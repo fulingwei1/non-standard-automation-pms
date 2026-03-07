@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """Tests for SyncBaseRepository"""
 
-import pytest
-from unittest.mock import MagicMock, patch
+from typing import Optional
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -27,12 +29,13 @@ class CreateSchema(BaseModel):
 
 
 class UpdateSchema(BaseModel):
-    name: str | None = None
-    status: str | None = None
+    name: Optional[str] = None
+    status: Optional[str] = None
 
 
 def _make_repo(db=None):
     from app.common.crud.sync_repository import SyncBaseRepository
+
     db = db or MagicMock(spec=Session)
     repo = SyncBaseRepository(FakeModel, db, "FakeModel")
     return repo, db
@@ -41,6 +44,7 @@ def _make_repo(db=None):
 class TestSyncBaseRepositoryInit:
     def test_default_resource_name(self):
         from app.common.crud.sync_repository import SyncBaseRepository
+
         db = MagicMock(spec=Session)
         repo = SyncBaseRepository(FakeModel, db)
         assert repo.resource_name == "FakeModel"

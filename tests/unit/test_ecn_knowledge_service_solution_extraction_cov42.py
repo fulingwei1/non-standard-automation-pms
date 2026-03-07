@@ -5,12 +5,13 @@ import pytest
 pytest.importorskip("app.services.ecn_knowledge_service.solution_extraction")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.ecn_knowledge_service.solution_extraction import (
-    extract_solution,
     _auto_extract_solution,
-    _extract_keywords,
     _build_solution_description,
+    _extract_keywords,
     _extract_solution_steps,
+    extract_solution,
 )
 
 
@@ -34,6 +35,7 @@ def make_ecn(**kw):
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_extract_solution_ecn_not_found():
     svc = make_service()
@@ -66,8 +68,9 @@ def test_auto_extract_falls_back_to_execution_note():
 
 
 def test_auto_extract_from_change_description():
-    ecn = make_ecn(solution="", execution_note="",
-                   change_description="问题描述。解决方案：更换零件C")
+    ecn = make_ecn(
+        solution="", execution_note="", change_description="问题描述。解决方案：更换零件C"
+    )
     result = _auto_extract_solution(ecn)
     assert "更换零件C" in result
 

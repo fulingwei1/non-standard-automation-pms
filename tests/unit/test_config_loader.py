@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """ConfigLoader 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch, mock_open
 from pathlib import Path
+from unittest.mock import MagicMock, mock_open, patch
 
-from app.services.report_framework.config_loader import ConfigLoader, ConfigError
+import pytest
+
+from app.services.report_framework.config_loader import ConfigError, ConfigLoader
 
 
 class TestConfigLoader:

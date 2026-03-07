@@ -4,8 +4,9 @@
 提供交互历史、决策链分析、健康度评分、购买偏好
 """
 
-from typing import Any
 from datetime import date
+from typing import Any
+
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 客户交互历史时间线 ==========
 
+
 @router.get("/customers/{customer_id}/timeline", summary="客户交互历史时间线")
 def get_customer_timeline(
     customer_id: int = Path(..., description="客户 ID"),
@@ -27,14 +29,14 @@ def get_customer_timeline(
 ) -> Any:
     """
     客户完整交互历史时间线
-    
+
     包含：
     - 电话/会议/邮件/微信记录
     - 商机阶段变更
     - 报价/合同/收款记录
     - 项目交付记录
     """
-    
+
     # 模拟交互历史数据
     timeline = [
         {
@@ -83,10 +85,10 @@ def get_customer_timeline(
             "sentiment": "positive",
         },
     ]
-    
+
     # 按时间排序
     timeline.sort(key=lambda x: x["date"], reverse=True)
-    
+
     return {
         "customer_id": customer_id,
         "period_months": months,
@@ -104,11 +106,14 @@ def get_customer_timeline(
         },
         "timeline": timeline,
         "last_contact": timeline[0]["date"] if timeline else None,
-        "days_since_last_contact": (date.today() - date.fromisoformat(timeline[0]["date"])).days if timeline else 999,
+        "days_since_last_contact": (
+            (date.today() - date.fromisoformat(timeline[0]["date"])).days if timeline else 999
+        ),
     }
 
 
 # ========== 2. 决策链分析 ==========
+
 
 @router.get("/customers/{customer_id}/decision-chain", summary="决策链分析")
 def get_decision_chain(
@@ -118,7 +123,7 @@ def get_decision_chain(
 ) -> Any:
     """
     客户决策链分析
-    
+
     识别：
     - 关键决策人（EB）
     - 技术决策人（TB）
@@ -126,7 +131,7 @@ def get_decision_chain(
     - 最终用户（UB）
     - 教练/内线（Coach）
     """
-    
+
     # 模拟决策链数据
     decision_chain = {
         "customer_id": customer_id,
@@ -226,11 +231,12 @@ def get_decision_chain(
             "保持与生产经理和内线的定期沟通",
         ],
     }
-    
+
     return decision_chain
 
 
 # ========== 3. 客户健康度评分 ==========
+
 
 @router.get("/customers/{customer_id}/health-score", summary="客户健康度评分")
 def get_customer_health_score(
@@ -240,14 +246,14 @@ def get_customer_health_score(
 ) -> Any:
     """
     客户健康度综合评分
-    
+
     维度：
     - 互动活跃度（联系频率）
     - 关系深度（决策链覆盖）
     - 商机进展（阶段推进）
     - 满意度（交互情绪）
     """
-    
+
     # 模拟健康度数据
     health_data = {
         "customer_id": customer_id,
@@ -256,7 +262,6 @@ def get_customer_health_score(
         "overall_score": 78,
         "health_level": "GOOD",
         "health_trend": "improving",
-        
         "dimensions": [
             {
                 "name": "互动活跃度",
@@ -307,7 +312,6 @@ def get_customer_health_score(
                 "status": "GOOD",
             },
         ],
-        
         "alerts": [
             {
                 "type": "WARNING",
@@ -316,7 +320,6 @@ def get_customer_health_score(
                 "suggested_action": "安排高层拜访",
             },
         ],
-        
         "recommended_actions": [
             {
                 "priority": 1,
@@ -338,11 +341,12 @@ def get_customer_health_score(
             },
         ],
     }
-    
+
     return health_data
 
 
 # ========== 4. 购买偏好分析 ==========
+
 
 @router.get("/customers/{customer_id}/buying-preferences", summary="购买偏好分析")
 def get_buying_preferences(
@@ -352,19 +356,18 @@ def get_buying_preferences(
 ) -> Any:
     """
     客户购买偏好分析
-    
+
     分析：
     - 产品类型偏好
     - 价格敏感度
     - 决策周期
     - 关键采购因素
     """
-    
+
     preferences = {
         "customer_id": customer_id,
         "customer_name": "宁德时代",
         "analysis_date": date.today().isoformat(),
-        
         "product_preferences": {
             "preferred_categories": [
                 {"category": "FCT", "count": 3, "percentage": 60},
@@ -382,7 +385,6 @@ def get_buying_preferences(
                 "长交付周期",
             ],
         },
-        
         "price_sensitivity": {
             "level": "MEDIUM",
             "score": 60,
@@ -395,7 +397,6 @@ def get_buying_preferences(
             "price_negotiation_style": "理性谈判，注重数据支撑",
             "payment_preference": "标准 3:6:1 付款，可接受预付优惠",
         },
-        
         "decision_pattern": {
             "avg_decision_cycle_days": 45,
             "decision_speed": "MEDIUM",
@@ -408,14 +409,12 @@ def get_buying_preferences(
             ],
             "procurement_process": "技术评审→商务谈判→高层审批",
         },
-        
         "relationship_preferences": {
             "communication_style": "正式 + 专业",
             "preferred_contact_method": "会议 > 电话 > 微信 > 邮件",
             "meeting_frequency": "每周 1-2 次",
             "technical_depth": "深入，需要详细技术方案",
         },
-        
         "historical_insights": {
             "total_projects": 5,
             "won_projects": 3,
@@ -425,7 +424,6 @@ def get_buying_preferences(
             "total_revenue": 9600000,
             "last_project_date": "2024-11-15",
         },
-        
         "recommended_approach": [
             "强调技术优势和锂电行业案例",
             "提供详细的技术方案和测试数据",
@@ -434,11 +432,12 @@ def get_buying_preferences(
             "保持每周定期沟通节奏",
         ],
     }
-    
+
     return preferences
 
 
 # ========== 5. 客户 360°总览 ==========
+
 
 @router.get("/customers/{customer_id}/360-view", summary="客户 360°总览")
 def get_customer_360_view(
@@ -448,17 +447,16 @@ def get_customer_360_view(
 ) -> Any:
     """
     客户 360°完整视图
-    
+
     整合所有客户信息于一页
     """
-    
+
     return {
         "customer_id": customer_id,
         "customer_name": "宁德时代",
         "industry": "锂电",
         "customer_type": "大客户",
         "customer_level": "A",
-        
         "basic_info": {
             "established": "2011 年",
             "employees": "50000+",
@@ -466,7 +464,6 @@ def get_customer_360_view(
             "location": "福建宁德",
             "website": "www.catl.com",
         },
-        
         "relationship_summary": {
             "first_contact": "2024-06-15",
             "relationship_duration_days": 260,
@@ -476,7 +473,6 @@ def get_customer_360_view(
             "health_score": 78,
             "health_level": "GOOD",
         },
-        
         "active_opportunities": [
             {
                 "id": 101,
@@ -487,7 +483,6 @@ def get_customer_360_view(
                 "estimated_close": "2025-03-20",
             },
         ],
-        
         "historical_projects": [
             {
                 "name": "EOL 测试设备",
@@ -497,19 +492,16 @@ def get_customer_360_view(
                 "satisfaction": "高",
             },
         ],
-        
         "key_contacts": [
             {"name": "张三", "title": "技术总监", "role": "TB", "relationship": 85},
             {"name": "李四", "title": "采购经理", "role": "PB", "relationship": 60},
             {"name": "王五", "title": "总经理", "role": "EB", "relationship": 40},
         ],
-        
         "quick_actions": [
             {"action": "安排 EB 拜访", "priority": "HIGH", "deadline": "2 周内"},
             {"action": "提交修订方案", "priority": "HIGH", "deadline": "3 月 5 日"},
             {"action": "准备 TCO 分析", "priority": "MEDIUM", "deadline": "1 周内"},
         ],
-        
         "alerts": [
             {"type": "WARNING", "message": "EB 关系需加强"},
             {"type": "INFO", "message": "方案修订截止 3 月 5 日"},

@@ -12,12 +12,13 @@
 import unittest
 from datetime import date
 from unittest.mock import MagicMock, Mock, patch
+
 from fastapi import HTTPException
 
-from app.services.project_members.service import ProjectMembersService
-from app.models.project import ProjectMember, Project
-from app.models.user import User
 from app.models.organization import Department, Employee
+from app.models.project import Project, ProjectMember
+from app.models.user import User
+from app.services.project_members.service import ProjectMembersService
 
 
 class TestProjectMembersService(unittest.TestCase):
@@ -92,7 +93,7 @@ class TestProjectMembersService(unittest.TestCase):
         result = self.service.get_member_by_id(100, 1, enrich=False)
 
         # 应该没有username/real_name属性
-        self.assertFalse(hasattr(result, 'username'))
+        self.assertFalse(hasattr(result, "username"))
 
     # ========== list_members() 测试 ==========
 
@@ -200,8 +201,8 @@ class TestProjectMembersService(unittest.TestCase):
 
     # ========== create_member() 测试 ==========
 
-    @patch('app.services.project_members.service.get_or_404')
-    @patch('app.services.project_members.service.save_obj')
+    @patch("app.services.project_members.service.get_or_404")
+    @patch("app.services.project_members.service.save_obj")
     def test_create_member_success(self, save_obj_mock, get_or_404_mock):
         """测试创建成员成功"""
         project = Mock(spec=Project, id=100)
@@ -212,17 +213,13 @@ class TestProjectMembersService(unittest.TestCase):
         query_mock.filter.return_value.first.return_value = None  # 不存在
 
         member = self.service.create_member(
-            project_id=100,
-            user_id=1,
-            role_code="PM",
-            allocation_pct=80,
-            created_by=999
+            project_id=100, user_id=1, role_code="PM", allocation_pct=80, created_by=999
         )
 
         save_obj_mock.assert_called_once()
         self.assertEqual(get_or_404_mock.call_count, 2)
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_create_member_project_not_found(self, get_or_404_mock):
         """测试创建成员失败（项目不存在）"""
         get_or_404_mock.side_effect = HTTPException(status_code=404, detail="项目不存在")
@@ -232,7 +229,7 @@ class TestProjectMembersService(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, 404)
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_create_member_already_exists(self, get_or_404_mock):
         """测试创建成员失败（已存在）"""
         project = Mock(spec=Project)
@@ -248,8 +245,8 @@ class TestProjectMembersService(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 400)
         self.assertEqual(context.exception.detail, "该用户已是项目成员")
 
-    @patch('app.services.project_members.service.get_or_404')
-    @patch('app.services.project_members.service.save_obj')
+    @patch("app.services.project_members.service.get_or_404")
+    @patch("app.services.project_members.service.save_obj")
     def test_create_member_with_dates(self, save_obj_mock, get_or_404_mock):
         """测试创建成员（包含日期）"""
         project = Mock(spec=Project)
@@ -264,14 +261,14 @@ class TestProjectMembersService(unittest.TestCase):
             user_id=1,
             role_code="DEV",
             start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
+            end_date=date(2024, 12, 31),
         )
 
         save_obj_mock.assert_called_once()
 
     # ========== update_member() 测试 ==========
 
-    @patch('app.services.project_members.service.save_obj')
+    @patch("app.services.project_members.service.save_obj")
     def test_update_member_success(self, save_obj_mock):
         """测试更新成员成功"""
         member = Mock(spec=ProjectMember, id=1, allocation_pct=100)
@@ -297,7 +294,7 @@ class TestProjectMembersService(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, 404)
 
-    @patch('app.services.project_members.service.save_obj')
+    @patch("app.services.project_members.service.save_obj")
     def test_update_member_ignore_invalid_fields(self, save_obj_mock):
         """测试更新成员忽略无效字段"""
         member = Mock(spec=ProjectMember, id=1)
@@ -310,11 +307,11 @@ class TestProjectMembersService(unittest.TestCase):
         result = self.service.update_member(100, 1, update_data)
 
         # invalid_field不应该被设置
-        self.assertFalse(hasattr(result, 'invalid_field'))
+        self.assertFalse(hasattr(result, "invalid_field"))
 
     # ========== delete_member() 测试 ==========
 
-    @patch('app.services.project_members.service.delete_obj')
+    @patch("app.services.project_members.service.delete_obj")
     def test_delete_member_success(self, delete_obj_mock):
         """测试删除成员成功"""
         member = Mock(spec=ProjectMember, id=1)
@@ -342,20 +339,16 @@ class TestProjectMembersService(unittest.TestCase):
         """测试冲突检查（无日期）"""
         result = self.service.check_member_conflicts(1, None, None)
 
-        self.assertFalse(result['has_conflict'])
+        self.assertFalse(result["has_conflict"])
 
     def test_check_member_conflicts_no_conflict(self):
         """测试冲突检查（无冲突）"""
         query_mock = self.db_mock.query.return_value
         query_mock.filter.return_value.all.return_value = []
 
-        result = self.service.check_member_conflicts(
-            1,
-            date(2024, 1, 1),
-            date(2024, 12, 31)
-        )
+        result = self.service.check_member_conflicts(1, date(2024, 1, 1), date(2024, 12, 31))
 
-        self.assertFalse(result['has_conflict'])
+        self.assertFalse(result["has_conflict"])
 
     def test_check_member_conflicts_has_conflict(self):
         """测试冲突检查（有冲突）"""
@@ -364,14 +357,9 @@ class TestProjectMembersService(unittest.TestCase):
             project_id=200,
             allocation_pct=80,
             start_date=date(2024, 3, 1),
-            end_date=date(2024, 10, 31)
+            end_date=date(2024, 10, 31),
         )
-        project = Mock(
-            spec=Project,
-            id=200,
-            project_code="PRJ-002",
-            project_name="冲突项目"
-        )
+        project = Mock(spec=Project, id=200, project_code="PRJ-002", project_name="冲突项目")
 
         user = Mock(spec=User, id=1, username="test", real_name="张三")
 
@@ -393,18 +381,15 @@ class TestProjectMembersService(unittest.TestCase):
         self.db_mock.query.side_effect = [query_mock_member, query_mock_project, query_mock_user]
 
         result = self.service.check_member_conflicts(
-            1,
-            date(2024, 6, 1),
-            date(2024, 9, 30),
-            exclude_project_id=100
+            1, date(2024, 6, 1), date(2024, 9, 30), exclude_project_id=100
         )
 
-        self.assertTrue(result['has_conflict'])
-        self.assertEqual(result['user_id'], 1)
-        self.assertEqual(result['user_name'], "张三")
-        self.assertEqual(len(result['conflicting_projects']), 1)
-        self.assertEqual(result['conflict_count'], 1)
-        self.assertEqual(result['conflicting_projects'][0]['project_code'], "PRJ-002")
+        self.assertTrue(result["has_conflict"])
+        self.assertEqual(result["user_id"], 1)
+        self.assertEqual(result["user_name"], "张三")
+        self.assertEqual(len(result["conflicting_projects"]), 1)
+        self.assertEqual(result["conflict_count"], 1)
+        self.assertEqual(result["conflicting_projects"][0]["project_code"], "PRJ-002")
 
     def test_check_member_conflicts_exclude_project(self):
         """测试冲突检查（排除指定项目）"""
@@ -414,17 +399,14 @@ class TestProjectMembersService(unittest.TestCase):
         self.db_mock.query.return_value = query_mock
 
         result = self.service.check_member_conflicts(
-            1,
-            date(2024, 1, 1),
-            date(2024, 12, 31),
-            exclude_project_id=100
+            1, date(2024, 1, 1), date(2024, 12, 31), exclude_project_id=100
         )
 
-        self.assertFalse(result['has_conflict'])
+        self.assertFalse(result["has_conflict"])
 
     # ========== batch_add_members() 测试 ==========
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_batch_add_members_success(self, get_or_404_mock):
         """测试批量添加成员成功"""
         project = Mock(spec=Project)
@@ -436,19 +418,15 @@ class TestProjectMembersService(unittest.TestCase):
         # Mock check_member_conflicts: no conflicts
         query_mock.filter.return_value.all.return_value = []
 
-        result = self.service.batch_add_members(
-            project_id=100,
-            user_ids=[1, 2, 3],
-            role_code="DEV"
-        )
+        result = self.service.batch_add_members(project_id=100, user_ids=[1, 2, 3], role_code="DEV")
 
-        self.assertEqual(result['added_count'], 3)
-        self.assertEqual(result['skipped_count'], 0)
-        self.assertEqual(len(result['conflicts']), 0)
+        self.assertEqual(result["added_count"], 3)
+        self.assertEqual(result["skipped_count"], 0)
+        self.assertEqual(len(result["conflicts"]), 0)
         self.assertEqual(self.db_mock.add.call_count, 3)
         self.db_mock.commit.assert_called_once()
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_batch_add_members_with_skip(self, get_or_404_mock):
         """测试批量添加成员（部分跳过）"""
         project = Mock(spec=Project)
@@ -464,16 +442,12 @@ class TestProjectMembersService(unittest.TestCase):
         ]
         query_mock.filter.return_value.all.return_value = []  # no conflicts
 
-        result = self.service.batch_add_members(
-            project_id=100,
-            user_ids=[1, 2, 3],
-            role_code="DEV"
-        )
+        result = self.service.batch_add_members(project_id=100, user_ids=[1, 2, 3], role_code="DEV")
 
-        self.assertEqual(result['added_count'], 2)
-        self.assertEqual(result['skipped_count'], 1)
+        self.assertEqual(result["added_count"], 2)
+        self.assertEqual(result["skipped_count"], 1)
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_batch_add_members_with_conflicts(self, get_or_404_mock):
         """测试批量添加成员（有冲突）"""
         project = Mock(spec=Project)
@@ -484,13 +458,10 @@ class TestProjectMembersService(unittest.TestCase):
             project_id=200,
             allocation_pct=100,
             start_date=date(2024, 3, 1),
-            end_date=date(2024, 10, 31)
+            end_date=date(2024, 10, 31),
         )
         conflicting_project = Mock(
-            spec=Project,
-            id=200,
-            project_code="PRJ-200",
-            project_name="冲突项目"
+            spec=Project, id=200, project_code="PRJ-200", project_name="冲突项目"
         )
         user1 = Mock(spec=User, id=1, username="user1", real_name="用户1")
 
@@ -546,14 +517,14 @@ class TestProjectMembersService(unittest.TestCase):
             user_ids=[1, 2, 3],
             role_code="DEV",
             start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
+            end_date=date(2024, 12, 31),
         )
 
         # 第一个有冲突，第二、三个成功
-        self.assertEqual(result['added_count'], 2)
-        self.assertEqual(len(result['conflicts']), 1)
+        self.assertEqual(result["added_count"], 2)
+        self.assertEqual(len(result["conflicts"]), 1)
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_batch_add_members_project_not_found(self, get_or_404_mock):
         """测试批量添加成员（项目不存在）"""
         get_or_404_mock.side_effect = HTTPException(status_code=404, detail="项目不存在")
@@ -575,7 +546,7 @@ class TestProjectMembersService(unittest.TestCase):
         result = self.service.notify_dept_manager(100, 1)
 
         self.assertTrue(member.dept_manager_notified)
-        self.assertEqual(result['message'], "部门经理通知已发送")
+        self.assertEqual(result["message"], "部门经理通知已发送")
         self.db_mock.commit.assert_called_once()
 
     def test_notify_dept_manager_already_notified(self):
@@ -587,7 +558,7 @@ class TestProjectMembersService(unittest.TestCase):
 
         result = self.service.notify_dept_manager(100, 1)
 
-        self.assertEqual(result['message'], "部门经理已通知")
+        self.assertEqual(result["message"], "部门经理已通知")
         # 不应该再次commit
         self.db_mock.commit.assert_not_called()
 
@@ -603,7 +574,7 @@ class TestProjectMembersService(unittest.TestCase):
 
     # ========== get_dept_users_for_project() 测试 ==========
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_get_dept_users_for_project_success(self, get_or_404_mock):
         """测试获取部门用户列表成功"""
         dept = Mock(spec=Department, id=1, dept_name="研发部")
@@ -612,8 +583,12 @@ class TestProjectMembersService(unittest.TestCase):
         employee1 = Mock(spec=Employee, id=10, department="研发部", is_active=True)
         employee2 = Mock(spec=Employee, id=11, department="研发部", is_active=True)
 
-        user1 = Mock(spec=User, id=1, employee_id=10, username="user1", real_name="张三", is_active=True)
-        user2 = Mock(spec=User, id=2, employee_id=11, username="user2", real_name="李四", is_active=True)
+        user1 = Mock(
+            spec=User, id=1, employee_id=10, username="user1", real_name="张三", is_active=True
+        )
+        user2 = Mock(
+            spec=User, id=2, employee_id=11, username="user2", real_name="李四", is_active=True
+        )
 
         # Mock Employee query
         query_mock_employee = MagicMock()
@@ -634,13 +609,13 @@ class TestProjectMembersService(unittest.TestCase):
 
         result = self.service.get_dept_users_for_project(100, 1)
 
-        self.assertEqual(result['dept_id'], 1)
-        self.assertEqual(result['dept_name'], "研发部")
-        self.assertEqual(len(result['users']), 2)
-        self.assertTrue(result['users'][0]['is_member'])  # user1 is member
-        self.assertFalse(result['users'][1]['is_member'])  # user2 is not member
+        self.assertEqual(result["dept_id"], 1)
+        self.assertEqual(result["dept_name"], "研发部")
+        self.assertEqual(len(result["users"]), 2)
+        self.assertTrue(result["users"][0]["is_member"])  # user1 is member
+        self.assertFalse(result["users"][1]["is_member"])  # user2 is not member
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_get_dept_users_for_project_dept_not_found(self, get_or_404_mock):
         """测试获取部门用户列表（部门不存在）"""
         get_or_404_mock.side_effect = HTTPException(status_code=404, detail="部门不存在")
@@ -650,7 +625,7 @@ class TestProjectMembersService(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, 404)
 
-    @patch('app.services.project_members.service.get_or_404')
+    @patch("app.services.project_members.service.get_or_404")
     def test_get_dept_users_for_project_no_employees(self, get_or_404_mock):
         """测试获取部门用户列表（无员工）"""
         dept = Mock(spec=Department, id=1, dept_name="空部门")
@@ -675,7 +650,7 @@ class TestProjectMembersService(unittest.TestCase):
 
         result = self.service.get_dept_users_for_project(100, 1)
 
-        self.assertEqual(len(result['users']), 0)
+        self.assertEqual(len(result["users"]), 0)
 
 
 class TestProjectMembersServiceEdgeCases(unittest.TestCase):
@@ -713,7 +688,7 @@ class TestProjectMembersServiceEdgeCases(unittest.TestCase):
 
         self.assertEqual(len(members), 0)
 
-    @patch('app.services.project_members.service.save_obj')
+    @patch("app.services.project_members.service.save_obj")
     def test_update_member_empty_data(self, save_obj_mock):
         """测试空更新数据"""
         member = Mock(spec=ProjectMember)
@@ -728,14 +703,14 @@ class TestProjectMembersServiceEdgeCases(unittest.TestCase):
 
     def test_batch_add_members_empty_list(self):
         """测试空用户列表"""
-        with patch('app.services.project_members.service.get_or_404') as get_or_404_mock:
+        with patch("app.services.project_members.service.get_or_404") as get_or_404_mock:
             project = Mock(spec=Project)
             get_or_404_mock.return_value = project
 
             result = self.service.batch_add_members(100, [], "DEV")
 
-            self.assertEqual(result['added_count'], 0)
-            self.assertEqual(result['skipped_count'], 0)
+            self.assertEqual(result["added_count"], 0)
+            self.assertEqual(result["skipped_count"], 0)
 
     def test_check_member_conflicts_user_not_found(self):
         """测试冲突检查（用户不存在）"""
@@ -744,7 +719,7 @@ class TestProjectMembersServiceEdgeCases(unittest.TestCase):
             project_id=200,
             allocation_pct=80,
             start_date=date(2024, 3, 1),
-            end_date=date(2024, 10, 31)
+            end_date=date(2024, 10, 31),
         )
         project = Mock(spec=Project, id=200, project_code="PRJ-200", project_name="测试")
 
@@ -762,14 +737,10 @@ class TestProjectMembersServiceEdgeCases(unittest.TestCase):
 
         self.db_mock.query.side_effect = [query_mock_member, query_mock_project, query_mock_user]
 
-        result = self.service.check_member_conflicts(
-            999,
-            date(2024, 1, 1),
-            date(2024, 12, 31)
-        )
+        result = self.service.check_member_conflicts(999, date(2024, 1, 1), date(2024, 12, 31))
 
-        self.assertTrue(result['has_conflict'])
-        self.assertEqual(result['user_name'], 'User 999')
+        self.assertTrue(result["has_conflict"])
+        self.assertEqual(result["user_name"], "User 999")
 
 
 if __name__ == "__main__":

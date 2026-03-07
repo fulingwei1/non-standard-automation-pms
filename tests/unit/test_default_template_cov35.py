@@ -6,7 +6,9 @@ import pytest
 
 try:
     from unittest.mock import MagicMock, patch
+
     from app.services.stage_template.default_template import DefaultTemplateMixin
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

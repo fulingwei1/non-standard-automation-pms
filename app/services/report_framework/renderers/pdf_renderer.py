@@ -23,10 +23,8 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from app.services.report_framework.renderers.base import Renderer, ReportResult, RenderError
-from app.services.report_framework.renderers.pdf_styles import (
-    FONT_PATHS as _SHARED_FONT_PATHS,
-)
+from app.services.report_framework.renderers.base import Renderer, RenderError, ReportResult
+from app.services.report_framework.renderers.pdf_styles import FONT_PATHS as _SHARED_FONT_PATHS
 
 
 class PdfRenderer(Renderer):
@@ -259,16 +257,20 @@ class PdfRenderer(Renderer):
 
         if rows:
             table = Table(rows, colWidths=[45 * mm] * cols)
-            table.setStyle(TableStyle([
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("FONTNAME", (0, 0), (-1, -1), self._font_name),
-                ("FONTSIZE", (0, 0), (-1, -1), 10),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                ("BACKGROUND", (0, 0), (-1, -1), colors.Color(0.95, 0.95, 0.95)),
-                ("TOPPADDING", (0, 0), (-1, -1), 8),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-            ]))
+            table.setStyle(
+                TableStyle(
+                    [
+                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                        ("FONTNAME", (0, 0), (-1, -1), self._font_name),
+                        ("FONTSIZE", (0, 0), (-1, -1), 10),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.Color(0.95, 0.95, 0.95)),
+                        ("TOPPADDING", (0, 0), (-1, -1), 8),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                    ]
+                )
+            )
             elements.append(table)
 
         return elements
@@ -311,21 +313,30 @@ class PdfRenderer(Renderer):
         col_width = available_width / col_count
 
         table = Table(table_data, colWidths=[col_width] * col_count)
-        table.setStyle(TableStyle([
-            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("FONTNAME", (0, 0), (-1, -1), self._font_name),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
-            # 表头样式
-            ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.2, 0.4, 0.6)),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTSIZE", (0, 0), (-1, 0), 9),
-            # 数据行样式
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.Color(0.95, 0.95, 0.95)]),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ]))
+        table.setStyle(
+            TableStyle(
+                [
+                    ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("FONTNAME", (0, 0), (-1, -1), self._font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    # 表头样式
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.Color(0.2, 0.4, 0.6)),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("FONTSIZE", (0, 0), (-1, 0), 9),
+                    # 数据行样式
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 1),
+                        (-1, -1),
+                        [colors.white, colors.Color(0.95, 0.95, 0.95)],
+                    ),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]
+            )
+        )
         elements.append(table)
 
         # 显示数据量提示

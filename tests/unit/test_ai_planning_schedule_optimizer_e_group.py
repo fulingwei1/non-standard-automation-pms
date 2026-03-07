@@ -9,17 +9,25 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ─── fixtures ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def optimizer(db_session):
     from app.services.ai_planning.schedule_optimizer import AIScheduleOptimizer
+
     return AIScheduleOptimizer(db=db_session)
 
 
-def _make_task(task_id, wbs_code, duration_days=5, dependencies=None,
-               wbs_level=1, parent_wbs_id=None, risk_level="LOW"):
+def _make_task(
+    task_id,
+    wbs_code,
+    duration_days=5,
+    dependencies=None,
+    wbs_level=1,
+    parent_wbs_id=None,
+    risk_level="LOW",
+):
     task = MagicMock()
     task.id = task_id
     task.task_name = f"Task {task_id}"
@@ -34,6 +42,7 @@ def _make_task(task_id, wbs_code, duration_days=5, dependencies=None,
 
 
 # ─── _get_predecessors ───────────────────────────────────────────────────────
+
 
 class TestGetPredecessors:
 
@@ -65,6 +74,7 @@ class TestGetPredecessors:
 
 # ─── _get_successors ────────────────────────────────────────────────────────
 
+
 class TestGetSuccessors:
 
     def test_no_successors(self, optimizer):
@@ -92,6 +102,7 @@ class TestGetSuccessors:
 
 
 # ─── _calculate_cpm ─────────────────────────────────────────────────────────
+
 
 class TestCalculateCPM:
 
@@ -132,6 +143,7 @@ class TestCalculateCPM:
 
 # ─── _generate_gantt_data ────────────────────────────────────────────────────
 
+
 class TestGenerateGanttData:
 
     def test_gantt_has_correct_structure(self, optimizer):
@@ -158,13 +170,14 @@ class TestGenerateGanttData:
         cpm_result = {
             "es": {1: 0, 2: 1, 3: 2},
             "ef": {1: 1, 2: 3, 3: 5},
-            "slack": {1: 0, 2: 0, 3: 0}
+            "slack": {1: 0, 2: 0, 3: 0},
         }
         result = optimizer._generate_gantt_data(tasks, cpm_result, date(2025, 1, 1))
         assert len(result) == 3
 
 
 # ─── _identify_critical_path ─────────────────────────────────────────────────
+
 
 class TestIdentifyCriticalPath:
 
@@ -188,6 +201,7 @@ class TestIdentifyCriticalPath:
 
 # ─── _analyze_resource_load ──────────────────────────────────────────────────
 
+
 class TestAnalyzeResourceLoad:
 
     def test_no_allocations_returns_empty(self, optimizer, db_session):
@@ -201,7 +215,9 @@ class TestAnalyzeResourceLoad:
         alloc.allocated_hours = 80
         alloc.wbs_suggestion_id = 10
         alloc.overall_match_score = 85
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = [alloc]
+        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            alloc
+        ]
         result = optimizer._analyze_resource_load(1, {})
         assert 1 in result
         assert result[1]["total_hours"] == 80
@@ -219,7 +235,10 @@ class TestAnalyzeResourceLoad:
         alloc2.wbs_suggestion_id = 11
         alloc2.overall_match_score = 75
 
-        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = [alloc1, alloc2]
+        db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            alloc1,
+            alloc2,
+        ]
         result = optimizer._analyze_resource_load(1, {})
         assert result[1]["total_hours"] == 100
         assert result[1]["task_count"] == 2
@@ -227,14 +246,13 @@ class TestAnalyzeResourceLoad:
 
 # ─── _detect_conflicts ──────────────────────────────────────────────────────
 
+
 class TestDetectConflicts:
 
     def test_overloaded_user_detected(self, optimizer):
         tasks = [_make_task(i, f"1.{i}") for i in range(1, 3)]
         cpm_result = {"slack": {1: 0, 2: 0}}
-        resource_load = {
-            1: {"total_hours": 600, "task_count": 5, "tasks": []}  # > 160*3=480
-        }
+        resource_load = {1: {"total_hours": 600, "task_count": 5, "tasks": []}}  # > 160*3=480
         conflicts = optimizer._detect_conflicts(tasks, cpm_result, resource_load)
         types = [c["type"] for c in conflicts]
         assert "RESOURCE_OVERLOAD" in types
@@ -264,6 +282,7 @@ class TestDetectConflicts:
 
 
 # ─── _generate_recommendations ──────────────────────────────────────────────
+
 
 class TestGenerateRecommendations:
 
@@ -295,6 +314,7 @@ class TestGenerateRecommendations:
 
 # ─── _calculate_resource_utilization ────────────────────────────────────────
 
+
 class TestCalculateResourceUtilization:
 
     def test_empty_load_returns_zero(self, optimizer):
@@ -320,6 +340,7 @@ class TestCalculateResourceUtilization:
 
 # ─── optimize_schedule (integration mock) ───────────────────────────────────
 
+
 class TestOptimizeSchedule:
 
     def test_project_not_found_returns_empty(self, optimizer, db_session):
@@ -330,7 +351,9 @@ class TestOptimizeSchedule:
     def test_no_tasks_returns_empty(self, optimizer, db_session):
         project = MagicMock()
         db_session.query.return_value.get.return_value = project
-        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         result = optimizer.optimize_schedule(1)
         assert result == {}
 
@@ -340,7 +363,9 @@ class TestOptimizeSchedule:
         db_session.query.return_value.get.return_value = project
 
         tasks = [_make_task(i, f"1.{i}", duration_days=5) for i in range(1, 4)]
-        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = tasks
+        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            tasks
+        )
         db_session.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
         result = optimizer.optimize_schedule(1, start_date=date(2025, 1, 1))

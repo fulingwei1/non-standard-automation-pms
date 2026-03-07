@@ -25,10 +25,10 @@ from app.schemas.strategy import (
     PersonalKPIUpdate,
 )
 
-
 # ============================================
 # 个人 KPI 管理
 # ============================================
+
 
 def create_personal_kpi(db: Session, data: PersonalKPICreate) -> PersonalKPI:
     """
@@ -73,10 +73,7 @@ def get_personal_kpi(db: Session, kpi_id: int) -> Optional[PersonalKPI]:
     Returns:
         Optional[PersonalKPI]: 个人 KPI
     """
-    return db.query(PersonalKPI).filter(
-        PersonalKPI.id == kpi_id,
-        PersonalKPI.is_active
-    ).first()
+    return db.query(PersonalKPI).filter(PersonalKPI.id == kpi_id, PersonalKPI.is_active).first()
 
 
 def list_personal_kpis(
@@ -86,7 +83,7 @@ def list_personal_kpis(
     year: Optional[int] = None,
     period: Optional[str] = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
 ) -> tuple[List[PersonalKPI], int]:
     """
     获取个人 KPI 列表
@@ -120,11 +117,7 @@ def list_personal_kpis(
     return items, total
 
 
-def update_personal_kpi(
-    db: Session,
-    kpi_id: int,
-    data: PersonalKPIUpdate
-) -> Optional[PersonalKPI]:
+def update_personal_kpi(db: Session, kpi_id: int, data: PersonalKPIUpdate) -> Optional[PersonalKPI]:
     """
     更新个人 KPI
 
@@ -174,7 +167,7 @@ def self_rating(
     kpi_id: int,
     actual_value: Decimal,
     self_score: int,
-    self_comment: Optional[str] = None
+    self_comment: Optional[str] = None,
 ) -> Optional[PersonalKPI]:
     """
     员工自评
@@ -204,10 +197,7 @@ def self_rating(
 
 
 def manager_rating(
-    db: Session,
-    kpi_id: int,
-    manager_score: int,
-    manager_comment: Optional[str] = None
+    db: Session, kpi_id: int, manager_score: int, manager_comment: Optional[str] = None
 ) -> Optional[PersonalKPI]:
     """
     主管评分
@@ -237,10 +227,7 @@ def manager_rating(
     return kpi
 
 
-def batch_create_personal_kpis(
-    db: Session,
-    items: List[PersonalKPICreate]
-) -> List[PersonalKPI]:
+def batch_create_personal_kpis(db: Session, items: List[PersonalKPICreate]) -> List[PersonalKPI]:
     """
     批量创建个人 KPI
 
@@ -256,5 +243,3 @@ def batch_create_personal_kpis(
         kpi = create_personal_kpi(db, item)
         created.append(kpi)
     return created
-
-

@@ -38,7 +38,7 @@ STAGE_CONFIGS = [
         "progress": 5,
         "count": 2,
         "name_prefix": "需求进入",
-        "description": "项目刚签单，需求确认阶段"
+        "description": "项目刚签单，需求确认阶段",
     },
     {
         "stage": "S2",
@@ -47,7 +47,7 @@ STAGE_CONFIGS = [
         "progress": 15,
         "count": 2,
         "name_prefix": "方案设计",
-        "description": "正在进行方案设计和评审"
+        "description": "正在进行方案设计和评审",
     },
     {
         "stage": "S3",
@@ -56,7 +56,7 @@ STAGE_CONFIGS = [
         "progress": 30,
         "count": 2,
         "name_prefix": "采购备料",
-        "description": "BOM已发布，正在采购物料"
+        "description": "BOM已发布，正在采购物料",
     },
     {
         "stage": "S4",
@@ -65,7 +65,7 @@ STAGE_CONFIGS = [
         "progress": 50,
         "count": 2,
         "name_prefix": "加工制造",
-        "description": "物料到齐，正在进行机加工和钣金"
+        "description": "物料到齐，正在进行机加工和钣金",
     },
     {
         "stage": "S5",
@@ -74,7 +74,7 @@ STAGE_CONFIGS = [
         "progress": 70,
         "count": 2,
         "name_prefix": "装配调试",
-        "description": "机械装配完成，正在进行电气调试"
+        "description": "机械装配完成，正在进行电气调试",
     },
     {
         "stage": "S6",
@@ -83,7 +83,7 @@ STAGE_CONFIGS = [
         "progress": 85,
         "count": 1,
         "name_prefix": "出厂验收",
-        "description": "调试完成，等待FAT验收"
+        "description": "调试完成，等待FAT验收",
     },
     {
         "stage": "S7",
@@ -92,7 +92,7 @@ STAGE_CONFIGS = [
         "progress": 90,
         "count": 1,
         "name_prefix": "包装发运",
-        "description": "FAT通过，正在包装准备发货"
+        "description": "FAT通过，正在包装准备发货",
     },
     {
         "stage": "S8",
@@ -101,7 +101,7 @@ STAGE_CONFIGS = [
         "progress": 95,
         "count": 1,
         "name_prefix": "现场安装",
-        "description": "设备已发货，现场安装调试中"
+        "description": "设备已发货，现场安装调试中",
     },
     {
         "stage": "S9",
@@ -110,8 +110,8 @@ STAGE_CONFIGS = [
         "progress": 100,
         "count": 1,
         "name_prefix": "质保结项",
-        "description": "SAT通过，项目已结项，进入质保期"
-    }
+        "description": "SAT通过，项目已结项，进入质保期",
+    },
 ]
 
 # 设备类型列表
@@ -131,7 +131,7 @@ CUSTOMER_NAMES = [
     "杭州视觉检测技术有限公司",
     "成都工业自动化设备有限公司",
     "武汉电子测试设备有限公司",
-    "西安智能制造科技有限公司"
+    "西安智能制造科技有限公司",
 ]
 
 
@@ -154,13 +154,17 @@ def get_or_create_users(db):
             from app.core.security import get_password_hash
 
             # 创建员工
-            emp = db.query(Employee).filter(Employee.employee_code == config["username"].upper().replace("_", "")).first()
+            emp = (
+                db.query(Employee)
+                .filter(Employee.employee_code == config["username"].upper().replace("_", ""))
+                .first()
+            )
             if not emp:
                 emp = Employee(
                     employee_code=config["username"].upper().replace("_", ""),
                     name=config["name"],
                     department=config["dept"],
-                    role=config["role"]
+                    role=config["role"],
                 )
                 db.add(emp)
                 db.flush()
@@ -171,7 +175,7 @@ def get_or_create_users(db):
                 real_name=config["name"],
                 email=f"{config['username']}@company.com",
                 password_hash=get_password_hash("123456"),
-                is_active=True
+                is_active=True,
             )
             db.add(user)
             db.flush()
@@ -205,7 +209,7 @@ def create_customer(db, index):
         credit_level="A" if index % 2 == 0 else "B",
         credit_limit=Decimal("5000000.00"),
         payment_terms="30%预付款，60%发货前，10%验收后",
-        status="ACTIVE"
+        status="ACTIVE",
     )
     db.add(customer)
     db.flush()
@@ -225,7 +229,7 @@ def create_sales_flow(db, customer, users, project_index):
         contact_phone=customer.contact_phone,
         demand_summary=f"需要{EQUIPMENT_TYPES[project_index % len(EQUIPMENT_TYPES)]}测试设备",
         owner_id=users["sales"].id,
-        status="CONVERTED"
+        status="CONVERTED",
     )
     db.add(lead)
     db.flush()
@@ -242,7 +246,7 @@ def create_sales_flow(db, customer, users, project_index):
         stage="WON",
         est_amount=Decimal("2000000.00") + Decimal(str(project_index * 100000)),
         owner_id=users["sales"].id,
-        gate_status="PASSED"
+        gate_status="PASSED",
     )
     db.add(opportunity)
     db.flush()
@@ -254,7 +258,7 @@ def create_sales_flow(db, customer, users, project_index):
         opportunity_id=opportunity.id,
         customer_id=customer.id,
         status="APPROVED",
-        owner_id=users["sales"].id
+        owner_id=users["sales"].id,
     )
     db.add(quote)
     db.flush()
@@ -268,7 +272,7 @@ def create_sales_flow(db, customer, users, project_index):
         gross_margin=Decimal("25.00"),
         lead_time_days=120,
         delivery_date=date.today() + timedelta(days=120),
-        created_by=users["sales"].id
+        created_by=users["sales"].id,
     )
     db.add(quote_version)
     db.flush()
@@ -287,7 +291,7 @@ def create_sales_flow(db, customer, users, project_index):
         signed_date=date.today() - timedelta(days=180 - project_index * 10),
         status="SIGNED",
         payment_terms_summary="30%预付款，60%发货前，10%验收后",
-        owner_id=users["sales"].id
+        owner_id=users["sales"].id,
     )
     db.add(contract)
     db.flush()
@@ -341,7 +345,7 @@ def create_project(db, customer, contract, users, stage_config, project_index):
         description=stage_config["description"],
         requirements=f"需要开发{equipment_type}测试设备，满足客户测试需求",
         opportunity_id=contract.opportunity_id,
-        contract_id=contract.id
+        contract_id=contract.id,
     )
     db.add(project)
     db.flush()
@@ -365,44 +369,114 @@ def create_milestones(db, project, stage_config, base_date):
     """创建里程碑"""
     milestones_config = {
         "S1": [
-            {"name": "需求确认", "type": "REQUIREMENT_CONFIRMED", "date_offset": 5, "status": "COMPLETED"}
+            {
+                "name": "需求确认",
+                "type": "REQUIREMENT_CONFIRMED",
+                "date_offset": 5,
+                "status": "COMPLETED",
+            }
         ],
         "S2": [
-            {"name": "需求确认", "type": "REQUIREMENT_CONFIRMED", "date_offset": 5, "status": "COMPLETED"},
-            {"name": "方案设计完成", "type": "DESIGN_COMPLETED", "date_offset": 20, "status": "COMPLETED"}
+            {
+                "name": "需求确认",
+                "type": "REQUIREMENT_CONFIRMED",
+                "date_offset": 5,
+                "status": "COMPLETED",
+            },
+            {
+                "name": "方案设计完成",
+                "type": "DESIGN_COMPLETED",
+                "date_offset": 20,
+                "status": "COMPLETED",
+            },
         ],
         "S3": [
-            {"name": "需求确认", "type": "REQUIREMENT_CONFIRMED", "date_offset": 5, "status": "COMPLETED"},
-            {"name": "方案设计完成", "type": "DESIGN_COMPLETED", "date_offset": 20, "status": "COMPLETED"},
+            {
+                "name": "需求确认",
+                "type": "REQUIREMENT_CONFIRMED",
+                "date_offset": 5,
+                "status": "COMPLETED",
+            },
+            {
+                "name": "方案设计完成",
+                "type": "DESIGN_COMPLETED",
+                "date_offset": 20,
+                "status": "COMPLETED",
+            },
             {"name": "BOM发布", "type": "BOM_RELEASED", "date_offset": 30, "status": "COMPLETED"},
-            {"name": "物料到齐", "type": "MATERIAL_ARRIVED", "date_offset": 45, "status": "IN_PROGRESS"}
+            {
+                "name": "物料到齐",
+                "type": "MATERIAL_ARRIVED",
+                "date_offset": 45,
+                "status": "IN_PROGRESS",
+            },
         ],
         "S4": [
             {"name": "BOM发布", "type": "BOM_RELEASED", "date_offset": 30, "status": "COMPLETED"},
-            {"name": "物料到齐", "type": "MATERIAL_ARRIVED", "date_offset": 45, "status": "COMPLETED"},
-            {"name": "机械加工完成", "type": "MACHINING_COMPLETED", "date_offset": 75, "status": "IN_PROGRESS"}
+            {
+                "name": "物料到齐",
+                "type": "MATERIAL_ARRIVED",
+                "date_offset": 45,
+                "status": "COMPLETED",
+            },
+            {
+                "name": "机械加工完成",
+                "type": "MACHINING_COMPLETED",
+                "date_offset": 75,
+                "status": "IN_PROGRESS",
+            },
         ],
         "S5": [
-            {"name": "机械加工完成", "type": "MACHINING_COMPLETED", "date_offset": 75, "status": "COMPLETED"},
-            {"name": "装配完成", "type": "ASSEMBLY_COMPLETED", "date_offset": 90, "status": "COMPLETED"},
-            {"name": "调试完成", "type": "DEBUG_COMPLETED", "date_offset": 105, "status": "IN_PROGRESS"}
+            {
+                "name": "机械加工完成",
+                "type": "MACHINING_COMPLETED",
+                "date_offset": 75,
+                "status": "COMPLETED",
+            },
+            {
+                "name": "装配完成",
+                "type": "ASSEMBLY_COMPLETED",
+                "date_offset": 90,
+                "status": "COMPLETED",
+            },
+            {
+                "name": "调试完成",
+                "type": "DEBUG_COMPLETED",
+                "date_offset": 105,
+                "status": "IN_PROGRESS",
+            },
         ],
         "S6": [
-            {"name": "调试完成", "type": "DEBUG_COMPLETED", "date_offset": 105, "status": "COMPLETED"},
-            {"name": "FAT验收通过", "type": "FAT_PASS", "date_offset": 130, "status": "PENDING"}
+            {
+                "name": "调试完成",
+                "type": "DEBUG_COMPLETED",
+                "date_offset": 105,
+                "status": "COMPLETED",
+            },
+            {"name": "FAT验收通过", "type": "FAT_PASS", "date_offset": 130, "status": "PENDING"},
         ],
         "S7": [
             {"name": "FAT验收通过", "type": "FAT_PASS", "date_offset": 130, "status": "COMPLETED"},
-            {"name": "发货", "type": "SHIPPED", "date_offset": 145, "status": "PENDING"}
+            {"name": "发货", "type": "SHIPPED", "date_offset": 145, "status": "PENDING"},
         ],
         "S8": [
             {"name": "发货", "type": "SHIPPED", "date_offset": 145, "status": "COMPLETED"},
-            {"name": "SAT验收通过", "type": "SAT_PASS", "date_offset": 160, "status": "IN_PROGRESS"}
+            {
+                "name": "SAT验收通过",
+                "type": "SAT_PASS",
+                "date_offset": 160,
+                "status": "IN_PROGRESS",
+            },
         ],
         "S9": [
             {"name": "SAT验收通过", "type": "SAT_PASS", "date_offset": 160, "status": "COMPLETED"},
-            {"name": "终验收通过", "type": "FINAL_ACCEPTANCE", "date_offset": 180, "status": "COMPLETED"}
-        ]
+            {
+                "name": "终验收通过",
+                "type": "FINAL_ACCEPTANCE",
+                "date_offset": 180,
+                "status": "COMPLETED",
+            },
+        ],
     }
 
     milestones_data = milestones_config.get(stage_config["stage"], [])
@@ -420,7 +494,7 @@ def create_milestones(db, project, stage_config, base_date):
             actual_date=actual_date,
             reminder_days=7,
             status=ms_data["status"],
-            is_key=(ms_data["type"] in ["FAT_PASS", "SAT_PASS", "FINAL_ACCEPTANCE"])
+            is_key=(ms_data["type"] in ["FAT_PASS", "SAT_PASS", "FINAL_ACCEPTANCE"]),
         )
         db.add(milestone)
 
@@ -433,22 +507,22 @@ def create_payment_plans(db, project, contract, base_date):
             "payment_type": "ADVANCE",
             "amount": contract.contract_amount * Decimal("0.30"),
             "date_offset": 0,
-            "status": "PAID"
+            "status": "PAID",
         },
         {
             "payment_name": "发货前付款",
             "payment_type": "BEFORE_SHIPMENT",
             "amount": contract.contract_amount * Decimal("0.60"),
             "date_offset": 145,
-            "status": "PENDING"
+            "status": "PENDING",
         },
         {
             "payment_name": "验收后尾款",
             "payment_type": "ACCEPTANCE",
             "amount": contract.contract_amount * Decimal("0.10"),
             "date_offset": 180,
-            "status": "PENDING"
-        }
+            "status": "PENDING",
+        },
     ]
 
     for idx, plan_data in enumerate(plans, 1):
@@ -464,7 +538,7 @@ def create_payment_plans(db, project, contract, base_date):
             planned_amount=plan_data["amount"],
             planned_date=planned_date,
             actual_date=actual_date,
-            status=plan_data["status"]
+            status=plan_data["status"],
         )
         db.add(payment_plan)
 
@@ -482,7 +556,7 @@ def create_machine(db, project, equipment_type, stage_config):
         health=stage_config["health"],
         planned_start_date=project.planned_start_date,
         planned_end_date=project.planned_end_date,
-        actual_start_date=project.actual_start_date
+        actual_start_date=project.actual_start_date,
     )
     db.add(machine)
     db.flush()
@@ -494,46 +568,51 @@ def create_tasks(db, project, machine, users, stage_config, base_date):
     tasks_config = {
         "S1": [
             {"name": "需求调研", "assignee": "pm", "days": 3, "status": "DONE"},
-            {"name": "需求确认", "assignee": "pm", "days": 5, "status": "DONE"}
+            {"name": "需求确认", "assignee": "pm", "days": 5, "status": "DONE"},
         ],
         "S2": [
             {"name": "需求调研", "assignee": "pm", "days": 3, "status": "DONE"},
             {"name": "方案设计", "assignee": "mech", "days": 15, "status": "DONE"},
-            {"name": "电气方案设计", "assignee": "elec", "days": 15, "status": "IN_PROGRESS"}
+            {"name": "电气方案设计", "assignee": "elec", "days": 15, "status": "IN_PROGRESS"},
         ],
         "S3": [
             {"name": "BOM设计", "assignee": "mech", "days": 10, "status": "DONE"},
-            {"name": "物料采购", "assignee": "pm", "days": 20, "status": "IN_PROGRESS"}
+            {"name": "物料采购", "assignee": "pm", "days": 20, "status": "IN_PROGRESS"},
         ],
         "S4": [
             {"name": "机械加工", "assignee": "mech", "days": 30, "status": "IN_PROGRESS"},
-            {"name": "钣金加工", "assignee": "mech", "days": 25, "status": "IN_PROGRESS"}
+            {"name": "钣金加工", "assignee": "mech", "days": 25, "status": "IN_PROGRESS"},
         ],
         "S5": [
             {"name": "机械装配", "assignee": "mech", "days": 15, "status": "DONE"},
             {"name": "电气接线", "assignee": "elec", "days": 10, "status": "DONE"},
-            {"name": "程序调试", "assignee": "soft", "days": 15, "status": "IN_PROGRESS"}
+            {"name": "程序调试", "assignee": "soft", "days": 15, "status": "IN_PROGRESS"},
         ],
         "S6": [
             {"name": "功能测试", "assignee": "soft", "days": 10, "status": "DONE"},
-            {"name": "FAT验收准备", "assignee": "pm", "days": 5, "status": "IN_PROGRESS"}
+            {"name": "FAT验收准备", "assignee": "pm", "days": 5, "status": "IN_PROGRESS"},
         ],
         "S7": [
             {"name": "FAT验收", "assignee": "pm", "days": 5, "status": "DONE"},
-            {"name": "包装准备", "assignee": "pm", "days": 3, "status": "IN_PROGRESS"}
+            {"name": "包装准备", "assignee": "pm", "days": 3, "status": "IN_PROGRESS"},
         ],
         "S8": [
             {"name": "设备发货", "assignee": "pm", "days": 1, "status": "DONE"},
-            {"name": "现场安装", "assignee": "elec", "days": 10, "status": "IN_PROGRESS"}
+            {"name": "现场安装", "assignee": "elec", "days": 10, "status": "IN_PROGRESS"},
         ],
         "S9": [
             {"name": "SAT验收", "assignee": "pm", "days": 5, "status": "DONE"},
-            {"name": "项目结项", "assignee": "pm", "days": 1, "status": "DONE"}
-        ]
+            {"name": "项目结项", "assignee": "pm", "days": 1, "status": "DONE"},
+        ],
     }
 
     tasks_data = tasks_config.get(stage_config["stage"], [])
-    user_map = {"pm": users["pm"], "mech": users["mech"], "elec": users["elec"], "soft": users["soft"]}
+    user_map = {
+        "pm": users["pm"],
+        "mech": users["mech"],
+        "elec": users["elec"],
+        "soft": users["soft"],
+    }
 
     for task_data in tasks_data:
         plan_start = base_date
@@ -552,7 +631,7 @@ def create_tasks(db, project, machine, users, stage_config, base_date):
             plan_end=plan_end,
             actual_start=plan_start,
             actual_end=actual_end,
-            progress_percent=100 if task_data["status"] == "DONE" else 50
+            progress_percent=100 if task_data["status"] == "DONE" else 50,
         )
         db.add(task)
 
@@ -575,7 +654,9 @@ def main():
             all_projects = []
 
             for stage_config in STAGE_CONFIGS:
-                print(f"\n2. 生成 {stage_config['stage']} 阶段项目 ({stage_config['name_prefix']})...")
+                print(
+                    f"\n2. 生成 {stage_config['stage']} 阶段项目 ({stage_config['name_prefix']})..."
+                )
 
                 for i in range(stage_config["count"]):
                     project_index += 1
@@ -587,11 +668,15 @@ def main():
                     contract = create_sales_flow(db, customer, users, project_index)
 
                     # 创建项目
-                    project = create_project(db, customer, contract, users, stage_config, project_index)
+                    project = create_project(
+                        db, customer, contract, users, stage_config, project_index
+                    )
                     all_projects.append(project)
 
-                    print(f"   ✓ 创建项目: {project.project_code} - {project.project_name} "
-                          f"(阶段: {project.stage}, 进度: {project.progress_pct}%)")
+                    print(
+                        f"   ✓ 创建项目: {project.project_code} - {project.project_name} "
+                        f"(阶段: {project.stage}, 进度: {project.progress_pct}%)"
+                    )
 
             db.commit()
 
@@ -621,6 +706,7 @@ def main():
             db.rollback()
             print(f"\n错误: {e}")
             import traceback
+
             traceback.print_exc()
             raise
 

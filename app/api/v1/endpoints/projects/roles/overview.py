@@ -123,9 +123,7 @@ async def get_project_role_overview(
         result.append(
             ProjectRoleOverviewResponse(
                 role_type=ProjectRoleTypeResponse.model_validate(rt),
-                config=(
-                    ProjectRoleConfigResponse.model_validate(config) if config else None
-                ),
+                config=(ProjectRoleConfigResponse.model_validate(config) if config else None),
                 lead=lead_response,
                 is_enabled=is_enabled,
                 is_required=is_required,

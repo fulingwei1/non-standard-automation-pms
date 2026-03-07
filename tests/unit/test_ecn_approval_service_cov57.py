@@ -51,9 +51,7 @@ class TestEcnApprovalService(unittest.TestCase):
         self.service.engine.submit.return_value = mock_instance
 
         # 执行测试
-        result = self.service._submit_single_ecn(
-            ecn_id=1, initiator_id=10, urgency="HIGH"
-        )
+        result = self.service._submit_single_ecn(ecn_id=1, initiator_id=10, urgency="HIGH")
 
         # 验证结果
         self.assertEqual(result["ecn_id"], 1)
@@ -108,11 +106,13 @@ class TestEcnApprovalService(unittest.TestCase):
         """测试批量提交ECN审批"""
         # 准备测试数据
         with patch.object(
-            self.service, "_submit_single_ecn", side_effect=[
+            self.service,
+            "_submit_single_ecn",
+            side_effect=[
                 {"ecn_id": 1, "ecn_no": "ECN-001", "instance_id": 100, "status": "submitted"},
                 ValueError("ECN不存在"),
                 {"ecn_id": 3, "ecn_no": "ECN-003", "instance_id": 102, "status": "submitted"},
-            ]
+            ],
         ):
             # 执行测试
             results, errors = self.service.submit_ecns_for_approval(
@@ -234,11 +234,13 @@ class TestEcnApprovalService(unittest.TestCase):
         """测试批量审批（混合成功和失败）"""
         # 准备测试数据
         with patch.object(
-            self.service, "perform_approval_action", side_effect=[
+            self.service,
+            "perform_approval_action",
+            side_effect=[
                 {"task_id": 1, "action": "approve", "instance_status": "APPROVED"},
                 ValueError("任务不存在"),
                 {"task_id": 3, "action": "approve", "instance_status": "APPROVED"},
-            ]
+            ],
         ):
             # 执行测试
             results, errors = self.service.perform_batch_approval(
@@ -318,7 +320,9 @@ class TestEcnApprovalService(unittest.TestCase):
         mock_get_or_404.return_value = mock_ecn
 
         # 模拟无审批实例
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         # 执行测试
         result = self.service.get_ecn_approval_status(ecn_id=1)
@@ -347,9 +351,7 @@ class TestEcnApprovalService(unittest.TestCase):
         self.db.query.side_effect = [query_ecn, query_instance]
 
         # 执行测试
-        result = self.service.withdraw_ecn_approval(
-            ecn_id=1, user_id=10, reason="需要修改"
-        )
+        result = self.service.withdraw_ecn_approval(ecn_id=1, user_id=10, reason="需要修改")
 
         # 验证结果
         self.assertEqual(result["ecn_id"], 1)

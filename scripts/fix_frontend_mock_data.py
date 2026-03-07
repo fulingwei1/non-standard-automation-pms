@@ -16,14 +16,14 @@ def find_files_with_mock_data() -> List[Path]:
     files_to_fix = []
 
     for file_path in FRONTEND_DIR.glob("*.jsx"):
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
 
         # 检查是否包含这些模式
         patterns = [
-            r'isDemoAccount',
-            r'demo_token_',
-            r'const mockData = ',
-            r'const mock[A-Z]',
+            r"isDemoAccount",
+            r"demo_token_",
+            r"const mockData = ",
+            r"const mock[A-Z]",
         ]
 
         for pattern in patterns:
@@ -36,11 +36,11 @@ def find_files_with_mock_data() -> List[Path]:
 
 def analyze_file_issues(file_path: Path) -> Tuple[int, int, int]:
     """分析文件中的问题数量"""
-    content = file_path.read_text(encoding='utf-8')
+    content = file_path.read_text(encoding="utf-8")
 
-    demo_account_count = len(re.findall(r'isDemoAccount', content))
-    demo_token_count = len(re.findall(r'demo_token_', content))
-    mock_data_count = len(re.findall(r'const mock[A-Z]', content))
+    demo_account_count = len(re.findall(r"isDemoAccount", content))
+    demo_token_count = len(re.findall(r"demo_token_", content))
+    mock_data_count = len(re.findall(r"const mock[A-Z]", content))
 
     return demo_account_count, demo_token_count, mock_data_count
 
@@ -94,7 +94,7 @@ def main():
     # 生成报告
     report = generate_fix_report(files)
     report_path = Path("/Users/flw/non-standard-automation-pm/FRONTEND_MOCK_FIX_REPORT.md")
-    report_path.write_text(report, encoding='utf-8')
+    report_path.write_text(report, encoding="utf-8")
     print(f"📄 修复报告已生成: {report_path}")
 
     # 显示前10个文件

@@ -6,9 +6,9 @@ Permission Schema 测试
 import pytest
 from pydantic import ValidationError
 
-
 try:
     from app.schemas.auth import PermissionCreate, PermissionUpdate
+
     SCHEMA_AVAILABLE = True
 except ImportError:
     SCHEMA_AVAILABLE = False

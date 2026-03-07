@@ -35,19 +35,17 @@ class PurchaseWorkflowService(BaseApprovalWorkflowService):
         return {
             "order_no": entity.order_no if entity else None,
             "order_title": entity.order_title if entity else None,
-            "amount_with_tax": float(entity.amount_with_tax)
-            if entity and entity.amount_with_tax
-            else 0,
-            "supplier_name": entity.supplier.vendor_name
-            if entity and entity.supplier
-            else None,
+            "amount_with_tax": (
+                float(entity.amount_with_tax) if entity and entity.amount_with_tax else 0
+            ),
+            "supplier_name": entity.supplier.vendor_name if entity and entity.supplier else None,
         }
 
     def _build_history_item(self, task: Any, entity: Optional[PurchaseOrder]) -> Dict[str, Any]:
         return {
             "order_no": entity.order_no if entity else None,
             "order_title": entity.order_title if entity else None,
-            "amount_with_tax": float(entity.amount_with_tax)
-            if entity and entity.amount_with_tax
-            else 0,
+            "amount_with_tax": (
+                float(entity.amount_with_tax) if entity and entity.amount_with_tax else 0
+            ),
         }

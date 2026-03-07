@@ -23,7 +23,8 @@ class FakeModel:
 
 class TestSyncStatisticsService:
     def test_import(self):
-        from app.services.statistics import SyncStatisticsService, AggregationServiceProtocol
+        from app.services.statistics import AggregationServiceProtocol, SyncStatisticsService
+
         assert SyncStatisticsService is not None
         assert AggregationServiceProtocol is not None
 

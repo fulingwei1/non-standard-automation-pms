@@ -28,11 +28,11 @@ import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
 from app.core.security import get_password_hash
+from app.models.acceptance import AcceptanceIssue, AcceptanceOrder, AcceptanceTemplate
 from app.models.base import get_session
 from app.models.budget import ProjectBudget, ProjectBudgetItem
-from app.models.project.financial import ProjectCost
+from app.models.ecn import Ecn
 from app.models.material import BomHeader, BomItem, Material, MaterialCategory
-from app.models.acceptance import AcceptanceOrder, AcceptanceTemplate, AcceptanceIssue
 from app.models.organization import Department, Employee
 from app.models.project import (
     Customer,
@@ -45,6 +45,7 @@ from app.models.project import (
     ProjectTemplate,
     ProjectTemplateVersion,
 )
+from app.models.project.financial import ProjectCost
 from app.models.purchase import PurchaseOrder, PurchaseRequest
 from app.models.sales import (
     ApprovalWorkflow,
@@ -54,7 +55,6 @@ from app.models.sales import (
     Opportunity,
     Quote,
 )
-from app.models.ecn import Ecn
 from app.models.user import Role, User
 from app.models.vendor import Vendor
 
@@ -185,9 +185,7 @@ class CustomerFactory(BaseFactory):
     customer_type = "ENTERPRISE"
     industry = "电子制造"
     contact_person = factory.Sequence(lambda n: f"联系人{n}")
-    contact_phone = factory.LazyFunction(
-        lambda: f"139{random.randint(10000000, 99999999)}"
-    )
+    contact_phone = factory.LazyFunction(lambda: f"139{random.randint(10000000, 99999999)}")
     credit_level = "A"
     status = "ACTIVE"
 
@@ -201,9 +199,7 @@ class ProjectFactory(BaseFactory):
     class Meta:
         model = Project
 
-    project_code = factory.Sequence(
-        lambda n: f"PJ{date.today().strftime('%y%m%d')}{n:06d}"
-    )
+    project_code = factory.Sequence(lambda n: f"PJ{date.today().strftime('%y%m%d')}{n:06d}")
     project_name = factory.Sequence(lambda n: f"测试项目{n}")
     short_name = factory.Sequence(lambda n: f"项目{n}")
     project_type = "NEW"
@@ -238,9 +234,7 @@ class MachineFactory(BaseFactory):
 
     project = factory.SubFactory(ProjectFactory)
     project_id = factory.LazyAttribute(lambda o: o.project.id)
-    machine_code = factory.Sequence(
-        lambda n: f"PN{n:06d}"
-    )
+    machine_code = factory.Sequence(lambda n: f"PN{n:06d}")
     machine_name = factory.Sequence(lambda n: f"测试机台{n}")
     machine_type = "TEST_EQUIPMENT"
     status = "DESIGN"
@@ -326,9 +320,7 @@ class ProjectPaymentPlanFactory(BaseFactory):
     payment_name = factory.Sequence(lambda n: f"第{n}期款项")
     payment_type = "ADVANCE"
     payment_ratio = Decimal("30.00")
-    planned_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(10000, 100000)))
-    )
+    planned_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 100000))))
     actual_amount = Decimal("0.00")
     planned_date = factory.LazyFunction(lambda: date.today() + timedelta(days=30))
     status = "PENDING"
@@ -404,9 +396,7 @@ class BomHeaderFactory(BaseFactory):
     class Meta:
         model = BomHeader
 
-    bom_code = factory.Sequence(
-        lambda n: f"BOM{date.today().strftime('%y%m%d')}{n:03d}"
-    )
+    bom_code = factory.Sequence(lambda n: f"BOM{date.today().strftime('%y%m%d')}{n:03d}")
     bom_name = factory.Sequence(lambda n: f"测试BOM{n}")
     version = "1.0"
     status = "DRAFT"
@@ -436,9 +426,7 @@ class PurchaseOrderFactory(BaseFactory):
     order_type = "NORMAL"
     order_title = factory.Sequence(lambda n: f"采购订单{n}")
     status = "DRAFT"
-    total_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(1000, 100000)))
-    )
+    total_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(1000, 100000))))
     required_date = factory.LazyFunction(lambda: date.today() + timedelta(days=14))
 
 
@@ -448,9 +436,7 @@ class PurchaseRequestFactory(BaseFactory):
     class Meta:
         model = PurchaseRequest
 
-    request_no = factory.Sequence(
-        lambda n: f"PR{date.today().strftime('%y%m%d')}{n:04d}"
-    )
+    request_no = factory.Sequence(lambda n: f"PR{date.today().strftime('%y%m%d')}{n:04d}")
     request_type = "PROJECT"
     request_reason = "项目物料采购"
     status = "DRAFT"
@@ -466,20 +452,14 @@ class LeadFactory(BaseFactory):
     class Meta:
         model = Lead
 
-    lead_code = factory.Sequence(
-        lambda n: f"LD{date.today().strftime('%y%m%d')}{n:05d}"
-    )
+    lead_code = factory.Sequence(lambda n: f"LD{date.today().strftime('%y%m%d')}{n:05d}")
     lead_name = factory.Sequence(lambda n: f"测试线索{n}")
     company_name = factory.Sequence(lambda n: f"潜在客户公司{n}")
     contact_name = factory.Sequence(lambda n: f"联系人{n}")
-    contact_phone = factory.LazyFunction(
-        lambda: f"136{random.randint(10000000, 99999999)}"
-    )
+    contact_phone = factory.LazyFunction(lambda: f"136{random.randint(10000000, 99999999)}")
     source = "WEBSITE"
     status = "NEW"
-    estimated_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(10000, 1000000)))
-    )
+    estimated_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 1000000))))
 
 
 class OpportunityFactory(BaseFactory):
@@ -488,19 +468,13 @@ class OpportunityFactory(BaseFactory):
     class Meta:
         model = Opportunity
 
-    opportunity_code = factory.Sequence(
-        lambda n: f"OP{date.today().strftime('%y%m%d')}{n:05d}"
-    )
+    opportunity_code = factory.Sequence(lambda n: f"OP{date.today().strftime('%y%m%d')}{n:05d}")
     opportunity_name = factory.Sequence(lambda n: f"测试商机{n}")
     stage = "INITIAL"
     status = "ACTIVE"
     probability = 30
-    expected_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(50000, 2000000)))
-    )
-    expected_close_date = factory.LazyFunction(
-        lambda: date.today() + timedelta(days=60)
-    )
+    expected_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(50000, 2000000))))
+    expected_close_date = factory.LazyFunction(lambda: date.today() + timedelta(days=60))
 
 
 class QuoteFactory(BaseFactory):
@@ -509,15 +483,11 @@ class QuoteFactory(BaseFactory):
     class Meta:
         model = Quote
 
-    quote_code = factory.Sequence(
-        lambda n: f"QT{date.today().strftime('%y%m%d')}{n:05d}"
-    )
+    quote_code = factory.Sequence(lambda n: f"QT{date.today().strftime('%y%m%d')}{n:05d}")
     quote_name = factory.Sequence(lambda n: f"测试报价{n}")
     version = 1
     status = "DRAFT"
-    total_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(50000, 2000000)))
-    )
+    total_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(50000, 2000000))))
     valid_until = factory.LazyFunction(lambda: date.today() + timedelta(days=30))
 
 
@@ -527,15 +497,11 @@ class ContractFactory(BaseFactory):
     class Meta:
         model = Contract
 
-    contract_code = factory.Sequence(
-        lambda n: f"CT{date.today().strftime('%y%m%d')}{n:05d}"
-    )
+    contract_code = factory.Sequence(lambda n: f"CT{date.today().strftime('%y%m%d')}{n:05d}")
     contract_name = factory.Sequence(lambda n: f"测试合同{n}")
     contract_type = "SALES"
     status = "DRAFT"
-    contract_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(100000, 5000000)))
-    )
+    contract_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(100000, 5000000))))
     signing_date = factory.LazyFunction(lambda: date.today())
     effective_date = factory.LazyFunction(lambda: date.today())
     expiry_date = factory.LazyFunction(lambda: date.today() + timedelta(days=365))
@@ -550,13 +516,9 @@ class ProjectBudgetFactory(BaseFactory):
     class Meta:
         model = ProjectBudget
 
-    budget_no = factory.Sequence(
-        lambda n: f"BG{date.today().strftime('%y%m%d')}{n:04d}"
-    )
+    budget_no = factory.Sequence(lambda n: f"BG{date.today().strftime('%y%m%d')}{n:04d}")
     budget_type = "INITIAL"
-    total_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(100000, 1000000)))
-    )
+    total_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(100000, 1000000))))
     budget_year = factory.LazyFunction(lambda: date.today().year)
     version = 1
     status = "DRAFT"
@@ -571,9 +533,7 @@ class ProjectBudgetItemFactory(BaseFactory):
     item_no = factory.Sequence(lambda n: f"{n:02d}")
     item_name = factory.Sequence(lambda n: f"预算项{n}")
     cost_type = "MATERIAL"
-    budget_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(10000, 100000)))
-    )
+    budget_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 100000))))
 
 
 # ============== ECN ==============
@@ -621,9 +581,7 @@ class AcceptanceOrderFactory(BaseFactory):
     class Meta:
         model = AcceptanceOrder
 
-    order_no = factory.Sequence(
-        lambda n: f"ACC{date.today().strftime('%y%m%d')}{n:05d}"
-    )
+    order_no = factory.Sequence(lambda n: f"ACC{date.today().strftime('%y%m%d')}{n:05d}")
     acceptance_type = "FAT"
     status = "DRAFT"
     planned_date = factory.LazyFunction(lambda: date.today() + timedelta(days=7))
@@ -711,9 +669,7 @@ def create_complete_project_setup():
     customer = CustomerFactory()
 
     # 创建项目
-    project = ProjectFactory(
-        customer_id=customer.id, customer_name=customer.customer_name
-    )
+    project = ProjectFactory(customer_id=customer.id, customer_name=customer.customer_name)
 
     # 创建供应商
     supplier = SupplierFactory()
@@ -748,9 +704,7 @@ class AcceptanceIssueFactory(BaseFactory):
     class Meta:
         model = AcceptanceIssue
 
-    issue_no = factory.Sequence(
-        lambda n: f"ISS{n:06d}"
-    )
+    issue_no = factory.Sequence(lambda n: f"ISS{n:06d}")
     title = factory.Sequence(lambda n: f"测试问题{n}")
     issue_type = "FUNCTIONAL"
     severity = "NORMAL"
@@ -767,12 +721,8 @@ class ProjectCostFactory(BaseFactory):
     cost_no = factory.Sequence(lambda n: f"CST{n:05d}")
     cost_type = "MATERIAL"
     description = factory.Sequence(lambda n: f"测试成本{n}")
-    budget_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(10000, 100000)))
-    )
-    actual_amount = factory.LazyFunction(
-        lambda: Decimal(str(random.uniform(10000, 100000)))
-    )
+    budget_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 100000))))
+    actual_amount = factory.LazyFunction(lambda: Decimal(str(random.uniform(10000, 100000))))
     cost_date = factory.LazyFunction(lambda: date.today())
     status = "PENDING"
 
@@ -797,36 +747,36 @@ class SupplierFactory(BaseFactory):
 def create_mock_timesheet_data():
     """创建模拟工时数据（用于服务测试）"""
     return {
-        'user_id': 1,
-        'user_name': '测试用户',
-        'normal_hours': 160.0,
-        'overtime_hours': 10.0,
-        'weekend_hours': 8.0,
-        'holiday_hours': 4.0,
+        "user_id": 1,
+        "user_name": "测试用户",
+        "normal_hours": 160.0,
+        "overtime_hours": 10.0,
+        "weekend_hours": 8.0,
+        "holiday_hours": 4.0,
     }
 
 
 def create_mock_project_data():
     """创建模拟项目数据（用于服务测试）"""
     return {
-        'id': 1,
-        'project_code': 'PJ260101001',
-        'project_name': '测试项目',
-        'customer_id': 1,
-        'customer_name': '测试客户',
-        'stage': 'S1',
-        'status': 'ST01',
-        'health': 'H1',
+        "id": 1,
+        "project_code": "PJ260101001",
+        "project_name": "测试项目",
+        "customer_id": 1,
+        "customer_name": "测试客户",
+        "stage": "S1",
+        "status": "ST01",
+        "health": "H1",
     }
 
 
 def create_mock_user_data():
     """创建模拟用户数据（用于服务测试）"""
     return {
-        'id': 1,
-        'username': 'test_user',
-        'real_name': '测试用户',
-        'department': '测试部门',
-        'department_id': 1,
-        'is_active': True,
+        "id": 1,
+        "username": "test_user",
+        "real_name": "测试用户",
+        "department": "测试部门",
+        "department_id": 1,
+        "is_active": True,
     }

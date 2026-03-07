@@ -4,15 +4,16 @@ Tests for app/utils/risk_calculator.py
 Standalone – no DB, no fixtures.
 """
 import pytest
+
 from app.utils.risk_calculator import (
-    calculate_risk_level,
-    get_risk_score,
-    compare_risk_levels,
     RiskCalculator,
+    calculate_risk_level,
+    compare_risk_levels,
+    get_risk_score,
 )
 
-
 # ========== calculate_risk_level ==========
+
 
 class TestCalculateRiskLevel:
     """Full coverage of the risk matrix."""
@@ -70,6 +71,7 @@ class TestCalculateRiskLevel:
 
 # ========== get_risk_score ==========
 
+
 class TestGetRiskScore:
     def test_critical_is_4(self):
         assert get_risk_score("CRITICAL") == 4
@@ -91,10 +93,16 @@ class TestGetRiskScore:
         assert get_risk_score("UNKNOWN") == 0
 
     def test_scores_ordered(self):
-        assert get_risk_score("LOW") < get_risk_score("MEDIUM") < get_risk_score("HIGH") < get_risk_score("CRITICAL")
+        assert (
+            get_risk_score("LOW")
+            < get_risk_score("MEDIUM")
+            < get_risk_score("HIGH")
+            < get_risk_score("CRITICAL")
+        )
 
 
 # ========== compare_risk_levels ==========
+
 
 class TestCompareRiskLevels:
     def test_upgrade(self):
@@ -117,6 +125,7 @@ class TestCompareRiskLevels:
 
 
 # ========== RiskCalculator (class wrapper) ==========
+
 
 class TestRiskCalculatorClass:
     def test_calculate_risk_level(self):

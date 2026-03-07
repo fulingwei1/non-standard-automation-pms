@@ -10,8 +10,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.project import Machine, Project, ProjectDocument
 from app.models.user import User
@@ -20,7 +21,6 @@ from app.schemas.project import (
 )
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -65,7 +65,9 @@ def read_documents(
         query = query.filter(ProjectDocument.status == status)
 
     total = query.count()
-    documents = apply_pagination(query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit).all()
+    documents = apply_pagination(
+        query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     # 使用统一响应格式
     return paginated_response(
@@ -98,12 +100,9 @@ def get_project_documents(
         query = query.filter(ProjectDocument.doc_type == doc_type)
 
     documents = query.order_by(desc(ProjectDocument.created_at)).all()
-    
+
     # 使用统一响应格式
-    return list_response(
-        items=documents,
-        message="获取项目文档列表成功"
-    )
+    return list_response(items=documents, message="获取项目文档列表成功")
 
 
 @router.get("/{doc_id}")
@@ -125,10 +124,7 @@ def read_document(
         check_project_access_or_raise(db, current_user, document.project_id)
 
     # 使用统一响应格式
-    return success_response(
-        data=document,
-        message="获取文档详情成功"
-    )
+    return success_response(data=document, message="获取文档详情成功")
 
 
 @router.post("/")
@@ -147,29 +143,24 @@ def create_document(
 
     # 如果指定了机台ID，验证机台是否存在且属于该项目
     if doc_in.machine_id:
-        machine = db.query(Machine).filter(
-            Machine.id == doc_in.machine_id,
-            Machine.project_id == doc_in.project_id
-        ).first()
+        machine = (
+            db.query(Machine)
+            .filter(Machine.id == doc_in.machine_id, Machine.project_id == doc_in.project_id)
+            .first()
+        )
         if not machine:
-            raise HTTPException(
-                status_code=404,
-                detail="机台不存在或不属于该项目"
-            )
+            raise HTTPException(status_code=404, detail="机台不存在或不属于该项目")
 
     doc_data = doc_in.model_dump()
-    doc_data['uploaded_by'] = current_user.id
+    doc_data["uploaded_by"] = current_user.id
 
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
     db.refresh(document)
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=document,
-        message="文档创建成功"
-    )
+    return success_response(data=document, message="文档创建成功")
 
 
 @router.post("/projects/{project_id}/documents")
@@ -187,28 +178,23 @@ def create_project_document(
 
     # 确保project_id一致
     doc_data = doc_in.model_dump()
-    doc_data['project_id'] = project_id
-    doc_data['uploaded_by'] = current_user.id
+    doc_data["project_id"] = project_id
+    doc_data["uploaded_by"] = current_user.id
 
     # 如果指定了机台ID，验证机台是否存在且属于该项目
-    if doc_data.get('machine_id'):
-        machine = db.query(Machine).filter(
-            Machine.id == doc_data['machine_id'],
-            Machine.project_id == project_id
-        ).first()
+    if doc_data.get("machine_id"):
+        machine = (
+            db.query(Machine)
+            .filter(Machine.id == doc_data["machine_id"], Machine.project_id == project_id)
+            .first()
+        )
         if not machine:
-            raise HTTPException(
-                status_code=404,
-                detail="机台不存在或不属于该项目"
-            )
+            raise HTTPException(status_code=404, detail="机台不存在或不属于该项目")
 
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
     db.refresh(document)
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=document,
-        message="项目文档创建成功"
-    )
+    return success_response(data=document, message="项目文档创建成功")

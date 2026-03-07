@@ -9,16 +9,17 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
-from app.services.approval_engine.executor import ApprovalNodeExecutor
+from unittest.mock import MagicMock, patch
+
 from app.models.approval import (
+    ApprovalCarbonCopy,
+    ApprovalCountersignResult,
     ApprovalInstance,
     ApprovalNodeDefinition,
     ApprovalTask,
-    ApprovalCountersignResult,
-    ApprovalCarbonCopy,
 )
+from app.services.approval_engine.executor import ApprovalNodeExecutor
 
 
 class TestApprovalNodeExecutorCreateTasks(unittest.TestCase):
@@ -90,8 +91,7 @@ class TestApprovalNodeExecutorCreateTasks(unittest.TestCase):
         # 检查是否创建了会签统计记录
         added_objs = [call[0][0] for call in self.db.add.call_args_list]
         countersign_result = next(
-            (obj for obj in added_objs if isinstance(obj, ApprovalCountersignResult)),
-            None
+            (obj for obj in added_objs if isinstance(obj, ApprovalCountersignResult)), None
         )
         self.assertIsNotNone(countersign_result)
         self.assertEqual(countersign_result.total_count, 4)
@@ -165,9 +165,7 @@ class TestApprovalNodeExecutorProcessApproval(unittest.TestCase):
             node=node,
         )
 
-        can_proceed, error = self.executor.process_approval(
-            task, "APPROVE", "同意", None, None
-        )
+        can_proceed, error = self.executor.process_approval(task, "APPROVE", "同意", None, None)
 
         # 单人审批：直接流转
         self.assertTrue(can_proceed)
@@ -255,9 +253,7 @@ class TestApprovalNodeExecutorProcessApproval(unittest.TestCase):
     def test_process_approval_and_sign_in_progress(self):
         """测试会签模式-审批中"""
         node = ApprovalNodeDefinition(
-            id=30,
-            approval_mode="AND_SIGN",
-            approver_config={"pass_rule": "ALL"}
+            id=30, approval_mode="AND_SIGN", approver_config={"pass_rule": "ALL"}
         )
         task = ApprovalTask(
             id=5,
@@ -280,9 +276,7 @@ class TestApprovalNodeExecutorProcessApproval(unittest.TestCase):
     def test_process_approval_and_sign_completed(self):
         """测试会签模式-全部完成"""
         node = ApprovalNodeDefinition(
-            id=30,
-            approval_mode="AND_SIGN",
-            approver_config={"pass_rule": "ALL"}
+            id=30, approval_mode="AND_SIGN", approver_config={"pass_rule": "ALL"}
         )
         task = ApprovalTask(
             id=6,
@@ -396,10 +390,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_not_completed(self):
         """测试会签未完成"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "ALL"}
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "ALL"})
         task = ApprovalTask(
             id=1,
             instance_id=300,
@@ -428,10 +419,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_all_pass_rule_all_success(self):
         """测试会签-ALL规则-全部通过"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "ALL"}
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "ALL"})
         task = ApprovalTask(
             id=2,
             instance_id=300,
@@ -463,10 +451,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_all_pass_rule_all_failed(self):
         """测试会签-ALL规则-有人驳回"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "ALL"}
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "ALL"})
         task = ApprovalTask(
             id=3,
             instance_id=300,
@@ -494,10 +479,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_majority_rule_pass(self):
         """测试会签-MAJORITY规则-多数通过"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "MAJORITY"}
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "MAJORITY"})
         task = ApprovalTask(
             id=4,
             instance_id=300,
@@ -525,10 +507,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_majority_rule_fail(self):
         """测试会签-MAJORITY规则-多数驳回"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "MAJORITY"}
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "MAJORITY"})
         task = ApprovalTask(
             id=5,
             instance_id=300,
@@ -556,10 +535,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_any_rule_pass(self):
         """测试会签-ANY规则-任一通过"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "ANY"}
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "ANY"})
         task = ApprovalTask(
             id=6,
             instance_id=300,
@@ -586,10 +562,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_any_rule_fail(self):
         """测试会签-ANY规则-全部驳回"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "ANY"}
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "ANY"})
         task = ApprovalTask(
             id=7,
             instance_id=300,
@@ -632,10 +605,7 @@ class TestApprovalNodeExecutorCountersign(unittest.TestCase):
 
     def test_process_countersign_default_rule(self):
         """测试会签-默认规则（无pass_rule或未知规则）"""
-        node = ApprovalNodeDefinition(
-            id=30,
-            approver_config={"pass_rule": "UNKNOWN"}  # 未知规则
-        )
+        node = ApprovalNodeDefinition(id=30, approver_config={"pass_rule": "UNKNOWN"})  # 未知规则
         task = ApprovalTask(
             id=9,
             instance_id=300,
@@ -806,8 +776,7 @@ class TestApprovalNodeExecutorHelperMethods(unittest.TestCase):
 
         # 验证调用了update
         mock_query.filter.return_value.update.assert_called_once_with(
-            {"status": "CANCELLED"},
-            synchronize_session=False
+            {"status": "CANCELLED"}, synchronize_session=False
         )
 
     def test_cancel_pending_tasks_no_exclude(self):
@@ -842,7 +811,9 @@ class TestApprovalNodeExecutorHelperMethods(unittest.TestCase):
             task_order=2,
             status="SKIPPED",
         )
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = next_task
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            next_task
+        )
 
         before = datetime.now()
         result = self.executor._activate_next_sequential_task(current_task)
@@ -863,7 +834,9 @@ class TestApprovalNodeExecutorHelperMethods(unittest.TestCase):
             task_order=3,
         )
 
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = self.executor._activate_next_sequential_task(current_task)
 
@@ -884,7 +857,9 @@ class TestApprovalNodeExecutorHelperMethods(unittest.TestCase):
             task_order=2,
             status="SKIPPED",
         )
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = next_task
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            next_task
+        )
 
         result = self.executor._activate_next_sequential_task(current_task)
 
@@ -927,7 +902,7 @@ class TestApprovalNodeExecutorCarbonCopy(unittest.TestCase):
 
         # Mock查询，第二个用户已存在抄送
         call_count = [0]
-        
+
         def mock_first():
             call_count[0] += 1
             if call_count[0] == 2:  # 第二次查询返回已存在
@@ -937,9 +912,7 @@ class TestApprovalNodeExecutorCarbonCopy(unittest.TestCase):
         # 每次调用query().filter()都返回同一个mock对象，但first()行为不同
         self.db.query.return_value.filter.return_value.first = mock_first
 
-        records = self.executor.create_cc_records(
-            instance, 10, [201, 202, 203], "MANUAL"
-        )
+        records = self.executor.create_cc_records(instance, 10, [201, 202, 203], "MANUAL")
 
         # 应该只创建2条记录（跳过202）
         self.assertEqual(len(records), 2)

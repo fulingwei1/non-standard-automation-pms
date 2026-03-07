@@ -4,15 +4,16 @@ Unit tests for app/utils/scheduler.py
 Covers: job_listener, _resolve_callable, _wrap_job_callable, shutdown_scheduler
 """
 
-import pytest
 import json
-from unittest.mock import MagicMock, patch, call
 from datetime import datetime, timezone
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.utils.scheduler import (
-    job_listener,
     _resolve_callable,
     _wrap_job_callable,
+    job_listener,
     shutdown_scheduler,
 )
 
@@ -66,7 +67,7 @@ class TestJobListener:
 
         msg = mock_logger.info.call_args[0][0]
         # Extract JSON part
-        json_part = msg[len("[scheduler] "):]
+        json_part = msg[len("[scheduler] ") :]
         parsed = json.loads(json_part)
         assert parsed["job_id"] == "json_job"
         assert parsed["status"] == "success"
@@ -95,6 +96,7 @@ class TestResolveCallable:
         }
         func = _resolve_callable(task)
         from app.utils.scheduler_metrics import record_job_success
+
         assert func is record_job_success
 
     def test_raises_on_invalid_module(self):
@@ -122,6 +124,7 @@ class TestWrapJobCallable:
     def test_wrapped_function_called(self):
         """Wrapped function executes the original callable."""
         results = []
+
         def my_task():
             results.append("executed")
 
@@ -133,6 +136,7 @@ class TestWrapJobCallable:
 
     def test_success_recorded_in_metrics(self):
         """Successful execution records job success in metrics."""
+
         def my_task():
             return "ok"
 
@@ -148,6 +152,7 @@ class TestWrapJobCallable:
 
     def test_failure_recorded_in_metrics(self):
         """Failed execution records job failure in metrics and re-raises."""
+
         def failing_task():
             raise ValueError("task failed!")
 
@@ -164,6 +169,7 @@ class TestWrapJobCallable:
     @patch("app.utils.scheduler.logger")
     def test_logs_start_and_success_events(self, mock_logger):
         """Wrapped function logs start and success events."""
+
         def my_task():
             return "done"
 
@@ -180,6 +186,7 @@ class TestWrapJobCallable:
     @patch("app.utils.scheduler.logger")
     def test_logs_failure_event(self, mock_logger):
         """Wrapped function logs failure on exception."""
+
         def bad_task():
             raise RuntimeError("boom")
 

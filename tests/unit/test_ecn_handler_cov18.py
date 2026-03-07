@@ -7,6 +7,7 @@ import pytest
 
 try:
     from app.services.status_handlers.ecn_handler import ECNStatusHandler
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -79,6 +80,7 @@ class TestHandleEcnScheduleImpact:
         ecn = make_ecn()
 
         call_idx = [0]
+
         def query_side(model):
             call_idx[0] += 1
             m = MagicMock()
@@ -99,6 +101,7 @@ class TestHandleEcnScheduleImpact:
         ecn = make_ecn()
 
         call_idx = [0]
+
         def query_side(model):
             call_idx[0] += 1
             m = MagicMock()
@@ -118,6 +121,7 @@ class TestHandleEcnScheduleImpact:
         ecn = make_ecn()
 
         call_idx = [0]
+
         def query_side(model):
             call_idx[0] += 1
             m = MagicMock()
@@ -137,6 +141,7 @@ class TestHandleEcnScheduleImpact:
         ecn = make_ecn()
 
         call_idx = [0]
+
         def query_side(model):
             call_idx[0] += 1
             m = MagicMock()

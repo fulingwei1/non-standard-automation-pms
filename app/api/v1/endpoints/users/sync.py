@@ -45,11 +45,15 @@ def sync_users_from_employees(
     return ResponseModel(
         code=200,
         message=f"同步完成：创建 {result['created']} 个账号，跳过 {result['skipped']} 个",
-        data=result
+        data=result,
     )
 
 
-@router.post("/create-from-employee/{employee_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/create-from-employee/{employee_id}",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def create_user_from_employee(
     *,
     db: Session = Depends(deps.get_db),
@@ -82,11 +86,13 @@ def create_user_from_employee(
             "username": user.username,
             "initial_password": password,
             "is_active": user.is_active,
-        }
+        },
     )
 
 
-@router.put("/{user_id}/toggle-active", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{user_id}/toggle-active", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def toggle_user_active(
     *,
     db: Session = Depends(deps.get_db),
@@ -102,19 +108,28 @@ def toggle_user_active(
         target_active = not bool(user.is_active)
 
     success, message = UserSyncService.toggle_user_active(
-        db=db, user_id=user_id, is_active=target_active,
+        db=db,
+        user_id=user_id,
+        is_active=target_active,
     )
 
     if not success:
         raise HTTPException(status_code=400, detail=message)
 
     try:
-        action = PermissionAuditService.ACTION_USER_ACTIVATED if target_active else PermissionAuditService.ACTION_USER_DEACTIVATED
+        action = (
+            PermissionAuditService.ACTION_USER_ACTIVATED
+            if target_active
+            else PermissionAuditService.ACTION_USER_DEACTIVATED
+        )
         PermissionAuditService.log_user_operation(
-            db=db, operator_id=current_user.id, user_id=user_id, action=action,
+            db=db,
+            operator_id=current_user.id,
+            user_id=user_id,
+            action=action,
             changes={"is_active": target_active},
             ip_address=request.client.host if request.client else None,
-            user_agent=request.headers.get("user-agent")
+            user_agent=request.headers.get("user-agent"),
         )
     except Exception:
         logger.warning("审计日志记录失败，不影响主流程", exc_info=True)
@@ -122,7 +137,9 @@ def toggle_user_active(
     return ResponseModel(code=200, message=message)
 
 
-@router.put("/{user_id}/reset-password", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{user_id}/reset-password", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def reset_user_password(
     *,
     db: Session = Depends(deps.get_db),
@@ -138,10 +155,13 @@ def reset_user_password(
 
     try:
         PermissionAuditService.log_user_operation(
-            db=db, operator_id=current_user.id, user_id=user_id, action="PASSWORD_RESET",
+            db=db,
+            operator_id=current_user.id,
+            user_id=user_id,
+            action="PASSWORD_RESET",
             changes={"password": "重置为初始密码"},
             ip_address=request.client.host if request.client else None,
-            user_agent=request.headers.get("user-agent")
+            user_agent=request.headers.get("user-agent"),
         )
     except Exception:
         logger.warning("审计日志记录失败，不影响主流程", exc_info=True)
@@ -163,13 +183,20 @@ def batch_toggle_user_active(
     )
 
     try:
-        action = PermissionAuditService.ACTION_USER_ACTIVATED if batch_request.is_active else PermissionAuditService.ACTION_USER_DEACTIVATED
+        action = (
+            PermissionAuditService.ACTION_USER_ACTIVATED
+            if batch_request.is_active
+            else PermissionAuditService.ACTION_USER_DEACTIVATED
+        )
         for user_id in batch_request.user_ids:
             PermissionAuditService.log_user_operation(
-                db=db, operator_id=current_user.id, user_id=user_id, action=action,
+                db=db,
+                operator_id=current_user.id,
+                user_id=user_id,
+                action=action,
                 changes={"is_active": batch_request.is_active, "batch": True},
                 ip_address=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent")
+                user_agent=request.headers.get("user-agent"),
             )
     except Exception:
         logger.warning("审计日志记录失败，不影响主流程", exc_info=True)
@@ -178,5 +205,5 @@ def batch_toggle_user_active(
     return ResponseModel(
         code=200,
         message=f"批量{status_text}完成：成功 {result['success']} 个，失败 {result['failed']} 个",
-        data=result
+        data=result,
     )

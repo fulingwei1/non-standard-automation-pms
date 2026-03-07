@@ -2,8 +2,9 @@
 """
 app/common/statistics/aggregator.py 覆盖率测试（当前 0%）
 """
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 
 class TestStatisticsAggregator:
@@ -12,6 +13,7 @@ class TestStatisticsAggregator:
     @pytest.fixture
     def aggregator(self):
         from app.common.statistics.aggregator import StatisticsAggregator
+
         db = MagicMock()
         return StatisticsAggregator(db=db)
 
@@ -78,9 +80,7 @@ class TestStatisticsAggregator:
         aggregator.register_service("projects", mock_service)
 
         result = await aggregator.get_trends(
-            service_name="projects",
-            date_field="created_at",
-            days=30
+            service_name="projects", date_field="created_at", days=30
         )
         assert isinstance(result, list)
 

@@ -2,13 +2,15 @@
 """
 第六批覆盖测试 - purchase_suggestion_engine.py
 """
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date, timedelta
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.purchase_suggestion_engine import PurchaseSuggestionEngine
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -57,8 +59,10 @@ class TestGenerateFromShortages:
 
     def test_with_shortages(self, engine, mock_db, mock_shortage):
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_shortage]
-        with patch.object(engine, '_recommend_supplier', return_value=None), \
-             patch.object(engine, '_generate_suggestion_no', return_value="PUR-001"):
+        with (
+            patch.object(engine, "_recommend_supplier", return_value=None),
+            patch.object(engine, "_generate_suggestion_no", return_value="PUR-001"),
+        ):
             result = engine.generate_from_shortages()
         assert isinstance(result, list)
 
@@ -123,7 +127,9 @@ class TestGenerateSuggestionNo:
 class TestCalculateSupplierScore:
     def test_with_no_performance_data(self, engine, mock_db):
         # Return None for performance query
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = []
         # Scalar returns proper int for order count
         mock_db.query.return_value.filter.return_value.scalar.return_value = 5
@@ -132,19 +138,17 @@ class TestCalculateSupplierScore:
         mock_supplier.lead_time_days = 10
         mock_db.query.return_value.filter.return_value.first.return_value = mock_supplier
         weight_config = {
-            'performance': Decimal('40'),
-            'price': Decimal('30'),
-            'delivery': Decimal('20'),
-            'history': Decimal('10'),
+            "performance": Decimal("40"),
+            "price": Decimal("30"),
+            "delivery": Decimal("20"),
+            "history": Decimal("10"),
         }
         try:
             result = engine._calculate_supplier_score(
-                supplier_id=1,
-                material_id=101,
-                weight_config=weight_config
+                supplier_id=1, material_id=101, weight_config=weight_config
             )
             assert isinstance(result, dict)
-            assert 'total_score' in result
+            assert "total_score" in result
         except TypeError:
             # Mock chain may not fully isolate - acceptable
             pass

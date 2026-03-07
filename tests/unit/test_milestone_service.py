@@ -4,9 +4,10 @@ Tests for milestone_service
 里程碑服务测试
 """
 
-import pytest
 from datetime import date
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.project import ProjectMilestone
@@ -25,11 +26,13 @@ class TestMilestoneService:
     def service(self, mock_db):
         """创建 MilestoneService 实例"""
         from app.services.milestone_service import MilestoneService
+
         return MilestoneService(mock_db)
 
     def test_init(self, mock_db):
         """测试服务初始化"""
         from app.services.milestone_service import MilestoneService
+
         service = MilestoneService(mock_db)
         assert service.db == mock_db
         assert service.model == ProjectMilestone
@@ -71,12 +74,12 @@ class TestMilestoneService:
             name="Test Milestone",
             status="PENDING",
             planned_date=date(2026, 1, 15),
-            actual_date=None
+            actual_date=None,
         )
 
         # Mock get method
-        with patch.object(service, 'get', return_value=mock_milestone):
-            with patch.object(service, 'update') as mock_update:
+        with patch.object(service, "get", return_value=mock_milestone):
+            with patch.object(service, "update") as mock_update:
                 # Mock the final query
                 mock_db.query.return_value.filter.return_value.first.return_value = mock_milestone
 
@@ -95,12 +98,12 @@ class TestMilestoneService:
             name="Test Milestone",
             status="PENDING",
             planned_date=date(2026, 1, 15),
-            actual_date=None
+            actual_date=None,
         )
         actual_completion_date = date(2026, 1, 10)
 
-        with patch.object(service, 'get', return_value=mock_milestone):
-            with patch.object(service, 'update') as mock_update:
+        with patch.object(service, "get", return_value=mock_milestone):
+            with patch.object(service, "update") as mock_update:
                 mock_db.query.return_value.filter.return_value.first.return_value = mock_milestone
 
                 result = service.complete_milestone(1, actual_date=actual_completion_date)
@@ -120,11 +123,11 @@ class TestMilestoneService:
             name="Test Milestone",
             status="PENDING",
             planned_date=date(2026, 1, 15),
-            actual_date=existing_actual_date
+            actual_date=existing_actual_date,
         )
 
-        with patch.object(service, 'get', return_value=mock_milestone):
-            with patch.object(service, 'update') as mock_update:
+        with patch.object(service, "get", return_value=mock_milestone):
+            with patch.object(service, "update") as mock_update:
                 mock_db.query.return_value.filter.return_value.first.return_value = mock_milestone
 
                 result = service.complete_milestone(1)

@@ -19,7 +19,11 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.post("/ecns/{ecn_id}/responsibility-analysis", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/ecns/{ecn_id}/responsibility-analysis",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def create_responsibility_analysis(
     ecn_id: int,
     responsibilities: List[Dict[str, Any]] = Body(..., description="责任分摊列表"),
@@ -34,7 +38,7 @@ def create_responsibility_analysis(
         raise HTTPException(status_code=404, detail=f"ECN {ecn_id} 不存在")
 
     # 验证责任比例总和
-    total_ratio = sum(float(r.get('responsibility_ratio', 0)) for r in responsibilities)
+    total_ratio = sum(float(r.get("responsibility_ratio", 0)) for r in responsibilities)
     if abs(total_ratio - 100) > 0.01:
         raise HTTPException(status_code=400, detail=f"责任比例总和必须为100%，当前为{total_ratio}%")
 
@@ -46,18 +50,18 @@ def create_responsibility_analysis(
     total_cost = float(ecn.cost_impact or 0)
 
     for resp_data in responsibilities:
-        ratio = float(resp_data.get('responsibility_ratio', 0))
+        ratio = float(resp_data.get("responsibility_ratio", 0))
         cost_allocation = total_cost * ratio / 100
 
         responsibility = EcnResponsibility(
             ecn_id=ecn_id,
-            dept=resp_data.get('dept'),
+            dept=resp_data.get("dept"),
             responsibility_ratio=ratio,
-            responsibility_type=resp_data.get('responsibility_type', 'PRIMARY'),
+            responsibility_type=resp_data.get("responsibility_type", "PRIMARY"),
             cost_allocation=cost_allocation,
-            impact_description=resp_data.get('impact_description'),
-            responsibility_scope=resp_data.get('responsibility_scope'),
-            confirmed=False
+            impact_description=resp_data.get("impact_description"),
+            responsibility_scope=resp_data.get("responsibility_scope"),
+            confirmed=False,
         )
         db.add(responsibility)
         created_responsibilities.append(responsibility)
@@ -76,15 +80,19 @@ def create_responsibility_analysis(
                     "dept": r.dept,
                     "responsibility_ratio": float(r.responsibility_ratio),
                     "cost_allocation": float(r.cost_allocation),
-                    "responsibility_type": r.responsibility_type
+                    "responsibility_type": r.responsibility_type,
                 }
                 for r in created_responsibilities
-            ]
-        }
+            ],
+        },
     )
 
 
-@router.get("/ecns/{ecn_id}/responsibility-summary", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}/responsibility-summary",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def get_responsibility_summary(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -93,18 +101,13 @@ def get_responsibility_summary(
     """
     获取责任分摊汇总
     """
-    responsibilities = db.query(EcnResponsibility).filter(
-        EcnResponsibility.ecn_id == ecn_id
-    ).all()
+    responsibilities = db.query(EcnResponsibility).filter(EcnResponsibility.ecn_id == ecn_id).all()
 
     if not responsibilities:
         return ResponseModel(
             code=200,
             message="暂无责任分摊信息",
-            data={
-                "ecn_id": ecn_id,
-                "has_responsibility": False
-            }
+            data={"ecn_id": ecn_id, "has_responsibility": False},
         )
 
     total_cost = sum(float(r.cost_allocation or 0) for r in responsibilities)
@@ -125,9 +128,9 @@ def get_responsibility_summary(
                     "cost_allocation": float(r.cost_allocation),
                     "impact_description": r.impact_description,
                     "confirmed": r.confirmed,
-                    "confirmed_at": r.confirmed_at.isoformat() if r.confirmed_at else None
+                    "confirmed_at": r.confirmed_at.isoformat() if r.confirmed_at else None,
                 }
                 for r in responsibilities
-            ]
-        }
+            ],
+        },
     )

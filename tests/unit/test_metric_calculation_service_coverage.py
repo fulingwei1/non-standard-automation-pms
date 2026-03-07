@@ -18,6 +18,7 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.metric_calculation_service import MetricCalculationService
+
     return MetricCalculationService(mock_db)
 
 
@@ -51,6 +52,7 @@ def make_metric_def(
 
 # ─── calculate_metric ─────────────────────────────────────────────────────────
 
+
 class TestCalculateMetric:
     def test_metric_not_found_raises(self, service, mock_db):
         """指标定义不存在应报错"""
@@ -79,6 +81,7 @@ class TestCalculateMetric:
 
         # Reset with proper side effects
         call_count = [0]
+
         def query_side_effect(model):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -102,6 +105,7 @@ class TestCalculateMetric:
         metric_def = make_metric_def(calculation_type="UNKNOWN")
 
         call_count = [0]
+
         def query_side_effect(model):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -123,6 +127,7 @@ class TestCalculateMetric:
         metric_def = make_metric_def(calculation_type="SUM", data_field=None)
 
         call_count = [0]
+
         def query_side_effect(model):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -142,6 +147,7 @@ class TestCalculateMetric:
 
 # ─── calculate_metrics_batch ──────────────────────────────────────────────────
 
+
 class TestCalculateMetricsBatch:
     def test_batch_calculation_handles_errors(self, service, mock_db):
         """批量计算时，单个失败不影响其他"""
@@ -157,6 +163,7 @@ class TestCalculateMetricsBatch:
 
 
 # ─── format_metric_value ──────────────────────────────────────────────────────
+
 
 class TestFormatMetricValue:
     def test_format_number(self, service):
@@ -181,6 +188,7 @@ class TestFormatMetricValue:
 
 
 # ─── _apply_filter_conditions ────────────────────────────────────────────────
+
 
 class TestApplyFilterConditions:
     def test_no_filters_key_returns_query(self, service):
@@ -207,6 +215,7 @@ class TestApplyFilterConditions:
         query.filter.return_value = query
 
         from app.models.project import Project
+
         conditions = {"filters": [{"field": "status", "operator": "=", "value": "ACTIVE"}]}
         result = service._apply_filter_conditions(
             query, Project, conditions, date(2024, 1, 1), date(2024, 1, 31)
@@ -220,7 +229,10 @@ class TestApplyFilterConditions:
         query.filter.return_value = query
 
         from app.models.project import Project
-        conditions = {"filters": [{"field": "status", "operator": "IN", "value": ["ACTIVE", "COMPLETED"]}]}
+
+        conditions = {
+            "filters": [{"field": "status", "operator": "IN", "value": ["ACTIVE", "COMPLETED"]}]
+        }
         result = service._apply_filter_conditions(
             query, Project, conditions, date(2024, 1, 1), date(2024, 1, 31)
         )
@@ -232,7 +244,10 @@ class TestApplyFilterConditions:
         query.filter.return_value = query
 
         from app.models.project import Project
-        conditions = {"filters": [{"field": "created_at", "operator": ">=", "value": "period_start"}]}
+
+        conditions = {
+            "filters": [{"field": "created_at", "operator": ">=", "value": "period_start"}]
+        }
         result = service._apply_filter_conditions(
             query, Project, conditions, date(2024, 1, 1), date(2024, 1, 31)
         )
@@ -243,7 +258,10 @@ class TestApplyFilterConditions:
         query = MagicMock()
 
         from app.models.project import Project
-        conditions = {"filters": [{"field": "nonexistent_field_xyz", "operator": "=", "value": "X"}]}
+
+        conditions = {
+            "filters": [{"field": "nonexistent_field_xyz", "operator": "=", "value": "X"}]
+        }
         result = service._apply_filter_conditions(
             query, Project, conditions, date(2024, 1, 1), date(2024, 1, 31)
         )

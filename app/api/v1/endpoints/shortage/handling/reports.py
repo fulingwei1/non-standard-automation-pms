@@ -44,6 +44,7 @@ router = APIRouter()
 # 工具函数
 # ============================================================
 
+
 def _generate_report_no(db: Session) -> str:
     """生成缺料上报单号：SR-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
@@ -51,18 +52,22 @@ def _generate_report_no(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=ShortageReport,
-        no_field='report_no',
-        prefix='SR',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="report_no",
+        prefix="SR",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
 
 def _build_report_response(report: ShortageReport, db: Session) -> ShortageReportResponse:
     """构建上报响应对象"""
     project = db.query(Project).filter(Project.id == report.project_id).first()
-    machine = db.query(Machine).filter(Machine.id == report.machine_id).first() if report.machine_id else None
+    machine = (
+        db.query(Machine).filter(Machine.id == report.machine_id).first()
+        if report.machine_id
+        else None
+    )
     reporter = db.query(User).filter(User.id == report.reporter_id).first()
 
     return ShortageReportResponse(
@@ -99,6 +104,7 @@ def _build_report_response(report: ShortageReport, db: Session) -> ShortageRepor
 # CRUD 操作
 # ============================================================
 
+
 @router.get("", response_model=PaginatedResponse)
 def list_shortage_reports(
     db: Session = Depends(deps.get_db),
@@ -114,7 +120,9 @@ def list_shortage_reports(
     query = db.query(ShortageReport)
 
     # 应用关键词过滤（上报单号/物料编码/物料名称）
-    query = apply_keyword_filter(query, ShortageReport, keyword, ["report_no", "material_code", "material_name"])
+    query = apply_keyword_filter(
+        query, ShortageReport, keyword, ["report_no", "material_code", "material_name"]
+    )
 
     if report_status:
         query = query.filter(ShortageReport.status == report_status)
@@ -126,7 +134,9 @@ def list_shortage_reports(
         query = query.filter(ShortageReport.urgent_level == urgent_level)
 
     total = query.count()
-    reports = apply_pagination(query.order_by(desc(ShortageReport.created_at)), pagination.offset, pagination.limit).all()
+    reports = apply_pagination(
+        query.order_by(desc(ShortageReport.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_build_report_response(report, db) for report in reports]
 
@@ -135,7 +145,7 @@ def list_shortage_reports(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -170,11 +180,11 @@ def create_shortage_report(
         required_qty=report_in.required_qty,
         shortage_qty=report_in.shortage_qty,
         urgent_level=report_in.urgent_level,
-        status='REPORTED',
+        status="REPORTED",
         reporter_id=current_user.id,
         report_time=datetime.now(),
         report_location=report_in.report_location,
-        remark=report_in.remark
+        remark=report_in.remark,
     )
 
     save_obj(db, report)
@@ -199,6 +209,7 @@ def get_shortage_report(
 # 状态操作
 # ============================================================
 
+
 @router.put("/{report_id}/confirm", response_model=ShortageReportResponse)
 def confirm_shortage_report(
     *,
@@ -209,10 +220,10 @@ def confirm_shortage_report(
     """确认上报（仓管确认）"""
     report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
-    if report.status != 'REPORTED':
+    if report.status != "REPORTED":
         raise HTTPException(status_code=400, detail="只有已上报状态的记录才能确认")
 
-    report.status = 'CONFIRMED'
+    report.status = "CONFIRMED"
     report.confirmed_by = current_user.id
     report.confirmed_at = datetime.now()
 
@@ -234,10 +245,10 @@ def handle_shortage_report(
     """处理上报"""
     report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
-    if report.status not in ['CONFIRMED', 'HANDLING']:
+    if report.status not in ["CONFIRMED", "HANDLING"]:
         raise HTTPException(status_code=400, detail="只有已确认或处理中的记录才能处理")
 
-    report.status = 'HANDLING'
+    report.status = "HANDLING"
     report.handler_id = handler_id or current_user.id
     report.solution_type = solution_type
     report.solution_note = solution_note
@@ -257,10 +268,10 @@ def resolve_shortage_report(
     """解决上报"""
     report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
-    if report.status != 'HANDLING':
+    if report.status != "HANDLING":
         raise HTTPException(status_code=400, detail="只有处理中的记录才能标记为已解决")
 
-    report.status = 'RESOLVED'
+    report.status = "RESOLVED"
     report.resolved_at = datetime.now()
     if not report.handler_id:
         report.handler_id = current_user.id
@@ -281,10 +292,10 @@ def reject_shortage_report(
     """驳回上报（用于驳回无效或错误的缺料上报）"""
     report = get_or_404(db, ShortageReport, report_id, "缺料上报不存在")
 
-    if report.status in ['RESOLVED', 'REJECTED']:
+    if report.status in ["RESOLVED", "REJECTED"]:
         raise HTTPException(status_code=400, detail="已解决或已驳回的记录不能再次驳回")
 
-    report.status = 'REJECTED'
+    report.status = "REJECTED"
     if reject_reason:
         report.solution_note = f"驳回原因：{reject_reason}"
 

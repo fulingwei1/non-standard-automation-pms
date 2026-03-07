@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/material.py"""
-import pytest
 from datetime import date
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.material import (
+    BomCreate,
+    BomItemCreate,
+    BomResponse,
+    BomUpdate,
     MaterialCategoryCreate,
     MaterialCategoryResponse,
     MaterialCreate,
-    MaterialUpdate,
     MaterialResponse,
-    WarehouseStatistics,
     MaterialSearchResponse,
+    MaterialUpdate,
     SupplierCreate,
-    SupplierUpdate,
     SupplierResponse,
-    BomItemCreate,
-    BomCreate,
-    BomUpdate,
-    BomResponse,
+    SupplierUpdate,
+    WarehouseStatistics,
 )
 
 
@@ -49,13 +50,21 @@ class TestMaterialCreate:
 
     def test_full(self):
         m = MaterialCreate(
-            material_code="M001", material_name="螺丝",
-            category_id=1, specification="M8x20",
-            brand="国标", unit="个", drawing_no="DWG001",
-            material_type="标准件", source_type="PURCHASE",
-            standard_price=Decimal("0.5"), safety_stock=Decimal("1000"),
-            lead_time_days=7, min_order_qty=Decimal("100"),
-            is_key_material=True, remark="常用",
+            material_code="M001",
+            material_name="螺丝",
+            category_id=1,
+            specification="M8x20",
+            brand="国标",
+            unit="个",
+            drawing_no="DWG001",
+            material_type="标准件",
+            source_type="PURCHASE",
+            standard_price=Decimal("0.5"),
+            safety_stock=Decimal("1000"),
+            lead_time_days=7,
+            min_order_qty=Decimal("100"),
+            is_key_material=True,
+            remark="常用",
         )
         assert m.standard_price == Decimal("0.5")
 
@@ -109,8 +118,10 @@ class TestSupplierCreate:
 
     def test_full(self):
         s = SupplierCreate(
-            supplier_code="S001", supplier_name="供应商A",
-            contact_person="张三", contact_phone="123",
+            supplier_code="S001",
+            supplier_name="供应商A",
+            contact_person="张三",
+            contact_phone="123",
             tax_number="91310000",
         )
         assert s.tax_number == "91310000"
@@ -119,7 +130,8 @@ class TestSupplierCreate:
 class TestBomItemCreate:
     def test_valid(self):
         b = BomItemCreate(
-            material_code="M001", material_name="螺丝",
+            material_code="M001",
+            material_name="螺丝",
             quantity=Decimal("10"),
         )
         assert b.unit == "件"

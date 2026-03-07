@@ -120,15 +120,11 @@ class TestGetInitiatedInstances:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 5
-        mock_query.offset.return_value.limit.return_value.all.return_value = (
-        mock_instances
-        )
+        mock_query.offset.return_value.limit.return_value.all.return_value = mock_instances
 
         mock_db.query.return_value = mock_query
 
-        result = engine.get_initiated_instances(
-        user_id=100, status="PENDING", page=1, page_size=20
-        )
+        result = engine.get_initiated_instances(user_id=100, status="PENDING", page=1, page_size=20)
 
         assert result["total"] == 5
         assert result["page"] == 1
@@ -145,9 +141,7 @@ class TestGetInitiatedInstances:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 10
-        mock_query.offset.return_value.limit.return_value.all.return_value = (
-        mock_instances
-        )
+        mock_query.offset.return_value.limit.return_value.all.return_value = mock_instances
 
         mock_db.query.return_value = mock_query
 
@@ -190,9 +184,7 @@ class TestGetCcRecords:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 5
-        mock_query.offset.return_value.limit.return_value.all.return_value = (
-        mock_records
-        )
+        mock_query.offset.return_value.limit.return_value.all.return_value = mock_records
 
         mock_db.query.return_value = mock_query
 
@@ -214,9 +206,7 @@ class TestGetCcRecords:
         mock_query.filter.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.count.return_value = 1
-        mock_query.offset.return_value.limit.return_value.all.return_value = (
-        mock_records
-        )
+        mock_query.offset.return_value.limit.return_value.all.return_value = mock_records
 
         mock_db.query.return_value = mock_query
 

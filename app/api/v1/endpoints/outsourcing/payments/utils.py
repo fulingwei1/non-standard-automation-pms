@@ -62,7 +62,9 @@ def generate_inspection_no(db: Session) -> str:
         "inspection_no",
         use_ilike=False,
     )
-    max_inspection = max_inspection_query.order_by(desc(OutsourcingInspection.inspection_no)).first()
+    max_inspection = max_inspection_query.order_by(
+        desc(OutsourcingInspection.inspection_no)
+    ).first()
     if max_inspection:
         seq = int(max_inspection.inspection_no.split("-")[-1]) + 1
     else:

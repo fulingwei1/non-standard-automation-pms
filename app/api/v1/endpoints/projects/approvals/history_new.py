@@ -16,8 +16,8 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.approval import (
-    ApprovalInstance,
     ApprovalActionLog,
+    ApprovalInstance,
 )
 from app.models.project import Project
 from app.models.user import User

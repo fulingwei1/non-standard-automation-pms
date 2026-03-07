@@ -72,9 +72,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_batch_query.filter.return_value = mock_batch_query
         mock_batch_query.all.return_value = [batch]
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             with patch.object(self.db, "query") as mock_db_query:
                 # 第一次调用返回物料查询，第二次调用返回批次查询
                 mock_db_query.side_effect = [mock_query, mock_batch_query]
@@ -112,9 +112,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_batch_query.filter.return_value = mock_batch_query
         mock_batch_query.all.return_value = []
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             with patch.object(self.db, "query") as mock_db_query:
                 mock_db_query.side_effect = [mock_query, mock_batch_query]
                 result = self.service.get_realtime_stock(material_id=1, page=1, page_size=20)
@@ -143,9 +143,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_batch_query.filter.return_value = mock_batch_query
         mock_batch_query.all.return_value = []
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             with patch.object(self.db, "query") as mock_db_query:
                 mock_db_query.side_effect = [mock_query, mock_batch_query]
                 result = self.service.get_realtime_stock(low_stock_only=True, page=1, page_size=20)
@@ -177,9 +177,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_batch_query.filter.return_value = mock_batch_query
         mock_batch_query.all.return_value = []
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             with patch.object(self.db, "query") as mock_db_query:
                 mock_db_query.side_effect = [mock_query] + [mock_batch_query] * 2
                 result = self.service.get_realtime_stock(page=1, page_size=2)
@@ -214,7 +214,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_alert_query.filter.return_value = mock_alert_query
         mock_alert_query.all.return_value = []
 
-        with patch("app.services.production.material_tracking.material_tracking_service.get_or_404") as mock_get:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get:
             mock_get.return_value = material
             with patch.object(self.db, "query", return_value=mock_alert_query):
                 result = self.service.create_consumption(consumption_data, self.current_user_id)
@@ -284,7 +286,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_alert_query.filter.return_value = mock_alert_query
         mock_alert_query.all.return_value = []
 
-        with patch("app.services.production.material_tracking.material_tracking_service.get_or_404") as mock_get:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get:
             mock_get.return_value = material
             with patch.object(self.db, "query") as mock_db_query:
                 # 依次返回：条码查询、批次ID查询、预警规则查询
@@ -319,7 +323,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_alert_query.filter.return_value = mock_alert_query
         mock_alert_query.all.return_value = []
 
-        with patch("app.services.production.material_tracking.material_tracking_service.get_or_404") as mock_get:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get:
             mock_get.return_value = material
             with patch.object(self.db, "query", return_value=mock_alert_query):
                 result = self.service.create_consumption(consumption_data, self.current_user_id)
@@ -364,7 +370,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_alert_query.filter.return_value = mock_alert_query
         mock_alert_query.all.return_value = []
 
-        with patch("app.services.production.material_tracking.material_tracking_service.get_or_404") as mock_get:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.get_or_404"
+        ) as mock_get:
             mock_get.return_value = material
             with patch.object(self.db, "query") as mock_db_query:
                 mock_db_query.side_effect = [mock_batch_query, mock_alert_query]
@@ -553,9 +561,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_query.count.return_value = 1
         mock_query.all.return_value = alerts
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             with patch.object(self.db, "query", return_value=mock_query):
                 result = self.service.list_alerts(page=1, page_size=20)
 
@@ -571,9 +579,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_query.count.return_value = 0
         mock_query.all.return_value = []
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             result = self.service.list_alerts(
                 alert_type="LOW_STOCK",
                 alert_level="CRITICAL",
@@ -600,7 +608,9 @@ class TestMaterialTrackingService(unittest.TestCase):
             "safety_days": 7,
         }
 
-        with patch("app.services.production.material_tracking.material_tracking_service.save_obj") as mock_save:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.save_obj"
+        ) as mock_save:
             result = self.service.create_alert_rule(rule_data, self.current_user_id)
 
         self.assertIn("rule_name", result)
@@ -616,7 +626,9 @@ class TestMaterialTrackingService(unittest.TestCase):
             "threshold_value": 20,
         }
 
-        with patch("app.services.production.material_tracking.material_tracking_service.save_obj") as mock_save:
+        with patch(
+            "app.services.production.material_tracking.material_tracking_service.save_obj"
+        ) as mock_save:
             result = self.service.create_alert_rule(rule_data, self.current_user_id)
 
         self.assertIn("id", result)
@@ -670,9 +682,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_wo_query.filter.return_value = mock_wo_query
         mock_wo_query.first.return_value = work_order
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             with patch.object(self.db, "query") as mock_db_query:
                 mock_db_query.side_effect = [
                     mock_query,
@@ -698,9 +710,9 @@ class TestMaterialTrackingService(unittest.TestCase):
         mock_query.count.return_value = 0
         mock_query.all.return_value = []
 
-        with patch('app.common.query_filters.apply_pagination') as mock_pagination:
+        with patch("app.common.query_filters.apply_pagination") as mock_pagination:
             mock_pagination.return_value = mock_query
-            
+
             result = self.service.get_waste_records(
                 material_id=1,
                 project_id=1,
@@ -734,9 +746,7 @@ class TestMaterialTrackingService(unittest.TestCase):
             status="ACTIVE",
         )
 
-        material = Material(
-            id=1, material_code="MAT001", material_name="物料1"
-        )
+        material = Material(id=1, material_code="MAT001", material_name="物料1")
 
         consumption = MaterialConsumption(
             id=1,
@@ -1068,7 +1078,9 @@ class TestMaterialTrackingService(unittest.TestCase):
 
         # 验证按周转率降序排序
         self.assertEqual(result["materials"][0]["material_code"], "MAT001")
-        self.assertTrue(result["materials"][0]["turnover_rate"] > result["materials"][1]["turnover_rate"])
+        self.assertTrue(
+            result["materials"][0]["turnover_rate"] > result["materials"][1]["turnover_rate"]
+        )
 
     # ================== 10. 测试平均日消耗计算 ==================
 

@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 from app.core.security import get_password_hash
 from app.models.base import get_session
 from app.models.organization import Employee
-from app.models.user import User, ApiPermission, Role, RoleApiPermission
 from app.models.permission import DataScopeRule
+from app.models.user import ApiPermission, Role, RoleApiPermission, User
 from app.services.permission_service import PermissionService
 
 
@@ -85,9 +85,7 @@ def test_user_with_role(db_session: Session, test_employee):
 class TestPermissionService:
     """PermissionService权限服务测试。"""
 
-    def test_check_permission_superuser_has_all(
-        self, db_session: Session, test_user_with_role
-    ):
+    def test_check_permission_superuser_has_all(self, db_session: Session, test_user_with_role):
         """测试超级用户拥有所有权限。"""
         # 将用户设为超级用户
         db_session.query(User).filter(User.id == test_user_with_role.id).update(
@@ -100,9 +98,7 @@ class TestPermissionService:
         )
         assert result is True
 
-    def test_check_permission_user_has_permission(
-        self, db_session: Session, test_user_with_role
-    ):
+    def test_check_permission_user_has_permission(self, db_session: Session, test_user_with_role):
         """测试用户有特定权限。"""
         result = PermissionService.check_permission(
             db_session, test_user_with_role.id, "project:read", "PROJECT"
@@ -117,9 +113,7 @@ class TestPermissionService:
 
     def test_check_permission_user_no_user(self, db_session: Session):
         """测试不存在的用户没有权限。"""
-        result = PermissionService.check_permission(
-            db_session, 9999, "project:read", "PROJECT"
-        )
+        result = PermissionService.check_permission(db_session, 9999, "project:read", "PROJECT")
         assert result is False
 
     def test_get_user_permissions_basic(self, db_session: Session, test_user_with_role):
@@ -154,18 +148,12 @@ class TestPermissionService:
         db_session.add(role_perm)
         db_session.commit()
 
-        result = PermissionService.get_user_permissions(
-            db_session, test_user_with_role.id
-        )
+        result = PermissionService.get_user_permissions(db_session, test_user_with_role.id)
         assert "project:write" in result
 
-    def test_get_user_effective_roles_with_roles(
-        self, db_session: Session, test_user_with_role
-    ):
+    def test_get_user_effective_roles_with_roles(self, db_session: Session, test_user_with_role):
         """测试用户的有效角色。"""
-        result = PermissionService.get_user_effective_roles(
-            db_session, test_user_with_role.id
-        )
+        result = PermissionService.get_user_effective_roles(db_session, test_user_with_role.id)
         assert len(result) > 0
 
     def test_check_any_permission_specific_permission(

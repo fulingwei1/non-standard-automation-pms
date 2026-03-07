@@ -63,9 +63,7 @@ class EcnApprovalService:
 
         return results, errors
 
-    def _submit_single_ecn(
-        self, ecn_id: int, initiator_id: int, urgency: str
-    ) -> Dict[str, Any]:
+    def _submit_single_ecn(self, ecn_id: int, initiator_id: int, urgency: str) -> Dict[str, Any]:
         """
         提交单个ECN审批
 
@@ -190,12 +188,10 @@ class EcnApprovalService:
                     "schedule_impact_days": ecn.schedule_impact_days or 0,
                     "priority": ecn.priority,
                     "urgency": instance.urgency,
-                    "initiator_name": instance.initiator.real_name
-                    if instance.initiator
-                    else None,
-                    "submitted_at": instance.created_at.isoformat()
-                    if instance.created_at
-                    else None,
+                    "initiator_name": instance.initiator.real_name if instance.initiator else None,
+                    "submitted_at": (
+                        instance.created_at.isoformat() if instance.created_at else None
+                    ),
                     "node_name": task.node.node_name if task.node else None,
                 }
             )
@@ -320,22 +316,16 @@ class EcnApprovalService:
                 {
                     "task_id": task.id,
                     "node_name": task.node.node_name if task.node else None,
-                    "assignee_name": task.assignee.real_name
-                    if task.assignee
-                    else None,
+                    "assignee_name": task.assignee.real_name if task.assignee else None,
                     "status": task.status,
                     "action": task.action,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 
         # 获取评估汇总
-        evaluations = (
-            self.db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn_id).all()
-        )
+        evaluations = self.db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn_id).all()
         eval_summary = {
             "total": len(evaluations),
             "completed": len([e for e in evaluations if e.status == "COMPLETED"]),
@@ -356,12 +346,8 @@ class EcnApprovalService:
             "instance_id": instance.id,
             "instance_status": instance.status,
             "urgency": instance.urgency,
-            "submitted_at": instance.created_at.isoformat()
-            if instance.created_at
-            else None,
-            "completed_at": instance.completed_at.isoformat()
-            if instance.completed_at
-            else None,
+            "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
+            "completed_at": instance.completed_at.isoformat() if instance.completed_at else None,
             "task_history": task_history,
         }
 
@@ -449,12 +435,7 @@ class EcnApprovalService:
             query = query.filter(ApprovalTask.status == status_filter)
 
         total = query.count()
-        tasks = (
-            query.order_by(ApprovalTask.completed_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        tasks = query.order_by(ApprovalTask.completed_at.desc()).offset(offset).limit(limit).all()
 
         items = []
         for task in tasks:
@@ -472,15 +453,11 @@ class EcnApprovalService:
                     "ecn_no": ecn.ecn_no if ecn else None,
                     "ecn_title": ecn.ecn_title if ecn else None,
                     "ecn_type": ecn.ecn_type if ecn else None,
-                    "project_name": ecn.project.project_name
-                    if ecn and ecn.project
-                    else None,
+                    "project_name": ecn.project.project_name if ecn and ecn.project else None,
                     "action": task.action,
                     "status": task.status,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 

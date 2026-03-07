@@ -2,10 +2,12 @@
 AI服务测试Fixture
 提供GLM-5、质量分析、资源调度等AI服务的Mock数据
 """
-import pytest
+
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List
+
+import pytest
 
 
 @pytest.fixture
@@ -16,16 +18,8 @@ def mock_glm_response():
         "delay_days": 15,
         "confidence": 0.85,
         "risk_level": "high",
-        "risk_factors": [
-            "团队规模不足",
-            "进度偏差较大",
-            "剩余时间紧张"
-        ],
-        "recommendations": [
-            "增加2名开发人员",
-            "调整部分功能优先级",
-            "增加加班时间"
-        ]
+        "risk_factors": ["团队规模不足", "进度偏差较大", "剩余时间紧张"],
+        "recommendations": ["增加2名开发人员", "调整部分功能优先级", "增加加班时间"],
     }
 
 
@@ -51,8 +45,8 @@ def mock_schedule_prediction_data():
             "avg_daily_progress": 1.2,
             "required_daily_progress": 1.8,
             "velocity_ratio": 0.67,
-            "complexity": "high"
-        }
+            "complexity": "high",
+        },
     }
 
 
@@ -67,12 +61,9 @@ def mock_quality_risk_data():
         "risk_category": "BUG",
         "risk_keywords": ["bug", "修复", "问题"],
         "abnormal_patterns": ["频繁修复", "多次返工"],
-        "predicted_issues": [
-            "可能存在架构问题",
-            "需要增加单元测试"
-        ],
+        "predicted_issues": ["可能存在架构问题", "需要增加单元测试"],
         "rework_probability": 0.65,
-        "estimated_impact_days": 5
+        "estimated_impact_days": 5,
     }
 
 
@@ -87,7 +78,7 @@ def mock_wbs_decomposition():
             "estimated_duration_days": 10,
             "estimated_hours": 80,
             "complexity": "medium",
-            "task_type": "requirement"
+            "task_type": "requirement",
         },
         {
             "level": 1,
@@ -96,7 +87,7 @@ def mock_wbs_decomposition():
             "estimated_duration_days": 15,
             "estimated_hours": 120,
             "complexity": "high",
-            "task_type": "design"
+            "task_type": "design",
         },
         {
             "level": 1,
@@ -105,8 +96,8 @@ def mock_wbs_decomposition():
             "estimated_duration_days": 40,
             "estimated_hours": 320,
             "complexity": "high",
-            "task_type": "development"
-        }
+            "task_type": "development",
+        },
     ]
 
 
@@ -124,7 +115,7 @@ def mock_resource_allocation():
         "availability_score": 80,
         "performance_score": 88,
         "overall_match_score": 86,
-        "recommendation_reason": "技能匹配度高，经验丰富，当前负载适中"
+        "recommendation_reason": "技能匹配度高，经验丰富，当前负载适中",
     }
 
 
@@ -140,28 +131,28 @@ def mock_change_impact_data():
         "risk_level": "high",
         "estimated_delay_days": 10,
         "affected_tasks_count": 15,
-        "dependency_chain": [
-            "用户模块 → 订单模块 → 支付模块"
-        ]
+        "dependency_chain": ["用户模块 → 订单模块 → 支付模块"],
     }
 
 
 @pytest.fixture
 def mock_ai_client_service():
     """Mock AI客户端服务"""
-    with patch('app.services.ai_client_service.AIClientService') as mock:
+    with patch("app.services.ai_client_service.AIClientService") as mock:
         instance = MagicMock()
-        
+
         # Mock chat方法
         async def mock_chat(*args, **kwargs):
             return {
-                "choices": [{
-                    "message": {
-                        "content": '{"completion_date": "2026-04-15", "delay_days": 15, "confidence": 0.85, "risk_level": "high"}'
+                "choices": [
+                    {
+                        "message": {
+                            "content": '{"completion_date": "2026-04-15", "delay_days": 15, "confidence": 0.85, "risk_level": "high"}'
+                        }
                     }
-                }]
+                ]
             }
-        
+
         instance.chat = AsyncMock(side_effect=mock_chat)
         mock.return_value = instance
         yield mock
@@ -180,7 +171,7 @@ def test_project_data():
         "planned_end_date": date(2026, 6, 30),
         "current_progress": 45.5,
         "budget": 1000000,
-        "team_size": 8
+        "team_size": 8,
     }
 
 
@@ -195,7 +186,7 @@ def test_user_data():
         "skill_tags": ["Python", "FastAPI", "PostgreSQL"],
         "hourly_rate": 200,
         "current_load": 60,
-        "performance_rating": 4.5
+        "performance_rating": 4.5,
     }
 
 
@@ -214,7 +205,7 @@ def test_task_data():
         "status": "pending",
         "assigned_to": None,
         "start_date": None,
-        "end_date": None
+        "end_date": None,
     }
 
 
@@ -238,27 +229,27 @@ def sample_work_logs():
             "date": date.today() - timedelta(days=1),
             "user": "开发A",
             "content": "修复了登录模块的bug，第3次修复了",
-            "hours": 4
+            "hours": 4,
         },
         {
             "date": date.today() - timedelta(days=2),
             "user": "开发B",
             "content": "优化数据库查询性能，响应时间从2s降到500ms",
-            "hours": 6
+            "hours": 6,
         },
         {
             "date": date.today() - timedelta(days=3),
             "user": "开发C",
             "content": "系统不稳定，经常崩溃，需要重新设计架构",
-            "hours": 8
-        }
+            "hours": 8,
+        },
     ]
 
 
 @pytest.fixture
 def mock_redis_client():
     """Mock Redis客户端"""
-    with patch('app.utils.redis_client.redis_client') as mock:
+    with patch("app.utils.redis_client.redis_client") as mock:
         mock.get = MagicMock(return_value=None)
         mock.set = MagicMock(return_value=True)
         mock.delete = MagicMock(return_value=True)
@@ -277,7 +268,7 @@ def performance_metrics():
         "quality_score": 88,
         "on_time_delivery_rate": 0.75,
         "bug_density": 0.05,
-        "test_coverage": 75
+        "test_coverage": 75,
     }
 
 
@@ -293,7 +284,7 @@ def cost_data():
             "pv": 600000,  # Planned Value
             "ev": 455000,  # Earned Value
             "ac": 550000,  # Actual Cost
-            "cpi": 0.83,   # Cost Performance Index
-            "spi": 0.76,   # Schedule Performance Index
-        }
+            "cpi": 0.83,  # Cost Performance Index
+            "spi": 0.76,  # Schedule Performance Index
+        },
     }

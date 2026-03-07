@@ -470,9 +470,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         mock_version.quote_code = "Q2024001"
 
         mock_instance = Mock()
-        self.db.query.return_value.filter.return_value.first.return_value = (
-            mock_instance
-        )
+        self.db.query.return_value.filter.return_value.first.return_value = mock_instance
 
         result = self.adapter.submit_for_approval(mock_version, initiator_id=1)
 
@@ -512,7 +510,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         mock_engine.create_instance.assert_called_once()
 
     # ========== create_quote_approval 测试 ========== #
-    
+
     @unittest.skip("QuoteApproval model not implemented yet")
     def test_create_quote_approval_success(self):
         """测试成功创建报价审批记录 (跳过 - 模型未实现)"""

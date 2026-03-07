@@ -33,20 +33,22 @@ from app.schemas.management_rhythm import (
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.common.query_filters import apply_pagination
 
-router = APIRouter(
-    prefix="/reports",
-    tags=["reports"]
-)
+router = APIRouter(prefix="/reports", tags=["reports"])
 
 # 共 4 个路由
 
 # ==================== 会议报告 ====================
 
-@router.post("/meeting-reports/generate", response_model=MeetingReportResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/meeting-reports/generate",
+    response_model=MeetingReportResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def generate_meeting_report(
     report_request: MeetingReportGenerateRequest,
     db: Session = Depends(deps.get_db),
@@ -71,13 +73,17 @@ def generate_meeting_report(
 
     if not config_id:
         # 尝试获取默认配置
-        default_config = db.query(MeetingReportConfig).filter(
-            and_(
-                MeetingReportConfig.report_type == report_request.report_type,
-                MeetingReportConfig.is_default,
-                MeetingReportConfig.is_active
+        default_config = (
+            db.query(MeetingReportConfig)
+            .filter(
+                and_(
+                    MeetingReportConfig.report_type == report_request.report_type,
+                    MeetingReportConfig.is_default,
+                    MeetingReportConfig.is_active,
+                )
             )
-        ).first()
+            .first()
+        )
         if default_config:
             config_id = default_config.id
 
@@ -106,17 +112,18 @@ def generate_meeting_report(
                 # 如果统一框架返回数据，需要转换为MeetingReport对象
                 # 这里暂时使用适配器方法（待完善）
                 from app.services.report_framework.adapters.meeting import MeetingReportAdapter
+
                 MeetingReportAdapter(db)
                 # 使用适配器生成数据，然后创建MeetingReport对象
                 raise ConfigError("MEETING_ANNUAL YAML配置待创建")
             except ConfigError:
                 # 如果YAML配置不存在，使用适配器（向后兼容）
                 from app.services.report_framework.adapters.meeting import MeetingReportAdapter
+
                 MeetingReportAdapter(db)
                 # 暂时返回错误，提示需要创建YAML配置或完善适配器
                 raise HTTPException(
-                    status_code=501,
-                    detail="年度会议报告功能待完善，请使用月度报告或联系管理员"
+                    status_code=501, detail="年度会议报告功能待完善，请使用月度报告或联系管理员"
                 )
         elif report_request.report_type == "MONTHLY":
             if not report_request.period_month:
@@ -127,9 +134,13 @@ def generate_meeting_report(
 
             # 使用统一报表框架生成月度报告
             from datetime import date
+
             period_start = date(report_request.period_year, report_request.period_month, 1)
-            period_end = date(report_request.period_year, report_request.period_month,
-                            monthrange(report_request.period_year, report_request.period_month)[1])
+            period_end = date(
+                report_request.period_year,
+                report_request.period_month,
+                monthrange(report_request.period_year, report_request.period_month)[1],
+            )
 
             try:
                 engine.generate(
@@ -152,11 +163,12 @@ def generate_meeting_report(
             except ConfigError:
                 # 如果YAML配置不存在或需要返回MeetingReport对象，使用适配器
                 from app.services.report_framework.adapters.meeting import MeetingReportAdapter
+
                 MeetingReportAdapter(db)
                 # 暂时返回错误，提示需要完善适配器
                 raise HTTPException(
                     status_code=501,
-                    detail="月度会议报告功能待完善，请使用统一报表框架端点或联系管理员"
+                    detail="月度会议报告功能待完善，请使用统一报表框架端点或联系管理员",
                 )
         else:
             raise HTTPException(status_code=400, detail="报告类型必须是ANNUAL或MONTHLY")
@@ -214,38 +226,44 @@ def read_meeting_reports(
         query = query.filter(MeetingReport.rhythm_level == rhythm_level)
 
     total = query.count()
-    reports = apply_pagination(query.order_by(desc(MeetingReport.period_start), desc(MeetingReport.created_at)), pagination.offset, pagination.limit).all()
+    reports = apply_pagination(
+        query.order_by(desc(MeetingReport.period_start), desc(MeetingReport.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for report in reports:
-        items.append(MeetingReportResponse(
-            id=report.id,
-            report_no=report.report_no,
-            report_type=report.report_type,
-            report_title=report.report_title,
-            period_year=report.period_year,
-            period_month=report.period_month,
-            period_start=report.period_start,
-            period_end=report.period_end,
-            rhythm_level=report.rhythm_level,
-            report_data=report.report_data,
-            comparison_data=report.comparison_data,
-            file_path=report.file_path,
-            file_size=report.file_size,
-            status=report.status,
-            generated_by=report.generated_by,
-            generated_at=report.generated_at,
-            published_at=report.published_at,
-            created_at=report.created_at,
-            updated_at=report.updated_at,
-        ))
+        items.append(
+            MeetingReportResponse(
+                id=report.id,
+                report_no=report.report_no,
+                report_type=report.report_type,
+                report_title=report.report_title,
+                period_year=report.period_year,
+                period_month=report.period_month,
+                period_start=report.period_start,
+                period_end=report.period_end,
+                rhythm_level=report.rhythm_level,
+                report_data=report.report_data,
+                comparison_data=report.comparison_data,
+                file_path=report.file_path,
+                file_size=report.file_size,
+                status=report.status,
+                generated_by=report.generated_by,
+                generated_at=report.generated_at,
+                published_at=report.published_at,
+                created_at=report.created_at,
+                updated_at=report.updated_at,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -313,7 +331,7 @@ def export_meeting_report_docx(
                 report_data=report.report_data or {},
                 report_title=report.report_title,
                 period_year=report.period_year,
-                rhythm_level=report.rhythm_level if report.rhythm_level != "ALL" else None
+                rhythm_level=report.rhythm_level if report.rhythm_level != "ALL" else None,
             )
         else:
             # 生成月度报告Word文档
@@ -323,7 +341,7 @@ def export_meeting_report_docx(
                 report_title=report.report_title,
                 period_year=report.period_year,
                 period_month=report.period_month or 1,
-                rhythm_level=report.rhythm_level if report.rhythm_level != "ALL" else None
+                rhythm_level=report.rhythm_level if report.rhythm_level != "ALL" else None,
             )
 
         # 保存文件
@@ -348,13 +366,10 @@ def export_meeting_report_docx(
         return StreamingResponse(
             buffer,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={
-                "Content-Disposition": f"attachment; filename={report.report_no}.docx"
-            }
+            headers={"Content-Disposition": f"attachment; filename={report.report_no}.docx"},
         )
 
     except ImportError:
         raise HTTPException(status_code=500, detail="Word文档生成功能不可用，请安装python-docx库")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生成Word文档失败: {str(e)}")
-

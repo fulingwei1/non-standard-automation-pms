@@ -10,18 +10,14 @@ from sqlalchemy.orm import Session
 
 from app.models.ecn import Ecn
 from app.models.project import ProjectMember
-
-from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
-    NotificationRequest,
     NotificationPriority,
+    NotificationRequest,
 )
+from app.services.notification_dispatcher import NotificationDispatcher
 
 
-def notify_ecn_submitted(
-    db: Session,
-    ecn: Ecn
-) -> None:
+def notify_ecn_submitted(db: Session, ecn: Ecn) -> None:
     """
     通知ECN提交
     通知申请人、项目相关人员和其他相关人员
@@ -42,21 +38,22 @@ def notify_ecn_submitted(
             source_type="ecn",
             source_id=ecn.id,
             link_url=f"/ecns?ecnId={ecn.id}",
-            extra_data={
-                "ecn_no": ecn.ecn_no,
-                "ecn_title": ecn.ecn_title
-            }
+            extra_data={"ecn_no": ecn.ecn_no, "ecn_title": ecn.ecn_title},
         )
         dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
         # 查找项目成员（排除申请人，避免重复通知）
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active,
-            ProjectMember.user_id != ecn.applicant_id
-        ).all()
+        project_members = (
+            db.query(ProjectMember)
+            .filter(
+                ProjectMember.project_id == ecn.project_id,
+                ProjectMember.is_active,
+                ProjectMember.user_id != ecn.applicant_id,
+            )
+            .all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
@@ -78,26 +75,26 @@ def notify_ecn_submitted(
                     extra_data={
                         "ecn_no": ecn.ecn_no,
                         "ecn_title": ecn.ecn_title,
-                        "is_cc": True  # 标记为抄送
-                    }
+                        "is_cc": True,  # 标记为抄送
+                    },
                 )
                 dispatcher.send_notification_request(request)
 
 
-def notify_overdue_alert(
-    db: Session,
-    alert: Dict[str, Any],
-    user_ids: List[int]
-) -> None:
+def notify_overdue_alert(db: Session, alert: Dict[str, Any], user_ids: List[int]) -> None:
     """
     通知超时提醒（使用统一通知服务）
     """
     dispatcher = NotificationDispatcher(db)
-    priority = NotificationPriority.URGENT if alert.get('overdue_days', 0) > 7 else NotificationPriority.HIGH
-    
+    priority = (
+        NotificationPriority.URGENT
+        if alert.get("overdue_days", 0) > 7
+        else NotificationPriority.HIGH
+    )
+
     for user_id in user_ids:
         title = f"ECN超时提醒：{alert.get('ecn_no', '')}"
-        content = alert.get('message', '')
+        content = alert.get("message", "")
 
         request = NotificationRequest(
             recipient_id=user_id,
@@ -107,12 +104,12 @@ def notify_overdue_alert(
             content=content,
             priority=priority,
             source_type="ecn",
-            source_id=alert.get('ecn_id'),
-            link_url=f"/ecns?ecnId={alert.get('ecn_id')}" if alert.get('ecn_id') else None,
+            source_id=alert.get("ecn_id"),
+            link_url=f"/ecns?ecnId={alert.get('ecn_id')}" if alert.get("ecn_id") else None,
             extra_data={
-                "alert_type": alert.get('type'),
-                "overdue_days": alert.get('overdue_days', 0),
-                "ecn_no": alert.get('ecn_no')
-            }
+                "alert_type": alert.get("type"),
+                "overdue_days": alert.get("overdue_days", 0),
+                "ecn_no": alert.get("ecn_no"),
+            },
         )
         dispatcher.send_notification_request(request)

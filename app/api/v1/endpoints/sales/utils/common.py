@@ -31,7 +31,9 @@ def normalize_date_range(
         if normalized_start.month == 12:
             normalized_end = date(normalized_start.year, 12, 31)
         else:
-            normalized_end = date(normalized_start.year, normalized_start.month + 1, 1) - timedelta(days=1)
+            normalized_end = date(normalized_start.year, normalized_start.month + 1, 1) - timedelta(
+                days=1
+            )
 
     if normalized_start > normalized_end:
         raise HTTPException(status_code=400, detail="开始日期不能晚于结束日期")
@@ -71,11 +73,11 @@ def get_visible_sales_users(
     )
     user_role_codes = []
     for ur in user_roles:
-        if ur.role is not None and hasattr(ur.role, 'role_code') and ur.role.role_code:
+        if ur.role is not None and hasattr(ur.role, "role_code") and ur.role.role_code:
             user_role_codes.append(ur.role.role_code)
 
-    is_sales_director = 'SALES_DIR' in user_role_codes
-    is_sales_manager = 'SALES_MANAGER' in user_role_codes
+    is_sales_director = "SALES_DIR" in user_role_codes
+    is_sales_manager = "SALES_MANAGER" in user_role_codes
 
     query = db.query(User).filter(User.is_active)
 
@@ -90,7 +92,7 @@ def get_visible_sales_users(
         pass
 
     if is_sales_director:
-        sales_role_codes = ['SALES', 'SALES_DIR', 'SALES_MANAGER', 'SA']
+        sales_role_codes = ["SALES", "SALES_DIR", "SALES_MANAGER", "SA"]
         # 优化查询：直接使用子查询，避免先查询再过滤
         sales_user_ids = (
             db.query(UserRole.user_id)
@@ -106,7 +108,7 @@ def get_visible_sales_users(
         else:
             return []
     elif is_sales_manager:
-        dept_id = getattr(current_user, 'department_id', None)
+        dept_id = getattr(current_user, "department_id", None)
         if dept_id:
             return query.filter(User.department_id == dept_id).all()
         else:
@@ -149,12 +151,14 @@ def generate_trend_buckets(period: str, count: int) -> List[dict]:
             _, last_day = calendar.monthrange(target_year, target_month)
             end = date(target_year, target_month, last_day)
             label = f"{target_year}-{target_month:02d}"
-            buckets.append({
-                "label": label,
-                "target_label": label,
-                "start": start,
-                "end": end,
-            })
+            buckets.append(
+                {
+                    "label": label,
+                    "target_label": label,
+                    "start": start,
+                    "end": end,
+                }
+            )
     elif period == "QUARTER":
         current_quarter = (today.month - 1) // 3 + 1
         for offset in range(count - 1, -1, -1):
@@ -168,24 +172,28 @@ def generate_trend_buckets(period: str, count: int) -> List[dict]:
             _, last_day = calendar.monthrange(target_year, end_month)
             end = date(target_year, end_month, last_day)
             label = f"{target_year}-Q{target_quarter}"
-            buckets.append({
-                "label": label,
-                "target_label": label,
-                "start": start,
-                "end": end,
-            })
+            buckets.append(
+                {
+                    "label": label,
+                    "target_label": label,
+                    "start": start,
+                    "end": end,
+                }
+            )
     else:  # YEAR
         for offset in range(count - 1, -1, -1):
             target_year = today.year - offset
             start = date(target_year, 1, 1)
             end = date(target_year, 12, 31)
             label = str(target_year)
-            buckets.append({
-                "label": label,
-                "target_label": label,
-                "start": start,
-                "end": end,
-            })
+            buckets.append(
+                {
+                    "label": label,
+                    "target_label": label,
+                    "start": start,
+                    "end": end,
+                }
+            )
 
     return buckets
 

@@ -13,8 +13,10 @@ from .common import BaseSchema, TimestampSchema
 
 # ==================== 验收模板 ====================
 
+
 class TemplateCheckItemCreate(BaseModel):
     """模板检查项创建"""
+
     item_code: str = Field(max_length=50)
     item_name: str = Field(max_length=200)
     check_method: Optional[str] = None
@@ -30,6 +32,7 @@ class TemplateCheckItemCreate(BaseModel):
 
 class TemplateCategoryCreate(BaseModel):
     """模板分类创建"""
+
     category_code: str = Field(max_length=20)
     category_name: str = Field(max_length=100)
     weight: Decimal = Field(default=0, ge=0, le=100)
@@ -41,6 +44,7 @@ class TemplateCategoryCreate(BaseModel):
 
 class AcceptanceTemplateCreate(BaseModel):
     """创建验收模板"""
+
     template_code: str = Field(max_length=50)
     template_name: str = Field(max_length=200)
     acceptance_type: str = Field(description="FAT/SAT/FINAL")
@@ -52,6 +56,7 @@ class AcceptanceTemplateCreate(BaseModel):
 
 class AcceptanceTemplateResponse(TimestampSchema):
     """验收模板响应"""
+
     id: int
     template_code: str
     template_name: str
@@ -64,8 +69,10 @@ class AcceptanceTemplateResponse(TimestampSchema):
 
 # ==================== 验收单 ====================
 
+
 class AcceptanceOrderCreate(BaseModel):
     """创建验收单"""
+
     project_id: int = Field(description="项目ID")
     machine_id: Optional[int] = None
     acceptance_type: str = Field(description="FAT/SAT/FINAL")
@@ -76,6 +83,7 @@ class AcceptanceOrderCreate(BaseModel):
 
 class AcceptanceOrderUpdate(BaseModel):
     """更新验收单"""
+
     planned_date: Optional[date] = None
     location: Optional[str] = None
     conclusion: Optional[str] = None
@@ -84,11 +92,13 @@ class AcceptanceOrderUpdate(BaseModel):
 
 class AcceptanceOrderStart(BaseModel):
     """开始验收"""
+
     location: Optional[str] = None
 
 
 class AcceptanceOrderComplete(BaseModel):
     """完成验收"""
+
     overall_result: str = Field(description="PASSED/FAILED/CONDITIONAL")
     conclusion: str = Field(description="验收结论")
     conditions: Optional[str] = None
@@ -96,6 +106,7 @@ class AcceptanceOrderComplete(BaseModel):
 
 class AcceptanceOrderResponse(TimestampSchema):
     """验收单响应"""
+
     id: int
     order_no: str
     project_id: int
@@ -125,6 +136,7 @@ class AcceptanceOrderResponse(TimestampSchema):
 
 class AcceptanceOrderListResponse(BaseSchema):
     """验收单列表响应"""
+
     id: int
     order_no: str
     project_name: Optional[str] = None
@@ -140,8 +152,10 @@ class AcceptanceOrderListResponse(BaseSchema):
 
 # ==================== 检查项结果 ====================
 
+
 class CheckItemResultUpdate(BaseModel):
     """更新检查项结果"""
+
     result_status: str = Field(description="PASSED/FAILED/NA/CONDITIONAL")
     actual_value: Optional[str] = None
     deviation: Optional[str] = None
@@ -150,6 +164,7 @@ class CheckItemResultUpdate(BaseModel):
 
 class CheckItemResultResponse(BaseSchema):
     """检查项结果响应"""
+
     id: int
     category_code: str
     category_name: str
@@ -173,8 +188,10 @@ class CheckItemResultResponse(BaseSchema):
 
 # ==================== 验收问题 ====================
 
+
 class AcceptanceIssueCreate(BaseModel):
     """创建验收问题"""
+
     order_id: int = Field(description="验收单ID")
     order_item_id: Optional[int] = None
     issue_type: str = Field(description="DEFECT/DEVIATION/SUGGESTION")
@@ -189,6 +206,7 @@ class AcceptanceIssueCreate(BaseModel):
 
 class AcceptanceIssueUpdate(BaseModel):
     """更新验收问题"""
+
     severity: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
@@ -201,6 +219,7 @@ class AcceptanceIssueUpdate(BaseModel):
 
 class AcceptanceIssueResponse(TimestampSchema):
     """验收问题响应"""
+
     id: int
     issue_no: str
     order_id: int
@@ -230,6 +249,7 @@ class AcceptanceIssueResponse(TimestampSchema):
 
 class AcceptanceIssueAssign(BaseModel):
     """指派问题"""
+
     assigned_to: int = Field(description="处理负责人ID")
     due_date: Optional[date] = None
     remark: Optional[str] = None
@@ -237,24 +257,28 @@ class AcceptanceIssueAssign(BaseModel):
 
 class AcceptanceIssueResolve(BaseModel):
     """解决问题"""
+
     solution: str = Field(description="解决方案")
     attachments: Optional[List[Any]] = None
 
 
 class AcceptanceIssueVerify(BaseModel):
     """验证问题"""
+
     verified_result: str = Field(description="验证结果：VERIFIED/REJECTED")
     remark: Optional[str] = None
 
 
 class AcceptanceIssueDefer(BaseModel):
     """延期问题"""
+
     reason: str = Field(description="延期原因")
     new_due_date: date = Field(description="新的完成日期")
 
 
 class IssueFollowUpCreate(BaseModel):
     """创建跟进记录"""
+
     action_type: str = Field(description="操作类型：COMMENT/STATUS_CHANGE/ASSIGN/RESOLVE/VERIFY")
     action_content: str = Field(description="操作内容")
     attachments: Optional[List[Any]] = None
@@ -262,6 +286,7 @@ class IssueFollowUpCreate(BaseModel):
 
 class IssueFollowUpResponse(BaseSchema):
     """跟进记录响应"""
+
     id: int
     issue_id: int
     action_type: str
@@ -276,8 +301,10 @@ class IssueFollowUpResponse(BaseSchema):
 
 # ==================== 签字 ====================
 
+
 class AcceptanceSignatureCreate(BaseModel):
     """创建签字"""
+
     order_id: int
     signer_type: str = Field(description="QA/PM/CUSTOMER/WITNESS")
     signer_role: Optional[str] = None
@@ -288,6 +315,7 @@ class AcceptanceSignatureCreate(BaseModel):
 
 class AcceptanceSignatureResponse(BaseSchema):
     """签字响应"""
+
     id: int
     order_id: int
     signer_type: str
@@ -300,8 +328,10 @@ class AcceptanceSignatureResponse(BaseSchema):
 
 # ==================== 验收报告 ====================
 
+
 class AcceptanceReportGenerateRequest(BaseModel):
     """生成验收报告请求"""
+
     report_type: str = Field(description="FAT/SAT/FINAL")
     version: Optional[int] = Field(default=1, description="版本号")
     include_signatures: bool = Field(default=True, description="是否包含签字")
@@ -309,6 +339,7 @@ class AcceptanceReportGenerateRequest(BaseModel):
 
 class AcceptanceReportResponse(TimestampSchema):
     """验收报告响应"""
+
     id: int
     order_id: int
     report_no: str

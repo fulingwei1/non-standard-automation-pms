@@ -10,6 +10,7 @@
 - 质检流程
 """
 
+import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -18,14 +19,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.vendor import Vendor
 from app.models.project import Project
 from app.models.purchase import PurchaseOrder, PurchaseRequest
-
-import uuid
+from app.models.vendor import Vendor
 
 _MAT001 = f"MAT001-{uuid.uuid4().hex[:8]}"
-
 
 
 class TestPurchaseOrderCRUD:
@@ -38,8 +36,7 @@ class TestPurchaseOrderCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -88,13 +85,11 @@ class TestPurchaseOrderCRUD:
                     "unit_price": 20.00,
                     "tax_rate": 13,
                 },
-            ]
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase-orders/",
-            json=order_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/", json=order_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -122,13 +117,11 @@ class TestPurchaseOrderCRUD:
                     "unit_price": 10.00,
                     "tax_rate": 13,
                 },
-            ]
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase-orders/",
-            json=order_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/", json=order_data, headers=headers
         )
 
         assert response.status_code == 404
@@ -148,8 +141,7 @@ class TestPurchaseOrderCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -163,10 +155,7 @@ class TestPurchaseOrderCRUD:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/999999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase-orders/999999", headers=headers)
 
         assert response.status_code == 404
 
@@ -184,8 +173,7 @@ class TestPurchaseOrderCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/items",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/items", headers=headers
         )
 
         assert response.status_code == 200
@@ -202,15 +190,12 @@ class TestPurchaseOrderFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/?keyword=PO",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/?keyword=PO", headers=headers
         )
 
         assert response.status_code == 200
 
-    def test_filter_by_supplier(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_filter_by_supplier(self, client: TestClient, admin_token: str, db_session: Session):
         """测试按供应商筛选"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -221,8 +206,7 @@ class TestPurchaseOrderFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/?supplier_id={supplier.id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/?supplier_id={supplier.id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -234,8 +218,7 @@ class TestPurchaseOrderFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/?status=DRAFT",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/?status=DRAFT", headers=headers
         )
 
         assert response.status_code == 200
@@ -245,16 +228,12 @@ class TestPurchaseOrderUpdate:
     """采购订单更新测试"""
 
     @pytest.mark.skip(reason="测试与实际API不匹配")
-    def test_update_draft_order(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_update_draft_order(self, client: TestClient, admin_token: str, db_session: Session):
         """测试更新草稿状态的订单"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        order = db_session.query(PurchaseOrder).filter(
-            PurchaseOrder.status == "DRAFT"
-        ).first()
+        order = db_session.query(PurchaseOrder).filter(PurchaseOrder.status == "DRAFT").first()
         if not order:
             pytest.skip("No draft order available for testing")
 
@@ -266,7 +245,7 @@ class TestPurchaseOrderUpdate:
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -280,9 +259,7 @@ class TestPurchaseOrderUpdate:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        order = db_session.query(PurchaseOrder).filter(
-            PurchaseOrder.status != "DRAFT"
-        ).first()
+        order = db_session.query(PurchaseOrder).filter(PurchaseOrder.status != "DRAFT").first()
         if not order:
             pytest.skip("No non-draft order available for testing")
 
@@ -294,7 +271,7 @@ class TestPurchaseOrderUpdate:
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 400
@@ -303,17 +280,13 @@ class TestPurchaseOrderUpdate:
 class TestPurchaseOrderApproval:
     """采购订单审批流程测试"""
 
-    def test_submit_order(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_submit_order(self, client: TestClient, admin_token: str, db_session: Session):
         """测试提交采购订单"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         # 查找有明细的草稿订单
-        order = db_session.query(PurchaseOrder).filter(
-            PurchaseOrder.status == "DRAFT"
-        ).first()
+        order = db_session.query(PurchaseOrder).filter(PurchaseOrder.status == "DRAFT").first()
         if not order:
             pytest.skip("No draft order available for testing")
 
@@ -323,8 +296,7 @@ class TestPurchaseOrderApproval:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/submit",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/submit", headers=headers
         )
 
         assert response.status_code == 200
@@ -348,50 +320,40 @@ class TestPurchaseOrderApproval:
             "supplier_id": supplier.id,
             "order_type": "NORMAL",
             "order_title": "空订单测试",
-            "items": []
+            "items": [],
         }
 
         # 创建订单需要至少一个明细，所以这里会失败
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase-orders/",
-            json=order_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/", json=order_data, headers=headers
         )
 
         # 可能在创建时就失败（需要至少一个明细）或者在提交时失败
         assert response.status_code in [200, 400, 422]
 
-    def test_approve_order(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_approve_order(self, client: TestClient, admin_token: str, db_session: Session):
         """测试审批采购订单"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        order = db_session.query(PurchaseOrder).filter(
-            PurchaseOrder.status == "SUBMITTED"
-        ).first()
+        order = db_session.query(PurchaseOrder).filter(PurchaseOrder.status == "SUBMITTED").first()
         if not order:
             pytest.skip("No submitted order available for testing")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve?approved=true",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
 
-    def test_reject_order(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_reject_order(self, client: TestClient, admin_token: str, db_session: Session):
         """测试驳回采购订单"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        order = db_session.query(PurchaseOrder).filter(
-            PurchaseOrder.status == "SUBMITTED"
-        ).first()
+        order = db_session.query(PurchaseOrder).filter(PurchaseOrder.status == "SUBMITTED").first()
         if not order:
             pytest.skip("No submitted order available for testing")
 
@@ -399,7 +361,7 @@ class TestPurchaseOrderApproval:
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/{order.id}/approve"
             f"?approved=false&approval_note=测试驳回",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -416,7 +378,7 @@ class TestPurchaseRequest:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
             f"{settings.API_V1_PREFIX}/purchase-orders/requests?page=1&page_size=10",
-            headers=headers
+            headers=headers,
         )
 
         # 如果422，可能是路由顺序问题（/requests被/{order_id}匹配）
@@ -455,13 +417,11 @@ class TestPurchaseRequest:
                     "quantity": 100,
                     "unit_price": 10.00,
                 },
-            ]
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase-orders/requests",
-            json=request_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests", json=request_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -483,8 +443,7 @@ class TestPurchaseRequest:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request.id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request.id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -498,9 +457,9 @@ class TestPurchaseRequest:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        request = db_session.query(PurchaseRequest).filter(
-            PurchaseRequest.status == "DRAFT"
-        ).first()
+        request = (
+            db_session.query(PurchaseRequest).filter(PurchaseRequest.status == "DRAFT").first()
+        )
         if not request:
             pytest.skip("No draft request available for testing")
 
@@ -511,7 +470,7 @@ class TestPurchaseRequest:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request.id}/submit",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -523,9 +482,9 @@ class TestPurchaseRequest:
         if not admin_token:
             pytest.skip("Admin token not available")
 
-        request = db_session.query(PurchaseRequest).filter(
-            PurchaseRequest.status == "SUBMITTED"
-        ).first()
+        request = (
+            db_session.query(PurchaseRequest).filter(PurchaseRequest.status == "SUBMITTED").first()
+        )
         if not request:
             pytest.skip("No submitted request available for testing")
 
@@ -533,7 +492,7 @@ class TestPurchaseRequest:
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request.id}/approve"
             f"?approved=true",
-            headers=headers
+            headers=headers,
         )
 
         # 400 可能是因为审批条件不满足（如已审批过），422可能是路由问题
@@ -543,9 +502,7 @@ class TestPurchaseRequest:
         assert response.status_code == 200
 
     @pytest.mark.skip(reason="测试与实际API不匹配")
-    def test_delete_draft_request(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_delete_draft_request(self, client: TestClient, admin_token: str, db_session: Session):
         """测试删除草稿状态的采购申请"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -568,13 +525,11 @@ class TestPurchaseRequest:
                     "quantity": 10,
                     "unit_price": 1.00,
                 },
-            ]
+            ],
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase-orders/requests",
-            json=request_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests", json=request_data, headers=headers
         )
 
         if create_response.status_code != 200:
@@ -584,8 +539,7 @@ class TestPurchaseRequest:
 
         # 删除申请
         delete_response = client.delete(
-            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/requests/{request_id}", headers=headers
         )
 
         assert delete_response.status_code == 200
@@ -602,7 +556,7 @@ class TestGoodsReceipt:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
             f"{settings.API_V1_PREFIX}/purchase-orders/goods-receipts/?page=1&page_size=10",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -610,17 +564,13 @@ class TestGoodsReceipt:
         assert "items" in data
         assert "total" in data
 
-    def test_create_goods_receipt(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_create_goods_receipt(self, client: TestClient, admin_token: str, db_session: Session):
         """测试创建收货单"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         # 查找已审批的采购订单
-        order = db_session.query(PurchaseOrder).filter(
-            PurchaseOrder.status == "APPROVED"
-        ).first()
+        order = db_session.query(PurchaseOrder).filter(PurchaseOrder.status == "APPROVED").first()
         if not order:
             pytest.skip("No approved order available for testing")
 
@@ -641,13 +591,13 @@ class TestGoodsReceipt:
                     "delivery_qty": 10,
                     "received_qty": 10,
                 }
-            ]
+            ],
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/purchase-orders/goods-receipts/",
             json=receipt_data,
-            headers=headers
+            headers=headers,
         )
 
         # 可能返回200或400（如果数量超过订单数量）
@@ -674,7 +624,7 @@ class TestGoodsReceipt:
         response = client.put(
             f"{settings.API_V1_PREFIX}/purchase-orders/goods-receipts/{receipt.id}/items/{item.id}/inspect"
             f"?inspect_qty=10&qualified_qty=9",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code in [200, 400]
@@ -691,8 +641,7 @@ class TestPurchaseFromBOM:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase-orders/from-bom?bom_id=999999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase-orders/from-bom?bom_id=999999", headers=headers
         )
 
         assert response.status_code == 404

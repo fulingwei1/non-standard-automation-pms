@@ -94,9 +94,7 @@ class RoleDataScope(Base):
     __tablename__ = "role_data_scopes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    role_id = Column(
-        Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False
-    )
+    role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
     resource_type = Column(String(50), nullable=False)
     scope_rule_id = Column(
         Integer, ForeignKey("data_scope_rules.id", ondelete="RESTRICT"), nullable=False
@@ -107,15 +105,14 @@ class RoleDataScope(Base):
     role = relationship("Role", back_populates="data_scopes")
     scope_rule = relationship("DataScopeRule", back_populates="role_data_scopes")
 
-    __table_args__ = (
-        UniqueConstraint("role_id", "resource_type", name="uk_role_resource"),
-    )
+    __table_args__ = (UniqueConstraint("role_id", "resource_type", name="uk_role_resource"),)
 
 
 class PermissionGroup(Base, TimestampMixin):
     """权限分组表
-    
+
     【状态】未启用 - 权限组（被Permission V2替代）"""
+
     __tablename__ = "permission_groups"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -149,9 +146,13 @@ class MenuPermission(Base, TimestampMixin):
     menu_name = Column(String(100), nullable=False, comment="菜单名称")
     menu_path = Column(String(200), comment="前端路由路径")
     menu_icon = Column(String(50), comment="菜单图标")
-    parent_id = Column(Integer, ForeignKey("menu_permissions.id", ondelete="SET NULL"), comment="父菜单ID")
+    parent_id = Column(
+        Integer, ForeignKey("menu_permissions.id", ondelete="SET NULL"), comment="父菜单ID"
+    )
     menu_type = Column(String(20), nullable=False, comment="类型: DIRECTORY/MENU/BUTTON")
-    perm_code = Column(String(100), nullable=True, comment="关联的API权限编码（可选，纯目录可为NULL）")
+    perm_code = Column(
+        String(100), nullable=True, comment="关联的API权限编码（可选，纯目录可为NULL）"
+    )
     sort_order = Column(Integer, default=0, comment="排序")
     is_visible = Column(Boolean, default=True, comment="是否可见")
     is_active = Column(Boolean, default=True, comment="是否启用")
@@ -176,12 +177,8 @@ class RoleMenu(Base):
     __tablename__ = "role_menus"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    role_id = Column(
-        Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False
-    )
-    menu_id = Column(
-        Integer, ForeignKey("menu_permissions.id", ondelete="CASCADE"), nullable=False
-    )
+    role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
+    menu_id = Column(Integer, ForeignKey("menu_permissions.id", ondelete="CASCADE"), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
 

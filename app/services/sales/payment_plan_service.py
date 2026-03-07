@@ -62,9 +62,11 @@ class PaymentPlanService:
             return False
 
         # 检查是否已有收款计划
-        existing_plans = self.db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.contract_id == contract.id
-        ).count()
+        existing_plans = (
+            self.db.query(ProjectPaymentPlan)
+            .filter(ProjectPaymentPlan.contract_id == contract.id)
+            .count()
+        )
         return existing_plans == 0
 
     def _get_payment_configurations(self) -> List[Dict[str, Any]]:
@@ -76,7 +78,7 @@ class PaymentPlanService:
                 "payment_type": "ADVANCE",
                 "payment_ratio": 30.0,
                 "trigger_milestone": "合同签订",
-                "trigger_condition": "合同签订后"
+                "trigger_condition": "合同签订后",
             },
             {
                 "payment_no": 2,
@@ -84,7 +86,7 @@ class PaymentPlanService:
                 "payment_type": "DELIVERY",
                 "payment_ratio": 40.0,
                 "trigger_milestone": "发货",
-                "trigger_condition": "设备发货后"
+                "trigger_condition": "设备发货后",
             },
             {
                 "payment_no": 3,
@@ -92,7 +94,7 @@ class PaymentPlanService:
                 "payment_type": "ACCEPTANCE",
                 "payment_ratio": 25.0,
                 "trigger_milestone": "终验通过",
-                "trigger_condition": "终验通过后"
+                "trigger_condition": "终验通过后",
             },
             {
                 "payment_no": 4,
@@ -100,11 +102,13 @@ class PaymentPlanService:
                 "payment_type": "WARRANTY",
                 "payment_ratio": 5.0,
                 "trigger_milestone": "质保结束",
-                "trigger_condition": "质保期结束后"
-            }
+                "trigger_condition": "质保期结束后",
+            },
         ]
 
-    def _create_payment_plan(self, contract: Contract, config: Dict[str, Any]) -> Optional[ProjectPaymentPlan]:
+    def _create_payment_plan(
+        self, contract: Contract, config: Dict[str, Any]
+    ) -> Optional[ProjectPaymentPlan]:
         """创建单个收款计划"""
         if not contract.project_id:
             return None
@@ -135,10 +139,12 @@ class PaymentPlanService:
             milestone_id=milestone_id,
             trigger_milestone=config["trigger_milestone"],
             trigger_condition=config["trigger_condition"],
-            status="PENDING"
+            status="PENDING",
         )
 
-    def _calculate_planned_date(self, contract: Contract, project: Project, payment_no: int) -> Optional[datetime]:
+    def _calculate_planned_date(
+        self, contract: Contract, project: Project, payment_no: int
+    ) -> Optional[datetime]:
         """计算计划收款日期"""
         if payment_no == 1:
             # 预付款：合同签订后7天
@@ -147,7 +153,11 @@ class PaymentPlanService:
             # 发货款：预计项目中期
             if project.planned_end_date and project.planned_start_date:
                 days = (project.planned_end_date - project.planned_start_date).days
-                return project.planned_start_date + timedelta(days=int(days * 0.6)) if days > 0 else None
+                return (
+                    project.planned_start_date + timedelta(days=int(days * 0.6))
+                    if days > 0
+                    else None
+                )
         elif payment_no == 3:
             # 验收款：项目结束前
             return project.planned_end_date
@@ -179,15 +189,20 @@ class PaymentPlanService:
             "milestone_name",
             use_ilike=False,
         )
-        milestone = self.db.query(ProjectMilestone).filter(
-            and_(
-                ProjectMilestone.project_id == project_id,
-                or_(
-                    ProjectMilestone.id.in_(keyword_query),
-                    ProjectMilestone.milestone_type == "GATE"
+        milestone = (
+            self.db.query(ProjectMilestone)
+            .filter(
+                and_(
+                    ProjectMilestone.project_id == project_id,
+                    or_(
+                        ProjectMilestone.id.in_(keyword_query),
+                        ProjectMilestone.milestone_type == "GATE",
+                    ),
                 )
             )
-        ).order_by(ProjectMilestone.planned_date.asc()).first()
+            .order_by(ProjectMilestone.planned_date.asc())
+            .first()
+        )
 
         return milestone.id if milestone else None
 
@@ -200,15 +215,20 @@ class PaymentPlanService:
             "milestone_name",
             use_ilike=False,
         )
-        milestone = self.db.query(ProjectMilestone).filter(
-            and_(
-                ProjectMilestone.project_id == project_id,
-                or_(
-                    ProjectMilestone.id.in_(keyword_query),
-                    ProjectMilestone.milestone_type == "DELIVERY"
+        milestone = (
+            self.db.query(ProjectMilestone)
+            .filter(
+                and_(
+                    ProjectMilestone.project_id == project_id,
+                    or_(
+                        ProjectMilestone.id.in_(keyword_query),
+                        ProjectMilestone.milestone_type == "DELIVERY",
+                    ),
                 )
             )
-        ).order_by(ProjectMilestone.planned_date.asc()).first()
+            .order_by(ProjectMilestone.planned_date.asc())
+            .first()
+        )
 
         return milestone.id if milestone else None
 
@@ -221,15 +241,20 @@ class PaymentPlanService:
             "milestone_name",
             use_ilike=False,
         )
-        milestone = self.db.query(ProjectMilestone).filter(
-            and_(
-                ProjectMilestone.project_id == project_id,
-                or_(
-                    ProjectMilestone.id.in_(keyword_query),
-                    ProjectMilestone.milestone_type == "GATE"
+        milestone = (
+            self.db.query(ProjectMilestone)
+            .filter(
+                and_(
+                    ProjectMilestone.project_id == project_id,
+                    or_(
+                        ProjectMilestone.id.in_(keyword_query),
+                        ProjectMilestone.milestone_type == "GATE",
+                    ),
                 )
             )
-        ).order_by(ProjectMilestone.planned_date.desc()).first()  # 取最晚的验收里程碑
+            .order_by(ProjectMilestone.planned_date.desc())
+            .first()
+        )  # 取最晚的验收里程碑
 
         return milestone.id if milestone else None
 
@@ -242,13 +267,16 @@ class PaymentPlanService:
             "milestone_name",
             use_ilike=False,
         )
-        milestone = self.db.query(ProjectMilestone).filter(
-            and_(
-                ProjectMilestone.project_id == project_id,
-                or_(
-                    ProjectMilestone.id.in_(keyword_query)
+        milestone = (
+            self.db.query(ProjectMilestone)
+            .filter(
+                and_(
+                    ProjectMilestone.project_id == project_id,
+                    or_(ProjectMilestone.id.in_(keyword_query)),
                 )
             )
-        ).order_by(ProjectMilestone.planned_date.desc()).first()
+            .order_by(ProjectMilestone.planned_date.desc())
+            .first()
+        )
 
         return milestone.id if milestone else None

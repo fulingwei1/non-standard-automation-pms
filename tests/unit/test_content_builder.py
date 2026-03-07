@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 
 class TestContentSlideBuilder:
     def setup_method(self):
-        with patch("app.services.ppt_generator.content_builder.BaseSlideBuilder.__init__", return_value=None):
+        with patch(
+            "app.services.ppt_generator.content_builder.BaseSlideBuilder.__init__",
+            return_value=None,
+        ):
             from app.services.ppt_generator.content_builder import ContentSlideBuilder
+
             self.builder = ContentSlideBuilder.__new__(ContentSlideBuilder)
             self.builder.prs = MagicMock()
             self.builder.config = MagicMock()

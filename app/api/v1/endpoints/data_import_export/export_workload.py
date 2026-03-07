@@ -28,9 +28,7 @@ def export_workload(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportWorkloadRequest,
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出负荷数据（Excel）
@@ -64,9 +62,7 @@ def export_workload(
 
         avg_daily_hours = total_hours / work_days if work_days > 0 else 0
         standard_hours = work_days * 8
-        utilization_rate = (
-            (total_hours / standard_hours * 100) if standard_hours > 0 else 0
-        )
+        utilization_rate = (total_hours / standard_hours * 100) if standard_hours > 0 else 0
 
         allocations = (
             db.query(PmoResourceAllocation)
@@ -94,9 +90,11 @@ def export_workload(
                 "标准工时(小时)": standard_hours,
                 "利用率(%)": round(utilization_rate, 2),
                 "分配项目数": project_count,
-                "负荷状态": "超负荷"
-                if utilization_rate > 100
-                else ("正常" if utilization_rate > 80 else "空闲"),
+                "负荷状态": (
+                    "超负荷"
+                    if utilization_rate > 100
+                    else ("正常" if utilization_rate > 80 else "空闲")
+                ),
             }
         )
 

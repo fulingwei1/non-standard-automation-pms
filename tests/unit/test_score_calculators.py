@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/staff_matching/score_calculators.py"""
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.services.staff_matching.score_calculators import (
-    SkillScoreCalculator,
-    DomainScoreCalculator,
     AttitudeScoreCalculator,
+    DomainScoreCalculator,
     QualityScoreCalculator,
-    WorkloadScoreCalculator,
+    SkillScoreCalculator,
     SpecialScoreCalculator,
+    WorkloadScoreCalculator,
 )
 
 

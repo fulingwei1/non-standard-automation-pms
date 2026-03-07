@@ -6,16 +6,17 @@ I4组：app/utils/spec_match_service.py 深度单元测试
 策略：MagicMock 模拟 db、TechnicalSpecRequirement、SpecMatchRecord、AlertRecord
 """
 
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.utils.spec_match_service import SpecMatchService
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def service():
@@ -29,14 +30,14 @@ def mock_db():
 
 def _make_req(
     project_id=1,
-    material_code='MAT-ME-00001',
-    material_name='伺服电机',
-    specification='AC220V 1.5kW',
-    brand='Siemens',
-    model='1FK7',
+    material_code="MAT-ME-00001",
+    material_name="伺服电机",
+    specification="AC220V 1.5kW",
+    brand="Siemens",
+    model="1FK7",
     key_parameters=None,
-    requirement_level='NORMAL',
-    req_id=10
+    requirement_level="NORMAL",
+    req_id=10,
 ):
     """构造 TechnicalSpecRequirement mock"""
     req = MagicMock()
@@ -56,6 +57,7 @@ def _make_req(
 # SpecMatchService 初始化
 # ===========================================================================
 
+
 class TestSpecMatchServiceInit:
     def test_has_matcher(self):
         svc = SpecMatchService()
@@ -63,6 +65,7 @@ class TestSpecMatchServiceInit:
 
     def test_matcher_type(self):
         from app.utils.spec_matcher import SpecMatcher
+
         svc = SpecMatchService()
         assert isinstance(svc.matcher, SpecMatcher)
 
@@ -70,6 +73,7 @@ class TestSpecMatchServiceInit:
 # ===========================================================================
 # check_po_item_spec_match
 # ===========================================================================
+
 
 class TestCheckPoItemSpecMatch:
     """测试 check_po_item_spec_match"""
@@ -82,8 +86,8 @@ class TestCheckPoItemSpecMatch:
             db=mock_db,
             project_id=1,
             po_item_id=100,
-            material_code='MAT-ME-00001',
-            specification='AC220V 1.5kW'
+            material_code="MAT-ME-00001",
+            specification="AC220V 1.5kW",
         )
 
         assert result is None
@@ -97,15 +101,15 @@ class TestCheckPoItemSpecMatch:
         mock_record = MagicMock()
         mock_record.id = 99
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', return_value=mock_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", return_value=mock_record):
             result = service.check_po_item_spec_match(
                 db=mock_db,
                 project_id=1,
                 po_item_id=100,
-                material_code='MAT-ME-00001',
-                specification='AC220V 1.5kW',
-                brand='Siemens',
-                model='1FK7'
+                material_code="MAT-ME-00001",
+                specification="AC220V 1.5kW",
+                brand="Siemens",
+                model="1FK7",
             )
 
         assert result is not None
@@ -114,7 +118,7 @@ class TestCheckPoItemSpecMatch:
 
     def test_mismatched_triggers_alert(self, service, mock_db):
         """规格不匹配时触发预警创建"""
-        req = _make_req(specification='AC380V 3kW')  # 要求不同
+        req = _make_req(specification="AC380V 3kW")  # 要求不同
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [req]
 
         mock_record = MagicMock()
@@ -127,30 +131,30 @@ class TestCheckPoItemSpecMatch:
 
         service._create_alert = mock_create_alert
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', return_value=mock_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", return_value=mock_record):
             result = service.check_po_item_spec_match(
                 db=mock_db,
                 project_id=1,
                 po_item_id=100,
-                material_code='MAT-ME-00001',
-                specification='DC12V 50W',
-                brand='ABB',
-                model='XYZ'
+                material_code="MAT-ME-00001",
+                specification="DC12V 50W",
+                brand="ABB",
+                model="XYZ",
             )
 
         assert result is not None
 
     def test_material_code_mismatch_skips_req(self, service, mock_db):
         """req.material_code与物料编码不匹配时跳过该req"""
-        req = _make_req(material_code='MAT-EL-00001')  # 不同物料码
+        req = _make_req(material_code="MAT-EL-00001")  # 不同物料码
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [req]
 
         result = service.check_po_item_spec_match(
             db=mock_db,
             project_id=1,
             po_item_id=100,
-            material_code='MAT-ME-00001',  # 查询的不同
-            specification='AC220V 1.5kW'
+            material_code="MAT-ME-00001",  # 查询的不同
+            specification="AC220V 1.5kW",
         )
 
         assert result is None
@@ -163,13 +167,13 @@ class TestCheckPoItemSpecMatch:
         mock_record = MagicMock()
         mock_record.id = 99
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', return_value=mock_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", return_value=mock_record):
             result = service.check_po_item_spec_match(
                 db=mock_db,
                 project_id=1,
                 po_item_id=100,
-                material_code='ANY-CODE',
-                specification='AC220V 1.5kW'
+                material_code="ANY-CODE",
+                specification="AC220V 1.5kW",
             )
 
         assert result is not None
@@ -187,24 +191,25 @@ class TestCheckPoItemSpecMatch:
             m.id = 1
             return m
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', side_effect=capture_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", side_effect=capture_record):
             service.check_po_item_spec_match(
                 db=mock_db,
                 project_id=1,
                 po_item_id=200,
-                material_code='MAT-ME-00001',
-                specification='AC220V 1.5kW',
-                brand='Siemens',
-                model='1FK7'
+                material_code="MAT-ME-00001",
+                specification="AC220V 1.5kW",
+                brand="Siemens",
+                model="1FK7",
             )
 
-        assert captured_kwargs.get('match_type') == 'PURCHASE_ORDER'
-        assert captured_kwargs.get('match_target_id') == 200
+        assert captured_kwargs.get("match_type") == "PURCHASE_ORDER"
+        assert captured_kwargs.get("match_target_id") == 200
 
 
 # ===========================================================================
 # check_bom_item_spec_match
 # ===========================================================================
+
 
 class TestCheckBomItemSpecMatch:
     """测试 check_bom_item_spec_match"""
@@ -217,8 +222,8 @@ class TestCheckBomItemSpecMatch:
             db=mock_db,
             project_id=1,
             bom_item_id=50,
-            material_code='MAT-ME-00001',
-            specification='AC220V 1.5kW'
+            material_code="MAT-ME-00001",
+            specification="AC220V 1.5kW",
         )
 
         assert result is None
@@ -236,19 +241,19 @@ class TestCheckBomItemSpecMatch:
             m.id = 2
             return m
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', side_effect=capture_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", side_effect=capture_record):
             service.check_bom_item_spec_match(
                 db=mock_db,
                 project_id=1,
                 bom_item_id=55,
-                material_code='MAT-ME-00001',
-                specification='AC220V 1.5kW',
-                brand='Siemens',
-                model='1FK7'
+                material_code="MAT-ME-00001",
+                specification="AC220V 1.5kW",
+                brand="Siemens",
+                model="1FK7",
             )
 
-        assert captured_kwargs.get('match_type') == 'BOM'
-        assert captured_kwargs.get('match_target_id') == 55
+        assert captured_kwargs.get("match_type") == "BOM"
+        assert captured_kwargs.get("match_target_id") == 55
 
     def test_creates_match_record(self, service, mock_db):
         """创建匹配记录"""
@@ -258,13 +263,13 @@ class TestCheckBomItemSpecMatch:
         mock_record = MagicMock()
         mock_record.id = 77
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', return_value=mock_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", return_value=mock_record):
             result = service.check_bom_item_spec_match(
                 db=mock_db,
                 project_id=1,
                 bom_item_id=55,
-                material_code='MAT-ME-00001',
-                specification='AC220V 1.5kW'
+                material_code="MAT-ME-00001",
+                specification="AC220V 1.5kW",
             )
 
         assert result is not None
@@ -279,13 +284,13 @@ class TestCheckBomItemSpecMatch:
         mock_record = MagicMock()
         mock_record.id = 1
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', return_value=mock_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", return_value=mock_record):
             result = service.check_bom_item_spec_match(
                 db=mock_db,
                 project_id=1,
                 bom_item_id=55,
-                material_code='MAT-ME-00001',
-                specification=None  # None 传入
+                material_code="MAT-ME-00001",
+                specification=None,  # None 传入
             )
 
         # specification=None 时传入 '' 给 match_specification
@@ -295,6 +300,7 @@ class TestCheckBomItemSpecMatch:
 # ===========================================================================
 # _create_alert
 # ===========================================================================
+
 
 class TestCreateAlert:
     """测试 _create_alert"""
@@ -311,21 +317,23 @@ class TestCreateAlert:
 
         req = _make_req()
         match_result = MagicMock()
-        match_result.match_score = Decimal('60.0')
-        match_result.differences = {'specification': {'required': 'A', 'actual': 'B'}}
+        match_result.match_score = Decimal("60.0")
+        match_result.differences = {"specification": {"required": "A", "actual": "B"}}
 
         mock_alert = MagicMock()
         mock_alert.id = 10
 
-        with patch('app.utils.spec_match_service.AlertRecord', return_value=mock_alert), \
-             patch('app.utils.spec_match_service.apply_like_filter') as mock_alf:
+        with (
+            patch("app.utils.spec_match_service.AlertRecord", return_value=mock_alert),
+            patch("app.utils.spec_match_service.apply_like_filter") as mock_alf,
+        ):
             mock_alf.return_value = mock_db.query.return_value.filter.return_value
             service._create_alert(
                 db=mock_db,
                 project_id=1,
                 match_record_id=99,
                 requirement=req,
-                match_result=match_result
+                match_result=match_result,
             )
 
         mock_db.add.assert_called()
@@ -355,21 +363,23 @@ class TestCreateAlert:
 
         req = _make_req()
         match_result = MagicMock()
-        match_result.match_score = Decimal('45.0')
-        match_result.differences = {'brand': {'required': 'A', 'actual': 'B'}}
+        match_result.match_score = Decimal("45.0")
+        match_result.differences = {"brand": {"required": "A", "actual": "B"}}
 
         mock_alert = MagicMock()
 
-        with patch('app.utils.spec_match_service.AlertRecord', return_value=mock_alert), \
-             patch('app.utils.spec_match_service.AlertRule', return_value=mock_new_rule), \
-             patch('app.utils.spec_match_service.apply_like_filter') as mock_alf:
+        with (
+            patch("app.utils.spec_match_service.AlertRecord", return_value=mock_alert),
+            patch("app.utils.spec_match_service.AlertRule", return_value=mock_new_rule),
+            patch("app.utils.spec_match_service.apply_like_filter") as mock_alf,
+        ):
             mock_alf.return_value = mock_count_query
             service._create_alert(
                 db=mock_db,
                 project_id=2,
                 match_record_id=50,
                 requirement=req,
-                match_result=match_result
+                match_result=match_result,
             )
 
         # db.add should have been called for both rule and alert
@@ -405,11 +415,13 @@ class TestCreateAlert:
 
         req = _make_req()
         match_result = MagicMock()
-        match_result.match_score = Decimal('30.0')
+        match_result.match_score = Decimal("30.0")
         match_result.differences = {}
 
-        with patch('app.utils.spec_match_service.AlertRecord', return_value=mock_alert), \
-             patch('app.utils.spec_match_service.apply_like_filter') as mock_alf:
+        with (
+            patch("app.utils.spec_match_service.AlertRecord", return_value=mock_alert),
+            patch("app.utils.spec_match_service.apply_like_filter") as mock_alf,
+        ):
             q = MagicMock()
             q.count.return_value = 0
             mock_alf.return_value = q
@@ -418,7 +430,7 @@ class TestCreateAlert:
                 project_id=1,
                 match_record_id=99,
                 requirement=req,
-                match_result=match_result
+                match_result=match_result,
             )
 
         # match_record.alert_id should have been set
@@ -429,23 +441,31 @@ class TestCreateAlert:
 # 边界条件
 # ===========================================================================
 
+
 class TestSpecMatchServiceEdgeCases:
     """边界条件测试"""
 
     def test_multiple_requirements_returns_first_match(self, service, mock_db):
         """多个规格要求时只处理第一个匹配的"""
-        req1 = _make_req(material_code='MAT-ME-00001', req_id=1)
-        req2 = _make_req(material_code='MAT-ME-00001', req_id=2, specification='DC24V')
-        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [req1, req2]
+        req1 = _make_req(material_code="MAT-ME-00001", req_id=1)
+        req2 = _make_req(material_code="MAT-ME-00001", req_id=2, specification="DC24V")
+        mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            req1,
+            req2,
+        ]
 
         mock_record = MagicMock()
         mock_record.id = 1
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', return_value=mock_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", return_value=mock_record):
             result = service.check_po_item_spec_match(
-                db=mock_db, project_id=1, po_item_id=1,
-                material_code='MAT-ME-00001', specification='AC220V 1.5kW',
-                brand='Siemens', model='1FK7'
+                db=mock_db,
+                project_id=1,
+                po_item_id=1,
+                material_code="MAT-ME-00001",
+                specification="AC220V 1.5kW",
+                brand="Siemens",
+                model="1FK7",
             )
 
         # 只返回第一个匹配结果
@@ -459,11 +479,15 @@ class TestSpecMatchServiceEdgeCases:
         mock_record = MagicMock()
         mock_record.id = 1
 
-        with patch('app.utils.spec_match_service.SpecMatchRecord', return_value=mock_record):
+        with patch("app.utils.spec_match_service.SpecMatchRecord", return_value=mock_record):
             result = service.check_bom_item_spec_match(
-                db=mock_db, project_id=1, bom_item_id=1,
-                material_code='ANY', specification='AC220V',
-                brand=None, model=None
+                db=mock_db,
+                project_id=1,
+                bom_item_id=1,
+                material_code="ANY",
+                specification="AC220V",
+                brand=None,
+                model=None,
             )
 
         assert result is not None

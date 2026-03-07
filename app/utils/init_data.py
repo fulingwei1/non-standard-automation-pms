@@ -37,9 +37,9 @@ def init_preset_stage_templates(db: Session) -> List[StageTemplate]:
         template_code = template_data["template_code"]
 
         # 检查是否已存在
-        existing = db.query(StageTemplate).filter(
-            StageTemplate.template_code == template_code
-        ).first()
+        existing = (
+            db.query(StageTemplate).filter(StageTemplate.template_code == template_code).first()
+        )
 
         if existing:
             logger.debug(f"预置模板 {template_code} 已存在，跳过")
@@ -59,7 +59,7 @@ def init_preset_stage_templates(db: Session) -> List[StageTemplate]:
 def init_api_permissions(db: Session) -> int:
     """
     初始化 API 权限种子数据
-    
+
     使用内嵌数据（不依赖外部SQL文件）
     此函数是幂等的，可重复执行
 
@@ -71,18 +71,21 @@ def init_api_permissions(db: Session) -> int:
     """
     try:
         # 使用新的内嵌初始化逻辑
-        from app.utils.init_permissions_data import init_api_permissions_data, ensure_admin_permissions
-        
+        from app.utils.init_permissions_data import (
+            ensure_admin_permissions,
+            init_api_permissions_data,
+        )
+
         result = init_api_permissions_data(db)
-        
-        if result.get('errors'):
+
+        if result.get("errors"):
             logger.error(f"API权限初始化有错误: {result['errors']}")
-        
+
         # 确保ADMIN角色拥有所有权限
         ensure_admin_permissions(db)
-        
-        return result.get('permissions_created', 0)
-        
+
+        return result.get("permissions_created", 0)
+
     except Exception as e:
         logger.error(f"API权限初始化失败: {e}")
         return 0

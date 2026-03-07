@@ -2,13 +2,15 @@
 """
 第十六批：加班工资计算服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.overtime_calculation_service import OvertimeCalculationService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -34,7 +36,7 @@ class TestOvertimeCalculationService:
         db = make_db()
         with patch(
             "app.services.overtime_calculation_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100")
+            return_value=Decimal("100"),
         ):
             svc = OvertimeCalculationService(db)
             result = svc.calculate_overtime_pay(1, date(2025, 1, 10), Decimal("8"), "NORMAL")
@@ -44,7 +46,7 @@ class TestOvertimeCalculationService:
         db = make_db()
         with patch(
             "app.services.overtime_calculation_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100")
+            return_value=Decimal("100"),
         ):
             svc = OvertimeCalculationService(db)
             result = svc.calculate_overtime_pay(1, date(2025, 1, 10), Decimal("2"), "OVERTIME")
@@ -55,7 +57,7 @@ class TestOvertimeCalculationService:
         db = make_db()
         with patch(
             "app.services.overtime_calculation_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100")
+            return_value=Decimal("100"),
         ):
             svc = OvertimeCalculationService(db)
             result = svc.calculate_overtime_pay(1, date(2025, 1, 11), Decimal("2"), "WEEKEND")
@@ -66,7 +68,7 @@ class TestOvertimeCalculationService:
         db = make_db()
         with patch(
             "app.services.overtime_calculation_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100")
+            return_value=Decimal("100"),
         ):
             svc = OvertimeCalculationService(db)
             result = svc.calculate_overtime_pay(1, date(2025, 2, 1), Decimal("1"), "HOLIDAY")
@@ -77,7 +79,7 @@ class TestOvertimeCalculationService:
         db = make_db()
         with patch(
             "app.services.overtime_calculation_service.HourlyRateService.get_user_hourly_rate",
-            return_value=Decimal("100")
+            return_value=Decimal("100"),
         ):
             svc = OvertimeCalculationService(db)
             result = svc.calculate_overtime_pay(1, date(2025, 1, 10), Decimal("4"), "UNKNOWN_TYPE")
@@ -95,7 +97,7 @@ class TestOvertimeCalculationService:
         svc = OvertimeCalculationService(db)
         with patch(
             "app.services.overtime_calculation_service.get_month_range_by_ym",
-            return_value=(date(2025, 1, 1), date(2025, 1, 31))
+            return_value=(date(2025, 1, 1), date(2025, 1, 31)),
         ):
             try:
                 result = svc.calculate_user_monthly_overtime_pay(999, 2025, 1)

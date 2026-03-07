@@ -25,7 +25,11 @@ from .utils import generate_issue_no, update_review_issue_counts
 router = APIRouter()
 
 
-@router.post("/technical-reviews/{review_id}/checklist-records", response_model=ReviewChecklistRecordResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/technical-reviews/{review_id}/checklist-records",
+    response_model=ReviewChecklistRecordResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_checklist_record(
     review_id: int,
     record_in: ReviewChecklistRecordCreate,
@@ -50,7 +54,7 @@ def create_checklist_record(
     db.add(record)
 
     # 如果不通过，自动创建问题
-    if record_in.result == 'FAIL' and record_in.issue_level and record_in.issue_desc:
+    if record_in.result == "FAIL" and record_in.issue_level and record_in.issue_desc:
         issue_no = generate_issue_no(db)
         issue = ReviewIssue(
             review_id=review_id,
@@ -60,7 +64,7 @@ def create_checklist_record(
             description=record_in.issue_desc,
             assignee_id=record_in.checker_id,
             deadline=date.today(),
-            status='OPEN',
+            status="OPEN",
         )
         db.add(issue)
         db.flush()
@@ -88,7 +92,11 @@ def create_checklist_record(
     )
 
 
-@router.put("/technical-reviews/checklist-records/{record_id}", response_model=ReviewChecklistRecordResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/technical-reviews/checklist-records/{record_id}",
+    response_model=ReviewChecklistRecordResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_checklist_record(
     record_id: int,
     record_in: ReviewChecklistRecordUpdate,

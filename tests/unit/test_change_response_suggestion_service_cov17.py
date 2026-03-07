@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第十七批 - 变更应对方案生成服务单元测试"""
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.change_response_suggestion_service")
 
 
 def _make_service(db=None):
     from app.services.change_response_suggestion_service import ChangeResponseSuggestionService
+
     return ChangeResponseSuggestionService(db or MagicMock())
 
 
@@ -75,10 +77,9 @@ class TestCreateApproveSuggestion:
         svc = _make_service(db)
 
         import asyncio
+
         with pytest.raises(ValueError, match="影响分析.*不存在"):
-            asyncio.get_event_loop().run_until_complete(
-                svc.generate_suggestions(1, 999, 1)
-            )
+            asyncio.get_event_loop().run_until_complete(svc.generate_suggestions(1, 999, 1))
 
     def test_generate_suggestions_change_not_found(self):
         """变更请求不存在时抛 ValueError"""
@@ -89,10 +90,9 @@ class TestCreateApproveSuggestion:
         svc = _make_service(db)
 
         import asyncio
+
         with pytest.raises(ValueError, match="变更请求.*不存在"):
-            asyncio.get_event_loop().run_until_complete(
-                svc.generate_suggestions(999, 1, 1)
-            )
+            asyncio.get_event_loop().run_until_complete(svc.generate_suggestions(999, 1, 1))
 
     def test_generate_suggestions_low_risk_produces_approve_and_modify(self):
         """LOW 风险时生成 APPROVE + MODIFY 两个方案"""
@@ -103,9 +103,8 @@ class TestCreateApproveSuggestion:
         svc = _make_service(db)
 
         import asyncio
-        result = asyncio.get_event_loop().run_until_complete(
-            svc.generate_suggestions(1, 1, 1)
-        )
+
+        result = asyncio.get_event_loop().run_until_complete(svc.generate_suggestions(1, 1, 1))
         types = [s.suggestion_type for s in result]
         assert "APPROVE" in types
         assert "MODIFY" in types
@@ -119,8 +118,7 @@ class TestCreateApproveSuggestion:
         svc = _make_service(db)
 
         import asyncio
-        result = asyncio.get_event_loop().run_until_complete(
-            svc.generate_suggestions(1, 1, 1)
-        )
+
+        result = asyncio.get_event_loop().run_until_complete(svc.generate_suggestions(1, 1, 1))
         types = [s.suggestion_type for s in result]
         assert "MITIGATE" in types

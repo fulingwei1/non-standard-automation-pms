@@ -13,9 +13,9 @@ KitRateService 综合单元测试
 - calculate_kit_rate: 计算齐套率
 """
 
-from unittest.mock import MagicMock, patch
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -57,8 +57,9 @@ class TestGetProject:
 
     def test_raises_for_missing_project(self):
         """测试项目不存在时抛出异常"""
-        from app.services.kit_rate.kit_rate_service import KitRateService
         from fastapi import HTTPException
+
+        from app.services.kit_rate.kit_rate_service import KitRateService
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -94,8 +95,9 @@ class TestGetMachine:
 
     def test_raises_for_missing_machine(self):
         """测试机台不存在时抛出异常"""
-        from app.services.kit_rate.kit_rate_service import KitRateService
         from fastapi import HTTPException
+
+        from app.services.kit_rate.kit_rate_service import KitRateService
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -121,7 +123,9 @@ class TestGetLatestBom:
         mock_bom.id = 1
         mock_bom.is_latest = True
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = mock_bom
+        mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = (
+            mock_bom
+        )
 
         service = KitRateService(mock_db)
 
@@ -165,7 +169,9 @@ class TestListBomItemsForMachine:
 
         # 第一次查询获取机台，第二次查询获取BOM
         mock_db.query.return_value.filter.return_value.first.side_effect = [mock_machine, None]
-        mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = mock_bom
+        mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = (
+            mock_bom
+        )
 
         service = KitRateService(mock_db)
 
@@ -219,8 +225,14 @@ class TestListBomItemsForProject:
 
         # 设置查询返回
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.all.return_value = [mock_machine1, mock_machine2]
-        mock_db.query.return_value.filter.return_value.filter.return_value.first.side_effect = [mock_bom1, mock_bom2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_machine1,
+            mock_machine2,
+        ]
+        mock_db.query.return_value.filter.return_value.filter.return_value.first.side_effect = [
+            mock_bom1,
+            mock_bom2,
+        ]
 
         service = KitRateService(mock_db)
 
@@ -277,7 +289,8 @@ class TestGetInTransitQty:
         mock_po_item2.received_qty = Decimal("0")
 
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
-            mock_po_item1, mock_po_item2
+            mock_po_item1,
+            mock_po_item2,
         ]
 
         service = KitRateService(mock_db)
@@ -313,7 +326,7 @@ class TestCalculateKitRate:
         service = KitRateService(mock_db)
 
         # 模拟BOM物料数据
-        with patch.object(service, 'list_bom_items_for_machine') as mock_list:
+        with patch.object(service, "list_bom_items_for_machine") as mock_list:
             mock_item1 = MagicMock()
             mock_item1.material_id = 1
             mock_item1.quantity = Decimal("10")
@@ -328,10 +341,12 @@ class TestCalculateKitRate:
 
             mock_list.return_value = [mock_item1, mock_item2]
 
-            with patch.object(service, '_get_in_transit_qty', return_value=Decimal(0)):
+            with patch.object(service, "_get_in_transit_qty", return_value=Decimal(0)):
                 result = service.calculate_kit_rate(machine_id=1)
 
-                assert 'kit_rate' in result or 'rate' in result or isinstance(result, (dict, Decimal))
+                assert (
+                    "kit_rate" in result or "rate" in result or isinstance(result, (dict, Decimal))
+                )
 
     def test_returns_100_for_full_kit(self):
         """测试齐套时返回100%"""
@@ -341,7 +356,7 @@ class TestCalculateKitRate:
 
         service = KitRateService(mock_db)
 
-        with patch.object(service, 'list_bom_items_for_machine') as mock_list:
+        with patch.object(service, "list_bom_items_for_machine") as mock_list:
             mock_item = MagicMock()
             mock_item.material_id = 1
             mock_item.quantity = Decimal("10")
@@ -350,7 +365,7 @@ class TestCalculateKitRate:
 
             mock_list.return_value = [mock_item]
 
-            with patch.object(service, '_get_in_transit_qty', return_value=Decimal(0)):
+            with patch.object(service, "_get_in_transit_qty", return_value=Decimal(0)):
                 result = service.calculate_kit_rate(machine_id=1)
 
                 assert result is not None
@@ -363,7 +378,7 @@ class TestCalculateKitRate:
 
         service = KitRateService(mock_db)
 
-        with patch.object(service, 'list_bom_items_for_machine', return_value=[]):
+        with patch.object(service, "list_bom_items_for_machine", return_value=[]):
             result = service.calculate_kit_rate(machine_id=1)
 
             assert result is not None

@@ -4,17 +4,17 @@ PMO 立项管理服务层单元测试
 覆盖率目标：60%+
 """
 import unittest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.pmo_initiation import PmoInitiationService
 from app.schemas.pmo import (
-    InitiationCreate,
-    InitiationUpdate,
     InitiationApproveRequest,
+    InitiationCreate,
     InitiationRejectRequest,
+    InitiationUpdate,
 )
+from app.services.pmo_initiation import PmoInitiationService
 
 
 class TestPmoInitiationService(unittest.TestCase):
@@ -161,9 +161,7 @@ class TestPmoInitiationService(unittest.TestCase):
         mock_query.filter.return_value = mock_query
         mock_query.first.return_value = mock_initiation
 
-        approve_request = InitiationApproveRequest(
-            review_result="通过", approved_level="L1"
-        )
+        approve_request = InitiationApproveRequest(review_result="通过", approved_level="L1")
 
         result = self.service.approve_initiation(1, approve_request, self.mock_user)
 
@@ -222,9 +220,7 @@ class TestPmoInitiationService(unittest.TestCase):
         )
 
         with patch("app.services.pmo_initiation.service.init_project_stages"):
-            result = self.service.approve_initiation(
-                1, approve_request, self.mock_user
-            )
+            result = self.service.approve_initiation(1, approve_request, self.mock_user)
 
         self.assertEqual(mock_initiation.status, "APPROVED")
         self.db.flush.assert_called_once()

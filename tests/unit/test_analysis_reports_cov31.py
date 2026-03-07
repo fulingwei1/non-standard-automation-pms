@@ -19,6 +19,7 @@ def mock_db():
 # generate_workload_analysis
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateWorkloadAnalysis:
     def test_returns_dict_without_department_filter(self, mock_db):
         chain = MagicMock()
@@ -86,6 +87,7 @@ class TestGenerateWorkloadAnalysis:
 # ---------------------------------------------------------------------------
 # generate_cost_analysis (if exists)
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateCostAnalysis:
     def test_method_exists_or_skip(self, mock_db):

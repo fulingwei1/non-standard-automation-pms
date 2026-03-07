@@ -18,11 +18,14 @@ except ImportError:  # pragma: no cover - 可选依赖
         if style is not None:
             return [str(ch)[0].lower() for ch in text]
         return [str(ch).lower() for ch in text]
+
+
 from sqlalchemy.orm import Session
+
+from app.models.organization import Employee
 
 # 模块级导入，支持 unittest.mock.patch 在测试中替换
 from app.models.user import User
-from app.models.organization import Employee
 
 
 def name_to_pinyin(name: str) -> str:
@@ -39,7 +42,7 @@ def name_to_pinyin(name: str) -> str:
         return ""
     # 转换为拼音并拼接
     pinyin_list = lazy_pinyin(name)
-    return ''.join(pinyin_list).lower()
+    return "".join(pinyin_list).lower()
 
 
 def name_to_pinyin_initials(name: str) -> str:
@@ -56,10 +59,12 @@ def name_to_pinyin_initials(name: str) -> str:
         return ""
     style = Style.FIRST_LETTER if Style is not None else True
     initials = lazy_pinyin(name, style=style)
-    return ''.join(initials).upper()
+    return "".join(initials).upper()
 
 
-def generate_unique_username(name: str, db: Session, existing_usernames: Optional[set] = None) -> str:
+def generate_unique_username(
+    name: str, db: Session, existing_usernames: Optional[set] = None
+) -> str:
     """
     生成唯一的用户名，处理重名情况
 
@@ -97,7 +102,9 @@ def generate_unique_username(name: str, db: Session, existing_usernames: Optiona
     return username
 
 
-def generate_initial_password(username: str = None, id_card: str = None, employee_code: str = None) -> str:
+def generate_initial_password(
+    username: str = None, id_card: str = None, employee_code: str = None
+) -> str:
     """
     生成安全的随机初始密码
 
@@ -127,9 +134,11 @@ def batch_generate_pinyin_for_employees(db: Session) -> int:
         更新的记录数
     """
 
-    employees = db.query(Employee).filter(
-        Employee.pinyin_name.is_(None) | (Employee.pinyin_name == '')
-    ).all()
+    employees = (
+        db.query(Employee)
+        .filter(Employee.pinyin_name.is_(None) | (Employee.pinyin_name == ""))
+        .all()
+    )
 
     updated_count = 0
     for emp in employees:
@@ -143,12 +152,11 @@ def batch_generate_pinyin_for_employees(db: Session) -> int:
     return updated_count
 
 
-
-
 # 别名函数（兼容测试和旧代码）
 def to_pinyin(text: str) -> str:
     """将中文转换为拼音（别名：name_to_pinyin）"""
     return name_to_pinyin(text)
+
 
 def get_initials(text: str) -> str:
     """获取拼音首字母缩写（别名：name_to_pinyin_initials）"""

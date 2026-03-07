@@ -20,7 +20,9 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.post("/{project_id}/health/calculate", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{project_id}/health/calculate", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def calculate_project_health(
     *,
     db: Session = Depends(deps.get_db),
@@ -32,15 +34,17 @@ def calculate_project_health(
     计算项目健康度
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     project = check_project_access_or_raise(db, current_user, project_id)
 
     from app.services.health_calculator import HealthCalculator
+
     calculator = HealthCalculator(db)
     result = calculator.calculate_project_health(project_id)
 
     if auto_update and result.get("calculated_health"):
         new_health = result["calculated_health"]
-        old_health = project.health or 'H1'
+        old_health = project.health or "H1"
 
         if old_health != new_health:
             project.health = new_health
@@ -57,7 +61,7 @@ def calculate_project_health(
                 change_type="HEALTH_CALCULATE",
                 change_reason="系统自动计算健康度",
                 changed_by=current_user.id,
-                changed_at=datetime.now()
+                changed_at=datetime.now(),
             )
             db.add(status_log)
             db.commit()
@@ -65,14 +69,12 @@ def calculate_project_health(
             result["updated"] = True
             result["old_health"] = old_health
 
-    return ResponseModel(
-        code=200,
-        message="健康度计算完成",
-        data=result
-    )
+    return ResponseModel(code=200, message="健康度计算完成", data=result)
 
 
-@router.get("/{project_id}/health/details", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{project_id}/health/details", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_project_health_details(
     *,
     db: Session = Depends(deps.get_db),
@@ -83,20 +85,20 @@ def get_project_health_details(
     获取项目健康度详情
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     project = check_project_access_or_raise(db, current_user, project_id)
 
     from app.services.health_calculator import HealthCalculator
+
     calculator = HealthCalculator(db)
     details = calculator.get_health_details(project)
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=details
-    )
+    return ResponseModel(code=200, message="success", data=details)
 
 
-@router.post("/health/batch-calculate", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/health/batch-calculate", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def batch_calculate_project_health(
     *,
     db: Session = Depends(deps.get_db),
@@ -119,11 +121,7 @@ def batch_calculate_project_health(
 
     for project_id in project_ids:
         if project_id not in accessible_project_ids:
-            results.append({
-                "project_id": project_id,
-                "success": False,
-                "error": "无访问权限"
-            })
+            results.append({"project_id": project_id, "success": False, "error": "无访问权限"})
             continue
 
         try:
@@ -133,7 +131,7 @@ def batch_calculate_project_health(
                 project = db.query(Project).filter(Project.id == project_id).first()
                 if project:
                     new_health = result["calculated_health"]
-                    old_health = project.health or 'H1'
+                    old_health = project.health or "H1"
 
                     if old_health != new_health:
                         project.health = new_health
@@ -150,24 +148,16 @@ def batch_calculate_project_health(
                             change_type="HEALTH_CALCULATE",
                             change_reason="批量自动计算健康度",
                             changed_by=current_user.id,
-                            changed_at=datetime.now()
+                            changed_at=datetime.now(),
                         )
                         db.add(status_log)
 
                         result["updated"] = True
                         result["old_health"] = old_health
 
-            results.append({
-                "project_id": project_id,
-                "success": True,
-                **result
-            })
+            results.append({"project_id": project_id, "success": True, **result})
         except Exception as e:
-            results.append({
-                "project_id": project_id,
-                "success": False,
-                "error": str(e)
-            })
+            results.append({"project_id": project_id, "success": False, "error": str(e)})
 
     db.commit()
 
@@ -178,6 +168,6 @@ def batch_calculate_project_health(
         data={
             "results": results,
             "success_count": success_count,
-            "failed_count": len(results) - success_count
-        }
+            "failed_count": len(results) - success_count,
+        },
     )

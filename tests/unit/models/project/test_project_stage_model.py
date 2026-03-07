@@ -3,14 +3,15 @@
 ProjectStage Model 测试
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.exc import IntegrityError
 
+import pytest
+from sqlalchemy.exc import IntegrityError
 
 try:
     from app.models.project.lifecycle import ProjectStage
+
     MODEL_AVAILABLE = True
 except ImportError:
     MODEL_AVAILABLE = False
@@ -64,7 +65,7 @@ class TestProjectStageModel:
     def test_projectstage_attributes(self, db_session):
         """Test ProjectStage attributes"""
         obj = ProjectStage()
-        assert hasattr(ProjectStage, '__tablename__') or True
+        assert hasattr(ProjectStage, "__tablename__") or True
 
     def test_projectstage_relationships(self, db_session):
         """Test ProjectStage relationships"""

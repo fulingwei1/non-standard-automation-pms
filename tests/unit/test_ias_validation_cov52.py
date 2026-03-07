@@ -2,13 +2,14 @@
 """
 Unit tests for app/services/invoice_auto_service/validation.py (cov52)
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.invoice_auto_service.validation import (
-        check_deliverables_complete,
         check_acceptance_issues_resolved,
+        check_deliverables_complete,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -21,6 +22,7 @@ def _make_service():
 
 
 # ──────────────────────── check_deliverables_complete ────────────────────────
+
 
 def test_deliverables_complete_no_contract_id():
     """plan 没有 contract_id 时直接返回 True"""
@@ -47,6 +49,7 @@ def test_deliverables_complete_with_contract():
 
 
 # ──────────────────────── check_acceptance_issues_resolved ────────────────────────
+
 
 def test_no_blocking_issues():
     """无阻塞问题时返回 True"""

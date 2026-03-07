@@ -11,7 +11,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
-from app.models.user import User, Role, UserRole
+from app.models.user import Role, User, UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +59,11 @@ class UserImportService:
     def read_file(cls, file_path: str, file_content: bytes = None) -> pd.DataFrame:
         """
         读取Excel或CSV文件
-        
+
         Args:
             file_path: 文件路径（用于判断格式）
             file_content: 文件内容字节流
-            
+
         Returns:
             DataFrame
         """
@@ -71,12 +71,14 @@ class UserImportService:
             if file_path.lower().endswith(".csv"):
                 if file_content:
                     import io
+
                     df = pd.read_csv(io.BytesIO(file_content), encoding="utf-8-sig")
                 else:
                     df = pd.read_csv(file_path, encoding="utf-8-sig")
             else:
                 if file_content:
                     import io
+
                     df = pd.read_excel(io.BytesIO(file_content), engine="openpyxl")
                 else:
                     df = pd.read_excel(file_path, engine="openpyxl")
@@ -106,7 +108,7 @@ class UserImportService:
     def validate_dataframe(cls, df: pd.DataFrame) -> List[str]:
         """
         验证DataFrame结构
-        
+
         Returns:
             错误列表，如果为空则验证通过
         """
@@ -136,7 +138,7 @@ class UserImportService:
     ) -> Optional[str]:
         """
         验证单行数据
-        
+
         Returns:
             错误信息，如果为None则验证通过
         """
@@ -183,17 +185,18 @@ class UserImportService:
         return None
 
     @classmethod
-    def get_or_create_role(cls, db: Session, role_name: str, tenant_id: Optional[int] = None) -> Optional[Role]:
+    def get_or_create_role(
+        cls, db: Session, role_name: str, tenant_id: Optional[int] = None
+    ) -> Optional[Role]:
         """获取或创建角色"""
-        role = db.query(Role).filter(
-            Role.role_name == role_name,
-            Role.tenant_id == tenant_id
-        ).first()
-        
+        role = (
+            db.query(Role).filter(Role.role_name == role_name, Role.tenant_id == tenant_id).first()
+        )
+
         if not role:
             logger.warning(f"角色 '{role_name}' 不存在")
             return None
-            
+
         return role
 
     @classmethod
@@ -205,16 +208,24 @@ class UserImportService:
         tenant_id: Optional[int] = None,
     ) -> User:
         """从DataFrame行创建用户"""
-        
+
         # 准备用户数据
         user_data = {
             "username": str(row.get("username", "")).strip(),
             "real_name": str(row.get("real_name", "")).strip(),
             "email": str(row.get("email", "")).strip(),
             "phone": str(row.get("phone", "")).strip() if pd.notna(row.get("phone")) else None,
-            "employee_no": str(row.get("employee_no", "")).strip() if pd.notna(row.get("employee_no")) else None,
-            "department": str(row.get("department", "")).strip() if pd.notna(row.get("department")) else None,
-            "position": str(row.get("position", "")).strip() if pd.notna(row.get("position")) else None,
+            "employee_no": (
+                str(row.get("employee_no", "")).strip()
+                if pd.notna(row.get("employee_no"))
+                else None
+            ),
+            "department": (
+                str(row.get("department", "")).strip() if pd.notna(row.get("department")) else None
+            ),
+            "position": (
+                str(row.get("position", "")).strip() if pd.notna(row.get("position")) else None
+            ),
             "tenant_id": tenant_id,
         }
 
@@ -265,13 +276,13 @@ class UserImportService:
     ) -> Dict[str, Any]:
         """
         批量导入用户
-        
+
         Args:
             db: 数据库会话
             df: 用户数据DataFrame
             operator_id: 操作人ID
             tenant_id: 租户ID
-            
+
         Returns:
             导入结果字典
         """
@@ -315,11 +326,13 @@ class UserImportService:
             for idx, row in df.iterrows():
                 try:
                     user = cls.create_user_from_row(db, row, operator_id, tenant_id)
-                    result["success_users"].append({
-                        "username": user.username,
-                        "real_name": user.real_name,
-                        "email": user.email,
-                    })
+                    result["success_users"].append(
+                        {
+                            "username": user.username,
+                            "real_name": user.real_name,
+                            "email": user.email,
+                        }
+                    )
                     result["success_count"] += 1
 
                 except Exception as e:
@@ -348,7 +361,7 @@ class UserImportService:
     def generate_template(cls) -> pd.DataFrame:
         """
         生成导入模板
-        
+
         Returns:
             模板DataFrame
         """

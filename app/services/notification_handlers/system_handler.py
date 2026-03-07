@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """系统通知处理器（站内消息）"""
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Session
 

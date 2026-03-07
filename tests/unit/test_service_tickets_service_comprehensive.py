@@ -16,9 +16,9 @@ ServiceTicketsService 综合单元测试
 - close_ticket: 关闭服务工单
 """
 
-from unittest.mock import MagicMock, patch
-from datetime import datetime, date, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -59,8 +59,8 @@ class TestGetDashboardStatistics:
         result = service.get_dashboard_statistics()
 
         assert result is not None
-        assert hasattr(result, 'today_new_tickets')
-        assert hasattr(result, 'pending_tickets')
+        assert hasattr(result, "today_new_tickets")
+        assert hasattr(result, "pending_tickets")
 
     def test_counts_today_tickets(self):
         """测试统计今日工单"""
@@ -232,8 +232,7 @@ class TestGetTicketStatistics:
         service = ServiceTicketsService(mock_db)
 
         result = service.get_ticket_statistics(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31)
+            start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
         )
 
         assert result is not None
@@ -310,7 +309,9 @@ class TestGetServiceTickets:
 
         service = ServiceTicketsService(mock_db)
 
-        with patch('app.services.service.service_tickets_service.ServiceTicketResponse') as mock_response:
+        with patch(
+            "app.services.service.service_tickets_service.ServiceTicketResponse"
+        ) as mock_response:
             mock_response.model_validate.side_effect = lambda x: x
             result = service.get_service_tickets(page=1, page_size=20)
 
@@ -334,7 +335,9 @@ class TestGetServiceTickets:
 
         service = ServiceTicketsService(mock_db)
 
-        with patch('app.services.service.service_tickets_service.ServiceTicketResponse') as mock_response:
+        with patch(
+            "app.services.service.service_tickets_service.ServiceTicketResponse"
+        ) as mock_response:
             result = service.get_service_tickets(keyword="设备故障")
 
         mock_query.filter.assert_called()
@@ -357,7 +360,9 @@ class TestGetServiceTickets:
 
         service = ServiceTicketsService(mock_db)
 
-        with patch('app.services.service.service_tickets_service.ServiceTicketResponse') as mock_response:
+        with patch(
+            "app.services.service.service_tickets_service.ServiceTicketResponse"
+        ) as mock_response:
             result = service.get_service_tickets(priority="high")
 
         mock_query.filter.assert_called()
@@ -380,7 +385,9 @@ class TestGetServiceTickets:
 
         service = ServiceTicketsService(mock_db)
 
-        with patch('app.services.service.service_tickets_service.ServiceTicketResponse') as mock_response:
+        with patch(
+            "app.services.service.service_tickets_service.ServiceTicketResponse"
+        ) as mock_response:
             result = service.get_service_tickets(customer_id=1)
 
         mock_query.filter.assert_called()

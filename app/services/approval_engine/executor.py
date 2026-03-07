@@ -232,7 +232,9 @@ class ApprovalNodeExecutor:
                 result.final_result = "PASSED" if result.rejected_count == 0 else "FAILED"
             elif pass_rule == "MAJORITY":
                 # 多数通过
-                result.final_result = "PASSED" if result.approved_count > result.rejected_count else "FAILED"
+                result.final_result = (
+                    "PASSED" if result.approved_count > result.rejected_count else "FAILED"
+                )
             elif pass_rule == "ANY":
                 # 任一通过
                 result.final_result = "PASSED" if result.approved_count > 0 else "FAILED"

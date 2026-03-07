@@ -13,7 +13,7 @@ ProjectContributionService 综合单元测试
 
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -46,7 +46,9 @@ class TestCalculateMemberContribution:
         mock_db.query.return_value.filter.return_value.first.return_value = None
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.services.project_contribution_service.ProjectBonusService") as MockBonusService:
+        with patch(
+            "app.services.project_contribution_service.ProjectBonusService"
+        ) as MockBonusService:
             mock_bonus_service = MagicMock()
             mock_bonus_service.get_project_bonus_calculations.return_value = []
             MockBonusService.return_value = mock_bonus_service
@@ -80,14 +82,18 @@ class TestCalculateMemberContribution:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_contribution
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.services.project_contribution_service.ProjectBonusService") as MockBonusService:
+        with patch(
+            "app.services.project_contribution_service.ProjectBonusService"
+        ) as MockBonusService:
             mock_bonus_service = MagicMock()
             mock_bonus_service.get_project_bonus_calculations.return_value = []
             MockBonusService.return_value = mock_bonus_service
 
             service = ProjectContributionService(mock_db)
 
-            with patch.object(service, "_calculate_contribution_score", return_value=Decimal("5.0")):
+            with patch.object(
+                service, "_calculate_contribution_score", return_value=Decimal("5.0")
+            ):
                 result = service.calculate_member_contribution(
                     project_id=1,
                     user_id=1,
@@ -124,7 +130,9 @@ class TestCalculateMemberContribution:
             [],  # issues
         ]
 
-        with patch("app.services.project_contribution_service.ProjectBonusService") as MockBonusService:
+        with patch(
+            "app.services.project_contribution_service.ProjectBonusService"
+        ) as MockBonusService:
             mock_bonus_service = MagicMock()
             mock_bonus_service.get_project_bonus_calculations.return_value = []
             MockBonusService.return_value = mock_bonus_service
@@ -154,7 +162,9 @@ class TestCalculateMemberContribution:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_contribution
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.services.project_contribution_service.ProjectBonusService") as MockBonusService:
+        with patch(
+            "app.services.project_contribution_service.ProjectBonusService"
+        ) as MockBonusService:
             mock_bonus_service = MagicMock()
             mock_bonus_service.get_project_bonus_calculations.return_value = [mock_bonus_calc]
             MockBonusService.return_value = mock_bonus_service
@@ -375,7 +385,9 @@ class TestGetUserProjectContributions:
 
         mock_db = MagicMock()
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         with patch("app.services.project_contribution_service.ProjectBonusService"):
             service = ProjectContributionService(mock_db)
@@ -493,7 +505,9 @@ class TestRateMemberContribution:
         mock_db.query.return_value.filter.return_value.first.return_value = None
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.services.project_contribution_service.ProjectBonusService") as MockBonusService:
+        with patch(
+            "app.services.project_contribution_service.ProjectBonusService"
+        ) as MockBonusService:
             mock_bonus_service = MagicMock()
             mock_bonus_service.get_project_bonus_calculations.return_value = []
             MockBonusService.return_value = mock_bonus_service
@@ -545,9 +559,7 @@ class TestGenerateContributionReport:
         with patch("app.services.project_contribution_service.ProjectBonusService"):
             service = ProjectContributionService(mock_db)
 
-        with patch.object(
-            service, "get_project_contributions", return_value=[mock_contrib]
-        ):
+        with patch.object(service, "get_project_contributions", return_value=[mock_contrib]):
             result = service.generate_contribution_report(project_id=1)
 
         assert result["project_id"] == 1
@@ -602,9 +614,7 @@ class TestGenerateContributionReport:
         with patch("app.services.project_contribution_service.ProjectBonusService"):
             service = ProjectContributionService(mock_db)
 
-        with patch.object(
-            service, "get_project_contributions", return_value=contributions
-        ):
+        with patch.object(service, "get_project_contributions", return_value=contributions):
             result = service.generate_contribution_report(project_id=1)
 
         # 应该只有前10名
@@ -637,9 +647,7 @@ class TestGenerateContributionReport:
         with patch("app.services.project_contribution_service.ProjectBonusService"):
             service = ProjectContributionService(mock_db)
 
-        with patch.object(
-            service, "get_project_contributions", return_value=[mock_contrib]
-        ):
+        with patch.object(service, "get_project_contributions", return_value=[mock_contrib]):
             result = service.generate_contribution_report(project_id=1)
 
         # 应该使用username作为备选
@@ -654,12 +662,8 @@ class TestGenerateContributionReport:
         with patch("app.services.project_contribution_service.ProjectBonusService"):
             service = ProjectContributionService(mock_db)
 
-        with patch.object(
-            service, "get_project_contributions", return_value=[]
-        ) as mock_get:
-            result = service.generate_contribution_report(
-                project_id=1, period="2026-01"
-            )
+        with patch.object(service, "get_project_contributions", return_value=[]) as mock_get:
+            result = service.generate_contribution_report(project_id=1, period="2026-01")
 
         mock_get.assert_called_once_with(1, "2026-01")
         assert result["period"] == "2026-01"

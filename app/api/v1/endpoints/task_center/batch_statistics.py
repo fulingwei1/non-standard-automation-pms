@@ -22,7 +22,9 @@ from app.schemas.task_center import BatchOperationStatistics
 router = APIRouter()
 
 
-@router.get("/batch/statistics", response_model=BatchOperationStatistics, status_code=status.HTTP_200_OK)
+@router.get(
+    "/batch/statistics", response_model=BatchOperationStatistics, status_code=status.HTTP_200_OK
+)
 def get_batch_operation_statistics(
     *,
     db: Session = Depends(deps.get_db),
@@ -68,16 +70,18 @@ def get_batch_operation_statistics(
     # 最近操作
     recent_operations = []
     for log in logs[:20]:  # 最近20条
-        recent_operations.append({
-            "operation_type": log.operation_type,
-            "operation_desc": log.operation_desc,
-            "operation_time": log.operation_time.isoformat(),
-            "task_id": log.task_id
-        })
+        recent_operations.append(
+            {
+                "operation_type": log.operation_type,
+                "operation_desc": log.operation_desc,
+                "operation_time": log.operation_time.isoformat(),
+                "task_id": log.task_id,
+            }
+        )
 
     return BatchOperationStatistics(
         total_operations=len(logs),
         by_operation_type=by_operation_type,
         by_date=by_date,
-        recent_operations=recent_operations
+        recent_operations=recent_operations,
     )

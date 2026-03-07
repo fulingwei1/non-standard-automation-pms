@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 服务方法调用数据源"""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.report_framework.data_sources.service import ServiceDataSource
     from app.services.report_framework.data_sources.base import DataSourceError
+    from app.services.report_framework.data_sources.service import ServiceDataSource
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -53,7 +55,9 @@ class TestServiceDataSource:
 
     def test_fetch_raises_when_service_not_found(self):
         config = make_config(method="NonExistentService.some_method")
-        with patch.object(ServiceDataSource, "_get_service_instance", side_effect=DataSourceError("not found")):
+        with patch.object(
+            ServiceDataSource, "_get_service_instance", side_effect=DataSourceError("not found")
+        ):
             ds = ServiceDataSource.__new__(ServiceDataSource)
             ds.db = MagicMock()
             ds.config = config
@@ -64,6 +68,7 @@ class TestServiceDataSource:
 
     def test_inherits_datasource(self):
         from app.services.report_framework.data_sources.base import DataSource
+
         assert issubclass(ServiceDataSource, DataSource)
 
     def test_instantiate_service_tries_with_db(self):

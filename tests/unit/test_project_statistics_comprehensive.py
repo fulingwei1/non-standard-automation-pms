@@ -3,22 +3,22 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 from app.services.project_statistics_service import (
-    calculate_status_statistics,
-    calculate_stage_statistics,
-    calculate_health_statistics,
-    calculate_pm_statistics,
-    calculate_customer_statistics,
-    calculate_monthly_statistics,
-    build_project_statistics,
-    ProjectStatisticsServiceBase,
     CostStatisticsService,
+    ProjectStatisticsServiceBase,
     TimesheetStatisticsService,
     WorkLogStatisticsService,
+    build_project_statistics,
+    calculate_customer_statistics,
+    calculate_health_statistics,
+    calculate_monthly_statistics,
+    calculate_pm_statistics,
+    calculate_stage_statistics,
+    calculate_status_statistics,
 )
 
 
@@ -160,7 +160,9 @@ class TestCalculateCustomerStatistics:
 
     def test_no_customer(self):
         q = MagicMock()
-        q.all.return_value = [_make_project(customer_id=None, customer_name=None, contract_amount=None)]
+        q.all.return_value = [
+            _make_project(customer_id=None, customer_name=None, contract_amount=None)
+        ]
         result = calculate_customer_statistics(q)
         assert len(result) == 1
         assert result[0]["customer_name"] == "未知客户"
@@ -196,7 +198,9 @@ class TestCalculateMonthlyStatistics:
         q = MagicMock()
         q.all.return_value = []
         q.filter.return_value = q
-        result = calculate_monthly_statistics(q, start_date=date(2024, 1, 1), end_date=date(2024, 12, 31))
+        result = calculate_monthly_statistics(
+            q, start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
+        )
         assert result == []
 
 
@@ -211,8 +215,22 @@ class TestBuildProjectStatistics:
     def test_with_projects(self):
         q = MagicMock()
         projects = [
-            _make_project(progress_pct=60, status="进行中", stage="设计", health="正常", pm_id=1, pm_name="PM1"),
-            _make_project(progress_pct=80, status="进行中", stage="生产", health="正常", pm_id=2, pm_name="PM2"),
+            _make_project(
+                progress_pct=60,
+                status="进行中",
+                stage="设计",
+                health="正常",
+                pm_id=1,
+                pm_name="PM1",
+            ),
+            _make_project(
+                progress_pct=80,
+                status="进行中",
+                stage="生产",
+                health="正常",
+                pm_id=2,
+                pm_name="PM2",
+            ),
         ]
         q.all.return_value = projects
         result = build_project_statistics(None, q)
@@ -221,7 +239,9 @@ class TestBuildProjectStatistics:
 
     def test_group_by_customer(self):
         q = MagicMock()
-        q.all.return_value = [_make_project(progress_pct=50, customer_id=1, customer_name="C1", contract_amount=100)]
+        q.all.return_value = [
+            _make_project(progress_pct=50, customer_id=1, customer_name="C1", contract_amount=100)
+        ]
         result = build_project_statistics(None, q, group_by="customer")
         assert "by_customer" in result
 
@@ -252,9 +272,13 @@ class TestCostStatisticsService:
         project.project_name = "测试项目"
         project.budget_amount = Decimal("100000")
         db.query.return_value.filter.return_value.first.return_value = project
-        db.query.return_value.filter.return_value.with_entities.return_value.group_by.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.with_entities.return_value.scalar.return_value = Decimal("50000")
-        
+        db.query.return_value.filter.return_value.with_entities.return_value.group_by.return_value.all.return_value = (
+            []
+        )
+        db.query.return_value.filter.return_value.with_entities.return_value.scalar.return_value = (
+            Decimal("50000")
+        )
+
         result = svc.get_summary(1)
         assert result["project_id"] == 1
         assert result["total_cost"] == 50000.0

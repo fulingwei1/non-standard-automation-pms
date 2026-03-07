@@ -26,7 +26,7 @@ router = APIRouter()
 @router.get(
     "/allocation-sheets/{sheet_id}/rows",
     response_model=ResponseModel,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 def get_allocation_sheet_rows(
     *,
@@ -47,9 +47,9 @@ def get_allocation_sheet_rows(
 
     if normalized_type == "valid":
         valid_rows = []
-        if sheet.parse_result and sheet.parse_result.get('valid_rows'):
-            for row_data in sheet.parse_result['valid_rows']:
-                distribution_date = row_data.get('distribution_date')
+        if sheet.parse_result and sheet.parse_result.get("valid_rows"):
+            for row_data in sheet.parse_result["valid_rows"]:
+                distribution_date = row_data.get("distribution_date")
                 if isinstance(distribution_date, str):
                     try:
                         distribution_date = date.fromisoformat(distribution_date)
@@ -61,20 +61,22 @@ def get_allocation_sheet_rows(
                     try:
                         distribution_date = datetime.fromisoformat(str(distribution_date)).date()
                     except ValueError:
-                        distribution_date = datetime.strptime(str(distribution_date), '%Y-%m-%d').date()
+                        distribution_date = datetime.strptime(
+                            str(distribution_date), "%Y-%m-%d"
+                        ).date()
 
                 valid_rows.append(
                     BonusAllocationRow(
-                        calculation_id=int(row_data['calculation_id']),
-                        user_id=int(row_data['user_id']),
-                        user_name=row_data.get('user_name'),
-                        calculated_amount=Decimal(str(row_data['calculated_amount'])),
-                        distributed_amount=Decimal(str(row_data['distributed_amount'])),
+                        calculation_id=int(row_data["calculation_id"]),
+                        user_id=int(row_data["user_id"]),
+                        user_name=row_data.get("user_name"),
+                        calculated_amount=Decimal(str(row_data["calculated_amount"])),
+                        distributed_amount=Decimal(str(row_data["distributed_amount"])),
                         distribution_date=distribution_date,
-                        payment_method=row_data.get('payment_method'),
-                        voucher_no=row_data.get('voucher_no'),
-                        payment_account=row_data.get('payment_account'),
-                        payment_remark=row_data.get('payment_remark')
+                        payment_method=row_data.get("payment_method"),
+                        voucher_no=row_data.get("voucher_no"),
+                        payment_account=row_data.get("payment_account"),
+                        payment_remark=row_data.get("payment_remark"),
                     ).model_dump()
                 )
 
@@ -86,7 +88,7 @@ def get_allocation_sheet_rows(
             "page": pagination.page,
             "page_size": pagination.page_size,
             "pages": pages,
-            "items": page_items
+            "items": page_items,
         }
     else:
         error_rows = []
@@ -98,10 +100,7 @@ def get_allocation_sheet_rows(
                 row_number = row_no
             if not isinstance(messages, list):
                 messages = [str(messages)]
-            error_rows.append({
-                "row_number": row_number,
-                "errors": [str(m) for m in messages]
-            })
+            error_rows.append({"row_number": row_number, "errors": [str(m) for m in messages]})
 
         error_rows.sort(key=lambda x: x["row_number"])
         page_items, total, pages = paginate_items(error_rows, pagination.page, pagination.page_size)
@@ -112,7 +111,7 @@ def get_allocation_sheet_rows(
             "page": pagination.page,
             "page_size": pagination.page_size,
             "pages": pages,
-            "items": page_items
+            "items": page_items,
         }
 
     return ResponseModel(code=200, data=data)

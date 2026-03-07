@@ -26,9 +26,7 @@ from app.models.sales import (
 
 
 def validate_g1_lead_to_opportunity(
-    lead: Lead,
-    requirement: Optional[OpportunityRequirement] = None,
-    db: Optional[Session] = None
+    lead: Lead, requirement: Optional[OpportunityRequirement] = None, db: Optional[Session] = None
 ) -> Tuple[bool, List[str]]:
     """
     G1：线索 → 商机 验证
@@ -65,7 +63,12 @@ def validate_g1_lead_to_opportunity(
     # 可选：检查技术评估状态（如果已申请）
     if db and lead.assessment_id:
         from app.models.sales import TechnicalAssessment
-        assessment = db.query(TechnicalAssessment).filter(TechnicalAssessment.id == lead.assessment_id).first()
+
+        assessment = (
+            db.query(TechnicalAssessment)
+            .filter(TechnicalAssessment.id == lead.assessment_id)
+            .first()
+        )
         if assessment:
             if assessment.status != AssessmentStatusEnum.COMPLETED.value:
                 warnings.append(f"技术评估状态为{assessment.status}，建议等待评估完成")
@@ -75,14 +78,19 @@ def validate_g1_lead_to_opportunity(
     # 检查未决事项（阻塞报价的）
     if db:
         from app.models.sales import OpenItem
-        blocking_items = db.query(OpenItem).filter(
-            and_(
-                OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
-                OpenItem.source_id == lead.id,
-                OpenItem.blocks_quotation,
-                OpenItem.status != 'CLOSED'
+
+        blocking_items = (
+            db.query(OpenItem)
+            .filter(
+                and_(
+                    OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                    OpenItem.source_id == lead.id,
+                    OpenItem.blocks_quotation,
+                    OpenItem.status != "CLOSED",
+                )
             )
-        ).count()
+            .count()
+        )
         if blocking_items > 0:
             warnings.append(f"存在{blocking_items}个阻塞报价的未决事项，建议先解决")
 
@@ -114,10 +122,7 @@ def validate_g2_opportunity_to_quote(opportunity: Opportunity) -> Tuple[bool, Li
 
 
 def validate_g3_quote_to_contract(
-    quote: Quote,
-    version: QuoteVersion,
-    items: List[QuoteItem],
-    db: Optional[Session] = None
+    quote: Quote, version: QuoteVersion, items: List[QuoteItem], db: Optional[Session] = None
 ) -> Tuple[bool, List[str], Optional[str]]:
     """
     G3：报价 → 合同 验证
@@ -149,9 +154,13 @@ def validate_g3_quote_to_contract(
         margin_warning = settings.SALES_GROSS_MARGIN_WARNING
 
         if gross_margin < margin_threshold:
-            errors.append(f"毛利率过低（{gross_margin:.2f}%），低于最低阈值{margin_threshold}%，需要审批")
+            errors.append(
+                f"毛利率过低（{gross_margin:.2f}%），低于最低阈值{margin_threshold}%，需要审批"
+            )
         elif gross_margin < margin_warning:
-            warnings.append(f"毛利率较低（{gross_margin:.2f}%），低于警告阈值{margin_warning}%，建议重新评估")
+            warnings.append(
+                f"毛利率较低（{gross_margin:.2f}%），低于警告阈值{margin_warning}%，建议重新评估"
+            )
 
     # 检查交期
     if not version.lead_time_days or version.lead_time_days <= 0:
@@ -159,12 +168,15 @@ def validate_g3_quote_to_contract(
     else:
         min_lead_time = settings.SALES_MIN_LEAD_TIME_DAYS
         if version.lead_time_days < min_lead_time:
-            warnings.append(f"交期较短（{version.lead_time_days}天），低于建议最小交期{min_lead_time}天，请确认关键物料交期和设计/装配/调试周期")
+            warnings.append(
+                f"交期较短（{version.lead_time_days}天），低于建议最小交期{min_lead_time}天，请确认关键物料交期和设计/装配/调试周期"
+            )
 
         if db is not None:
             from app.services.delivery_validation_service import (
                 delivery_validation_service,
             )
+
             validation_result = delivery_validation_service.validate_delivery_date(
                 db, quote, version, items
             )
@@ -186,9 +198,7 @@ def validate_g3_quote_to_contract(
 
 
 def validate_g4_contract_to_project(
-    contract: Contract,
-    deliverables: List[ContractDeliverable],
-    db: Optional[Session] = None
+    contract: Contract, deliverables: List[ContractDeliverable], db: Optional[Session] = None
 ) -> Tuple[bool, List[str]]:
     """
     G4：合同 → 项目 验证
@@ -204,7 +214,11 @@ def validate_g4_contract_to_project(
         if len(required_deliverables) == 0:
             errors.append("至少需要一个付款必需的交付物")
 
-        incomplete_deliverables = [d for d in deliverables if not d.deliverable_name or len(d.deliverable_name.strip()) == 0]
+        incomplete_deliverables = [
+            d
+            for d in deliverables
+            if not d.deliverable_name or len(d.deliverable_name.strip()) == 0
+        ]
         if incomplete_deliverables:
             errors.append(f"有{len(incomplete_deliverables)}个交付物名称不完整")
 
@@ -227,10 +241,14 @@ def validate_g4_contract_to_project(
         freeze_checks = []
 
         from app.models.project import ProjectDocument
-        sow_documents = db.query(ProjectDocument).filter(
-            ProjectDocument.contract_id == contract.id,
-            ProjectDocument.document_type == "SOW"
-        ).count()
+
+        sow_documents = (
+            db.query(ProjectDocument)
+            .filter(
+                ProjectDocument.contract_id == contract.id, ProjectDocument.document_type == "SOW"
+            )
+            .count()
+        )
 
         if sow_documents == 0:
             freeze_checks.append("SOW文档未上传")
@@ -243,10 +261,12 @@ def validate_g4_contract_to_project(
             freeze_checks.append("验收标准未确认")
 
         from app.models.material import BomHeader
-        bom_count = db.query(BomHeader).filter(
-            BomHeader.contract_id == contract.id,
-            BomHeader.version == "1.0"
-        ).count()
+
+        bom_count = (
+            db.query(BomHeader)
+            .filter(BomHeader.contract_id == contract.id, BomHeader.version == "1.0")
+            .count()
+        )
 
         if bom_count == 0:
             freeze_checks.append("BOM初版未创建")
@@ -254,11 +274,14 @@ def validate_g4_contract_to_project(
             freeze_checks.append(f"BOM初版已创建({bom_count}个)")
 
         milestone_count = 0
-        if hasattr(contract, 'deliverables') and contract.deliverables:
+        if hasattr(contract, "deliverables") and contract.deliverables:
             from app.models.project import ProjectMilestone
-            milestone_count = db.query(ProjectMilestone).filter(
-                ProjectMilestone.contract_id == contract.id
-            ).count()
+
+            milestone_count = (
+                db.query(ProjectMilestone)
+                .filter(ProjectMilestone.contract_id == contract.id)
+                .count()
+            )
 
         if milestone_count == 0:
             freeze_checks.append("里程碑基线未确定")

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """第九批: test_demand_forecast_engine_cov9.py - DemandForecastEngine 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date, timedelta
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.shortage.demand_forecast_engine")
 

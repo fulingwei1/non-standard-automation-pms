@@ -18,10 +18,22 @@ def fix_file(file_path: Path) -> int:
     # 1. 移除 mock 数据定义
     # 查找 "const mockXXX = [" 或 "const mockXXX = {" 这样的模式
     mock_patterns = [
-        (r'// Mock data for demo accounts\n(?:.|\n)*?^const mock[A-Z][a-zA-Z]+ = \[\s*\n(?:.|\n)*?\n\];?\s*\n', ''),
-        (r'// Mock data for demo accounts\n(?:.|\n)*?^const mock[A-Z][a-zA-Z]+ = \{\s*\n(?:.|\n)*?^\};?\s*\n', ''),
-        (r'^const mock[A-Z][a-zA-Z]+ = \[[\s\S]*?\];?\s*\n', '// Mock data - 已移除，使用真实API\n'),
-        (r'^const mock[A-Z][a-zA-Z]+ = \{[\s\S]*?\};?\s*\n', '// Mock data - 已移除，使用真实API\n'),
+        (
+            r"// Mock data for demo accounts\n(?:.|\n)*?^const mock[A-Z][a-zA-Z]+ = \[\s*\n(?:.|\n)*?\n\];?\s*\n",
+            "",
+        ),
+        (
+            r"// Mock data for demo accounts\n(?:.|\n)*?^const mock[A-Z][a-zA-Z]+ = \{\s*\n(?:.|\n)*?^\};?\s*\n",
+            "",
+        ),
+        (
+            r"^const mock[A-Z][a-zA-Z]+ = \[[\s\S]*?\];?\s*\n",
+            "// Mock data - 已移除，使用真实API\n",
+        ),
+        (
+            r"^const mock[A-Z][a-zA-Z]+ = \{[\s\S]*?\};?\s*\n",
+            "// Mock data - 已移除，使用真实API\n",
+        ),
     ]
 
     for pattern, replacement in mock_patterns:
@@ -40,7 +52,7 @@ def fix_file(file_path: Path) -> int:
 
     for pattern in demo_account_patterns:
         if re.search(pattern, content):
-            content = re.sub(pattern, '', content)
+            content = re.sub(pattern, "", content)
             changes += 1
             modified = True
 
@@ -49,7 +61,7 @@ def fix_file(file_path: Path) -> int:
     # 建议人工检查和修复复杂的条件逻辑
 
     if modified:
-        file_path.write_text(content, encoding='utf-8')
+        file_path.write_text(content, encoding="utf-8")
         print(f"  ✅ {file_path.name}: {changes} 处修改")
 
     return changes
@@ -61,10 +73,10 @@ def auto_fix_all() -> None:
 
     files_to_fix = []
     for file_path in FRONTEND_DIR.glob("*.jsx"):
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
 
         # 检查是否需要修复
-        if re.search(r'isDemoAccount|demo_token_|const mock[A-Z]', content):
+        if re.search(r"isDemoAccount|demo_token_|const mock[A-Z]", content):
             files_to_fix.append(file_path)
 
     if not files_to_fix:

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import pytest
 from datetime import date, datetime
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
+import pytest
 from fastapi import HTTPException
 
 from app.services.unified_import.base import ImportBase
@@ -21,6 +22,7 @@ class TestImportBase:
 
     def test_parse_file_success(self):
         import io
+
         df = pd.DataFrame({"a": [1, 2]})
         buf = io.BytesIO()
         df.to_excel(buf, index=False)
@@ -29,6 +31,7 @@ class TestImportBase:
 
     def test_parse_file_empty(self):
         import io
+
         df = pd.DataFrame()
         buf = io.BytesIO()
         df.to_excel(buf, index=False)

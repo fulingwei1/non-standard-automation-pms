@@ -4,7 +4,7 @@
 import json
 import logging
 from datetime import date, datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Session
 
@@ -72,13 +72,13 @@ class SMSNotificationHandler:
 
         title = notification.notify_title or alert.alert_title
         frontend_url = (
-            settings.CORS_ORIGINS[0]
-            if settings.CORS_ORIGINS
-            else "http://localhost:3000"
+            settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "http://localhost:3000"
         )
         alert_url = f"{frontend_url}/alerts/{alert.id}"
 
-        sms_content = f"【预警通知】{title[:30]}{'...' if len(title) > 30 else ''} 详情：{alert_url}"
+        sms_content = (
+            f"【预警通知】{title[:30]}{'...' if len(title) > 30 else ''} 详情：{alert_url}"
+        )
         if len(sms_content) > 70:
             sms_content = f"【预警】{title[:20]} {alert_url}"
 
@@ -137,9 +137,7 @@ class SMSNotificationHandler:
         result = json.loads(response)
 
         if result.get("Code") != "OK":
-            raise ValueError(
-                f"Aliyun SMS failed: {result.get('Message', 'Unknown error')}"
-            )
+            raise ValueError(f"Aliyun SMS failed: {result.get('Message', 'Unknown error')}")
 
     def _send_tencent(self, phone: str, content: str) -> None:
         """通过腾讯云发送短信"""

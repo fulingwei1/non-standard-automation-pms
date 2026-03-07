@@ -2,12 +2,13 @@
 """
 Tests for app/services/staff_matching/base.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.staff_matching.base import StaffMatchingBase
     from app.models.staff_matching import RecommendationTypeEnum
+    from app.services.staff_matching.base import StaffMatchingBase
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -20,7 +21,7 @@ def test_dimension_weights_sum_to_one():
 
 def test_dimension_weights_keys():
     """维度权重包含所有预期键"""
-    expected = {'skill', 'domain', 'attitude', 'quality', 'workload', 'special'}
+    expected = {"skill", "domain", "attitude", "quality", "workload", "special"}
     assert set(StaffMatchingBase.DIMENSION_WEIGHTS.keys()) == expected
 
 

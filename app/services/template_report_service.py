@@ -41,7 +41,7 @@ class TemplateReportService:
         Returns:
             报表数据字典
         """
-        report_type = getattr(template, 'report_type', '')
+        report_type = getattr(template, "report_type", "")
 
         generators = {
             "PROJECT_WEEKLY": TemplateReportService._generate_project_weekly,
@@ -72,26 +72,38 @@ class TemplateReportService:
         end_date: Optional[date],
     ) -> Dict[str, Any]:
         """生成项目周报"""
-        from app.models.project import Project, ProjectMilestone, Machine
+        from app.models.project import Machine, Project, ProjectMilestone
 
         project = db.query(Project).filter(Project.id == project_id).first()
 
-        milestones = db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == project_id,
-        ).all() if project_id else []
+        milestones = (
+            db.query(ProjectMilestone)
+            .filter(
+                ProjectMilestone.project_id == project_id,
+            )
+            .all()
+            if project_id
+            else []
+        )
 
-        machines = db.query(Machine).filter(
-            Machine.project_id == project_id,
-        ).all() if project_id else []
+        machines = (
+            db.query(Machine)
+            .filter(
+                Machine.project_id == project_id,
+            )
+            .all()
+            if project_id
+            else []
+        )
 
         summary = {}
         if project:
             summary = {
                 "project_name": project.project_name,
-                "customer_name": getattr(project, 'customer_name', ''),
-                "current_stage": getattr(project, 'current_stage', ''),
-                "health_status": getattr(project, 'health_status', ''),
-                "progress": getattr(project, 'progress', 0),
+                "customer_name": getattr(project, "customer_name", ""),
+                "current_stage": getattr(project, "current_stage", ""),
+                "health_status": getattr(project, "health_status", ""),
+                "progress": getattr(project, "progress", 0),
             }
 
         return {
@@ -117,14 +129,26 @@ class TemplateReportService:
         from app.models.organization import Department
         from app.models.user import User
 
-        dept = db.query(Department).filter(
-            Department.id == department_id,
-        ).first() if department_id else None
+        dept = (
+            db.query(Department)
+            .filter(
+                Department.id == department_id,
+            )
+            .first()
+            if department_id
+            else None
+        )
 
-        users = db.query(User).filter(
-            User.department_id == department_id,
-            User.is_active,
-        ).all() if department_id else []
+        users = (
+            db.query(User)
+            .filter(
+                User.department_id == department_id,
+                User.is_active,
+            )
+            .all()
+            if department_id
+            else []
+        )
 
         summary = {
             "department_name": dept.name if dept else "",
@@ -152,9 +176,15 @@ class TemplateReportService:
         """生成工作量分析报表"""
         from app.models.organization import Department
 
-        dept = db.query(Department).filter(
-            Department.id == department_id,
-        ).first() if department_id else None
+        dept = (
+            db.query(Department)
+            .filter(
+                Department.id == department_id,
+            )
+            .first()
+            if department_id
+            else None
+        )
 
         return {
             "template_code": template.template_code,
@@ -180,9 +210,15 @@ class TemplateReportService:
         """生成成本分析报表"""
         from app.models.project import Project
 
-        projects = db.query(Project).filter(
-            Project.id == project_id,
-        ).all() if project_id else db.query(Project).all()
+        projects = (
+            db.query(Project)
+            .filter(
+                Project.id == project_id,
+            )
+            .all()
+            if project_id
+            else db.query(Project).all()
+        )
 
         return {
             "template_code": template.template_code,

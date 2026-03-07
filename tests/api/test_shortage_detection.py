@@ -40,7 +40,9 @@ def _create_material(db_session: Session) -> Material:
 
 
 @pytest.fixture
-def shortage_alert_factory(db_session: Session) -> Callable[..., Tuple[MaterialShortage, Project, Material]]:
+def shortage_alert_factory(
+    db_session: Session,
+) -> Callable[..., Tuple[MaterialShortage, Project, Material]]:
     """
     Factory fixture that creates `MaterialShortage` records and tracks them for cleanup.
     """
@@ -84,13 +86,17 @@ def shortage_alert_factory(db_session: Session) -> Callable[..., Tuple[MaterialS
     yield _create_alert
 
     if created_alert_ids:
-        db_session.query(MaterialShortage).filter(MaterialShortage.id.in_(created_alert_ids)).delete(
+        db_session.query(MaterialShortage).filter(
+            MaterialShortage.id.in_(created_alert_ids)
+        ).delete(synchronize_session=False)
+    if project_ids:
+        db_session.query(Project).filter(Project.id.in_(project_ids)).delete(
             synchronize_session=False
         )
-    if project_ids:
-        db_session.query(Project).filter(Project.id.in_(project_ids)).delete(synchronize_session=False)
     if material_ids:
-        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(synchronize_session=False)
+        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(
+            synchronize_session=False
+        )
     db_session.commit()
 
 

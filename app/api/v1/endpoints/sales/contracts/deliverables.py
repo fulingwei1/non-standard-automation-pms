@@ -22,14 +22,16 @@ from app.schemas.sales import (
     ContractAmendmentResponse,
     ContractDeliverableResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 from ..utils import generate_amendment_no
-from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
 
-@router.get("/contracts/{contract_id}/deliverables", response_model=List[ContractDeliverableResponse])
+@router.get(
+    "/contracts/{contract_id}/deliverables", response_model=List[ContractDeliverableResponse]
+)
 def get_contract_deliverables(
     *,
     db: Session = Depends(deps.get_db),
@@ -41,8 +43,13 @@ def get_contract_deliverables(
     """
     get_or_404(db, Contract, contract_id, detail="合同不存在")
 
-    deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
-    return [ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns}) for d in deliverables]
+    deliverables = (
+        db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    )
+    return [
+        ContractDeliverableResponse(**{c.name: getattr(d, c.name) for c in d.__table__.columns})
+        for d in deliverables
+    ]
 
 
 @router.get("/contracts/{contract_id}/amendments", response_model=List[ContractAmendmentResponse])
@@ -63,40 +70,46 @@ def get_contract_amendments(
     if status:
         query = query.filter(ContractAmendment.status == status)
 
-    amendments = query.order_by(desc(ContractAmendment.request_date), desc(ContractAmendment.created_at)).all()
+    amendments = query.order_by(
+        desc(ContractAmendment.request_date), desc(ContractAmendment.created_at)
+    ).all()
 
     result = []
     for amendment in amendments:
-        result.append({
-            "id": amendment.id,
-            "contract_id": amendment.contract_id,
-            "amendment_no": amendment.amendment_no,
-            "amendment_type": amendment.amendment_type,
-            "title": amendment.title,
-            "description": amendment.description,
-            "reason": amendment.reason,
-            "old_value": amendment.old_value,
-            "new_value": amendment.new_value,
-            "amount_change": amendment.amount_change,
-            "schedule_impact": amendment.schedule_impact,
-            "other_impact": amendment.other_impact,
-            "requestor_id": amendment.requestor_id,
-            "requestor_name": amendment.requestor.real_name if amendment.requestor else None,
-            "request_date": amendment.request_date,
-            "status": amendment.status,
-            "approver_id": amendment.approver_id,
-            "approver_name": amendment.approver.real_name if amendment.approver else None,
-            "approval_date": amendment.approval_date,
-            "approval_comment": amendment.approval_comment,
-            "attachments": amendment.attachments,
-            "created_at": amendment.created_at,
-            "updated_at": amendment.updated_at,
-        })
+        result.append(
+            {
+                "id": amendment.id,
+                "contract_id": amendment.contract_id,
+                "amendment_no": amendment.amendment_no,
+                "amendment_type": amendment.amendment_type,
+                "title": amendment.title,
+                "description": amendment.description,
+                "reason": amendment.reason,
+                "old_value": amendment.old_value,
+                "new_value": amendment.new_value,
+                "amount_change": amendment.amount_change,
+                "schedule_impact": amendment.schedule_impact,
+                "other_impact": amendment.other_impact,
+                "requestor_id": amendment.requestor_id,
+                "requestor_name": amendment.requestor.real_name if amendment.requestor else None,
+                "request_date": amendment.request_date,
+                "status": amendment.status,
+                "approver_id": amendment.approver_id,
+                "approver_name": amendment.approver.real_name if amendment.approver else None,
+                "approval_date": amendment.approval_date,
+                "approval_comment": amendment.approval_comment,
+                "attachments": amendment.attachments,
+                "created_at": amendment.created_at,
+                "updated_at": amendment.updated_at,
+            }
+        )
 
     return result
 
 
-@router.post("/contracts/{contract_id}/amendments", response_model=ContractAmendmentResponse, status_code=201)
+@router.post(
+    "/contracts/{contract_id}/amendments", response_model=ContractAmendmentResponse, status_code=201
+)
 def create_contract_amendment(
     *,
     db: Session = Depends(deps.get_db),

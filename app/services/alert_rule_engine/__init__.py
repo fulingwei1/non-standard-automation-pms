@@ -25,12 +25,7 @@ class AlertRuleEngine(AlertCreator, AlertUpgrader):
         AlertCreator.__init__(self, db)
         AlertUpgrader.__init__(self, db)
 
-    def evaluate_rule(
-        self,
-        rule,
-        target_data,
-        context=None
-    ):
+    def evaluate_rule(self, rule, target_data, context=None):
         """
         评估规则并创建预警记录（如果条件满足）
 
@@ -74,14 +69,14 @@ class AlertRuleEngine(AlertCreator, AlertUpgrader):
 
 # 向后兼容：导出主引擎类
 __all__ = [
-    'AlertRuleEngine',
+    "AlertRuleEngine",
     # 基类
-    'AlertRuleEngineBase',
+    "AlertRuleEngineBase",
     # 组件类
-    'ConditionEvaluator',
-    'AlertCreator',
-    'AlertUpgrader',
-    'AlertGenerator',
-    'LevelDeterminer',
-    'RuleManager',
+    "ConditionEvaluator",
+    "AlertCreator",
+    "AlertUpgrader",
+    "AlertGenerator",
+    "LevelDeterminer",
+    "RuleManager",
 ]

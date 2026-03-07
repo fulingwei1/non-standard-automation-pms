@@ -24,9 +24,7 @@ class HelpersMixin:
         则必须等所有子任务完成/跳过后才能手动完成节点。
         """
         # 查询节点的子任务
-        tasks = self.db.query(NodeTask).filter(
-            NodeTask.node_instance_id == node.id
-        ).all()
+        tasks = self.db.query(NodeTask).filter(NodeTask.node_instance_id == node.id).all()
 
         if not tasks:
             # 没有子任务，可以直接完成
@@ -34,7 +32,8 @@ class HelpersMixin:
 
         # 检查是否有未完成的任务
         incomplete_tasks = [
-            t for t in tasks
+            t
+            for t in tasks
             if t.status not in [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]
         ]
 
@@ -47,15 +46,18 @@ class HelpersMixin:
             return True
 
         # 检查所有依赖节点是否已完成
-        incomplete = self.db.query(ProjectNodeInstance).filter(
-            and_(
-                ProjectNodeInstance.id.in_(node.dependency_node_instance_ids),
-                ProjectNodeInstance.status.notin_([
-                    StageStatusEnum.COMPLETED.value,
-                    StageStatusEnum.SKIPPED.value
-                ])
+        incomplete = (
+            self.db.query(ProjectNodeInstance)
+            .filter(
+                and_(
+                    ProjectNodeInstance.id.in_(node.dependency_node_instance_ids),
+                    ProjectNodeInstance.status.notin_(
+                        [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]
+                    ),
+                )
             )
-        ).count()
+            .count()
+        )
 
         return incomplete == 0
 
@@ -84,16 +86,23 @@ class HelpersMixin:
     def _try_auto_complete_next_nodes(self, completed_node: ProjectNodeInstance) -> None:
         """尝试自动完成依赖于当前节点的自动节点"""
         # 查找依赖于当前节点的自动完成节点
-        dependent_nodes = self.db.query(ProjectNodeInstance).filter(
-            and_(
-                ProjectNodeInstance.stage_instance_id == completed_node.stage_instance_id,
-                ProjectNodeInstance.completion_method == CompletionMethodEnum.AUTO.value,
-                ProjectNodeInstance.status == StageStatusEnum.PENDING.value
+        dependent_nodes = (
+            self.db.query(ProjectNodeInstance)
+            .filter(
+                and_(
+                    ProjectNodeInstance.stage_instance_id == completed_node.stage_instance_id,
+                    ProjectNodeInstance.completion_method == CompletionMethodEnum.AUTO.value,
+                    ProjectNodeInstance.status == StageStatusEnum.PENDING.value,
+                )
             )
-        ).all()
+            .all()
+        )
 
         for node in dependent_nodes:
-            if node.dependency_node_instance_ids and completed_node.id in node.dependency_node_instance_ids:
+            if (
+                node.dependency_node_instance_ids
+                and completed_node.id in node.dependency_node_instance_ids
+            ):
                 if self._check_node_dependencies(node):
                     # 检查自动完成条件
                     if self._check_auto_condition(node):
@@ -149,24 +158,25 @@ class HelpersMixin:
             return True
 
         # 统计已完成的依赖数量
-        completed = self.db.query(ProjectNodeInstance).filter(
-            and_(
-                ProjectNodeInstance.id.in_(node.dependency_node_instance_ids),
-                ProjectNodeInstance.status.in_([
-                    StageStatusEnum.COMPLETED.value,
-                    StageStatusEnum.SKIPPED.value
-                ])
+        completed = (
+            self.db.query(ProjectNodeInstance)
+            .filter(
+                and_(
+                    ProjectNodeInstance.id.in_(node.dependency_node_instance_ids),
+                    ProjectNodeInstance.status.in_(
+                        [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]
+                    ),
+                )
             )
-        ).count()
+            .count()
+        )
 
         percentage = (completed / total) * 100
         return percentage >= threshold
 
     def _check_all_tasks_complete(self, node: ProjectNodeInstance) -> bool:
         """检查所有子任务是否完成"""
-        tasks = self.db.query(NodeTask).filter(
-            NodeTask.node_instance_id == node.id
-        ).all()
+        tasks = self.db.query(NodeTask).filter(NodeTask.node_instance_id == node.id).all()
 
         if not tasks:
             # 没有子任务，视为满足条件
@@ -226,10 +236,9 @@ class HelpersMixin:
             and_(
                 ProjectNodeInstance.stage_instance_id == stage_instance_id,
                 ProjectNodeInstance.is_required,
-                ProjectNodeInstance.status.notin_([
-                    StageStatusEnum.COMPLETED.value,
-                    StageStatusEnum.SKIPPED.value
-                ])
+                ProjectNodeInstance.status.notin_(
+                    [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]
+                ),
             )
         ).count()
 

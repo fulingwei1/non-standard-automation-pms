@@ -2,9 +2,11 @@
 """成本偏差根因分析"""
 
 from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
 from app.api import deps
 from app.models.user import User
 
@@ -17,13 +19,15 @@ def variance_summary(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
-    sql = text("""
+    sql = text(
+        """
         SELECT p.id, p.project_name, p.project_code, p.product_category,
                p.contract_amount, p.budget_amount, p.actual_cost
         FROM projects p
         WHERE p.is_active = 1 AND p.budget_amount > 0
         ORDER BY p.id
-    """)
+    """
+    )
     rows = db.execute(sql).fetchall()
 
     projects = []
@@ -35,11 +39,13 @@ def variance_summary(
         var_pct = round(variance / budget * 100, 2) if budget > 0 else 0
 
         # Per cost_type breakdown
-        type_sql = text("""
+        type_sql = text(
+            """
             SELECT cost_type, SUM(amount) as total
             FROM project_costs WHERE project_id = :pid
             GROUP BY cost_type
-        """)
+        """
+        )
         breakdown = {}
         for c in db.execute(type_sql, {"pid": r.id}).fetchall():
             breakdown[c.cost_type] = float(c.total)
@@ -47,18 +53,20 @@ def variance_summary(
         if variance > 0:
             total_overrun += variance
 
-        projects.append({
-            "project_id": r.id,
-            "project_name": r.project_name,
-            "project_code": r.project_code,
-            "product_category": r.product_category,
-            "budget": budget,
-            "actual": actual,
-            "variance": round(variance, 2),
-            "variance_pct": var_pct,
-            "overrun": variance > 0,
-            "cost_breakdown": breakdown,
-        })
+        projects.append(
+            {
+                "project_id": r.id,
+                "project_name": r.project_name,
+                "project_code": r.project_code,
+                "product_category": r.product_category,
+                "budget": budget,
+                "actual": actual,
+                "variance": round(variance, 2),
+                "variance_pct": var_pct,
+                "overrun": variance > 0,
+                "cost_breakdown": breakdown,
+            }
+        )
 
     overrun_projects = [p for p in projects if p["overrun"]]
     worst = max(projects, key=lambda x: x["variance_pct"]) if projects else None
@@ -83,7 +91,8 @@ def variance_patterns(
     current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
     # Which cost_type has highest average overrun
-    sql = text("""
+    sql = text(
+        """
         SELECT pc.cost_type,
                COUNT(DISTINCT pc.project_id) as project_count,
                SUM(pc.amount) as total_cost,
@@ -93,7 +102,8 @@ def variance_patterns(
         WHERE p.is_active = 1
         GROUP BY pc.cost_type
         ORDER BY total_cost DESC
-    """)
+    """
+    )
     by_type = [
         {
             "cost_type": r.cost_type,
@@ -105,7 +115,8 @@ def variance_patterns(
     ]
 
     # By product category
-    cat_sql = text("""
+    cat_sql = text(
+        """
         SELECT p.product_category,
                COUNT(*) as count,
                AVG(CASE WHEN p.budget_amount > 0 
@@ -114,7 +125,8 @@ def variance_patterns(
         WHERE p.is_active = 1 AND p.budget_amount > 0
         GROUP BY p.product_category
         ORDER BY avg_variance DESC
-    """)
+    """
+    )
     by_category = [
         {
             "category": r.product_category or "未分类",
@@ -158,12 +170,14 @@ def variance_detail(
     actual = float(p.actual_cost or 0)
 
     # Breakdown by type
-    type_sql = text("""
+    type_sql = text(
+        """
         SELECT cost_type, SUM(amount) as total, COUNT(*) as records,
                MIN(cost_date) as first_date, MAX(cost_date) as last_date
         FROM project_costs WHERE project_id = :pid
         GROUP BY cost_type ORDER BY total DESC
-    """)
+    """
+    )
     breakdown = [
         {
             "cost_type": r.cost_type,
@@ -177,33 +191,46 @@ def variance_detail(
     ]
 
     # Monthly trend
-    monthly_sql = text("""
+    monthly_sql = text(
+        """
         SELECT strftime('%Y-%m', cost_date) as month, SUM(amount) as total
         FROM project_costs WHERE project_id = :pid AND cost_date IS NOT NULL
         GROUP BY month ORDER BY month
-    """)
+    """
+    )
     cumulative = 0
     monthly = []
     for r in db.execute(monthly_sql, {"pid": project_id}).fetchall():
         cumulative += float(r.total)
-        monthly.append({"month": r.month, "amount": float(r.total), "cumulative": round(cumulative, 2)})
+        monthly.append(
+            {"month": r.month, "amount": float(r.total), "cumulative": round(cumulative, 2)}
+        )
 
     # Top cost records
-    top_sql = text("""
+    top_sql = text(
+        """
         SELECT cost_type, amount, description, cost_date, source_no
         FROM project_costs WHERE project_id = :pid
         ORDER BY amount DESC LIMIT 5
-    """)
+    """
+    )
     top_costs = [
-        {"cost_type": r.cost_type, "amount": float(r.amount), "description": r.description,
-         "date": r.cost_date, "source": r.source_no}
+        {
+            "cost_type": r.cost_type,
+            "amount": float(r.amount),
+            "description": r.description,
+            "date": r.cost_date,
+            "source": r.source_no,
+        }
         for r in db.execute(top_sql, {"pid": project_id}).fetchall()
     ]
 
     return {
         "project": {
-            "name": p.project_name, "code": p.project_code,
-            "budget": budget, "actual": actual,
+            "name": p.project_name,
+            "code": p.project_code,
+            "budget": budget,
+            "actual": actual,
             "variance": round(actual - budget, 2),
             "variance_pct": round((actual - budget) / budget * 100, 2) if budget > 0 else 0,
         },

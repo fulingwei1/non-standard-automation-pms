@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import MagicMock
 from datetime import date
+from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.template_report.company_reports import CompanyReportMixin
 
 
@@ -17,8 +19,12 @@ class TestCompanyReportMixin:
 
     def test_generate_with_projects(self):
         db = MagicMock()
-        p1 = MagicMock(); p1.status = "IN_PROGRESS"; p1.health_status = "H1"
-        p2 = MagicMock(); p2.status = "COMPLETED"; p2.health_status = "H2"
+        p1 = MagicMock()
+        p1.status = "IN_PROGRESS"
+        p1.health_status = "H1"
+        p2 = MagicMock()
+        p2.status = "COMPLETED"
+        p2.health_status = "H2"
         db.query.return_value.filter.return_value.all.side_effect = [
             [p1, p2],  # projects
             [],  # departments

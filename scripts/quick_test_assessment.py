@@ -57,7 +57,7 @@ def test_assessment_service():
             source_type=AssessmentSourceTypeEnum.LEAD.value,
             source_id=lead.id,
             evaluator_id=1,  # 假设admin用户ID为1
-            status=AssessmentStatusEnum.PENDING.value
+            status=AssessmentStatusEnum.PENDING.value,
         )
         db.add(assessment)
         db.flush()
@@ -74,15 +74,12 @@ def test_assessment_service():
             "customerPotential": "中",
             "demandClarity": "详细规范",
             "techMaturity": "成熟",
-            "deliveryFeasibility": "合理"
+            "deliveryFeasibility": "合理",
         }
 
         try:
             result = service.evaluate(
-                assessment.source_type,
-                assessment.source_id,
-                1,
-                requirement_data
+                assessment.source_type, assessment.source_id, 1, requirement_data
             )
             print(f"   ✅ 评估完成:")
             print(f"      总分: {result.total_score}")
@@ -91,6 +88,7 @@ def test_assessment_service():
 
             if result.dimension_scores:
                 import json
+
                 dims = json.loads(result.dimension_scores)
                 print(f"      维度分数: {dims}")
 
@@ -98,6 +96,7 @@ def test_assessment_service():
         except Exception as e:
             print(f"   ❌ 评估失败: {e}")
             import traceback
+
             traceback.print_exc()
             return False
     finally:
@@ -111,6 +110,7 @@ def test_failure_case_matching():
     try:
         # 检查是否已存在
         from datetime import datetime
+
         case_code = f"TEST-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         existing = db.query(FailureCase).filter(FailureCase.case_code == case_code).first()
         if existing:
@@ -128,7 +128,7 @@ def test_failure_case_matching():
                 core_failure_reason="客户需求频繁变更",
                 early_warning_signals='["需求文档不完整"]',
                 lesson_learned="需要在项目前期充分沟通需求",
-                keywords='["需求变更"]'
+                keywords='["需求变更"]',
             )
             db.add(case)
             db.commit()
@@ -136,21 +136,20 @@ def test_failure_case_matching():
 
         # 测试匹配
         service = TechnicalAssessmentService(db)
-        requirement_data = {
-            "industry": "新能源",
-            "productTypes": '["电池测试"]',
-            "targetTakt": 30
-        }
+        requirement_data = {"industry": "新能源", "productTypes": '["电池测试"]', "targetTakt": 30}
 
         similar_cases = service._match_similar_cases(requirement_data)
         print(f"   ✅ 找到 {len(similar_cases)} 个相似案例")
         for case_info in similar_cases:
-            print(f"      - {case_info.get('project_name')} (相似度: {case_info.get('similarity_score', 0):.2%})")
+            print(
+                f"      - {case_info.get('project_name')} (相似度: {case_info.get('similarity_score', 0):.2%})"
+            )
 
         return True
     except Exception as e:
         print(f"   ❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:
@@ -169,6 +168,7 @@ def test_open_items():
 
         import time
         from datetime import datetime
+
         item_code = f"TEST-{datetime.now().strftime('%y%m%d')}-{int(time.time()) % 10000:04d}"
         # 检查是否已存在
         existing = db.query(OpenItem).filter(OpenItem.item_code == item_code).first()
@@ -183,25 +183,30 @@ def test_open_items():
                 item_type="INTERFACE",
                 description="测试未决事项：接口协议文档尚未提供",
                 responsible_party="CUSTOMER",
-                blocks_quotation=True
+                blocks_quotation=True,
             )
             db.add(open_item)
             db.commit()
             print(f"   ✅ 创建未决事项: {open_item.item_code}")
 
         # 检查阻塞报价的事项
-        blocking = db.query(OpenItem).filter(
-            OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
-            OpenItem.source_id == lead.id,
-            OpenItem.blocks_quotation == True,
-            OpenItem.status != 'CLOSED'
-        ).count()
+        blocking = (
+            db.query(OpenItem)
+            .filter(
+                OpenItem.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                OpenItem.source_id == lead.id,
+                OpenItem.blocks_quotation == True,
+                OpenItem.status != "CLOSED",
+            )
+            .count()
+        )
         print(f"   ✅ 阻塞报价的未决事项数量: {blocking}")
 
         return True
     except Exception as e:
         print(f"   ❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:
@@ -210,9 +215,9 @@ def test_open_items():
 
 def main():
     """主测试函数"""
-    print("="*60)
+    print("=" * 60)
     print("技术评估系统快速测试（数据库层）")
-    print("="*60)
+    print("=" * 60)
 
     results = []
 
@@ -229,9 +234,9 @@ def main():
     results.append(("未决事项", test_open_items()))
 
     # 汇总结果
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("测试结果汇总")
-    print("="*60)
+    print("=" * 60)
     for name, result in results:
         status = "✅ 通过" if result else "❌ 失败"
         print(f"{name}: {status}")
@@ -243,4 +248,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

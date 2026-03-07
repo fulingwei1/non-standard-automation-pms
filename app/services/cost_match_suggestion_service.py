@@ -10,8 +10,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
-from app.models.sales.quotes import PurchaseMaterialCost
 from app.models.sales import QuoteItem
+from app.models.sales.quotes import PurchaseMaterialCost
 from app.schemas.sales import CostMatchSuggestion, PurchaseMaterialCostResponse
 
 
@@ -40,24 +40,16 @@ def check_cost_anomalies(
     if not historical_costs:
         return warnings
 
-    avg_cost = sum([float(c.unit_cost or 0) for c in historical_costs]) / len(
-        historical_costs
-    )
+    avg_cost = sum([float(c.unit_cost or 0) for c in historical_costs]) / len(historical_costs)
     max_cost = max([float(c.unit_cost or 0) for c in historical_costs])
     min_cost = min([float(c.unit_cost or 0) for c in historical_costs])
 
     if current_cost > max_cost * 1.5:
-        warnings.append(
-            f"成本异常偏高：当前{current_cost}，历史最高{max_cost}，超出50%"
-        )
+        warnings.append(f"成本异常偏高：当前{current_cost}，历史最高{max_cost}，超出50%")
     elif current_cost < min_cost * 0.5:
-        warnings.append(
-            f"成本异常偏低：当前{current_cost}，历史最低{min_cost}，低于50%"
-        )
+        warnings.append(f"成本异常偏低：当前{current_cost}，历史最低{min_cost}，低于50%")
     elif abs(current_cost - avg_cost) / avg_cost > 0.3:
-        warnings.append(
-            f"成本偏差较大：当前{current_cost}，历史平均{avg_cost:.2f}，偏差超过30%"
-        )
+        warnings.append(f"成本偏差较大：当前{current_cost}，历史平均{avg_cost:.2f}，偏差超过30%")
 
     return warnings
 
@@ -164,17 +156,10 @@ def build_cost_suggestion(
     # 添加匹配到的成本记录信息
     if matched_cost:
         matched_cost_dict = {
-            **{
-                c.name: getattr(matched_cost, c.name)
-                for c in matched_cost.__table__.columns
-            },
-            "submitter_name": matched_cost.submitter.real_name
-            if matched_cost.submitter
-            else None,
+            **{c.name: getattr(matched_cost, c.name) for c in matched_cost.__table__.columns},
+            "submitter_name": matched_cost.submitter.real_name if matched_cost.submitter else None,
         }
-        suggestion.matched_cost_record = PurchaseMaterialCostResponse(
-            **matched_cost_dict
-        )
+        suggestion.matched_cost_record = PurchaseMaterialCostResponse(**matched_cost_dict)
 
     return suggestion
 
@@ -197,9 +182,7 @@ def check_overall_anomalies(
     if current_total_price <= 0 or suggested_total_cost <= 0:
         return warnings
 
-    suggested_margin = (
-        (current_total_price - suggested_total_cost) / current_total_price * 100
-    )
+    suggested_margin = (current_total_price - suggested_total_cost) / current_total_price * 100
     current_margin = (
         ((current_total_price - current_total_cost) / current_total_price * 100)
         if current_total_cost > 0
@@ -207,9 +190,7 @@ def check_overall_anomalies(
     )
 
     if suggested_margin < 10:
-        warnings.append(
-            f"建议成本计算后毛利率仅{suggested_margin:.2f}%，低于10%，存在风险"
-        )
+        warnings.append(f"建议成本计算后毛利率仅{suggested_margin:.2f}%，低于10%，存在风险")
     elif current_margin and abs(suggested_margin - current_margin) > 10:
         warnings.append(
             f"建议成本与当前成本差异较大：当前毛利率{current_margin:.2f}%，建议毛利率{suggested_margin:.2f}%"
@@ -243,18 +224,16 @@ def calculate_summary(
         "suggested_total_cost": suggested_total_cost,
         "current_total_price": current_total_price,
         "current_margin": (
-            (current_total_price - current_total_cost) / current_total_price * 100
-        )
-        if current_total_price > 0 and current_total_cost > 0
-        else None,
+            ((current_total_price - current_total_cost) / current_total_price * 100)
+            if current_total_price > 0 and current_total_cost > 0
+            else None
+        ),
         "suggested_margin": None,
     }
 
     if summary["suggested_total_cost"] > 0 and current_total_price > 0:
         summary["suggested_margin"] = (
-            (current_total_price - summary["suggested_total_cost"])
-            / current_total_price
-            * 100
+            (current_total_price - summary["suggested_total_cost"]) / current_total_price * 100
         )
 
     return summary
@@ -275,9 +254,7 @@ def process_cost_match_suggestions(
     unmatched_count = 0
 
     # 计算当前总成本
-    current_total_cost = sum(
-        [float(item.cost or 0) * float(item.qty or 0) for item in items]
-    )
+    current_total_cost = sum([float(item.cost or 0) * float(item.qty or 0) for item in items])
 
     for item in items:
         current_cost = float(item.cost or 0)

@@ -29,6 +29,7 @@ class AlertCreator(ConditionEvaluator):
         """延迟加载通知服务"""
         if self._notification_service is None:
             from app.services.notification_service import AlertNotificationService
+
             self._notification_service = AlertNotificationService(self.db)
         return self._notification_service
 
@@ -37,14 +38,12 @@ class AlertCreator(ConditionEvaluator):
         """延迟加载订阅服务"""
         if self._subscription_service is None:
             from app.services.alert_subscription_service import AlertSubscriptionService
+
             self._subscription_service = AlertSubscriptionService(self.db)
         return self._subscription_service
 
     def should_create_alert(
-        self,
-        rule: AlertRule,
-        target_data: Dict[str, Any],
-        alert_level: str
+        self, rule: AlertRule, target_data: Dict[str, Any], alert_level: str
     ) -> Optional[AlertRecord]:
         """
         检查是否应该创建预警（去重逻辑）
@@ -57,8 +56,8 @@ class AlertCreator(ConditionEvaluator):
         Returns:
             AlertRecord: 如果存在相同来源的活跃预警，返回该预警；否则返回 None
         """
-        target_type = target_data.get('target_type')
-        target_id = target_data.get('target_id')
+        target_type = target_data.get("target_type")
+        target_id = target_data.get("target_id")
 
         if not target_type or not target_id:
             return None
@@ -66,13 +65,18 @@ class AlertCreator(ConditionEvaluator):
         # 查询相同来源的活跃预警（24小时内）
         time_window = datetime.now() - timedelta(hours=24)
 
-        existing_alert = self.db.query(AlertRecord).filter(
-            AlertRecord.rule_id == rule.id,
-            AlertRecord.target_type == target_type,
-            AlertRecord.target_id == target_id,
-            AlertRecord.status.in_(['PENDING', 'ACKNOWLEDGED']),
-            AlertRecord.created_at >= time_window
-        ).order_by(AlertRecord.created_at.desc()).first()
+        existing_alert = (
+            self.db.query(AlertRecord)
+            .filter(
+                AlertRecord.rule_id == rule.id,
+                AlertRecord.target_type == target_type,
+                AlertRecord.target_id == target_id,
+                AlertRecord.status.in_(["PENDING", "ACKNOWLEDGED"]),
+                AlertRecord.created_at >= time_window,
+            )
+            .order_by(AlertRecord.created_at.desc())
+            .first()
+        )
 
         return existing_alert
 
@@ -81,7 +85,7 @@ class AlertCreator(ConditionEvaluator):
         rule: AlertRule,
         target_data: Dict[str, Any],
         alert_level: str,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> AlertRecord:
         """
         创建预警记录
@@ -109,20 +113,24 @@ class AlertCreator(ConditionEvaluator):
         alert = AlertRecord(
             alert_no=alert_no,
             rule_id=rule.id,
-            target_type=target_data.get('target_type'),
-            target_id=target_data.get('target_id'),
-            target_no=target_data.get('target_no'),
-            target_name=target_data.get('target_name'),
-            project_id=target_data.get('project_id'),
-            machine_id=target_data.get('machine_id'),
+            target_type=target_data.get("target_type"),
+            target_id=target_data.get("target_id"),
+            target_no=target_data.get("target_no"),
+            target_name=target_data.get("target_name"),
+            project_id=target_data.get("project_id"),
+            machine_id=target_data.get("machine_id"),
             alert_level=alert_level,
-            alert_title=AlertGenerator.generate_alert_title(rule, target_data, alert_level, context, self),
-            alert_content=AlertGenerator.generate_alert_content(rule, target_data, alert_level, context, self),
+            alert_title=AlertGenerator.generate_alert_title(
+                rule, target_data, alert_level, context, self
+            ),
+            alert_content=AlertGenerator.generate_alert_content(
+                rule, target_data, alert_level, context, self
+            ),
             alert_data=target_data,
             status=AlertStatusEnum.PENDING.value,
             triggered_at=datetime.now(),
             trigger_value=str(trigger_value) if trigger_value is not None else None,
-            threshold_value=rule.threshold_value
+            threshold_value=rule.threshold_value,
         )
 
         self.db.add(alert)
@@ -133,12 +141,10 @@ class AlertCreator(ConditionEvaluator):
             # 获取通知接收人（基于订阅配置）
             recipients = self.subscription_service.get_notification_recipients(alert, rule)
 
-            if recipients['user_ids']:
+            if recipients["user_ids"]:
                 # 有匹配的订阅，发送通知
                 self.notification_service.send_alert_notification(
-                    alert=alert,
-                    user_ids=recipients['user_ids'],
-                    channels=recipients['channels']
+                    alert=alert, user_ids=recipients["user_ids"], channels=recipients["channels"]
                 )
             else:
                 # 没有匹配的订阅，使用规则默认配置
@@ -146,6 +152,7 @@ class AlertCreator(ConditionEvaluator):
         except Exception as e:
             # 通知发送失败不影响预警创建
             import logging
+
             logging.getLogger(__name__).error(f"预警通知发送失败: {e}")
 
         return alert

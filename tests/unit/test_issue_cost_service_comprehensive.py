@@ -26,9 +26,9 @@ class TestGetIssueRelatedCosts:
 
         result = IssueCostService.get_issue_related_costs(mock_db, "ISS001")
 
-        assert result['inventory_loss'] == Decimal(0)
-        assert result['total_cost'] == Decimal(0)
-        assert result['costs'] == []
+        assert result["inventory_loss"] == Decimal(0)
+        assert result["total_cost"] == Decimal(0)
+        assert result["costs"] == []
 
     def test_returns_costs_matching_issue_no(self):
         """测试返回匹配问题编号的成本"""
@@ -48,8 +48,8 @@ class TestGetIssueRelatedCosts:
 
         result = IssueCostService.get_issue_related_costs(mock_db, "ISS001")
 
-        assert result['total_cost'] == Decimal("1500")
-        assert len(result['costs']) == 2
+        assert result["total_cost"] == Decimal("1500")
+        assert len(result["costs"]) == 2
 
     def test_calculates_inventory_loss(self):
         """测试计算库存损失"""
@@ -69,8 +69,8 @@ class TestGetIssueRelatedCosts:
 
         result = IssueCostService.get_issue_related_costs(mock_db, "ISS001")
 
-        assert result['inventory_loss'] == Decimal("2000")
-        assert result['total_cost'] == Decimal("2500")
+        assert result["inventory_loss"] == Decimal("2000")
+        assert result["total_cost"] == Decimal("2500")
 
     def test_handles_none_amount(self):
         """测试处理金额为None的成本"""
@@ -86,7 +86,7 @@ class TestGetIssueRelatedCosts:
 
         result = IssueCostService.get_issue_related_costs(mock_db, "ISS001")
 
-        assert result['total_cost'] == Decimal(0)
+        assert result["total_cost"] == Decimal(0)
 
     def test_handles_none_description(self):
         """测试处理描述为None的成本"""
@@ -102,8 +102,8 @@ class TestGetIssueRelatedCosts:
 
         result = IssueCostService.get_issue_related_costs(mock_db, "ISS001")
 
-        assert result['inventory_loss'] == Decimal(0)
-        assert result['total_cost'] == Decimal("1000")
+        assert result["inventory_loss"] == Decimal(0)
+        assert result["total_cost"] == Decimal("1000")
 
 
 class TestGetIssueRelatedHours:
@@ -118,8 +118,8 @@ class TestGetIssueRelatedHours:
 
         result = IssueCostService.get_issue_related_hours(mock_db, "ISS001")
 
-        assert result['total_hours'] == Decimal(0)
-        assert result['timesheets'] == []
+        assert result["total_hours"] == Decimal(0)
+        assert result["timesheets"] == []
 
     def test_returns_only_approved_timesheets(self):
         """测试只返回已审批的工时"""
@@ -143,8 +143,8 @@ class TestGetIssueRelatedHours:
 
         result = IssueCostService.get_issue_related_hours(mock_db, "ISS001")
 
-        assert result['total_hours'] == Decimal("4")
-        assert len(result['timesheets']) == 1
+        assert result["total_hours"] == Decimal("4")
+        assert len(result["timesheets"]) == 1
 
     def test_calculates_total_hours(self):
         """测试计算总工时"""
@@ -166,8 +166,8 @@ class TestGetIssueRelatedHours:
 
         result = IssueCostService.get_issue_related_hours(mock_db, "ISS001")
 
-        assert result['total_hours'] == Decimal("10")
-        assert len(result['timesheets']) == 2
+        assert result["total_hours"] == Decimal("10")
+        assert len(result["timesheets"]) == 2
 
     def test_handles_none_hours(self):
         """测试处理工时为None"""
@@ -184,7 +184,7 @@ class TestGetIssueRelatedHours:
 
         result = IssueCostService.get_issue_related_hours(mock_db, "ISS001")
 
-        assert result['total_hours'] == Decimal(0)
+        assert result["total_hours"] == Decimal(0)
 
     def test_searches_in_work_content_and_result(self):
         """测试同时搜索work_content和work_result"""
@@ -208,7 +208,7 @@ class TestGetIssueRelatedHours:
 
         result = IssueCostService.get_issue_related_hours(mock_db, "ISS001")
 
-        assert result['total_hours'] == Decimal("6")
+        assert result["total_hours"] == Decimal("6")
 
 
 class TestGetIssueCostSummary:
@@ -233,6 +233,7 @@ class TestGetIssueCostSummary:
 
         # Setup query chain for costs and timesheets
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             result = MagicMock()
             call_count[0] += 1
@@ -246,12 +247,12 @@ class TestGetIssueCostSummary:
 
         result = IssueCostService.get_issue_cost_summary(mock_db, "ISS001")
 
-        assert result['issue_no'] == "ISS001"
-        assert result['inventory_loss'] == Decimal("1000")
-        assert result['total_cost'] == Decimal("1000")
-        assert result['total_hours'] == Decimal("5")
-        assert result['cost_count'] == 1
-        assert result['timesheet_count'] == 1
+        assert result["issue_no"] == "ISS001"
+        assert result["inventory_loss"] == Decimal("1000")
+        assert result["total_cost"] == Decimal("1000")
+        assert result["total_hours"] == Decimal("5")
+        assert result["cost_count"] == 1
+        assert result["timesheet_count"] == 1
 
     def test_returns_zero_for_no_data(self):
         """测试无数据时返回零"""
@@ -262,12 +263,12 @@ class TestGetIssueCostSummary:
 
         result = IssueCostService.get_issue_cost_summary(mock_db, "ISS999")
 
-        assert result['issue_no'] == "ISS999"
-        assert result['inventory_loss'] == Decimal(0)
-        assert result['total_cost'] == Decimal(0)
-        assert result['total_hours'] == Decimal(0)
-        assert result['cost_count'] == 0
-        assert result['timesheet_count'] == 0
+        assert result["issue_no"] == "ISS999"
+        assert result["inventory_loss"] == Decimal(0)
+        assert result["total_cost"] == Decimal(0)
+        assert result["total_hours"] == Decimal(0)
+        assert result["cost_count"] == 0
+        assert result["timesheet_count"] == 0
 
     def test_handles_mixed_data(self):
         """测试处理混合数据"""
@@ -296,6 +297,7 @@ class TestGetIssueCostSummary:
         mock_ts2.status = "APPROVED"
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             result = MagicMock()
             call_count[0] += 1
@@ -309,8 +311,8 @@ class TestGetIssueCostSummary:
 
         result = IssueCostService.get_issue_cost_summary(mock_db, "ISS001")
 
-        assert result['inventory_loss'] == Decimal("1500")
-        assert result['total_cost'] == Decimal("2000")
-        assert result['total_hours'] == Decimal("7")
-        assert result['cost_count'] == 2
-        assert result['timesheet_count'] == 2
+        assert result["inventory_loss"] == Decimal("1500")
+        assert result["total_cost"] == Decimal("2000")
+        assert result["total_hours"] == Decimal("7")
+        assert result["cost_count"] == 2
+        assert result["timesheet_count"] == 2

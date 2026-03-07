@@ -25,6 +25,7 @@ class TestAcceptanceStatusHandler:
     def handler(self, db_session):
         """创建验收状态处理器"""
         from app.services.status_handlers.acceptance_handler import AcceptanceStatusHandler
+
         return AcceptanceStatusHandler(db_session)
 
     @pytest.fixture

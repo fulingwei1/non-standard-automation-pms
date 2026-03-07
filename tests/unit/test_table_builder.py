@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 
 class TestTableSlideBuilder:
     @patch("app.services.ppt_generator.table_builder.BaseSlideBuilder", autospec=True)
     def test_format_table_header(self, mock_base):
         from app.services.ppt_generator.table_builder import TableSlideBuilder
+
         builder = MagicMock(spec=TableSlideBuilder)
         builder.config = MagicMock()
         builder.config.DARK_BLUE = MagicMock()
@@ -21,6 +23,7 @@ class TestTableSlideBuilder:
     @patch("app.services.ppt_generator.table_builder.BaseSlideBuilder", autospec=True)
     def test_format_table_rows(self, mock_base):
         from app.services.ppt_generator.table_builder import TableSlideBuilder
+
         builder = MagicMock(spec=TableSlideBuilder)
         builder.config = MagicMock()
         builder.config.LIGHT_BLUE = MagicMock()

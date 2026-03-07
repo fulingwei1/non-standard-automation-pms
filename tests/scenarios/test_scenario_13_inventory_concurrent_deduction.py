@@ -3,14 +3,17 @@
 
 测试多个用户同时扣减同一物料库存的并发场景
 """
-import pytest
+
 import threading
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy.orm import Session
+
+import pytest
 from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 try:
-    from app.models.material import Material, MaterialInventory, InventoryTransaction
+    from app.models.material import InventoryTransaction, Material, MaterialInventory
 except ImportError as e:
     pytest.skip(f"Required models not available: {e}", allow_module_level=True)
 
@@ -56,9 +59,12 @@ class TestInventoryConcurrentDeduction:
         # 模拟并发扣减
         def deduct_stock(session, inv_id, quantity):
             # 使用 SELECT FOR UPDATE 行锁
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id
-            ).with_for_update().first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == inv_id)
+                .with_for_update()
+                .first()
+            )
 
             if inv and inv.available_quantity >= quantity:
                 inv.available_quantity -= quantity
@@ -85,14 +91,19 @@ class TestInventoryConcurrentDeduction:
         assert inventory.reserved_quantity == Decimal("100")
         assert sum(results) == 10  # 10次都成功
 
-    def test_02_concurrent_deduction_exceeding_stock(self, db_session: Session, test_material_stock):
+    def test_02_concurrent_deduction_exceeding_stock(
+        self, db_session: Session, test_material_stock
+    ):
         """测试2：并发扣减超过库存"""
         material, inventory = test_material_stock
 
         def try_deduct(session, inv_id, quantity):
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id
-            ).with_for_update().first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == inv_id)
+                .with_for_update()
+                .first()
+            )
 
             if inv and inv.available_quantity >= quantity:
                 inv.available_quantity -= quantity
@@ -142,10 +153,13 @@ class TestInventoryConcurrentDeduction:
 
         # 模拟乐观锁更新
         def optimistic_update(session, inv_id, expected_version, quantity):
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id,
-                MaterialInventory.version == expected_version
-            ).first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(
+                    MaterialInventory.id == inv_id, MaterialInventory.version == expected_version
+                )
+                .first()
+            )
 
             if inv and inv.available_quantity >= quantity:
                 inv.available_quantity -= quantity
@@ -181,14 +195,17 @@ class TestInventoryConcurrentDeduction:
         material, inventory = test_material_stock
 
         def reserve_stock(session, inv_id, quantity, reservation_code):
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id
-            ).with_for_update().first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == inv_id)
+                .with_for_update()
+                .first()
+            )
 
             if inv and inv.available_quantity >= quantity:
                 inv.available_quantity -= quantity
                 inv.reserved_quantity += quantity
-                
+
                 # 记录预留交易
                 trans = InventoryTransaction(
                     material_id=inv.material_id,
@@ -230,9 +247,12 @@ class TestInventoryConcurrentDeduction:
         db_session.commit()
 
         def issue_stock(session, inv_id, quantity):
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id
-            ).with_for_update().first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == inv_id)
+                .with_for_update()
+                .first()
+            )
 
             if inv and inv.reserved_quantity >= quantity:
                 inv.reserved_quantity -= quantity
@@ -243,9 +263,12 @@ class TestInventoryConcurrentDeduction:
             return False
 
         def return_stock(session, inv_id, quantity):
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id
-            ).with_for_update().first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == inv_id)
+                .with_for_update()
+                .first()
+            )
 
             if inv:
                 inv.quantity += quantity
@@ -320,13 +343,19 @@ class TestInventoryConcurrentDeduction:
 
         def trans1(session):
             try:
-                i1 = session.query(MaterialInventory).filter(
-                    MaterialInventory.id == inv1.id
-                ).with_for_update().first()
-                i2 = session.query(MaterialInventory).filter(
-                    MaterialInventory.id == inv2.id
-                ).with_for_update().first()
-                
+                i1 = (
+                    session.query(MaterialInventory)
+                    .filter(MaterialInventory.id == inv1.id)
+                    .with_for_update()
+                    .first()
+                )
+                i2 = (
+                    session.query(MaterialInventory)
+                    .filter(MaterialInventory.id == inv2.id)
+                    .with_for_update()
+                    .first()
+                )
+
                 i1.available_quantity -= 10
                 i2.available_quantity -= 10
                 session.commit()
@@ -353,7 +382,7 @@ class TestInventoryConcurrentDeduction:
             )
             db_session.add(mat)
             materials.append(mat)
-        
+
         db_session.commit()
 
         # 创建库存
@@ -367,14 +396,17 @@ class TestInventoryConcurrentDeduction:
             )
             db_session.add(inv)
             inventories.append(inv)
-        
+
         db_session.commit()
 
         # 批量扣减
         def batch_deduct(session, inv_ids, quantities):
-            invs = session.query(MaterialInventory).filter(
-                MaterialInventory.id.in_(inv_ids)
-            ).with_for_update().all()
+            invs = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id.in_(inv_ids))
+                .with_for_update()
+                .all()
+            )
 
             for inv, qty in zip(invs, quantities):
                 if inv.available_quantity >= qty:
@@ -382,7 +414,7 @@ class TestInventoryConcurrentDeduction:
                 else:
                     session.rollback()
                     return False
-            
+
             session.commit()
             return True
 
@@ -402,14 +434,17 @@ class TestInventoryConcurrentDeduction:
         material, inventory = test_material_stock
 
         def adjust_inventory(session, inv_id, adjustment):
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id
-            ).with_for_update().first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == inv_id)
+                .with_for_update()
+                .first()
+            )
 
             if inv:
                 inv.quantity += adjustment
                 inv.available_quantity += adjustment
-                
+
                 trans = InventoryTransaction(
                     material_id=inv.material_id,
                     transaction_type="ADJUSTMENT",
@@ -427,7 +462,7 @@ class TestInventoryConcurrentDeduction:
 
         # 并发调整（有正有负）
         adjustments = [Decimal("10"), Decimal("-5"), Decimal("8"), Decimal("-3")]
-        
+
         for adj in adjustments:
             sess = SessionLocal()
             adjust_inventory(sess, inventory.id, adj)
@@ -471,13 +506,19 @@ class TestInventoryConcurrentDeduction:
         db_session.commit()
 
         def transfer_stock(session, from_id, to_id, quantity):
-            from_inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == from_id
-            ).with_for_update().first()
-            
-            to_inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == to_id
-            ).with_for_update().first()
+            from_inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == from_id)
+                .with_for_update()
+                .first()
+            )
+
+            to_inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == to_id)
+                .with_for_update()
+                .first()
+            )
 
             if from_inv and to_inv and from_inv.available_quantity >= quantity:
                 from_inv.quantity -= quantity
@@ -504,24 +545,30 @@ class TestInventoryConcurrentDeduction:
         total_qty = inv_from.quantity + inv_to.quantity
         assert total_qty == Decimal("100")
 
-    def test_10_concurrent_with_transaction_isolation(self, db_session: Session, test_material_stock):
+    def test_10_concurrent_with_transaction_isolation(
+        self, db_session: Session, test_material_stock
+    ):
         """测试10：事务隔离级别测试"""
         material, inventory = test_material_stock
 
-        from app.models.base import SessionLocal
         from sqlalchemy import text
+
+        from app.models.base import SessionLocal
 
         # 使用不同的事务隔离级别
         def deduct_with_isolation(inv_id, quantity, isolation_level="READ COMMITTED"):
             sess = SessionLocal()
-            
+
             try:
                 # 设置事务隔离级别（SQLite不完全支持，这里演示概念）
                 # sess.execute(text(f"SET TRANSACTION ISOLATION LEVEL {isolation_level}"))
-                
-                inv = sess.query(MaterialInventory).filter(
-                    MaterialInventory.id == inv_id
-                ).with_for_update().first()
+
+                inv = (
+                    sess.query(MaterialInventory)
+                    .filter(MaterialInventory.id == inv_id)
+                    .with_for_update()
+                    .first()
+                )
 
                 if inv and inv.available_quantity >= quantity:
                     inv.available_quantity -= quantity

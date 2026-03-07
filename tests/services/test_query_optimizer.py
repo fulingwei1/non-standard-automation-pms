@@ -7,24 +7,27 @@ from unittest.mock import MagicMock, patch
 
 # Patch missing model relationships
 from app.models.project import Project
-for _attr in ('owner', 'milestones', 'issues', 'contracts'):
+
+for _attr in ("owner", "milestones", "issues", "contracts"):
     if not hasattr(Project, _attr):
         setattr(Project, _attr, MagicMock())
 
 from app.models.shortage import ShortageReport
-for _attr in ('material',):
+
+for _attr in ("material",):
     if not hasattr(ShortageReport, _attr):
         setattr(ShortageReport, _attr, MagicMock())
 # Source code references urgency_level but model has urgent_level
-if not hasattr(ShortageReport, 'urgency_level'):
+if not hasattr(ShortageReport, "urgency_level"):
     ShortageReport.urgency_level = ShortageReport.urgent_level
 # Source code references report_date but model has report_time
-if not hasattr(ShortageReport, 'report_date'):
+if not hasattr(ShortageReport, "report_date"):
     ShortageReport.report_date = ShortageReport.report_time
 
 from app.models.project import ProjectStatusLog
+
 # Source code references created_at but model has changed_at
-if not hasattr(ProjectStatusLog, 'created_at'):
+if not hasattr(ProjectStatusLog, "created_at"):
     ProjectStatusLog.created_at = ProjectStatusLog.changed_at
 
 # Patch joinedload/selectinload/func at module level to avoid SQLAlchemy
@@ -134,7 +137,9 @@ class TestQueryOptimizer(unittest.TestCase):
         mock_func.case.return_value = MagicMock()
         q = self._chain()
         q.all.return_value = []
-        result = self.optimizer.get_shortage_reports_optimized(project_id=1, status="open", urgency="HIGH")
+        result = self.optimizer.get_shortage_reports_optimized(
+            project_id=1, status="open", urgency="HIGH"
+        )
         self.assertEqual(result, [])
 
     # --- get_contract_performance_optimized ---

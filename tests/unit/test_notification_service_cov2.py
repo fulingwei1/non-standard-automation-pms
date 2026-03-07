@@ -2,13 +2,15 @@
 """
 notification_service.py 单元测试（第二批）
 """
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, MagicMock
 
 
 # ─── 1. Enums 枚举值 ─────────────────────────────────────────────────────────
 def test_notification_channel_values():
     from app.services.notification_service import NotificationChannel
+
     assert NotificationChannel.SYSTEM.value == "system"
     assert NotificationChannel.EMAIL.value == "email"
     assert NotificationChannel.WEB.value == "web"
@@ -16,12 +18,14 @@ def test_notification_channel_values():
 
 def test_notification_priority_values():
     from app.services.notification_service import NotificationPriority
+
     assert NotificationPriority.LOW.value == "low"
     assert NotificationPriority.URGENT.value == "urgent"
 
 
 def test_notification_type_values():
     from app.services.notification_service import NotificationType
+
     assert NotificationType.TASK_ASSIGNED.value == "task_assigned"
     assert NotificationType.DEADLINE_REMINDER.value == "deadline_reminder"
 
@@ -71,7 +75,7 @@ def test_infer_category_general():
 
 # ─── 3. NotificationService._get_enabled_channels ───────────────────────────
 def test_enabled_channels_web_only():
-    from app.services.notification_service import NotificationService, NotificationChannel
+    from app.services.notification_service import NotificationChannel, NotificationService
 
     with patch("app.services.notification_service.settings") as mock_settings:
         mock_settings.EMAIL_ENABLED = False
@@ -85,7 +89,7 @@ def test_enabled_channels_web_only():
 
 
 def test_enabled_channels_with_email():
-    from app.services.notification_service import NotificationService, NotificationChannel
+    from app.services.notification_service import NotificationChannel, NotificationService
 
     with patch("app.services.notification_service.settings") as mock_settings:
         mock_settings.EMAIL_ENABLED = True

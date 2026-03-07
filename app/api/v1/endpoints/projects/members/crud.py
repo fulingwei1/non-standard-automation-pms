@@ -8,23 +8,18 @@
 from datetime import date
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, Path, Body, Query
+from fastapi import APIRouter, Body, Depends, Path, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.schemas.project import (
-    ProjectMemberCreate,
-    ProjectMemberUpdate,
-    ProjectMemberResponse
-)
-from app.utils.permission_helpers import check_project_access_or_raise
-from app.common.pagination import PaginationParams, get_pagination_query
+from app.schemas.project import ProjectMemberCreate, ProjectMemberResponse, ProjectMemberUpdate
 from app.services.project_members import ProjectMembersService
-
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -45,7 +40,7 @@ def list_project_members(
 ) -> Any:
     """获取项目成员列表（支持分页、搜索、排序、筛选）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectMembersService(db)
     members, total = service.list_members(
         project_id=project_id,
@@ -54,15 +49,15 @@ def list_project_members(
         keyword=keyword,
         order_by=order_by,
         order_direction=order_direction,
-        role=role
+        role=role,
     )
-    
+
     return PaginatedResponse(
         items=members,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -74,10 +69,8 @@ def add_project_member(
     current_user: User = Depends(security.require_permission("project:update")),
 ) -> Any:
     """为项目添加成员"""
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限在该项目中添加成员"
-    )
-    
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限在该项目中添加成员")
+
     service = ProjectMembersService(db)
     member = service.create_member(
         project_id=project_id,
@@ -89,9 +82,9 @@ def add_project_member(
         commitment_level=member_in.commitment_level,
         reporting_to_pm=member_in.reporting_to_pm,
         remark=member_in.remark,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
-    
+
     return member
 
 
@@ -104,7 +97,7 @@ def get_project_member(
 ) -> Any:
     """获取项目成员详情"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectMembersService(db)
     return service.get_member_by_id(project_id, member_id)
 
@@ -119,7 +112,7 @@ def update_project_member(
 ) -> Any:
     """更新项目成员信息"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectMembersService(db)
     update_data = member_in.model_dump(exclude_unset=True)
     return service.update_member(project_id, member_id, update_data)
@@ -134,7 +127,7 @@ def remove_project_member(
 ):
     """移除项目成员"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectMembersService(db)
     service.delete_member(project_id, member_id)
 
@@ -153,11 +146,9 @@ def check_member_conflicts(
 ) -> Any:
     """检查成员分配冲突"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectMembersService(db)
-    return service.check_member_conflicts(
-        user_id, start_date, end_date, project_id
-    )
+    return service.check_member_conflicts(user_id, start_date, end_date, project_id)
 
 
 # ==================== 批量添加 ====================
@@ -165,6 +156,7 @@ def check_member_conflicts(
 
 class BatchAddMembersRequest(BaseModel):
     """批量添加成员请求"""
+
     user_ids: List[int]
     role_code: str
     allocation_pct: float = 100
@@ -182,10 +174,8 @@ def batch_add_project_members(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """批量添加项目成员"""
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限在该项目中添加成员"
-    )
-    
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限在该项目中添加成员")
+
     service = ProjectMembersService(db)
     return service.batch_add_members(
         project_id=project_id,
@@ -196,7 +186,7 @@ def batch_add_project_members(
         end_date=request.end_date,
         commitment_level=request.commitment_level,
         reporting_to_pm=request.reporting_to_pm,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
 
@@ -212,11 +202,11 @@ def notify_dept_manager(
 ) -> Any:
     """通知部门经理（成员加入项目）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectMembersService(db)
     result = service.notify_dept_manager(project_id, member_id)
-    
-    return ResponseModel(code=200, message=result['message'])
+
+    return ResponseModel(code=200, message=result["message"])
 
 
 @router.get("/from-dept/{dept_id}", response_model=dict)
@@ -228,6 +218,6 @@ def get_dept_users_for_project(
 ) -> Any:
     """获取部门用户列表（用于批量添加成员）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     service = ProjectMembersService(db)
     return service.get_dept_users_for_project(project_id, dept_id)

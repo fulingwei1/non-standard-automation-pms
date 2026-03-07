@@ -16,6 +16,7 @@ MODULE = "app.utils.scheduled_tasks.issue_tasks"
 # 辅助
 # ============================================================================
 
+
 def make_mock_db_ctx():
     mock_session = MagicMock()
     mock_ctx = MagicMock()
@@ -143,6 +144,7 @@ class TestIssueTasksCheckOverdueIssues:
         mock_session.query.return_value.filter.return_value.first.return_value = project
 
         notify_calls = []
+
         def mock_notify(*args, **kwargs):
             notify_calls.append(kwargs.get("user_id"))
 
@@ -184,7 +186,9 @@ class TestIssueTasksCheckBlockingIssues:
 
         mock_calculator = MagicMock()
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = check_blocking_issues()
 
         assert result["blocking_count"] == 0
@@ -209,7 +213,9 @@ class TestIssueTasksCheckBlockingIssues:
 
         mock_calculator = MagicMock()
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 with patch(f"{MODULE}.Project") as mock_project_cls:
                     mock_session.query.return_value.filter.return_value.first.return_value = project
                     result = check_blocking_issues()
@@ -233,14 +239,16 @@ class TestIssueTasksCheckBlockingIssues:
         project = MagicMock()
         project.id = 10
         mock_session.query.return_value.filter.return_value.first.side_effect = [
-            rule,           # AlertRule query
-            existing_alert, # existing AlertRecord
-            project,        # Project lookup for health update
+            rule,  # AlertRule query
+            existing_alert,  # existing AlertRecord
+            project,  # Project lookup for health update
         ]
 
         mock_calculator = MagicMock()
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = check_blocking_issues()
 
         # 不应该添加新预警记录（仅有可能 flush 了 rule）
@@ -265,7 +273,9 @@ class TestIssueTasksCheckBlockingIssues:
 
         mock_calculator = MagicMock()
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.health_calculator.HealthCalculator", return_value=mock_calculator):
+            with patch(
+                "app.services.health_calculator.HealthCalculator", return_value=mock_calculator
+            ):
                 result = check_blocking_issues()
 
         for key in ["blocking_count", "affected_projects", "health_updated", "timestamp"]:
@@ -379,8 +389,7 @@ class TestIssueTasksDailyStatisticsSnapshot:
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
-                "app.services.issue_statistics_service.check_existing_snapshot",
-                return_value=True
+                "app.services.issue_statistics_service.check_existing_snapshot", return_value=True
             ):
                 result = daily_issue_statistics_snapshot()
 
@@ -403,17 +412,49 @@ class TestIssueTasksDailyStatisticsSnapshot:
         mock_distributions = {}
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
-            with patch("app.services.issue_statistics_service.check_existing_snapshot", return_value=False):
-                with patch("app.services.issue_statistics_service.count_issues_by_status", return_value=mock_status):
-                    with patch("app.services.issue_statistics_service.count_issues_by_severity", return_value=mock_severity):
-                        with patch("app.services.issue_statistics_service.count_issues_by_priority", return_value=mock_priority):
-                            with patch("app.services.issue_statistics_service.count_issues_by_type", return_value=mock_type):
-                                with patch("app.services.issue_statistics_service.count_blocking_and_overdue_issues", return_value=mock_blocking):
-                                    with patch("app.services.issue_statistics_service.count_issues_by_category", return_value=mock_category):
-                                        with patch("app.services.issue_statistics_service.count_today_issues", return_value=mock_today):
-                                            with patch("app.services.issue_statistics_service.calculate_avg_resolve_time", return_value=mock_avg):
-                                                with patch("app.services.issue_statistics_service.build_distribution_data", return_value=mock_distributions):
-                                                    with patch("app.services.issue_statistics_service.create_snapshot_record", return_value=None):
+            with patch(
+                "app.services.issue_statistics_service.check_existing_snapshot", return_value=False
+            ):
+                with patch(
+                    "app.services.issue_statistics_service.count_issues_by_status",
+                    return_value=mock_status,
+                ):
+                    with patch(
+                        "app.services.issue_statistics_service.count_issues_by_severity",
+                        return_value=mock_severity,
+                    ):
+                        with patch(
+                            "app.services.issue_statistics_service.count_issues_by_priority",
+                            return_value=mock_priority,
+                        ):
+                            with patch(
+                                "app.services.issue_statistics_service.count_issues_by_type",
+                                return_value=mock_type,
+                            ):
+                                with patch(
+                                    "app.services.issue_statistics_service.count_blocking_and_overdue_issues",
+                                    return_value=mock_blocking,
+                                ):
+                                    with patch(
+                                        "app.services.issue_statistics_service.count_issues_by_category",
+                                        return_value=mock_category,
+                                    ):
+                                        with patch(
+                                            "app.services.issue_statistics_service.count_today_issues",
+                                            return_value=mock_today,
+                                        ):
+                                            with patch(
+                                                "app.services.issue_statistics_service.calculate_avg_resolve_time",
+                                                return_value=mock_avg,
+                                            ):
+                                                with patch(
+                                                    "app.services.issue_statistics_service.build_distribution_data",
+                                                    return_value=mock_distributions,
+                                                ):
+                                                    with patch(
+                                                        "app.services.issue_statistics_service.create_snapshot_record",
+                                                        return_value=None,
+                                                    ):
                                                         result = daily_issue_statistics_snapshot()
 
         assert result["total_issues"] == 10
@@ -429,8 +470,7 @@ class TestIssueTasksDailyStatisticsSnapshot:
 
         with patch(f"{MODULE}.get_db_session", return_value=mock_ctx):
             with patch(
-                "app.services.issue_statistics_service.check_existing_snapshot",
-                return_value=True
+                "app.services.issue_statistics_service.check_existing_snapshot", return_value=True
             ):
                 result = daily_issue_statistics_snapshot()
 

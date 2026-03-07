@@ -5,8 +5,8 @@ PDF 共享样式与字体工具
 所有 PDF 导出服务共用的样式定义和中文字体注册。
 """
 
-import os
 import logging
+import os
 from typing import Optional
 
 from reportlab.lib import colors
@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 # ── 中文字体路径 ─────────────────────────────────────
 FONT_PATHS = [
-    "/System/Library/Fonts/PingFang.ttc",     # macOS
+    "/System/Library/Fonts/PingFang.ttc",  # macOS
     "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",  # Linux
-    "C:/Windows/Fonts/msyh.ttc",              # Windows
+    "C:/Windows/Fonts/msyh.ttc",  # Windows
 ]
 
 _font_registered = False

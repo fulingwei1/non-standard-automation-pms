@@ -5,11 +5,12 @@ import pytest
 pytest.importorskip("app.services.issue_statistics_service")
 
 from unittest.mock import MagicMock
+
 from app.services.issue_statistics_service import (
     check_existing_snapshot,
-    count_issues_by_status,
-    count_issues_by_severity,
     count_issues_by_priority,
+    count_issues_by_severity,
+    count_issues_by_status,
 )
 
 
@@ -24,6 +25,7 @@ def test_check_existing_snapshot_not_found():
     db = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = None
     from datetime import date
+
     result = check_existing_snapshot(db, date.today())
     assert result is False
 
@@ -32,6 +34,7 @@ def test_check_existing_snapshot_found():
     db = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = MagicMock()
     from datetime import date
+
     result = check_existing_snapshot(db, date.today())
     assert result is True
 

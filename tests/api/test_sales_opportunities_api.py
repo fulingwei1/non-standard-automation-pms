@@ -5,9 +5,10 @@
 测试商机的创建、查询、更新、跟进、转化等功能
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestSalesOpportunitiesAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/opportunities/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Opportunities API not implemented")
@@ -53,13 +51,11 @@ class TestSalesOpportunitiesAPI:
             "source": "客户推荐",
             "description": "客户有意向采购自动化生产线设备",
             "contact_person": "张经理",
-            "contact_phone": "13800138000"
+            "contact_phone": "13800138000",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/",
-            headers=headers,
-            json=opportunity_data
+            f"{settings.API_V1_PREFIX}/sales/opportunities/", headers=headers, json=opportunity_data
         )
 
         if response.status_code == 404:
@@ -74,10 +70,7 @@ class TestSalesOpportunitiesAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/opportunities/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No opportunity data or API not implemented")
@@ -94,13 +87,11 @@ class TestSalesOpportunitiesAPI:
         update_data = {
             "opportunity_stage": "proposal",
             "probability": 60,
-            "expected_amount": 550000.0
+            "expected_amount": 550000.0,
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/sales/opportunities/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -116,8 +107,7 @@ class TestSalesOpportunitiesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -132,15 +122,12 @@ class TestSalesOpportunitiesAPI:
 
         headers = _auth_headers(admin_token)
 
-        stage_data = {
-            "stage": "negotiation",
-            "probability": 75
-        }
+        stage_data = {"stage": "negotiation", "probability": 75}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/opportunities/1/update-stage",
             headers=headers,
-            json=stage_data
+            json=stage_data,
         )
 
         if response.status_code == 404:
@@ -160,13 +147,13 @@ class TestSalesOpportunitiesAPI:
             "followup_type": "phone_call",
             "content": "与客户沟通了需求细节，客户表示很感兴趣",
             "next_followup_date": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"),
-            "next_action": "准备技术方案"
+            "next_action": "准备技术方案",
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/opportunities/1/followups",
             headers=headers,
-            json=followup_data
+            json=followup_data,
         )
 
         if response.status_code == 404:
@@ -182,8 +169,7 @@ class TestSalesOpportunitiesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/1/followups",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/1/followups", headers=headers
         )
 
         if response.status_code == 404:
@@ -201,13 +187,11 @@ class TestSalesOpportunitiesAPI:
         win_data = {
             "win_date": datetime.now().strftime("%Y-%m-%d"),
             "actual_amount": 520000.0,
-            "win_reason": "技术方案优秀，价格合理"
+            "win_reason": "技术方案优秀，价格合理",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/1/win",
-            headers=headers,
-            json=win_data
+            f"{settings.API_V1_PREFIX}/sales/opportunities/1/win", headers=headers, json=win_data
         )
 
         if response.status_code == 404:
@@ -225,13 +209,11 @@ class TestSalesOpportunitiesAPI:
         lose_data = {
             "lose_date": datetime.now().strftime("%Y-%m-%d"),
             "lose_reason": "价格因素",
-            "competitor": "某竞争对手公司"
+            "competitor": "某竞争对手公司",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/1/lose",
-            headers=headers,
-            json=lose_data
+            f"{settings.API_V1_PREFIX}/sales/opportunities/1/lose", headers=headers, json=lose_data
         )
 
         if response.status_code == 404:
@@ -247,8 +229,7 @@ class TestSalesOpportunitiesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/?stage=proposal",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/?stage=proposal", headers=headers
         )
 
         if response.status_code == 404:
@@ -264,8 +245,7 @@ class TestSalesOpportunitiesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/?min_probability=50",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/?min_probability=50", headers=headers
         )
 
         if response.status_code == 404:
@@ -281,8 +261,7 @@ class TestSalesOpportunitiesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/my-opportunities",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/my-opportunities", headers=headers
         )
 
         if response.status_code == 404:
@@ -298,8 +277,7 @@ class TestSalesOpportunitiesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -315,8 +293,7 @@ class TestSalesOpportunitiesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/pipeline",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities/pipeline", headers=headers
         )
 
         if response.status_code == 404:
@@ -326,8 +303,6 @@ class TestSalesOpportunitiesAPI:
 
     def test_opportunity_unauthorized(self, client: TestClient):
         """测试未授权访问商机"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/opportunities/")
 
         assert response.status_code in [401, 403], response.text

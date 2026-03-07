@@ -10,8 +10,9 @@
 """
 
 import os
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from app.core.config import Settings
 
@@ -90,10 +91,10 @@ class TestSettingsInitialization:
     @patch.dict(
         os.environ,
         {
-        "SECRET_KEY": "test_key",
-        "DATABASE_URL": "mysql://user:pass@localhost:3306/testdb",
-        "REDIS_URL": "redis://localhost:6379/0",
-        "POSTGRES_URL": "postgresql://user:pass@localhost:5432/testdb",
+            "SECRET_KEY": "test_key",
+            "DATABASE_URL": "mysql://user:pass@localhost:3306/testdb",
+            "REDIS_URL": "redis://localhost:6379/0",
+            "POSTGRES_URL": "postgresql://user:pass@localhost:5432/testdb",
         },
     )
     def test_settings_override_from_env(self):
@@ -213,9 +214,7 @@ class TestRedisConfig:
         settings = Settings()
         assert settings.REDIS_CACHE_ENABLED is False
 
-    @patch.dict(
-        os.environ, {"SECRET_KEY": "test_key", "REDIS_CACHE_DEFAULT_TTL": "600"}
-    )
+    @patch.dict(os.environ, {"SECRET_KEY": "test_key", "REDIS_CACHE_DEFAULT_TTL": "600"})
     def test_redis_custom_ttl(self):
         """测试自定义 TTL"""
         settings = Settings()
@@ -224,9 +223,9 @@ class TestRedisConfig:
     @patch.dict(
         os.environ,
         {
-        "SECRET_KEY": "test_key",
-        "REDIS_CACHE_PROJECT_DETAIL_TTL": "1200",
-        "REDIS_CACHE_PROJECT_LIST_TTL": "900",
+            "SECRET_KEY": "test_key",
+            "REDIS_CACHE_PROJECT_DETAIL_TTL": "1200",
+            "REDIS_CACHE_PROJECT_LIST_TTL": "900",
         },
     )
     def test_redis_project_specific_ttl(self):
@@ -245,17 +244,13 @@ class TestJwtConfig:
         settings = Settings()
         assert settings.ALGORITHM == "HS256"
 
-    @patch.dict(
-        os.environ, {"SECRET_KEY": "test_key", "ACCESS_TOKEN_EXPIRE_MINUTES": "120"}
-    )
+    @patch.dict(os.environ, {"SECRET_KEY": "test_key", "ACCESS_TOKEN_EXPIRE_MINUTES": "120"})
     def test_jwt_custom_expiry(self):
         """测试自定义 Token 过期时间"""
         settings = Settings()
         assert settings.ACCESS_TOKEN_EXPIRE_MINUTES == 120
 
-    @patch.dict(
-        os.environ, {"SECRET_KEY": "test_key", "ACCESS_TOKEN_EXPIRE_MINUTES": "30"}
-    )
+    @patch.dict(os.environ, {"SECRET_KEY": "test_key", "ACCESS_TOKEN_EXPIRE_MINUTES": "30"})
     def test_jwt_short_expiry(self):
         """测试短过期时间"""
         settings = Settings()
@@ -280,8 +275,8 @@ class TestDatabaseConfig:
     @patch.dict(
         os.environ,
         {
-        "SECRET_KEY": "test_key",
-        "DATABASE_URL": "mysql://root:pass@localhost:3306/mydb",
+            "SECRET_KEY": "test_key",
+            "DATABASE_URL": "mysql://root:pass@localhost:3306/mydb",
         },
     )
     def test_database_url(self):
@@ -292,8 +287,8 @@ class TestDatabaseConfig:
     @patch.dict(
         os.environ,
         {
-        "SECRET_KEY": "test_key",
-        "POSTGRES_URL": "postgresql://user:pass@host:5432/db",
+            "SECRET_KEY": "test_key",
+            "POSTGRES_URL": "postgresql://user:pass@host:5432/db",
         },
     )
     def test_postgres_url(self):
@@ -356,20 +351,20 @@ class TestConfigModule:
         settings = Settings()
 
         required_fields = [
-        "APP_NAME",
-        "APP_VERSION",
-        "API_V1_PREFIX",
-        "SQLITE_DB_PATH",
-        "DATABASE_URL",
-        "POSTGRES_URL",
-        "REDIS_URL",
-        "REDIS_CACHE_ENABLED",
-        "REDIS_CACHE_DEFAULT_TTL",
-        "SECRET_KEY",
-        "ALGORITHM",
-        "ACCESS_TOKEN_EXPIRE_MINUTES",
-        "CORS_ORIGINS",
-        "DEBUG",
+            "APP_NAME",
+            "APP_VERSION",
+            "API_V1_PREFIX",
+            "SQLITE_DB_PATH",
+            "DATABASE_URL",
+            "POSTGRES_URL",
+            "REDIS_URL",
+            "REDIS_CACHE_ENABLED",
+            "REDIS_CACHE_DEFAULT_TTL",
+            "SECRET_KEY",
+            "ALGORITHM",
+            "ACCESS_TOKEN_EXPIRE_MINUTES",
+            "CORS_ORIGINS",
+            "DEBUG",
         ]
 
         for field in required_fields:
@@ -408,7 +403,7 @@ class TestConfigModule:
 
             # DEBUG 模式应该生成关于 SECRET_KEY 的警告
         assert any(
-        "使用开发环境临时生成的 SECRET_KEY" in str(warning.message)
-        for warning in w
-        if "SECRET_KEY" in str(warning.message)
+            "使用开发环境临时生成的 SECRET_KEY" in str(warning.message)
+            for warning in w
+            if "SECRET_KEY" in str(warning.message)
         )

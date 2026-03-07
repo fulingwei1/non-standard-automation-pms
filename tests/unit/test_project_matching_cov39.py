@@ -2,11 +2,11 @@
 """
 第三十九批覆盖率测试 - work_log_ai/project_matching.py
 """
-import pytest
 from unittest.mock import MagicMock
 
-pytest.importorskip("app.services.work_log_ai.project_matching",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip("app.services.work_log_ai.project_matching", reason="import failed, skip")
 
 from app.services.work_log_ai.project_matching import ProjectMatchingMixin
 
@@ -30,6 +30,7 @@ def _make_member(user_id, project_id):
 
 class ConcreteProjectMatcher(ProjectMatchingMixin):
     """用于实例化 Mixin 的具体类"""
+
     def __init__(self, db):
         self.db = db
 
@@ -51,8 +52,10 @@ class TestProjectMatchingMixin:
 
     def test_get_user_projects_sorted_by_timesheet_count(self):
         members = [_make_member(1, 100), _make_member(1, 200)]
-        projects = [_make_project(100, "P001", "项目一", "客户A"),
-                    _make_project(200, "P002", "项目二")]
+        projects = [
+            _make_project(100, "P001", "项目一", "客户A"),
+            _make_project(200, "P002", "项目二"),
+        ]
 
         mock_q = MagicMock()
         self.db.query.return_value = mock_q

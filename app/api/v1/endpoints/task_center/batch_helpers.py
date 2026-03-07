@@ -25,7 +25,7 @@ def log_task_operation(
     operator_id: int,
     operator_name: str,
     old_value: Optional[Dict] = None,
-    new_value: Optional[Dict] = None
+    new_value: Optional[Dict] = None,
 ):
     """记录任务操作日志"""
     log = TaskOperationLog(
@@ -35,7 +35,7 @@ def log_task_operation(
         operator_id=operator_id,
         operator_name=operator_name,
         old_value=old_value,
-        new_value=new_value
+        new_value=new_value,
     )
     db.add(log)
     db.commit()

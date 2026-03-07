@@ -14,8 +14,8 @@ import pandas as pd
 
 from app.services.unified_import.timesheet_importer import TimesheetImporter
 
-
 # ---------- parse_progress ----------
+
 
 def test_parse_progress_valid():
     row = pd.Series({"进度": 80})
@@ -43,6 +43,7 @@ def test_parse_progress_missing_key():
 
 # ---------- create_timesheet_record ----------
 
+
 def test_create_timesheet_record_basic():
     user = MagicMock()
     user.id = 10
@@ -65,7 +66,7 @@ def test_create_timesheet_record_basic():
         work_result="完成功能",
         progress_before=50,
         progress_after=80,
-        current_user_id=1
+        current_user_id=1,
     )
 
     assert ts.user_id == 10
@@ -76,21 +77,25 @@ def test_create_timesheet_record_basic():
 
 # ---------- import_timesheet_data ----------
 
+
 def test_import_missing_columns():
     db = MagicMock()
     df = pd.DataFrame({"无效列": []})
     from fastapi import HTTPException
+
     with pytest.raises(HTTPException):
         TimesheetImporter.import_timesheet_data(db, df, current_user_id=1)
 
 
 def test_import_empty_row_fails():
     db = MagicMock()
-    df = pd.DataFrame({
-        "工作日期*": [None],
-        "人员姓名*": ["张三"],
-        "工时(小时)*": [8],
-    })
+    df = pd.DataFrame(
+        {
+            "工作日期*": [None],
+            "人员姓名*": ["张三"],
+            "工时(小时)*": [8],
+        }
+    )
     _, _, failed = TimesheetImporter.import_timesheet_data(db, df, current_user_id=1)
     assert len(failed) == 1
 
@@ -98,11 +103,13 @@ def test_import_empty_row_fails():
 def test_import_user_not_found():
     db = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = None
-    df = pd.DataFrame({
-        "工作日期*": ["2025-01-01"],
-        "人员姓名*": ["不存在的人"],
-        "工时(小时)*": [8],
-    })
+    df = pd.DataFrame(
+        {
+            "工作日期*": ["2025-01-01"],
+            "人员姓名*": ["不存在的人"],
+            "工时(小时)*": [8],
+        }
+    )
     _, _, failed = TimesheetImporter.import_timesheet_data(db, df, current_user_id=1)
     assert any("未找到用户" in r["error"] for r in failed)
 
@@ -129,10 +136,14 @@ def test_import_update_existing():
 
     db.query.side_effect = lambda m: query_side(m)
 
-    df = pd.DataFrame({
-        "工作日期*": ["2025-01-01"],
-        "人员姓名*": ["李四"],
-        "工时(小时)*": [4],
-    })
-    _, updated, _ = TimesheetImporter.import_timesheet_data(db, df, current_user_id=1, update_existing=True)
+    df = pd.DataFrame(
+        {
+            "工作日期*": ["2025-01-01"],
+            "人员姓名*": ["李四"],
+            "工时(小时)*": [4],
+        }
+    )
+    _, updated, _ = TimesheetImporter.import_timesheet_data(
+        db, df, current_user_id=1, update_existing=True
+    )
     assert updated == 1

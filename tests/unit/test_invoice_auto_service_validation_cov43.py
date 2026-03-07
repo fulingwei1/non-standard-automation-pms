@@ -7,9 +7,10 @@ import pytest
 pytest.importorskip("app.services.invoice_auto_service.validation")
 
 from unittest.mock import MagicMock
+
 from app.services.invoice_auto_service.validation import (
-    check_deliverables_complete,
     check_acceptance_issues_resolved,
+    check_deliverables_complete,
 )
 
 

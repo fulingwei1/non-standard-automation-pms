@@ -5,7 +5,6 @@
 
 from datetime import date, datetime, timedelta
 
-
 from app.dependencies import get_db_session
 from app.services.debug_issue_sync_service import DebugIssueSyncService
 from app.services.design_review_sync_service import DesignReviewSyncService
@@ -30,9 +29,9 @@ def daily_work_log_generation_task():
         print(f"  跳过数量: {stats['skipped_count']}")
         print(f"  错误数量: {stats['error_count']}")
 
-        if stats['errors']:
+        if stats["errors"]:
             print("  错误详情:")
-            for error in stats['errors'][:5]:  # 只显示前5个错误
+            for error in stats["errors"][:5]:  # 只显示前5个错误
                 print(f"    - {error['user_name']} ({error['date']}): {error['error']}")
 
         return stats
@@ -47,10 +46,7 @@ def daily_design_review_sync_task():
         sync_service = DesignReviewSyncService(db)
         yesterday = date.today() - timedelta(days=1)
 
-        stats = sync_service.sync_all_completed_reviews(
-            start_date=yesterday,
-            end_date=yesterday
-        )
+        stats = sync_service.sync_all_completed_reviews(start_date=yesterday, end_date=yesterday)
 
         print(f"[设计评审自动同步] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"  总评审数: {stats['total_reviews']}")
@@ -58,9 +54,9 @@ def daily_design_review_sync_task():
         print(f"  跳过数量: {stats['skipped_count']}")
         print(f"  错误数量: {stats['error_count']}")
 
-        if stats['errors']:
+        if stats["errors"]:
             print("  错误详情:")
-            for error in stats['errors'][:5]:
+            for error in stats["errors"][:5]:
                 print(f"    - {error['review_no']}: {error['error']}")
 
         return stats
@@ -75,10 +71,7 @@ def daily_debug_issue_sync_task():
         sync_service = DebugIssueSyncService(db)
         yesterday = date.today() - timedelta(days=1)
 
-        stats = sync_service.sync_all_project_issues(
-            start_date=yesterday,
-            end_date=yesterday
-        )
+        stats = sync_service.sync_all_project_issues(start_date=yesterday, end_date=yesterday)
 
         print(f"[调试问题自动同步] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"  总问题数: {stats['total_issues']}")
@@ -88,9 +81,9 @@ def daily_debug_issue_sync_task():
         print(f"  跳过数量: {stats['skipped_count']}")
         print(f"  错误数量: {stats['error_count']}")
 
-        if stats['errors']:
+        if stats["errors"]:
             print("  错误详情:")
-            for error in stats['errors'][:5]:
+            for error in stats["errors"][:5]:
                 print(f"    - {error['issue_no']}: {error['error']}")
 
         return stats
@@ -111,14 +104,12 @@ def weekly_knowledge_identification_task():
 
         # 从服务工单识别
         ticket_stats = identification_service.batch_identify_from_service_tickets(
-            start_date=last_monday,
-            end_date=last_sunday
+            start_date=last_monday, end_date=last_sunday
         )
 
         # 从知识库识别
         kb_stats = identification_service.batch_identify_from_knowledge_base(
-            start_date=last_monday,
-            end_date=last_sunday
+            start_date=last_monday, end_date=last_sunday
         )
 
         print(f"[知识贡献自动识别] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -129,10 +120,7 @@ def weekly_knowledge_identification_task():
         print(f"    总文章数: {kb_stats['total_articles']}")
         print(f"    识别数量: {kb_stats['identified_count']}")
 
-        return {
-            'ticket_stats': ticket_stats,
-            'kb_stats': kb_stats
-        }
+        return {"ticket_stats": ticket_stats, "kb_stats": kb_stats}
 
 
 def sync_all_performance_data_task():
@@ -147,46 +135,37 @@ def sync_all_performance_data_task():
         generator = WorkLogAutoGenerator(db)
         week_ago = date.today() - timedelta(days=7)
         work_log_stats = generator.batch_generate_work_logs(
-            start_date=week_ago,
-            end_date=date.today(),
-            auto_submit=False
+            start_date=week_ago, end_date=date.today(), auto_submit=False
         )
-        results['work_log'] = work_log_stats
+        results["work_log"] = work_log_stats
 
         # 2. 同步设计评审（最近30天）
         print("\n[2] 同步设计评审...")
         design_sync = DesignReviewSyncService(db)
         month_ago = date.today() - timedelta(days=30)
         design_stats = design_sync.sync_all_completed_reviews(
-            start_date=month_ago,
-            end_date=date.today()
+            start_date=month_ago, end_date=date.today()
         )
-        results['design_review'] = design_stats
+        results["design_review"] = design_stats
 
         # 3. 同步调试问题（最近30天）
         print("\n[3] 同步调试问题...")
         debug_sync = DebugIssueSyncService(db)
         debug_stats = debug_sync.sync_all_project_issues(
-            start_date=month_ago,
-            end_date=date.today()
+            start_date=month_ago, end_date=date.today()
         )
-        results['debug_issue'] = debug_stats
+        results["debug_issue"] = debug_stats
 
         # 4. 识别知识贡献（最近30天）
         print("\n[4] 识别知识贡献...")
         knowledge_service = KnowledgeAutoIdentificationService(db)
         ticket_stats = knowledge_service.batch_identify_from_service_tickets(
-            start_date=month_ago,
-            end_date=date.today()
+            start_date=month_ago, end_date=date.today()
         )
         kb_stats = knowledge_service.batch_identify_from_knowledge_base(
-            start_date=month_ago,
-            end_date=date.today()
+            start_date=month_ago, end_date=date.today()
         )
-        results['knowledge'] = {
-            'ticket_stats': ticket_stats,
-            'kb_stats': kb_stats
-        }
+        results["knowledge"] = {"ticket_stats": ticket_stats, "kb_stats": kb_stats}
 
         print("\n[完成] 所有绩效数据同步完成")
         return results

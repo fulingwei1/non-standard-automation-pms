@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """TimesheetQualityService 单元测试"""
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestTimesheetQualityService:
 
     def _make_service(self):
         from app.services.timesheet_quality_service import TimesheetQualityService
+
         db = MagicMock()
         return TimesheetQualityService(db_session), db
 
@@ -52,7 +54,9 @@ class TestTimesheetQualityService:
         svc, db = self._make_service()
         monday = date(2025, 1, 6)
         # 5 天各 17 小时 = 85 > 80
-        timesheets = [MagicMock(user_id=1, work_date=monday + timedelta(days=i), hours=17) for i in range(5)]
+        timesheets = [
+            MagicMock(user_id=1, work_date=monday + timedelta(days=i), hours=17) for i in range(5)
+        ]
         user = MagicMock(real_name="王五", username="ww")
         db.query.return_value.filter.return_value.all.return_value = timesheets
         db.query.return_value.filter.return_value.first.return_value = user
@@ -79,7 +83,10 @@ class TestTimesheetQualityService:
             (today, 1)
         ]
         # 第二次查询（WorkLog）返回 None
-        db.query.return_value.filter.return_value.first.side_effect = [None, MagicMock(real_name="测试", username="test")]
+        db.query.return_value.filter.return_value.first.side_effect = [
+            None,
+            MagicMock(real_name="测试", username="test"),
+        ]
         result = svc.check_work_log_completeness()
         assert result["missing_log_count"] == 1
 

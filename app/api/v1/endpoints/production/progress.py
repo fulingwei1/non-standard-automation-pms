@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+
 # from app.core.permissions import check_permissions  # FIXME: Module does not exist
 from app.models.user import User
 from app.schemas.production_progress import (
@@ -42,20 +43,20 @@ async def get_realtime_progress(
 ):
     """
     **GET /production/progress/realtime**
-    
+
     获取实时进度总览：
     - 工单统计（总数、进行中、今日完成、延期）
     - 工位统计（活跃、空闲、瓶颈）
     - 预警统计（总数、严重预警）
     - 整体指标（进度、产能利用率、效率）
-    
+
     **权限要求**: production:read
     """
     # check_permissions(current_user, ["production:read"])
-    
+
     service = ProductionProgressService(db)
     overview = service.get_realtime_overview(workshop_id=workshop_id)
-    
+
     return overview
 
 
@@ -72,26 +73,25 @@ async def get_work_order_timeline(
 ):
     """
     **GET /production/progress/work-orders/{id}/timeline**
-    
+
     获取工单进度时间线：
     - 工单基本信息
     - 进度变化历史
     - 预警记录
     - 计划 vs 实际对比
-    
+
     **权限要求**: production:read
     """
     # check_permissions(current_user, ["production:read"])
-    
+
     service = ProductionProgressService(db)
     timeline = service.get_work_order_timeline(work_order_id)
-    
+
     if not timeline:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"工单 {work_order_id} 不存在"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"工单 {work_order_id} 不存在"
         )
-    
+
     return timeline
 
 
@@ -108,7 +108,7 @@ async def get_workstation_realtime(
 ):
     """
     **GET /production/progress/workstations/{id}/realtime**
-    
+
     获取工位实时状态：
     - 当前状态（空闲/忙碌/暂停/维护/离线）
     - 当前工单和操作工
@@ -116,20 +116,19 @@ async def get_workstation_realtime(
     - 产能利用率
     - 效率和质量指标
     - 瓶颈状态
-    
+
     **权限要求**: production:read
     """
     # check_permissions(current_user, ["production:read"])
-    
+
     service = ProductionProgressService(db)
     ws_status = service.get_workstation_realtime(workstation_id)
-    
+
     if not ws_status:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"工位 {workstation_id} 状态不存在"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"工位 {workstation_id} 状态不存在"
         )
-    
+
     return ws_status
 
 
@@ -147,27 +146,24 @@ async def create_progress_log(
 ):
     """
     **POST /production/progress/log**
-    
+
     记录进度日志：
     - 自动计算进度偏差（实际 vs 计划）
     - 更新工单进度和状态
     - 更新工位状态
     - 触发预警规则评估
-    
+
     **权限要求**: production:write
     """
     # check_permissions(current_user, ["production:write"])
-    
+
     service = ProductionProgressService(db)
-    
+
     try:
         progress_log = service.create_progress_log(log_data, current_user.id)
         return progress_log
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get(
@@ -185,28 +181,25 @@ async def get_bottleneck_workstations(
 ):
     """
     **GET /production/progress/bottlenecks**
-    
+
     识别瓶颈工位：
     - 基于产能利用率算法
     - 分级识别（轻度/中度/严重）
     - 提供瓶颈原因分析
     - 显示排队工单数量
-    
+
     **瓶颈判断规则**:
     - 轻度(level=1): 产能利用率 > 90%
     - 中度(level=2): 产能利用率 > 95% 且有排队工单
     - 严重(level=3): 产能利用率 > 98% 且排队工单 > 3
-    
+
     **权限要求**: production:read
     """
     # check_permissions(current_user, ["production:read"])
-    
+
     service = ProductionProgressService(db)
-    bottlenecks = service.identify_bottlenecks(
-        workshop_id=workshop_id,
-        min_level=min_level
-    )
-    
+    bottlenecks = service.identify_bottlenecks(workshop_id=workshop_id, min_level=min_level)
+
     return bottlenecks[:limit]
 
 
@@ -219,7 +212,9 @@ async def get_bottleneck_workstations(
 async def get_progress_alerts(
     work_order_id: Optional[int] = Query(None, description="工单ID"),
     workstation_id: Optional[int] = Query(None, description="工位ID"),
-    alert_type: Optional[str] = Query(None, description="预警类型：DELAY/BOTTLENECK/QUALITY/EFFICIENCY"),
+    alert_type: Optional[str] = Query(
+        None, description="预警类型：DELAY/BOTTLENECK/QUALITY/EFFICIENCY"
+    ),
     alert_level: Optional[str] = Query(None, description="预警级别：INFO/WARNING/CRITICAL/URGENT"),
     status: Optional[str] = Query(None, description="状态：ACTIVE/ACKNOWLEDGED/RESOLVED/DISMISSED"),
     db: Session = Depends(get_db),
@@ -227,32 +222,32 @@ async def get_progress_alerts(
 ):
     """
     **GET /production/progress/alerts**
-    
+
     获取进度预警列表：
     - 延期预警（进度偏差）
     - 瓶颈预警（产能利用率）
     - 质量预警（合格率）
     - 效率预警（生产效率）
-    
+
     **预警规则**:
     - DELAY: 进度偏差 < -10%（WARNING）或 < -20%（CRITICAL）
     - BOTTLENECK: 工位瓶颈等级 ≥ 1
     - QUALITY: 合格率 < 95%
     - EFFICIENCY: 生产效率 < 80%
-    
+
     **权限要求**: production:read
     """
     # check_permissions(current_user, ["production:read"])
-    
+
     service = ProductionProgressService(db)
     alerts = service.get_alerts(
         work_order_id=work_order_id,
         workstation_id=workstation_id,
         alert_type=alert_type,
         alert_level=alert_level,
-        status=status
+        status=status,
     )
-    
+
     return alerts
 
 
@@ -270,29 +265,24 @@ async def dismiss_progress_alert(
 ):
     """
     **POST /production/progress/alerts/{id}/dismiss**
-    
+
     关闭预警：
     - 更新预警状态为 DISMISSED
     - 记录关闭时间和操作人
     - 可添加处理说明
-    
+
     **权限要求**: production:write
     """
     # check_permissions(current_user, ["production:write"])
-    
+
     service = ProductionProgressService(db)
     success = service.dismiss_alert(
-        alert_id=alert_id,
-        user_id=current_user.id,
-        note=dismiss_data.resolution_note
+        alert_id=alert_id, user_id=current_user.id, note=dismiss_data.resolution_note
     )
-    
+
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"预警 {alert_id} 不存在"
-        )
-    
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"预警 {alert_id} 不存在")
+
     return {"message": "预警已关闭", "alert_id": alert_id}
 
 
@@ -311,28 +301,26 @@ async def get_progress_deviation(
 ):
     """
     **GET /production/progress/deviation**
-    
+
     进度偏差分析：
     - 计划进度 vs 实际进度
     - 偏差百分比
     - 延期风险评估（LOW/MEDIUM/HIGH/CRITICAL）
     - 预计完成日期
     - 延期天数
-    
+
     **偏差计算**:
     - 基于计划开始/结束日期线性插值
     - 偏差 = 实际进度 - 计划进度
     - 偏差 < -5% 认为延期
-    
+
     **权限要求**: production:read
     """
     # check_permissions(current_user, ["production:read"])
-    
+
     service = ProductionProgressService(db)
     deviations = service.get_progress_deviations(
-        workshop_id=workshop_id,
-        min_deviation=min_deviation,
-        only_delayed=only_delayed
+        workshop_id=workshop_id, min_deviation=min_deviation, only_delayed=only_delayed
     )
-    
+
     return deviations

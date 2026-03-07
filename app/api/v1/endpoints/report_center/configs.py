@@ -27,17 +27,14 @@ from app.schemas.report_center import (
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/configs",
-    tags=["configs"]
-)
+router = APIRouter(prefix="/configs", tags=["configs"])
 
 # 共 3 个路由
 
 # ==================== 报表配置 ====================
+
 
 @router.get("/roles", response_model=ReportRoleResponse, status_code=status.HTTP_200_OK)
 def get_report_roles(
@@ -52,12 +49,14 @@ def get_report_roles(
 
     role_list = []
     for role in roles:
-        role_list.append({
-            "role_id": role.id,
-            "role_code": role.role_code,
-            "role_name": role.role_name,
-            "description": role.description
-        })
+        role_list.append(
+            {
+                "role_id": role.id,
+                "role_code": role.role_code,
+                "role_name": role.role_name,
+                "description": role.description,
+            }
+        )
 
     return ReportRoleResponse(roles=role_list)
 
@@ -80,13 +79,15 @@ def get_report_types(
         {"type": "COST_ANALYSIS", "name": "成本分析", "description": "项目成本分析报告"},
         {"type": "WORKLOAD_ANALYSIS", "name": "负荷分析", "description": "人员负荷分析报告"},
         {"type": "RISK_REPORT", "name": "风险报告", "description": "项目风险分析报告"},
-        {"type": "CUSTOM", "name": "自定义报表", "description": "用户自定义报表"}
+        {"type": "CUSTOM", "name": "自定义报表", "description": "用户自定义报表"},
     ]
 
     return ReportTypeResponse(types=types)
 
 
-@router.get("/role-report-matrix", response_model=RoleReportMatrixResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/role-report-matrix", response_model=RoleReportMatrixResponse, status_code=status.HTTP_200_OK
+)
 def get_role_report_matrix(
     *,
     db: Session = Depends(deps.get_db),
@@ -100,6 +101,3 @@ def get_role_report_matrix(
     matrix = ReportDataGenerationCore.ROLE_REPORT_MATRIX
 
     return RoleReportMatrixResponse(matrix=matrix)
-
-
-

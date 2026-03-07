@@ -9,18 +9,18 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.common.pagination import get_pagination_query, PaginationParams
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.user import User
 from app.schemas.production.exception_enhancement import (
     ExceptionEscalateRequest,
     ExceptionEscalateResponse,
+    ExceptionStatisticsResponse,
     FlowTrackingResponse,
     KnowledgeCreateRequest,
     KnowledgeListResponse,
     KnowledgeResponse,
-    ExceptionStatisticsResponse,
-    PDCACreateRequest,
     PDCAAdvanceRequest,
+    PDCACreateRequest,
     PDCAResponse,
     RecurrenceAnalysisResponse,
 )
@@ -32,6 +32,7 @@ router = APIRouter()
 
 
 # ==================== 异常升级 ====================
+
 
 @router.post("/exception/escalate", response_model=ExceptionEscalateResponse)
 def escalate_exception(
@@ -58,6 +59,7 @@ def escalate_exception(
 
 # ==================== 处理流程跟踪 ====================
 
+
 @router.get("/exception/{exception_id}/flow", response_model=FlowTrackingResponse)
 def get_exception_flow(
     exception_id: int,
@@ -70,6 +72,7 @@ def get_exception_flow(
 
 
 # ==================== 异常知识库 ====================
+
 
 @router.post("/exception/knowledge", response_model=KnowledgeResponse)
 def create_knowledge(
@@ -108,6 +111,7 @@ def search_knowledge(
 
 # ==================== 异常统计分析 ====================
 
+
 @router.get("/exception/statistics", response_model=ExceptionStatisticsResponse)
 def get_exception_statistics(
     start_date: Optional[datetime] = Query(None, description="开始日期"),
@@ -121,6 +125,7 @@ def get_exception_statistics(
 
 
 # ==================== PDCA管理 ====================
+
 
 @router.post("/exception/pdca", response_model=PDCAResponse)
 def create_pdca(
@@ -146,6 +151,7 @@ def advance_pdca_stage(
 
 
 # ==================== 重复异常分析 ====================
+
 
 @router.get("/exception/recurrence", response_model=List[RecurrenceAnalysisResponse])
 def analyze_recurrence(

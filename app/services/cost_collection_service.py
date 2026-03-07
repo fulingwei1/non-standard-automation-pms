@@ -27,7 +27,7 @@ class CostCollectionService:
         db: Session,
         order_id: int,
         created_by: Optional[int] = None,
-        cost_date: Optional[date] = None
+        cost_date: Optional[date] = None,
     ) -> Optional[ProjectCost]:
         """
         从采购订单归集成本
@@ -46,17 +46,23 @@ class CostCollectionService:
             return None
 
         # 检查是否已归集过
-        existing_cost = db.query(ProjectCost).filter(
-            ProjectCost.source_module == "PURCHASE",
-            ProjectCost.source_type == "PURCHASE_ORDER",
-            ProjectCost.source_id == order_id
-        ).first()
+        existing_cost = (
+            db.query(ProjectCost)
+            .filter(
+                ProjectCost.source_module == "PURCHASE",
+                ProjectCost.source_type == "PURCHASE_ORDER",
+                ProjectCost.source_id == order_id,
+            )
+            .first()
+        )
 
         if existing_cost:
             # 更新现有成本记录
             existing_cost.amount = order.total_amount or Decimal("0")
             existing_cost.tax_amount = order.tax_amount or Decimal("0")
-            existing_cost.cost_date = cost_date or (order.created_at.date() if order.created_at else date.today())
+            existing_cost.cost_date = cost_date or (
+                order.created_at.date() if order.created_at else date.today()
+            )
             if created_by:
                 existing_cost.created_by = created_by
             db.add(existing_cost)
@@ -66,9 +72,11 @@ class CostCollectionService:
                 project = db.query(Project).filter(Project.id == order.project_id).first()
                 if project:
                     # 重新计算项目成本
-                    project_costs = db.query(ProjectCost).filter(
-                        ProjectCost.project_id == order.project_id
-                    ).all()
+                    project_costs = (
+                        db.query(ProjectCost)
+                        .filter(ProjectCost.project_id == order.project_id)
+                        .all()
+                    )
                     project.actual_cost = sum([float(c.amount or 0) for c in project_costs])
                     db.add(project)
 
@@ -91,7 +99,7 @@ class CostCollectionService:
             tax_amount=order.tax_amount or Decimal("0"),
             cost_date=cost_date or order.order_date or date.today(),
             description=f"采购订单：{order.order_title or order.order_no}",
-            created_by=created_by
+            created_by=created_by,
         )
         db.add(cost)
 
@@ -117,7 +125,7 @@ class CostCollectionService:
         db: Session,
         order_id: int,
         created_by: Optional[int] = None,
-        cost_date: Optional[date] = None
+        cost_date: Optional[date] = None,
     ) -> Optional[ProjectCost]:
         """
         从外协订单归集成本
@@ -136,17 +144,23 @@ class CostCollectionService:
             return None
 
         # 检查是否已归集过
-        existing_cost = db.query(ProjectCost).filter(
-            ProjectCost.source_module == "OUTSOURCING",
-            ProjectCost.source_type == "OUTSOURCING_ORDER",
-            ProjectCost.source_id == order_id
-        ).first()
+        existing_cost = (
+            db.query(ProjectCost)
+            .filter(
+                ProjectCost.source_module == "OUTSOURCING",
+                ProjectCost.source_type == "OUTSOURCING_ORDER",
+                ProjectCost.source_id == order_id,
+            )
+            .first()
+        )
 
         if existing_cost:
             # 更新现有成本记录
             existing_cost.amount = order.total_amount or Decimal("0")
             existing_cost.tax_amount = order.tax_amount or Decimal("0")
-            existing_cost.cost_date = cost_date or (order.created_at.date() if order.created_at else date.today())
+            existing_cost.cost_date = cost_date or (
+                order.created_at.date() if order.created_at else date.today()
+            )
             if created_by:
                 existing_cost.created_by = created_by
             db.add(existing_cost)
@@ -156,9 +170,11 @@ class CostCollectionService:
                 project = db.query(Project).filter(Project.id == order.project_id).first()
                 if project:
                     # 重新计算项目成本
-                    project_costs = db.query(ProjectCost).filter(
-                        ProjectCost.project_id == order.project_id
-                    ).all()
+                    project_costs = (
+                        db.query(ProjectCost)
+                        .filter(ProjectCost.project_id == order.project_id)
+                        .all()
+                    )
                     project.actual_cost = sum([float(c.amount or 0) for c in project_costs])
                     db.add(project)
 
@@ -182,7 +198,7 @@ class CostCollectionService:
             tax_amount=order.tax_amount or Decimal("0"),
             cost_date=cost_date or (order.created_at.date() if order.created_at else date.today()),
             description=f"外协订单：{order.order_title or order.order_no}",
-            created_by=created_by
+            created_by=created_by,
         )
         db.add(cost)
 
@@ -205,10 +221,7 @@ class CostCollectionService:
 
     @staticmethod
     def collect_from_ecn(
-        db: Session,
-        ecn_id: int,
-        created_by: Optional[int] = None,
-        cost_date: Optional[date] = None
+        db: Session, ecn_id: int, created_by: Optional[int] = None, cost_date: Optional[date] = None
     ) -> Optional[ProjectCost]:
         """
         从ECN变更归集成本（变更成本独立核算）
@@ -232,11 +245,15 @@ class CostCollectionService:
             return None
 
         # 检查是否已归集过
-        existing_cost = db.query(ProjectCost).filter(
-            ProjectCost.source_module == "ECN",
-            ProjectCost.source_type == "ECN",
-            ProjectCost.source_id == ecn_id
-        ).first()
+        existing_cost = (
+            db.query(ProjectCost)
+            .filter(
+                ProjectCost.source_module == "ECN",
+                ProjectCost.source_type == "ECN",
+                ProjectCost.source_id == ecn_id,
+            )
+            .first()
+        )
 
         if existing_cost:
             # 更新现有成本记录
@@ -251,9 +268,9 @@ class CostCollectionService:
                 project = db.query(Project).filter(Project.id == ecn.project_id).first()
                 if project:
                     # 重新计算项目成本
-                    project_costs = db.query(ProjectCost).filter(
-                        ProjectCost.project_id == ecn.project_id
-                    ).all()
+                    project_costs = (
+                        db.query(ProjectCost).filter(ProjectCost.project_id == ecn.project_id).all()
+                    )
                     project.actual_cost = sum([float(c.amount or 0) for c in project_costs])
                     db.add(project)
 
@@ -277,7 +294,7 @@ class CostCollectionService:
             tax_amount=Decimal("0"),  # 变更成本通常不含税
             cost_date=cost_date or date.today(),
             description=f"ECN变更成本：{ecn.ecn_title}",
-            created_by=created_by
+            created_by=created_by,
         )
         db.add(cost)
 
@@ -300,10 +317,7 @@ class CostCollectionService:
 
     @staticmethod
     def remove_cost_from_source(
-        db: Session,
-        source_module: str,
-        source_type: str,
-        source_id: int
+        db: Session, source_module: str, source_type: str, source_id: int
     ) -> bool:
         """
         删除指定来源的成本记录（用于订单取消等情况）
@@ -317,11 +331,15 @@ class CostCollectionService:
         Returns:
             是否成功删除
         """
-        cost = db.query(ProjectCost).filter(
-            ProjectCost.source_module == source_module,
-            ProjectCost.source_type == source_type,
-            ProjectCost.source_id == source_id
-        ).first()
+        cost = (
+            db.query(ProjectCost)
+            .filter(
+                ProjectCost.source_module == source_module,
+                ProjectCost.source_type == source_type,
+                ProjectCost.source_id == source_id,
+            )
+            .first()
+        )
 
         if not cost:
             return False
@@ -343,10 +361,7 @@ class CostCollectionService:
 
     @staticmethod
     def collect_from_bom(
-        db: Session,
-        bom_id: int,
-        created_by: Optional[int] = None,
-        cost_date: Optional[date] = None
+        db: Session, bom_id: int, created_by: Optional[int] = None, cost_date: Optional[date] = None
     ) -> Optional[ProjectCost]:
         """
         从BOM归集材料成本
@@ -374,12 +389,16 @@ class CostCollectionService:
             raise ValueError("只有已发布的BOM才能归集成本")
 
         # 检查是否已存在该BOM的成本记录
-        existing_cost = db.query(ProjectCost).filter(
-            ProjectCost.project_id == bom.project_id,
-            ProjectCost.source_module == "BOM",
-            ProjectCost.source_type == "BOM_COST",
-            ProjectCost.source_id == bom_id
-        ).first()
+        existing_cost = (
+            db.query(ProjectCost)
+            .filter(
+                ProjectCost.project_id == bom.project_id,
+                ProjectCost.source_module == "BOM",
+                ProjectCost.source_type == "BOM_COST",
+                ProjectCost.source_id == bom_id,
+            )
+            .first()
+        )
 
         # 计算BOM总成本
         bom_items = db.query(BomItem).filter(BomItem.bom_id == bom_id).all()
@@ -391,7 +410,9 @@ class CostCollectionService:
                 # 删除已存在的成本记录
                 project = db.query(Project).filter(Project.id == bom.project_id).first()
                 if project:
-                    project.actual_cost = max(0, (project.actual_cost or 0) - float(existing_cost.amount or 0))
+                    project.actual_cost = max(
+                        0, (project.actual_cost or 0) - float(existing_cost.amount or 0)
+                    )
                     db.add(project)
                 delete_obj(db, existing_cost)
             return None
@@ -430,7 +451,7 @@ class CostCollectionService:
                 amount=Decimal(str(total_amount)),
                 cost_date=cost_date or date.today(),
                 description=f"BOM材料成本：{bom.bom_name}（{bom.bom_no}）",
-                created_by=created_by
+                created_by=created_by,
             )
             db.add(cost)
 

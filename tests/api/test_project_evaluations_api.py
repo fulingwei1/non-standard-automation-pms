@@ -29,10 +29,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -46,8 +43,7 @@ class TestProjectEvaluationsAPI:
 
         # 测试项目中心API
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -67,10 +63,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -86,7 +79,7 @@ class TestProjectEvaluationsAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -95,7 +88,9 @@ class TestProjectEvaluationsAPI:
             assert data["page"] == 1
             assert data["page_size"] == 10
 
-    def test_list_project_evaluations_with_status_filter(self, client: TestClient, admin_token: str):
+    def test_list_project_evaluations_with_status_filter(
+        self, client: TestClient, admin_token: str
+    ):
         """测试状态筛选"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -103,10 +98,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -122,7 +114,7 @@ class TestProjectEvaluationsAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
             params={"status": "DRAFT"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -135,10 +127,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -161,7 +150,7 @@ class TestProjectEvaluationsAPI:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
             json=evaluation_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -182,10 +171,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -199,15 +185,16 @@ class TestProjectEvaluationsAPI:
 
         # 先获取评价列表
         evaluations_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/", headers=headers
         )
 
         if evaluations_response.status_code != 200:
             pytest.skip("Failed to get evaluations list")
 
         evaluations = evaluations_response.json()
-        eval_items = evaluations.get("items", evaluations) if isinstance(evaluations, dict) else evaluations
+        eval_items = (
+            evaluations.get("items", evaluations) if isinstance(evaluations, dict) else evaluations
+        )
         if not eval_items:
             pytest.skip("No evaluations available for testing")
 
@@ -215,8 +202,7 @@ class TestProjectEvaluationsAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -233,10 +219,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -249,8 +232,7 @@ class TestProjectEvaluationsAPI:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/99999", headers=headers
         )
 
         assert response.status_code == 404
@@ -263,10 +245,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -280,8 +259,7 @@ class TestProjectEvaluationsAPI:
 
         # 测试最新评价
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/latest",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/latest", headers=headers
         )
 
         # 可能没有评价记录，返回404也是正常的
@@ -296,10 +274,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -323,7 +298,7 @@ class TestProjectEvaluationsAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
             json=evaluation_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -334,15 +309,12 @@ class TestProjectEvaluationsAPI:
             pytest.skip("Failed to get evaluation ID")
 
         # 更新评价
-        update_data = {
-            "novelty_score": 8.0,
-            "evaluation_note": "更新后的评价说明"
-        }
+        update_data = {"novelty_score": 8.0, "evaluation_note": "更新后的评价说明"}
 
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -361,10 +333,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -388,7 +357,7 @@ class TestProjectEvaluationsAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
             json=evaluation_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -401,7 +370,7 @@ class TestProjectEvaluationsAPI:
         # 确认评价
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}/confirm",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -418,10 +387,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -445,7 +411,7 @@ class TestProjectEvaluationsAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
             json=evaluation_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -457,8 +423,7 @@ class TestProjectEvaluationsAPI:
 
         # 删除评价
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}", headers=headers
         )
 
         # 删除成功返回204或200
@@ -466,8 +431,7 @@ class TestProjectEvaluationsAPI:
 
         # 验证已删除
         get_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/{eval_id}", headers=headers
         )
         assert get_response.status_code == 404
 
@@ -480,10 +444,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -507,15 +468,15 @@ class TestProjectEvaluationsAPI:
                 "new_tech": 0.20,
                 "difficulty": 0.20,
                 "workload": 0.20,
-                "amount": 0.15
+                "amount": 0.15,
             },
-            "evaluation_note": "自定义权重测试"
+            "evaluation_note": "自定义权重测试",
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/",
             json=evaluation_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -539,10 +500,7 @@ class TestProjectEvaluationsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -557,7 +515,7 @@ class TestProjectEvaluationsAPI:
         # 获取评价统计
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/evaluations/statistics",
-            headers=headers
+            headers=headers,
         )
 
         # 统计端点可能不存在

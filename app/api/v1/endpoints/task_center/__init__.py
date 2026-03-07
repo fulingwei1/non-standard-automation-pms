@@ -29,4 +29,4 @@ router.include_router(reject_router)
 router.include_router(comments_router)
 router.include_router(batch_router)
 
-__all__ = ['router']
+__all__ = ["router"]

@@ -278,9 +278,7 @@ class TestProcessApproval(TestApprovalNodeExecutor):
         task.node = self._create_mock_node(node_id=1, approval_mode="OR_SIGN")
 
         # Mock _cancel_pending_tasks
-        with patch.object(
-            self.executor, "_cancel_pending_tasks"
-        ) as mock_cancel:
+        with patch.object(self.executor, "_cancel_pending_tasks") as mock_cancel:
             can_proceed, error = self.executor.process_approval(task, "APPROVE")
 
             # 验证取消其他待处理任务
@@ -298,9 +296,7 @@ class TestProcessApproval(TestApprovalNodeExecutor):
         task.node = self._create_mock_node(approval_mode="OR_SIGN")
 
         # Mock _count_pending_tasks 返回0（没有待处理任务了）
-        with patch.object(
-            self.executor, "_count_pending_tasks", return_value=0
-        ):
+        with patch.object(self.executor, "_count_pending_tasks", return_value=0):
             can_proceed, error = self.executor.process_approval(task, "REJECT")
 
             # 全部驳回，可以流转
@@ -313,9 +309,7 @@ class TestProcessApproval(TestApprovalNodeExecutor):
         task.node = self._create_mock_node(approval_mode="OR_SIGN")
 
         # Mock _count_pending_tasks 返回2（还有2个待处理任务）
-        with patch.object(
-            self.executor, "_count_pending_tasks", return_value=2
-        ):
+        with patch.object(self.executor, "_count_pending_tasks", return_value=2):
             can_proceed, error = self.executor.process_approval(task, "REJECT")
 
             # 还有待处理任务，不流转
@@ -345,9 +339,7 @@ class TestProcessApproval(TestApprovalNodeExecutor):
 
         # Mock _activate_next_sequential_task 返回下一个任务
         next_task = Mock()
-        with patch.object(
-            self.executor, "_activate_next_sequential_task", return_value=next_task
-        ):
+        with patch.object(self.executor, "_activate_next_sequential_task", return_value=next_task):
             can_proceed, error = self.executor.process_approval(task, "APPROVE")
 
             # 还有后续任务，不流转
@@ -360,9 +352,7 @@ class TestProcessApproval(TestApprovalNodeExecutor):
         task.node = self._create_mock_node(approval_mode="SEQUENTIAL")
 
         # Mock _activate_next_sequential_task 返回None（没有下一个任务）
-        with patch.object(
-            self.executor, "_activate_next_sequential_task", return_value=None
-        ):
+        with patch.object(self.executor, "_activate_next_sequential_task", return_value=None):
             can_proceed, error = self.executor.process_approval(task, "APPROVE")
 
             # 所有人都通过，可以流转
@@ -391,9 +381,7 @@ class TestProcessApproval(TestApprovalNodeExecutor):
             "risk_assessment": "中",
         }
 
-        can_proceed, error = self.executor.process_approval(
-            task, "APPROVE", eval_data=eval_data
-        )
+        can_proceed, error = self.executor.process_approval(task, "APPROVE", eval_data=eval_data)
 
         self.assertEqual(task.eval_data, eval_data)
         self.assertTrue(can_proceed)
@@ -402,9 +390,7 @@ class TestProcessApproval(TestApprovalNodeExecutor):
 class TestProcessCountersign(TestApprovalNodeExecutor):
     """测试 _process_countersign() 方法"""
 
-    def _create_mock_countersign_result(
-        self, approved_count=0, rejected_count=0, pending_count=3
-    ):
+    def _create_mock_countersign_result(self, approved_count=0, rejected_count=0, pending_count=3):
         """创建mock会签结果"""
         result = Mock()
         result.instance_id = 1
@@ -418,9 +404,7 @@ class TestProcessCountersign(TestApprovalNodeExecutor):
     def test_process_countersign_not_complete(self):
         """测试会签未完成"""
         task = self._create_mock_task()
-        result = self._create_mock_countersign_result(
-            approved_count=1, pending_count=2
-        )
+        result = self._create_mock_countersign_result(approved_count=1, pending_count=2)
 
         # Mock query
         self.mock_db.query.return_value.filter.return_value.first.return_value = result
@@ -438,9 +422,7 @@ class TestProcessCountersign(TestApprovalNodeExecutor):
     def test_process_countersign_complete_all_pass(self):
         """测试会签完成 - 全部通过"""
         task = self._create_mock_task()
-        task.node = self._create_mock_node(
-            approver_config={"pass_rule": "ALL"}
-        )
+        task.node = self._create_mock_node(approver_config={"pass_rule": "ALL"})
         result = self._create_mock_countersign_result(
             approved_count=2, rejected_count=0, pending_count=1
         )
@@ -463,9 +445,7 @@ class TestProcessCountersign(TestApprovalNodeExecutor):
     def test_process_countersign_complete_has_reject(self):
         """测试会签完成 - 有驳回"""
         task = self._create_mock_task()
-        task.node = self._create_mock_node(
-            approver_config={"pass_rule": "ALL"}
-        )
+        task.node = self._create_mock_node(approver_config={"pass_rule": "ALL"})
         result = self._create_mock_countersign_result(
             approved_count=2, rejected_count=1, pending_count=1
         )
@@ -482,9 +462,7 @@ class TestProcessCountersign(TestApprovalNodeExecutor):
     def test_process_countersign_majority_pass(self):
         """测试会签完成 - 多数通过"""
         task = self._create_mock_task()
-        task.node = self._create_mock_node(
-            approver_config={"pass_rule": "MAJORITY"}
-        )
+        task.node = self._create_mock_node(approver_config={"pass_rule": "MAJORITY"})
         result = self._create_mock_countersign_result(
             approved_count=3, rejected_count=1, pending_count=1
         )
@@ -500,9 +478,7 @@ class TestProcessCountersign(TestApprovalNodeExecutor):
     def test_process_countersign_majority_fail(self):
         """测试会签完成 - 多数驳回"""
         task = self._create_mock_task()
-        task.node = self._create_mock_node(
-            approver_config={"pass_rule": "MAJORITY"}
-        )
+        task.node = self._create_mock_node(approver_config={"pass_rule": "MAJORITY"})
         result = self._create_mock_countersign_result(
             approved_count=1, rejected_count=2, pending_count=1
         )
@@ -518,9 +494,7 @@ class TestProcessCountersign(TestApprovalNodeExecutor):
     def test_process_countersign_any_pass(self):
         """测试会签完成 - 任一通过"""
         task = self._create_mock_task()
-        task.node = self._create_mock_node(
-            approver_config={"pass_rule": "ANY"}
-        )
+        task.node = self._create_mock_node(approver_config={"pass_rule": "ANY"})
         result = self._create_mock_countersign_result(
             approved_count=1, rejected_count=2, pending_count=1
         )
@@ -648,24 +622,20 @@ class TestCancelPendingTasks(TestApprovalNodeExecutor):
         """测试取消待处理任务"""
         # 创建一个mock update方法
         mock_update = Mock()
-        
+
         # 创建mock查询对象，filter()返回自己以支持链式调用
         # update()返回mock_update的返回值
         mock_query_obj = Mock()
         mock_query_obj.filter.return_value = mock_query_obj  # 支持链式调用
         mock_query_obj.update = mock_update
-        
+
         # query()返回mock查询对象
         self.mock_db.query.return_value = mock_query_obj
 
-        self.executor._cancel_pending_tasks(
-            instance_id=1, node_id=1, exclude_task_id=10
-        )
+        self.executor._cancel_pending_tasks(instance_id=1, node_id=1, exclude_task_id=10)
 
         # 验证update调用
-        mock_update.assert_called_once_with(
-            {"status": "CANCELLED"}, synchronize_session=False
-        )
+        mock_update.assert_called_once_with({"status": "CANCELLED"}, synchronize_session=False)
 
     def test_cancel_pending_tasks_no_exclude(self):
         """测试取消所有待处理任务（无排除）"""
@@ -714,9 +684,7 @@ class TestActivateNextSequentialTask(TestApprovalNodeExecutor):
 
         # Mock query
         mock_query = self.mock_db.query.return_value
-        mock_query.filter.return_value.order_by.return_value.first.return_value = (
-            next_task
-        )
+        mock_query.filter.return_value.order_by.return_value.first.return_value = next_task
 
         result = self.executor._activate_next_sequential_task(current_task)
 
@@ -747,9 +715,7 @@ class TestActivateNextSequentialTask(TestApprovalNodeExecutor):
         next_task.due_at = None
 
         mock_query = self.mock_db.query.return_value
-        mock_query.filter.return_value.order_by.return_value.first.return_value = (
-            next_task
-        )
+        mock_query.filter.return_value.order_by.return_value.first.return_value = next_task
 
         result = self.executor._activate_next_sequential_task(current_task)
 
@@ -810,9 +776,7 @@ class TestCreateCCRecords(TestApprovalNodeExecutor):
         added_records = []
         self.mock_db.add.side_effect = lambda obj: added_records.append(obj)
 
-        records = self.executor.create_cc_records(
-            instance, node_id=1, cc_user_ids=cc_user_ids
-        )
+        records = self.executor.create_cc_records(instance, node_id=1, cc_user_ids=cc_user_ids)
 
         # 只创建了1条记录（跳过了重复的）
         self.assertEqual(len(records), 1)
@@ -837,9 +801,7 @@ class TestCreateCCRecords(TestApprovalNodeExecutor):
         added_records = []
         self.mock_db.add.side_effect = lambda obj: added_records.append(obj)
 
-        records = self.executor.create_cc_records(
-            instance, node_id=None, cc_user_ids=[201]
-        )
+        records = self.executor.create_cc_records(instance, node_id=None, cc_user_ids=[201])
 
         self.assertEqual(len(records), 1)
         self.assertIsNone(records[0].node_id)
@@ -946,9 +908,7 @@ class TestHandleTimeout(TestApprovalNodeExecutor):
 class TestEdgeCases(TestApprovalNodeExecutor):
     """测试边界情况"""
 
-    def _create_mock_countersign_result(
-        self, approved_count=0, rejected_count=0, pending_count=3
-    ):
+    def _create_mock_countersign_result(self, approved_count=0, rejected_count=0, pending_count=3):
         """创建mock会签结果"""
         result = Mock()
         result.instance_id = 1
@@ -972,9 +932,7 @@ class TestEdgeCases(TestApprovalNodeExecutor):
                 added_objects = []
                 self.mock_db.add.side_effect = lambda obj: added_objects.append(obj)
 
-                tasks = self.executor.create_tasks_for_node(
-                    instance, node, approver_ids
-                )
+                tasks = self.executor.create_tasks_for_node(instance, node, approver_ids)
 
                 self.assertEqual(len(tasks), 1)
 
@@ -1006,9 +964,7 @@ class TestEdgeCases(TestApprovalNodeExecutor):
     def test_countersign_default_pass_rule(self):
         """测试会签默认通过规则"""
         task = self._create_mock_task()
-        task.node = self._create_mock_node(
-            approver_config={}  # 空配置，应使用默认ALL规则
-        )
+        task.node = self._create_mock_node(approver_config={})  # 空配置，应使用默认ALL规则
         result = self._create_mock_countersign_result(
             approved_count=2, rejected_count=1, pending_count=1
         )

@@ -23,14 +23,18 @@ def notify_payment_plan_upcoming(db: Session, days_before: int = 7) -> int:
     target_date = today + timedelta(days=days_before)
 
     # 查找即将到期的收款计划
-    payment_plans = db.query(ProjectPaymentPlan).filter(
-        and_(
-            ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
-            ProjectPaymentPlan.planned_date.isnot(None),
-            ProjectPaymentPlan.planned_date <= target_date,
-            ProjectPaymentPlan.planned_date >= today
+    payment_plans = (
+        db.query(ProjectPaymentPlan)
+        .filter(
+            and_(
+                ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
+                ProjectPaymentPlan.planned_date.isnot(None),
+                ProjectPaymentPlan.planned_date <= target_date,
+                ProjectPaymentPlan.planned_date >= today,
+            )
         )
-    ).all()
+        .all()
+    )
 
     count = 0
     for plan in payment_plans:
@@ -46,15 +50,19 @@ def notify_payment_plan_upcoming(db: Session, days_before: int = 7) -> int:
 
         if user_id:
             # 检查是否已发送过提醒
-            existing = db.query(Notification).filter(
-                and_(
-                    Notification.user_id == user_id,
-                    Notification.source_type == "payment_plan",
-                    Notification.source_id == plan.id,
-                    Notification.notification_type == "PAYMENT_PLAN_UPCOMING",
-                    Notification.created_at >= datetime.combine(today, datetime.min.time())
+            existing = (
+                db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.user_id == user_id,
+                        Notification.source_type == "payment_plan",
+                        Notification.source_id == plan.id,
+                        Notification.notification_type == "PAYMENT_PLAN_UPCOMING",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not existing:
                 create_notification(
@@ -65,15 +73,21 @@ def notify_payment_plan_upcoming(db: Session, days_before: int = 7) -> int:
                     content=f"收款计划 {plan.payment_name}（金额：{plan.planned_amount}）将在 {plan.planned_date} 到期，请及时跟进。",
                     source_type="payment_plan",
                     source_id=plan.id,
-                    link_url=f"/projects/{plan.project_id}/payment-plans" if plan.project_id else None,
+                    link_url=(
+                        f"/projects/{plan.project_id}/payment-plans" if plan.project_id else None
+                    ),
                     priority="HIGH" if days_before <= 3 else "NORMAL",
                     extra_data={
                         "payment_name": plan.payment_name,
                         "payment_type": plan.payment_type,
                         "planned_amount": float(plan.planned_amount),
-                        "planned_date": plan.planned_date.isoformat() if plan.planned_date else None,
-                        "days_left": (plan.planned_date - today).days if plan.planned_date else None
-                    }
+                        "planned_date": (
+                            plan.planned_date.isoformat() if plan.planned_date else None
+                        ),
+                        "days_left": (
+                            (plan.planned_date - today).days if plan.planned_date else None
+                        ),
+                    },
                 )
                 count += 1
 
@@ -81,10 +95,7 @@ def notify_payment_plan_upcoming(db: Session, days_before: int = 7) -> int:
 
 
 def _create_overdue_dispute_record(
-    db: Session,
-    payment_id: int,
-    overdue_days: int,
-    description: str = None
+    db: Session, payment_id: int, overdue_days: int, description: str = None
 ) -> ReceivableDispute:
     """
     为逾期收款创建争议记录
@@ -99,16 +110,19 @@ def _create_overdue_dispute_record(
         创建的 ReceivableDispute 记录
     """
     # 检查是否已存在该付款计划的争议记录
-    existing_dispute = db.query(ReceivableDispute).filter(
-        and_(
-            ReceivableDispute.payment_id == payment_id,
-            ReceivableDispute.reason_code == DisputeReasonCodeEnum.OVERDUE.value,
-            ReceivableDispute.status.in_([
-                DisputeStatusEnum.OPEN.value,
-                DisputeStatusEnum.IN_PROGRESS.value
-            ])
+    existing_dispute = (
+        db.query(ReceivableDispute)
+        .filter(
+            and_(
+                ReceivableDispute.payment_id == payment_id,
+                ReceivableDispute.reason_code == DisputeReasonCodeEnum.OVERDUE.value,
+                ReceivableDispute.status.in_(
+                    [DisputeStatusEnum.OPEN.value, DisputeStatusEnum.IN_PROGRESS.value]
+                ),
+            )
         )
-    ).first()
+        .first()
+    )
 
     if existing_dispute:
         # 已存在未解决的争议记录，更新描述
@@ -122,7 +136,7 @@ def _create_overdue_dispute_record(
         description=description or f"收款已逾期 {overdue_days} 天，系统自动生成争议记录",
         status=DisputeStatusEnum.OPEN.value,
         responsible_dept="财务部",
-        expect_resolve_date=date.today() + timedelta(days=30)  # 默认30天内解决
+        expect_resolve_date=date.today() + timedelta(days=30),  # 默认30天内解决
     )
     db.add(dispute)
     return dispute
@@ -137,14 +151,18 @@ def notify_payment_overdue(db: Session) -> int:
     today = date.today()
 
     # 查找已逾期的收款计划（状态为PENDING或INVOICED，且计划日期已过）
-    payment_plans = db.query(ProjectPaymentPlan).filter(
-        and_(
-            ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
-            ProjectPaymentPlan.planned_date.isnot(None),
-            ProjectPaymentPlan.planned_date < today,
-            ProjectPaymentPlan.actual_amount < ProjectPaymentPlan.planned_amount
+    payment_plans = (
+        db.query(ProjectPaymentPlan)
+        .filter(
+            and_(
+                ProjectPaymentPlan.status.in_(["PENDING", "INVOICED"]),
+                ProjectPaymentPlan.planned_date.isnot(None),
+                ProjectPaymentPlan.planned_date < today,
+                ProjectPaymentPlan.actual_amount < ProjectPaymentPlan.planned_amount,
+            )
         )
-    ).all()
+        .all()
+    )
 
     count = 0
     reminder_days = [7, 15, 30, 60]  # 分级提醒时间点
@@ -161,8 +179,8 @@ def notify_payment_overdue(db: Session) -> int:
             db=db,
             payment_id=plan.id,
             overdue_days=overdue_days,
-            description=f"收款计划 {plan.payment_name} 已逾期 {overdue_days} 天，" +
-                       f"未收金额：{plan.planned_amount - (plan.actual_amount or 0)}"
+            description=f"收款计划 {plan.payment_name} 已逾期 {overdue_days} 天，"
+            + f"未收金额：{plan.planned_amount - (plan.actual_amount or 0)}",
         )
 
         # 获取需要通知的用户：收款责任人、销售、财务、销售经理
@@ -188,15 +206,19 @@ def notify_payment_overdue(db: Session) -> int:
 
         for user_id in user_ids:
             # 检查今天是否已发送过提醒
-            existing = db.query(Notification).filter(
-                and_(
-                    Notification.user_id == user_id,
-                    Notification.source_type == "payment_plan",
-                    Notification.source_id == plan.id,
-                    Notification.notification_type == "PAYMENT_OVERDUE",
-                    Notification.created_at >= datetime.combine(today, datetime.min.time())
+            existing = (
+                db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.user_id == user_id,
+                        Notification.source_type == "payment_plan",
+                        Notification.source_id == plan.id,
+                        Notification.notification_type == "PAYMENT_OVERDUE",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not existing:
                 unpaid_amount = plan.planned_amount - (plan.actual_amount or 0)
@@ -219,7 +241,9 @@ def notify_payment_overdue(db: Session) -> int:
                     content=f"收款计划 {plan.payment_name} 已逾期 {overdue_days} 天，未收金额：{unpaid_amount}，请尽快跟进。",
                     source_type="payment_plan",
                     source_id=plan.id,
-                    link_url=f"/projects/{plan.project_id}/payment-plans" if plan.project_id else None,
+                    link_url=(
+                        f"/projects/{plan.project_id}/payment-plans" if plan.project_id else None
+                    ),
                     priority=priority,
                     extra_data={
                         "payment_name": plan.payment_name,
@@ -227,9 +251,11 @@ def notify_payment_overdue(db: Session) -> int:
                         "planned_amount": float(plan.planned_amount),
                         "actual_amount": float(plan.actual_amount or 0),
                         "unpaid_amount": float(unpaid_amount),
-                        "planned_date": plan.planned_date.isoformat() if plan.planned_date else None,
-                        "overdue_days": overdue_days
-                    }
+                        "planned_date": (
+                            plan.planned_date.isoformat() if plan.planned_date else None
+                        ),
+                        "overdue_days": overdue_days,
+                    },
                 )
                 count += 1
 

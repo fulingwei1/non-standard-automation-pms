@@ -26,7 +26,7 @@ class TestCheckLevelMatch:
         mock_db = MagicMock()
         service = AlertSubscriptionService(mock_db)
 
-        result = service._check_level_match('INFO', 'INFO')
+        result = service._check_level_match("INFO", "INFO")
 
         assert result is True
 
@@ -37,7 +37,7 @@ class TestCheckLevelMatch:
         mock_db = MagicMock()
         service = AlertSubscriptionService(mock_db)
 
-        result = service._check_level_match('WARNING', 'INFO')
+        result = service._check_level_match("WARNING", "INFO")
 
         assert result is True
 
@@ -48,7 +48,7 @@ class TestCheckLevelMatch:
         mock_db = MagicMock()
         service = AlertSubscriptionService(mock_db)
 
-        result = service._check_level_match('INFO', 'WARNING')
+        result = service._check_level_match("INFO", "WARNING")
 
         assert result is False
 
@@ -59,10 +59,10 @@ class TestCheckLevelMatch:
         mock_db = MagicMock()
         service = AlertSubscriptionService(mock_db)
 
-        assert service._check_level_match('URGENT', 'INFO') is True
-        assert service._check_level_match('URGENT', 'WARNING') is True
-        assert service._check_level_match('URGENT', 'CRITICAL') is True
-        assert service._check_level_match('URGENT', 'URGENT') is True
+        assert service._check_level_match("URGENT", "INFO") is True
+        assert service._check_level_match("URGENT", "WARNING") is True
+        assert service._check_level_match("URGENT", "CRITICAL") is True
+        assert service._check_level_match("URGENT", "URGENT") is True
 
     def test_handles_unknown_level(self):
         """测试处理未知级别"""
@@ -71,7 +71,7 @@ class TestCheckLevelMatch:
         mock_db = MagicMock()
         service = AlertSubscriptionService(mock_db)
 
-        result = service._check_level_match('UNKNOWN', 'INFO')
+        result = service._check_level_match("UNKNOWN", "INFO")
 
         assert result is False
 
@@ -122,7 +122,7 @@ class TestIsQuietHours:
         mock_subscription.quiet_end = "03:01"
 
         # 通过mock datetime.now来控制当前时间
-        with patch('app.services.alert_subscription_service.datetime') as mock_datetime:
+        with patch("app.services.alert_subscription_service.datetime") as mock_datetime:
             mock_datetime.now.return_value.time.return_value = time(12, 0)
 
             result = service._is_quiet_hours(mock_subscription)
@@ -140,7 +140,7 @@ class TestIsQuietHours:
         mock_subscription.quiet_start = "22:00"
         mock_subscription.quiet_end = "08:00"
 
-        with patch('app.services.alert_subscription_service.datetime') as mock_datetime:
+        with patch("app.services.alert_subscription_service.datetime") as mock_datetime:
             # 测试晚上23:00在免打扰时段内
             mock_datetime.now.return_value.time.return_value = time(23, 0)
 
@@ -190,18 +190,20 @@ class TestMatchSubscriptions:
 
         mock_alert = MagicMock()
         mock_alert.project_id = 1
-        mock_alert.alert_level = 'WARNING'
+        mock_alert.alert_level = "WARNING"
 
         mock_rule = MagicMock()
-        mock_rule.rule_type = 'BUDGET'
+        mock_rule.rule_type = "BUDGET"
 
         mock_subscription = MagicMock()
         mock_subscription.is_active = True
-        mock_subscription.min_level = 'INFO'
+        mock_subscription.min_level = "INFO"
         mock_subscription.quiet_start = None
         mock_subscription.quiet_end = None
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [mock_subscription]
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_subscription
+        ]
 
         result = service.match_subscriptions(mock_alert, mock_rule)
 
@@ -217,18 +219,20 @@ class TestMatchSubscriptions:
 
         mock_alert = MagicMock()
         mock_alert.project_id = 1
-        mock_alert.alert_level = 'INFO'
+        mock_alert.alert_level = "INFO"
 
         mock_rule = MagicMock()
-        mock_rule.rule_type = 'COST'
+        mock_rule.rule_type = "COST"
 
         mock_subscription = MagicMock()
         mock_subscription.is_active = True
-        mock_subscription.min_level = 'WARNING'  # 高于INFO
+        mock_subscription.min_level = "WARNING"  # 高于INFO
         mock_subscription.quiet_start = None
         mock_subscription.quiet_end = None
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [mock_subscription]
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_subscription
+        ]
 
         result = service.match_subscriptions(mock_alert, mock_rule)
 
@@ -243,18 +247,20 @@ class TestMatchSubscriptions:
 
         mock_alert = MagicMock()
         mock_alert.project_id = 1
-        mock_alert.alert_level = 'WARNING'
+        mock_alert.alert_level = "WARNING"
 
         mock_rule = MagicMock()
-        mock_rule.rule_type = 'BUDGET'
+        mock_rule.rule_type = "BUDGET"
 
         mock_subscription = MagicMock()
         mock_subscription.is_active = True
-        mock_subscription.min_level = 'INFO'
+        mock_subscription.min_level = "INFO"
         mock_subscription.quiet_start = "00:00"
         mock_subscription.quiet_end = "23:59"  # 全天免打扰
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [mock_subscription]
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_subscription
+        ]
 
         result = service.match_subscriptions(mock_alert, mock_rule)
 
@@ -276,9 +282,9 @@ class TestGetNotificationRecipients:
 
         result = service.get_notification_recipients(mock_alert)
 
-        assert result['user_ids'] == []
-        assert result['channels'] == ['SYSTEM']
-        assert result['subscriptions'] == []
+        assert result["user_ids"] == []
+        assert result["channels"] == ["SYSTEM"]
+        assert result["subscriptions"] == []
 
     def test_collects_user_ids_from_subscriptions(self):
         """测试从订阅中收集用户ID"""
@@ -289,40 +295,41 @@ class TestGetNotificationRecipients:
 
         mock_alert = MagicMock()
         mock_alert.project_id = 1
-        mock_alert.alert_level = 'WARNING'
+        mock_alert.alert_level = "WARNING"
 
         mock_rule = MagicMock()
-        mock_rule.rule_type = 'COST'
+        mock_rule.rule_type = "COST"
         mock_rule.notify_users = None
         mock_rule.notify_channels = None
 
         mock_subscription1 = MagicMock()
         mock_subscription1.user_id = 10
-        mock_subscription1.notify_channels = ['email', 'sms']
+        mock_subscription1.notify_channels = ["email", "sms"]
         mock_subscription1.is_active = True
-        mock_subscription1.min_level = 'INFO'
+        mock_subscription1.min_level = "INFO"
         mock_subscription1.quiet_start = None
         mock_subscription1.quiet_end = None
 
         mock_subscription2 = MagicMock()
         mock_subscription2.user_id = 20
-        mock_subscription2.notify_channels = ['system']
+        mock_subscription2.notify_channels = ["system"]
         mock_subscription2.is_active = True
-        mock_subscription2.min_level = 'INFO'
+        mock_subscription2.min_level = "INFO"
         mock_subscription2.quiet_start = None
         mock_subscription2.quiet_end = None
 
         mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
-            mock_subscription1, mock_subscription2
+            mock_subscription1,
+            mock_subscription2,
         ]
 
         result = service.get_notification_recipients(mock_alert, mock_rule)
 
-        assert 10 in result['user_ids']
-        assert 20 in result['user_ids']
-        assert 'EMAIL' in result['channels']
-        assert 'SMS' in result['channels']
-        assert 'SYSTEM' in result['channels']
+        assert 10 in result["user_ids"]
+        assert 20 in result["user_ids"]
+        assert "EMAIL" in result["channels"]
+        assert "SMS" in result["channels"]
+        assert "SYSTEM" in result["channels"]
 
     def test_adds_rule_notify_users(self):
         """测试添加规则配置的通知用户"""
@@ -333,29 +340,31 @@ class TestGetNotificationRecipients:
 
         mock_alert = MagicMock()
         mock_alert.project_id = 1
-        mock_alert.alert_level = 'WARNING'
+        mock_alert.alert_level = "WARNING"
 
         mock_rule = MagicMock()
-        mock_rule.rule_type = 'COST'
+        mock_rule.rule_type = "COST"
         mock_rule.notify_users = [100, 200]
-        mock_rule.notify_channels = ['wechat']
+        mock_rule.notify_channels = ["wechat"]
 
         mock_subscription = MagicMock()
         mock_subscription.user_id = 10
-        mock_subscription.notify_channels = ['email']
+        mock_subscription.notify_channels = ["email"]
         mock_subscription.is_active = True
-        mock_subscription.min_level = 'INFO'
+        mock_subscription.min_level = "INFO"
         mock_subscription.quiet_start = None
         mock_subscription.quiet_end = None
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [mock_subscription]
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_subscription
+        ]
 
         result = service.get_notification_recipients(mock_alert, mock_rule)
 
-        assert 10 in result['user_ids']
-        assert 100 in result['user_ids']
-        assert 200 in result['user_ids']
-        assert 'WECHAT' in result['channels']
+        assert 10 in result["user_ids"]
+        assert 100 in result["user_ids"]
+        assert 200 in result["user_ids"]
+        assert "WECHAT" in result["channels"]
 
     def test_uses_default_when_no_subscriptions(self):
         """测试无订阅时使用默认配置"""
@@ -366,19 +375,21 @@ class TestGetNotificationRecipients:
 
         mock_alert = MagicMock()
         mock_alert.project_id = 1
-        mock_alert.alert_level = 'WARNING'
+        mock_alert.alert_level = "WARNING"
 
         mock_rule = MagicMock()
-        mock_rule.rule_type = 'COST'
+        mock_rule.rule_type = "COST"
         mock_rule.notify_users = [50]
-        mock_rule.notify_channels = ['dingding']
+        mock_rule.notify_channels = ["dingding"]
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         result = service.get_notification_recipients(mock_alert, mock_rule)
 
-        assert 50 in result['user_ids']
-        assert 'DINGDING' in result['channels']
+        assert 50 in result["user_ids"]
+        assert "DINGDING" in result["channels"]
 
 
 class TestGetUserSubscriptions:
@@ -410,7 +421,7 @@ class TestGetUserSubscriptions:
 
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-        result = service.get_user_subscriptions(user_id=1, alert_type='BUDGET')
+        result = service.get_user_subscriptions(user_id=1, alert_type="BUDGET")
 
         mock_db.query.assert_called()
 
@@ -434,9 +445,11 @@ class TestGetUserSubscriptions:
         mock_db = MagicMock()
         service = AlertSubscriptionService(mock_db)
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
-        result = service.get_user_subscriptions(user_id=1, alert_type='COST', project_id=5)
+        result = service.get_user_subscriptions(user_id=1, alert_type="COST", project_id=5)
 
         mock_db.query.assert_called()
 
@@ -450,6 +463,6 @@ class TestLevelPriority:
 
         priority = AlertSubscriptionService.LEVEL_PRIORITY
 
-        assert priority['INFO'] < priority['WARNING']
-        assert priority['WARNING'] < priority['CRITICAL']
-        assert priority['CRITICAL'] < priority['URGENT']
+        assert priority["INFO"] < priority["WARNING"]
+        assert priority["WARNING"] < priority["CRITICAL"]
+        assert priority["CRITICAL"] < priority["URGENT"]

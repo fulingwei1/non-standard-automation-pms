@@ -97,31 +97,33 @@ class ShortageManagementService:
                 if reporter:
                     reporter_name = reporter.real_name or reporter.username
 
-            items.append({
-                "id": record.id,
-                "report_no": record.report_no,
-                "project_id": record.project_id,
-                "project_name": project_name,
-                "material_id": record.material_id,
-                "material_code": record.material_code,
-                "material_name": record.material_name,
-                "required_qty": float(record.required_qty) if record.required_qty else 0,
-                "shortage_qty": float(record.shortage_qty) if record.shortage_qty else 0,
-                "urgent_level": record.urgent_level,
-                "status": record.status,
-                "reporter_id": record.reporter_id,
-                "reporter_name": reporter_name,
-                "report_time": record.report_time.isoformat() if record.report_time else None,
-                "solution_type": record.solution_type,
-                "created_at": record.created_at.isoformat() if record.created_at else None,
-            })
+            items.append(
+                {
+                    "id": record.id,
+                    "report_no": record.report_no,
+                    "project_id": record.project_id,
+                    "project_name": project_name,
+                    "material_id": record.material_id,
+                    "material_code": record.material_code,
+                    "material_name": record.material_name,
+                    "required_qty": float(record.required_qty) if record.required_qty else 0,
+                    "shortage_qty": float(record.shortage_qty) if record.shortage_qty else 0,
+                    "urgent_level": record.urgent_level,
+                    "status": record.status,
+                    "reporter_id": record.reporter_id,
+                    "reporter_name": reporter_name,
+                    "report_time": record.report_time.isoformat() if record.report_time else None,
+                    "solution_type": record.solution_type,
+                    "created_at": record.created_at.isoformat() if record.created_at else None,
+                }
+            )
 
         return PaginatedResponse(
             total=total,
             page=pagination.page,
             page_size=pagination.page_size,
             pages=pagination.pages_for_total(total),
-            items=items
+            items=items,
         )
 
     def create_shortage_record(self, data: Dict[str, Any], current_user: User) -> Dict[str, Any]:
@@ -137,9 +139,11 @@ class ShortageManagementService:
         """
         # 生成上报单号
         today = date.today()
-        count = self.db.query(ShortageReport).filter(
-            func.date(ShortageReport.created_at) == today
-        ).count()
+        count = (
+            self.db.query(ShortageReport)
+            .filter(func.date(ShortageReport.created_at) == today)
+            .count()
+        )
         report_no = f"SR{today.strftime('%Y%m%d')}{count + 1:03d}"
 
         # 获取物料信息
@@ -174,7 +178,7 @@ class ShortageManagementService:
             "data": {
                 "id": record.id,
                 "report_no": record.report_no,
-            }
+            },
         }
 
     def get_shortage_statistics(self, project_id: Optional[int] = None) -> Dict[str, Any]:
@@ -198,8 +202,7 @@ class ShortageManagementService:
         # 按状态统计
         status_stats = {}
         status_query = self.db.query(
-            ShortageReport.status,
-            func.count(ShortageReport.id).label("count")
+            ShortageReport.status, func.count(ShortageReport.id).label("count")
         )
         if project_id:
             status_query = status_query.filter(ShortageReport.project_id == project_id)
@@ -211,8 +214,7 @@ class ShortageManagementService:
         # 按紧急程度统计
         urgent_stats = {}
         urgent_query = self.db.query(
-            ShortageReport.urgent_level,
-            func.count(ShortageReport.id).label("count")
+            ShortageReport.urgent_level, func.count(ShortageReport.id).label("count")
         )
         if project_id:
             urgent_query = urgent_query.filter(ShortageReport.project_id == project_id)
@@ -226,21 +228,18 @@ class ShortageManagementService:
         daily_stats = []
         daily_query = self.db.query(
             func.date(ShortageReport.created_at).label("date"),
-            func.count(ShortageReport.id).label("count")
-        ).filter(
-            ShortageReport.created_at >= seven_days_ago
-        )
+            func.count(ShortageReport.id).label("count"),
+        ).filter(ShortageReport.created_at >= seven_days_ago)
         if project_id:
             daily_query = daily_query.filter(ShortageReport.project_id == project_id)
-        daily_results = daily_query.group_by(
-            func.date(ShortageReport.created_at)
-        ).order_by(func.date(ShortageReport.created_at)).all()
+        daily_results = (
+            daily_query.group_by(func.date(ShortageReport.created_at))
+            .order_by(func.date(ShortageReport.created_at))
+            .all()
+        )
 
         for d, count in daily_results:
-            daily_stats.append({
-                "date": d.isoformat() if d else None,
-                "count": count
-            })
+            daily_stats.append({"date": d.isoformat() if d else None, "count": count})
 
         # 待处理数量
         pending_count = query.filter(

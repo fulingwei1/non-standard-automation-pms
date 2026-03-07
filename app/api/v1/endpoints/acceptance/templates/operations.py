@@ -21,7 +21,11 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.post("/acceptance-templates/{template_id}/copy", response_model=AcceptanceTemplateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/acceptance-templates/{template_id}/copy",
+    response_model=AcceptanceTemplateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def copy_acceptance_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -36,7 +40,9 @@ def copy_acceptance_template(
     source_template = get_or_404(db, AcceptanceTemplate, template_id, "源模板不存在")
 
     # 检查新编码是否已存在
-    existing = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.template_code == new_code).first()
+    existing = (
+        db.query(AcceptanceTemplate).filter(AcceptanceTemplate.template_code == new_code).first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="模板编码已存在")
 
@@ -50,15 +56,18 @@ def copy_acceptance_template(
         description=source_template.description,
         is_system=False,
         is_active=True,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(new_template)
     db.flush()
 
     # 复制分类和检查项
-    source_categories = db.query(TemplateCategory).filter(
-        TemplateCategory.template_id == template_id
-    ).order_by(TemplateCategory.sort_order).all()
+    source_categories = (
+        db.query(TemplateCategory)
+        .filter(TemplateCategory.template_id == template_id)
+        .order_by(TemplateCategory.sort_order)
+        .all()
+    )
 
     for source_category in source_categories:
         # 创建新分类
@@ -69,15 +78,18 @@ def copy_acceptance_template(
             weight=source_category.weight,
             sort_order=source_category.sort_order,
             is_required=source_category.is_required,
-            description=source_category.description
+            description=source_category.description,
         )
         db.add(new_category)
         db.flush()
 
         # 复制检查项
-        source_items = db.query(TemplateCheckItem).filter(
-            TemplateCheckItem.category_id == source_category.id
-        ).order_by(TemplateCheckItem.sort_order).all()
+        source_items = (
+            db.query(TemplateCheckItem)
+            .filter(TemplateCheckItem.category_id == source_category.id)
+            .order_by(TemplateCheckItem.sort_order)
+            .all()
+        )
 
         for source_item in source_items:
             new_item = TemplateCheckItem(
@@ -92,7 +104,7 @@ def copy_acceptance_template(
                 unit=source_item.unit,
                 is_required=source_item.is_required,
                 is_key_item=source_item.is_key_item,
-                sort_order=source_item.sort_order
+                sort_order=source_item.sort_order,
             )
             db.add(new_item)
 
@@ -109,5 +121,5 @@ def copy_acceptance_template(
         is_system=new_template.is_system,
         is_active=new_template.is_active,
         created_at=new_template.created_at,
-        updated_at=new_template.updated_at
+        updated_at=new_template.updated_at,
     )

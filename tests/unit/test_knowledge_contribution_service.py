@@ -60,21 +60,21 @@ class TestListContributions:
     def test_list_contributions_with_job_type_filter(self, db_session: Session):
         """测试按工种筛选"""
         service = KnowledgeContributionService(db_session)
-        items, total = service.list_contributions(job_type='software')
+        items, total = service.list_contributions(job_type="software")
         assert isinstance(items, list)
         assert isinstance(total, int)
 
     def test_list_contributions_with_contribution_type_filter(self, db_session: Session):
         """测试按贡献类型筛选"""
         service = KnowledgeContributionService(db_session)
-        items, total = service.list_contributions(contribution_type='code')
+        items, total = service.list_contributions(contribution_type="code")
         assert isinstance(items, list)
         assert isinstance(total, int)
 
     def test_list_contributions_with_status_filter(self, db_session: Session):
         """测试按状态筛选"""
         service = KnowledgeContributionService(db_session)
-        items, total = service.list_contributions(status='approved')
+        items, total = service.list_contributions(status="approved")
         assert isinstance(items, list)
         assert isinstance(total, int)
 
@@ -119,13 +119,13 @@ class TestGetContributionRanking:
     def test_get_contribution_ranking_with_job_type(self, db_session: Session):
         """测试按工种筛选排行"""
         service = KnowledgeContributionService(db_session)
-        ranking = service.get_contribution_ranking(job_type='software')
+        ranking = service.get_contribution_ranking(job_type="software")
         assert isinstance(ranking, list)
 
     def test_get_contribution_ranking_with_contribution_type(self, db_session: Session):
         """测试按贡献类型筛选排行"""
         service = KnowledgeContributionService(db_session)
-        ranking = service.get_contribution_ranking(contribution_type='code')
+        ranking = service.get_contribution_ranking(contribution_type="code")
         assert isinstance(ranking, list)
 
     def test_get_contribution_ranking_with_limit(self, db_session: Session):
@@ -144,23 +144,23 @@ class TestGetContributorStats:
         service = KnowledgeContributionService(db_session)
         stats = service.get_contributor_stats(user_id=99999)
 
-        assert stats['total_contributions'] == 0
-        assert stats['total_reuse'] == 0
-        assert stats['avg_rating'] == 0
-        assert stats['by_type'] == {}
+        assert stats["total_contributions"] == 0
+        assert stats["total_reuse"] == 0
+        assert stats["avg_rating"] == 0
+        assert stats["by_type"] == {}
 
     def test_get_contributor_stats_structure(self, db_session: Session):
         """测试统计数据结构"""
         service = KnowledgeContributionService(db_session)
         stats = service.get_contributor_stats(user_id=1)
 
-        assert 'total_contributions' in stats
-        assert 'total_reuse' in stats
-        assert 'avg_rating' in stats
-        assert 'by_type' in stats
-        assert isinstance(stats['total_contributions'], int)
-        assert isinstance(stats['total_reuse'], int)
-        assert isinstance(stats['by_type'], dict)
+        assert "total_contributions" in stats
+        assert "total_reuse" in stats
+        assert "avg_rating" in stats
+        assert "by_type" in stats
+        assert isinstance(stats["total_contributions"], int)
+        assert isinstance(stats["total_reuse"], int)
+        assert isinstance(stats["by_type"], dict)
 
 
 class TestListCodeModules:
@@ -176,14 +176,14 @@ class TestListCodeModules:
     def test_list_code_modules_with_category(self, db_session: Session):
         """测试按分类筛选代码模块"""
         service = KnowledgeContributionService(db_session)
-        items, total = service.list_code_modules(category='vision')
+        items, total = service.list_code_modules(category="vision")
         assert isinstance(items, list)
         assert isinstance(total, int)
 
     def test_list_code_modules_with_language(self, db_session: Session):
         """测试按语言筛选代码模块"""
         service = KnowledgeContributionService(db_session)
-        items, total = service.list_code_modules(language='python')
+        items, total = service.list_code_modules(language="python")
         assert isinstance(items, list)
         assert isinstance(total, int)
 
@@ -208,14 +208,14 @@ class TestListPlcModules:
     def test_list_plc_modules_with_category(self, db_session: Session):
         """测试按分类筛选PLC模块"""
         service = KnowledgeContributionService(db_session)
-        items, total = service.list_plc_modules(category='motion')
+        items, total = service.list_plc_modules(category="motion")
         assert isinstance(items, list)
         assert isinstance(total, int)
 
     def test_list_plc_modules_with_plc_brand(self, db_session: Session):
         """测试按PLC品牌筛选"""
         service = KnowledgeContributionService(db_session)
-        items, total = service.list_plc_modules(plc_brand='siemens')
+        items, total = service.list_plc_modules(plc_brand="siemens")
         assert isinstance(items, list)
         assert isinstance(total, int)
 

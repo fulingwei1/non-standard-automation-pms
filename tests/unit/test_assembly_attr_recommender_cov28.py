@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - assembly_attr_recommender 单元测试（BOM装配属性智能推荐）"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.assembly_attr_recommender")
 
@@ -11,8 +12,8 @@ from app.services.assembly_attr_recommender import (
     AssemblyAttrRecommender,
 )
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_material(
     material_id=1,
@@ -37,6 +38,7 @@ def _make_bom_item(bom_item_id=1, material_id=1):
 
 
 # ─── AssemblyAttrRecommendation ──────────────────────────────
+
 
 class TestAssemblyAttrRecommendation:
 
@@ -66,6 +68,7 @@ class TestAssemblyAttrRecommendation:
 
 
 # ─── _match_from_keywords ────────────────────────────────────
+
 
 class TestMatchFromKeywords:
 
@@ -123,6 +126,7 @@ class TestMatchFromKeywords:
 
 # ─── _match_from_category ────────────────────────────────────
 
+
 class TestMatchFromCategory:
 
     def test_returns_none_when_no_category_id(self):
@@ -175,6 +179,7 @@ class TestMatchFromCategory:
 
 # ─── _match_from_history ─────────────────────────────────────
 
+
 class TestMatchFromHistory:
 
     def test_returns_none_when_no_history(self):
@@ -226,6 +231,7 @@ class TestMatchFromHistory:
 
 # ─── recommend (优先级整合) ──────────────────────────────────
 
+
 class TestRecommend:
 
     def test_returns_default_when_no_matches(self):
@@ -233,7 +239,9 @@ class TestRecommend:
         db.query.return_value.join.return_value.filter.return_value.all.return_value = []
         db.query.return_value.filter.return_value.first.return_value = None
 
-        material = _make_material(material_name="未知物料XYZ", category_id=None, default_supplier_id=None)
+        material = _make_material(
+            material_name="未知物料XYZ", category_id=None, default_supplier_id=None
+        )
         bom_item = _make_bom_item()
 
         rec = AssemblyAttrRecommender.recommend(db, bom_item, material, current_bom_id=1)
@@ -251,7 +259,11 @@ class TestRecommend:
         attr.can_postpone = False
         attr.importance_level = "NORMAL"
         attr.confirmed = True
-        db.query.return_value.join.return_value.filter.return_value.all.return_value = [attr, attr, attr]
+        db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+            attr,
+            attr,
+            attr,
+        ]
         # 无分类映射
         db.query.return_value.filter.return_value.first.return_value = None
 
@@ -265,6 +277,7 @@ class TestRecommend:
 
 
 # ─── batch_recommend ─────────────────────────────────────────
+
 
 class TestBatchRecommend:
 

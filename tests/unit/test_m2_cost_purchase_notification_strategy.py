@@ -21,14 +21,16 @@ sys.modules.setdefault("redis", redis_mock)
 sys.modules.setdefault("redis.exceptions", MagicMock())
 
 import os
+
 os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
 os.environ.setdefault("REDIS_URL", "")
 os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 
 # ===========================================================================
@@ -52,8 +54,8 @@ class TestCostCollectionService:
 
     def test_collect_from_purchase_order_no_project_id_returns_none(self):
         """订单没有关联项目时返回 None"""
-        from app.services.cost_collection_service import CostCollectionService
         from app.models.purchase import PurchaseOrder
+        from app.services.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -69,9 +71,9 @@ class TestCostCollectionService:
 
     def test_collect_from_purchase_order_existing_cost_updates(self):
         """已有成本记录时更新而不新建"""
-        from app.services.cost_collection_service import CostCollectionService
-        from app.models.purchase import PurchaseOrder
         from app.models.project import ProjectCost
+        from app.models.purchase import PurchaseOrder
+        from app.services.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -101,9 +103,9 @@ class TestCostCollectionService:
 
     def test_collect_from_purchase_order_creates_new_cost(self):
         """新建成本记录并更新项目实际成本"""
-        from app.services.cost_collection_service import CostCollectionService
-        from app.models.purchase import PurchaseOrder
         from app.models.project import Project
+        from app.models.purchase import PurchaseOrder
+        from app.services.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -123,18 +125,16 @@ class TestCostCollectionService:
 
         with patch("app.services.cost_collection_service.CostAlertService") as mock_alert:
             mock_alert.check_budget_execution.return_value = None
-            result = CostCollectionService.collect_from_purchase_order(
-                db, order_id=3, created_by=1
-            )
+            result = CostCollectionService.collect_from_purchase_order(db, order_id=3, created_by=1)
 
         db.add.assert_called()
         assert result is not None
 
     def test_collect_from_purchase_order_alert_failure_does_not_raise(self):
         """预警检查失败不影响成本归集"""
-        from app.services.cost_collection_service import CostCollectionService
-        from app.models.purchase import PurchaseOrder
         from app.models.project import Project
+        from app.models.purchase import PurchaseOrder
+        from app.services.cost_collection_service import CostCollectionService
 
         db = self._make_db()
         order = Mock(spec=PurchaseOrder)
@@ -203,8 +203,7 @@ class TestLossDeepAnalysisService:
         with patch("app.services.loss_deep_analysis_service.HourlyRateService"):
             svc = LossDeepAnalysisService(db)
             result = svc.analyze_lost_projects(
-                start_date=date(2024, 1, 1),
-                end_date=date(2024, 12, 31)
+                start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
             )
 
         assert isinstance(result, dict)
@@ -227,9 +226,9 @@ class TestLossDeepAnalysisService:
         """阶段常量正确定义"""
         from app.services.loss_deep_analysis_service import LossDeepAnalysisService
 
-        assert LossDeepAnalysisService.STAGE_REQUIREMENT == 'S1'
-        assert LossDeepAnalysisService.STAGE_DESIGN == 'S2'
-        assert LossDeepAnalysisService.STAGE_DETAILED_DESIGN == 'S4'
+        assert LossDeepAnalysisService.STAGE_REQUIREMENT == "S1"
+        assert LossDeepAnalysisService.STAGE_DESIGN == "S2"
+        assert LossDeepAnalysisService.STAGE_DETAILED_DESIGN == "S4"
 
 
 # ===========================================================================
@@ -326,9 +325,7 @@ class TestKpiCollectors:
         q.count.return_value = 5
         db.query.return_value = q
 
-        result = collect_project_metrics(
-            db, metric="PROJECT_COUNT", filters={"status": "ACTIVE"}
-        )
+        result = collect_project_metrics(db, metric="PROJECT_COUNT", filters={"status": "ACTIVE"})
         assert isinstance(result, Decimal)
 
     def test_collect_project_metrics_unknown_metric_returns_none(self):
@@ -382,6 +379,7 @@ class TestNotificationDispatcher:
         with patch("app.services.notification_dispatcher.get_notification_service") as mock_svc:
             mock_svc.return_value = MagicMock()
             from app.services.notification_dispatcher import NotificationDispatcher
+
             dispatcher = NotificationDispatcher(db)
             dispatcher._unified_service_mock = mock_svc.return_value
         return dispatcher, db
@@ -392,6 +390,7 @@ class TestNotificationDispatcher:
         with patch("app.services.notification_dispatcher.get_notification_service") as mock_get:
             mock_get.return_value = MagicMock()
             from app.services.notification_dispatcher import NotificationDispatcher
+
             dispatcher = NotificationDispatcher(db)
         mock_get.assert_called_once_with(db)
         assert dispatcher.unified_service is not None
@@ -401,6 +400,7 @@ class TestNotificationDispatcher:
         db = MagicMock()
         with patch("app.services.notification_dispatcher.get_notification_service"):
             from app.services.notification_dispatcher import NotificationDispatcher
+
             dispatcher = NotificationDispatcher(db)
 
         notification = dispatcher.create_system_notification(
@@ -418,6 +418,7 @@ class TestNotificationDispatcher:
         db = MagicMock()
         with patch("app.services.notification_dispatcher.get_notification_service"):
             from app.services.notification_dispatcher import NotificationDispatcher
+
             dispatcher = NotificationDispatcher(db)
 
         now = datetime.now()
@@ -431,6 +432,7 @@ class TestNotificationDispatcher:
         db = MagicMock()
         with patch("app.services.notification_dispatcher.get_notification_service"):
             from app.services.notification_dispatcher import NotificationDispatcher
+
             dispatcher = NotificationDispatcher(db)
 
         result = dispatcher._resolve_recipients_by_ids([])
@@ -441,6 +443,7 @@ class TestNotificationDispatcher:
         db = MagicMock()
         with patch("app.services.notification_dispatcher.get_notification_service"):
             from app.services.notification_dispatcher import NotificationDispatcher
+
             dispatcher = NotificationDispatcher(db)
 
         assert len(dispatcher.RETRY_SCHEDULE) == 4
@@ -466,7 +469,9 @@ class TestPresaleAIIntegrationService:
 
         db = MagicMock()
         # Simulate no existing record
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
 
         # Mock the stat returned after commit/refresh
         new_stat = Mock()
@@ -481,13 +486,13 @@ class TestPresaleAIIntegrationService:
             mock_instance.usage_count = 1
             mock_instance.success_count = 1
             MockStat.return_value = mock_instance
-            
+
             # Make the query chain return None (no existing)
             q = MagicMock()
             q.filter.return_value = q
             q.first.return_value = None
             db.query.return_value = q
-            db.refresh.side_effect = lambda obj: setattr(obj, '_refreshed', True)
+            db.refresh.side_effect = lambda obj: setattr(obj, "_refreshed", True)
 
             result = svc.record_usage(user_id=1, ai_function="COST_ESTIMATE", success=True)
 
@@ -542,10 +547,7 @@ class TestPresaleAIIntegrationService:
         db.query.return_value = q
 
         svc = PresaleAIIntegrationService(db)
-        result = svc.get_usage_stats(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
-        )
+        result = svc.get_usage_stats(start_date=date(2024, 1, 1), end_date=date(2024, 12, 31))
         assert isinstance(result, list)
 
 
@@ -559,6 +561,7 @@ class TestResourceSchedulingAIService:
         """初始化保存 db 引用"""
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
             from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
             db = MagicMock()
             svc = ResourceSchedulingAIService(db_session)
             assert svc.db is db
@@ -567,11 +570,13 @@ class TestResourceSchedulingAIService:
         """Helper: create ResourceSchedulingAIService with mocked deps"""
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
             from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
             return ResourceSchedulingAIService(db_session)
 
     def test_detect_resource_conflicts_no_allocations_returns_empty(self):
         """无分配记录时返回空列表"""
         import app.models.finance as finance_mod
+
         finance_mod.PMOResourceAllocation = MagicMock()
 
         db = MagicMock()
@@ -587,6 +592,7 @@ class TestResourceSchedulingAIService:
     def test_detect_resource_conflicts_with_resource_id_filter(self):
         """带 resource_id 参数筛选"""
         import app.models.finance as finance_mod
+
         finance_mod.PMOResourceAllocation = MagicMock()
 
         db = MagicMock()
@@ -602,6 +608,7 @@ class TestResourceSchedulingAIService:
     def test_detect_resource_conflicts_no_overlap_no_conflict(self):
         """分配时段不重叠时无冲突"""
         import app.models.finance as finance_mod
+
         finance_mod.PMOResourceAllocation = MagicMock()
 
         db = MagicMock()
@@ -634,6 +641,7 @@ class TestResourceSchedulingAIService:
     def test_detect_resource_conflicts_with_project_id(self):
         """带 project_id 参数正常运行"""
         import app.models.finance as finance_mod
+
         finance_mod.PMOResourceAllocation = MagicMock()
 
         db = MagicMock()
@@ -757,8 +765,9 @@ class TestSalesTargetService:
 
     def test_create_target_team_without_team_id_raises(self):
         """创建团队目标时缺少 team_id 抛出 HTTPException"""
-        from app.services.sales_target_service import SalesTargetService
         from fastapi import HTTPException
+
+        from app.services.sales_target_service import SalesTargetService
 
         db = MagicMock()
         target_data = Mock()
@@ -772,8 +781,9 @@ class TestSalesTargetService:
 
     def test_create_target_personal_without_user_id_raises(self):
         """创建个人目标时缺少 user_id 抛出 HTTPException"""
-        from app.services.sales_target_service import SalesTargetService
         from fastapi import HTTPException
+
+        from app.services.sales_target_service import SalesTargetService
 
         db = MagicMock()
         target_data = Mock()
@@ -810,8 +820,9 @@ class TestSalesTargetService:
 
     def test_delete_target_with_sub_targets_raises(self):
         """存在子目标时删除抛出 HTTPException"""
-        from app.services.sales_target_service import SalesTargetService
         from fastapi import HTTPException
+
+        from app.services.sales_target_service import SalesTargetService
 
         db = MagicMock()
         mock_target = Mock()

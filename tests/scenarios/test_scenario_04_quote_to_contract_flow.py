@@ -3,13 +3,16 @@
 
 测试从销售报价到项目启动的业务流程
 """
-import pytest
+
 from datetime import date, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
-from app.models.sales.quotes import Quote
+
+from app.models.project import Customer, Project
 from app.models.sales.contracts import Contract
-from app.models.project import Project, Customer
+from app.models.sales.quotes import Quote
 
 
 class TestQuoteToContractFlow:
@@ -233,7 +236,9 @@ class TestQuoteToContractFlow:
         assert amendment.version == 2
         assert amendment.parent_id == contract.id
 
-    def test_09_track_quote_to_contract_conversion_rate(self, db_session: Session, flow_customer: Customer):
+    def test_09_track_quote_to_contract_conversion_rate(
+        self, db_session: Session, flow_customer: Customer
+    ):
         """测试9：跟踪报价转合同转化率"""
         # 创建5个报价
         quotes = []

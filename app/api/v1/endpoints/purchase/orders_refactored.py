@@ -4,29 +4,29 @@
 使用统一响应格式
 """
 
+import logging
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, Optional
-import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, and_
+from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core.schemas import list_response, paginated_response, success_response
-from app.models.vendor import Vendor
 from app.models.purchase import (
     PurchaseOrder,
     PurchaseOrderItem,
 )
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
-from app.common.pagination import PaginationParams, get_pagination_query
-
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404, save_obj
+
 from .utils import (
     decimal_value,
     generate_order_no,
@@ -66,6 +66,7 @@ def list_purchase_orders(
 
         # 应用关键词过滤（订单号/标题）
         from app.common.query_filters import apply_keyword_filter
+
         query = apply_keyword_filter(query, PurchaseOrder, keyword, ["order_no", "order_title"])
 
         if supplier_id:
@@ -80,7 +81,7 @@ def list_purchase_orders(
                 query = query.filter(
                     and_(
                         PurchaseOrder.order_date.isnot(None),
-                        PurchaseOrder.order_date >= start_date_obj
+                        PurchaseOrder.order_date >= start_date_obj,
                     )
                 )
             except ValueError:
@@ -91,25 +92,22 @@ def list_purchase_orders(
                 query = query.filter(
                     and_(
                         PurchaseOrder.order_date.isnot(None),
-                        PurchaseOrder.order_date <= end_date_obj
+                        PurchaseOrder.order_date <= end_date_obj,
                     )
                 )
             except ValueError:
                 raise HTTPException(status_code=400, detail="end_date 格式错误，应为 YYYY-MM-DD")
 
         total = query.count()
-        orders = (
-            apply_pagination(query.order_by(desc(PurchaseOrder.created_at)), pagination.offset, pagination.limit).all()
-        )
+        orders = apply_pagination(
+            query.order_by(desc(PurchaseOrder.created_at)), pagination.offset, pagination.limit
+        ).all()
 
         items = [serialize_purchase_order(o, include_items=False) for o in orders]
 
         # 使用统一响应格式
         return paginated_response(
-            items=items,
-            total=total,
-            page=pagination.page,
-            page_size=pagination.page_size
+            items=items, total=total, page=pagination.page, page_size=pagination.page_size
         )
     except HTTPException:
         # 重新抛出 HTTP 异常（如参数验证错误）
@@ -117,10 +115,7 @@ def list_purchase_orders(
     except Exception as e:
         # 记录详细错误信息
         logging.error(f"获取采购订单列表失败: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="获取采购订单失败，请稍后重试"
-        )
+        raise HTTPException(status_code=500, detail="获取采购订单失败，请稍后重试")
 
 
 @router.post("/")
@@ -133,7 +128,9 @@ def create_purchase_order(
     supplier_id = payload.get("supplier_id")
     if not supplier_id:
         raise HTTPException(status_code=422, detail="supplier_id 必填")
-    supplier = db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == 'MATERIAL').first()
+    supplier = (
+        db.query(Vendor).filter(Vendor.id == supplier_id, Vendor.vendor_type == "MATERIAL").first()
+    )
     if not supplier:
         raise HTTPException(status_code=404, detail="供应商不存在")
 
@@ -187,11 +184,10 @@ def create_purchase_order(
 
     order.total_amount = total_amount
     save_obj(db, order)
-    
+
     # 使用统一响应格式
     return success_response(
-        data=serialize_purchase_order(order, include_items=True),
-        message="采购订单创建成功"
+        data=serialize_purchase_order(order, include_items=True), message="采购订单创建成功"
     )
 
 
@@ -203,11 +199,10 @@ def get_purchase_order_detail(
 ):
     """获取采购订单详情"""
     order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
-    
+
     # 使用统一响应格式
     return success_response(
-        data=serialize_purchase_order(order, include_items=True),
-        message="获取采购订单详情成功"
+        data=serialize_purchase_order(order, include_items=True), message="获取采购订单详情成功"
     )
 
 
@@ -219,17 +214,16 @@ def get_purchase_order_items(
 ):
     """获取采购订单明细"""
     order = get_or_404(db, PurchaseOrder, order_id, "采购订单不存在")
-    
+
     try:
-        items = [serialize_order_item(i) for i in order.items.order_by(PurchaseOrderItem.item_no).all()]
+        items = [
+            serialize_order_item(i) for i in order.items.order_by(PurchaseOrderItem.item_no).all()
+        ]
     except Exception:
         items = []
-    
+
     # 使用统一响应格式
-    return list_response(
-        items=items,
-        message="获取采购订单明细成功"
-    )
+    return list_response(items=items, message="获取采购订单明细成功")
 
 
 @router.put("/{order_id}")
@@ -251,11 +245,10 @@ def update_purchase_order(
             else:
                 setattr(order, field, payload[field])
     save_obj(db, order)
-    
+
     # 使用统一响应格式
     return success_response(
-        data=serialize_purchase_order(order, include_items=True),
-        message="采购订单更新成功"
+        data=serialize_purchase_order(order, include_items=True), message="采购订单更新成功"
     )
 
 
@@ -278,12 +271,9 @@ def submit_purchase_order(
     order.status = "SUBMITTED"
     order.submitted_at = datetime.now()
     db.commit()
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="采购订单提交成功"
-    )
+    return success_response(data=None, message="采购订单提交成功")
 
 
 @router.put("/{order_id}/approve")
@@ -304,9 +294,6 @@ def approve_purchase_order(
     order.approval_note = approval_note
     order.status = "APPROVED" if approved else "REJECTED"
     db.commit()
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="采购订单审批完成"
-    )
+    return success_response(data=None, message="采购订单审批完成")

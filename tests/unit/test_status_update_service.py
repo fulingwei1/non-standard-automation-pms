@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from app.services.status_update_service import StatusUpdateResult, StatusUpdateService
 from app.models.user import User
+from app.services.status_update_service import StatusUpdateResult, StatusUpdateService
 
 
 @pytest.mark.unit
@@ -192,11 +192,13 @@ class TestStatusUpdateService:
             entity=mock_entity,
             new_status="STARTED",
             operator=mock_user,
-            related_entities=[{
-                "entity": related_entity,
-                "field": "status",
-                "value": "WORKING",
-            }],
+            related_entities=[
+                {
+                    "entity": related_entity,
+                    "field": "status",
+                    "value": "WORKING",
+                }
+            ],
         )
 
         assert result.success is True
@@ -208,13 +210,15 @@ class TestStatusUpdateService:
         history_called = []
 
         def history_callback(entity, old_status, new_status, operator, reason):
-            history_called.append({
-                "entity": entity,
-                "old_status": old_status,
-                "new_status": new_status,
-                "operator": operator,
-                "reason": reason,
-            })
+            history_called.append(
+                {
+                    "entity": entity,
+                    "old_status": old_status,
+                    "new_status": new_status,
+                    "operator": operator,
+                    "reason": reason,
+                }
+            )
 
         service = StatusUpdateService(mock_db)
 
@@ -238,11 +242,13 @@ class TestStatusUpdateService:
         callback_called = []
 
         def before_callback(entity, old_status, new_status, operator):
-            callback_called.append({
-                "entity": entity,
-                "old_status": old_status,
-                "new_status": new_status,
-            })
+            callback_called.append(
+                {
+                    "entity": entity,
+                    "old_status": old_status,
+                    "new_status": new_status,
+                }
+            )
 
         service = StatusUpdateService(mock_db)
 
@@ -263,11 +269,13 @@ class TestStatusUpdateService:
         callback_called = []
 
         def after_callback(entity, old_status, new_status, operator):
-            callback_called.append({
-                "entity": entity,
-                "old_status": old_status,
-                "new_status": new_status,
-            })
+            callback_called.append(
+                {
+                    "entity": entity,
+                    "old_status": old_status,
+                    "new_status": new_status,
+                }
+            )
 
         service = StatusUpdateService(mock_db)
 
@@ -285,6 +293,7 @@ class TestStatusUpdateService:
 
     def test_update_status_before_callback_failure(self, mock_db, mock_user, mock_entity):
         """测试更新前回调失败"""
+
         def before_callback(entity, old_status, new_status, operator):
             raise ValueError("回调失败")
 
@@ -303,6 +312,7 @@ class TestStatusUpdateService:
 
     def test_update_status_history_callback_failure(self, mock_db, mock_user, mock_entity):
         """测试历史记录回调失败不影响主流程"""
+
         def history_callback(entity, old_status, new_status, operator, reason):
             raise ValueError("历史记录失败")
 

@@ -43,6 +43,7 @@ generate_risk_no = pmo_codes.generate_risk_no
 
 # ==================== 项目阶段 ====================
 
+
 @router.get("/pmo/projects/{project_id}/phases", response_model=List[PhaseResponse])
 def read_project_phases(
     *,
@@ -57,35 +58,40 @@ def read_project_phases(
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    phases = db.query(PmoProjectPhase).filter(
-        PmoProjectPhase.project_id == project_id
-    ).order_by(PmoProjectPhase.phase_order).all()
+    phases = (
+        db.query(PmoProjectPhase)
+        .filter(PmoProjectPhase.project_id == project_id)
+        .order_by(PmoProjectPhase.phase_order)
+        .all()
+    )
 
     result = []
     for phase in phases:
-        result.append(PhaseResponse(
-            id=phase.id,
-            project_id=phase.project_id,
-            phase_code=phase.phase_code,
-            phase_name=phase.phase_name,
-            phase_order=phase.phase_order,
-            plan_start_date=phase.plan_start_date,
-            plan_end_date=phase.plan_end_date,
-            actual_start_date=phase.actual_start_date,
-            actual_end_date=phase.actual_end_date,
-            status=phase.status,
-            progress=phase.progress,
-            entry_criteria=phase.entry_criteria,
-            exit_criteria=phase.exit_criteria,
-            entry_check_result=phase.entry_check_result,
-            exit_check_result=phase.exit_check_result,
-            review_required=phase.review_required,
-            review_date=phase.review_date,
-            review_result=phase.review_result,
-            review_notes=phase.review_notes,
-            created_at=phase.created_at,
-            updated_at=phase.updated_at,
-        ))
+        result.append(
+            PhaseResponse(
+                id=phase.id,
+                project_id=phase.project_id,
+                phase_code=phase.phase_code,
+                phase_name=phase.phase_name,
+                phase_order=phase.phase_order,
+                plan_start_date=phase.plan_start_date,
+                plan_end_date=phase.plan_end_date,
+                actual_start_date=phase.actual_start_date,
+                actual_end_date=phase.actual_end_date,
+                status=phase.status,
+                progress=phase.progress,
+                entry_criteria=phase.entry_criteria,
+                exit_criteria=phase.exit_criteria,
+                entry_check_result=phase.entry_check_result,
+                exit_check_result=phase.exit_check_result,
+                review_required=phase.review_required,
+                review_date=phase.review_date,
+                review_result=phase.review_result,
+                review_notes=phase.review_notes,
+                created_at=phase.created_at,
+                updated_at=phase.updated_at,
+            )
+        )
 
     return result
 
@@ -258,14 +264,17 @@ def phase_advance(
 
     if advance_request.actual_start_date:
         phase.actual_start_date = advance_request.actual_start_date
-        phase.status = 'IN_PROGRESS'
+        phase.status = "IN_PROGRESS"
 
     # 推进到下一阶段的逻辑：如果当前阶段已完成，自动创建下一阶段
-    if phase.status == 'COMPLETED':
+    if phase.status == "COMPLETED":
         # 查找当前项目的所有阶段
-        all_phases = db.query(PmoProjectPhase).filter(
-            PmoProjectPhase.project_id == phase.project_id
-        ).order_by(PmoProjectPhase.phase_order).all()
+        all_phases = (
+            db.query(PmoProjectPhase)
+            .filter(PmoProjectPhase.project_id == phase.project_id)
+            .order_by(PmoProjectPhase.phase_order)
+            .all()
+        )
 
         # 找到当前阶段的顺序
         current_order = None
@@ -282,8 +291,8 @@ def phase_advance(
                 break
 
         # 如果存在下一阶段且状态为PENDING，则更新为IN_PROGRESS
-        if next_phase and next_phase.status == 'PENDING':
-            next_phase.status = 'IN_PROGRESS'
+        if next_phase and next_phase.status == "PENDING":
+            next_phase.status = "IN_PROGRESS"
             next_phase.actual_start_date = datetime.now().date()
             db.add(next_phase)
 
@@ -314,5 +323,3 @@ def phase_advance(
         created_at=phase.created_at,
         updated_at=phase.updated_at,
     )
-
-

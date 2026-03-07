@@ -34,7 +34,7 @@ def enrich_project_data():
     """为项目添加丰富的数据"""
     with get_db_session() as db:
         # 查找项目
-        project = db.query(Project).filter(Project.project_code == 'PJ250114').first()
+        project = db.query(Project).filter(Project.project_code == "PJ250114").first()
         if not project:
             print("❌ 项目未找到")
             return
@@ -72,10 +72,13 @@ def enrich_project_data():
         ]
 
         for stage_code, stage_name, order, start_date, end_date in stage_configs:
-            existing = db.query(ProjectStage).filter(
-                ProjectStage.project_id == project.id,
-                ProjectStage.stage_code == stage_code
-            ).first()
+            existing = (
+                db.query(ProjectStage)
+                .filter(
+                    ProjectStage.project_id == project.id, ProjectStage.stage_code == stage_code
+                )
+                .first()
+            )
 
             if not existing:
                 stage = ProjectStage(
@@ -87,10 +90,18 @@ def enrich_project_data():
                     planned_end_date=end_date,
                     actual_start_date=start_date,
                     actual_end_date=end_date,
-                    progress_pct=100 if stage_code in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9'] else 0,
-                    status="COMPLETED" if stage_code in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9'] else "PENDING",
+                    progress_pct=(
+                        100
+                        if stage_code in ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
+                        else 0
+                    ),
+                    status=(
+                        "COMPLETED"
+                        if stage_code in ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
+                        else "PENDING"
+                    ),
                     description=f"{stage_name}阶段已完成",
-                    is_active=True
+                    is_active=True,
                 )
                 db.add(stage)
                 print(f"  ✓ 添加阶段: {stage_code} - {stage_name}")
@@ -116,38 +127,52 @@ def enrich_project_data():
             user = users[i] if i > 0 else pm  # 第一个是项目经理
 
             # 检查是否已存在
-            existing = db.query(ProjectMember).filter(
-                ProjectMember.project_id == project.id,
-                ProjectMember.user_id == user.id
-            ).first()
+            existing = (
+                db.query(ProjectMember)
+                .filter(ProjectMember.project_id == project.id, ProjectMember.user_id == user.id)
+                .first()
+            )
 
             if not existing:
                 # 检查角色是否存在，如果不存在则创建
-                role_result = db.execute(text("SELECT id FROM roles WHERE role_code = :role_code"), {"role_code": role_name}).first()
+                role_result = db.execute(
+                    text("SELECT id FROM roles WHERE role_code = :role_code"),
+                    {"role_code": role_name},
+                ).first()
                 if not role_result:
                     # 创建角色
-                    db.execute(text("""
+                    db.execute(
+                        text(
+                            """
                         INSERT INTO roles (role_code, role_name, data_scope, is_system, created_at)
                         VALUES (:role_code, :role_name, 'PROJECT', 0, CURRENT_TIMESTAMP)
-                    """), {"role_code": role_name, "role_name": role_name})
+                    """
+                        ),
+                        {"role_code": role_name, "role_name": role_name},
+                    )
                     db.flush()
 
                 # 使用原始SQL插入，设置role_code为NULL避免外键约束
                 try:
-                    db.execute(text("""
+                    db.execute(
+                        text(
+                            """
                         INSERT INTO project_members
                         (project_id, user_id, role_code, allocation_pct, start_date, end_date, is_active, remark, created_by, created_at, updated_at)
                         VALUES (:project_id, :user_id, :role_code, :allocation_pct, :start_date, :end_date, 1, :remark, :created_by, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    """), {
-                        "project_id": project.id,
-                        "user_id": user.id,
-                        "role_code": role_name,
-                        "allocation_pct": allocation,
-                        "start_date": start_date,
-                        "end_date": end_date,
-                        "remark": f"负责{role_name}相关工作",
-                        "created_by": pm.id
-                    })
+                    """
+                        ),
+                        {
+                            "project_id": project.id,
+                            "user_id": user.id,
+                            "role_code": role_name,
+                            "allocation_pct": allocation,
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "remark": f"负责{role_name}相关工作",
+                            "created_by": pm.id,
+                        },
+                    )
                     print(f"  ✓ 添加成员: {user.real_name or user.username} - {role_name}")
                 except Exception as e:
                     print(f"  ⚠️ 跳过成员 {user.real_name or user.username}: {str(e)}")
@@ -155,25 +180,125 @@ def enrich_project_data():
         # 3. 添加里程碑
         print("\n🎯 添加里程碑...")
         milestone_data = [
-            ("M001", "需求确认完成", "GATE", date(2024, 1, 31), date(2024, 1, 31), "COMPLETED", True),
-            ("M002", "方案设计评审通过", "GATE", date(2024, 3, 15), date(2024, 3, 18), "COMPLETED", True),
-            ("M003", "BOM发布", "DELIVERY", date(2024, 4, 15), date(2024, 4, 20), "COMPLETED", True),
-            ("M004", "首付款到账", "PAYMENT", date(2024, 4, 30), date(2024, 5, 5), "COMPLETED", True),
-            ("M005", "机械加工完成", "DELIVERY", date(2024, 7, 31), date(2024, 8, 5), "COMPLETED", True),
-            ("M006", "电气装配完成", "DELIVERY", date(2024, 8, 31), date(2024, 9, 3), "COMPLETED", True),
-            ("M007", "软件调试完成", "DELIVERY", date(2024, 9, 15), date(2024, 9, 18), "COMPLETED", True),
-            ("M008", "FAT验收通过", "GATE", date(2024, 10, 10), date(2024, 10, 12), "COMPLETED", True),
-            ("M009", "设备发货", "DELIVERY", date(2024, 10, 25), date(2024, 10, 28), "COMPLETED", True),
-            ("M010", "SAT验收通过", "GATE", date(2024, 11, 30), date(2024, 12, 2), "COMPLETED", True),
-            ("M011", "尾款到账", "PAYMENT", date(2024, 12, 15), date(2024, 12, 18), "COMPLETED", True),
-            ("M012", "项目结项", "CUSTOM", date(2024, 12, 20), date(2024, 12, 20), "COMPLETED", True),
+            (
+                "M001",
+                "需求确认完成",
+                "GATE",
+                date(2024, 1, 31),
+                date(2024, 1, 31),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M002",
+                "方案设计评审通过",
+                "GATE",
+                date(2024, 3, 15),
+                date(2024, 3, 18),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M003",
+                "BOM发布",
+                "DELIVERY",
+                date(2024, 4, 15),
+                date(2024, 4, 20),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M004",
+                "首付款到账",
+                "PAYMENT",
+                date(2024, 4, 30),
+                date(2024, 5, 5),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M005",
+                "机械加工完成",
+                "DELIVERY",
+                date(2024, 7, 31),
+                date(2024, 8, 5),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M006",
+                "电气装配完成",
+                "DELIVERY",
+                date(2024, 8, 31),
+                date(2024, 9, 3),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M007",
+                "软件调试完成",
+                "DELIVERY",
+                date(2024, 9, 15),
+                date(2024, 9, 18),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M008",
+                "FAT验收通过",
+                "GATE",
+                date(2024, 10, 10),
+                date(2024, 10, 12),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M009",
+                "设备发货",
+                "DELIVERY",
+                date(2024, 10, 25),
+                date(2024, 10, 28),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M010",
+                "SAT验收通过",
+                "GATE",
+                date(2024, 11, 30),
+                date(2024, 12, 2),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M011",
+                "尾款到账",
+                "PAYMENT",
+                date(2024, 12, 15),
+                date(2024, 12, 18),
+                "COMPLETED",
+                True,
+            ),
+            (
+                "M012",
+                "项目结项",
+                "CUSTOM",
+                date(2024, 12, 20),
+                date(2024, 12, 20),
+                "COMPLETED",
+                True,
+            ),
         ]
 
         for code, name, mtype, planned, actual, status, is_key in milestone_data:
-            existing = db.query(ProjectMilestone).filter(
-                ProjectMilestone.project_id == project.id,
-                ProjectMilestone.milestone_code == code
-            ).first()
+            existing = (
+                db.query(ProjectMilestone)
+                .filter(
+                    ProjectMilestone.project_id == project.id,
+                    ProjectMilestone.milestone_code == code,
+                )
+                .first()
+            )
 
             if not existing:
                 milestone = ProjectMilestone(
@@ -186,7 +311,7 @@ def enrich_project_data():
                     status=status,
                     is_key=is_key,
                     owner_id=pm.id,
-                    remark=f"{name}里程碑"
+                    remark=f"{name}里程碑",
                 )
                 db.add(milestone)
                 print(f"  ✓ 添加里程碑: {code} - {name}")
@@ -204,7 +329,7 @@ def enrich_project_data():
             ("包装运输", "LOGISTICS", 15000.00, date(2024, 10, 20), "包装运输费用"),
         ]
 
-        total_cost = Decimal('0')
+        total_cost = Decimal("0")
         for cost_type, category, amount, cost_date, remark in cost_data:
             cost = ProjectCost(
                 project_id=project.id,
@@ -213,7 +338,7 @@ def enrich_project_data():
                 amount=Decimal(str(amount)),
                 cost_date=cost_date,
                 description=remark,
-                created_by=pm.id
+                created_by=pm.id,
             )
             db.add(cost)
             total_cost += Decimal(str(amount))
@@ -240,10 +365,13 @@ def enrich_project_data():
         ]
 
         for doc_name, doc_type, version, status, doc_date in doc_data:
-            existing = db.query(ProjectDocument).filter(
-                ProjectDocument.project_id == project.id,
-                ProjectDocument.doc_name == doc_name
-            ).first()
+            existing = (
+                db.query(ProjectDocument)
+                .filter(
+                    ProjectDocument.project_id == project.id, ProjectDocument.doc_name == doc_name
+                )
+                .first()
+            )
 
             if not existing:
                 doc = ProjectDocument(
@@ -254,7 +382,7 @@ def enrich_project_data():
                     status=status,
                     file_path=f"/documents/projects/{project.id}/{doc_name}_{version}.pdf",
                     file_name=f"{doc_name}_{version}.pdf",
-                    uploaded_by=pm.id
+                    uploaded_by=pm.id,
                 )
                 doc.created_at = datetime.combine(doc_date, datetime.min.time())
                 db.add(doc)
@@ -263,27 +391,126 @@ def enrich_project_data():
         # 6. 添加任务
         print("\n✅ 添加项目任务...")
         task_data = [
-            ("需求调研", "需求进入阶段需求调研工作", "COMPLETED", date(2024, 1, 20), date(2024, 1, 25), users[1].id if len(users) > 1 else pm.id),
-            ("方案设计", "完成技术方案设计", "COMPLETED", date(2024, 2, 5), date(2024, 3, 10), users[1].id if len(users) > 1 else pm.id),
-            ("BOM编制", "编制物料清单", "COMPLETED", date(2024, 3, 20), date(2024, 4, 15), users[5].id if len(users) > 5 else pm.id),
-            ("物料采购", "执行物料采购", "COMPLETED", date(2024, 4, 16), date(2024, 5, 31), users[5].id if len(users) > 5 else pm.id),
-            ("机械加工", "机械件加工制造", "COMPLETED", date(2024, 6, 1), date(2024, 7, 31), users[1].id if len(users) > 1 else pm.id),
-            ("电气装配", "电气系统装配", "COMPLETED", date(2024, 8, 1), date(2024, 8, 31), users[2].id if len(users) > 2 else pm.id),
-            ("软件开发", "软件开发与调试", "COMPLETED", date(2024, 8, 5), date(2024, 9, 15), users[3].id if len(users) > 3 else pm.id),
-            ("系统联调", "系统联调测试", "COMPLETED", date(2024, 9, 1), date(2024, 9, 10), users[4].id if len(users) > 4 else pm.id),
-            ("FAT验收", "出厂验收测试", "COMPLETED", date(2024, 9, 16), date(2024, 10, 10), users[4].id if len(users) > 4 else pm.id),
-            ("设备发货", "设备包装发运", "COMPLETED", date(2024, 10, 11), date(2024, 10, 25), users[5].id if len(users) > 5 else pm.id),
-            ("现场安装", "现场安装调试", "COMPLETED", date(2024, 10, 26), date(2024, 11, 25), users[1].id if len(users) > 1 else pm.id),
-            ("SAT验收", "现场验收测试", "COMPLETED", date(2024, 11, 26), date(2024, 11, 30), users[4].id if len(users) > 4 else pm.id),
-            ("培训交付", "用户培训与交付", "COMPLETED", date(2024, 12, 1), date(2024, 12, 10), pm.id),
-            ("项目结项", "项目总结与结项", "COMPLETED", date(2024, 12, 11), date(2024, 12, 20), pm.id),
+            (
+                "需求调研",
+                "需求进入阶段需求调研工作",
+                "COMPLETED",
+                date(2024, 1, 20),
+                date(2024, 1, 25),
+                users[1].id if len(users) > 1 else pm.id,
+            ),
+            (
+                "方案设计",
+                "完成技术方案设计",
+                "COMPLETED",
+                date(2024, 2, 5),
+                date(2024, 3, 10),
+                users[1].id if len(users) > 1 else pm.id,
+            ),
+            (
+                "BOM编制",
+                "编制物料清单",
+                "COMPLETED",
+                date(2024, 3, 20),
+                date(2024, 4, 15),
+                users[5].id if len(users) > 5 else pm.id,
+            ),
+            (
+                "物料采购",
+                "执行物料采购",
+                "COMPLETED",
+                date(2024, 4, 16),
+                date(2024, 5, 31),
+                users[5].id if len(users) > 5 else pm.id,
+            ),
+            (
+                "机械加工",
+                "机械件加工制造",
+                "COMPLETED",
+                date(2024, 6, 1),
+                date(2024, 7, 31),
+                users[1].id if len(users) > 1 else pm.id,
+            ),
+            (
+                "电气装配",
+                "电气系统装配",
+                "COMPLETED",
+                date(2024, 8, 1),
+                date(2024, 8, 31),
+                users[2].id if len(users) > 2 else pm.id,
+            ),
+            (
+                "软件开发",
+                "软件开发与调试",
+                "COMPLETED",
+                date(2024, 8, 5),
+                date(2024, 9, 15),
+                users[3].id if len(users) > 3 else pm.id,
+            ),
+            (
+                "系统联调",
+                "系统联调测试",
+                "COMPLETED",
+                date(2024, 9, 1),
+                date(2024, 9, 10),
+                users[4].id if len(users) > 4 else pm.id,
+            ),
+            (
+                "FAT验收",
+                "出厂验收测试",
+                "COMPLETED",
+                date(2024, 9, 16),
+                date(2024, 10, 10),
+                users[4].id if len(users) > 4 else pm.id,
+            ),
+            (
+                "设备发货",
+                "设备包装发运",
+                "COMPLETED",
+                date(2024, 10, 11),
+                date(2024, 10, 25),
+                users[5].id if len(users) > 5 else pm.id,
+            ),
+            (
+                "现场安装",
+                "现场安装调试",
+                "COMPLETED",
+                date(2024, 10, 26),
+                date(2024, 11, 25),
+                users[1].id if len(users) > 1 else pm.id,
+            ),
+            (
+                "SAT验收",
+                "现场验收测试",
+                "COMPLETED",
+                date(2024, 11, 26),
+                date(2024, 11, 30),
+                users[4].id if len(users) > 4 else pm.id,
+            ),
+            (
+                "培训交付",
+                "用户培训与交付",
+                "COMPLETED",
+                date(2024, 12, 1),
+                date(2024, 12, 10),
+                pm.id,
+            ),
+            (
+                "项目结项",
+                "项目总结与结项",
+                "COMPLETED",
+                date(2024, 12, 11),
+                date(2024, 12, 20),
+                pm.id,
+            ),
         ]
 
         for task_name, description, status, start_date, end_date, assignee_id in task_data:
-            existing = db.query(Task).filter(
-                Task.project_id == project.id,
-                Task.task_name == task_name
-            ).first()
+            existing = (
+                db.query(Task)
+                .filter(Task.project_id == project.id, Task.task_name == task_name)
+                .first()
+            )
 
             if not existing:
                 task = Task(
@@ -295,7 +522,7 @@ def enrich_project_data():
                     actual_start=start_date,
                     actual_end=end_date,
                     owner_id=assignee_id,
-                    progress_percent=100 if status == "COMPLETED" else 0
+                    progress_percent=100 if status == "COMPLETED" else 0,
                 )
                 # 使用block_reason字段存储描述（如果没有description字段）
                 if description:
@@ -326,7 +553,7 @@ def enrich_project_data():
                 change_type=change_type,
                 changed_at=datetime.combine(change_date, datetime.min.time()),
                 changed_by=pm.id,
-                change_reason=remark
+                change_reason=remark,
             )
             # 根据变更类型设置对应的字段
             if change_type == "STAGE_CHANGE":
@@ -354,13 +581,43 @@ def enrich_project_data():
         # 9. 添加问题记录
         print("\n🐛 添加项目问题...")
         issue_data = [
-            ("机械加工精度问题", "机械加工件精度未达到要求", "RESOLVED", date(2024, 7, 10), "重新加工", users[1].id if len(users) > 1 else pm.id),
-            ("电气接线错误", "电气接线图与实际不符", "RESOLVED", date(2024, 8, 15), "修正接线图并重新接线", users[2].id if len(users) > 2 else pm.id),
-            ("软件功能异常", "测试发现软件功能异常", "RESOLVED", date(2024, 9, 5), "修复软件bug", users[3].id if len(users) > 3 else pm.id),
-            ("测试设备故障", "测试过程中设备出现故障", "RESOLVED", date(2024, 9, 25), "更换测试设备", users[4].id if len(users) > 4 else pm.id),
+            (
+                "机械加工精度问题",
+                "机械加工件精度未达到要求",
+                "RESOLVED",
+                date(2024, 7, 10),
+                "重新加工",
+                users[1].id if len(users) > 1 else pm.id,
+            ),
+            (
+                "电气接线错误",
+                "电气接线图与实际不符",
+                "RESOLVED",
+                date(2024, 8, 15),
+                "修正接线图并重新接线",
+                users[2].id if len(users) > 2 else pm.id,
+            ),
+            (
+                "软件功能异常",
+                "测试发现软件功能异常",
+                "RESOLVED",
+                date(2024, 9, 5),
+                "修复软件bug",
+                users[3].id if len(users) > 3 else pm.id,
+            ),
+            (
+                "测试设备故障",
+                "测试过程中设备出现故障",
+                "RESOLVED",
+                date(2024, 9, 25),
+                "更换测试设备",
+                users[4].id if len(users) > 4 else pm.id,
+            ),
         ]
 
-        for i, (issue_title, description, status, create_date, solution, assignee_id) in enumerate(issue_data):
+        for i, (issue_title, description, status, create_date, solution, assignee_id) in enumerate(
+            issue_data
+        ):
             issue_no = f"I{project.id:03d}{i+1:03d}"
             # 检查是否已存在
             existing = db.query(Issue).filter(Issue.issue_no == issue_no).first()
@@ -382,8 +639,12 @@ def enrich_project_data():
                 reporter_id=pm.id,
                 report_date=datetime.combine(create_date, datetime.min.time()),
                 solution=solution if status == "RESOLVED" else None,
-                resolved_at=datetime.combine(create_date + timedelta(days=3), datetime.min.time()) if status == "RESOLVED" else None,
-                resolved_by=assignee_id if status == "RESOLVED" else None
+                resolved_at=(
+                    datetime.combine(create_date + timedelta(days=3), datetime.min.time())
+                    if status == "RESOLVED"
+                    else None
+                ),
+                resolved_by=assignee_id if status == "RESOLVED" else None,
             )
             db.add(issue)
             print(f"  ✓ 添加问题: {issue_title}")
@@ -394,13 +655,25 @@ def enrich_project_data():
 
         # 打印统计信息
         print("\n📊 数据统计:")
-        print(f"  阶段: {db.query(ProjectStage).filter(ProjectStage.project_id == project.id).count()}")
-        print(f"  里程碑: {db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project.id).count()}")
-        print(f"  成员: {db.query(ProjectMember).filter(ProjectMember.project_id == project.id).count()}")
-        print(f"  成本记录: {db.query(ProjectCost).filter(ProjectCost.project_id == project.id).count()}")
-        print(f"  文档: {db.query(ProjectDocument).filter(ProjectDocument.project_id == project.id).count()}")
+        print(
+            f"  阶段: {db.query(ProjectStage).filter(ProjectStage.project_id == project.id).count()}"
+        )
+        print(
+            f"  里程碑: {db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project.id).count()}"
+        )
+        print(
+            f"  成员: {db.query(ProjectMember).filter(ProjectMember.project_id == project.id).count()}"
+        )
+        print(
+            f"  成本记录: {db.query(ProjectCost).filter(ProjectCost.project_id == project.id).count()}"
+        )
+        print(
+            f"  文档: {db.query(ProjectDocument).filter(ProjectDocument.project_id == project.id).count()}"
+        )
         print(f"  任务: {db.query(Task).filter(Task.project_id == project.id).count()}")
-        print(f"  状态日志: {db.query(ProjectStatusLog).filter(ProjectStatusLog.project_id == project.id).count()}")
+        print(
+            f"  状态日志: {db.query(ProjectStatusLog).filter(ProjectStatusLog.project_id == project.id).count()}"
+        )
         # print(f"  风险: {db.query(PmoProjectRisk).filter(PmoProjectRisk.project_id == project.id).count()}")
         print(f"  问题: {db.query(Issue).filter(Issue.project_id == project.id).count()}")
 

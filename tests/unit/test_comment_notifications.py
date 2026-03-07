@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """评论通知单元测试"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.approval_engine.notify.comment_notifications import CommentNotificationsMixin
 
 

@@ -11,6 +11,7 @@ from app.services.report_framework.adapters.analysis import (
     WorkloadAnalysisAdapter,
 )
 from app.services.report_framework.adapters.base import BaseReportAdapter
+from app.services.report_framework.adapters.business_support import BusinessSupportReportAdapter
 from app.services.report_framework.adapters.department import (
     DeptMonthlyAdapter,
     DeptReportAdapter,
@@ -23,9 +24,10 @@ from app.services.report_framework.adapters.project import (
     ProjectWeeklyAdapter,
 )
 from app.services.report_framework.adapters.rd_expense import RdExpenseReportAdapter
-from app.services.report_framework.adapters.report_data_generation import ReportDataGenerationAdapter
+from app.services.report_framework.adapters.report_data_generation import (
+    ReportDataGenerationAdapter,
+)
 from app.services.report_framework.adapters.sales import SalesReportAdapter
-from app.services.report_framework.adapters.business_support import BusinessSupportReportAdapter
 from app.services.report_framework.adapters.shortage import ShortageReportAdapter
 from app.services.report_framework.adapters.template import TemplateReportAdapter
 from app.services.report_framework.adapters.timesheet import TimesheetReportAdapter

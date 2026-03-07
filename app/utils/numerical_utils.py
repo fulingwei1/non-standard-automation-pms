@@ -15,12 +15,9 @@
   - calc_price_breakdown: 报价分解（硬件+人工+外协+利润）
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, List, Sequence, Tuple
-
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 # ---------------------------------------------------------------------------
 # 精度常量
@@ -39,10 +36,11 @@ DAILY_WORK_HOURS = Decimal("8")
 # 1. EVM — 进度/成本绩效指数（防除零版本）
 # ---------------------------------------------------------------------------
 
+
 def calc_spi_safe(
-    ev: float | int | Decimal,
-    pv: float | int | Decimal,
-    zero_pv_default: float | Decimal = Decimal("1.0"),
+    ev: Union[float, int, Decimal],
+    pv: Union[float, int, Decimal],
+    zero_pv_default: Union[float, Decimal] = Decimal("1.0"),
 ) -> Decimal:
     """
     计算进度绩效指数 (SPI = EV / PV)，PV=0 时返回约定默认值 1.0。
@@ -68,8 +66,8 @@ def calc_spi_safe(
 
 
 def calc_cpi(
-    ev: float | int | Decimal,
-    ac: float | int | Decimal,
+    ev: Union[float, int, Decimal],
+    ac: Union[float, int, Decimal],
 ) -> Decimal:
     """
     计算成本绩效指数 (CPI = EV / AC)。
@@ -94,7 +92,7 @@ def calc_cpi(
     return cpi.quantize(PLACES_6)
 
 
-def is_cost_overrun(cpi: float | Decimal) -> bool:
+def is_cost_overrun(cpi: Union[float, Decimal]) -> bool:
     """
     判断是否成本超支。
 
@@ -110,9 +108,9 @@ def is_cost_overrun(cpi: float | Decimal) -> bool:
 
 
 def calc_eac(
-    bac: float | int | Decimal,
-    ev: float | int | Decimal,
-    ac: float | int | Decimal,
+    bac: Union[float, int, Decimal],
+    ev: Union[float, int, Decimal],
+    ac: Union[float, int, Decimal],
 ) -> Decimal:
     """
     计算完工估算 EAC = AC + (BAC - EV) / CPI。
@@ -140,8 +138,8 @@ def calc_eac(
 
 
 def calc_vac(
-    bac: float | int | Decimal,
-    eac: float | int | Decimal,
+    bac: Union[float, int, Decimal],
+    eac: Union[float, int, Decimal],
 ) -> Decimal:
     """
     计算完工偏差 VAC = BAC - EAC。
@@ -156,8 +154,9 @@ def calc_vac(
 # 2. 套件率（Kit Rate）
 # ---------------------------------------------------------------------------
 
+
 def calc_cumulative_kit_rate(
-    batches: Sequence[Tuple[float | int | Decimal, float | int | Decimal]],
+    batches: Union[Sequence[Tuple[float, int, Decimal], float | int | Decimal]],
 ) -> Decimal:
     """
     计算分批到货的累计套件率。
@@ -187,7 +186,7 @@ def calc_cumulative_kit_rate(
         raise ValueError("批次列表不能为空")
 
     total_actual = Decimal("0")
-    bom_required = Decimal(str(batches[0][1]))   # 取第一批的 BOM 需求量
+    bom_required = Decimal(str(batches[0][1]))  # 取第一批的 BOM 需求量
 
     if bom_required <= 0:
         raise ValueError("BOM 需求量必须大于 0")
@@ -203,7 +202,8 @@ def calc_cumulative_kit_rate(
 # 3. 工时计算
 # ---------------------------------------------------------------------------
 
-def calc_hourly_rate(monthly_salary: float | int | Decimal) -> Decimal:
+
+def calc_hourly_rate(monthly_salary: Union[float, int, Decimal]) -> Decimal:
     """
     计算时薪。
 
@@ -235,9 +235,10 @@ def calc_hourly_rate(monthly_salary: float | int | Decimal) -> Decimal:
 # 4. 报价含税计算
 # ---------------------------------------------------------------------------
 
+
 def calc_price_with_vat(
-    price: float | int | Decimal,
-    vat_rate: float | Decimal = Decimal("0.13"),
+    price: Union[float, int, Decimal],
+    vat_rate: Union[float, Decimal] = Decimal("0.13"),
 ) -> Decimal:
     """
     计算含税价格。
@@ -269,10 +270,10 @@ def calc_price_with_vat(
 
 
 def calc_price_breakdown(
-    hardware: float | int | Decimal,
-    labor: float | int | Decimal,
-    outsource: float | int | Decimal,
-    margin_rate: float | Decimal,
+    hardware: Union[float, int, Decimal],
+    labor: Union[float, int, Decimal],
+    outsource: Union[float, int, Decimal],
+    margin_rate: Union[float, Decimal],
 ) -> Dict[str, Decimal]:
     """
     计算报价分解（含利润）。
@@ -323,22 +324,24 @@ def calc_price_breakdown(
 # 5. 纯函数分页工具（不依赖 SQLAlchemy）
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PageResult:
     """分页结果数据类"""
+
     items: List = field(default_factory=list)
     total: int = 0
     page: int = 1
     page_size: int = 10
     total_pages: int = 0
-    items_count: int = 0   # 当前页实际条数
+    items_count: int = 0  # 当前页实际条数
 
 
 def paginate_pure(
     total: int,
     page: int,
     page_size: int,
-    items: List | None = None,
+    items: Optional[List] = None,
 ) -> PageResult:
     """
     纯函数分页计算，不依赖数据库。

@@ -41,9 +41,7 @@ class ProjectReportGenerator:
             return {"error": "项目不存在", "project_id": project_id}
 
         # 基础信息
-        summary = ProjectReportGenerator._build_project_summary(
-            project, start_date, end_date
-        )
+        summary = ProjectReportGenerator._build_project_summary(project, start_date, end_date)
 
         # 里程碑数据
         milestones = ProjectReportGenerator._get_milestone_data(
@@ -93,9 +91,7 @@ class ProjectReportGenerator:
             return {"error": "项目不存在", "project_id": project_id}
 
         # 基础信息
-        summary = ProjectReportGenerator._build_project_summary(
-            project, start_date, end_date
-        )
+        summary = ProjectReportGenerator._build_project_summary(project, start_date, end_date)
         summary["report_type"] = "月报"
 
         # 里程碑数据
@@ -282,11 +278,7 @@ class ProjectReportGenerator:
     @staticmethod
     def _get_cost_summary(project: Project) -> Dict[str, Any]:
         """获取成本概况"""
-        budget = (
-            float(project.budget_amount or 0)
-            if hasattr(project, "budget_amount")
-            else 0
-        )
+        budget = float(project.budget_amount or 0) if hasattr(project, "budget_amount") else 0
 
         return {
             "planned_cost": budget,

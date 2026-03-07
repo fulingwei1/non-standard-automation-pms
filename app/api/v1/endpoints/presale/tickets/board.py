@@ -42,18 +42,15 @@ def get_ticket_board(
     for ticket in tickets:
         ticket_resp = build_ticket_response(ticket)
 
-        if ticket.status == 'PENDING':
+        if ticket.status == "PENDING":
             pending.append(ticket_resp)
-        elif ticket.status == 'ACCEPTED':
+        elif ticket.status == "ACCEPTED":
             accepted.append(ticket_resp)
-        elif ticket.status == 'IN_PROGRESS':
+        elif ticket.status == "IN_PROGRESS":
             in_progress.append(ticket_resp)
-        elif ticket.status == 'COMPLETED':
+        elif ticket.status == "COMPLETED":
             completed.append(ticket_resp)
 
     return TicketBoardResponse(
-        pending=pending,
-        accepted=accepted,
-        in_progress=in_progress,
-        completed=completed
+        pending=pending, accepted=accepted, in_progress=in_progress, completed=completed
     )

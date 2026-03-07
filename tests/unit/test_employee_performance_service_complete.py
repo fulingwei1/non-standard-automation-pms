@@ -71,9 +71,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_target_user = MagicMock()
         mock_target_user.department_id = 10
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_target_user
 
         result = self.service.check_performance_view_permission(mock_user, 2)
         self.assertTrue(result)
@@ -134,9 +132,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_query_projects.filter.return_value.all.return_value = [mock_project]
 
         mock_query_target_projects = MagicMock()
-        mock_query_target_projects.filter.return_value.all.return_value = [
-            mock_project
-        ]
+        mock_query_target_projects.filter.return_value.all.return_value = [mock_project]
 
         mock_query_task = MagicMock()
         mock_query_task.filter.return_value.first.return_value = mock_task
@@ -159,9 +155,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_user.roles = []
 
         mock_target_user = MagicMock()
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_target_user
 
         result = self.service.check_performance_view_permission(mock_user, 2)
         self.assertFalse(result)
@@ -371,9 +365,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_dept = MagicMock()
         mock_dept.name = "研发一组"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_team_name(1)
         self.assertEqual(result, "研发一组")
@@ -390,9 +382,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_dept = MagicMock()
         mock_dept.name = "技术部"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_department_name(5)
         self.assertEqual(result, "技术部")
@@ -441,9 +431,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_summary_in.period = "2025-01"
 
         mock_existing = MagicMock()
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_existing
 
         with self.assertRaises(HTTPException) as context:
             self.service.create_monthly_work_summary(mock_user, mock_summary_in)
@@ -467,9 +455,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = self.service.save_monthly_summary_draft(
-            mock_user, "2025-03", mock_summary_update
-        )
+        result = self.service.save_monthly_summary_draft(mock_user, "2025-03", mock_summary_update)
 
         self.mock_db.add.assert_called_once()
         self.mock_db.commit.assert_called_once()
@@ -489,13 +475,9 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_existing = MagicMock()
         mock_existing.status = "DRAFT"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_existing
 
-        result = self.service.save_monthly_summary_draft(
-            mock_user, "2025-03", mock_summary_update
-        )
+        result = self.service.save_monthly_summary_draft(mock_user, "2025-03", mock_summary_update)
 
         self.mock_db.commit.assert_called_once()
         self.assertEqual(mock_existing.work_content, "更新后内容")
@@ -510,14 +492,10 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_existing = MagicMock()
         mock_existing.status = "SUBMITTED"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_existing
 
         with self.assertRaises(HTTPException) as context:
-            self.service.save_monthly_summary_draft(
-                mock_user, "2025-03", mock_summary_update
-            )
+            self.service.save_monthly_summary_draft(mock_user, "2025-03", mock_summary_update)
 
         self.assertEqual(context.exception.status_code, 400)
 
@@ -539,13 +517,9 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_existing.self_evaluation = "旧评价"
         mock_existing.highlights = "旧亮点"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_existing
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_existing
 
-        result = self.service.save_monthly_summary_draft(
-            mock_user, "2025-03", mock_summary_update
-        )
+        result = self.service.save_monthly_summary_draft(mock_user, "2025-03", mock_summary_update)
 
         self.assertEqual(mock_existing.work_content, "新内容")
         self.assertEqual(mock_existing.self_evaluation, "旧评价")  # 未更新
@@ -644,9 +618,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
             result = self.service.get_my_performance(mock_user)
 
             self.assertEqual(result["current_status"]["summary_status"], "SUBMITTED")
-            self.assertEqual(
-                result["current_status"]["dept_evaluation"]["evaluator"], "张经理"
-            )
+            self.assertEqual(result["current_status"]["dept_evaluation"]["evaluator"], "张经理")
 
     def test_get_my_performance_completed_with_score(self):
         """测试35: 查看绩效（已完成评价有分数）"""
@@ -721,9 +693,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
             MagicMock(first=MagicMock(return_value=mock_current_summary)),
             MagicMock(first=MagicMock(return_value=None)),  # dept_eval
             MagicMock(all=MagicMock(return_value=[])),  # project_evals
-            MagicMock(
-                first=MagicMock(side_effect=[None, mock_past_summary, None])
-            ),  # 季度趋势查询
+            MagicMock(first=MagicMock(side_effect=[None, mock_past_summary, None])),  # 季度趋势查询
         ]
 
         self.mock_db.query.side_effect = mock_queries
@@ -771,9 +741,7 @@ class TestEmployeePerformanceServiceComplete(unittest.TestCase):
         mock_queries = [
             MagicMock(first=MagicMock(return_value=mock_summary)),
             MagicMock(first=MagicMock(return_value=None)),  # dept_eval
-            MagicMock(
-                all=MagicMock(return_value=[mock_project_eval1, mock_project_eval2])
-            ),
+            MagicMock(all=MagicMock(return_value=[mock_project_eval1, mock_project_eval2])),
         ]
 
         self.mock_db.query.side_effect = mock_queries

@@ -68,9 +68,7 @@ def get_project_progress_report(
     """
     service = ProjectPerformanceService(db)
     try:
-        result = service.get_project_progress_report(
-            project_id, report_type, report_date
-        )
+        result = service.get_project_progress_report(project_id, report_type, report_date)
         return ProjectProgressReportResponse(**result)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

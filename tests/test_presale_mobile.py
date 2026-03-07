@@ -4,10 +4,10 @@
 """
 
 import json
-import pytest
 from datetime import date, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from fastapi import status
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,6 @@ from app.models.presale_mobile import (
 )
 from app.schemas.presale_mobile import QuestionType, SyncStatus, VisitType
 from app.services.presale_mobile_service import PresaleMobileService
-
 
 # ==================== Fixtures ====================
 
@@ -53,9 +52,7 @@ class TestAIChat:
     async def test_chat_technical_question(self, mobile_service, db_session):
         """测试技术类问题"""
         question = "请问这款机器人的最大负载是多少？"
-        result = await mobile_service.chat(
-            user_id=1, question=question, presale_ticket_id=100
-        )
+        result = await mobile_service.chat(user_id=1, question=question, presale_ticket_id=100)
 
         assert "answer" in result
         assert result["question_type"] == QuestionType.TECHNICAL
@@ -91,9 +88,7 @@ class TestAIChat:
     async def test_chat_with_context(self, mobile_service, db_session):
         """测试带上下文的对话"""
         context = {"previous_question": "什么是六轴机器人？", "customer_id": 123}
-        result = await mobile_service.chat(
-            user_id=1, question="它的价格是多少？", context=context
-        )
+        result = await mobile_service.chat(user_id=1, question="它的价格是多少？", context=context)
 
         assert result["context"] == context
 
@@ -141,13 +136,9 @@ class TestVoiceInteraction:
         """测试语音转文字"""
         audio_base64 = "fake_audio_base64_data"
 
-        with patch.object(
-            mobile_service, "_speech_to_text", new_callable=AsyncMock
-        ) as mock_stt:
+        with patch.object(mobile_service, "_speech_to_text", new_callable=AsyncMock) as mock_stt:
             mock_stt.return_value = "这是转换后的文字"
-            result = await mobile_service.voice_question(
-                user_id=1, audio_base64=audio_base64
-            )
+            result = await mobile_service.voice_question(user_id=1, audio_base64=audio_base64)
 
             assert "transcription" in result
             assert result["transcription"] == "这是转换后的文字"
@@ -158,13 +149,9 @@ class TestVoiceInteraction:
         """测试文字转语音"""
         audio_base64 = "fake_audio_base64_data"
 
-        with patch.object(
-            mobile_service, "_text_to_speech", new_callable=AsyncMock
-        ) as mock_tts:
+        with patch.object(mobile_service, "_text_to_speech", new_callable=AsyncMock) as mock_tts:
             mock_tts.return_value = "https://example.com/audio.mp3"
-            result = await mobile_service.voice_question(
-                user_id=1, audio_base64=audio_base64
-            )
+            result = await mobile_service.voice_question(user_id=1, audio_base64=audio_base64)
 
             assert "audio_url" in result
             assert result["audio_url"].startswith("http")
@@ -210,9 +197,7 @@ class TestVoiceInteraction:
     @pytest.mark.asyncio
     async def test_voice_question_response_time(self, mobile_service, db_session):
         """测试语音问答响应时间"""
-        result = await mobile_service.voice_question(
-            user_id=1, audio_base64="fake_data"
-        )
+        result = await mobile_service.voice_question(user_id=1, audio_base64="fake_data")
 
         assert result["response_time"] > 0
 
@@ -307,9 +292,7 @@ class TestQuickEstimate:
     @pytest.mark.asyncio
     async def test_quick_estimate_bom_matching(self, mobile_service, db_session):
         """测试BOM匹配"""
-        result = await mobile_service.quick_estimate(
-            user_id=1, equipment_description="六轴机器人"
-        )
+        result = await mobile_service.quick_estimate(user_id=1, equipment_description="六轴机器人")
 
         assert len(result["bom_items"]) > 0
         for item in result["bom_items"]:
@@ -321,9 +304,7 @@ class TestQuickEstimate:
     @pytest.mark.asyncio
     async def test_quick_estimate_price_range(self, mobile_service, db_session):
         """测试报价范围计算"""
-        result = await mobile_service.quick_estimate(
-            user_id=1, equipment_description="测试设备"
-        )
+        result = await mobile_service.quick_estimate(user_id=1, equipment_description="测试设备")
 
         # 验证报价范围在成本的1.3-1.5倍之间
         cost = result["estimated_cost"]
@@ -339,9 +320,7 @@ class TestVisitRecord:
 
     def test_create_visit_record(self, mobile_service, db_session):
         """测试创建拜访记录"""
-        attendees = [
-            {"name": "张三", "title": "技术总监", "company": "客户公司"}
-        ]
+        attendees = [{"name": "张三", "title": "技术总监", "company": "客户公司"}]
 
         result = mobile_service.create_visit_record(
             user_id=1,
@@ -525,9 +504,7 @@ class TestOfflineSync:
         existing_record = MagicMock(spec=PresaleMobileOfflineData)
         existing_record.sync_status = SyncStatus.SYNCED.value
 
-        db_session.query.return_value.filter.return_value.first.return_value = (
-            existing_record
-        )
+        db_session.query.return_value.filter.return_value.first.return_value = existing_record
 
         result = mobile_service.sync_offline_data(
             user_id=1,

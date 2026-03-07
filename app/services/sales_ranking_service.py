@@ -7,8 +7,6 @@
 - 计算综合评分和排名结果
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -116,9 +114,7 @@ class SalesRankingService:
 
     def get_active_config(self) -> SalesRankingConfig:
         config = (
-            self.db.query(SalesRankingConfig)
-            .order_by(SalesRankingConfig.updated_at.desc())
-            .first()
+            self.db.query(SalesRankingConfig).order_by(SalesRankingConfig.updated_at.desc()).first()
         )
         if config:
             return config
@@ -224,9 +220,7 @@ class SalesRankingService:
         opportunity_map = self.team_service.get_opportunity_stats_map(
             user_ids, start_datetime, end_datetime
         )
-        acceptance_map = self._get_acceptance_amount_map(
-            user_ids, start_datetime, end_datetime
-        )
+        acceptance_map = self._get_acceptance_amount_map(user_ids, start_datetime, end_datetime)
 
         aggregated_data: Dict[int, Dict[str, float]] = {}
         for user in users:
@@ -262,9 +256,9 @@ class SalesRankingService:
         max_values: Dict[str, float] = {}
         for metric in metrics_config:
             source = metric.get("data_source")
-            max_values[source] = max(
-                aggregated_data[user.id].get(source, 0) or 0 for user in users
-            ) or 1.0
+            max_values[source] = (
+                max(aggregated_data[user.id].get(source, 0) or 0 for user in users) or 1.0
+            )
 
         ranking_entries: List[Dict[str, Any]] = []
         for user in users:
@@ -352,9 +346,7 @@ class SalesRankingService:
             self.db.query(
                 Contract.sales_owner_id.label("owner_id"),
                 func.count(Contract.id).label("count"),
-                func.sum(func.coalesce(Contract.total_amount, 0)).label(
-                    "contract_amount"
-                ),
+                func.sum(func.coalesce(Contract.total_amount, 0)).label("contract_amount"),
             )
             .filter(Contract.sales_owner_id.in_(user_ids))
             .filter(Contract.created_at >= start_datetime)
@@ -411,6 +403,4 @@ class SalesRankingService:
             .group_by(Contract.sales_owner_id)
         )
 
-        return {
-            row.owner_id: float(row.acceptance_amount or 0) for row in query.all()
-        }
+        return {row.owner_id: float(row.acceptance_amount or 0) for row in query.all()}

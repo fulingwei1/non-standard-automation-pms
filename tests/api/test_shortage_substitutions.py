@@ -36,15 +36,24 @@ def _make_material(db_session: Session, name_suffix: str) -> Material:
     return material
 
 
-def _cleanup_substitutions(db_session: Session, substitution_ids: List[int], material_ids: List[int], project_ids: List[int]) -> None:
+def _cleanup_substitutions(
+    db_session: Session,
+    substitution_ids: List[int],
+    material_ids: List[int],
+    project_ids: List[int],
+) -> None:
     if substitution_ids:
-        db_session.query(MaterialSubstitution).filter(MaterialSubstitution.id.in_(substitution_ids)).delete(
+        db_session.query(MaterialSubstitution).filter(
+            MaterialSubstitution.id.in_(substitution_ids)
+        ).delete(synchronize_session=False)
+    if project_ids:
+        db_session.query(Project).filter(Project.id.in_(project_ids)).delete(
             synchronize_session=False
         )
-    if project_ids:
-        db_session.query(Project).filter(Project.id.in_(project_ids)).delete(synchronize_session=False)
     if material_ids:
-        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(synchronize_session=False)
+        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(
+            synchronize_session=False
+        )
     db_session.commit()
 
 

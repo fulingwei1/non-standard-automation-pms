@@ -12,10 +12,10 @@ sys.modules.setdefault("redis.exceptions", MagicMock())
 
 import pytest
 
-
 # ================================================================
 #  辅助函数：构造 mock db
 # ================================================================
+
 
 def _make_db():
     db = MagicMock()
@@ -25,6 +25,7 @@ def _make_db():
 # ================================================================
 #  check_production_plan_alerts (直接注入 db 的内部逻辑)
 # ================================================================
+
 
 class TestCheckProductionPlanAlerts:
     """
@@ -63,6 +64,7 @@ class TestCheckProductionPlanAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
+
         result = check_production_plan_alerts()
 
         assert result["checked_count"] == 0
@@ -87,6 +89,7 @@ class TestCheckProductionPlanAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
+
         result = check_production_plan_alerts()
 
         assert result["checked_count"] == 1
@@ -112,6 +115,7 @@ class TestCheckProductionPlanAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
+
         result = check_production_plan_alerts()
 
         assert result["alert_count"] == 1
@@ -152,6 +156,7 @@ class TestCheckProductionPlanAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
+
         result = check_production_plan_alerts()
 
         # 应该调用 db.add (添加规则 + 添加预警记录)
@@ -192,6 +197,7 @@ class TestCheckProductionPlanAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
+
         result = check_production_plan_alerts()
 
         assert result["alert_count"] == 0
@@ -204,6 +210,7 @@ class TestCheckProductionPlanAlerts:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("DB连接失败")
 
         from app.utils.scheduled_tasks.production_tasks import check_production_plan_alerts
+
         result = check_production_plan_alerts()
 
         assert "error" in result
@@ -212,6 +219,7 @@ class TestCheckProductionPlanAlerts:
 # ================================================================
 #  check_work_report_timeout
 # ================================================================
+
 
 class TestCheckWorkReportTimeout:
 
@@ -235,6 +243,7 @@ class TestCheckWorkReportTimeout:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_work_report_timeout
+
         result = check_work_report_timeout()
 
         assert result["checked_count"] == 0
@@ -273,6 +282,7 @@ class TestCheckWorkReportTimeout:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_work_report_timeout
+
         result = check_work_report_timeout()
 
         assert result["alert_count"] == 0
@@ -309,6 +319,7 @@ class TestCheckWorkReportTimeout:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.production_tasks import check_work_report_timeout
+
         result = check_work_report_timeout()
 
         assert result["alert_count"] == 1
@@ -321,6 +332,7 @@ class TestCheckWorkReportTimeout:
         mock_db_ctx.return_value.__enter__.side_effect = RuntimeError("timeout")
 
         from app.utils.scheduled_tasks.production_tasks import check_work_report_timeout
+
         result = check_work_report_timeout()
 
         assert "error" in result
@@ -329,6 +341,7 @@ class TestCheckWorkReportTimeout:
 # ================================================================
 #  generate_production_daily_reports
 # ================================================================
+
 
 class TestGenerateProductionDailyReports:
 
@@ -344,7 +357,9 @@ class TestGenerateProductionDailyReports:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from datetime import date
+
         from app.utils.scheduled_tasks.production_tasks import generate_production_daily_reports
+
         result = generate_production_daily_reports(target_date=date(2025, 1, 1))
 
         assert "message" in result
@@ -370,7 +385,9 @@ class TestGenerateProductionDailyReports:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from datetime import date
+
         from app.utils.scheduled_tasks.production_tasks import generate_production_daily_reports
+
         result = generate_production_daily_reports(target_date=date(2025, 1, 2))
 
         assert "report_date" in result
@@ -383,7 +400,9 @@ class TestGenerateProductionDailyReports:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("模拟错误")
 
         from datetime import date
+
         from app.utils.scheduled_tasks.production_tasks import generate_production_daily_reports
+
         result = generate_production_daily_reports(target_date=date(2025, 1, 3))
 
         assert "error" in result
@@ -393,6 +412,7 @@ class TestGenerateProductionDailyReports:
 #  _calculate_production_daily_stats (纯函数，无 db session 包装)
 # ================================================================
 
+
 class TestCalculateProductionDailyStats:
 
     def test_empty_work_orders(self):
@@ -401,7 +421,9 @@ class TestCalculateProductionDailyStats:
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
         from datetime import date
+
         from app.utils.scheduled_tasks.production_tasks import _calculate_production_daily_stats
+
         result = _calculate_production_daily_stats(db, date(2025, 1, 1), None)
 
         assert result["total_work_orders"] == 0
@@ -425,7 +447,9 @@ class TestCalculateProductionDailyStats:
         db.query.return_value.filter.return_value.all.return_value = [wo1, wo2]
 
         from datetime import date
+
         from app.utils.scheduled_tasks.production_tasks import _calculate_production_daily_stats
+
         result = _calculate_production_daily_stats(db, date(2025, 1, 1), None)
 
         assert result["total_work_orders"] == 2

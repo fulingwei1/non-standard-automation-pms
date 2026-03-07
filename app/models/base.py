@@ -88,9 +88,7 @@ class RuntimePatchedSession(Session):
                 "Detected legacy SQLite schema missing api_permissions.group_id; applying runtime patch."
             )
             with bind.begin() as conn:
-                conn.execute(
-                    text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
-                )
+                conn.execute(text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER"))
 
         RuntimePatchedSession._sqlite_patches_applied = True
 
@@ -156,24 +154,17 @@ def _ensure_sqlite_schema(engine):
         if "is_active" not in columns:
             with engine.begin() as conn:
                 conn.execute(
-                    text(
-                        "ALTER TABLE task_unified "
-                        "ADD COLUMN is_active BOOLEAN DEFAULT 1"
-                    )
+                    text("ALTER TABLE task_unified " "ADD COLUMN is_active BOOLEAN DEFAULT 1")
                 )
 
     if "api_permissions" in tables:
         columns = {col["name"] for col in inspector.get_columns("api_permissions")}
         if "group_id" not in columns:
             with engine.begin() as conn:
-                conn.execute(
-                    text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
-                )
+                conn.execute(text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER"))
 
     if "engineer_dimension_config" in tables:
-        columns = {
-            col["name"] for col in inspector.get_columns("engineer_dimension_config")
-        }
+        columns = {col["name"] for col in inspector.get_columns("engineer_dimension_config")}
         statements = []
         if "department_id" not in columns:
             statements.append(
@@ -181,8 +172,7 @@ def _ensure_sqlite_schema(engine):
             )
         if "is_global" not in columns:
             statements.append(
-                "ALTER TABLE engineer_dimension_config "
-                "ADD COLUMN is_global BOOLEAN DEFAULT 1"
+                "ALTER TABLE engineer_dimension_config " "ADD COLUMN is_global BOOLEAN DEFAULT 1"
             )
         if "approval_status" not in columns:
             statements.append(
@@ -206,9 +196,7 @@ def _ensure_sqlite_schema(engine):
 class TimestampMixin:
     """时间戳混入类，提供创建时间和更新时间字段"""
 
-    created_at = Column(
-        DateTime, default=datetime.now, nullable=False, comment="创建时间"
-    )
+    created_at = Column(DateTime, default=datetime.now, nullable=False, comment="创建时间")
     updated_at = Column(
         DateTime,
         default=datetime.now,
@@ -412,7 +400,7 @@ def get_session_factory():
         engine = get_engine()
         # 导入 TenantQuery - 框架级租户过滤
         from app.core.database.tenant_query import TenantQuery
-        
+
         _SessionLocal = sessionmaker(
             autocommit=False,
             autoflush=False,
@@ -483,9 +471,9 @@ def init_db(database_url: Optional[str] = None, drop_all: bool = False):
         if url.startswith("sqlite"):
             with engine.begin() as conn:
                 conn.execute(text("PRAGMA foreign_keys=OFF"))
-        
+
         Base.metadata.drop_all(bind=engine)
-        
+
         # 重新启用外键约束
         if url.startswith("sqlite"):
             with engine.begin() as conn:

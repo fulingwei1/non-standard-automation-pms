@@ -5,18 +5,20 @@
 创建 4-5 个验收记录，包含检查清单和问题
 """
 
-import sqlite3
 import os
+import sqlite3
 from datetime import datetime, timedelta
 
 # 数据库路径
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "app.db")
+
 
 def get_db_connection():
     """获取数据库连接"""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def seed_acceptance_data():
     """创建验收记录种子数据"""
@@ -117,29 +119,32 @@ def seed_acceptance_data():
         count = cursor.fetchone()["cnt"]
         acceptance_code = f"{project_code}-{record['acceptance_type']}-{str(count + 1).zfill(3)}"
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO acceptance_records (
                 project_id, acceptance_type, acceptance_code, title, status,
                 scheduled_date, actual_date, location, customer_representative,
                 our_representative, overall_result, notes, sign_date, sign_by,
                 created_by, created_at, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """, (
-            record["project_id"],
-            record["acceptance_type"],
-            acceptance_code,
-            record["title"],
-            record["status"],
-            record["scheduled_date"],
-            record["actual_date"],
-            record["location"],
-            record["customer_representative"],
-            record["our_representative"],
-            record["overall_result"],
-            record["notes"],
-            record["sign_date"],
-            record["sign_by"],
-        ))
+        """,
+            (
+                record["project_id"],
+                record["acceptance_type"],
+                acceptance_code,
+                record["title"],
+                record["status"],
+                record["scheduled_date"],
+                record["actual_date"],
+                record["location"],
+                record["customer_representative"],
+                record["our_representative"],
+                record["overall_result"],
+                record["notes"],
+                record["sign_date"],
+                record["sign_by"],
+            ),
+        )
         inserted_ids.append(cursor.lastrowid)
         print(f"  ✓ 创建验收记录：{acceptance_code} - {record['title']}")
 
@@ -172,7 +177,7 @@ def seed_acceptance_data():
     # 为每个验收记录添加检查清单
     for acceptance_id, record in zip(inserted_ids, acceptance_records):
         template = checklist_templates.get(record["acceptance_type"], checklist_templates["FAT"])
-        
+
         # 根据状态设置不同的检查结果
         if record["status"] == "signed" or record["status"] == "passed":
             # 已通过的：大部分通过
@@ -182,33 +187,49 @@ def seed_acceptance_data():
             statuses = ["pass", "pass", "fail", "fail", "pass", "pass", "pass", "na"]
         elif record["status"] == "in_progress":
             # 进行中：部分完成
-            statuses = ["pass", "pass", "pass", "pending", "pending", "pending", "pending", "pending"]
+            statuses = [
+                "pass",
+                "pass",
+                "pass",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+            ]
         else:
             # 草稿：全部待检
             statuses = ["pending"] * 8
 
-        for i, (item_no, category, check_item, expected_result, default_status) in enumerate(template):
+        for i, (item_no, category, check_item, expected_result, default_status) in enumerate(
+            template
+        ):
             status = statuses[i] if i < len(statuses) else default_status
-            actual_result = "符合要求" if status == "pass" else ("不符合要求" if status == "fail" else None)
+            actual_result = (
+                "符合要求" if status == "pass" else ("不符合要求" if status == "fail" else None)
+            )
             checked_by = "李工" if status != "pending" else None
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO acceptance_checklist (
                     acceptance_id, item_no, category, check_item, expected_result,
                     actual_result, status, remarks, checked_by, checked_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                acceptance_id,
-                item_no,
-                category,
-                check_item,
-                expected_result,
-                actual_result,
-                status,
-                None,
-                checked_by,
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S") if checked_by else None,
-            ))
+            """,
+                (
+                    acceptance_id,
+                    item_no,
+                    category,
+                    check_item,
+                    expected_result,
+                    actual_result,
+                    status,
+                    None,
+                    checked_by,
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S") if checked_by else None,
+                ),
+            )
 
     conn.commit()
     print("  ✓ 创建检查清单项")
@@ -278,23 +299,26 @@ def seed_acceptance_data():
     # 插入问题
     for issue in issues_data:
         acceptance_id = inserted_ids[issue["acceptance_idx"]]
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO acceptance_issues (
                 acceptance_id, issue_no, severity, description, root_cause,
                 solution, status, responsible, due_date, resolved_date, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        """, (
-            acceptance_id,
-            issue["issue_no"],
-            issue["severity"],
-            issue["description"],
-            issue["root_cause"],
-            issue["solution"],
-            issue["status"],
-            issue["responsible"],
-            issue["due_date"],
-            issue.get("resolved_date"),
-        ))
+        """,
+            (
+                acceptance_id,
+                issue["issue_no"],
+                issue["severity"],
+                issue["description"],
+                issue["root_cause"],
+                issue["solution"],
+                issue["status"],
+                issue["responsible"],
+                issue["due_date"],
+                issue.get("resolved_date"),
+            ),
+        )
 
     conn.commit()
     print("  ✓ 创建问题记录")
@@ -302,16 +326,17 @@ def seed_acceptance_data():
     # 打印统计
     print("\n种子数据创建完成！")
     print(f"  - 验收记录：{len(inserted_ids)} 条")
-    
+
     cursor.execute("SELECT COUNT(*) FROM acceptance_checklist")
     checklist_count = cursor.fetchone()[0]
     print(f"  - 检查清单项：{checklist_count} 条")
-    
+
     cursor.execute("SELECT COUNT(*) FROM acceptance_issues")
     issues_count = cursor.fetchone()[0]
     print(f"  - 问题记录：{issues_count} 条")
 
     conn.close()
+
 
 if __name__ == "__main__":
     seed_acceptance_data()

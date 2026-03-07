@@ -2,9 +2,10 @@
 """
 Tests for app/services/unified_import/task_importer.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
+import pytest
 
 try:
     from app.services.unified_import.task_importer import TaskImporter
@@ -24,6 +25,7 @@ def _make_df(data):
 def test_import_missing_required_columns(mock_db):
     """缺少必需列时应抛出 HTTPException"""
     from fastapi import HTTPException
+
     df = _make_df({"其他列": ["value"]})
     with pytest.raises(HTTPException) as exc_info:
         TaskImporter.import_task_data(mock_db, df, current_user_id=1)

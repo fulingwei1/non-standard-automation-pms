@@ -3,8 +3,9 @@
 Comprehensive tests for app/core/csrf.py
 Tests use unittest.mock to avoid importing the full app.
 """
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from app.core.csrf import (
     CSRFMiddleware,
@@ -12,10 +13,10 @@ from app.core.csrf import (
     verify_csrf_token,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     method="POST",
@@ -49,6 +50,7 @@ def _make_middleware(debug=True):
 # ---------------------------------------------------------------------------
 # generate_csrf_token / verify_csrf_token
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateCsrfToken:
     def test_returns_string(self):
@@ -87,6 +89,7 @@ class TestVerifyCsrfToken:
 # CSRFMiddleware._is_exempt_path
 # ---------------------------------------------------------------------------
 
+
 class TestIsExemptPath:
     def setup_method(self):
         self.mw = _make_middleware()
@@ -116,6 +119,7 @@ class TestIsExemptPath:
 # ---------------------------------------------------------------------------
 # CSRFMiddleware._normalize_origin
 # ---------------------------------------------------------------------------
+
 
 class TestNormalizeOrigin:
     def setup_method(self):
@@ -149,6 +153,7 @@ class TestNormalizeOrigin:
 # ---------------------------------------------------------------------------
 # CSRFMiddleware._is_origin_allowed
 # ---------------------------------------------------------------------------
+
 
 class TestIsOriginAllowed:
     def setup_method(self):
@@ -189,6 +194,7 @@ class TestIsOriginAllowed:
 # CSRFMiddleware._extract_origin_from_referer
 # ---------------------------------------------------------------------------
 
+
 class TestExtractOriginFromReferer:
     def setup_method(self):
         self.mw = _make_middleware()
@@ -213,6 +219,7 @@ class TestExtractOriginFromReferer:
 # ---------------------------------------------------------------------------
 # CSRFMiddleware.dispatch – safe methods pass through
 # ---------------------------------------------------------------------------
+
 
 class TestDispatchSafeMethods:
     @pytest.mark.asyncio
@@ -258,6 +265,7 @@ class TestDispatchSafeMethods:
 # CSRFMiddleware.dispatch – exempt paths
 # ---------------------------------------------------------------------------
 
+
 class TestDispatchExemptPaths:
     @pytest.mark.asyncio
     async def test_login_path_exempt(self):
@@ -275,6 +283,7 @@ class TestDispatchExemptPaths:
 # ---------------------------------------------------------------------------
 # CSRFMiddleware.dispatch – debug mode
 # ---------------------------------------------------------------------------
+
 
 class TestDispatchDebugMode:
     @pytest.mark.asyncio
@@ -302,6 +311,7 @@ class TestDispatchDebugMode:
 # CSRFMiddleware._validate_web_request
 # ---------------------------------------------------------------------------
 
+
 class TestValidateWebRequest:
     def test_debug_mode_returns_none(self):
         with patch("app.core.csrf.settings") as ms:
@@ -313,6 +323,7 @@ class TestValidateWebRequest:
 
     def test_no_origin_or_referer_raises(self):
         from fastapi import HTTPException
+
         with patch("app.core.csrf.settings") as ms:
             ms.DEBUG = False
             mw = _make_middleware(debug=False)
@@ -325,6 +336,7 @@ class TestValidateWebRequest:
 # ---------------------------------------------------------------------------
 # CSRFMiddleware._add_cors_headers
 # ---------------------------------------------------------------------------
+
 
 class TestAddCorsHeaders:
     def test_allowed_origin_sets_headers(self):

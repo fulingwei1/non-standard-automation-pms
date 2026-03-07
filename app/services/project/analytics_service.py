@@ -5,8 +5,6 @@
 整合核心、执行、资源、财务服务能力，面向 `/analytics` 顶层路由使用。
 """
 
-from __future__ import annotations
-
 from datetime import date
 from typing import Any, Dict, Optional
 

@@ -3,40 +3,23 @@
 完整模型导出 - 绩效和人员相关
 """
 
-# 用户权限
-from ...user import (
-    ApiPermission,
-    PermissionAudit,
-    Role,
-    RoleApiPermission,
-    User,
-    UserRole,
-)
-
 # API Key认证
 from ...api_key import APIKey
 
-# 用户会话
-from ...session import UserSession
+# 时薪配置
+from ...hourly_rate import HourlyRateConfig
 
-# 租户
-from ...tenant import Tenant, TenantPlan, TenantStatus
-
+# 组织架构V2
 # 组织架构
 from ...organization import (
+    AssignmentType,
     ContractReminder,
     Department,
     Employee,
     EmployeeContract,
     EmployeeHrProfile,
-    HrTransaction,
-    SalaryRecord,
-)
-
-# 组织架构V2
-from ...organization import (
-    AssignmentType,
     EmployeeOrgAssignment,
+    HrTransaction,
     JobLevel,
     JobLevelCategory,
     OrganizationUnit,
@@ -44,6 +27,7 @@ from ...organization import (
     Position,
     PositionCategory,
     PositionRole,
+    SalaryRecord,
 )
 
 # 绩效管理
@@ -61,6 +45,17 @@ from ...performance import (
     ProjectContribution,
 )
 
+# 资格认证
+from ...qualification import (
+    EmployeeQualification,
+    PositionCompetencyModel,
+    QualificationAssessment,
+    QualificationLevel,
+)
+
+# 用户会话
+from ...session import UserSession
+
 # 人员匹配
 from ...staff_matching import (
     HrAIMatchingLog,
@@ -71,16 +66,18 @@ from ...staff_matching import (
     MesProjectStaffingNeed,
 )
 
-# 资格认证
-from ...qualification import (
-    EmployeeQualification,
-    PositionCompetencyModel,
-    QualificationAssessment,
-    QualificationLevel,
-)
+# 租户
+from ...tenant import Tenant, TenantPlan, TenantStatus
 
-# 时薪配置
-from ...hourly_rate import HourlyRateConfig
+# 用户权限
+from ...user import (
+    ApiPermission,
+    PermissionAudit,
+    Role,
+    RoleApiPermission,
+    User,
+    UserRole,
+)
 
 __all__ = [
     # User - 新模型

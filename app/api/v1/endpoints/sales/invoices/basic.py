@@ -11,6 +11,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.enums import (
     InvoiceStatusEnum,
@@ -23,12 +25,11 @@ from app.schemas.sales import InvoiceCreate, InvoiceResponse
 from app.services.approval_engine import ApprovalEngineService as ApprovalWorkflowService
 
 from ..utils import generate_invoice_code
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 logger = logging.getLogger(__name__)
 
 from app.utils.db_helpers import delete_obj, get_or_404
+
 router = APIRouter()
 
 
@@ -45,9 +46,7 @@ def read_invoices(
     获取发票列表
     Issue 7.1: 已集成数据权限过滤（财务可以看到所有发票）
     """
-    query = db.query(Invoice).options(
-        joinedload(Invoice.contract)
-    )
+    query = db.query(Invoice).options(joinedload(Invoice.contract))
 
     # Issue 7.1: 应用财务数据权限过滤（财务可以看到所有发票）
     # 注意：Invoice 模型没有 owner_id 字段，所以跳过此过滤
@@ -63,7 +62,9 @@ def read_invoices(
         query = query.join(Contract).filter(Contract.customer_id == customer_id)
 
     total = query.count()
-    invoices = apply_pagination(query.order_by(desc(Invoice.created_at)), pagination.offset, pagination.limit).all()
+    invoices = apply_pagination(
+        query.order_by(desc(Invoice.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     invoice_responses = []
     for invoice in invoices:
@@ -85,7 +86,7 @@ def read_invoices(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -99,10 +100,14 @@ def read_invoice(
     """
     获取发票详情
     """
-    invoice = db.query(Invoice).options(
-        joinedload(Invoice.contract).joinedload(Contract.customer),
-        joinedload(Invoice.project)
-    ).filter(Invoice.id == invoice_id).first()
+    invoice = (
+        db.query(Invoice)
+        .options(
+            joinedload(Invoice.contract).joinedload(Contract.customer), joinedload(Invoice.project)
+        )
+        .filter(Invoice.id == invoice_id)
+        .first()
+    )
     if not invoice:
         raise HTTPException(status_code=404, detail="发票不存在")
 
@@ -136,7 +141,9 @@ def create_invoice(
     if not invoice_data.get("invoice_code"):
         invoice_data["invoice_code"] = generate_invoice_code(db)
     else:
-        existing = db.query(Invoice).filter(Invoice.invoice_code == invoice_data["invoice_code"]).first()
+        existing = (
+            db.query(Invoice).filter(Invoice.invoice_code == invoice_data["invoice_code"]).first()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="发票编码已存在")
 
@@ -159,14 +166,12 @@ def create_invoice(
                 initiator_id=current_user.id,
                 workflow_id=None,  # 自动选择
                 routing_params=routing_params,
-                comment="发票申请"
+                comment="发票申请",
             )
             invoice.status = InvoiceStatusEnum.IN_REVIEW
         except Exception as e:
             # 如果启动审批失败，记录日志但不阻止发票创建
-            logger.warning(
-                f"发票审批流程启动失败: invoice_id={invoice.id}, error={str(e)}"
-            )
+            logger.warning(f"发票审批流程启动失败: invoice_id={invoice.id}, error={str(e)}")
 
     db.commit()
     db.refresh(invoice)
@@ -202,4 +207,5 @@ def delete_invoice(
     delete_obj(db, invoice)
 
     from app.schemas.common import ResponseModel
+
     return ResponseModel(code=200, message="发票已删除")

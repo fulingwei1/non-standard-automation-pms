@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.services.report_framework.cache_manager import ReportCacheManager
-from app.services.report_framework.config_loader import ConfigLoader, ConfigError
+from app.services.report_framework.config_loader import ConfigError, ConfigLoader
 from app.services.report_framework.data_resolver import DataResolver
 from app.services.report_framework.expressions import ExpressionParser
 from app.services.report_framework.models import (
@@ -26,11 +26,13 @@ from app.services.report_framework.renderers import JsonRenderer, Renderer, Repo
 
 class PermissionError(Exception):
     """权限错误"""
+
     pass
 
 
 class ParameterError(Exception):
     """参数错误"""
+
     pass
 
 
@@ -75,18 +77,21 @@ class ReportEngine:
         # 注册可选渲染器（PDF、Excel、Word）
         try:
             from app.services.report_framework.renderers.pdf_renderer import PdfRenderer
+
             self.renderers["pdf"] = PdfRenderer()
         except ImportError:
             pass  # reportlab 未安装
 
         try:
             from app.services.report_framework.renderers.excel_renderer import ExcelRenderer
+
             self.renderers["excel"] = ExcelRenderer()
         except ImportError:
             pass  # openpyxl 未安装
 
         try:
             from app.services.report_framework.renderers.word_renderer import WordRenderer
+
             self.renderers["word"] = WordRenderer()
         except ImportError:
             pass  # python-docx 未安装
@@ -266,9 +271,7 @@ class ReportEngine:
             return
 
         if not user_roles.intersection(allowed_roles):
-            raise PermissionError(
-                f"User does not have permission for report: {config.meta.code}"
-            )
+            raise PermissionError(f"User does not have permission for report: {config.meta.code}")
 
     def _validate_params(
         self,
@@ -418,12 +421,14 @@ class ReportEngine:
     ) -> List[Dict[str, Any]]:
         """渲染指标项"""
         items = []
-        for item in (section.items or []):
+        for item in section.items or []:
             value = self.expression_parser.evaluate(item.value, context)
-            items.append({
-                "label": item.label,
-                "value": value,
-            })
+            items.append(
+                {
+                    "label": item.label,
+                    "value": value,
+                }
+            )
         return items
 
     def _render_table(

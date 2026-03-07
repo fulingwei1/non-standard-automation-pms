@@ -16,11 +16,12 @@ from pydantic import BaseModel, Field
 
 from ..common import PaginatedResponse, TimestampSchema
 
-
 # ==================== 报工 ====================
+
 
 class WorkReportStartRequest(BaseModel):
     """开工报告请求"""
+
     work_order_id: int = Field(description="工单ID")
     worker_id: int = Field(description="工人ID")
     report_note: Optional[str] = Field(default=None, description="报工说明")
@@ -28,6 +29,7 @@ class WorkReportStartRequest(BaseModel):
 
 class WorkReportProgressRequest(BaseModel):
     """进度上报请求"""
+
     work_order_id: int = Field(description="工单ID")
     worker_id: int = Field(description="工人ID")
     progress_percent: int = Field(ge=0, le=100, description="进度百分比")
@@ -37,6 +39,7 @@ class WorkReportProgressRequest(BaseModel):
 
 class WorkReportCompleteRequest(BaseModel):
     """完工报告请求"""
+
     work_order_id: int = Field(description="工单ID")
     worker_id: int = Field(description="工人ID")
     completed_qty: int = Field(description="完成数量")
@@ -48,6 +51,7 @@ class WorkReportCompleteRequest(BaseModel):
 
 class WorkReportResponse(TimestampSchema):
     """报工响应"""
+
     id: int
     report_no: str
     work_order_id: int
@@ -69,6 +73,5 @@ class WorkReportResponse(TimestampSchema):
 
 class WorkReportListResponse(PaginatedResponse):
     """报工列表响应"""
+
     items: List[WorkReportResponse]
-
-

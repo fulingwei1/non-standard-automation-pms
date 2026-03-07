@@ -7,17 +7,17 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from app.services.bom_attributes import BomAttributesService
 from app.models import (
+    AssemblyStage,
+    AssemblyTemplate,
     BomHeader,
     BomItem,
     BomItemAssemblyAttrs,
-    Material,
-    AssemblyStage,
     CategoryStageMapping,
-    AssemblyTemplate,
+    Material,
     MaterialCategory,
 )
+from app.services.bom_attributes import BomAttributesService
 
 
 class TestBomAttributesService(unittest.TestCase):
@@ -34,7 +34,7 @@ class TestBomAttributesService(unittest.TestCase):
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         attr1 = MagicMock(spec=BomItemAssemblyAttrs)
         attr1.id = 1
         attr1.bom_id = 1
@@ -45,39 +45,41 @@ class TestBomAttributesService(unittest.TestCase):
         attr1.can_postpone = False
         attr1.importance_level = "NORMAL"
         attr1.remark = None
-        
+
         bom_item = MagicMock(spec=BomItem)
         bom_item.id = 10
         bom_item.material_id = 100
         bom_item.quantity = 5
-        
+
         material = MagicMock(spec=Material)
         material.id = 100
         material.code = "MAT001"
         material.name = "物料A"
-        
+
         stage = MagicMock(spec=AssemblyStage)
         stage.stage_code = "MECH"
         stage.stage_name = "机械装配"
 
         # Mock数据库查询
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
             # BomItemAssemblyAttrs查询
             attrs_query = MagicMock()
             attrs_query.filter.return_value = attrs_query
             attrs_query.order_by.return_value = attrs_query
             attrs_query.all.return_value = [attr1]
-            
+
             # BomItem查询
             bom_item_query = MagicMock()
             bom_item_query.filter.return_value = bom_item_query
             bom_item_query.first.return_value = bom_item
-            
+
             # Material查询
             material_query = MagicMock()
             material_query.filter.return_value = material_query
             material_query.first.return_value = material
-            
+
             # Stage查询
             stage_query = MagicMock()
             stage_query.filter.return_value = stage_query
@@ -101,7 +103,9 @@ class TestBomAttributesService(unittest.TestCase):
         bom.id = 1
         bom.bom_no = "BOM001"
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
             query_mock = MagicMock()
             query_mock.filter.return_value = query_mock
             query_mock.order_by.return_value = query_mock
@@ -112,24 +116,28 @@ class TestBomAttributesService(unittest.TestCase):
             result = self.service.get_bom_assembly_attrs(1, stage_code="MECH", is_blocking=True)
 
             # 验证筛选条件被应用（实际会有4次filter调用，包括SQLAlchemy内部的处理）
-            self.assertGreaterEqual(query_mock.filter.call_count, 3)  # 至少有 bom_id + stage_code + is_blocking
+            self.assertGreaterEqual(
+                query_mock.filter.call_count, 3
+            )  # 至少有 bom_id + stage_code + is_blocking
 
     def test_batch_set_assembly_attrs_create(self):
         """测试批量设置装配属性 - 新建场景"""
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         item_data = MagicMock()
         item_data.bom_id = 1
         item_data.bom_item_id = 10
         item_data.model_dump.return_value = {
             "bom_id": 1,
             "bom_item_id": 10,
-            "assembly_stage": "MECH"
+            "assembly_stage": "MECH",
         }
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
             query_mock = MagicMock()
             query_mock.filter.return_value = query_mock
             query_mock.first.return_value = None  # 不存在，新建
@@ -148,22 +156,24 @@ class TestBomAttributesService(unittest.TestCase):
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         existing_attr = MagicMock(spec=BomItemAssemblyAttrs)
         existing_attr.id = 1
         existing_attr.bom_item_id = 10
         existing_attr.assembly_stage = "ELEC"
-        
+
         item_data = MagicMock()
         item_data.bom_id = 1
         item_data.bom_item_id = 10
         item_data.model_dump.return_value = {
             "bom_id": 1,
             "bom_item_id": 10,
-            "assembly_stage": "MECH"
+            "assembly_stage": "MECH",
         }
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
             query_mock = MagicMock()
             query_mock.filter.return_value = query_mock
             query_mock.first.return_value = existing_attr  # 已存在，更新
@@ -190,9 +200,14 @@ class TestBomAttributesService(unittest.TestCase):
         attr.remark = None
 
         mock_response = MagicMock()
-        
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=attr):
-            with patch('app.schemas.assembly_kit.BomItemAssemblyAttrsResponse.model_validate', return_value=mock_response):
+
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=attr
+        ):
+            with patch(
+                "app.schemas.assembly_kit.BomItemAssemblyAttrsResponse.model_validate",
+                return_value=mock_response,
+            ):
                 update_data = {"assembly_stage": "MECH", "is_blocking": False}
 
                 result = self.service.update_assembly_attr(1, update_data)
@@ -208,24 +223,26 @@ class TestBomAttributesService(unittest.TestCase):
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         bom_item = MagicMock(spec=BomItem)
         bom_item.id = 10
         bom_item.bom_id = 1
         bom_item.material_id = 100
-        
+
         material = MagicMock(spec=Material)
         material.id = 100
         material.code = "MAT001"
         material.category_id = 5
-        
+
         mapping = MagicMock(spec=CategoryStageMapping)
         mapping.category_id = 5
         mapping.stage_code = "ELEC"
         mapping.is_blocking = True
         mapping.can_postpone = False
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
             # Mock查询链
             bom_items_query = MagicMock()
             bom_items_query.filter.return_value = bom_items_query
@@ -245,9 +262,9 @@ class TestBomAttributesService(unittest.TestCase):
 
             self.db.query.side_effect = [
                 bom_items_query,  # 获取BOM明细
-                existing_query,   # 检查已存在
-                material_query,   # 获取物料
-                mapping_query,    # 获取映射配置
+                existing_query,  # 检查已存在
+                material_query,  # 获取物料
+                mapping_query,  # 获取映射配置
             ]
 
             result = self.service.auto_assign_assembly_attrs(1, overwrite=False)
@@ -262,18 +279,20 @@ class TestBomAttributesService(unittest.TestCase):
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         bom_item = MagicMock(spec=BomItem)
         bom_item.id = 10
         bom_item.bom_id = 1
         bom_item.material_id = 100
-        
+
         material = MagicMock(spec=Material)
         material.id = 100
         material.code = "MAT001"
         material.category_id = 5
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
             bom_items_query = MagicMock()
             bom_items_query.filter.return_value = bom_items_query
             bom_items_query.all.return_value = [bom_item]
@@ -309,11 +328,11 @@ class TestBomAttributesService(unittest.TestCase):
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         bom_item = MagicMock(spec=BomItem)
         bom_item.id = 10
         bom_item.material_id = 100
-        
+
         material = MagicMock(spec=Material)
         material.id = 100
         material.code = "MAT001"
@@ -329,8 +348,12 @@ class TestBomAttributesService(unittest.TestCase):
         mock_rec.source = "HISTORY"
         mock_rec.reason = "基于历史数据"
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
-            with patch('app.services.assembly_attr_recommender.AssemblyAttrRecommender.batch_recommend') as mock_batch:
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
+            with patch(
+                "app.services.assembly_attr_recommender.AssemblyAttrRecommender.batch_recommend"
+            ) as mock_batch:
                 mock_batch.return_value = {10: mock_rec}
 
                 bom_items_query = MagicMock()
@@ -357,7 +380,7 @@ class TestBomAttributesService(unittest.TestCase):
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         bom_item = MagicMock(spec=BomItem)
         bom_item.id = 10
         bom_item.bom_id = 1
@@ -370,8 +393,12 @@ class TestBomAttributesService(unittest.TestCase):
         mock_rec.importance_level = "NORMAL"
         mock_rec.source = "CATEGORY"
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
-            with patch('app.services.assembly_attr_recommender.AssemblyAttrRecommender.batch_recommend') as mock_batch:
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
+            with patch(
+                "app.services.assembly_attr_recommender.AssemblyAttrRecommender.batch_recommend"
+            ) as mock_batch:
                 mock_batch.return_value = {10: mock_rec}
 
                 bom_items_query = MagicMock()
@@ -391,7 +418,7 @@ class TestBomAttributesService(unittest.TestCase):
                         new_query.filter.return_value = new_query
                         new_query.first.return_value = None
                         return new_query
-                
+
                 self.db.query.side_effect = query_side_effect
 
                 result = self.service.smart_recommend_assembly_attrs(1, overwrite=False, user_id=1)
@@ -407,30 +434,32 @@ class TestBomAttributesService(unittest.TestCase):
         bom = MagicMock(spec=BomHeader)
         bom.id = 1
         bom.bom_no = "BOM001"
-        
+
         template = MagicMock(spec=AssemblyTemplate)
         template.id = 1
         template.template_name = "标准模板"
         template.stage_config = {
             "ELECTRONICS": {"stage": "ELEC", "blocking": True, "postpone": False}
         }
-        
+
         bom_item = MagicMock(spec=BomItem)
         bom_item.id = 10
         bom_item.bom_id = 1
         bom_item.material_id = 100
-        
+
         material = MagicMock(spec=Material)
         material.id = 100
         material.code = "MAT001"
         material.category_id = 5
-        
+
         category = MagicMock(spec=MaterialCategory)
         category.id = 5
         category.code = "ELECTRONICS"
         category.name = "电子元件"
 
-        with patch('app.services.bom_attributes.bom_attributes_service.get_or_404', return_value=bom):
+        with patch(
+            "app.services.bom_attributes.bom_attributes_service.get_or_404", return_value=bom
+        ):
             template_query = MagicMock()
             template_query.filter.return_value = template_query
             template_query.first.return_value = template

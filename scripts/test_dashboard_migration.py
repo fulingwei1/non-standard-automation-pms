@@ -134,7 +134,9 @@ def test_unified_endpoints():
     print("  2. 测试统一dashboard:")
     print("     curl http://localhost:8000/api/v1/dashboard/unified/pmo\n")
     print("  3. 测试详细数据:")
-    print("     curl http://localhost:8000/api/v1/dashboard/unified/pmo/detailed?module_id=business_support\n")
+    print(
+        "     curl http://localhost:8000/api/v1/dashboard/unified/pmo/detailed?module_id=business_support\n"
+    )
     print("  4. 测试模块列表:")
     print("     curl http://localhost:8000/api/v1/dashboard/modules\n")
 
@@ -158,6 +160,7 @@ def main():
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

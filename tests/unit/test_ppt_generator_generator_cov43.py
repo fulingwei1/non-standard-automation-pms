@@ -6,9 +6,8 @@ import pytest
 
 pytest.importorskip("app.services.ppt_generator.generator")
 
-from unittest.mock import MagicMock, patch, call
 import os
-
+from unittest.mock import MagicMock, call, patch
 
 # ── 公共 patch 上下文 ─────────────────────────────────────────────────────────
 PATCHES = [
@@ -31,6 +30,7 @@ def make_generator():
         mocks[p] = mock
 
     from app.services.ppt_generator.generator import PresentationGenerator
+
     gen = PresentationGenerator()
 
     # Stop patches after instantiation; further calls use mock attrs
@@ -42,12 +42,15 @@ def make_generator():
 
 # ── 1. PresentationGenerator 可以正常实例化 ──────────────────────────────────
 def test_generator_instantiation():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder"),
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder"),
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
         assert gen is not None
         assert hasattr(gen, "base_builder")
@@ -57,12 +60,15 @@ def test_generator_instantiation():
 
 # ── 2. create_cover_slide 调用 base_builder.add_title_slide ──────────────────
 def test_create_cover_slide():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder") as MockBase, \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder") as MockBase,
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder"),
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
 
         mock_slide = MagicMock()
@@ -76,12 +82,15 @@ def test_create_cover_slide():
 
 # ── 3. create_toc_slide 调用 content_builder.add_content_slide ───────────────
 def test_create_toc_slide():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder") as MockContent, \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder"),
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder") as MockContent,
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
 
         gen.create_toc_slide()
@@ -90,12 +99,15 @@ def test_create_toc_slide():
 
 # ── 4. create_part1_industry_insights 调用 content/table builder ─────────────
 def test_create_part1():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder"),
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder"),
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
 
         gen.create_part1_industry_insights()
@@ -107,12 +119,15 @@ def test_create_part1():
 
 # ── 5. create_part2_solution_overview 调用 section slide ─────────────────────
 def test_create_part2():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder"),
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder"),
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
 
         gen.create_part2_solution_overview()
@@ -121,12 +136,15 @@ def test_create_part2():
 
 # ── 6. generate 调用 prs.save 并返回路径 ─────────────────────────────────────
 def test_generate_saves_file():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder"),
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder"),
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
 
         out = gen.generate("test_output.pptx")
@@ -136,12 +154,15 @@ def test_generate_saves_file():
 
 # ── 7. generate 默认输出路径 ─────────────────────────────────────────────────
 def test_generate_default_path():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder"),
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder"),
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
 
         out = gen.generate()
@@ -151,12 +172,15 @@ def test_generate_default_path():
 
 # ── 8. 各 part 方法均可无异常调用 ────────────────────────────────────────────
 def test_all_parts_no_exception():
-    with patch("app.services.ppt_generator.generator.Presentation"), \
-         patch("app.services.ppt_generator.generator.BaseSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.ContentSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.TableSlideBuilder"), \
-         patch("app.services.ppt_generator.generator.PresentationConfig"):
+    with (
+        patch("app.services.ppt_generator.generator.Presentation"),
+        patch("app.services.ppt_generator.generator.BaseSlideBuilder"),
+        patch("app.services.ppt_generator.generator.ContentSlideBuilder"),
+        patch("app.services.ppt_generator.generator.TableSlideBuilder"),
+        patch("app.services.ppt_generator.generator.PresentationConfig"),
+    ):
         from app.services.ppt_generator.generator import PresentationGenerator
+
         gen = PresentationGenerator()
 
         gen.create_part3_core_features()

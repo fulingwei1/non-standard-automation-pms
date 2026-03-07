@@ -27,9 +27,6 @@ from app.api.v1.endpoints.production.material_tracking import (
     get_realtime_stock,
     get_waste_tracing,
 )
-from app.services.production.material_tracking.material_tracking_service import (
-    MaterialTrackingService,
-)
 
 # 需要正确的模型模块路径
 from app.models.material import Material
@@ -39,9 +36,12 @@ from app.models.production.material_tracking import (
     MaterialBatch,
     MaterialConsumption,
 )
-
+from app.services.production.material_tracking.material_tracking_service import (
+    MaterialTrackingService,
+)
 
 # ==================== Fixtures ====================
+
 
 @pytest.fixture
 def mock_db():
@@ -108,6 +108,7 @@ def _make_query_mock(count=0, items=None, first_val=None):
 
 # ==================== 1. get_realtime_stock ====================
 
+
 class TestGetRealtimeStock:
 
     def test_empty_stock(self, mock_db, mock_user):
@@ -125,11 +126,16 @@ class TestGetRealtimeStock:
         mock_db.query.side_effect = q_side
 
         result = get_realtime_stock(
-            db=mock_db, current_user=mock_user,
-            material_id=None, material_code=None,
-            category_id=None, warehouse_location=None,
-            status=None, low_stock_only=False,
-            page=1, page_size=20,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            material_code=None,
+            category_id=None,
+            warehouse_location=None,
+            status=None,
+            low_stock_only=False,
+            page=1,
+            page_size=20,
         )
         assert result is not None
 
@@ -148,11 +154,16 @@ class TestGetRealtimeStock:
         mock_db.query.side_effect = q_side
 
         result = get_realtime_stock(
-            db=mock_db, current_user=mock_user,
-            material_id=None, material_code=None,
-            category_id=None, warehouse_location=None,
-            status=None, low_stock_only=False,
-            page=1, page_size=20,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            material_code=None,
+            category_id=None,
+            warehouse_location=None,
+            status=None,
+            low_stock_only=False,
+            page=1,
+            page_size=20,
         )
         assert result is not None
 
@@ -171,11 +182,16 @@ class TestGetRealtimeStock:
         mock_db.query.side_effect = q_side
 
         result = get_realtime_stock(
-            db=mock_db, current_user=mock_user,
-            material_id=1, material_code=None,
-            category_id=None, warehouse_location=None,
-            status=None, low_stock_only=False,
-            page=1, page_size=20,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=1,
+            material_code=None,
+            category_id=None,
+            warehouse_location=None,
+            status=None,
+            low_stock_only=False,
+            page=1,
+            page_size=20,
         )
         assert result is not None
 
@@ -195,11 +211,16 @@ class TestGetRealtimeStock:
         mock_db.query.side_effect = q_side
 
         result = get_realtime_stock(
-            db=mock_db, current_user=mock_user,
-            material_id=None, material_code=None,
-            category_id=None, warehouse_location=None,
-            status=None, low_stock_only=True,
-            page=1, page_size=20,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            material_code=None,
+            category_id=None,
+            warehouse_location=None,
+            status=None,
+            low_stock_only=True,
+            page=1,
+            page_size=20,
         )
         assert result is not None
 
@@ -218,16 +239,22 @@ class TestGetRealtimeStock:
         mock_db.query.side_effect = q_side
 
         result = get_realtime_stock(
-            db=mock_db, current_user=mock_user,
-            material_id=None, material_code=None,
-            category_id=None, warehouse_location=None,
-            status=None, low_stock_only=False,
-            page=2, page_size=10,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            material_code=None,
+            category_id=None,
+            warehouse_location=None,
+            status=None,
+            low_stock_only=False,
+            page=2,
+            page_size=10,
         )
         assert result is not None
 
 
 # ==================== 2. create_consumption ====================
+
 
 class TestCreateConsumption:
 
@@ -235,8 +262,7 @@ class TestCreateConsumption:
         """缺少 material_id 应抛出 400"""
         with pytest.raises(HTTPException) as exc:
             create_consumption(
-                db=mock_db, current_user=mock_user,
-                consumption_data={"consumption_qty": 10}
+                db=mock_db, current_user=mock_user, consumption_data={"consumption_qty": 10}
             )
         assert exc.value.status_code == 400
         assert "material_id" in str(exc.value.detail)
@@ -245,8 +271,7 @@ class TestCreateConsumption:
         """缺少 consumption_qty 应抛出 400"""
         with pytest.raises(HTTPException) as exc:
             create_consumption(
-                db=mock_db, current_user=mock_user,
-                consumption_data={"material_id": 1}
+                db=mock_db, current_user=mock_user, consumption_data={"material_id": 1}
             )
         assert exc.value.status_code == 400
 
@@ -255,19 +280,21 @@ class TestCreateConsumption:
         batch_q = _make_query_mock(first_val=None)
         mock_db.query.return_value = batch_q
 
-        with patch(
-            "app.services.production.material_tracking.material_tracking_service.get_or_404",
-            return_value=mock_material
-        ), patch.object(
-            MaterialTrackingService, "check_and_create_alerts"
+        with (
+            patch(
+                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                return_value=mock_material,
+            ),
+            patch.object(MaterialTrackingService, "check_and_create_alerts"),
         ):
             result = create_consumption(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 consumption_data={
                     "material_id": 1,
                     "consumption_qty": 5,
                     "consumption_type": "PRODUCTION",
-                }
+                },
             )
         assert result is not None
 
@@ -276,19 +303,21 @@ class TestCreateConsumption:
         batch_q = _make_query_mock(first_val=mock_batch)
         mock_db.query.return_value = batch_q
 
-        with patch(
-            "app.services.production.material_tracking.material_tracking_service.get_or_404",
-            return_value=mock_material
-        ), patch.object(
-            MaterialTrackingService, "check_and_create_alerts"
+        with (
+            patch(
+                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                return_value=mock_material,
+            ),
+            patch.object(MaterialTrackingService, "check_and_create_alerts"),
         ):
             result = create_consumption(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 consumption_data={
                     "material_id": 1,
                     "consumption_qty": 5,
                     "batch_id": 1,
-                }
+                },
             )
         assert result is not None
 
@@ -297,19 +326,21 @@ class TestCreateConsumption:
         batch_q = _make_query_mock(first_val=None)
         mock_db.query.return_value = batch_q
 
-        with patch(
-            "app.services.production.material_tracking.material_tracking_service.get_or_404",
-            return_value=mock_material
-        ), patch.object(
-            MaterialTrackingService, "check_and_create_alerts"
+        with (
+            patch(
+                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                return_value=mock_material,
+            ),
+            patch.object(MaterialTrackingService, "check_and_create_alerts"),
         ):
             result = create_consumption(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 consumption_data={
                     "material_id": 1,
                     "consumption_qty": 20,
                     "standard_qty": 10,  # 差异100% → is_waste=True
-                }
+                },
             )
         assert result is not None
 
@@ -318,19 +349,21 @@ class TestCreateConsumption:
         batch_q = _make_query_mock(first_val=None)
         mock_db.query.return_value = batch_q
 
-        with patch(
-            "app.services.production.material_tracking.material_tracking_service.get_or_404",
-            return_value=mock_material
-        ), patch.object(
-            MaterialTrackingService, "check_and_create_alerts"
+        with (
+            patch(
+                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                return_value=mock_material,
+            ),
+            patch.object(MaterialTrackingService, "check_and_create_alerts"),
         ):
             result = create_consumption(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 consumption_data={
                     "material_id": 1,
                     "consumption_qty": 10,
                     "standard_qty": 10,  # 差异0%
-                }
+                },
             )
         assert result is not None
 
@@ -339,24 +372,27 @@ class TestCreateConsumption:
         batch_q = _make_query_mock(first_val=mock_batch)
         mock_db.query.return_value = batch_q
 
-        with patch(
-            "app.services.production.material_tracking.material_tracking_service.get_or_404",
-            return_value=mock_material
-        ), patch.object(
-            MaterialTrackingService, "check_and_create_alerts"
+        with (
+            patch(
+                "app.services.production.material_tracking.material_tracking_service.get_or_404",
+                return_value=mock_material,
+            ),
+            patch.object(MaterialTrackingService, "check_and_create_alerts"),
         ):
             result = create_consumption(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 consumption_data={
                     "material_id": 1,
                     "consumption_qty": 3,
                     "barcode": "BAR-001",
-                }
+                },
             )
         assert result is not None
 
 
 # ==================== 3. get_consumption_analysis ====================
+
 
 class TestGetConsumptionAnalysis:
 
@@ -366,10 +402,14 @@ class TestGetConsumptionAnalysis:
         mock_db.query.return_value = q
 
         result = get_consumption_analysis(
-            db=mock_db, current_user=mock_user,
-            material_id=None, project_id=None,
-            work_order_id=None, consumption_type=None,
-            start_date=None, end_date=None,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            project_id=None,
+            work_order_id=None,
+            consumption_type=None,
+            start_date=None,
+            end_date=None,
             group_by="day",
         )
         assert result is not None
@@ -390,10 +430,14 @@ class TestGetConsumptionAnalysis:
         mock_db.query.return_value = q
 
         result = get_consumption_analysis(
-            db=mock_db, current_user=mock_user,
-            material_id=None, project_id=None,
-            work_order_id=None, consumption_type=None,
-            start_date=None, end_date=None,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            project_id=None,
+            work_order_id=None,
+            consumption_type=None,
+            start_date=None,
+            end_date=None,
             group_by="material",
         )
         assert result is not None
@@ -411,10 +455,14 @@ class TestGetConsumptionAnalysis:
         mock_db.query.return_value = q
 
         result = get_consumption_analysis(
-            db=mock_db, current_user=mock_user,
-            material_id=None, project_id=None,
-            work_order_id=None, consumption_type=None,
-            start_date=None, end_date=None,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            project_id=None,
+            work_order_id=None,
+            consumption_type=None,
+            start_date=None,
+            end_date=None,
             group_by="day",
         )
         assert result is not None
@@ -432,10 +480,14 @@ class TestGetConsumptionAnalysis:
         mock_db.query.return_value = q
 
         result = get_consumption_analysis(
-            db=mock_db, current_user=mock_user,
-            material_id=None, project_id=None,
-            work_order_id=None, consumption_type=None,
-            start_date=None, end_date=None,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            project_id=None,
+            work_order_id=None,
+            consumption_type=None,
+            start_date=None,
+            end_date=None,
             group_by="week",
         )
         assert result is not None
@@ -453,10 +505,14 @@ class TestGetConsumptionAnalysis:
         mock_db.query.return_value = q
 
         result = get_consumption_analysis(
-            db=mock_db, current_user=mock_user,
-            material_id=1, project_id=None,
-            work_order_id=None, consumption_type="PRODUCTION",
-            start_date=date(2025, 1, 1), end_date=date(2025, 12, 31),
+            db=mock_db,
+            current_user=mock_user,
+            material_id=1,
+            project_id=None,
+            work_order_id=None,
+            consumption_type="PRODUCTION",
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 12, 31),
             group_by="month",
         )
         assert result is not None
@@ -468,7 +524,7 @@ class TestGetConsumptionAnalysis:
             c = MagicMock()
             c.consumption_qty = 10
             c.total_cost = 100
-            c.is_waste = (i == 0)  # 1 waste
+            c.is_waste = i == 0  # 1 waste
             c.consumption_date = datetime(2025, 1, 1)
             c.standard_qty = 9
             consumptions.append(c)
@@ -477,16 +533,21 @@ class TestGetConsumptionAnalysis:
         mock_db.query.return_value = q
 
         result = get_consumption_analysis(
-            db=mock_db, current_user=mock_user,
-            material_id=None, project_id=None,
-            work_order_id=None, consumption_type=None,
-            start_date=None, end_date=None,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            project_id=None,
+            work_order_id=None,
+            consumption_type=None,
+            start_date=None,
+            end_date=None,
             group_by="day",
         )
         assert result is not None
 
 
 # ==================== 4. get_material_alerts ====================
+
 
 class TestGetMaterialAlerts:
 
@@ -496,10 +557,14 @@ class TestGetMaterialAlerts:
         mock_db.query.return_value = q
 
         result = get_material_alerts(
-            db=mock_db, current_user=mock_user,
-            alert_type=None, alert_level=None,
-            status="ACTIVE", material_id=None,
-            page=1, page_size=20,
+            db=mock_db,
+            current_user=mock_user,
+            alert_type=None,
+            alert_level=None,
+            status="ACTIVE",
+            material_id=None,
+            page=1,
+            page_size=20,
         )
         assert result is not None
 
@@ -526,10 +591,14 @@ class TestGetMaterialAlerts:
         mock_db.query.return_value = q
 
         result = get_material_alerts(
-            db=mock_db, current_user=mock_user,
-            alert_type="SHORTAGE", alert_level="CRITICAL",
-            status="ACTIVE", material_id=1,
-            page=1, page_size=20,
+            db=mock_db,
+            current_user=mock_user,
+            alert_type="SHORTAGE",
+            alert_level="CRITICAL",
+            status="ACTIVE",
+            material_id=1,
+            page=1,
+            page_size=20,
         )
         assert result is not None
 
@@ -539,10 +608,14 @@ class TestGetMaterialAlerts:
         mock_db.query.return_value = q
 
         result = get_material_alerts(
-            db=mock_db, current_user=mock_user,
-            alert_type="LOW_STOCK", alert_level=None,
-            status="ACTIVE", material_id=None,
-            page=1, page_size=20,
+            db=mock_db,
+            current_user=mock_user,
+            alert_type="LOW_STOCK",
+            alert_level=None,
+            status="ACTIVE",
+            material_id=None,
+            page=1,
+            page_size=20,
         )
         assert result is not None
 
@@ -552,15 +625,20 @@ class TestGetMaterialAlerts:
         mock_db.query.return_value = q
 
         result = get_material_alerts(
-            db=mock_db, current_user=mock_user,
-            alert_type=None, alert_level=None,
-            status="ACTIVE", material_id=None,
-            page=3, page_size=10,
+            db=mock_db,
+            current_user=mock_user,
+            alert_type=None,
+            alert_level=None,
+            status="ACTIVE",
+            material_id=None,
+            page=3,
+            page_size=10,
         )
         assert result is not None
 
 
 # ==================== 5. create_alert_rule ====================
+
 
 class TestCreateAlertRule:
 
@@ -569,17 +647,20 @@ class TestCreateAlertRule:
         with patch(
             "app.services.production.material_tracking.material_tracking_service.save_obj"
         ) as mock_save:
+
             def _save(db, obj):
                 obj.id = 1
+
             mock_save.side_effect = _save
 
             result = create_alert_rule(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 rule_data={
                     "rule_name": "低库存预警",
                     "alert_type": "LOW_STOCK",
                     "threshold_value": 20,
-                }
+                },
             )
         assert result is not None
 
@@ -588,12 +669,15 @@ class TestCreateAlertRule:
         with patch(
             "app.services.production.material_tracking.material_tracking_service.save_obj"
         ) as mock_save:
+
             def _save(db, obj):
                 obj.id = 2
+
             mock_save.side_effect = _save
 
             result = create_alert_rule(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 rule_data={
                     "rule_name": "全局缺料预警",
                     "alert_type": "SHORTAGE",
@@ -602,7 +686,7 @@ class TestCreateAlertRule:
                     "threshold_value": 0,
                     "is_active": True,
                     "priority": 10,
-                }
+                },
             )
         assert result is not None
 
@@ -611,12 +695,15 @@ class TestCreateAlertRule:
         with patch(
             "app.services.production.material_tracking.material_tracking_service.save_obj"
         ) as mock_save:
+
             def _save(db, obj):
                 obj.id = 3
+
             mock_save.side_effect = _save
 
             result = create_alert_rule(
-                db=mock_db, current_user=mock_user,
+                db=mock_db,
+                current_user=mock_user,
                 rule_data={
                     "rule_name": "百分比低库存",
                     "material_id": 5,
@@ -626,12 +713,13 @@ class TestCreateAlertRule:
                     "safety_days": 7,
                     "lead_time_days": 3,
                     "buffer_ratio": 1.5,
-                }
+                },
             )
         assert result is not None
 
 
 # ==================== 6. get_waste_tracing ====================
+
 
 class TestGetWasteTracing:
     """
@@ -650,11 +738,15 @@ class TestGetWasteTracing:
         mock_resp = MagicMock()
         with patch(self._PATCH_TARGET, return_value=mock_resp):
             result = get_waste_tracing(
-                db=mock_db, current_user=mock_user,
-                material_id=None, project_id=None,
-                start_date=None, end_date=None,
+                db=mock_db,
+                current_user=mock_user,
+                material_id=None,
+                project_id=None,
+                start_date=None,
+                end_date=None,
                 min_variance_rate=10.0,
-                page=1, page_size=20,
+                page=1,
+                page_size=20,
             )
         assert result is mock_resp
 
@@ -684,8 +776,8 @@ class TestGetWasteTracing:
         proj_q = _make_query_mock(first_val=mock_proj)
         wo_q = _make_query_mock(first_val=None)
 
-        from app.models.project import Project
         from app.models.production.work_order import WorkOrder
+        from app.models.project import Project
 
         def q_side(model):
             if model is MaterialConsumption:
@@ -701,11 +793,15 @@ class TestGetWasteTracing:
         mock_resp = MagicMock()
         with patch(self._PATCH_TARGET, return_value=mock_resp):
             result = get_waste_tracing(
-                db=mock_db, current_user=mock_user,
-                material_id=None, project_id=1,
-                start_date=None, end_date=None,
+                db=mock_db,
+                current_user=mock_user,
+                material_id=None,
+                project_id=1,
+                start_date=None,
+                end_date=None,
                 min_variance_rate=10.0,
-                page=1, page_size=20,
+                page=1,
+                page_size=20,
             )
         assert result is mock_resp
 
@@ -717,11 +813,15 @@ class TestGetWasteTracing:
         mock_resp = MagicMock()
         with patch(self._PATCH_TARGET, return_value=mock_resp):
             result = get_waste_tracing(
-                db=mock_db, current_user=mock_user,
-                material_id=None, project_id=None,
-                start_date=date(2025, 1, 1), end_date=date(2025, 12, 31),
+                db=mock_db,
+                current_user=mock_user,
+                material_id=None,
+                project_id=None,
+                start_date=date(2025, 1, 1),
+                end_date=date(2025, 12, 31),
                 min_variance_rate=10.0,
-                page=1, page_size=20,
+                page=1,
+                page_size=20,
             )
         assert result is mock_resp
 
@@ -764,16 +864,21 @@ class TestGetWasteTracing:
         mock_resp = MagicMock()
         with patch(self._PATCH_TARGET, return_value=mock_resp):
             result = get_waste_tracing(
-                db=mock_db, current_user=mock_user,
-                material_id=None, project_id=None,
-                start_date=None, end_date=None,
+                db=mock_db,
+                current_user=mock_user,
+                material_id=None,
+                project_id=None,
+                start_date=None,
+                end_date=None,
                 min_variance_rate=10.0,
-                page=1, page_size=20,
+                page=1,
+                page_size=20,
             )
         assert result is mock_resp
 
 
 # ==================== 7. get_batch_tracing ====================
+
 
 class TestGetBatchTracing:
 
@@ -784,14 +889,18 @@ class TestGetBatchTracing:
 
         with pytest.raises(HTTPException) as exc:
             get_batch_tracing(
-                db=mock_db, current_user=mock_user,
-                batch_no=None, batch_id=None, barcode=None,
+                db=mock_db,
+                current_user=mock_user,
+                batch_no=None,
+                batch_id=None,
+                barcode=None,
                 trace_direction="forward",
             )
         assert exc.value.status_code == 404
 
     def test_batch_found_by_id(self, mock_db, mock_user, mock_batch, mock_material):
         """通过 batch_id 追溯"""
+
         def q_side(model):
             if model is MaterialBatch:
                 return _make_query_mock(first_val=mock_batch)
@@ -804,14 +913,18 @@ class TestGetBatchTracing:
         mock_db.query.side_effect = q_side
 
         result = get_batch_tracing(
-            db=mock_db, current_user=mock_user,
-            batch_id=1, batch_no=None, barcode=None,
+            db=mock_db,
+            current_user=mock_user,
+            batch_id=1,
+            batch_no=None,
+            barcode=None,
             trace_direction="forward",
         )
         assert result is not None
 
     def test_batch_found_by_batch_no(self, mock_db, mock_user, mock_batch, mock_material):
         """通过批次号追溯"""
+
         def q_side(model):
             if model is MaterialBatch:
                 return _make_query_mock(first_val=mock_batch)
@@ -824,14 +937,18 @@ class TestGetBatchTracing:
         mock_db.query.side_effect = q_side
 
         result = get_batch_tracing(
-            db=mock_db, current_user=mock_user,
-            batch_id=None, batch_no="BATCH-2025-001", barcode=None,
+            db=mock_db,
+            current_user=mock_user,
+            batch_id=None,
+            batch_no="BATCH-2025-001",
+            barcode=None,
             trace_direction="forward",
         )
         assert result is not None
 
     def test_batch_found_by_barcode(self, mock_db, mock_user, mock_batch, mock_material):
         """通过条码追溯"""
+
         def q_side(model):
             if model is MaterialBatch:
                 return _make_query_mock(first_val=mock_batch)
@@ -844,13 +961,18 @@ class TestGetBatchTracing:
         mock_db.query.side_effect = q_side
 
         result = get_batch_tracing(
-            db=mock_db, current_user=mock_user,
-            batch_id=None, batch_no=None, barcode="BAR-001",
+            db=mock_db,
+            current_user=mock_user,
+            batch_id=None,
+            batch_no=None,
+            barcode="BAR-001",
             trace_direction="forward",
         )
         assert result is not None
 
-    def test_batch_with_consumptions_and_project(self, mock_db, mock_user, mock_batch, mock_material):
+    def test_batch_with_consumptions_and_project(
+        self, mock_db, mock_user, mock_batch, mock_material
+    ):
         """批次有消耗记录和项目信息"""
         mock_c = MagicMock()
         mock_c.consumption_no = "CONS-001"
@@ -870,8 +992,8 @@ class TestGetBatchTracing:
         mock_wo.id = 1
         mock_wo.work_order_no = "WO-001"
 
-        from app.models.project import Project
         from app.models.production.work_order import WorkOrder
+        from app.models.project import Project
 
         def q_side(model):
             if model is MaterialBatch:
@@ -889,14 +1011,18 @@ class TestGetBatchTracing:
         mock_db.query.side_effect = q_side
 
         result = get_batch_tracing(
-            db=mock_db, current_user=mock_user,
-            batch_id=1, batch_no=None, barcode=None,
+            db=mock_db,
+            current_user=mock_user,
+            batch_id=1,
+            batch_no=None,
+            barcode=None,
             trace_direction="forward",
         )
         assert result is not None
 
 
 # ==================== 8. get_cost_analysis ====================
+
 
 class TestGetCostAnalysis:
 
@@ -906,9 +1032,12 @@ class TestGetCostAnalysis:
         mock_db.query.return_value = q
 
         result = get_cost_analysis(
-            db=mock_db, current_user=mock_user,
-            start_date=None, end_date=None,
-            project_id=None, category_id=None,
+            db=mock_db,
+            current_user=mock_user,
+            start_date=None,
+            end_date=None,
+            project_id=None,
+            category_id=None,
             top_n=10,
         )
         assert result is not None
@@ -929,9 +1058,12 @@ class TestGetCostAnalysis:
         mock_db.query.return_value = q
 
         result = get_cost_analysis(
-            db=mock_db, current_user=mock_user,
-            start_date=None, end_date=None,
-            project_id=None, category_id=None,
+            db=mock_db,
+            current_user=mock_user,
+            start_date=None,
+            end_date=None,
+            project_id=None,
+            category_id=None,
             top_n=3,
         )
         assert result is not None
@@ -942,10 +1074,12 @@ class TestGetCostAnalysis:
         mock_db.query.return_value = q
 
         result = get_cost_analysis(
-            db=mock_db, current_user=mock_user,
+            db=mock_db,
+            current_user=mock_user,
             start_date=date(2025, 1, 1),
             end_date=date(2025, 6, 30),
-            project_id=None, category_id=None,
+            project_id=None,
+            category_id=None,
             top_n=10,
         )
         assert result is not None
@@ -956,15 +1090,19 @@ class TestGetCostAnalysis:
         mock_db.query.return_value = q
 
         result = get_cost_analysis(
-            db=mock_db, current_user=mock_user,
-            start_date=None, end_date=None,
-            project_id=5, category_id=None,
+            db=mock_db,
+            current_user=mock_user,
+            start_date=None,
+            end_date=None,
+            project_id=5,
+            category_id=None,
             top_n=10,
         )
         assert result is not None
 
 
 # ==================== 9. get_inventory_turnover ====================
+
 
 class TestGetInventoryTurnover:
 
@@ -983,8 +1121,11 @@ class TestGetInventoryTurnover:
         mock_db.query.side_effect = q_side
 
         result = get_inventory_turnover(
-            db=mock_db, current_user=mock_user,
-            material_id=None, category_id=None, days=30,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            category_id=None,
+            days=30,
         )
         assert result is not None
 
@@ -1008,8 +1149,11 @@ class TestGetInventoryTurnover:
         mock_db.query.side_effect = q_side
 
         result = get_inventory_turnover(
-            db=mock_db, current_user=mock_user,
-            material_id=None, category_id=None, days=30,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            category_id=None,
+            days=30,
         )
         assert result is not None
 
@@ -1030,8 +1174,11 @@ class TestGetInventoryTurnover:
         mock_db.query.side_effect = q_side
 
         result = get_inventory_turnover(
-            db=mock_db, current_user=mock_user,
-            material_id=None, category_id=None, days=30,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            category_id=None,
+            days=30,
         )
         assert result is not None
 
@@ -1050,13 +1197,17 @@ class TestGetInventoryTurnover:
         mock_db.query.side_effect = q_side
 
         result = get_inventory_turnover(
-            db=mock_db, current_user=mock_user,
-            material_id=None, category_id=2, days=60,
+            db=mock_db,
+            current_user=mock_user,
+            material_id=None,
+            category_id=2,
+            days=60,
         )
         assert result is not None
 
 
 # ==================== 辅助函数 (now service methods) ====================
+
 
 class TestCheckAndCreateAlerts:
 
@@ -1164,7 +1315,7 @@ class TestCheckAndCreateAlerts:
         mock_rule.threshold_value = 80  # 80% of safety_stock=20 = 16
         mock_rule.alert_level = "INFO"
 
-        mock_material.current_stock = 10   # < 16 → 触发
+        mock_material.current_stock = 10  # < 16 → 触发
         mock_material.safety_stock = 20
 
         rules_q = _make_query_mock(items=[mock_rule])

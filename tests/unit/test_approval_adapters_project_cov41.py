@@ -15,6 +15,7 @@ def db():
 @pytest.fixture
 def adapter(db):
     from app.services.approval_engine.adapters.project import ProjectApprovalAdapter
+
     return ProjectApprovalAdapter(db)
 
 

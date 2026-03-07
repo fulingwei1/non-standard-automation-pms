@@ -207,7 +207,7 @@ class TestIsQuietHours:
         settings.quiet_hours_start = "22:00"
         settings.quiet_hours_end = "08:00"
 
-            # 凌晨3点
+        # 凌晨3点
         current_time = datetime(2025, 1, 15, 3, 0)
         result = is_quiet_hours(settings, current_time)
 
@@ -221,7 +221,7 @@ class TestIsQuietHours:
         settings.quiet_hours_start = "22:00"
         settings.quiet_hours_end = "08:00"
 
-            # 下午3点
+        # 下午3点
         current_time = datetime(2025, 1, 15, 15, 0)
         result = is_quiet_hours(settings, current_time)
 
@@ -238,7 +238,7 @@ class TestNextQuietResume:
         settings = MagicMock()
         settings.quiet_hours_end = "08:00"
 
-            # 凌晨3点
+        # 凌晨3点
         current_time = datetime(2025, 1, 15, 3, 0)
         result = next_quiet_resume(settings, current_time)
 
@@ -252,7 +252,7 @@ class TestNextQuietResume:
         settings = MagicMock()
         settings.quiet_hours_end = "08:00"
 
-            # 上午10点（已过今天的结束时间）
+        # 上午10点（已过今天的结束时间）
         current_time = datetime(2025, 1, 15, 10, 0)
         result = next_quiet_resume(settings, current_time)
 
@@ -268,7 +268,7 @@ class TestNextQuietResume:
         current_time = datetime(2025, 1, 15, 3, 0)
         result = next_quiet_resume(settings, current_time)
 
-            # 默认30分钟后
+        # 默认30分钟后
         assert result == current_time + timedelta(minutes=30)
 
 
@@ -296,6 +296,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

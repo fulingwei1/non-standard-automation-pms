@@ -5,11 +5,11 @@
 根据DEBUG模式返回不同的错误信息，避免生产环境泄露系统内部信息。
 """
 
-from fastapi import HTTPException, Request, status
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from fastapi.exceptions import StarletteHTTPException
 from typing import Any, Dict, Optional
+
+from fastapi import HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError, StarletteHTTPException
+from fastapi.responses import JSONResponse
 
 from .config import settings
 from .logging_config import get_logger
@@ -224,9 +224,7 @@ async def validation_exception_handler(
         )
 
     if error_details:
-        user_friendly_message += (
-            f"：{error_details[0]['field']} {error_details[0]['message']}"
-        )
+        user_friendly_message += f"：{error_details[0]['field']} {error_details[0]['message']}"
 
     content = _build_error_response(
         status_code=status_code,

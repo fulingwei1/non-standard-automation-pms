@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """第十三批 - ECN自动分配服务 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.ecn_auto_assign_service import (
         find_users_by_department,
         find_users_by_role,
     )
+
     SKIP = False
 except Exception:
     SKIP = True

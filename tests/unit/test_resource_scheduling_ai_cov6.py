@@ -2,18 +2,22 @@
 """
 第六批覆盖测试 - resource_scheduling_ai_service.py
 """
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 from datetime import date
 from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 try:
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
 
-pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="resource_scheduling_ai_service not importable")
+pytestmark = pytest.mark.skipif(
+    not HAS_MODULE, reason="resource_scheduling_ai_service not importable"
+)
 
 
 @pytest.fixture
@@ -37,7 +41,7 @@ def service(mock_db):
 class TestDetectResourceConflicts:
     def test_no_allocations(self, service, mock_db):
         # PMOResourceAllocation is imported lazily in the method
-        with patch.dict('sys.modules', {'app.models.finance': MagicMock()}):
+        with patch.dict("sys.modules", {"app.models.finance": MagicMock()}):
             mock_db.query.return_value.filter.return_value.all.return_value = []
             try:
                 result = service.detect_resource_conflicts()
@@ -46,7 +50,7 @@ class TestDetectResourceConflicts:
                 pass  # ImportError for PMOResourceAllocation is expected
 
     def test_with_resource_filter(self, service, mock_db):
-        with patch.dict('sys.modules', {'app.models.finance': MagicMock()}):
+        with patch.dict("sys.modules", {"app.models.finance": MagicMock()}):
             mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
             try:
                 result = service.detect_resource_conflicts(resource_id=1)
@@ -55,12 +59,11 @@ class TestDetectResourceConflicts:
                 pass
 
     def test_with_date_range(self, service, mock_db):
-        with patch.dict('sys.modules', {'app.models.finance': MagicMock()}):
+        with patch.dict("sys.modules", {"app.models.finance": MagicMock()}):
             mock_db.query.return_value.filter.return_value.all.return_value = []
             try:
                 result = service.detect_resource_conflicts(
-                    start_date=date(2024, 1, 1),
-                    end_date=date(2024, 3, 31)
+                    start_date=date(2024, 1, 1), end_date=date(2024, 3, 31)
                 )
                 assert isinstance(result, list)
             except Exception:
@@ -133,8 +136,7 @@ class TestForecastResourceDemand:
         mock_db.query.return_value.filter.return_value.all.return_value = []
         try:
             result = service.forecast_resource_demand(
-                start_date=date(2024, 1, 1),
-                end_date=date(2024, 12, 31)
+                start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
             )
             assert isinstance(result, list)
         except Exception:

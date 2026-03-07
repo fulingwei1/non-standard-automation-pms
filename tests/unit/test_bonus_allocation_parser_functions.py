@@ -3,15 +3,15 @@
 Tests for bonus_allocation_parser - testing actual exported functions
 """
 
-import pytest
 from datetime import date, datetime
-from fastapi import HTTPException
 
 import pandas as pd
+import pytest
+from fastapi import HTTPException
 
 from app.services.bonus_allocation_parser import (
-    validate_file_type,
     parse_date,
+    validate_file_type,
     validate_required_columns,
 )
 

@@ -30,9 +30,7 @@ class TeamPerformanceService:
 
     # ==================== 权限检查 ====================
 
-    def check_performance_view_permission(
-        self, current_user: User, target_user_id: int
-    ) -> bool:
+    def check_performance_view_permission(self, current_user: User, target_user_id: int) -> bool:
         """
         检查用户是否有权限查看指定用户的绩效
 
@@ -76,16 +74,8 @@ class TeamPerformanceService:
 
         has_manager_role = False
         for user_role in current_user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower()
-                if user_role.role.role_code
-                else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower()
-                if user_role.role.role_name
-                else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
             if role_code in manager_roles or role_name in manager_roles:
                 has_manager_role = True
                 break
@@ -94,21 +84,14 @@ class TeamPerformanceService:
             return False
 
         # 检查是否是同一部门
-        if (
-            target_user.department_id
-            and current_user.department_id == target_user.department_id
-        ):
+        if target_user.department_id and current_user.department_id == target_user.department_id:
             return True
 
         # 检查是否管理同一项目
-        user_projects = (
-            self.db.query(Project).filter(Project.pm_id == current_user.id).all()
-        )
+        user_projects = self.db.query(Project).filter(Project.pm_id == current_user.id).all()
         project_ids = [p.id for p in user_projects]
 
-        target_projects = (
-            self.db.query(Project).filter(Project.id.in_(project_ids)).all()
-        )
+        target_projects = self.db.query(Project).filter(Project.id.in_(project_ids)).all()
         for project in target_projects:
             # 检查目标用户是否是项目成员
             from app.models.progress import Task
@@ -136,11 +119,7 @@ class TeamPerformanceService:
             List[int]: 成员ID列表
         """
         # 临时使用部门作为团队
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == team_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == team_id, User.is_active).all()
         return [u.id for u in users]
 
     def get_department_members(self, dept_id: int) -> List[int]:
@@ -153,11 +132,7 @@ class TeamPerformanceService:
         Returns:
             List[int]: 成员ID列表
         """
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == dept_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == dept_id, User.is_active).all()
         return [u.id for u in users]
 
     # ==================== 名称获取 ====================
@@ -202,9 +177,7 @@ class TeamPerformanceService:
         """
         if period_id:
             return (
-                self.db.query(PerformancePeriod)
-                .filter(PerformancePeriod.id == period_id)
-                .first()
+                self.db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
             )
         else:
             return (
@@ -230,16 +203,8 @@ class TeamPerformanceService:
         is_project_manager = False
 
         for user_role in user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower()
-                if user_role.role.role_code
-                else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower()
-                if user_role.role.role_name
-                else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
 
             if role_code in ["dept_manager", "department_manager", "部门经理"] or role_name in [
                 "dept_manager",
@@ -265,9 +230,7 @@ class TeamPerformanceService:
 
     # ==================== 团队绩效 ====================
 
-    def get_team_performance(
-        self, team_id: int, period_id: Optional[int] = None
-    ) -> Dict:
+    def get_team_performance(self, team_id: int, period_id: Optional[int] = None) -> Dict:
         """
         获取团队绩效汇总
 
@@ -315,9 +278,7 @@ class TeamPerformanceService:
 
         # 计算统计数据
         scores = [float(r.total_score) if r.total_score else 0 for r in results]
-        avg_score = (
-            Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
-        )
+        avg_score = Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
         max_score = Decimal(str(max(scores))) if scores else Decimal("0")
         min_score = Decimal(str(min(scores))) if scores else Decimal("0")
 
@@ -356,9 +317,7 @@ class TeamPerformanceService:
             "members": members,
         }
 
-    def _empty_team_performance(
-        self, team_id: int, team_name: str, member_ids: List[int]
-    ) -> Dict:
+    def _empty_team_performance(self, team_id: int, team_name: str, member_ids: List[int]) -> Dict:
         """返回空的团队绩效数据"""
         return {
             "team_id": team_id,
@@ -375,9 +334,7 @@ class TeamPerformanceService:
 
     # ==================== 部门绩效 ====================
 
-    def get_department_performance(
-        self, dept_id: int, period_id: Optional[int] = None
-    ) -> Dict:
+    def get_department_performance(self, dept_id: int, period_id: Optional[int] = None) -> Dict:
         """
         获取部门绩效汇总
 
@@ -423,9 +380,7 @@ class TeamPerformanceService:
 
         # 计算平均分
         scores = [float(r.total_score) if r.total_score else 0 for r in results]
-        avg_score = (
-            Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
-        )
+        avg_score = Decimal(str(sum(scores) / len(scores))) if scores else Decimal("0")
 
         # 等级分布
         level_distribution = {}
@@ -434,9 +389,7 @@ class TeamPerformanceService:
             level_distribution[level] = level_distribution.get(level, 0) + 1
 
         # 获取子团队列表
-        sub_teams = (
-            self.db.query(Department).filter(Department.parent_id == dept_id).all()
-        )
+        sub_teams = self.db.query(Department).filter(Department.parent_id == dept_id).all()
         teams = [{"team_id": t.id, "team_name": t.name} for t in sub_teams]
 
         return {
@@ -452,9 +405,7 @@ class TeamPerformanceService:
 
     # ==================== 绩效排行榜 ====================
 
-    def get_performance_ranking(
-        self, ranking_type: str, period_id: Optional[int] = None
-    ) -> Dict:
+    def get_performance_ranking(self, ranking_type: str, period_id: Optional[int] = None) -> Dict:
         """
         获取绩效排行榜
 
@@ -527,9 +478,7 @@ class TeamPerformanceService:
             )
 
             if dept_results:
-                avg_score = sum(
-                    float(r.total_score or 0) for r in dept_results
-                ) / len(dept_results)
+                avg_score = sum(float(r.total_score or 0) for r in dept_results) / len(dept_results)
                 rankings.append(
                     {
                         "rank": 0,  # 稍后填充
@@ -563,9 +512,7 @@ class TeamPerformanceService:
             )
 
             if dept_results:
-                avg_score = sum(
-                    float(r.total_score or 0) for r in dept_results
-                ) / len(dept_results)
+                avg_score = sum(float(r.total_score or 0) for r in dept_results) / len(dept_results)
 
                 # 等级分布
                 level_dist = {}

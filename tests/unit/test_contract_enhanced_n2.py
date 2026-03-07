@@ -5,15 +5,16 @@
       get_pending_approvals, 条款/附件管理, get_contract_stats,
       金额重新计算
 """
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.sales.contract_enhanced import ContractEnhancedService
 
-
 # ======================= approve_contract =======================
+
 
 class TestApproveContract:
     """测试审批通过逻辑"""
@@ -41,6 +42,7 @@ class TestApproveContract:
 
         # Simulate query chain: first returns approval, second returns contract, third returns pending count
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -51,6 +53,7 @@ class TestApproveContract:
             else:
                 q.filter.return_value.count.return_value = 1  # still pending
             return q
+
         db.query.side_effect = query_side
 
         result = ContractEnhancedService.approve_contract(db, 1, 1, user_id=5, opinion="OK")
@@ -67,6 +70,7 @@ class TestApproveContract:
         contract.status = "approving"
 
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -77,6 +81,7 @@ class TestApproveContract:
             else:
                 q.filter.return_value.count.return_value = 0  # all approved
             return q
+
         db.query.side_effect = query_side
 
         ContractEnhancedService.approve_contract(db, 1, 1, user_id=1)
@@ -84,6 +89,7 @@ class TestApproveContract:
 
 
 # ======================= reject_contract =======================
+
 
 class TestRejectContract:
     """测试审批驳回逻辑"""
@@ -109,6 +115,7 @@ class TestRejectContract:
         contract = MagicMock()
 
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -117,6 +124,7 @@ class TestRejectContract:
             else:
                 q.filter.return_value.first.return_value = contract
             return q
+
         db.query.side_effect = query_side
 
         ContractEnhancedService.reject_contract(db, 1, 1, user_id=2, opinion="不合规")
@@ -127,6 +135,7 @@ class TestRejectContract:
 
 
 # ======================= mark_as_signed =======================
+
 
 class TestMarkAsSigned:
     def test_raises_when_not_found(self):
@@ -155,6 +164,7 @@ class TestMarkAsSigned:
 
 # ======================= mark_as_executing =======================
 
+
 class TestMarkAsExecuting:
     def test_raises_when_not_found(self):
         db = MagicMock()
@@ -181,6 +191,7 @@ class TestMarkAsExecuting:
 
 # ======================= mark_as_completed =======================
 
+
 class TestMarkAsCompleted:
     def test_raises_when_not_found(self):
         db = MagicMock()
@@ -206,6 +217,7 @@ class TestMarkAsCompleted:
 
 
 # ======================= void_contract =======================
+
 
 class TestVoidContract:
     def test_raises_when_not_found(self):
@@ -242,28 +254,26 @@ class TestVoidContract:
 
 # ======================= get_pending_approvals =======================
 
+
 class TestGetPendingApprovals:
     def test_returns_pending_approvals(self):
         db = MagicMock()
         approvals = [MagicMock(), MagicMock()]
-        (db.query.return_value
-         .filter.return_value
-         .options.return_value
-         .all.return_value) = approvals
+        (db.query.return_value.filter.return_value.options.return_value.all.return_value) = (
+            approvals
+        )
         result = ContractEnhancedService.get_pending_approvals(db, user_id=1)
         assert len(result) == 2
 
     def test_returns_empty_list_when_none(self):
         db = MagicMock()
-        (db.query.return_value
-         .filter.return_value
-         .options.return_value
-         .all.return_value) = []
+        (db.query.return_value.filter.return_value.options.return_value.all.return_value) = []
         result = ContractEnhancedService.get_pending_approvals(db, user_id=1)
         assert result == []
 
 
 # ======================= 条款管理 =======================
+
 
 class TestContractTerms:
     @patch("app.services.sales.contract_enhanced.save_obj")
@@ -314,6 +324,7 @@ class TestContractTerms:
 
 # ======================= 附件管理 =======================
 
+
 class TestContractAttachments:
     @patch("app.services.sales.contract_enhanced.save_obj")
     def test_add_attachment_creates_attachment(self, mock_save):
@@ -348,6 +359,7 @@ class TestContractAttachments:
 
 # ======================= get_contract_stats =======================
 
+
 class TestGetContractStats:
     def test_returns_stats_structure(self):
         db = MagicMock()
@@ -376,6 +388,7 @@ class TestGetContractStats:
 
 
 # ======================= 金额计算 (update_contract) =======================
+
 
 class TestContractAmountCalculation:
     def test_unreceived_amount_recalculated_on_amount_update(self):

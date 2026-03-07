@@ -2,12 +2,14 @@
 """
 第十六批：营业收入数据服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.revenue_service import RevenueService
+
     SKIP = False
 except Exception:
     SKIP = True

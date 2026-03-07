@@ -143,8 +143,8 @@ class TestMapChannelToUnified:
 
     def test_system_channel_mapping(self):
         """测试系统通道映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationChannel
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -154,8 +154,8 @@ class TestMapChannelToUnified:
 
     def test_email_channel_mapping(self):
         """测试邮件通道映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationChannel
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -165,8 +165,8 @@ class TestMapChannelToUnified:
 
     def test_wechat_channel_mapping(self):
         """测试微信通道映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationChannel
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -176,8 +176,8 @@ class TestMapChannelToUnified:
 
     def test_sms_channel_mapping(self):
         """测试短信通道映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationChannel
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -187,8 +187,8 @@ class TestMapChannelToUnified:
 
     def test_lowercase_channel_mapping(self):
         """测试小写通道映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationChannel
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -198,8 +198,8 @@ class TestMapChannelToUnified:
 
     def test_unknown_channel_defaults_to_system(self):
         """测试未知通道默认映射到系统"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationChannel
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -213,8 +213,8 @@ class TestMapAlertLevelToPriority:
 
     def test_urgent_level_mapping(self):
         """测试紧急级别映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationPriority
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -224,8 +224,8 @@ class TestMapAlertLevelToPriority:
 
     def test_critical_level_mapping(self):
         """测试严重级别映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationPriority
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -235,8 +235,8 @@ class TestMapAlertLevelToPriority:
 
     def test_warning_level_mapping(self):
         """测试警告级别映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationPriority
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -246,8 +246,8 @@ class TestMapAlertLevelToPriority:
 
     def test_info_level_mapping(self):
         """测试信息级别映射"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationPriority
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -257,8 +257,8 @@ class TestMapAlertLevelToPriority:
 
     def test_none_level_defaults_to_normal(self):
         """测试空级别默认为普通"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationPriority
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -268,8 +268,8 @@ class TestMapAlertLevelToPriority:
 
     def test_unknown_level_defaults_to_normal(self):
         """测试未知级别默认为普通"""
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import NotificationPriority
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_db = MagicMock()
         dispatcher = NotificationDispatcher(mock_db)
@@ -309,9 +309,7 @@ class TestDispatch:
         dispatcher.unified_service = MagicMock()
         dispatcher.unified_service.send_notification.return_value = {"success": True}
 
-        with patch(
-            "app.services.notification_dispatcher.record_notification_success"
-        ):
+        with patch("app.services.notification_dispatcher.record_notification_success"):
             result = dispatcher.dispatch(notification, alert, None)
 
         assert result is True
@@ -349,9 +347,7 @@ class TestDispatch:
             "message": "发送失败",
         }
 
-        with patch(
-            "app.services.notification_dispatcher.record_notification_failure"
-        ):
+        with patch("app.services.notification_dispatcher.record_notification_failure"):
             result = dispatcher.dispatch(notification, alert, None)
 
         assert result is False
@@ -385,13 +381,9 @@ class TestDispatch:
 
         # Mock unified service to raise exception
         dispatcher.unified_service = MagicMock()
-        dispatcher.unified_service.send_notification.side_effect = Exception(
-            "连接失败"
-        )
+        dispatcher.unified_service.send_notification.side_effect = Exception("连接失败")
 
-        with patch(
-            "app.services.notification_dispatcher.record_notification_failure"
-        ):
+        with patch("app.services.notification_dispatcher.record_notification_failure"):
             result = dispatcher.dispatch(notification, alert, None)
 
         assert result is False
@@ -430,9 +422,7 @@ class TestDispatch:
         dispatcher.unified_service = MagicMock()
         dispatcher.unified_service.send_notification.return_value = {"success": True}
 
-        with patch(
-            "app.services.notification_dispatcher.record_notification_success"
-        ):
+        with patch("app.services.notification_dispatcher.record_notification_success"):
             result = dispatcher.dispatch(notification, alert, user)
 
         # 验证使用了用户ID
@@ -464,9 +454,7 @@ class TestDispatch:
         alert.target_type = "PROJECT"
         alert.target_name = "测试项目"
 
-        with patch(
-            "app.services.notification_dispatcher.record_notification_failure"
-        ):
+        with patch("app.services.notification_dispatcher.record_notification_failure"):
             result = dispatcher.dispatch(notification, alert, None)
 
         assert result is False
@@ -499,9 +487,7 @@ class TestDispatch:
         dispatcher.unified_service = MagicMock()
         dispatcher.unified_service.send_notification.return_value = {"success": True}
 
-        with patch(
-            "app.services.notification_dispatcher.record_notification_success"
-        ):
+        with patch("app.services.notification_dispatcher.record_notification_success"):
             result = dispatcher.dispatch(notification, alert, None)
 
         assert result is True
@@ -519,12 +505,12 @@ class TestModuleExports:
     def test_exports_utility_functions(self):
         """测试导出工具函数"""
         from app.services.notification_dispatcher import (
-            resolve_channels,
-            resolve_recipients,
-            resolve_channel_target,
             channel_allowed,
             is_quiet_hours,
             next_quiet_resume,
+            resolve_channel_target,
+            resolve_channels,
+            resolve_recipients,
         )
 
         assert resolve_channels is not None

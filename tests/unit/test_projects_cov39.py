@@ -2,12 +2,14 @@
 """
 第三十九批覆盖率测试 - strategy/annual_work_service/projects.py
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-pytest.importorskip("app.services.strategy.annual_work_service.projects",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip(
+    "app.services.strategy.annual_work_service.projects", reason="import failed, skip"
+)
 
 
 @pytest.fixture
@@ -29,8 +31,9 @@ class TestLinkProject:
     def test_link_project_returns_none_if_no_work(self, mock_db):
         from app.services.strategy.annual_work_service.projects import link_project
 
-        with patch("app.services.strategy.annual_work_service.projects.get_annual_work",
-                   return_value=None):
+        with patch(
+            "app.services.strategy.annual_work_service.projects.get_annual_work", return_value=None
+        ):
             result = link_project(mock_db, work_id=999, project_id=1)
             assert result is None
 
@@ -45,10 +48,16 @@ class TestLinkProject:
 
         new_link = _make_link(1, 10)
 
-        with patch("app.services.strategy.annual_work_service.projects.get_annual_work",
-                   return_value=mock_work), \
-             patch("app.services.strategy.annual_work_service.projects.AnnualKeyWorkProjectLink",
-                   return_value=new_link):
+        with (
+            patch(
+                "app.services.strategy.annual_work_service.projects.get_annual_work",
+                return_value=mock_work,
+            ),
+            patch(
+                "app.services.strategy.annual_work_service.projects.AnnualKeyWorkProjectLink",
+                return_value=new_link,
+            ),
+        ):
             result = link_project(mock_db, work_id=1, project_id=10)
             mock_db.add.assert_called_once()
             mock_db.commit.assert_called_once()
@@ -63,8 +72,10 @@ class TestLinkProject:
         mock_q.filter.return_value = mock_q
         mock_q.first.return_value = existing
 
-        with patch("app.services.strategy.annual_work_service.projects.get_annual_work",
-                   return_value=mock_work):
+        with patch(
+            "app.services.strategy.annual_work_service.projects.get_annual_work",
+            return_value=mock_work,
+        ):
             result = link_project(mock_db, work_id=1, project_id=10)
             assert existing.is_active is True
             mock_db.commit.assert_called_once()
@@ -127,8 +138,10 @@ class TestGetLinkedProjects:
         mock_q.all.return_value = links
         mock_q.first.return_value = mock_project
 
-        with patch("app.services.strategy.annual_work_service.projects.AnnualKeyWorkProjectLink"), \
-             patch("app.services.strategy.annual_work_service.projects.ProjectLinkItem") as MockItem:
+        with (
+            patch("app.services.strategy.annual_work_service.projects.AnnualKeyWorkProjectLink"),
+            patch("app.services.strategy.annual_work_service.projects.ProjectLinkItem") as MockItem,
+        ):
             MockItem.return_value = MagicMock(project_id=10)
             result = get_linked_projects(mock_db, work_id=1)
             assert len(result) == 1

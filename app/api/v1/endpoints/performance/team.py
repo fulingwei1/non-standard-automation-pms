@@ -75,9 +75,7 @@ def get_department_performance(
 def get_performance_ranking(
     *,
     db: Session = Depends(deps.get_db),
-    ranking_type: str = Query(
-        "COMPANY", description="排行榜类型：TEAM/DEPARTMENT/COMPANY"
-    ),
+    ranking_type: str = Query("COMPANY", description="排行榜类型：TEAM/DEPARTMENT/COMPANY"),
     period_id: Optional[int] = Query(None, description="周期ID"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:

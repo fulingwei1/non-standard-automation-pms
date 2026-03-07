@@ -18,9 +18,9 @@ from app.core import security
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas.common import BatchOperationResponse
-from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.task_progress_service import apply_task_progress_update
+from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
 from app.utils.db_helpers import get_or_404
 
 from .batch_helpers import log_task_operation
@@ -28,7 +28,9 @@ from .batch_helpers import log_task_operation
 router = APIRouter()
 
 
-@router.post("/batch/transfer", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/batch/transfer", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK
+)
 def batch_transfer_tasks(
     *,
     db: Session = Depends(deps.get_db),
@@ -42,12 +44,8 @@ def batch_transfer_tasks(
     """
     target_user = get_or_404(db, User, target_user_id, "目标用户不存在")
 
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def transfer_task(task: TaskUnified):
         """转办任务的操作函数"""
         task.assignee_id = target_user_id
@@ -59,21 +57,25 @@ def batch_transfer_tasks(
         task.transfer_time = datetime.now()
         task.status = "PENDING"
         task.updated_by = current_user.id
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
         log_task_operation(
-            db, task.id, "BATCH_TRANSFER",
+            db,
+            task.id,
+            "BATCH_TRANSFER",
             f"批量转办任务：{task.title} -> {target_user.real_name or target_user.username}",
-            current_user.id, current_user.real_name or current_user.username
+            current_user.id,
+            current_user.real_name or current_user.username,
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(TaskUnified.id.in_(ids), TaskUnified.assignee_id == current_user.id)
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=transfer_task,
@@ -81,13 +83,15 @@ def batch_transfer_tasks(
         error_message="已完成的任务不能转办",
         log_func=log_operation,
         operation_type="BATCH_TRANSFER",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())
 
 
-@router.post("/batch/priority", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/batch/priority", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK
+)
 def batch_set_priority(
     *,
     db: Session = Depends(deps.get_db),
@@ -101,46 +105,48 @@ def batch_set_priority(
     if priority not in ["URGENT", "HIGH", "MEDIUM", "LOW"]:
         raise HTTPException(status_code=400, detail="无效的优先级")
 
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def set_priority(task: TaskUnified):
         """设置优先级的操作函数"""
         task.priority = priority
         task.updated_by = current_user.id
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
-        old_priority = getattr(task, '_old_priority', task.priority)
+        old_priority = getattr(task, "_old_priority", task.priority)
         log_task_operation(
-            db, task.id, "BATCH_SET_PRIORITY",
+            db,
+            task.id,
+            "BATCH_SET_PRIORITY",
             f"批量设置优先级：{old_priority} -> {priority}",
-            current_user.id, current_user.real_name or current_user.username,
+            current_user.id,
+            current_user.real_name or current_user.username,
             old_value={"priority": old_priority},
-            new_value={"priority": priority}
+            new_value={"priority": priority},
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(TaskUnified.id.in_(ids), TaskUnified.assignee_id == current_user.id)
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=set_priority,
         log_func=log_operation,
         operation_type="BATCH_SET_PRIORITY",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())
 
 
-@router.post("/batch/progress", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/batch/progress", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK
+)
 def batch_update_progress(
     *,
     db: Session = Depends(deps.get_db),
@@ -151,12 +157,8 @@ def batch_update_progress(
     """
     批量更新进度
     """
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def update_progress(task: TaskUnified):
         """更新进度的操作函数"""
         apply_task_progress_update(
@@ -166,24 +168,28 @@ def batch_update_progress(
             reject_completed=False,
             enforce_assignee=True,
         )
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
-        old_progress = getattr(task, '_old_progress', task.progress)
+        old_progress = getattr(task, "_old_progress", task.progress)
         log_task_operation(
-            db, task.id, "BATCH_UPDATE_PROGRESS",
+            db,
+            task.id,
+            "BATCH_UPDATE_PROGRESS",
             f"批量更新进度：{old_progress}% -> {progress}%",
-            current_user.id, current_user.real_name or current_user.username,
+            current_user.id,
+            current_user.real_name or current_user.username,
             old_value={"progress": old_progress},
-            new_value={"progress": progress}
+            new_value={"progress": progress},
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(TaskUnified.id.in_(ids), TaskUnified.assignee_id == current_user.id)
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=update_progress,
@@ -191,9 +197,9 @@ def batch_update_progress(
         error_message="已完成的任务不能更新进度",
         log_func=log_operation,
         operation_type="BATCH_UPDATE_PROGRESS",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())
 
 
@@ -208,12 +214,8 @@ def batch_tag_tasks(
     """
     批量添加标签
     """
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def add_tags(task: TaskUnified):
         """添加标签的操作函数"""
         existing_tags = task.tags or []
@@ -221,33 +223,37 @@ def batch_tag_tasks(
         new_tags = list(set(existing_tags + tags))
         task.tags = new_tags
         task.updated_by = current_user.id
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
-        old_tags = getattr(task, '_old_tags', task.tags)
+        old_tags = getattr(task, "_old_tags", task.tags)
         new_tags = task.tags
         log_task_operation(
-            db, task.id, "BATCH_TAG",
+            db,
+            task.id,
+            "BATCH_TAG",
             f"批量添加标签：{task.title} -> {', '.join(tags)}",
-            current_user.id, current_user.real_name or current_user.username,
+            current_user.id,
+            current_user.real_name or current_user.username,
             old_value={"tags": old_tags},
-            new_value={"tags": new_tags}
+            new_value={"tags": new_tags},
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(TaskUnified.id.in_(ids), TaskUnified.assignee_id == current_user.id)
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=add_tags,
         log_func=log_operation,
         operation_type="BATCH_TAG",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())
 
 
@@ -262,13 +268,9 @@ def batch_urge_tasks(
     """
     批量催办任务（发送催办通知）
     """
-    BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
+    BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
     dispatcher = NotificationDispatcher(db)
-    
+
     def urge_task(task: TaskUnified):
         """催办任务的操作函数"""
         # 创建催办通知
@@ -288,20 +290,21 @@ def batch_urge_tasks(
                 "urge_by_id": current_user.id,
             },
         )
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
         log_task_operation(
-            db, task.id, "BATCH_URGE",
+            db,
+            task.id,
+            "BATCH_URGE",
             f"批量催办任务：{task.title}",
-            current_user.id, current_user.real_name or current_user.username
+            current_user.id,
+            current_user.real_name or current_user.username,
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids)
-        ).all()
-    
+        return db.query(TaskUnified).filter(TaskUnified.id.in_(ids)).all()
+
     def validate_urge(task: TaskUnified) -> bool:
         """验证是否可以催办"""
         if not task.assignee_id:
@@ -309,18 +312,18 @@ def batch_urge_tasks(
         if task.status == "COMPLETED":
             return False
         return True
-    
+
     # 使用自定义验证逻辑，因为错误消息需要根据任务状态动态生成
     result = BatchOperationResult()
     tasks = pre_filter(db, task_ids)
     task_map = {task.id: task for task in tasks}
-    
+
     for task_id in task_ids:
         task = task_map.get(task_id)
         if not task:
             result.add_failure(task_id, "任务不存在或无访问权限", id_field="task_id")
             continue
-        
+
         try:
             if not validate_urge(task):
                 # 根据任务状态生成错误消息
@@ -332,14 +335,14 @@ def batch_urge_tasks(
                     error_msg = "无法催办"
                 result.add_failure(task_id, error_msg, id_field="task_id")
                 continue
-            
+
             urge_task(task)
             log_operation(task, "BATCH_URGE")
             db.add(task)  # 确保任务也被添加到会话
             result.add_success()
         except Exception as e:
             result.add_failure(task_id, str(e), id_field="task_id")
-    
+
     try:
         db.commit()
     except Exception as e:
@@ -347,6 +350,8 @@ def batch_urge_tasks(
         # 如果提交失败，记录错误
         for item in result.failed_items:
             if item.get("task_id") not in [t.id for t in tasks]:
-                result.add_failure(item.get("task_id", 0), f"事务提交失败: {str(e)}", id_field="task_id")
-    
+                result.add_failure(
+                    item.get("task_id", 0), f"事务提交失败: {str(e)}", id_field="task_id"
+                )
+
     return BatchOperationResponse(**result.to_dict(id_field="task_id"))

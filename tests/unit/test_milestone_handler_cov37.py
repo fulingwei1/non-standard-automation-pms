@@ -3,10 +3,11 @@
 第三十七批覆盖率测试 - 里程碑状态处理器
 tests/unit/test_milestone_handler_cov37.py
 """
-import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.status_handlers.milestone_handler")
 
@@ -86,9 +87,7 @@ class TestHandleMilestoneCompleted:
 
         db.query.side_effect = query_side
 
-        with patch(
-            "app.services.status_handlers.milestone_handler.apply_like_filter"
-        ) as mock_alf:
+        with patch("app.services.status_handlers.milestone_handler.apply_like_filter") as mock_alf:
             # Return a mock that supports .order_by().first()
             filter_chain = MagicMock()
             filter_chain.order_by.return_value.first.return_value = None

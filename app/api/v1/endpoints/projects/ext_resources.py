@@ -12,13 +12,13 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.pmo import PmoResourceAllocation
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
@@ -56,22 +56,27 @@ def get_project_resources(
         query = query.filter(PmoResourceAllocation.resource_role == resource_role)
 
     total = query.count()
-    resources = apply_pagination(query.order_by(PmoResourceAllocation.start_date), pagination.offset, pagination.limit).all()
+    resources = apply_pagination(
+        query.order_by(PmoResourceAllocation.start_date), pagination.offset, pagination.limit
+    ).all()
 
-    resources_data = [{
-        "id": r.id,
-        "resource_id": r.resource_id,
-        "resource_name": r.resource_name,
-        "resource_dept": r.resource_dept,
-        "resource_role": r.resource_role,
-        "allocation_percent": r.allocation_percent,
-        "start_date": r.start_date.isoformat() if r.start_date else None,
-        "end_date": r.end_date.isoformat() if r.end_date else None,
-        "planned_hours": r.planned_hours,
-        "actual_hours": r.actual_hours,
-        "status": r.status,
-        "created_at": r.created_at.isoformat() if r.created_at else None,
-    } for r in resources]
+    resources_data = [
+        {
+            "id": r.id,
+            "resource_id": r.resource_id,
+            "resource_name": r.resource_name,
+            "resource_dept": r.resource_dept,
+            "resource_role": r.resource_role,
+            "allocation_percent": r.allocation_percent,
+            "start_date": r.start_date.isoformat() if r.start_date else None,
+            "end_date": r.end_date.isoformat() if r.end_date else None,
+            "planned_hours": r.planned_hours,
+            "actual_hours": r.actual_hours,
+            "status": r.status,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in resources
+    ]
 
     # 汇总
     total_planned = sum(r.planned_hours or 0 for r in resources)
@@ -84,8 +89,8 @@ def get_project_resources(
             "total": total,
             "total_planned_hours": total_planned,
             "total_actual_hours": total_actual,
-            "items": resources_data
-        }
+            "items": resources_data,
+        },
     )
 
 
@@ -107,31 +112,38 @@ def get_resource_summary(
         ResponseModel: 资源汇总
     """
     # 按角色汇总
-    by_role = db.query(
-        PmoResourceAllocation.resource_role,
-        func.count(PmoResourceAllocation.id).label("count"),
-        func.sum(PmoResourceAllocation.planned_hours).label("planned"),
-        func.sum(PmoResourceAllocation.actual_hours).label("actual")
-    ).filter(
-        PmoResourceAllocation.project_id == project_id
-    ).group_by(PmoResourceAllocation.resource_role).all()
+    by_role = (
+        db.query(
+            PmoResourceAllocation.resource_role,
+            func.count(PmoResourceAllocation.id).label("count"),
+            func.sum(PmoResourceAllocation.planned_hours).label("planned"),
+            func.sum(PmoResourceAllocation.actual_hours).label("actual"),
+        )
+        .filter(PmoResourceAllocation.project_id == project_id)
+        .group_by(PmoResourceAllocation.resource_role)
+        .all()
+    )
 
     # 按部门汇总
-    by_dept = db.query(
-        PmoResourceAllocation.resource_dept,
-        func.count(PmoResourceAllocation.id).label("count")
-    ).filter(
-        PmoResourceAllocation.project_id == project_id
-    ).group_by(PmoResourceAllocation.resource_dept).all()
+    by_dept = (
+        db.query(
+            PmoResourceAllocation.resource_dept, func.count(PmoResourceAllocation.id).label("count")
+        )
+        .filter(PmoResourceAllocation.project_id == project_id)
+        .group_by(PmoResourceAllocation.resource_dept)
+        .all()
+    )
 
     # 总人数和工时
-    totals = db.query(
-        func.count(func.distinct(PmoResourceAllocation.resource_id)).label("total_members"),
-        func.sum(PmoResourceAllocation.planned_hours).label("total_planned"),
-        func.sum(PmoResourceAllocation.actual_hours).label("total_actual")
-    ).filter(
-        PmoResourceAllocation.project_id == project_id
-    ).first()
+    totals = (
+        db.query(
+            func.count(func.distinct(PmoResourceAllocation.resource_id)).label("total_members"),
+            func.sum(PmoResourceAllocation.planned_hours).label("total_planned"),
+            func.sum(PmoResourceAllocation.actual_hours).label("total_actual"),
+        )
+        .filter(PmoResourceAllocation.project_id == project_id)
+        .first()
+    )
 
     return ResponseModel(
         code=200,
@@ -141,9 +153,17 @@ def get_resource_summary(
             "total_members": totals.total_members or 0 if totals else 0,
             "total_planned_hours": totals.total_planned or 0 if totals else 0,
             "total_actual_hours": totals.total_actual or 0 if totals else 0,
-            "by_role": [{"role": r.resource_role, "count": r.count, "planned_hours": r.planned or 0, "actual_hours": r.actual or 0} for r in by_role],
+            "by_role": [
+                {
+                    "role": r.resource_role,
+                    "count": r.count,
+                    "planned_hours": r.planned or 0,
+                    "actual_hours": r.actual or 0,
+                }
+                for r in by_role
+            ],
             "by_dept": [{"dept": d.resource_dept, "count": d.count} for d in by_dept],
-        }
+        },
     )
 
 
@@ -169,11 +189,15 @@ def create_resource_allocation(
     get_or_404(db, Project, project_id, detail="项目不存在")
 
     # 检查是否已分配
-    existing = db.query(PmoResourceAllocation).filter(
-        PmoResourceAllocation.project_id == project_id,
-        PmoResourceAllocation.resource_id == resource_data.get("resource_id"),
-        PmoResourceAllocation.status != "RELEASED"
-    ).first()
+    existing = (
+        db.query(PmoResourceAllocation)
+        .filter(
+            PmoResourceAllocation.project_id == project_id,
+            PmoResourceAllocation.resource_id == resource_data.get("resource_id"),
+            PmoResourceAllocation.status != "RELEASED",
+        )
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="该资源已分配到此项目")
 
@@ -185,18 +209,20 @@ def create_resource_allocation(
         resource_dept=resource_data.get("resource_dept"),
         resource_role=resource_data.get("resource_role"),
         allocation_percent=resource_data.get("allocation_percent", 100),
-        start_date=date.fromisoformat(resource_data["start_date"]) if resource_data.get("start_date") else None,
-        end_date=date.fromisoformat(resource_data["end_date"]) if resource_data.get("end_date") else None,
+        start_date=(
+            date.fromisoformat(resource_data["start_date"])
+            if resource_data.get("start_date")
+            else None
+        ),
+        end_date=(
+            date.fromisoformat(resource_data["end_date"]) if resource_data.get("end_date") else None
+        ),
         planned_hours=resource_data.get("planned_hours"),
         status="PLANNED",
     )
     save_obj(db, allocation)
 
-    return ResponseModel(
-        code=200,
-        message="资源分配成功",
-        data={"id": allocation.id}
-    )
+    return ResponseModel(code=200, message="资源分配成功", data={"id": allocation.id})
 
 
 @router.put("/resources/{allocation_id}", response_model=ResponseModel)
@@ -220,18 +246,19 @@ def update_resource_allocation(
     """
     allocation = get_or_404(db, PmoResourceAllocation, allocation_id, detail="资源分配不存在")
 
-    updatable = [
-        "resource_role", "allocation_percent", "planned_hours",
-        "actual_hours", "status"
-    ]
+    updatable = ["resource_role", "allocation_percent", "planned_hours", "actual_hours", "status"]
     for field in updatable:
         if field in resource_data:
             setattr(allocation, field, resource_data[field])
 
     if "start_date" in resource_data:
-        allocation.start_date = date.fromisoformat(resource_data["start_date"]) if resource_data["start_date"] else None
+        allocation.start_date = (
+            date.fromisoformat(resource_data["start_date"]) if resource_data["start_date"] else None
+        )
     if "end_date" in resource_data:
-        allocation.end_date = date.fromisoformat(resource_data["end_date"]) if resource_data["end_date"] else None
+        allocation.end_date = (
+            date.fromisoformat(resource_data["end_date"]) if resource_data["end_date"] else None
+        )
 
     db.commit()
 
@@ -317,7 +344,7 @@ def get_resource_workload(
     """
     query = db.query(PmoResourceAllocation).filter(
         PmoResourceAllocation.resource_id == resource_id,
-        PmoResourceAllocation.status.in_(["PLANNED", "ACTIVE"])
+        PmoResourceAllocation.status.in_(["PLANNED", "ACTIVE"]),
     )
 
     if start_date:
@@ -327,15 +354,18 @@ def get_resource_workload(
 
     allocations = query.all()
 
-    projects = [{
-        "project_id": a.project_id,
-        "resource_role": a.resource_role,
-        "allocation_percent": a.allocation_percent,
-        "start_date": a.start_date.isoformat() if a.start_date else None,
-        "end_date": a.end_date.isoformat() if a.end_date else None,
-        "planned_hours": a.planned_hours,
-        "actual_hours": a.actual_hours,
-    } for a in allocations]
+    projects = [
+        {
+            "project_id": a.project_id,
+            "resource_role": a.resource_role,
+            "allocation_percent": a.allocation_percent,
+            "start_date": a.start_date.isoformat() if a.start_date else None,
+            "end_date": a.end_date.isoformat() if a.end_date else None,
+            "planned_hours": a.planned_hours,
+            "actual_hours": a.actual_hours,
+        }
+        for a in allocations
+    ]
 
     total_allocation = sum(a.allocation_percent or 0 for a in allocations)
 
@@ -346,6 +376,6 @@ def get_resource_workload(
             "resource_id": resource_id,
             "total_allocation_percent": total_allocation,
             "is_overloaded": total_allocation > 100,
-            "projects": projects
-        }
+            "projects": projects,
+        },
     )

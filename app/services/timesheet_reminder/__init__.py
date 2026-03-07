@@ -13,6 +13,16 @@
  └── scanner.py           # 扫描器
 """
 
+# 异常工时预警
+from .anomaly_reminders import (
+    notify_timesheet_anomaly,
+)
+
+# 审批超时提醒
+from .approval_reminders import (
+    notify_approval_timeout,
+)
+
 # 基础工具
 from .base import (
     create_timesheet_notification,
@@ -24,24 +34,14 @@ from .missing_reminders import (
     notify_weekly_timesheet_missing,
 )
 
-# 异常工时预警
-from .anomaly_reminders import (
-    notify_timesheet_anomaly,
-)
-
-# 审批超时提醒
-from .approval_reminders import (
-    notify_approval_timeout,
+# 扫描器
+from .scanner import (
+    scan_and_notify_all,
 )
 
 # 同步失败提醒
 from .sync_reminders import (
     notify_sync_failure,
-)
-
-# 扫描器
-from .scanner import (
-    scan_and_notify_all,
 )
 
 __all__ = [

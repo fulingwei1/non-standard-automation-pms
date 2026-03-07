@@ -78,9 +78,7 @@ class ServiceDataSource(DataSource):
             # 获取方法
             method = getattr(service_instance, self._method_name, None)
             if not method:
-                raise DataSourceError(
-                    f"Method '{self._method_name}' not found in service"
-                )
+                raise DataSourceError(f"Method '{self._method_name}' not found in service")
 
             # 合并配置参数和运行时参数
             call_args = {**self.config.args, **params}
@@ -157,6 +155,7 @@ class ServiceDataSource(DataSource):
             下划线命名
         """
         import re
+
         # 处理连续大写字母
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()

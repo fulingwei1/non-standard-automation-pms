@@ -58,18 +58,11 @@ def get_csf(db: Session, csf_id: int) -> Optional[CSF]:
     Returns:
         Optional[CSF]: CSF 对象
     """
-    return db.query(CSF).filter(
-        CSF.id == csf_id,
-        CSF.is_active
-    ).first()
+    return db.query(CSF).filter(CSF.id == csf_id, CSF.is_active).first()
 
 
 def list_csfs(
-    db: Session,
-    strategy_id: int,
-    dimension: Optional[str] = None,
-    skip: int = 0,
-    limit: int = 100
+    db: Session, strategy_id: int, dimension: Optional[str] = None, skip: int = 0, limit: int = 100
 ) -> tuple[List[CSF], int]:
     """
     获取 CSF 列表
@@ -84,10 +77,7 @@ def list_csfs(
     Returns:
         tuple: (CSF 列表, 总数)
     """
-    query = db.query(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active
-    )
+    query = db.query(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active)
 
     if dimension:
         query = query.filter(CSF.dimension == dimension)
@@ -159,18 +149,17 @@ def get_csf_detail(db: Session, csf_id: int) -> Optional[CSFDetailResponse]:
         return None
 
     # 统计 KPI 和重点工作数量
-    kpi_count = db.query(KPI).filter(
-        KPI.csf_id == csf_id,
-        KPI.is_active
-    ).count()
+    kpi_count = db.query(KPI).filter(KPI.csf_id == csf_id, KPI.is_active).count()
 
-    annual_work_count = db.query(AnnualKeyWork).filter(
-        AnnualKeyWork.csf_id == csf_id,
-        AnnualKeyWork.is_active
-    ).count()
+    annual_work_count = (
+        db.query(AnnualKeyWork)
+        .filter(AnnualKeyWork.csf_id == csf_id, AnnualKeyWork.is_active)
+        .count()
+    )
 
     # 获取健康度
     from .health_calculator import calculate_csf_health
+
     health_data = calculate_csf_health(db, csf_id)
 
     # 获取责任人和部门名称
@@ -179,12 +168,14 @@ def get_csf_detail(db: Session, csf_id: int) -> Optional[CSFDetailResponse]:
 
     if csf.owner_user_id:
         from app.models.user import User
+
         user = db.query(User).filter(User.id == csf.owner_user_id).first()
         if user:
             owner_name = user.name
 
     if csf.owner_dept_id:
         from app.models.organization import Department
+
         dept = db.query(Department).filter(Department.id == csf.owner_dept_id).first()
         if dept:
             owner_dept_name = dept.name
@@ -236,11 +227,12 @@ def get_csfs_by_dimension(db: Session, strategy_id: int) -> List[CSFByDimensionR
 
     result = []
     for dim_code, dim_name in dimension_names.items():
-        csfs = db.query(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.dimension == dim_code,
-            CSF.is_active
-        ).order_by(CSF.sort_order).all()
+        csfs = (
+            db.query(CSF)
+            .filter(CSF.strategy_id == strategy_id, CSF.dimension == dim_code, CSF.is_active)
+            .order_by(CSF.sort_order)
+            .all()
+        )
 
         csf_items = []
         total_weight = 0
@@ -248,21 +240,20 @@ def get_csfs_by_dimension(db: Session, strategy_id: int) -> List[CSFByDimensionR
         valid_count = 0
 
         for csf in csfs:
-            kpi_count = db.query(KPI).filter(
-                KPI.csf_id == csf.id,
-                KPI.is_active
-            ).count()
+            kpi_count = db.query(KPI).filter(KPI.csf_id == csf.id, KPI.is_active).count()
 
             health_data = calculate_csf_health(db, csf.id)
 
-            csf_items.append(CSFByDimensionItem(
-                id=csf.id,
-                code=csf.code,
-                name=csf.name,
-                weight=float(csf.weight or 0),
-                health_score=health_data.get("score"),
-                kpi_count=kpi_count,
-            ))
+            csf_items.append(
+                CSFByDimensionItem(
+                    id=csf.id,
+                    code=csf.code,
+                    name=csf.name,
+                    weight=float(csf.weight or 0),
+                    health_score=health_data.get("score"),
+                    kpi_count=kpi_count,
+                )
+            )
 
             total_weight += float(csf.weight or 0)
             if health_data.get("score") is not None:
@@ -271,22 +262,20 @@ def get_csfs_by_dimension(db: Session, strategy_id: int) -> List[CSFByDimensionR
 
         avg_health = total_health / valid_count if valid_count > 0 else None
 
-        result.append(CSFByDimensionResponse(
-            dimension=dim_code,
-            dimension_name=dim_name,
-            csfs=csf_items,
-            total_weight=total_weight,
-            avg_health_score=avg_health,
-        ))
+        result.append(
+            CSFByDimensionResponse(
+                dimension=dim_code,
+                dimension_name=dim_name,
+                csfs=csf_items,
+                total_weight=total_weight,
+                avg_health_score=avg_health,
+            )
+        )
 
     return result
 
 
-def batch_create_csfs(
-    db: Session,
-    strategy_id: int,
-    items: List[CSFCreate]
-) -> List[CSF]:
+def batch_create_csfs(db: Session, strategy_id: int, items: List[CSFCreate]) -> List[CSF]:
     """
     批量创建 CSF
 

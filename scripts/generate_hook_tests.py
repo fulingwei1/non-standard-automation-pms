@@ -63,11 +63,7 @@ describe('%(hook_name)s Hook', () => {
         if not os.path.isdir(hooks_dir):
             continue
 
-        hook_files = [
-            f
-            for f in os.listdir(hooks_dir)
-            if f.startswith("use") and f.endswith(".js")
-        ]
+        hook_files = [f for f in os.listdir(hooks_dir) if f.startswith("use") and f.endswith(".js")]
         if not hook_files:
             continue
 

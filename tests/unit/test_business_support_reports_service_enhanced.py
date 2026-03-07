@@ -7,7 +7,7 @@
 import unittest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, Mock, PropertyMock
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from app.services.business_support_reports.business_support_reports_service import (
     BusinessSupportReportsService,
@@ -55,7 +55,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         """测试获取当前周范围"""
         mock_date_class.today.return_value = date(2024, 3, 15)  # 周五
         year, week_num, week_start, week_end = self.service.get_current_week_range()
-        
+
         self.assertEqual(year, 2024)
         self.assertIsInstance(week_num, int)
         self.assertEqual(week_start.weekday(), 0)  # 周一
@@ -66,7 +66,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         """测试周一获取当前周范围"""
         mock_date_class.today.return_value = date(2024, 3, 11)  # 周一
         year, week_num, week_start, week_end = self.service.get_current_week_range()
-        
+
         self.assertEqual(week_start, date(2024, 3, 11))
         self.assertEqual(week_end, date(2024, 3, 17))
 
@@ -82,7 +82,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
         mock_filter.all.return_value = [mock_contract1, mock_contract2]
-        
+
         # Mock count() calls
         mock_filter.count.side_effect = [5, 3]  # active_count, completed_count
 
@@ -180,11 +180,11 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         # Mock planned
         mock_planned = MagicMock()
         mock_planned.__getitem__.return_value = 100000
-        
+
         # Mock actual
         mock_actual = MagicMock()
         mock_actual.__getitem__.return_value = 80000
-        
+
         # Mock overdue
         mock_overdue = MagicMock()
         mock_overdue.__getitem__.return_value = 20000
@@ -208,7 +208,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         """测试无数据的回款统计"""
         mock_result = MagicMock()
         mock_result.__getitem__.return_value = None
-        
+
         self.mock_db.execute.return_value.fetchone.side_effect = [
             mock_result,
             mock_result,
@@ -227,10 +227,10 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         """测试计划回款为0的情况"""
         mock_planned = MagicMock()
         mock_planned.__getitem__.return_value = 0
-        
+
         mock_actual = MagicMock()
         mock_actual.__getitem__.return_value = 0
-        
+
         mock_overdue = MagicMock()
         mock_overdue.__getitem__.return_value = 0
 
@@ -316,17 +316,17 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_filter1 = MagicMock()
         mock_filter1.count.return_value = 5
         mock_query1.filter.return_value = mock_filter1
-        
+
         # Mock the second query for won_bidding
         mock_query2 = MagicMock()
         mock_filter2 = MagicMock()
         mock_filter2.count.return_value = 3
         mock_query2.filter.return_value = mock_filter2
-        
+
         # Mock the third query for total
         mock_query3 = MagicMock()
         mock_query3.count.return_value = 10
-        
+
         self.mock_db.query.side_effect = [mock_query1, mock_query2, mock_query3]
 
         start_date = date(2024, 1, 1)
@@ -344,17 +344,17 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_filter1 = MagicMock()
         mock_filter1.count.return_value = 0
         mock_query1.filter.return_value = mock_filter1
-        
+
         # Mock the second query for won_bidding
         mock_query2 = MagicMock()
         mock_filter2 = MagicMock()
         mock_filter2.count.return_value = 0
         mock_query2.filter.return_value = mock_filter2
-        
+
         # Mock the third query for total
         mock_query3 = MagicMock()
         mock_query3.count.return_value = 0
-        
+
         self.mock_db.query.side_effect = [mock_query1, mock_query2, mock_query3]
 
         start_date = date(2024, 1, 1)
@@ -372,17 +372,17 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_filter1 = MagicMock()
         mock_filter1.count.return_value = 2
         mock_query1.filter.return_value = mock_filter1
-        
+
         # Mock the second query for won_bidding
         mock_query2 = MagicMock()
         mock_filter2 = MagicMock()
         mock_filter2.count.return_value = 1
         mock_query2.filter.return_value = mock_filter2
-        
+
         # Mock the third query for total
         mock_query3 = MagicMock()
         mock_query3.count.return_value = 0
-        
+
         self.mock_db.query.side_effect = [mock_query1, mock_query2, mock_query3]
 
         start_date = date(2024, 1, 1)
@@ -399,10 +399,10 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         # Mock all database queries
         mock_contract = MagicMock()
         mock_contract.total_amount = Decimal("100000")
-        
+
         mock_order = MagicMock()
         mock_order.order_amount = Decimal("50000")
-        
+
         mock_invoice = MagicMock()
         mock_invoice.amount = Decimal("30000")
 
@@ -410,15 +410,15 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_filter = mock_query.filter.return_value
         mock_filter.all.side_effect = [
             [mock_contract],  # new_contracts
-            [mock_order],     # new_orders
-            [mock_invoice],   # invoices
+            [mock_order],  # new_orders
+            [mock_invoice],  # invoices
         ]
         mock_filter.count.side_effect = [
             2,  # active_contracts
             1,  # completed_contracts
             3,  # new_bidding
             2,  # won_bidding
-            10, # total_bidding
+            10,  # total_bidding
         ]
 
         # Mock execute for receipt and invoice stats
@@ -431,7 +431,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_result3.__getitem__.return_value = 20000
         mock_result4 = MagicMock()
         mock_result4.__getitem__.return_value = 5
-        
+
         mock_execute_result.fetchone.side_effect = [
             mock_result1,  # planned_receipt
             mock_result2,  # actual_receipt
@@ -464,7 +464,10 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_result = MagicMock()
         mock_result.__getitem__.return_value = 0
         mock_execute_result.fetchone.side_effect = [
-            mock_result, mock_result, mock_result, mock_result
+            mock_result,
+            mock_result,
+            mock_result,
+            mock_result,
         ]
 
         result = self.service.get_daily_report()
@@ -477,10 +480,10 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         """测试日报中金额为None的情况"""
         mock_contract = MagicMock()
         mock_contract.total_amount = None
-        
+
         mock_order = MagicMock()
         mock_order.order_amount = None
-        
+
         mock_invoice = MagicMock()
         mock_invoice.amount = None
 
@@ -498,7 +501,10 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_result = MagicMock()
         mock_result.__getitem__.return_value = None
         mock_execute_result.fetchone.side_effect = [
-            mock_result, mock_result, mock_result, mock_result
+            mock_result,
+            mock_result,
+            mock_result,
+            mock_result,
         ]
 
         result = self.service.get_daily_report("2024-01-15")
@@ -512,21 +518,13 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_get_weekly_report_with_week_string(self):
         """测试指定周的周报"""
         # Mock calculate methods
-        with patch.object(
-            self.service, "calculate_contract_stats"
-        ) as mock_contract_stats, \
-             patch.object(
-                 self.service, "calculate_order_stats"
-             ) as mock_order_stats, \
-             patch.object(
-                 self.service, "calculate_receipt_stats"
-             ) as mock_receipt_stats, \
-             patch.object(
-                 self.service, "calculate_invoice_stats"
-             ) as mock_invoice_stats, \
-             patch.object(
-                 self.service, "calculate_bidding_stats"
-             ) as mock_bidding_stats:
+        with (
+            patch.object(self.service, "calculate_contract_stats") as mock_contract_stats,
+            patch.object(self.service, "calculate_order_stats") as mock_order_stats,
+            patch.object(self.service, "calculate_receipt_stats") as mock_receipt_stats,
+            patch.object(self.service, "calculate_invoice_stats") as mock_invoice_stats,
+            patch.object(self.service, "calculate_bidding_stats") as mock_bidding_stats,
+        ):
 
             mock_contract_stats.return_value = {
                 "new_count": 5,
@@ -570,21 +568,13 @@ class TestBusinessSupportReportsService(unittest.TestCase):
         mock_date_class.today.return_value = date(2024, 3, 15)
 
         # Mock calculate methods
-        with patch.object(
-            self.service, "calculate_contract_stats"
-        ) as mock_contract_stats, \
-             patch.object(
-                 self.service, "calculate_order_stats"
-             ) as mock_order_stats, \
-             patch.object(
-                 self.service, "calculate_receipt_stats"
-             ) as mock_receipt_stats, \
-             patch.object(
-                 self.service, "calculate_invoice_stats"
-             ) as mock_invoice_stats, \
-             patch.object(
-                 self.service, "calculate_bidding_stats"
-             ) as mock_bidding_stats:
+        with (
+            patch.object(self.service, "calculate_contract_stats") as mock_contract_stats,
+            patch.object(self.service, "calculate_order_stats") as mock_order_stats,
+            patch.object(self.service, "calculate_receipt_stats") as mock_receipt_stats,
+            patch.object(self.service, "calculate_invoice_stats") as mock_invoice_stats,
+            patch.object(self.service, "calculate_bidding_stats") as mock_bidding_stats,
+        ):
 
             mock_contract_stats.return_value = {
                 "new_count": 0,
@@ -620,21 +610,13 @@ class TestBusinessSupportReportsService(unittest.TestCase):
 
     def test_get_weekly_report_year_start_week(self):
         """测试年初第一周的周报"""
-        with patch.object(
-            self.service, "calculate_contract_stats"
-        ) as mock_contract_stats, \
-             patch.object(
-                 self.service, "calculate_order_stats"
-             ) as mock_order_stats, \
-             patch.object(
-                 self.service, "calculate_receipt_stats"
-             ) as mock_receipt_stats, \
-             patch.object(
-                 self.service, "calculate_invoice_stats"
-             ) as mock_invoice_stats, \
-             patch.object(
-                 self.service, "calculate_bidding_stats"
-             ) as mock_bidding_stats:
+        with (
+            patch.object(self.service, "calculate_contract_stats") as mock_contract_stats,
+            patch.object(self.service, "calculate_order_stats") as mock_order_stats,
+            patch.object(self.service, "calculate_receipt_stats") as mock_receipt_stats,
+            patch.object(self.service, "calculate_invoice_stats") as mock_invoice_stats,
+            patch.object(self.service, "calculate_bidding_stats") as mock_bidding_stats,
+        ):
 
             # Setup all mock returns
             mock_contract_stats.return_value = {

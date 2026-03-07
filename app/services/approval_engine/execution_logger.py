@@ -7,21 +7,22 @@
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
 from sqlalchemy.orm import Session
 
+from app.core.logging_config import (
+    get_logger,
+    log_error_with_context,
+    log_info_with_context,
+    log_warning_with_context,
+)
 from app.models.approval import (
     ApprovalActionLog,
     ApprovalInstance,
-    ApprovalTask,
     ApprovalNodeDefinition,
+    ApprovalTask,
 )
 from app.models.user import User
-from app.core.logging_config import (
-    get_logger,
-    log_info_with_context,
-    log_error_with_context,
-    log_warning_with_context,
-)
 
 logger = get_logger(__name__)
 
@@ -667,15 +668,15 @@ class ApprovalExecutionLogger:
         stats = (
             self.db.query(
                 func.count(ApprovalTask.id).label("total_tasks"),
-                func.sum(
-                    func.case((ApprovalTask.status == "PENDING", 1), else_=0)
-                ).label("pending_tasks"),
-                func.sum(
-                    func.case((ApprovalTask.status == "APPROVED", 1), else_=0)
-                ).label("approved_tasks"),
-                func.sum(
-                    func.case((ApprovalTask.status == "REJECTED", 1), else_=0)
-                ).label("rejected_tasks"),
+                func.sum(func.case((ApprovalTask.status == "PENDING", 1), else_=0)).label(
+                    "pending_tasks"
+                ),
+                func.sum(func.case((ApprovalTask.status == "APPROVED", 1), else_=0)).label(
+                    "approved_tasks"
+                ),
+                func.sum(func.case((ApprovalTask.status == "REJECTED", 1), else_=0)).label(
+                    "rejected_tasks"
+                ),
             )
             .filter(ApprovalTask.instance_id == instance.id)
             .first()

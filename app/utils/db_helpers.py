@@ -21,6 +21,7 @@
 """
 
 from typing import Any, Optional, Type, TypeVar
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 

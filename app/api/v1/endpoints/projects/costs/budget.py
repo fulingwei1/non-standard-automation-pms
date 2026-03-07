@@ -34,11 +34,7 @@ def get_budget_execution_analysis(
 
     try:
         result = BudgetAnalysisService.get_budget_execution_analysis(db, project_id)
-        return ResponseModel(
-            code=200,
-            message="success",
-            data=result
-        )
+        return ResponseModel(code=200, message="success", data=result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -66,11 +62,7 @@ def get_budget_trend_analysis(
         result = BudgetAnalysisService.get_budget_trend_analysis(
             db, project_id, start_date=start, end_date=end
         )
-        return ResponseModel(
-            code=200,
-            message="success",
-            data=result
-        )
+        return ResponseModel(code=200, message="success", data=result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

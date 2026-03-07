@@ -38,7 +38,9 @@ class ApprovalTemplate(Base, TimestampMixin):
     entity_type = Column(String(50), comment="关联业务实体类型（如QUOTE/CONTRACT/ECN）")
 
     # 表单定义
-    form_schema = Column(JSON, comment="""
+    form_schema = Column(
+        JSON,
+        comment="""
         表单结构定义（JSON Schema），示例：
         {
             "fields": [
@@ -47,7 +49,8 @@ class ApprovalTemplate(Base, TimestampMixin):
                 {"name": "leave_days", "type": "number", "label": "请假天数", "computed": true}
             ]
         }
-    """)
+    """,
+    )
 
     # 版本管理
     version = Column(Integer, default=1, comment="版本号")
@@ -56,7 +59,9 @@ class ApprovalTemplate(Base, TimestampMixin):
     published_by = Column(Integer, ForeignKey("users.id"), comment="发布人ID")
 
     # 权限控制
-    visible_scope = Column(JSON, comment="""
+    visible_scope = Column(
+        JSON,
+        comment="""
         可见范围配置，示例：
         {
             "type": "ALL",  // ALL/DEPARTMENT/ROLE/USER
@@ -64,7 +69,8 @@ class ApprovalTemplate(Base, TimestampMixin):
             "role_codes": ["SALES", "PM"],
             "user_ids": [10, 20]
         }
-    """)
+    """,
+    )
 
     # 状态
     is_active = Column(Boolean, default=True, comment="是否启用")
@@ -74,8 +80,12 @@ class ApprovalTemplate(Base, TimestampMixin):
     updated_by = Column(Integer, ForeignKey("users.id"), comment="最后更新人ID")
 
     # 关系
-    flows = relationship("ApprovalFlowDefinition", back_populates="template", cascade="all, delete-orphan")
-    routing_rules = relationship("ApprovalRoutingRule", back_populates="template", cascade="all, delete-orphan")
+    flows = relationship(
+        "ApprovalFlowDefinition", back_populates="template", cascade="all, delete-orphan"
+    )
+    routing_rules = relationship(
+        "ApprovalRoutingRule", back_populates="template", cascade="all, delete-orphan"
+    )
     instances = relationship("ApprovalInstance", back_populates="template")
     creator = relationship("User", foreign_keys=[created_by])
     publisher = relationship("User", foreign_keys=[published_by])
@@ -94,12 +104,15 @@ class ApprovalTemplate(Base, TimestampMixin):
 
 class ApprovalTemplateVersion(Base, TimestampMixin):
     """审批模板版本历史
-    
+
     【状态】未启用 - 审批模板版本控制"""
+
     __tablename__ = "approval_template_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    template_id = Column(Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID")
+    template_id = Column(
+        Integer, ForeignKey("approval_templates.id"), nullable=False, comment="模板ID"
+    )
     version = Column(Integer, nullable=False, comment="版本号")
 
     # 版本快照

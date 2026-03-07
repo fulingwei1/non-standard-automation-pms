@@ -22,27 +22,24 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.outsourcing import OutsourcingOrder
-from app.models.vendor import Vendor
 from app.models.project import Project, ProjectPaymentPlan
 from app.models.sales import Contract
 from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.schemas.common import ResponseModel
 
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/bi",
-    tags=["bi"]
-)
+router = APIRouter(prefix="/bi", tags=["bi"])
 
 # 共 5 个路由
 
 # ==================== BI 报表 ====================
+
 
 @router.get("/delivery-rate", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_delivery_rate(
@@ -62,11 +59,15 @@ def get_delivery_rate(
         end_date = date.today()
 
     # 获取在时间范围内的项目
-    projects = db.query(Project).filter(
-        Project.planned_end_date >= start_date,
-        Project.planned_end_date <= end_date,
-        Project.status.in_(["COMPLETED", "EXECUTING"])
-    ).all()
+    projects = (
+        db.query(Project)
+        .filter(
+            Project.planned_end_date >= start_date,
+            Project.planned_end_date <= end_date,
+            Project.status.in_(["COMPLETED", "EXECUTING"]),
+        )
+        .all()
+    )
 
     total_projects = len(projects)
     on_time_projects = 0
@@ -89,8 +90,8 @@ def get_delivery_rate(
             "total_projects": total_projects,
             "on_time_projects": on_time_projects,
             "delayed_projects": delayed_projects,
-            "on_time_rate": round(on_time_rate, 2)
-        }
+            "on_time_rate": round(on_time_rate, 2),
+        },
     )
 
 
@@ -104,12 +105,12 @@ def get_health_distribution(
     项目健康度分布
     统计各健康度等级的项目数量
     """
-    health_stats = db.query(
-        Project.health,
-        func.count(Project.id).label('count')
-    ).filter(
-        Project.status != "CANCELLED"
-    ).group_by(Project.health).all()
+    health_stats = (
+        db.query(Project.health, func.count(Project.id).label("count"))
+        .filter(Project.status != "CANCELLED")
+        .group_by(Project.health)
+        .all()
+    )
 
     distribution = {}
     total = 0
@@ -130,8 +131,8 @@ def get_health_distribution(
         data={
             "total_projects": total,
             "distribution": distribution,
-            "distribution_percentage": distribution_pct
-        }
+            "distribution_percentage": distribution_pct,
+        },
     )
 
 
@@ -157,7 +158,7 @@ def get_utilization(
     query = db.query(Timesheet).filter(
         Timesheet.work_date >= start_date,
         Timesheet.work_date <= end_date,
-        func.upper(func.coalesce(Timesheet.status, "APPROVED")) == "APPROVED"
+        func.upper(func.coalesce(Timesheet.status, "APPROVED")) == "APPROVED",
     )
 
     if department_id:
@@ -189,19 +190,25 @@ def get_utilization(
         user = db.query(User).filter(User.id == user_id).first()
         if user:
             utilization_rate = (hours / standard_hours * 100) if standard_hours > 0 else 0
-            utilization_data.append({
-                "user_id": user_id,
-                "user_name": user.real_name or user.username,
-                "department": user.department,
-                "total_hours": round(hours, 2),
-                "standard_hours": standard_hours,
-                "utilization_rate": round(utilization_rate, 2)
-            })
+            utilization_data.append(
+                {
+                    "user_id": user_id,
+                    "user_name": user.real_name or user.username,
+                    "department": user.department,
+                    "total_hours": round(hours, 2),
+                    "standard_hours": standard_hours,
+                    "utilization_rate": round(utilization_rate, 2),
+                }
+            )
 
     # 按利用率排序
     utilization_data.sort(key=lambda x: x["utilization_rate"], reverse=True)
 
-    avg_utilization = sum([u["utilization_rate"] for u in utilization_data]) / len(utilization_data) if utilization_data else 0
+    avg_utilization = (
+        sum([u["utilization_rate"] for u in utilization_data]) / len(utilization_data)
+        if utilization_data
+        else 0
+    )
 
     return ResponseModel(
         code=200,
@@ -210,8 +217,8 @@ def get_utilization(
             "period": {"start": str(start_date), "end": str(end_date)},
             "total_users": len(utilization_data),
             "avg_utilization_rate": round(avg_utilization, 2),
-            "utilization_list": utilization_data
-        }
+            "utilization_list": utilization_data,
+        },
     )
 
 
@@ -233,20 +240,22 @@ def get_supplier_performance(
         end_date = date.today()
 
     # 查询外协订单
-    orders = db.query(OutsourcingOrder).filter(
-        OutsourcingOrder.created_at >= start_date,
-        OutsourcingOrder.created_at <= end_date
-    ).all()
+    orders = (
+        db.query(OutsourcingOrder)
+        .filter(OutsourcingOrder.created_at >= start_date, OutsourcingOrder.created_at <= end_date)
+        .all()
+    )
 
     # 按供应商统计
     vendor_stats = {}
     for order in orders:
         vendor_id = order.vendor_id
         if vendor_id not in vendor_stats:
-            vendor = db.query(Vendor).filter(
-                Vendor.id == vendor_id,
-                Vendor.vendor_type == 'OUTSOURCING'
-            ).first()
+            vendor = (
+                db.query(Vendor)
+                .filter(Vendor.id == vendor_id, Vendor.vendor_type == "OUTSOURCING")
+                .first()
+            )
             vendor_stats[vendor_id] = {
                 "vendor_id": vendor_id,
                 "vendor_name": vendor.supplier_name if vendor else None,
@@ -255,7 +264,7 @@ def get_supplier_performance(
                 "total_amount": Decimal("0"),
                 "on_time_deliveries": 0,
                 "delayed_deliveries": 0,
-                "quality_pass_rate": 0.0
+                "quality_pass_rate": 0.0,
             }
 
         stats = vendor_stats[vendor_id]
@@ -264,9 +273,10 @@ def get_supplier_performance(
 
         # 检查交付情况
         from app.models.outsourcing import OutsourcingDelivery
-        deliveries = db.query(OutsourcingDelivery).filter(
-            OutsourcingDelivery.order_id == order.id
-        ).all()
+
+        deliveries = (
+            db.query(OutsourcingDelivery).filter(OutsourcingDelivery.order_id == order.id).all()
+        )
 
         for delivery in deliveries:
             if delivery.delivery_date and order.expected_delivery_date:
@@ -277,9 +287,10 @@ def get_supplier_performance(
 
         # 检查质检情况
         from app.models.outsourcing import OutsourcingInspection
-        inspections = db.query(OutsourcingInspection).filter(
-            OutsourcingInspection.order_id == order.id
-        ).all()
+
+        inspections = (
+            db.query(OutsourcingInspection).filter(OutsourcingInspection.order_id == order.id).all()
+        )
 
         if inspections:
             pass_count = sum([1 for ins in inspections if ins.inspection_result == "PASS"])
@@ -289,18 +300,22 @@ def get_supplier_performance(
     performance_list = []
     for vendor_id, stats in vendor_stats.items():
         total_deliveries = stats["on_time_deliveries"] + stats["delayed_deliveries"]
-        on_time_rate = (stats["on_time_deliveries"] / total_deliveries * 100) if total_deliveries > 0 else 0
+        on_time_rate = (
+            (stats["on_time_deliveries"] / total_deliveries * 100) if total_deliveries > 0 else 0
+        )
 
-        performance_list.append({
-            "vendor_id": stats["vendor_id"],
-            "vendor_name": stats["vendor_name"],
-            "vendor_code": stats["vendor_code"],
-            "total_orders": stats["total_orders"],
-            "total_amount": float(stats["total_amount"]),
-            "on_time_rate": round(on_time_rate, 2),
-            "quality_pass_rate": round(stats["quality_pass_rate"], 2),
-            "performance_score": round((on_time_rate + stats["quality_pass_rate"]) / 2, 2)
-        })
+        performance_list.append(
+            {
+                "vendor_id": stats["vendor_id"],
+                "vendor_name": stats["vendor_name"],
+                "vendor_code": stats["vendor_code"],
+                "total_orders": stats["total_orders"],
+                "total_amount": float(stats["total_amount"]),
+                "on_time_rate": round(on_time_rate, 2),
+                "quality_pass_rate": round(stats["quality_pass_rate"], 2),
+                "performance_score": round((on_time_rate + stats["quality_pass_rate"]) / 2, 2),
+            }
+        )
 
     # 按绩效得分排序
     performance_list.sort(key=lambda x: x["performance_score"], reverse=True)
@@ -311,8 +326,8 @@ def get_supplier_performance(
         data={
             "period": {"start": str(start_date), "end": str(end_date)},
             "total_vendors": len(performance_list),
-            "performance_list": performance_list
-        }
+            "performance_list": performance_list,
+        },
     )
 
 
@@ -336,17 +351,23 @@ def get_executive_dashboard(
         completed_projects = db.query(Project).filter(Project.status == "COMPLETED").count()
 
         # 健康度分布
-        health_dist = db.query(
-            Project.health,
-            func.count(Project.id).label('count')
-        ).filter(Project.status != "CANCELLED").group_by(Project.health).all()
+        health_dist = (
+            db.query(Project.health, func.count(Project.id).label("count"))
+            .filter(Project.status != "CANCELLED")
+            .group_by(Project.health)
+            .all()
+        )
         health_distribution = {stat.health or "H4": stat.count for stat in health_dist}
 
         # 销售统计（本月）- Contract.status 使用小写与模型一致
-        month_contracts = db.query(Contract).filter(
-            func.date(Contract.signing_date) >= month_start,
-            func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"])
-        ).all()
+        month_contracts = (
+            db.query(Contract)
+            .filter(
+                func.date(Contract.signing_date) >= month_start,
+                func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"]),
+            )
+            .all()
+        )
         month_contract_amount = sum([float(c.total_amount or 0) for c in month_contracts])
 
         # 成本统计（scalar() 可能返回 Decimal，统一转 float）
@@ -354,27 +375,39 @@ def get_executive_dashboard(
         total_actual = db.query(func.sum(Project.actual_cost)).scalar() or 0
 
         # 合同统计 - 状态与模型一致（小写）
-        total_contracts = db.query(Contract).filter(
-            func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"])
-        ).count()
-        total_contract_amount = db.query(func.sum(Contract.total_amount)).filter(
-            func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"])
-        ).scalar() or 0
+        total_contracts = (
+            db.query(Contract)
+            .filter(func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"]))
+            .count()
+        )
+        total_contract_amount = (
+            db.query(func.sum(Contract.total_amount))
+            .filter(func.upper(Contract.status).in_(["SIGNED", "EXECUTING", "ACTIVE"]))
+            .scalar()
+            or 0
+        )
 
         # 回款统计：按实际收款金额汇总（ProjectPaymentPlan 状态为 COMPLETED/PARTIAL，无 PAID）
-        total_received = db.query(func.sum(ProjectPaymentPlan.actual_amount)).filter(
-            ProjectPaymentPlan.status.in_(["COMPLETED", "PARTIAL"])
-        ).scalar() or 0
+        total_received = (
+            db.query(func.sum(ProjectPaymentPlan.actual_amount))
+            .filter(ProjectPaymentPlan.status.in_(["COMPLETED", "PARTIAL"]))
+            .scalar()
+            or 0
+        )
 
         # 人员统计
         total_users = db.query(User).filter(User.is_active).count()
 
         # 工时统计（本月）
         try:
-            month_timesheets = db.query(Timesheet).filter(
-                Timesheet.work_date >= month_start,
-                func.upper(func.coalesce(Timesheet.status, "APPROVED")) == "APPROVED"
-            ).all()
+            month_timesheets = (
+                db.query(Timesheet)
+                .filter(
+                    Timesheet.work_date >= month_start,
+                    func.upper(func.coalesce(Timesheet.status, "APPROVED")) == "APPROVED",
+                )
+                .all()
+            )
             month_total_hours = sum([float(ts.hours or 0) for ts in month_timesheets])
         except Exception:
             month_total_hours = 0
@@ -418,4 +451,3 @@ def get_executive_dashboard(
                 "detail": str(e),
             },
         )
-

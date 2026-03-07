@@ -4,9 +4,10 @@ Unit tests for domain_codes.py
 Covers: app/utils/domain_codes.py
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 import re
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # We'll import domain code classes lazily inside tests to avoid model import errors
 
@@ -36,9 +37,12 @@ class TestOutsourcingCodes:
     def test_generate_order_no_format(self):
         """generate_order_no calls generate_sequential_no and returns its result."""
         from app.utils.domain_codes import OutsourcingCodes
+
         with _patch_gen("OS-250101-001") as mock_gen:
             db = MagicMock()
-            with patch("app.utils.domain_codes.OutsourcingCodes.generate_order_no.__func__", create=True):
+            with patch(
+                "app.utils.domain_codes.OutsourcingCodes.generate_order_no.__func__", create=True
+            ):
                 pass
             # Patch the lazy import inside the method
             with patch("app.models.outsourcing.OutsourcingOrder", MagicMock()):
@@ -49,6 +53,7 @@ class TestOutsourcingCodes:
     def test_generate_delivery_no_format(self):
         """generate_delivery_no calls generate_sequential_no."""
         from app.utils.domain_codes import OutsourcingCodes
+
         with _patch_gen("DL-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.outsourcing.OutsourcingDelivery", MagicMock()):
@@ -58,6 +63,7 @@ class TestOutsourcingCodes:
     def test_generate_inspection_no_format(self):
         """generate_inspection_no calls generate_sequential_no."""
         from app.utils.domain_codes import OutsourcingCodes
+
         with _patch_gen("IQ-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.outsourcing.OutsourcingInspection", MagicMock()):
@@ -71,6 +77,7 @@ class TestPresaleCodes:
     def test_generate_ticket_no(self):
         """generate_ticket_no returns TICKET prefixed number."""
         from app.utils.domain_codes import PresaleCodes
+
         with _patch_gen("TICKET-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.presale.PresaleSupportTicket", MagicMock()):
@@ -80,6 +87,7 @@ class TestPresaleCodes:
     def test_generate_solution_no(self):
         """generate_solution_no returns SOL prefixed number."""
         from app.utils.domain_codes import PresaleCodes
+
         with _patch_gen("SOL-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.presale.PresaleSolution", MagicMock()):
@@ -89,6 +97,7 @@ class TestPresaleCodes:
     def test_generate_tender_no(self):
         """generate_tender_no returns TENDER prefixed number."""
         from app.utils.domain_codes import PresaleCodes
+
         with _patch_gen("TENDER-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.presale.PresaleTenderRecord", MagicMock()):
@@ -102,6 +111,7 @@ class TestPmoCodes:
     def test_generate_risk_no(self):
         """generate_risk_no returns RISK prefixed number."""
         from app.utils.domain_codes import PmoCodes
+
         with _patch_gen("RISK-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.pmo.PmoProjectRisk", MagicMock()):
@@ -112,6 +122,7 @@ class TestPmoCodes:
     def test_generate_meeting_no(self):
         """generate_meeting_no returns MTG prefixed number."""
         from app.utils.domain_codes import PmoCodes
+
         with _patch_gen("MTG-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.pmo.PmoMeeting", MagicMock()):
@@ -121,6 +132,7 @@ class TestPmoCodes:
     def test_generate_initiation_no(self):
         """generate_initiation_no returns INIT prefixed number."""
         from app.utils.domain_codes import PmoCodes
+
         with _patch_gen("INIT-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.pmo.PmoProjectInitiation", MagicMock()):
@@ -134,6 +146,7 @@ class TestTaskCenterCodes:
     def test_generate_task_code(self):
         """generate_task_code returns TASK prefixed number."""
         from app.utils.domain_codes import TaskCenterCodes
+
         with _patch_gen("TASK-250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.task_center.TaskUnified", MagicMock()):
@@ -148,6 +161,7 @@ class TestPurchaseCodes:
     def test_generate_order_no(self):
         """generate_order_no returns PO prefixed number."""
         from app.utils.domain_codes import PurchaseCodes
+
         with _patch_gen("PO-20250101-001") as mock_gen:
             db = MagicMock()
             with patch("app.models.purchase.PurchaseOrder", MagicMock()):
@@ -161,29 +175,35 @@ class TestDomainCodeModuleExports:
     def test_outsourcing_instance_exists(self):
         """Module exports an outsourcing instance."""
         from app.utils.domain_codes import OutsourcingCodes
+
         assert OutsourcingCodes is not None
 
     def test_presale_instance_exists(self):
         """Module exports a presale instance."""
         from app.utils.domain_codes import PresaleCodes
+
         assert PresaleCodes is not None
 
     def test_pmo_instance_exists(self):
         """Module exports a pmo instance."""
         from app.utils.domain_codes import PmoCodes
+
         assert PmoCodes is not None
 
     def test_task_center_instance_exists(self):
         """Module exports a task_center instance."""
         from app.utils.domain_codes import TaskCenterCodes
+
         assert TaskCenterCodes is not None
 
     def test_generate_sequential_no_is_called_with_correct_prefix(self):
         """Ensure prefix param is correctly passed for each code type."""
         from app.utils.domain_codes import OutsourcingCodes
+
         call_kwargs = {}
+
         def capture_gen(*args, **kwargs):
-            call_kwargs['prefix'] = args[3] if len(args) > 3 else kwargs.get('prefix')
+            call_kwargs["prefix"] = args[3] if len(args) > 3 else kwargs.get("prefix")
             return "OS-250101-001"
 
         with patch("app.utils.domain_codes.generate_sequential_no", side_effect=capture_gen):
@@ -191,4 +211,4 @@ class TestDomainCodeModuleExports:
             with patch("app.models.outsourcing.OutsourcingOrder", MagicMock()):
                 OutsourcingCodes.generate_order_no(db)
 
-        assert call_kwargs.get('prefix') == 'OS'
+        assert call_kwargs.get("prefix") == "OS"

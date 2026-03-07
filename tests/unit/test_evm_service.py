@@ -3,8 +3,9 @@
 EVM (Earned Value Management) 服务单元测试
 覆盖 EVMCalculator 核心计算方法
 """
-import pytest
 from decimal import Decimal
+
+import pytest
 
 from app.services.evm_service import EVMCalculator
 
@@ -37,21 +38,15 @@ class TestScheduleVariance:
     """进度偏差 SV = EV - PV"""
 
     def test_sv_on_schedule(self):
-        sv = EVMCalculator.calculate_schedule_variance(
-            ev=Decimal("500"), pv=Decimal("500")
-        )
+        sv = EVMCalculator.calculate_schedule_variance(ev=Decimal("500"), pv=Decimal("500"))
         assert sv == Decimal("0.0000")
 
     def test_sv_ahead_of_schedule(self):
-        sv = EVMCalculator.calculate_schedule_variance(
-            ev=Decimal("600"), pv=Decimal("500")
-        )
+        sv = EVMCalculator.calculate_schedule_variance(ev=Decimal("600"), pv=Decimal("500"))
         assert sv == Decimal("100.0000")
 
     def test_sv_behind_schedule(self):
-        sv = EVMCalculator.calculate_schedule_variance(
-            ev=Decimal("400"), pv=Decimal("500")
-        )
+        sv = EVMCalculator.calculate_schedule_variance(ev=Decimal("400"), pv=Decimal("500"))
         assert sv == Decimal("-100.0000")
 
 
@@ -59,21 +54,15 @@ class TestCostVariance:
     """成本偏差 CV = EV - AC"""
 
     def test_cv_under_budget(self):
-        cv = EVMCalculator.calculate_cost_variance(
-            ev=Decimal("500"), ac=Decimal("400")
-        )
+        cv = EVMCalculator.calculate_cost_variance(ev=Decimal("500"), ac=Decimal("400"))
         assert cv == Decimal("100.0000")
 
     def test_cv_over_budget(self):
-        cv = EVMCalculator.calculate_cost_variance(
-            ev=Decimal("500"), ac=Decimal("600")
-        )
+        cv = EVMCalculator.calculate_cost_variance(ev=Decimal("500"), ac=Decimal("600"))
         assert cv == Decimal("-100.0000")
 
     def test_cv_on_budget(self):
-        cv = EVMCalculator.calculate_cost_variance(
-            ev=Decimal("500"), ac=Decimal("500")
-        )
+        cv = EVMCalculator.calculate_cost_variance(ev=Decimal("500"), ac=Decimal("500"))
         assert cv == Decimal("0.0000")
 
 
@@ -87,27 +76,19 @@ class TestPerformanceIndices:
         assert spi == Decimal("1.000000")
 
     def test_spi_pv_zero_returns_none(self):
-        spi = EVMCalculator.calculate_schedule_performance_index(
-            ev=Decimal("500"), pv=Decimal("0")
-        )
+        spi = EVMCalculator.calculate_schedule_performance_index(ev=Decimal("500"), pv=Decimal("0"))
         assert spi is None
 
     def test_cpi_on_budget(self):
-        cpi = EVMCalculator.calculate_cost_performance_index(
-            ev=Decimal("500"), ac=Decimal("500")
-        )
+        cpi = EVMCalculator.calculate_cost_performance_index(ev=Decimal("500"), ac=Decimal("500"))
         assert cpi == Decimal("1.000000")
 
     def test_cpi_ac_zero_returns_none(self):
-        cpi = EVMCalculator.calculate_cost_performance_index(
-            ev=Decimal("500"), ac=Decimal("0")
-        )
+        cpi = EVMCalculator.calculate_cost_performance_index(ev=Decimal("500"), ac=Decimal("0"))
         assert cpi is None
 
     def test_cpi_under_budget(self):
-        cpi = EVMCalculator.calculate_cost_performance_index(
-            ev=Decimal("600"), ac=Decimal("500")
-        )
+        cpi = EVMCalculator.calculate_cost_performance_index(ev=Decimal("600"), ac=Decimal("500"))
         assert cpi > Decimal("1.0")
 
 
@@ -161,15 +142,11 @@ class TestTCPIAndPercentComplete:
         assert tcpi is None
 
     def test_percent_complete(self):
-        pct = EVMCalculator.calculate_percent_complete(
-            value=Decimal("500"), bac=Decimal("1000")
-        )
+        pct = EVMCalculator.calculate_percent_complete(value=Decimal("500"), bac=Decimal("1000"))
         assert pct == Decimal("50.00")
 
     def test_percent_complete_zero_bac_returns_none(self):
-        pct = EVMCalculator.calculate_percent_complete(
-            value=Decimal("500"), bac=Decimal("0")
-        )
+        pct = EVMCalculator.calculate_percent_complete(value=Decimal("500"), bac=Decimal("0"))
         assert pct is None
 
 
@@ -177,33 +154,37 @@ class TestCalculateAllMetrics:
     """一次性计算所有EVM指标"""
 
     def test_all_metrics_returns_required_keys(self):
-        result = EVMCalculator.calculate_all_metrics(
-            pv=500, ev=450, ac=480, bac=1000
-        )
-        required_keys = ["pv", "ev", "ac", "bac", "sv", "cv", "spi", "cpi",
-                         "eac", "etc", "vac", "tcpi"]
+        result = EVMCalculator.calculate_all_metrics(pv=500, ev=450, ac=480, bac=1000)
+        required_keys = [
+            "pv",
+            "ev",
+            "ac",
+            "bac",
+            "sv",
+            "cv",
+            "spi",
+            "cpi",
+            "eac",
+            "etc",
+            "vac",
+            "tcpi",
+        ]
         for key in required_keys:
             assert key in result
 
     def test_all_metrics_sv_calculation(self):
-        result = EVMCalculator.calculate_all_metrics(
-            pv=500, ev=450, ac=480, bac=1000
-        )
+        result = EVMCalculator.calculate_all_metrics(pv=500, ev=450, ac=480, bac=1000)
         # SV = EV - PV = 450 - 500 = -50
         assert result["sv"] == Decimal("-50.0000")
 
     def test_all_metrics_cv_calculation(self):
-        result = EVMCalculator.calculate_all_metrics(
-            pv=500, ev=450, ac=480, bac=1000
-        )
+        result = EVMCalculator.calculate_all_metrics(pv=500, ev=450, ac=480, bac=1000)
         # CV = EV - AC = 450 - 480 = -30
         assert result["cv"] == Decimal("-30.0000")
 
     def test_all_metrics_on_track_project(self):
         """完美项目：EV==PV==AC"""
-        result = EVMCalculator.calculate_all_metrics(
-            pv=500, ev=500, ac=500, bac=1000
-        )
+        result = EVMCalculator.calculate_all_metrics(pv=500, ev=500, ac=500, bac=1000)
         assert result["sv"] == Decimal("0.0000")
         assert result["cv"] == Decimal("0.0000")
         assert result["spi"] == Decimal("1.000000")

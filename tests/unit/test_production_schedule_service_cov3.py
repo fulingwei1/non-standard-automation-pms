@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - production_schedule_service"""
-import pytest
+from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
-from datetime import datetime, date, timedelta
+
+import pytest
 
 pytest.importorskip("app.services.production_schedule_service")
 
@@ -33,12 +34,8 @@ def make_schedule(**kw):
     s.work_order_id = kw.get("work_order_id", 1)
     s.equipment_id = kw.get("equipment_id", 1)
     s.worker_id = kw.get("worker_id", 1)
-    s.scheduled_start_time = kw.get(
-        "scheduled_start_time", datetime(2024, 1, 2, 8, 0)
-    )
-    s.scheduled_end_time = kw.get(
-        "scheduled_end_time", datetime(2024, 1, 2, 16, 0)
-    )
+    s.scheduled_start_time = kw.get("scheduled_start_time", datetime(2024, 1, 2, 8, 0))
+    s.scheduled_end_time = kw.get("scheduled_end_time", datetime(2024, 1, 2, 16, 0))
     s.duration_hours = kw.get("duration_hours", 8.0)
     s.priority_score = kw.get("priority_score", 20.0)
     return s

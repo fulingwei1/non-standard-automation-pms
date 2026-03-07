@@ -2,13 +2,15 @@
 """
 第六批覆盖测试 - stock_count_service.py
 """
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.stock_count_service import StockCountService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -52,7 +54,7 @@ class TestCreateCountTask:
     def test_creates_task(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
         service._create_count_details = MagicMock()
-        
+
         task = service.create_count_task(
             count_type="FULL",
             count_date=date(2024, 1, 1),
@@ -63,7 +65,7 @@ class TestCreateCountTask:
     def test_creates_task_with_options(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
         service._create_count_details = MagicMock()
-        
+
         task = service.create_count_task(
             count_type="PARTIAL",
             count_date=date(2024, 6, 15),
@@ -76,17 +78,23 @@ class TestCreateCountTask:
 
 class TestGetCountTasks:
     def test_returns_list(self, service, mock_db):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = service.get_count_tasks()
         assert isinstance(result, list)
 
     def test_with_status_filter(self, service, mock_db):
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = service.get_count_tasks(status="PENDING")
         assert isinstance(result, list)
 
     def test_with_date_filter(self, service, mock_db):
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = service.get_count_tasks(start_date=date(2024, 1, 1), end_date=date(2024, 12, 31))
         assert isinstance(result, list)
 
@@ -107,18 +115,18 @@ class TestStartCountTask:
     def test_start_pending_task(self, service, mock_db, mock_task):
         mock_task.status = "PENDING"
         # Patch get_count_task to return the mock_task directly
-        with patch.object(service, 'get_count_task', return_value=mock_task):
+        with patch.object(service, "get_count_task", return_value=mock_task):
             result = service.start_count_task(1)
         assert mock_db.commit.called
 
     def test_start_nonexistent_task(self, service):
-        with patch.object(service, 'get_count_task', return_value=None):
+        with patch.object(service, "get_count_task", return_value=None):
             with pytest.raises(ValueError):
                 service.start_count_task(999)
 
     def test_start_non_pending_raises(self, service, mock_task):
         mock_task.status = "COMPLETED"
-        with patch.object(service, 'get_count_task', return_value=mock_task):
+        with patch.object(service, "get_count_task", return_value=mock_task):
             with pytest.raises(ValueError):
                 service.start_count_task(1)
 
@@ -126,18 +134,18 @@ class TestStartCountTask:
 class TestCancelCountTask:
     def test_cancel_pending_task(self, service, mock_db, mock_task):
         mock_task.status = "PENDING"
-        with patch.object(service, 'get_count_task', return_value=mock_task):
+        with patch.object(service, "get_count_task", return_value=mock_task):
             result = service.cancel_count_task(1)
         assert mock_db.commit.called
 
     def test_cancel_nonexistent_raises(self, service):
-        with patch.object(service, 'get_count_task', return_value=None):
+        with patch.object(service, "get_count_task", return_value=None):
             with pytest.raises(ValueError):
                 service.cancel_count_task(999)
 
     def test_cancel_completed_raises(self, service, mock_task):
         mock_task.status = "COMPLETED"
-        with patch.object(service, 'get_count_task', return_value=mock_task):
+        with patch.object(service, "get_count_task", return_value=mock_task):
             with pytest.raises(ValueError):
                 service.cancel_count_task(1)
 
@@ -150,9 +158,11 @@ class TestRecordActualQuantity:
         detail.task_id = 1
         detail.status = "PENDING"
         detail.book_qty = Decimal("100")
-        
-        with patch.object(service, 'get_count_task', return_value=mock_task):
-            mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = detail
+
+        with patch.object(service, "get_count_task", return_value=mock_task):
+            mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = (
+                detail
+            )
             service._update_task_statistics = MagicMock()
             try:
                 result = service.record_actual_quantity(
@@ -167,10 +177,12 @@ class TestRecordActualQuantity:
 class TestGetCountSummary:
     def test_summary_returns_dict(self, service, mock_task):
         service._get_top_differences = MagicMock(return_value=[])
-        with patch.object(service, 'get_count_task', return_value=mock_task):
-            with patch.object(service.db, 'query') as mock_query:
+        with patch.object(service, "get_count_task", return_value=mock_task):
+            with patch.object(service.db, "query") as mock_query:
                 mock_query.return_value.filter.return_value.count.return_value = 10
-                mock_query.return_value.filter.return_value.filter.return_value.count.return_value = 5
+                mock_query.return_value.filter.return_value.filter.return_value.count.return_value = (
+                    5
+                )
                 try:
                     result = service.get_count_summary(1)
                     assert isinstance(result, dict)

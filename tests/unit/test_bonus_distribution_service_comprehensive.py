@@ -117,11 +117,7 @@ class TestValidateSheetForDistribution:
         mock_sheet.finance_confirmed = True
         mock_sheet.hr_confirmed = True
         mock_sheet.manager_confirmed = True
-        mock_sheet.parse_result = {
-            "valid_rows": [
-                {"user_id": 1, "amount": 1000}
-            ]
-        }
+        mock_sheet.parse_result = {"valid_rows": [{"user_id": 1, "amount": 1000}]}
 
         is_valid, error = validate_sheet_for_distribution(mock_sheet)
 
@@ -147,7 +143,7 @@ class TestCreateCalculationFromTeamAllocation:
                 team_allocation_id=999,
                 user_id=1,
                 calculated_amount=Decimal("1000"),
-                calculator=mock_calculator
+                calculator=mock_calculator,
             )
 
         assert "不存在" in str(exc_info.value)
@@ -172,7 +168,7 @@ class TestCreateCalculationFromTeamAllocation:
                 team_allocation_id=1,
                 user_id=1,
                 calculated_amount=Decimal("1000"),
-                calculator=mock_calculator
+                calculator=mock_calculator,
             )
 
         assert "缺少规则ID" in str(exc_info.value)
@@ -200,7 +196,7 @@ class TestCreateCalculationFromTeamAllocation:
                 team_allocation_id=1,
                 user_id=1,
                 calculated_amount=Decimal("1000"),
-                calculator=mock_calculator
+                calculator=mock_calculator,
             )
 
         assert "规则ID" in str(exc_info.value)
@@ -232,7 +228,7 @@ class TestCreateCalculationFromTeamAllocation:
             team_allocation_id=1,
             user_id=1,
             calculated_amount=Decimal("1000"),
-            calculator=mock_calculator
+            calculator=mock_calculator,
         )
 
         mock_db.add.assert_called_once()
@@ -266,7 +262,7 @@ class TestCreateDistributionRecord:
             user_id=10,
             row_data=row_data,
             current_user_id=100,
-            generate_distribution_code_func=mock_code_generator
+            generate_distribution_code_func=mock_code_generator,
         )
 
         mock_db.add.assert_called_once()
@@ -291,7 +287,7 @@ class TestCreateDistributionRecord:
             user_id=20,
             row_data=row_data,
             current_user_id=100,
-            generate_distribution_code_func=mock_code_generator
+            generate_distribution_code_func=mock_code_generator,
         )
 
         mock_db.add.assert_called_once()
@@ -316,7 +312,7 @@ class TestCreateDistributionRecord:
             user_id=30,
             row_data=row_data,
             current_user_id=100,
-            generate_distribution_code_func=mock_code_generator
+            generate_distribution_code_func=mock_code_generator,
         )
 
         # Verify the distribution object was added

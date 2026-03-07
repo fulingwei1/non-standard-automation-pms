@@ -10,22 +10,22 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, call
 from datetime import datetime
+from unittest.mock import MagicMock, call, patch
 
 from fastapi import HTTPException
 
-from app.services.production.work_order_service import WorkOrderService
 from app.models.production import (
+    ProcessDict,
+    ProductionPlan,
+    Worker,
     WorkOrder,
     Workshop,
     Workstation,
-    ProcessDict,
-    Worker,
-    ProductionPlan,
 )
-from app.models.project import Project, Machine
+from app.models.project import Machine, Project
 from app.schemas.production import WorkOrderResponse
+from app.services.production.work_order_service import WorkOrderService
 
 
 class TestWorkOrderService(unittest.TestCase):
@@ -41,6 +41,7 @@ class TestWorkOrderService(unittest.TestCase):
     def test_build_response_full_fields(self):
         """测试构建响应 - 所有字段都存在"""
         from datetime import date
+
         # 准备mock对象
         mock_order = MagicMock(spec=WorkOrder)
         mock_order.id = 1
@@ -259,7 +260,7 @@ class TestWorkOrderService(unittest.TestCase):
             def __init__(self):
                 self.offset = 0
                 self.limit = 10
-            
+
             def to_response(self, items, total):
                 return {
                     "items": items,
@@ -267,7 +268,7 @@ class TestWorkOrderService(unittest.TestCase):
                     "page": 1,
                     "page_size": 10,
                 }
-        
+
         mock_pagination = MockPagination()
 
         # 执行
@@ -435,12 +436,26 @@ class TestWorkOrderService(unittest.TestCase):
         mock_order.created_at = datetime.now()
         mock_order.updated_at = datetime.now()
         # 设置所有可选字段为None
-        for attr in ['project_id', 'machine_id', 'production_plan_id', 'process_id',
-                     'workshop_id', 'workstation_id', 'assigned_to', 'material_name',
-                     'specification', 'standard_hours', 'plan_start_date', 'plan_end_date',
-                     'actual_start_time', 'actual_end_time', 'work_content', 'remark']:
+        for attr in [
+            "project_id",
+            "machine_id",
+            "production_plan_id",
+            "process_id",
+            "workshop_id",
+            "workstation_id",
+            "assigned_to",
+            "material_name",
+            "specification",
+            "standard_hours",
+            "plan_start_date",
+            "plan_end_date",
+            "actual_start_time",
+            "actual_end_time",
+            "work_content",
+            "remark",
+        ]:
             setattr(mock_order, attr, None)
-        
+
         mock_get_or_404.return_value = mock_order
 
         result = self.service.get_work_order(1)
@@ -546,7 +561,7 @@ class TestWorkOrderService(unittest.TestCase):
         mock_order.workshop_id = 50
 
         mock_worker = MagicMock(spec=Worker)
-        
+
         mock_workstation = MagicMock(spec=Workstation)
         mock_workstation.workshop_id = 999  # 不匹配工单的车间ID
 

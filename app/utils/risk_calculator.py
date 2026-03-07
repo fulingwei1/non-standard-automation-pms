@@ -11,10 +11,7 @@ Probability = Literal["LOW", "MEDIUM", "HIGH"]
 Impact = Literal["LOW", "MEDIUM", "HIGH"]
 
 
-def calculate_risk_level(
-    probability: Optional[str],
-    impact: Optional[str]
-) -> Optional[str]:
+def calculate_risk_level(probability: Optional[str], impact: Optional[str]) -> Optional[str]:
     """
     基于概率和影响计算风险等级
 

@@ -2,8 +2,9 @@
 """
 Tests for app/core/security_headers.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.core.security_headers import SecurityHeadersMiddleware, setup_security_headers
 
@@ -32,6 +33,7 @@ def _make_request(path="/api/v1/something"):
 # ---------------------------------------------------------------------------
 # Security headers applied to every response
 # ---------------------------------------------------------------------------
+
 
 class TestSecurityHeadersAdded:
     def setup_method(self):
@@ -147,6 +149,7 @@ class TestProductionOnlyHeaders:
 # CSP policy
 # ---------------------------------------------------------------------------
 
+
 class TestBuildCspPolicy:
     def test_debug_csp_allows_unsafe_inline(self):
         mw = _make_middleware(debug=True)
@@ -186,6 +189,7 @@ class TestBuildCspPolicy:
 # Permissions policy
 # ---------------------------------------------------------------------------
 
+
 class TestBuildPermissionsPolicy:
     def test_contains_geolocation_disabled(self):
         mw = _make_middleware()
@@ -212,6 +216,7 @@ class TestBuildPermissionsPolicy:
 # No-cache headers for sensitive paths
 # ---------------------------------------------------------------------------
 
+
 class TestNoCacheHeaders:
     def test_no_cache_headers_added(self):
         mw = _make_middleware()
@@ -225,6 +230,7 @@ class TestNoCacheHeaders:
 # ---------------------------------------------------------------------------
 # dispatch – integration
 # ---------------------------------------------------------------------------
+
 
 class TestDispatch:
     @pytest.mark.asyncio
@@ -265,9 +271,11 @@ class TestDispatch:
 # setup_security_headers
 # ---------------------------------------------------------------------------
 
+
 class TestSetupSecurityHeaders:
     def test_adds_middleware_to_app(self):
         from fastapi import FastAPI
+
         app = FastAPI()
         setup_security_headers(app)
         # Check that the middleware stack was modified

@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """报表缓存管理器单元测试 - 第三十四批"""
 
-import pytest
 import time
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.cache_manager")
 
 try:
     from app.services.report_framework.cache_manager import (
+        CacheManager,
         MemoryCacheBackend,
         RedisCacheBackend,
         ReportCacheManager,
-        CacheManager,
     )
 except ImportError:
     pytestmark = pytest.mark.skip(reason="导入失败")

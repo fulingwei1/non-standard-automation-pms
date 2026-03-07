@@ -3,8 +3,9 @@
 app/services/permission_service.py 核心方法覆盖率测试（当前 12%）
 专注于不需要 DB 的方法和可 mock DB 的方法
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestPermissionServiceCheckPermission:
@@ -21,10 +22,7 @@ class TestPermissionServiceCheckPermission:
         user.is_superuser = True
 
         result = PermissionService.check_permission(
-            db=mock_db,
-            user_id=1,
-            permission_code="project:delete",
-            user=user
+            db=mock_db, user_id=1, permission_code="project:delete", user=user
         )
         assert result is True
 
@@ -35,10 +33,7 @@ class TestPermissionServiceCheckPermission:
         user.is_superuser = True
 
         result = PermissionService.check_any_permission(
-            db=mock_db,
-            user_id=1,
-            permission_codes=["a", "b", "c"],
-            user=user
+            db=mock_db, user_id=1, permission_codes=["a", "b", "c"], user=user
         )
         assert result is True
 
@@ -49,10 +44,7 @@ class TestPermissionServiceCheckPermission:
         user.is_superuser = True
 
         result = PermissionService.check_all_permissions(
-            db=mock_db,
-            user_id=1,
-            permission_codes=["a", "b", "c"],
-            user=user
+            db=mock_db, user_id=1, permission_codes=["a", "b", "c"], user=user
         )
         assert result is True
 
@@ -63,14 +55,9 @@ class TestPermissionServiceCheckPermission:
         user.is_superuser = False
         user.tenant_id = 1
 
-        with patch.object(
-            PermissionService, "get_user_permissions", return_value=set()
-        ):
+        with patch.object(PermissionService, "get_user_permissions", return_value=set()):
             result = PermissionService.check_permission(
-                db=mock_db,
-                user_id=10,
-                permission_code="project:delete",
-                user=user
+                db=mock_db, user_id=10, permission_code="project:delete", user=user
             )
             assert result is False
 
@@ -82,15 +69,10 @@ class TestPermissionServiceCheckPermission:
         user.tenant_id = 1
 
         with patch.object(
-            PermissionService,
-            "get_user_permissions",
-            return_value={"project:read", "project:edit"}
+            PermissionService, "get_user_permissions", return_value={"project:read", "project:edit"}
         ):
             result = PermissionService.check_permission(
-                db=mock_db,
-                user_id=10,
-                permission_code="project:read",
-                user=user
+                db=mock_db, user_id=10, permission_code="project:read", user=user
             )
             assert result is True
 
@@ -101,16 +83,12 @@ class TestPermissionServiceCheckPermission:
         user.is_superuser = False
         user.tenant_id = 1
 
-        with patch.object(
-            PermissionService,
-            "get_user_permissions",
-            return_value={"project:read"}
-        ):
+        with patch.object(PermissionService, "get_user_permissions", return_value={"project:read"}):
             result = PermissionService.check_any_permission(
                 db=mock_db,
                 user_id=10,
                 permission_codes=["project:read", "project:delete"],
-                user=user
+                user=user,
             )
             assert result is True
 
@@ -121,16 +99,12 @@ class TestPermissionServiceCheckPermission:
         user.is_superuser = False
         user.tenant_id = 1
 
-        with patch.object(
-            PermissionService,
-            "get_user_permissions",
-            return_value=set()
-        ):
+        with patch.object(PermissionService, "get_user_permissions", return_value=set()):
             result = PermissionService.check_any_permission(
                 db=mock_db,
                 user_id=10,
                 permission_codes=["project:read", "project:delete"],
-                user=user
+                user=user,
             )
             assert result is False
 
@@ -144,13 +118,10 @@ class TestPermissionServiceCheckPermission:
         with patch.object(
             PermissionService,
             "get_user_permissions",
-            return_value={"project:read", "project:edit", "project:delete"}
+            return_value={"project:read", "project:edit", "project:delete"},
         ):
             result = PermissionService.check_all_permissions(
-                db=mock_db,
-                user_id=10,
-                permission_codes=["project:read", "project:edit"],
-                user=user
+                db=mock_db, user_id=10, permission_codes=["project:read", "project:edit"], user=user
             )
             assert result is True
 
@@ -161,16 +132,12 @@ class TestPermissionServiceCheckPermission:
         user.is_superuser = False
         user.tenant_id = 1
 
-        with patch.object(
-            PermissionService,
-            "get_user_permissions",
-            return_value={"project:read"}
-        ):
+        with patch.object(PermissionService, "get_user_permissions", return_value={"project:read"}):
             result = PermissionService.check_all_permissions(
                 db=mock_db,
                 user_id=10,
                 permission_codes=["project:read", "project:delete"],
-                user=user
+                user=user,
             )
             assert result is False
 
@@ -189,8 +156,7 @@ class TestCheckPermissionCompat:
         assert result is True
 
     def test_compat_regular_user_denied(self):
-        from app.services.permission_service import check_permission_compat
-        from app.services.permission_service import PermissionService
+        from app.services.permission_service import PermissionService, check_permission_compat
 
         user = MagicMock()
         user.is_superuser = False
@@ -217,8 +183,7 @@ class TestHasModulePermission:
         assert result is True
 
     def test_regular_user_no_module_permissions(self):
-        from app.services.permission_service import has_module_permission
-        from app.services.permission_service import PermissionService
+        from app.services.permission_service import PermissionService, has_module_permission
 
         user = MagicMock()
         user.is_superuser = False

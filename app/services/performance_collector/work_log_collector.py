@@ -8,8 +8,8 @@ import re
 from datetime import date
 from typing import Any, Dict
 
-
 from app.models.work_log import WorkLog
+
 from .base import PerformanceDataCollectorBase
 
 
@@ -17,10 +17,7 @@ class WorkLogCollector(PerformanceDataCollectorBase):
     """工作日志数据收集器"""
 
     def extract_self_evaluation_from_work_logs(
-        self,
-        engineer_id: int,
-        start_date: date,
-        end_date: date
+        self, engineer_id: int, start_date: date, end_date: date
     ) -> Dict[str, Any]:
         """
         从工作日志中提取自我评价数据（增强版：支持上下文分析）
@@ -39,23 +36,27 @@ class WorkLogCollector(PerformanceDataCollectorBase):
             }
         """
         try:
-            work_logs = self.db.query(WorkLog).filter(
-                WorkLog.user_id == engineer_id,
-                WorkLog.work_date.between(start_date, end_date),
-                WorkLog.status == 'SUBMITTED'
-            ).all()
+            work_logs = (
+                self.db.query(WorkLog)
+                .filter(
+                    WorkLog.user_id == engineer_id,
+                    WorkLog.work_date.between(start_date, end_date),
+                    WorkLog.status == "SUBMITTED",
+                )
+                .all()
+            )
 
             if not work_logs:
                 return {
-                    'positive_count': 0,
-                    'negative_count': 0,
-                    'tech_mentions': 0,
-                    'collaboration_mentions': 0,
-                    'problem_solving_count': 0,
-                    'knowledge_sharing_count': 0,
-                    'tech_breakthrough_count': 0,
-                    'total_logs': 0,
-                    'self_evaluation_score': 75.0  # 默认值
+                    "positive_count": 0,
+                    "negative_count": 0,
+                    "tech_mentions": 0,
+                    "collaboration_mentions": 0,
+                    "problem_solving_count": 0,
+                    "knowledge_sharing_count": 0,
+                    "tech_breakthrough_count": 0,
+                    "total_logs": 0,
+                    "self_evaluation_score": 75.0,  # 默认值
                 }
 
             positive_count = 0
@@ -134,27 +135,27 @@ class WorkLogCollector(PerformanceDataCollectorBase):
             self_evaluation_score = max(0, min(100, self_evaluation_score))
 
             return {
-                'positive_count': positive_count,
-                'negative_count': negative_count,
-                'tech_mentions': tech_mentions,
-                'collaboration_mentions': collaboration_mentions,
-                'problem_solving_count': problem_solving_count,
-                'knowledge_sharing_count': knowledge_sharing_count,
-                'tech_breakthrough_count': tech_breakthrough_count,
-                'total_logs': len(work_logs),
-                'self_evaluation_score': round(self_evaluation_score, 2)
+                "positive_count": positive_count,
+                "negative_count": negative_count,
+                "tech_mentions": tech_mentions,
+                "collaboration_mentions": collaboration_mentions,
+                "problem_solving_count": problem_solving_count,
+                "knowledge_sharing_count": knowledge_sharing_count,
+                "tech_breakthrough_count": tech_breakthrough_count,
+                "total_logs": len(work_logs),
+                "self_evaluation_score": round(self_evaluation_score, 2),
             }
         except Exception as e:
             # 异常处理：返回默认值
             return {
-                'positive_count': 0,
-                'negative_count': 0,
-                'tech_mentions': 0,
-                'collaboration_mentions': 0,
-                'problem_solving_count': 0,
-                'knowledge_sharing_count': 0,
-                'tech_breakthrough_count': 0,
-                'total_logs': 0,
-                'self_evaluation_score': 75.0,
-                'error': str(e)
+                "positive_count": 0,
+                "negative_count": 0,
+                "tech_mentions": 0,
+                "collaboration_mentions": 0,
+                "problem_solving_count": 0,
+                "knowledge_sharing_count": 0,
+                "tech_breakthrough_count": 0,
+                "total_logs": 0,
+                "self_evaluation_score": 75.0,
+                "error": str(e),
             }

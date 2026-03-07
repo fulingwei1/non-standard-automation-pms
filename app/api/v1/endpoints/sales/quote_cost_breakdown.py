@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
-from app.models.sales import Quote, QuoteVersion, QuoteItem
+from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
@@ -47,14 +47,14 @@ def get_cost_breakdown(
 
     get_or_404(db, QuoteVersion, vid, detail="版本不存在")
 
-    items = db.query(QuoteItem).filter(
-        QuoteItem.quote_version_id == vid
-    ).order_by(QuoteItem.id).all()
+    items = (
+        db.query(QuoteItem).filter(QuoteItem.quote_version_id == vid).order_by(QuoteItem.id).all()
+    )
 
     # 按类型分组汇总
     categories = {}
-    total_cost = Decimal('0')
-    total_price = Decimal('0')
+    total_cost = Decimal("0")
+    total_price = Decimal("0")
 
     for item in items:
         cat = item.cost_category or item.item_type or "其他"
@@ -62,23 +62,25 @@ def get_cost_breakdown(
             categories[cat] = {
                 "category": cat,
                 "items": [],
-                "subtotal_cost": Decimal('0'),
-                "subtotal_price": Decimal('0'),
+                "subtotal_cost": Decimal("0"),
+                "subtotal_price": Decimal("0"),
             }
 
-        item_cost = item.cost or Decimal('0')
-        item_price = (item.qty or Decimal('0')) * (item.unit_price or Decimal('0'))
+        item_cost = item.cost or Decimal("0")
+        item_price = (item.qty or Decimal("0")) * (item.unit_price or Decimal("0"))
 
-        categories[cat]["items"].append({
-            "id": item.id,
-            "item_name": item.item_name,
-            "specification": item.specification,
-            "qty": float(item.qty) if item.qty else 0,
-            "unit": item.unit,
-            "unit_price": float(item.unit_price) if item.unit_price else 0,
-            "cost": float(item_cost),
-            "cost_source": item.cost_source,
-        })
+        categories[cat]["items"].append(
+            {
+                "id": item.id,
+                "item_name": item.item_name,
+                "specification": item.specification,
+                "qty": float(item.qty) if item.qty else 0,
+                "unit": item.unit,
+                "unit_price": float(item.unit_price) if item.unit_price else 0,
+                "cost": float(item_cost),
+                "cost_source": item.cost_source,
+            }
+        )
         categories[cat]["subtotal_cost"] += item_cost
         categories[cat]["subtotal_price"] += item_price
         total_cost += item_cost
@@ -89,7 +91,9 @@ def get_cost_breakdown(
     for cat_data in categories.values():
         cat_data["subtotal_cost"] = float(cat_data["subtotal_cost"])
         cat_data["subtotal_price"] = float(cat_data["subtotal_price"])
-        cat_data["cost_ratio"] = round(cat_data["subtotal_cost"] / float(total_cost) * 100, 2) if total_cost else 0
+        cat_data["cost_ratio"] = (
+            round(cat_data["subtotal_cost"] / float(total_cost) * 100, 2) if total_cost else 0
+        )
         breakdown.append(cat_data)
 
     return ResponseModel(
@@ -100,9 +104,13 @@ def get_cost_breakdown(
             "version_id": vid,
             "total_cost": float(total_cost),
             "total_price": float(total_price),
-            "gross_margin": round((float(total_price) - float(total_cost)) / float(total_price) * 100, 2) if total_price else 0,
-            "breakdown": breakdown
-        }
+            "gross_margin": (
+                round((float(total_price) - float(total_cost)) / float(total_price) * 100, 2)
+                if total_price
+                else 0
+            ),
+            "breakdown": breakdown,
+        },
     )
 
 
@@ -164,11 +172,11 @@ def recalculate_cost(
 
     items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == vid).all()
 
-    total_cost = Decimal('0')
-    total_price = Decimal('0')
+    total_cost = Decimal("0")
+    total_price = Decimal("0")
 
     for item in items:
-        total_cost += item.cost or Decimal('0')
+        total_cost += item.cost or Decimal("0")
         if item.qty and item.unit_price:
             total_price += item.qty * item.unit_price
 
@@ -176,10 +184,12 @@ def recalculate_cost(
     version.cost_total = total_cost
     version.total_price = total_price
     if total_price > 0:
-        version.gross_margin = ((total_price - total_cost) / total_price * 100).quantize(Decimal('0.01'))
+        version.gross_margin = ((total_price - total_cost) / total_price * 100).quantize(
+            Decimal("0.01")
+        )
         version.margin_warning = version.gross_margin < 15
     else:
-        version.gross_margin = Decimal('0')
+        version.gross_margin = Decimal("0")
 
     version.cost_breakdown_complete = True
     db.commit()
@@ -191,6 +201,6 @@ def recalculate_cost(
             "version_id": vid,
             "total_cost": float(total_cost),
             "total_price": float(total_price),
-            "gross_margin": float(version.gross_margin)
-        }
+            "gross_margin": float(version.gross_margin),
+        },
     )

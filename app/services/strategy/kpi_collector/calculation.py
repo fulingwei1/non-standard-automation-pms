@@ -14,6 +14,7 @@ from app.models.strategy import KPI, KPIDataSource
 # 尝试导入 simpleeval，如果不存在则禁用公式计算
 try:
     from simpleeval import simple_eval
+
     HAS_SIMPLEEVAL = True
 except ImportError:
     HAS_SIMPLEEVAL = False
@@ -21,10 +22,7 @@ except ImportError:
 from .registry import get_collector
 
 
-def calculate_formula(
-    formula: str,
-    params: Dict[str, Any]
-) -> Optional[Decimal]:
+def calculate_formula(formula: str, params: Dict[str, Any]) -> Optional[Decimal]:
     """
     计算公式（使用 simpleeval 安全执行）
 
@@ -42,16 +40,12 @@ def calculate_formula(
         return None
 
     if not HAS_SIMPLEEVAL:
-        raise RuntimeError(
-            "公式计算需要安装 simpleeval 库。请运行: pip install simpleeval"
-        )
+        raise RuntimeError("公式计算需要安装 simpleeval 库。请运行: pip install simpleeval")
 
     try:
         # 将 Decimal 转换为 float 以便计算
         float_params = {
-            k: float(v) if isinstance(v, Decimal) else v
-            for k, v in params.items()
-            if v is not None
+            k: float(v) if isinstance(v, Decimal) else v for k, v in params.items() if v is not None
         }
 
         # 使用 simpleeval 安全执行公式
@@ -63,9 +57,7 @@ def calculate_formula(
 
 
 def collect_kpi_value(
-    db: Session,
-    kpi_id: int,
-    data_source_id: Optional[int] = None
+    db: Session, kpi_id: int, data_source_id: Optional[int] = None
 ) -> Optional[Decimal]:
     """
     采集单个 KPI 的值
@@ -84,18 +76,24 @@ def collect_kpi_value(
 
     # 获取数据源配置
     if data_source_id:
-        data_source = db.query(KPIDataSource).filter(
-            KPIDataSource.id == data_source_id,
-            KPIDataSource.kpi_id == kpi_id,
-            KPIDataSource.is_active
-        ).first()
+        data_source = (
+            db.query(KPIDataSource)
+            .filter(
+                KPIDataSource.id == data_source_id,
+                KPIDataSource.kpi_id == kpi_id,
+                KPIDataSource.is_active,
+            )
+            .first()
+        )
     else:
         # 使用主数据源
-        data_source = db.query(KPIDataSource).filter(
-            KPIDataSource.kpi_id == kpi_id,
-            KPIDataSource.is_primary,
-            KPIDataSource.is_active
-        ).first()
+        data_source = (
+            db.query(KPIDataSource)
+            .filter(
+                KPIDataSource.kpi_id == kpi_id, KPIDataSource.is_primary, KPIDataSource.is_active
+            )
+            .first()
+        )
 
     if not data_source:
         return None
@@ -113,18 +111,22 @@ def collect_kpi_value(
                 db,
                 metric=data_source.metric,
                 filters=filters,
-                aggregation=data_source.aggregation or "COUNT"
+                aggregation=data_source.aggregation or "COUNT",
             )
 
             # 如果有公式，进行计算
             if value is not None and data_source.formula:
-                formula_params = json.loads(data_source.formula_params) if data_source.formula_params else {}
+                formula_params = (
+                    json.loads(data_source.formula_params) if data_source.formula_params else {}
+                )
                 formula_params["value"] = value
                 value = calculate_formula(data_source.formula, formula_params)
 
         elif data_source.source_type == "FORMULA":
             # 纯公式计算
-            formula_params = json.loads(data_source.formula_params) if data_source.formula_params else {}
+            formula_params = (
+                json.loads(data_source.formula_params) if data_source.formula_params else {}
+            )
             value = calculate_formula(data_source.formula, formula_params)
 
         else:
@@ -147,11 +149,7 @@ def collect_kpi_value(
         return None
 
 
-def auto_collect_kpi(
-    db: Session,
-    kpi_id: int,
-    recorded_by: Optional[int] = None
-) -> Optional[KPI]:
+def auto_collect_kpi(db: Session, kpi_id: int, recorded_by: Optional[int] = None) -> Optional[KPI]:
     """
     自动采集并更新 KPI 值
 
@@ -177,6 +175,7 @@ def auto_collect_kpi(
 
     # 创建历史记录
     from app.services.strategy.kpi_service import create_kpi_snapshot
+
     create_kpi_snapshot(db, kpi_id, "AUTO", recorded_by)
 
     db.commit()
@@ -185,9 +184,7 @@ def auto_collect_kpi(
 
 
 def batch_collect_kpis(
-    db: Session,
-    strategy_id: Optional[int] = None,
-    frequency: Optional[str] = None
+    db: Session, strategy_id: Optional[int] = None, frequency: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     批量采集 KPI
@@ -202,16 +199,10 @@ def batch_collect_kpis(
     """
     from app.models.strategy import CSF
 
-    query = db.query(KPI).filter(
-        KPI.is_active,
-        KPI.data_source_type == "AUTO"
-    )
+    query = db.query(KPI).filter(KPI.is_active, KPI.data_source_type == "AUTO")
 
     if strategy_id:
-        query = query.join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.is_active
-        )
+        query = query.join(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active)
 
     if frequency:
         query = query.filter(KPI.frequency == frequency)

@@ -14,11 +14,12 @@ from pydantic import BaseModel, Field
 
 from ..common import PaginatedResponse, TimestampSchema
 
-
 # ==================== 生产人员管理 ====================
+
 
 class WorkerCreate(BaseModel):
     """创建生产人员"""
+
     worker_code: str = Field(max_length=50, description="工人编码")
     worker_name: str = Field(max_length=100, description="工人姓名")
     user_id: Optional[int] = Field(default=None, description="关联用户ID")
@@ -31,6 +32,7 @@ class WorkerCreate(BaseModel):
 
 class WorkerUpdate(BaseModel):
     """更新生产人员"""
+
     worker_name: Optional[str] = None
     workshop_id: Optional[int] = None
     worker_type: Optional[str] = None
@@ -41,6 +43,7 @@ class WorkerUpdate(BaseModel):
 
 class WorkerResponse(TimestampSchema):
     """生产人员响应"""
+
     id: int
     worker_code: str
     worker_name: str
@@ -55,6 +58,5 @@ class WorkerResponse(TimestampSchema):
 
 class WorkerListResponse(PaginatedResponse):
     """生产人员列表响应"""
+
     items: List[WorkerResponse]
-
-

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - assembly_attr_recommender 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.assembly_attr_recommender")
 
@@ -43,7 +44,7 @@ class TestAssemblyAttrRecommendation:
             importance_level="NORMAL",
             confidence=95.0,
             source="HISTORY",
-            reason="测试原因"
+            reason="测试原因",
         )
         assert rec.stage_code == "FRAME"
         assert rec.is_blocking is True
@@ -54,11 +55,7 @@ class TestAssemblyAttrRecommendation:
         assert rec.reason == "测试原因"
 
     def test_default_values(self):
-        rec = AssemblyAttrRecommendation(
-            stage_code="MECH",
-            is_blocking=False,
-            can_postpone=True
-        )
+        rec = AssemblyAttrRecommendation(stage_code="MECH", is_blocking=False, can_postpone=True)
         assert rec.confidence == 0.0
         assert rec.source == "UNKNOWN"
         assert rec.reason == ""
@@ -116,7 +113,9 @@ class TestRecommend:
         material = make_material(name="未知物料")
 
         # All queries return nothing
-        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.first.return_value = None
 
         result = AssemblyAttrRecommender.recommend(db, bom_item, material, current_bom_id=999)
@@ -129,7 +128,9 @@ class TestRecommend:
         bom_item = make_bom_item()
         material = make_material(name="铝型材框架件")
 
-        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.first.return_value = None
 
         result = AssemblyAttrRecommender.recommend(db, bom_item, material, current_bom_id=1)
@@ -141,7 +142,9 @@ class TestRecommend:
         bom_item = make_bom_item()
         material = make_material(name="铝型材 40x40")
 
-        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.first.return_value = None
 
         result = AssemblyAttrRecommender.recommend(db, bom_item, material, current_bom_id=1)
@@ -162,7 +165,9 @@ class TestRecommend:
         history_attr.importance_level = "CRITICAL"
 
         db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
-            history_attr, history_attr, history_attr  # 3 uses
+            history_attr,
+            history_attr,
+            history_attr,  # 3 uses
         ]
         db.query.return_value.filter.return_value.first.return_value = None
 
@@ -228,7 +233,9 @@ class TestMatchFromHistory:
         attr.can_postpone = False
         attr.importance_level = "NORMAL"
         db.query.return_value.join.return_value.filter.return_value.all.return_value = [
-            attr, attr, attr
+            attr,
+            attr,
+            attr,
         ]
 
         result = AssemblyAttrRecommender._match_from_history(db, material_id=1, current_bom_id=99)
@@ -251,7 +258,9 @@ class TestMatchFromHistory:
         non_blocking_attr.importance_level = "NORMAL"
 
         db.query.return_value.join.return_value.filter.return_value.all.return_value = [
-            blocking_attr, blocking_attr, non_blocking_attr
+            blocking_attr,
+            blocking_attr,
+            non_blocking_attr,
         ]
 
         result = AssemblyAttrRecommender._match_from_history(db, material_id=1, current_bom_id=99)

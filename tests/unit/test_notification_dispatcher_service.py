@@ -20,13 +20,13 @@ class TestNotificationDispatcherInit:
         """测试重试计划存在"""
         from app.services.notification_dispatcher import NotificationDispatcher
 
-        assert hasattr(NotificationDispatcher, 'RETRY_SCHEDULE')
+        assert hasattr(NotificationDispatcher, "RETRY_SCHEDULE")
         assert isinstance(NotificationDispatcher.RETRY_SCHEDULE, list)
         assert len(NotificationDispatcher.RETRY_SCHEDULE) > 0
 
     def test_handlers_initialized(self, dispatcher):
         """测试处理器初始化"""
-        assert hasattr(dispatcher, 'unified_service')
+        assert hasattr(dispatcher, "unified_service")
 
 
 class TestComputeNextRetry:
@@ -162,7 +162,9 @@ class TestDispatchSuccess:
         alert = MagicMock()
         alert.id = 1
 
-        with patch('app.services.notification_dispatcher.record_notification_success') as record_success:
+        with patch(
+            "app.services.notification_dispatcher.record_notification_success"
+        ) as record_success:
             result = dispatcher.dispatch(notification, alert, None)
 
             if result:
@@ -188,7 +190,9 @@ class TestDispatchFailure:
             "success": False,
             "message": "发送失败",
         }
-        with patch('app.services.notification_dispatcher.record_notification_failure') as record_failure:
+        with patch(
+            "app.services.notification_dispatcher.record_notification_failure"
+        ) as record_failure:
             result = dispatcher.dispatch(notification, alert, None)
 
             assert result is False
@@ -210,7 +214,7 @@ class TestDispatchFailure:
             "success": False,
             "message": "发送失败",
         }
-        with patch('app.services.notification_dispatcher.record_notification_failure'):
+        with patch("app.services.notification_dispatcher.record_notification_failure"):
             dispatcher.dispatch(notification, alert, None)
 
             assert notification.next_retry_at is not None
@@ -259,6 +263,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

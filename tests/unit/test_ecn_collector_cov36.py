@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """ECN数据收集器单元测试 - 第三十六批"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.performance_collector.ecn_collector")
 
@@ -37,8 +38,10 @@ class TestCollectEcnResponsibilityData:
     def test_with_projects_calculates_ecn_rate(self):
         collector = make_collector()
         # 模拟有两个项目
-        pm1 = MagicMock(); pm1.project_id = 1
-        pm2 = MagicMock(); pm2.project_id = 2
+        pm1 = MagicMock()
+        pm1.project_id = 1
+        pm2 = MagicMock()
+        pm2.project_id = 2
         collector.db.query.return_value.filter.return_value.all.return_value = [pm1, pm2]
         # 模拟ECN数量
         collector.db.query.return_value.filter.return_value.count.return_value = 4
@@ -56,12 +59,15 @@ class TestCollectEcnResponsibilityData:
 
     def test_responsible_ecn_less_than_total(self):
         collector = make_collector()
-        pm = MagicMock(); pm.project_id = 10
+        pm = MagicMock()
+        pm.project_id = 10
         collector.db.query.return_value.filter.return_value.all.return_value = [pm]
         call_count = [0]
+
         def count_side(*args, **kwargs):
             call_count[0] += 1
             return 10 if call_count[0] == 1 else 3
+
         collector.db.query.return_value.filter.return_value.count.side_effect = count_side
         result = collector.collect_ecn_responsibility_data(1, START, END)
         assert "ecn_responsibility_rate" in result

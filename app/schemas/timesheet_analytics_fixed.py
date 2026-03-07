@@ -5,11 +5,10 @@ Pydantic 2.x + Python 3.13 兼容
 """
 
 from datetime import date
-from typing import Optional, List, Dict, Any
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
-
 
 # ==================== 基础类型 ====================
 
@@ -21,8 +20,10 @@ ForecastMethodType = str
 
 # ==================== 请求参数 ====================
 
+
 class TimesheetAnalyticsQuery(BaseModel):
     """工时分析查询参数"""
+
     period_type: str = Field(..., description="周期类型:DAILY/WEEKLY/MONTHLY/QUARTERLY/YEARLY")
     start_date: date = Field(..., description="开始日期")
     end_date: date = Field(..., description="结束日期")
@@ -30,36 +31,39 @@ class TimesheetAnalyticsQuery(BaseModel):
     user_ids: Optional[List[int]] = Field(None, description="用户ID列表")
     project_ids: Optional[List[int]] = Field(None, description="项目ID列表")
     department_ids: Optional[List[int]] = Field(None, description="部门ID列表")
-    
-    @field_validator('period_type')
+
+    @field_validator("period_type")
     @classmethod
     def validate_period_type(cls, v):
-        valid = ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY']
+        valid = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"]
         if v not in valid:
-            raise ValueError(f'period_type must be one of {valid}')
+            raise ValueError(f"period_type must be one of {valid}")
         return v
 
 
 class ProjectForecastRequest(BaseModel):
     """项目工时预测请求"""
+
     project_id: Optional[int] = Field(None, description="项目ID(已存在项目)")
     project_name: Optional[str] = Field(None, description="项目名称(新项目)")
     project_type: Optional[str] = Field(None, description="项目类型")
     complexity: Optional[str] = Field(None, description="复杂度:LOW/MEDIUM/HIGH")
     team_size: Optional[int] = Field(None, description="团队规模")
     duration_days: Optional[int] = Field(None, description="计划周期(天)")
-    forecast_method: str = Field('HISTORICAL_AVERAGE', description="预测方法")
+    forecast_method: str = Field("HISTORICAL_AVERAGE", description="预测方法")
     similar_project_ids: Optional[List[int]] = Field(None, description="相似项目ID列表")
 
 
 class CompletionForecastQuery(BaseModel):
     """完工时间预测查询"""
+
     project_id: int = Field(..., description="项目ID")
-    forecast_method: str = Field('TREND_FORECAST', description="预测方法")
+    forecast_method: str = Field("TREND_FORECAST", description="预测方法")
 
 
 class WorkloadAlertQuery(BaseModel):
     """负荷预警查询"""
+
     user_ids: Optional[List[int]] = Field(None, description="用户ID列表")
     department_ids: Optional[List[int]] = Field(None, description="部门ID列表")
     alert_level: Optional[str] = Field(None, description="预警级别:LOW/MEDIUM/HIGH/CRITICAL")
@@ -68,8 +72,10 @@ class WorkloadAlertQuery(BaseModel):
 
 # ==================== 响应模型 ====================
 
+
 class ChartDataPoint(BaseModel):
     """图表数据点"""
+
     label: str = Field(..., description="标签")
     value: float = Field(..., description="值")
     date: Optional[date] = Field(None, description="日期")
@@ -78,12 +84,14 @@ class ChartDataPoint(BaseModel):
 
 class TrendChartData(BaseModel):
     """趋势图数据"""
+
     labels: List[str] = Field(..., description="X轴标签")
     datasets: List[Dict[str, Any]] = Field(..., description="数据集")
 
 
 class PieChartData(BaseModel):
     """饼图数据"""
+
     labels: List[str] = Field(..., description="标签")
     values: List[float] = Field(..., description="值")
     colors: Optional[List[str]] = Field(None, description="颜色")
@@ -91,6 +99,7 @@ class PieChartData(BaseModel):
 
 class HeatmapData(BaseModel):
     """热力图数据"""
+
     rows: List[str] = Field(..., description="行标签")
     columns: List[str] = Field(..., description="列标签")
     data: List[List[float]] = Field(..., description="数据矩阵")
@@ -98,6 +107,7 @@ class HeatmapData(BaseModel):
 
 class TimesheetTrendResponse(BaseModel):
     """工时趋势响应"""
+
     period_type: str
     start_date: date
     end_date: date
@@ -109,26 +119,28 @@ class TimesheetTrendResponse(BaseModel):
     trend: str = Field(..., description="趋势:INCREASING/STABLE/DECREASING")
     change_rate: Decimal = Field(..., description="变化率(%)")
     chart_data: TrendChartData = Field(..., description="图表数据")
-    
+
     class Config:
         from_attributes = True
 
 
 class WorkloadHeatmapResponse(BaseModel):
     """人员负荷热力图响应"""
+
     period_type: str
     start_date: date
     end_date: date
     heatmap_data: HeatmapData
     statistics: Dict[str, Any] = Field(..., description="统计信息")
     overload_users: List[Dict[str, Any]] = Field(..., description="超负荷人员")
-    
+
     class Config:
         from_attributes = True
 
 
 class EfficiencyComparisonResponse(BaseModel):
     """效率对比响应"""
+
     period_type: str
     start_date: date
     end_date: date
@@ -139,13 +151,14 @@ class EfficiencyComparisonResponse(BaseModel):
     efficiency_rate: Decimal
     chart_data: Dict[str, Any]
     insights: List[str] = Field(..., description="洞察建议")
-    
+
     class Config:
         from_attributes = True
 
 
 class OvertimeStatisticsResponse(BaseModel):
     """加班统计响应"""
+
     period_type: str
     start_date: date
     end_date: date
@@ -156,26 +169,28 @@ class OvertimeStatisticsResponse(BaseModel):
     avg_overtime_per_person: Decimal
     top_overtime_users: List[Dict[str, Any]]
     overtime_trend: TrendChartData
-    
+
     class Config:
         from_attributes = True
 
 
 class DepartmentComparisonResponse(BaseModel):
     """部门对比响应"""
+
     period_type: str
     start_date: date
     end_date: date
     departments: List[Dict[str, Any]] = Field(..., description="部门数据")
     chart_data: Dict[str, Any]
     rankings: List[Dict[str, Any]] = Field(..., description="排名")
-    
+
     class Config:
         from_attributes = True
 
 
 class ProjectDistributionResponse(BaseModel):
     """项目分布响应"""
+
     period_type: str
     start_date: date
     end_date: date
@@ -184,13 +199,14 @@ class ProjectDistributionResponse(BaseModel):
     pie_chart: PieChartData
     project_details: List[Dict[str, Any]]
     concentration_index: Decimal = Field(..., description="集中度指数(0-1)")
-    
+
     class Config:
         from_attributes = True
 
 
 class ProjectForecastResponse(BaseModel):
     """项目工时预测响应"""
+
     forecast_no: str
     project_id: Optional[int] = None
     project_name: str
@@ -203,13 +219,14 @@ class ProjectForecastResponse(BaseModel):
     similar_projects: List[Dict[str, Any]]
     algorithm_params: Dict[str, Any]
     recommendations: List[str]
-    
+
     class Config:
         from_attributes = True
 
 
 class CompletionForecastResponse(BaseModel):
     """完工时间预测响应"""
+
     forecast_no: str
     project_id: int
     project_name: str
@@ -222,13 +239,14 @@ class CompletionForecastResponse(BaseModel):
     confidence_level: Decimal
     forecast_curve: TrendChartData
     risk_factors: List[str]
-    
+
     class Config:
         from_attributes = True
 
 
 class WorkloadAlertResponse(BaseModel):
     """负荷预警响应"""
+
     user_id: int
     user_name: str
     department_name: str
@@ -239,13 +257,14 @@ class WorkloadAlertResponse(BaseModel):
     available_hours: Decimal
     gap_hours: Decimal
     recommendations: List[str]
-    
+
     class Config:
         from_attributes = True
 
 
 class GapAnalysisResponse(BaseModel):
     """缺口分析响应"""
+
     period_type: str
     start_date: date
     end_date: date
@@ -257,15 +276,17 @@ class GapAnalysisResponse(BaseModel):
     projects: List[Dict[str, Any]] = Field(..., description="项目缺口")
     recommendations: List[str]
     chart_data: Dict[str, Any]
-    
+
     class Config:
         from_attributes = True
 
 
 # ==================== 汇总模型 ====================
 
+
 class TimesheetAnalyticsSummary(BaseModel):
     """工时分析汇总"""
+
     id: int
     period_type: str
     dimension: str
@@ -279,19 +300,20 @@ class TimesheetAnalyticsSummary(BaseModel):
     overtime_rate: Optional[Decimal] = None
     workload_saturation: Optional[Decimal] = None
     entries_count: int
-    
+
     class Config:
         from_attributes = True
 
 
 class ForecastValidationResult(BaseModel):
     """预测验证结果"""
+
     forecast_id: int
     predicted_hours: Decimal
     actual_hours: Decimal
     prediction_error: Decimal
     error_rate: Decimal
     is_accurate: bool = Field(..., description="是否准确(误差<10%)")
-    
+
     class Config:
         from_attributes = True

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第二十二批：business_support dashboard adapter 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.dashboard_adapters.business_support import BusinessSupportDashboardAdapter
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -45,24 +47,31 @@ class TestBusinessSupportDashboardAdapter:
 
     def test_get_stats_raises_or_succeeds(self, adapter):
         """get_stats 调用不崩溃（允许 Pydantic 验证失败）"""
-        with patch(
-            "app.services.business_support_dashboard_service.count_active_contracts",
-            return_value=5
-        ), patch(
-            "app.services.business_support_dashboard_service.calculate_pending_amount",
-            return_value=Decimal("50000")
-        ), patch(
-            "app.services.business_support_dashboard_service.calculate_overdue_amount",
-            return_value=Decimal("10000")
-        ), patch(
-            "app.services.business_support_dashboard_service.calculate_invoice_rate",
-            return_value=Decimal("75.5")
-        ), patch(
-            "app.services.business_support_dashboard_service.count_active_bidding",
-            return_value=3
-        ), patch(
-            "app.services.business_support_dashboard_service.calculate_acceptance_rate",
-            return_value=Decimal("90.0")
+        with (
+            patch(
+                "app.services.business_support_dashboard_service.count_active_contracts",
+                return_value=5,
+            ),
+            patch(
+                "app.services.business_support_dashboard_service.calculate_pending_amount",
+                return_value=Decimal("50000"),
+            ),
+            patch(
+                "app.services.business_support_dashboard_service.calculate_overdue_amount",
+                return_value=Decimal("10000"),
+            ),
+            patch(
+                "app.services.business_support_dashboard_service.calculate_invoice_rate",
+                return_value=Decimal("75.5"),
+            ),
+            patch(
+                "app.services.business_support_dashboard_service.count_active_bidding",
+                return_value=3,
+            ),
+            patch(
+                "app.services.business_support_dashboard_service.calculate_acceptance_rate",
+                return_value=Decimal("90.0"),
+            ),
         ):
             try:
                 stats = adapter.get_stats()

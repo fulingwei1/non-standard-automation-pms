@@ -6,10 +6,10 @@
 """
 
 import unittest
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path as FilePath
-from unittest.mock import MagicMock, patch, AsyncMock, mock_open
-from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 from fastapi import HTTPException, UploadFile
 
@@ -34,12 +34,14 @@ class TestMachineCustomService(unittest.TestCase):
 
         # Mock save_obj
         with patch("app.services.machine_custom.service.save_obj") as mock_save:
-            with patch("app.services.machine_custom.service.ProjectAggregationService") as MockAggService:
+            with patch(
+                "app.services.machine_custom.service.ProjectAggregationService"
+            ) as MockAggService:
                 mock_agg_service = MockAggService.return_value
-                
+
                 # 执行
                 result = self.service.update_machine_progress(machine, new_progress)
-                
+
                 # 验证
                 self.assertEqual(machine.progress_pct, new_progress)
                 mock_save.assert_called_once_with(self.db, machine)
@@ -72,7 +74,8 @@ class TestMachineCustomService(unittest.TestCase):
 
         mock_query = self.db.query.return_value
         mock_query.filter.return_value.order_by.return_value.all.return_value = [
-            mock_bom1, mock_bom2
+            mock_bom1,
+            mock_bom2,
         ]
 
         # 执行
@@ -92,9 +95,9 @@ class TestMachineCustomService(unittest.TestCase):
 
         with patch("app.services.machine_custom.service.check_permission") as mock_check:
             mock_check.return_value = True
-            
+
             result = self.service.check_document_permission(user, doc_type)
-            
+
             self.assertTrue(result)
             mock_check.assert_called_once_with(user, "machine:doc_circuit", self.db)
 
@@ -105,9 +108,9 @@ class TestMachineCustomService(unittest.TestCase):
 
         with patch("app.services.machine_custom.service.check_permission") as mock_check:
             mock_check.return_value = False
-            
+
             result = self.service.check_document_permission(user, doc_type)
-            
+
             self.assertFalse(result)
             mock_check.assert_called_once_with(user, "machine:doc_plc", self.db)
 
@@ -140,17 +143,19 @@ class TestMachineCustomService(unittest.TestCase):
             with patch("app.services.machine_custom.service.uuid.uuid4", return_value="test-uuid"):
                 with patch("app.services.machine_custom.service.settings") as mock_settings:
                     mock_settings.UPLOAD_DIR = "/upload"
-                    mock_file_path.relative_to.return_value = FilePath("documents/machines/10/test-uuid.pdf")
-                    
+                    mock_file_path.relative_to.return_value = FilePath(
+                        "documents/machines/10/test-uuid.pdf"
+                    )
+
                     # 执行
                     result = await self.service.upload_document(
                         machine=machine,
                         file=file,
                         doc_type="CIRCUIT_DIAGRAM",
                         user=user,
-                        version="1.0"
+                        version="1.0",
                     )
-                    
+
                     # 验证
                     self.assertIsNotNone(result)
                     mock_save.assert_called_once()
@@ -165,12 +170,9 @@ class TestMachineCustomService(unittest.TestCase):
 
         with self.assertRaises(HTTPException) as context:
             await self.service.upload_document(
-                machine=machine,
-                file=file,
-                doc_type="INVALID_TYPE",
-                user=user
+                machine=machine, file=file, doc_type="INVALID_TYPE", user=user
             )
-        
+
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("无效的文档类型", context.exception.detail)
 
@@ -184,12 +186,9 @@ class TestMachineCustomService(unittest.TestCase):
         with patch.object(self.service, "check_document_permission", return_value=False):
             with self.assertRaises(HTTPException) as context:
                 await self.service.upload_document(
-                    machine=machine,
-                    file=file,
-                    doc_type="CIRCUIT_DIAGRAM",
-                    user=user
+                    machine=machine, file=file, doc_type="CIRCUIT_DIAGRAM", user=user
                 )
-            
+
             self.assertEqual(context.exception.status_code, 403)
             self.assertIn("没有权限", context.exception.detail)
 
@@ -211,20 +210,18 @@ class TestMachineCustomService(unittest.TestCase):
         doc3.doc_type = "PLC_PROGRAM"
 
         mock_query = self.db.query.return_value
-        mock_query.filter.return_value.order_by.return_value.all.return_value = [
-            doc1, doc2, doc3
-        ]
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [doc1, doc2, doc3]
 
         with patch.object(self.service, "check_document_permission", return_value=True):
-            with patch("app.services.machine_custom.service.ProjectDocumentResponse") as MockResponse:
+            with patch(
+                "app.services.machine_custom.service.ProjectDocumentResponse"
+            ) as MockResponse:
                 MockResponse.model_validate.side_effect = lambda x: x
-                
+
                 result = self.service.get_machine_documents(
-                    machine=machine,
-                    user=user,
-                    group_by_type=True
+                    machine=machine, user=user, group_by_type=True
                 )
-                
+
                 self.assertEqual(result["machine_id"], 10)
                 self.assertEqual(result["total_count"], 3)
                 self.assertIn("documents_by_type", result)
@@ -244,20 +241,20 @@ class TestMachineCustomService(unittest.TestCase):
             with patch("app.services.machine_custom.service.FilePath") as MockPath:
                 with patch("app.services.machine_custom.service.settings") as mock_settings:
                     mock_settings.UPLOAD_DIR = "/upload"
-                    
+
                     mock_file = MagicMock()
                     mock_file.is_absolute.return_value = False
                     mock_file.exists.return_value = True
                     mock_file.resolve.return_value = mock_file
                     mock_file.relative_to.return_value = mock_file
-                    
+
                     mock_upload = MagicMock()
                     mock_upload.resolve.return_value = mock_upload
-                    
+
                     MockPath.side_effect = [mock_file, mock_upload]
-                    
+
                     path, filename = self.service.get_document_download_path(document, user)
-                    
+
                     self.assertEqual(filename, "test.pdf")
 
     def test_get_document_download_path_permission_denied(self):
@@ -269,7 +266,7 @@ class TestMachineCustomService(unittest.TestCase):
         with patch.object(self.service, "check_document_permission", return_value=False):
             with self.assertRaises(HTTPException) as context:
                 self.service.get_document_download_path(document, user)
-            
+
             self.assertEqual(context.exception.status_code, 403)
 
     def test_get_document_versions_success(self):
@@ -289,12 +286,13 @@ class TestMachineCustomService(unittest.TestCase):
 
         mock_query = self.db.query.return_value
         mock_query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [
-            v1, v2
+            v1,
+            v2,
         ]
 
         with patch.object(self.service, "check_document_permission", return_value=True):
             result = self.service.get_document_versions(document, user)
-            
+
             self.assertEqual(len(result), 2)
 
     def test_get_service_history_success(self):
@@ -327,9 +325,9 @@ class TestMachineCustomService(unittest.TestCase):
 
         with patch("app.services.machine_custom.service.apply_pagination") as mock_pagination:
             mock_pagination.return_value.all.return_value = [record1]
-            
+
             result = self.service.get_service_history(machine, page=1, page_size=20)
-            
+
             self.assertEqual(result["machine_id"], 10)
             self.assertEqual(result["summary"]["total_records"], 1)
             self.assertEqual(result["summary"]["total_service_hours"], 2.5)

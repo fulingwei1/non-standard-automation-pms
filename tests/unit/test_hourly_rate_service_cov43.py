@@ -6,8 +6,8 @@ import pytest
 
 pytest.importorskip("app.services.hourly_rate_service")
 
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock
 
 from app.services.hourly_rate_service import HourlyRateService
@@ -59,9 +59,9 @@ def test_get_user_hourly_rate_default_config():
 
     def q_side(*args, **kwargs):
         m = MagicMock()
-        m.filter.return_value.first.return_value = user             # User
+        m.filter.return_value.first.return_value = user  # User
         m.filter.return_value.order_by.return_value.first.return_value = None  # USER config
-        m.filter.return_value.all.return_value = []                 # UserRole
+        m.filter.return_value.all.return_value = []  # UserRole
         return m
 
     # Simplified mock: no user config, no role config, no dept config, but default config

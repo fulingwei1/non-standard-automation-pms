@@ -3,13 +3,16 @@
 
 测试物料从需求提出到实际使用的完整流程
 """
-import pytest
+
 from datetime import date, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
+
 try:
     from app.models.material import Material, MaterialInventory, MaterialRequisition
-    from app.models.purchase import PurchaseRequest, PurchaseOrder
+    from app.models.purchase import PurchaseOrder, PurchaseRequest
     from app.models.vendor import Vendor
 except ImportError as e:
     pytest.skip(f"Required models not available: {e}", allow_module_level=True)
@@ -92,9 +95,7 @@ class TestMaterialProcurementFlow:
 
         assert req.status == "APPROVED"
 
-    def test_03_create_purchase_request_from_requisition(
-        self, db_session: Session
-    ):
+    def test_03_create_purchase_request_from_requisition(self, db_session: Session):
         """测试3：从物料需求创建采购申请"""
         material = Material(
             material_code="MAT-PR-001",
@@ -133,9 +134,7 @@ class TestMaterialProcurementFlow:
         assert pr.source_requisition_id == req.id
         assert pr.total_amount == Decimal("8000.00")
 
-    def test_04_create_purchase_order(
-        self, db_session: Session, test_vendor: Vendor
-    ):
+    def test_04_create_purchase_order(self, db_session: Session, test_vendor: Vendor):
         """测试4：创建采购订单"""
         material = Material(
             material_code="MAT-PO-001",

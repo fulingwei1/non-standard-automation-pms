@@ -6,6 +6,7 @@ pytest.importorskip("app.services.ecn_bom_analysis_service.utils")
 
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
 from app.services.ecn_bom_analysis_service.utils import (
     get_impact_description,
     save_bom_impact,
@@ -21,6 +22,7 @@ def make_affected_mat(change_type="ADD", old_qty=None, new_qty=None):
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_get_impact_description_add():
     m = make_affected_mat("ADD")
@@ -57,10 +59,15 @@ def test_save_bom_impact_creates_new():
         mock_instance = MagicMock()
         MockImpact.return_value = mock_instance
         save_bom_impact(
-            svc, ecn_id=1, bom_version_id=2, machine_id=3,
-            project_id=4, affected_item_count=5,
-            total_cost_impact=Decimal("100"), schedule_impact_days=3,
-            impact_analysis={"detail": "test"}
+            svc,
+            ecn_id=1,
+            bom_version_id=2,
+            machine_id=3,
+            project_id=4,
+            affected_item_count=5,
+            total_cost_impact=Decimal("100"),
+            schedule_impact_days=3,
+            impact_analysis={"detail": "test"},
         )
     svc.db.add.assert_called_once_with(mock_instance)
     svc.db.commit.assert_called_once()
@@ -71,10 +78,15 @@ def test_save_bom_impact_updates_existing():
     existing = MagicMock()
     svc.db.query.return_value.filter.return_value.first.return_value = existing
     save_bom_impact(
-        svc, ecn_id=1, bom_version_id=2, machine_id=3,
-        project_id=4, affected_item_count=7,
-        total_cost_impact=Decimal("200"), schedule_impact_days=5,
-        impact_analysis={"updated": True}
+        svc,
+        ecn_id=1,
+        bom_version_id=2,
+        machine_id=3,
+        project_id=4,
+        affected_item_count=7,
+        total_cost_impact=Decimal("200"),
+        schedule_impact_days=5,
+        impact_analysis={"updated": True},
     )
     assert existing.affected_item_count == 7
     assert existing.analysis_status == "COMPLETED"

@@ -28,10 +28,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -45,8 +42,7 @@ class TestProjectMembersAPI:
 
         # 测试项目中心API
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -66,10 +62,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -85,7 +78,7 @@ class TestProjectMembersAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -102,10 +95,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -121,7 +111,7 @@ class TestProjectMembersAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
             params={"role": "PM"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -134,10 +124,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -150,10 +137,7 @@ class TestProjectMembersAPI:
         project_id = items[0]["id"]
 
         # 先获取用户列表
-        users_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        users_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if users_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -174,7 +158,7 @@ class TestProjectMembersAPI:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
             json=member_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -199,10 +183,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -216,8 +197,7 @@ class TestProjectMembersAPI:
 
         # 先获取成员列表
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/", headers=headers
         )
 
         if members_response.status_code != 200:
@@ -232,8 +212,7 @@ class TestProjectMembersAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -251,10 +230,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -267,8 +243,7 @@ class TestProjectMembersAPI:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/99999", headers=headers
         )
 
         assert response.status_code == 404
@@ -281,10 +256,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -298,8 +270,7 @@ class TestProjectMembersAPI:
 
         # 先获取成员列表
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/", headers=headers
         )
 
         if members_response.status_code != 200:
@@ -320,7 +291,7 @@ class TestProjectMembersAPI:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -341,10 +312,7 @@ class TestProjectMembersAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -357,10 +325,7 @@ class TestProjectMembersAPI:
         project_id = items[0]["id"]
 
         # 先添加一个成员（用于测试删除）
-        users_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        users_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if users_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -374,8 +339,7 @@ class TestProjectMembersAPI:
 
         # 先检查是否已是成员
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/", headers=headers
         )
 
         member_id = None
@@ -398,7 +362,7 @@ class TestProjectMembersAPI:
             create_response = client.post(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
                 json=member_data,
-                headers=headers
+                headers=headers,
             )
 
             if create_response.status_code not in [200, 201]:
@@ -408,8 +372,7 @@ class TestProjectMembersAPI:
 
         # 删除成员
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}", headers=headers
         )
 
         if response.status_code == 403:
@@ -430,10 +393,7 @@ class TestProjectMembersAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -446,10 +406,7 @@ class TestProjectMembersAdvanced:
         project_id = items[0]["id"]
 
         # 先获取用户列表
-        users_response = client.get(
-            f"{settings.API_V1_PREFIX}/users/",
-            headers=headers
-        )
+        users_response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
         if users_response.status_code != 200:
             pytest.skip("Failed to get users list")
@@ -463,14 +420,18 @@ class TestProjectMembersAdvanced:
         members_data = {
             "members": [
                 {"user_id": user_items[0]["id"], "role_code": "DEV", "allocation_pct": 50},
-                {"user_id": user_items[1]["id"] if len(user_items) > 1 else user_items[0]["id"], "role_code": "TEST", "allocation_pct": 30},
+                {
+                    "user_id": user_items[1]["id"] if len(user_items) > 1 else user_items[0]["id"],
+                    "role_code": "TEST",
+                    "allocation_pct": 30,
+                },
             ]
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/batch",
             json=members_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -490,10 +451,7 @@ class TestProjectMembersAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -507,8 +465,7 @@ class TestProjectMembersAdvanced:
 
         # 获取贡献度统计
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/contribution",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/contribution", headers=headers
         )
 
         if response.status_code == 404:
@@ -526,10 +483,7 @@ class TestProjectMembersAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -543,8 +497,7 @@ class TestProjectMembersAdvanced:
 
         # 先获取成员列表
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/", headers=headers
         )
 
         if members_response.status_code != 200:
@@ -560,7 +513,7 @@ class TestProjectMembersAdvanced:
         # 获取成员工作量
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}/workload",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -578,10 +531,7 @@ class TestProjectMembersAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -595,8 +545,7 @@ class TestProjectMembersAdvanced:
 
         # 先获取成员列表
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/", headers=headers
         )
 
         if members_response.status_code != 200:
@@ -617,7 +566,7 @@ class TestProjectMembersAdvanced:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -639,10 +588,7 @@ class TestProjectMembersAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -656,8 +602,7 @@ class TestProjectMembersAdvanced:
 
         # 先获取成员列表
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/members/", headers=headers
         )
 
         if members_response.status_code != 200:
@@ -678,7 +623,7 @@ class TestProjectMembersAdvanced:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/members/{member_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -698,10 +643,7 @@ class TestProjectMembersAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -719,7 +661,7 @@ class TestProjectMembersAdvanced:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/members/",
                 params={"role": role},
-                headers=headers
+                headers=headers,
             )
 
             assert response.status_code == 200, f"Failed for role {role}: {response.text}"

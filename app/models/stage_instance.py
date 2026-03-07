@@ -153,9 +153,7 @@ class ProjectNodeInstance(Base, TimestampMixin):
     # 任务分解相关
     assignee_id = Column(Integer, ForeignKey("users.id"), comment="负责人ID")
     auto_complete_on_tasks = Column(
-        Boolean,
-        default=True,
-        comment="子任务全部完成时是否自动完成节点"
+        Boolean, default=True, comment="子任务全部完成时是否自动完成节点"
     )
 
     # 责任分配与交付物（从模板复制，可修改）
@@ -177,7 +175,7 @@ class ProjectNodeInstance(Base, TimestampMixin):
         "NodeTask",
         back_populates="node_instance",
         cascade="all, delete-orphan",
-        order_by="NodeTask.sequence"
+        order_by="NodeTask.sequence",
     )
 
     __table_args__ = {"comment": "项目节点实例表"}

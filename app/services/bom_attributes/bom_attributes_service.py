@@ -4,7 +4,7 @@ BOM装配属性服务类
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -29,10 +29,7 @@ class BomAttributesService:
         self.db = db
 
     def get_bom_assembly_attrs(
-        self,
-        bom_id: int,
-        stage_code: Optional[str] = None,
-        is_blocking: Optional[bool] = None
+        self, bom_id: int, stage_code: Optional[str] = None, is_blocking: Optional[bool] = None
     ) -> List[BomItemAssemblyAttrsResponse]:
         """获取BOM装配属性列表"""
         # 验证BOM存在
@@ -44,7 +41,9 @@ class BomAttributesService:
         if is_blocking is not None:
             query = query.filter(BomItemAssemblyAttrs.is_blocking == is_blocking)
 
-        attrs = query.order_by(BomItemAssemblyAttrs.assembly_stage, BomItemAssemblyAttrs.stage_order).all()
+        attrs = query.order_by(
+            BomItemAssemblyAttrs.assembly_stage, BomItemAssemblyAttrs.stage_order
+        ).all()
 
         # 关联物料信息
         result = []
@@ -52,23 +51,25 @@ class BomAttributesService:
             data = BomItemAssemblyAttrsResponse.model_validate(attr)
             bom_item = self.db.query(BomItem).filter(BomItem.id == attr.bom_item_id).first()
             if bom_item:
-                material = self.db.query(Material).filter(Material.id == bom_item.material_id).first()
+                material = (
+                    self.db.query(Material).filter(Material.id == bom_item.material_id).first()
+                )
                 if material:
                     data.material_code = material.material_code
                     data.material_name = material.material_name
                 data.required_qty = bom_item.quantity
-            stage = self.db.query(AssemblyStage).filter(AssemblyStage.stage_code == attr.assembly_stage).first()
+            stage = (
+                self.db.query(AssemblyStage)
+                .filter(AssemblyStage.stage_code == attr.assembly_stage)
+                .first()
+            )
             if stage:
                 data.stage_name = stage.stage_name
             result.append(data)
 
         return result
 
-    def batch_set_assembly_attrs(
-        self,
-        bom_id: int,
-        items: List[Any]
-    ) -> Dict[str, int]:
+    def batch_set_assembly_attrs(self, bom_id: int, items: List[Any]) -> Dict[str, int]:
         """批量设置BOM装配属性"""
         # 验证BOM存在
         get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
@@ -80,9 +81,11 @@ class BomAttributesService:
             if item.bom_id != bom_id:
                 continue
 
-            existing = self.db.query(BomItemAssemblyAttrs).filter(
-                BomItemAssemblyAttrs.bom_item_id == item.bom_item_id
-            ).first()
+            existing = (
+                self.db.query(BomItemAssemblyAttrs)
+                .filter(BomItemAssemblyAttrs.bom_item_id == item.bom_item_id)
+                .first()
+            )
 
             if existing:
                 # 更新
@@ -101,9 +104,7 @@ class BomAttributesService:
         return {"created": created_count, "updated": updated_count}
 
     def update_assembly_attr(
-        self,
-        attr_id: int,
-        update_data: Dict[str, Any]
+        self, attr_id: int, update_data: Dict[str, Any]
     ) -> BomItemAssemblyAttrsResponse:
         """更新单个物料装配属性"""
         attr = get_or_404(self.db, BomItemAssemblyAttrs, attr_id, "装配属性不存在")
@@ -117,11 +118,7 @@ class BomAttributesService:
 
         return BomItemAssemblyAttrsResponse.model_validate(attr)
 
-    def auto_assign_assembly_attrs(
-        self,
-        bom_id: int,
-        overwrite: bool = False
-    ) -> Dict[str, int]:
+    def auto_assign_assembly_attrs(self, bom_id: int, overwrite: bool = False) -> Dict[str, int]:
         """自动分配装配属性（基于物料分类映射）"""
         # 验证BOM存在
         get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
@@ -134,9 +131,11 @@ class BomAttributesService:
 
         for bom_item in bom_items:
             # 检查是否已有配置
-            existing = self.db.query(BomItemAssemblyAttrs).filter(
-                BomItemAssemblyAttrs.bom_item_id == bom_item.id
-            ).first()
+            existing = (
+                self.db.query(BomItemAssemblyAttrs)
+                .filter(BomItemAssemblyAttrs.bom_item_id == bom_item.id)
+                .first()
+            )
 
             if existing and not overwrite:
                 skipped_count += 1
@@ -149,9 +148,11 @@ class BomAttributesService:
                 continue
 
             # 获取映射配置
-            mapping = self.db.query(CategoryStageMapping).filter(
-                CategoryStageMapping.category_id == material.category_id
-            ).first()
+            mapping = (
+                self.db.query(CategoryStageMapping)
+                .filter(CategoryStageMapping.category_id == material.category_id)
+                .first()
+            )
 
             if not mapping:
                 # 使用默认阶段
@@ -175,7 +176,7 @@ class BomAttributesService:
                     assembly_stage=stage_code,
                     importance_level="NORMAL",
                     is_blocking=is_blocking,
-                    can_postpone=can_postpone
+                    can_postpone=can_postpone,
                 )
                 self.db.add(attr)
 
@@ -185,10 +186,7 @@ class BomAttributesService:
 
         return {"assigned": assigned_count, "skipped": skipped_count}
 
-    def get_assembly_attr_recommendations(
-        self,
-        bom_id: int
-    ) -> Dict[str, Any]:
+    def get_assembly_attr_recommendations(self, bom_id: int) -> Dict[str, Any]:
         """获取装配属性推荐结果（不应用，仅返回推荐）"""
         from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
@@ -210,26 +208,25 @@ class BomAttributesService:
 
             rec = recommendations.get(bom_item.id)
             if rec:
-                result.append({
-                    "bom_item_id": bom_item.id,
-                    "material_code": material.material_code,
-                    "material_name": material.material_name,
-                    "recommended_stage": rec.stage_code,
-                    "recommended_blocking": rec.is_blocking,
-                    "recommended_postpone": rec.can_postpone,
-                    "recommended_importance": rec.importance_level,
-                    "confidence": rec.confidence,
-                    "source": rec.source,
-                    "reason": rec.reason
-                })
+                result.append(
+                    {
+                        "bom_item_id": bom_item.id,
+                        "material_code": material.material_code,
+                        "material_name": material.material_name,
+                        "recommended_stage": rec.stage_code,
+                        "recommended_blocking": rec.is_blocking,
+                        "recommended_postpone": rec.can_postpone,
+                        "recommended_importance": rec.importance_level,
+                        "confidence": rec.confidence,
+                        "source": rec.source,
+                        "reason": rec.reason,
+                    }
+                )
 
         return {"recommendations": result, "total": len(result)}
 
     def smart_recommend_assembly_attrs(
-        self,
-        bom_id: int,
-        overwrite: bool = False,
-        user_id: Optional[int] = None
+        self, bom_id: int, overwrite: bool = False, user_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """智能推荐装配属性（多级推荐规则）"""
         from app.services.assembly_attr_recommender import AssemblyAttrRecommender
@@ -250,14 +247,16 @@ class BomAttributesService:
             "CATEGORY": 0,
             "KEYWORD": 0,
             "SUPPLIER": 0,
-            "DEFAULT": 0
+            "DEFAULT": 0,
         }
 
         for bom_item in bom_items:
             # 检查是否已有配置
-            existing = self.db.query(BomItemAssemblyAttrs).filter(
-                BomItemAssemblyAttrs.bom_item_id == bom_item.id
-            ).first()
+            existing = (
+                self.db.query(BomItemAssemblyAttrs)
+                .filter(BomItemAssemblyAttrs.bom_item_id == bom_item.id)
+                .first()
+            )
 
             if existing and not overwrite:
                 skipped_count += 1
@@ -302,14 +301,11 @@ class BomAttributesService:
         return {
             "assigned": assigned_count,
             "skipped": skipped_count,
-            "recommendation_stats": recommendation_stats
+            "recommendation_stats": recommendation_stats,
         }
 
     def apply_assembly_template(
-        self,
-        bom_id: int,
-        template_id: int,
-        overwrite: bool = False
+        self, bom_id: int, template_id: int, overwrite: bool = False
     ) -> Dict[str, int]:
         """套用装配模板"""
         from fastapi import HTTPException
@@ -317,7 +313,9 @@ class BomAttributesService:
         # 验证BOM和模板存在
         get_or_404(self.db, BomHeader, bom_id, "BOM不存在")
 
-        template = self.db.query(AssemblyTemplate).filter(AssemblyTemplate.id == template_id).first()
+        template = (
+            self.db.query(AssemblyTemplate).filter(AssemblyTemplate.id == template_id).first()
+        )
         if not template:
             raise HTTPException(status_code=404, detail="模板不存在")
 
@@ -339,16 +337,22 @@ class BomAttributesService:
             # 查找模板中匹配的配置
             config = None
             if material.category_id:
-                category = self.db.query(MaterialCategory).filter(MaterialCategory.id == material.category_id).first()
+                category = (
+                    self.db.query(MaterialCategory)
+                    .filter(MaterialCategory.id == material.category_id)
+                    .first()
+                )
                 if category and category.category_code in stage_config:
                     config = stage_config[category.category_code]
 
             if not config:
                 continue
 
-            existing = self.db.query(BomItemAssemblyAttrs).filter(
-                BomItemAssemblyAttrs.bom_item_id == bom_item.id
-            ).first()
+            existing = (
+                self.db.query(BomItemAssemblyAttrs)
+                .filter(BomItemAssemblyAttrs.bom_item_id == bom_item.id)
+                .first()
+            )
 
             if existing and not overwrite:
                 continue
@@ -365,7 +369,7 @@ class BomAttributesService:
                     assembly_stage=config.get("stage", "MECH"),
                     importance_level="NORMAL",
                     is_blocking=config.get("blocking", True),
-                    can_postpone=config.get("postpone", False)
+                    can_postpone=config.get("postpone", False),
                 )
                 self.db.add(attr)
 

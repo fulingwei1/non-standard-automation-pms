@@ -62,9 +62,7 @@ class TestResourceSchedulingServiceConflictDetection(unittest.TestCase):
     def test_detect_conflicts_with_auto_suggestions(self):
         """测试检测冲突时自动生成方案"""
         # 准备数据
-        mock_conflicts = [
-            MagicMock(id=i, severity="CRITICAL") for i in range(1, 8)
-        ]
+        mock_conflicts = [MagicMock(id=i, severity="CRITICAL") for i in range(1, 8)]
         self.service.ai_service.detect_resource_conflicts.return_value = mock_conflicts
         self.service.ai_service.generate_scheduling_suggestions.return_value = []
 
@@ -83,9 +81,7 @@ class TestResourceSchedulingServiceConflictDetection(unittest.TestCase):
         # 验证 - 应该只为前5个冲突生成方案
         self.assertEqual(result["total_conflicts"], 7)
         self.assertEqual(result["suggestions_generated"], 5)
-        self.assertEqual(
-            self.service.ai_service.generate_scheduling_suggestions.call_count, 5
-        )
+        self.assertEqual(self.service.ai_service.generate_scheduling_suggestions.call_count, 5)
 
     def test_detect_conflicts_auto_suggestions_with_errors(self):
         """测试自动生成方案时部分失败"""
@@ -142,7 +138,9 @@ class TestResourceSchedulingServiceConflictDetection(unittest.TestCase):
         # 准备数据
         mock_conflicts = [MagicMock(id=i) for i in range(1, 6)]
         mock_query = MagicMock()
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_conflicts
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_conflicts
+        )
         self.mock_db.query.return_value = mock_query
 
         # 执行
@@ -303,9 +301,7 @@ class TestResourceSchedulingServiceSuggestions(unittest.TestCase):
             MagicMock(id=1, is_recommended=True, ai_tokens_used=100),
             MagicMock(id=2, is_recommended=False, ai_tokens_used=80),
         ]
-        self.service.ai_service.generate_scheduling_suggestions.return_value = (
-            mock_suggestions
-        )
+        self.service.ai_service.generate_scheduling_suggestions.return_value = mock_suggestions
 
         # 执行
         result = self.service.generate_suggestions(
@@ -329,9 +325,7 @@ class TestResourceSchedulingServiceSuggestions(unittest.TestCase):
             MagicMock(id=1, is_recommended=False, ai_tokens_used=100),
             MagicMock(id=2, is_recommended=False, ai_tokens_used=None),
         ]
-        self.service.ai_service.generate_scheduling_suggestions.return_value = (
-            mock_suggestions
-        )
+        self.service.ai_service.generate_scheduling_suggestions.return_value = mock_suggestions
 
         # 执行
         result = self.service.generate_suggestions(
@@ -351,7 +345,9 @@ class TestResourceSchedulingServiceSuggestions(unittest.TestCase):
         # 准备数据
         mock_suggestions = [MagicMock(id=i) for i in range(1, 4)]
         mock_query = MagicMock()
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_suggestions
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_suggestions
+        )
         self.mock_db.query.return_value = mock_query
 
         # 执行
@@ -610,7 +606,9 @@ class TestResourceSchedulingServiceForecasting(unittest.TestCase):
         # 准备数据
         mock_forecasts = [MagicMock(id=i) for i in range(1, 4)]
         mock_query = MagicMock()
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_forecasts
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_forecasts
+        )
         self.mock_db.query.return_value = mock_query
 
         # 执行
@@ -631,9 +629,7 @@ class TestResourceSchedulingServiceForecasting(unittest.TestCase):
         self.mock_db.query.return_value = mock_query
 
         # 执行
-        self.service.list_forecasts(
-            skip=0, limit=10, forecast_period="Q1_2024", status="ACTIVE"
-        )
+        self.service.list_forecasts(skip=0, limit=10, forecast_period="Q1_2024", status="ACTIVE")
 
         # 验证
         self.assertEqual(mock_query.filter.call_count, 2)
@@ -678,12 +674,8 @@ class TestResourceSchedulingServiceUtilization(unittest.TestCase):
     def test_analyze_utilization_single_resource(self):
         """测试分析单个资源利用率"""
         # 准备数据
-        mock_analysis = MagicMock(
-            is_idle_resource=False, is_overloaded=True, utilization_rate=85.5
-        )
-        self.service.ai_service.analyze_resource_utilization.return_value = (
-            mock_analysis
-        )
+        mock_analysis = MagicMock(is_idle_resource=False, is_overloaded=True, utilization_rate=85.5)
+        self.service.ai_service.analyze_resource_utilization.return_value = mock_analysis
 
         # 执行
         result = self.service.analyze_utilization(
@@ -709,16 +701,10 @@ class TestResourceSchedulingServiceUtilization(unittest.TestCase):
 
         mock_analyses = [
             MagicMock(is_idle_resource=True, is_overloaded=False, utilization_rate=20.0),
-            MagicMock(
-                is_idle_resource=False, is_overloaded=False, utilization_rate=60.0
-            ),
-            MagicMock(
-                is_idle_resource=False, is_overloaded=True, utilization_rate=95.0
-            ),
+            MagicMock(is_idle_resource=False, is_overloaded=False, utilization_rate=60.0),
+            MagicMock(is_idle_resource=False, is_overloaded=True, utilization_rate=95.0),
         ]
-        self.service.ai_service.analyze_resource_utilization.side_effect = (
-            mock_analyses
-        )
+        self.service.ai_service.analyze_resource_utilization.side_effect = mock_analyses
 
         # 执行
         result = self.service.analyze_utilization(
@@ -766,7 +752,9 @@ class TestResourceSchedulingServiceUtilization(unittest.TestCase):
         # 准备数据
         mock_analyses = [MagicMock(id=i) for i in range(1, 4)]
         mock_query = MagicMock()
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_analyses
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_analyses
+        )
         self.mock_db.query.return_value = mock_query
 
         # 执行
@@ -834,37 +822,37 @@ class TestResourceSchedulingServiceDashboard(unittest.TestCase):
         """测试获取仪表板摘要（简化版本，测试关键字段）"""
         # 由于dashboard_summary方法有非常复杂的查询链，我们简化测试
         # 只验证方法能正常运行并返回所有必需的字段
-        
+
         # Mock所有查询返回合理的值
         def mock_func_count_scalar():
             mock_q = MagicMock()
             mock_q.scalar.return_value = 10
             return mock_q
-            
+
         def mock_filter_scalar():
             mock_q = MagicMock()
             mock_q.scalar.return_value = 5
             return mock_q
-        
+
         mock_query = MagicMock()
         # 简化：所有func.count查询返回10，filter查询返回5
         mock_query.scalar.return_value = 10
         mock_query.filter.return_value = mock_filter_scalar()
-        
+
         # order_by查询（最近时间）
         mock_conflict = MagicMock(created_at=datetime(2024, 1, 15))
         mock_analysis = MagicMock(created_at=datetime(2024, 1, 16))
-        
+
         order_results = [mock_conflict, mock_analysis]
         order_index = [0]
-        
+
         def mock_order_by(*args):
             mock_chain = MagicMock()
             val = order_results[order_index[0]] if order_index[0] < len(order_results) else None
             order_index[0] += 1
             mock_chain.first.return_value = val
             return mock_chain
-        
+
         mock_query.order_by = mock_order_by
         self.mock_db.query.return_value = mock_query
 
@@ -873,38 +861,48 @@ class TestResourceSchedulingServiceDashboard(unittest.TestCase):
 
         # 验证返回结构完整
         expected_keys = [
-            "total_conflicts", "critical_conflicts", "unresolved_conflicts",
-            "total_suggestions", "pending_suggestions", "implemented_suggestions",
-            "idle_resources", "overloaded_resources", "avg_utilization",
-            "forecasts_count", "critical_gaps", "hiring_needed",
-            "last_detection_time", "last_analysis_time"
+            "total_conflicts",
+            "critical_conflicts",
+            "unresolved_conflicts",
+            "total_suggestions",
+            "pending_suggestions",
+            "implemented_suggestions",
+            "idle_resources",
+            "overloaded_resources",
+            "avg_utilization",
+            "forecasts_count",
+            "critical_gaps",
+            "hiring_needed",
+            "last_detection_time",
+            "last_analysis_time",
         ]
-        
+
         for key in expected_keys:
             self.assertIn(key, result, f"Missing key: {key}")
-        
+
         # 验证时间字段
         self.assertEqual(result["last_detection_time"], datetime(2024, 1, 15))
         self.assertEqual(result["last_analysis_time"], datetime(2024, 1, 16))
 
     def test_get_dashboard_summary_empty(self):
         """测试获取空的仪表板摘要"""
+
         # 准备数据 - 所有查询返回0或None
         def mock_filter_chain(*args):
             mock_chain = MagicMock()
             mock_chain.scalar.return_value = 0
             return mock_chain
-            
+
         def mock_order_by_chain(*args):
             mock_chain = MagicMock()
             mock_chain.first.return_value = None
             return mock_chain
-        
+
         mock_base_query = MagicMock()
         mock_base_query.filter.side_effect = mock_filter_chain
         mock_base_query.scalar.return_value = 0
         mock_base_query.order_by.side_effect = mock_order_by_chain
-        
+
         self.mock_db.query.return_value = mock_base_query
 
         # 执行
@@ -921,7 +919,9 @@ class TestResourceSchedulingServiceDashboard(unittest.TestCase):
         # 准备数据
         mock_logs = [MagicMock(id=i) for i in range(1, 6)]
         mock_query = MagicMock()
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_logs
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_logs
+        )
         self.mock_db.query.return_value = mock_query
 
         # 执行
@@ -943,9 +943,7 @@ class TestResourceSchedulingServiceDashboard(unittest.TestCase):
         self.mock_db.query.return_value = mock_query
 
         # 执行
-        self.service.list_logs(
-            skip=0, limit=10, action_type="DETECT", conflict_id=1
-        )
+        self.service.list_logs(skip=0, limit=10, action_type="DETECT", conflict_id=1)
 
         # 验证
         self.assertEqual(mock_query.filter.call_count, 2)

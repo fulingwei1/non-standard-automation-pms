@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第九批: test_permission_service_cov9.py - PermissionService 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.permission_service")
 
@@ -55,19 +56,25 @@ class TestCheckPermission:
 
     def test_check_permission_superuser(self, mock_db):
         user = make_user(is_superuser=True)
-        result = PermissionService.check_permission(mock_db, user_id=1, permission_code="any_perm", user=user)
+        result = PermissionService.check_permission(
+            mock_db, user_id=1, permission_code="any_perm", user=user
+        )
         assert result is True
 
     def test_check_permission_no_perm(self, mock_db):
         user = make_user(is_superuser=False)
         with patch.object(PermissionService, "get_user_permissions", return_value=set()):
-            result = PermissionService.check_permission(mock_db, user_id=1, permission_code="admin_only", user=user)
+            result = PermissionService.check_permission(
+                mock_db, user_id=1, permission_code="admin_only", user=user
+            )
             assert result is False
 
     def test_check_permission_has_perm(self, mock_db):
         user = make_user(is_superuser=False)
         with patch.object(PermissionService, "get_user_permissions", return_value={"view_reports"}):
-            result = PermissionService.check_permission(mock_db, user_id=1, permission_code="view_reports", user=user)
+            result = PermissionService.check_permission(
+                mock_db, user_id=1, permission_code="view_reports", user=user
+            )
             assert result is True
 
 

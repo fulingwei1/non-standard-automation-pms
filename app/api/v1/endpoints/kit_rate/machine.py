@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.services.kit_rate import KitRateService
 from app.models.user import User
+from app.services.kit_rate import KitRateService
 
 router = APIRouter()
 

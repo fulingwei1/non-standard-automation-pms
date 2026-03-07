@@ -2,20 +2,22 @@
 """
 Unit tests for app/services/ecn_notification/base.py (cov52)
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
+    from app.services.channel_handlers.base import NotificationPriority
     from app.services.ecn_notification.base import (
         _map_priority_to_unified,
         create_ecn_notification,
     )
-    from app.services.channel_handlers.base import NotificationPriority
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
 
 # ──────────────────────── _map_priority_to_unified ────────────────────────
+
 
 def test_map_priority_urgent():
     result = _map_priority_to_unified("URGENT")
@@ -50,6 +52,7 @@ def test_map_priority_none_defaults_to_normal():
 
 
 # ──────────────────────── create_ecn_notification ────────────────────────
+
 
 @patch("app.services.ecn_notification.base.NotificationDispatcher")
 def test_create_ecn_notification_success(mock_dispatcher_cls):

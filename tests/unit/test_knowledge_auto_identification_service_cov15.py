@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("app.services.knowledge_auto_identification_service")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.knowledge_auto_identification_service import KnowledgeAutoIdentificationService
 
 
@@ -71,12 +72,14 @@ def test_identify_from_ticket_creates_new():
     new_article = MagicMock()
     new_contrib = MagicMock()
 
-    with patch(
-        "app.services.knowledge_auto_identification_service.apply_keyword_filter"
-    ) as mock_filter, patch(
-        "app.services.knowledge_auto_identification_service.auto_extract_knowledge_from_ticket"
-    ) as mock_extract, patch(
-        "app.services.knowledge_auto_identification_service.save_obj"
+    with (
+        patch(
+            "app.services.knowledge_auto_identification_service.apply_keyword_filter"
+        ) as mock_filter,
+        patch(
+            "app.services.knowledge_auto_identification_service.auto_extract_knowledge_from_ticket"
+        ) as mock_extract,
+        patch("app.services.knowledge_auto_identification_service.save_obj"),
     ):
         mock_q = MagicMock()
         mock_q.first.return_value = None
@@ -99,7 +102,7 @@ def test_identify_from_ticket_extract_returns_none():
 
     with patch(
         "app.services.knowledge_auto_identification_service.auto_extract_knowledge_from_ticket",
-        return_value=None
+        return_value=None,
     ):
         db.query.return_value.filter.return_value.first.return_value = ticket
         svc = KnowledgeAutoIdentificationService(db)

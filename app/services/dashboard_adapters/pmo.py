@@ -104,9 +104,7 @@ class PmoDashboardAdapter(DashboardAdapter):
         # 获取风险项目列表
         from app.services.data_scope_service import DataScopeService
 
-        query = self.db.query(Project).filter(
-            Project.is_active, Project.health.in_(["H2", "H3"])
-        )
+        query = self.db.query(Project).filter(Project.is_active, Project.health.in_(["H2", "H3"]))
         query = DataScopeService.apply_data_scope(
             query,
             self.db,
@@ -162,9 +160,7 @@ class PmoDashboardAdapter(DashboardAdapter):
             stage = project.current_stage or "未知"
             by_stage[stage] = by_stage.get(stage, 0) + 1
 
-        details = {
-            "by_stage": [{"stage": k, "count": v} for k, v in by_stage.items()]
-        }
+        details = {"by_stage": [{"stage": k, "count": v} for k, v in by_stage.items()]}
 
         return DetailedDashboardResponse(
             module=self.module_id,

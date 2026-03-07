@@ -12,23 +12,25 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.sales import PurchaseMaterialCost
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.schemas.sales import (
     PurchaseMaterialCostCreate,
     PurchaseMaterialCostResponse,
     PurchaseMaterialCostUpdate,
 )
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
 
-@router.get("/purchase-material-costs", response_model=PaginatedResponse[PurchaseMaterialCostResponse])
+@router.get(
+    "/purchase-material-costs", response_model=PaginatedResponse[PurchaseMaterialCostResponse]
+)
 def get_purchase_material_costs(
     *,
     db: Session = Depends(deps.get_db),
@@ -44,7 +46,9 @@ def get_purchase_material_costs(
     """
     query = db.query(PurchaseMaterialCost)
 
-    query = apply_keyword_filter(query, PurchaseMaterialCost, material_name, "material_name", use_ilike=False)
+    query = apply_keyword_filter(
+        query, PurchaseMaterialCost, material_name, "material_name", use_ilike=False
+    )
     if material_type:
         query = query.filter(PurchaseMaterialCost.material_type == material_type)
     if is_standard_part is not None:
@@ -53,13 +57,19 @@ def get_purchase_material_costs(
         query = query.filter(PurchaseMaterialCost.is_active == is_active)
 
     total = query.count()
-    costs = apply_pagination(query.order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.created_at)), pagination.offset, pagination.limit).all()
+    costs = apply_pagination(
+        query.order_by(
+            desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.created_at)
+        ),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for cost in costs:
         cost_dict = {
             **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-            "submitter_name": cost.submitter.real_name if cost.submitter else None
+            "submitter_name": cost.submitter.real_name if cost.submitter else None,
         }
         items.append(PurchaseMaterialCostResponse(**cost_dict))
 
@@ -68,7 +78,7 @@ def get_purchase_material_costs(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -86,12 +96,14 @@ def get_purchase_material_cost(
 
     cost_dict = {
         **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-        "submitter_name": cost.submitter.real_name if cost.submitter else None
+        "submitter_name": cost.submitter.real_name if cost.submitter else None,
     }
     return PurchaseMaterialCostResponse(**cost_dict)
 
 
-@router.post("/purchase-material-costs", response_model=PurchaseMaterialCostResponse, status_code=201)
+@router.post(
+    "/purchase-material-costs", response_model=PurchaseMaterialCostResponse, status_code=201
+)
 def create_purchase_material_cost(
     *,
     db: Session = Depends(deps.get_db),
@@ -101,15 +113,12 @@ def create_purchase_material_cost(
     """
     创建采购物料成本（采购部提交）
     """
-    cost = PurchaseMaterialCost(
-        **cost_in.model_dump(),
-        submitted_by=current_user.id
-    )
+    cost = PurchaseMaterialCost(**cost_in.model_dump(), submitted_by=current_user.id)
     save_obj(db, cost)
 
     cost_dict = {
         **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-        "submitter_name": cost.submitter.real_name if cost.submitter else None
+        "submitter_name": cost.submitter.real_name if cost.submitter else None,
     }
     return PurchaseMaterialCostResponse(**cost_dict)
 
@@ -136,7 +145,7 @@ def update_purchase_material_cost(
 
     cost_dict = {
         **{c.name: getattr(cost, c.name) for c in cost.__table__.columns},
-        "submitter_name": cost.submitter.real_name if cost.submitter else None
+        "submitter_name": cost.submitter.real_name if cost.submitter else None,
     }
     return PurchaseMaterialCostResponse(**cost_dict)
 

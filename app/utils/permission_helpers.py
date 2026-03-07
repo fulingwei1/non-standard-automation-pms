@@ -15,10 +15,7 @@ from app.services.data_scope import DataScopeService
 
 
 def check_project_access_or_raise(
-    db: Session,
-    user: User,
-    project_id: int,
-    error_message: Optional[str] = None
+    db: Session, user: User, project_id: int, error_message: Optional[str] = None
 ) -> Project:
     """
     检查项目访问权限，如果没有权限则抛出异常
@@ -38,27 +35,18 @@ def check_project_access_or_raise(
     # 检查项目是否存在
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="项目不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
 
     # 检查访问权限
     if not DataScopeService.check_project_access(db, user, project_id):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=error_message or "您没有权限访问该项目"
+            status_code=status.HTTP_403_FORBIDDEN, detail=error_message or "您没有权限访问该项目"
         )
 
     return project
 
 
-def filter_projects_by_scope(
-    db: Session,
-    query,
-    user: User,
-    project_ids: Optional[list] = None
-):
+def filter_projects_by_scope(db: Session, query, user: User, project_ids: Optional[list] = None):
     """
     根据用户数据权限范围过滤项目查询
 
@@ -115,6 +103,3 @@ def filter_by_project_access(db: Session, query, user: User, project_id_column):
         query = filter_by_project_access(db, query, user, ProjectMember.project_id)
     """
     return DataScopeService.filter_related_by_project(db, query, user, project_id_column)
-
-
-

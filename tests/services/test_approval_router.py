@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """ApprovalRouterService 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestApprovalRouterService:
@@ -10,6 +11,7 @@ class TestApprovalRouterService:
 
     def _make_service(self):
         from app.services.approval_engine.router import ApprovalRouterService
+
         db = MagicMock()
         return ApprovalRouterService(db), db
 
@@ -19,7 +21,10 @@ class TestApprovalRouterService:
         svc, db = self._make_service()
         flow = MagicMock(id=1)
         rule = MagicMock(
-            conditions={"operator": "AND", "items": [{"field": "form.amount", "op": ">=", "value": 100}]},
+            conditions={
+                "operator": "AND",
+                "items": [{"field": "form.amount", "op": ">=", "value": 100}],
+            },
             flow=flow,
         )
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [rule]
@@ -30,7 +35,10 @@ class TestApprovalRouterService:
     def test_select_flow_no_match_returns_default(self):
         svc, db = self._make_service()
         rule = MagicMock(
-            conditions={"operator": "AND", "items": [{"field": "form.amount", "op": ">=", "value": 1000}]},
+            conditions={
+                "operator": "AND",
+                "items": [{"field": "form.amount", "op": ">=", "value": 1000}],
+            },
         )
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [rule]
         default_flow = MagicMock(id=2)
@@ -187,7 +195,9 @@ class TestApprovalRouterService:
         svc, db = self._make_service()
         node = MagicMock(approver_type="ROLE", approver_config={"role_codes": ["ADMIN"]})
         user_row = MagicMock(id=3)
-        db.query.return_value.join.return_value.join.return_value.filter.return_value.all.return_value = [user_row]
+        db.query.return_value.join.return_value.join.return_value.filter.return_value.all.return_value = [
+            user_row
+        ]
         assert svc.resolve_approvers(node, {}) == [3]
 
     def test_resolve_approvers_department_head(self):
@@ -212,7 +222,9 @@ class TestApprovalRouterService:
         svc, db = self._make_service()
         current = MagicMock(flow_id=1, node_order=1)
         next_node = MagicMock(node_type="APPROVAL")
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [next_node]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            next_node
+        ]
         result = svc.get_next_nodes(current, {})
         assert result == [next_node]
 
@@ -229,14 +241,21 @@ class TestApprovalRouterService:
             node_type="CONDITION",
             approver_config={
                 "branches": [
-                    {"conditions": {"operator": "AND", "items": [{"field": "form.x", "op": "==", "value": 1}]},
-                     "target_node_id": 10}
+                    {
+                        "conditions": {
+                            "operator": "AND",
+                            "items": [{"field": "form.x", "op": "==", "value": 1}],
+                        },
+                        "target_node_id": 10,
+                    }
                 ],
                 "default_node_id": 20,
             },
         )
         target = MagicMock(id=10)
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [cond_node]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            cond_node
+        ]
         db.query.return_value.filter.return_value.first.return_value = target
 
         result = svc.get_next_nodes(current, {"form": {"x": 1}})

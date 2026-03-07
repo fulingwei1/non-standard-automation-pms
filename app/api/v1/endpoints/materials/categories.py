@@ -20,9 +20,7 @@ router = APIRouter()
 @router.get("/categories/", response_model=List[MaterialCategoryResponse])
 def read_material_categories(
     db: Session = Depends(deps.get_db),
-    parent_id: Optional[int] = Query(
-        None, description="父分类ID，为空则返回顶级分类树"
-    ),
+    parent_id: Optional[int] = Query(None, description="父分类ID，为空则返回顶级分类树"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
     current_user: User = Depends(security.require_permission("procurement:read")),
 ) -> Any:

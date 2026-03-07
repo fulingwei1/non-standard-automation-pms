@@ -29,7 +29,7 @@ class IssueStateMachine(StateMachine):
 
     def __init__(self, issue: Issue, db: Session):
         """初始化问题状态机"""
-        super().__init__(issue, db, state_field='status')
+        super().__init__(issue, db, state_field="status")
 
     @transition(
         from_state="OPEN",
@@ -49,12 +49,12 @@ class IssueStateMachine(StateMachine):
             due_date: 截止日期（可选）
         """
         # 更新分配信息
-        if 'assignee_id' in kwargs:
-            self.model.assignee_id = kwargs['assignee_id']
-        if 'assignee_name' in kwargs:
-            self.model.assignee_name = kwargs['assignee_name']
-        if 'due_date' in kwargs:
-            self.model.due_date = kwargs['due_date']
+        if "assignee_id" in kwargs:
+            self.model.assignee_id = kwargs["assignee_id"]
+        if "assignee_name" in kwargs:
+            self.model.assignee_name = kwargs["assignee_name"]
+        if "due_date" in kwargs:
+            self.model.due_date = kwargs["due_date"]
 
     @transition(
         from_state="IN_PROGRESS",
@@ -75,12 +75,12 @@ class IssueStateMachine(StateMachine):
         """
         from datetime import datetime
 
-        if 'solution' in kwargs:
-            self.model.solution = kwargs['solution']
-        if 'resolved_by' in kwargs:
-            self.model.resolved_by = kwargs['resolved_by']
-        if 'resolved_by_name' in kwargs:
-            self.model.resolved_by_name = kwargs['resolved_by_name']
+        if "solution" in kwargs:
+            self.model.solution = kwargs["solution"]
+        if "resolved_by" in kwargs:
+            self.model.resolved_by = kwargs["resolved_by"]
+        if "resolved_by_name" in kwargs:
+            self.model.resolved_by_name = kwargs["resolved_by_name"]
 
         self.model.resolved_at = datetime.now()
 
@@ -93,7 +93,7 @@ class IssueStateMachine(StateMachine):
             self._update_project_health()
 
         # 业务逻辑：同步调试问题
-        if self.model.category == 'PROJECT' and self.model.issue_type in ['DEFECT', 'BUG']:
+        if self.model.category == "PROJECT" and self.model.issue_type in ["DEFECT", "BUG"]:
             self._sync_debug_issue()
 
     @transition(
@@ -114,13 +114,13 @@ class IssueStateMachine(StateMachine):
         """
         from datetime import datetime
 
-        if 'verified_by' in kwargs:
-            self.model.verified_by = kwargs['verified_by']
-        if 'verified_by_name' in kwargs:
-            self.model.verified_by_name = kwargs['verified_by_name']
+        if "verified_by" in kwargs:
+            self.model.verified_by = kwargs["verified_by"]
+        if "verified_by_name" in kwargs:
+            self.model.verified_by_name = kwargs["verified_by_name"]
 
         self.model.verified_at = datetime.now()
-        self.model.verified_result = 'VERIFIED'
+        self.model.verified_result = "VERIFIED"
 
     @transition(
         from_state="RESOLVED",
@@ -140,13 +140,13 @@ class IssueStateMachine(StateMachine):
         """
         from datetime import datetime
 
-        if 'verified_by' in kwargs:
-            self.model.verified_by = kwargs['verified_by']
-        if 'verified_by_name' in kwargs:
-            self.model.verified_by_name = kwargs['verified_by_name']
+        if "verified_by" in kwargs:
+            self.model.verified_by = kwargs["verified_by"]
+        if "verified_by_name" in kwargs:
+            self.model.verified_by_name = kwargs["verified_by_name"]
 
         self.model.verified_at = datetime.now()
-        self.model.verified_result = 'FAILED'
+        self.model.verified_result = "FAILED"
 
     @transition(
         from_state="OPEN",
@@ -197,44 +197,44 @@ class IssueStateMachine(StateMachine):
         """关闭阻塞问题的相关预警"""
         try:
             import logging
+
             from app.api.v1.endpoints.issues.utils import close_blocking_issue_alerts
 
             closed_count = close_blocking_issue_alerts(self.db, self.model)
             if closed_count > 0:
-                logging.info(
-                    f"问题 {self.model.issue_no} 已解决，自动关闭 {closed_count} 个预警"
-                )
+                logging.info(f"问题 {self.model.issue_no} 已解决，自动关闭 {closed_count} 个预警")
         except Exception as e:
             import logging
+
             logging.error(f"关闭阻塞问题预警失败: {str(e)}")
 
     def _update_project_health(self):
         """更新关联项目的健康度"""
         try:
             import logging
+
             from app.models.project import Project
             from app.services.health_calculator import HealthCalculator
 
-            project = (
-                self.db.query(Project)
-                .filter(Project.id == self.model.project_id)
-                .first()
-            )
+            project = self.db.query(Project).filter(Project.id == self.model.project_id).first()
             if project:
                 calculator = HealthCalculator(self.db)
                 calculator.calculate_and_update(project, auto_save=True)
         except Exception as e:
             import logging
+
             logging.error(f"更新项目健康度失败: {str(e)}")
 
     def _sync_debug_issue(self):
         """同步调试问题"""
         try:
             import logging
+
             from app.services.debug_issue_sync_service import DebugIssueSyncService
 
             sync_service = DebugIssueSyncService(self.db)
             sync_service.sync_issue(self.model.id)
         except Exception as e:
             import logging
+
             logging.error(f"调试问题同步失败: {e}")

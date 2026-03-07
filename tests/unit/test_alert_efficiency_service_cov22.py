@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """第二十二批：alert_efficiency_service 单元测试"""
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.alert_efficiency_service import (
         calculate_basic_metrics,
-        calculate_project_metrics,
         calculate_handler_metrics,
+        calculate_project_metrics,
         calculate_type_metrics,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -41,7 +43,7 @@ def make_alert(
     target_type="project",
     target_id=1,
     project_id=1,
-    handler_id=None
+    handler_id=None,
 ):
     a = MagicMock()
     a.status = status
@@ -92,7 +94,12 @@ class TestCalculateBasicMetrics:
         """24小时内重复预警计入重复率"""
         base_time = datetime(2025, 1, 1, 10, 0)
         a1 = make_alert(rule_id=1, target_type="project", target_id=1, triggered_at=base_time)
-        a2 = make_alert(rule_id=1, target_type="project", target_id=1, triggered_at=base_time + timedelta(hours=5))
+        a2 = make_alert(
+            rule_id=1,
+            target_type="project",
+            target_id=1,
+            triggered_at=base_time + timedelta(hours=5),
+        )
         result = calculate_basic_metrics([a1, a2], engine)
         assert result["duplicate_rate"] > 0
 

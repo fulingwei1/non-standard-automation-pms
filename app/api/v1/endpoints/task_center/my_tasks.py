@@ -19,9 +19,9 @@ from sqlalchemy import case, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.task_center import (
     TaskUnified,
 )
@@ -38,14 +38,12 @@ router = APIRouter()
 
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="",
-    tags=["my_tasks"]
-)
+router = APIRouter(prefix="", tags=["my_tasks"])
 
 # 共 1 个路由
 
 # ==================== 我的任务列表 ====================
+
 
 @router.get("/my-tasks", response_model=TaskUnifiedListResponse, status_code=status.HTTP_200_OK)
 def get_my_tasks(
@@ -93,14 +91,14 @@ def get_my_tasks(
             query = query.filter(
                 TaskUnified.deadline.isnot(None),
                 func.date(TaskUnified.deadline) < today_str,
-                TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
+                TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
             )
         else:
             query = query.filter(
                 or_(
                     TaskUnified.deadline.is_(None),
                     func.date(TaskUnified.deadline) >= today_str,
-                    ~TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"])
+                    ~TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
                 )
             )
 
@@ -120,7 +118,7 @@ def get_my_tasks(
             (TaskUnified.priority == "HIGH", 2),
             (TaskUnified.priority == "MEDIUM", 3),
             (TaskUnified.priority == "LOW", 4),
-            else_=5
+            else_=5,
         )
         order_by = priority_order
     else:
@@ -143,52 +141,53 @@ def get_my_tasks(
     for task in tasks:
         is_overdue = False
         if task.deadline and task.status in ["PENDING", "ACCEPTED", "IN_PROGRESS"]:
-            deadline_date = task.deadline.date() if isinstance(task.deadline, datetime) else task.deadline
+            deadline_date = (
+                task.deadline.date() if isinstance(task.deadline, datetime) else task.deadline
+            )
             if deadline_date < today:
                 is_overdue = True
 
-        items.append(TaskUnifiedResponse(
-            id=task.id,
-            task_code=task.task_code,
-            title=task.title,
-            description=task.description,
-            task_type=task.task_type,
-            source_type=task.source_type,
-            source_id=task.source_id,
-            source_name=task.source_name,
-            project_id=task.project_id,
-            project_name=task.project_name,
-            assignee_id=task.assignee_id,
-            assignee_name=task.assignee_name,
-            assigner_id=task.assigner_id,
-            assigner_name=task.assigner_name,
-            plan_start_date=task.plan_start_date,
-            plan_end_date=task.plan_end_date,
-            actual_start_date=task.actual_start_date,
-            actual_end_date=task.actual_end_date,
-            deadline=task.deadline,
-            estimated_hours=task.estimated_hours,
-            actual_hours=task.actual_hours or Decimal("0"),
-            status=task.status,
-            progress=task.progress or 0,
-            priority=task.priority,
-            is_urgent=task.is_urgent or False,
-            is_transferred=task.is_transferred or False,
-            transfer_from_name=task.transfer_from_name,
-            tags=task.tags if task.tags else [],
-            category=task.category,
-            is_overdue=is_overdue,
-            created_at=task.created_at,
-            updated_at=task.updated_at
-        ))
+        items.append(
+            TaskUnifiedResponse(
+                id=task.id,
+                task_code=task.task_code,
+                title=task.title,
+                description=task.description,
+                task_type=task.task_type,
+                source_type=task.source_type,
+                source_id=task.source_id,
+                source_name=task.source_name,
+                project_id=task.project_id,
+                project_name=task.project_name,
+                assignee_id=task.assignee_id,
+                assignee_name=task.assignee_name,
+                assigner_id=task.assigner_id,
+                assigner_name=task.assigner_name,
+                plan_start_date=task.plan_start_date,
+                plan_end_date=task.plan_end_date,
+                actual_start_date=task.actual_start_date,
+                actual_end_date=task.actual_end_date,
+                deadline=task.deadline,
+                estimated_hours=task.estimated_hours,
+                actual_hours=task.actual_hours or Decimal("0"),
+                status=task.status,
+                progress=task.progress or 0,
+                priority=task.priority,
+                is_urgent=task.is_urgent or False,
+                is_transferred=task.is_transferred or False,
+                transfer_from_name=task.transfer_from_name,
+                tags=task.tags if task.tags else [],
+                category=task.category,
+                is_overdue=is_overdue,
+                created_at=task.created_at,
+                updated_at=task.updated_at,
+            )
+        )
 
     return TaskUnifiedListResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
-
-
-

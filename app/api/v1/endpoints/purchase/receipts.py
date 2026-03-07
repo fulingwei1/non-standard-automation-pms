@@ -12,6 +12,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.models.purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
@@ -20,11 +22,9 @@ from app.models.purchase import (
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404
 
 from .utils import decimal_value, generate_receipt_no
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -38,7 +38,9 @@ def list_goods_receipts(
     """获取收货单列表"""
     query = db.query(GoodsReceipt)
     total = query.count()
-    receipts = apply_pagination(query.order_by(desc(GoodsReceipt.created_at)), pagination.offset, pagination.limit).all()
+    receipts = apply_pagination(
+        query.order_by(desc(GoodsReceipt.created_at)), pagination.offset, pagination.limit
+    ).all()
     return {
         "items": [
             {

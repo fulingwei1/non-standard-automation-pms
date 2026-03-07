@@ -160,12 +160,13 @@ class TestDetectAnomalies:
         from app.services.timesheet_quality_service import TimesheetQualityService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         service = TimesheetQualityService(mock_db)
         result = service.detect_anomalies(
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+            start_date=date.today() - timedelta(days=30), end_date=date.today()
         )
 
         assert result == []
@@ -200,7 +201,9 @@ class TestCheckWorkLogCompleteness:
         mock_user.real_name = "测试用户"
         mock_user.username = "testuser"
 
-        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = timesheet_dates
+        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = (
+            timesheet_dates
+        )
         # First call returns None (no work log), second returns user
         mock_db.query.return_value.filter.return_value.first.side_effect = [
             None,  # No work log for first date
@@ -277,8 +280,7 @@ class TestValidateDataConsistency:
 
         assert result["inconsistency_count"] >= 1
         inconsistency = next(
-            (i for i in result["inconsistencies"] if i["type"] == "MISMATCHED_ASSOCIATION"),
-            None
+            (i for i in result["inconsistencies"] if i["type"] == "MISMATCHED_ASSOCIATION"), None
         )
         assert inconsistency is not None
 

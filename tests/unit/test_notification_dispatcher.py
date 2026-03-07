@@ -3,9 +3,10 @@
 Tests for notification_dispatcher service
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertNotification, AlertRecord
@@ -132,9 +133,7 @@ class TestNotificationDispatcher:
         assert mock_notification.status == "SENT"
         assert mock_service.send_notification.called
 
-    def test_dispatch_with_exception(
-        self, db_session, mock_notification, mock_alert, mock_user
-    ):
+    def test_dispatch_with_exception(self, db_session, mock_notification, mock_alert, mock_user):
         from app.services.notification_dispatcher import NotificationDispatcher
 
         mock_service = Mock()

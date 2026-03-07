@@ -11,13 +11,14 @@ from pydantic import BaseModel, Field
 
 from ..common import TimestampSchema
 
-
 # ============================================
 # Dashboard - 仪表板
 # ============================================
 
+
 class StrategyOverviewResponse(BaseModel):
     """战略总览响应"""
+
     strategy_id: int
     strategy_code: Optional[str] = None
     strategy_name: str
@@ -51,6 +52,7 @@ class StrategyOverviewResponse(BaseModel):
 
 class MyStrategyItem(BaseModel):
     """我的战略关联项"""
+
     type: str  # KPI / ANNUAL_WORK / DEPT_OBJECTIVE
     id: int
     name: str
@@ -65,6 +67,7 @@ class MyStrategyItem(BaseModel):
 
 class MyStrategyResponse(BaseModel):
     """我的战略关联响应"""
+
     employee_id: int
     employee_name: str
     department_name: Optional[str] = None
@@ -89,6 +92,7 @@ class MyStrategyResponse(BaseModel):
 # GET /dashboard/my-strategy 专用响应，与端点返回结构一致
 class MyStrategyKPIItem(BaseModel):
     """我的战略 - 公司 KPI 项"""
+
     id: int
     code: str
     name: str
@@ -99,6 +103,7 @@ class MyStrategyKPIItem(BaseModel):
 
 class MyStrategyAnnualWorkItem(BaseModel):
     """我的战略 - 年度重点工作项"""
+
     id: int
     code: str
     name: str
@@ -108,6 +113,7 @@ class MyStrategyAnnualWorkItem(BaseModel):
 
 class MyStrategyPersonalKPIItem(BaseModel):
     """我的战略 - 个人 KPI 项"""
+
     id: int
     code: str
     name: str
@@ -118,6 +124,7 @@ class MyStrategyPersonalKPIItem(BaseModel):
 
 class MyStrategyDashboardResponse(BaseModel):
     """GET /dashboard/my-strategy 响应"""
+
     strategy_id: Optional[int] = None
     strategy_name: Optional[str] = None
     my_kpis: List[MyStrategyKPIItem] = []
@@ -129,6 +136,7 @@ class MyStrategyDashboardResponse(BaseModel):
 
 class ExecutionStatusItem(BaseModel):
     """执行状态项"""
+
     dimension: str
     dimension_name: str
     csf_count: int
@@ -146,6 +154,7 @@ class ExecutionStatusItem(BaseModel):
 
 class ExecutionStatusResponse(BaseModel):
     """执行状态看板响应"""
+
     strategy_id: int
     strategy_name: str
     year: int
@@ -163,8 +172,10 @@ class ExecutionStatusResponse(BaseModel):
 # Comparison - 同比分析
 # ============================================
 
+
 class StrategyComparisonCreate(BaseModel):
     """创建战略对比"""
+
     current_strategy_id: int = Field(description="当前战略ID")
     previous_strategy_id: Optional[int] = Field(default=None, description="对比战略ID")
     current_year: int = Field(description="当前年份")
@@ -173,6 +184,7 @@ class StrategyComparisonCreate(BaseModel):
 
 class StrategyComparisonResponse(TimestampSchema):
     """战略对比响应"""
+
     id: int
     current_strategy_id: int
     previous_strategy_id: Optional[int] = None
@@ -229,6 +241,7 @@ class StrategyComparisonResponse(TimestampSchema):
 
 class DimensionComparisonDetail(BaseModel):
     """维度对比详情"""
+
     dimension: str
     dimension_name: str
     current_score: int
@@ -244,6 +257,7 @@ class DimensionComparisonDetail(BaseModel):
 
 class CSFComparisonItem(BaseModel):
     """CSF 对比项"""
+
     csf_id: int
     csf_code: str
     csf_name: str
@@ -259,6 +273,7 @@ class CSFComparisonItem(BaseModel):
 
 class KPIComparisonItem(BaseModel):
     """KPI 对比项"""
+
     kpi_id: int
     kpi_code: str
     kpi_name: str
@@ -276,6 +291,7 @@ class KPIComparisonItem(BaseModel):
 
 class YoYReportResponse(BaseModel):
     """同比报告响应"""
+
     current_year: int
     previous_year: int
     generated_date: date

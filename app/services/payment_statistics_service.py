@@ -14,10 +14,7 @@ from app.models.sales import Contract, Invoice
 
 
 def build_invoice_query(
-    db: Session,
-    customer_id: Optional[int],
-    start_date: Optional[date],
-    end_date: Optional[date]
+    db: Session, customer_id: Optional[int], start_date: Optional[date], end_date: Optional[date]
 ):
     """
     构建发票查询
@@ -33,28 +30,22 @@ def build_invoice_query(
     if start_date:
         query = query.filter(
             or_(
-                and_(
-                    Invoice.issue_date.isnot(None),
-                    Invoice.issue_date >= start_date
-                ),
+                and_(Invoice.issue_date.isnot(None), Invoice.issue_date >= start_date),
                 and_(
                     Invoice.issue_date.is_(None),
-                    Invoice.created_at >= datetime.combine(start_date, datetime.min.time())
-                )
+                    Invoice.created_at >= datetime.combine(start_date, datetime.min.time()),
+                ),
             )
         )
 
     if end_date:
         query = query.filter(
             or_(
-                and_(
-                    Invoice.issue_date.isnot(None),
-                    Invoice.issue_date <= end_date
-                ),
+                and_(Invoice.issue_date.isnot(None), Invoice.issue_date <= end_date),
                 and_(
                     Invoice.issue_date.is_(None),
-                    Invoice.created_at <= datetime.combine(end_date, datetime.max.time())
-                )
+                    Invoice.created_at <= datetime.combine(end_date, datetime.max.time()),
+                ),
             )
         )
 
@@ -74,7 +65,11 @@ def calculate_monthly_statistics(invoices: List[Invoice]) -> Dict[str, Dict[str,
         if invoice.issue_date:
             month_key = invoice.issue_date.strftime("%Y-%m")
             if month_key not in monthly_stats:
-                monthly_stats[month_key] = {"invoiced": Decimal("0"), "paid": Decimal("0"), "count": 0}
+                monthly_stats[month_key] = {
+                    "invoiced": Decimal("0"),
+                    "paid": Decimal("0"),
+                    "count": 0,
+                }
 
             total = invoice.total_amount or invoice.amount or Decimal("0")
             paid = invoice.paid_amount or Decimal("0")
@@ -107,7 +102,7 @@ def calculate_customer_statistics(invoices: List[Invoice]) -> Dict[int, Dict[str
                     "invoiced": Decimal("0"),
                     "paid": Decimal("0"),
                     "unpaid": Decimal("0"),
-                    "count": 0
+                    "count": 0,
                 }
 
             total = invoice.total_amount or invoice.amount or Decimal("0")
@@ -179,14 +174,18 @@ def build_monthly_list(monthly_stats: Dict[str, Dict[str, Any]]) -> List[Dict[st
             "invoiced": float(stats["invoiced"]),
             "paid": float(stats["paid"]),
             "unpaid": float(stats["invoiced"] - stats["paid"]),
-            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
-            "count": stats["count"]
+            "collection_rate": float(
+                (stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0
+            ),
+            "count": stats["count"],
         }
         for month, stats in sorted(monthly_stats.items())
     ]
 
 
-def build_customer_list(customer_stats: Dict[int, Dict[str, Any]], limit: int = 10) -> List[Dict[str, Any]]:
+def build_customer_list(
+    customer_stats: Dict[int, Dict[str, Any]], limit: int = 10
+) -> List[Dict[str, Any]]:
     """
     构建客户统计列表
 
@@ -200,8 +199,12 @@ def build_customer_list(customer_stats: Dict[int, Dict[str, Any]], limit: int = 
             "invoiced": float(stats["invoiced"]),
             "paid": float(stats["paid"]),
             "unpaid": float(stats["unpaid"]),
-            "collection_rate": float((stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0),
-            "count": stats["count"]
+            "collection_rate": float(
+                (stats["paid"] / stats["invoiced"] * 100) if stats["invoiced"] > 0 else 0
+            ),
+            "count": stats["count"],
         }
-        for stats in sorted(customer_stats.values(), key=lambda x: x["unpaid"], reverse=True)[:limit]
+        for stats in sorted(customer_stats.values(), key=lambda x: x["unpaid"], reverse=True)[
+            :limit
+        ]
     ]

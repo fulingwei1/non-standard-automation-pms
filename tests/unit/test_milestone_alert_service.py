@@ -2,6 +2,7 @@
 """MilestoneAlertService 单元测试"""
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.alert.milestone_alert_service import MilestoneAlertService

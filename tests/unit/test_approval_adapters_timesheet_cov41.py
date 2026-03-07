@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("app.services.approval_engine.adapters.timesheet")
 
-from unittest.mock import MagicMock
 from datetime import date
+from unittest.mock import MagicMock
 
 
 @pytest.fixture
@@ -16,6 +16,7 @@ def db():
 @pytest.fixture
 def adapter(db):
     from app.services.approval_engine.adapters.timesheet import TimesheetApprovalAdapter
+
     return TimesheetApprovalAdapter(db)
 
 

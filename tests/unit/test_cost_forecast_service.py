@@ -15,17 +15,18 @@ CostForecastService 单元测试
 - save_forecast
 """
 
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 from app.services.cost_forecast_service import CostForecastService
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def db():
@@ -63,6 +64,7 @@ def _make_project(
 # Tests: linear_forecast
 # ---------------------------------------------------------------------------
 
+
 class TestLinearForecast:
     def test_project_not_found(self, service, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -74,9 +76,11 @@ class TestLinearForecast:
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
         # _get_monthly_costs returns only 1 item → insufficient
-        with patch.object(service, "_get_monthly_costs", return_value=[
-            {"month": "2024-01", "monthly_cost": 1000, "cumulative_cost": 1000}
-        ]):
+        with patch.object(
+            service,
+            "_get_monthly_costs",
+            return_value=[{"month": "2024-01", "monthly_cost": 1000, "cumulative_cost": 1000}],
+        ):
             result = service.linear_forecast(project_id=1)
         assert "error" in result
         assert "历史数据不足" in result["error"]
@@ -84,18 +88,22 @@ class TestLinearForecast:
     def _run_with_sklearn_mock(self, service, db, project, monthly_data, slope=10000.0):
         """Helper: run linear_forecast with properly mocked sklearn."""
         import sys
+
         mock_model = MagicMock()
-        mock_model.coef_ = [slope]          # 1-D array-like
+        mock_model.coef_ = [slope]  # 1-D array-like
         mock_model.intercept_ = 0.0
         mock_model.score.return_value = 0.95
         mock_lr_class = MagicMock(return_value=mock_model)
         mock_lr_module = MagicMock()
         mock_lr_module.LinearRegression = mock_lr_class
         db.query.return_value.filter.return_value.first.return_value = project
-        with patch.dict(sys.modules, {
-            "sklearn": MagicMock(),
-            "sklearn.linear_model": mock_lr_module,
-        }):
+        with patch.dict(
+            sys.modules,
+            {
+                "sklearn": MagicMock(),
+                "sklearn.linear_model": mock_lr_module,
+            },
+        ):
             with patch.object(service, "_get_monthly_costs", return_value=monthly_data):
                 return service.linear_forecast(project_id=1)
 
@@ -104,7 +112,7 @@ class TestLinearForecast:
         monthly_data = [
             {"month": "2024-01", "monthly_cost": 10000, "cumulative_cost": 10000},
             {"month": "2024-02", "monthly_cost": 11000, "cumulative_cost": 21000},
-            {"month": "2024-03", "monthly_cost": 9000,  "cumulative_cost": 30000},
+            {"month": "2024-03", "monthly_cost": 9000, "cumulative_cost": 30000},
         ]
         result = self._run_with_sklearn_mock(service, db, project, monthly_data)
         assert result["method"] == "LINEAR"
@@ -126,6 +134,7 @@ class TestLinearForecast:
     def test_forecast_with_planned_dates(self, service, db):
         """使用计划日期计算总月数"""
         from datetime import date as ddate
+
         project = _make_project(
             budget_amount=120000,
             actual_cost=40000,
@@ -148,6 +157,7 @@ class TestLinearForecast:
 # Tests: exponential_forecast
 # ---------------------------------------------------------------------------
 
+
 class TestExponentialForecast:
     def test_project_not_found(self, service, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -157,9 +167,11 @@ class TestExponentialForecast:
     def test_insufficient_data(self, service, db):
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
-        with patch.object(service, "_get_monthly_costs", return_value=[
-            {"month": "2024-01", "monthly_cost": 5000, "cumulative_cost": 5000}
-        ]):
+        with patch.object(
+            service,
+            "_get_monthly_costs",
+            return_value=[{"month": "2024-01", "monthly_cost": 5000, "cumulative_cost": 5000}],
+        ):
             result = service.exponential_forecast(project_id=1)
         assert "error" in result
 
@@ -196,6 +208,7 @@ class TestExponentialForecast:
 # Tests: historical_average_forecast
 # ---------------------------------------------------------------------------
 
+
 class TestHistoricalAverageForecast:
     def test_project_not_found(self, service, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -226,7 +239,7 @@ class TestHistoricalAverageForecast:
         project = _make_project(budget_amount=100000, actual_cost=40000, progress_pct=40)
         db.query.return_value.filter.return_value.first.return_value = project
         monthly_data = [
-            {"month": "2024-01", "monthly_cost": 8000,  "cumulative_cost": 8000},
+            {"month": "2024-01", "monthly_cost": 8000, "cumulative_cost": 8000},
             {"month": "2024-02", "monthly_cost": 12000, "cumulative_cost": 20000},
         ]
         with patch.object(service, "_get_monthly_costs", return_value=monthly_data):
@@ -252,6 +265,7 @@ class TestHistoricalAverageForecast:
 # Tests: get_cost_trend
 # ---------------------------------------------------------------------------
 
+
 class TestGetCostTrend:
     def test_project_not_found(self, service, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -269,7 +283,7 @@ class TestGetCostTrend:
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
         monthly_data = [
-            {"month": "2024-01", "monthly_cost": 5000,  "cumulative_cost": 5000},
+            {"month": "2024-01", "monthly_cost": 5000, "cumulative_cost": 5000},
             {"month": "2024-02", "monthly_cost": 15000, "cumulative_cost": 20000},
         ]
         with patch.object(service, "_get_monthly_costs", return_value=monthly_data):
@@ -284,6 +298,7 @@ class TestGetCostTrend:
 # ---------------------------------------------------------------------------
 # Tests: get_burn_down_data
 # ---------------------------------------------------------------------------
+
 
 class TestGetBurnDownData:
     def test_project_not_found(self, service, db):
@@ -300,6 +315,7 @@ class TestGetBurnDownData:
 
     def test_burn_down_basic(self, service, db):
         from datetime import date as ddate
+
         project = _make_project(
             budget_amount=120000,
             actual_cost=30000,
@@ -323,6 +339,7 @@ class TestGetBurnDownData:
 # ---------------------------------------------------------------------------
 # Tests: _check_overspend_alert
 # ---------------------------------------------------------------------------
+
 
 class TestCheckOverspendAlert:
     def test_no_budget(self, service):
@@ -363,6 +380,7 @@ class TestCheckOverspendAlert:
 # Tests: _check_progress_mismatch_alert
 # ---------------------------------------------------------------------------
 
+
 class TestCheckProgressMismatchAlert:
     def test_no_budget(self, service):
         project = _make_project(budget_amount=0)
@@ -397,13 +415,18 @@ class TestCheckProgressMismatchAlert:
 # Tests: _check_trend_anomaly_alert
 # ---------------------------------------------------------------------------
 
+
 class TestCheckTrendAnomalyAlert:
     def test_insufficient_data(self, service, db):
         project = _make_project()
-        with patch.object(service, "_get_monthly_costs", return_value=[
-            {"month": "2024-01", "monthly_cost": 5000, "cumulative_cost": 5000},
-            {"month": "2024-02", "monthly_cost": 5000, "cumulative_cost": 10000},
-        ]):
+        with patch.object(
+            service,
+            "_get_monthly_costs",
+            return_value=[
+                {"month": "2024-01", "monthly_cost": 5000, "cumulative_cost": 5000},
+                {"month": "2024-02", "monthly_cost": 5000, "cumulative_cost": 10000},
+            ],
+        ):
             result = service._check_trend_anomaly_alert(1, project, {})
         assert result is None
 
@@ -435,6 +458,7 @@ class TestCheckTrendAnomalyAlert:
 # Tests: check_cost_alerts (integration of sub-checks)
 # ---------------------------------------------------------------------------
 
+
 class TestCheckCostAlerts:
     def test_no_project(self, service, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -455,6 +479,7 @@ class TestCheckCostAlerts:
 # ---------------------------------------------------------------------------
 # Tests: save_forecast
 # ---------------------------------------------------------------------------
+
 
 class TestSaveForecast:
     def test_project_not_found_raises(self, service, db):

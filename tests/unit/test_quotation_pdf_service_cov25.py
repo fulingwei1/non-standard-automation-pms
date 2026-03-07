@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - quotation_pdf_service 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.quotation_pdf_service")
 
@@ -37,6 +38,7 @@ def _make_quotation(quotation_number="QT20250001"):
 
 # ── __init__ ──────────────────────────────────────────────────────────────────
 
+
 class TestQuotationPDFServiceInit:
     def test_output_dir_set(self):
         with patch("os.makedirs"):
@@ -53,10 +55,12 @@ class TestQuotationPDFServiceInit:
 
 # ── generate_pdf - not available ──────────────────────────────────────────────
 
+
 class TestGeneratePdfNotAvailable:
     def test_raises_runtime_error_when_reportlab_unavailable(self):
         """Simulate environment where REPORTLAB_AVAILABLE is False."""
         import app.services.quotation_pdf_service as qpdf_module
+
         original = qpdf_module.REPORTLAB_AVAILABLE
         try:
             qpdf_module.REPORTLAB_AVAILABLE = False
@@ -70,6 +74,7 @@ class TestGeneratePdfNotAvailable:
 
     def test_error_message_mentions_install(self):
         import app.services.quotation_pdf_service as qpdf_module
+
         original = qpdf_module.REPORTLAB_AVAILABLE
         try:
             qpdf_module.REPORTLAB_AVAILABLE = False
@@ -85,6 +90,7 @@ class TestGeneratePdfNotAvailable:
 
 
 # ── generate_pdf - with reportlab ─────────────────────────────────────────────
+
 
 class TestGeneratePdfWithReportlab:
     def test_generate_pdf_attempts_to_create_file(self):
@@ -128,6 +134,7 @@ class TestGeneratePdfWithReportlab:
 
 # ── output_dir attribute ──────────────────────────────────────────────────────
 
+
 class TestOutputDir:
     def test_output_dir_format(self, service):
         assert service.output_dir.endswith("/")
@@ -135,6 +142,7 @@ class TestOutputDir:
 
 
 # ── REPORTLAB_AVAILABLE flag ──────────────────────────────────────────────────
+
 
 class TestReportlabAvailableFlag:
     def test_service_usable_without_reportlab(self):

@@ -10,17 +10,17 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from app.services.timesheet_reminders.service import TimesheetReminderService
 from app.models.timesheet_reminder import (
     ReminderStatusEnum,
     ReminderTypeEnum,
+    TimesheetAnomalyRecord,
     TimesheetReminderConfig,
     TimesheetReminderRecord,
-    TimesheetAnomalyRecord,
 )
+from app.services.timesheet_reminders.service import TimesheetReminderService
 
 
 class TestTimesheetReminderServiceConfigManagement(unittest.TestCase):
@@ -109,7 +109,9 @@ class TestTimesheetReminderServiceConfigManagement(unittest.TestCase):
         ]
         mock_query = MagicMock()
         mock_query.count.return_value = 2
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_configs
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_configs
+        )
 
         self.db.query.return_value = mock_query
 
@@ -166,7 +168,9 @@ class TestTimesheetReminderServiceReminderOperations(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 2
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
 
         self.db.query.return_value = mock_query
 
@@ -212,7 +216,9 @@ class TestTimesheetReminderServiceReminderOperations(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 5
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
 
         self.db.query.return_value = mock_query
 
@@ -365,7 +371,9 @@ class TestTimesheetReminderServiceAnomalyOperations(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 3
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_anomalies
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_anomalies
+        )
 
         self.db.query.return_value = mock_query
 
@@ -477,11 +485,20 @@ class TestTimesheetReminderServiceStatistics(unittest.TestCase):
         # Mock各种count查询
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
-        mock_query.count.side_effect = [100, 20, 15, 30, 35]  # total, pending, sent, dismissed, resolved
+        mock_query.count.side_effect = [
+            100,
+            20,
+            15,
+            30,
+            35,
+        ]  # total, pending, sent, dismissed, resolved
 
         # Mock按类型统计
         mock_query.group_by.return_value.all.side_effect = [
-            [(ReminderTypeEnum.MISSING_TIMESHEET, 50), (ReminderTypeEnum.APPROVAL_TIMEOUT, 50)],  # by_type
+            [
+                (ReminderTypeEnum.MISSING_TIMESHEET, 50),
+                (ReminderTypeEnum.APPROVAL_TIMEOUT, 50),
+            ],  # by_type
             [("HIGH", 30), ("NORMAL", 70)],  # by_priority
         ]
 
@@ -592,7 +609,9 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
         """测试配置列表为空"""
         mock_query = MagicMock()
         mock_query.count.return_value = 0
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = []
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            []
+        )
 
         self.db.query.return_value = mock_query
 
@@ -606,7 +625,9 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 0
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = []
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            []
+        )
 
         self.db.query.return_value = mock_query
 
@@ -620,7 +641,9 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 0
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = []
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            []
+        )
 
         self.db.query.return_value = mock_query
 
@@ -650,7 +673,9 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
         mock_configs = [MagicMock(spec=TimesheetReminderConfig, id=i) for i in range(10, 20)]
         mock_query = MagicMock()
         mock_query.count.return_value = 100
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_configs
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_configs
+        )
 
         self.db.query.return_value = mock_query
 

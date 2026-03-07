@@ -357,9 +357,7 @@ class TestCreateMonthlyWorkSummary:
 
         # Mock查询已存在
         existing_summary = Mock(spec=MonthlyWorkSummary)
-        mock_db.query.return_value.filter.return_value.first.return_value = (
-            existing_summary
-        )
+        mock_db.query.return_value.filter.return_value.first.return_value = existing_summary
 
         with pytest.raises(HTTPException) as exc_info:
             service.create_monthly_work_summary(current_user, summary_in)
@@ -386,9 +384,7 @@ class TestSaveMonthlySummaryDraft:
         # Mock查询不存在
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = service.save_monthly_summary_draft(
-            current_user, "2024-02", summary_update
-        )
+        result = service.save_monthly_summary_draft(current_user, "2024-02", summary_update)
 
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
@@ -408,13 +404,9 @@ class TestSaveMonthlySummaryDraft:
         # Mock现有草稿
         existing_summary = Mock(spec=MonthlyWorkSummary)
         existing_summary.status = "DRAFT"
-        mock_db.query.return_value.filter.return_value.first.return_value = (
-            existing_summary
-        )
+        mock_db.query.return_value.filter.return_value.first.return_value = existing_summary
 
-        result = service.save_monthly_summary_draft(
-            current_user, "2024-02", summary_update
-        )
+        result = service.save_monthly_summary_draft(current_user, "2024-02", summary_update)
 
         assert existing_summary.work_content == "更新内容"
         assert existing_summary.self_evaluation == "更新评价"
@@ -433,9 +425,7 @@ class TestSaveMonthlySummaryDraft:
         # Mock已提交的总结
         existing_summary = Mock(spec=MonthlyWorkSummary)
         existing_summary.status = "SUBMITTED"
-        mock_db.query.return_value.filter.return_value.first.return_value = (
-            existing_summary
-        )
+        mock_db.query.return_value.filter.return_value.first.return_value = existing_summary
 
         with pytest.raises(HTTPException) as exc_info:
             service.save_monthly_summary_draft(current_user, "2024-02", summary_update)
@@ -630,10 +620,7 @@ class TestGetMyPerformance:
         result = service.get_my_performance(current_user)
 
         assert len(result["current_status"]["project_evaluations"]) == 1
-        assert (
-            result["current_status"]["project_evaluations"][0]["project_name"]
-            == "项目A"
-        )
+        assert result["current_status"]["project_evaluations"][0]["project_name"] == "项目A"
         assert result["current_status"]["project_evaluations"][0]["score"] == 90
 
 

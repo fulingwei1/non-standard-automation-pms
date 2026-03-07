@@ -23,17 +23,14 @@ from app.models.user import User
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/integrations",
-    tags=["integrations"]
-)
+router = APIRouter(prefix="/integrations", tags=["integrations"])
 
 # 共 3 个路由
 
 # ==================== 数据集成 ====================
+
 
 @router.get("/rhythm-integration/financial-metrics")
 def get_financial_metrics(
@@ -62,7 +59,7 @@ def get_financial_metrics(
 
     # 查询收入（已收款金额）
     revenue_query = db.query(func.coalesce(func.sum(ProjectPaymentPlan.actual_amount), 0)).filter(
-        ProjectPaymentPlan.status.in_(['PARTIAL', 'COMPLETED'])
+        ProjectPaymentPlan.status.in_(["PARTIAL", "COMPLETED"])
     )
     if start_date:
         revenue_query = revenue_query.filter(ProjectPaymentPlan.actual_date >= start_date)
@@ -74,10 +71,12 @@ def get_financial_metrics(
     profit = total_revenue - total_cost
 
     # 查询预算总额（已批准的预算）
-    budget_total = db.query(func.coalesce(func.sum(ProjectBudget.total_amount), 0)).filter(
-        ProjectBudget.status == 'APPROVED',
-        ProjectBudget.is_active
-    ).scalar() or 0
+    budget_total = (
+        db.query(func.coalesce(func.sum(ProjectBudget.total_amount), 0))
+        .filter(ProjectBudget.status == "APPROVED", ProjectBudget.is_active)
+        .scalar()
+        or 0
+    )
 
     # 计算毛利率和净利润率
     gross_margin_rate = (profit / total_revenue * 100) if total_revenue > 0 else 0.0
@@ -94,7 +93,9 @@ def get_financial_metrics(
         "gross_margin_rate": round(gross_margin_rate, 2),
         "net_profit_rate": round(net_profit_rate, 2),
         "budget_total": float(budget_total),
-        "budget_usage_rate": round((total_cost / float(budget_total) * 100) if budget_total else 0, 2),
+        "budget_usage_rate": round(
+            (total_cost / float(budget_total) * 100) if budget_total else 0, 2
+        ),
     }
 
     return metrics
@@ -112,8 +113,8 @@ def get_project_metrics(
 
     # 获取项目统计数据
     total_projects = db.query(Project).count()
-    active_projects = db.query(Project).filter(Project.health.in_(['H1', 'H2', 'H3'])).count()
-    at_risk_projects = db.query(Project).filter(Project.health.in_(['H2', 'H3'])).count()
+    active_projects = db.query(Project).filter(Project.health.in_(["H1", "H2", "H3"])).count()
+    at_risk_projects = db.query(Project).filter(Project.health.in_(["H2", "H3"])).count()
 
     metrics = {
         "total_projects": total_projects,
@@ -151,12 +152,9 @@ def get_task_metrics(
         query = query.filter(Task.created_at <= end_date)
 
     total_tasks = query.count()
-    completed_tasks = query.filter(Task.status == 'COMPLETED').count()
+    completed_tasks = query.filter(Task.status == "COMPLETED").count()
     overdue_tasks = query.filter(
-        and_(
-            Task.deadline < date.today(),
-            Task.status != 'COMPLETED'
-        )
+        and_(Task.deadline < date.today(), Task.status != "COMPLETED")
     ).count()
 
     metrics = {
@@ -167,6 +165,3 @@ def get_task_metrics(
     }
 
     return metrics
-
-
-

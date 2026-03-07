@@ -19,6 +19,7 @@ class DataScopeConfig:
 
     用于配置不同模型的数据权限过滤字段映射
     """
+
     # 所有者字段（用于 OWN 范围）
     owner_field: Optional[str] = "created_by"
     # 额外的所有者字段列表（如 pm_id, assignee_id）

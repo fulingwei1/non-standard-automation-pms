@@ -3,15 +3,18 @@
 
 测试API和操作的幂等性，确保重复请求不会产生副作用
 """
-import pytest
+
 from datetime import date, datetime
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
+
 try:
-    from app.models.project import Project, Customer
-    from app.models.sales.contracts import Contract
-    from app.models.material import Material, MaterialInventory
     from app.models.approval.instance import ApprovalInstance
+    from app.models.material import Material, MaterialInventory
+    from app.models.project import Customer, Project
+    from app.models.sales.contracts import Contract
 except ImportError as e:
     pytest.skip(f"Required models not available: {e}", allow_module_level=True)
 
@@ -40,9 +43,7 @@ class TestIdempotency:
         idempotency_key = "IDEMP-KEY-001"
 
         # 第一次创建
-        project1 = db_session.query(Project).filter(
-            Project.project_code == "PJ-IDEMP-001"
-        ).first()
+        project1 = db_session.query(Project).filter(Project.project_code == "PJ-IDEMP-001").first()
 
         if not project1:
             project1 = Project(
@@ -59,9 +60,9 @@ class TestIdempotency:
             db_session.commit()
 
         # 第二次创建（使用相同幂等性键）
-        project2 = db_session.query(Project).filter(
-            Project.idempotency_key == idempotency_key
-        ).first()
+        project2 = (
+            db_session.query(Project).filter(Project.idempotency_key == idempotency_key).first()
+        )
 
         # 应该返回已存在的项目，而不是创建新的
         assert project2 is not None
@@ -120,16 +121,12 @@ class TestIdempotency:
         db_session.commit()
 
         # 第二次删除（已经不存在）
-        project_retry = db_session.query(Project).filter(
-            Project.id == project_id
-        ).first()
+        project_retry = db_session.query(Project).filter(Project.id == project_id).first()
 
         # 应该返回None，不抛出异常
         assert project_retry is None
 
-    def test_04_inventory_deduction_idempotency(
-        self, db_session: Session
-    ):
+    def test_04_inventory_deduction_idempotency(self, db_session: Session):
         """测试4：库存扣减幂等性"""
         # 创建物料和库存
         material = Material(
@@ -157,15 +154,18 @@ class TestIdempotency:
         deduction_amount = Decimal("20")
 
         # 检查是否已处理
-        processed = db_session.query(InventoryTransaction).filter(
-            InventoryTransaction.reference_code == deduction_key
-        ).first()
+        processed = (
+            db_session.query(InventoryTransaction)
+            .filter(InventoryTransaction.reference_code == deduction_key)
+            .first()
+        )
 
         if not processed:
             # 第一次扣减
             inventory.available_quantity -= deduction_amount
-            
+
             from app.models.material import InventoryTransaction
+
             trans = InventoryTransaction(
                 material_id=material.id,
                 transaction_type="OUT",
@@ -177,19 +177,19 @@ class TestIdempotency:
             db_session.commit()
 
         # 第二次扣减（相同键）
-        processed_again = db_session.query(InventoryTransaction).filter(
-            InventoryTransaction.reference_code == deduction_key
-        ).first()
+        processed_again = (
+            db_session.query(InventoryTransaction)
+            .filter(InventoryTransaction.reference_code == deduction_key)
+            .first()
+        )
 
         # 应该找到之前的记录，不重复扣减
         assert processed_again is not None
-        
+
         db_session.refresh(inventory)
         assert inventory.available_quantity == Decimal("80")  # 只扣减一次
 
-    def test_05_approval_submission_idempotency(
-        self, db_session: Session
-    ):
+    def test_05_approval_submission_idempotency(self, db_session: Session):
         """测试5：审批提交幂等性"""
         from app.models.purchase import PurchaseRequest
 
@@ -207,10 +207,14 @@ class TestIdempotency:
         submission_key = "SUBMIT-PR-001"
 
         # 检查是否已提交
-        existing_instance = db_session.query(ApprovalInstance).filter(
-            ApprovalInstance.business_id == pr.id,
-            ApprovalInstance.business_type == "PURCHASE_REQUEST"
-        ).first()
+        existing_instance = (
+            db_session.query(ApprovalInstance)
+            .filter(
+                ApprovalInstance.business_id == pr.id,
+                ApprovalInstance.business_type == "PURCHASE_REQUEST",
+            )
+            .first()
+        )
 
         if not existing_instance:
             # 第一次提交审批
@@ -227,9 +231,11 @@ class TestIdempotency:
             db_session.commit()
 
         # 第二次提交（相同键）
-        instance_retry = db_session.query(ApprovalInstance).filter(
-            ApprovalInstance.idempotency_key == submission_key
-        ).first()
+        instance_retry = (
+            db_session.query(ApprovalInstance)
+            .filter(ApprovalInstance.idempotency_key == submission_key)
+            .first()
+        )
 
         # 应该返回已存在的实例
         assert instance_retry is not None
@@ -309,9 +315,7 @@ class TestIdempotency:
         batch_key = "BATCH-CREATE-001"
 
         # 检查批次是否已处理
-        existing_projects = db_session.query(Project).filter(
-            Project.batch_key == batch_key
-        ).all()
+        existing_projects = db_session.query(Project).filter(Project.batch_key == batch_key).all()
 
         if not existing_projects:
             # 第一次批量创建
@@ -330,9 +334,7 @@ class TestIdempotency:
             db_session.commit()
 
         # 第二次批量创建（相同键）
-        projects = db_session.query(Project).filter(
-            Project.batch_key == batch_key
-        ).all()
+        projects = db_session.query(Project).filter(Project.batch_key == batch_key).all()
 
         # 应该只有3个项目
         assert len(projects) == 3
@@ -347,9 +349,7 @@ class TestIdempotency:
         # 第一次请求
         def process_request(session, req_id, customer_id):
             # 检查请求是否已处理
-            existing = session.query(Project).filter(
-                Project.request_id == req_id
-            ).first()
+            existing = session.query(Project).filter(Project.request_id == req_id).first()
 
             if existing:
                 return existing, False  # 已存在，未创建
@@ -370,21 +370,15 @@ class TestIdempotency:
             return project, True  # 新创建
 
         # 第一次请求
-        proj1, created1 = process_request(
-            db_session, request_id, idempotency_customer.id
-        )
+        proj1, created1 = process_request(db_session, request_id, idempotency_customer.id)
         assert created1 is True
 
         # 第二次请求（相同request_id）
-        proj2, created2 = process_request(
-            db_session, request_id, idempotency_customer.id
-        )
+        proj2, created2 = process_request(db_session, request_id, idempotency_customer.id)
         assert created2 is False
         assert proj2.id == proj1.id
 
-    def test_10_concurrent_idempotent_operations(
-        self, db_session: Session
-    ):
+    def test_10_concurrent_idempotent_operations(self, db_session: Session):
         """测试10：并发幂等操作"""
         material = Material(
             material_code="MAT-CONC-IDEMP-001",
@@ -415,17 +409,22 @@ class TestIdempotency:
 
         def idempotent_deduct(session, inv_id, amount, ref_code):
             # 检查是否已处理
-            existing = session.query(InventoryTransaction).filter(
-                InventoryTransaction.reference_code == ref_code
-            ).first()
+            existing = (
+                session.query(InventoryTransaction)
+                .filter(InventoryTransaction.reference_code == ref_code)
+                .first()
+            )
 
             if existing:
                 return False  # 已处理
 
             # 加锁扣减
-            inv = session.query(MaterialInventory).filter(
-                MaterialInventory.id == inv_id
-            ).with_for_update().first()
+            inv = (
+                session.query(MaterialInventory)
+                .filter(MaterialInventory.id == inv_id)
+                .with_for_update()
+                .first()
+            )
 
             if inv and inv.available_quantity >= amount:
                 inv.available_quantity -= amount
@@ -447,9 +446,7 @@ class TestIdempotency:
         results = []
         for i in range(3):
             sess = SessionLocal()
-            result = idempotent_deduct(
-                sess, inventory.id, deduction_amount, deduction_key
-            )
+            result = idempotent_deduct(sess, inventory.id, deduction_amount, deduction_key)
             results.append(result)
             sess.close()
 

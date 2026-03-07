@@ -25,9 +25,7 @@ router = APIRouter()
 def get_import_template_types(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     获取所有模板类型（项目/任务/人员/工时等）
@@ -49,9 +47,7 @@ def download_import_template(
     *,
     db: Session = Depends(deps.get_db),
     template_type: str,
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     下载导入模板（按类型下载）
@@ -60,9 +56,7 @@ def download_import_template(
         import openpyxl  # noqa: F401
         import pandas as pd  # noqa: F401
     except ImportError:
-        raise HTTPException(
-            status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl"
-        )
+        raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl")
 
     from app.services.excel_template_service import (
         create_template_excel,
@@ -71,9 +65,7 @@ def download_import_template(
 
     config = get_template_config(template_type)
     if not config:
-        raise HTTPException(
-            status_code=400, detail=f"不支持的模板类型: {template_type}"
-        )
+        raise HTTPException(status_code=400, detail=f"不支持的模板类型: {template_type}")
 
     return create_template_excel(
         template_data=config["template_data"],

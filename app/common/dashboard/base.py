@@ -7,8 +7,8 @@ Dashboard API 端点基类
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
 from datetime import date
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -26,37 +26,35 @@ class BaseDashboardService(ABC):
     permission_required: Optional[str] = None
 
     @abstractmethod
-    def get_dashboard_data(
-        self, db: Session, current_user: User
-    ) -> Dict[str, Any]:
+    def get_dashboard_data(self, db: Session, current_user: User) -> Dict[str, Any]:
         """子类需要实现获取dashboard数据的逻辑"""
         raise NotImplementedError
 
 
 class BaseDashboardEndpoint(BaseDashboardService):
     """Dashboard端点基类
-    
+
     所有模块的dashboard端点应该继承此类，实现必要的方法。
-    
+
     使用示例:
         class ProductionDashboardEndpoint(BaseDashboardEndpoint):
             module_name = "production"
             permission_required = "production:read"
-            
+
             def get_stats(self, db: Session, current_user: User) -> Dict[str, Any]:
                 # 实现统计逻辑
                 return {...}
     """
-    
+
     # 子类必须定义的属性
     module_name: str = ""  # 模块名称，用于路由前缀
     permission_required: Optional[str] = None  # 需要的权限，None表示不需要特殊权限
-    
+
     def __init__(self):
         """初始化路由"""
         self.router = APIRouter()
         self._register_routes()
-    
+
     def _register_routes(self):
         """注册路由"""
         user_dependency = self._get_user_dependency()
@@ -92,7 +90,7 @@ class BaseDashboardEndpoint(BaseDashboardService):
                 summary=f"获取{self.module_name}模块统计数据",
                 response_model=ResponseModel[Dict[str, Any]],
             )
-    
+
     def _get_dashboard_handler(
         self,
         db: Session,
@@ -101,17 +99,10 @@ class BaseDashboardEndpoint(BaseDashboardService):
         """Dashboard端点处理器（统一入口）"""
         try:
             data = self.get_dashboard_data(db, current_user)
-            return ResponseModel(
-                code=200,
-                message="获取仪表板数据成功",
-                data=data
-            )
+            return ResponseModel(code=200, message="获取仪表板数据成功", data=data)
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"获取仪表板数据失败: {str(e)}"
-            )
-    
+            raise HTTPException(status_code=500, detail=f"获取仪表板数据失败: {str(e)}")
+
     def _get_stats_handler(
         self,
         db: Session,
@@ -120,61 +111,46 @@ class BaseDashboardEndpoint(BaseDashboardService):
         """统计端点处理器"""
         try:
             stats = self.get_stats(db, current_user)
-            return ResponseModel(
-                code=200,
-                message="获取统计数据成功",
-                data=stats
-            )
+            return ResponseModel(code=200, message="获取统计数据成功", data=stats)
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"获取统计数据失败: {str(e)}"
-            )
-    
+            raise HTTPException(status_code=500, detail=f"获取统计数据失败: {str(e)}")
+
     def _get_user_dependency(self):
         """获取用户依赖（根据权限要求）"""
         if self.permission_required:
             return security.require_permission(self.permission_required)
         return security.get_current_active_user
-    
+
     @abstractmethod
-    def get_dashboard_data(
-        self,
-        db: Session,
-        current_user: User
-    ) -> Dict[str, Any]:
+    def get_dashboard_data(self, db: Session, current_user: User) -> Dict[str, Any]:
         """获取完整的dashboard数据
-        
+
         Args:
             db: 数据库会话
             current_user: 当前用户
-            
+
         Returns:
             dashboard数据字典，包含所有统计和展示数据
         """
         pass
-    
-    def get_stats(
-        self,
-        db: Session,
-        current_user: User
-    ) -> Dict[str, Any]:
+
+    def get_stats(self, db: Session, current_user: User) -> Dict[str, Any]:
         """获取统计数据（可选实现）
-        
+
         如果只需要统计卡片数据，可以实现此方法。
         默认实现调用get_dashboard_data并提取stats字段。
-        
+
         Args:
             db: 数据库会话
             current_user: 当前用户
-            
+
         Returns:
             统计数据字典
         """
         dashboard_data = self.get_dashboard_data(db, current_user)
         # 尝试提取stats字段，如果没有则返回整个数据
         return dashboard_data.get("stats", dashboard_data)
-    
+
     def create_stat_card(
         self,
         key: str,
@@ -183,10 +159,10 @@ class BaseDashboardEndpoint(BaseDashboardService):
         trend: Optional[float] = None,
         unit: Optional[str] = None,
         icon: Optional[str] = None,
-        color: Optional[str] = None
+        color: Optional[str] = None,
     ) -> Dict[str, Any]:
         """创建统计卡片数据
-        
+
         Args:
             key: 统计项标识
             label: 统计项名称
@@ -195,7 +171,7 @@ class BaseDashboardEndpoint(BaseDashboardService):
             unit: 单位
             icon: 图标名称
             color: 颜色
-            
+
         Returns:
             统计卡片字典
         """
@@ -206,9 +182,9 @@ class BaseDashboardEndpoint(BaseDashboardService):
             "trend": trend,
             "unit": unit,
             "icon": icon,
-            "color": color
+            "color": color,
         }
-    
+
     def create_list_item(
         self,
         id: Any,
@@ -217,10 +193,10 @@ class BaseDashboardEndpoint(BaseDashboardService):
         status: Optional[str] = None,
         priority: Optional[str] = None,
         event_date: Optional[date] = None,
-        extra: Optional[Dict[str, Any]] = None
+        extra: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """创建列表项数据
-        
+
         Args:
             id: 项目ID
             title: 标题
@@ -229,7 +205,7 @@ class BaseDashboardEndpoint(BaseDashboardService):
             priority: 优先级
             event_date: 日期
             extra: 额外信息
-            
+
         Returns:
             列表项字典
         """
@@ -240,53 +216,48 @@ class BaseDashboardEndpoint(BaseDashboardService):
             "status": status,
             "priority": priority,
             "event_date": str(event_date) if event_date else None,
-            "extra": extra or {}
+            "extra": extra or {},
         }
         return item
-    
+
     def create_chart_data(
         self,
         chart_type: str,
         data_points: List[Dict[str, Any]],
         title: Optional[str] = None,
-        series: Optional[List[Dict[str, Any]]] = None
+        series: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """创建图表数据
-        
+
         Args:
             chart_type: 图表类型（line/bar/pie/area/scatter）
             data_points: 数据点列表
             title: 图表标题
             series: 多系列数据
-            
+
         Returns:
             图表数据字典
         """
-        return {
-            "type": chart_type,
-            "title": title,
-            "data": data_points,
-            "series": series
-        }
+        return {"type": chart_type, "title": title, "data": data_points, "series": series}
 
 
 def create_dashboard_router(
     module_name: str,
     get_dashboard_data_func,
     permission_required: Optional[str] = None,
-    additional_routes: Optional[List[Dict[str, Any]]] = None
+    additional_routes: Optional[List[Dict[str, Any]]] = None,
 ) -> APIRouter:
     """快速创建dashboard路由的工厂函数
-    
+
     Args:
         module_name: 模块名称
         get_dashboard_data_func: 获取dashboard数据的函数
         permission_required: 需要的权限
         additional_routes: 额外的路由配置
-        
+
     Returns:
         APIRouter实例
-        
+
     使用示例:
         router = create_dashboard_router(
             module_name="production",
@@ -295,13 +266,13 @@ def create_dashboard_router(
         )
     """
     router = APIRouter()
-    
+
     # 用户依赖
     if permission_required:
         user_dep = security.require_permission(permission_required)
     else:
         user_dep = security.get_current_active_user
-    
+
     # 主dashboard端点
     @router.get("/dashboard", response_model=ResponseModel[Dict[str, Any]])
     def get_dashboard(
@@ -311,20 +282,13 @@ def create_dashboard_router(
         """获取仪表板数据"""
         try:
             data = get_dashboard_data_func(db, current_user)
-            return ResponseModel(
-                code=200,
-                message="获取仪表板数据成功",
-                data=data
-            )
+            return ResponseModel(code=200, message="获取仪表板数据成功", data=data)
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"获取仪表板数据失败: {str(e)}"
-            )
-    
+            raise HTTPException(status_code=500, detail=f"获取仪表板数据失败: {str(e)}")
+
     # 添加额外路由
     if additional_routes:
         for route_config in additional_routes:
             router.add_api_route(**route_config)
-    
+
     return router

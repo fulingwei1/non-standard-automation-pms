@@ -17,10 +17,7 @@ from app.services.bonus.base import BonusCalculatorBase
 from app.services.project_evaluation_service import ProjectEvaluationService
 
 
-def get_active_rules(
-    db: Session,
-    bonus_type: str
-) -> List[BonusRule]:
+def get_active_rules(db: Session, bonus_type: str) -> List[BonusRule]:
     """
     获取激活的奖金规则
 
@@ -33,9 +30,7 @@ def get_active_rules(
 
 
 def calculate_sales_bonus(
-    db: Session,
-    project: Project,
-    sales_rules: List[BonusRule]
+    db: Session, project: Project, sales_rules: List[BonusRule]
 ) -> Optional[TeamBonusAllocation]:
     """
     计算销售奖金总额（团队奖金）
@@ -44,9 +39,7 @@ def calculate_sales_bonus(
         Optional[TeamBonusAllocation]: 团队奖金分配记录，如果计算失败返回None
     """
     try:
-        contract = db.query(Contract).filter(
-           Contract.contract_code == project.contract_no
-        ).first()
+        contract = db.query(Contract).filter(Contract.contract_code == project.contract_no).first()
 
         if not contract:
             return None
@@ -54,10 +47,10 @@ def calculate_sales_bonus(
         for rule in sales_rules:
             # 检查触发条件：验收完成
             trigger_condition = rule.trigger_condition or {}
-            if trigger_condition.get('acceptance_completed') or not trigger_condition:
+            if trigger_condition.get("acceptance_completed") or not trigger_condition:
                 # 计算总奖金（不分配到个人）
-                bonus_ratio = (rule.coefficient or Decimal('0')) / Decimal('100')
-                contract_amount = contract.contract_amount or Decimal('0')
+                bonus_ratio = (rule.coefficient or Decimal("0")) / Decimal("100")
+                contract_amount = contract.contract_amount or Decimal("0")
                 total_bonus = contract_amount * bonus_ratio
 
                 if total_bonus > 0:
@@ -76,10 +69,10 @@ def calculate_sales_bonus(
                             "calculation_basis": {
                                 "type": "sales",
                                 "contract_id": contract.id,
-                                "based_on": "CONTRACT"
-                            }
+                                "based_on": "CONTRACT",
+                            },
                         },
-                        status='PENDING'  # 待审批
+                        status="PENDING",  # 待审批
                     )
                     db.add(allocation)
                     return allocation
@@ -87,15 +80,14 @@ def calculate_sales_bonus(
         return None
     except Exception as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"计算销售奖金总额失败: {str(e)}", exc_info=True)
         return None
 
 
 def calculate_presale_bonus(
-    db: Session,
-    project: Project,
-    presale_rules: List[BonusRule]
+    db: Session, project: Project, presale_rules: List[BonusRule]
 ) -> Optional[TeamBonusAllocation]:
     """
     计算售前技术奖金总额（团队奖金）
@@ -108,10 +100,14 @@ def calculate_presale_bonus(
             return None
 
         # 查找项目关联的售前工单
-        presale_tickets = db.query(PresaleSupportTicket).filter(
-            PresaleSupportTicket.project_id == project.id,
-            PresaleSupportTicket.status == 'COMPLETED'
-        ).all()
+        presale_tickets = (
+            db.query(PresaleSupportTicket)
+            .filter(
+                PresaleSupportTicket.project_id == project.id,
+                PresaleSupportTicket.status == "COMPLETED",
+            )
+            .all()
+        )
 
         if not presale_tickets:
             return None
@@ -124,24 +120,26 @@ def calculate_presale_bonus(
             # 查找关联的商机或项目
             opportunity = None
             if ticket.opportunity_id:
-                opportunity = db.query(Opportunity).filter(
-                    Opportunity.id == ticket.opportunity_id
-                ).first()
+                opportunity = (
+                    db.query(Opportunity).filter(Opportunity.id == ticket.opportunity_id).first()
+                )
 
-            won_amount = Decimal('0')
-            if opportunity and opportunity.stage == 'WON':
-                won_amount = opportunity.est_amount or Decimal('0')
-            elif project and project.status in ['ST01', 'ST02']:
-                won_amount = project.contract_amount or Decimal('0')
+            won_amount = Decimal("0")
+            if opportunity and opportunity.stage == "WON":
+                won_amount = opportunity.est_amount or Decimal("0")
+            elif project and project.status in ["ST01", "ST02"]:
+                won_amount = project.contract_amount or Decimal("0")
 
             if won_amount > 0:
                 # 计算总奖金（按中标金额的百分比）
-                bonus_ratio = (rule.coefficient or Decimal('0')) / Decimal('100')
+                bonus_ratio = (rule.coefficient or Decimal("0")) / Decimal("100")
                 total_bonus = won_amount * bonus_ratio
 
                 if total_bonus > 0:
                     # 统计参与售前支持的人员数量（用于后续分配参考）
-                    assignee_ids = list(set([t.assignee_id for t in presale_tickets if t.assignee_id]))
+                    assignee_ids = list(
+                        set([t.assignee_id for t in presale_tickets if t.assignee_id])
+                    )
 
                     # 创建团队奖金分配记录
                     allocation = TeamBonusAllocation(
@@ -160,10 +158,10 @@ def calculate_presale_bonus(
                             "calculation_basis": {
                                 "type": "presale",
                                 "ticket_ids": [t.id for t in presale_tickets],
-                                "based_on": "WON"
-                            }
+                                "based_on": "WON",
+                            },
                         },
-                        status='PENDING'  # 待审批
+                        status="PENDING",  # 待审批
                     )
                     db.add(allocation)
                     return allocation
@@ -171,15 +169,14 @@ def calculate_presale_bonus(
         return None
     except Exception as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"计算售前技术奖金总额失败: {str(e)}", exc_info=True)
         return None
 
 
 def calculate_project_bonus(
-    db: Session,
-    project: Project,
-    project_rules: List[BonusRule]
+    db: Session, project: Project, project_rules: List[BonusRule]
 ) -> Optional[TeamBonusAllocation]:
     """
     计算项目奖金总额（团队奖金）
@@ -193,8 +190,8 @@ def calculate_project_bonus(
 
         # 计算总奖金（按项目金额的百分比）
         for rule in project_rules:
-            bonus_ratio = (rule.coefficient or Decimal('0')) / Decimal('100')
-            project_amount = project.contract_amount or Decimal('0')
+            bonus_ratio = (rule.coefficient or Decimal("0")) / Decimal("100")
+            project_amount = project.contract_amount or Decimal("0")
             total_bonus = project_amount * bonus_ratio
 
             # 应用项目评价系数
@@ -206,16 +203,20 @@ def calculate_project_bonus(
 
             if total_bonus > 0:
                 # 获取项目成员信息（用于后续分配参考）
-                members = db.query(ProjectMember).filter(
-                    ProjectMember.project_id == project.id,
-                    ProjectMember.is_active
-                ).all()
+                members = (
+                    db.query(ProjectMember)
+                    .filter(ProjectMember.project_id == project.id, ProjectMember.is_active)
+                    .all()
+                )
 
                 # 获取项目贡献记录（如果有）
                 from app.models.performance import ProjectContribution
-                contributions = db.query(ProjectContribution).filter(
-                    ProjectContribution.project_id == project.id
-                ).all()
+
+                contributions = (
+                    db.query(ProjectContribution)
+                    .filter(ProjectContribution.project_id == project.id)
+                    .all()
+                )
 
                 # 创建团队奖金分配记录
                 allocation = TeamBonusAllocation(
@@ -236,10 +237,10 @@ def calculate_project_bonus(
                         "calculation_basis": {
                             "type": "project",
                             "project_id": project.id,
-                            "has_contributions": len(contributions) > 0
-                        }
+                            "has_contributions": len(contributions) > 0,
+                        },
                     },
-                    status='PENDING'  # 待审批
+                    status="PENDING",  # 待审批
                 )
                 db.add(allocation)
                 return allocation
@@ -247,6 +248,7 @@ def calculate_project_bonus(
         return None
     except Exception as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"计算项目奖金总额失败: {str(e)}", exc_info=True)
         return None

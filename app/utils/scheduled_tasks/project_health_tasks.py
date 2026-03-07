@@ -33,8 +33,9 @@ def calculate_project_health():
     except Exception as e:
         logger.error(f"健康度计算失败: {e}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def daily_health_snapshot():
@@ -50,20 +51,21 @@ def daily_health_snapshot():
             calculator = HealthCalculator(db)
 
             # 查询所有活跃项目
-            projects = db.query(Project).filter(
-                Project.is_active,
-                not Project.is_archived
-            ).all()
+            projects = db.query(Project).filter(Project.is_active, not Project.is_archived).all()
 
             today = date.today()
             snapshot_count = 0
 
             for project in projects:
                 # 检查今天是否已有快照
-                existing = db.query(ProjectHealthSnapshot).filter(
-                    ProjectHealthSnapshot.project_id == project.id,
-                    ProjectHealthSnapshot.snapshot_date == today
-                ).first()
+                existing = (
+                    db.query(ProjectHealthSnapshot)
+                    .filter(
+                        ProjectHealthSnapshot.project_id == project.id,
+                        ProjectHealthSnapshot.snapshot_date == today,
+                    )
+                    .first()
+                )
 
                 if existing:
                     continue
@@ -75,10 +77,10 @@ def daily_health_snapshot():
                 snapshot = ProjectHealthSnapshot(
                     project_id=project.id,
                     snapshot_date=today,
-                    overall_health=health_details['calculated_health'],
-                    open_alerts=health_details['statistics']['active_alerts'],
-                    blocking_issues=health_details['statistics']['blocking_issues'],
-                    milestone_delayed=health_details['statistics']['overdue_milestones']
+                    overall_health=health_details["calculated_health"],
+                    open_alerts=health_details["statistics"]["active_alerts"],
+                    blocking_issues=health_details["statistics"]["blocking_issues"],
+                    milestone_delayed=health_details["statistics"]["overdue_milestones"],
                 )
                 db.add(snapshot)
                 snapshot_count += 1
@@ -87,12 +89,10 @@ def daily_health_snapshot():
 
             logger.info(f"健康度快照生成完成: 生成 {snapshot_count} 个快照")
 
-            return {
-                'snapshot_count': snapshot_count,
-                'timestamp': datetime.now().isoformat()
-            }
+            return {"snapshot_count": snapshot_count, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"健康度快照生成失败: {e}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}

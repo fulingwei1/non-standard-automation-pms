@@ -11,31 +11,24 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from app.models.material import BomHeader, BomItem, Material
-from app.models.vendor import Vendor
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.vendor import Vendor
 
 
-def get_purchase_items_from_bom(
-    db: Session,
-    bom: BomHeader
-) -> List[BomItem]:
+def get_purchase_items_from_bom(db: Session, bom: BomHeader) -> List[BomItem]:
     """
     获取BOM中需要采购的物料
 
     Returns:
         List[BomItem]: 需要采购的BOM物料项列表
     """
-    bom_items = bom.items.filter(
-        BomItem.source_type == "PURCHASE"
-    ).all()
+    bom_items = bom.items.filter(BomItem.source_type == "PURCHASE").all()
 
     return bom_items
 
 
 def determine_supplier_for_item(
-    db: Session,
-    item: BomItem,
-    default_supplier_id: Optional[int]
+    db: Session, item: BomItem, default_supplier_id: Optional[int]
 ) -> Optional[int]:
     """
     确定物料的供应商
@@ -61,9 +54,7 @@ def determine_supplier_for_item(
 
 
 def group_items_by_supplier(
-    db: Session,
-    bom_items: List[BomItem],
-    default_supplier_id: Optional[int]
+    db: Session, bom_items: List[BomItem], default_supplier_id: Optional[int]
 ) -> Dict[int, List[BomItem]]:
     """
     按供应商分组物料
@@ -83,11 +74,7 @@ def group_items_by_supplier(
     return dict(supplier_items)
 
 
-def calculate_order_item(
-    item: BomItem,
-    item_no: int,
-    remaining_qty: Decimal
-) -> Dict[str, Any]:
+def calculate_order_item(item: BomItem, item_no: int, remaining_qty: Decimal) -> Dict[str, Any]:
     """
     计算订单明细项
 
@@ -119,7 +106,7 @@ def calculate_order_item(
 
 
 def build_order_items(
-    items: List[BomItem]
+    items: List[BomItem],
 ) -> Tuple[List[Dict[str, Any]], Decimal, Decimal, Decimal]:
     """
     构建订单明细列表
@@ -157,7 +144,7 @@ def create_order_preview(
     order_items: List[Dict[str, Any]],
     total_amount: Decimal,
     total_tax_amount: Decimal,
-    total_amount_with_tax: Decimal
+    total_amount_with_tax: Decimal,
 ) -> Dict[str, Any]:
     """
     生成订单预览
@@ -185,7 +172,7 @@ def create_purchase_order_from_preview(
     order_preview: Dict[str, Any],
     bom: BomHeader,
     current_user_id: int,
-    generate_order_no_func
+    generate_order_no_func,
 ) -> Tuple[PurchaseOrder, List[PurchaseOrderItem]]:
     """
     根据预览创建实际的采购订单
@@ -203,7 +190,7 @@ def create_purchase_order_from_preview(
         project_id=order_preview["project_id"],
         order_type=order_preview["order_type"],
         order_title=order_preview["order_title"],
-        required_date=bom.required_date if hasattr(bom, 'required_date') else None,
+        required_date=bom.required_date if hasattr(bom, "required_date") else None,
         order_date=date.today(),
         status="DRAFT",
         total_amount=Decimal(str(order_preview["total_amount"])),
@@ -241,9 +228,7 @@ def create_purchase_order_from_preview(
     return order, order_items
 
 
-def calculate_summary(
-    purchase_orders_preview: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+def calculate_summary(purchase_orders_preview: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     计算汇总统计
 

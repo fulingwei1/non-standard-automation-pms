@@ -24,7 +24,7 @@ def execute_matching(
     top_n: int = Query(10, ge=1, le=50, description="返回候选人数量"),
     include_overloaded: bool = Query(False, description="是否包含超负荷员工"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """执行AI匹配"""
     try:
@@ -32,7 +32,7 @@ def execute_matching(
             db=db,
             staffing_need_id=staffing_need_id,
             top_n=top_n,
-            include_overloaded=include_overloaded
+            include_overloaded=include_overloaded,
         )
         return result
     except ValueError as e:
@@ -46,20 +46,21 @@ def get_matching_results(
     staffing_need_id: int,
     request_id: Optional[str] = Query(None, description="匹配请求ID"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """获取匹配结果"""
-    query = db.query(HrAIMatchingLog).filter(
-        HrAIMatchingLog.staffing_need_id == staffing_need_id
-    )
+    query = db.query(HrAIMatchingLog).filter(HrAIMatchingLog.staffing_need_id == staffing_need_id)
 
     if request_id:
         query = query.filter(HrAIMatchingLog.request_id == request_id)
     else:
         # 获取最新一次匹配
-        latest_request = db.query(HrAIMatchingLog.request_id).filter(
-            HrAIMatchingLog.staffing_need_id == staffing_need_id
-        ).order_by(HrAIMatchingLog.matching_time.desc()).first()
+        latest_request = (
+            db.query(HrAIMatchingLog.request_id)
+            .filter(HrAIMatchingLog.staffing_need_id == staffing_need_id)
+            .order_by(HrAIMatchingLog.matching_time.desc())
+            .first()
+        )
 
         if latest_request:
             query = query.filter(HrAIMatchingLog.request_id == latest_request[0])
@@ -68,25 +69,27 @@ def get_matching_results(
 
     result = []
     for log in logs:
-        result.append({
-            'id': log.id,
-            'request_id': log.request_id,
-            'project_id': log.project_id,
-            'staffing_need_id': log.staffing_need_id,
-            'candidate_employee_id': log.candidate_employee_id,
-            'total_score': log.total_score,
-            'dimension_scores': log.dimension_scores,
-            'rank': log.rank,
-            'recommendation_type': log.recommendation_type,
-            'is_accepted': log.is_accepted,
-            'accept_time': log.accept_time,
-            'acceptor_id': log.acceptor_id,
-            'reject_reason': log.reject_reason,
-            'matching_time': log.matching_time,
-            'project_name': log.project.name if log.project else None,
-            'employee_name': log.candidate.name if log.candidate else None,
-            'acceptor_name': log.acceptor.real_name if log.acceptor else None
-        })
+        result.append(
+            {
+                "id": log.id,
+                "request_id": log.request_id,
+                "project_id": log.project_id,
+                "staffing_need_id": log.staffing_need_id,
+                "candidate_employee_id": log.candidate_employee_id,
+                "total_score": log.total_score,
+                "dimension_scores": log.dimension_scores,
+                "rank": log.rank,
+                "recommendation_type": log.recommendation_type,
+                "is_accepted": log.is_accepted,
+                "accept_time": log.accept_time,
+                "acceptor_id": log.acceptor_id,
+                "reject_reason": log.reject_reason,
+                "matching_time": log.matching_time,
+                "project_name": log.project.name if log.project else None,
+                "employee_name": log.candidate.name if log.candidate else None,
+                "acceptor_name": log.acceptor.real_name if log.acceptor else None,
+            }
+        )
 
     return result
 
@@ -95,13 +98,11 @@ def get_matching_results(
 def accept_candidate(
     accept_data: schemas.MatchingAcceptRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """采纳候选人"""
     success = StaffMatchingService.accept_candidate(
-        db=db,
-        matching_log_id=accept_data.matching_log_id,
-        acceptor_id=current_user.id
+        db=db, matching_log_id=accept_data.matching_log_id, acceptor_id=current_user.id
     )
 
     if not success:
@@ -114,13 +115,11 @@ def accept_candidate(
 def reject_candidate(
     reject_data: schemas.MatchingRejectRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """拒绝候选人"""
     success = StaffMatchingService.reject_candidate(
-        db=db,
-        matching_log_id=reject_data.matching_log_id,
-        reject_reason=reject_data.reject_reason
+        db=db, matching_log_id=reject_data.matching_log_id, reject_reason=reject_data.reject_reason
     )
 
     if not success:
@@ -136,7 +135,7 @@ def get_matching_history(
     employee_id: Optional[int] = Query(None, description="员工ID"),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """获取匹配历史"""
     logs = StaffMatchingService.get_matching_history(
@@ -144,29 +143,31 @@ def get_matching_history(
         project_id=project_id,
         staffing_need_id=staffing_need_id,
         employee_id=employee_id,
-        limit=limit
+        limit=limit,
     )
 
     result = []
     for log in logs:
-        result.append({
-            'id': log.id,
-            'request_id': log.request_id,
-            'project_id': log.project_id,
-            'staffing_need_id': log.staffing_need_id,
-            'candidate_employee_id': log.candidate_employee_id,
-            'total_score': log.total_score,
-            'dimension_scores': log.dimension_scores,
-            'rank': log.rank,
-            'recommendation_type': log.recommendation_type,
-            'is_accepted': log.is_accepted,
-            'accept_time': log.accept_time,
-            'acceptor_id': log.acceptor_id,
-            'reject_reason': log.reject_reason,
-            'matching_time': log.matching_time,
-            'project_name': log.project.name if log.project else None,
-            'employee_name': log.candidate.name if log.candidate else None,
-            'acceptor_name': log.acceptor.real_name if log.acceptor else None
-        })
+        result.append(
+            {
+                "id": log.id,
+                "request_id": log.request_id,
+                "project_id": log.project_id,
+                "staffing_need_id": log.staffing_need_id,
+                "candidate_employee_id": log.candidate_employee_id,
+                "total_score": log.total_score,
+                "dimension_scores": log.dimension_scores,
+                "rank": log.rank,
+                "recommendation_type": log.recommendation_type,
+                "is_accepted": log.is_accepted,
+                "accept_time": log.accept_time,
+                "acceptor_id": log.acceptor_id,
+                "reject_reason": log.reject_reason,
+                "matching_time": log.matching_time,
+                "project_name": log.project.name if log.project else None,
+                "employee_name": log.candidate.name if log.candidate else None,
+                "acceptor_name": log.acceptor.real_name if log.acceptor else None,
+            }
+        )
 
     return result

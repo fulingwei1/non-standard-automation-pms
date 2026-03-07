@@ -10,10 +10,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.core.schemas import list_response, success_response
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
+from app.core import security
+from app.core.schemas import list_response, success_response
 from app.models.organization import Position
 from app.models.user import User
 from app.schemas.organization import (
@@ -45,17 +45,15 @@ def list_positions(
 
     positions = apply_pagination(
         query.order_by(Position.sort_order, Position.position_code),
-        pagination.offset, pagination.limit
+        pagination.offset,
+        pagination.limit,
     ).all()
 
     # 转换为Pydantic模型
     pos_responses = [PositionResponse.model_validate(pos) for pos in positions]
 
     # 使用统一响应格式
-    return list_response(
-        items=pos_responses,
-        message="获取岗位列表成功"
-    )
+    return list_response(items=pos_responses, message="获取岗位列表成功")
 
 
 @router.post("/")
@@ -66,11 +64,7 @@ def create_position(
     current_user: User = Depends(security.get_current_active_superuser),
 ) -> Any:
     """创建岗位"""
-    pos = (
-        db.query(Position)
-        .filter(Position.position_code == pos_in.position_code)
-        .first()
-    )
+    pos = db.query(Position).filter(Position.position_code == pos_in.position_code).first()
     if pos:
         raise HTTPException(status_code=400, detail="岗位编码已存在")
 
@@ -83,10 +77,7 @@ def create_position(
     pos_response = PositionResponse.model_validate(pos)
 
     # 使用统一响应格式
-    return success_response(
-        data=pos_response,
-        message="岗位创建成功"
-    )
+    return success_response(data=pos_response, message="岗位创建成功")
 
 
 @router.get("/{id}")
@@ -104,10 +95,7 @@ def get_position(
     pos_response = PositionResponse.model_validate(pos)
 
     # 使用统一响应格式
-    return success_response(
-        data=pos_response,
-        message="获取岗位信息成功"
-    )
+    return success_response(data=pos_response, message="获取岗位信息成功")
 
 
 @router.put("/{id}")
@@ -135,10 +123,7 @@ def update_position(
     pos_response = PositionResponse.model_validate(pos)
 
     # 使用统一响应格式
-    return success_response(
-        data=pos_response,
-        message="岗位更新成功"
-    )
+    return success_response(data=pos_response, message="岗位更新成功")
 
 
 @router.delete("/{id}")
@@ -156,10 +141,7 @@ def delete_position(
     db.commit()
 
     # 使用统一响应格式
-    return success_response(
-        data={"id": id},
-        message="岗位删除成功"
-    )
+    return success_response(data={"id": id}, message="岗位删除成功")
 
 
 @router.get("/{id}/roles")
@@ -179,15 +161,14 @@ def get_position_roles(
     # 构建角色响应数据
     role_data = []
     for role in roles:
-        role_data.append({
-            "id": role.id,
-            "role_code": role.role_code,
-            "role_name": role.role_name,
-            "is_active": role.is_active,
-        })
+        role_data.append(
+            {
+                "id": role.id,
+                "role_code": role.role_code,
+                "role_name": role.role_name,
+                "is_active": role.is_active,
+            }
+        )
 
     # 使用统一响应格式
-    return list_response(
-        items=role_data,
-        message="获取岗位角色成功"
-    )
+    return list_response(items=role_data, message="获取岗位角色成功")

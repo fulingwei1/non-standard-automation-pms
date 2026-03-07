@@ -4,42 +4,42 @@ Comprehensive unit tests for batch 3 services
 Tests 10 service modules using mock-based approach
 """
 
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
+
+import pytest
 from sqlalchemy.orm import Query, Session
 
 # Import services to test
 from app.services.data_scope import DataScopeService
+from app.services.lead_priority_scoring import LeadPriorityScoringService
 from app.services.project_evaluation_service import ProjectEvaluationService
+from app.services.project_import_service import (
+    find_or_create_customer,
+    find_project_manager,
+    get_column_value,
+    parse_date_value,
+    parse_decimal_value,
+    parse_excel_data,
+    parse_project_row,
+    validate_excel_file,
+    validate_project_columns,
+)
 from app.services.spec_match_service import (
     calculate_match_statistics,
 )
-from app.services.lead_priority_scoring import LeadPriorityScoringService
 from app.services.staff_matching.matching import MatchingEngine
 from app.services.staff_matching.score_calculators import (
-    SkillScoreCalculator,
-    DomainScoreCalculator,
     AttitudeScoreCalculator,
+    DomainScoreCalculator,
     QualityScoreCalculator,
-    WorkloadScoreCalculator,
+    SkillScoreCalculator,
     SpecialScoreCalculator,
+    WorkloadScoreCalculator,
 )
-from app.services.unified_import.unified_importer import UnifiedImporter
 from app.services.unified_import.base import ImportBase
-from app.services.project_import_service import (
-    validate_excel_file,
-    parse_excel_data,
-    validate_project_columns,
-    get_column_value,
-    parse_project_row,
-    find_or_create_customer,
-    find_project_manager,
-    parse_date_value,
-    parse_decimal_value,
-)
-
+from app.services.unified_import.unified_importer import UnifiedImporter
 
 # ==================== DataScopeService Tests ====================
 
@@ -157,11 +157,11 @@ class TestProjectEvaluationService:
         service = ProjectEvaluationService(db_session_mock)
 
         total = service.calculate_total_score(
-        novelty_score=Decimal("8"),
-        new_tech_score=Decimal("7"),
-        difficulty_score=Decimal("6"),
-        workload_score=Decimal("8"),
-        amount_score=Decimal("9"),
+            novelty_score=Decimal("8"),
+            new_tech_score=Decimal("7"),
+            difficulty_score=Decimal("6"),
+            workload_score=Decimal("8"),
+            amount_score=Decimal("9"),
         )
 
         assert isinstance(total, Decimal)
@@ -243,7 +243,9 @@ class TestProjectEvaluationService:
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.evaluation_level = "S"
 
-        db_session_mock.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session_mock.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         service = ProjectEvaluationService(db_session_mock)
         coefficient = service.get_bonus_coefficient(project)
@@ -257,7 +259,9 @@ class TestProjectEvaluationService:
         project = Mock(spec=Project)
         project.id = 1
 
-        db_session_mock.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        db_session_mock.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         service = ProjectEvaluationService(db_session_mock)
         coefficient = service.get_bonus_coefficient(project)
@@ -276,27 +280,27 @@ class TestSpecMatchService:
         from app.schemas.technical_spec import SpecMatchResult
 
         results = [
-        SpecMatchResult(
-        spec_requirement_id=1,
-        material_name="A",
-        match_status="MATCHED",
-        match_score=100,
-        differences={},
-        ),
-        SpecMatchResult(
-        spec_requirement_id=2,
-        material_name="B",
-        match_status="MISMATCHED",
-        match_score=50,
-        differences={"field": "diff"},
-        ),
-        SpecMatchResult(
-        spec_requirement_id=3,
-        material_name="C",
-        match_status="UNKNOWN",
-        match_score=0,
-        differences={},
-        ),
+            SpecMatchResult(
+                spec_requirement_id=1,
+                material_name="A",
+                match_status="MATCHED",
+                match_score=100,
+                differences={},
+            ),
+            SpecMatchResult(
+                spec_requirement_id=2,
+                material_name="B",
+                match_status="MISMATCHED",
+                match_score=50,
+                differences={"field": "diff"},
+            ),
+            SpecMatchResult(
+                spec_requirement_id=3,
+                material_name="C",
+                match_status="UNKNOWN",
+                match_score=0,
+                differences={},
+            ),
         ]
 
         stats = calculate_match_statistics(results)
@@ -341,7 +345,7 @@ class TestLeadPriorityScoringService:
     def test_determine_priority_level_p1(self, mock_date):
         """Test determining priority level P1"""
         from app.services.lead_priority_scoring import (
-        LeadPriorityScoringService,
+            LeadPriorityScoringService,
         )
 
         service = LeadPriorityScoringService(Mock())
@@ -354,7 +358,7 @@ class TestLeadPriorityScoringService:
     def test_determine_priority_level_p2(self, mock_date):
         """Test determining priority level P2"""
         from app.services.lead_priority_scoring import (
-        LeadPriorityScoringService,
+            LeadPriorityScoringService,
         )
 
         service = LeadPriorityScoringService(Mock())
@@ -367,7 +371,7 @@ class TestLeadPriorityScoringService:
     def test_determine_importance_level_high(self, mock_date):
         """Test determining importance level HIGH"""
         from app.services.lead_priority_scoring import (
-        LeadPriorityScoringService,
+            LeadPriorityScoringService,
         )
 
         service = LeadPriorityScoringService(Mock())
@@ -380,7 +384,7 @@ class TestLeadPriorityScoringService:
     def test_determine_urgency_level_high(self, mock_date):
         """Test determining urgency level HIGH"""
         from app.services.lead_priority_scoring import (
-        LeadPriorityScoringService,
+            LeadPriorityScoringService,
         )
 
         service = LeadPriorityScoringService(Mock())
@@ -452,7 +456,6 @@ class TestMatchingEngine:
         with pytest.raises(ValueError, match="人员需求不存在: 1"):
             MatchingEngine.match_candidates(db_session_mock, 1)
 
-
             # ==================== StaffMatching - ScoreCalculators Tests ====================
 
 
@@ -461,9 +464,7 @@ class TestScoreCalculators:
 
     def test_skill_score_calculator_no_requirements(self, db_session_mock):
         """Test skill score calculator with no requirements"""
-        result = SkillScoreCalculator.calculate_skill_score(
-        db_session_mock, 1, None, [], []
-        )
+        result = SkillScoreCalculator.calculate_skill_score(db_session_mock, 1, None, [], [])
 
         assert result["score"] == 60.0
         assert result["matched"] == []
@@ -486,13 +487,13 @@ class TestScoreCalculators:
         tag_eval.tag = tag
 
         db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = [
-        tag_eval
+            tag_eval
         ]
 
         required_skills = [{"tag_id": 100, "tag_name": "Python", "min_score": 3}]
 
         result = SkillScoreCalculator.calculate_skill_score(
-        db_session_mock, 1, None, required_skills, []
+            db_session_mock, 1, None, required_skills, []
         )
 
         assert "score" in result
@@ -500,9 +501,7 @@ class TestScoreCalculators:
 
     def test_domain_score_calculator_no_requirements(self, db_session_mock):
         """Test domain score calculator with no requirements"""
-        score = DomainScoreCalculator.calculate_domain_score(
-        db_session_mock, 1, None, []
-        )
+        score = DomainScoreCalculator.calculate_domain_score(db_session_mock, 1, None, [])
 
         assert score == 60.0
 
@@ -513,19 +512,17 @@ class TestScoreCalculators:
         profile = Mock(spec=HrEmployeeProfile)
         profile.attitude_score = Decimal("80")
 
-        score = AttitudeScoreCalculator.calculate_attitude_score(
-        db_session_mock, 1, profile, []
-        )
+        score = AttitudeScoreCalculator.calculate_attitude_score(db_session_mock, 1, profile, [])
 
         assert score == 80.0
 
     def test_attitude_score_calculator_no_profile(self, db_session_mock):
         """Test attitude score calculator without profile"""
-        db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = []
-
-        score = AttitudeScoreCalculator.calculate_attitude_score(
-        db_session_mock, 1, None, []
+        db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = (
+            []
         )
+
+        score = AttitudeScoreCalculator.calculate_attitude_score(db_session_mock, 1, None, [])
 
         assert score == 60.0
 
@@ -584,7 +581,9 @@ class TestScoreCalculators:
 
     def test_special_score_calculator_no_special(self, db_session_mock):
         """Test special score calculator with no special abilities"""
-        db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = []
+        db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         score = SpecialScoreCalculator.calculate_special_score(db_session_mock, 1, None)
 
@@ -604,7 +603,7 @@ class TestScoreCalculators:
         tag_eval.tag = tag
 
         db_session_mock.query.return_value.join.return_value.filter.return_value.all.return_value = [
-        tag_eval
+            tag_eval
         ]
 
         score = SpecialScoreCalculator.calculate_special_score(db_session_mock, 1, None)
@@ -632,7 +631,7 @@ class TestUnifiedImporter:
         mock_material_importer.import_material_data.return_value = (10, 2, [])
 
         result = UnifiedImporter.import_data(
-        db_session_mock, b"fake content", "test.xlsx", "MATERIAL", 1
+            db_session_mock, b"fake content", "test.xlsx", "MATERIAL", 1
         )
 
         assert result["imported_count"] == 10
@@ -641,9 +640,7 @@ class TestUnifiedImporter:
 
     @patch.object(ImportBase, "parse_file")
     @patch.object(ImportBase, "validate_file")
-    def test_import_data_unsupported_type(
-        self, mock_validate, mock_parse, db_session_mock
-    ):
+    def test_import_data_unsupported_type(self, mock_validate, mock_parse, db_session_mock):
         """Test importing data with unsupported type"""
         from fastapi import HTTPException
 
@@ -651,9 +648,8 @@ class TestUnifiedImporter:
 
         with pytest.raises(HTTPException, match="不支持的模板类型"):
             UnifiedImporter.import_data(
-            db_session_mock, b"fake content", "test.xlsx", "UNSUPPORTED", 1
+                db_session_mock, b"fake content", "test.xlsx", "UNSUPPORTED", 1
             )
-
 
             # ==================== ImportBase Tests ====================
 
@@ -693,8 +689,8 @@ class TestImportBase:
     @patch("pandas.read_excel")
     def test_parse_file_empty(self, mock_read_excel):
         """Test file parsing with empty file"""
-        from fastapi import HTTPException
         import pandas as pd
+        from fastapi import HTTPException
 
         mock_df = Mock(spec=pd.DataFrame)
         mock_df.dropna.return_value = mock_df
@@ -801,8 +797,8 @@ class TestProjectImportService:
 
     def test_validate_project_columns_missing(self):
         """Test validating project columns with missing required"""
-        from fastapi import HTTPException
         import pandas as pd
+        from fastapi import HTTPException
 
         df = Mock(spec=pd.DataFrame)
         df.columns = ["项目编码*", "客户名称"]
@@ -845,10 +841,10 @@ class TestProjectImportService:
 
         row = Mock()
         row.get = lambda x: {
-        "项目编码*": "PJ001",
-        "项目编码": "PJ001",
-        "项目名称*": "Test Project",
-        "项目名称": "Test Project",
+            "项目编码*": "PJ001",
+            "项目编码": "PJ001",
+            "项目名称*": "Test Project",
+            "项目名称": "Test Project",
         }.get(x)
 
         code, name, errors = parse_project_row(row, 0)
@@ -874,9 +870,7 @@ class TestProjectImportService:
         from app.models import Customer
 
         customer = Mock(spec=Customer)
-        db_session_mock.query.return_value.filter.return_value.first.return_value = (
-        customer
-        )
+        db_session_mock.query.return_value.filter.return_value.first.return_value = customer
 
         result = find_or_create_customer(db_session_mock, "Test Customer")
 

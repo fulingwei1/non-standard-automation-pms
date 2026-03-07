@@ -14,7 +14,7 @@ AICostEstimationService 单元测试 - G2组覆盖率提升
 """
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -24,6 +24,7 @@ class TestAICostEstimationServiceInit:
 
     def test_init_stores_db_and_user_id(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         db = MagicMock()
         svc = AICostEstimationService(db, user_id=42)
         assert svc.db is db
@@ -31,6 +32,7 @@ class TestAICostEstimationServiceInit:
 
     def test_model_version_constant(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         assert AICostEstimationService.MODEL_VERSION == "v1.0.0"
 
 
@@ -39,6 +41,7 @@ class TestCalculateHardwareCost:
 
     def setup_method(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         self.svc = AICostEstimationService(MagicMock(), user_id=1)
 
     def test_empty_items_returns_zero(self):
@@ -76,6 +79,7 @@ class TestCalculateSoftwareCost:
 
     def setup_method(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         self.svc = AICostEstimationService(MagicMock(), user_id=1)
 
     def test_no_requirements_no_man_days_returns_zero(self):
@@ -110,6 +114,7 @@ class TestCalculateInstallationCost:
 
     def setup_method(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         self.svc = AICostEstimationService(MagicMock(), user_id=1)
 
     def test_no_difficulty_uses_default_multiplier(self):
@@ -138,6 +143,7 @@ class TestCalculateServiceCost:
 
     def setup_method(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         self.svc = AICostEstimationService(MagicMock(), user_id=1)
 
     def test_one_year(self):
@@ -160,6 +166,7 @@ class TestCalculateRiskReserve:
 
     def setup_method(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         self.db = MagicMock()
         # No historical variance
         self.db.query.return_value.filter.return_value.scalar.return_value = None
@@ -190,6 +197,7 @@ class TestCalculateConfidenceScore:
 
     def setup_method(self):
         from app.services.sales.ai_cost_estimation_service import AICostEstimationService
+
         self.svc = AICostEstimationService(MagicMock(), user_id=1)
 
     def test_returns_decimal_between_0_and_1(self):

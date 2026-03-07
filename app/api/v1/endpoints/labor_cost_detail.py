@@ -63,9 +63,7 @@ def labor_cost_summary(
 
     for project in projects:
         project["labor_cost_pct"] = (
-            round(project["labor_cost"] / total_labor_cost * 100, 2)
-            if total_labor_cost > 0
-            else 0
+            round(project["labor_cost"] / total_labor_cost * 100, 2) if total_labor_cost > 0 else 0
         )
 
     return {
@@ -148,9 +146,7 @@ def labor_cost_by_engineer(
             "total_hours": round(total_hours, 2),
             "total_estimated_labor_cost": round(total_cost, 2),
             "hourly_rate_used": DEFAULT_HOURLY_RATE,
-            "avg_cost_per_hour": round(total_cost / total_hours, 2)
-            if total_hours > 0
-            else 0,
+            "avg_cost_per_hour": round(total_cost / total_hours, 2) if total_hours > 0 else 0,
         },
         "engineers": engineers,
     }
@@ -242,9 +238,7 @@ def labor_cost_project_detail(
         "summary": {
             "record_count": len(details),
             "total_labor_cost": round(total_labor_cost, 2),
-            "avg_cost_per_record": round(total_labor_cost / len(details), 2)
-            if details
-            else 0,
+            "avg_cost_per_record": round(total_labor_cost / len(details), 2) if details else 0,
             "latest_cost_date": latest_date,
         },
         "by_source": by_source,

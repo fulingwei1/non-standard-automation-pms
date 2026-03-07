@@ -1,6 +1,8 @@
 """Tests for app/services/ppt_generator/base_builder.py"""
+
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 try:
     from app.services.ppt_generator.base_builder import BaseSlideBuilder

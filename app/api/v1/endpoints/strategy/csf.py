@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.common import PageResponse
 from app.schemas.strategy import (
     CSFBatchCreateRequest,
@@ -19,7 +20,6 @@ from app.schemas.strategy import (
     CSFUpdate,
 )
 from app.services import strategy as strategy_service
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -28,7 +28,7 @@ router = APIRouter()
 def create_csf(
     data: CSFCreate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     创建 CSF
@@ -36,10 +36,7 @@ def create_csf(
     # 验证战略是否存在
     strategy = strategy_service.get_strategy(db, data.strategy_id)
     if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="关联的战略不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="关联的战略不存在")
 
     csf = strategy_service.create_csf(db, data)
     return csf
@@ -49,7 +46,7 @@ def create_csf(
 def batch_create_csfs(
     data: CSFBatchCreateRequest,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     批量创建 CSF
@@ -57,10 +54,7 @@ def batch_create_csfs(
     # 验证战略是否存在
     strategy = strategy_service.get_strategy(db, data.strategy_id)
     if not strategy:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="关联的战略不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="关联的战略不存在")
 
     csfs = strategy_service.batch_create_csfs(db, data.strategy_id, data.items)
     return csfs
@@ -77,7 +71,11 @@ def list_csfs(
     获取 CSF 列表
     """
     items, total = strategy_service.list_csfs(
-        db, strategy_id=strategy_id, dimension=dimension, skip=pagination.offset, limit=pagination.limit
+        db,
+        strategy_id=strategy_id,
+        dimension=dimension,
+        skip=pagination.offset,
+        limit=pagination.limit,
     )
     return PageResponse(
         items=items,
@@ -108,10 +106,7 @@ def get_csf(
     """
     detail = strategy_service.get_csf_detail(db, csf_id)
     if not detail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CSF 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CSF 不存在")
     return detail
 
 
@@ -120,17 +115,14 @@ def update_csf(
     csf_id: int,
     data: CSFUpdate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     更新 CSF
     """
     csf = strategy_service.update_csf(db, csf_id, data)
     if not csf:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CSF 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CSF 不存在")
     return csf
 
 
@@ -138,15 +130,12 @@ def update_csf(
 def delete_csf(
     csf_id: int,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     删除 CSF（软删除）
     """
     success = strategy_service.delete_csf(db, csf_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CSF 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CSF 不存在")
     return None

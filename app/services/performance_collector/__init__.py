@@ -15,7 +15,7 @@ from .base import PerformanceDataCollectorBase
 PerformanceDataCollector = PerformanceDataAggregator
 
 __all__ = [
-    'PerformanceDataCollector',
-    'PerformanceDataCollectorBase',
-    'PerformanceDataAggregator',
+    "PerformanceDataCollector",
+    "PerformanceDataCollectorBase",
+    "PerformanceDataAggregator",
 ]

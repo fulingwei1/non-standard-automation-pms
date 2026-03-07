@@ -40,10 +40,7 @@ class AlertRuleEngineBase:
         return self.LEVEL_PRIORITY.get(level, 0)
 
     def get_field_value(
-        self,
-        field_path: str,
-        target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        self, field_path: str, target_data: Dict[str, Any], context: Optional[Dict[str, Any]] = None
     ) -> Any:
         """
         获取字段值（支持点号分隔的嵌套路径）
@@ -71,7 +68,7 @@ class AlertRuleEngineBase:
 
     def _get_nested_value(self, field_path: str, data: Dict[str, Any]) -> Any:
         """获取嵌套字段值"""
-        parts = field_path.split('.')
+        parts = field_path.split(".")
         value = data
         for part in parts:
             if isinstance(value, dict):

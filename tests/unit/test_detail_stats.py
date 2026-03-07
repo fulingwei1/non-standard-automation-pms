@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """detail_stats 单元测试"""
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.strategy.annual_work_service.detail_stats import (
@@ -44,7 +45,10 @@ class TestGetAnnualWorkStats:
         work2.progress_percent = Decimal("100")
         work2.csf_id = 20
 
-        db.query.return_value.join.return_value.filter.return_value.all.return_value = [work1, work2]
+        db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+            work1,
+            work2,
+        ]
         csf1 = MagicMock()
         csf1.dimension = "Financial"
         csf2 = MagicMock()

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.project.execution_service import ProjectExecutionService
 
 
@@ -35,8 +37,12 @@ class TestProjectExecutionService:
         query.order_by.return_value = query
         query.count.return_value = 1
         p = MagicMock()
-        p.id = 1; p.project_code = "P001"; p.project_name = "Test"
-        p.stage = "S1"; p.status = "ST01"; p.pm_name = "PM"
+        p.id = 1
+        p.project_code = "P001"
+        p.project_name = "Test"
+        p.stage = "S1"
+        p.status = "ST01"
+        p.pm_name = "PM"
         query.limit.return_value.all.return_value = [p]
         mock_core.get_scoped_query.return_value = query
         mock_progress.return_value = {"actual_progress": 50, "is_delayed": False}

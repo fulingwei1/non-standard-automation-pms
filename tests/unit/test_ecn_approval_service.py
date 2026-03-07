@@ -10,8 +10,8 @@ ECN审批服务单元测试
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
 
 from app.services.ecn_approval.service import EcnApprovalService
 
@@ -23,7 +23,7 @@ class TestEcnApprovalServiceInit(unittest.TestCase):
         """测试服务初始化"""
         mock_db = MagicMock()
         service = EcnApprovalService(mock_db)
-        
+
         self.assertEqual(service.db, mock_db)
         self.assertIsNotNone(service.engine)
 
@@ -38,15 +38,15 @@ class TestSubmitEcnsForApproval(unittest.TestCase):
     def test_submit_multiple_ecns_success(self):
         """测试批量提交成功"""
         # Mock _submit_single_ecn
-        self.service._submit_single_ecn = Mock(side_effect=[
-            {"ecn_id": 1, "ecn_no": "ECN-001", "instance_id": 10, "status": "submitted"},
-            {"ecn_id": 2, "ecn_no": "ECN-002", "instance_id": 11, "status": "submitted"},
-        ])
+        self.service._submit_single_ecn = Mock(
+            side_effect=[
+                {"ecn_id": 1, "ecn_no": "ECN-001", "instance_id": 10, "status": "submitted"},
+                {"ecn_id": 2, "ecn_no": "ECN-002", "instance_id": 11, "status": "submitted"},
+            ]
+        )
 
         results, errors = self.service.submit_ecns_for_approval(
-            ecn_ids=[1, 2],
-            initiator_id=100,
-            urgency="HIGH"
+            ecn_ids=[1, 2], initiator_id=100, urgency="HIGH"
         )
 
         self.assertEqual(len(results), 2)
@@ -56,6 +56,7 @@ class TestSubmitEcnsForApproval(unittest.TestCase):
 
     def test_submit_multiple_ecns_partial_failure(self):
         """测试批量提交部分失败"""
+
         def mock_submit(ecn_id, initiator_id, urgency):
             if ecn_id == 1:
                 return {"ecn_id": 1, "ecn_no": "ECN-001", "status": "submitted"}
@@ -64,10 +65,7 @@ class TestSubmitEcnsForApproval(unittest.TestCase):
 
         self.service._submit_single_ecn = Mock(side_effect=mock_submit)
 
-        results, errors = self.service.submit_ecns_for_approval(
-            ecn_ids=[1, 2],
-            initiator_id=100
-        )
+        results, errors = self.service.submit_ecns_for_approval(ecn_ids=[1, 2], initiator_id=100)
 
         self.assertEqual(len(results), 1)
         self.assertEqual(len(errors), 1)
@@ -76,10 +74,7 @@ class TestSubmitEcnsForApproval(unittest.TestCase):
 
     def test_submit_empty_list(self):
         """测试提交空列表"""
-        results, errors = self.service.submit_ecns_for_approval(
-            ecn_ids=[],
-            initiator_id=100
-        )
+        results, errors = self.service.submit_ecns_for_approval(ecn_ids=[], initiator_id=100)
 
         self.assertEqual(len(results), 0)
         self.assertEqual(len(errors), 0)
@@ -122,11 +117,7 @@ class TestSubmitSingleEcn(unittest.TestCase):
         mock_instance.id = 100
         self.service.engine.submit = Mock(return_value=mock_instance)
 
-        result = self.service._submit_single_ecn(
-            ecn_id=1,
-            initiator_id=200,
-            urgency="NORMAL"
-        )
+        result = self.service._submit_single_ecn(ecn_id=1, initiator_id=200, urgency="NORMAL")
 
         self.assertEqual(result["ecn_id"], 1)
         self.assertEqual(result["ecn_no"], "ECN-001")
@@ -143,7 +134,7 @@ class TestSubmitSingleEcn(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service._submit_single_ecn(1, 200, "NORMAL")
-        
+
         self.assertIn("ECN不存在", str(ctx.exception))
 
     def test_submit_ecn_invalid_status(self):
@@ -157,7 +148,7 @@ class TestSubmitSingleEcn(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service._submit_single_ecn(1, 200, "NORMAL")
-        
+
         self.assertIn("不允许提交审批", str(ctx.exception))
 
     def test_submit_ecn_with_pending_evaluations(self):
@@ -167,22 +158,22 @@ class TestSubmitSingleEcn(unittest.TestCase):
 
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = mock_ecn
-        
+
         # Mock evaluation count
         mock_eval_query = MagicMock()
         mock_eval_query.filter.return_value.count.return_value = 2
-        
+
         self.mock_db.query.side_effect = [mock_query, mock_eval_query]
 
         with self.assertRaises(ValueError) as ctx:
             self.service._submit_single_ecn(1, 200, "NORMAL")
-        
+
         self.assertIn("2 个评估未完成", str(ctx.exception))
 
     def test_submit_ecn_from_different_statuses(self):
         """测试从不同合法状态提交"""
         valid_statuses = ["DRAFT", "EVALUATING", "EVALUATED", "REJECTED"]
-        
+
         for status in valid_statuses:
             mock_ecn = MagicMock()
             mock_ecn.id = 1
@@ -193,10 +184,10 @@ class TestSubmitSingleEcn(unittest.TestCase):
 
             mock_query = MagicMock()
             mock_query.filter.return_value.first.return_value = mock_ecn
-            
+
             mock_eval_query = MagicMock()
             mock_eval_query.filter.return_value.count.return_value = 0
-            
+
             self.mock_db.query.side_effect = [mock_query, mock_eval_query]
 
             mock_instance = MagicMock()
@@ -219,7 +210,7 @@ class TestGetPendingTasksForUser(unittest.TestCase):
         # Mock task
         mock_task = MagicMock()
         mock_task.id = 1
-        
+
         # Mock instance
         mock_instance = MagicMock()
         mock_instance.id = 10
@@ -311,10 +302,7 @@ class TestGetPendingTasksForUser(unittest.TestCase):
         self.mock_db.query.return_value = mock_query
 
         # 筛选 ecn_type
-        items, total = self.service.get_pending_tasks_for_user(
-            user_id=1,
-            ecn_type="DESIGN"
-        )
+        items, total = self.service.get_pending_tasks_for_user(user_id=1, ecn_type="DESIGN")
         self.assertEqual(total, 1)
         self.assertEqual(items[0]["ecn_no"], "ECN-001")
 
@@ -350,28 +338,28 @@ class TestGetPendingTasksForUser(unittest.TestCase):
         def get_ecn_by_id(*args, **kwargs):
             mock_q = MagicMock()
             # 每次返回一个新的ecn对象
-            mock_q.filter.return_value.first = lambda: ecns[len([x for x in ecns if x is not None]) % len(ecns)]
+            mock_q.filter.return_value.first = lambda: ecns[
+                len([x for x in ecns if x is not None]) % len(ecns)
+            ]
             return mock_q
-        
+
         # 简化：直接让每次查询返回一个固定的ecn
         def ecn_query_side_effect(model):
             mock_q = MagicMock()
             counter = [0]  # Use list to make it mutable in closure
+
             def get_ecn():
                 idx = counter[0]
                 counter[0] += 1
                 return ecns[idx % len(ecns)]
+
             mock_q.filter.return_value.first = get_ecn
             return mock_q
-        
+
         self.mock_db.query.side_effect = ecn_query_side_effect
 
         # 第一页
-        items, total = self.service.get_pending_tasks_for_user(
-            user_id=1,
-            offset=0,
-            limit=10
-        )
+        items, total = self.service.get_pending_tasks_for_user(user_id=1, offset=0, limit=10)
         self.assertEqual(total, 25)
         self.assertEqual(len(items), 10)
 
@@ -388,7 +376,7 @@ class TestGetPendingTasksForUser(unittest.TestCase):
         self.mock_db.query.return_value = mock_query
 
         items, total = self.service.get_pending_tasks_for_user(user_id=1)
-        
+
         self.assertEqual(total, 0)
         self.assertEqual(len(items), 0)
 
@@ -407,19 +395,14 @@ class TestPerformApprovalAction(unittest.TestCase):
         self.service.engine.approve = Mock(return_value=mock_result)
 
         result = self.service.perform_approval_action(
-            task_id=1,
-            approver_id=100,
-            action="approve",
-            comment="同意"
+            task_id=1, approver_id=100, action="approve", comment="同意"
         )
 
         self.assertEqual(result["task_id"], 1)
         self.assertEqual(result["action"], "approve")
         self.assertEqual(result["instance_status"], "APPROVED")
         self.service.engine.approve.assert_called_once_with(
-            task_id=1,
-            approver_id=100,
-            comment="同意"
+            task_id=1, approver_id=100, comment="同意"
         )
 
     def test_reject_action(self):
@@ -429,10 +412,7 @@ class TestPerformApprovalAction(unittest.TestCase):
         self.service.engine.reject = Mock(return_value=mock_result)
 
         result = self.service.perform_approval_action(
-            task_id=1,
-            approver_id=100,
-            action="reject",
-            comment="不同意"
+            task_id=1, approver_id=100, action="reject", comment="不同意"
         )
 
         self.assertEqual(result["action"], "reject")
@@ -442,12 +422,8 @@ class TestPerformApprovalAction(unittest.TestCase):
     def test_unsupported_action(self):
         """测试不支持的操作"""
         with self.assertRaises(ValueError) as ctx:
-            self.service.perform_approval_action(
-                task_id=1,
-                approver_id=100,
-                action="unknown"
-            )
-        
+            self.service.perform_approval_action(task_id=1, approver_id=100, action="unknown")
+
         self.assertIn("不支持的操作类型", str(ctx.exception))
 
     def test_action_without_comment(self):
@@ -456,11 +432,7 @@ class TestPerformApprovalAction(unittest.TestCase):
         mock_result.status = "APPROVED"
         self.service.engine.approve = Mock(return_value=mock_result)
 
-        result = self.service.perform_approval_action(
-            task_id=1,
-            approver_id=100,
-            action="approve"
-        )
+        result = self.service.perform_approval_action(task_id=1, approver_id=100, action="approve")
 
         self.assertEqual(result["instance_status"], "APPROVED")
 
@@ -474,16 +446,12 @@ class TestPerformBatchApproval(unittest.TestCase):
 
     def test_batch_approval_success(self):
         """测试批量审批成功"""
-        self.service.perform_approval_action = Mock(return_value={
-            "task_id": 1,
-            "action": "approve",
-            "instance_status": "APPROVED"
-        })
+        self.service.perform_approval_action = Mock(
+            return_value={"task_id": 1, "action": "approve", "instance_status": "APPROVED"}
+        )
 
         results, errors = self.service.perform_batch_approval(
-            task_ids=[1, 2, 3],
-            approver_id=100,
-            action="approve"
+            task_ids=[1, 2, 3], approver_id=100, action="approve"
         )
 
         self.assertEqual(len(results), 3)
@@ -491,6 +459,7 @@ class TestPerformBatchApproval(unittest.TestCase):
 
     def test_batch_approval_partial_failure(self):
         """测试批量审批部分失败"""
+
         def mock_action(task_id, approver_id, action, comment=None):
             if task_id == 2:
                 raise ValueError("任务不存在")
@@ -499,9 +468,7 @@ class TestPerformBatchApproval(unittest.TestCase):
         self.service.perform_approval_action = Mock(side_effect=mock_action)
 
         results, errors = self.service.perform_batch_approval(
-            task_ids=[1, 2, 3],
-            approver_id=100,
-            action="approve"
+            task_ids=[1, 2, 3], approver_id=100, action="approve"
         )
 
         self.assertEqual(len(results), 2)
@@ -511,9 +478,7 @@ class TestPerformBatchApproval(unittest.TestCase):
     def test_batch_approval_empty_list(self):
         """测试批量审批空列表"""
         results, errors = self.service.perform_batch_approval(
-            task_ids=[],
-            approver_id=100,
-            action="approve"
+            task_ids=[], approver_id=100, action="approve"
         )
 
         self.assertEqual(len(results), 0)
@@ -527,7 +492,7 @@ class TestGetEcnApprovalStatus(unittest.TestCase):
         self.mock_db = MagicMock()
         self.service = EcnApprovalService(self.mock_db)
 
-    @patch('app.services.ecn_approval.service.get_or_404')
+    @patch("app.services.ecn_approval.service.get_or_404")
     def test_get_status_without_instance(self, mock_get_or_404):
         """测试没有审批实例的ECN"""
         mock_ecn = MagicMock()
@@ -547,7 +512,7 @@ class TestGetEcnApprovalStatus(unittest.TestCase):
         self.assertEqual(result["status"], "DRAFT")
         self.assertIsNone(result["approval_instance"])
 
-    @patch('app.services.ecn_approval.service.get_or_404')
+    @patch("app.services.ecn_approval.service.get_or_404")
     def test_get_status_with_instance(self, mock_get_or_404):
         """测试有审批实例的ECN"""
         # Mock ECN
@@ -592,11 +557,13 @@ class TestGetEcnApprovalStatus(unittest.TestCase):
         # Setup query mocks
         def query_side_effect(model):
             mock_query = MagicMock()
-            if model.__name__ == 'ApprovalInstance':
-                mock_query.filter.return_value.order_by.return_value.first.return_value = mock_instance
-            elif model.__name__ == 'ApprovalTask':
+            if model.__name__ == "ApprovalInstance":
+                mock_query.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_instance
+                )
+            elif model.__name__ == "ApprovalTask":
                 mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_task]
-            elif model.__name__ == 'EcnEvaluation':
+            elif model.__name__ == "EcnEvaluation":
                 mock_query.filter.return_value.all.return_value = [mock_eval]
             return mock_query
 
@@ -645,10 +612,7 @@ class TestWithdrawEcnApproval(unittest.TestCase):
 
         self.service.engine.withdraw = Mock()
 
-        result = self.service.withdraw_ecn_approval(
-            ecn_id=1,
-            user_id=100
-        )
+        result = self.service.withdraw_ecn_approval(ecn_id=1, user_id=100)
 
         self.assertEqual(result["ecn_id"], 1)
         self.assertEqual(result["status"], "withdrawn")
@@ -663,7 +627,7 @@ class TestWithdrawEcnApproval(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.withdraw_ecn_approval(ecn_id=999, user_id=100)
-        
+
         self.assertIn("ECN不存在", str(ctx.exception))
 
     def test_withdraw_no_pending_instance(self):
@@ -681,7 +645,7 @@ class TestWithdrawEcnApproval(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.withdraw_ecn_approval(ecn_id=1, user_id=100)
-        
+
         self.assertIn("没有进行中的审批流程", str(ctx.exception))
 
     def test_withdraw_not_initiator(self):
@@ -701,7 +665,7 @@ class TestWithdrawEcnApproval(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.withdraw_ecn_approval(ecn_id=1, user_id=999)
-        
+
         self.assertIn("只能撤回自己提交的审批", str(ctx.exception))
 
 
@@ -740,17 +704,19 @@ class TestGetApprovalHistoryForUser(unittest.TestCase):
         mock_query.join.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 1
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_task]
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+            mock_task
+        ]
 
         # Mock ECN query
         def query_side_effect(model):
-            if model.__name__ == 'ApprovalTask':
+            if model.__name__ == "ApprovalTask":
                 return mock_query
             else:  # Ecn
                 mock_ecn_query = MagicMock()
                 mock_ecn_query.filter.return_value.first.return_value = mock_ecn
                 return mock_ecn_query
-        
+
         self.mock_db.query.side_effect = query_side_effect
 
         items, total = self.service.get_approval_history_for_user(user_id=1)
@@ -766,13 +732,14 @@ class TestGetApprovalHistoryForUser(unittest.TestCase):
         mock_query.join.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 0
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         self.mock_db.query.return_value = mock_query
 
         items, total = self.service.get_approval_history_for_user(
-            user_id=1,
-            status_filter="APPROVED"
+            user_id=1, status_filter="APPROVED"
         )
 
         self.assertEqual(total, 0)
@@ -799,17 +766,16 @@ class TestGetApprovalHistoryForUser(unittest.TestCase):
         mock_query.join.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 1
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_task]
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+            mock_task
+        ]
 
         mock_ecn_query = MagicMock()
         mock_ecn_query.filter.return_value.first.return_value = mock_ecn
 
         self.mock_db.query.side_effect = [mock_query, mock_query, mock_ecn_query]
 
-        items, total = self.service.get_approval_history_for_user(
-            user_id=1,
-            ecn_type="DESIGN"
-        )
+        items, total = self.service.get_approval_history_for_user(user_id=1, ecn_type="DESIGN")
 
         # 总数为原始查询结果，但items被筛选过滤
         self.assertEqual(total, 1)
@@ -842,7 +808,9 @@ class TestGetApprovalHistoryForUser(unittest.TestCase):
         mock_query.join.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 5
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = tasks[0:2]
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            tasks[0:2]
+        )
 
         def ecn_query_side_effect(model):
             mock_q = MagicMock()
@@ -861,11 +829,7 @@ class TestGetApprovalHistoryForUser(unittest.TestCase):
             mock_ecn_query = MagicMock()
             mock_ecn_query.filter.return_value.first.return_value = ecn
 
-        items, total = self.service.get_approval_history_for_user(
-            user_id=1,
-            offset=0,
-            limit=2
-        )
+        items, total = self.service.get_approval_history_for_user(user_id=1, offset=0, limit=2)
 
         self.assertEqual(total, 5)
         # 只返回2个（分页）

@@ -19,7 +19,7 @@ def client():
 def test_login_lockout_flow(client: TestClient):
     """
     测试完整的登录锁定流程
-    
+
     1. 5次失败登录
     2. 账户被锁定
     3. 尝试登录返回423
@@ -28,19 +28,17 @@ def test_login_lockout_flow(client: TestClient):
     """
     test_username = "integration_test_user"
     wrong_password = "wrongpassword123"
-    
+
     # 1. 连续5次失败登录
     for i in range(5):
         response = client.post(
-            "/api/v1/auth/login",
-            data={"username": test_username, "password": wrong_password}
+            "/api/v1/auth/login", data={"username": test_username, "password": wrong_password}
         )
         assert response.status_code in [401, 423], f"第{i+1}次登录失败"
-    
+
     # 2. 第6次应该返回账户锁定
     response = client.post(
-        "/api/v1/auth/login",
-        data={"username": test_username, "password": wrong_password}
+        "/api/v1/auth/login", data={"username": test_username, "password": wrong_password}
     )
     assert response.status_code == 423
     data = response.json()
@@ -50,7 +48,7 @@ def test_login_lockout_flow(client: TestClient):
 def test_successful_login_resets_attempts(client: TestClient):
     """
     测试成功登录重置失败次数
-    
+
     1. 3次失败登录
     2. 1次成功登录
     3. 再次5次失败登录才能锁定
@@ -62,7 +60,7 @@ def test_successful_login_resets_attempts(client: TestClient):
 def test_ip_blacklist_prevents_login(client: TestClient):
     """
     测试IP黑名单阻止登录
-    
+
     1. 从同一IP多次尝试不同用户
     2. IP被拉黑
     3. 无法登录任何账户
@@ -70,5 +68,5 @@ def test_ip_blacklist_prevents_login(client: TestClient):
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main([__file__, "-v"])

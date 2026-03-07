@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - 年度重点工作进度管理单元测试"""
-import pytest
 from decimal import Decimal
 
-pytest.importorskip("app.services.strategy.annual_work_service.progress",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.strategy.annual_work_service.progress", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.strategy.annual_work_service.progress import (
-    update_progress,
     calculate_progress_from_projects,
     sync_progress_from_projects,
+    update_progress,
 )
 
 
@@ -30,8 +31,9 @@ def _make_work(work_id=1):
 class TestUpdateProgress:
     def test_returns_none_when_work_not_found(self):
         db = _make_db()
-        with patch("app.services.strategy.annual_work_service.progress.get_annual_work",
-                   return_value=None):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.get_annual_work", return_value=None
+        ):
             result = update_progress(db, 99, MagicMock())
         assert result is None
 
@@ -41,8 +43,9 @@ class TestUpdateProgress:
         data = MagicMock()
         data.progress_percent = 100
         data.progress_description = "完成了"
-        with patch("app.services.strategy.annual_work_service.progress.get_annual_work",
-                   return_value=work):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.get_annual_work", return_value=work
+        ):
             update_progress(db, 1, data)
         assert work.status == "COMPLETED"
         db.commit.assert_called_once()
@@ -53,8 +56,9 @@ class TestUpdateProgress:
         data = MagicMock()
         data.progress_percent = 50
         data.progress_description = None
-        with patch("app.services.strategy.annual_work_service.progress.get_annual_work",
-                   return_value=work):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.get_annual_work", return_value=work
+        ):
             update_progress(db, 1, data)
         assert work.status == "IN_PROGRESS"
 
@@ -65,8 +69,9 @@ class TestUpdateProgress:
         data = MagicMock()
         data.progress_percent = 0
         data.progress_description = None
-        with patch("app.services.strategy.annual_work_service.progress.get_annual_work",
-                   return_value=work):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.get_annual_work", return_value=work
+        ):
             update_progress(db, 1, data)
         assert work.status == "NOT_STARTED"
 
@@ -85,12 +90,17 @@ class TestCalculateProgressFromProjects:
         link.contribution_weight = Decimal("1")
 
         from app.models.project import Project as _Project
+
         project_mock = MagicMock()
         project_mock.progress = 80
 
         def query_side(model):
             q = MagicMock()
-            if model.__name__ if hasattr(model, '__name__') else str(model) == "AnnualKeyWorkProjectLink":
+            if (
+                model.__name__
+                if hasattr(model, "__name__")
+                else str(model) == "AnnualKeyWorkProjectLink"
+            ):
                 q.filter.return_value.all.return_value = [link]
             else:
                 q.filter.return_value.first.return_value = project_mock
@@ -99,8 +109,10 @@ class TestCalculateProgressFromProjects:
         db.query.side_effect = None
         db.query.return_value.filter.return_value.all.return_value = [link]
 
-        with patch("app.services.strategy.annual_work_service.progress.db") if False else patch(
-            "app.models.project.Project", create=True
+        with (
+            patch("app.services.strategy.annual_work_service.progress.db")
+            if False
+            else patch("app.models.project.Project", create=True)
         ):
             # 简化：直接patch db.query路径
             call_count = [0]
@@ -123,18 +135,26 @@ class TestCalculateProgressFromProjects:
 class TestSyncProgressFromProjects:
     def test_returns_none_when_no_progress(self):
         db = _make_db()
-        with patch("app.services.strategy.annual_work_service.progress.calculate_progress_from_projects",
-                   return_value=None):
+        with patch(
+            "app.services.strategy.annual_work_service.progress.calculate_progress_from_projects",
+            return_value=None,
+        ):
             result = sync_progress_from_projects(db, 1)
         assert result is None
 
     def test_syncs_and_returns_work(self):
         db = _make_db()
         work = _make_work()
-        with patch("app.services.strategy.annual_work_service.progress.calculate_progress_from_projects",
-                   return_value=Decimal("75")), \
-             patch("app.services.strategy.annual_work_service.progress.get_annual_work",
-                   return_value=work):
+        with (
+            patch(
+                "app.services.strategy.annual_work_service.progress.calculate_progress_from_projects",
+                return_value=Decimal("75"),
+            ),
+            patch(
+                "app.services.strategy.annual_work_service.progress.get_annual_work",
+                return_value=work,
+            ),
+        ):
             result = sync_progress_from_projects(db, 1)
         assert work.progress_percent == Decimal("75")
         assert work.status == "IN_PROGRESS"

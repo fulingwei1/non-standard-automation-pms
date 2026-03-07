@@ -125,9 +125,7 @@ class StatusUpdateService:
                     )
             # 如果当前状态不在规则中，说明该状态不允许任何转换（包括到自己）
             else:
-                errors.append(
-                    f"状态 {old_status} 不允许转换到任何状态"
-                )
+                errors.append(f"状态 {old_status} 不允许转换到任何状态")
                 return StatusUpdateResult(
                     success=False,
                     entity=entity,
@@ -173,9 +171,7 @@ class StatusUpdateService:
                         if not current_value:  # 只在字段为空时设置
                             setattr(entity, field_name, datetime.now())
                     else:
-                        logger.warning(
-                            f"实体 {type(entity).__name__} 没有字段 {field_name}"
-                        )
+                        logger.warning(f"实体 {type(entity).__name__} 没有字段 {field_name}")
 
         # 8. 更新关联实体状态
         if related_entities:

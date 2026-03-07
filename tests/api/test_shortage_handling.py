@@ -59,7 +59,9 @@ def _cleanup_reports(db_session: Session, report_ids: List[int]) -> None:
         db_session.commit()
 
 
-def _create_report_payload(project: Project, material: Material, urgent_level: str = "NORMAL") -> Dict:
+def _create_report_payload(
+    project: Project, material: Material, urgent_level: str = "NORMAL"
+) -> Dict:
     return {
         "project_id": project.id,
         "material_id": material.id,

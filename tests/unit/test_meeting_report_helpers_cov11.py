@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """第十一批：meeting_report_helpers 单元测试"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.meeting_report_helpers import (
         calculate_periods,
         query_meetings,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

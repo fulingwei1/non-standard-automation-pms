@@ -11,9 +11,7 @@ if TYPE_CHECKING:
 
 
 def analyze_cascade_impact(
-    service: "EcnBomAnalysisService",
-    bom_items: List[BomItem],
-    affected_item_ids: Set[int]
+    service: "EcnBomAnalysisService", bom_items: List[BomItem], affected_item_ids: Set[int]
 ) -> List[Dict[str, Any]]:
     """分析级联影响（父子关系）"""
     cascade_impact = []
@@ -43,13 +41,15 @@ def analyze_cascade_impact(
         if item.parent_item_id and item.parent_item_id not in processed_ids:
             parent_item = item_id_to_item.get(item.parent_item_id)
             if parent_item:
-                cascade_impact.append({
-                    "bom_item_id": parent_item.id,
-                    "material_code": parent_item.material_code,
-                    "material_name": parent_item.material_name,
-                    "impact": "因子物料变更可能受影响",
-                    "cascade_type": "UPWARD"
-                })
+                cascade_impact.append(
+                    {
+                        "bom_item_id": parent_item.id,
+                        "material_code": parent_item.material_code,
+                        "material_name": parent_item.material_name,
+                        "impact": "因子物料变更可能受影响",
+                        "cascade_type": "UPWARD",
+                    }
+                )
                 processed_ids.add(item.parent_item_id)
                 queue.append(item.parent_item_id)
 
@@ -57,13 +57,15 @@ def analyze_cascade_impact(
         if item_id in parent_to_children:
             for child_item in parent_to_children[item_id]:
                 if child_item.id not in processed_ids:
-                    cascade_impact.append({
-                        "bom_item_id": child_item.id,
-                        "material_code": child_item.material_code,
-                        "material_name": child_item.material_name,
-                        "impact": "因父物料变更可能受影响",
-                        "cascade_type": "DOWNWARD"
-                    })
+                    cascade_impact.append(
+                        {
+                            "bom_item_id": child_item.id,
+                            "material_code": child_item.material_code,
+                            "material_name": child_item.material_name,
+                            "impact": "因父物料变更可能受影响",
+                            "cascade_type": "DOWNWARD",
+                        }
+                    )
                     processed_ids.add(child_item.id)
 
     return cascade_impact

@@ -29,7 +29,7 @@ class TestSupplierCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/suppliers/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -45,7 +45,7 @@ class TestSupplierCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/suppliers/",
             params={"page": 1, "page_size": 10, "keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -65,9 +65,7 @@ class TestSupplierCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/suppliers/",
-            json=supplier_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/suppliers/", json=supplier_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -85,10 +83,7 @@ class TestSupplierCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取供应商列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/suppliers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/suppliers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get suppliers list")
@@ -100,10 +95,7 @@ class TestSupplierCRUD:
 
         supplier_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/suppliers/{supplier_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/suppliers/{supplier_id}", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -120,10 +112,7 @@ class TestSupplierCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/suppliers/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/suppliers/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -135,10 +124,7 @@ class TestSupplierCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取供应商列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/suppliers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/suppliers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get suppliers list")
@@ -156,9 +142,7 @@ class TestSupplierCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/suppliers/{supplier_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/suppliers/{supplier_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -178,10 +162,7 @@ class TestSupplierRating:
         headers = _auth_headers(admin_token)
 
         # 先获取供应商列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/suppliers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/suppliers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get suppliers list")
@@ -202,7 +183,7 @@ class TestSupplierRating:
         response = client.put(
             f"{settings.API_V1_PREFIX}/suppliers/{supplier_id}/rating",
             json=rating_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -224,10 +205,7 @@ class TestSupplierMaterials:
         headers = _auth_headers(admin_token)
 
         # 先获取供应商列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/suppliers/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/suppliers/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get suppliers list")
@@ -240,8 +218,7 @@ class TestSupplierMaterials:
         supplier_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/suppliers/{supplier_id}/materials",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/suppliers/{supplier_id}/materials", headers=headers
         )
 
         assert response.status_code == 200

@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_like_filter, apply_pagination
 from app.core import security
-from app.common.pagination import get_pagination_query, PaginationParams
 from app.models.presale import (
     PresaleSolution,
     PresaleSolutionCost,
@@ -27,23 +27,21 @@ from app.schemas.presale import (
     TemplateCreate,
     TemplateResponse,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
-from app.utils.db_helpers import get_or_404, save_obj
 
 generate_ticket_no = presale_codes.generate_ticket_no
 generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
 
-router = APIRouter(
-    prefix="/templates",
-    tags=["templates"]
-)
+router = APIRouter(prefix="/templates", tags=["templates"])
 
 # 共 5 个路由
 
 # ==================== 方案模板库 ====================
+
 
 @router.get("", response_model=PaginatedResponse)
 def read_templates(
@@ -73,22 +71,28 @@ def read_templates(
         query = query.filter(PresaleSolutionTemplate.is_active == is_active)
 
     total = query.count()
-    templates = apply_pagination(query.order_by(desc(PresaleSolutionTemplate.created_at)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(desc(PresaleSolutionTemplate.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for template in templates:
-        items.append(TemplateResponse(
-            id=template.id,
-            template_no=template.template_no,
-            name=template.name,
-            industry=template.industry,
-            test_type=template.test_type,
-            description=template.description,
-            use_count=template.use_count,
-            is_active=template.is_active,
-            created_at=template.created_at,
-            updated_at=template.updated_at,
-        ))
+        items.append(
+            TemplateResponse(
+                id=template.id,
+                template_no=template.template_no,
+                name=template.name,
+                industry=template.industry,
+                test_type=template.test_type,
+                description=template.description,
+                use_count=template.use_count,
+                is_active=template.is_active,
+                created_at=template.created_at,
+                updated_at=template.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
@@ -130,7 +134,7 @@ def create_template(
         cost_template=template_in.cost_template,
         attachments=template_in.attachments,
         is_active=True,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     save_obj(db, template)
@@ -175,7 +179,7 @@ def get_template_stats(
         # 统计该模板在此时间段内创建方案的数量
         solutions_query = db.query(PresaleSolution).filter(
             PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
+            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
         )
         solutions_query = apply_keyword_filter(
             solutions_query,
@@ -187,24 +191,30 @@ def get_template_stats(
         solutions_count = solutions_query.count()
 
         # 计算复用率（使用次数 / 总方案数）
-        total_solutions = db.query(PresaleSolution).filter(
-            PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
-            PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time())
-        ).count()
+        total_solutions = (
+            db.query(PresaleSolution)
+            .filter(
+                PresaleSolution.created_at >= datetime.combine(start_date, datetime.min.time()),
+                PresaleSolution.created_at <= datetime.combine(end_date, datetime.max.time()),
+            )
+            .count()
+        )
 
         reuse_rate = (solutions_count / total_solutions * 100) if total_solutions > 0 else 0.0
 
-        template_stats.append({
-            "template_id": template.id,
-            "template_no": template.template_no,
-            "template_name": template.name,
-            "industry": template.industry,
-            "test_type": template.test_type,
-            "total_use_count": template.use_count or 0,
-            "period_use_count": solutions_count,
-            "reuse_rate": round(reuse_rate, 2),
-            "is_active": template.is_active
-        })
+        template_stats.append(
+            {
+                "template_id": template.id,
+                "template_no": template.template_no,
+                "template_name": template.name,
+                "industry": template.industry,
+                "test_type": template.test_type,
+                "total_use_count": template.use_count or 0,
+                "period_use_count": solutions_count,
+                "reuse_rate": round(reuse_rate, 2),
+                "is_active": template.is_active,
+            }
+        )
 
     # 按使用次数排序
     template_stats.sort(key=lambda x: x["period_use_count"], reverse=True)
@@ -219,9 +229,13 @@ def get_template_stats(
                 "total_templates": len(templates),
                 "active_templates": len([t for t in templates if t.is_active]),
                 "total_uses": sum(t["period_use_count"] for t in template_stats),
-                "avg_reuse_rate": round(sum(t["reuse_rate"] for t in template_stats) / len(template_stats), 2) if template_stats else 0.0
-            }
-        }
+                "avg_reuse_rate": (
+                    round(sum(t["reuse_rate"] for t in template_stats) / len(template_stats), 2)
+                    if template_stats
+                    else 0.0
+                ),
+            },
+        },
     )
 
 
@@ -251,7 +265,9 @@ def read_template(
     )
 
 
-@router.post("/{template_id}/apply", response_model=SolutionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{template_id}/apply", response_model=SolutionResponse, status_code=status.HTTP_201_CREATED
+)
 def apply_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -273,7 +289,7 @@ def apply_template(
     solution = PresaleSolution(
         solution_no=generate_solution_no(db),
         name=f"{template.name}（基于模板）",
-        solution_type='STANDARD',
+        solution_type="STANDARD",
         industry=template.industry,
         test_type=template.test_type,
         ticket_id=ticket_id,
@@ -281,10 +297,10 @@ def apply_template(
         opportunity_id=opportunity_id,
         requirement_summary=template.description,
         solution_overview=template.content_template,
-        status='DRAFT',
-        version='V1.0',
+        status="DRAFT",
+        version="V1.0",
         author_id=current_user.id,
-        author_name=current_user.real_name or current_user.username
+        author_name=current_user.real_name or current_user.username,
     )
 
     db.add(solution)
@@ -298,13 +314,13 @@ def apply_template(
         for item in cost_items:
             cost_record = PresaleSolutionCost(
                 solution_id=solution.id,
-                category=item.get('category', '其他'),
-                item_name=item.get('item_name', ''),
-                specification=item.get('specification'),
-                unit=item.get('unit'),
-                quantity=item.get('quantity'),
-                unit_price=item.get('unit_price'),
-                amount=item.get('amount')
+                category=item.get("category", "其他"),
+                item_name=item.get("item_name", ""),
+                specification=item.get("specification"),
+                unit=item.get("unit"),
+                quantity=item.get("quantity"),
+                unit_price=item.get("unit_price"),
+                amount=item.get("amount"),
             )
             db.add(cost_record)
 

@@ -146,8 +146,7 @@ class RoleInheritanceUtils:
                 # 多租户权限过滤
                 if tenant_id is not None:
                     role_perms = role_perms.filter(
-                        (ApiPermission.tenant_id.is_(None))
-                        | (ApiPermission.tenant_id == tenant_id)
+                        (ApiPermission.tenant_id.is_(None)) | (ApiPermission.tenant_id == tenant_id)
                     )
 
                 for (perm_code,) in role_perms.all():
@@ -156,9 +155,7 @@ class RoleInheritanceUtils:
 
             # 缓存结果
             RoleInheritanceUtils._permission_cache[role_id] = permissions.copy()
-            logger.info(
-                f"角色 {role_id} 获取到 {len(permissions)} 个权限（包含继承）"
-            )
+            logger.info(f"角色 {role_id} 获取到 {len(permissions)} 个权限（包含继承）")
 
         except Exception as e:
             logger.error(f"获取角色 {role_id} 继承权限失败: {e}")
@@ -227,9 +224,7 @@ class RoleInheritanceUtils:
         query = db.query(Role).filter(Role.is_active == True)
 
         if tenant_id is not None:
-            query = query.filter(
-                (Role.tenant_id.is_(None)) | (Role.tenant_id == tenant_id)
-            )
+            query = query.filter((Role.tenant_id.is_(None)) | (Role.tenant_id == tenant_id))
 
         roles = query.all()
 
@@ -240,15 +235,11 @@ class RoleInheritanceUtils:
             """构建树节点"""
             # 计算权限数量
             perm_count = (
-                db.query(RoleApiPermission)
-                .filter(RoleApiPermission.role_id == role.id)
-                .count()
+                db.query(RoleApiPermission).filter(RoleApiPermission.role_id == role.id).count()
             )
 
             # 获取继承权限数量
-            inherited_perms = RoleInheritanceUtils.get_inherited_permissions(
-                db, role.id, tenant_id
-            )
+            inherited_perms = RoleInheritanceUtils.get_inherited_permissions(db, role.id, tenant_id)
 
             node = {
                 "id": role.id,
@@ -295,9 +286,7 @@ class RoleInheritanceUtils:
         merged_permissions: Set[str] = set()
 
         for role_id in role_ids:
-            perms = RoleInheritanceUtils.get_inherited_permissions(
-                db, role_id, tenant_id
-            )
+            perms = RoleInheritanceUtils.get_inherited_permissions(db, role_id, tenant_id)
             merged_permissions.update(perms)
 
         logger.info(f"合并 {len(role_ids)} 个角色的权限，共 {len(merged_permissions)} 个")
@@ -312,11 +301,7 @@ class RoleInheritanceUtils:
             统计信息字典
         """
         total_roles = db.query(Role).filter(Role.is_active == True).count()
-        root_roles = (
-            db.query(Role)
-            .filter(Role.is_active == True, Role.parent_id.is_(None))
-            .count()
-        )
+        root_roles = db.query(Role).filter(Role.is_active == True, Role.parent_id.is_(None)).count()
         inherited_roles = (
             db.query(Role)
             .filter(
@@ -377,9 +362,7 @@ class RoleInheritanceUtils:
                 chain = RoleInheritanceUtils.get_role_chain(db, role.id)
                 chain_ids = [r.id for r in chain]
                 if len(chain_ids) != len(set(chain_ids)):
-                    errors.append(
-                        f"角色 {role.role_code} (ID:{role.id}) 存在循环继承"
-                    )
+                    errors.append(f"角色 {role.role_code} (ID:{role.id}) 存在循环继承")
 
                 # 检查层级深度
                 level = RoleInheritanceUtils.calculate_role_level(db, role.id)

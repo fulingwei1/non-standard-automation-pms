@@ -11,9 +11,9 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch, call
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict, List
+from unittest.mock import MagicMock, Mock, call, patch
 
 # 显式导入以便覆盖率统计
 import app.services.approval_engine.engine.approve as approve_module
@@ -28,13 +28,13 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """每个测试前的准备工作"""
         # Mock数据库会话
         self.mock_db = MagicMock()
-        
+
         # 创建引擎实例 - 通过多重继承让ApprovalEngineCore拥有approve功能
         class TestEngine(ApprovalProcessMixin, ApprovalEngineCore):
             pass
-        
+
         self.engine = TestEngine(self.mock_db)
-        
+
         # Mock服务依赖
         self.engine.executor = MagicMock()
         self.engine.notify = MagicMock()
@@ -42,7 +42,7 @@ class TestApprovalProcessMixin(unittest.TestCase):
         self.engine.delegate_service = MagicMock()
 
     def _create_mock_task(
-        self, 
+        self,
         task_id: int = 1,
         assignee_id: int = 100,
         status: str = "PENDING",
@@ -60,13 +60,13 @@ class TestApprovalProcessMixin(unittest.TestCase):
         task.task_order = 1
         task.is_countersign = False
         task.due_at = None
-        
+
         # Mock节点
         task.node = self._create_mock_node(node_id)
-        
+
         # Mock实例
         task.instance = self._create_mock_instance(instance_id)
-        
+
         return task
 
     def _create_mock_node(
@@ -126,16 +126,16 @@ class TestApprovalProcessMixin(unittest.TestCase):
         # 准备数据
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         # Mock数据库查询
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,  # _get_and_validate_task
             approver,  # approve() 中查询审批人
         ]
-        
+
         # Mock executor.process_approval 返回可以继续流转
         self.engine.executor.process_approval.return_value = (True, None)
-        
+
         # 执行
         result = self.engine.approve(
             task_id=1,
@@ -143,7 +143,7 @@ class TestApprovalProcessMixin(unittest.TestCase):
             comment="同意",
             attachments=[{"name": "file.pdf"}],
         )
-        
+
         # 验证
         self.assertEqual(result, task)
         self.engine.executor.process_approval.assert_called_once_with(
@@ -160,19 +160,19 @@ class TestApprovalProcessMixin(unittest.TestCase):
         # 准备数据
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         # Mock数据库查询
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
-        
+
         # Mock executor.process_approval 返回不能继续流转
         self.engine.executor.process_approval.return_value = (False, None)
-        
+
         # 执行
         result = self.engine.approve(task_id=1, approver_id=100)
-        
+
         # 验证 - 不应调用 _advance_to_next_node
         self.assertEqual(result, task)
         self.mock_db.commit.assert_called_once()
@@ -181,20 +181,20 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试带评估数据的审批（ECN场景）"""
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
         self.engine.executor.process_approval.return_value = (True, None)
-        
+
         eval_data = {"score": 95, "comment": "优秀"}
         result = self.engine.approve(
             task_id=1,
             approver_id=100,
             eval_data=eval_data,
         )
-        
+
         self.engine.executor.process_approval.assert_called_once()
         call_kwargs = self.engine.executor.process_approval.call_args[1]
         self.assertEqual(call_kwargs["eval_data"], eval_data)
@@ -205,13 +205,13 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试驳回到发起人"""
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
         self.engine.executor.process_approval.return_value = (False, None)
-        
+
         # 执行
         result = self.engine.reject(
             task_id=1,
@@ -219,7 +219,7 @@ class TestApprovalProcessMixin(unittest.TestCase):
             comment="不同意",
             reject_to="START",
         )
-        
+
         # 验证
         self.assertEqual(result, task)
         self.assertEqual(task.instance.status, "REJECTED")
@@ -232,24 +232,24 @@ class TestApprovalProcessMixin(unittest.TestCase):
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
         prev_node = self._create_mock_node(node_id=0, node_order=0)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
-        
+
         # Mock _get_previous_node
-        with patch.object(self.engine, '_get_previous_node', return_value=prev_node):
-            with patch.object(self.engine, '_return_to_node') as mock_return:
+        with patch.object(self.engine, "_get_previous_node", return_value=prev_node):
+            with patch.object(self.engine, "_return_to_node") as mock_return:
                 self.engine.executor.process_approval.return_value = (False, None)
-                
+
                 result = self.engine.reject(
                     task_id=1,
                     approver_id=100,
                     comment="退回修改",
                     reject_to="PREV",
                 )
-                
+
                 mock_return.assert_called_once_with(task.instance, prev_node)
                 self.mock_db.commit.assert_called_once()
 
@@ -257,23 +257,23 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试退回上一节点但不存在上一节点"""
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
-        
+
         # Mock _get_previous_node 返回None
-        with patch.object(self.engine, '_get_previous_node', return_value=None):
+        with patch.object(self.engine, "_get_previous_node", return_value=None):
             self.engine.executor.process_approval.return_value = (False, None)
-            
+
             result = self.engine.reject(
                 task_id=1,
                 approver_id=100,
                 comment="退回修改",
                 reject_to="PREV",
             )
-            
+
             # 应该变为REJECTED状态
             self.assertEqual(task.instance.status, "REJECTED")
             self.assertIsNotNone(task.instance.completed_at)
@@ -283,48 +283,48 @@ class TestApprovalProcessMixin(unittest.TestCase):
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
         target_node = self._create_mock_node(node_id=999)
-        
+
         # Mock数据库查询 - 注意顺序
         query_mock = self.mock_db.query.return_value
         filter_mock = query_mock.filter.return_value
         filter_mock.first.side_effect = [
-            task,       # _get_and_validate_task
-            approver,   # reject() 中查询审批人
+            task,  # _get_and_validate_task
+            approver,  # reject() 中查询审批人
             target_node,  # reject() 中查询目标节点
         ]
-        
+
         self.engine.executor.process_approval.return_value = (False, None)
-        
-        with patch.object(self.engine, '_return_to_node') as mock_return:
+
+        with patch.object(self.engine, "_return_to_node") as mock_return:
             result = self.engine.reject(
                 task_id=1,
                 approver_id=100,
                 comment="退回修改",
                 reject_to="999",  # 节点ID字符串
             )
-            
+
             mock_return.assert_called_once_with(task.instance, target_node)
 
     def test_reject_to_invalid_node_id(self):
         """测试退回到无效节点ID"""
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
             None,  # 查不到目标节点
         ]
-        
+
         self.engine.executor.process_approval.return_value = (False, None)
-        
+
         result = self.engine.reject(
             task_id=1,
             approver_id=100,
             comment="退回",
             reject_to="999",
         )
-        
+
         # 应该变为REJECTED状态
         self.assertEqual(task.instance.status, "REJECTED")
 
@@ -332,21 +332,21 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试退回目标为非数字字符串"""
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
-        
+
         self.engine.executor.process_approval.return_value = (False, None)
-        
+
         result = self.engine.reject(
             task_id=1,
             approver_id=100,
             comment="退回",
             reject_to="INVALID",  # 非数字字符串
         )
-        
+
         # 应该变为REJECTED状态
         self.assertEqual(task.instance.status, "REJECTED")
 
@@ -354,14 +354,14 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试驳回时不填写原因抛出异常"""
         with self.assertRaises(ValueError) as context:
             self.engine.reject(task_id=1, approver_id=100, comment="")
-        
+
         self.assertIn("驳回原因不能为空", str(context.exception))
 
     def test_reject_none_comment_raises_error(self):
         """测试驳回时原因为None抛出异常"""
         with self.assertRaises(ValueError) as context:
             self.engine.reject(task_id=1, approver_id=100, comment=None)
-        
+
         self.assertIn("驳回原因不能为空", str(context.exception))
 
     # ========== return_to() 测试 ==========
@@ -371,21 +371,21 @@ class TestApprovalProcessMixin(unittest.TestCase):
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
         target_node = self._create_mock_node(node_id=999)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
             target_node,
         ]
-        
-        with patch.object(self.engine, '_return_to_node') as mock_return:
+
+        with patch.object(self.engine, "_return_to_node") as mock_return:
             result = self.engine.return_to(
                 task_id=1,
                 approver_id=100,
                 target_node_id=999,
                 comment="请重新填写",
             )
-            
+
             self.assertEqual(result, task)
             self.assertEqual(task.action, "RETURN")
             self.assertEqual(task.comment, "请重新填写")
@@ -399,21 +399,21 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试退回到不存在的节点"""
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
             None,  # 目标节点不存在
         ]
-        
-        with patch.object(self.engine, '_return_to_node') as mock_return:
+
+        with patch.object(self.engine, "_return_to_node") as mock_return:
             result = self.engine.return_to(
                 task_id=1,
                 approver_id=100,
                 target_node_id=999,
                 comment="退回",
             )
-            
+
             # 不应调用 _return_to_node
             mock_return.assert_not_called()
             self.mock_db.commit.assert_called_once()
@@ -425,26 +425,26 @@ class TestApprovalProcessMixin(unittest.TestCase):
         task = self._create_mock_task()
         from_user = self._create_mock_user(user_id=100, real_name="张三")
         to_user = self._create_mock_user(user_id=200, real_name="李四")
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             from_user,
             to_user,
         ]
-        
+
         # Mock _log_action 以避免影响 db.add 的调用计数
-        with patch.object(self.engine, '_log_action'):
+        with patch.object(self.engine, "_log_action"):
             result = self.engine.transfer(
                 task_id=1,
                 from_user_id=100,
                 to_user_id=200,
                 comment="转给你处理",
             )
-        
+
         # 验证原任务状态
         self.assertEqual(task.status, "TRANSFERRED")
         self.assertIsNotNone(task.completed_at)
-        
+
         # 验证新任务创建 (只有1次,因为_log_action被mock了)
         self.mock_db.add.assert_called_once()
         new_task = self.mock_db.add.call_args[0][0]
@@ -453,7 +453,7 @@ class TestApprovalProcessMixin(unittest.TestCase):
         self.assertEqual(new_task.assignee_type, "TRANSFERRED")
         self.assertEqual(new_task.original_assignee_id, 100)
         self.assertEqual(new_task.status, "PENDING")
-        
+
         # 验证通知
         self.engine.notify.notify_transferred.assert_called_once()
         self.mock_db.flush.assert_called_once()
@@ -463,36 +463,36 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试节点不允许转审"""
         task = self._create_mock_task()
         task.node.can_transfer = False
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = task
-        
+
         with self.assertRaises(ValueError) as context:
             self.engine.transfer(
                 task_id=1,
                 from_user_id=100,
                 to_user_id=200,
             )
-        
+
         self.assertIn("当前节点不允许转审", str(context.exception))
 
     def test_transfer_to_user_not_exist(self):
         """测试转审目标用户不存在"""
         task = self._create_mock_task()
         from_user = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             from_user,
             None,  # to_user不存在
         ]
-        
+
         with self.assertRaises(ValueError) as context:
             self.engine.transfer(
                 task_id=1,
                 from_user_id=100,
                 to_user_id=200,
             )
-        
+
         self.assertIn("转审目标用户不存在", str(context.exception))
 
     # ========== add_approver() 测试 ==========
@@ -503,16 +503,16 @@ class TestApprovalProcessMixin(unittest.TestCase):
         operator = self._create_mock_user(user_id=100, real_name="张三")
         approver1 = self._create_mock_user(user_id=201, real_name="李四")
         approver2 = self._create_mock_user(user_id=202, real_name="王五")
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             operator,
             approver1,
             approver2,
         ]
-        
+
         # Mock _log_action 以避免影响 db.add 的调用计数
-        with patch.object(self.engine, '_log_action'):
+        with patch.object(self.engine, "_log_action"):
             result = self.engine.add_approver(
                 task_id=1,
                 operator_id=100,
@@ -520,16 +520,16 @@ class TestApprovalProcessMixin(unittest.TestCase):
                 position="BEFORE",
                 comment="请先审核",
             )
-        
+
         # 验证返回的新任务列表
         self.assertEqual(len(result), 2)
-        
+
         # 验证新任务创建 (2个新任务)
         self.assertEqual(self.mock_db.add.call_count, 2)
-        
+
         # 验证原任务状态变为SKIPPED
         self.assertEqual(task.status, "SKIPPED")
-        
+
         # 验证通知
         self.assertEqual(self.engine.notify.notify_add_approver.call_count, 2)
         self.mock_db.flush.assert_called_once()
@@ -540,13 +540,13 @@ class TestApprovalProcessMixin(unittest.TestCase):
         task = self._create_mock_task()
         operator = self._create_mock_user(user_id=100, real_name="张三")
         approver1 = self._create_mock_user(user_id=201, real_name="李四")
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             operator,
             approver1,
         ]
-        
+
         result = self.engine.add_approver(
             task_id=1,
             operator_id=100,
@@ -554,18 +554,18 @@ class TestApprovalProcessMixin(unittest.TestCase):
             position="AFTER",
             comment="加签",
         )
-        
+
         # 验证
         self.assertEqual(len(result), 1)
         new_task = result[0]
-        
+
         # 后加签的任务状态应该是SKIPPED（等待当前审批人完成后才激活）
         self.assertEqual(new_task.status, "SKIPPED")
         self.assertEqual(new_task.assignee_type, "ADDED_AFTER")
-        
+
         # 原任务状态不变
         self.assertNotEqual(task.status, "SKIPPED")
-        
+
         # 后加签不应该立即通知
         self.engine.notify.notify_add_approver.assert_not_called()
 
@@ -573,16 +573,16 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试节点不允许加签"""
         task = self._create_mock_task()
         task.node.can_add_approver = False
-        
+
         self.mock_db.query.return_value.filter.return_value.first.return_value = task
-        
+
         with self.assertRaises(ValueError) as context:
             self.engine.add_approver(
                 task_id=1,
                 operator_id=100,
                 approver_ids=[201],
             )
-        
+
         self.assertIn("当前节点不允许加签", str(context.exception))
 
     def test_add_approver_skip_non_exist_users(self):
@@ -590,23 +590,23 @@ class TestApprovalProcessMixin(unittest.TestCase):
         task = self._create_mock_task()
         operator = self._create_mock_user(user_id=100)
         approver1 = self._create_mock_user(user_id=201)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             operator,
             approver1,
             None,  # 第二个用户不存在
         ]
-        
+
         # Mock _log_action 以避免影响 db.add 的调用计数
-        with patch.object(self.engine, '_log_action'):
+        with patch.object(self.engine, "_log_action"):
             result = self.engine.add_approver(
                 task_id=1,
                 operator_id=100,
                 approver_ids=[201, 202],  # 202不存在
                 position="BEFORE",
             )
-        
+
         # 应该只创建一个任务
         self.assertEqual(len(result), 1)
         self.assertEqual(self.mock_db.add.call_count, 1)
@@ -616,30 +616,30 @@ class TestApprovalProcessMixin(unittest.TestCase):
     def test_get_and_validate_task_not_exist(self):
         """测试任务不存在"""
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
-        
+
         with self.assertRaises(ValueError) as context:
             self.engine._get_and_validate_task(task_id=999, user_id=100)
-        
+
         self.assertIn("任务不存在", str(context.exception))
 
     def test_get_and_validate_task_not_authorized(self):
         """测试无权操作任务"""
         task = self._create_mock_task(assignee_id=999)
         self.mock_db.query.return_value.filter.return_value.first.return_value = task
-        
+
         with self.assertRaises(ValueError) as context:
             self.engine._get_and_validate_task(task_id=1, user_id=100)
-        
+
         self.assertIn("无权操作此任务", str(context.exception))
 
     def test_get_and_validate_task_wrong_status(self):
         """测试任务状态不正确"""
         task = self._create_mock_task(status="COMPLETED")
         self.mock_db.query.return_value.filter.return_value.first.return_value = task
-        
+
         with self.assertRaises(ValueError) as context:
             self.engine._get_and_validate_task(task_id=1, user_id=100)
-        
+
         self.assertIn("任务状态不正确", str(context.exception))
 
     # ========== 集成场景测试 ==========
@@ -649,22 +649,22 @@ class TestApprovalProcessMixin(unittest.TestCase):
         # 场景：张三审批通过 -> 调用_advance_to_next_node -> 流转成功
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100, real_name="张三")
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
-        
+
         self.engine.executor.process_approval.return_value = (True, None)
-        
+
         # Mock _advance_to_next_node
-        with patch.object(self.engine, '_advance_to_next_node') as mock_advance:
+        with patch.object(self.engine, "_advance_to_next_node") as mock_advance:
             result = self.engine.approve(
                 task_id=1,
                 approver_id=100,
                 comment="通过",
             )
-            
+
             mock_advance.assert_called_once_with(task.instance, task)
             self.mock_db.commit.assert_called_once()
 
@@ -672,23 +672,23 @@ class TestApprovalProcessMixin(unittest.TestCase):
         """测试驳回并触发适配器回调"""
         task = self._create_mock_task()
         approver = self._create_mock_user(user_id=100)
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
-        
+
         self.engine.executor.process_approval.return_value = (False, None)
-        
+
         # Mock _call_adapter_callback
-        with patch.object(self.engine, '_call_adapter_callback') as mock_callback:
+        with patch.object(self.engine, "_call_adapter_callback") as mock_callback:
             result = self.engine.reject(
                 task_id=1,
                 approver_id=100,
                 comment="不符合要求",
                 reject_to="START",
             )
-            
+
             mock_callback.assert_called_once_with(task.instance, "on_rejected")
 
 
@@ -697,10 +697,10 @@ class TestApprovalProcessLogging(unittest.TestCase):
 
     def setUp(self):
         self.mock_db = MagicMock()
-        
+
         class TestEngine(ApprovalProcessMixin, ApprovalEngineCore):
             pass
-        
+
         self.engine = TestEngine(self.mock_db)
         self.engine.executor = MagicMock()
         self.engine.notify = MagicMock()
@@ -717,27 +717,27 @@ class TestApprovalProcessLogging(unittest.TestCase):
         task.instance.id = 1
         task.instance.status = "PENDING"
         task.node = MagicMock()
-        
+
         approver = MagicMock()
         approver.real_name = "张三"
         approver.username = "zhangsan"
-        
+
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [
             task,
             approver,
         ]
-        
+
         self.engine.executor.process_approval.return_value = (False, None)
-        
+
         # Mock _log_action
-        with patch.object(self.engine, '_log_action') as mock_log:
+        with patch.object(self.engine, "_log_action") as mock_log:
             self.engine.approve(
                 task_id=1,
                 approver_id=100,
                 comment="同意",
                 attachments=[{"name": "file.pdf"}],
             )
-            
+
             mock_log.assert_called_once()
             call_kwargs = mock_log.call_args[1]
             self.assertEqual(call_kwargs["action"], "APPROVE")

@@ -3,7 +3,7 @@
 Shared unified report routes for report_center and reports modules.
 """
 
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 class GenerateRequest(BaseModel):
     """生成报告请求"""
+
     report_code: str = Field(..., description="报告代码")
     params: Dict[str, Any] = Field(default_factory=dict, description="报告参数")
     format: str = Field(default="json", description="导出格式: json/pdf/excel/word")
@@ -20,6 +21,7 @@ class GenerateRequest(BaseModel):
 
 class GenerateResponse(BaseModel):
     """生成报告响应"""
+
     success: bool
     report_code: str
     format: str
@@ -160,7 +162,11 @@ def create_unified_report_router(
 
                 content = json.dumps(result.data, ensure_ascii=False, indent=2).encode("utf-8")
             else:
-                content = result.data if isinstance(result.data, bytes) else str(result.data).encode("utf-8")
+                content = (
+                    result.data
+                    if isinstance(result.data, bytes)
+                    else str(result.data).encode("utf-8")
+                )
 
             filename = f"{request.report_code}{extension}"
 

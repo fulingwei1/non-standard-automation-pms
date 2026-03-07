@@ -32,6 +32,7 @@ def _make_project(budget=100000.0, actual_cost=30000.0, project_id=1):
 # predict_project_cost
 # ---------------------------------------------------------------------------
 
+
 class TestPredictProjectCost:
     def test_returns_error_when_project_not_found(self, service, mock_db):
         chain = MagicMock()
@@ -90,6 +91,7 @@ class TestPredictProjectCost:
 # get_cost_overrun_warning
 # ---------------------------------------------------------------------------
 
+
 class TestGetCostOverrunWarning:
     def test_no_warning_for_low_usage(self, service, mock_db):
         if not hasattr(service, "get_cost_overrun_warning"):
@@ -124,6 +126,7 @@ class TestGetCostOverrunWarning:
 # ---------------------------------------------------------------------------
 # compare_project_costs (if exists)
 # ---------------------------------------------------------------------------
+
 
 class TestCompareProjectCosts:
     def test_method_exists_or_skip(self, service):

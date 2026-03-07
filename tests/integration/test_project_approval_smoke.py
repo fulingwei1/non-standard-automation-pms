@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """项目审批流程冒烟测试."""
 
-from __future__ import annotations
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
@@ -19,7 +17,6 @@ from app.models.project import Project
 from app.models.user import User
 from tests.factories import ProjectFactory
 
-
 PROJECT_TEMPLATE_CODE = "PROJECT_TEMPLATE"
 
 
@@ -27,9 +24,7 @@ def _ensure_api_permission_group_column(db_session: Session) -> None:
     """弥补遗留SQLite schema缺口，防止加载权限时失败."""
 
     try:
-        db_session.execute(
-            text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER")
-        )
+        db_session.execute(text("ALTER TABLE api_permissions ADD COLUMN group_id INTEGER"))
         db_session.commit()
     except OperationalError:
         db_session.rollback()
@@ -126,11 +121,7 @@ class TestProjectApprovalSmoke:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
 
-        admin_user = (
-            db_session.query(User)
-            .filter(User.username == "admin")
-            .first()
-        )
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
         if not admin_user:
             pytest.skip("Admin user missing")
 

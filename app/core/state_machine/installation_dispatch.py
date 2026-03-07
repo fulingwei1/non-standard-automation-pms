@@ -11,6 +11,7 @@
 
 from datetime import datetime
 from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from app.core.state_machine.base import StateMachine
@@ -23,7 +24,7 @@ class InstallationDispatchStateMachine(StateMachine):
 
     def __init__(self, order: InstallationDispatchOrder, db: Session):
         """初始化派工单状态机"""
-        super().__init__(order, db, state_field='status')
+        super().__init__(order, db, state_field="status")
 
     @transition(
         from_state="PENDING",
@@ -44,19 +45,19 @@ class InstallationDispatchStateMachine(StateMachine):
             assigned_by_name: 派工人姓名
             remark: 派工备注（可选）
         """
-        if 'assigned_to_id' in kwargs:
-            self.model.assigned_to_id = kwargs['assigned_to_id']
-        if 'assigned_to_name' in kwargs:
-            self.model.assigned_to_name = kwargs['assigned_to_name']
-        if 'assigned_by_id' in kwargs:
-            self.model.assigned_by_id = kwargs['assigned_by_id']
-        if 'assigned_by_name' in kwargs:
-            self.model.assigned_by_name = kwargs['assigned_by_name']
+        if "assigned_to_id" in kwargs:
+            self.model.assigned_to_id = kwargs["assigned_to_id"]
+        if "assigned_to_name" in kwargs:
+            self.model.assigned_to_name = kwargs["assigned_to_name"]
+        if "assigned_by_id" in kwargs:
+            self.model.assigned_by_id = kwargs["assigned_by_id"]
+        if "assigned_by_name" in kwargs:
+            self.model.assigned_by_name = kwargs["assigned_by_name"]
 
         self.model.assigned_time = datetime.now()
 
         # 添加备注
-        if 'remark' in kwargs and kwargs['remark']:
+        if "remark" in kwargs and kwargs["remark"]:
             current_remark = self.model.remark or ""
             self.model.remark = current_remark + f"\n派工备注：{kwargs['remark']}"
 
@@ -75,7 +76,7 @@ class InstallationDispatchStateMachine(StateMachine):
         Args:
             start_time: 开始时间（可选，默认当前时间）
         """
-        self.model.start_time = kwargs.get('start_time', datetime.now())
+        self.model.start_time = kwargs.get("start_time", datetime.now())
         self.model.progress = 0
 
     @transition(
@@ -98,23 +99,23 @@ class InstallationDispatchStateMachine(StateMachine):
             solution_provided: 提供的解决方案
             photos: 现场照片
         """
-        self.model.end_time = kwargs.get('end_time', datetime.now())
+        self.model.end_time = kwargs.get("end_time", datetime.now())
         self.model.progress = 100
 
-        if 'actual_hours' in kwargs:
-            self.model.actual_hours = kwargs['actual_hours']
+        if "actual_hours" in kwargs:
+            self.model.actual_hours = kwargs["actual_hours"]
 
         # 添加完成说明
-        if 'execution_notes' in kwargs and kwargs['execution_notes']:
+        if "execution_notes" in kwargs and kwargs["execution_notes"]:
             current_notes = self.model.execution_notes or ""
             self.model.execution_notes = current_notes + f"\n完成说明：{kwargs['execution_notes']}"
 
-        if 'issues_found' in kwargs:
-            self.model.issues_found = kwargs['issues_found']
-        if 'solution_provided' in kwargs:
-            self.model.solution_provided = kwargs['solution_provided']
-        if 'photos' in kwargs:
-            self.model.photos = kwargs['photos']
+        if "issues_found" in kwargs:
+            self.model.issues_found = kwargs["issues_found"]
+        if "solution_provided" in kwargs:
+            self.model.solution_provided = kwargs["solution_provided"]
+        if "photos" in kwargs:
+            self.model.photos = kwargs["photos"]
 
         # 业务逻辑：自动创建现场服务记录
         self._create_service_record(**kwargs)
@@ -161,18 +162,15 @@ class InstallationDispatchStateMachine(StateMachine):
         """完成任务时自动创建现场服务记录"""
         try:
             import logging
+
+            from app.api.v1.endpoints.service import generate_record_no
             from app.models.project import Machine
             from app.models.service import ServiceRecord
-            from app.api.v1.endpoints.service import generate_record_no
 
             # 获取机台号
             machine_no = None
             if self.model.machine_id:
-                machine = (
-                    self.db.query(Machine)
-                    .filter(Machine.id == self.model.machine_id)
-                    .first()
-                )
+                machine = self.db.query(Machine).filter(Machine.id == self.model.machine_id).first()
                 if machine:
                     machine_no = machine.machine_no
 
@@ -185,22 +183,20 @@ class InstallationDispatchStateMachine(StateMachine):
                 customer_id=self.model.customer_id,
                 location=self.model.location,
                 service_date=self.model.scheduled_date,
-                start_time=self.model.start_time.strftime("%H:%M")
-                if self.model.start_time
-                else None,
-                end_time=self.model.end_time.strftime("%H:%M")
-                if self.model.end_time
-                else None,
-                duration_hours=kwargs.get('actual_hours') or self.model.estimated_hours,
+                start_time=(
+                    self.model.start_time.strftime("%H:%M") if self.model.start_time else None
+                ),
+                end_time=self.model.end_time.strftime("%H:%M") if self.model.end_time else None,
+                duration_hours=kwargs.get("actual_hours") or self.model.estimated_hours,
                 service_engineer_id=self.model.assigned_to_id,
                 service_engineer_name=self.model.assigned_to_name,
                 customer_contact=self.model.customer_contact,
                 customer_phone=self.model.customer_phone,
                 service_content=self.model.task_description or self.model.task_title,
-                service_result=kwargs.get('execution_notes'),
-                issues_found=kwargs.get('issues_found'),
-                solution_provided=kwargs.get('solution_provided'),
-                photos=kwargs.get('photos'),
+                service_result=kwargs.get("execution_notes"),
+                issues_found=kwargs.get("issues_found"),
+                solution_provided=kwargs.get("solution_provided"),
+                photos=kwargs.get("photos"),
                 status="COMPLETED",
             )
             self.db.add(service_record)
@@ -211,6 +207,7 @@ class InstallationDispatchStateMachine(StateMachine):
 
         except Exception as e:
             import logging
+
             # 创建服务记录失败不影响派工单完成，但需要回滚脏状态
             logging.warning(f"自动创建现场服务记录失败：{str(e)}")
             self.model.service_record_id = None

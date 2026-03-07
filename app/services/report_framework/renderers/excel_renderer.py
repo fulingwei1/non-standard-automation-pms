@@ -12,12 +12,17 @@ from typing import Any, Dict, List
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
 
-from app.services.report_framework.renderers.base import Renderer, ReportResult, RenderError
+from app.services.report_framework.renderers.base import Renderer, RenderError, ReportResult
 from app.services.report_framework.renderers.excel_styles import (
-    HEADER_FONT, HEADER_FILL, HEADER_ALIGNMENT,
-    DATA_FONT, DATA_ALIGNMENT,
-    METRIC_LABEL_FONT, METRIC_VALUE_FONT,
-    THIN_BORDER, ALT_ROW_FILL,
+    ALT_ROW_FILL,
+    DATA_ALIGNMENT,
+    DATA_FONT,
+    HEADER_ALIGNMENT,
+    HEADER_FILL,
+    HEADER_FONT,
+    METRIC_LABEL_FONT,
+    METRIC_VALUE_FONT,
+    THIN_BORDER,
 )
 
 
@@ -186,9 +191,7 @@ class ExcelRenderer(Renderer):
         # 写入表头
         for col_idx, col in enumerate(columns, 1):
             cell = ws.cell(
-                row=current_row,
-                column=col_idx,
-                value=col.get("label", col.get("field", ""))
+                row=current_row, column=col_idx, value=col.get("label", col.get("field", ""))
             )
             cell.font = self.header_font
             cell.fill = self.header_fill
@@ -218,11 +221,7 @@ class ExcelRenderer(Renderer):
 
         # 显示数据量提示
         if len(data) > 1000:
-            ws.cell(
-                row=current_row,
-                column=1,
-                value=f"(显示前 1000 条，共 {len(data)} 条)"
-            )
+            ws.cell(row=current_row, column=1, value=f"(显示前 1000 条，共 {len(data)} 条)")
             current_row += 1
 
         return current_row
@@ -244,10 +243,7 @@ class ExcelRenderer(Renderer):
                 try:
                     if cell.value:
                         # 中文字符按 2 个单位计算
-                        cell_length = sum(
-                            2 if ord(c) > 127 else 1
-                            for c in str(cell.value)
-                        )
+                        cell_length = sum(2 if ord(c) > 127 else 1 for c in str(cell.value))
                         max_length = max(max_length, cell_length)
                 except Exception:
                     pass

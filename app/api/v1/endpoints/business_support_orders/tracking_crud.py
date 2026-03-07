@@ -30,7 +30,11 @@ from .tracking_helpers import build_tracking_response
 router = APIRouter()
 
 
-@router.get("/acceptance-tracking", response_model=ResponseModel[PaginatedResponse[AcceptanceTrackingResponse]], summary="获取验收单跟踪列表")
+@router.get(
+    "/acceptance-tracking",
+    response_model=ResponseModel[PaginatedResponse[AcceptanceTrackingResponse]],
+    summary="获取验收单跟踪列表",
+)
 async def get_acceptance_tracking(
     pagination: PaginationParams = Depends(get_pagination_query),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -39,7 +43,7 @@ async def get_acceptance_tracking(
     condition_check_status: Optional[str] = Query(None, description="验收条件检查状态筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取验收单跟踪列表（商务支持角度）"""
     try:
@@ -53,10 +57,17 @@ async def get_acceptance_tracking(
         if tracking_status:
             query = query.filter(AcceptanceTracking.tracking_status == tracking_status)
         if condition_check_status:
-            query = query.filter(AcceptanceTracking.condition_check_status == condition_check_status)
+            query = query.filter(
+                AcceptanceTracking.condition_check_status == condition_check_status
+            )
 
         # 应用关键词过滤（验收单号/客户名称/项目编码）
-        query = apply_keyword_filter(query, AcceptanceTracking, search, ["acceptance_order_no", "customer_name", "project_code"])
+        query = apply_keyword_filter(
+            query,
+            AcceptanceTracking,
+            search,
+            ["acceptance_order_no", "customer_name", "project_code"],
+        )
 
         # 总数
         total = query.count()
@@ -80,30 +91,40 @@ async def get_acceptance_tracking(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取验收单跟踪列表失败: {str(e)}")
 
 
-@router.post("/acceptance-tracking", response_model=ResponseModel[AcceptanceTrackingResponse], summary="创建验收单跟踪记录")
+@router.post(
+    "/acceptance-tracking",
+    response_model=ResponseModel[AcceptanceTrackingResponse],
+    summary="创建验收单跟踪记录",
+)
 async def create_acceptance_tracking(
     tracking_data: AcceptanceTrackingCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """创建验收单跟踪记录"""
     try:
         # 检查验收单是否存在
-        acceptance_order = db.query(AcceptanceOrder).filter(AcceptanceOrder.id == tracking_data.acceptance_order_id).first()
+        acceptance_order = (
+            db.query(AcceptanceOrder)
+            .filter(AcceptanceOrder.id == tracking_data.acceptance_order_id)
+            .first()
+        )
         if not acceptance_order:
             raise HTTPException(status_code=404, detail="验收单不存在")
 
         # 检查是否已有跟踪记录
-        existing = db.query(AcceptanceTracking).filter(
-            AcceptanceTracking.acceptance_order_id == tracking_data.acceptance_order_id
-        ).first()
+        existing = (
+            db.query(AcceptanceTracking)
+            .filter(AcceptanceTracking.acceptance_order_id == tracking_data.acceptance_order_id)
+            .first()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="该验收单已有跟踪记录")
 
@@ -113,11 +134,13 @@ async def create_acceptance_tracking(
             raise HTTPException(status_code=404, detail="项目不存在")
 
         # 获取客户信息（从项目获取）
-        customer = project.customer if hasattr(project, 'customer') else None
+        customer = project.customer if hasattr(project, "customer") else None
         if not customer:
             # 尝试从合同获取
             if tracking_data.contract_id:
-                contract = db.query(Contract).filter(Contract.id == tracking_data.contract_id).first()
+                contract = (
+                    db.query(Contract).filter(Contract.id == tracking_data.contract_id).first()
+                )
                 if contract:
                     customer = contract.customer
 
@@ -156,7 +179,7 @@ async def create_acceptance_tracking(
             tracking_status="pending",
             report_status="pending",
             warranty_status="not_started",
-            remark=tracking_data.remark
+            remark=tracking_data.remark,
         )
 
         db.add(tracking)
@@ -164,9 +187,7 @@ async def create_acceptance_tracking(
         db.refresh(tracking)
 
         return ResponseModel(
-            code=200,
-            message="创建验收单跟踪记录成功",
-            data=build_tracking_response(tracking)
+            code=200, message="创建验收单跟踪记录成功", data=build_tracking_response(tracking)
         )
     except HTTPException:
         raise
@@ -175,20 +196,22 @@ async def create_acceptance_tracking(
         raise HTTPException(status_code=500, detail=f"创建验收单跟踪记录失败: {str(e)}")
 
 
-@router.get("/acceptance-tracking/{tracking_id}", response_model=ResponseModel[AcceptanceTrackingResponse], summary="获取验收单跟踪详情")
+@router.get(
+    "/acceptance-tracking/{tracking_id}",
+    response_model=ResponseModel[AcceptanceTrackingResponse],
+    summary="获取验收单跟踪详情",
+)
 async def get_acceptance_tracking_detail(
     tracking_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取验收单跟踪详情"""
     try:
         tracking = get_or_404(db, AcceptanceTracking, tracking_id, "验收单跟踪记录不存在")
 
         return ResponseModel(
-            code=200,
-            message="获取验收单跟踪详情成功",
-            data=build_tracking_response(tracking)
+            code=200, message="获取验收单跟踪详情成功", data=build_tracking_response(tracking)
         )
     except HTTPException:
         raise
@@ -196,12 +219,16 @@ async def get_acceptance_tracking_detail(
         raise HTTPException(status_code=500, detail=f"获取验收单跟踪详情失败: {str(e)}")
 
 
-@router.put("/acceptance-tracking/{tracking_id}", response_model=ResponseModel[AcceptanceTrackingResponse], summary="更新验收单跟踪记录")
+@router.put(
+    "/acceptance-tracking/{tracking_id}",
+    response_model=ResponseModel[AcceptanceTrackingResponse],
+    summary="更新验收单跟踪记录",
+)
 async def update_acceptance_tracking(
     tracking_id: int,
     tracking_data: AcceptanceTrackingUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """更新验收单跟踪记录"""
     try:
@@ -216,9 +243,7 @@ async def update_acceptance_tracking(
         db.refresh(tracking)
 
         return ResponseModel(
-            code=200,
-            message="更新验收单跟踪记录成功",
-            data=build_tracking_response(tracking)
+            code=200, message="更新验收单跟踪记录成功", data=build_tracking_response(tracking)
         )
     except HTTPException:
         raise

@@ -99,8 +99,12 @@ def test_score_level_a():
 def test_multiple_summaries():
     db = make_db()
 
-    s1 = MagicMock(); s1.id = 1; s1.period = "2025-12"
-    s2 = MagicMock(); s2.id = 2; s2.period = "2025-11"
+    s1 = MagicMock()
+    s1.id = 1
+    s1.period = "2025-12"
+    s2 = MagicMock()
+    s2.id = 2
+    s2.period = "2025-11"
 
     db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [s1, s2]
 

@@ -2,26 +2,27 @@
 """
 异常处理增强 API 测试
 """
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.production import (
-    ProductionException,
+    EscalationLevel,
     ExceptionHandlingFlow,
     ExceptionKnowledge,
     ExceptionPDCA,
     FlowStatus,
-    EscalationLevel,
     PDCAStage,
+    ProductionException,
 )
 from app.models.user import User
 
 
 class TestExceptionEscalation:
     """异常升级测试"""
-    
+
     def test_escalate_exception_success(self, client: TestClient, db_session, auth_headers):
         """测试异常升级成功"""
         # 创建测试异常
@@ -36,7 +37,7 @@ class TestExceptionEscalation:
         )
         db_session.add(exception)
         db_session.commit()
-        
+
         # 升级异常
         response = client.post(
             "/api/v1/production/exception/escalate",
@@ -48,13 +49,13 @@ class TestExceptionEscalation:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["exception_id"] == exception.id
         assert data["escalation_level"] == "LEVEL_1"
         assert data["escalation_reason"] == "超过2小时未处理"
-    
+
     def test_escalate_exception_not_found(self, client: TestClient, auth_headers):
         """测试升级不存在的异常"""
         response = client.post(
@@ -66,9 +67,9 @@ class TestExceptionEscalation:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 404
-    
+
     def test_escalate_multiple_levels(self, client: TestClient, db_session, auth_headers):
         """测试多级升级"""
         exception = ProductionException(
@@ -81,7 +82,7 @@ class TestExceptionEscalation:
         )
         db_session.add(exception)
         db_session.commit()
-        
+
         # 一级升级
         response = client.post(
             "/api/v1/production/exception/escalate",
@@ -93,7 +94,7 @@ class TestExceptionEscalation:
             headers=auth_headers,
         )
         assert response.status_code == 200
-        
+
         # 二级升级
         response = client.post(
             "/api/v1/production/exception/escalate",
@@ -111,7 +112,7 @@ class TestExceptionEscalation:
 
 class TestFlowTracking:
     """流程跟踪测试"""
-    
+
     def test_get_flow_tracking(self, client: TestClient, db_session, auth_headers):
         """测试获取流程跟踪"""
         # 创建异常和流程
@@ -125,7 +126,7 @@ class TestFlowTracking:
         )
         db_session.add(exception)
         db_session.commit()
-        
+
         flow = ExceptionHandlingFlow(
             exception_id=exception.id,
             status=FlowStatus.PROCESSING,
@@ -135,32 +136,32 @@ class TestFlowTracking:
         )
         db_session.add(flow)
         db_session.commit()
-        
+
         # 查询流程
         response = client.get(
             f"/api/v1/production/exception/{exception.id}/flow",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["exception_id"] == exception.id
         assert data["status"] == "PROCESSING"
         assert data["pending_duration_minutes"] is not None
-    
+
     def test_get_flow_not_found(self, client: TestClient, auth_headers):
         """测试查询不存在的流程"""
         response = client.get(
             "/api/v1/production/exception/99999/flow",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 404
 
 
 class TestKnowledge:
     """知识库测试"""
-    
+
     def test_create_knowledge(self, client: TestClient, auth_headers):
         """测试创建知识库条目"""
         response = client.post(
@@ -176,13 +177,13 @@ class TestKnowledge:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["title"] == "设备故障处理指南"
         assert data["exception_type"] == "EQUIPMENT"
         assert data["reference_count"] == 0
-    
+
     def test_search_knowledge_by_keyword(self, client: TestClient, db_session, auth_headers):
         """测试按关键词搜索知识库"""
         # 创建测试知识
@@ -197,31 +198,31 @@ class TestKnowledge:
         )
         db_session.add(knowledge)
         db_session.commit()
-        
+
         # 搜索
         response = client.get(
             "/api/v1/production/exception/knowledge/search?keyword=质量",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["total"] >= 1
         assert any(k["title"] == "质量问题处理" for k in data["items"])
-    
+
     def test_search_knowledge_by_type(self, client: TestClient, db_session, auth_headers):
         """测试按类型搜索知识库"""
         response = client.get(
             "/api/v1/production/exception/knowledge/search?exception_type=EQUIPMENT",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         # 验证返回的都是EQUIPMENT类型
         for item in data["items"]:
             assert item["exception_type"] == "EQUIPMENT"
-    
+
     def test_search_knowledge_pagination(self, client: TestClient, db_session, auth_headers):
         """测试知识库分页"""
         # 创建多条测试数据
@@ -236,7 +237,7 @@ class TestKnowledge:
             )
             db_session.add(knowledge)
         db_session.commit()
-        
+
         # 第1页
         response = client.get(
             "/api/v1/production/exception/knowledge/search?page=1&page_size=20",
@@ -246,7 +247,7 @@ class TestKnowledge:
         data = response.json()
         assert len(data["items"]) == 20
         assert data["page"] == 1
-        
+
         # 第2页
         response = client.get(
             "/api/v1/production/exception/knowledge/search?page=2&page_size=20",
@@ -259,7 +260,7 @@ class TestKnowledge:
 
 class TestStatistics:
     """统计分析测试"""
-    
+
     def test_get_statistics(self, client: TestClient, db_session, auth_headers):
         """测试获取统计数据"""
         # 创建测试异常
@@ -275,13 +276,13 @@ class TestStatistics:
             )
             db_session.add(exception)
         db_session.commit()
-        
+
         # 查询统计
         response = client.get(
             "/api/v1/production/exception/statistics",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["total_count"] >= 10
@@ -289,17 +290,17 @@ class TestStatistics:
         assert "by_level" in data
         assert "by_status" in data
         assert "top_exceptions" in data
-    
+
     def test_get_statistics_with_date_range(self, client: TestClient, db_session, auth_headers):
         """测试按日期范围统计"""
         start_date = (datetime.now() - timedelta(days=7)).isoformat()
         end_date = datetime.now().isoformat()
-        
+
         response = client.get(
             f"/api/v1/production/exception/statistics?start_date={start_date}&end_date={end_date}",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "total_count" in data
@@ -307,7 +308,7 @@ class TestStatistics:
 
 class TestPDCA:
     """PDCA管理测试"""
-    
+
     def test_create_pdca(self, client: TestClient, db_session, auth_headers):
         """测试创建PDCA记录"""
         # 创建测试异常
@@ -321,7 +322,7 @@ class TestPDCA:
         )
         db_session.add(exception)
         db_session.commit()
-        
+
         # 创建PDCA
         response = client.post(
             "/api/v1/production/exception/pdca",
@@ -334,13 +335,13 @@ class TestPDCA:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["exception_id"] == exception.id
         assert data["current_stage"] == "PLAN"
         assert data["plan_description"] == "产品尺寸超差"
-    
+
     def test_advance_pdca_to_do(self, client: TestClient, db_session, auth_headers):
         """测试推进PDCA到Do阶段"""
         # 创建异常和PDCA
@@ -354,7 +355,7 @@ class TestPDCA:
         )
         db_session.add(exception)
         db_session.commit()
-        
+
         pdca = ExceptionPDCA(
             exception_id=exception.id,
             pdca_no=f"PDCA-TEST-{exception.id}",
@@ -366,7 +367,7 @@ class TestPDCA:
         )
         db_session.add(pdca)
         db_session.commit()
-        
+
         # 推进到Do
         response = client.put(
             f"/api/v1/production/exception/pdca/{pdca.id}/advance",
@@ -378,12 +379,12 @@ class TestPDCA:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["current_stage"] == "DO"
         assert data["do_action_taken"] == "更换老化部件"
-    
+
     def test_pdca_stage_validation(self, client: TestClient, db_session, auth_headers):
         """测试PDCA阶段状态机验证"""
         # 创建处于PLAN阶段的PDCA
@@ -397,7 +398,7 @@ class TestPDCA:
         )
         db_session.add(exception)
         db_session.commit()
-        
+
         pdca = ExceptionPDCA(
             exception_id=exception.id,
             pdca_no=f"PDCA-TEST-{exception.id}",
@@ -409,7 +410,7 @@ class TestPDCA:
         )
         db_session.add(pdca)
         db_session.commit()
-        
+
         # 尝试直接跳到CHECK（应该失败）
         response = client.put(
             f"/api/v1/production/exception/pdca/{pdca.id}/advance",
@@ -419,9 +420,9 @@ class TestPDCA:
             },
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 400
-    
+
     def test_pdca_full_cycle(self, client: TestClient, db_session, auth_headers):
         """测试PDCA完整周期"""
         # 创建异常
@@ -435,7 +436,7 @@ class TestPDCA:
         )
         db_session.add(exception)
         db_session.commit()
-        
+
         # 创建PDCA
         response = client.post(
             "/api/v1/production/exception/pdca",
@@ -449,7 +450,7 @@ class TestPDCA:
             headers=auth_headers,
         )
         pdca_id = response.json()["id"]
-        
+
         # Do
         response = client.put(
             f"/api/v1/production/exception/pdca/{pdca_id}/advance",
@@ -457,15 +458,20 @@ class TestPDCA:
             headers=auth_headers,
         )
         assert response.status_code == 200
-        
+
         # Check
         response = client.put(
             f"/api/v1/production/exception/pdca/{pdca_id}/advance",
-            json={"stage": "CHECK", "check_result": "检查", "check_effectiveness": "EFFECTIVE", "check_owner_id": 1},
+            json={
+                "stage": "CHECK",
+                "check_result": "检查",
+                "check_effectiveness": "EFFECTIVE",
+                "check_owner_id": 1,
+            },
             headers=auth_headers,
         )
         assert response.status_code == 200
-        
+
         # Act
         response = client.put(
             f"/api/v1/production/exception/pdca/{pdca_id}/advance",
@@ -473,7 +479,7 @@ class TestPDCA:
             headers=auth_headers,
         )
         assert response.status_code == 200
-        
+
         # Complete
         response = client.put(
             f"/api/v1/production/exception/pdca/{pdca_id}/advance",
@@ -487,7 +493,7 @@ class TestPDCA:
 
 class TestRecurrenceAnalysis:
     """重复异常分析测试"""
-    
+
     def test_analyze_recurrence(self, client: TestClient, db_session, auth_headers):
         """测试重复异常分析"""
         # 创建重复异常
@@ -503,13 +509,13 @@ class TestRecurrenceAnalysis:
             )
             db_session.add(exception)
         db_session.commit()
-        
+
         # 分析
         response = client.get(
             "/api/v1/production/exception/recurrence?days=30",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
@@ -518,14 +524,14 @@ class TestRecurrenceAnalysis:
         assert "total_occurrences" in data[0]
         assert "similar_exceptions" in data[0]
         assert "time_trend" in data[0]
-    
+
     def test_analyze_recurrence_by_type(self, client: TestClient, auth_headers):
         """测试按类型分析重复异常"""
         response = client.get(
             "/api/v1/production/exception/recurrence?exception_type=EQUIPMENT&days=7",
             headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         # 验证只返回EQUIPMENT类型

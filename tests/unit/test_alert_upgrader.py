@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 class TestAlertUpgrader:
     def setup_method(self):
         self.db = MagicMock()
-        with patch("app.services.alert_rule_engine.alert_upgrader.AlertRuleEngineBase.__init__", return_value=None):
+        with patch(
+            "app.services.alert_rule_engine.alert_upgrader.AlertRuleEngineBase.__init__",
+            return_value=None,
+        ):
             from app.services.alert_rule_engine.alert_upgrader import AlertUpgrader
+
             self.upgrader = AlertUpgrader(self.db)
 
     def test_upgrade_alert_updates_level_and_content(self):
@@ -19,7 +24,10 @@ class TestAlertUpgrader:
 
         self.upgrader.get_field_value = MagicMock(return_value=100)
         self.upgrader._subscription_service = MagicMock()
-        self.upgrader._subscription_service.get_notification_recipients.return_value = {"user_ids": [1], "channels": ["email"]}
+        self.upgrader._subscription_service.get_notification_recipients.return_value = {
+            "user_ids": [1],
+            "channels": ["email"],
+        }
         self.upgrader._notification_service = MagicMock()
 
         with patch("app.services.alert_rule_engine.alert_upgrader.AlertGenerator") as MockGen:
@@ -60,7 +68,9 @@ class TestAlertUpgrader:
         alert.escalated_at = None
         alert.alert_level = "WARNING"
 
-        self.upgrader.level_priority = MagicMock(side_effect=lambda x: {"WARNING": 1, "CRITICAL": 2}[x])
+        self.upgrader.level_priority = MagicMock(
+            side_effect=lambda x: {"WARNING": 1, "CRITICAL": 2}[x]
+        )
         self.upgrader.upgrade_alert = MagicMock(return_value=alert)
 
         with patch("app.services.alert_rule_engine.level_determiner.LevelDeterminer") as MockLD:

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第二十二批：basic_notifications 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.notify.basic_notifications import BasicNotificationsMixin
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -16,6 +18,7 @@ pytestmark = pytest.mark.skipif(not IMPORT_OK, reason="import failed")
 
 class ConcreteNotifier(BasicNotificationsMixin):
     """具体实现用于测试"""
+
     def __init__(self):
         self.sent_notifications = []
 

@@ -28,9 +28,9 @@ class TestAnalyzeResolutionTime:
 
         result = analyze_resolution_time(mock_db)
 
-        assert result['total_tickets'] == 0
-        assert result['avg_resolution_hours'] == 0
-        assert result['by_problem_type'] == []
+        assert result["total_tickets"] == 0
+        assert result["avg_resolution_hours"] == 0
+        assert result["by_problem_type"] == []
 
     def test_calculates_resolution_statistics(self):
         """测试计算解决时间统计"""
@@ -54,14 +54,17 @@ class TestAnalyzeResolutionTime:
         mock_ticket2.reported_time = datetime(2026, 1, 11, 9, 0)
         mock_ticket2.resolved_time = datetime(2026, 1, 11, 13, 0)  # 4小时
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [mock_ticket1, mock_ticket2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_ticket1,
+            mock_ticket2,
+        ]
 
         result = analyze_resolution_time(mock_db)
 
-        assert result['total_tickets'] == 2
-        assert result['avg_resolution_hours'] == 6.0  # (8 + 4) / 2
-        assert result['min_resolution_hours'] == 4.0
-        assert result['max_resolution_hours'] == 8.0
+        assert result["total_tickets"] == 2
+        assert result["avg_resolution_hours"] == 6.0  # (8 + 4) / 2
+        assert result["min_resolution_hours"] == 4.0
+        assert result["max_resolution_hours"] == 8.0
 
     def test_groups_by_problem_type(self):
         """测试按问题类型分组"""
@@ -85,28 +88,31 @@ class TestAnalyzeResolutionTime:
         mock_ticket2.reported_time = datetime(2026, 1, 11, 9, 0)
         mock_ticket2.resolved_time = datetime(2026, 1, 11, 13, 0)
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [mock_ticket1, mock_ticket2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_ticket1,
+            mock_ticket2,
+        ]
 
         result = analyze_resolution_time(mock_db)
 
-        assert len(result['by_problem_type']) == 1
-        assert result['by_problem_type'][0]['problem_type'] == "硬件故障"
-        assert result['by_problem_type'][0]['count'] == 2
+        assert len(result["by_problem_type"]) == 1
+        assert result["by_problem_type"][0]["problem_type"] == "硬件故障"
+        assert result["by_problem_type"][0]["count"] == 2
 
     def test_filters_by_date_range(self):
         """测试按日期范围筛选"""
         from app.services.itr_analytics_service import analyze_resolution_time
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
-
-        result = analyze_resolution_time(
-            mock_db,
-            start_date=datetime(2026, 1, 1),
-            end_date=datetime(2026, 1, 31)
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
         )
 
-        assert result['total_tickets'] == 0
+        result = analyze_resolution_time(
+            mock_db, start_date=datetime(2026, 1, 1), end_date=datetime(2026, 1, 31)
+        )
+
+        assert result["total_tickets"] == 0
 
 
 class TestAnalyzeSatisfactionTrend:
@@ -121,8 +127,8 @@ class TestAnalyzeSatisfactionTrend:
 
         result = analyze_satisfaction_trend(mock_db)
 
-        assert result['total_surveys'] == 0
-        assert result['avg_score'] == 0
+        assert result["total_surveys"] == 0
+        assert result["avg_score"] == 0
 
     def test_calculates_average_score(self):
         """测试计算平均分"""
@@ -140,12 +146,15 @@ class TestAnalyzeSatisfactionTrend:
         mock_sat2.survey_date = datetime(2026, 1, 20)
         mock_sat2.survey_type = "SAT"
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_sat1, mock_sat2]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_sat1,
+            mock_sat2,
+        ]
 
         result = analyze_satisfaction_trend(mock_db)
 
-        assert result['total_surveys'] == 2
-        assert result['avg_score'] == 4.25
+        assert result["total_surveys"] == 2
+        assert result["avg_score"] == 4.25
 
     def test_groups_by_month(self):
         """测试按月分组"""
@@ -163,11 +172,14 @@ class TestAnalyzeSatisfactionTrend:
         mock_sat2.survey_date = datetime(2026, 2, 15)
         mock_sat2.survey_type = "FAT"
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_sat1, mock_sat2]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_sat1,
+            mock_sat2,
+        ]
 
         result = analyze_satisfaction_trend(mock_db)
 
-        assert len(result['trend_by_month']) == 2
+        assert len(result["trend_by_month"]) == 2
 
     def test_groups_by_survey_type(self):
         """测试按调查类型分组"""
@@ -185,11 +197,14 @@ class TestAnalyzeSatisfactionTrend:
         mock_sat2.survey_date = datetime(2026, 1, 20)
         mock_sat2.survey_type = "SAT"
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_sat1, mock_sat2]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_sat1,
+            mock_sat2,
+        ]
 
         result = analyze_satisfaction_trend(mock_db)
 
-        assert len(result['trend_by_type']) == 2
+        assert len(result["trend_by_type"]) == 2
 
 
 class TestIdentifyBottlenecks:
@@ -204,8 +219,8 @@ class TestIdentifyBottlenecks:
 
         result = identify_bottlenecks(mock_db)
 
-        assert result['total_analyzed'] == 0
-        assert result['bottlenecks'] == []
+        assert result["total_analyzed"] == 0
+        assert result["bottlenecks"] == []
 
     def test_identifies_response_bottleneck(self):
         """测试识别响应瓶颈"""
@@ -226,11 +241,13 @@ class TestIdentifyBottlenecks:
 
         result = identify_bottlenecks(mock_db)
 
-        assert result['total_analyzed'] == 1
+        assert result["total_analyzed"] == 1
         # 响应时间超过24小时，应该是HIGH severity
-        response_bottleneck = next((b for b in result['bottlenecks'] if 'PENDING' in b['stage']), None)
+        response_bottleneck = next(
+            (b for b in result["bottlenecks"] if "PENDING" in b["stage"]), None
+        )
         if response_bottleneck:
-            assert response_bottleneck['severity'] == 'HIGH'
+            assert response_bottleneck["severity"] == "HIGH"
 
     def test_sorts_by_severity(self):
         """测试按严重程度排序"""
@@ -251,11 +268,11 @@ class TestIdentifyBottlenecks:
 
         result = identify_bottlenecks(mock_db)
 
-        if result['bottlenecks']:
+        if result["bottlenecks"]:
             # 第一个应该是最严重的
-            severities = [b['severity'] for b in result['bottlenecks']]
-            if 'HIGH' in severities:
-                assert result['bottlenecks'][0]['severity'] == 'HIGH'
+            severities = [b["severity"] for b in result["bottlenecks"]]
+            if "HIGH" in severities:
+                assert result["bottlenecks"][0]["severity"] == "HIGH"
 
 
 class TestAnalyzeSlaPerformance:
@@ -270,9 +287,9 @@ class TestAnalyzeSlaPerformance:
 
         result = analyze_sla_performance(mock_db)
 
-        assert result['total_monitors'] == 0
-        assert result['response_rate'] == 0
-        assert result['resolve_rate'] == 0
+        assert result["total_monitors"] == 0
+        assert result["response_rate"] == 0
+        assert result["resolve_rate"] == 0
 
     def test_calculates_response_rate(self):
         """测试计算响应达成率"""
@@ -296,9 +313,9 @@ class TestAnalyzeSlaPerformance:
 
         result = analyze_sla_performance(mock_db)
 
-        assert result['total_monitors'] == 2
-        assert result['response_rate'] == 50.0  # 1/2 = 50%
-        assert result['resolve_rate'] == 100.0  # 2/2 = 100%
+        assert result["total_monitors"] == 2
+        assert result["response_rate"] == 50.0  # 1/2 = 50%
+        assert result["resolve_rate"] == 100.0  # 2/2 = 100%
 
     def test_groups_by_policy(self):
         """测试按策略分组"""
@@ -322,7 +339,7 @@ class TestAnalyzeSlaPerformance:
 
         result = analyze_sla_performance(mock_db)
 
-        assert len(result['by_policy']) == 2
+        assert len(result["by_policy"]) == 2
 
     def test_filters_by_policy_id(self):
         """测试按策略ID筛选"""
@@ -333,4 +350,4 @@ class TestAnalyzeSlaPerformance:
 
         result = analyze_sla_performance(mock_db, policy_id=1)
 
-        assert result['total_monitors'] == 0
+        assert result["total_monitors"] == 0

@@ -18,6 +18,7 @@ try:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side  # noqa: F401
     from openpyxl.utils import get_column_letter
+
     EXCEL_AVAILABLE = True
 except ImportError:
     EXCEL_AVAILABLE = False
@@ -28,7 +29,9 @@ class ExcelExportService:
 
     def __init__(self):
         if not EXCEL_AVAILABLE:
-            raise ImportError("Excel处理库未安装，请安装pandas和openpyxl: pip install pandas openpyxl")
+            raise ImportError(
+                "Excel处理库未安装，请安装pandas和openpyxl: pip install pandas openpyxl"
+            )
 
     def export_to_excel(
         self,
@@ -37,7 +40,7 @@ class ExcelExportService:
         sheet_name: str = "Sheet1",
         filename: Optional[str] = None,
         title: Optional[str] = None,
-        apply_styles: bool = True
+        apply_styles: bool = True,
     ) -> io.BytesIO:
         """
         导出数据到 Excel
@@ -63,7 +66,7 @@ class ExcelExportService:
             ws = wb.active
             ws.title = sheet_name
             if title:
-                ws['A1'] = title
+                ws["A1"] = title
             output = io.BytesIO()
             wb.save(output)
             output.seek(0)
@@ -71,10 +74,7 @@ class ExcelExportService:
 
         # 如果没有指定列配置，使用数据的所有键
         if not columns:
-            columns = [
-                {"key": key, "label": key}
-                for key in data[0].keys()
-            ]
+            columns = [{"key": key, "label": key} for key in data[0].keys()]
 
         # 构建 DataFrame
         df_data = []
@@ -90,11 +90,15 @@ class ExcelExportService:
 
                 # 处理特殊类型
                 if isinstance(value, (date, datetime)):
-                    value = value.strftime('%Y-%m-%d %H:%M:%S') if isinstance(value, datetime) else value.strftime('%Y-%m-%d')
+                    value = (
+                        value.strftime("%Y-%m-%d %H:%M:%S")
+                        if isinstance(value, datetime)
+                        else value.strftime("%Y-%m-%d")
+                    )
                 elif isinstance(value, Decimal):
                     value = float(value)
                 elif value is None:
-                    value = ''
+                    value = ""
 
                 df_row[col["label"]] = value
             df_data.append(df_row)
@@ -103,7 +107,7 @@ class ExcelExportService:
 
         # 创建 Excel 文件
         output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
             # 获取工作表
@@ -122,8 +126,8 @@ class ExcelExportService:
                 # 如果有标题，添加标题行
                 if title:
                     worksheet.insert_rows(1)
-                    worksheet.merge_cells(f'A1:{get_column_letter(len(columns))}1')
-                    title_cell = worksheet['A1']
+                    worksheet.merge_cells(f"A1:{get_column_letter(len(columns))}1")
+                    title_cell = worksheet["A1"]
                     title_cell.value = title
                     title_cell.font = Font(bold=True, size=14)
                     title_cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -165,21 +169,18 @@ class ExcelExportService:
 
             if not data:
                 if title:
-                    ws['A1'] = title
+                    ws["A1"] = title
                 continue
 
             # 如果没有指定列配置，使用数据的所有键
             if not columns:
-                columns = [
-                    {"key": key, "label": key}
-                    for key in data[0].keys()
-                ]
+                columns = [{"key": key, "label": key} for key in data[0].keys()]
 
             # 写入标题（如果有）
             row = 1
             if title:
-                ws.merge_cells(f'A{row}:{get_column_letter(len(columns))}{row}')
-                title_cell = ws[f'A{row}']
+                ws.merge_cells(f"A{row}:{get_column_letter(len(columns))}{row}")
+                title_cell = ws[f"A{row}"]
                 title_cell.value = title
                 title_cell.font = Font(bold=True, size=14)
                 title_cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -189,7 +190,7 @@ class ExcelExportService:
             header_row = row
             for idx, col in enumerate(columns, start=1):
                 col_letter = get_column_letter(idx)
-                cell = ws[f'{col_letter}{header_row}']
+                cell = ws[f"{col_letter}{header_row}"]
                 cell.value = col["label"]
                 cell.font = Font(bold=True, color="FFFFFF")
                 cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
@@ -211,13 +212,17 @@ class ExcelExportService:
 
                     # 处理特殊类型
                     if isinstance(value, (date, datetime)):
-                        value = value.strftime('%Y-%m-%d %H:%M:%S') if isinstance(value, datetime) else value.strftime('%Y-%m-%d')
+                        value = (
+                            value.strftime("%Y-%m-%d %H:%M:%S")
+                            if isinstance(value, datetime)
+                            else value.strftime("%Y-%m-%d")
+                        )
                     elif isinstance(value, Decimal):
                         value = float(value)
                     elif value is None:
-                        value = ''
+                        value = ""
 
-                    cell = ws[f'{col_letter}{row}']
+                    cell = ws[f"{col_letter}{row}"]
                     cell.value = value
                     cell.alignment = Alignment(horizontal="left", vertical="center")
 
@@ -242,11 +247,17 @@ class ExcelExportService:
         header_alignment = Alignment(horizontal="center", vertical="center")
 
         # 找到标题行（如果有标题，表头在第2行，否则在第1行）
-        header_row = 2 if worksheet['A1'].value and len(str(worksheet['A1'].value)) > 0 and worksheet['A1'].value != worksheet[f'{get_column_letter(1)}2'].value else 1
+        header_row = (
+            2
+            if worksheet["A1"].value
+            and len(str(worksheet["A1"].value)) > 0
+            and worksheet["A1"].value != worksheet[f"{get_column_letter(1)}2"].value
+            else 1
+        )
 
         for col_idx in range(1, num_columns + 1):
             col_letter = get_column_letter(col_idx)
-            cell = worksheet[f'{col_letter}{header_row}']
+            cell = worksheet[f"{col_letter}{header_row}"]
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = header_alignment
@@ -261,8 +272,8 @@ class ExcelExportService:
         Returns:
             str: 格式化后的字符串
         """
-        if value is None or value == '':
-            return '0.00'
+        if value is None or value == "":
+            return "0.00"
         try:
             if isinstance(value, str):
                 value = float(value)
@@ -280,8 +291,8 @@ class ExcelExportService:
         Returns:
             str: 格式化后的字符串
         """
-        if value is None or value == '':
-            return '0.00%'
+        if value is None or value == "":
+            return "0.00%"
         try:
             if isinstance(value, str):
                 value = float(value)
@@ -300,18 +311,18 @@ class ExcelExportService:
             str: 格式化后的字符串
         """
         if value is None:
-            return ''
+            return ""
         if isinstance(value, datetime):
-            return value.strftime('%Y-%m-%d %H:%M:%S')
+            return value.strftime("%Y-%m-%d %H:%M:%S")
         if isinstance(value, date):
-            return value.strftime('%Y-%m-%d')
+            return value.strftime("%Y-%m-%d")
         return str(value)
 
 
 def create_excel_response(
     excel_data: io.BytesIO,
     filename: str,
-    media_type: str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    media_type: str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ) -> Any:
     """
     创建 Excel 下载响应
@@ -325,6 +336,7 @@ def create_excel_response(
         StreamingResponse: FastAPI 流式响应
     """
     from fastapi.responses import StreamingResponse
+
     encoded_filename = quote(filename)
     fallback_filename = filename.encode("ascii", "ignore").decode("ascii").strip() or "export.xlsx"
 
@@ -333,10 +345,9 @@ def create_excel_response(
         media_type=media_type,
         headers={
             "Content-Disposition": (
-                f"attachment; filename={fallback_filename}; "
-                f"filename*=UTF-8''{encoded_filename}"
+                f"attachment; filename={fallback_filename}; " f"filename*=UTF-8''{encoded_filename}"
             )
-        }
+        },
     )
 
 
@@ -344,6 +355,4 @@ def create_excel_response(
 from app.services.report_framework.renderers.excel_renderer import ExcelRenderer  # noqa: F401, E402
 from app.services.report_framework.renderers.excel_styles import (  # noqa: F401, E402
     HEADER_FONT as EXCEL_HEADER_FONT,
-    HEADER_FILL as EXCEL_HEADER_FILL,
-    THIN_BORDER as EXCEL_THIN_BORDER,
 )

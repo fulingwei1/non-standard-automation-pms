@@ -13,22 +13,22 @@
 """
 
 # 配置
-from .config import DataScopeConfig, DATA_SCOPE_CONFIGS
+from .config import DATA_SCOPE_CONFIGS, DataScopeConfig
 
-# 用户权限范围服务
-from .user_scope import UserScopeService
-
-# 项目过滤服务
-from .project_filter import ProjectFilterService
-
-# 问题过滤服务
-from .issue_filter import IssueFilterService
+# 自定义规则服务
+from .custom_rule import CustomRuleService
 
 # 通用过滤服务
 from .generic_filter import GenericFilterService
 
-# 自定义规则服务
-from .custom_rule import CustomRuleService
+# 问题过滤服务
+from .issue_filter import IssueFilterService
+
+# 项目过滤服务
+from .project_filter import ProjectFilterService
+
+# 用户权限范围服务
+from .user_scope import UserScopeService
 
 
 # 为了向后兼容，创建 DataScopeService 类，聚合所有方法

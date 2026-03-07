@@ -20,8 +20,8 @@ def clean_str(val: Any) -> Optional[str]:
     """清理字符串值，去除换行和空白，过滤无效值"""
     if pd.isna(val):
         return None
-    result = str(val).replace('\n', '').strip()
-    if result in ('/', 'NaN', ''):
+    result = str(val).replace("\n", "").strip()
+    if result in ("/", "NaN", ""):
         return None
     return result
 
@@ -30,7 +30,7 @@ def clean_name(name: Any) -> Optional[str]:
     """清理姓名中的特殊字符"""
     if pd.isna(name):
         return None
-    return str(name).replace('\n', '').strip()
+    return str(name).replace("\n", "").strip()
 
 
 def clean_phone(phone: Any) -> Optional[str]:
@@ -38,7 +38,7 @@ def clean_phone(phone: Any) -> Optional[str]:
     if pd.isna(phone):
         return None
     phone_str = str(phone)
-    if 'e' in phone_str.lower() or '.' in phone_str:
+    if "e" in phone_str.lower() or "." in phone_str:
         try:
             phone_str = str(int(float(phone)))
         except (ValueError, TypeError, OverflowError):
@@ -69,9 +69,9 @@ def parse_date(date_val: Any) -> Optional[datetime]:
         return date_val.date()
     if isinstance(date_val, str):
         date_str = str(date_val).strip()
-        if not date_str or date_str in ('/', 'NaN', '无试用期'):
+        if not date_str or date_str in ("/", "NaN", "无试用期"):
             return None
-        for fmt in ['%Y/%m/%d', '%Y-%m-%d', '%Y.%m.%d', '%Y年%m月%d日']:
+        for fmt in ["%Y/%m/%d", "%Y-%m-%d", "%Y.%m.%d", "%Y年%m月%d日"]:
             try:
                 return datetime.strptime(date_str, fmt).date()
             except ValueError:
@@ -84,9 +84,9 @@ def get_department_name(row: dict, dept_cols: List[str]) -> Optional[str]:
     parts = []
     for col in dept_cols:
         val = row.get(col)
-        if pd.notna(val) and str(val).strip() not in ('/', 'NaN', ''):
+        if pd.notna(val) and str(val).strip() not in ("/", "NaN", ""):
             parts.append(str(val).strip())
-    return '-'.join(parts) if parts else None
+    return "-".join(parts) if parts else None
 
 
 def is_active_employee(status: Any) -> bool:
@@ -94,6 +94,6 @@ def is_active_employee(status: Any) -> bool:
     if pd.isna(status):
         return True
     status_str = str(status).strip()
-    if status_str in ('离职', '已离职'):
+    if status_str in ("离职", "已离职"):
         return False
     return True

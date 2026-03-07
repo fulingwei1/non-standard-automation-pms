@@ -11,13 +11,14 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.api.v1.endpoints.base_crud_router_sync import create_crud_router_sync
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.core.schemas.response import (
-    SuccessResponse,
     PaginatedResponse,
-    success_response,
+    SuccessResponse,
     paginated_response,
+    success_response,
 )
 from app.models.user import User
 from app.schemas.material import (
@@ -26,7 +27,6 @@ from app.schemas.material import (
     MaterialUpdate,
 )
 from app.services.material_service import MaterialService
-from app.api.v1.endpoints.base_crud_router_sync import create_crud_router_sync
 
 # 创建通用CRUD路由
 crud_router = create_crud_router_sync(
@@ -56,11 +56,12 @@ router.include_router(crud_router)
 
 # ========== 覆盖列表查询端点（支持额外筛选参数） ==========
 
+
 @router.get(
     "/",
     response_model=PaginatedResponse[MaterialResponse],
     summary="物料列表",
-    description="分页查询物料列表，支持筛选、搜索、排序"
+    description="分页查询物料列表，支持筛选、搜索、排序",
 )
 def list_materials(
     db: Session = Depends(deps.get_db),
@@ -74,7 +75,7 @@ def list_materials(
 ) -> PaginatedResponse[MaterialResponse]:
     """
     获取物料列表（支持分页、搜索、筛选）
-    
+
     - **keyword**: 关键词搜索（物料编码/名称）
     - **category_id**: 分类ID筛选
     - **material_type**: 物料类型筛选
@@ -95,18 +96,19 @@ def list_materials(
         items=result["items"],
         total=result["total"],
         page=result["page"],
-        page_size=result["page_size"]
+        page_size=result["page_size"],
     )
 
 
 # ========== 覆盖创建端点（支持自动生成编码） ==========
+
 
 @router.post(
     "/",
     response_model=SuccessResponse[MaterialResponse],
     status_code=201,
     summary="创建物料",
-    description="创建新物料，如果未提供物料编码，系统将根据物料类别自动生成"
+    description="创建新物料，如果未提供物料编码，系统将根据物料类别自动生成",
 )
 def create_material(
     *,
@@ -116,22 +118,18 @@ def create_material(
 ) -> SuccessResponse[MaterialResponse]:
     """
     创建新物料
-    
+
     如果未提供物料编码，系统将根据物料类别自动生成 MAT-{类别}-xxxxx 格式的编码
     """
     service = MaterialService(db)
-    
+
     # 如果没有提供物料编码，自动生成
     if not material_in.material_code:
         material_in.material_code = service.generate_code(material_in.category_id)
-    
+
     # 业务逻辑（唯一性检查、外键检查）将在 Service 层处理或通过 check_unique 参数
     material_data = service.create(
         material_in, check_unique={"material_code": material_in.material_code}
     )
-    
-    return success_response(
-        data=material_data,
-        message="物料创建成功",
-        code=201
-    )
+
+    return success_response(data=material_data, message="物料创建成功", code=201)

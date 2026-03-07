@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip(
     "app.services.preset_stage_templates.templates.execution.procurement_assembly",
-    reason="导入失败，跳过"
+    reason="导入失败，跳过",
 )
 
 try:

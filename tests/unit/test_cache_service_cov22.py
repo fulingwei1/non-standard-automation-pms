@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第二十二批：cache_service 单元测试"""
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.cache_service import CacheService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -71,19 +73,13 @@ class TestCacheServiceGet:
 
     def test_get_expired_key_returns_none(self, cache):
         """过期的key返回None"""
-        cache.memory_cache["expired_key"] = (
-            "expired_value",
-            datetime.now() - timedelta(seconds=1)
-        )
+        cache.memory_cache["expired_key"] = ("expired_value", datetime.now() - timedelta(seconds=1))
         result = cache.get("expired_key")
         assert result is None
 
     def test_expired_key_removed_from_cache(self, cache):
         """过期key被自动删除"""
-        cache.memory_cache["expired_key"] = (
-            "value",
-            datetime.now() - timedelta(seconds=1)
-        )
+        cache.memory_cache["expired_key"] = ("value", datetime.now() - timedelta(seconds=1))
         cache.get("expired_key")
         assert "expired_key" not in cache.memory_cache
 

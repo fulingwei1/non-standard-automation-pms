@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """第十一批：cost_collection_service 单元测试"""
 
-import pytest
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.cost_collection_service import CostCollectionService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

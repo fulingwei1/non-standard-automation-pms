@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - change_impact_ai_service"""
-import pytest
 import asyncio
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 try:
     from app.services.change_impact_ai_service import ChangeImpactAIService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -63,8 +65,11 @@ class TestAnalyzeChangeImpact:
         db.query.side_effect = side_effect
 
         async def run():
-            with patch("app.services.change_impact_ai_service.call_glm_api",
-                       new_callable=AsyncMock, return_value="AI analysis result"):
+            with patch(
+                "app.services.change_impact_ai_service.call_glm_api",
+                new_callable=AsyncMock,
+                return_value="AI analysis result",
+            ):
                 try:
                     await svc.analyze_change_impact(1, user_id=1)
                 except Exception:
@@ -138,11 +143,14 @@ class TestParseAIResponse:
     def test_valid_json_response(self):
         svc, db = _make_service()
         import json
-        ai_response = json.dumps({
-            "risk_level": "HIGH",
-            "affected_tasks": [],
-            "recommendations": ["Fix ASAP"],
-        })
+
+        ai_response = json.dumps(
+            {
+                "risk_level": "HIGH",
+                "affected_tasks": [],
+                "recommendations": ["Fix ASAP"],
+            }
+        )
         try:
             result = svc._parse_ai_response(ai_response)
             assert isinstance(result, (dict, str))

@@ -5,9 +5,10 @@
 测试项目工作日志的创建、查询、更新、统计等功能
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestProjectsWorkLogsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/work-logs/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Work logs API not implemented")
@@ -52,13 +50,11 @@ class TestProjectsWorkLogsAPI:
             "description": "完成了用户登录、注册和权限验证功能",
             "progress": 80,
             "issues": "无",
-            "next_plan": "继续完善权限管理"
+            "next_plan": "继续完善权限管理",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/",
-            headers=headers,
-            json=log_data
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/", headers=headers, json=log_data
         )
 
         if response.status_code == 404:
@@ -73,10 +69,7 @@ class TestProjectsWorkLogsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/work-logs/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No work log data or API not implemented")
@@ -90,15 +83,10 @@ class TestProjectsWorkLogsAPI:
 
         headers = _auth_headers(admin_token)
 
-        update_data = {
-            "progress": 90,
-            "description": "更新：完成了用户认证和权限验证的所有功能"
-        }
+        update_data = {"progress": 90, "description": "更新：完成了用户认证和权限验证的所有功能"}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -114,8 +102,7 @@ class TestProjectsWorkLogsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -133,7 +120,7 @@ class TestProjectsWorkLogsAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/1/work-logs/"
             f"?start_date=2024-01-01&end_date=2024-12-31",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -149,8 +136,7 @@ class TestProjectsWorkLogsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/?member_id=1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/?member_id=1", headers=headers
         )
 
         if response.status_code == 404:
@@ -166,8 +152,7 @@ class TestProjectsWorkLogsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/?work_type=development",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/?work_type=development", headers=headers
         )
 
         if response.status_code == 404:
@@ -183,8 +168,7 @@ class TestProjectsWorkLogsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/work-logs/my-logs",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/work-logs/my-logs", headers=headers
         )
 
         if response.status_code == 404:
@@ -200,8 +184,7 @@ class TestProjectsWorkLogsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/statistics/hours",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/statistics/hours", headers=headers
         )
 
         if response.status_code == 404:
@@ -217,8 +200,7 @@ class TestProjectsWorkLogsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/statistics/workload",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/statistics/workload", headers=headers
         )
 
         if response.status_code == 404:
@@ -234,8 +216,7 @@ class TestProjectsWorkLogsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/export",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/export", headers=headers
         )
 
         if response.status_code == 404:
@@ -250,14 +231,10 @@ class TestProjectsWorkLogsAPI:
 
         headers = _auth_headers(admin_token)
 
-        invalid_data = {
-            "work_hours": -5.0  # 负数工时
-        }
+        invalid_data = {"work_hours": -5.0}  # 负数工时
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:
@@ -267,9 +244,7 @@ class TestProjectsWorkLogsAPI:
 
     def test_work_log_unauthorized(self, client: TestClient):
         """测试未授权访问工作日志"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/projects/1/work-logs/")
 
         assert response.status_code in [401, 403], response.text
 
@@ -282,23 +257,13 @@ class TestProjectsWorkLogsAPI:
 
         batch_data = {
             "logs": [
-                {
-                    "work_date": "2024-01-01",
-                    "work_hours": 8.0,
-                    "task_name": "任务1"
-                },
-                {
-                    "work_date": "2024-01-02",
-                    "work_hours": 7.5,
-                    "task_name": "任务2"
-                }
+                {"work_date": "2024-01-01", "work_hours": 8.0, "task_name": "任务1"},
+                {"work_date": "2024-01-02", "work_hours": 7.5, "task_name": "任务2"},
             ]
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/1/work-logs/batch",
-            headers=headers,
-            json=batch_data
+            f"{settings.API_V1_PREFIX}/projects/1/work-logs/batch", headers=headers, json=batch_data
         )
 
         if response.status_code == 404:

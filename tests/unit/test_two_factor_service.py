@@ -9,10 +9,10 @@
 4. 目标覆盖率70%+
 """
 
-import unittest
-from unittest.mock import MagicMock, patch, call
-from datetime import datetime
 import base64
+import unittest
+from datetime import datetime
+from unittest.mock import MagicMock, call, patch
 
 from app.services.two_factor_service import (
     TwoFactorService,
@@ -84,6 +84,7 @@ class TestEncryptionDecryption(unittest.TestCase):
     def test_decrypt_invalid_token(self):
         """测试解密无效token"""
         from cryptography.fernet import InvalidToken
+
         with self.assertRaises(InvalidToken):
             self.service._decrypt_secret("invalid_encrypted_data")
 
@@ -101,6 +102,7 @@ class TestTOTPGeneration(unittest.TestCase):
         self.assertEqual(len(secret), 32)  # pyotp默认32字符
         # 验证是base32编码
         import base64
+
         try:
             base64.b32decode(secret)
         except Exception:
@@ -127,20 +129,16 @@ class TestQRCodeGeneration(unittest.TestCase):
         """测试生成QR码"""
         secret = self.service.generate_totp_secret()
         qr_code = self.service.generate_qr_code(self.mock_user, secret)
-        
+
         self.assertIsInstance(qr_code, bytes)
         self.assertTrue(len(qr_code) > 0)
         # 验证是PNG格式
-        self.assertTrue(qr_code.startswith(b'\x89PNG'))
+        self.assertTrue(qr_code.startswith(b"\x89PNG"))
 
     def test_generate_qr_code_custom_issuer(self):
         """测试自定义发行者名称"""
         secret = self.service.generate_totp_secret()
-        qr_code = self.service.generate_qr_code(
-            self.mock_user, 
-            secret, 
-            issuer_name="测试系统"
-        )
+        qr_code = self.service.generate_qr_code(self.mock_user, secret, issuer_name="测试系统")
         self.assertIsInstance(qr_code, bytes)
         self.assertTrue(len(qr_code) > 0)
 
@@ -162,9 +160,10 @@ class TestTOTPVerification(unittest.TestCase):
     def test_verify_totp_code_valid(self):
         """测试验证有效的TOTP码"""
         import pyotp
+
         totp = pyotp.TOTP(self.secret)
         code = totp.now()
-        
+
         result = self.service.verify_totp_code(self.secret, code)
         self.assertTrue(result)
 
@@ -176,9 +175,10 @@ class TestTOTPVerification(unittest.TestCase):
     def test_verify_totp_code_with_window(self):
         """测试时间窗口验证"""
         import pyotp
+
         totp = pyotp.TOTP(self.secret)
         code = totp.now()
-        
+
         # 使用更大的窗口
         result = self.service.verify_totp_code(self.secret, code, window=2)
         self.assertTrue(result)
@@ -201,14 +201,14 @@ class TestSetup2FA(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.delete.return_value = None
         self.mock_db.query.return_value = mock_query
-        
+
         secret, qr_code = self.service.setup_2fa_for_user(self.mock_db, self.mock_user)
-        
+
         # 验证返回值
         self.assertIsInstance(secret, str)
         self.assertEqual(len(secret), 32)
         self.assertIsInstance(qr_code, bytes)
-        
+
         # 验证数据库操作
         self.mock_db.query.assert_called()
         self.mock_db.add.assert_called_once()
@@ -220,9 +220,9 @@ class TestSetup2FA(unittest.TestCase):
         mock_filter = MagicMock()
         mock_query.filter.return_value = mock_filter
         self.mock_db.query.return_value = mock_query
-        
+
         self.service.setup_2fa_for_user(self.mock_db, self.mock_user)
-        
+
         # 验证删除操作被调用
         mock_filter.delete.assert_called_once()
 
@@ -243,35 +243,36 @@ class TestEnable2FA(unittest.TestCase):
         # 生成有效的TOTP码
         secret = self.service.generate_totp_secret()
         encrypted_secret = self.service._encrypt_secret(secret)
-        
+
         import pyotp
+
         totp = pyotp.TOTP(secret)
         valid_code = totp.now()
-        
+
         # Mock数据库查询 - TOTP密钥
         mock_secret_record = MagicMock()
         mock_secret_record.secret_encrypted = encrypted_secret
-        
+
         mock_query_totp = MagicMock()
         mock_query_totp.filter.return_value.first.return_value = mock_secret_record
-        
+
         # Mock数据库查询 - 备用码（删除旧的）
         mock_query_backup = MagicMock()
         mock_query_backup.filter.return_value.delete.return_value = None
-        
+
         def query_side_effect(model):
             if "User2FASecret" in str(model):
                 return mock_query_totp
             else:  # User2FABackupCode
                 return mock_query_backup
-        
+
         self.mock_db.query.side_effect = query_side_effect
-        
+
         # 执行
         success, message, backup_codes = self.service.enable_2fa_for_user(
             self.mock_db, self.mock_user, valid_code
         )
-        
+
         # 验证
         self.assertTrue(success)
         self.assertEqual(message, "2FA已启用")
@@ -285,11 +286,11 @@ class TestEnable2FA(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
-        
+
         success, message, backup_codes = self.service.enable_2fa_for_user(
             self.mock_db, self.mock_user, "123456"
         )
-        
+
         self.assertFalse(success)
         self.assertEqual(message, "未找到2FA配置，请先获取二维码")
         self.assertIsNone(backup_codes)
@@ -298,18 +299,18 @@ class TestEnable2FA(unittest.TestCase):
         """测试验证码错误"""
         secret = self.service.generate_totp_secret()
         encrypted_secret = self.service._encrypt_secret(secret)
-        
+
         mock_secret_record = MagicMock()
         mock_secret_record.secret_encrypted = encrypted_secret
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = mock_secret_record
         self.mock_db.query.return_value = mock_query
-        
+
         success, message, backup_codes = self.service.enable_2fa_for_user(
             self.mock_db, self.mock_user, "000000"
         )
-        
+
         self.assertFalse(success)
         self.assertEqual(message, "验证码错误，请检查时间同步")
         self.assertIsNone(backup_codes)
@@ -327,34 +328,34 @@ class TestDisable2FA(unittest.TestCase):
         self.mock_user.password_hash = "$2b$12$xyz"  # mock hash
         self.mock_user.two_factor_enabled = True
 
-    @patch('app.services.two_factor_service.verify_password')
+    @patch("app.services.two_factor_service.verify_password")
     def test_disable_2fa_success(self, mock_verify_password):
         """测试成功禁用2FA"""
         mock_verify_password.return_value = True
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.delete.return_value = None
         self.mock_db.query.return_value = mock_query
-        
+
         success, message = self.service.disable_2fa_for_user(
             self.mock_db, self.mock_user, "correct_password"
         )
-        
+
         self.assertTrue(success)
         self.assertEqual(message, "2FA已禁用")
         self.assertFalse(self.mock_user.two_factor_enabled)
         self.assertIsNone(self.mock_user.two_factor_method)
         self.assertIsNone(self.mock_user.two_factor_verified_at)
 
-    @patch('app.services.two_factor_service.verify_password')
+    @patch("app.services.two_factor_service.verify_password")
     def test_disable_2fa_wrong_password(self, mock_verify_password):
         """测试密码错误"""
         mock_verify_password.return_value = False
-        
+
         success, message = self.service.disable_2fa_for_user(
             self.mock_db, self.mock_user, "wrong_password"
         )
-        
+
         self.assertFalse(success)
         self.assertEqual(message, "密码错误")
 
@@ -373,11 +374,9 @@ class TestVerify2FACode(unittest.TestCase):
     def test_verify_2fa_not_enabled(self):
         """测试未启用2FA"""
         self.mock_user.two_factor_enabled = False
-        
-        success, message = self.service.verify_2fa_code(
-            self.mock_db, self.mock_user, "123456"
-        )
-        
+
+        success, message = self.service.verify_2fa_code(self.mock_db, self.mock_user, "123456")
+
         self.assertFalse(success)
         self.assertEqual(message, "未启用2FA")
 
@@ -385,22 +384,21 @@ class TestVerify2FACode(unittest.TestCase):
         """测试TOTP验证成功"""
         secret = self.service.generate_totp_secret()
         encrypted_secret = self.service._encrypt_secret(secret)
-        
+
         import pyotp
+
         totp = pyotp.TOTP(secret)
         valid_code = totp.now()
-        
+
         mock_secret_record = MagicMock()
         mock_secret_record.secret_encrypted = encrypted_secret
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = mock_secret_record
         self.mock_db.query.return_value = mock_query
-        
-        success, message = self.service.verify_2fa_code(
-            self.mock_db, self.mock_user, valid_code
-        )
-        
+
+        success, message = self.service.verify_2fa_code(self.mock_db, self.mock_user, valid_code)
+
         self.assertTrue(success)
         self.assertEqual(message, "验证成功")
 
@@ -408,19 +406,17 @@ class TestVerify2FACode(unittest.TestCase):
         """测试验证码错误"""
         secret = self.service.generate_totp_secret()
         encrypted_secret = self.service._encrypt_secret(secret)
-        
+
         mock_secret_record = MagicMock()
         mock_secret_record.secret_encrypted = encrypted_secret
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = mock_secret_record
         mock_query.filter.return_value.all.return_value = []
         self.mock_db.query.return_value = mock_query
-        
-        success, message = self.service.verify_2fa_code(
-            self.mock_db, self.mock_user, "000000"
-        )
-        
+
+        success, message = self.service.verify_2fa_code(self.mock_db, self.mock_user, "000000")
+
         self.assertFalse(success)
         self.assertEqual(message, "验证码错误")
 
@@ -440,9 +436,9 @@ class TestBackupCodes(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.delete.return_value = None
         self.mock_db.query.return_value = mock_query
-        
+
         backup_codes = self.service._generate_backup_codes(self.mock_db, self.mock_user)
-        
+
         self.assertEqual(len(backup_codes), 10)
         for code in backup_codes:
             self.assertIsInstance(code, str)
@@ -454,52 +450,50 @@ class TestBackupCodes(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.delete.return_value = None
         self.mock_db.query.return_value = mock_query
-        
-        backup_codes = self.service._generate_backup_codes(
-            self.mock_db, self.mock_user, count=5
-        )
-        
+
+        backup_codes = self.service._generate_backup_codes(self.mock_db, self.mock_user, count=5)
+
         self.assertEqual(len(backup_codes), 5)
 
-    @patch('app.services.two_factor_service.verify_password')
+    @patch("app.services.two_factor_service.verify_password")
     def test_verify_backup_code_success(self, mock_verify_password):
         """测试验证备用码成功"""
         mock_verify_password.return_value = True
-        
+
         mock_backup_code = MagicMock()
         mock_backup_code.code_hash = "hashed_code"
         mock_backup_code.used = False
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = [mock_backup_code]
         self.mock_db.query.return_value = mock_query
-        
+
         success, message = self.service._verify_backup_code(
             self.mock_db, self.mock_user, "12345678", "192.168.1.1"
         )
-        
+
         self.assertTrue(success)
         self.assertEqual(message, "备用码验证成功")
         self.assertTrue(mock_backup_code.used)
         self.assertIsNotNone(mock_backup_code.used_at)
         self.assertEqual(mock_backup_code.used_ip, "192.168.1.1")
 
-    @patch('app.services.two_factor_service.verify_password')
+    @patch("app.services.two_factor_service.verify_password")
     def test_verify_backup_code_invalid(self, mock_verify_password):
         """测试验证无效备用码"""
         mock_verify_password.return_value = False
-        
+
         mock_backup_code = MagicMock()
         mock_backup_code.code_hash = "hashed_code"
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = [mock_backup_code]
         self.mock_db.query.return_value = mock_query
-        
+
         success, message = self.service._verify_backup_code(
             self.mock_db, self.mock_user, "wrong_code"
         )
-        
+
         self.assertFalse(success)
         self.assertEqual(message, "备用码无效或已使用")
 
@@ -508,11 +502,11 @@ class TestBackupCodes(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = []
         self.mock_db.query.return_value = mock_query
-        
+
         success, message = self.service._verify_backup_code(
             self.mock_db, self.mock_user, "12345678"
         )
-        
+
         self.assertFalse(success)
         self.assertEqual(message, "备用码无效或已使用")
 
@@ -520,71 +514,71 @@ class TestBackupCodes(unittest.TestCase):
         """测试获取备用码信息"""
         mock_query_total = MagicMock()
         mock_query_total.filter.return_value.count.return_value = 10
-        
+
         mock_query_unused = MagicMock()
         mock_query_unused.filter.return_value.count.return_value = 7
-        
+
         def query_side_effect(model):
             # 第一次调用返回total，第二次返回unused
-            if not hasattr(query_side_effect, 'call_count'):
+            if not hasattr(query_side_effect, "call_count"):
                 query_side_effect.call_count = 0
             query_side_effect.call_count += 1
-            
+
             if query_side_effect.call_count == 1:
                 return mock_query_total
             else:
                 return mock_query_unused
-        
-        self.mock_db.query.side_effect = query_side_effect
-        
-        info = self.service.get_backup_codes_info(self.mock_db, self.mock_user)
-        
-        self.assertEqual(info['total'], 10)
-        self.assertEqual(info['unused'], 7)
-        self.assertEqual(info['used'], 3)
 
-    @patch('app.services.two_factor_service.verify_password')
+        self.mock_db.query.side_effect = query_side_effect
+
+        info = self.service.get_backup_codes_info(self.mock_db, self.mock_user)
+
+        self.assertEqual(info["total"], 10)
+        self.assertEqual(info["unused"], 7)
+        self.assertEqual(info["used"], 3)
+
+    @patch("app.services.two_factor_service.verify_password")
     def test_regenerate_backup_codes_success(self, mock_verify_password):
         """测试重新生成备用码成功"""
         self.mock_user.two_factor_enabled = True
         mock_verify_password.return_value = True
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.delete.return_value = None
         self.mock_db.query.return_value = mock_query
-        
+
         success, message, backup_codes = self.service.regenerate_backup_codes(
             self.mock_db, self.mock_user, "correct_password"
         )
-        
+
         self.assertTrue(success)
         self.assertEqual(message, "备用码已重新生成")
         self.assertIsNotNone(backup_codes)
         self.assertEqual(len(backup_codes), 10)
 
-    @patch('app.services.two_factor_service.verify_password')
+    @patch("app.services.two_factor_service.verify_password")
     def test_regenerate_backup_codes_not_enabled(self, mock_verify_password):
         """测试未启用2FA时重新生成备用码"""
         self.mock_user.two_factor_enabled = False
-        
+
         success, message, backup_codes = self.service.regenerate_backup_codes(
             self.mock_db, self.mock_user, "password"
         )
-        
+
         self.assertFalse(success)
         self.assertEqual(message, "未启用2FA")
         self.assertIsNone(backup_codes)
 
-    @patch('app.services.two_factor_service.verify_password')
+    @patch("app.services.two_factor_service.verify_password")
     def test_regenerate_backup_codes_wrong_password(self, mock_verify_password):
         """测试密码错误时重新生成备用码"""
         self.mock_user.two_factor_enabled = True
         mock_verify_password.return_value = False
-        
+
         success, message, backup_codes = self.service.regenerate_backup_codes(
             self.mock_db, self.mock_user, "wrong_password"
         )
-        
+
         self.assertFalse(success)
         self.assertEqual(message, "密码错误")
         self.assertIsNone(backup_codes)

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十一批：预警订阅服务单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.alert_subscription_service")
 
@@ -16,6 +17,7 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.alert_subscription_service import AlertSubscriptionService
+
     return AlertSubscriptionService(mock_db)
 
 
@@ -37,8 +39,9 @@ def _make_rule(rule_type="SCHEDULE_DELAY"):
     return r
 
 
-def _make_subscription(user_id=1, min_level="INFO", quiet_start=None, quiet_end=None,
-                        project_id=None, alert_type=None):
+def _make_subscription(
+    user_id=1, min_level="INFO", quiet_start=None, quiet_end=None, project_id=None, alert_type=None
+):
     s = MagicMock()
     s.user_id = user_id
     s.min_level = min_level
@@ -94,7 +97,9 @@ class TestMatchSubscriptions:
         mock_db.query.return_value.filter.return_value.all.return_value = [sub]
 
         # The method queries and filters; just verify it returns something
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [sub]
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            sub
+        ]
         result = service.match_subscriptions(alert, rule=rule)
         # Should call db.query
         assert mock_db.query.called
@@ -109,6 +114,8 @@ class TestGetUserSubscriptions:
 
     def test_filters_by_alert_type(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         result = service.get_user_subscriptions(user_id=1, alert_type="SCHEDULE_DELAY")
         assert isinstance(result, list)

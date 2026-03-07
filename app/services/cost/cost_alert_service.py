@@ -21,7 +21,7 @@ class CostAlertService:
         db: Session,
         project_id: int,
         trigger_source: Optional[str] = None,
-        source_id: Optional[int] = None
+        source_id: Optional[int] = None,
     ) -> Optional[AlertRecord]:
         """
         检查项目预算执行情况并生成预警
@@ -58,15 +58,21 @@ class CostAlertService:
 
         # 计算执行率和超支比例
         execution_rate = (actual_cost / budget_amount * 100) if budget_amount > 0 else 0
-        overrun_ratio = ((actual_cost - budget_amount) / budget_amount * 100) if budget_amount > 0 else 0
+        overrun_ratio = (
+            ((actual_cost - budget_amount) / budget_amount * 100) if budget_amount > 0 else 0
+        )
 
         # 获取或创建预警规则
         alert_rule = get_or_create_alert_rule(db)
 
         # 判断预警级别
         alert_level, alert_title, alert_content = determine_alert_level(
-            execution_rate, overrun_ratio, project.project_name, project.project_code,
-            budget_amount, actual_cost
+            execution_rate,
+            overrun_ratio,
+            project.project_name,
+            project.project_code,
+            budget_amount,
+            actual_cost,
         )
 
         if not alert_level:
@@ -83,16 +89,21 @@ class CostAlertService:
 
         # 创建预警记录
         return create_alert_record(
-            db, project, project_id, alert_rule, alert_level,
-            alert_title, alert_content, budget_amount, actual_cost,
-            trigger_source, source_id
+            db,
+            project,
+            project_id,
+            alert_rule,
+            alert_level,
+            alert_title,
+            alert_content,
+            budget_amount,
+            actual_cost,
+            trigger_source,
+            source_id,
         )
 
     @staticmethod
-    def check_all_projects_budget(
-        db: Session,
-        project_ids: Optional[List[int]] = None
-    ) -> Dict:
+    def check_all_projects_budget(db: Session, project_ids: Optional[List[int]] = None) -> Dict:
         """
         批量检查项目预算执行情况
 
@@ -115,21 +126,17 @@ class CostAlertService:
             alert = CostAlertService.check_budget_execution(db, project.id)
             if alert:
                 alert_count += 1
-                checked_projects.append({
-                    'project_id': project.id,
-                    'project_code': project.project_code,
-                    'alert_id': alert.id,
-                    'alert_level': alert.alert_level
-                })
+                checked_projects.append(
+                    {
+                        "project_id": project.id,
+                        "project_code": project.project_code,
+                        "alert_id": alert.id,
+                        "alert_level": alert.alert_level,
+                    }
+                )
 
         return {
-            'checked_count': len(projects),
-            'alert_count': alert_count,
-            'projects': checked_projects
+            "checked_count": len(projects),
+            "alert_count": alert_count,
+            "projects": checked_projects,
         }
-
-
-
-
-
-

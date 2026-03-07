@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十一批：企业微信预警服务单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.wechat_alert_service")
 
@@ -42,6 +43,7 @@ def _make_project(project_id=1, name="测试项目", pm_id=100):
 class TestWeChatAlertService:
     def test_returns_false_when_no_readiness(self, mock_db):
         from app.services.wechat_alert_service import WeChatAlertService
+
         sd = _make_shortage_detail()
         mock_db.query.return_value.filter.return_value.first.return_value = None
         result = WeChatAlertService.send_shortage_alert(mock_db, sd, "L1")
@@ -49,6 +51,7 @@ class TestWeChatAlertService:
 
     def test_returns_false_when_no_project(self, mock_db):
         from app.services.wechat_alert_service import WeChatAlertService
+
         sd = _make_shortage_detail()
         readiness = _make_readiness()
         mock_db.query.return_value.filter.return_value.first.side_effect = [readiness, None]
@@ -56,8 +59,10 @@ class TestWeChatAlertService:
         assert result is False
 
     def test_sends_when_project_found(self, mock_db):
-        from app.services.wechat_alert_service import WeChatAlertService
         from datetime import date as d
+
+        from app.services.wechat_alert_service import WeChatAlertService
+
         sd = _make_shortage_detail()
         # Give sd proper scalar attributes to avoid comparison errors
         sd.shortage_qty = 5
@@ -69,13 +74,19 @@ class TestWeChatAlertService:
         project = _make_project()
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            readiness, project, None, None
+            readiness,
+            project,
+            None,
+            None,
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         mock_dispatcher = MagicMock()
-        with patch("app.services.wechat_alert_service.NotificationDispatcher",
-                   return_value=mock_dispatcher, create=True):
+        with patch(
+            "app.services.wechat_alert_service.NotificationDispatcher",
+            return_value=mock_dispatcher,
+            create=True,
+        ):
             try:
                 result = WeChatAlertService.send_shortage_alert(mock_db, sd, "L1")
                 assert result is not None
@@ -84,18 +95,25 @@ class TestWeChatAlertService:
 
     def test_no_rule_still_processes(self, mock_db):
         from app.services.wechat_alert_service import WeChatAlertService
+
         sd = _make_shortage_detail()
         readiness = _make_readiness()
         project = _make_project()
 
         mock_db.query.return_value.filter.return_value.first.side_effect = [
-            readiness, project, None, None
+            readiness,
+            project,
+            None,
+            None,
         ]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         mock_dispatcher = MagicMock()
-        with patch("app.services.wechat_alert_service.NotificationDispatcher",
-                   return_value=mock_dispatcher, create=True):
+        with patch(
+            "app.services.wechat_alert_service.NotificationDispatcher",
+            return_value=mock_dispatcher,
+            create=True,
+        ):
             try:
                 result = WeChatAlertService.send_shortage_alert(mock_db, sd, "L2")
             except Exception:
@@ -105,9 +123,11 @@ class TestWeChatAlertService:
 class TestWeChatAlertServiceImport:
     def test_module_importable(self):
         import app.services.wechat_alert_service as svc
+
         assert hasattr(svc, "WeChatAlertService")
 
     def test_class_has_send_method(self):
         from app.services.wechat_alert_service import WeChatAlertService
+
         assert hasattr(WeChatAlertService, "send_shortage_alert")
         assert callable(WeChatAlertService.send_shortage_alert)

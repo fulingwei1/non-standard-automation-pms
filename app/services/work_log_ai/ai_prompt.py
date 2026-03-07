@@ -10,21 +10,17 @@ from datetime import date
 from typing import Any, Dict, List
 
 
-
 class AIPromptMixin:
     """AI提示词构建功能混入类"""
 
     def _build_ai_prompt(
-        self,
-        content: str,
-        user_projects: List[Dict[str, Any]],
-        work_date: date
+        self, content: str, user_projects: List[Dict[str, Any]], work_date: date
     ) -> str:
         """构建AI分析提示词"""
         # 构建项目列表文本（供AI参考）
-        projects_text = "\n".join([
-            f"- {p['code']} - {p['name']}" for p in user_projects[:10]  # 只取前10个最常用的项目
-        ])
+        projects_text = "\n".join(
+            [f"- {p['code']} - {p['name']}" for p in user_projects[:10]]  # 只取前10个最常用的项目
+        )
 
         prompt = f"""
 你是一个专业的工时分析助手。请分析以下工作日志内容，提取工作项、工时和项目关联信息。
@@ -73,9 +69,7 @@ class AIPromptMixin:
         return prompt
 
     def _parse_ai_response(
-        self,
-        ai_response: str,
-        user_projects: List[Dict[str, Any]]
+        self, ai_response: str, user_projects: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """解析AI响应并补充项目信息"""
         # 解析JSON响应
@@ -84,43 +78,44 @@ class AIPromptMixin:
             result = json.loads(ai_response)
         except json.JSONDecodeError:
             # 如果解析失败，尝试提取JSON部分
-            json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", ai_response, re.DOTALL)
             if json_match:
                 result = json.loads(json_match.group())
             else:
                 raise ValueError("AI返回的不是有效的JSON格式")
 
         # 验证和补充项目信息
-        work_items = result.get('work_items', [])
+        work_items = result.get("work_items", [])
         for item in work_items:
-            project_code = item.get('project_code')
+            project_code = item.get("project_code")
             if project_code:
                 # 查找项目ID
-                project = next(
-                    (p for p in user_projects if p['code'] == project_code),
-                    None
-                )
+                project = next((p for p in user_projects if p["code"] == project_code), None)
                 if project:
-                    item['project_id'] = project['id']
-                    item['project_name'] = project['name']
+                    item["project_id"] = project["id"]
+                    item["project_name"] = project["name"]
                 else:
                     # 项目编码不匹配，尝试通过名称匹配
-                    project_name = item.get('project_name')
+                    project_name = item.get("project_name")
                     if project_name:
                         project = next(
-                            (p for p in user_projects if project_name in p['name'] or p['name'] in project_name),
-                            None
+                            (
+                                p
+                                for p in user_projects
+                                if project_name in p["name"] or p["name"] in project_name
+                            ),
+                            None,
                         )
                         if project:
-                            item['project_id'] = project['id']
-                            item['project_code'] = project['code']
-                            item['project_name'] = project['name']
+                            item["project_id"] = project["id"]
+                            item["project_code"] = project["code"]
+                            item["project_name"] = project["name"]
                         else:
                             # 无法匹配，清除项目信息
-                            item['project_id'] = None
-                            item['project_code'] = None
-                            item['project_name'] = None
+                            item["project_id"] = None
+                            item["project_code"] = None
+                            item["project_name"] = None
             else:
-                item['project_id'] = None
+                item["project_id"] = None
 
         return result

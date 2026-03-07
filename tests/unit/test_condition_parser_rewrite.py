@@ -9,8 +9,9 @@
 """
 
 import unittest
+from datetime import date, datetime
 from unittest.mock import MagicMock
-from datetime import datetime, date
+
 from app.services.approval_engine.condition_parser import (
     ConditionEvaluator,
     ConditionParseError,
@@ -24,14 +25,14 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         self.evaluator = ConditionEvaluator()
 
     # ========== evaluate() 主入口测试 ==========
-    
+
     def test_evaluate_jinja2_expression(self):
         """测试Jinja2表达式评估"""
         context = {"name": "张三", "age": 30}
         # Jinja2语法
         result = self.evaluator.evaluate("{{ name }}", context)
         self.assertEqual(result, "张三")
-        
+
         result = self.evaluator.evaluate("{{ age }}", context)
         self.assertEqual(result, 30)
 
@@ -39,7 +40,9 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         """测试JSON条件评估"""
         context = {"form": {"amount": 5000}}
         # JSON格式
-        expression = '{"operator": "AND", "items": [{"field": "form.amount", "op": ">=", "value": 1000}]}'
+        expression = (
+            '{"operator": "AND", "items": [{"field": "form.amount", "op": ">=", "value": 1000}]}'
+        )
         result = self.evaluator.evaluate(expression, context)
         self.assertTrue(result)
 
@@ -56,7 +59,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         self.assertIsNone(result)
 
     # ========== _evaluate_simple_conditions() 测试 ==========
-    
+
     def test_simple_conditions_and_logic(self):
         """测试AND逻辑"""
         conditions = {
@@ -64,7 +67,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 1000},
                 {"field": "form.days", "op": "<=", "value": 7},
-            ]
+            ],
         }
         context = {"form": {"amount": 5000, "days": 5}}
         result = self.evaluator._evaluate_simple_conditions(conditions, context)
@@ -77,7 +80,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 1000},
                 {"field": "form.days", "op": "<=", "value": 7},
-            ]
+            ],
         }
         context = {"form": {"amount": 5000, "days": 10}}  # days超限
         result = self.evaluator._evaluate_simple_conditions(conditions, context)
@@ -90,7 +93,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 10000},
                 {"field": "form.urgent", "op": "==", "value": True},
-            ]
+            ],
         }
         context = {"form": {"amount": 5000, "urgent": True}}
         result = self.evaluator._evaluate_simple_conditions(conditions, context)
@@ -103,7 +106,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 10000},
                 {"field": "form.urgent", "op": "==", "value": True},
-            ]
+            ],
         }
         context = {"form": {"amount": 5000, "urgent": False}}
         result = self.evaluator._evaluate_simple_conditions(conditions, context)
@@ -113,12 +116,12 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         """测试空条件（应返回True）"""
         result = self.evaluator._evaluate_simple_conditions({}, {})
         self.assertTrue(result)
-        
+
         result = self.evaluator._evaluate_simple_conditions({"items": []}, {})
         self.assertTrue(result)
 
     # ========== _get_field_value() 测试 ==========
-    
+
     def test_get_field_value_simple(self):
         """测试简单字段获取"""
         context = {"amount": 1000}
@@ -169,7 +172,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         self.assertIsNone(result)
 
     # ========== _compare_values() 测试 ==========
-    
+
     def test_compare_equal(self):
         """测试相等比较"""
         self.assertTrue(self.evaluator._compare_values(100, "==", 100))
@@ -257,7 +260,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         self.assertFalse(result)
 
     # ========== _evaluate_sql_like() 测试 ==========
-    
+
     def test_sql_like_simple_comparison(self):
         """测试简单SQL比较"""
         context = {"amount": 5000}
@@ -305,7 +308,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         self.assertTrue(result)
 
     # ========== Jinja2过滤器测试（保留部分关键测试）==========
-    
+
     def test_jinja2_length_filter(self):
         """测试length过滤器"""
         context = {"items": [1, 2, 3, 4, 5]}
@@ -349,7 +352,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
         self.assertEqual(result, "未命名")
 
     # ========== 异常处理测试 ==========
-    
+
     def test_jinja2_syntax_error(self):
         """测试Jinja2语法错误"""
         with self.assertRaises(ConditionParseError):
@@ -361,7 +364,7 @@ class TestConditionEvaluatorCore(unittest.TestCase):
             self.evaluator.evaluate('{"invalid": json}', {})
 
     # ========== 边界情况测试 ==========
-    
+
     def test_nested_value_with_none(self):
         """测试嵌套值中间为None"""
         context = {"form": None}

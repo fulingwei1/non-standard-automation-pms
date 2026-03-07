@@ -20,8 +20,8 @@ from app.schemas.project import (
     ProjectDocumentResponse,
     ProjectDocumentUpdate,
 )
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import get_or_404, save_obj
+from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
 
@@ -92,9 +92,7 @@ def download_document(
         raise HTTPException(status_code=404, detail="文件不存在")
 
     return FileResponse(
-        path=str(resolved_path),
-        filename=document.file_name,
-        media_type='application/octet-stream'
+        path=str(resolved_path), filename=document.file_name, media_type="application/octet-stream"
     )
 
 
@@ -112,9 +110,7 @@ def get_document_versions(
     document = get_or_404(db, ProjectDocument, doc_id, "文档记录不存在")
 
     # 根据文档编号或名称查找所有版本
-    query = db.query(ProjectDocument).filter(
-        ProjectDocument.project_id == document.project_id
-    )
+    query = db.query(ProjectDocument).filter(ProjectDocument.project_id == document.project_id)
 
     if document.doc_no:
         query = query.filter(ProjectDocument.doc_no == document.doc_no)

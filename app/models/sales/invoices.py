@@ -23,6 +23,7 @@ from app.models.enums import DisputeStatusEnum, InvoiceStatusEnum
 
 class Invoice(Base, TimestampMixin):
     """发票表"""
+
     __tablename__ = "invoices"
     id = Column(Integer, primary_key=True, autoincrement=True)
     invoice_code = Column(String(30), unique=True, nullable=False, comment="发票编码")
@@ -46,7 +47,9 @@ class Invoice(Base, TimestampMixin):
 
     contract = relationship("Contract", back_populates="invoices")
     project = relationship("Project", foreign_keys=[project_id])
-    approvals = relationship("InvoiceApproval", back_populates="invoice", cascade="all, delete-orphan")
+    approvals = relationship(
+        "InvoiceApproval", back_populates="invoice", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Invoice {self.invoice_code}>"
@@ -54,9 +57,12 @@ class Invoice(Base, TimestampMixin):
 
 class ReceivableDispute(Base, TimestampMixin):
     """回款争议/卡点表"""
+
     __tablename__ = "receivable_disputes"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_id = Column(Integer, ForeignKey("project_payment_plans.id"), nullable=False, comment="付款节点ID")
+    payment_id = Column(
+        Integer, ForeignKey("project_payment_plans.id"), nullable=False, comment="付款节点ID"
+    )
     reason_code = Column(String(30), comment="原因代码")
     description = Column(Text, comment="描述")
     status = Column(String(20), default=DisputeStatusEnum.OPEN, comment="状态")
@@ -72,6 +78,7 @@ class ReceivableDispute(Base, TimestampMixin):
 
 class InvoiceApproval(Base, TimestampMixin):
     """发票审批表"""
+
     __tablename__ = "invoice_approvals"
     id = Column(Integer, primary_key=True, autoincrement=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False, comment="发票ID")

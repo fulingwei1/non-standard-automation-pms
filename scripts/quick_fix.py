@@ -11,28 +11,28 @@ from pathlib import Path
 def fix_whitespace_issues(file_path: Path):
     """修复空白行空格问题"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # 修复空白行包含空格的问题
-        lines = content.split('\n')
+        lines = content.split("\n")
         fixed_lines = []
 
         for line in lines:
             # 如果是空行或只包含空白字符，则完全清空
-            if line.strip() == '':
-                fixed_lines.append('')
+            if line.strip() == "":
+                fixed_lines.append("")
             else:
                 # 修复行尾空格
                 fixed_lines.append(line.rstrip())
 
         # 确保文件以换行符结尾
-        fixed_content = '\n'.join(fixed_lines)
-        if not fixed_content.endswith('\n'):
-            fixed_content += '\n'
+        fixed_content = "\n".join(fixed_lines)
+        if not fixed_content.endswith("\n"):
+            fixed_content += "\n"
 
         # 写回文件
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(fixed_content)
 
         return True
@@ -44,28 +44,28 @@ def fix_whitespace_issues(file_path: Path):
 def remove_unused_imports(file_path: Path):
     """简单移除明显的未使用导入"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # 移除常见的未使用导入
         unused_imports = [
-            'from typing import Optional',
-            'from typing import Any',
-            'from typing import List, Dict',
-            'from typing import Union',
+            "from typing import Optional",
+            "from typing import Any",
+            "from typing import List, Dict",
+            "from typing import Union",
         ]
 
         modified = False
         for unused in unused_imports:
             if unused in content:
                 # 检查是否真的未使用
-                import_name = unused.split(' import ')[1].strip()
-                if import_name not in content.replace(unused, ''):
-                    content = content.replace(unused + '\n', '')
+                import_name = unused.split(" import ")[1].strip()
+                if import_name not in content.replace(unused, ""):
+                    content = content.replace(unused + "\n", "")
                     modified = True
 
         if modified:
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content)
             return True
 
@@ -78,19 +78,19 @@ def remove_unused_imports(file_path: Path):
 def fix_line_length(file_path: Path):
     """修复行长度问题"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         fixed_lines = []
         modified = False
 
         for line in lines:
             if len(line) > 120:
                 # 简单的行长度修复：在逗号后换行
-                if ',' in line and not line.strip().startswith('#'):
+                if "," in line and not line.strip().startswith("#"):
                     # 分割长行
-                    parts = line.split(',')
+                    parts = line.split(",")
                     if len(parts) > 1:
                         indent = len(line) - len(line.lstrip())
                         new_lines = []
@@ -98,15 +98,15 @@ def fix_line_length(file_path: Path):
                             if i == 0:
                                 new_lines.append(part.rstrip())
                             else:
-                                new_lines.append(' ' * (indent + 4) + part.strip())
+                                new_lines.append(" " * (indent + 4) + part.strip())
                         fixed_lines.extend(new_lines)
                         modified = True
                         continue
             fixed_lines.append(line)
 
         if modified:
-            content = '\n'.join(fixed_lines)
-            with open(file_path, 'w', encoding='utf-8') as f:
+            content = "\n".join(fixed_lines)
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content)
             return True
 
@@ -120,15 +120,14 @@ def run_autopep8():
     """运行 autopep8 自动格式化"""
     try:
         # 安装 autopep8
-        subprocess.run(['pip', 'install', 'autopep8'], capture_output=True, check=True)
+        subprocess.run(["pip", "install", "autopep8"], capture_output=True, check=True)
 
         # 运行 autopep8
-        result = subprocess.run([
-            'python3', '-m', 'autopep8',
-            '--in-place',
-            '--max-line-length=120',
-            'app/'
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            ["python3", "-m", "autopep8", "--in-place", "--max-line-length=120", "app/"],
+            capture_output=True,
+            text=True,
+        )
 
         if result.returncode == 0:
             print("✅ autopep8 格式化完成")

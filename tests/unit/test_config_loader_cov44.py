@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 报表配置加载器"""
 
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
 
 try:
-    from app.services.report_framework.config_loader import ConfigLoader, ConfigError
+    from app.services.report_framework.config_loader import ConfigError, ConfigLoader
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

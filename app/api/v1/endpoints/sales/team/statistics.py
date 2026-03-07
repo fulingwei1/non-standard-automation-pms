@@ -40,7 +40,9 @@ def get_sales_team(
     normalized_start, normalized_end = normalize_date_range(start_date, end_date)
     users = get_visible_sales_users(db, current_user, department_id, region)
     department_names = build_department_name_map(db, users)
-    team_members = collect_sales_team_members(db, users, department_names, normalized_start, normalized_end)
+    team_members = collect_sales_team_members(
+        db, users, department_names, normalized_start, normalized_end
+    )
 
     return ResponseModel(
         code=200,
@@ -54,7 +56,7 @@ def get_sales_team(
                 "department_id": department_id,
                 "region": region,
             },
-        }
+        },
     )
 
 
@@ -72,48 +74,69 @@ def export_sales_team(
     normalized_start, normalized_end = normalize_date_range(start_date, end_date)
     users = get_visible_sales_users(db, current_user, department_id, region)
     department_names = build_department_name_map(db, users)
-    team_members = collect_sales_team_members(db, users, department_names, normalized_start, normalized_end)
+    team_members = collect_sales_team_members(
+        db, users, department_names, normalized_start, normalized_end
+    )
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow([
-        "成员ID", "姓名", "角色", "部门", "区域", "邮箱", "电话",
-        "线索数量", "商机数量", "合同数量", "合同金额", "回款金额",
-        "月度目标", "月度完成", "月度完成率(%)",
-        "年度目标", "年度完成", "年度完成率(%)",
-        "客户总数", "本期新增客户",
-    ])
+    writer.writerow(
+        [
+            "成员ID",
+            "姓名",
+            "角色",
+            "部门",
+            "区域",
+            "邮箱",
+            "电话",
+            "线索数量",
+            "商机数量",
+            "合同数量",
+            "合同金额",
+            "回款金额",
+            "月度目标",
+            "月度完成",
+            "月度完成率(%)",
+            "年度目标",
+            "年度完成",
+            "年度完成率(%)",
+            "客户总数",
+            "本期新增客户",
+        ]
+    )
 
     for member in team_members:
-        writer.writerow([
-            member.get("user_id"),
-            member.get("user_name"),
-            member.get("role"),
-            member.get("department_name") or "",
-            member.get("region") or "",
-            member.get("email") or "",
-            member.get("phone") or "",
-            member.get("lead_count") or 0,
-            member.get("opportunity_count") or 0,
-            member.get("contract_count") or 0,
-            member.get("contract_amount") or 0,
-            member.get("collection_amount") or 0,
-            member.get("monthly_target") or 0,
-            member.get("monthly_actual") or 0,
-            member.get("monthly_completion_rate") or 0,
-            member.get("year_target") or 0,
-            member.get("year_actual") or 0,
-            member.get("year_completion_rate") or 0,
-            member.get("customer_total") or 0,
-            member.get("new_customers") or 0,
-        ])
+        writer.writerow(
+            [
+                member.get("user_id"),
+                member.get("user_name"),
+                member.get("role"),
+                member.get("department_name") or "",
+                member.get("region") or "",
+                member.get("email") or "",
+                member.get("phone") or "",
+                member.get("lead_count") or 0,
+                member.get("opportunity_count") or 0,
+                member.get("contract_count") or 0,
+                member.get("contract_amount") or 0,
+                member.get("collection_amount") or 0,
+                member.get("monthly_target") or 0,
+                member.get("monthly_actual") or 0,
+                member.get("monthly_completion_rate") or 0,
+                member.get("year_target") or 0,
+                member.get("year_actual") or 0,
+                member.get("year_completion_rate") or 0,
+                member.get("customer_total") or 0,
+                member.get("new_customers") or 0,
+            ]
+        )
 
     output.seek(0)
-    filename = f"sales-team-{normalized_start.strftime('%Y%m%d')}-{normalized_end.strftime('%Y%m%d')}.csv"
+    filename = (
+        f"sales-team-{normalized_start.strftime('%Y%m%d')}-{normalized_end.strftime('%Y%m%d')}.csv"
+    )
     return StreamingResponse(
         iter([output.getvalue().encode("utf-8-sig")]),
         media_type="text/csv",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"'
-        },
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

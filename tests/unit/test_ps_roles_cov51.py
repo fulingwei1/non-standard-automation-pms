@@ -3,19 +3,21 @@
 tests/unit/test_ps_roles_cov51.py
 Unit tests for app/services/performance_service/roles.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.performance_service.roles import (
-        get_user_manager_roles,
         get_manageable_employees,
+        get_user_manager_roles,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
+
 
 def _make_user(employee_id=None, user_id=10):
     u = MagicMock()
@@ -26,6 +28,7 @@ def _make_user(employee_id=None, user_id=10):
 
 
 # ─── get_user_manager_roles ───────────────────────────────────────────────────
+
 
 def test_get_user_manager_roles_no_employee_id():
     """User with no employee_id → not dept manager."""
@@ -96,14 +99,13 @@ def test_get_user_manager_roles_both_manager():
 
 # ─── get_manageable_employees ─────────────────────────────────────────────────
 
+
 def test_get_manageable_employees_no_roles():
     """Non-manager gets empty employee list."""
     db = MagicMock()
     user = _make_user(employee_id=None)
 
-    with patch(
-        "app.services.performance_service.roles.get_user_manager_roles"
-    ) as mock_roles:
+    with patch("app.services.performance_service.roles.get_user_manager_roles") as mock_roles:
         mock_roles.return_value = {
             "is_dept_manager": False,
             "is_project_manager": False,
@@ -133,9 +135,7 @@ def test_get_manageable_employees_project_manager():
     # Also handle the no-period path
     db.query.return_value.filter.return_value.all.return_value = [member1, member2]
 
-    with patch(
-        "app.services.performance_service.roles.get_user_manager_roles"
-    ) as mock_roles:
+    with patch("app.services.performance_service.roles.get_user_manager_roles") as mock_roles:
         mock_roles.return_value = {
             "is_dept_manager": False,
             "is_project_manager": True,
@@ -152,9 +152,7 @@ def test_get_manageable_employees_with_period_filter():
     db = MagicMock()
     user = _make_user(employee_id=None)
 
-    with patch(
-        "app.services.performance_service.roles.get_user_manager_roles"
-    ) as mock_roles:
+    with patch("app.services.performance_service.roles.get_user_manager_roles") as mock_roles:
         mock_roles.return_value = {
             "is_dept_manager": False,
             "is_project_manager": False,

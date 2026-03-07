@@ -163,9 +163,7 @@ def perform_approval_action(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post(
-    "/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.post("/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def perform_batch_approval(
     *,
     db: Session = Depends(deps.get_db),
@@ -194,9 +192,7 @@ def perform_batch_approval(
     )
 
 
-@router.get(
-    "/status/{ecn_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.get("/status/{ecn_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_approval_status(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -248,9 +244,7 @@ def get_approval_history(
     *,
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
-    status_filter: Optional[str] = Query(
-        None, description="状态筛选: APPROVED/REJECTED"
-    ),
+    status_filter: Optional[str] = Query(None, description="状态筛选: APPROVED/REJECTED"),
     ecn_type: Optional[str] = Query(None, description="ECN类型筛选"),
     current_user: User = Depends(security.require_permission("ecn:read")),
 ) -> Any:

@@ -9,8 +9,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.timesheet import Timesheet, TimesheetSummary
 from app.common.date_range import get_month_range_by_ym
+from app.models.timesheet import Timesheet, TimesheetSummary
 
 
 def calculate_month_range(year: int, month: int) -> Tuple[date, date]:
@@ -31,7 +31,7 @@ def query_timesheets(
     end_date: date,
     user_id: Optional[int],
     department_id: Optional[int],
-    project_id: Optional[int]
+    project_id: Optional[int],
 ) -> List[Timesheet]:
     """
     查询已审批的工时记录
@@ -40,9 +40,9 @@ def query_timesheets(
         List[Timesheet]: 工时记录列表
     """
     query = db.query(Timesheet).filter(
-        Timesheet.status == 'APPROVED',
+        Timesheet.status == "APPROVED",
         Timesheet.work_date >= start_date,
-        Timesheet.work_date <= end_date
+        Timesheet.work_date <= end_date,
     )
 
     if user_id:
@@ -63,10 +63,12 @@ def calculate_hours_summary(timesheets: List[Timesheet]) -> Dict[str, float]:
         Dict: 工时汇总数据
     """
     total_hours = sum(float(ts.hours or 0) for ts in timesheets)
-    normal_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'NORMAL')
-    overtime_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'OVERTIME')
-    weekend_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'WEEKEND')
-    holiday_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == 'HOLIDAY')
+    normal_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == "NORMAL")
+    overtime_hours = sum(
+        float(ts.hours or 0) for ts in timesheets if ts.overtime_type == "OVERTIME"
+    )
+    weekend_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == "WEEKEND")
+    holiday_hours = sum(float(ts.hours or 0) for ts in timesheets if ts.overtime_type == "HOLIDAY")
 
     return {
         "total_hours": total_hours,
@@ -91,12 +93,12 @@ def build_project_breakdown(timesheets: List[Timesheet]) -> Dict[str, Dict[str, 
             project_key = f"{ts.project_code or ''}_{ts.project_id}"
             if project_key not in project_breakdown:
                 project_breakdown[project_key] = {
-                    'project_id': ts.project_id,
-                    'project_code': ts.project_code,
-                    'project_name': ts.project_name,
-                    'hours': 0
+                    "project_id": ts.project_id,
+                    "project_code": ts.project_code,
+                    "project_name": ts.project_name,
+                    "hours": 0,
                 }
-            project_breakdown[project_key]['hours'] += float(ts.hours or 0)
+            project_breakdown[project_key]["hours"] += float(ts.hours or 0)
 
     return project_breakdown
 
@@ -114,16 +116,16 @@ def build_daily_breakdown(timesheets: List[Timesheet]) -> Dict[str, Dict[str, An
         day_key = str(ts.work_date)
         if day_key not in daily_breakdown:
             daily_breakdown[day_key] = {
-                'date': day_key,
-                'hours': 0,
-                'normal_hours': 0,
-                'overtime_hours': 0
+                "date": day_key,
+                "hours": 0,
+                "normal_hours": 0,
+                "overtime_hours": 0,
             }
-        daily_breakdown[day_key]['hours'] += float(ts.hours or 0)
-        if ts.overtime_type == 'NORMAL':
-            daily_breakdown[day_key]['normal_hours'] += float(ts.hours or 0)
+        daily_breakdown[day_key]["hours"] += float(ts.hours or 0)
+        if ts.overtime_type == "NORMAL":
+            daily_breakdown[day_key]["normal_hours"] += float(ts.hours or 0)
         else:
-            daily_breakdown[day_key]['overtime_hours'] += float(ts.hours or 0)
+            daily_breakdown[day_key]["overtime_hours"] += float(ts.hours or 0)
 
     return daily_breakdown
 
@@ -142,11 +144,11 @@ def build_task_breakdown(timesheets: List[Timesheet]) -> Dict[str, Dict[str, Any
             task_key = f"task_{ts.task_id}"
             if task_key not in task_breakdown:
                 task_breakdown[task_key] = {
-                    'task_id': ts.task_id,
-                    'task_name': ts.task_name,
-                    'hours': 0
+                    "task_id": ts.task_id,
+                    "task_name": ts.task_name,
+                    "hours": 0,
                 }
-            task_breakdown[task_key]['hours'] += float(ts.hours or 0)
+            task_breakdown[task_key]["hours"] += float(ts.hours or 0)
 
     return task_breakdown
 
@@ -163,7 +165,7 @@ def get_or_create_summary(
     project_breakdown: Dict[str, Dict[str, Any]],
     daily_breakdown: Dict[str, Dict[str, Any]],
     task_breakdown: Dict[str, Dict[str, Any]],
-    entries_count: int
+    entries_count: int,
 ) -> TimesheetSummary:
     """
     获取或创建汇总记录
@@ -174,7 +176,7 @@ def get_or_create_summary(
     summary = db.query(TimesheetSummary).filter(
         TimesheetSummary.summary_type == summary_type,
         TimesheetSummary.year == year,
-        TimesheetSummary.month == month
+        TimesheetSummary.month == month,
     )
 
     if user_id:
@@ -203,7 +205,7 @@ def get_or_create_summary(
             projects_count=len(project_breakdown),
             project_breakdown=project_breakdown,
             daily_breakdown=daily_breakdown,
-            task_breakdown=task_breakdown
+            task_breakdown=task_breakdown,
         )
         db.add(summary)
     else:

@@ -35,9 +35,11 @@ class StageFlowMixin:
         Returns:
             ProjectStageInstance: 更新后的阶段实例
         """
-        stage = self.db.query(ProjectStageInstance).filter(
-            ProjectStageInstance.id == stage_instance_id
-        ).first()
+        stage = (
+            self.db.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.id == stage_instance_id)
+            .first()
+        )
 
         if not stage:
             raise ValueError(f"阶段实例 {stage_instance_id} 不存在")
@@ -49,9 +51,9 @@ class StageFlowMixin:
         stage.actual_start_date = actual_start_date or date.today()
 
         # 更新项目的当前阶段
-        self.db.query(Project).filter(
-            Project.id == stage.project_id
-        ).update({"current_stage_instance_id": stage_instance_id})
+        self.db.query(Project).filter(Project.id == stage.project_id).update(
+            {"current_stage_instance_id": stage_instance_id}
+        )
 
         self.db.flush()
         return stage
@@ -73,9 +75,11 @@ class StageFlowMixin:
         Returns:
             Tuple[当前阶段, 下一阶段（如有）]
         """
-        stage = self.db.query(ProjectStageInstance).filter(
-            ProjectStageInstance.id == stage_instance_id
-        ).first()
+        stage = (
+            self.db.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.id == stage_instance_id)
+            .first()
+        )
 
         if not stage:
             raise ValueError(f"阶段实例 {stage_instance_id} 不存在")
@@ -84,16 +88,19 @@ class StageFlowMixin:
             raise ValueError(f"阶段当前状态为 {stage.status}，无法完成")
 
         # 检查是否所有必需节点都已完成
-        incomplete_required = self.db.query(ProjectNodeInstance).filter(
-            and_(
-                ProjectNodeInstance.stage_instance_id == stage_instance_id,
-                ProjectNodeInstance.is_required,
-                ProjectNodeInstance.status.notin_([
-                    StageStatusEnum.COMPLETED.value,
-                    StageStatusEnum.SKIPPED.value
-                ])
+        incomplete_required = (
+            self.db.query(ProjectNodeInstance)
+            .filter(
+                and_(
+                    ProjectNodeInstance.stage_instance_id == stage_instance_id,
+                    ProjectNodeInstance.is_required,
+                    ProjectNodeInstance.status.notin_(
+                        [StageStatusEnum.COMPLETED.value, StageStatusEnum.SKIPPED.value]
+                    ),
+                )
             )
-        ).count()
+            .count()
+        )
 
         if incomplete_required > 0:
             raise ValueError(f"还有 {incomplete_required} 个必需节点未完成")
@@ -104,13 +111,18 @@ class StageFlowMixin:
         # 查找下一阶段
         next_stage = None
         if auto_start_next:
-            next_stage = self.db.query(ProjectStageInstance).filter(
-                and_(
-                    ProjectStageInstance.project_id == stage.project_id,
-                    ProjectStageInstance.sequence > stage.sequence,
-                    ProjectStageInstance.status == StageStatusEnum.PENDING.value
+            next_stage = (
+                self.db.query(ProjectStageInstance)
+                .filter(
+                    and_(
+                        ProjectStageInstance.project_id == stage.project_id,
+                        ProjectStageInstance.sequence > stage.sequence,
+                        ProjectStageInstance.status == StageStatusEnum.PENDING.value,
+                    )
                 )
-            ).order_by(ProjectStageInstance.sequence).first()
+                .order_by(ProjectStageInstance.sequence)
+                .first()
+            )
 
             if next_stage:
                 self.start_stage(next_stage.id)
@@ -133,9 +145,11 @@ class StageFlowMixin:
         Returns:
             ProjectStageInstance: 更新后的阶段实例
         """
-        stage = self.db.query(ProjectStageInstance).filter(
-            ProjectStageInstance.id == stage_instance_id
-        ).first()
+        stage = (
+            self.db.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.id == stage_instance_id)
+            .first()
+        )
 
         if not stage:
             raise ValueError(f"阶段实例 {stage_instance_id} 不存在")
@@ -151,10 +165,9 @@ class StageFlowMixin:
         self.db.query(ProjectNodeInstance).filter(
             and_(
                 ProjectNodeInstance.stage_instance_id == stage_instance_id,
-                ProjectNodeInstance.status.in_([
-                    StageStatusEnum.PENDING.value,
-                    StageStatusEnum.IN_PROGRESS.value
-                ])
+                ProjectNodeInstance.status.in_(
+                    [StageStatusEnum.PENDING.value, StageStatusEnum.IN_PROGRESS.value]
+                ),
             )
         ).update({"status": StageStatusEnum.SKIPPED.value})
 

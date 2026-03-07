@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestTemplateReportAdapter:
     def setup_method(self):
         self.db = MagicMock()
-        with patch("app.services.report_framework.adapters.template.BaseReportAdapter.__init__", return_value=None), \
-             patch("app.services.report_framework.adapters.template.ConfigLoader"):
+        with (
+            patch(
+                "app.services.report_framework.adapters.template.BaseReportAdapter.__init__",
+                return_value=None,
+            ),
+            patch("app.services.report_framework.adapters.template.ConfigLoader"),
+        ):
             from app.services.report_framework.adapters.template import TemplateReportAdapter
+
             self.adapter = TemplateReportAdapter(self.db)
             self.adapter.db = self.db
             self.adapter.engine = MagicMock()

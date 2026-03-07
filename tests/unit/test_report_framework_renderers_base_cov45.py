@@ -3,17 +3,18 @@
 第四十五批覆盖：report_framework/renderers/base.py
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock
 from typing import Any, Dict, List
+from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.renderers.base")
 
 from app.services.report_framework.renderers.base import (
-    ReportResult,
-    RenderError,
     Renderer,
+    RenderError,
+    ReportResult,
 )
 
 

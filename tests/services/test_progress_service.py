@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """进度服务单元测试"""
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 from app.services.progress_service import (
-    apply_task_progress_update,
-    update_task_progress,
-    aggregate_task_progress,
-    create_progress_log_entry,
-    get_project_progress_summary,
     ProgressAggregationService,
     ProgressAutoService,
+    aggregate_task_progress,
+    apply_task_progress_update,
+    create_progress_log_entry,
+    get_project_progress_summary,
     progress_error_to_http,
+    update_task_progress,
 )
 
 
@@ -24,11 +25,21 @@ def _make_db():
 def _make_task(**kw):
     t = MagicMock()
     defaults = dict(
-        id=1, project_id=10, assignee_id=1, status="ACCEPTED",
-        progress=0, actual_hours=None, actual_start_date=None,
-        actual_end_date=None, updated_by=None, updated_at=None,
-        is_active=True, is_delayed=False, stage="DESIGN",
-        estimated_hours=Decimal("8"), deadline=datetime(2025, 12, 31),
+        id=1,
+        project_id=10,
+        assignee_id=1,
+        status="ACCEPTED",
+        progress=0,
+        actual_hours=None,
+        actual_start_date=None,
+        actual_end_date=None,
+        updated_by=None,
+        updated_at=None,
+        is_active=True,
+        is_delayed=False,
+        stage="DESIGN",
+        estimated_hours=Decimal("8"),
+        deadline=datetime(2025, 12, 31),
     )
     defaults.update(kw)
     for k, v in defaults.items():
@@ -37,6 +48,7 @@ def _make_task(**kw):
 
 
 # --- apply_task_progress_update ---
+
 
 class TestApplyTaskProgressUpdate:
     def test_basic_update(self):
@@ -84,6 +96,7 @@ class TestApplyTaskProgressUpdate:
 
 # --- progress_error_to_http ---
 
+
 class TestProgressErrorToHttp:
     def test_not_found(self):
         exc = progress_error_to_http(ValueError("任务不存在"))
@@ -100,14 +113,17 @@ class TestProgressErrorToHttp:
 
 # --- update_task_progress ---
 
+
 class TestUpdateTaskProgress:
     def test_success(self):
         db = _make_db()
         task = _make_task()
         db.query.return_value.filter.return_value.first.return_value = task
 
-        with patch("app.services.progress_service.aggregate_task_progress", return_value={}), \
-             patch("app.services.progress_service.create_progress_log_entry"):
+        with (
+            patch("app.services.progress_service.aggregate_task_progress", return_value={}),
+            patch("app.services.progress_service.create_progress_log_entry"),
+        ):
             result_task, agg = update_task_progress(db, 1, 50, 1, progress_note="half done")
         assert result_task.progress == 50
         db.commit.assert_called()
@@ -120,6 +136,7 @@ class TestUpdateTaskProgress:
 
 
 # --- aggregate_task_progress ---
+
 
 class TestAggregateTaskProgress:
     def test_no_task(self):
@@ -140,14 +157,17 @@ class TestAggregateTaskProgress:
         db.query.return_value.filter.return_value.first.side_effect = [task, project, None]
         db.query.return_value.filter.return_value.scalar.return_value = 5
 
-        with patch("app.services.progress_service._check_and_update_health"), \
-             patch("app.services.progress_service.TaskUnified", MagicMock()), \
-             patch("app.services.progress_service.and_", lambda *a: MagicMock()):
+        with (
+            patch("app.services.progress_service._check_and_update_health"),
+            patch("app.services.progress_service.TaskUnified", MagicMock()),
+            patch("app.services.progress_service.and_", lambda *a: MagicMock()),
+        ):
             result = aggregate_task_progress(db, 1)
         assert "project_id" in result
 
 
 # --- create_progress_log_entry ---
+
 
 class TestCreateProgressLogEntry:
     def test_creates_log(self):
@@ -168,12 +188,14 @@ class TestCreateProgressLogEntry:
 
 # --- get_project_progress_summary ---
 
+
 class TestGetProjectProgressSummary:
     def test_basic(self):
         db = _make_db()
         db.query.return_value.filter.return_value.scalar.side_effect = [10, 2, 1, 50.0]
         db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
-            ("COMPLETED", 3), ("IN_PROGRESS", 5)
+            ("COMPLETED", 3),
+            ("IN_PROGRESS", 5),
         ]
         result = get_project_progress_summary(db, 1)
         assert result["project_id"] == 1
@@ -181,6 +203,7 @@ class TestGetProjectProgressSummary:
 
 
 # --- ProgressAggregationService ---
+
 
 class TestProgressAggregationService:
     def test_aggregate_empty_project(self):
@@ -194,6 +217,7 @@ class TestProgressAggregationService:
 
 
 # --- ProgressAutoService ---
+
 
 class TestProgressAutoServiceApplyForecast:
     def test_apply_forecast_blocks_delayed(self):
@@ -251,7 +275,7 @@ class TestProgressAutoServiceNotifications:
         project = MagicMock(pm_id=1, project_name="P1")
         task = MagicMock(owner_id=2)
         db.query.return_value.filter.return_value.first.side_effect = [task, None, None]
-        
+
         forecast_item = MagicMock(task_id=1, critical=True, delay_days=5)
 
         svc = ProgressAutoService(db)

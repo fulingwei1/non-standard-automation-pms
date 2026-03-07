@@ -3,8 +3,9 @@
 app/services/ai_client_service.py 覆盖率测试（当前 19%）
 专注于不依赖外部 API 的方法（_mock_response, generate_solution 分支等）
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestAIClientServiceInit:
@@ -13,11 +14,13 @@ class TestAIClientServiceInit:
     def test_init_no_api_keys(self):
         with patch.dict("os.environ", {}, clear=False):
             from app.services.ai_client_service import AIClientService
+
             svc = AIClientService()
             assert svc.default_model == "glm-5"
 
     def test_init_sets_default_model(self):
         from app.services.ai_client_service import AIClientService
+
         svc = AIClientService()
         assert svc.default_model == "glm-5"
 
@@ -28,6 +31,7 @@ class TestMockResponse:
     @pytest.fixture
     def svc(self):
         from app.services.ai_client_service import AIClientService
+
         return AIClientService()
 
     def test_mock_response_returns_dict(self, svc):
@@ -73,6 +77,7 @@ class TestGenerateSolution:
     @pytest.fixture
     def svc(self):
         from app.services.ai_client_service import AIClientService
+
         return AIClientService()
 
     def test_glm_model_routes_to_glm(self, svc):

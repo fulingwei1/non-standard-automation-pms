@@ -7,18 +7,16 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.models.ecn import Ecn, EcnSolutionTemplate
+from app.utils.db_helpers import save_obj
 
 from .solution_extraction import _extract_keywords
-from app.utils.db_helpers import save_obj
 
 if TYPE_CHECKING:
     from app.services.ecn_knowledge_service import EcnKnowledgeService
 
 
 def recommend_solutions(
-    service: "EcnKnowledgeService",
-    ecn_id: int,
-    top_n: int = 5
+    service: "EcnKnowledgeService", ecn_id: int, top_n: int = 5
 ) -> List[Dict[str, Any]]:
     """
     推荐解决方案模板
@@ -36,9 +34,7 @@ def recommend_solutions(
         raise ValueError(f"ECN {ecn_id} 不存在")
 
     # 获取所有活跃的解决方案模板
-    templates = service.db.query(EcnSolutionTemplate).filter(
-        EcnSolutionTemplate.is_active
-    ).all()
+    templates = service.db.query(EcnSolutionTemplate).filter(EcnSolutionTemplate.is_active).all()
 
     recommendations = []
 
@@ -46,32 +42,31 @@ def recommend_solutions(
         score = _calculate_template_score(service, ecn, template)
 
         if score > 0:
-            recommendations.append({
-                "template_id": template.id,
-                "template_code": template.template_code,
-                "template_name": template.template_name,
-                "template_category": template.template_category,
-                "solution_description": template.solution_description,
-                "solution_steps": template.solution_steps or [],
-                "score": score,
-                "success_rate": float(template.success_rate or 0),
-                "usage_count": template.usage_count or 0,
-                "estimated_cost": float(template.estimated_cost or 0),
-                "estimated_days": template.estimated_days or 0,
-                "match_reasons": _get_template_match_reasons(ecn, template, score)
-            })
+            recommendations.append(
+                {
+                    "template_id": template.id,
+                    "template_code": template.template_code,
+                    "template_name": template.template_name,
+                    "template_category": template.template_category,
+                    "solution_description": template.solution_description,
+                    "solution_steps": template.solution_steps or [],
+                    "score": score,
+                    "success_rate": float(template.success_rate or 0),
+                    "usage_count": template.usage_count or 0,
+                    "estimated_cost": float(template.estimated_cost or 0),
+                    "estimated_days": template.estimated_days or 0,
+                    "match_reasons": _get_template_match_reasons(ecn, template, score),
+                }
+            )
 
     # 按评分排序
-    recommendations.sort(key=lambda x: x['score'], reverse=True)
+    recommendations.sort(key=lambda x: x["score"], reverse=True)
 
     return recommendations[:top_n]
 
 
 def create_solution_template(
-    service: "EcnKnowledgeService",
-    ecn_id: int,
-    template_data: Dict[str, Any],
-    created_by: int
+    service: "EcnKnowledgeService", ecn_id: int, template_data: Dict[str, Any], created_by: int
 ) -> EcnSolutionTemplate:
     """
     从ECN创建解决方案模板
@@ -94,20 +89,20 @@ def create_solution_template(
 
     template = EcnSolutionTemplate(
         template_code=template_code,
-        template_name=template_data.get('template_name', f"{ecn.ecn_title} - 解决方案模板"),
-        template_category=template_data.get('template_category', ecn.ecn_type),
+        template_name=template_data.get("template_name", f"{ecn.ecn_title} - 解决方案模板"),
+        template_category=template_data.get("template_category", ecn.ecn_type),
         ecn_type=ecn.ecn_type,
         root_cause_category=ecn.root_cause_category,
-        keywords=template_data.get('keywords', _extract_keywords(service, ecn)),
-        solution_description=template_data.get('solution_description', ecn.solution or ''),
-        solution_steps=template_data.get('solution_steps', []),
-        required_resources=template_data.get('required_resources', []),
-        estimated_cost=template_data.get('estimated_cost', ecn.cost_impact),
-        estimated_days=template_data.get('estimated_days', ecn.schedule_impact_days),
+        keywords=template_data.get("keywords", _extract_keywords(service, ecn)),
+        solution_description=template_data.get("solution_description", ecn.solution or ""),
+        solution_steps=template_data.get("solution_steps", []),
+        required_resources=template_data.get("required_resources", []),
+        estimated_cost=template_data.get("estimated_cost", ecn.cost_impact),
+        estimated_days=template_data.get("estimated_days", ecn.schedule_impact_days),
         source_ecn_id=ecn_id,
-        created_from='MANUAL',
+        created_from="MANUAL",
         is_active=True,
-        created_by=created_by
+        created_by=created_by,
     )
 
     save_obj(service.db, template)
@@ -116,9 +111,7 @@ def create_solution_template(
 
 
 def apply_solution_template(
-    service: "EcnKnowledgeService",
-    ecn_id: int,
-    template_id: int
+    service: "EcnKnowledgeService", ecn_id: int, template_id: int
 ) -> Dict[str, Any]:
     """
     应用解决方案模板到ECN
@@ -137,9 +130,9 @@ def apply_solution_template(
     if not ecn:
         raise ValueError(f"ECN {ecn_id} 不存在")
 
-    template = service.db.query(EcnSolutionTemplate).filter(
-        EcnSolutionTemplate.id == template_id
-    ).first()
+    template = (
+        service.db.query(EcnSolutionTemplate).filter(EcnSolutionTemplate.id == template_id).first()
+    )
 
     if not template:
         raise ValueError(f"解决方案模板 {template_id} 不存在")
@@ -147,7 +140,7 @@ def apply_solution_template(
     # 应用解决方案
     ecn.solution = template.solution_description
     ecn.solution_template_id = template_id
-    ecn.solution_source = 'KNOWLEDGE_BASE'
+    ecn.solution_source = "KNOWLEDGE_BASE"
 
     # 更新模板使用次数
     template.usage_count = (template.usage_count or 0) + 1
@@ -159,11 +152,13 @@ def apply_solution_template(
         "template_id": template_id,
         "solution": template.solution_description,
         "solution_steps": template.solution_steps or [],
-        "applied_at": datetime.now().isoformat()
+        "applied_at": datetime.now().isoformat(),
     }
 
 
-def _calculate_template_score(service: "EcnKnowledgeService", ecn: Ecn, template: EcnSolutionTemplate) -> float:
+def _calculate_template_score(
+    service: "EcnKnowledgeService", ecn: Ecn, template: EcnSolutionTemplate
+) -> float:
     """计算模板推荐评分"""
     score = 0.0
 
@@ -219,5 +214,5 @@ def _get_template_match_reasons(ecn: Ecn, template: EcnSolutionTemplate, score: 
 
 def _generate_template_code(ecn: Ecn) -> str:
     """生成模板编码"""
-    timestamp = datetime.now().strftime('%Y%m%d')
+    timestamp = datetime.now().strftime("%Y%m%d")
     return f"ECN-SOL-{timestamp}-{ecn.id:04d}"

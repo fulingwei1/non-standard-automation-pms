@@ -11,19 +11,17 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
 from app.models.strategy import CSF, KPI, Strategy, StrategyComparison
+from app.schemas.strategy import StrategyComparisonCreate
 from app.schemas.strategy.yoy_report import (
     CSFComparisonItem,
     DimensionComparisonDetail,
     KPIComparisonItem,
     YoYReportResponse,
 )
-from app.schemas.strategy import StrategyComparisonCreate
 
 
 def create_strategy_comparison(
-    db: Session,
-    data: StrategyComparisonCreate,
-    created_by: int
+    db: Session, data: StrategyComparisonCreate, created_by: int
 ) -> StrategyComparison:
     """
     创建战略对比记录
@@ -51,10 +49,7 @@ def create_strategy_comparison(
     return comparison
 
 
-def get_strategy_comparison(
-    db: Session,
-    comparison_id: int
-) -> Optional[StrategyComparison]:
+def get_strategy_comparison(db: Session, comparison_id: int) -> Optional[StrategyComparison]:
     """
     获取战略对比记录
 
@@ -65,17 +60,15 @@ def get_strategy_comparison(
     Returns:
         Optional[StrategyComparison]: 对比记录
     """
-    return db.query(StrategyComparison).filter(
-        StrategyComparison.id == comparison_id,
-        StrategyComparison.is_active
-    ).first()
+    return (
+        db.query(StrategyComparison)
+        .filter(StrategyComparison.id == comparison_id, StrategyComparison.is_active)
+        .first()
+    )
 
 
 def list_strategy_comparisons(
-    db: Session,
-    base_strategy_id: Optional[int] = None,
-    skip: int = 0,
-    limit: int = 20
+    db: Session, base_strategy_id: Optional[int] = None, skip: int = 0, limit: int = 20
 ) -> tuple[List[StrategyComparison], int]:
     """
     获取战略对比记录列表
@@ -95,7 +88,9 @@ def list_strategy_comparisons(
         query = query.filter(StrategyComparison.base_strategy_id == base_strategy_id)
 
     total = query.count()
-    items = apply_pagination(query.order_by(StrategyComparison.created_at.desc()), skip, limit).all()
+    items = apply_pagination(
+        query.order_by(StrategyComparison.created_at.desc()), skip, limit
+    ).all()
 
     return items, total
 
@@ -121,9 +116,7 @@ def delete_strategy_comparison(db: Session, comparison_id: int) -> bool:
 
 
 def generate_yoy_report(
-    db: Session,
-    current_year: int,
-    previous_year: Optional[int] = None
+    db: Session, current_year: int, previous_year: Optional[int] = None
 ) -> YoYReportResponse:
     """
     生成同比报告
@@ -140,15 +133,13 @@ def generate_yoy_report(
         previous_year = current_year - 1
 
     # 获取两年的战略
-    current_strategy = db.query(Strategy).filter(
-        Strategy.year == current_year,
-        Strategy.is_active
-    ).first()
+    current_strategy = (
+        db.query(Strategy).filter(Strategy.year == current_year, Strategy.is_active).first()
+    )
 
-    previous_strategy = db.query(Strategy).filter(
-        Strategy.year == previous_year,
-        Strategy.is_active
-    ).first()
+    previous_strategy = (
+        db.query(Strategy).filter(Strategy.year == previous_year, Strategy.is_active).first()
+    )
 
     if not current_strategy or not previous_strategy:
         return YoYReportResponse(
@@ -162,7 +153,7 @@ def generate_yoy_report(
         )
 
     # 计算健康度变化
-    from .health_calculator import calculate_strategy_health, calculate_dimension_health
+    from .health_calculator import calculate_dimension_health, calculate_strategy_health
 
     current_health = calculate_strategy_health(db, current_strategy.id)
     previous_health = calculate_strategy_health(db, previous_strategy.id)
@@ -191,14 +182,16 @@ def generate_yoy_report(
         # 获取 CSF 对比
         csf_comparisons = _compare_csfs(db, current_strategy.id, previous_strategy.id, dim_code)
 
-        dimensions.append(DimensionComparisonDetail(
-            dimension=dim_code,
-            dimension_name=dim_name,
-            current_score=current_dim.get("score"),
-            previous_score=previous_dim.get("score"),
-            score_change=score_change,
-            csf_comparisons=csf_comparisons,
-        ))
+        dimensions.append(
+            DimensionComparisonDetail(
+                dimension=dim_code,
+                dimension_name=dim_name,
+                current_score=current_dim.get("score"),
+                previous_score=previous_dim.get("score"),
+                score_change=score_change,
+                csf_comparisons=csf_comparisons,
+            )
+        )
 
     return YoYReportResponse(
         current_year=current_year,
@@ -212,10 +205,7 @@ def generate_yoy_report(
 
 
 def _compare_csfs(
-    db: Session,
-    current_strategy_id: int,
-    previous_strategy_id: int,
-    dimension: str
+    db: Session, current_strategy_id: int, previous_strategy_id: int, dimension: str
 ) -> List[CSFComparisonItem]:
     """
     对比两个战略的 CSF
@@ -231,17 +221,17 @@ def _compare_csfs(
     """
     from .health_calculator import calculate_csf_health
 
-    current_csfs = db.query(CSF).filter(
-        CSF.strategy_id == current_strategy_id,
-        CSF.dimension == dimension,
-        CSF.is_active
-    ).all()
+    current_csfs = (
+        db.query(CSF)
+        .filter(CSF.strategy_id == current_strategy_id, CSF.dimension == dimension, CSF.is_active)
+        .all()
+    )
 
-    previous_csfs = db.query(CSF).filter(
-        CSF.strategy_id == previous_strategy_id,
-        CSF.dimension == dimension,
-        CSF.is_active
-    ).all()
+    previous_csfs = (
+        db.query(CSF)
+        .filter(CSF.strategy_id == previous_strategy_id, CSF.dimension == dimension, CSF.is_active)
+        .all()
+    )
 
     # 按编码匹配
     previous_map = {csf.code: csf for csf in previous_csfs}
@@ -260,23 +250,23 @@ def _compare_csfs(
         # 获取 KPI 对比
         kpi_comparisons = _compare_kpis(db, current.id, previous.id if previous else None)
 
-        comparisons.append(CSFComparisonItem(
-            csf_code=current.code,
-            csf_name=current.name,
-            current_score=current_health.get("score"),
-            previous_score=previous_health.get("score"),
-            score_change=score_change,
-            is_new=previous is None,
-            kpi_comparisons=kpi_comparisons,
-        ))
+        comparisons.append(
+            CSFComparisonItem(
+                csf_code=current.code,
+                csf_name=current.name,
+                current_score=current_health.get("score"),
+                previous_score=previous_health.get("score"),
+                score_change=score_change,
+                is_new=previous is None,
+                kpi_comparisons=kpi_comparisons,
+            )
+        )
 
     return comparisons
 
 
 def _compare_kpis(
-    db: Session,
-    current_csf_id: int,
-    previous_csf_id: Optional[int]
+    db: Session, current_csf_id: int, previous_csf_id: Optional[int]
 ) -> List[KPIComparisonItem]:
     """
     对比两个 CSF 的 KPI
@@ -291,17 +281,11 @@ def _compare_kpis(
     """
     from .health_calculator import calculate_kpi_completion_rate
 
-    current_kpis = db.query(KPI).filter(
-        KPI.csf_id == current_csf_id,
-        KPI.is_active
-    ).all()
+    current_kpis = db.query(KPI).filter(KPI.csf_id == current_csf_id, KPI.is_active).all()
 
     previous_kpis = []
     if previous_csf_id:
-        previous_kpis = db.query(KPI).filter(
-            KPI.csf_id == previous_csf_id,
-            KPI.is_active
-        ).all()
+        previous_kpis = db.query(KPI).filter(KPI.csf_id == previous_csf_id, KPI.is_active).all()
 
     # 按编码匹配
     previous_map = {kpi.code: kpi for kpi in previous_kpis}
@@ -321,17 +305,19 @@ def _compare_kpis(
         if current.target_value is not None and previous and previous.target_value is not None:
             target_change = float(current.target_value - previous.target_value)
 
-        comparisons.append(KPIComparisonItem(
-            kpi_code=current.code,
-            kpi_name=current.name,
-            current_target=current.target_value,
-            previous_target=previous.target_value if previous else None,
-            target_change=Decimal(str(target_change)) if target_change else None,
-            current_completion_rate=current_rate,
-            previous_completion_rate=previous_rate,
-            completion_rate_change=rate_change,
-            is_new=previous is None,
-        ))
+        comparisons.append(
+            KPIComparisonItem(
+                kpi_code=current.code,
+                kpi_name=current.name,
+                current_target=current.target_value,
+                previous_target=previous.target_value if previous else None,
+                target_change=Decimal(str(target_change)) if target_change else None,
+                current_completion_rate=current_rate,
+                previous_completion_rate=previous_rate,
+                completion_rate_change=rate_change,
+                is_new=previous is None,
+            )
+        )
 
     return comparisons
 
@@ -340,10 +326,8 @@ def _compare_kpis(
 # 统计分析
 # ============================================
 
-def get_multi_year_trend(
-    db: Session,
-    years: int = 3
-) -> Dict[str, Any]:
+
+def get_multi_year_trend(db: Session, years: int = 3) -> Dict[str, Any]:
     """
     获取多年趋势数据
 
@@ -355,24 +339,23 @@ def get_multi_year_trend(
         Dict: 多年趋势数据
     """
     current_year = date.today().year
-    from .health_calculator import calculate_strategy_health, calculate_dimension_health
+    from .health_calculator import calculate_dimension_health, calculate_strategy_health
 
     trend_data = []
     for year in range(current_year - years + 1, current_year + 1):
-        strategy = db.query(Strategy).filter(
-            Strategy.year == year,
-            Strategy.is_active
-        ).first()
+        strategy = db.query(Strategy).filter(Strategy.year == year, Strategy.is_active).first()
 
         if not strategy:
-            trend_data.append({
-                "year": year,
-                "overall_health": None,
-                "financial": None,
-                "customer": None,
-                "internal": None,
-                "learning": None,
-            })
+            trend_data.append(
+                {
+                    "year": year,
+                    "overall_health": None,
+                    "financial": None,
+                    "customer": None,
+                    "internal": None,
+                    "learning": None,
+                }
+            )
             continue
 
         overall = calculate_strategy_health(db, strategy.id)
@@ -381,14 +364,16 @@ def get_multi_year_trend(
         internal = calculate_dimension_health(db, strategy.id, "INTERNAL")
         learning = calculate_dimension_health(db, strategy.id, "LEARNING")
 
-        trend_data.append({
-            "year": year,
-            "overall_health": overall,
-            "financial": financial.get("score"),
-            "customer": customer.get("score"),
-            "internal": internal.get("score"),
-            "learning": learning.get("score"),
-        })
+        trend_data.append(
+            {
+                "year": year,
+                "overall_health": overall,
+                "financial": financial.get("score"),
+                "customer": customer.get("score"),
+                "internal": internal.get("score"),
+                "learning": learning.get("score"),
+            }
+        )
 
     return {
         "years": list(range(current_year - years + 1, current_year + 1)),
@@ -397,9 +382,7 @@ def get_multi_year_trend(
 
 
 def get_kpi_achievement_comparison(
-    db: Session,
-    current_year: int,
-    previous_year: Optional[int] = None
+    db: Session, current_year: int, previous_year: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     获取 KPI 达成率对比
@@ -417,28 +400,27 @@ def get_kpi_achievement_comparison(
 
     from .health_calculator import calculate_kpi_completion_rate
 
-    current_strategy = db.query(Strategy).filter(
-        Strategy.year == current_year,
-        Strategy.is_active
-    ).first()
+    current_strategy = (
+        db.query(Strategy).filter(Strategy.year == current_year, Strategy.is_active).first()
+    )
 
-    previous_strategy = db.query(Strategy).filter(
-        Strategy.year == previous_year,
-        Strategy.is_active
-    ).first()
+    previous_strategy = (
+        db.query(Strategy).filter(Strategy.year == previous_year, Strategy.is_active).first()
+    )
 
     def get_kpi_stats(strategy_id: int) -> Dict[str, Any]:
-        kpis = db.query(KPI).join(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.is_active,
-            KPI.is_active
-        ).all()
+        kpis = (
+            db.query(KPI)
+            .join(CSF)
+            .filter(CSF.strategy_id == strategy_id, CSF.is_active, KPI.is_active)
+            .all()
+        )
 
         total = len(kpis)
         excellent = 0  # >= 100%
-        good = 0       # >= 80%
-        warning = 0    # >= 60%
-        danger = 0     # < 60%
+        good = 0  # >= 80%
+        warning = 0  # >= 60%
+        danger = 0  # < 60%
 
         for kpi in kpis:
             rate = calculate_kpi_completion_rate(kpi)

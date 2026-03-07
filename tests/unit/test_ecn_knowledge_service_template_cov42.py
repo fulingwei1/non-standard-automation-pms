@@ -5,12 +5,13 @@ import pytest
 pytest.importorskip("app.services.ecn_knowledge_service.template")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.ecn_knowledge_service.template import (
-    recommend_solutions,
-    create_solution_template,
-    apply_solution_template,
     _calculate_template_score,
     _generate_template_code,
+    apply_solution_template,
+    create_solution_template,
+    recommend_solutions,
 )
 
 
@@ -31,8 +32,14 @@ def make_ecn(ecn_type="DESIGN", root_cause_category="QUALITY"):
     return ecn
 
 
-def make_template(ecn_type="DESIGN", root_cause="QUALITY", keywords=None,
-                  success_rate=80, usage_count=5, is_active=True):
+def make_template(
+    ecn_type="DESIGN",
+    root_cause="QUALITY",
+    keywords=None,
+    success_rate=80,
+    usage_count=5,
+    is_active=True,
+):
     t = MagicMock()
     t.ecn_type = ecn_type
     t.root_cause_category = root_cause
@@ -52,6 +59,7 @@ def make_template(ecn_type="DESIGN", root_cause="QUALITY", keywords=None,
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_recommend_solutions_ecn_not_found():
     svc = make_service()
@@ -85,8 +93,9 @@ def test_calculate_template_score_type_mismatch():
     svc.db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
     ecn = make_ecn(ecn_type="DESIGN", root_cause_category="QUALITY")
     # Different type AND different root cause AND no keywords AND zero success_rate AND zero usage
-    tmpl = make_template(ecn_type="PROCESS", root_cause="DESIGN_ERROR",
-                         keywords=[], success_rate=0, usage_count=0)
+    tmpl = make_template(
+        ecn_type="PROCESS", root_cause="DESIGN_ERROR", keywords=[], success_rate=0, usage_count=0
+    )
     score = _calculate_template_score(svc, ecn, tmpl)
     assert score == 0.0
 
@@ -104,6 +113,7 @@ def test_apply_solution_template_success():
     tmpl = make_template()
 
     call_count = [0]
+
     def query_router(*args):
         call_count[0] += 1
         q = MagicMock()

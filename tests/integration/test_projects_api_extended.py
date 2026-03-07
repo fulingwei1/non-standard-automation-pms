@@ -16,9 +16,10 @@
 """
 
 import uuid
-import pytest
 from datetime import date
 from decimal import Decimal
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -88,9 +89,7 @@ class TestProjectsAPIExtended:
         except Exception:
             db_session.rollback()
 
-    def test_list_projects_empty_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_projects_empty_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试项目列表 - 无筛选条件"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects",
@@ -124,9 +123,7 @@ class TestProjectsAPIExtended:
         )
         assert response.status_code in (200, 500)
 
-    def test_list_projects_pagination(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_projects_pagination(self, client: TestClient, admin_auth_headers: dict):
         """测试项目列表分页"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects?page=1&page_size=10",
@@ -155,9 +152,7 @@ class TestProjectsAPIExtended:
             if isinstance(result, dict) and "id" in result:
                 assert result["id"] == test_project.id
 
-    def test_get_project_detail_not_found(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_get_project_detail_not_found(self, client: TestClient, admin_auth_headers: dict):
         """测试获取不存在的项目详情"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/999999",
@@ -183,9 +178,7 @@ class TestProjectsAPIExtended:
         )
         assert response.status_code in (200, 201, 400, 422, 500)
 
-    def test_create_project_validation_error(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_create_project_validation_error(self, client: TestClient, admin_auth_headers: dict):
         """测试创建项目验证错误"""
         project_data = {
             "project_name": "缺少必填字段的项目",
@@ -212,9 +205,7 @@ class TestProjectsAPIExtended:
         )
         assert response.status_code in (200, 400, 404, 422, 500)
 
-    def test_update_project_not_found(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_update_project_not_found(self, client: TestClient, admin_auth_headers: dict):
         """测试更新不存在的项目"""
         update_data = {"project_name": "不存在项目的更新"}
         response = client.put(
@@ -234,9 +225,7 @@ class TestProjectsAPIExtended:
         )
         assert response.status_code in (200, 400, 404, 500)
 
-    def test_delete_project_not_found(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_delete_project_not_found(self, client: TestClient, admin_auth_headers: dict):
         """测试删除不存在的项目"""
         response = client.delete(
             f"{settings.API_V1_PREFIX}/projects/999999",
@@ -364,9 +353,7 @@ class TestMaterialsAPI:
             if isinstance(result, dict) and "id" in result:
                 assert result["id"] == test_material.id
 
-    def test_get_material_detail_not_found(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_get_material_detail_not_found(self, client: TestClient, admin_auth_headers: dict):
         """测试获取不存在的物料"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/999999",
@@ -374,9 +361,7 @@ class TestMaterialsAPI:
         )
         assert response.status_code in (404, 500)
 
-    def test_list_materials_pagination(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_materials_pagination(self, client: TestClient, admin_auth_headers: dict):
         """测试物料列表分页"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials?page=1&page_size=10",
@@ -467,9 +452,7 @@ class TestBOMAPI:
         )
         assert response.status_code in (200, 422, 500)
 
-    def test_list_boms_latest_version(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_boms_latest_version(self, client: TestClient, admin_auth_headers: dict):
         """测试BOM列表只返回最新版本"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/bom?is_latest=true",
@@ -490,9 +473,7 @@ class TestBOMAPI:
             if isinstance(result, dict):
                 assert result.get("page") in (1, None) or "items" in result
 
-    def test_get_bom_detail_not_found(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_get_bom_detail_not_found(self, client: TestClient, admin_auth_headers: dict):
         """测试获取不存在的BOM详情"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/bom/999999",
@@ -569,9 +550,7 @@ class TestPurchaseOrderAPI:
             db_session.rollback()
 
     @pytest.fixture
-    def test_purchase_order(
-        self, db_session: Session, test_supplier: Supplier, po_test_project
-    ):
+    def test_purchase_order(self, db_session: Session, test_supplier: Supplier, po_test_project):
         """创建测试采购订单"""
         order = PurchaseOrder(
             order_no=_uid("PO"),
@@ -611,9 +590,7 @@ class TestPurchaseOrderAPI:
         except Exception:
             db_session.rollback()
 
-    def test_list_purchase_orders_success(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_purchase_orders_success(self, client: TestClient, admin_auth_headers: dict):
         """测试获取采购订单列表成功"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/purchase-orders",
@@ -812,9 +789,7 @@ class TestPurchaseOrderAPI:
         )
         assert response.status_code in (400, 404, 500)
 
-    def test_update_purchase_order_not_found(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_update_purchase_order_not_found(self, client: TestClient, admin_auth_headers: dict):
         """测试更新不存在的采购订单"""
         update_data = {"order_title": "不存在的订单"}
         response = client.put(
@@ -896,9 +871,7 @@ class TestPurchaseOrderAPI:
         response = client.get(f"{settings.API_V1_PREFIX}/purchase-orders")
         assert response.status_code in (401, 403)
 
-    def test_list_purchase_orders_pagination(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_purchase_orders_pagination(self, client: TestClient, admin_auth_headers: dict):
         """测试采购订单列表分页"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/purchase-orders?page=1&page_size=10",

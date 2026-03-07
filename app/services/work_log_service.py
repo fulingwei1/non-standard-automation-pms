@@ -26,11 +26,7 @@ class WorkLogService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_work_log(
-        self,
-        user_id: int,
-        work_log_in: WorkLogCreate
-    ) -> WorkLog:
+    def create_work_log(self, user_id: int, work_log_in: WorkLogCreate) -> WorkLog:
         """
         创建工作日志
 
@@ -43,22 +39,26 @@ class WorkLogService:
         """
         # 验证内容长度
         if len(work_log_in.content) > 300:
-            raise ValueError('工作内容不能超过300字')
+            raise ValueError("工作内容不能超过300字")
 
         # 检查同一天是否已有记录（如果状态不是草稿，则不允许重复提交）
-        existing = self.db.query(WorkLog).filter(
-            WorkLog.user_id == user_id,
-            WorkLog.work_date == work_log_in.work_date,
-            WorkLog.status != 'DRAFT'
-        ).first()
+        existing = (
+            self.db.query(WorkLog)
+            .filter(
+                WorkLog.user_id == user_id,
+                WorkLog.work_date == work_log_in.work_date,
+                WorkLog.status != "DRAFT",
+            )
+            .first()
+        )
 
         if existing:
-            raise ValueError('该日期已提交工作日志，请更新现有记录或选择其他日期')
+            raise ValueError("该日期已提交工作日志，请更新现有记录或选择其他日期")
 
         # 获取用户信息
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise ValueError('用户不存在')
+            raise ValueError("用户不存在")
 
         # 创建工作日志
         work_log = WorkLog(
@@ -66,7 +66,7 @@ class WorkLogService:
             user_name=user.real_name or user.username,
             work_date=work_log_in.work_date,
             content=work_log_in.content,
-            status=work_log_in.status or 'SUBMITTED'
+            status=work_log_in.status or "SUBMITTED",
         )
 
         self.db.add(work_log)
@@ -89,10 +89,7 @@ class WorkLogService:
         return work_log
 
     def update_work_log(
-        self,
-        work_log_id: int,
-        user_id: int,
-        work_log_in: WorkLogUpdate
+        self, work_log_id: int, user_id: int, work_log_in: WorkLogUpdate
     ) -> WorkLog:
         """
         更新工作日志（仅限草稿状态）
@@ -107,33 +104,33 @@ class WorkLogService:
         """
         work_log = self.db.query(WorkLog).filter(WorkLog.id == work_log_id).first()
         if not work_log:
-            raise ValueError('工作日志不存在')
+            raise ValueError("工作日志不存在")
 
         # 验证权限：只能更新自己的日志
         if work_log.user_id != user_id:
-            raise ValueError('只能更新自己的工作日志')
+            raise ValueError("只能更新自己的工作日志")
 
         # 只能更新草稿状态的日志
-        if work_log.status != 'DRAFT':
-            raise ValueError('只能更新草稿状态的工作日志')
+        if work_log.status != "DRAFT":
+            raise ValueError("只能更新草稿状态的工作日志")
 
         # 更新内容
         if work_log_in.content is not None:
             if len(work_log_in.content) > 300:
-                raise ValueError('工作内容不能超过300字')
+                raise ValueError("工作内容不能超过300字")
             work_log.content = work_log_in.content
 
         if work_log_in.status is not None:
             work_log.status = work_log_in.status
 
         # 更新@提及（如果提供了新的提及列表）
-        if work_log_in.mentioned_projects is not None or \
-           work_log_in.mentioned_machines is not None or \
-           work_log_in.mentioned_users is not None:
+        if (
+            work_log_in.mentioned_projects is not None
+            or work_log_in.mentioned_machines is not None
+            or work_log_in.mentioned_users is not None
+        ):
             # 删除旧的提及
-            self.db.query(WorkLogMention).filter(
-                WorkLogMention.work_log_id == work_log_id
-            ).delete()
+            self.db.query(WorkLogMention).filter(WorkLogMention.work_log_id == work_log_id).delete()
 
             # 创建新的提及
             create_data = WorkLogCreate(
@@ -142,7 +139,7 @@ class WorkLogService:
                 mentioned_projects=work_log_in.mentioned_projects or [],
                 mentioned_machines=work_log_in.mentioned_machines or [],
                 mentioned_users=work_log_in.mentioned_users or [],
-                status=work_log.status
+                status=work_log.status,
             )
             self._create_mentions(work_log_id, create_data)
 
@@ -151,10 +148,12 @@ class WorkLogService:
             self._link_to_progress(work_log, create_data, user_id)
 
         # 更新工时记录（如果提供了工时信息）
-        if work_log_in.work_hours is not None or \
-           work_log_in.work_type is not None or \
-           work_log_in.project_id is not None or \
-           work_log_in.rd_project_id is not None:
+        if (
+            work_log_in.work_hours is not None
+            or work_log_in.work_type is not None
+            or work_log_in.project_id is not None
+            or work_log_in.rd_project_id is not None
+        ):
             self._update_timesheet_from_worklog(work_log, work_log_in, user_id)
 
         self.db.commit()
@@ -162,11 +161,7 @@ class WorkLogService:
 
         return work_log
 
-    def _create_mentions(
-        self,
-        work_log_id: int,
-        work_log_in: WorkLogCreate
-    ):
+    def _create_mentions(self, work_log_id: int, work_log_in: WorkLogCreate):
         """创建@提及记录"""
         # 处理项目提及
         if work_log_in.mentioned_projects:
@@ -177,7 +172,7 @@ class WorkLogService:
                         work_log_id=work_log_id,
                         mention_type=MentionTypeEnum.PROJECT.value,
                         mention_id=project_id,
-                        mention_name=project.project_name
+                        mention_name=project.project_name,
                     )
                     self.db.add(mention)
 
@@ -190,7 +185,7 @@ class WorkLogService:
                         work_log_id=work_log_id,
                         mention_type=MentionTypeEnum.MACHINE.value,
                         mention_id=machine_id,
-                        mention_name=machine.machine_name
+                        mention_name=machine.machine_name,
                     )
                     self.db.add(mention)
 
@@ -203,16 +198,11 @@ class WorkLogService:
                         work_log_id=work_log_id,
                         mention_type=MentionTypeEnum.USER.value,
                         mention_id=user_id,
-                        mention_name=user.real_name or user.username
+                        mention_name=user.real_name or user.username,
                     )
                     self.db.add(mention)
 
-    def _link_to_progress(
-        self,
-        work_log: WorkLog,
-        work_log_in: WorkLogCreate,
-        user_id: int
-    ):
+    def _link_to_progress(self, work_log: WorkLog, work_log_in: WorkLogCreate, user_id: int):
         """
         自动关联到项目/设备进展
         当@了项目或设备时，创建ProjectStatusLog记录
@@ -225,10 +215,10 @@ class WorkLogService:
                     status_log = ProjectStatusLog(
                         project_id=project_id,
                         machine_id=None,
-                        change_type='WORK_LOG',
+                        change_type="WORK_LOG",
                         change_note=work_log_in.content,
                         changed_by=user_id,
-                        changed_at=datetime.now()
+                        changed_at=datetime.now(),
                     )
                     self.db.add(status_log)
 
@@ -240,18 +230,15 @@ class WorkLogService:
                     status_log = ProjectStatusLog(
                         project_id=machine.project_id,
                         machine_id=machine_id,
-                        change_type='WORK_LOG',
+                        change_type="WORK_LOG",
                         change_note=work_log_in.content,
                         changed_by=user_id,
-                        changed_at=datetime.now()
+                        changed_at=datetime.now(),
                     )
                     self.db.add(status_log)
 
     def _create_timesheet_from_worklog(
-        self,
-        work_log: WorkLog,
-        work_log_in: WorkLogCreate,
-        user_id: int
+        self, work_log: WorkLog, work_log_in: WorkLogCreate, user_id: int
     ) -> Timesheet:
         """
         从工作日志创建工时记录
@@ -266,13 +253,15 @@ class WorkLogService:
         """
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise ValueError('用户不存在')
+            raise ValueError("用户不存在")
 
         # 获取部门信息
         department_id = None
         department_name = None
-        if hasattr(user, 'department_id') and user.department_id:
-            department = self.db.query(Department).filter(Department.id == user.department_id).first()
+        if hasattr(user, "department_id") and user.department_id:
+            department = (
+                self.db.query(Department).filter(Department.id == user.department_id).first()
+            )
             if department:
                 department_id = department.id
                 department_name = department.name
@@ -308,10 +297,10 @@ class WorkLogService:
             task_id=work_log_in.task_id,
             work_date=work_log_in.work_date,
             hours=work_log_in.work_hours,
-            overtime_type=work_log_in.work_type or 'NORMAL',
+            overtime_type=work_log_in.work_type or "NORMAL",
             work_content=work_log_in.content,
-            status='DRAFT',  # 初始状态为草稿，需要单独提交审批
-            created_by=user_id
+            status="DRAFT",  # 初始状态为草稿，需要单独提交审批
+            created_by=user_id,
         )
 
         self.db.add(timesheet)
@@ -320,10 +309,7 @@ class WorkLogService:
         return timesheet
 
     def _update_timesheet_from_worklog(
-        self,
-        work_log: WorkLog,
-        work_log_in: WorkLogUpdate,
-        user_id: int
+        self, work_log: WorkLog, work_log_in: WorkLogUpdate, user_id: int
     ):
         """
         从工作日志更新工时记录
@@ -335,10 +321,12 @@ class WorkLogService:
         """
         # 如果已有工时记录，更新它
         if work_log.timesheet_id:
-            timesheet = self.db.query(Timesheet).filter(Timesheet.id == work_log.timesheet_id).first()
+            timesheet = (
+                self.db.query(Timesheet).filter(Timesheet.id == work_log.timesheet_id).first()
+            )
             if timesheet:
                 # 只能更新草稿状态的工时记录
-                if timesheet.status == 'DRAFT':
+                if timesheet.status == "DRAFT":
                     if work_log_in.work_hours is not None:
                         timesheet.hours = work_log_in.work_hours
                     if work_log_in.work_type is not None:
@@ -346,7 +334,11 @@ class WorkLogService:
                     if work_log_in.project_id is not None:
                         timesheet.project_id = work_log_in.project_id
                         if work_log_in.project_id:
-                            project = self.db.query(Project).filter(Project.id == work_log_in.project_id).first()
+                            project = (
+                                self.db.query(Project)
+                                .filter(Project.id == work_log_in.project_id)
+                                .first()
+                            )
                             if project:
                                 timesheet.project_code = project.project_code
                                 timesheet.project_name = project.project_name
@@ -367,18 +359,15 @@ class WorkLogService:
                     mentioned_users=[],
                     status=work_log.status,
                     work_hours=work_log_in.work_hours,
-                    work_type=work_log_in.work_type or 'NORMAL',
+                    work_type=work_log_in.work_type or "NORMAL",
                     project_id=work_log_in.project_id,
                     rd_project_id=work_log_in.rd_project_id,
-                    task_id=work_log_in.task_id
+                    task_id=work_log_in.task_id,
                 )
                 timesheet = self._create_timesheet_from_worklog(work_log, create_data, user_id)
                 work_log.timesheet_id = timesheet.id
 
-    def get_mention_options(
-        self,
-        user_id: int
-    ) -> MentionOptionsResponse:
+    def get_mention_options(self, user_id: int) -> MentionOptionsResponse:
         """
         获取可@的选项列表
 
@@ -393,40 +382,20 @@ class WorkLogService:
         users = []
 
         # 获取用户有权限的项目列表（简化处理：获取所有项目，实际应该根据权限过滤）
-        project_list = self.db.query(Project).filter(
-            Project.is_active
-        ).all()
+        project_list = self.db.query(Project).filter(Project.is_active).all()
         for project in project_list:
-            projects.append(MentionOption(
-                id=project.id,
-                name=project.project_name,
-                type='PROJECT'
-            ))
+            projects.append(MentionOption(id=project.id, name=project.project_name, type="PROJECT"))
 
         # 获取用户有权限的设备列表（简化处理：获取所有设备，实际应该根据权限过滤）
-        machine_list = self.db.query(Machine).join(Project).filter(
-            Project.is_active
-        ).all()
+        machine_list = self.db.query(Machine).join(Project).filter(Project.is_active).all()
         for machine in machine_list:
-            machines.append(MentionOption(
-                id=machine.id,
-                name=machine.machine_name,
-                type='MACHINE'
-            ))
+            machines.append(MentionOption(id=machine.id, name=machine.machine_name, type="MACHINE"))
 
         # 获取用户列表（简化处理：获取所有活跃用户，实际应该根据权限范围过滤）
-        user_list = self.db.query(User).filter(
-            User.is_active
-        ).all()
+        user_list = self.db.query(User).filter(User.is_active).all()
         for user in user_list:
-            users.append(MentionOption(
-                id=user.id,
-                name=user.real_name or user.username,
-                type='USER'
-            ))
+            users.append(
+                MentionOption(id=user.id, name=user.real_name or user.username, type="USER")
+            )
 
-        return MentionOptionsResponse(
-            projects=projects,
-            machines=machines,
-            users=users
-        )
+        return MentionOptionsResponse(projects=projects, machines=machines, users=users)

@@ -6,9 +6,9 @@ User Schema 测试
 import pytest
 from pydantic import ValidationError
 
-
 try:
-    from app.schemas.auth import UserCreate, UserUpdate, UserResponse
+    from app.schemas.auth import UserCreate, UserResponse, UserUpdate
+
     SCHEMA_AVAILABLE = True
 except ImportError:
     SCHEMA_AVAILABLE = False
@@ -25,7 +25,7 @@ class TestUserSchema:
             "username": "testuser",
             "email": "test@example.com",
             "password": "SecurePass123!",
-            "real_name": "测试用户"
+            "real_name": "测试用户",
         }
         schema = UserCreate(**data)
         assert schema.username == "testuser"
@@ -34,30 +34,19 @@ class TestUserSchema:
     def test_username_required(self):
         """测试用户名必填"""
         with pytest.raises(ValidationError):
-            UserCreate(
-                email="test@example.com",
-                password="pass123"
-            )
+            UserCreate(email="test@example.com", password="pass123")
 
     def test_email_format(self):
         """测试邮箱格式验证"""
         with pytest.raises(ValidationError):
-            UserCreate(
-                username="user1",
-                email="invalid-email",
-                password="pass123"
-            )
+            UserCreate(username="user1", email="invalid-email", password="pass123")
 
     def test_password_strength(self):
         """测试密码强度"""
         weak_passwords = ["123", "abc", "pass"]
         for pwd in weak_passwords:
             try:
-                UserCreate(
-                    username="user1",
-                    email="test@example.com",
-                    password=pwd
-                )
+                UserCreate(username="user1", email="test@example.com", password=pwd)
             except ValidationError:
                 pass  # Expected
 
@@ -65,18 +54,12 @@ class TestUserSchema:
         """测试用户名长度"""
         with pytest.raises(ValidationError):
             UserCreate(
-                username="ab",  # Too short
-                email="test@example.com",
-                password="SecurePass123!"
+                username="ab", email="test@example.com", password="SecurePass123!"  # Too short
             )
 
     def test_email_uniqueness_check(self):
         """测试邮箱格式"""
-        data = {
-            "username": "user2",
-            "email": "valid@example.com",
-            "password": "SecurePass123!"
-        }
+        data = {"username": "user2", "email": "valid@example.com", "password": "SecurePass123!"}
         schema = UserCreate(**data)
         assert "@" in schema.email
 
@@ -95,7 +78,7 @@ class TestUserSchema:
             "username": "user3",
             "email": "test@example.com",
             "password": "SecurePass123!",
-            "phone": "13800138000"
+            "phone": "13800138000",
         }
         schema = UserCreate(**data)
         assert schema.phone == "13800138000"
@@ -106,7 +89,7 @@ class TestUserSchema:
             "username": "user4",
             "email": "test@example.com",
             "password": "SecurePass123!",
-            "extra": "notallowed"
+            "extra": "notallowed",
         }
         try:
             UserCreate(**data)
@@ -120,7 +103,7 @@ class TestUserSchema:
             "email": "admin@example.com",
             "password": "AdminPass123!",
             "is_superuser": True,
-            "is_active": True
+            "is_active": True,
         }
         schema = UserCreate(**data)
         assert schema.is_superuser is True
@@ -128,13 +111,8 @@ class TestUserSchema:
     def test_password_not_in_response(self):
         """测试响应中不包含密码"""
         try:
-            data = {
-                "id": 1,
-                "username": "user5",
-                "email": "test@example.com",
-                "real_name": "Test"
-            }
+            data = {"id": 1, "username": "user5", "email": "test@example.com", "real_name": "Test"}
             schema = UserResponse(**data)
-            assert not hasattr(schema, 'password_hash')
+            assert not hasattr(schema, "password_hash")
         except:
             pass

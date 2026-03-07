@@ -15,21 +15,25 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ==================== 绩效汇总 Schemas ====================
+
 
 class EngineerDimensionScore(BaseModel):
     """工程师五维得分（或方案工程师六维得分）"""
+
     technical_score: Decimal = Field(..., description="技术能力得分")
     execution_score: Decimal = Field(..., description="项目执行得分")
     cost_quality_score: Decimal = Field(..., description="成本质量得分")
     knowledge_score: Decimal = Field(..., description="知识沉淀得分")
     collaboration_score: Decimal = Field(..., description="团队协作得分")
-    solution_success_score: Optional[Decimal] = Field(None, description="方案成功率得分（仅方案工程师）")
+    solution_success_score: Optional[Decimal] = Field(
+        None, description="方案成功率得分（仅方案工程师）"
+    )
 
 
 class EngineerPerformanceSummary(BaseModel):
     """工程师绩效汇总"""
+
     engineer_id: int
     engineer_name: str
     job_type: str
@@ -55,6 +59,7 @@ class EngineerPerformanceSummary(BaseModel):
 
 class CompanySummaryResponse(BaseModel):
     """公司整体概况响应"""
+
     period_id: int
     period_name: str
     total_engineers: int
@@ -76,6 +81,7 @@ class CompanySummaryResponse(BaseModel):
 
 class RankingQueryParams(BaseModel):
     """排名查询参数"""
+
     period_id: Optional[int] = Field(None, description="考核周期ID")
     job_type: Optional[str] = Field(None, description="岗位类型")
     job_level: Optional[str] = Field(None, description="职级")
@@ -86,6 +92,7 @@ class RankingQueryParams(BaseModel):
 
 class RankingResponse(BaseModel):
     """排名响应"""
+
     total: int
     items: List[EngineerPerformanceSummary]
     period_id: int
@@ -94,6 +101,7 @@ class RankingResponse(BaseModel):
 
 class EngineerTrendResponse(BaseModel):
     """工程师趋势响应"""
+
     engineer_id: int
     engineer_name: str
     trends: List[Dict[str, Any]] = Field(..., description="历史趋势数据")
@@ -101,6 +109,7 @@ class EngineerTrendResponse(BaseModel):
 
 class EngineerComparisonResponse(BaseModel):
     """工程师对比响应"""
+
     engineer_id: int
     engineer_name: str
     job_type: str
@@ -117,5 +126,3 @@ class EngineerComparisonResponse(BaseModel):
     # 同级别平均
     job_level_avg: EngineerDimensionScore
     job_level_avg_total: Decimal
-
-

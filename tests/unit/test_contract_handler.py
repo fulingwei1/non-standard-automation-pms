@@ -10,6 +10,7 @@ class TestContractStatusHandler:
 
     def _make_handler(self):
         from app.services.status_handlers.contract_handler import ContractStatusHandler
+
         db = MagicMock()
         parent = MagicMock()
         return ContractStatusHandler(db, parent), db
@@ -52,7 +53,10 @@ class TestContractStatusHandler:
         result = handler.handle_contract_signed(contract_id=1, auto_create_project=False)
         assert result is None
 
-    @patch("app.services.status_handlers.contract_handler.generate_project_code", return_value="P2024001")
+    @patch(
+        "app.services.status_handlers.contract_handler.generate_project_code",
+        return_value="P2024001",
+    )
     @patch("app.services.status_handlers.contract_handler.init_project_stages")
     def test_auto_create_project(self, mock_init, mock_gen):
         handler, db = self._make_handler()
@@ -91,16 +95,11 @@ class TestContractStatusHandler:
             old_stage="S2",
             new_stage="S3",
             change_type="TEST",
-            log_status_change=callback
+            log_status_change=callback,
         )
         callback.assert_called_once()
 
     def test_log_status_change_direct(self):
         handler, db = self._make_handler()
-        handler._log_status_change(
-            project_id=1,
-            old_stage="S2",
-            new_stage="S3",
-            change_type="TEST"
-        )
+        handler._log_status_change(project_id=1, old_stage="S2", new_stage="S3", change_type="TEST")
         db.add.assert_called_once()

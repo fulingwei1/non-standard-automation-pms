@@ -68,6 +68,17 @@ from .others import (
     VerifyResultEnum,
 )
 
+# 踩坑库相关
+from .pitfall import (
+    PitfallEquipmentType,
+    PitfallProblemType,
+    PitfallSensitiveReason,
+    PitfallSourceType,
+    PitfallStage,
+    PitfallStatus,
+    RecommendationTriggerType,
+)
+
 # 项目相关
 from .project import (
     ApprovalDecision,
@@ -122,8 +133,8 @@ from .strategy import (
     HealthLevelEnum,
     IPOOCTypeEnum,
     ObjectiveLevelEnum,
-    StrategyReviewTypeEnum,
     StrategyEventTypeEnum,
+    StrategyReviewTypeEnum,
     StrategyStatusEnum,
     VOCSourceEnum,
     WorkStatusEnum,
@@ -151,17 +162,6 @@ from .workflow import (
     PriorityEnum,
     TeamBonusAllocationMethodEnum,
     WorkflowTypeEnum,
-)
-
-# 踩坑库相关
-from .pitfall import (
-    PitfallEquipmentType,
-    PitfallProblemType,
-    PitfallSensitiveReason,
-    PitfallSourceType,
-    PitfallStage,
-    PitfallStatus,
-    RecommendationTriggerType,
 )
 
 __all__ = [

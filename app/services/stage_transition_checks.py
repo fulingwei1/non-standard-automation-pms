@@ -14,8 +14,7 @@ from app.models.sales import Contract
 
 
 def check_s3_to_s4_transition(
-    db: Session,
-    project: Project
+    db: Session, project: Project
 ) -> Tuple[bool, Optional[str], List[str]]:
     """
     检查 S3→S4 流转条件（合同签订后自动推进）
@@ -27,9 +26,7 @@ def check_s3_to_s4_transition(
         return False, None, ["合同信息不完整（请填写合同编号、签订日期和金额）"]
 
     # 检查合同状态
-    contract = db.query(Contract).filter(
-        Contract.contract_code == project.contract_no
-    ).first()
+    contract = db.query(Contract).filter(Contract.contract_code == project.contract_no).first()
 
     if contract and contract.status == "SIGNED":
         return True, "S4", []
@@ -38,8 +35,7 @@ def check_s3_to_s4_transition(
 
 
 def check_s4_to_s5_transition(
-    db: Session,
-    project_id: int
+    db: Session, project_id: int
 ) -> Tuple[bool, Optional[str], List[str]]:
     """
     检查 S4→S5 流转条件（BOM发布后自动推进）
@@ -47,10 +43,11 @@ def check_s4_to_s5_transition(
     Returns:
         Tuple[bool, Optional[str], List[str]]: (是否可推进, 目标阶段, 缺失项列表)
     """
-    released_boms = db.query(BomHeader).filter(
-        BomHeader.project_id == project_id,
-        BomHeader.status == "RELEASED"
-    ).count()
+    released_boms = (
+        db.query(BomHeader)
+        .filter(BomHeader.project_id == project_id, BomHeader.status == "RELEASED")
+        .count()
+    )
 
     if released_boms > 0:
         return True, "S5", []
@@ -59,8 +56,7 @@ def check_s4_to_s5_transition(
 
 
 def check_s5_to_s6_transition(
-    db: Session,
-    project: Project
+    db: Session, project: Project
 ) -> Tuple[bool, Optional[str], List[str]]:
     """
     检查 S5→S6 流转条件（物料齐套率≥80%时提示可推进）
@@ -79,8 +75,7 @@ def check_s5_to_s6_transition(
 
 
 def check_s7_to_s8_transition(
-    db: Session,
-    project_id: int
+    db: Session, project_id: int
 ) -> Tuple[bool, Optional[str], List[str]]:
     """
     检查 S7→S8 流转条件（FAT验收通过后自动推进）
@@ -88,12 +83,16 @@ def check_s7_to_s8_transition(
     Returns:
         Tuple[bool, Optional[str], List[str]]: (是否可推进, 目标阶段, 缺失项列表)
     """
-    fat_orders = db.query(AcceptanceOrder).filter(
-        AcceptanceOrder.project_id == project_id,
-        AcceptanceOrder.acceptance_type == "FAT",
-        AcceptanceOrder.status == "COMPLETED",
-        AcceptanceOrder.overall_result == "PASSED"
-    ).count()
+    fat_orders = (
+        db.query(AcceptanceOrder)
+        .filter(
+            AcceptanceOrder.project_id == project_id,
+            AcceptanceOrder.acceptance_type == "FAT",
+            AcceptanceOrder.status == "COMPLETED",
+            AcceptanceOrder.overall_result == "PASSED",
+        )
+        .count()
+    )
 
     if fat_orders > 0:
         return True, "S8", []
@@ -102,8 +101,7 @@ def check_s7_to_s8_transition(
 
 
 def check_s8_to_s9_transition(
-    db: Session,
-    project: Project
+    db: Session, project: Project
 ) -> Tuple[bool, Optional[str], List[str]]:
     """
     检查 S8→S9 流转条件（终验收通过且回款达标后提示可推进）
@@ -114,25 +112,31 @@ def check_s8_to_s9_transition(
     project_id = project.id
 
     # 检查终验收
-    final_orders = db.query(AcceptanceOrder).filter(
-        AcceptanceOrder.project_id == project_id,
-        AcceptanceOrder.acceptance_type.in_(["FINAL", "SAT"]),
-        AcceptanceOrder.status == "COMPLETED",
-        AcceptanceOrder.overall_result == "PASSED"
-    ).count()
+    final_orders = (
+        db.query(AcceptanceOrder)
+        .filter(
+            AcceptanceOrder.project_id == project_id,
+            AcceptanceOrder.acceptance_type.in_(["FINAL", "SAT"]),
+            AcceptanceOrder.status == "COMPLETED",
+            AcceptanceOrder.overall_result == "PASSED",
+        )
+        .count()
+    )
 
     if final_orders == 0:
         return False, None, ["终验收未通过（请完成终验收流程）"]
 
     # 检查回款达标
-    payment_plans = db.query(ProjectPaymentPlan).filter(
-        ProjectPaymentPlan.project_id == project_id
-    ).all()
+    payment_plans = (
+        db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.project_id == project_id).all()
+    )
 
     if not payment_plans:
         return False, None, ["收款计划未设置"]
 
-    total_paid = sum(float(plan.actual_amount or 0) for plan in payment_plans if plan.status == "PAID")
+    total_paid = sum(
+        float(plan.actual_amount or 0) for plan in payment_plans if plan.status == "PAID"
+    )
     total_planned = sum(float(plan.planned_amount or 0) for plan in payment_plans)
     contract_amount = float(project.contract_amount or 0)
     base_amount = max(contract_amount, total_planned) if total_planned > 0 else contract_amount
@@ -155,19 +159,16 @@ def get_stage_status_mapping() -> Dict[str, str]:
         Dict[str, str]: 阶段到状态的映射字典
     """
     return {
-        'S4': 'ST09',
-        'S5': 'ST12',
-        'S6': 'ST16',
-        'S8': 'ST23',
-        'S9': 'ST30',
+        "S4": "ST09",
+        "S5": "ST12",
+        "S6": "ST16",
+        "S8": "ST23",
+        "S9": "ST30",
     }
 
 
 def execute_stage_transition(
-    db: Session,
-    project: Project,
-    target_stage: str,
-    transition_reason: str
+    db: Session, project: Project, target_stage: str, transition_reason: str
 ) -> Tuple[bool, Dict[str, Any]]:
     """
     执行阶段流转
@@ -188,7 +189,7 @@ def execute_stage_transition(
                 "current_stage": project.stage,
                 "target_stage": target_stage,
                 "missing_items": gate_missing,
-                "transition_reason": transition_reason
+                "transition_reason": transition_reason,
             }
 
         old_stage = project.stage
@@ -206,10 +207,11 @@ def execute_stage_transition(
             "current_stage": old_stage,
             "target_stage": target_stage,
             "missing_items": [],
-            "transition_reason": transition_reason
+            "transition_reason": transition_reason,
         }
     except Exception as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"自动推进阶段失败：{str(e)}", exc_info=True)
         return False, {
@@ -218,5 +220,5 @@ def execute_stage_transition(
             "message": f"自动推进失败：{str(e)}",
             "current_stage": project.stage,
             "target_stage": target_stage,
-            "missing_items": []
+            "missing_items": [],
         }

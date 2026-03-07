@@ -1,10 +1,12 @@
 """Tests for app/services/stage_instance/helpers.py"""
+
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 try:
+    from app.models.enums import CompletionMethodEnum, StageStatusEnum
     from app.services.stage_instance.helpers import HelpersMixin
-    from app.models.enums import StageStatusEnum, CompletionMethodEnum
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 

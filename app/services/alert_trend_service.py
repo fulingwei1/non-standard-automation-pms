@@ -8,7 +8,6 @@
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List
 
-
 from app.common.date_range import get_month_range, month_start
 from app.models.alert import AlertRecord
 
@@ -76,10 +75,7 @@ def generate_date_range(start: date, end: date, period: str) -> List[str]:
     return sorted(dates)
 
 
-def build_trend_statistics(
-    alerts: List[AlertRecord],
-    period: str
-) -> Dict[str, Any]:
+def build_trend_statistics(alerts: List[AlertRecord], period: str) -> Dict[str, Any]:
     """
     构建趋势统计数据
 
@@ -92,8 +88,8 @@ def build_trend_statistics(
     """
     date_trends = {}
     level_trends = {}  # {date: {level: count}}
-    type_trends = {}   # {date: {type: count}}
-    status_trends = {} # {date: {status: count}}
+    type_trends = {}  # {date: {type: count}}
+    status_trends = {}  # {date: {status: count}}
 
     for alert in alerts:
         if not alert.triggered_at:
@@ -123,16 +119,14 @@ def build_trend_statistics(
         status_trends[period_key][status] = status_trends[period_key].get(status, 0) + 1
 
     return {
-        'date_trends': date_trends,
-        'level_trends': level_trends,
-        'type_trends': type_trends,
-        'status_trends': status_trends
+        "date_trends": date_trends,
+        "level_trends": level_trends,
+        "type_trends": type_trends,
+        "status_trends": status_trends,
     }
 
 
-def build_summary_statistics(
-    alerts: List[AlertRecord]
-) -> Dict[str, Dict[str, int]]:
+def build_summary_statistics(alerts: List[AlertRecord]) -> Dict[str, Dict[str, int]]:
     """
     构建汇总统计
 
@@ -156,8 +150,4 @@ def build_summary_statistics(
         status = alert.status or "UNKNOWN"
         total_by_status[status] = total_by_status.get(status, 0) + 1
 
-    return {
-        'by_level': total_by_level,
-        'by_type': total_by_type,
-        'by_status': total_by_status
-    }
+    return {"by_level": total_by_level, "by_type": total_by_type, "by_status": total_by_status}

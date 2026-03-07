@@ -16,13 +16,13 @@ class TestAssemblyAttrRecommendation:
         from app.services.assembly_attr_recommender import AssemblyAttrRecommendation
 
         rec = AssemblyAttrRecommendation(
-        stage_code="MECH",
-        is_blocking=True,
-        can_postpone=False,
-        importance_level="HIGH",
-        confidence=95.0,
-        source="HISTORY",
-        reason="测试原因"
+            stage_code="MECH",
+            is_blocking=True,
+            can_postpone=False,
+            importance_level="HIGH",
+            confidence=95.0,
+            source="HISTORY",
+            reason="测试原因",
         )
 
         assert rec.stage_code == "MECH"
@@ -37,11 +37,7 @@ class TestAssemblyAttrRecommendation:
         """测试默认值"""
         from app.services.assembly_attr_recommender import AssemblyAttrRecommendation
 
-        rec = AssemblyAttrRecommendation(
-        stage_code="FRAME",
-        is_blocking=False,
-        can_postpone=True
-        )
+        rec = AssemblyAttrRecommendation(stage_code="FRAME", is_blocking=False, can_postpone=True)
 
         assert rec.importance_level == "NORMAL"
         assert rec.confidence == 0.0
@@ -58,9 +54,9 @@ class TestAssemblyAttrRecommenderConstants:
 
         mapping = AssemblyAttrRecommender.KEYWORD_STAGE_MAPPING
         assert isinstance(mapping, dict)
-        assert 'FRAME' in mapping
-        assert 'MECH' in mapping
-        assert 'ELECTRIC' in mapping
+        assert "FRAME" in mapping
+        assert "MECH" in mapping
+        assert "ELECTRIC" in mapping
 
     def test_supplier_type_mapping_exists(self):
         """测试供应商类型映射存在"""
@@ -68,8 +64,8 @@ class TestAssemblyAttrRecommenderConstants:
 
         mapping = AssemblyAttrRecommender.SUPPLIER_TYPE_MAPPING
         assert isinstance(mapping, dict)
-        assert 'MACHINING' in mapping
-        assert 'SHEET_METAL' in mapping
+        assert "MACHINING" in mapping
+        assert "SHEET_METAL" in mapping
 
 
 class TestRecommend:
@@ -88,9 +84,7 @@ class TestRecommend:
         material.category_id = None
         material.default_supplier_id = None
 
-        rec = AssemblyAttrRecommender.recommend(
-        db_session, bom_item, material, current_bom_id=1
-        )
+        rec = AssemblyAttrRecommender.recommend(db_session, bom_item, material, current_bom_id=1)
 
         assert rec is not None
         assert rec.source == "DEFAULT"
@@ -183,7 +177,7 @@ class TestMatchFromHistory:
         from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
         rec = AssemblyAttrRecommender._match_from_history(
-        db_session, material_id=99999, current_bom_id=1
+            db_session, material_id=99999, current_bom_id=1
         )
 
         assert rec is None
@@ -211,9 +205,7 @@ class TestBatchRecommend:
         """测试空物料列表"""
         from app.services.assembly_attr_recommender import AssemblyAttrRecommender
 
-        result = AssemblyAttrRecommender.batch_recommend(
-        db_session, bom_id=1, bom_items=[]
-        )
+        result = AssemblyAttrRecommender.batch_recommend(db_session, bom_id=1, bom_items=[])
 
         assert result == {}
 
@@ -224,30 +216,30 @@ class TestBlockingDefaults:
     def test_frame_is_blocking(self):
         """测试框架阶段是阻塞的"""
         blocking_defaults = {
-        'FRAME': True,
-        'MECH': True,
-        'ELECTRIC': True,
-        'WIRING': False,
-        'DEBUG': False,
-        'COSMETIC': False
+            "FRAME": True,
+            "MECH": True,
+            "ELECTRIC": True,
+            "WIRING": False,
+            "DEBUG": False,
+            "COSMETIC": False,
         }
 
-        assert blocking_defaults['FRAME'] is True
-        assert blocking_defaults['WIRING'] is False
+        assert blocking_defaults["FRAME"] is True
+        assert blocking_defaults["WIRING"] is False
 
     def test_postpone_defaults(self):
         """测试可后补默认值"""
         postpone_defaults = {
-        'FRAME': False,
-        'MECH': False,
-        'ELECTRIC': False,
-        'WIRING': True,
-        'DEBUG': True,
-        'COSMETIC': True
+            "FRAME": False,
+            "MECH": False,
+            "ELECTRIC": False,
+            "WIRING": True,
+            "DEBUG": True,
+            "COSMETIC": True,
         }
 
-        assert postpone_defaults['FRAME'] is False
-        assert postpone_defaults['COSMETIC'] is True
+        assert postpone_defaults["FRAME"] is False
+        assert postpone_defaults["COSMETIC"] is True
 
 
 class TestConfidenceLevels:
@@ -283,6 +275,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestNotifyTimesheetAnomaly:
@@ -10,6 +11,7 @@ class TestNotifyTimesheetAnomaly:
     def test_no_anomalies(self, mock_notify, mock_quality_cls):
         mock_quality_cls.return_value.detect_anomalies.return_value = []
         from app.services.timesheet_reminder.anomaly_reminders import notify_timesheet_anomaly
+
         db = MagicMock()
         result = notify_timesheet_anomaly(db)
         assert result == 0
@@ -21,6 +23,7 @@ class TestNotifyTimesheetAnomaly:
             {"timesheet_id": 1, "anomaly_type": "OVERTIME", "description": "超时"}
         ]
         from app.services.timesheet_reminder.anomaly_reminders import notify_timesheet_anomaly
+
         db = MagicMock()
         ts = MagicMock()
         ts.user_id = 1

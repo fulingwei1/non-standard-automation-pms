@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Session
 
-
 from .utils import create_requirement
 
 if TYPE_CHECKING:
@@ -23,7 +22,7 @@ def extract_from_excel(
     file_path: Path,
     project_id: int,
     document_id: int,
-    extracted_by: int
+    extracted_by: int,
 ) -> List:
     """
     从Excel文件中提取规格要求
@@ -44,23 +43,23 @@ def extract_from_excel(
         for col_idx, cell in enumerate(ws[header_row], 1):
             if cell.value:
                 header_text = str(cell.value).strip().lower()
-                if '物料编码' in header_text or 'material_code' in header_text:
-                    headers['material_code'] = col_idx
-                elif '物料名称' in header_text or 'material_name' in header_text:
-                    headers['material_name'] = col_idx
-                elif '规格' in header_text or 'specification' in header_text:
-                    headers['specification'] = col_idx
-                elif '品牌' in header_text or 'brand' in header_text:
-                    headers['brand'] = col_idx
-                elif '型号' in header_text or 'model' in header_text:
-                    headers['model'] = col_idx
+                if "物料编码" in header_text or "material_code" in header_text:
+                    headers["material_code"] = col_idx
+                elif "物料名称" in header_text or "material_name" in header_text:
+                    headers["material_name"] = col_idx
+                elif "规格" in header_text or "specification" in header_text:
+                    headers["specification"] = col_idx
+                elif "品牌" in header_text or "brand" in header_text:
+                    headers["brand"] = col_idx
+                elif "型号" in header_text or "model" in header_text:
+                    headers["model"] = col_idx
 
         # 读取数据行
         for row_idx in range(header_row + 1, ws.max_row + 1):
             row = ws[row_idx]
 
             # 获取物料名称（必需）
-            material_name_col = headers.get('material_name')
+            material_name_col = headers.get("material_name")
             if not material_name_col or not row[material_name_col - 1].value:
                 continue
 
@@ -70,23 +69,23 @@ def extract_from_excel(
 
             # 获取其他字段
             material_code = None
-            if 'material_code' in headers:
-                cell_value = row[headers['material_code'] - 1].value
+            if "material_code" in headers:
+                cell_value = row[headers["material_code"] - 1].value
                 material_code = str(cell_value).strip() if cell_value else None
 
             specification = None
-            if 'specification' in headers:
-                cell_value = row[headers['specification'] - 1].value
+            if "specification" in headers:
+                cell_value = row[headers["specification"] - 1].value
                 specification = str(cell_value).strip() if cell_value else None
 
             brand = None
-            if 'brand' in headers:
-                cell_value = row[headers['brand'] - 1].value
+            if "brand" in headers:
+                cell_value = row[headers["brand"] - 1].value
                 brand = str(cell_value).strip() if cell_value else None
 
             model = None
-            if 'model' in headers:
-                cell_value = row[headers['model'] - 1].value
+            if "model" in headers:
+                cell_value = row[headers["model"] - 1].value
                 model = str(cell_value).strip() if cell_value else None
 
             # 创建规格要求
@@ -100,7 +99,7 @@ def extract_from_excel(
                 extracted_by=extracted_by,
                 material_code=material_code,
                 brand=brand,
-                model=model
+                model=model,
             )
             requirements.append(requirement)
 
@@ -119,7 +118,7 @@ def extract_from_word(
     file_path: Path,
     project_id: int,
     document_id: int,
-    extracted_by: int
+    extracted_by: int,
 ) -> List:
     """
     从Word文件中提取规格要求
@@ -139,40 +138,40 @@ def extract_from_word(
                     # 读取表头
                     for col_idx, cell in enumerate(row.cells):
                         header_text = cell.text.strip().lower()
-                        if '物料编码' in header_text or 'material_code' in header_text:
-                            headers['material_code'] = col_idx
-                        elif '物料名称' in header_text or 'material_name' in header_text:
-                            headers['material_name'] = col_idx
-                        elif '规格' in header_text or 'specification' in header_text:
-                            headers['specification'] = col_idx
-                        elif '品牌' in header_text or 'brand' in header_text:
-                            headers['brand'] = col_idx
-                        elif '型号' in header_text or 'model' in header_text:
-                            headers['model'] = col_idx
+                        if "物料编码" in header_text or "material_code" in header_text:
+                            headers["material_code"] = col_idx
+                        elif "物料名称" in header_text or "material_name" in header_text:
+                            headers["material_name"] = col_idx
+                        elif "规格" in header_text or "specification" in header_text:
+                            headers["specification"] = col_idx
+                        elif "品牌" in header_text or "brand" in header_text:
+                            headers["brand"] = col_idx
+                        elif "型号" in header_text or "model" in header_text:
+                            headers["model"] = col_idx
                 else:
                     # 读取数据行
-                    if 'material_name' not in headers:
+                    if "material_name" not in headers:
                         continue
 
-                    material_name = row.cells[headers['material_name']].text.strip()
+                    material_name = row.cells[headers["material_name"]].text.strip()
                     if not material_name:
                         continue
 
                     material_code = None
-                    if 'material_code' in headers:
-                        material_code = row.cells[headers['material_code']].text.strip() or None
+                    if "material_code" in headers:
+                        material_code = row.cells[headers["material_code"]].text.strip() or None
 
                     specification = None
-                    if 'specification' in headers:
-                        specification = row.cells[headers['specification']].text.strip() or None
+                    if "specification" in headers:
+                        specification = row.cells[headers["specification"]].text.strip() or None
 
                     brand = None
-                    if 'brand' in headers:
-                        brand = row.cells[headers['brand']].text.strip() or None
+                    if "brand" in headers:
+                        brand = row.cells[headers["brand"]].text.strip() or None
 
                     model = None
-                    if 'model' in headers:
-                        model = row.cells[headers['model']].text.strip() or None
+                    if "model" in headers:
+                        model = row.cells[headers["model"]].text.strip() or None
 
                     requirement = create_requirement(
                         service=service,
@@ -184,7 +183,7 @@ def extract_from_word(
                         extracted_by=extracted_by,
                         material_code=material_code,
                         brand=brand,
-                        model=model
+                        model=model,
                     )
                     requirements.append(requirement)
 
@@ -213,7 +212,7 @@ def extract_from_pdf(
     file_path: Path,
     project_id: int,
     document_id: int,
-    extracted_by: int
+    extracted_by: int,
 ) -> List:
     """
     从PDF文件中提取规格要求
@@ -226,14 +225,14 @@ def extract_from_pdf(
         text_content = ""
 
         # 提取PDF文本
-        with open(file_path, 'rb') as file:
+        with open(file_path, "rb") as file:
             pdf_reader = PdfReader(file)
             for page in pdf_reader.pages:
                 text_content += page.extract_text() + "\n"
 
         # 简单的文本解析：查找包含物料信息的段落
         # 这里可以根据实际PDF格式扩展更复杂的解析逻辑
-        lines = text_content.split('\n')
+        lines = text_content.split("\n")
         current_material = None
         current_spec = None
 
@@ -244,14 +243,16 @@ def extract_from_pdf(
 
             # 简单的模式匹配：识别物料名称和规格
             # 可以根据实际文档格式调整
-            if '物料' in line or '材料' in line or '零件' in line:
+            if "物料" in line or "材料" in line or "零件" in line:
                 # 可能是物料名称行
                 parts = line.split()
                 if len(parts) >= 2:
-                    material_name = parts[0] if parts[0] not in ['物料', '材料', '零件'] else parts[1]
+                    material_name = (
+                        parts[0] if parts[0] not in ["物料", "材料", "零件"] else parts[1]
+                    )
                     if material_name and len(material_name) > 1:
                         current_material = material_name
-                        current_spec = ' '.join(parts[1:]) if len(parts) > 1 else None
+                        current_spec = " ".join(parts[1:]) if len(parts) > 1 else None
 
                         if current_material:
                             requirement = create_requirement(
@@ -261,7 +262,7 @@ def extract_from_pdf(
                                 document_id=document_id,
                                 material_name=current_material,
                                 specification=current_spec or current_material,
-                                extracted_by=extracted_by
+                                extracted_by=extracted_by,
                             )
                             requirements.append(requirement)
                             current_material = None

@@ -14,9 +14,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.acceptance import (
     AcceptanceIssue,
     AcceptanceOrder,
@@ -37,12 +37,11 @@ from app.schemas.acceptance import (
     AcceptanceOrderUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
-
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_order_no, validate_acceptance_rules, validate_edit_rules
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -90,7 +89,9 @@ def read_acceptance_orders(
         query = query.filter(AcceptanceOrder.status == order_status)
 
     total = query.count()
-    orders = apply_pagination(query.order_by(desc(AcceptanceOrder.created_at)), pagination.offset, pagination.limit).all()
+    orders = apply_pagination(
+        query.order_by(desc(AcceptanceOrder.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for order in orders:
@@ -100,30 +101,40 @@ def read_acceptance_orders(
             machine = db.query(Machine).filter(Machine.id == order.machine_id).first()
 
         # 统计开放问题数
-        open_issues = db.query(AcceptanceIssue).filter(
-            AcceptanceIssue.order_id == order.id,
-            AcceptanceIssue.status.in_(["OPEN", "IN_PROGRESS"])
-        ).count()
+        open_issues = (
+            db.query(AcceptanceIssue)
+            .filter(
+                AcceptanceIssue.order_id == order.id,
+                AcceptanceIssue.status.in_(["OPEN", "IN_PROGRESS"]),
+            )
+            .count()
+        )
 
-        items.append(AcceptanceOrderListResponse(
-            id=order.id,
-            order_no=order.order_no,
-            project_name=project.project_name if project else None,
-            machine_name=machine.machine_name if machine else None,
-            acceptance_type=order.acceptance_type,
-            planned_date=order.planned_date,
-            status=order.status,
-            overall_result=order.overall_result,
-            pass_rate=order.pass_rate or Decimal("0"),
-            open_issues=open_issues,
-            is_officially_completed=order.is_officially_completed or False,
-            created_at=order.created_at
-        ))
+        items.append(
+            AcceptanceOrderListResponse(
+                id=order.id,
+                order_no=order.order_no,
+                project_name=project.project_name if project else None,
+                machine_name=machine.machine_name if machine else None,
+                acceptance_type=order.acceptance_type,
+                planned_date=order.planned_date,
+                status=order.status,
+                overall_result=order.overall_result,
+                pass_rate=order.pass_rate or Decimal("0"),
+                open_issues=open_issues,
+                is_officially_completed=order.is_officially_completed or False,
+                created_at=order.created_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
 
-@router.get("/acceptance-orders/{order_id}", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-orders/{order_id}",
+    response_model=AcceptanceOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def read_acceptance_order(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -143,7 +154,9 @@ def read_acceptance_order(
 
     template = None
     if order.template_id:
-        template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == order.template_id).first()
+        template = (
+            db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == order.template_id).first()
+        )
 
     return AcceptanceOrderResponse(
         id=order.id,
@@ -172,11 +185,15 @@ def read_acceptance_order(
         is_officially_completed=order.is_officially_completed or False,
         officially_completed_at=order.officially_completed_at,
         created_at=order.created_at,
-        updated_at=order.updated_at
+        updated_at=order.updated_at,
     )
 
 
-@router.post("/acceptance-orders", response_model=AcceptanceOrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/acceptance-orders",
+    response_model=AcceptanceOrderResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_acceptance_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -208,13 +225,17 @@ def create_acceptance_order(
         db=db,
         acceptance_type=order_in.acceptance_type,
         project_id=order_in.project_id,
-        machine_id=order_in.machine_id
+        machine_id=order_in.machine_id,
     )
 
     # 验证模板（如果提供）
     template = None
     if order_in.template_id:
-        template = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.id == order_in.template_id).first()
+        template = (
+            db.query(AcceptanceTemplate)
+            .filter(AcceptanceTemplate.id == order_in.template_id)
+            .first()
+        )
         if not template:
             raise HTTPException(status_code=404, detail="验收模板不存在")
         if template.acceptance_type != order_in.acceptance_type:
@@ -225,7 +246,7 @@ def create_acceptance_order(
         db=db,
         acceptance_type=order_in.acceptance_type,
         project_code=project.project_code,
-        machine_no=machine_no
+        machine_no=machine_no,
     )
 
     order = AcceptanceOrder(
@@ -237,7 +258,7 @@ def create_acceptance_order(
         planned_date=order_in.planned_date,
         location=order_in.location,
         status="DRAFT",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     db.add(order)
@@ -245,10 +266,16 @@ def create_acceptance_order(
 
     # 如果使用了模板，从模板创建检查项
     if template:
-        categories = db.query(TemplateCategory).filter(TemplateCategory.template_id == template.id).all()
+        categories = (
+            db.query(TemplateCategory).filter(TemplateCategory.template_id == template.id).all()
+        )
         item_no = 0
         for category in categories:
-            items = db.query(TemplateCheckItem).filter(TemplateCheckItem.category_id == category.id).all()
+            items = (
+                db.query(TemplateCheckItem)
+                .filter(TemplateCheckItem.category_id == category.id)
+                .all()
+            )
             for item in items:
                 item_no += 1
                 order_item = AcceptanceOrderItem(
@@ -267,7 +294,7 @@ def create_acceptance_order(
                     is_required=item.is_required,
                     is_key_item=item.is_key_item,
                     sort_order=item.sort_order,
-                    result_status="PENDING"
+                    result_status="PENDING",
                 )
                 db.add(order_item)
 
@@ -280,7 +307,11 @@ def create_acceptance_order(
     return read_acceptance_order(order.id, db, current_user)
 
 
-@router.put("/acceptance-orders/{order_id}", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/acceptance-orders/{order_id}",
+    response_model=AcceptanceOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_acceptance_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -314,7 +345,9 @@ def update_acceptance_order(
     return read_acceptance_order(order_id, db, current_user)
 
 
-@router.delete("/acceptance-orders/{order_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.delete(
+    "/acceptance-orders/{order_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def delete_acceptance_order(
     *,
     db: Session = Depends(deps.get_db),

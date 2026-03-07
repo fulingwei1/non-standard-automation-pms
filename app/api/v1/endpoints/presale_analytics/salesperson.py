@@ -30,13 +30,9 @@ router = APIRouter()
 )
 async def get_salesperson_performance(
     salesperson_id: int,
-    period: Optional[str] = Query(
-        None, description="统计周期，格式 YYYY 或 YYYY-MM，默认全部"
-    ),
+    period: Optional[str] = Query(None, description="统计周期，格式 YYYY 或 YYYY-MM，默认全部"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(
-        security.require_permission("presale_analytics:create")
-    ),
+    current_user: User = Depends(security.require_permission("presale_analytics:create")),
 ) -> Any:
     """获取销售人员绩效分析"""
 
@@ -53,18 +49,14 @@ async def get_salesperson_performance(
             year = int(period)
             start_date = date(year, 1, 1)
             end_date = date(year + 1, 1, 1)
-        query = query.filter(
-            Project.created_at >= start_date, Project.created_at < end_date
-        )
+        query = query.filter(Project.created_at >= start_date, Project.created_at < end_date)
 
     projects = query.all()
 
     total_leads = len(projects)
     won_leads = sum(1 for p in projects if p.outcome == LeadOutcomeEnum.WON.value)
     lost_leads = sum(1 for p in projects if p.outcome == LeadOutcomeEnum.LOST.value)
-    win_rate = (
-        won_leads / (won_leads + lost_leads) if (won_leads + lost_leads) > 0 else 0
-    )
+    win_rate = won_leads / (won_leads + lost_leads) if (won_leads + lost_leads) > 0 else 0
 
     total_estimated_amount = sum(p.contract_amount or Decimal("0") for p in projects)
     won_amount = sum(
@@ -81,9 +73,7 @@ async def get_salesperson_performance(
 
     for project in projects:
         hours = (
-            db.query(func.sum(WorkLog.work_hours))
-            .filter(WorkLog.project_id == project.id)
-            .scalar()
+            db.query(func.sum(WorkLog.work_hours)).filter(WorkLog.project_id == project.id).scalar()
             or 0
         )
         total_resource_hours += hours
@@ -100,9 +90,7 @@ async def get_salesperson_performance(
         float(won_amount) / total_resource_hours if total_resource_hours > 0 else 0
     )
 
-    top_loss_reasons = sorted(
-        loss_reason_count.items(), key=lambda x: x[1], reverse=True
-    )[:3]
+    top_loss_reasons = sorted(loss_reason_count.items(), key=lambda x: x[1], reverse=True)[:3]
     top_loss_reasons = [{"reason": r, "count": c} for r, c in top_loss_reasons]
 
     monthly_trend = []
@@ -112,19 +100,11 @@ async def get_salesperson_performance(
         month_key = month_date.strftime("%Y-%m")
 
         month_projects = [
-            p
-            for p in projects
-            if p.created_at and p.created_at.strftime("%Y-%m") == month_key
+            p for p in projects if p.created_at and p.created_at.strftime("%Y-%m") == month_key
         ]
-        month_won = sum(
-            1 for p in month_projects if p.outcome == LeadOutcomeEnum.WON.value
-        )
-        month_lost = sum(
-            1 for p in month_projects if p.outcome == LeadOutcomeEnum.LOST.value
-        )
-        month_rate = (
-            month_won / (month_won + month_lost) if (month_won + month_lost) > 0 else 0
-        )
+        month_won = sum(1 for p in month_projects if p.outcome == LeadOutcomeEnum.WON.value)
+        month_lost = sum(1 for p in month_projects if p.outcome == LeadOutcomeEnum.LOST.value)
+        month_rate = month_won / (month_won + month_lost) if (month_won + month_lost) > 0 else 0
 
         monthly_trend.append(
             {
@@ -162,15 +142,11 @@ async def get_salesperson_performance(
 
 @router.get("/salesperson-ranking", response_model=ResponseModel[SalespersonRanking])
 async def get_salesperson_ranking(
-    ranking_type: str = Query(
-        "win_rate", description="排行类型: win_rate/efficiency/amount"
-    ),
+    ranking_type: str = Query("win_rate", description="排行类型: win_rate/efficiency/amount"),
     period: str = Query(..., description="统计周期，格式 YYYY 或 YYYY-MM"),
     limit: int = Query(10, ge=1, le=50, description="返回数量"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(
-        security.require_permission("presale_analytics:create")
-    ),
+    current_user: User = Depends(security.require_permission("presale_analytics:create")),
 ) -> Any:
     """获取销售人员排行榜"""
     from app.models.user import Role, UserRole
@@ -193,9 +169,7 @@ async def get_salesperson_ranking(
             start_date = date(year, 1, 1)
             end_date = date(year + 1, 1, 1)
 
-        query = query.filter(
-            Project.created_at >= start_date, Project.created_at < end_date
-        )
+        query = query.filter(Project.created_at >= start_date, Project.created_at < end_date)
         projects = query.all()
 
         if not projects:

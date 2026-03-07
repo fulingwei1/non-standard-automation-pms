@@ -22,42 +22,46 @@ def create_style():
     cell_alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
 
     thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
     )
 
     return {
-        'header_font': header_font,
-        'header_fill': header_fill,
-        'header_alignment': header_alignment,
-        'title_font': title_font,
-        'title_alignment': title_alignment,
-        'cell_alignment': cell_alignment,
-        'border': thin_border
+        "header_font": header_font,
+        "header_fill": header_fill,
+        "header_alignment": header_alignment,
+        "title_font": title_font,
+        "title_alignment": title_alignment,
+        "cell_alignment": cell_alignment,
+        "border": thin_border,
     }
+
 
 def set_column_widths(ws, widths):
     """设置列宽"""
     for i, width in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = width
 
+
 def add_header_row(ws, row, headers, styles):
     """添加表头行"""
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=row, column=col, value=header)
-        cell.font = styles['header_font']
-        cell.fill = styles['header_fill']
-        cell.alignment = styles['header_alignment']
-        cell.border = styles['border']
+        cell.font = styles["header_font"]
+        cell.fill = styles["header_fill"]
+        cell.alignment = styles["header_alignment"]
+        cell.border = styles["border"]
+
 
 def add_data_row(ws, row, data, styles):
     """添加数据行"""
     for col, value in enumerate(data, 1):
         cell = ws.cell(row=row, column=col, value=value)
-        cell.alignment = styles['cell_alignment']
-        cell.border = styles['border']
+        cell.alignment = styles["cell_alignment"]
+        cell.border = styles["border"]
+
 
 def create_overview_sheet(wb, styles):
     """创建概述页"""
@@ -66,18 +70,18 @@ def create_overview_sheet(wb, styles):
     set_column_widths(ws, [20, 60])
 
     # 标题
-    ws.merge_cells('A1:B1')
-    ws['A1'] = "项目四算体系设计文档"
-    ws['A1'].font = Font(bold=True, size=18)
-    ws['A1'].alignment = Alignment(horizontal="center")
+    ws.merge_cells("A1:B1")
+    ws["A1"] = "项目四算体系设计文档"
+    ws["A1"].font = Font(bold=True, size=18)
+    ws["A1"].alignment = Alignment(horizontal="center")
 
-    ws.merge_cells('A2:B2')
-    ws['A2'] = f"文档日期: {datetime.now().strftime('%Y-%m-%d')}"
-    ws['A2'].alignment = Alignment(horizontal="center")
+    ws.merge_cells("A2:B2")
+    ws["A2"] = f"文档日期: {datetime.now().strftime('%Y-%m-%d')}"
+    ws["A2"].alignment = Alignment(horizontal="center")
 
     # 四算定义
     row = 4
-    ws.cell(row=row, column=1, value="一、四算定义").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、四算定义").font = styles["title_font"]
     row += 1
 
     add_header_row(ws, row, ["阶段", "含义与价值"], styles)
@@ -95,7 +99,7 @@ def create_overview_sheet(wb, styles):
 
     # 核心理念
     row += 1
-    ws.cell(row=row, column=1, value="二、核心理念").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、核心理念").font = styles["title_font"]
     row += 1
 
     principles = [
@@ -112,7 +116,7 @@ def create_overview_sheet(wb, styles):
 
     # 设计目标
     row += 1
-    ws.cell(row=row, column=1, value="三、设计目标").font = styles['title_font']
+    ws.cell(row=row, column=1, value="三、设计目标").font = styles["title_font"]
     row += 1
     ws.cell(row=row, column=1, value="建立分层四算体系：")
     row += 1
@@ -129,6 +133,7 @@ def create_overview_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_estimate_sheet(wb, styles):
     """创建概算模块页"""
     ws = wb.create_sheet("2.概算模块")
@@ -139,7 +144,7 @@ def create_estimate_sheet(wb, styles):
 
     # 概算流程
     row += 2
-    ws.cell(row=row, column=1, value="一、概算流程").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、概算流程").font = styles["title_font"]
     row += 1
 
     flow = [
@@ -157,7 +162,7 @@ def create_estimate_sheet(wb, styles):
 
     # 数据模型
     row += 1
-    ws.cell(row=row, column=1, value="二、数据模型 - project_estimates").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、数据模型 - project_estimates").font = styles["title_font"]
     row += 1
 
     fields = [
@@ -188,7 +193,7 @@ def create_estimate_sheet(wb, styles):
 
     # 审批层级
     row += 1
-    ws.cell(row=row, column=1, value="三、概算审批层级").font = styles['title_font']
+    ws.cell(row=row, column=1, value="三、概算审批层级").font = styles["title_font"]
     row += 1
 
     approval = [
@@ -203,6 +208,7 @@ def create_estimate_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_budget_sheet(wb, styles):
     """创建预算模块页"""
     ws = wb.create_sheet("3.预算模块")
@@ -213,7 +219,7 @@ def create_budget_sheet(wb, styles):
 
     # 预算流程
     row += 2
-    ws.cell(row=row, column=1, value="一、预算流程").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、预算流程").font = styles["title_font"]
     row += 1
 
     flow = [
@@ -231,7 +237,9 @@ def create_budget_sheet(wb, styles):
 
     # 扩展字段
     row += 1
-    ws.cell(row=row, column=1, value="二、现有表扩展字段 - project_budgets").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、现有表扩展字段 - project_budgets").font = styles[
+        "title_font"
+    ]
     row += 1
 
     fields = [
@@ -253,7 +261,7 @@ def create_budget_sheet(wb, styles):
 
     # 预算控制
     row += 1
-    ws.cell(row=row, column=1, value="三、预算控制机制").font = styles['title_font']
+    ws.cell(row=row, column=1, value="三、预算控制机制").font = styles["title_font"]
     row += 1
 
     control = [
@@ -267,6 +275,7 @@ def create_budget_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_accounting_sheet(wb, styles):
     """创建核算模块页"""
     ws = wb.create_sheet("4.核算模块")
@@ -277,7 +286,7 @@ def create_accounting_sheet(wb, styles):
 
     # 成本归集
     row += 2
-    ws.cell(row=row, column=1, value="一、成本自动归集").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、成本自动归集").font = styles["title_font"]
     row += 1
 
     sources = [
@@ -294,7 +303,9 @@ def create_accounting_sheet(wb, styles):
 
     # 数据模型
     row += 1
-    ws.cell(row=row, column=1, value="二、数据模型 - project_cost_ledgers").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、数据模型 - project_cost_ledgers").font = styles[
+        "title_font"
+    ]
     row += 1
 
     fields = [
@@ -320,6 +331,7 @@ def create_accounting_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_settlement_sheet(wb, styles):
     """创建决算模块页"""
     ws = wb.create_sheet("5.决算模块")
@@ -330,7 +342,7 @@ def create_settlement_sheet(wb, styles):
 
     # 决算流程
     row += 2
-    ws.cell(row=row, column=1, value="一、决算流程").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、决算流程").font = styles["title_font"]
     row += 1
 
     flow = [
@@ -348,7 +360,7 @@ def create_settlement_sheet(wb, styles):
 
     # 偏差原因分类
     row += 1
-    ws.cell(row=row, column=1, value="二、偏差根本原因分类").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、偏差根本原因分类").font = styles["title_font"]
     row += 1
 
     causes = [
@@ -367,7 +379,7 @@ def create_settlement_sheet(wb, styles):
 
     # 经验传承闭环
     row += 1
-    ws.cell(row=row, column=1, value="三、经验传承闭环").font = styles['title_font']
+    ws.cell(row=row, column=1, value="三、经验传承闭环").font = styles["title_font"]
     row += 1
 
     feedback = [
@@ -383,6 +395,7 @@ def create_settlement_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_roles_sheet(wb, styles):
     """创建角色权限页"""
     ws = wb.create_sheet("6.角色权限")
@@ -393,7 +406,7 @@ def create_roles_sheet(wb, styles):
 
     # 角色定义
     row += 2
-    ws.cell(row=row, column=1, value="一、四算相关角色").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、四算相关角色").font = styles["title_font"]
     row += 1
 
     roles = [
@@ -410,7 +423,7 @@ def create_roles_sheet(wb, styles):
 
     # 权限矩阵
     row += 1
-    ws.cell(row=row, column=1, value="二、权限矩阵").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、权限矩阵").font = styles["title_font"]
     row += 1
 
     ws_perm = wb.create_sheet("6.1权限矩阵")
@@ -441,7 +454,7 @@ def create_roles_sheet(wb, styles):
 
     # 数据权限
     row += 1
-    ws.cell(row=row, column=1, value="三、数据权限范围").font = styles['title_font']
+    ws.cell(row=row, column=1, value="三、数据权限范围").font = styles["title_font"]
     row += 1
 
     data_scope = [
@@ -456,6 +469,7 @@ def create_roles_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_integration_sheet(wb, styles):
     """创建集成与检查点页"""
     ws = wb.create_sheet("7.LTC集成")
@@ -466,7 +480,7 @@ def create_integration_sheet(wb, styles):
 
     # 检查点
     row += 2
-    ws.cell(row=row, column=1, value="一、预置检查点").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、预置检查点").font = styles["title_font"]
     row += 1
 
     checkpoints = [
@@ -486,7 +500,7 @@ def create_integration_sheet(wb, styles):
 
     # 状态流转
     row += 1
-    ws.cell(row=row, column=1, value="二、四算状态流转").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、四算状态流转").font = styles["title_font"]
     row += 1
 
     states = [
@@ -509,6 +523,7 @@ def create_integration_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_implementation_sheet(wb, styles):
     """创建实施计划页"""
     ws = wb.create_sheet("8.实施计划")
@@ -519,7 +534,7 @@ def create_implementation_sheet(wb, styles):
 
     # Phase 1
     row += 2
-    ws.cell(row=row, column=1, value="Phase 1: 基础闭环（优先）").font = styles['title_font']
+    ws.cell(row=row, column=1, value="Phase 1: 基础闭环（优先）").font = styles["title_font"]
     row += 1
 
     phase1 = [
@@ -536,7 +551,7 @@ def create_implementation_sheet(wb, styles):
 
     # Phase 2
     row += 1
-    ws.cell(row=row, column=1, value="Phase 2: 深化控制").font = styles['title_font']
+    ws.cell(row=row, column=1, value="Phase 2: 深化控制").font = styles["title_font"]
     row += 1
 
     phase2 = [
@@ -553,7 +568,7 @@ def create_implementation_sheet(wb, styles):
 
     # Phase 3
     row += 1
-    ws.cell(row=row, column=1, value="Phase 3: 管理提升").font = styles['title_font']
+    ws.cell(row=row, column=1, value="Phase 3: 管理提升").font = styles["title_font"]
     row += 1
 
     phase3 = [
@@ -570,7 +585,7 @@ def create_implementation_sheet(wb, styles):
 
     # 系统改造
     row += 1
-    ws.cell(row=row, column=1, value="现有系统改造点").font = styles['title_font']
+    ws.cell(row=row, column=1, value="现有系统改造点").font = styles["title_font"]
     row += 1
 
     changes = [
@@ -588,6 +603,7 @@ def create_implementation_sheet(wb, styles):
         add_data_row(ws, row, item, styles)
         row += 1
 
+
 def create_gap_sheet(wb, styles):
     """创建差距分析页"""
     ws = wb.create_sheet("9.差距分析")
@@ -597,7 +613,7 @@ def create_gap_sheet(wb, styles):
     ws.cell(row=row, column=1, value="现有系统与四算目标差距分析").font = Font(bold=True, size=16)
 
     row += 2
-    ws.cell(row=row, column=1, value="一、需要新增的模块").font = styles['title_font']
+    ws.cell(row=row, column=1, value="一、需要新增的模块").font = styles["title_font"]
     row += 1
 
     new_modules = [
@@ -616,7 +632,7 @@ def create_gap_sheet(wb, styles):
         row += 1
 
     row += 1
-    ws.cell(row=row, column=1, value="二、现有功能覆盖度").font = styles['title_font']
+    ws.cell(row=row, column=1, value="二、现有功能覆盖度").font = styles["title_font"]
     row += 1
 
     coverage = [
@@ -630,6 +646,7 @@ def create_gap_sheet(wb, styles):
     for item in coverage:
         add_data_row(ws, row, item, styles)
         row += 1
+
 
 def main():
     """主函数"""
@@ -652,6 +669,7 @@ def main():
     wb.save(output_path)
     print(f"Excel 文件已生成: {output_path}")
     return output_path
+
 
 if __name__ == "__main__":
     main()

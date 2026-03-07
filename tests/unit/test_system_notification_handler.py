@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """系统通知处理器单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.notification_handlers.system_handler import SystemNotificationHandler
 
 

@@ -5,14 +5,12 @@
 提供个人工作量、部门工作量以及全局资源概览等能力。
 """
 
-from __future__ import annotations
-
 from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.common.date_range import get_month_range, month_start, month_end
+from app.common.date_range import get_month_range, month_end, month_start
 from app.models.organization import Department
 from app.models.project.resource_plan import ProjectStageResourcePlan
 from app.models.user import User
@@ -63,7 +61,9 @@ class ProjectResourceService:
         workdays = calculate_workdays(start_date, end_date)
         standard_hours = workdays * 8.0
 
-        allocation_rate = round((assigned_hours / standard_hours) * 100, 2) if standard_hours else 0.0
+        allocation_rate = (
+            round((assigned_hours / standard_hours) * 100, 2) if standard_hours else 0.0
+        )
         efficiency = round((actual_hours / assigned_hours) * 100, 2) if assigned_hours else 0.0
 
         summary = UserWorkloadSummary(

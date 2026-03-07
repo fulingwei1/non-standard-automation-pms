@@ -18,16 +18,12 @@ from .validators import _validate_row_data
 router = APIRouter()
 
 
-@router.post(
-    "/validate", response_model=ImportValidateResponse, status_code=status.HTTP_200_OK
-)
+@router.post("/validate", response_model=ImportValidateResponse, status_code=status.HTTP_200_OK)
 def validate_import_data(
     *,
     db: Session = Depends(deps.get_db),
     validate_in: ImportValidateRequest,
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     验证导入数据（格式校验）

@@ -18,10 +18,11 @@ from app.models.project import Project, ProjectPaymentPlan
 
 def _sync_invoice_request_receipt_status(db: Session, plan: ProjectPaymentPlan) -> None:
     """根据收款计划实收金额同步开票申请回款状态"""
-    invoice_requests = db.query(InvoiceRequest).filter(
-        InvoiceRequest.payment_plan_id == plan.id,
-        InvoiceRequest.status == "APPROVED"
-    ).all()
+    invoice_requests = (
+        db.query(InvoiceRequest)
+        .filter(InvoiceRequest.payment_plan_id == plan.id, InvoiceRequest.status == "APPROVED")
+        .all()
+    )
     if not invoice_requests:
         return
 
@@ -57,22 +58,22 @@ def _sync_to_erp_system(project: Project, erp_order_no: Optional[str] = None) ->
         dict: 同步结果 {'success': bool, 'erp_order_no': str, 'error': str}
     """
     # 检查是否配置了ERP接口
-    erp_api_url = getattr(settings, 'ERP_API_URL', None)
-    getattr(settings, 'ERP_API_KEY', None)
+    erp_api_url = getattr(settings, "ERP_API_URL", None)
+    getattr(settings, "ERP_API_KEY", None)
 
     # 如果没有配置ERP接口，返回模拟成功
     if not erp_api_url:
         # 生成模拟ERP订单号
         generated_order_no = erp_order_no or f"ERP-{project.project_code}"
         return {
-            'success': True,
-            'erp_order_no': generated_order_no,
-            'message': 'ERP接口未配置，使用模拟同步'
+            "success": True,
+            "erp_order_no": generated_order_no,
+            "message": "ERP接口未配置，使用模拟同步",
         }
 
     # 实际ERP集成逻辑（待实现）
     return {
-        'success': True,
-        'erp_order_no': erp_order_no or f"ERP-{project.project_code}",
-        'message': 'ERP同步功能框架已就绪，请配置实际ERP接口'
+        "success": True,
+        "erp_order_no": erp_order_no or f"ERP-{project.project_code}",
+        "message": "ERP同步功能框架已就绪，请配置实际ERP接口",
     }

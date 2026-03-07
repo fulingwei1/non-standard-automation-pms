@@ -48,8 +48,8 @@ def get_user_hourly_rate(
             "user_id": user_id,
             "hourly_rate": float(hourly_rate),
             "work_date": work_date or str(date.today()),
-            "source": "配置"
-        }
+            "source": "配置",
+        },
     )
 
 
@@ -82,11 +82,8 @@ def get_users_hourly_rates(
         message="success",
         data={
             "work_date": work_date or str(date.today()),
-            "hourly_rates": {
-                str(user_id): float(rate)
-                for user_id, rate in hourly_rates.items()
-            }
-        }
+            "hourly_rates": {str(user_id): float(rate) for user_id, rate in hourly_rates.items()},
+        },
     )
 
 
@@ -133,17 +130,20 @@ def get_hourly_rate_history(
         if item.get("expiry_date"):
             item["expiry_date"] = str(item["expiry_date"])
         if item.get("created_at"):
-            item["created_at"] = item["created_at"].isoformat() if hasattr(item["created_at"], "isoformat") else str(item["created_at"])
+            item["created_at"] = (
+                item["created_at"].isoformat()
+                if hasattr(item["created_at"], "isoformat")
+                else str(item["created_at"])
+            )
         if item.get("updated_at"):
-            item["updated_at"] = item["updated_at"].isoformat() if hasattr(item["updated_at"], "isoformat") else str(item["updated_at"])
+            item["updated_at"] = (
+                item["updated_at"].isoformat()
+                if hasattr(item["updated_at"], "isoformat")
+                else str(item["updated_at"])
+            )
         if item.get("hourly_rate"):
             item["hourly_rate"] = float(item["hourly_rate"])
 
     return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "history": history,
-            "total": len(history)
-        }
+        code=200, message="success", data={"history": history, "total": len(history)}
     )

@@ -3,16 +3,17 @@
 holiday_utils.py 覆盖率测试
 目标: 提升 app/utils/holiday_utils.py 覆盖率（当前 44.6%）
 """
-import pytest
 from datetime import date, timedelta
 
+import pytest
+
 from app.utils.holiday_utils import (
-    is_holiday,
+    add_working_days,
     get_holiday_name,
-    is_workday_adjustment,
     get_work_type,
     get_working_days,
-    add_working_days,
+    is_holiday,
+    is_workday_adjustment,
 )
 
 
@@ -123,14 +124,14 @@ class TestGetWorkingDays:
         assert isinstance(result, int)
 
     def test_one_full_week(self):
-        start = date(2026, 2, 9)   # 周一
-        end = date(2026, 2, 13)    # 周五
+        start = date(2026, 2, 9)  # 周一
+        end = date(2026, 2, 13)  # 周五
         result = get_working_days(start, end)
         assert result >= 1
 
     def test_cross_weekend(self):
-        start = date(2026, 2, 6)   # 周五
-        end = date(2026, 2, 10)    # 下周二
+        start = date(2026, 2, 6)  # 周五
+        end = date(2026, 2, 10)  # 下周二
         result = get_working_days(start, end)
         assert isinstance(result, int)
         assert result >= 0

@@ -9,21 +9,21 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
 
 from app.services.project_dashboard_service import (
     build_basic_info,
-    calculate_progress_stats,
     calculate_cost_stats,
-    calculate_task_stats,
-    calculate_milestone_stats,
-    calculate_risk_stats,
     calculate_issue_stats,
-    calculate_resource_usage,
-    get_recent_activities,
     calculate_key_metrics,
+    calculate_milestone_stats,
+    calculate_progress_stats,
+    calculate_resource_usage,
+    calculate_risk_stats,
+    calculate_task_stats,
+    get_recent_activities,
 )
 
 
@@ -212,7 +212,7 @@ class TestCalculateProgressStats(unittest.TestCase):
 class TestCalculateCostStats(unittest.TestCase):
     """测试计算成本统计"""
 
-    @patch('app.services.cost_service.CostService')
+    @patch("app.services.cost_service.CostService")
     def test_calculate_cost_stats(self, mock_cost_service_class):
         """测试成本统计（mock CostService）"""
         mock_db = Mock()
@@ -243,7 +243,7 @@ class TestCalculateTaskStats(unittest.TestCase):
         # Mock total count
         mock_total_result = Mock()
         mock_total_result.total = 20
-        
+
         # Mock status counts
         mock_status_counts = [
             ("COMPLETED", 8),
@@ -252,7 +252,7 @@ class TestCalculateTaskStats(unittest.TestCase):
             ("ACCEPTED", 2),
             ("BLOCKED", 1),
         ]
-        
+
         # Mock average progress
         mock_avg_result = Mock()
         mock_avg_result.avg = Decimal("62.5")
@@ -260,7 +260,7 @@ class TestCalculateTaskStats(unittest.TestCase):
         # Setup query chain
         mock_query = Mock()
         mock_db.query.return_value = mock_query
-        
+
         # first() calls for total and avg
         # all() call for status counts
         mock_query.filter.return_value = mock_query
@@ -284,7 +284,7 @@ class TestCalculateTaskStats(unittest.TestCase):
 
         mock_total_result = Mock()
         mock_total_result.total = 0
-        
+
         mock_avg_result = Mock()
         mock_avg_result.avg = None
 
@@ -308,9 +308,9 @@ class TestCalculateTaskStats(unittest.TestCase):
 
         mock_total_result = Mock()
         mock_total_result.total = 10
-        
+
         mock_status_counts = [("COMPLETED", 10)]
-        
+
         mock_avg_result = Mock()
         mock_avg_result.avg = Decimal("100.0")
 
@@ -414,14 +414,14 @@ class TestCalculateMilestoneStats(unittest.TestCase):
 class TestCalculateRiskStats(unittest.TestCase):
     """测试计算风险统计"""
 
-    @patch('app.services.project_dashboard_service.PmoProjectRisk', None)
+    @patch("app.services.project_dashboard_service.PmoProjectRisk", None)
     def test_calculate_risk_stats_model_not_available(self):
         """测试风险模型不可用的情况"""
         mock_db = Mock()
         result = calculate_risk_stats(mock_db, 1)
         self.assertIsNone(result)
 
-    @patch('app.services.project_dashboard_service.PmoProjectRisk')
+    @patch("app.services.project_dashboard_service.PmoProjectRisk")
     def test_calculate_risk_stats_normal(self, mock_risk_model):
         """测试正常风险统计"""
         mock_db = Mock()
@@ -447,7 +447,7 @@ class TestCalculateRiskStats(unittest.TestCase):
         self.assertEqual(result["high"], 1)  # HIGH且非CLOSED
         self.assertEqual(result["critical"], 1)  # CRITICAL且非CLOSED
 
-    @patch('app.services.project_dashboard_service.PmoProjectRisk')
+    @patch("app.services.project_dashboard_service.PmoProjectRisk")
     def test_calculate_risk_stats_no_risks(self, mock_risk_model):
         """测试没有风险的情况"""
         mock_db = Mock()
@@ -464,7 +464,7 @@ class TestCalculateRiskStats(unittest.TestCase):
         self.assertEqual(result["high"], 0)
         self.assertEqual(result["critical"], 0)
 
-    @patch('app.services.project_dashboard_service.PmoProjectRisk')
+    @patch("app.services.project_dashboard_service.PmoProjectRisk")
     def test_calculate_risk_stats_exception(self, mock_risk_model):
         """测试异常情况"""
         mock_db = Mock()
@@ -478,14 +478,14 @@ class TestCalculateRiskStats(unittest.TestCase):
 class TestCalculateIssueStats(unittest.TestCase):
     """测试计算问题统计"""
 
-    @patch('app.services.project_dashboard_service.Issue', None)
+    @patch("app.services.project_dashboard_service.Issue", None)
     def test_calculate_issue_stats_model_not_available(self):
         """测试问题模型不可用的情况"""
         mock_db = Mock()
         result = calculate_issue_stats(mock_db, 1)
         self.assertIsNone(result)
 
-    @patch('app.services.project_dashboard_service.Issue')
+    @patch("app.services.project_dashboard_service.Issue")
     def test_calculate_issue_stats_normal(self, mock_issue_model):
         """测试正常问题统计"""
         mock_db = Mock()
@@ -510,7 +510,7 @@ class TestCalculateIssueStats(unittest.TestCase):
         self.assertEqual(result["processing"], 2)
         self.assertEqual(result["blocking"], 2)
 
-    @patch('app.services.project_dashboard_service.Issue')
+    @patch("app.services.project_dashboard_service.Issue")
     def test_calculate_issue_stats_no_issues(self, mock_issue_model):
         """测试没有问题的情况"""
         mock_db = Mock()
@@ -527,7 +527,7 @@ class TestCalculateIssueStats(unittest.TestCase):
         self.assertEqual(result["processing"], 0)
         self.assertEqual(result["blocking"], 0)
 
-    @patch('app.services.project_dashboard_service.Issue')
+    @patch("app.services.project_dashboard_service.Issue")
     def test_calculate_issue_stats_exception(self, mock_issue_model):
         """测试异常情况"""
         mock_db = Mock()
@@ -541,14 +541,14 @@ class TestCalculateIssueStats(unittest.TestCase):
 class TestCalculateResourceUsage(unittest.TestCase):
     """测试计算资源使用"""
 
-    @patch('app.services.project_dashboard_service.PmoResourceAllocation', None)
+    @patch("app.services.project_dashboard_service.PmoResourceAllocation", None)
     def test_calculate_resource_usage_model_not_available(self):
         """测试资源模型不可用的情况"""
         mock_db = Mock()
         result = calculate_resource_usage(mock_db, 1)
         self.assertIsNone(result)
 
-    @patch('app.services.project_dashboard_service.PmoResourceAllocation')
+    @patch("app.services.project_dashboard_service.PmoResourceAllocation")
     def test_calculate_resource_usage_normal(self, mock_resource_model):
         """测试正常资源使用统计"""
         mock_db = Mock()
@@ -574,7 +574,7 @@ class TestCalculateResourceUsage(unittest.TestCase):
         self.assertEqual(result["by_role"]["开发工程师"], 1)
         self.assertEqual(result["by_role"]["顾问"], 1)
 
-    @patch('app.services.project_dashboard_service.PmoResourceAllocation')
+    @patch("app.services.project_dashboard_service.PmoResourceAllocation")
     def test_calculate_resource_usage_no_allocations(self, mock_resource_model):
         """测试没有资源分配的情况"""
         mock_db = Mock()
@@ -588,7 +588,7 @@ class TestCalculateResourceUsage(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    @patch('app.services.project_dashboard_service.PmoResourceAllocation')
+    @patch("app.services.project_dashboard_service.PmoResourceAllocation")
     def test_calculate_resource_usage_exception(self, mock_resource_model):
         """测试异常情况"""
         mock_db = Mock()
@@ -612,36 +612,32 @@ class TestGetRecentActivities(unittest.TestCase):
                 changed_at=datetime(2024, 7, 5, 10, 0, 0),
                 old_status="ST01",
                 new_status="ST02",
-                change_reason="项目启动"
+                change_reason="项目启动",
             ),
             Mock(
                 changed_at=datetime(2024, 7, 3, 14, 30, 0),
                 old_status="ST02",
                 new_status="ST03",
-                change_reason="进入执行阶段"
+                change_reason="进入执行阶段",
             ),
         ]
 
         # Mock milestones
         mock_milestones = [
-            Mock(
-                actual_date=date(2024, 7, 4),
-                milestone_name="需求评审完成",
-                status="COMPLETED"
-            ),
+            Mock(actual_date=date(2024, 7, 4), milestone_name="需求评审完成", status="COMPLETED"),
         ]
 
         mock_query1 = Mock()
         mock_query2 = Mock()
-        
+
         def query_side_effect(model):
             if model.__name__ == "ProjectStatusLog":
                 return mock_query1
             else:  # ProjectMilestone
                 return mock_query2
-        
+
         mock_db.query.side_effect = query_side_effect
-        
+
         mock_query1.filter.return_value = mock_query1
         mock_query1.order_by.return_value = mock_query1
         mock_query1.limit.return_value = mock_query1
@@ -657,7 +653,7 @@ class TestGetRecentActivities(unittest.TestCase):
         self.assertLessEqual(len(result), 10)
         self.assertTrue(any(a["type"] == "STATUS_CHANGE" for a in result))
         self.assertTrue(any(a["type"] == "MILESTONE" for a in result))
-        
+
         # 验证排序（按时间倒序）
         times = [a.get("time") for a in result if a.get("time")]
         self.assertEqual(times, sorted(times, reverse=True))
@@ -668,15 +664,15 @@ class TestGetRecentActivities(unittest.TestCase):
 
         mock_query1 = Mock()
         mock_query2 = Mock()
-        
+
         def query_side_effect(model):
             if model.__name__ == "ProjectStatusLog":
                 return mock_query1
             else:
                 return mock_query2
-        
+
         mock_db.query.side_effect = query_side_effect
-        
+
         mock_query1.filter.return_value = mock_query1
         mock_query1.order_by.return_value = mock_query1
         mock_query1.limit.return_value = mock_query1
@@ -696,25 +692,20 @@ class TestGetRecentActivities(unittest.TestCase):
         mock_db = Mock()
 
         mock_status_logs = [
-            Mock(
-                changed_at=None,
-                old_status="ST01",
-                new_status="ST02",
-                change_reason="测试"
-            ),
+            Mock(changed_at=None, old_status="ST01", new_status="ST02", change_reason="测试"),
         ]
 
         mock_query1 = Mock()
         mock_query2 = Mock()
-        
+
         def query_side_effect(model):
             if model.__name__ == "ProjectStatusLog":
                 return mock_query1
             else:
                 return mock_query2
-        
+
         mock_db.query.side_effect = query_side_effect
-        
+
         mock_query1.filter.return_value = mock_query1
         mock_query1.order_by.return_value = mock_query1
         mock_query1.limit.return_value = mock_query1
@@ -744,7 +735,7 @@ class TestCalculateKeyMetrics(unittest.TestCase):
             progress_deviation=2.0,  # 轻微偏差
             cost_variance_rate=3.0,
             task_completed=15,
-            task_total=20
+            task_total=20,
         )
 
         self.assertEqual(result["health_score"], 100)
@@ -766,7 +757,7 @@ class TestCalculateKeyMetrics(unittest.TestCase):
             progress_deviation=-15.0,  # 大偏差
             cost_variance_rate=20.0,  # 大成本超支
             task_completed=5,
-            task_total=20
+            task_total=20,
         )
 
         self.assertEqual(result["health_score"], 50)
@@ -786,7 +777,7 @@ class TestCalculateKeyMetrics(unittest.TestCase):
             progress_deviation=-30.0,
             cost_variance_rate=50.0,
             task_completed=2,
-            task_total=30
+            task_total=30,
         )
 
         self.assertEqual(result["health_score"], 25)
@@ -803,7 +794,7 @@ class TestCalculateKeyMetrics(unittest.TestCase):
             progress_deviation=0.0,
             cost_variance_rate=0.0,
             task_completed=0,
-            task_total=0
+            task_total=0,
         )
 
         self.assertEqual(result["quality_score"], 100.0)  # 没有任务默认100分
@@ -819,7 +810,7 @@ class TestCalculateKeyMetrics(unittest.TestCase):
             progress_deviation=3.0,  # ≤5%
             cost_variance_rate=2.0,
             task_completed=10,
-            task_total=10
+            task_total=10,
         )
 
         # 小偏差使用简单公式: 100 - abs(deviation)
@@ -837,7 +828,7 @@ class TestCalculateKeyMetrics(unittest.TestCase):
             progress_deviation=10.0,  # >5%
             cost_variance_rate=8.0,
             task_completed=10,
-            task_total=10
+            task_total=10,
         )
 
         # 大偏差使用加倍惩罚: 100 - abs(deviation) * 2
@@ -855,7 +846,7 @@ class TestCalculateKeyMetrics(unittest.TestCase):
             progress_deviation=-80.0,  # 极大偏差
             cost_variance_rate=100.0,
             task_completed=1,
-            task_total=100
+            task_total=100,
         )
 
         # 确保所有分数≥0

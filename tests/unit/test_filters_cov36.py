@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
 """报告框架过滤器单元测试 - 第三十六批"""
 
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.expressions.filters")
 
 try:
     from app.services.report_framework.expressions.filters import (
-        filter_sum_by,
         filter_avg_by,
-        filter_count_by,
-        filter_group_by,
-        filter_sort_by,
-        filter_unique,
-        filter_pluck,
-        filter_currency,
-        filter_percentage,
-        filter_round_num,
-        filter_date_format,
-        filter_truncate_text,
-        filter_default_if_none,
         filter_coalesce,
+        filter_count_by,
+        filter_currency,
+        filter_date_format,
+        filter_default_if_none,
+        filter_group_by,
+        filter_percentage,
+        filter_pluck,
+        filter_round_num,
+        filter_sort_by,
+        filter_sum_by,
+        filter_truncate_text,
+        filter_unique,
         register_filters,
     )
 except ImportError:

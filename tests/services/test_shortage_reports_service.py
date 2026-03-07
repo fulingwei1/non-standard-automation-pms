@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
 """缺料报告服务单元测试"""
-import pytest
 from datetime import date, datetime, timezone
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.models.shortage import ShortageReport
 
 # Patch relationship attributes that don't exist on the model class
 # but are used in joinedload() calls in the service
-for _attr in ('reporter', 'confirmer', 'handler', 'resolver'):
+for _attr in ("reporter", "confirmer", "handler", "resolver"):
     if not hasattr(ShortageReport, _attr):
         setattr(ShortageReport, _attr, MagicMock())
 
 from app.services.shortage.shortage_reports_service import (
     ShortageReportsService,
+    build_daily_report_data,
     calculate_alert_statistics,
-    calculate_report_statistics,
-    calculate_kit_statistics,
     calculate_arrival_statistics,
+    calculate_kit_statistics,
+    calculate_report_statistics,
     calculate_response_time_statistics,
     calculate_stoppage_statistics,
-    build_daily_report_data,
 )
 
 
@@ -37,8 +38,14 @@ def _make_user(uid=1):
 def _make_report(**kw):
     r = MagicMock()
     defaults = dict(
-        id=1, title="缺料报告1", description="desc", status="pending",
-        reporter=MagicMock(), confirmer=None, handler=None, resolver=None,
+        id=1,
+        title="缺料报告1",
+        description="desc",
+        status="pending",
+        reporter=MagicMock(),
+        confirmer=None,
+        handler=None,
+        resolver=None,
         created_at=datetime(2025, 5, 1, tzinfo=timezone.utc),
     )
     defaults.update(kw)
@@ -51,15 +58,25 @@ class TestShortageReportsServiceGetList:
     def test_get_shortage_reports(self):
         db = _make_db()
         q = db.query.return_value.options.return_value
-        for attr in ('filter', 'order_by'):
+        for attr in ("filter", "order_by"):
             setattr(q, attr, MagicMock(return_value=q))
         q.count.return_value = 0
         q.all.return_value = []
 
-        with patch("app.services.shortage.shortage_reports_service.joinedload", lambda *a, **k: MagicMock()), \
-             patch("app.services.shortage.shortage_reports_service.apply_keyword_filter", return_value=q), \
-             patch("app.services.shortage.shortage_reports_service.get_pagination_params") as gpp, \
-             patch("app.services.shortage.shortage_reports_service.apply_pagination", return_value=q):
+        with (
+            patch(
+                "app.services.shortage.shortage_reports_service.joinedload",
+                lambda *a, **k: MagicMock(),
+            ),
+            patch(
+                "app.services.shortage.shortage_reports_service.apply_keyword_filter",
+                return_value=q,
+            ),
+            patch("app.services.shortage.shortage_reports_service.get_pagination_params") as gpp,
+            patch(
+                "app.services.shortage.shortage_reports_service.apply_pagination", return_value=q
+            ),
+        ):
             pag = MagicMock(page=1, page_size=20, offset=0, limit=20)
             pag.pages_for_total.return_value = 0
             gpp.return_value = pag
@@ -73,9 +90,13 @@ class TestCreateShortageReport:
     def test_create(self):
         db = _make_db()
         report_data = MagicMock(
-            title="test", description="desc", material_id=1,
-            shortage_quantity=10, shortage_reason="供应商", 
-            impact_assessment="高", expected_arrival_date=date(2025, 7, 1)
+            title="test",
+            description="desc",
+            material_id=1,
+            shortage_quantity=10,
+            shortage_reason="供应商",
+            impact_assessment="高",
+            expected_arrival_date=date(2025, 7, 1),
         )
         svc = ShortageReportsService(db)
         with patch("app.services.shortage.shortage_reports_service.ShortageReport") as MockReport:
@@ -92,14 +113,18 @@ class TestGetShortageReport:
         report = _make_report()
         db.query.return_value.options.return_value.filter.return_value.first.return_value = report
         svc = ShortageReportsService(db)
-        with patch("app.services.shortage.shortage_reports_service.joinedload", lambda *a, **k: MagicMock()):
+        with patch(
+            "app.services.shortage.shortage_reports_service.joinedload", lambda *a, **k: MagicMock()
+        ):
             assert svc.get_shortage_report(1) is report
 
     def test_not_found(self):
         db = _make_db()
         db.query.return_value.options.return_value.filter.return_value.first.return_value = None
         svc = ShortageReportsService(db)
-        with patch("app.services.shortage.shortage_reports_service.joinedload", lambda *a, **k: MagicMock()):
+        with patch(
+            "app.services.shortage.shortage_reports_service.joinedload", lambda *a, **k: MagicMock()
+        ):
             assert svc.get_shortage_report(999) is None
 
 
@@ -141,6 +166,7 @@ class TestResolveShortageReport:
 
 
 # --- Module-level functions ---
+
 
 class TestCalculateAlertStatistics:
     def test_basic(self):
@@ -218,12 +244,32 @@ class TestCalculateStoppageStatistics:
 class TestBuildDailyReportData:
     def test_combines_all(self):
         db = _make_db()
-        with patch("app.services.shortage.shortage_reports_service.calculate_alert_statistics", return_value={"new_alerts": 1}), \
-             patch("app.services.shortage.shortage_reports_service.calculate_report_statistics", return_value={"new_reports": 2}), \
-             patch("app.services.shortage.shortage_reports_service.calculate_kit_statistics", return_value={"kit_rate": 0.9}), \
-             patch("app.services.shortage.shortage_reports_service.calculate_arrival_statistics", return_value={"actual_arrivals": 3}), \
-             patch("app.services.shortage.shortage_reports_service.calculate_response_time_statistics", return_value={"avg_response_minutes": 10}), \
-             patch("app.services.shortage.shortage_reports_service.calculate_stoppage_statistics", return_value={"stoppage_count": 0}):
+        with (
+            patch(
+                "app.services.shortage.shortage_reports_service.calculate_alert_statistics",
+                return_value={"new_alerts": 1},
+            ),
+            patch(
+                "app.services.shortage.shortage_reports_service.calculate_report_statistics",
+                return_value={"new_reports": 2},
+            ),
+            patch(
+                "app.services.shortage.shortage_reports_service.calculate_kit_statistics",
+                return_value={"kit_rate": 0.9},
+            ),
+            patch(
+                "app.services.shortage.shortage_reports_service.calculate_arrival_statistics",
+                return_value={"actual_arrivals": 3},
+            ),
+            patch(
+                "app.services.shortage.shortage_reports_service.calculate_response_time_statistics",
+                return_value={"avg_response_minutes": 10},
+            ),
+            patch(
+                "app.services.shortage.shortage_reports_service.calculate_stoppage_statistics",
+                return_value={"stoppage_count": 0},
+            ),
+        ):
             result = build_daily_report_data(db, date(2025, 5, 1))
         assert result["new_alerts"] == 1
         assert result["new_reports"] == 2

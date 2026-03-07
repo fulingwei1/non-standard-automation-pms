@@ -4,8 +4,9 @@ import pytest
 
 pytest.importorskip("app.services.knowledge_contribution_service")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
 from app.services.knowledge_contribution_service import KnowledgeContributionService
 
 
@@ -97,6 +98,7 @@ def test_get_contributor_stats_with_data():
     svc = KnowledgeContributionService(db)
     # Patch the actual DB call to return expected data
     from unittest.mock import patch
+
     with patch.object(svc.db, "query") as mock_q:
         chain = MagicMock()
         chain.filter.return_value.filter.return_value.all.return_value = [c1, c2]

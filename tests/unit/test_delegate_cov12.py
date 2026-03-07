@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十二批：审批代理人服务单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.delegate import ApprovalDelegateService
+
     SKIP = False
 except Exception:
     SKIP = True

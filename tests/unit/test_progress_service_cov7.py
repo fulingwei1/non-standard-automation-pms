@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - progress_service"""
-import pytest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.progress_service import (
-        progress_error_to_http,
-        apply_task_progress_update,
-        aggregate_task_progress,
-        get_project_progress_summary,
-        create_progress_log_entry,
         ProgressAggregationService,
         ProgressAutoService,
+        aggregate_task_progress,
+        apply_task_progress_update,
+        create_progress_log_entry,
+        get_project_progress_summary,
+        progress_error_to_http,
     )
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

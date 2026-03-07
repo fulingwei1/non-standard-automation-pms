@@ -3,8 +3,9 @@
 第三十七批覆盖率测试 - 预警级别确定器
 tests/unit/test_level_determiner_cov37.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.alert_rule_engine.level_determiner")
 

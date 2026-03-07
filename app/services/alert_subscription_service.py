@@ -15,7 +15,6 @@ from sqlalchemy.orm import Session
 from app.models.alert import AlertRecord, AlertRule, AlertSubscription
 from app.models.enums import AlertLevelEnum
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -34,9 +33,7 @@ class AlertSubscriptionService:
         self.db = db
 
     def match_subscriptions(
-        self,
-        alert: AlertRecord,
-        rule: Optional[AlertRule] = None
+        self, alert: AlertRecord, rule: Optional[AlertRule] = None
     ) -> List[AlertSubscription]:
         """
         匹配预警的订阅配置
@@ -54,15 +51,13 @@ class AlertSubscriptionService:
                 return []
 
         # 查询匹配的订阅配置
-        query = self.db.query(AlertSubscription).filter(
-            AlertSubscription.is_active
-        )
+        query = self.db.query(AlertSubscription).filter(AlertSubscription.is_active)
 
         # 预警类型匹配：订阅的 alert_type 为空（全部）或与规则的 rule_type 匹配
         query = query.filter(
             or_(
                 AlertSubscription.alert_type.is_(None),
-                AlertSubscription.alert_type == rule.rule_type
+                AlertSubscription.alert_type == rule.rule_type,
             )
         )
 
@@ -71,7 +66,7 @@ class AlertSubscriptionService:
             query = query.filter(
                 or_(
                     AlertSubscription.project_id.is_(None),
-                    AlertSubscription.project_id == alert.project_id
+                    AlertSubscription.project_id == alert.project_id,
                 )
             )
         else:
@@ -91,9 +86,7 @@ class AlertSubscriptionService:
         return matched_subscriptions
 
     def get_notification_recipients(
-        self,
-        alert: AlertRecord,
-        rule: Optional[AlertRule] = None
+        self, alert: AlertRecord, rule: Optional[AlertRule] = None
     ) -> Dict[str, Any]:
         """
         获取预警的通知接收人列表
@@ -113,11 +106,7 @@ class AlertSubscriptionService:
         if not rule:
             rule = alert.rule
             if not rule:
-                return {
-                    'user_ids': [],
-                    'channels': ['SYSTEM'],
-                    'subscriptions': []
-                }
+                return {"user_ids": [], "channels": ["SYSTEM"], "subscriptions": []}
 
         # 匹配订阅配置
         subscriptions = self.match_subscriptions(alert, rule)
@@ -148,18 +137,20 @@ class AlertSubscriptionService:
             else:
                 # 如果没有配置，返回空列表（不发送通知）
                 # TODO: 完善实现 - 根据规则类型获取默认接收人（如项目负责人）
-                logger.info("订阅默认接收人: 暂未配置 (rule_id=%s, rule_name=%s)", rule.id, rule.name)
+                logger.info(
+                    "订阅默认接收人: 暂未配置 (rule_id=%s, rule_name=%s)", rule.id, rule.name
+                )
 
             # 使用规则配置的默认通知渠道
             if rule.notify_channels:
                 channels.update([ch.upper() for ch in rule.notify_channels])
             else:
-                channels.add('SYSTEM')  # 默认使用站内消息
+                channels.add("SYSTEM")  # 默认使用站内消息
 
         return {
-            'user_ids': list(user_ids),
-            'channels': list(channels) if channels else ['SYSTEM'],
-            'subscriptions': subscriptions
+            "user_ids": list(user_ids),
+            "channels": list(channels) if channels else ["SYSTEM"],
+            "subscriptions": subscriptions,
         }
 
     def _check_level_match(self, alert_level: str, min_level: str) -> bool:
@@ -192,8 +183,8 @@ class AlertSubscriptionService:
 
         try:
             # 解析时间字符串（HH:mm格式）
-            start_parts = subscription.quiet_start.split(':')
-            end_parts = subscription.quiet_end.split(':')
+            start_parts = subscription.quiet_start.split(":")
+            end_parts = subscription.quiet_end.split(":")
 
             quiet_start = time(int(start_parts[0]), int(start_parts[1]))
             quiet_end = time(int(end_parts[0]), int(end_parts[1]))
@@ -211,10 +202,7 @@ class AlertSubscriptionService:
             return False
 
     def get_user_subscriptions(
-        self,
-        user_id: int,
-        alert_type: Optional[str] = None,
-        project_id: Optional[int] = None
+        self, user_id: int, alert_type: Optional[str] = None, project_id: Optional[int] = None
     ) -> List[AlertSubscription]:
         """
         获取用户的订阅配置（用于查询）
@@ -228,15 +216,14 @@ class AlertSubscriptionService:
             List[AlertSubscription]: 订阅配置列表
         """
         query = self.db.query(AlertSubscription).filter(
-            AlertSubscription.user_id == user_id,
-            AlertSubscription.is_active
+            AlertSubscription.user_id == user_id, AlertSubscription.is_active
         )
 
         if alert_type:
             query = query.filter(
                 or_(
                     AlertSubscription.alert_type.is_(None),
-                    AlertSubscription.alert_type == alert_type
+                    AlertSubscription.alert_type == alert_type,
                 )
             )
 
@@ -244,7 +231,7 @@ class AlertSubscriptionService:
             query = query.filter(
                 or_(
                     AlertSubscription.project_id.is_(None),
-                    AlertSubscription.project_id == project_id
+                    AlertSubscription.project_id == project_id,
                 )
             )
 

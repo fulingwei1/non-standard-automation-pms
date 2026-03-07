@@ -2,10 +2,11 @@
 """
 Tests for app/services/resource_waste_analysis/report_generation.py
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.resource_waste_analysis.report_generation import ReportGenerationMixin
@@ -15,6 +16,7 @@ except ImportError as e:
 
 class ConcreteReportGen(ReportGenerationMixin):
     """用于测试的具体实现"""
+
     def calculate_waste_by_period(self, start_date, end_date):
         return {
             "period": f"{start_date} ~ {end_date}",
@@ -65,9 +67,16 @@ def test_generate_yearly_period(gen):
 def test_generate_report_has_required_keys(gen):
     """报告应包含所有必要的键"""
     result = gen.generate_waste_report("2024-01")
-    required_keys = ["report_period", "generated_at", "overall_statistics",
-                     "top_resource_wasters", "failure_pattern_analysis",
-                     "monthly_trend", "department_comparison", "summary"]
+    required_keys = [
+        "report_period",
+        "generated_at",
+        "overall_statistics",
+        "top_resource_wasters",
+        "failure_pattern_analysis",
+        "monthly_trend",
+        "department_comparison",
+        "summary",
+    ]
     for key in required_keys:
         assert key in result
 

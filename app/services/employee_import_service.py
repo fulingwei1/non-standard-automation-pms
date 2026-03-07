@@ -25,7 +25,7 @@ def find_name_column(columns: List[str]) -> Optional[str]:
     Returns:
         Optional[str]: 列名，如果未找到则返回None
     """
-    for col in ['姓名', '名字', 'name', 'Name', '员工姓名']:
+    for col in ["姓名", "名字", "name", "Name", "员工姓名"]:
         if col in columns:
             return col
     return None
@@ -39,11 +39,11 @@ def find_department_columns(columns: List[str]) -> List[str]:
         List[str]: 部门列名列表
     """
     dept_cols = []
-    for col in ['一级部门', '二级部门', '三级部门']:
+    for col in ["一级部门", "二级部门", "三级部门"]:
         if col in columns:
             dept_cols.append(col)
-    if not dept_cols and '部门' in columns:
-        dept_cols = ['部门']
+    if not dept_cols and "部门" in columns:
+        dept_cols = ["部门"]
     return dept_cols
 
 
@@ -54,20 +54,20 @@ def find_other_columns(columns: List[str]) -> Dict[str, Optional[str]]:
     Returns:
         Dict[str, Optional[str]]: 列名映射
     """
-    position_col = next((c for c in ['职务', '岗位', '职位', 'position'] if c in columns), None)
-    phone_col = next((c for c in ['联系方式', '手机', '电话', 'phone', '手机号'] if c in columns), None)
-    status_col = next((c for c in ['在职离职状态', '状态', '在职状态'] if c in columns), None)
+    position_col = next((c for c in ["职务", "岗位", "职位", "position"] if c in columns), None)
+    phone_col = next(
+        (c for c in ["联系方式", "手机", "电话", "phone", "手机号"] if c in columns), None
+    )
+    status_col = next((c for c in ["在职离职状态", "状态", "在职状态"] if c in columns), None)
 
-    return {
-        'position': position_col,
-        'phone': phone_col,
-        'status': status_col
-    }
+    return {"position": position_col, "phone": phone_col, "status": status_col}
 
 
-from app.utils.common import (  # noqa: F401
+from app.utils.common import (
     clean_name,
-    clean_phone as _clean_phone,
+)
+from app.utils.common import clean_phone as _clean_phone  # noqa: F401
+from app.utils.common import (
     get_department_name,
     is_active_employee,
 )
@@ -84,9 +84,9 @@ def generate_employee_code(code_idx: int, existing_codes: Set[str]) -> str:
     """
     from app.utils.code_config import CODE_PREFIX, SEQ_LENGTH
 
-    prefix = CODE_PREFIX['EMPLOYEE']
-    seq_length = SEQ_LENGTH['EMPLOYEE']
-    separator = '-'
+    prefix = CODE_PREFIX["EMPLOYEE"]
+    seq_length = SEQ_LENGTH["EMPLOYEE"]
+    separator = "-"
 
     # 从现有编码中提取最大序号
     max_seq = 0
@@ -122,7 +122,7 @@ def create_hr_profile_for_employee(
     position: Optional[str],
     is_active: bool,
     evaluator_id: int,
-    tag_dict: Dict[str, HrTagDict]
+    tag_dict: Dict[str, HrTagDict],
 ) -> None:
     """
     为员工创建HR档案并自动添加技能标签
@@ -138,25 +138,25 @@ def create_hr_profile_for_employee(
         attitude_tags=[],
         character_tags=[],
         special_tags=[],
-        current_workload_pct=Decimal('0'),
+        current_workload_pct=Decimal("0"),
         total_projects=0,
-        profile_updated_at=now
+        profile_updated_at=now,
     )
     db.add(profile)
 
     # 根据职位自动添加技能标签
     if position and is_active:
         skill_mappings = {
-            'PLC': ['PLC编程'],
-            '测试': ['ICT测试', 'FCT测试'],
-            '机械': ['机械设计', '3D建模'],
-            '电气': ['电气原理图'],
-            '视觉': ['视觉系统'],
-            '客服': ['故障排除', '现场经验'],
-            '装配': ['装配调试'],
-            'HMI': ['HMI开发'],
-            '硬件': ['电气原理图'],
-            '软件': ['PLC编程', 'HMI开发'],
+            "PLC": ["PLC编程"],
+            "测试": ["ICT测试", "FCT测试"],
+            "机械": ["机械设计", "3D建模"],
+            "电气": ["电气原理图"],
+            "视觉": ["视觉系统"],
+            "客服": ["故障排除", "现场经验"],
+            "装配": ["装配调试"],
+            "HMI": ["HMI开发"],
+            "硬件": ["电气原理图"],
+            "软件": ["PLC编程", "HMI开发"],
         }
 
         matched_tags = set()
@@ -176,7 +176,7 @@ def create_hr_profile_for_employee(
                     evidence=f'根据职位 "{position}" 自动匹配',
                     evaluator_id=evaluator_id,
                     evaluate_date=today,
-                    is_valid=True
+                    is_valid=True,
                 )
                 db.add(eval_record)
 
@@ -191,7 +191,7 @@ def process_employee_row(
     existing_map: Dict[Tuple[str, Optional[str]], Employee],
     existing_codes: Set[str],
     evaluator_id: int,
-    tag_dict: Dict[str, HrTagDict]
+    tag_dict: Dict[str, HrTagDict],
 ) -> Tuple[Optional[int], Optional[str]]:
     """
     处理单行员工数据
@@ -205,9 +205,15 @@ def process_employee_row(
             return 0, None  # 跳过
 
         department = get_department_name(row, dept_cols) if dept_cols else None
-        position = str(row.get(column_map['position'], '')).strip() if column_map['position'] and pd.notna(row.get(column_map['position'])) else None
-        phone = clean_phone(row.get(column_map['phone'])) if column_map['phone'] else None
-        is_active = is_active_employee(row.get(column_map['status'])) if column_map['status'] else True
+        position = (
+            str(row.get(column_map["position"], "")).strip()
+            if column_map["position"] and pd.notna(row.get(column_map["position"]))
+            else None
+        )
+        phone = clean_phone(row.get(column_map["phone"])) if column_map["phone"] else None
+        is_active = (
+            is_active_employee(row.get(column_map["status"])) if column_map["status"] else True
+        )
 
         key = (name, department)
 
@@ -231,7 +237,7 @@ def process_employee_row(
                 department=department,
                 role=position,
                 phone=phone,
-                is_active=is_active
+                is_active=is_active,
             )
             db.add(employee)
             db.flush()
@@ -249,9 +255,7 @@ def process_employee_row(
 
 
 def import_employees_from_dataframe(
-    db: Session,
-    df: pd.DataFrame,
-    evaluator_id: int
+    db: Session, df: pd.DataFrame, evaluator_id: int
 ) -> Dict[str, Any]:
     """
     从DataFrame导入员工数据
@@ -264,6 +268,7 @@ def import_employees_from_dataframe(
     name_col = find_name_column(columns)
     if not name_col:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="Excel中必须包含'姓名'列")
 
     # 识别列
@@ -286,8 +291,16 @@ def import_employees_from_dataframe(
 
     for idx, row in df.iterrows():
         result_code, error = process_employee_row(
-            db, row, idx, name_col, dept_cols, column_map,
-            existing_map, existing_codes, evaluator_id, tag_dict
+            db,
+            row,
+            idx,
+            name_col,
+            dept_cols,
+            column_map,
+            existing_map,
+            existing_codes,
+            evaluator_id,
+            tag_dict,
         )
 
         if error:
@@ -303,5 +316,5 @@ def import_employees_from_dataframe(
         "imported": imported_count,
         "updated": updated_count,
         "skipped": skipped_count,
-        "errors": errors[:10] if errors else []
+        "errors": errors[:10] if errors else [],
     }

@@ -6,19 +6,20 @@ get_latest_prediction, get_prediction_history,
 GLM5CostPredictor._parse_* / _summarize_evm_history 等分支
 """
 import json
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.cost_prediction_service import (
     CostPredictionService,
     GLM5CostPredictor,
 )
 
-
 # ============================================================
 # Helper builders
 # ============================================================
+
 
 @pytest.fixture
 def mock_db():
@@ -54,6 +55,7 @@ def make_predictor():
 # 1. _traditional_risk_analysis - 4个风险等级分支
 # ============================================================
 
+
 class TestTraditionalRiskAnalysis:
     def test_low_risk_when_cpi_high(self, service):
         evm = make_evm_data(cpi=1.0)
@@ -88,15 +90,23 @@ class TestTraditionalRiskAnalysis:
     def test_has_required_keys(self, service):
         evm = make_evm_data(cpi=0.9)
         result = service._traditional_risk_analysis(evm, [])
-        for key in ["overrun_probability", "risk_level", "risk_score",
-                    "risk_factors", "trend_analysis", "cost_trend",
-                    "key_concerns", "early_warning_signals"]:
+        for key in [
+            "overrun_probability",
+            "risk_level",
+            "risk_score",
+            "risk_factors",
+            "trend_analysis",
+            "cost_trend",
+            "key_concerns",
+            "early_warning_signals",
+        ]:
             assert key in result
 
 
 # ============================================================
 # 2. _calculate_data_quality - 不同数量/验证状态
 # ============================================================
+
 
 class TestCalculateDataQuality:
     def test_empty_history_penalized(self, service):
@@ -135,15 +145,20 @@ class TestCalculateDataQuality:
 # 3. get_latest_prediction
 # ============================================================
 
+
 class TestGetLatestPrediction:
     def test_found(self, service, mock_db):
         pred = MagicMock()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = pred
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            pred
+        )
         result = service.get_latest_prediction(project_id=1)
         assert result is pred
 
     def test_not_found(self, service, mock_db):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         result = service.get_latest_prediction(project_id=999)
         assert result is None
 
@@ -152,16 +167,21 @@ class TestGetLatestPrediction:
 # 4. get_prediction_history
 # ============================================================
 
+
 class TestGetPredictionHistory:
     def test_returns_list(self, service, mock_db):
         preds = [MagicMock(), MagicMock()]
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = preds
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            preds
+        )
         result = service.get_prediction_history(project_id=1)
         assert len(result) == 2
 
     def test_with_limit(self, service, mock_db):
         preds = [MagicMock()]
-        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = preds
+        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            preds
+        )
         result = service.get_prediction_history(project_id=1, limit=1)
         assert len(result) == 1
 
@@ -175,6 +195,7 @@ class TestGetPredictionHistory:
 # 5. GLM5CostPredictor._summarize_evm_history
 # ============================================================
 
+
 class TestSummarizeEVMHistory:
     def test_empty_history(self):
         predictor = make_predictor()
@@ -183,9 +204,7 @@ class TestSummarizeEVMHistory:
 
     def test_short_history(self):
         predictor = make_predictor()
-        history = [
-            {"period": "2025-01", "cpi": 0.9, "spi": 1.0, "ac": 500, "ev": 450}
-        ]
+        history = [{"period": "2025-01", "cpi": 0.9, "spi": 1.0, "ac": 500, "ev": 450}]
         result = predictor._summarize_evm_history(history)
         assert "2025-01" in result
 
@@ -222,38 +241,38 @@ class TestSummarizeEVMHistory:
 # 6. GLM5CostPredictor._parse_eac_prediction
 # ============================================================
 
+
 class TestParseEACPrediction:
     def test_valid_json_parsed(self):
         predictor = make_predictor()
-        response = json.dumps({
-            "predicted_eac": 1200,
-            "confidence": 80,
-            "prediction_method": "AI",
-            "eac_lower_bound": 1100,
-            "eac_upper_bound": 1300,
-            "eac_most_likely": 1200,
-            "reasoning": "趋势分析",
-            "key_assumptions": ["CPI稳定"],
-            "uncertainty_factors": ["物价波动"]
-        })
-        project_data = {"bac": 1000, "current_cpi": 0.9,
-                        "current_ac": 500, "current_ev": 450}
+        response = json.dumps(
+            {
+                "predicted_eac": 1200,
+                "confidence": 80,
+                "prediction_method": "AI",
+                "eac_lower_bound": 1100,
+                "eac_upper_bound": 1300,
+                "eac_most_likely": 1200,
+                "reasoning": "趋势分析",
+                "key_assumptions": ["CPI稳定"],
+                "uncertainty_factors": ["物价波动"],
+            }
+        )
+        project_data = {"bac": 1000, "current_cpi": 0.9, "current_ac": 500, "current_ev": 450}
         result = predictor._parse_eac_prediction(response, project_data)
         assert result["predicted_eac"] == pytest.approx(1200.0)
         assert result["confidence"] == 80.0
 
     def test_invalid_json_falls_back_to_cpi(self):
         predictor = make_predictor()
-        project_data = {"bac": 1000, "current_cpi": 0.8,
-                        "current_ac": 500, "current_ev": 400}
+        project_data = {"bac": 1000, "current_cpi": 0.8, "current_ac": 500, "current_ev": 400}
         result = predictor._parse_eac_prediction("invalid json", project_data)
         assert result["prediction_method"] == "CPI_BASED_FALLBACK"
         assert result["confidence"] == 50.0
 
     def test_zero_cpi_uses_bac_fallback(self):
         predictor = make_predictor()
-        project_data = {"bac": 1000, "current_cpi": 0,
-                        "current_ac": 500, "current_ev": 400}
+        project_data = {"bac": 1000, "current_cpi": 0, "current_ac": 500, "current_ev": 400}
         result = predictor._parse_eac_prediction("not json", project_data)
         # cpi=0 时 EAC = BAC * 1.2 = 1200
         assert result["predicted_eac"] == pytest.approx(1200.0)
@@ -261,8 +280,7 @@ class TestParseEACPrediction:
     def test_json_with_text_wrapper(self):
         predictor = make_predictor()
         response = 'Here is the result: {"predicted_eac": 1500, "confidence": 75} done'
-        project_data = {"bac": 1000, "current_cpi": 1.0,
-                        "current_ac": 500, "current_ev": 450}
+        project_data = {"bac": 1000, "current_cpi": 1.0, "current_ac": 500, "current_ev": 450}
         result = predictor._parse_eac_prediction(response, project_data)
         assert result["predicted_eac"] == pytest.approx(1500.0)
 
@@ -270,6 +288,7 @@ class TestParseEACPrediction:
 # ============================================================
 # 7. GLM5CostPredictor._parse_risk_analysis
 # ============================================================
+
 
 class TestParseRiskAnalysis:
     def test_valid_json(self):
@@ -282,7 +301,7 @@ class TestParseRiskAnalysis:
             "trend_analysis": "CPI下降",
             "cost_trend": "DECLINING",
             "key_concerns": ["资源不足"],
-            "early_warning_signals": ["CPI < 0.9"]
+            "early_warning_signals": ["CPI < 0.9"],
         }
         result = predictor._parse_risk_analysis(json.dumps(data))
         assert result["risk_level"] == "HIGH"
@@ -306,12 +325,17 @@ class TestParseRiskAnalysis:
 # 8. GLM5CostPredictor._parse_optimization_suggestions
 # ============================================================
 
+
 class TestParseOptimizationSuggestions:
     def test_valid_list(self):
         predictor = make_predictor()
         data = [
-            {"title": "优化建议1", "type": "RESOURCE_OPTIMIZATION",
-             "priority": "HIGH", "description": "减少人力"}
+            {
+                "title": "优化建议1",
+                "type": "RESOURCE_OPTIMIZATION",
+                "priority": "HIGH",
+                "description": "减少人力",
+            }
         ]
         result = predictor._parse_optimization_suggestions(json.dumps(data))
         assert len(result) == 1
@@ -326,8 +350,12 @@ class TestParseOptimizationSuggestions:
     def test_dict_wrapped_in_list(self):
         """单个 dict 响应时应包装为列表"""
         predictor = make_predictor()
-        data = {"title": "单条建议", "type": "SCOPE_ADJUSTMENT",
-                "priority": "MEDIUM", "description": "缩小范围"}
+        data = {
+            "title": "单条建议",
+            "type": "SCOPE_ADJUSTMENT",
+            "priority": "MEDIUM",
+            "description": "缩小范围",
+        }
         result = predictor._parse_optimization_suggestions(json.dumps(data))
         assert isinstance(result, list)
         assert len(result) == 1
@@ -336,6 +364,7 @@ class TestParseOptimizationSuggestions:
 # ============================================================
 # 9. create_prediction - project not found / no evm data
 # ============================================================
+
 
 class TestCreatePrediction:
     def test_project_not_found_raises(self, service, mock_db):

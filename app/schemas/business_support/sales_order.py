@@ -41,7 +41,9 @@ class SalesOrderItemResponse(TimestampSchema):
 class SalesOrderCreate(BaseModel):
     """创建销售订单"""
 
-    order_no: Optional[str] = Field(default=None, max_length=50, description="订单编号（不提供则自动生成）")
+    order_no: Optional[str] = Field(
+        default=None, max_length=50, description="订单编号（不提供则自动生成）"
+    )
     contract_id: Optional[int] = Field(default=None, description="合同ID")
     customer_id: int = Field(description="客户ID")
     project_id: Optional[int] = Field(default=None, description="项目ID")
@@ -53,7 +55,9 @@ class SalesOrderCreate(BaseModel):
     sales_person_id: Optional[int] = Field(default=None, description="业务员ID")
     sales_person_name: Optional[str] = Field(default=None, max_length=50, description="业务员")
     remark: Optional[str] = Field(default=None, description="备注")
-    items: Optional[List[SalesOrderItemCreate]] = Field(default_factory=list, description="订单明细")
+    items: Optional[List[SalesOrderItemCreate]] = Field(
+        default_factory=list, description="订单明细"
+    )
 
 
 class SalesOrderUpdate(BaseModel):
@@ -102,7 +106,9 @@ class AssignProjectRequest(BaseModel):
     """分配项目号请求"""
 
     project_id: int = Field(description="项目ID")
-    project_no: Optional[str] = Field(default=None, max_length=50, description="项目号（不提供则使用项目编码）")
+    project_no: Optional[str] = Field(
+        default=None, max_length=50, description="项目号（不提供则使用项目编码）"
+    )
 
 
 class SendNoticeRequest(BaseModel):

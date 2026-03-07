@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """Tests for status_handlers/milestone_handler.py"""
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 class TestMilestoneStatusHandler:
     def test_handle_milestone_completed_wrong_status(self):
         from app.services.status_handlers.milestone_handler import MilestoneStatusHandler
+
         db = MagicMock()
         milestone = MagicMock()
         MilestoneStatusHandler.handle_milestone_completed(db, milestone, "PENDING", "IN_PROGRESS")
@@ -16,6 +18,7 @@ class TestMilestoneStatusHandler:
 
     def test_handle_milestone_completed_no_payment_plans(self):
         from app.services.status_handlers.milestone_handler import MilestoneStatusHandler
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         milestone = MagicMock(id=1)
@@ -24,6 +27,7 @@ class TestMilestoneStatusHandler:
 
     def test_handle_milestone_completed_plan_already_invoiced(self):
         from app.services.status_handlers.milestone_handler import MilestoneStatusHandler
+
         db = MagicMock()
         plan = MagicMock(invoice_id=99, contract_id=1)
         db.query.return_value.filter.return_value.all.return_value = [plan]
@@ -34,6 +38,7 @@ class TestMilestoneStatusHandler:
 
     def test_handle_milestone_completed_no_contract(self):
         from app.services.status_handlers.milestone_handler import MilestoneStatusHandler
+
         db = MagicMock()
         plan = MagicMock(invoice_id=None, contract_id=None)
         db.query.return_value.filter.return_value.all.return_value = [plan]

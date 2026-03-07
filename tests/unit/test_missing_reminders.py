@@ -3,7 +3,7 @@
 
 import unittest
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 from app.services.timesheet_reminder.missing_reminders import (
     notify_timesheet_missing,
@@ -32,6 +32,7 @@ class TestNotifyTimesheetMissing(unittest.TestCase):
         # We can't easily test the default without running the full function,
         # but we verify the function signature accepts None
         import inspect
+
         sig = inspect.signature(notify_timesheet_missing)
         self.assertIn("target_date", sig.parameters)
         self.assertIsNone(sig.parameters["target_date"].default)
@@ -44,6 +45,7 @@ class TestNotifyWeeklyTimesheetMissing(unittest.TestCase):
 
     def test_default_week_start_is_none(self):
         import inspect
+
         sig = inspect.signature(notify_weekly_timesheet_missing)
         self.assertIsNone(sig.parameters["week_start"].default)
 

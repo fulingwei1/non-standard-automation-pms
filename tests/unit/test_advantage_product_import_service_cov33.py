@@ -2,8 +2,9 @@
 """
 第三十三批覆盖率测试 - 优势产品导入服务
 """
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 try:
     from app.services.advantage_product_import_service import (
@@ -13,6 +14,7 @@ try:
         parse_product_from_cell,
         process_product_row,
     )
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -59,11 +61,12 @@ class TestEnsureCategoriesExist:
         mock_new_cat = MagicMock()
         mock_new_cat.id = 1
 
-        with patch(
-            "app.services.advantage_product_import_service.AdvantageProductCategory",
-            return_value=mock_new_cat
-        ), patch(
-            "app.services.advantage_product_import_service.clear_existing_data"
+        with (
+            patch(
+                "app.services.advantage_product_import_service.AdvantageProductCategory",
+                return_value=mock_new_cat,
+            ),
+            patch("app.services.advantage_product_import_service.clear_existing_data"),
         ):
             cat_map, created = ensure_categories_exist(db, clear_existing=False)
 
@@ -89,7 +92,7 @@ class TestEnsureCategoriesExist:
 
         with patch(
             "app.services.advantage_product_import_service.AdvantageProductCategory",
-            return_value=mock_new_cat
+            return_value=mock_new_cat,
         ):
             cat_map, created = ensure_categories_exist(db, clear_existing=False)
 

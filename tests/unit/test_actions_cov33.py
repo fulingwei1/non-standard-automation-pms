@@ -2,12 +2,14 @@
 """
 第三十三批覆盖率测试 - 审批操作混入 (ApprovalActionsMixin)
 """
-import pytest
-from unittest.mock import MagicMock, call
 from datetime import datetime
+from unittest.mock import MagicMock, call
+
+import pytest
 
 try:
     from app.services.approval_engine.engine.actions import ApprovalActionsMixin
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -85,7 +87,9 @@ class TestAddCc:
         engine._log_action = MagicMock()
         engine.notify = MagicMock()
 
-        result = ApprovalActionsMixin.add_cc(engine, instance_id=1, operator_id=1, cc_user_ids=[2, 3])
+        result = ApprovalActionsMixin.add_cc(
+            engine, instance_id=1, operator_id=1, cc_user_ids=[2, 3]
+        )
 
         assert len(result) == 2
         engine.notify.notify_cc.assert_called()
@@ -159,7 +163,9 @@ class TestWithdraw:
         engine._log_action = MagicMock()
         engine.notify = MagicMock()
 
-        result = ApprovalActionsMixin.withdraw(engine, instance_id=1, initiator_id=1, comment="不需要了")
+        result = ApprovalActionsMixin.withdraw(
+            engine, instance_id=1, initiator_id=1, comment="不需要了"
+        )
 
         assert mock_instance.status == "CANCELLED"
         engine.db.commit.assert_called_once()
@@ -194,7 +200,9 @@ class TestTerminate:
         engine._call_adapter_callback = MagicMock()
         engine._log_action = MagicMock()
 
-        result = ApprovalActionsMixin.terminate(engine, instance_id=1, operator_id=99, comment="流程有误")
+        result = ApprovalActionsMixin.terminate(
+            engine, instance_id=1, operator_id=99, comment="流程有误"
+        )
 
         assert mock_instance.status == "TERMINATED"
         engine.db.commit.assert_called_once()
@@ -271,11 +279,7 @@ class TestAddComment:
         engine.notify = MagicMock()
 
         result = ApprovalActionsMixin.add_comment(
-            engine,
-            instance_id=1,
-            user_id=3,
-            content="这个需要补充附件",
-            mentioned_user_ids=[4, 5]
+            engine, instance_id=1, user_id=3, content="这个需要补充附件", mentioned_user_ids=[4, 5]
         )
 
         engine.db.add.assert_called_once()

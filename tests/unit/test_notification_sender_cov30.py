@@ -2,7 +2,7 @@
 """
 Unit tests for NotificationSender (第三十批)
 """
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -48,6 +48,7 @@ def mock_user():
 # ---------------------------------------------------------------------------
 # send_reminder_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendReminderNotification:
     def test_returns_empty_dict_when_user_not_found(self, sender, mock_db, mock_reminder):
@@ -107,6 +108,7 @@ class TestSendReminderNotification:
 # _send_system_notification
 # ---------------------------------------------------------------------------
 
+
 class TestSendSystemNotification:
     def test_creates_notification_and_commits(self, sender, mock_db, mock_reminder, mock_user):
         result = sender._send_system_notification(mock_reminder, mock_user)
@@ -128,6 +130,7 @@ class TestSendSystemNotification:
 # _send_email_notification
 # ---------------------------------------------------------------------------
 
+
 class TestSendEmailNotification:
     def test_returns_false_when_smtp_not_configured(self, sender, mock_reminder, mock_user):
         with patch("app.services.timesheet_reminder.notification_sender.settings") as mock_settings:
@@ -148,6 +151,7 @@ class TestSendEmailNotification:
 # ---------------------------------------------------------------------------
 # _send_wechat_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendWechatNotification:
     def test_returns_false_when_wechat_not_configured(self, sender, mock_reminder, mock_user):

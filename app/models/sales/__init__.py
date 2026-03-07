@@ -6,7 +6,6 @@
 # 客户和联系人（Customer在project模块中定义）
 from ..project.customer import Customer
 from .contacts import Contact
-from .customer_tags import CustomerTag, PredefinedTags
 
 # 合同相关
 from .contracts import (
@@ -19,6 +18,7 @@ from .contracts import (
     ContractTemplateVersion,
     ContractTerm,
 )
+from .customer_tags import CustomerTag, PredefinedTags
 
 # 发票相关
 from .invoices import (
@@ -35,6 +35,20 @@ from .leads import (
     OpportunityRequirement,
 )
 
+# AI成本估算
+from .presale_ai_cost import (
+    PresaleAICostEstimation,
+    PresaleCostHistory,
+    PresaleCostOptimizationRecord,
+)
+
+# AI赢率预测
+from .presale_ai_win_rate import (
+    PresaleAIWinRate,
+    PresaleWinRateHistory,
+    WinRateResultEnum,
+)
+
 # 报价相关
 from .quotes import (
     CpqRuleSet,
@@ -48,6 +62,25 @@ from .quotes import (
     QuoteTemplate,
     QuoteTemplateVersion,
     QuoteVersion,
+)
+
+# 销售区域
+from .region import SalesRegion
+
+# 销售目标 V2
+from .target_v2 import (
+    SalesTargetV2,
+    TargetBreakdownLog,
+    TargetPeriodEnumV2,
+    TargetTypeEnumV2,
+)
+
+# 团队管理
+from .team import (
+    SalesTeam,
+    SalesTeamMember,
+    TeamPerformanceSnapshot,
+    TeamPKRecord,
 )
 
 # 技术评估和需求
@@ -70,39 +103,6 @@ from .workflow import (
     ApprovalWorkflowStep,
     SalesRankingConfig,
     SalesTarget,
-)
-
-# 团队管理
-from .team import (
-    SalesTeam,
-    SalesTeamMember,
-    TeamPerformanceSnapshot,
-    TeamPKRecord,
-)
-
-# 销售目标 V2
-from .target_v2 import (
-    SalesTargetV2,
-    TargetBreakdownLog,
-    TargetPeriodEnumV2,
-    TargetTypeEnumV2,
-)
-
-# 销售区域
-from .region import SalesRegion
-
-# AI赢率预测
-from .presale_ai_win_rate import (
-    PresaleAIWinRate,
-    PresaleWinRateHistory,
-    WinRateResultEnum,
-)
-
-# AI成本估算
-from .presale_ai_cost import (
-    PresaleAICostEstimation,
-    PresaleCostHistory,
-    PresaleCostOptimizationRecord,
 )
 
 __all__ = [

@@ -2,8 +2,9 @@
 """
 app/api/deps.py 覆盖率测试（当前 34%）
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from fastapi import HTTPException, Request
 
 

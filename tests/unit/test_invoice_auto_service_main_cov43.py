@@ -93,12 +93,21 @@ def test_create_invoice_request_flow():
     plan.invoice_id = None
     plan.planned_date = None
 
-    with patch("app.services.invoice_auto_service.main.check_deliverables_complete", return_value=True), \
-         patch("app.services.invoice_auto_service.main.check_acceptance_issues_resolved", return_value=True), \
-         patch("app.services.invoice_auto_service.main.create_invoice_request",
-               return_value={"success": True, "request_no": "IR2602-001", "amount": 1000.0}) as mock_create, \
-         patch("app.services.invoice_auto_service.main.send_invoice_notifications"), \
-         patch("app.services.invoice_auto_service.main.log_auto_invoice"):
+    with (
+        patch(
+            "app.services.invoice_auto_service.main.check_deliverables_complete", return_value=True
+        ),
+        patch(
+            "app.services.invoice_auto_service.main.check_acceptance_issues_resolved",
+            return_value=True,
+        ),
+        patch(
+            "app.services.invoice_auto_service.main.create_invoice_request",
+            return_value={"success": True, "request_no": "IR2602-001", "amount": 1000.0},
+        ) as mock_create,
+        patch("app.services.invoice_auto_service.main.send_invoice_notifications"),
+        patch("app.services.invoice_auto_service.main.log_auto_invoice"),
+    ):
 
         q_order = MagicMock()
         q_order.filter.return_value.first.return_value = order
@@ -133,12 +142,21 @@ def test_create_invoice_directly_flow():
     plan.invoice_id = None
     plan.planned_date = None
 
-    with patch("app.services.invoice_auto_service.main.check_deliverables_complete", return_value=True), \
-         patch("app.services.invoice_auto_service.main.check_acceptance_issues_resolved", return_value=True), \
-         patch("app.services.invoice_auto_service.main.create_invoice_directly",
-               return_value={"success": True, "invoice_code": "INV2602-001", "amount": 2000.0}), \
-         patch("app.services.invoice_auto_service.main.send_invoice_notifications"), \
-         patch("app.services.invoice_auto_service.main.log_auto_invoice"):
+    with (
+        patch(
+            "app.services.invoice_auto_service.main.check_deliverables_complete", return_value=True
+        ),
+        patch(
+            "app.services.invoice_auto_service.main.check_acceptance_issues_resolved",
+            return_value=True,
+        ),
+        patch(
+            "app.services.invoice_auto_service.main.create_invoice_directly",
+            return_value={"success": True, "invoice_code": "INV2602-001", "amount": 2000.0},
+        ),
+        patch("app.services.invoice_auto_service.main.send_invoice_notifications"),
+        patch("app.services.invoice_auto_service.main.log_auto_invoice"),
+    ):
 
         q_order = MagicMock()
         q_order.filter.return_value.first.return_value = order

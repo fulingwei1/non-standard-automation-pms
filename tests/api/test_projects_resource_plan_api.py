@@ -5,9 +5,10 @@
 测试项目资源规划、分配、调整等功能
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
 
 from app.core.config import settings
 
@@ -27,8 +28,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/", headers=headers
         )
 
         if response.status_code == 404:
@@ -49,13 +49,11 @@ class TestProjectResourcePlanAPI:
             "allocation_rate": 80.0,
             "start_date": datetime.now().strftime("%Y-%m-%d"),
             "end_date": (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d"),
-            "role": "developer"
+            "role": "developer",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/",
-            headers=headers,
-            json=plan_data
+            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/", headers=headers, json=plan_data
         )
 
         if response.status_code == 404:
@@ -72,13 +70,13 @@ class TestProjectResourcePlanAPI:
 
         update_data = {
             "allocation_rate": 100.0,
-            "end_date": (datetime.now() + timedelta(days=120)).strftime("%Y-%m-%d")
+            "end_date": (datetime.now() + timedelta(days=120)).strftime("%Y-%m-%d"),
         }
 
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/1/resource-plan/1",
             headers=headers,
-            json=update_data
+            json=update_data,
         )
 
         if response.status_code in [404, 422]:
@@ -94,8 +92,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -111,8 +108,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/conflicts",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/conflicts", headers=headers
         )
 
         if response.status_code == 404:
@@ -128,8 +124,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/utilization",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/utilization", headers=headers
         )
 
         if response.status_code == 404:
@@ -146,7 +141,7 @@ class TestProjectResourcePlanAPI:
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/1/resource-plan/?resource_type=employee",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -167,7 +162,7 @@ class TestProjectResourcePlanAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/1/resource-plan/"
             f"?start_date={start_date}&end_date={end_date}",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -185,13 +180,13 @@ class TestProjectResourcePlanAPI:
         check_data = {
             "resource_id": 1,
             "start_date": datetime.now().strftime("%Y-%m-%d"),
-            "end_date": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+            "end_date": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/resource-plan/availability",
             headers=headers,
-            json=check_data
+            json=check_data,
         )
 
         if response.status_code == 404:
@@ -208,13 +203,13 @@ class TestProjectResourcePlanAPI:
 
         invalid_data = {
             "allocation_rate": 150.0,  # 超过100%
-            "start_date": datetime.now().strftime("%Y-%m-%d")
+            "start_date": datetime.now().strftime("%Y-%m-%d"),
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/1/resource-plan/",
             headers=headers,
-            json=invalid_data
+            json=invalid_data,
         )
 
         if response.status_code == 404:
@@ -232,16 +227,16 @@ class TestProjectResourcePlanAPI:
         batch_data = {
             "assignments": [
                 {"resource_id": 1, "allocation_rate": 80.0, "role": "developer"},
-                {"resource_id": 2, "allocation_rate": 50.0, "role": "tester"}
+                {"resource_id": 2, "allocation_rate": 50.0, "role": "tester"},
             ],
             "start_date": datetime.now().strftime("%Y-%m-%d"),
-            "end_date": (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
+            "end_date": (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d"),
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/1/resource-plan/batch",
             headers=headers,
-            json=batch_data
+            json=batch_data,
         )
 
         if response.status_code == 404:
@@ -257,8 +252,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/resource-plan/workload-balance",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/resource-plan/workload-balance", headers=headers
         )
 
         if response.status_code == 404:
@@ -273,15 +267,12 @@ class TestProjectResourcePlanAPI:
 
         headers = _auth_headers(admin_token)
 
-        match_data = {
-            "required_skills": ["Python", "FastAPI", "PostgreSQL"],
-            "min_proficiency": 3
-        }
+        match_data = {"required_skills": ["Python", "FastAPI", "PostgreSQL"], "min_proficiency": 3}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/1/resource-plan/skills-match",
             headers=headers,
-            json=match_data
+            json=match_data,
         )
 
         if response.status_code == 404:
@@ -297,8 +288,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/timeline",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/timeline", headers=headers
         )
 
         if response.status_code == 404:
@@ -314,8 +304,7 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/cost",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/1/resource-plan/cost", headers=headers
         )
 
         if response.status_code == 404:

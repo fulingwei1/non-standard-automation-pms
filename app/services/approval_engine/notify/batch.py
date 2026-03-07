@@ -7,6 +7,7 @@
 
 from typing import Any, Dict, List
 
+
 class BatchNotificationMixin:
     """批量通知 Mixin"""
 

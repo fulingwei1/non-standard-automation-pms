@@ -20,7 +20,9 @@ def check_roles():
     """检查所有角色数据"""
     with get_db_session() as session:
         # 查询所有角色
-        result = session.execute(text("""
+        result = session.execute(
+            text(
+                """
             SELECT
                 id,
                 role_code,
@@ -32,7 +34,9 @@ def check_roles():
                 created_at
             FROM roles
             ORDER BY role_code, created_at
-        """))
+        """
+            )
+        )
 
         roles = []
         roles_by_code = defaultdict(list)
@@ -40,14 +44,14 @@ def check_roles():
 
         for row in result:
             role = {
-                'id': row.id,
-                'role_code': row.role_code,
-                'role_name': row.role_name,
-                'description': row.description,
-                'data_scope': row.data_scope,
-                'is_system': row.is_system,
-                'is_active': row.is_active,
-                'created_at': row.created_at,
+                "id": row.id,
+                "role_code": row.role_code,
+                "role_name": row.role_name,
+                "description": row.description,
+                "data_scope": row.data_scope,
+                "is_system": row.is_system,
+                "is_active": row.is_active,
+                "created_at": row.created_at,
             }
             roles.append(role)
             roles_by_code[row.role_code].append(role)
@@ -66,9 +70,11 @@ def check_roles():
             for code, role_list in code_duplicates.items():
                 print(f"\n  角色编码: {code}")
                 for role in role_list:
-                    print(f"    - ID {role['id']}: {role['role_name']} "
-                          f"(系统: {role['is_system']}, 启用: {role['is_active']}, "
-                          f"创建: {role['created_at']})")
+                    print(
+                        f"    - ID {role['id']}: {role['role_name']} "
+                        f"(系统: {role['is_system']}, 启用: {role['is_active']}, "
+                        f"创建: {role['created_at']})"
+                    )
         else:
             print("✓ role_code 无重复")
 
@@ -81,9 +87,11 @@ def check_roles():
             for name, role_list in name_duplicates.items():
                 print(f"\n  角色名称: {name}")
                 for role in role_list:
-                    print(f"    - ID {role['id']}: role_code={role['role_code']} "
-                          f"(系统: {role['is_system']}, 启用: {role['is_active']}, "
-                          f"创建: {role['created_at']})")
+                    print(
+                        f"    - ID {role['id']}: role_code={role['role_code']} "
+                        f"(系统: {role['is_system']}, 启用: {role['is_active']}, "
+                        f"创建: {role['created_at']})"
+                    )
         else:
             print("✓ role_name 无重复")
 
@@ -92,9 +100,11 @@ def check_roles():
         print("所有角色列表:")
         print("=" * 80)
         for role in roles:
-            print(f"ID {role['id']:3d} | {role['role_code']:20s} | {role['role_name']:20s} | "
-                  f"系统: {role['is_system']:1d} | 启用: {role['is_active']:1d} | "
-                  f"创建: {role['created_at']}")
+            print(
+                f"ID {role['id']:3d} | {role['role_code']:20s} | {role['role_name']:20s} | "
+                f"系统: {role['is_system']:1d} | 启用: {role['is_active']:1d} | "
+                f"创建: {role['created_at']}"
+            )
 
 
 if __name__ == "__main__":

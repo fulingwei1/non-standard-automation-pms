@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """默认模板管理单元测试"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.stage_template.default_template import DefaultTemplateMixin
 
 

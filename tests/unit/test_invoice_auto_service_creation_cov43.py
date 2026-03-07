@@ -6,13 +6,13 @@ import pytest
 
 pytest.importorskip("app.services.invoice_auto_service.creation")
 
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from app.services.invoice_auto_service.creation import (
-    create_invoice_request,
     create_invoice_directly,
+    create_invoice_request,
 )
 
 
@@ -159,8 +159,10 @@ def test_create_invoice_directly_success():
     mock_invoice = MagicMock()
     mock_invoice.id = 101
 
-    with patch("app.services.invoice_auto_service.creation.apply_like_filter") as mock_lf, \
-         patch("app.services.invoice_auto_service.creation.Invoice", return_value=mock_invoice):
+    with (
+        patch("app.services.invoice_auto_service.creation.apply_like_filter") as mock_lf,
+        patch("app.services.invoice_auto_service.creation.Invoice", return_value=mock_invoice),
+    ):
         mock_lf.return_value = q_seq
         result = create_invoice_directly(svc, plan, MagicMock(), MagicMock())
 

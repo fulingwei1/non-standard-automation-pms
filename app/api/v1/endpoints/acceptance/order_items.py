@@ -25,7 +25,11 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/acceptance-orders/{order_id}/items", response_model=List[CheckItemResultResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-orders/{order_id}/items",
+    response_model=List[CheckItemResultResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_acceptance_order_items(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -36,9 +40,12 @@ def read_acceptance_order_items(
     """
     get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
-    items = db.query(AcceptanceOrderItem).filter(AcceptanceOrderItem.order_id == order_id).order_by(
-        AcceptanceOrderItem.category_code, AcceptanceOrderItem.sort_order
-    ).all()
+    items = (
+        db.query(AcceptanceOrderItem)
+        .filter(AcceptanceOrderItem.order_id == order_id)
+        .order_by(AcceptanceOrderItem.category_code, AcceptanceOrderItem.sort_order)
+        .all()
+    )
 
     items_data = []
     for item in items:
@@ -47,35 +54,41 @@ def read_acceptance_order_items(
             user = db.query(User).filter(User.id == item.checked_by).first()
             checked_by_name = user.real_name or user.username if user else None
 
-        items_data.append(CheckItemResultResponse(
-            id=item.id,
-            category_code=item.category_code,
-            category_name=item.category_name,
-            item_code=item.item_code,
-            item_name=item.item_name,
-            check_method=item.check_method,
-            acceptance_criteria=item.acceptance_criteria,
-            standard_value=item.standard_value,
-            tolerance_min=item.tolerance_min,
-            tolerance_max=item.tolerance_max,
-            unit=item.unit,
-            is_required=item.is_required,
-            is_key_item=item.is_key_item,
-            result_status=item.result_status,
-            actual_value=item.actual_value,
-            deviation=item.deviation,
-            remark=item.remark,
-            checked_by=item.checked_by,
-            checked_by_name=checked_by_name,
-            checked_at=item.checked_at,
-            created_at=item.created_at.isoformat() if item.created_at else None,
-            updated_at=item.updated_at.isoformat() if item.updated_at else None
-        ))
+        items_data.append(
+            CheckItemResultResponse(
+                id=item.id,
+                category_code=item.category_code,
+                category_name=item.category_name,
+                item_code=item.item_code,
+                item_name=item.item_name,
+                check_method=item.check_method,
+                acceptance_criteria=item.acceptance_criteria,
+                standard_value=item.standard_value,
+                tolerance_min=item.tolerance_min,
+                tolerance_max=item.tolerance_max,
+                unit=item.unit,
+                is_required=item.is_required,
+                is_key_item=item.is_key_item,
+                result_status=item.result_status,
+                actual_value=item.actual_value,
+                deviation=item.deviation,
+                remark=item.remark,
+                checked_by=item.checked_by,
+                checked_by_name=checked_by_name,
+                checked_at=item.checked_at,
+                created_at=item.created_at.isoformat() if item.created_at else None,
+                updated_at=item.updated_at.isoformat() if item.updated_at else None,
+            )
+        )
 
     return items_data
 
 
-@router.put("/acceptance-items/{item_id}", response_model=CheckItemResultResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/acceptance-items/{item_id}",
+    response_model=CheckItemResultResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_check_item_result(
     *,
     db: Session = Depends(deps.get_db),
@@ -156,5 +169,5 @@ def update_check_item_result(
         checked_by_name=checked_by_name,
         checked_at=item.checked_at,
         created_at=item.created_at,
-        updated_at=item.updated_at
+        updated_at=item.updated_at,
     )

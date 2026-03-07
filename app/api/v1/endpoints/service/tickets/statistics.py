@@ -4,15 +4,13 @@
 """
 from typing import Any
 
-from fastapi import Depends, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.service import ServiceTicket
 from app.models.user import User
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

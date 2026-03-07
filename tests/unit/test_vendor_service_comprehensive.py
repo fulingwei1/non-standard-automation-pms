@@ -8,9 +8,9 @@ VendorService 综合单元测试
 - list_suppliers: 获取供应商列表
 """
 
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-from datetime import datetime
 
 import pytest
 
@@ -31,8 +31,8 @@ class TestVendorServiceInit:
 
     def test_sets_correct_model(self):
         """测试设置正确的模型"""
-        from app.services.vendor_service import VendorService
         from app.models.vendor import Vendor
+        from app.services.vendor_service import VendorService
 
         mock_db = MagicMock()
 
@@ -135,13 +135,13 @@ class TestListSuppliers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_suppliers(page=1, page_size=20)
 
-            assert result['items'] == mock_result.items
-            assert result['total'] == 2
-            assert result['page'] == 1
-            assert result['page_size'] == 20
+            assert result["items"] == mock_result.items
+            assert result["total"] == 2
+            assert result["page"] == 1
+            assert result["page_size"] == 20
 
     def test_filters_by_supplier_type(self):
         """测试按供应商类型过滤"""
@@ -156,12 +156,12 @@ class TestListSuppliers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_suppliers(supplier_type="MANUFACTURER")
 
             mock_list.assert_called_once()
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('supplier_type') == "MANUFACTURER"
+            assert call_args.filters.get("supplier_type") == "MANUFACTURER"
 
     def test_filters_by_status(self):
         """测试按状态过滤"""
@@ -176,11 +176,11 @@ class TestListSuppliers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_suppliers(status="ACTIVE")
 
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('status') == "ACTIVE"
+            assert call_args.filters.get("status") == "ACTIVE"
 
     def test_filters_by_supplier_level(self):
         """测试按供应商级别过滤"""
@@ -195,11 +195,11 @@ class TestListSuppliers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_suppliers(supplier_level="A")
 
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('supplier_level') == "A"
+            assert call_args.filters.get("supplier_level") == "A"
 
     def test_filters_by_vendor_type(self):
         """测试按供应商类别过滤"""
@@ -214,11 +214,11 @@ class TestListSuppliers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_suppliers(vendor_type="OUTSOURCING")
 
             call_args = mock_list.call_args[0][0]
-            assert call_args.filters.get('vendor_type') == "OUTSOURCING"
+            assert call_args.filters.get("vendor_type") == "OUTSOURCING"
 
     def test_searches_by_keyword(self):
         """测试关键字搜索"""
@@ -233,7 +233,7 @@ class TestListSuppliers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result) as mock_list:
+        with patch.object(service, "list", return_value=mock_result) as mock_list:
             result = service.list_suppliers(keyword="华为")
 
             call_args = mock_list.call_args[0][0]
@@ -254,8 +254,8 @@ class TestListSuppliers:
         mock_result.page = 1
         mock_result.page_size = 20
 
-        with patch.object(service, 'list', return_value=mock_result):
+        with patch.object(service, "list", return_value=mock_result):
             result = service.list_suppliers()
 
             # (45 + 20 - 1) // 20 = 3
-            assert result['pages'] == 3
+            assert result["pages"] == 3

@@ -12,20 +12,17 @@ from sqlalchemy.orm import Session
 from app.models.ecn import Ecn, EcnApproval, EcnTask
 from app.models.project import ProjectMember
 from app.models.user import User
-
-from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
-    NotificationRequest,
     NotificationPriority,
+    NotificationRequest,
 )
+from app.services.notification_dispatcher import NotificationDispatcher
+
 from .utils import find_users_by_role
 
 
 def notify_approval_assigned(
-    db: Session,
-    ecn: Ecn,
-    approval: EcnApproval,
-    approver_id: Optional[int] = None
+    db: Session, ecn: Ecn, approval: EcnApproval, approver_id: Optional[int] = None
 ) -> None:
     """
     通知审批任务分配
@@ -50,7 +47,11 @@ def notify_approval_assigned(
     title = f"ECN审批任务分配：{ecn.ecn_no}"
     content = f"您有一个新的ECN审批任务：\n\nECN编号：{ecn.ecn_no}\nECN标题：{ecn.ecn_title}\n审批层级：第{approval.approval_level}级\n审批角色：{approval.approval_role}\n截止日期：{approval.due_date.strftime('%Y-%m-%d') if approval.due_date else '未设置'}\n\n请及时完成审批。"
 
-    priority = NotificationPriority.URGENT if approval.due_date and approval.due_date < datetime.now().date() else NotificationPriority.HIGH
+    priority = (
+        NotificationPriority.URGENT
+        if approval.due_date and approval.due_date < datetime.now().date()
+        else NotificationPriority.HIGH
+    )
 
     dispatcher = NotificationDispatcher(db)
     request = NotificationRequest(
@@ -69,19 +70,23 @@ def notify_approval_assigned(
             "approval_level": approval.approval_level,
             "approval_role": approval.approval_role,
             "approval_id": approval.id,
-            "due_date": approval.due_date.isoformat() if approval.due_date else None
-        }
+            "due_date": approval.due_date.isoformat() if approval.due_date else None,
+        },
     )
     dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目，且审批人员不是项目成员）
     if ecn.project_id:
         # 查找项目成员（排除审批人员，避免重复通知）
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active,
-            ~ProjectMember.user_id.in_(approver_ids)
-        ).all()
+        project_members = (
+            db.query(ProjectMember)
+            .filter(
+                ProjectMember.project_id == ecn.project_id,
+                ProjectMember.is_active,
+                ~ProjectMember.user_id.in_(approver_ids),
+            )
+            .all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
@@ -112,18 +117,13 @@ def notify_approval_assigned(
                         "approval_id": approval.id,
                         "approver_ids": approver_ids,
                         "due_date": approval.due_date.isoformat() if approval.due_date else None,
-                        "is_cc": True  # 标记为抄送
-                    }
+                        "is_cc": True,  # 标记为抄送
+                    },
                 )
                 dispatcher.send_notification_request(request)
 
 
-def notify_approval_result(
-    db: Session,
-    ecn: Ecn,
-    approval: EcnApproval,
-    result: str
-) -> None:
+def notify_approval_result(db: Session, ecn: Ecn, approval: EcnApproval, result: str) -> None:
     """
     通知审批结果
     通知ECN申请人、项目相关人员和其他相关人员
@@ -151,19 +151,23 @@ def notify_approval_result(
                 "ecn_no": ecn.ecn_no,
                 "approval_level": approval.approval_level,
                 "approval_role": approval.approval_role,
-                "approval_result": result
-            }
+                "approval_result": result,
+            },
         )
         dispatcher.send_notification_request(request)
 
     # 抄送项目相关人员（如果ECN关联了项目）
     if ecn.project_id:
         # 查找项目成员（排除申请人，避免重复通知）
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active,
-            ProjectMember.user_id != ecn.applicant_id
-        ).all()
+        project_members = (
+            db.query(ProjectMember)
+            .filter(
+                ProjectMember.project_id == ecn.project_id,
+                ProjectMember.is_active,
+                ProjectMember.user_id != ecn.applicant_id,
+            )
+            .all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
@@ -187,18 +191,19 @@ def notify_approval_result(
                         "approval_level": approval.approval_level,
                         "approval_role": approval.approval_role,
                         "approval_result": result,
-                        "is_cc": True  # 标记为抄送
-                    }
+                        "is_cc": True,  # 标记为抄送
+                    },
                 )
                 dispatcher.send_notification_request(request)
 
     # 如果审批通过，通知执行人员
     if result == "APPROVED":
         # 查找所有待执行的ECN任务
-        pending_tasks = db.query(EcnTask).filter(
-            EcnTask.ecn_id == ecn.id,
-            EcnTask.task_status.in_(['PENDING', 'IN_PROGRESS'])
-        ).all()
+        pending_tasks = (
+            db.query(EcnTask)
+            .filter(EcnTask.ecn_id == ecn.id, EcnTask.task_status.in_(["PENDING", "IN_PROGRESS"]))
+            .all()
+        )
 
         for task in pending_tasks:
             if task.assignee_id:
@@ -218,7 +223,7 @@ def notify_approval_result(
                     extra_data={
                         "ecn_no": ecn.ecn_no,
                         "task_id": task.id,
-                        "task_name": task.task_name
-                    }
+                        "task_name": task.task_name,
+                    },
                 )
                 dispatcher.send_notification_request(request)

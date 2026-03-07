@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - project_cost_aggregation_service 单元测试"""
 
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.project_cost_aggregation_service")
 
@@ -21,6 +22,7 @@ def service(db):
 
 
 # ── _map_cost_type ────────────────────────────────────────────────────────────
+
 
 class TestMapCostType:
     def test_labor_types(self, service):
@@ -58,6 +60,7 @@ class TestMapCostType:
 
 # ── get_projects_cost_summary - empty case ────────────────────────────────────
 
+
 class TestGetProjectsCostSummaryEmpty:
     def test_empty_project_ids_returns_empty_dict(self, service):
         result = service.get_projects_cost_summary([])
@@ -65,6 +68,7 @@ class TestGetProjectsCostSummaryEmpty:
 
 
 # ── get_projects_cost_summary ─────────────────────────────────────────────────
+
 
 class TestGetProjectsCostSummary:
     def _setup_db(self, db, projects_data, cost_data=None, fin_cost_data=None):
@@ -165,6 +169,7 @@ class TestGetProjectsCostSummary:
 
 # ── get_cost_summary_for_project ──────────────────────────────────────────────
 
+
 class TestGetCostSummaryForProject:
     def test_returns_none_when_project_not_found(self, service, db):
         db.query.return_value.filter.return_value.all.return_value = []
@@ -187,6 +192,7 @@ class TestGetCostSummaryForProject:
 
 
 # ── _get_cost_breakdown_batch ─────────────────────────────────────────────────
+
 
 class TestGetCostBreakdownBatch:
     def test_returns_empty_when_no_costs(self, service, db):

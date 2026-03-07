@@ -40,9 +40,7 @@ def check_refactoring_consistency(base_dir):
             main_jsx = os.path.join(page_path, "index.jsx")
             # 兼容旧结构，有些页面可能直接是 PageName.jsx 放在 pages 根目录，
             # 但我们这里只检查已经有目录结构的页面
-            if os.path.exists(main_jsx) or any(
-                f.endswith(".jsx") for f in os.listdir(page_path)
-            ):
+            if os.path.exists(main_jsx) or any(f.endswith(".jsx") for f in os.listdir(page_path)):
                 # 如果是新创建的目录结构，应该有 hooks
                 pass  # 暂时不标记为错误，因为有些小页面可能不需要
         else:

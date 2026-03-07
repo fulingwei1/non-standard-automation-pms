@@ -9,8 +9,8 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, call
 from datetime import datetime
+from unittest.mock import MagicMock, call, patch
 
 from app.services.permission_management.permission_management_service import (
     PermissionManagementService,
@@ -73,7 +73,7 @@ class TestPermissionManagementService(unittest.TestCase):
         mock_filter_chain.offset.return_value = mock_filter_chain
         mock_filter_chain.limit.return_value = mock_filter_chain
         mock_filter_chain.all.return_value = []
-        
+
         self.mock_db.query.return_value.filter.return_value = mock_filter_chain
 
         # 执行测试（全部筛选条件）
@@ -124,7 +124,7 @@ class TestPermissionManagementService(unittest.TestCase):
             ("user",),
             ("approval",),
         ]
-        
+
         self.mock_db.query.return_value = mock_chain
 
         # 执行测试
@@ -156,7 +156,7 @@ class TestPermissionManagementService(unittest.TestCase):
             (None,),  # 应该被过滤
             ("user",),
         ]
-        
+
         self.mock_db.query.return_value = mock_chain
 
         result = self.service.list_modules(tenant_id=self.tenant_id)
@@ -450,11 +450,11 @@ class TestPermissionManagementService(unittest.TestCase):
         def mock_filter_side_effect(*args, **kwargs):
             mock_filter_result = MagicMock()
             # 第一次调用：删除现有关联
-            if not hasattr(mock_filter_side_effect, 'call_count'):
+            if not hasattr(mock_filter_side_effect, "call_count"):
                 mock_filter_side_effect.call_count = 0
-            
+
             mock_filter_side_effect.call_count += 1
-            
+
             if mock_filter_side_effect.call_count == 1:
                 # 删除操作
                 mock_filter_result.delete.return_value = None
@@ -490,11 +490,11 @@ class TestPermissionManagementService(unittest.TestCase):
 
         def mock_filter_side_effect(*args, **kwargs):
             mock_filter_result = MagicMock()
-            if not hasattr(mock_filter_side_effect, 'call_count'):
+            if not hasattr(mock_filter_side_effect, "call_count"):
                 mock_filter_side_effect.call_count = 0
-            
+
             mock_filter_side_effect.call_count += 1
-            
+
             if mock_filter_side_effect.call_count == 1:
                 mock_filter_result.delete.return_value = None
                 return mock_filter_result
@@ -537,7 +537,7 @@ class TestPermissionManagementService(unittest.TestCase):
         self.mock_db.add.assert_not_called()
         self.mock_db.commit.assert_called_once()
 
-    @patch('app.services.permission_cache_service.get_permission_cache_service')
+    @patch("app.services.permission_cache_service.get_permission_cache_service")
     def test_invalidate_permission_cache_success(self, mock_get_cache):
         """测试清除权限缓存成功"""
         mock_cache_service = MagicMock()
@@ -553,7 +553,7 @@ class TestPermissionManagementService(unittest.TestCase):
             1, tenant_id=self.tenant_id
         )
 
-    @patch('app.services.permission_cache_service.get_permission_cache_service')
+    @patch("app.services.permission_cache_service.get_permission_cache_service")
     def test_invalidate_permission_cache_failure(self, mock_get_cache):
         """测试清除权限缓存失败"""
         mock_get_cache.side_effect = Exception("缓存服务不可用")
@@ -595,7 +595,7 @@ class TestPermissionManagementService(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    @patch('app.services.permission_service.PermissionService')
+    @patch("app.services.permission_service.PermissionService")
     def test_get_user_permissions(self, mock_permission_service):
         """测试获取用户权限"""
         # Mock PermissionService返回权限编码列表
@@ -614,7 +614,7 @@ class TestPermissionManagementService(unittest.TestCase):
         mock_chain.filter.return_value = mock_chain
         mock_chain.order_by.return_value = mock_chain
         mock_chain.all.return_value = [mock_perm1, mock_perm2]
-        
+
         self.mock_db.query.return_value = mock_chain
 
         # 执行测试
@@ -633,7 +633,7 @@ class TestPermissionManagementService(unittest.TestCase):
             self.mock_db, 1, self.tenant_id
         )
 
-    @patch('app.services.permission_service.PermissionService')
+    @patch("app.services.permission_service.PermissionService")
     def test_get_user_permissions_empty(self, mock_permission_service):
         """测试用户无权限"""
         mock_permission_service.get_user_permissions.return_value = []
@@ -642,7 +642,7 @@ class TestPermissionManagementService(unittest.TestCase):
         mock_chain.filter.return_value = mock_chain
         mock_chain.order_by.return_value = mock_chain
         mock_chain.all.return_value = []
-        
+
         self.mock_db.query.return_value = mock_chain
 
         result = self.service.get_user_permissions(
@@ -652,7 +652,7 @@ class TestPermissionManagementService(unittest.TestCase):
 
         self.assertEqual(len(result), 0)
 
-    @patch('app.services.permission_service.PermissionService')
+    @patch("app.services.permission_service.PermissionService")
     def test_check_user_permission_true(self, mock_permission_service):
         """测试用户有权限"""
         mock_user = MagicMock()
@@ -670,7 +670,7 @@ class TestPermissionManagementService(unittest.TestCase):
             self.mock_db, 1, "project.create", mock_user, self.tenant_id
         )
 
-    @patch('app.services.permission_service.PermissionService')
+    @patch("app.services.permission_service.PermissionService")
     def test_check_user_permission_false(self, mock_permission_service):
         """测试用户无权限"""
         mock_user = MagicMock()
@@ -746,11 +746,11 @@ class TestPermissionManagementService(unittest.TestCase):
 
         def mock_filter_side_effect(*args, **kwargs):
             mock_filter_result = MagicMock()
-            if not hasattr(mock_filter_side_effect, 'call_count'):
+            if not hasattr(mock_filter_side_effect, "call_count"):
                 mock_filter_side_effect.call_count = 0
-            
+
             mock_filter_side_effect.call_count += 1
-            
+
             if mock_filter_side_effect.call_count == 1:
                 # 第一次调用：删除现有关联
                 mock_filter_result.delete.return_value = None

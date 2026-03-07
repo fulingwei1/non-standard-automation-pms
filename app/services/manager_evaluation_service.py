@@ -23,11 +23,7 @@ class ManagerEvaluationService:
     def __init__(self, db: Session):
         self.db = db
 
-    def check_manager_permission(
-        self,
-        manager_id: int,
-        engineer_id: int
-    ) -> bool:
+    def check_manager_permission(self, manager_id: int, engineer_id: int) -> bool:
         """
         检查部门经理是否有权限评价该工程师
 
@@ -44,10 +40,11 @@ class ManagerEvaluationService:
             return False
 
         # 检查是否是部门经理
-        dept = self.db.query(Department).filter(
-            Department.manager_id == manager.employee_id,
-            Department.is_active
-        ).first()
+        dept = (
+            self.db.query(Department)
+            .filter(Department.manager_id == manager.employee_id, Department.is_active)
+            .first()
+        )
 
         if not dept:
             return False
@@ -58,9 +55,8 @@ class ManagerEvaluationService:
             return False
 
         from app.models.organization import Employee
-        employee = self.db.query(Employee).filter(
-            Employee.id == engineer.employee_id
-        ).first()
+
+        employee = self.db.query(Employee).filter(Employee.id == engineer.employee_id).first()
 
         if not employee or employee.department_id != dept.id:
             return False
@@ -74,7 +70,7 @@ class ManagerEvaluationService:
         new_total_score: Optional[Decimal] = None,
         new_dept_rank: Optional[int] = None,
         new_company_rank: Optional[int] = None,
-        adjustment_reason: str = ""
+        adjustment_reason: str = "",
     ) -> PerformanceResult:
         """
         部门经理调整绩效得分和排名
@@ -97,9 +93,7 @@ class ManagerEvaluationService:
         if len(adjustment_reason.strip()) < 10:
             raise ValueError("调整理由至少需要10个字符，请详细说明调整原因")
 
-        result = self.db.query(PerformanceResult).filter(
-            PerformanceResult.id == result_id
-        ).first()
+        result = self.db.query(PerformanceResult).filter(PerformanceResult.id == result_id).first()
 
         if not result:
             raise ValueError(f"绩效结果不存在: {result_id}")
@@ -132,7 +126,7 @@ class ManagerEvaluationService:
             adjustment_reason=adjustment_reason,
             adjusted_by=manager_id,
             adjusted_by_name=manager.name or manager.username,
-            adjusted_at=datetime.now()
+            adjusted_at=datetime.now(),
         )
 
         # 更新绩效结果
@@ -167,20 +161,17 @@ class ManagerEvaluationService:
         """根据得分计算等级"""
         score_int = int(score)
         if score_int >= 85:
-            return 'S'
+            return "S"
         elif score_int >= 70:
-            return 'A'
+            return "A"
         elif score_int >= 60:
-            return 'B'
+            return "B"
         elif score_int >= 40:
-            return 'C'
+            return "C"
         else:
-            return 'D'
+            return "D"
 
-    def get_adjustment_history(
-        self,
-        result_id: int
-    ) -> List[Dict[str, Any]]:
+    def get_adjustment_history(self, result_id: int) -> List[Dict[str, Any]]:
         """
         获取调整历史记录（增强版：包含详细信息）
 
@@ -190,43 +181,67 @@ class ManagerEvaluationService:
         Returns:
             调整历史记录列表（包含详细信息）
         """
-        histories = self.db.query(PerformanceAdjustmentHistory).filter(
-            PerformanceAdjustmentHistory.result_id == result_id
-        ).order_by(desc(PerformanceAdjustmentHistory.adjusted_at)).all()
+        histories = (
+            self.db.query(PerformanceAdjustmentHistory)
+            .filter(PerformanceAdjustmentHistory.result_id == result_id)
+            .order_by(desc(PerformanceAdjustmentHistory.adjusted_at))
+            .all()
+        )
 
         result = []
         for history in histories:
             # 获取调整人信息
             adjuster = self.db.query(User).filter(User.id == history.adjusted_by).first()
 
-            result.append({
-                'id': history.id,
-                'result_id': history.result_id,
-                'original_total_score': float(history.original_total_score) if history.original_total_score else None,
-                'original_dept_rank': history.original_dept_rank,
-                'original_company_rank': history.original_company_rank,
-                'original_level': history.original_level,
-                'adjusted_total_score': float(history.adjusted_total_score) if history.adjusted_total_score else None,
-                'adjusted_dept_rank': history.adjusted_dept_rank,
-                'adjusted_company_rank': history.adjusted_company_rank,
-                'adjusted_level': history.adjusted_level,
-                'adjustment_reason': history.adjustment_reason,
-                'adjusted_by': history.adjusted_by,
-                'adjusted_by_name': history.adjusted_by_name or (adjuster.name if adjuster else None),
-                'adjusted_at': history.adjusted_at.isoformat() if history.adjusted_at else None,
-                'score_change': float(history.adjusted_total_score - history.original_total_score) if history.adjusted_total_score and history.original_total_score else 0.0,
-                'rank_change': {
-                    'dept': (history.adjusted_dept_rank - history.original_dept_rank) if history.adjusted_dept_rank and history.original_dept_rank else 0,
-                    'company': (history.adjusted_company_rank - history.original_company_rank) if history.adjusted_company_rank and history.original_company_rank else 0
+            result.append(
+                {
+                    "id": history.id,
+                    "result_id": history.result_id,
+                    "original_total_score": (
+                        float(history.original_total_score)
+                        if history.original_total_score
+                        else None
+                    ),
+                    "original_dept_rank": history.original_dept_rank,
+                    "original_company_rank": history.original_company_rank,
+                    "original_level": history.original_level,
+                    "adjusted_total_score": (
+                        float(history.adjusted_total_score)
+                        if history.adjusted_total_score
+                        else None
+                    ),
+                    "adjusted_dept_rank": history.adjusted_dept_rank,
+                    "adjusted_company_rank": history.adjusted_company_rank,
+                    "adjusted_level": history.adjusted_level,
+                    "adjustment_reason": history.adjustment_reason,
+                    "adjusted_by": history.adjusted_by,
+                    "adjusted_by_name": history.adjusted_by_name
+                    or (adjuster.name if adjuster else None),
+                    "adjusted_at": history.adjusted_at.isoformat() if history.adjusted_at else None,
+                    "score_change": (
+                        float(history.adjusted_total_score - history.original_total_score)
+                        if history.adjusted_total_score and history.original_total_score
+                        else 0.0
+                    ),
+                    "rank_change": {
+                        "dept": (
+                            (history.adjusted_dept_rank - history.original_dept_rank)
+                            if history.adjusted_dept_rank and history.original_dept_rank
+                            else 0
+                        ),
+                        "company": (
+                            (history.adjusted_company_rank - history.original_company_rank)
+                            if history.adjusted_company_rank and history.original_company_rank
+                            else 0
+                        ),
+                    },
                 }
-            })
+            )
 
         return result
 
     def get_engineers_for_evaluation(
-        self,
-        manager_id: int,
-        period_id: Optional[int] = None
+        self, manager_id: int, period_id: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
         获取部门经理可评价的工程师列表
@@ -244,25 +259,25 @@ class ManagerEvaluationService:
         for result in results:
             engineer = self.db.query(User).filter(User.id == result.user_id).first()
             if engineer:
-                engineers.append({
-                    'user_id': engineer.id,
-                    'username': engineer.username,
-                    'name': engineer.real_name or engineer.name or engineer.username,
-                    'result_id': result.id,
-                    'total_score': float(result.total_score) if result.total_score else None,
-                    'dept_rank': result.dept_rank,
-                    'company_rank': result.company_rank,
-                    'level': result.level,
-                    'is_adjusted': result.is_adjusted,
-                    'adjustment_reason': result.adjustment_reason
-                })
+                engineers.append(
+                    {
+                        "user_id": engineer.id,
+                        "username": engineer.username,
+                        "name": engineer.real_name or engineer.name or engineer.username,
+                        "result_id": result.id,
+                        "total_score": float(result.total_score) if result.total_score else None,
+                        "dept_rank": result.dept_rank,
+                        "company_rank": result.company_rank,
+                        "level": result.level,
+                        "is_adjusted": result.is_adjusted,
+                        "adjustment_reason": result.adjustment_reason,
+                    }
+                )
 
         return engineers
 
     def get_manager_evaluation_tasks(
-        self,
-        manager_id: int,
-        period_id: Optional[int] = None
+        self, manager_id: int, period_id: Optional[int] = None
     ) -> List[PerformanceResult]:
         """
         获取部门经理需要评价的任务列表
@@ -279,35 +294,34 @@ class ManagerEvaluationService:
         if not manager:
             return []
 
-        dept = self.db.query(Department).filter(
-            Department.manager_id == manager.employee_id,
-            Department.is_active
-        ).first()
+        dept = (
+            self.db.query(Department)
+            .filter(Department.manager_id == manager.employee_id, Department.is_active)
+            .first()
+        )
 
         if not dept:
             return []
 
         # 获取该部门的所有工程师
         from app.models.organization import Employee
-        employees = self.db.query(Employee).filter(
-            Employee.department_id == dept.id,
-            Employee.is_active
-        ).all()
+
+        employees = (
+            self.db.query(Employee)
+            .filter(Employee.department_id == dept.id, Employee.is_active)
+            .all()
+        )
 
         employee_ids = [e.id for e in employees]
         user_ids = [
-            u.id for u in self.db.query(User).filter(
-                User.employee_id.in_(employee_ids)
-            ).all()
+            u.id for u in self.db.query(User).filter(User.employee_id.in_(employee_ids)).all()
         ]
 
         if not user_ids:
             return []
 
         # 查询绩效结果
-        query = self.db.query(PerformanceResult).filter(
-            PerformanceResult.user_id.in_(user_ids)
-        )
+        query = self.db.query(PerformanceResult).filter(PerformanceResult.user_id.in_(user_ids))
 
         if period_id:
             query = query.filter(PerformanceResult.period_id == period_id)
@@ -320,7 +334,7 @@ class ManagerEvaluationService:
         manager_id: int,
         overall_comment: Optional[str] = None,
         strength_comment: Optional[str] = None,
-        improvement_comment: Optional[str] = None
+        improvement_comment: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         提交评价（不调整得分和排名）
@@ -335,9 +349,7 @@ class ManagerEvaluationService:
         Returns:
             评价结果
         """
-        result = self.db.query(PerformanceResult).filter(
-            PerformanceResult.id == result_id
-        ).first()
+        result = self.db.query(PerformanceResult).filter(PerformanceResult.id == result_id).first()
 
         if not result:
             raise ValueError(f"绩效结果不存在: {result_id}")
@@ -348,10 +360,15 @@ class ManagerEvaluationService:
 
         # 创建或更新评价记录
         from app.models.performance import PerformanceEvaluation
-        evaluation = self.db.query(PerformanceEvaluation).filter(
-            PerformanceEvaluation.result_id == result_id,
-            PerformanceEvaluation.evaluator_id == manager_id
-        ).first()
+
+        evaluation = (
+            self.db.query(PerformanceEvaluation)
+            .filter(
+                PerformanceEvaluation.result_id == result_id,
+                PerformanceEvaluation.evaluator_id == manager_id,
+            )
+            .first()
+        )
 
         manager = self.db.query(User).filter(User.id == manager_id).first()
 
@@ -367,19 +384,15 @@ class ManagerEvaluationService:
                 result_id=result_id,
                 evaluator_id=manager_id,
                 evaluator_name=manager.name or manager.username if manager else None,
-                evaluator_role='dept_manager',
+                evaluator_role="dept_manager",
                 overall_comment=overall_comment,
                 strength_comment=strength_comment,
                 improvement_comment=improvement_comment,
-                evaluated_at=datetime.now()
+                evaluated_at=datetime.now(),
             )
             self.db.add(evaluation)
 
         self.db.commit()
         self.db.refresh(evaluation)
 
-        return {
-            'evaluation_id': evaluation.id,
-            'result_id': result_id,
-            'message': '评价提交成功'
-        }
+        return {"evaluation_id": evaluation.id, "result_id": result_id, "message": "评价提交成功"}

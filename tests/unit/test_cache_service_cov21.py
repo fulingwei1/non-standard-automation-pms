@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十一批：缓存服务单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.cache_service")
 
@@ -11,10 +12,16 @@ pytest.importorskip("app.services.cache_service")
 @pytest.fixture
 def cache_no_redis():
     """无Redis的缓存服务"""
-    with patch("app.services.cache_service.REDIS_AVAILABLE", False), \
-         patch("app.utils.redis_client.get_redis_client", side_effect=Exception("no redis"),
-               create=True):
+    with (
+        patch("app.services.cache_service.REDIS_AVAILABLE", False),
+        patch(
+            "app.utils.redis_client.get_redis_client",
+            side_effect=Exception("no redis"),
+            create=True,
+        ),
+    ):
         from app.services.cache_service import CacheService
+
         return CacheService(redis_client=None)
 
 
@@ -24,6 +31,7 @@ def cache_with_mock_redis():
     mock_redis = MagicMock()
     with patch("app.services.cache_service.REDIS_AVAILABLE", True):
         from app.services.cache_service import CacheService
+
         svc = CacheService(redis_client=mock_redis)
     svc.redis_client = mock_redis
     svc.use_redis = True
@@ -53,7 +61,7 @@ class TestMemoryCacheSetAndGet:
     def test_expired_key_returns_none(self, cache_no_redis):
         cache_no_redis.memory_cache["expired_key"] = (
             "old_value",
-            datetime.now() - timedelta(seconds=1)
+            datetime.now() - timedelta(seconds=1),
         )
         result = cache_no_redis.get("expired_key")
         assert result is None

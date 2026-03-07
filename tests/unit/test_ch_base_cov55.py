@@ -2,16 +2,17 @@
 """
 Tests for app/services/channel_handlers/base.py
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.channel_handlers.base import (
         ChannelHandler,
         NotificationChannel,
         NotificationPriority,
-        NotificationResult,
         NotificationRequest,
+        NotificationResult,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -19,6 +20,7 @@ except ImportError as e:
 
 class ConcreteHandler(ChannelHandler):
     """用于测试的具体实现"""
+
     def send(self, request):
         return NotificationResult(channel=self.channel, success=True)
 
@@ -91,11 +93,7 @@ def test_notification_result_dataclass():
 def test_notification_request_defaults():
     """NotificationRequest 默认值检查"""
     req = NotificationRequest(
-        recipient_id=1,
-        notification_type="ALERT",
-        category="alert",
-        title="test",
-        content="content"
+        recipient_id=1, notification_type="ALERT", category="alert", title="test", content="content"
     )
     assert req.priority == NotificationPriority.NORMAL
     assert req.force_send is False

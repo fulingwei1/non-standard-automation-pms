@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - quality_risk_analyzer 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.quality_risk_ai.quality_risk_analyzer")
 
@@ -19,7 +20,7 @@ def make_work_log(**kwargs):
         "user_name": kwargs.get("user_name", "张三"),
         "task_name": kwargs.get("task_name", "模块开发"),
         "work_content": kwargs.get("work_content", "完成功能开发"),
-        "work_result": kwargs.get("work_result", "功能正常")
+        "work_result": kwargs.get("work_result", "功能正常"),
     }
 
 
@@ -32,7 +33,9 @@ class TestQualityRiskAnalyzerInit:
 
     def test_init_creates_keyword_extractor(self):
         db = make_db()
-        with patch("app.services.quality_risk_ai.quality_risk_analyzer.RiskKeywordExtractor") as MockExt:
+        with patch(
+            "app.services.quality_risk_ai.quality_risk_analyzer.RiskKeywordExtractor"
+        ) as MockExt:
             analyzer = QualityRiskAnalyzer(db)
         MockExt.assert_called_once()
 
@@ -64,14 +67,17 @@ class TestAnalyzeWithKeywords:
     def setup_method(self):
         db = make_db()
         self.mock_extractor = MagicMock()
-        with patch("app.services.quality_risk_ai.quality_risk_analyzer.RiskKeywordExtractor", return_value=self.mock_extractor):
+        with patch(
+            "app.services.quality_risk_ai.quality_risk_analyzer.RiskKeywordExtractor",
+            return_value=self.mock_extractor,
+        ):
             self.analyzer = QualityRiskAnalyzer(db)
 
     def test_keyword_analysis_called_for_each_log(self):
         self.mock_extractor.analyze_text.return_value = {
             "risk_keywords": {"BUG": ["缺陷"]},
             "abnormal_patterns": [],
-            "risk_score": 10.0
+            "risk_score": 10.0,
         }
         self.mock_extractor.determine_risk_level.return_value = "LOW"
 
@@ -85,7 +91,7 @@ class TestAnalyzeWithKeywords:
         self.mock_extractor.analyze_text.return_value = {
             "risk_keywords": {},
             "abnormal_patterns": [],
-            "risk_score": 5.0
+            "risk_score": 5.0,
         }
         self.mock_extractor.determine_risk_level.return_value = "LOW"
 
@@ -99,7 +105,7 @@ class TestAnalyzeWithKeywords:
         self.mock_extractor.analyze_text.return_value = {
             "risk_keywords": {},
             "abnormal_patterns": [],
-            "risk_score": 5.0
+            "risk_score": 5.0,
         }
         self.mock_extractor.determine_risk_level.return_value = "LOW"
 
@@ -113,7 +119,7 @@ class TestAnalyzeWithKeywords:
         self.mock_extractor.analyze_text.return_value = {
             "risk_keywords": {"BUG": ["严重缺陷", "崩溃", "报错"]},
             "abnormal_patterns": [],
-            "risk_score": 50.0
+            "risk_score": 50.0,
         }
         self.mock_extractor.determine_risk_level.return_value = "HIGH"
 
@@ -137,7 +143,7 @@ class TestMergeAnalysisResults:
             "risk_signals": [],
             "risk_keywords": {},
             "abnormal_patterns": [],
-            "ai_analysis": {"method": "KEYWORD_BASED", "logs_analyzed": 1}
+            "ai_analysis": {"method": "KEYWORD_BASED", "logs_analyzed": 1},
         }
         ai_result = {
             "risk_level": "HIGH",
@@ -149,7 +155,7 @@ class TestMergeAnalysisResults:
             "estimated_impact_days": 3,
             "ai_analysis": {"method": "GLM_BASED"},
             "ai_confidence": 80.0,
-            "analysis_model": "glm-4-flash"
+            "analysis_model": "glm-4-flash",
         }
         result = self.analyzer._merge_analysis_results(kw_result, ai_result)
         assert result["risk_level"] == "HIGH"
@@ -161,7 +167,7 @@ class TestMergeAnalysisResults:
             "risk_signals": [],
             "risk_keywords": {},
             "abnormal_patterns": [],
-            "ai_analysis": {"method": "KEYWORD_BASED"}
+            "ai_analysis": {"method": "KEYWORD_BASED"},
         }
         ai_result = {
             "risk_level": "MEDIUM",
@@ -173,7 +179,7 @@ class TestMergeAnalysisResults:
             "estimated_impact_days": 0,
             "ai_analysis": {"method": "GLM_BASED"},
             "ai_confidence": 70.0,
-            "analysis_model": "glm-4-flash"
+            "analysis_model": "glm-4-flash",
         }
         result = self.analyzer._merge_analysis_results(kw_result, ai_result)
         # 40 * 0.4 + 60 * 0.6 = 16 + 36 = 52
@@ -186,7 +192,7 @@ class TestMergeAnalysisResults:
             "risk_signals": [{"date": "2024-06-10", "risk_score": 25}],
             "risk_keywords": {},
             "abnormal_patterns": [],
-            "ai_analysis": {}
+            "ai_analysis": {},
         }
         ai_result = {
             "risk_level": "LOW",
@@ -198,7 +204,7 @@ class TestMergeAnalysisResults:
             "estimated_impact_days": 0,
             "ai_analysis": {},
             "ai_confidence": 70.0,
-            "analysis_model": "test"
+            "analysis_model": "test",
         }
         result = self.analyzer._merge_analysis_results(kw_result, ai_result)
         assert len(result["risk_signals"]) == 2

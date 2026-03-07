@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """第二十批 - node_operations 单元测试"""
 import pytest
+
 pytest.importorskip("app.services.stage_instance.node_operations")
 
 from unittest.mock import MagicMock, patch
-from app.services.stage_instance.node_operations import NodeOperationsMixin
+
 from app.models.enums import StageStatusEnum
+from app.services.stage_instance.node_operations import NodeOperationsMixin
 
 
 class ConcreteNodeOps(NodeOperationsMixin):
     """具体测试类"""
+
     def __init__(self, db):
         self.db = db
 

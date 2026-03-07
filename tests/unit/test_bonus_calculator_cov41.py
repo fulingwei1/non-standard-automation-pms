@@ -23,6 +23,7 @@ def _make_calculator(db):
     ]
     mocks = [p.start() for p in patches]
     from app.services.bonus.calculator import BonusCalculator
+
     calc = BonusCalculator(db)
     for p in patches:
         p.stop()
@@ -52,7 +53,9 @@ def test_calculate_project_bonus_delegates(db):
     calc.project_calculator = MagicMock()
     calc.project_calculator.calculate_by_contribution.return_value = MagicMock()
     calc.calculate_project_bonus(contribution, project, rule)
-    calc.project_calculator.calculate_by_contribution.assert_called_once_with(contribution, project, rule)
+    calc.project_calculator.calculate_by_contribution.assert_called_once_with(
+        contribution, project, rule
+    )
 
 
 def test_calculate_milestone_bonus_delegates(db):

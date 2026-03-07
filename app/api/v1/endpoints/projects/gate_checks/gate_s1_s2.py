@@ -18,7 +18,6 @@ from sqlalchemy.orm import Session
 from app.models.project import Project
 
 
-
 def check_gate_s1_to_s2(db: Session, project: Project) -> Tuple[bool, List[str]]:
     """G1: S1→S2 阶段门校验 - 基本信息完整、客户信息齐全、项目评价已完成"""
     missing = []
@@ -43,13 +42,17 @@ def check_gate_s1_to_s2(db: Session, project: Project) -> Tuple[bool, List[str]]
 
     # 项目评价强制要求（新增）
     from app.models.project_evaluation import ProjectEvaluation
-    evaluation = db.query(ProjectEvaluation).filter(
-        ProjectEvaluation.project_id == project.id,
-        ProjectEvaluation.status == 'CONFIRMED'
-    ).first()
+
+    evaluation = (
+        db.query(ProjectEvaluation)
+        .filter(ProjectEvaluation.project_id == project.id, ProjectEvaluation.status == "CONFIRMED")
+        .first()
+    )
 
     if not evaluation:
-        missing.append("项目评价未完成（项目管理部经理必须填写项目难度和工作量评价，状态需为已确认）")
+        missing.append(
+            "项目评价未完成（项目管理部经理必须填写项目难度和工作量评价，状态需为已确认）"
+        )
     else:
         # 检查必要字段是否已填写
         if evaluation.difficulty_score is None:
@@ -58,4 +61,3 @@ def check_gate_s1_to_s2(db: Session, project: Project) -> Tuple[bool, List[str]]
             missing.append("项目工作量得分未填写")
 
     return (len(missing) == 0, missing)
-

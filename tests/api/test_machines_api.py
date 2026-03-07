@@ -9,16 +9,15 @@ API Integration Tests for machines module
   - PUT /api/v1/projects/{project_id}/machines/{machine_id}/progress
 """
 
+import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from tests.factories import ProjectWithCustomerFactory, MachineFactory
-
-import uuid
+from tests.factories import MachineFactory, ProjectWithCustomerFactory
 
 _PN001 = f"PN001-{uuid.uuid4().hex[:8]}"
-
 
 
 @pytest.fixture
@@ -41,9 +40,9 @@ class TestMachinesAPI:
         project = ProjectWithCustomerFactory()
         machine1 = MachineFactory(project_id=project.id)
         machine2 = MachineFactory(project_id=project.id)
-        
+
         response = api_client.get(f"/api/v1/projects/{project.id}/machines")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list) or "items" in data
@@ -55,19 +54,16 @@ class TestMachinesAPI:
     def test_post_machines_projects_project_id_machines(self, api_client, db_session):
         """测试 POST /api/v1/projects/{project_id}/machines - 创建机台"""
         project = ProjectWithCustomerFactory()
-        
+
         machine_data = {
             "machine_code": _PN001,
             "machine_name": "测试机台",
             "machine_type": "TEST_EQUIPMENT",
-            "status": "DESIGN"
+            "status": "DESIGN",
         }
-        
-        response = api_client.post(
-            f"/api/v1/projects/{project.id}/machines",
-            json=machine_data
-        )
-        
+
+        response = api_client.post(f"/api/v1/projects/{project.id}/machines", json=machine_data)
+
         assert response.status_code in [200, 201]
         data = response.json()
         assert data.get("machine_code") == _PN001 or "code" in data or "machine_code" in data
@@ -76,13 +72,12 @@ class TestMachinesAPI:
         """测试 PUT /api/v1/projects/{project_id}/machines/{machine_id}/progress - 更新进度"""
         project = ProjectWithCustomerFactory()
         machine = MachineFactory(project_id=project.id)
-        
+
         response = api_client.put(
             f"/api/v1/projects/{project.id}/machines/{machine.id}/progress?progress_pct=50"
         )
-        
-        assert response.status_code in [200, 400, 404]
 
+        assert response.status_code in [200, 400, 404]
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

@@ -3,9 +3,10 @@
 第三十七批覆盖率测试 - 审批基础通知
 tests/unit/test_basic_notifications_cov37.py
 """
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, call
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.notify.basic_notifications")
 

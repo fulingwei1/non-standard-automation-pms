@@ -34,14 +34,12 @@ router = APIRouter()
 
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="",
-    tags=["overview"]
-)
+router = APIRouter(prefix="", tags=["overview"])
 
 # 共 1 个路由
 
 # ==================== 任务概览 ====================
+
 
 @router.get("/overview", response_model=TaskOverviewResponse, status_code=status.HTTP_200_OK)
 def get_task_overview(
@@ -60,39 +58,53 @@ def get_task_overview(
     total_tasks = db.query(TaskUnified).filter(TaskUnified.assignee_id == user_id).count()
 
     # 待接收任务（转办任务）
-    pending_tasks = db.query(TaskUnified).filter(
-        TaskUnified.assignee_id == user_id,
-        TaskUnified.status == "PENDING"
-    ).count()
+    pending_tasks = (
+        db.query(TaskUnified)
+        .filter(TaskUnified.assignee_id == user_id, TaskUnified.status == "PENDING")
+        .count()
+    )
 
     # 进行中任务
-    in_progress_tasks = db.query(TaskUnified).filter(
-        TaskUnified.assignee_id == user_id,
-        TaskUnified.status == "IN_PROGRESS"
-    ).count()
+    in_progress_tasks = (
+        db.query(TaskUnified)
+        .filter(TaskUnified.assignee_id == user_id, TaskUnified.status == "IN_PROGRESS")
+        .count()
+    )
 
     # 逾期任务
     today_str = today.strftime("%Y-%m-%d")
-    overdue_tasks = db.query(TaskUnified).filter(
-        TaskUnified.assignee_id == user_id,
-        TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
-        TaskUnified.deadline.isnot(None),
-        func.date(TaskUnified.deadline) < today_str
-    ).count()
+    overdue_tasks = (
+        db.query(TaskUnified)
+        .filter(
+            TaskUnified.assignee_id == user_id,
+            TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
+            TaskUnified.deadline.isnot(None),
+            func.date(TaskUnified.deadline) < today_str,
+        )
+        .count()
+    )
 
     # 本周任务
-    this_week_tasks = db.query(TaskUnified).filter(
-        TaskUnified.assignee_id == user_id,
-        TaskUnified.plan_start_date >= week_start,
-        TaskUnified.plan_start_date <= week_start + timedelta(days=6)
-    ).count()
+    this_week_tasks = (
+        db.query(TaskUnified)
+        .filter(
+            TaskUnified.assignee_id == user_id,
+            TaskUnified.plan_start_date >= week_start,
+            TaskUnified.plan_start_date <= week_start + timedelta(days=6),
+        )
+        .count()
+    )
 
     # 紧急任务
-    urgent_tasks = db.query(TaskUnified).filter(
-        TaskUnified.assignee_id == user_id,
-        TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
-        or_(TaskUnified.is_urgent, TaskUnified.priority == "URGENT")
-    ).count()
+    urgent_tasks = (
+        db.query(TaskUnified)
+        .filter(
+            TaskUnified.assignee_id == user_id,
+            TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
+            or_(TaskUnified.is_urgent, TaskUnified.priority == "URGENT"),
+        )
+        .count()
+    )
 
     # 按状态统计
     status_stats = {}
@@ -136,8 +148,5 @@ def get_task_overview(
         urgent_tasks=urgent_tasks,
         by_status=status_stats,
         by_priority=priority_stats,
-        by_type=type_stats
+        by_type=type_stats,
     )
-
-
-

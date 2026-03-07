@@ -26,8 +26,12 @@ class StrategyComparison(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     # 对比年份
-    current_strategy_id = Column(Integer, ForeignKey("strategies.id"), nullable=False, comment="当前战略ID")
-    previous_strategy_id = Column(Integer, ForeignKey("strategies.id"), comment="对比战略ID（去年）")
+    current_strategy_id = Column(
+        Integer, ForeignKey("strategies.id"), nullable=False, comment="当前战略ID"
+    )
+    previous_strategy_id = Column(
+        Integer, ForeignKey("strategies.id"), comment="对比战略ID（去年）"
+    )
     current_year = Column(Integer, nullable=False, comment="当前年份")
     previous_year = Column(Integer, comment="对比年份")
 

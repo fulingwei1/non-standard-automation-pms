@@ -2,9 +2,10 @@
 """
 Unit tests for PresalesDashboardAdapter (第三十八批)
 """
-import pytest
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.dashboard_adapters.presales", reason="导入失败，跳过")
 
@@ -22,7 +23,9 @@ def mock_db():
 
 @pytest.fixture
 def adapter(mock_db):
-    with patch("app.services.dashboard_adapters.presales.DashboardAdapter.__init__", return_value=None):
+    with patch(
+        "app.services.dashboard_adapters.presales.DashboardAdapter.__init__", return_value=None
+    ):
         adp = PresalesDashboardAdapter.__new__(PresalesDashboardAdapter)
         adp.db = mock_db
         adp.user = MagicMock()
@@ -80,8 +83,10 @@ class TestGetStats:
         mock_query.scalar.return_value = 10
         adapter.db.query.return_value = mock_query
 
-        with patch("app.services.dashboard_adapters.presales.DashboardStatCard") as MockCard, \
-             patch("app.models.work_log.WorkLog"):
+        with (
+            patch("app.services.dashboard_adapters.presales.DashboardStatCard") as MockCard,
+            patch("app.models.work_log.WorkLog"),
+        ):
             MockCard.return_value = MagicMock()
             result = adapter.get_stats()
             assert isinstance(result, list)
@@ -102,8 +107,10 @@ class TestGetStats:
         mock_query.scalar.return_value = 20
         adapter.db.query.return_value = mock_query
 
-        with patch("app.services.dashboard_adapters.presales.DashboardStatCard") as MockCard, \
-             patch("app.models.work_log.WorkLog"):
+        with (
+            patch("app.services.dashboard_adapters.presales.DashboardStatCard") as MockCard,
+            patch("app.models.work_log.WorkLog"),
+        ):
             MockCard.return_value = MagicMock()
             result = adapter.get_stats()
             assert isinstance(result, list)

@@ -10,13 +10,13 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
 
+from app.schemas.performance import PerformanceEvaluationRecordCreate
 from app.services.manager_performance.manager_performance_service import (
     ManagerPerformanceService,
 )
-from app.schemas.performance import PerformanceEvaluationRecordCreate
 
 
 class TestManagerPerformanceService(unittest.TestCase):
@@ -584,7 +584,7 @@ class TestManagerPerformanceService(unittest.TestCase):
         """测试重复提交已完成的评价"""
         current_user = MagicMock()
         current_user.id = 1
-        
+
         evaluation_in = PerformanceEvaluationRecordCreate(
             score=85,
             comment="表现良好，工作认真负责，态度积极主动。",

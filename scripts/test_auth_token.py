@@ -48,9 +48,7 @@ def test_auth():
     print("\n2. 使用token访问权限列表...")
     try:
         headers = {"Authorization": f"Bearer {token}"}
-        perm_response = requests.get(
-            f"{base_url}/roles/permissions", headers=headers, timeout=5
-        )
+        perm_response = requests.get(f"{base_url}/roles/permissions", headers=headers, timeout=5)
         print(f"状态码: {perm_response.status_code}")
         if perm_response.status_code == 200:
             data = perm_response.json()

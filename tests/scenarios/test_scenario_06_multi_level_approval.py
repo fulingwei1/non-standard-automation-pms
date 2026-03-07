@@ -3,10 +3,13 @@
 
 测试需要经过多个审批节点的复杂审批流程
 """
-import pytest
+
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
+
 from app.models.approval.instance import ApprovalInstance
 from app.models.approval.task import ApprovalTask
 from app.models.approval.template import ApprovalTemplate
@@ -113,9 +116,12 @@ class TestMultiLevelApproval:
         db_session.add(task3)
         db_session.commit()
 
-        tasks = db_session.query(ApprovalTask).filter(
-            ApprovalTask.instance_id == instance.id
-        ).order_by(ApprovalTask.sequence).all()
+        tasks = (
+            db_session.query(ApprovalTask)
+            .filter(ApprovalTask.instance_id == instance.id)
+            .order_by(ApprovalTask.sequence)
+            .all()
+        )
 
         assert len(tasks) == 3
         assert tasks[0].status == "PENDING"
@@ -375,10 +381,11 @@ class TestMultiLevelApproval:
         db_session.commit()
 
         # 检查会签是否全部通过
-        countersign_tasks = db_session.query(ApprovalTask).filter(
-            ApprovalTask.instance_id == instance.id,
-            ApprovalTask.sequence == 2
-        ).all()
+        countersign_tasks = (
+            db_session.query(ApprovalTask)
+            .filter(ApprovalTask.instance_id == instance.id, ApprovalTask.sequence == 2)
+            .all()
+        )
 
         all_approved = all(t.status == "APPROVED" for t in countersign_tasks)
         assert all_approved is True
@@ -500,9 +507,11 @@ class TestMultiLevelApproval:
             db_session.add(task)
         db_session.commit()
 
-        tasks_large = db_session.query(ApprovalTask).filter(
-            ApprovalTask.instance_id == instance_large.id
-        ).all()
+        tasks_large = (
+            db_session.query(ApprovalTask)
+            .filter(ApprovalTask.instance_id == instance_large.id)
+            .all()
+        )
 
         assert len(tasks_large) == 3
 

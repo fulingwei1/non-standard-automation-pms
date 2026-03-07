@@ -15,8 +15,10 @@ from pydantic import BaseModel, Field
 # 角色类型相关 Schema
 # ===========================
 
+
 class ProjectRoleTypeBase(BaseModel):
     """角色类型基础字段"""
+
     role_code: str = Field(..., max_length=50, description="角色编码")
     role_name: str = Field(..., max_length=100, description="角色名称")
     role_category: Optional[str] = Field("GENERAL", max_length=50, description="角色分类")
@@ -29,11 +31,13 @@ class ProjectRoleTypeBase(BaseModel):
 
 class ProjectRoleTypeCreate(ProjectRoleTypeBase):
     """创建角色类型"""
+
     pass
 
 
 class ProjectRoleTypeUpdate(BaseModel):
     """更新角色类型"""
+
     role_name: Optional[str] = Field(None, max_length=100, description="角色名称")
     role_category: Optional[str] = Field(None, max_length=50, description="角色分类")
     description: Optional[str] = Field(None, description="角色职责描述")
@@ -45,6 +49,7 @@ class ProjectRoleTypeUpdate(BaseModel):
 
 class ProjectRoleTypeResponse(ProjectRoleTypeBase):
     """角色类型响应"""
+
     id: int
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -55,6 +60,7 @@ class ProjectRoleTypeResponse(ProjectRoleTypeBase):
 
 class ProjectRoleTypeListResponse(BaseModel):
     """角色类型列表响应"""
+
     items: List[ProjectRoleTypeResponse]
     total: int
 
@@ -63,8 +69,10 @@ class ProjectRoleTypeListResponse(BaseModel):
 # 项目角色配置相关 Schema
 # ===========================
 
+
 class ProjectRoleConfigBase(BaseModel):
     """项目角色配置基础字段"""
+
     role_type_id: int = Field(..., description="角色类型ID")
     is_enabled: bool = Field(True, description="是否启用该角色")
     is_required: bool = Field(False, description="是否必填")
@@ -73,11 +81,13 @@ class ProjectRoleConfigBase(BaseModel):
 
 class ProjectRoleConfigCreate(ProjectRoleConfigBase):
     """创建项目角色配置"""
+
     pass
 
 
 class ProjectRoleConfigUpdate(BaseModel):
     """更新项目角色配置"""
+
     is_enabled: Optional[bool] = Field(None, description="是否启用该角色")
     is_required: Optional[bool] = Field(None, description="是否必填")
     remark: Optional[str] = Field(None, description="配置备注")
@@ -85,11 +95,13 @@ class ProjectRoleConfigUpdate(BaseModel):
 
 class ProjectRoleConfigBatchUpdate(BaseModel):
     """批量更新项目角色配置"""
+
     configs: List[ProjectRoleConfigCreate]
 
 
 class ProjectRoleConfigResponse(ProjectRoleConfigBase):
     """项目角色配置响应"""
+
     id: int
     project_id: int
     role_type: Optional[ProjectRoleTypeResponse] = None
@@ -103,6 +115,7 @@ class ProjectRoleConfigResponse(ProjectRoleConfigBase):
 
 class ProjectRoleConfigListResponse(BaseModel):
     """项目角色配置列表响应"""
+
     items: List[ProjectRoleConfigResponse]
     total: int
 
@@ -111,8 +124,10 @@ class ProjectRoleConfigListResponse(BaseModel):
 # 项目负责人相关 Schema
 # ===========================
 
+
 class UserBrief(BaseModel):
     """用户简要信息"""
+
     id: int
     username: str
     real_name: Optional[str] = None
@@ -126,6 +141,7 @@ class UserBrief(BaseModel):
 
 class ProjectLeadCreate(BaseModel):
     """指定项目负责人"""
+
     user_id: int = Field(..., description="用户ID")
     role_type_id: int = Field(..., description="角色类型ID")
     allocation_pct: Decimal = Field(100, ge=0, le=100, description="分配比例")
@@ -137,6 +153,7 @@ class ProjectLeadCreate(BaseModel):
 
 class ProjectLeadUpdate(BaseModel):
     """更新项目负责人"""
+
     allocation_pct: Optional[Decimal] = Field(None, ge=0, le=100, description="分配比例")
     start_date: Optional[date] = Field(None, description="开始日期")
     end_date: Optional[date] = Field(None, description="结束日期")
@@ -146,6 +163,7 @@ class ProjectLeadUpdate(BaseModel):
 
 class ProjectLeadResponse(BaseModel):
     """项目负责人响应"""
+
     id: int
     project_id: int
     user_id: int
@@ -170,6 +188,7 @@ class ProjectLeadResponse(BaseModel):
 
 class ProjectLeadListResponse(BaseModel):
     """项目负责人列表响应"""
+
     items: List[ProjectLeadResponse]
     total: int
 
@@ -178,8 +197,10 @@ class ProjectLeadListResponse(BaseModel):
 # 团队成员相关 Schema
 # ===========================
 
+
 class TeamMemberCreate(BaseModel):
     """添加团队成员"""
+
     user_id: int = Field(..., description="用户ID")
     allocation_pct: Decimal = Field(100, ge=0, le=100, description="分配比例")
     start_date: Optional[date] = Field(None, description="开始日期")
@@ -190,6 +211,7 @@ class TeamMemberCreate(BaseModel):
 
 class TeamMemberResponse(BaseModel):
     """团队成员响应"""
+
     id: int
     project_id: int
     user_id: int
@@ -212,6 +234,7 @@ class TeamMemberResponse(BaseModel):
 
 class TeamMemberListResponse(BaseModel):
     """团队成员列表响应"""
+
     items: List[TeamMemberResponse]
     total: int
 
@@ -220,13 +243,16 @@ class TeamMemberListResponse(BaseModel):
 # 项目负责人完整视图（含团队）
 # ===========================
 
+
 class ProjectLeadWithTeamResponse(ProjectLeadResponse):
     """项目负责人（含团队成员）"""
+
     team_members: List[TeamMemberResponse] = []
 
 
 class ProjectRoleOverviewResponse(BaseModel):
     """项目角色概览（用于项目详情页）"""
+
     role_type: ProjectRoleTypeResponse
     config: Optional[ProjectRoleConfigResponse] = None
     lead: Optional[ProjectLeadWithTeamResponse] = None

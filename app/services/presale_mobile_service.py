@@ -92,8 +92,7 @@ class PresaleMobileService:
 
         # 技术参数相关关键词
         if any(
-            kw in question_lower
-            for kw in ["参数", "规格", "技术", "性能", "配置", "尺寸", "功率"]
+            kw in question_lower for kw in ["参数", "规格", "技术", "性能", "配置", "尺寸", "功率"]
         ):
             return QuestionType.TECHNICAL
 
@@ -106,9 +105,7 @@ class PresaleMobileService:
             return QuestionType.CASE
 
         # 报价相关关键词
-        if any(
-            kw in question_lower for kw in ["价格", "报价", "成本", "费用", "多少钱", "预算"]
-        ):
+        if any(kw in question_lower for kw in ["价格", "报价", "成本", "费用", "多少钱", "预算"]):
             return QuestionType.PRICING
 
         return QuestionType.OTHER
@@ -165,9 +162,7 @@ class PresaleMobileService:
         base_prompt += "\n请用专业、简洁的语言回答，便于销售人员向客户转述。"
         return base_prompt
 
-    async def _call_ai_service(
-        self, prompt: str, context: Optional[Dict[str, Any]]
-    ) -> str:
+    async def _call_ai_service(self, prompt: str, context: Optional[Dict[str, Any]]) -> str:
         """调用AI服务"""
         # TODO: 集成真实的AI服务（OpenAI GPT-4 / Kimi API）
         # 这里返回模拟数据
@@ -229,9 +224,7 @@ class PresaleMobileService:
 
     # ==================== 拜访准备服务 ====================
 
-    def get_visit_preparation(
-        self, ticket_id: int, user_id: int
-    ) -> Dict[str, Any]:
+    def get_visit_preparation(self, ticket_id: int, user_id: int) -> Dict[str, Any]:
         """
         获取拜访准备清单
 
@@ -366,9 +359,7 @@ class PresaleMobileService:
             },
         }
 
-    def _match_bom_and_estimate(
-        self, equipment_name: str
-    ) -> tuple[List[Dict[str, Any]], int]:
+    def _match_bom_and_estimate(self, equipment_name: str) -> tuple[List[Dict[str, Any]], int]:
         """匹配BOM并估算成本"""
         # TODO: 从数据库查询历史BOM数据
         # 模拟返回
@@ -479,9 +470,7 @@ class PresaleMobileService:
         """从转录文本中提取拜访信息"""
         # TODO: 使用AI提取结构化信息
         return {
-            "attendees": [
-                {"name": "张三", "title": "技术总监", "company": "客户公司"}
-            ],
+            "attendees": [{"name": "张三", "title": "技术总监", "company": "客户公司"}],
             "discussion_points": "讨论了自动化改造方案的技术细节和实施计划",
             "customer_feedback": "客户对方案整体满意，但希望进一步优化成本",
             "next_steps": "1周内提供优化方案和详细报价",

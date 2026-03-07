@@ -45,13 +45,19 @@ class ApprovalWorkflowService:
         from app.models.sales.workflow import ApprovalRecord
 
         # 检查是否已有进行中的审批
-        existing = self.db.query(ApprovalRecord).filter(
-            ApprovalRecord.entity_type == business_type,
-        ).filter(
-            ApprovalRecord.entity_id == business_id,
-        ).filter(
-            ApprovalRecord.status == ApprovalRecordStatusEnum.PENDING,
-        ).first()
+        existing = (
+            self.db.query(ApprovalRecord)
+            .filter(
+                ApprovalRecord.entity_type == business_type,
+            )
+            .filter(
+                ApprovalRecord.entity_id == business_id,
+            )
+            .filter(
+                ApprovalRecord.status == ApprovalRecordStatusEnum.PENDING,
+            )
+            .first()
+        )
 
         if existing:
             return existing
@@ -87,11 +93,16 @@ class ApprovalWorkflowService:
         """
         from app.models.sales.workflow import ApprovalWorkflow
 
-        workflows = self.db.query(ApprovalWorkflow).filter(
-            ApprovalWorkflow.workflow_type == business_type,
-        ).filter(
-            ApprovalWorkflow.is_active,
-        ).all()
+        workflows = (
+            self.db.query(ApprovalWorkflow)
+            .filter(
+                ApprovalWorkflow.workflow_type == business_type,
+            )
+            .filter(
+                ApprovalWorkflow.is_active,
+            )
+            .all()
+        )
 
         if not workflows:
             return None
@@ -120,9 +131,13 @@ class ApprovalWorkflowService:
         """
         from app.models.sales.workflow import ApprovalRecord
 
-        record = self.db.query(ApprovalRecord).filter(
-            ApprovalRecord.id == record_id,
-        ).first()
+        record = (
+            self.db.query(ApprovalRecord)
+            .filter(
+                ApprovalRecord.id == record_id,
+            )
+            .first()
+        )
 
         if not record:
             raise ValueError(f"审批记录不存在: {record_id}")
@@ -148,9 +163,13 @@ class ApprovalWorkflowService:
         """
         from app.models.sales.workflow import ApprovalRecord
 
-        record = self.db.query(ApprovalRecord).filter(
-            ApprovalRecord.id == record_id,
-        ).first()
+        record = (
+            self.db.query(ApprovalRecord)
+            .filter(
+                ApprovalRecord.id == record_id,
+            )
+            .first()
+        )
 
         if not record:
             raise ValueError(f"审批记录不存在: {record_id}")
@@ -176,9 +195,13 @@ class ApprovalWorkflowService:
         """
         from app.models.sales.workflow import ApprovalRecord
 
-        record = self.db.query(ApprovalRecord).filter(
-            ApprovalRecord.id == record_id,
-        ).first()
+        record = (
+            self.db.query(ApprovalRecord)
+            .filter(
+                ApprovalRecord.id == record_id,
+            )
+            .first()
+        )
 
         if not record:
             raise ValueError(f"审批记录不存在: {record_id}")

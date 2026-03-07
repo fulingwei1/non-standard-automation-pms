@@ -3,8 +3,9 @@
 第三十七批覆盖率测试 - 审批提醒通知
 tests/unit/test_reminder_notifications_cov37.py
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.notify.reminder_notifications")
 

@@ -3,11 +3,13 @@
 第四十批覆盖测试 - 角色业务逻辑服务
 """
 
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 try:
     from app.services.role_service import RoleService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -44,6 +46,7 @@ class TestToResponse:
 
     def _make_role(self, role_id=1, parent_id=None):
         from datetime import datetime
+
         role = MagicMock()
         role.id = role_id
         role.role_code = "ADMIN"

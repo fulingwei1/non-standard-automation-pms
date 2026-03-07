@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - approval_engine/adapters/quote 单元测试"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.adapters.quote")
 
@@ -116,7 +117,9 @@ class TestGetEntityData:
             quote,
             version,
         ]
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = version
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            version
+        )
 
         result = self.adapter.get_entity_data(1)
         assert "quote_code" in result

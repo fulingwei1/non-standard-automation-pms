@@ -5,9 +5,10 @@
 测试审批实例的创建、查询、取消、历史记录等功能
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestApprovalsInstancesAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/instances/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Approval instances API not implemented")
@@ -50,16 +48,11 @@ class TestApprovalsInstancesAPI:
             "title": "采购申请审批",
             "description": "总金额5万元的采购申请",
             "priority": "normal",
-            "data": {
-                "amount": 50000.0,
-                "items_count": 3
-            }
+            "data": {"amount": 50000.0, "items_count": 3},
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/instances/",
-            headers=headers,
-            json=instance_data
+            f"{settings.API_V1_PREFIX}/approvals/instances/", headers=headers, json=instance_data
         )
 
         if response.status_code == 404:
@@ -74,10 +67,7 @@ class TestApprovalsInstancesAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/instances/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No instance data or API not implemented")
@@ -92,8 +82,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/1/status",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/1/status", headers=headers
         )
 
         if response.status_code == 404:
@@ -109,8 +98,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/1/history",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/1/history", headers=headers
         )
 
         if response.status_code == 404:
@@ -125,14 +113,12 @@ class TestApprovalsInstancesAPI:
 
         headers = _auth_headers(admin_token)
 
-        cancel_data = {
-            "reason": "业务需求变更，取消审批"
-        }
+        cancel_data = {"reason": "业务需求变更，取消审批"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/approvals/instances/1/cancel",
             headers=headers,
-            json=cancel_data
+            json=cancel_data,
         )
 
         if response.status_code == 404:
@@ -148,8 +134,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/instances/1/withdraw",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/1/withdraw", headers=headers
         )
 
         if response.status_code == 404:
@@ -165,8 +150,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/instances/1/restart",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/1/restart", headers=headers
         )
 
         if response.status_code == 404:
@@ -182,8 +166,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/?status=approved",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/?status=approved", headers=headers
         )
 
         if response.status_code == 404:
@@ -200,7 +183,7 @@ class TestApprovalsInstancesAPI:
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/approvals/instances/?business_type=purchase_request",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -216,8 +199,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/my-initiated",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/my-initiated", headers=headers
         )
 
         if response.status_code == 404:
@@ -233,8 +215,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/1/timeline",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/1/timeline", headers=headers
         )
 
         if response.status_code == 404:
@@ -250,8 +231,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -267,8 +247,7 @@ class TestApprovalsInstancesAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/export",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/export", headers=headers
         )
 
         if response.status_code == 404:
@@ -278,8 +257,6 @@ class TestApprovalsInstancesAPI:
 
     def test_instance_unauthorized(self, client: TestClient):
         """测试未授权访问审批实例"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/instances/")
 
         assert response.status_code in [401, 403], response.text

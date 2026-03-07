@@ -12,6 +12,8 @@ from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.issue import Issue
 from app.models.user import User
@@ -23,20 +25,20 @@ from app.schemas.issue import (
 )
 from app.services.data_scope import DataScopeService
 
-from .utils import create_blocking_issue_alert, close_blocking_issue_alerts, generate_issue_no
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
+from .utils import close_blocking_issue_alerts, create_blocking_issue_alert, generate_issue_no
 
 router = APIRouter()
 
 
 def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
     """获取带权限范围的问题"""
-    query = db.query(Issue).options(
-        joinedload(Issue.project),
-        joinedload(Issue.machine),
-        joinedload(Issue.service_ticket)
-    ).filter(Issue.id == issue_id)
+    query = (
+        db.query(Issue)
+        .options(
+            joinedload(Issue.project), joinedload(Issue.machine), joinedload(Issue.service_ticket)
+        )
+        .filter(Issue.id == issue_id)
+    )
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
     return query.first()
 
@@ -119,6 +121,7 @@ def list_issues(
     pagination: PaginationParams = Depends(get_pagination_query),
 ) -> Any:
     """获取问题列表"""
+
     def _normalize_str_filter(value: Optional[str]) -> Optional[str]:
         if value is None:
             return None
@@ -141,7 +144,7 @@ def list_issues(
     query = db.query(Issue).options(joinedload(Issue.service_ticket))
 
     # 排除已删除的问题
-    query = query.filter(Issue.status != 'DELETED')
+    query = query.filter(Issue.status != "DELETED")
 
     # 数据权限：默认仅返回与当前用户相关的问题（管理员/ALL范围除外）
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
@@ -178,7 +181,7 @@ def list_issues(
             and_(
                 Issue.due_date.isnot(None),
                 Issue.due_date < date.today(),
-                Issue.status.in_(['OPEN', 'PROCESSING'])
+                Issue.status.in_(["OPEN", "PROCESSING"]),
             )
         )
     if service_ticket_id:
@@ -186,13 +189,16 @@ def list_issues(
 
     # 应用关键词过滤（标题/描述/问题编号）
     from app.common.query_filters import apply_keyword_filter
+
     query = apply_keyword_filter(query, Issue, keyword, ["title", "description", "issue_no"])
 
     # 总数
     total = query.count()
 
     # 分页
-    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
+    issues = apply_pagination(
+        query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     # 构建响应
     items = []
@@ -205,7 +211,7 @@ def list_issues(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -231,7 +237,7 @@ def create_issue(
 ) -> Any:
     """创建问题"""
     from datetime import datetime
-    
+
     # 生成问题编号
     issue_no = generate_issue_no(db)
 
@@ -252,11 +258,14 @@ def create_issue(
     # 验证服务工单是否存在（如果指定了 service_ticket_id）
     if issue_in.service_ticket_id:
         from app.models.service import ServiceTicket
-        ticket = db.query(ServiceTicket).filter(ServiceTicket.id == issue_in.service_ticket_id).first()
+
+        ticket = (
+            db.query(ServiceTicket).filter(ServiceTicket.id == issue_in.service_ticket_id).first()
+        )
         if not ticket:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"服务工单不存在 (ID: {issue_in.service_ticket_id})"
+                detail=f"服务工单不存在 (ID: {issue_in.service_ticket_id})",
             )
 
     # 创建问题
@@ -280,7 +289,7 @@ def create_issue(
         assignee_id=issue_in.assignee_id,
         assignee_name=assignee_name,
         due_date=issue_in.due_date,
-        status='OPEN',
+        status="OPEN",
         impact_scope=issue_in.impact_scope,
         impact_level=issue_in.impact_level,
         is_blocking=issue_in.is_blocking,
@@ -315,11 +324,14 @@ def update_issue(
     # 验证服务工单是否存在（如果指定了 service_ticket_id）
     if issue_in.service_ticket_id is not None:
         from app.models.service import ServiceTicket
-        ticket = db.query(ServiceTicket).filter(ServiceTicket.id == issue_in.service_ticket_id).first()
+
+        ticket = (
+            db.query(ServiceTicket).filter(ServiceTicket.id == issue_in.service_ticket_id).first()
+        )
         if not ticket:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"服务工单不存在 (ID: {issue_in.service_ticket_id})"
+                detail=f"服务工单不存在 (ID: {issue_in.service_ticket_id})",
             )
 
     # 记录阻塞状态变化
@@ -327,20 +339,24 @@ def update_issue(
 
     # 更新字段
     update_data = issue_in.dict(exclude_unset=True)
-    if 'attachments' in update_data:
-        update_data['attachments'] = str(update_data['attachments'])
-    if 'tags' in update_data:
-        update_data['tags'] = str(update_data['tags'])
-    if 'assignee_id' in update_data and update_data['assignee_id']:
-        assignee = db.query(User).filter(User.id == update_data['assignee_id']).first()
+    if "attachments" in update_data:
+        update_data["attachments"] = str(update_data["attachments"])
+    if "tags" in update_data:
+        update_data["tags"] = str(update_data["tags"])
+    if "assignee_id" in update_data and update_data["assignee_id"]:
+        assignee = db.query(User).filter(User.id == update_data["assignee_id"]).first()
         if assignee:
-            update_data['assignee_name'] = assignee.real_name or assignee.username
-    if 'responsible_engineer_id' in update_data and update_data['responsible_engineer_id']:
-        responsible_engineer = db.query(User).filter(User.id == update_data['responsible_engineer_id']).first()
+            update_data["assignee_name"] = assignee.real_name or assignee.username
+    if "responsible_engineer_id" in update_data and update_data["responsible_engineer_id"]:
+        responsible_engineer = (
+            db.query(User).filter(User.id == update_data["responsible_engineer_id"]).first()
+        )
         if responsible_engineer:
-            update_data['responsible_engineer_name'] = responsible_engineer.real_name or responsible_engineer.username
-        elif update_data['responsible_engineer_id'] is None:
-            update_data['responsible_engineer_name'] = None
+            update_data["responsible_engineer_name"] = (
+                responsible_engineer.real_name or responsible_engineer.username
+            )
+        elif update_data["responsible_engineer_id"] is None:
+            update_data["responsible_engineer_name"] = None
 
     for field, value in update_data.items():
         setattr(issue, field, value)
@@ -358,6 +374,7 @@ def update_issue(
             create_blocking_issue_alert(db, issue)
     except Exception as e:
         import logging
+
         logging.error(f"处理阻塞问题预警失败: {str(e)}")
 
     db.commit()

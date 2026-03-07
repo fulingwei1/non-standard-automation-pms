@@ -5,18 +5,18 @@ Covers: app/services/ai_service.py
 """
 
 import json
-import pytest
-from unittest.mock import Mock, MagicMock, patch, AsyncMock
-from fastapi import HTTPException
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import httpx
+import pytest
+from fastapi import HTTPException
 
 
 class TestAIServiceInit:
     """Test suite for AIService initialization."""
 
     def test_init_enabled_with_api_key(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = "test-api-key"
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -26,6 +26,7 @@ class TestAIServiceInit:
             mock_settings.KIMI_ENABLED = True
 
             from app.services.ai_service import AIService
+
             service = AIService()
 
             assert service.enabled is True
@@ -35,7 +36,7 @@ class TestAIServiceInit:
             assert service.client is not None
 
     def test_init_disabled_when_kimi_disabled(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = "test-api-key"
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -45,13 +46,14 @@ class TestAIServiceInit:
             mock_settings.KIMI_ENABLED = False
 
             from app.services.ai_service import AIService
+
             service = AIService()
 
             assert service.enabled is False
             assert service.client is None
 
     def test_init_disabled_when_no_api_key(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = None
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -61,6 +63,7 @@ class TestAIServiceInit:
             mock_settings.KIMI_ENABLED = True
 
             from app.services.ai_service import AIService
+
             service = AIService()
 
             assert service.enabled is False
@@ -72,7 +75,7 @@ class TestChatCompletion:
 
     @pytest.fixture
     def enabled_service(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = "test-api-key"
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -82,12 +85,13 @@ class TestChatCompletion:
             mock_settings.KIMI_ENABLED = True
 
             from app.services.ai_service import AIService
+
             service = AIService()
             yield service
 
     @pytest.fixture
     def disabled_service(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = None
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -97,6 +101,7 @@ class TestChatCompletion:
             mock_settings.KIMI_ENABLED = False
 
             from app.services.ai_service import AIService
+
             service = AIService()
             yield service
 
@@ -126,9 +131,7 @@ class TestChatCompletion:
     async def test_chat_completion_success(self, enabled_service):
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "Hello!"}}]
-        }
+        mock_response.json.return_value = {"choices": [{"message": {"content": "Hello!"}}]}
 
         enabled_service.client = AsyncMock()
         enabled_service.client.post = AsyncMock(return_value=mock_response)
@@ -150,11 +153,7 @@ class TestChatCompletion:
 
         messages = [{"role": "user", "content": "Test"}]
         await enabled_service.chat_completion(
-            messages,
-            model="custom-model",
-            max_tokens=500,
-            temperature=0.5,
-            stream=True
+            messages, model="custom-model", max_tokens=500, temperature=0.5, stream=True
         )
 
         call_args = enabled_service.client.post.call_args
@@ -188,7 +187,7 @@ class TestChatCompletion:
     async def test_chat_completion_api_error_empty_content(self, enabled_service):
         mock_response = Mock()
         mock_response.status_code = 500
-        mock_response.content = b''
+        mock_response.content = b""
 
         enabled_service.client = AsyncMock()
         enabled_service.client.post = AsyncMock(return_value=mock_response)
@@ -203,9 +202,7 @@ class TestChatCompletion:
     @pytest.mark.asyncio
     async def test_chat_completion_timeout(self, enabled_service):
         enabled_service.client = AsyncMock()
-        enabled_service.client.post = AsyncMock(
-            side_effect=httpx.TimeoutException("Timeout")
-        )
+        enabled_service.client.post = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
 
         messages = [{"role": "user", "content": "Test"}]
 
@@ -218,9 +215,7 @@ class TestChatCompletion:
     @pytest.mark.asyncio
     async def test_chat_completion_request_error(self, enabled_service):
         enabled_service.client = AsyncMock()
-        enabled_service.client.post = AsyncMock(
-            side_effect=httpx.RequestError("Connection failed")
-        )
+        enabled_service.client.post = AsyncMock(side_effect=httpx.RequestError("Connection failed"))
 
         messages = [{"role": "user", "content": "Test"}]
 
@@ -233,9 +228,7 @@ class TestChatCompletion:
     @pytest.mark.asyncio
     async def test_chat_completion_unknown_error(self, enabled_service):
         enabled_service.client = AsyncMock()
-        enabled_service.client.post = AsyncMock(
-            side_effect=Exception("Unknown error")
-        )
+        enabled_service.client.post = AsyncMock(side_effect=Exception("Unknown error"))
 
         messages = [{"role": "user", "content": "Test"}]
 
@@ -251,7 +244,7 @@ class TestSimpleChat:
 
     @pytest.fixture
     def enabled_service(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = "test-api-key"
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -261,6 +254,7 @@ class TestSimpleChat:
             mock_settings.KIMI_ENABLED = True
 
             from app.services.ai_service import AIService
+
             service = AIService()
             yield service
 
@@ -268,9 +262,7 @@ class TestSimpleChat:
     async def test_simple_chat_without_context(self, enabled_service):
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "AI response"}}]
-        }
+        mock_response.json.return_value = {"choices": [{"message": {"content": "AI response"}}]}
 
         enabled_service.client = AsyncMock()
         enabled_service.client.post = AsyncMock(return_value=mock_response)
@@ -298,10 +290,7 @@ class TestSimpleChat:
         enabled_service.client = AsyncMock()
         enabled_service.client.post = AsyncMock(return_value=mock_response)
 
-        result = await enabled_service.simple_chat(
-            "Hello",
-            context="You are a helpful assistant"
-        )
+        result = await enabled_service.simple_chat("Hello", context="You are a helpful assistant")
 
         assert result == "Context-aware response"
 
@@ -336,7 +325,7 @@ class TestProjectAnalysis:
 
     @pytest.fixture
     def enabled_service(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = "test-api-key"
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -346,6 +335,7 @@ class TestProjectAnalysis:
             mock_settings.KIMI_ENABLED = True
 
             from app.services.ai_service import AIService
+
             service = AIService()
             yield service
 
@@ -358,7 +348,7 @@ class TestProjectAnalysis:
             "resource_suggestions": ["建议1"],
             "schedule_risks": ["风险1"],
             "cost_recommendations": ["建议1"],
-            "overall_summary": "项目分析总结"
+            "overall_summary": "项目分析总结",
         }
 
         mock_response = Mock()
@@ -370,11 +360,7 @@ class TestProjectAnalysis:
         enabled_service.client = AsyncMock()
         enabled_service.client.post = AsyncMock(return_value=mock_response)
 
-        project_data = {
-            "name": "测试项目",
-            "status": "进行中",
-            "budget": 100000
-        }
+        project_data = {"name": "测试项目", "status": "进行中", "budget": 100000}
 
         result = await enabled_service.project_analysis(project_data)
 
@@ -410,7 +396,7 @@ class TestClose:
 
     @pytest.mark.asyncio
     async def test_close_with_client(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = "test-api-key"
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -420,6 +406,7 @@ class TestClose:
             mock_settings.KIMI_ENABLED = True
 
             from app.services.ai_service import AIService
+
             service = AIService()
 
             mock_client = AsyncMock()
@@ -431,7 +418,7 @@ class TestClose:
 
     @pytest.mark.asyncio
     async def test_close_without_client(self):
-        with patch('app.services.ai_service.settings') as mock_settings:
+        with patch("app.services.ai_service.settings") as mock_settings:
             mock_settings.KIMI_API_KEY = None
             mock_settings.KIMI_API_BASE = "https://api.test.com"
             mock_settings.KIMI_MODEL = "test-model"
@@ -441,6 +428,7 @@ class TestClose:
             mock_settings.KIMI_ENABLED = False
 
             from app.services.ai_service import AIService
+
             service = AIService()
 
             # Should not raise error when client is None
@@ -452,7 +440,7 @@ class TestHelperFunctions:
 
     @pytest.mark.asyncio
     async def test_get_ai_service(self):
-        with patch('app.services.ai_service.ai_service') as mock_global_service:
+        with patch("app.services.ai_service.ai_service") as mock_global_service:
             from app.services.ai_service import get_ai_service
 
             result = await get_ai_service()
@@ -461,11 +449,9 @@ class TestHelperFunctions:
 
     @pytest.mark.asyncio
     async def test_analyze_project_with_ai(self):
-        with patch('app.services.ai_service.get_ai_service') as mock_get_service:
+        with patch("app.services.ai_service.get_ai_service") as mock_get_service:
             mock_service = AsyncMock()
-            mock_service.project_analysis = AsyncMock(
-                return_value={"risk_level": "低"}
-            )
+            mock_service.project_analysis = AsyncMock(return_value={"risk_level": "低"})
             mock_get_service.return_value = mock_service
 
             from app.services.ai_service import analyze_project_with_ai
@@ -478,7 +464,7 @@ class TestHelperFunctions:
 
     @pytest.mark.asyncio
     async def test_chat_with_ai(self):
-        with patch('app.services.ai_service.get_ai_service') as mock_get_service:
+        with patch("app.services.ai_service.get_ai_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.simple_chat = AsyncMock(return_value="AI response")
             mock_get_service.return_value = mock_service
@@ -492,7 +478,7 @@ class TestHelperFunctions:
 
     @pytest.mark.asyncio
     async def test_chat_with_ai_no_context(self):
-        with patch('app.services.ai_service.get_ai_service') as mock_get_service:
+        with patch("app.services.ai_service.get_ai_service") as mock_get_service:
             mock_service = AsyncMock()
             mock_service.simple_chat = AsyncMock(return_value="AI response")
             mock_get_service.return_value = mock_service

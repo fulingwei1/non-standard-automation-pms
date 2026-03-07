@@ -91,10 +91,10 @@ CHINESE_HOLIDAYS: Dict[int, Dict[date, str]] = {
 WORKDAY_ADJUSTMENTS: Dict[int, Set[date]] = {
     2025: {
         date(2025, 1, 26),  # 春节调休
-        date(2025, 2, 8),   # 春节调休
+        date(2025, 2, 8),  # 春节调休
         date(2025, 4, 27),  # 劳动节调休
         date(2025, 9, 28),  # 国庆调休
-        date(2025, 10, 11), # 国庆调休
+        date(2025, 10, 11),  # 国庆调休
     },
     2026: {
         date(2026, 2, 14),  # 春节调休
@@ -176,15 +176,16 @@ def get_work_type(check_date: date) -> str:
 def get_working_days(start_date: date, end_date: date) -> int:
     """
     计算两个日期之间的工作日数量（不含节假日和周末）。
-    
+
     Args:
         start_date: 开始日期（含）
         end_date: 结束日期（含）
-    
+
     Returns:
         工作日天数
     """
     from datetime import timedelta
+
     count = 0
     current = start_date
     while current <= end_date:
@@ -197,15 +198,16 @@ def get_working_days(start_date: date, end_date: date) -> int:
 def add_working_days(start_date: date, working_days: int) -> date:
     """
     从 start_date 起，往后加指定工作日数，返回目标日期。
-    
+
     Args:
         start_date: 起始日期
         working_days: 要增加的工作日数
-    
+
     Returns:
         目标日期
     """
     from datetime import timedelta
+
     current = start_date
     added = 0
     while added < working_days:

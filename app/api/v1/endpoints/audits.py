@@ -11,11 +11,11 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.user import PermissionAudit, User
 from app.schemas.common import PaginatedResponse
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -23,6 +23,7 @@ router = APIRouter()
 
 class PermissionAuditResponse(BaseModel):
     """权限审计响应"""
+
     id: int
     operator_id: int
     operator_name: Optional[str] = None
@@ -40,6 +41,7 @@ class PermissionAuditResponse(BaseModel):
 
 class PermissionAuditListResponse(PaginatedResponse):
     """权限审计列表响应"""
+
     items: List[PermissionAuditResponse]
 
 
@@ -95,7 +97,9 @@ def read_audits(
     total = query.count()
 
     # 分页
-    audits = apply_pagination(query.order_by(PermissionAudit.created_at.desc()), pagination.offset, pagination.limit).all()
+    audits = apply_pagination(
+        query.order_by(PermissionAudit.created_at.desc()), pagination.offset, pagination.limit
+    ).all()
 
     # 构建响应数据
     items = []
@@ -104,25 +108,27 @@ def read_audits(
         if audit.operator:
             operator_name = audit.operator.real_name or audit.operator.username
 
-        items.append(PermissionAuditResponse(
-            id=audit.id,
-            operator_id=audit.operator_id,
-            operator_name=operator_name,
-            action=audit.action,
-            target_type=audit.target_type,
-            target_id=audit.target_id,
-            detail=audit.detail,
-            ip_address=audit.ip_address,
-            user_agent=audit.user_agent,
-            created_at=audit.created_at
-        ))
+        items.append(
+            PermissionAuditResponse(
+                id=audit.id,
+                operator_id=audit.operator_id,
+                operator_name=operator_name,
+                action=audit.action,
+                target_type=audit.target_type,
+                target_id=audit.target_id,
+                detail=audit.detail,
+                ip_address=audit.ip_address,
+                user_agent=audit.user_agent,
+                created_at=audit.created_at,
+            )
+        )
 
     return PermissionAuditListResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -153,8 +159,5 @@ def read_audit(
         detail=audit.detail,
         ip_address=audit.ip_address,
         user_agent=audit.user_agent,
-        created_at=audit.created_at
+        created_at=audit.created_at,
     )
-
-
-

@@ -6,6 +6,7 @@ import pytest
 
 try:
     from app.services.lead_priority_scoring.constants import ScoringConstants
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

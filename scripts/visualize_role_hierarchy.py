@@ -165,9 +165,7 @@ class RoleHierarchyVisualizer:
             inherit_class = "inherit-yes" if node["inherit_permissions"] else "inherit-no"
             inherit_text = "✓ 继承" if node["inherit_permissions"] else "✗ 不继承"
             system_badge = (
-                "<span class='badge badge-system'>系统</span>"
-                if node["is_system"]
-                else ""
+                "<span class='badge badge-system'>系统</span>" if node["is_system"] else ""
             )
 
             html = f"<div class='role-node {level_class}'>"
@@ -200,11 +198,21 @@ class RoleHierarchyVisualizer:
         # 统计信息
         html_parts.append("<div class='stats-box'>")
         html_parts.append("<h2>📊 统计信息</h2>")
-        html_parts.append(f"<div class='stats-item'>总角色数: <strong>{stats['total_roles']}</strong></div>")
-        html_parts.append(f"<div class='stats-item'>根角色数: <strong>{stats['root_roles']}</strong></div>")
-        html_parts.append(f"<div class='stats-item'>继承角色数: <strong>{stats['inherited_roles']}</strong></div>")
-        html_parts.append(f"<div class='stats-item'>非继承角色数: <strong>{stats['non_inherited_roles']}</strong></div>")
-        html_parts.append(f"<div class='stats-item'>最大继承深度: <strong>Level {stats['max_depth']}</strong></div>")
+        html_parts.append(
+            f"<div class='stats-item'>总角色数: <strong>{stats['total_roles']}</strong></div>"
+        )
+        html_parts.append(
+            f"<div class='stats-item'>根角色数: <strong>{stats['root_roles']}</strong></div>"
+        )
+        html_parts.append(
+            f"<div class='stats-item'>继承角色数: <strong>{stats['inherited_roles']}</strong></div>"
+        )
+        html_parts.append(
+            f"<div class='stats-item'>非继承角色数: <strong>{stats['non_inherited_roles']}</strong></div>"
+        )
+        html_parts.append(
+            f"<div class='stats-item'>最大继承深度: <strong>Level {stats['max_depth']}</strong></div>"
+        )
         html_parts.append("</div>")
 
         html_parts.append("</div></body></html>")
@@ -259,9 +267,7 @@ class RoleHierarchyVisualizer:
             .filter(RoleInheritanceUtils.role_id == role_id)
             .count()
         )
-        inherited_perms = RoleInheritanceUtils.get_inherited_permissions(
-            self.db, role_id
-        )
+        inherited_perms = RoleInheritanceUtils.get_inherited_permissions(self.db, role_id)
         lines.append(f"自有权限数: {own_perms}")
         lines.append(f"总权限数（含继承）: {len(inherited_perms)}")
         lines.append("")

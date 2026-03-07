@@ -2,12 +2,14 @@
 """
 第三十三批覆盖率测试 - 预警升级器 (AlertUpgrader)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.alert_rule_engine.alert_upgrader import AlertUpgrader
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -30,19 +32,23 @@ class TestUpgradeAlert:
         upgrader = _make_upgrader()
         upgrader.get_field_value = MagicMock(return_value=10)
         upgrader._subscription_service.get_notification_recipients.return_value = {
-            "user_ids": [1], "channels": ["wechat"]
+            "user_ids": [1],
+            "channels": ["wechat"],
         }
 
         alert = MagicMock()
         alert.rule = MagicMock()
         alert.rule.target_field = "delay_days"
 
-        with patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
-            return_value="升级标题"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
-            return_value="升级内容"
+        with (
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
+                return_value="升级标题",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
+                return_value="升级内容",
+            ),
         ):
             result = upgrader.upgrade_alert(alert, "RED", {"target_name": "PJ001"})
 
@@ -55,19 +61,23 @@ class TestUpgradeAlert:
         upgrader = _make_upgrader()
         upgrader.get_field_value = MagicMock(return_value=None)
         upgrader._subscription_service.get_notification_recipients.return_value = {
-            "user_ids": [2, 3], "channels": ["email"]
+            "user_ids": [2, 3],
+            "channels": ["email"],
         }
 
         alert = MagicMock()
         alert.rule = MagicMock()
         alert.rule.target_field = None
 
-        with patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
-            return_value="标题"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
-            return_value="内容"
+        with (
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
+                return_value="标题",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
+                return_value="内容",
+            ),
         ):
             upgrader.upgrade_alert(alert, "RED", {})
 
@@ -93,18 +103,23 @@ class TestUpgradeAlert:
         """通知失败不影响升级操作"""
         upgrader = _make_upgrader()
         upgrader.get_field_value = MagicMock(return_value=None)
-        upgrader._subscription_service.get_notification_recipients.side_effect = RuntimeError("通知异常")
+        upgrader._subscription_service.get_notification_recipients.side_effect = RuntimeError(
+            "通知异常"
+        )
 
         alert = MagicMock()
         alert.rule = MagicMock()
         alert.rule.target_field = None
 
-        with patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
-            return_value="标题"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
-            return_value="内容"
+        with (
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
+                return_value="标题",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
+                return_value="内容",
+            ),
         ):
             # 不应抛出异常
             result = upgrader.upgrade_alert(alert, "ORANGE", {})
@@ -116,19 +131,23 @@ class TestUpgradeAlert:
         upgrader = _make_upgrader()
         upgrader.get_field_value = MagicMock(return_value=None)
         upgrader._subscription_service.get_notification_recipients.return_value = {
-            "user_ids": [], "channels": []
+            "user_ids": [],
+            "channels": [],
         }
 
         alert = MagicMock()
         alert.rule = MagicMock()
         alert.rule.target_field = None
 
-        with patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
-            return_value="标题"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
-            return_value="内容"
+        with (
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
+                return_value="标题",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
+                return_value="内容",
+            ),
         ):
             upgrader.upgrade_alert(alert, "RED", {})
 
@@ -172,9 +191,7 @@ class TestCheckLevelEscalation:
         alert.is_escalated = False
         alert.alert_level = "YELLOW"
 
-        with patch(
-            "app.services.alert_rule_engine.level_determiner.LevelDeterminer"
-        ) as mock_ld:
+        with patch("app.services.alert_rule_engine.level_determiner.LevelDeterminer") as mock_ld:
             mock_ld.determine_alert_level.return_value = "RED"
             result = upgrader.check_level_escalation(alert, {"delay_days": 15})
 
@@ -185,18 +202,14 @@ class TestCheckLevelEscalation:
         """新级别相同时不触发升级"""
         upgrader = _make_upgrader()
         upgrader.upgrade_alert = MagicMock()
-        upgrader.level_priority = MagicMock(
-            side_effect=lambda l: {"YELLOW": 1, "RED": 2}.get(l, 0)
-        )
+        upgrader.level_priority = MagicMock(side_effect=lambda l: {"YELLOW": 1, "RED": 2}.get(l, 0))
 
         alert = MagicMock()
         alert.rule = MagicMock()
         alert.is_escalated = False
         alert.alert_level = "RED"
 
-        with patch(
-            "app.services.alert_rule_engine.level_determiner.LevelDeterminer"
-        ) as mock_ld:
+        with patch("app.services.alert_rule_engine.level_determiner.LevelDeterminer") as mock_ld:
             mock_ld.determine_alert_level.return_value = "RED"
             result = upgrader.check_level_escalation(alert, {})
 
@@ -207,9 +220,7 @@ class TestCheckLevelEscalation:
         """超过24小时的升级记录允许再次升级"""
         upgrader = _make_upgrader()
         upgrader.upgrade_alert = MagicMock(return_value=MagicMock())
-        upgrader.level_priority = MagicMock(
-            side_effect=lambda l: {"YELLOW": 1, "RED": 2}.get(l, 0)
-        )
+        upgrader.level_priority = MagicMock(side_effect=lambda l: {"YELLOW": 1, "RED": 2}.get(l, 0))
 
         alert = MagicMock()
         alert.rule = MagicMock()
@@ -217,9 +228,7 @@ class TestCheckLevelEscalation:
         alert.escalated_at = datetime.now() - timedelta(hours=25)  # 超过24小时
         alert.alert_level = "YELLOW"
 
-        with patch(
-            "app.services.alert_rule_engine.level_determiner.LevelDeterminer"
-        ) as mock_ld:
+        with patch("app.services.alert_rule_engine.level_determiner.LevelDeterminer") as mock_ld:
             mock_ld.determine_alert_level.return_value = "RED"
             result = upgrader.check_level_escalation(alert, {})
 

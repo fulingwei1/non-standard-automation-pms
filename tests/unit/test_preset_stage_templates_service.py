@@ -11,8 +11,9 @@
 - REPEAT_TEMPLATE: 重复生产模板
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestGetPresetTemplate:

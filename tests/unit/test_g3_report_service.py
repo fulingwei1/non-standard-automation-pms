@@ -3,12 +3,13 @@
 G3组 - 工时报表服务单元测试
 目标文件: app/services/report_service.py
 """
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
+import pytest
+
+from app.models.report import ArchiveStatusEnum, GeneratedByEnum, ReportTypeEnum
 from app.services.report_service import ReportService
-from app.models.report import ReportTypeEnum, GeneratedByEnum, ArchiveStatusEnum
 
 
 class TestGetActiveMonthlyTemplates:
@@ -17,20 +18,16 @@ class TestGetActiveMonthlyTemplates:
     def test_returns_enabled_monthly_templates(self):
         db = MagicMock()
         mock_templates = [MagicMock(), MagicMock()]
-        (db.query.return_value
-            .filter.return_value
-            .filter.return_value
-            .all.return_value) = mock_templates
+        (db.query.return_value.filter.return_value.filter.return_value.all.return_value) = (
+            mock_templates
+        )
 
         result = ReportService.get_active_monthly_templates(db)
         assert result == mock_templates
 
     def test_returns_empty_when_no_templates(self):
         db = MagicMock()
-        (db.query.return_value
-            .filter.return_value
-            .filter.return_value
-            .all.return_value) = []
+        (db.query.return_value.filter.return_value.filter.return_value.all.return_value) = []
 
         result = ReportService.get_active_monthly_templates(db)
         assert result == []
@@ -55,9 +52,11 @@ class TestGenerateReport:
         template.config = None
         self.db.query.return_value.filter.return_value.first.return_value = template
 
-        with patch.object(ReportService, "_generate_user_monthly_report",
-                          return_value={"summary": [], "detail": [],
-                                        "year": 2026, "month": 1}) as mock_gen:
+        with patch.object(
+            ReportService,
+            "_generate_user_monthly_report",
+            return_value={"summary": [], "detail": [], "year": 2026, "month": 1},
+        ) as mock_gen:
             result = ReportService.generate_report(self.db, template_id=1, period="2026-01")
 
         mock_gen.assert_called_once_with(self.db, template, 2026, 1)
@@ -71,9 +70,11 @@ class TestGenerateReport:
         template.config = None
         self.db.query.return_value.filter.return_value.first.return_value = template
 
-        with patch.object(ReportService, "_generate_dept_monthly_report",
-                          return_value={"summary": [], "detail": [],
-                                        "year": 2026, "month": 2}) as mock_gen:
+        with patch.object(
+            ReportService,
+            "_generate_dept_monthly_report",
+            return_value={"summary": [], "detail": [], "year": 2026, "month": 2},
+        ) as mock_gen:
             result = ReportService.generate_report(self.db, template_id=2, period="2026-02")
 
         mock_gen.assert_called_once_with(self.db, template, 2026, 2)
@@ -85,9 +86,11 @@ class TestGenerateReport:
         template.report_type = ReportTypeEnum.PROJECT_MONTHLY.value
         self.db.query.return_value.filter.return_value.first.return_value = template
 
-        with patch.object(ReportService, "_generate_project_monthly_report",
-                          return_value={"summary": [], "detail": [],
-                                        "year": 2026, "month": 3}):
+        with patch.object(
+            ReportService,
+            "_generate_project_monthly_report",
+            return_value={"summary": [], "detail": [], "year": 2026, "month": 3},
+        ):
             result = ReportService.generate_report(self.db, template_id=3, period="2026-03")
 
         assert result["period"] == "2026-03"
@@ -98,9 +101,11 @@ class TestGenerateReport:
         template.report_type = ReportTypeEnum.COMPANY_MONTHLY.value
         self.db.query.return_value.filter.return_value.first.return_value = template
 
-        with patch.object(ReportService, "_generate_company_monthly_report",
-                          return_value={"summary": [], "detail": [],
-                                        "year": 2026, "month": 4}):
+        with patch.object(
+            ReportService,
+            "_generate_company_monthly_report",
+            return_value={"summary": [], "detail": [], "year": 2026, "month": 4},
+        ):
             result = ReportService.generate_report(self.db, template_id=4, period="2026-04")
 
         assert result["period"] == "2026-04"
@@ -111,9 +116,11 @@ class TestGenerateReport:
         template.report_type = ReportTypeEnum.OVERTIME_MONTHLY.value
         self.db.query.return_value.filter.return_value.first.return_value = template
 
-        with patch.object(ReportService, "_generate_overtime_monthly_report",
-                          return_value={"summary": [], "detail": [],
-                                        "year": 2026, "month": 5}):
+        with patch.object(
+            ReportService,
+            "_generate_overtime_monthly_report",
+            return_value={"summary": [], "detail": [], "year": 2026, "month": 5},
+        ):
             result = ReportService.generate_report(self.db, template_id=5, period="2026-05")
 
         assert result["period"] == "2026-05"
@@ -134,8 +141,11 @@ class TestGenerateReport:
         template.config = None
         self.db.query.return_value.filter.return_value.first.return_value = template
 
-        with patch.object(ReportService, "_generate_user_monthly_report",
-                          return_value={"summary": [], "detail": [], "year": 2026, "month": 1}):
+        with patch.object(
+            ReportService,
+            "_generate_user_monthly_report",
+            return_value={"summary": [], "detail": [], "year": 2026, "month": 1},
+        ):
             result = ReportService.generate_report(self.db, template_id=1, period="2026-01")
 
         assert result["generated_by"] == GeneratedByEnum.SYSTEM.value

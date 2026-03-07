@@ -1,6 +1,8 @@
 """Tests for app/services/stage_template/stage_management.py"""
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.stage_template.stage_management import StageManagementMixin

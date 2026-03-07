@@ -25,10 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def extract_self_evaluation_from_work_logs(
-    db: Session,
-    engineer_id: int,
-    start_date: date,
-    end_date: date
+    db: Session, engineer_id: int, start_date: date, end_date: date
 ) -> Dict[str, Any]:
     """
     从工作日志中提取自我评价数据
@@ -47,23 +44,27 @@ def extract_self_evaluation_from_work_logs(
         }
     """
     try:
-        work_logs = db.query(WorkLog).filter(
-            WorkLog.user_id == engineer_id,
-            WorkLog.work_date.between(start_date, end_date),
-            WorkLog.status == 'SUBMITTED'
-        ).all()
+        work_logs = (
+            db.query(WorkLog)
+            .filter(
+                WorkLog.user_id == engineer_id,
+                WorkLog.work_date.between(start_date, end_date),
+                WorkLog.status == "SUBMITTED",
+            )
+            .all()
+        )
 
         if not work_logs:
             return {
-                'positive_count': 0,
-                'negative_count': 0,
-                'tech_mentions': 0,
-                'collaboration_mentions': 0,
-                'problem_solving_count': 0,
-                'knowledge_sharing_count': 0,
-                'tech_breakthrough_count': 0,
-                'total_logs': 0,
-                'self_evaluation_score': 75.0
+                "positive_count": 0,
+                "negative_count": 0,
+                "tech_mentions": 0,
+                "collaboration_mentions": 0,
+                "problem_solving_count": 0,
+                "knowledge_sharing_count": 0,
+                "tech_breakthrough_count": 0,
+                "total_logs": 0,
+                "self_evaluation_score": 75.0,
             }
 
         positive_count = 0
@@ -131,26 +132,26 @@ def extract_self_evaluation_from_work_logs(
         self_evaluation_score = max(0, min(100, self_evaluation_score))
 
         return {
-            'positive_count': positive_count,
-            'negative_count': negative_count,
-            'tech_mentions': tech_mentions,
-            'collaboration_mentions': collaboration_mentions,
-            'problem_solving_count': problem_solving_count,
-            'knowledge_sharing_count': knowledge_sharing_count,
-            'tech_breakthrough_count': tech_breakthrough_count,
-            'total_logs': len(work_logs),
-            'self_evaluation_score': round(self_evaluation_score, 2)
+            "positive_count": positive_count,
+            "negative_count": negative_count,
+            "tech_mentions": tech_mentions,
+            "collaboration_mentions": collaboration_mentions,
+            "problem_solving_count": problem_solving_count,
+            "knowledge_sharing_count": knowledge_sharing_count,
+            "tech_breakthrough_count": tech_breakthrough_count,
+            "total_logs": len(work_logs),
+            "self_evaluation_score": round(self_evaluation_score, 2),
         }
     except Exception as e:
         return {
-            'positive_count': 0,
-            'negative_count': 0,
-            'tech_mentions': 0,
-            'collaboration_mentions': 0,
-            'problem_solving_count': 0,
-            'knowledge_sharing_count': 0,
-            'tech_breakthrough_count': 0,
-            'total_logs': 0,
-            'self_evaluation_score': 75.0,
-            'error': str(e)
+            "positive_count": 0,
+            "negative_count": 0,
+            "tech_mentions": 0,
+            "collaboration_mentions": 0,
+            "problem_solving_count": 0,
+            "knowledge_sharing_count": 0,
+            "tech_breakthrough_count": 0,
+            "total_logs": 0,
+            "self_evaluation_score": 75.0,
+            "error": str(e),
         }

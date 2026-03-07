@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """单元测试 - ApprovalEngineCore (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.engine.core import ApprovalEngineCore
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False
@@ -22,10 +24,12 @@ _PATCH_TARGETS = [
 
 def _make_core():
     db = MagicMock()
-    with patch(_PATCH_TARGETS[0]), \
-         patch(_PATCH_TARGETS[1]), \
-         patch(_PATCH_TARGETS[2]), \
-         patch(_PATCH_TARGETS[3]):
+    with (
+        patch(_PATCH_TARGETS[0]),
+        patch(_PATCH_TARGETS[1]),
+        patch(_PATCH_TARGETS[2]),
+        patch(_PATCH_TARGETS[3]),
+    ):
         core = ApprovalEngineCore(db)
     return core
 
@@ -88,8 +92,10 @@ def test_call_adapter_callback_ignores_value_error():
     core = _make_core()
     instance = MagicMock(entity_type="UNKNOWN", entity_id=1)
     # get_adapter is imported locally inside _call_adapter_callback, patch at source
-    with patch("app.services.approval_engine.adapters.get_adapter",
-               side_effect=ValueError("不支持的业务类型")):
+    with patch(
+        "app.services.approval_engine.adapters.get_adapter",
+        side_effect=ValueError("不支持的业务类型"),
+    ):
         core._call_adapter_callback(instance, "on_approved")  # should not raise
 
 
@@ -97,8 +103,9 @@ def test_generate_instance_no_returns_ap_prefixed_string():
     core = _make_core()
     mock_query = MagicMock()
     mock_query.with_for_update.return_value.scalar.return_value = None
-    with patch("app.services.approval_engine.engine.core.apply_like_filter",
-               return_value=mock_query):
+    with patch(
+        "app.services.approval_engine.engine.core.apply_like_filter", return_value=mock_query
+    ):
         result = core._generate_instance_no("SALES_INVOICE")
     assert isinstance(result, str)
     assert result.startswith("AP")

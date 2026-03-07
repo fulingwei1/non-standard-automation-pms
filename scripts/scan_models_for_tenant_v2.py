@@ -7,7 +7,7 @@
 import os
 import re
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
 # 工作目录
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -44,14 +44,14 @@ def scan_model_file(file_path: Path) -> List[Dict]:
     models = []
 
     # 查找所有类定义（继承自Base）
-    class_pattern = r'class\s+(\w+)\s*\([^)]*Base[^)]*\)\s*:'
+    class_pattern = r"class\s+(\w+)\s*\([^)]*Base[^)]*\)\s*:"
     for class_match in re.finditer(class_pattern, content):
         class_name = class_match.group(1)
         class_start = class_match.start()
 
         # 查找 __tablename__
         tablename_pattern = r'__tablename__\s*=\s*["\']([^"\']+)["\']'
-        tablename_match = re.search(tablename_pattern, content[class_start:class_start+2000])
+        tablename_match = re.search(tablename_pattern, content[class_start : class_start + 2000])
 
         if not tablename_match:
             continue
@@ -64,27 +64,29 @@ def scan_model_file(file_path: Path) -> List[Dict]:
 
         # 查找是否有 tenant_id 字段
         # 在类定义范围内查找（取接下来的5000个字符，覆盖大部分类定义）
-        class_content = content[class_start:class_start+5000]
+        class_content = content[class_start : class_start + 5000]
 
         # 检查下一个 class 定义的位置，避免跨类查找
-        next_class_match = re.search(r'\nclass\s+\w+', class_content[100:])  # 跳过当前class的头
+        next_class_match = re.search(r"\nclass\s+\w+", class_content[100:])  # 跳过当前class的头
         if next_class_match:
-            class_content = class_content[:100 + next_class_match.start()]
+            class_content = class_content[: 100 + next_class_match.start()]
 
         # 查找 tenant_id 字段定义
         tenant_id_patterns = [
-            r'tenant_id\s*=\s*Column',
-            r'tenant_id:\s*Mapped',  # SQLAlchemy 2.0 风格
+            r"tenant_id\s*=\s*Column",
+            r"tenant_id:\s*Mapped",  # SQLAlchemy 2.0 风格
         ]
 
         has_tenant_id = any(re.search(pattern, class_content) for pattern in tenant_id_patterns)
 
-        models.append({
-            "class_name": class_name,
-            "table_name": table_name,
-            "file_path": str(file_path.relative_to(PROJECT_ROOT)),
-            "has_tenant_id": has_tenant_id,
-        })
+        models.append(
+            {
+                "class_name": class_name,
+                "table_name": table_name,
+                "file_path": str(file_path.relative_to(PROJECT_ROOT)),
+                "has_tenant_id": has_tenant_id,
+            }
+        )
 
     return models
 

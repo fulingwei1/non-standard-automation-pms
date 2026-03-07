@@ -2,14 +2,12 @@
 """
 Unit tests for win_rate_prediction_service/prediction.py (第三十八批)
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-pytest.importorskip(
-    "app.services.win_rate_prediction_service.prediction",
-    reason="导入失败，跳过"
-)
+import pytest
+
+pytest.importorskip("app.services.win_rate_prediction_service.prediction", reason="导入失败，跳过")
 
 try:
     from app.services.win_rate_prediction_service.prediction import predict
@@ -41,24 +39,42 @@ class TestPredict:
 
     def _patch_all(self):
         return [
-            patch("app.services.win_rate_prediction_service.prediction.calculate_base_score",
-                  return_value=0.7),
-            patch("app.services.win_rate_prediction_service.prediction.get_salesperson_historical_win_rate",
-                  return_value=(0.65, 20)),
-            patch("app.services.win_rate_prediction_service.prediction.calculate_salesperson_factor",
-                  return_value=1.0),
-            patch("app.services.win_rate_prediction_service.prediction.get_customer_cooperation_history",
-                  return_value=(3, 2)),
-            patch("app.services.win_rate_prediction_service.prediction.calculate_customer_factor",
-                  return_value=1.1),
-            patch("app.services.win_rate_prediction_service.prediction.calculate_competitor_factor",
-                  return_value=0.9),
-            patch("app.services.win_rate_prediction_service.prediction.calculate_amount_factor",
-                  return_value=1.0),
-            patch("app.services.win_rate_prediction_service.prediction.calculate_product_factor",
-                  return_value=1.0),
-            patch("app.services.win_rate_prediction_service.prediction.get_similar_leads_statistics",
-                  return_value=(5, 0.65)),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.calculate_base_score",
+                return_value=0.7,
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.get_salesperson_historical_win_rate",
+                return_value=(0.65, 20),
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.calculate_salesperson_factor",
+                return_value=1.0,
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.get_customer_cooperation_history",
+                return_value=(3, 2),
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.calculate_customer_factor",
+                return_value=1.1,
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.calculate_competitor_factor",
+                return_value=0.9,
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.calculate_amount_factor",
+                return_value=1.0,
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.calculate_product_factor",
+                return_value=1.0,
+            ),
+            patch(
+                "app.services.win_rate_prediction_service.prediction.get_similar_leads_statistics",
+                return_value=(5, 0.65),
+            ),
         ]
 
     def test_predict_returns_dict(self, mock_service):
@@ -68,11 +84,7 @@ class TestPredict:
         for p in patches:
             p.start()
         try:
-            result = predict(
-                service=mock_service,
-                dimension_scores=scores,
-                salesperson_id=1
-            )
+            result = predict(service=mock_service, dimension_scores=scores, salesperson_id=1)
             assert isinstance(result, dict)
         finally:
             for p in patches:
@@ -85,11 +97,7 @@ class TestPredict:
         for p in patches:
             p.start()
         try:
-            result = predict(
-                service=mock_service,
-                dimension_scores=scores,
-                salesperson_id=1
-            )
+            result = predict(service=mock_service, dimension_scores=scores, salesperson_id=1)
             assert "predicted_rate" in result
         finally:
             for p in patches:
@@ -102,11 +110,7 @@ class TestPredict:
         for p in patches:
             p.start()
         try:
-            result = predict(
-                service=mock_service,
-                dimension_scores=scores,
-                salesperson_id=1
-            )
+            result = predict(service=mock_service, dimension_scores=scores, salesperson_id=1)
             assert "probability_level" in result
         finally:
             for p in patches:
@@ -119,11 +123,7 @@ class TestPredict:
         for p in patches:
             p.start()
         try:
-            result = predict(
-                service=mock_service,
-                dimension_scores=scores,
-                salesperson_id=1
-            )
+            result = predict(service=mock_service, dimension_scores=scores, salesperson_id=1)
             assert "recommendations" in result
         finally:
             for p in patches:
@@ -136,11 +136,7 @@ class TestPredict:
         for p in patches:
             p.start()
         try:
-            result = predict(
-                service=mock_service,
-                dimension_scores=scores,
-                salesperson_id=1
-            )
+            result = predict(service=mock_service, dimension_scores=scores, salesperson_id=1)
             rate = result.get("predicted_rate", 0)
             assert 0 <= float(rate) <= 1
         finally:
@@ -161,7 +157,7 @@ class TestPredict:
                 customer_id=5,
                 customer_name="测试客户",
                 estimated_amount=Decimal("500000"),
-                is_repeat_customer=True
+                is_repeat_customer=True,
             )
             assert isinstance(result, dict)
         finally:

@@ -2,6 +2,7 @@
 """EVM Service 测试 - Batch 2"""
 from decimal import Decimal
 from unittest.mock import MagicMock
+
 import pytest
 
 from app.services.evm_service import EVMCalculator

@@ -6,8 +6,6 @@
 项目审批主要用于：项目立项、项目变更、项目结项等场景
 """
 
-from __future__ import annotations
-
 from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
@@ -71,8 +69,12 @@ class ProjectApprovalAdapter(ApprovalAdapter):
             "pm_name": project.pm_name,
             "dept_id": project.dept_id,
             "priority": project.priority,
-            "planned_start_date": project.planned_start_date.isoformat() if project.planned_start_date else None,
-            "planned_end_date": project.planned_end_date.isoformat() if project.planned_end_date else None,
+            "planned_start_date": (
+                project.planned_start_date.isoformat() if project.planned_start_date else None
+            ),
+            "planned_end_date": (
+                project.planned_end_date.isoformat() if project.planned_end_date else None
+            ),
         }
 
     def on_submit(self, entity_id: int, instance: ApprovalInstance) -> None:

@@ -25,11 +25,7 @@ class GenericFilterService:
 
     @staticmethod
     def filter_by_scope(
-        db: Session,
-        query: Query,
-        model: type,
-        user: User,
-        config: Optional[DataScopeConfig] = None
+        db: Session, query: Query, model: type, user: User, config: Optional[DataScopeConfig] = None
     ) -> Query:
         """
         通用数据权限过滤方法
@@ -130,25 +126,31 @@ class GenericFilterService:
                 dept_col = getattr(model, config.dept_field)
                 if user.department:
                     from app.models.organization import Department
-                    dept = db.query(Department).filter(
-                        Department.dept_name == user.department
-                    ).first()
+
+                    dept = (
+                        db.query(Department).filter(Department.dept_name == user.department).first()
+                    )
                     if dept:
                         conditions.append(dept_col == dept.id)
 
             # 方式2：通过项目间接获取部门
-            elif config.dept_through_project and config.project_field and hasattr(model, config.project_field):
+            elif (
+                config.dept_through_project
+                and config.project_field
+                and hasattr(model, config.project_field)
+            ):
                 project_col = getattr(model, config.project_field)
                 if user.department:
                     from app.models.organization import Department
-                    dept = db.query(Department).filter(
-                        Department.dept_name == user.department
-                    ).first()
+
+                    dept = (
+                        db.query(Department).filter(Department.dept_name == user.department).first()
+                    )
                     if dept:
                         # 获取该部门的所有项目
-                        dept_projects = db.query(Project.id).filter(
-                            Project.dept_id == dept.id
-                        ).all()
+                        dept_projects = (
+                            db.query(Project.id).filter(Project.dept_id == dept.id).all()
+                        )
                         dept_project_ids = [p[0] for p in dept_projects]
                         if dept_project_ids:
                             conditions.append(project_col.in_(dept_project_ids))
@@ -168,20 +170,21 @@ class GenericFilterService:
         if data_scope == "CUSTOM":
             try:
                 from .custom_rule import CustomRuleService
+
                 # 尝试获取自定义规则并应用
-                custom_rule = CustomRuleService.get_custom_rule(
-                    db, user.id, model.__tablename__
-                )
+                custom_rule = CustomRuleService.get_custom_rule(db, user.id, model.__tablename__)
                 if custom_rule:
                     return CustomRuleService.apply_custom_filter(
-                        query, db, user, custom_rule, model,
+                        query,
+                        db,
+                        user,
+                        custom_rule,
+                        model,
                         owner_field=config.owner_field or "created_by",
-                        project_field=config.project_field or "project_id"
+                        project_field=config.project_field or "project_id",
                     )
                 else:
-                    logger.warning(
-                        f"用户 {user.id} 有 CUSTOM 权限但未找到规则，降级为 OWN"
-                    )
+                    logger.warning(f"用户 {user.id} 有 CUSTOM 权限但未找到规则，降级为 OWN")
             except Exception as e:
                 logger.error(f"应用自定义规则失败: {e}")
             # 降级为 OWN
@@ -196,11 +199,7 @@ class GenericFilterService:
         return query.filter(False)
 
     @staticmethod
-    def check_customer_access(
-        db: Session,
-        user: User,
-        customer_id: int
-    ) -> bool:
+    def check_customer_access(db: Session, user: User, customer_id: int) -> bool:
         """
         检查用户是否有权限访问指定客户的数据
 
@@ -228,10 +227,7 @@ class GenericFilterService:
 
             projects = (
                 db.query(Project.customer_id)
-                .filter(
-                    Project.id.in_(user_project_ids),
-                    Project.customer_id == customer_id
-                )
+                .filter(Project.id.in_(user_project_ids), Project.customer_id == customer_id)
                 .first()
             )
             return projects is not None

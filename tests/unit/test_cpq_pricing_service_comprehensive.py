@@ -43,6 +43,7 @@ class TestResolveRuleSet:
         mock_rule_set = MagicMock()
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -135,13 +136,7 @@ class TestCalculateAdjustment:
         mock_db = MagicMock()
         service = CpqPricingService(mock_db)
 
-        pricing_matrix = {
-            "size": {
-                "small": 100,
-                "medium": 200,
-                "large": 300
-            }
-        }
+        pricing_matrix = {"size": {"small": 100, "medium": 200, "large": 300}}
 
         delta, reason = service._calculate_adjustment("size", "medium", pricing_matrix)
 
@@ -154,14 +149,7 @@ class TestCalculateAdjustment:
         mock_db = MagicMock()
         service = CpqPricingService(mock_db)
 
-        pricing_matrix = {
-            "feature": {
-                "premium": {
-                    "amount": 1000,
-                    "reason": "高级功能加价"
-                }
-            }
-        }
+        pricing_matrix = {"feature": {"premium": {"amount": 1000, "reason": "高级功能加价"}}}
 
         delta, reason = service._calculate_adjustment("feature", "premium", pricing_matrix)
 
@@ -175,12 +163,7 @@ class TestCalculateAdjustment:
         mock_db = MagicMock()
         service = CpqPricingService(mock_db)
 
-        pricing_matrix = {
-            "color": {
-                "red": 50,
-                "default": 25
-            }
-        }
+        pricing_matrix = {"color": {"red": 50, "default": 25}}
 
         delta, reason = service._calculate_adjustment("color", "blue", pricing_matrix)
 
@@ -199,10 +182,7 @@ class TestEvaluateApprovals:
         service = CpqPricingService(mock_db)
 
         requires, reason = service._evaluate_approvals(
-            {},
-            base_price=Decimal("1000"),
-            final_price=Decimal("800"),
-            manual_discount_pct=None
+            {}, base_price=Decimal("1000"), final_price=Decimal("800"), manual_discount_pct=None
         )
 
         assert requires is False
@@ -221,7 +201,7 @@ class TestEvaluateApprovals:
             threshold,
             base_price=Decimal("1000"),
             final_price=Decimal("800"),
-            manual_discount_pct=Decimal("15")
+            manual_discount_pct=Decimal("15"),
         )
 
         assert requires is True
@@ -241,7 +221,7 @@ class TestEvaluateApprovals:
             threshold,
             base_price=Decimal("1000"),
             final_price=Decimal("800"),
-            manual_discount_pct=None
+            manual_discount_pct=None,
         )
 
         assert requires is True
@@ -260,7 +240,7 @@ class TestEvaluateApprovals:
             threshold,
             base_price=Decimal("1000"),
             final_price=Decimal("1050"),  # 5% margin
-            manual_discount_pct=None
+            manual_discount_pct=None,
         )
 
         assert requires is True
@@ -288,10 +268,7 @@ class TestCalculateConfidence:
         mock_db = MagicMock()
         service = CpqPricingService(mock_db)
 
-        config_schema = {
-            "option1": {"required": False},
-            "option2": {}
-        }
+        config_schema = {"option1": {"required": False}, "option2": {}}
 
         result = service._calculate_confidence(config_schema, {})
 
@@ -304,10 +281,7 @@ class TestCalculateConfidence:
         mock_db = MagicMock()
         service = CpqPricingService(mock_db)
 
-        config_schema = {
-            "field1": {"required": True},
-            "field2": {"required": True}
-        }
+        config_schema = {"field1": {"required": True}, "field2": {"required": True}}
         selections = {"field1": "a", "field2": "b"}
 
         result = service._calculate_confidence(config_schema, selections)
@@ -325,7 +299,7 @@ class TestCalculateConfidence:
             "field1": {"required": True},
             "field2": {"required": True},
             "field3": {"required": True},
-            "field4": {"required": True}
+            "field4": {"required": True},
         }
         selections = {"field1": "a", "field2": "b"}  # 50%
 
@@ -345,7 +319,7 @@ class TestCalculateConfidence:
             "field2": {"required": True},
             "field3": {"required": True},
             "field4": {"required": True},
-            "field5": {"required": True}
+            "field5": {"required": True},
         }
         selections = {"field1": "a"}  # 20%
 
@@ -375,10 +349,10 @@ class TestPreviewPrice:
 
         result = service.preview_price(rule_set_id=1)
 
-        assert result['base_price'] == Decimal("1000")
-        assert result['final_price'] == Decimal("1000")
-        assert result['adjustment_total'] == Decimal("0")
-        assert result['currency'] == "CNY"
+        assert result["base_price"] == Decimal("1000")
+        assert result["final_price"] == Decimal("1000")
+        assert result["adjustment_total"] == Decimal("0")
+        assert result["currency"] == "CNY"
 
     def test_applies_selections_adjustments(self):
         """测试应用选择调整"""
@@ -396,14 +370,11 @@ class TestPreviewPrice:
 
         service = CpqPricingService(mock_db)
 
-        result = service.preview_price(
-            rule_set_id=1,
-            selections={"size": "large"}
-        )
+        result = service.preview_price(rule_set_id=1, selections={"size": "large"})
 
-        assert result['final_price'] == Decimal("1500")
-        assert result['adjustment_total'] == Decimal("500")
-        assert len(result['adjustments']) == 1
+        assert result["final_price"] == Decimal("1500")
+        assert result["adjustment_total"] == Decimal("500")
+        assert len(result["adjustments"]) == 1
 
     def test_applies_manual_markup(self):
         """测试应用人工加成"""
@@ -421,12 +392,9 @@ class TestPreviewPrice:
 
         service = CpqPricingService(mock_db)
 
-        result = service.preview_price(
-            rule_set_id=1,
-            manual_markup_pct=Decimal("10")
-        )
+        result = service.preview_price(rule_set_id=1, manual_markup_pct=Decimal("10"))
 
-        assert result['final_price'] == Decimal("1100")  # 1000 + 10%
+        assert result["final_price"] == Decimal("1100")  # 1000 + 10%
 
     def test_applies_manual_discount(self):
         """测试应用人工折扣"""
@@ -444,12 +412,9 @@ class TestPreviewPrice:
 
         service = CpqPricingService(mock_db)
 
-        result = service.preview_price(
-            rule_set_id=1,
-            manual_discount_pct=Decimal("20")
-        )
+        result = service.preview_price(rule_set_id=1, manual_discount_pct=Decimal("20"))
 
-        assert result['final_price'] == Decimal("800")  # 1000 - 20%
+        assert result["final_price"] == Decimal("800")  # 1000 - 20%
 
     def test_includes_approval_info(self):
         """测试包含审批信息"""
@@ -467,13 +432,10 @@ class TestPreviewPrice:
 
         service = CpqPricingService(mock_db)
 
-        result = service.preview_price(
-            rule_set_id=1,
-            manual_discount_pct=Decimal("15")
-        )
+        result = service.preview_price(rule_set_id=1, manual_discount_pct=Decimal("15"))
 
-        assert result['requires_approval'] is True
-        assert result['approval_reason'] is not None
+        assert result["requires_approval"] is True
+        assert result["approval_reason"] is not None
 
     def test_uses_template_version_when_no_rule_set(self):
         """测试无规则集时使用模板版本"""
@@ -487,6 +449,7 @@ class TestPreviewPrice:
         mock_version.pricing_rules = {"base_price": 2000}
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -502,4 +465,4 @@ class TestPreviewPrice:
 
         result = service.preview_price(template_version_id=1)
 
-        assert result['base_price'] == Decimal("2000")
+        assert result["base_price"] == Decimal("2000")

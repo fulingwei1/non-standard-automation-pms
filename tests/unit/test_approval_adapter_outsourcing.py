@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from app.models.approval import ApprovalInstance
 from app.models.outsourcing import OutsourcingOrder, OutsourcingOrderItem
-from app.models.project import Project, Machine
+from app.models.project import Machine, Project
 from app.models.vendor import Vendor
 from app.services.approval_engine.adapters.outsourcing import (
     OutsourcingOrderApprovalAdapter,
@@ -696,9 +696,7 @@ class TestOutsourcingOrderApprovalAdapter(unittest.TestCase):
 
         # Mock部门负责人查询方法
         with patch.object(
-            self.adapter,
-            'get_department_manager_user_ids_by_codes',
-            return_value=[200, 300]
+            self.adapter, "get_department_manager_user_ids_by_codes", return_value=[200, 300]
         ):
             # 执行测试
             result = self.adapter.get_cc_user_ids(1)
@@ -733,9 +731,7 @@ class TestOutsourcingOrderApprovalAdapter(unittest.TestCase):
         self.mock_db.query.side_effect = query_side_effect
 
         with patch.object(
-            self.adapter,
-            'get_department_manager_user_ids_by_codes',
-            return_value=[200]
+            self.adapter, "get_department_manager_user_ids_by_codes", return_value=[200]
         ):
             result = self.adapter.get_cc_user_ids(1)
 
@@ -763,9 +759,7 @@ class TestOutsourcingOrderApprovalAdapter(unittest.TestCase):
         mock_filter.first.return_value = mock_order
 
         with patch.object(
-            self.adapter,
-            'get_department_manager_user_ids_by_codes',
-            return_value=[200]
+            self.adapter, "get_department_manager_user_ids_by_codes", return_value=[200]
         ):
             result = self.adapter.get_cc_user_ids(1)
 
@@ -797,8 +791,8 @@ class TestOutsourcingOrderApprovalAdapter(unittest.TestCase):
         # Mock返回重复的用户ID
         with patch.object(
             self.adapter,
-            'get_department_manager_user_ids_by_codes',
-            return_value=[100, 200, 100]  # 包含重复ID
+            "get_department_manager_user_ids_by_codes",
+            return_value=[100, 200, 100],  # 包含重复ID
         ):
             result = self.adapter.get_cc_user_ids(1)
 

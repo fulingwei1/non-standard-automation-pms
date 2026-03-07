@@ -26,12 +26,16 @@ class TestCollectFromPurchaseOrder:
         result = CostCollectionService.collect_from_purchase_order(db, 1)
         assert result is None
 
-    @patch('app.services.cost_collection_service.CostAlertService')
+    @patch("app.services.cost_collection_service.CostAlertService")
     def test_new_cost_created(self, mock_alert, db):
         order = MagicMock(
-            project_id=1, total_amount=Decimal("500"), tax_amount=Decimal("50"),
-            order_no="PO001", order_title="Test PO", order_date=date.today(),
-            created_at=MagicMock(date=MagicMock(return_value=date.today()))
+            project_id=1,
+            total_amount=Decimal("500"),
+            tax_amount=Decimal("50"),
+            order_no="PO001",
+            order_title="Test PO",
+            order_date=date.today(),
+            created_at=MagicMock(date=MagicMock(return_value=date.today())),
         )
         project = MagicMock(actual_cost=0)
         # first call: find order, second: find existing cost (None), third: find project
@@ -41,12 +45,18 @@ class TestCollectFromPurchaseOrder:
 
     def test_existing_cost_updated(self, db):
         order = MagicMock(
-            project_id=1, total_amount=Decimal("500"), tax_amount=Decimal("50"),
-            created_at=MagicMock(date=MagicMock(return_value=date.today()))
+            project_id=1,
+            total_amount=Decimal("500"),
+            tax_amount=Decimal("50"),
+            created_at=MagicMock(date=MagicMock(return_value=date.today())),
         )
         existing_cost = MagicMock(amount=Decimal("400"))
         project = MagicMock(actual_cost=400)
-        db.query.return_value.filter.return_value.first.side_effect = [order, existing_cost, project]
+        db.query.return_value.filter.return_value.first.side_effect = [
+            order,
+            existing_cost,
+            project,
+        ]
         db.query.return_value.filter.return_value.all.return_value = [existing_cost]
         result = CostCollectionService.collect_from_purchase_order(db, 1)
         assert result == existing_cost

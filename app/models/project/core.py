@@ -37,7 +37,9 @@ class Project(Base, TimestampMixin):
     # 保留原因：现有代码兼容性，避免大量 JOIN 查询
     # 建议：新代码使用 project.customer.customer_name
     customer_name = Column(String(200), comment="客户名称（冗余，建议使用 customer.name）")
-    customer_contact = Column(String(100), comment="客户联系人（冗余，建议使用 customer.contact_person）")
+    customer_contact = Column(
+        String(100), comment="客户联系人（冗余，建议使用 customer.contact_person）"
+    )
     customer_phone = Column(String(50), comment="联系电话（冗余，建议使用 customer.contact_phone）")
     customer_address = Column(String(500), comment="客户地址（现场安装地址）")
     contract_no = Column(String(100), comment="合同编号（内部编号）")
@@ -86,7 +88,9 @@ class Project(Base, TimestampMixin):
     # ⚠️ 冗余字段：应通过 pm 关联获取
     pm_name = Column(String(50), comment="项目经理姓名（冗余，建议使用 pm.real_name）")
     # ⚠️ 命名不一致：dept_id 应改为 department_id 以保持一致性
-    dept_id = Column(Integer, ForeignKey("departments.id"), comment="所属部门（建议重命名为 department_id）")
+    dept_id = Column(
+        Integer, ForeignKey("departments.id"), comment="所属部门（建议重命名为 department_id）"
+    )
 
     # 优先级与标签
     priority = Column(String(20), default="NORMAL", comment="优先级")
@@ -105,7 +109,9 @@ class Project(Base, TimestampMixin):
 
     # 模板关联（Sprint 4.1: 项目模板使用统计）
     template_id = Column(Integer, ForeignKey("project_templates.id"), comment="创建时使用的模板ID")
-    template_version_id = Column(Integer, ForeignKey("project_template_versions.id"), comment="创建时使用的模板版本ID")
+    template_version_id = Column(
+        Integer, ForeignKey("project_template_versions.id"), comment="创建时使用的模板版本ID"
+    )
 
     # 阶段模板关联（阶段模板化功能）
     stage_template_id = Column(Integer, ForeignKey("stage_templates.id"), comment="阶段模板ID")
@@ -121,7 +127,9 @@ class Project(Base, TimestampMixin):
     erp_synced = Column(Boolean, default=False, comment="是否已录入ERP系统")
     erp_sync_time = Column(DateTime, comment="ERP同步时间")
     erp_order_no = Column(String(50), comment="ERP订单号")
-    erp_sync_status = Column(String(20), default="PENDING", comment="ERP同步状态：PENDING/SYNCED/FAILED")
+    erp_sync_status = Column(
+        String(20), default="PENDING", comment="ERP同步状态：PENDING/SYNCED/FAILED"
+    )
 
     # 财务状态
     invoice_issued = Column(Boolean, default=False, comment="是否已开票")
@@ -153,12 +161,8 @@ class Project(Base, TimestampMixin):
 
     # 关系
     customer = relationship("Customer", back_populates="projects")
-    creator = relationship(
-        "User", foreign_keys=[created_by], back_populates="created_projects"
-    )
-    manager = relationship(
-        "User", foreign_keys=[pm_id], back_populates="managed_projects"
-    )
+    creator = relationship("User", foreign_keys=[created_by], back_populates="created_projects")
+    manager = relationship("User", foreign_keys=[pm_id], back_populates="managed_projects")
     department = relationship(Department)
     lead = relationship("Lead", foreign_keys=[lead_id])
     opportunity = relationship("Opportunity", foreign_keys=[opportunity_id])
@@ -167,35 +171,29 @@ class Project(Base, TimestampMixin):
     initiation = relationship("PmoProjectInitiation", foreign_keys=[initiation_id])
     machines = relationship("Machine", back_populates="project", lazy="dynamic")
     stages = relationship("ProjectStage", back_populates="project", lazy="dynamic")
-    milestones = relationship(
-        "ProjectMilestone", back_populates="project", lazy="dynamic"
-    )
+    milestones = relationship("ProjectMilestone", back_populates="project", lazy="dynamic")
     members = relationship("ProjectMember", back_populates="project", lazy="dynamic")
     costs = relationship("ProjectCost", back_populates="project", lazy="dynamic")
     financial_costs = relationship("FinancialProjectCost", back_populates="project", lazy="dynamic")
-    documents = relationship(
-        "ProjectDocument", back_populates="project", lazy="dynamic"
-    )
+    documents = relationship("ProjectDocument", back_populates="project", lazy="dynamic")
     # EVM - 挣值管理
     earned_value_data = relationship("EarnedValueData", back_populates="project", lazy="dynamic")
     # 阶段模板化关系
     stage_template = relationship("StageTemplate", foreign_keys=[stage_template_id])
-    stage_instances = relationship(
-        "ProjectStageInstance", back_populates="project", lazy="dynamic"
-    )
-    node_instances = relationship(
-        "ProjectNodeInstance", back_populates="project", lazy="dynamic"
-    )
+    stage_instances = relationship("ProjectStageInstance", back_populates="project", lazy="dynamic")
+    node_instances = relationship("ProjectNodeInstance", back_populates="project", lazy="dynamic")
     # 扩展模型关系（一对一）
     financial_info = relationship("ProjectFinancial", back_populates="project", uselist=False)
     erp_info = relationship("ProjectERP", back_populates="project", uselist=False)
     warranty_info = relationship("ProjectWarranty", back_populates="project", uselist=False)
-    implementation_info = relationship("ProjectImplementation", back_populates="project", uselist=False)
+    implementation_info = relationship(
+        "ProjectImplementation", back_populates="project", uselist=False
+    )
     presale_info = relationship("ProjectPresale", back_populates="project", uselist=False)
     # 变更管理关系
     change_requests = relationship("ChangeRequest", back_populates="project", lazy="dynamic")
     # 成本预测关系
-    cost_predictions = relationship('CostPrediction', back_populates='project', lazy="dynamic")
+    cost_predictions = relationship("CostPrediction", back_populates="project", lazy="dynamic")
 
     __table_args__ = (
         Index("idx_projects_code", "project_code"),
@@ -234,12 +232,12 @@ class Project(Base, TimestampMixin):
         """
         if self.customer:
             return {
-                'id': self.customer.id,
-                'code': self.customer.customer_code,
-                'name': self.customer.customer_name,
-                'contact': self.customer.contact_person,
-                'phone': self.customer.contact_phone,
-                'email': self.customer.contact_email,
+                "id": self.customer.id,
+                "code": self.customer.customer_code,
+                "name": self.customer.customer_name,
+                "contact": self.customer.contact_person,
+                "phone": self.customer.contact_phone,
+                "email": self.customer.contact_email,
             }
         return None
 
@@ -252,11 +250,11 @@ class Project(Base, TimestampMixin):
         """
         if self.manager:
             return {
-                'id': self.manager.id,
-                'username': self.manager.username,
-                'name': self.manager.real_name,
-                'email': self.manager.email,
-                'phone': self.manager.phone,
+                "id": self.manager.id,
+                "username": self.manager.username,
+                "name": self.manager.real_name,
+                "email": self.manager.email,
+                "phone": self.manager.phone,
             }
         return None
 
@@ -269,10 +267,10 @@ class Project(Base, TimestampMixin):
         """
         if self.department:
             return {
-                'id': self.department.id,
-                'code': self.department.dept_code,
-                'name': self.department.dept_name,
-                'manager_id': self.department.manager_id,
+                "id": self.department.id,
+                "code": self.department.dept_code,
+                "name": self.department.dept_name,
+                "manager_id": self.department.manager_id,
             }
         return None
 
@@ -287,7 +285,7 @@ class Project(Base, TimestampMixin):
             return False
         if self.actual_end_date:
             return self.actual_end_date > self.planned_end_date
-        return date.today() > self.planned_end_date and self.stage not in ['S9', 'CLOSED']
+        return date.today() > self.planned_end_date and self.stage not in ["S9", "CLOSED"]
 
     # ========================================================================
     # 扩展模型便捷属性 - 透明访问拆分的扩展表数据
@@ -397,9 +395,7 @@ class Machine(Base, TimestampMixin):
     __tablename__ = "machines"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="所属项目"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="所属项目")
     machine_code = Column(String(50), nullable=False, comment="设备编码")
     machine_name = Column(String(200), nullable=False, comment="设备名称")
     machine_no = Column(Integer, default=1, comment="设备序号（项目内）")
@@ -457,12 +453,12 @@ class Machine(Base, TimestampMixin):
     @property
     def is_fat_completed(self) -> bool:
         """FAT 是否已完成"""
-        return self.fat_result in ['PASSED', 'FAILED']
+        return self.fat_result in ["PASSED", "FAILED"]
 
     @property
     def is_sat_completed(self) -> bool:
         """SAT 是否已完成"""
-        return self.sat_result in ['PASSED', 'FAILED']
+        return self.sat_result in ["PASSED", "FAILED"]
 
     @property
     def is_shipped(self) -> bool:
@@ -480,15 +476,15 @@ class Machine(Base, TimestampMixin):
     def production_stage_name(self) -> str:
         """获取生产阶段中文名称"""
         stage_names = {
-            'S1': '需求进入',
-            'S2': '方案设计',
-            'S3': '采购备料',
-            'S4': '加工制造',
-            'S5': '装配调试',
-            'S6': '出厂验收',
-            'S7': '包装发运',
-            'S8': '现场安装',
-            'S9': '质保结项',
+            "S1": "需求进入",
+            "S2": "方案设计",
+            "S3": "采购备料",
+            "S4": "加工制造",
+            "S5": "装配调试",
+            "S6": "出厂验收",
+            "S7": "包装发运",
+            "S8": "现场安装",
+            "S9": "质保结项",
         }
         return stage_names.get(self.stage, self.stage)
 
@@ -496,10 +492,10 @@ class Machine(Base, TimestampMixin):
     def health_level_name(self) -> str:
         """获取健康度中文名称"""
         health_names = {
-            'H1': '正常',
-            'H2': '有风险',
-            'H3': '阻塞',
-            'H4': '已完结',
+            "H1": "正常",
+            "H2": "有风险",
+            "H3": "阻塞",
+            "H4": "已完结",
         }
         return health_names.get(self.health, self.health)
 

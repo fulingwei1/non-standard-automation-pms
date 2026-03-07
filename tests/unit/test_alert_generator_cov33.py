@@ -2,12 +2,14 @@
 """
 第三十三批覆盖率测试 - 预警内容生成器 (AlertGenerator)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.alert_rule_engine.alert_generator import AlertGenerator
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -26,11 +28,11 @@ class TestGenerateAlertNo:
 
         with patch(
             "app.services.alert_rule_engine.alert_generator.apply_like_filter",
-            return_value=db.query.return_value
+            return_value=db.query.return_value,
         ):
             alert_no = AlertGenerator.generate_alert_no(db, rule, {})
 
-        today = datetime.now().strftime('%Y%m%d')
+        today = datetime.now().strftime("%Y%m%d")
         assert today in alert_no
         assert alert_no.startswith("PRO")  # "project_delay"[:3].upper() = "PRO"
 
@@ -44,7 +46,7 @@ class TestGenerateAlertNo:
 
         with patch(
             "app.services.alert_rule_engine.alert_generator.apply_like_filter",
-            return_value=db.query.return_value
+            return_value=db.query.return_value,
         ):
             alert_no = AlertGenerator.generate_alert_no(db, rule, {})
 
@@ -61,7 +63,7 @@ class TestGenerateAlertNo:
 
         with patch(
             "app.services.alert_rule_engine.alert_generator.apply_like_filter",
-            return_value=db.query.return_value
+            return_value=db.query.return_value,
         ):
             alert_no = AlertGenerator.generate_alert_no(db, rule, {})
 
@@ -154,6 +156,8 @@ class TestGenerateAlertContent:
         engine = MagicMock()
         engine.get_field_value.return_value = 7
 
-        content = AlertGenerator.generate_alert_content(rule, {"delay_days": 7}, "RED", engine=engine)
+        content = AlertGenerator.generate_alert_content(
+            rule, {"delay_days": 7}, "RED", engine=engine
+        )
 
         assert "7" in content

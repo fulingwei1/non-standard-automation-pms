@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.material import BomHeader, BomItem
 from app.models.production import WorkOrder, Workshop
@@ -17,10 +19,8 @@ from app.models.project import Machine, Project
 from app.models.purchase import PurchaseOrderItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
 
 from .utils import calculate_work_order_kit_rate
-from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 
@@ -49,7 +49,7 @@ def get_work_orders_for_check(
         WorkOrder.plan_start_date.isnot(None),
         WorkOrder.plan_start_date >= today,
         WorkOrder.plan_start_date <= end_date,
-        WorkOrder.status.in_(['PENDING', 'ASSIGNED', 'READY']),  # 待开工状态
+        WorkOrder.status.in_(["PENDING", "ASSIGNED", "READY"]),  # 待开工状态
     )
 
     # 筛选条件
@@ -64,7 +64,11 @@ def get_work_orders_for_check(
     total = query.count()
 
     # 分页
-    work_orders = apply_pagination(query.order_by(WorkOrder.plan_start_date, WorkOrder.priority), pagination.offset, pagination.limit).all()
+    work_orders = apply_pagination(
+        query.order_by(WorkOrder.plan_start_date, WorkOrder.priority),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 计算每个工单的齐套率
     work_order_list = []
@@ -92,32 +96,42 @@ def get_work_orders_for_check(
             continue
 
         # 获取关联信息
-        project = db.query(Project).filter(Project.id == wo.project_id).first() if wo.project_id else None
-        machine = db.query(Machine).filter(Machine.id == wo.machine_id).first() if wo.machine_id else None
-        workshop = db.query(Workshop).filter(Workshop.id == wo.workshop_id).first() if wo.workshop_id else None
+        project = (
+            db.query(Project).filter(Project.id == wo.project_id).first() if wo.project_id else None
+        )
+        machine = (
+            db.query(Machine).filter(Machine.id == wo.machine_id).first() if wo.machine_id else None
+        )
+        workshop = (
+            db.query(Workshop).filter(Workshop.id == wo.workshop_id).first()
+            if wo.workshop_id
+            else None
+        )
 
-        work_order_list.append({
-            "id": wo.id,
-            "work_order_no": wo.work_order_no,
-            "task_name": wo.task_name,
-            "project_id": wo.project_id,
-            "project_name": project.project_name if project else None,
-            "machine_id": wo.machine_id,
-            "machine_name": machine.machine_name if machine else None,
-            "workshop_id": wo.workshop_id,
-            "workshop_name": workshop.workshop_name if workshop else None,
-            "plan_start_date": wo.plan_start_date.isoformat() if wo.plan_start_date else None,
-            "plan_qty": wo.plan_qty,
-            "status": wo.status,
-            "priority": wo.priority,
-            "kit_rate": kit_data["kit_rate"],
-            "kit_status": kit_data["kit_status"],
-            "is_kit_complete": kit_data["is_kit_complete"],
-            "total_items": kit_data["total_items"],
-            "fulfilled_items": kit_data["fulfilled_items"],
-            "shortage_items": kit_data["shortage_items"],
-            "in_transit_items": kit_data["in_transit_items"],
-        })
+        work_order_list.append(
+            {
+                "id": wo.id,
+                "work_order_no": wo.work_order_no,
+                "task_name": wo.task_name,
+                "project_id": wo.project_id,
+                "project_name": project.project_name if project else None,
+                "machine_id": wo.machine_id,
+                "machine_name": machine.machine_name if machine else None,
+                "workshop_id": wo.workshop_id,
+                "workshop_name": workshop.workshop_name if workshop else None,
+                "plan_start_date": wo.plan_start_date.isoformat() if wo.plan_start_date else None,
+                "plan_qty": wo.plan_qty,
+                "status": wo.status,
+                "priority": wo.priority,
+                "kit_rate": kit_data["kit_rate"],
+                "kit_status": kit_data["kit_status"],
+                "is_kit_complete": kit_data["is_kit_complete"],
+                "total_items": kit_data["total_items"],
+                "fulfilled_items": kit_data["fulfilled_items"],
+                "shortage_items": kit_data["shortage_items"],
+                "in_transit_items": kit_data["in_transit_items"],
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -130,8 +144,8 @@ def get_work_orders_for_check(
                 "page_size": pagination.page_size,
                 "total": total,
                 "pages": pagination.pages_for_total(total),
-            }
-        }
+            },
+        },
     )
 
 
@@ -174,11 +188,17 @@ def get_work_order_kit_detail(
                     po_items = (
                         db.query(PurchaseOrderItem)
                         .filter(PurchaseOrderItem.material_id == item.material_id)
-                        .filter(PurchaseOrderItem.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
+                        .filter(
+                            PurchaseOrderItem.status.in_(
+                                ["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]
+                            )
+                        )
                         .all()
                     )
                     for po_item in po_items:
-                        in_transit_qty += (Decimal(po_item.quantity or 0) - Decimal(po_item.received_qty or 0))
+                        in_transit_qty += Decimal(po_item.quantity or 0) - Decimal(
+                            po_item.received_qty or 0
+                        )
 
                     # 需求数量
                     required_qty = Decimal(item.quantity or 0) * Decimal(work_order.plan_qty or 1)
@@ -192,26 +212,40 @@ def get_work_order_kit_detail(
                     else:
                         status = "shortage"
 
-                    bom_items.append({
-                        "material_id": material.id,
-                        "material_code": material.material_code,
-                        "material_name": material.material_name,
-                        "specification": material.specification,
-                        "unit": material.unit,
-                        "bom_quantity": float(item.quantity or 0),
-                        "required_qty": float(required_qty),
-                        "available_qty": float(available_qty),
-                        "in_transit_qty": float(in_transit_qty),
-                        "total_available": float(total_available),
-                        "shortage_qty": float(max(0, required_qty - total_available)),
-                        "status": status,
-                        "is_critical": item.is_critical or False,
-                    })
+                    bom_items.append(
+                        {
+                            "material_id": material.id,
+                            "material_code": material.material_code,
+                            "material_name": material.material_name,
+                            "specification": material.specification,
+                            "unit": material.unit,
+                            "bom_quantity": float(item.quantity or 0),
+                            "required_qty": float(required_qty),
+                            "available_qty": float(available_qty),
+                            "in_transit_qty": float(in_transit_qty),
+                            "total_available": float(total_available),
+                            "shortage_qty": float(max(0, required_qty - total_available)),
+                            "status": status,
+                            "is_critical": item.is_critical or False,
+                        }
+                    )
 
     # 获取关联信息
-    project = db.query(Project).filter(Project.id == work_order.project_id).first() if work_order.project_id else None
-    machine = db.query(Machine).filter(Machine.id == work_order.machine_id).first() if work_order.machine_id else None
-    workshop = db.query(Workshop).filter(Workshop.id == work_order.workshop_id).first() if work_order.workshop_id else None
+    project = (
+        db.query(Project).filter(Project.id == work_order.project_id).first()
+        if work_order.project_id
+        else None
+    )
+    machine = (
+        db.query(Machine).filter(Machine.id == work_order.machine_id).first()
+        if work_order.machine_id
+        else None
+    )
+    workshop = (
+        db.query(Workshop).filter(Workshop.id == work_order.workshop_id).first()
+        if work_order.workshop_id
+        else None
+    )
 
     return ResponseModel(
         code=200,
@@ -227,11 +261,13 @@ def get_work_order_kit_detail(
                 "machine_name": machine.machine_name if machine else None,
                 "workshop_id": work_order.workshop_id,
                 "workshop_name": workshop.workshop_name if workshop else None,
-                "plan_start_date": work_order.plan_start_date.isoformat() if work_order.plan_start_date else None,
+                "plan_start_date": (
+                    work_order.plan_start_date.isoformat() if work_order.plan_start_date else None
+                ),
                 "plan_qty": work_order.plan_qty,
                 "status": work_order.status,
             },
             "kit_data": kit_data,
             "bom_items": bom_items,
-        }
+        },
     )

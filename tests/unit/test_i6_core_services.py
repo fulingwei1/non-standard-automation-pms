@@ -11,15 +11,16 @@ I6 组：services 剩余核心文件单元测试
 - app/services/report_service.py      (ReportService 报表生成)
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 
 # ===========================================================================
 # 一、evm_service.py — EVMCalculator 纯数学计算
 # ===========================================================================
+
 
 class TestEVMCalculator:
     """EVM 计算器测试 - 全为纯数学，无 DB 依赖"""
@@ -27,80 +28,61 @@ class TestEVMCalculator:
     @pytest.fixture(autouse=True)
     def setup(self):
         from app.services.evm_service import EVMCalculator
+
         self.calc = EVMCalculator
 
     # ---- SV ----------------------------------------------------------------
     def test_schedule_variance_positive(self):
         """EV > PV => 进度超前，SV > 0"""
-        sv = self.calc.calculate_schedule_variance(
-            ev=Decimal("120"), pv=Decimal("100")
-        )
+        sv = self.calc.calculate_schedule_variance(ev=Decimal("120"), pv=Decimal("100"))
         assert sv == Decimal("20.0000")
 
     def test_schedule_variance_negative(self):
         """EV < PV => 进度落后，SV < 0"""
-        sv = self.calc.calculate_schedule_variance(
-            ev=Decimal("80"), pv=Decimal("100")
-        )
+        sv = self.calc.calculate_schedule_variance(ev=Decimal("80"), pv=Decimal("100"))
         assert sv == Decimal("-20.0000")
 
     def test_schedule_variance_zero(self):
         """EV == PV => SV == 0"""
-        sv = self.calc.calculate_schedule_variance(
-            ev=Decimal("100"), pv=Decimal("100")
-        )
+        sv = self.calc.calculate_schedule_variance(ev=Decimal("100"), pv=Decimal("100"))
         assert sv == Decimal("0.0000")
 
     # ---- CV ----------------------------------------------------------------
     def test_cost_variance_positive(self):
         """EV > AC => 成本节约，CV > 0"""
-        cv = self.calc.calculate_cost_variance(
-            ev=Decimal("110"), ac=Decimal("100")
-        )
+        cv = self.calc.calculate_cost_variance(ev=Decimal("110"), ac=Decimal("100"))
         assert cv == Decimal("10.0000")
 
     def test_cost_variance_negative(self):
         """EV < AC => 成本超支，CV < 0"""
-        cv = self.calc.calculate_cost_variance(
-            ev=Decimal("90"), ac=Decimal("100")
-        )
+        cv = self.calc.calculate_cost_variance(ev=Decimal("90"), ac=Decimal("100"))
         assert cv == Decimal("-10.0000")
 
     # ---- SPI ---------------------------------------------------------------
     def test_spi_normal(self):
         """SPI = EV / PV"""
-        spi = self.calc.calculate_schedule_performance_index(
-            ev=Decimal("80"), pv=Decimal("100")
-        )
+        spi = self.calc.calculate_schedule_performance_index(ev=Decimal("80"), pv=Decimal("100"))
         assert spi == Decimal("0.800000")
 
     def test_spi_pv_zero_returns_none(self):
         """PV=0 时 SPI 应返回 None"""
-        spi = self.calc.calculate_schedule_performance_index(
-            ev=Decimal("100"), pv=Decimal("0")
-        )
+        spi = self.calc.calculate_schedule_performance_index(ev=Decimal("100"), pv=Decimal("0"))
         assert spi is None
 
     def test_spi_greater_than_one(self):
         """SPI > 1 表示进度超前"""
-        spi = self.calc.calculate_schedule_performance_index(
-            ev=Decimal("120"), pv=Decimal("100")
-        )
+        spi = self.calc.calculate_schedule_performance_index(ev=Decimal("120"), pv=Decimal("100"))
         assert spi > Decimal("1")
 
     # ---- CPI ---------------------------------------------------------------
     def test_cpi_normal(self):
         """CPI = EV / AC"""
-        cpi = self.calc.calculate_cost_performance_index(
-            ev=Decimal("100"), ac=Decimal("80")
-        )
+        cpi = self.calc.calculate_cost_performance_index(ev=Decimal("100"), ac=Decimal("80"))
         assert cpi == Decimal("1.250000")
 
     def test_cpi_ac_zero_returns_none(self):
         """AC=0 时 CPI 应返回 None"""
-        cpi = self.calc.calculate_cost_performance_index(
-            ev=Decimal("100"), ac=Decimal("0")
-        )
+        cpi = self.calc.calculate_cost_performance_index(ev=Decimal("100"), ac=Decimal("0"))
         assert cpi is None
 
     # ---- EAC ---------------------------------------------------------------
@@ -127,16 +109,12 @@ class TestEVMCalculator:
     # ---- VAC ---------------------------------------------------------------
     def test_vac_positive(self):
         """BAC > EAC => 预计节约"""
-        vac = self.calc.calculate_variance_at_completion(
-            bac=Decimal("1000"), eac=Decimal("900")
-        )
+        vac = self.calc.calculate_variance_at_completion(bac=Decimal("1000"), eac=Decimal("900"))
         assert vac == Decimal("100.0000")
 
     def test_vac_negative(self):
         """BAC < EAC => 预计超支"""
-        vac = self.calc.calculate_variance_at_completion(
-            bac=Decimal("1000"), eac=Decimal("1100")
-        )
+        vac = self.calc.calculate_variance_at_completion(bac=Decimal("1000"), eac=Decimal("1100"))
         assert vac == Decimal("-100.0000")
 
     # ---- TCPI --------------------------------------------------------------
@@ -161,34 +139,36 @@ class TestEVMCalculator:
 
     # ---- percent_complete --------------------------------------------------
     def test_percent_complete_normal(self):
-        pct = self.calc.calculate_percent_complete(
-            value=Decimal("50"), bac=Decimal("200")
-        )
+        pct = self.calc.calculate_percent_complete(value=Decimal("50"), bac=Decimal("200"))
         assert pct == Decimal("25.00")
 
     def test_percent_complete_bac_zero_returns_none(self):
-        pct = self.calc.calculate_percent_complete(
-            value=Decimal("50"), bac=Decimal("0")
-        )
+        pct = self.calc.calculate_percent_complete(value=Decimal("50"), bac=Decimal("0"))
         assert pct is None
 
     # ---- calculate_all_metrics ---------------------------------------------
     def test_calculate_all_metrics_keys(self):
         """calculate_all_metrics 返回字典包含所有预期键"""
-        metrics = self.calc.calculate_all_metrics(
-            pv=100, ev=90, ac=80, bac=500
-        )
-        expected_keys = {"sv", "cv", "spi", "cpi", "eac", "etc", "vac",
-                         "tcpi", "planned_percent_complete", "actual_percent_complete"}
+        metrics = self.calc.calculate_all_metrics(pv=100, ev=90, ac=80, bac=500)
+        expected_keys = {
+            "sv",
+            "cv",
+            "spi",
+            "cpi",
+            "eac",
+            "etc",
+            "vac",
+            "tcpi",
+            "planned_percent_complete",
+            "actual_percent_complete",
+        }
         assert expected_keys.issubset(set(metrics.keys()))
 
     def test_calculate_all_metrics_values_correct(self):
         """综合验证：计算结果与手算一致"""
-        metrics = self.calc.calculate_all_metrics(
-            pv=100, ev=80, ac=90, bac=500
-        )
-        assert metrics["sv"] == Decimal("-20.0000")   # 80-100
-        assert metrics["cv"] == Decimal("-10.0000")   # 80-90
+        metrics = self.calc.calculate_all_metrics(pv=100, ev=80, ac=90, bac=500)
+        assert metrics["sv"] == Decimal("-20.0000")  # 80-100
+        assert metrics["cv"] == Decimal("-10.0000")  # 80-90
         # SPI = 80/100 = 0.8
         assert metrics["spi"] == Decimal("0.800000")
         # CPI = 80/90 ≈ 0.888889
@@ -199,12 +179,14 @@ class TestEVMCalculator:
 # 二、health_calculator.py — HealthCalculator
 # ===========================================================================
 
+
 class TestHealthCalculator:
     """健康度计算器测试 - mock DB"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
         from app.services.health_calculator import HealthCalculator
+
         self.db = MagicMock()
         self.calc = HealthCalculator(db=self.db)
 
@@ -339,12 +321,14 @@ class TestHealthCalculator:
 # 三、notification_service.py — NotificationService
 # ===========================================================================
 
+
 class TestNotificationService:
     """通知服务测试 - mock 掉统一服务"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
         from app.services.notification_service import NotificationService
+
         self.svc = NotificationService(db=MagicMock())
         self.db = MagicMock()
 
@@ -358,34 +342,40 @@ class TestNotificationService:
     def test_enabled_channels_always_has_web(self):
         """站内通知 (WEB) 始终在启用渠道中"""
         from app.services.notification_service import NotificationChannel
+
         assert NotificationChannel.WEB in self.svc.enabled_channels
 
     # ---- _infer_category ---------------------------------------------------
     def test_infer_category_task(self):
         from app.services.notification_service import NotificationType
+
         cat = self.svc._infer_category(NotificationType.TASK_ASSIGNED)
         assert cat == "task"
 
     def test_infer_category_project(self):
         from app.services.notification_service import NotificationType
+
         cat = self.svc._infer_category(NotificationType.PROJECT_UPDATE)
         assert cat == "project"
 
     def test_infer_category_general_fallback(self):
         from app.services.notification_service import NotificationType
+
         cat = self.svc._infer_category(NotificationType.SYSTEM_ANNOUNCEMENT)
         assert cat == "general"
 
     # ---- _map_old_channel_to_new -------------------------------------------
     def test_map_channel_web_to_system(self):
-        from app.services.notification_service import NotificationChannel
         from app.services.channel_handlers.base import NotificationChannel as UC
+        from app.services.notification_service import NotificationChannel
+
         mapped = self.svc._map_old_channel_to_new(NotificationChannel.WEB)
         assert mapped == UC.SYSTEM
 
     def test_map_channel_email(self):
-        from app.services.notification_service import NotificationChannel
         from app.services.channel_handlers.base import NotificationChannel as UC
+        from app.services.notification_service import NotificationChannel
+
         mapped = self.svc._map_old_channel_to_new(NotificationChannel.EMAIL)
         assert mapped == UC.EMAIL
 
@@ -393,7 +383,8 @@ class TestNotificationService:
     @patch("app.services.notification_service.get_notification_service")
     def test_send_notification_success(self, mock_get_svc):
         """send_notification 成功时返回 True"""
-        from app.services.notification_service import NotificationType, NotificationPriority
+        from app.services.notification_service import NotificationPriority, NotificationType
+
         mock_unified = self._make_unified_service_mock(success=True)
         mock_get_svc.return_value = mock_unified
 
@@ -411,6 +402,7 @@ class TestNotificationService:
     def test_send_notification_failure(self, mock_get_svc):
         """统一服务返回 success=False 时应返回 False"""
         from app.services.notification_service import NotificationType
+
         mock_unified = self._make_unified_service_mock(success=False)
         mock_get_svc.return_value = mock_unified
 
@@ -426,6 +418,7 @@ class TestNotificationService:
     def test_send_notification_no_db_returns_false(self):
         """未传入 db 时应直接返回 False"""
         from app.services.notification_service import NotificationType
+
         result = self.svc.send_notification(
             db=None,
             recipient_id=1,
@@ -496,12 +489,14 @@ class TestNotificationService:
 # 四、session_service.py — SessionService 工具方法
 # ===========================================================================
 
+
 class TestSessionService:
     """会话服务测试 - 主要测试无 Redis 依赖的逻辑"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
         from app.services.session_service import SessionService
+
         self.svc = SessionService
 
     # ---- _parse_user_agent -------------------------------------------------
@@ -572,11 +567,12 @@ class TestSessionService:
     def test_assess_risk_new_user_zero_risk(self):
         """新用户无历史记录 => risk_score=0, not suspicious"""
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         is_suspicious, risk_score = self.svc._assess_risk(
-            db, user_id=999, ip_address="1.2.3.4",
-            device_info=None, location="上海"
+            db, user_id=999, ip_address="1.2.3.4", device_info=None, location="上海"
         )
         assert is_suspicious is False
         assert risk_score == 0
@@ -590,11 +586,12 @@ class TestSessionService:
         old_sess.location = "北京"
         old_sess.login_at = datetime.utcnow() - timedelta(days=1)
 
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [old_sess]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            old_sess
+        ]
 
         _, risk_score = self.svc._assess_risk(
-            db, user_id=1, ip_address="10.0.0.1",
-            device_info=None, location="上海"
+            db, user_id=1, ip_address="10.0.0.1", device_info=None, location="上海"
         )
         assert risk_score >= 30
 
@@ -622,23 +619,26 @@ class TestSessionService:
 # 五、project_relations_service.py — 统计与发现函数
 # ===========================================================================
 
+
 class TestProjectRelationsService:
     """项目关联关系测试"""
 
     # ---- calculate_relation_statistics -------------------------------------
     def test_calculate_statistics_empty(self):
         from app.services.project_relations_service import calculate_relation_statistics
+
         stats = calculate_relation_statistics([])
         assert stats["total_relations"] == 0
         assert stats["by_strength"] == {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
 
     def test_calculate_statistics_counts(self):
         from app.services.project_relations_service import calculate_relation_statistics
+
         relations = [
             {"type": "MATERIAL_TRANSFER_OUT", "strength": "MEDIUM"},
-            {"type": "MATERIAL_TRANSFER_IN",  "strength": "MEDIUM"},
-            {"type": "SHARED_CUSTOMER",        "strength": "LOW"},
-            {"type": "SHARED_RESOURCE",        "strength": "HIGH"},
+            {"type": "MATERIAL_TRANSFER_IN", "strength": "MEDIUM"},
+            {"type": "SHARED_CUSTOMER", "strength": "LOW"},
+            {"type": "SHARED_RESOURCE", "strength": "HIGH"},
         ]
         stats = calculate_relation_statistics(relations)
         assert stats["total_relations"] == 4
@@ -650,6 +650,7 @@ class TestProjectRelationsService:
     def test_calculate_statistics_by_type_aggregation(self):
         """同类型多条记录 by_type 应正确累加"""
         from app.services.project_relations_service import calculate_relation_statistics
+
         relations = [
             {"type": "SHARED_CUSTOMER", "strength": "LOW"},
             {"type": "SHARED_CUSTOMER", "strength": "LOW"},
@@ -661,6 +662,7 @@ class TestProjectRelationsService:
     def test_discover_same_customer_no_customer_id(self):
         """项目无 customer_id 时，返回空列表"""
         from app.services.project_relations_service import discover_same_customer_relations
+
         db = MagicMock()
         project = MagicMock()
         project.customer_id = None
@@ -692,6 +694,7 @@ class TestProjectRelationsService:
     def test_discover_same_pm_no_pm_id(self):
         """项目无 pm_id 时，返回空列表"""
         from app.services.project_relations_service import discover_same_pm_relations
+
         db = MagicMock()
         project = MagicMock()
         project.pm_id = None
@@ -723,6 +726,7 @@ class TestProjectRelationsService:
     def test_get_material_transfer_relations_wrong_type(self):
         """relation_type 不匹配时返回空列表"""
         from app.services.project_relations_service import get_material_transfer_relations
+
         db = MagicMock()
         result = get_material_transfer_relations(db, project_id=1, relation_type="SHARED_RESOURCE")
         assert result == []
@@ -732,12 +736,14 @@ class TestProjectRelationsService:
 # 六、report_service.py — ReportService 报表生成
 # ===========================================================================
 
+
 class TestReportService:
     """工时报表服务测试"""
 
     @pytest.fixture(autouse=True)
     def setup(self):
         from app.services.report_service import ReportService
+
         self.svc = ReportService
 
     # ---- get_active_monthly_templates --------------------------------------
@@ -782,7 +788,7 @@ class TestReportService:
     @patch.object(
         __import__("app.services.report_service", fromlist=["ReportService"]).ReportService,
         "_generate_user_monthly_report",
-        return_value={"rows": [], "summary": {}}
+        return_value={"rows": [], "summary": {}},
     )
     def test_generate_report_user_monthly(self, mock_gen):
         """USER_MONTHLY 类型应调用 _generate_user_monthly_report"""
@@ -813,7 +819,7 @@ class TestReportService:
     @patch.object(
         __import__("app.services.report_service", fromlist=["ReportService"]).ReportService,
         "_generate_dept_monthly_report",
-        return_value={"rows": []}
+        return_value={"rows": []},
     )
     def test_generate_report_sets_generated_by(self, _mock):
         """generate_report 返回的数据应包含 generated_by 字段"""

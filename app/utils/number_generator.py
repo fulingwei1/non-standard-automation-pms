@@ -11,17 +11,17 @@ from typing import Optional, Type
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
+from app.models.bonus import BonusCalculation
+from app.models.material import Material
+
+# 模块级导入，支持 unittest.mock.patch 在测试中替换
+from app.models.organization import Employee
+from app.models.project import Customer, Machine
 from app.utils.code_config import (
     CODE_PREFIX,
     SEQ_LENGTH,
     get_material_category_code,
 )
-
-# 模块级导入，支持 unittest.mock.patch 在测试中替换
-from app.models.organization import Employee
-from app.models.project import Customer, Machine
-from app.models.material import Material
-from app.models.bonus import BonusCalculation
 
 
 def generate_sequential_no(
@@ -332,11 +332,7 @@ def generate_material_code(db: Session, category_code: Optional[str] = None) -> 
             max_code = max_record.material_code
             # 提取序号部分：MAT-ME-00001 -> 00001
             parts = max_code.split(separator)
-            if (
-                len(parts) == 3
-                and parts[0] == prefix
-                and parts[1] == material_category_code
-            ):
+            if len(parts) == 3 and parts[0] == prefix and parts[1] == material_category_code:
                 seq_str = parts[2]
                 seq = int(seq_str) + 1
             else:
@@ -473,7 +469,9 @@ class NumberGenerator:
 
     def generate_unique_number(self, prefix: str) -> str:
         """生成唯一编号（基于时间戳），格式：{prefix}-{timestamp}"""
-        import time, random
+        import random
+        import time
+
         ts = int(time.time() * 1000)
         rnd = random.randint(0, 999)
         return f"{prefix}-{ts}-{rnd:03d}"
@@ -484,11 +482,11 @@ class NumberGenerator:
 
         示例：'PRJ-20260216-0042' → {'prefix': 'PRJ', 'date_str': '20260216', 'sequence': 42}
         """
-        parts = number.split('-')
+        parts = number.split("-")
         if len(parts) >= 3:
             return {
-                'prefix': parts[0],
-                'date_str': parts[1],
-                'sequence': int(parts[2]),
+                "prefix": parts[0],
+                "date_str": parts[1],
+                "sequence": int(parts[2]),
             }
-        return {'prefix': number, 'date_str': '', 'sequence': 0}
+        return {"prefix": number, "date_str": "", "sequence": 0}

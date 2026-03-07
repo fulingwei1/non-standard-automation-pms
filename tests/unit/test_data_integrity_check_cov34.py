@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """数据完整性检查单元测试 - 第三十四批"""
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import date
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.data_integrity.check")
 

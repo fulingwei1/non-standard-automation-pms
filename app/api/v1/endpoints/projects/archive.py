@@ -13,12 +13,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project import Project, ProjectStatusLog
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 router = APIRouter()
 
@@ -35,22 +35,18 @@ def archive_project(
     归档项目
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     project = check_project_access_or_raise(db, current_user, project_id)
 
     if project.is_archived:
-        return ResponseModel(
-            code=200,
-            message="项目已归档",
-            data={"project_id": project_id}
-        )
+        return ResponseModel(code=200, message="项目已归档", data={"project_id": project_id})
 
     # 检查项目是否可以归档（通常需要项目已完成或已结项）
     if project.stage not in ["S9"] and project.status not in ["ST30"]:
         # 非管理员不能归档未完成的项目
         if not current_user.is_superuser:
             raise HTTPException(
-                status_code=400,
-                detail="项目未完成，无法归档。只有管理员可以强制归档未完成的项目。"
+                status_code=400, detail="项目未完成，无法归档。只有管理员可以强制归档未完成的项目。"
             )
 
     project.is_archived = True
@@ -73,17 +69,17 @@ def archive_project(
         old_status=project.status,
         new_status=project.status,
         old_health=project.health,
-        new_health='H4',  # 归档后健康度变为H4
+        new_health="H4",  # 归档后健康度变为H4
         change_type="ARCHIVE",
         change_reason=reason or "项目归档",
         changed_by=current_user.id,
-        changed_at=datetime.now()
+        changed_at=datetime.now(),
     )
     db.add(status_log)
 
     # 更新健康度为H4（已完结）
     old_health = project.health
-    project.health = 'H4'
+    project.health = "H4"
 
     db.commit()
 
@@ -96,8 +92,8 @@ def archive_project(
             "project_name": project.project_name,
             "archived_at": project.updated_at.isoformat() if project.status == "archived" else None,
             "old_health": old_health,
-            "new_health": 'H4',
-        }
+            "new_health": "H4",
+        },
     )
 
 
@@ -113,14 +109,11 @@ def unarchive_project(
     取消归档项目
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     project = check_project_access_or_raise(db, current_user, project_id)
 
     if not project.is_archived:
-        return ResponseModel(
-            code=200,
-            message="项目未归档",
-            data={"project_id": project_id}
-        )
+        return ResponseModel(code=200, message="项目未归档", data={"project_id": project_id})
 
     project.is_archived = False
     project.status = "active"
@@ -135,17 +128,17 @@ def unarchive_project(
         new_stage=project.stage,
         old_status=project.status,
         new_status=project.status,
-        old_health='H4',
-        new_health='H1',  # 取消归档后恢复为正常
+        old_health="H4",
+        new_health="H1",  # 取消归档后恢复为正常
         change_type="UNARCHIVE",
         change_reason=reason or "取消归档",
         changed_by=current_user.id,
-        changed_at=datetime.now()
+        changed_at=datetime.now(),
     )
     db.add(status_log)
 
     # 恢复健康度为H1
-    project.health = 'H1'
+    project.health = "H1"
 
     db.commit()
 
@@ -156,7 +149,7 @@ def unarchive_project(
             "project_id": project_id,
             "project_code": project.project_code,
             "project_name": project.project_name,
-        }
+        },
     )
 
 
@@ -177,6 +170,7 @@ def get_archived_projects(
 
     # 应用数据权限过滤
     from app.services.data_scope import DataScopeService
+
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
 
     query = apply_keyword_filter(query, Project, keyword, ["project_name", "project_code"])
@@ -188,30 +182,36 @@ def get_archived_projects(
         query = query.filter(Project.project_type == project_type)
 
     total = query.count()
-    projects = apply_pagination(query.order_by(desc(Project.updated_at)), pagination.offset, pagination.limit).all()
+    projects = apply_pagination(
+        query.order_by(desc(Project.updated_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for project in projects:
-        items.append({
-            "id": project.id,
-            "project_code": project.project_code,
-            "project_name": project.project_name,
-            "project_type": project.project_type,
-            "customer_name": project.customer_name,
-            "pm_name": project.pm_name,
-            "stage": project.stage,
-            "status": project.status,
-            "contract_amount": float(project.contract_amount or 0),
-            "archived_at": project.updated_at.isoformat() if project.status == "archived" else None,
-            "archived_by": project.archived_by,
-        })
+        items.append(
+            {
+                "id": project.id,
+                "project_code": project.project_code,
+                "project_name": project.project_name,
+                "project_type": project.project_type,
+                "customer_name": project.customer_name,
+                "pm_name": project.pm_name,
+                "stage": project.stage,
+                "status": project.status,
+                "contract_amount": float(project.contract_amount or 0),
+                "archived_at": (
+                    project.updated_at.isoformat() if project.status == "archived" else None
+                ),
+                "archived_by": project.archived_by,
+            }
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -230,6 +230,7 @@ def batch_archive_projects(
     failed_projects = []
 
     from app.services.data_scope import DataScopeService
+
     query = db.query(Project).filter(Project.id.in_(project_ids))
     query = DataScopeService.filter_projects_by_scope(db, query, current_user)
     accessible_project_ids = {p.id for p in query.all()}
@@ -237,40 +238,30 @@ def batch_archive_projects(
     for project_id in project_ids:
         try:
             if project_id not in accessible_project_ids:
-                failed_projects.append({
-                    "project_id": project_id,
-                    "reason": "无访问权限"
-                })
+                failed_projects.append({"project_id": project_id, "reason": "无访问权限"})
                 continue
 
             project = db.query(Project).filter(Project.id == project_id).first()
             if not project:
-                failed_projects.append({
-                    "project_id": project_id,
-                    "reason": "项目不存在"
-                })
+                failed_projects.append({"project_id": project_id, "reason": "项目不存在"})
                 continue
 
             if project.is_archived:
-                failed_projects.append({
-                    "project_id": project_id,
-                    "reason": "项目已归档"
-                })
+                failed_projects.append({"project_id": project_id, "reason": "项目已归档"})
                 continue
 
             # 检查项目是否可以归档
             if project.stage not in ["S9"] and project.status not in ["ST30"]:
                 if not current_user.is_superuser:
-                    failed_projects.append({
-                        "project_id": project_id,
-                        "reason": "项目未完成，无法归档"
-                    })
+                    failed_projects.append(
+                        {"project_id": project_id, "reason": "项目未完成，无法归档"}
+                    )
                     continue
 
             project.is_archived = True
             project.status = "archived"
             project.archived_by = current_user.id
-            project.health = 'H4'
+            project.health = "H4"
 
             if archive_reason:
                 if project.description:
@@ -282,10 +273,7 @@ def batch_archive_projects(
             success_count += 1
 
         except Exception as e:
-            failed_projects.append({
-                "project_id": project_id,
-                "reason": str(e)
-            })
+            failed_projects.append({"project_id": project_id, "reason": str(e)})
 
     db.commit()
 
@@ -295,6 +283,6 @@ def batch_archive_projects(
         data={
             "success_count": success_count,
             "failed_count": len(failed_projects),
-            "failed_projects": failed_projects
-        }
+            "failed_projects": failed_projects,
+        },
     )

@@ -17,14 +17,18 @@ sys.path.insert(0, str(project_root))
 warnings.simplefilter("always")
 warning_list = []
 
+
 def warning_handler(message, category, filename, lineno, file=None, line=None):
     """自定义warning处理器"""
-    warning_list.append({
-        'message': str(message),
-        'category': category.__name__,
-        'filename': filename,
-        'lineno': lineno
-    })
+    warning_list.append(
+        {
+            "message": str(message),
+            "category": category.__name__,
+            "filename": filename,
+            "lineno": lineno,
+        }
+    )
+
 
 # 设置warning处理器
 warnings.showwarning = warning_handler
@@ -75,22 +79,22 @@ for model_name, rel_name, target_name in relationships_to_verify:
     try:
         # 获取模型类
         model_cls = eval(model_name)
-        
+
         # 检查关系是否存在
         if not hasattr(model_cls, rel_name):
             errors.append(f"❌ {model_name}.{rel_name} 关系不存在")
             continue
-        
+
         rel = getattr(model_cls, rel_name)
-        
+
         # 检查是否是relationship
-        if not hasattr(rel, 'property'):
+        if not hasattr(rel, "property"):
             errors.append(f"❌ {model_name}.{rel_name} 不是有效的relationship")
             continue
-        
+
         print(f"✅ {model_name}.{rel_name} → {target_name}")
         success_count += 1
-        
+
     except Exception as e:
         errors.append(f"❌ 验证 {model_name}.{rel_name} 时出错: {e}")
 
@@ -120,9 +124,9 @@ if warning_list:
         print(f"  消息: {w['message']}")
         print(f"  位置: {w['filename']}:{w['lineno']}")
         print()
-    
+
     # 检查是否有relationship冲突警告
-    relationship_warnings = [w for w in warning_list if 'relationship' in w['message'].lower()]
+    relationship_warnings = [w for w in warning_list if "relationship" in w["message"].lower()]
     if relationship_warnings:
         print(f"❌ 发现 {len(relationship_warnings)} 个 relationship 冲突警告")
         sys.exit(1)
@@ -153,24 +157,24 @@ for model1_name, rel1_name, model2_name, rel2_name in bidirectional_checks:
     try:
         model1 = eval(model1_name)
         model2 = eval(model2_name)
-        
+
         # 检查双向关系是否存在
         if not hasattr(model1, rel1_name):
             bidirectional_errors.append(f"❌ {model1_name}.{rel1_name} 不存在")
             continue
-        
+
         if not hasattr(model2, rel2_name):
             bidirectional_errors.append(f"❌ {model2_name}.{rel2_name} 不存在")
             continue
-        
+
         # 检查 back_populates 配置
         rel1 = getattr(model1, rel1_name).property
         rel2 = getattr(model2, rel2_name).property
-        
+
         # 注意：这里只能做基本检查，完整验证需要数据库连接
         print(f"✅ {model1_name}.{rel1_name} ↔ {model2_name}.{rel2_name}")
         bidirectional_success += 1
-        
+
     except Exception as e:
         bidirectional_errors.append(
             f"❌ 验证 {model1_name}.{rel1_name} ↔ {model2_name}.{rel2_name} 时出错: {e}"

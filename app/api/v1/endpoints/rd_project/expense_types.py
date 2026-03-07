@@ -18,10 +18,13 @@ router = APIRouter()
 
 # ==================== 研发费用类型 ====================
 
+
 @router.get("/rd-cost-types", response_model=ResponseModel)
 def get_rd_cost_types(
     db: Session = Depends(deps.get_db),
-    category: Optional[str] = Query(None, description="费用大类筛选：LABOR/MATERIAL/DEPRECIATION/OTHER"),
+    category: Optional[str] = Query(
+        None, description="费用大类筛选：LABOR/MATERIAL/DEPRECIATION/OTHER"
+    ),
     is_active: Optional[bool] = Query(None, description="是否启用筛选"),
     current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
@@ -40,8 +43,5 @@ def get_rd_cost_types(
     return ResponseModel(
         code=200,
         message="success",
-        data=[RdCostTypeResponse.model_validate(ct) for ct in cost_types]
+        data=[RdCostTypeResponse.model_validate(ct) for ct in cost_types],
     )
-
-
-

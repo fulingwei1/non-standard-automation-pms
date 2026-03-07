@@ -9,8 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.security import get_current_active_user
 from app.core.auth import check_permission
+from app.core.security import get_current_active_user
 from app.models.user import User
 from app.schemas.common import ResponseModel
 
@@ -32,32 +32,25 @@ def get_scheduler_status(
 
         job_list = []
         for job in jobs:
-            job_list.append({
-                "id": job.id,
-                "name": job.name,
-                "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
-                "trigger": str(job.trigger) if job.trigger else None,
-            })
+            job_list.append(
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+                    "trigger": str(job.trigger) if job.trigger else None,
+                }
+            )
 
         return ResponseModel(
             code=200,
             message="success",
-            data={
-                "running": scheduler.running,
-                "job_count": len(jobs),
-                "jobs": job_list
-            }
+            data={"running": scheduler.running, "job_count": len(jobs), "jobs": job_list},
         )
     except ImportError:
         return ResponseModel(
             code=200,
             message="success",
-            data={
-                "running": False,
-                "job_count": 0,
-                "jobs": [],
-                "error": "APScheduler未安装"
-            }
+            data={"running": False, "job_count": 0, "jobs": [], "error": "APScheduler未安装"},
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取调度器状态失败: {str(e)}")
@@ -77,31 +70,22 @@ def get_scheduler_jobs(
 
         job_list = []
         for job in jobs:
-            job_list.append({
-                "id": job.id,
-                "name": job.name,
-                "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
-                "trigger": str(job.trigger) if job.trigger else None,
-                "func": job.func.__name__ if job.func else None,
-            })
+            job_list.append(
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+                    "trigger": str(job.trigger) if job.trigger else None,
+                    "func": job.func.__name__ if job.func else None,
+                }
+            )
 
         return ResponseModel(
-            code=200,
-            message="success",
-            data={
-                "total": len(jobs),
-                "jobs": job_list
-            }
+            code=200, message="success", data={"total": len(jobs), "jobs": job_list}
         )
     except ImportError:
         return ResponseModel(
-            code=200,
-            message="success",
-            data={
-                "total": 0,
-                "jobs": [],
-                "error": "APScheduler未安装"
-            }
+            code=200, message="success", data={"total": 0, "jobs": [], "error": "APScheduler未安装"}
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取任务列表失败: {str(e)}")
@@ -135,11 +119,7 @@ def trigger_job(
         return ResponseModel(
             code=200,
             message="success",
-            data={
-                "job_id": job_id,
-                "job_name": job.name,
-                "message": "任务已触发"
-            }
+            data={"job_id": job_id, "job_name": job.name, "message": "任务已触发"},
         )
     except ImportError:
         raise HTTPException(status_code=503, detail="APScheduler未安装")
@@ -160,28 +140,25 @@ def list_all_services(
 
         services = []
         for task in SCHEDULER_TASKS:
-            services.append({
-                "id": task["id"],
-                "name": task["name"],
-                "module": task["module"],
-                "callable": task["callable"],
-                "cron": task.get("cron"),
-                "owner": task.get("owner"),
-                "category": task.get("category"),
-                "enabled": task.get("enabled", True),
-                "description": task.get("description"),
-                "dependencies_tables": task.get("dependencies_tables", []),
-                "risk_level": task.get("risk_level", "UNKNOWN"),
-                "sla": task.get("sla", {}),
-            })
+            services.append(
+                {
+                    "id": task["id"],
+                    "name": task["name"],
+                    "module": task["module"],
+                    "callable": task["callable"],
+                    "cron": task.get("cron"),
+                    "owner": task.get("owner"),
+                    "category": task.get("category"),
+                    "enabled": task.get("enabled", True),
+                    "description": task.get("description"),
+                    "dependencies_tables": task.get("dependencies_tables", []),
+                    "risk_level": task.get("risk_level", "UNKNOWN"),
+                    "sla": task.get("sla", {}),
+                }
+            )
 
         return ResponseModel(
-            code=200,
-            message="success",
-            data={
-                "total": len(services),
-                "services": services
-            }
+            code=200, message="success", data={"total": len(services), "services": services}
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取服务列表失败: {str(e)}")

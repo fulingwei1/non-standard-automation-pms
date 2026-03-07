@@ -2,23 +2,35 @@
 """Tests for app.services.strategy.strategy_service"""
 
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_strategy(**overrides):
     s = MagicMock()
     defaults = dict(
-        id=1, code="S-2025", name="战略2025", vision="愿景", mission="使命",
-        slogan="口号", year=2025, start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31), status="DRAFT", is_active=True,
-        created_by=1, approved_by=None, approved_at=None, published_at=None,
-        created_at=datetime.now(), updated_at=datetime.now(),
+        id=1,
+        code="S-2025",
+        name="战略2025",
+        vision="愿景",
+        mission="使命",
+        slogan="口号",
+        year=2025,
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 12, 31),
+        status="DRAFT",
+        is_active=True,
+        created_by=1,
+        approved_by=None,
+        approved_at=None,
+        published_at=None,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
     )
     defaults.update(overrides)
     for k, v in defaults.items():
@@ -43,9 +55,11 @@ def _mock_db_query(db, result=None, results_list=None, count=0):
 # Tests – free functions
 # ---------------------------------------------------------------------------
 
+
 class TestCreateStrategy:
     def test_creates_and_returns(self):
         from app.services.strategy.strategy_service import create_strategy
+
         db = MagicMock()
         data = MagicMock()
         data.code = "S-2025"
@@ -64,6 +78,7 @@ class TestCreateStrategy:
 class TestGetStrategy:
     def test_found(self):
         from app.services.strategy.strategy_service import get_strategy
+
         db = MagicMock()
         expected = _make_strategy()
         _mock_db_query(db, result=expected)
@@ -71,6 +86,7 @@ class TestGetStrategy:
 
     def test_not_found(self):
         from app.services.strategy.strategy_service import get_strategy
+
         db = MagicMock()
         _mock_db_query(db, result=None)
         assert get_strategy(db, 999) is None
@@ -79,6 +95,7 @@ class TestGetStrategy:
 class TestGetStrategyByCode:
     def test_found(self):
         from app.services.strategy.strategy_service import get_strategy_by_code
+
         db = MagicMock()
         expected = _make_strategy()
         _mock_db_query(db, result=expected)
@@ -88,6 +105,7 @@ class TestGetStrategyByCode:
 class TestGetStrategyByYear:
     def test_found(self):
         from app.services.strategy.strategy_service import get_strategy_by_year
+
         db = MagicMock()
         expected = _make_strategy()
         _mock_db_query(db, result=expected)
@@ -97,6 +115,7 @@ class TestGetStrategyByYear:
 class TestGetActiveStrategy:
     def test_found(self):
         from app.services.strategy.strategy_service import get_active_strategy
+
         db = MagicMock()
         expected = _make_strategy(status="ACTIVE")
         _mock_db_query(db, result=expected)
@@ -106,6 +125,7 @@ class TestGetActiveStrategy:
 class TestListStrategies:
     def test_returns_tuple(self):
         from app.services.strategy.strategy_service import list_strategies
+
         db = MagicMock()
         items = [_make_strategy()]
         q = MagicMock()
@@ -122,6 +142,7 @@ class TestListStrategies:
 
     def test_filter_by_year_and_status(self):
         from app.services.strategy.strategy_service import list_strategies
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -139,6 +160,7 @@ class TestUpdateStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_update_existing(self, mock_get):
         from app.services.strategy.strategy_service import update_strategy
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -152,6 +174,7 @@ class TestUpdateStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_update_not_found(self, mock_get):
         from app.services.strategy.strategy_service import update_strategy
+
         db = MagicMock()
         mock_get.return_value = None
         assert update_strategy(db, 999, MagicMock()) is None
@@ -161,6 +184,7 @@ class TestPublishStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_publish(self, mock_get):
         from app.services.strategy.strategy_service import publish_strategy
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -176,6 +200,7 @@ class TestPublishStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_publish_not_found(self, mock_get):
         from app.services.strategy.strategy_service import publish_strategy
+
         db = MagicMock()
         mock_get.return_value = None
         assert publish_strategy(db, 999, 2) is None
@@ -185,6 +210,7 @@ class TestArchiveStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_archive(self, mock_get):
         from app.services.strategy.strategy_service import archive_strategy
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -194,6 +220,7 @@ class TestArchiveStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_archive_not_found(self, mock_get):
         from app.services.strategy.strategy_service import archive_strategy
+
         db = MagicMock()
         mock_get.return_value = None
         assert archive_strategy(db, 999) is None
@@ -203,6 +230,7 @@ class TestDeleteStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_delete(self, mock_get):
         from app.services.strategy.strategy_service import delete_strategy
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -212,6 +240,7 @@ class TestDeleteStrategy:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_delete_not_found(self, mock_get):
         from app.services.strategy.strategy_service import delete_strategy
+
         db = MagicMock()
         mock_get.return_value = None
         assert delete_strategy(db, 999) is False
@@ -221,6 +250,7 @@ class TestGetStrategyDetail:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_not_found(self, mock_get):
         from app.services.strategy.strategy_service import get_strategy_detail
+
         db = MagicMock()
         mock_get.return_value = None
         assert get_strategy_detail(db, 999) is None
@@ -229,6 +259,7 @@ class TestGetStrategyDetail:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_returns_detail(self, mock_get, mock_health):
         from app.services.strategy.strategy_service import get_strategy_detail
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -239,7 +270,9 @@ class TestGetStrategyDetail:
         q.count.return_value = 5
         db.query.return_value = q
 
-        with patch("app.services.strategy.strategy_service.calculate_strategy_health", return_value=85):
+        with patch(
+            "app.services.strategy.strategy_service.calculate_strategy_health", return_value=85
+        ):
             result = get_strategy_detail(db, 1)
             assert result is not None
             assert result.id == 1
@@ -249,6 +282,7 @@ class TestGetStrategyMapData:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_not_found(self, mock_get):
         from app.services.strategy.strategy_service import get_strategy_map_data
+
         db = MagicMock()
         mock_get.return_value = None
         assert get_strategy_map_data(db, 999) is None
@@ -256,6 +290,7 @@ class TestGetStrategyMapData:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_returns_map(self, mock_get):
         from app.services.strategy.strategy_service import get_strategy_map_data
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -267,8 +302,15 @@ class TestGetStrategyMapData:
         q.count.return_value = 0
         db.query.return_value = q
 
-        with patch("app.services.strategy.health_calculator.calculate_strategy_health", return_value=80), \
-             patch("app.services.strategy.health_calculator.calculate_csf_health", return_value={"score": 80, "level": "GOOD", "kpi_completion_rate": 75}):
+        with (
+            patch(
+                "app.services.strategy.health_calculator.calculate_strategy_health", return_value=80
+            ),
+            patch(
+                "app.services.strategy.health_calculator.calculate_csf_health",
+                return_value={"score": 80, "level": "GOOD", "kpi_completion_rate": 75},
+            ),
+        ):
             result = get_strategy_map_data(db, 1)
             assert result is not None
             assert result.strategy_id == 1
@@ -279,9 +321,11 @@ class TestGetStrategyMapData:
 # Tests – StrategyService wrapper class
 # ---------------------------------------------------------------------------
 
+
 class TestStrategyServiceClass:
     def test_create(self):
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         svc = StrategyService(db)
         data = MagicMock()
@@ -295,6 +339,7 @@ class TestStrategyServiceClass:
 
     def test_get(self):
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         _mock_db_query(db, result=_make_strategy())
         svc = StrategyService(db)
@@ -302,6 +347,7 @@ class TestStrategyServiceClass:
 
     def test_get_strategies_with_page(self):
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -317,6 +363,7 @@ class TestStrategyServiceClass:
     @patch("app.services.strategy.strategy_service.get_strategy")
     def test_delete_strategy_alias(self, mock_get):
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         mock_get.return_value = _make_strategy()
         svc = StrategyService(db)
@@ -325,6 +372,7 @@ class TestStrategyServiceClass:
     @patch("app.services.strategy.strategy_service.get_strategy_detail")
     def test_get_metrics_not_found(self, mock_detail):
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         mock_detail.return_value = None
         svc = StrategyService(db)
@@ -333,6 +381,7 @@ class TestStrategyServiceClass:
     @patch("app.services.strategy.strategy_service.get_strategy_detail")
     def test_get_metrics_ok(self, mock_detail):
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         detail = MagicMock(csf_count=3, kpi_count=10, annual_work_count=5, health_score=80)
         mock_detail.return_value = detail

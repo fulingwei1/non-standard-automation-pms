@@ -3,13 +3,15 @@
 第四十五批覆盖：report_framework/generators/project.py
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.generators.project")
 
 from unittest.mock import patch
+
 from app.services.report_framework.generators.project import ProjectReportGenerator
 
 
@@ -45,7 +47,14 @@ class TestProjectReportGeneratorWeekly:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch.object(ProjectReportGenerator, "_get_milestone_data", return_value={"summary": {"total": 0, "completed": 0, "delayed": 0, "in_progress": 0}, "details": []}):
+        with patch.object(
+            ProjectReportGenerator,
+            "_get_milestone_data",
+            return_value={
+                "summary": {"total": 0, "completed": 0, "delayed": 0, "in_progress": 0},
+                "details": [],
+            },
+        ):
             result = ProjectReportGenerator.generate_weekly(
                 mock_db, 1, date(2024, 1, 1), date(2024, 1, 7)
             )
@@ -59,7 +68,14 @@ class TestProjectReportGeneratorWeekly:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch.object(ProjectReportGenerator, "_get_milestone_data", return_value={"summary": {"total": 0, "completed": 0, "delayed": 0, "in_progress": 0}, "details": []}):
+        with patch.object(
+            ProjectReportGenerator,
+            "_get_milestone_data",
+            return_value={
+                "summary": {"total": 0, "completed": 0, "delayed": 0, "in_progress": 0},
+                "details": [],
+            },
+        ):
             result = ProjectReportGenerator.generate_weekly(
                 mock_db, 1, date(2024, 1, 1), date(2024, 1, 7)
             )
@@ -79,7 +95,14 @@ class TestProjectReportGeneratorMonthly:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch.object(ProjectReportGenerator, "_get_milestone_data", return_value={"summary": {"total": 0, "completed": 0, "delayed": 0, "in_progress": 0}, "details": []}):
+        with patch.object(
+            ProjectReportGenerator,
+            "_get_milestone_data",
+            return_value={
+                "summary": {"total": 0, "completed": 0, "delayed": 0, "in_progress": 0},
+                "details": [],
+            },
+        ):
             result = ProjectReportGenerator.generate_monthly(
                 mock_db, 1, date(2024, 1, 1), date(2024, 1, 31)
             )

@@ -6,9 +6,9 @@
 """
 
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock
 
 import pytest
-from unittest.mock import Mock, MagicMock
 
 from app.models.enums import ProjectEvaluationLevelEnum
 from app.models.project import Project
@@ -63,8 +63,8 @@ class TestProjectEvaluationService:
         dim2.default_weight = Decimal("20")
 
         db_session.query.return_value.filter.return_value.all.return_value = [
-        dim1,
-        dim2,
+            dim1,
+            dim2,
         ]
 
         weights = service.get_dimension_weights()
@@ -89,11 +89,11 @@ class TestProjectEvaluationService:
         db_session.query.return_value.filter.return_value.all.return_value = []
 
         total = service.calculate_total_score(
-        novelty_score=Decimal("80"),
-        new_tech_score=Decimal("90"),
-        difficulty_score=Decimal("85"),
-        workload_score=Decimal("75"),
-        amount_score=Decimal("70"),
+            novelty_score=Decimal("80"),
+            new_tech_score=Decimal("90"),
+            difficulty_score=Decimal("85"),
+            workload_score=Decimal("75"),
+            amount_score=Decimal("70"),
         )
 
         assert float(total) == pytest.approx(80.25, rel=1e-3)
@@ -112,9 +112,7 @@ class TestProjectEvaluationService:
         level = service.determine_evaluation_level(Decimal("50"))
         assert level == ProjectEvaluationLevelEnum.D.value
 
-    def test_auto_calculate_novelty_score_no_similar(
-        self, service, db_session, mock_project
-    ):
+    def test_auto_calculate_novelty_score_no_similar(self, service, db_session, mock_project):
         """没有相似项目"""
         db_session.query.return_value.filter.return_value.all.return_value = []
 
@@ -128,9 +126,7 @@ class TestProjectEvaluationService:
         score = service.auto_calculate_amount_score(mock_project)
         assert score == Decimal("7.5")
 
-    def test_auto_calculate_workload_score_no_timesheet(
-        self, service, db_session, mock_project
-    ):
+    def test_auto_calculate_workload_score_no_timesheet(self, service, db_session, mock_project):
         """没有工时数据"""
         db_session.query.return_value.filter.return_value.scalar.return_value = None
 
@@ -142,14 +138,18 @@ class TestProjectEvaluationService:
         evaluation = Mock(spec=ProjectEvaluation)
         evaluation.evaluation_level = ProjectEvaluationLevelEnum.S.value
 
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = evaluation
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            evaluation
+        )
 
         coefficient = service.get_bonus_coefficient(Mock(id=1))
         assert coefficient == Decimal("1.5")
 
     def test_get_bonus_coefficient_no_evaluation(self, service, db_session):
         """没有评价记录"""
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         coefficient = service.get_bonus_coefficient(Mock(id=1))
         assert coefficient == Decimal("1.0")

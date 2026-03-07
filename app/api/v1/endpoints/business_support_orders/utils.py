@@ -10,7 +10,6 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.business_support_utils import BusinessSupportUtilsService
 from app.models.business_support import (
     CustomerSupplierRegistration,
     InvoiceRequest,
@@ -19,7 +18,7 @@ from app.schemas.business_support import (
     CustomerSupplierRegistrationResponse,
     InvoiceRequestResponse,
 )
-
+from app.services.business_support_utils import BusinessSupportUtilsService
 
 # ==================== 通知发送函数 ====================
 
@@ -33,7 +32,7 @@ def _send_department_notification(
     source_type: str,
     source_id: int,
     priority: str = "NORMAL",
-    extra_data: Optional[dict] = None
+    extra_data: Optional[dict] = None,
 ) -> None:
     """
     发送部门通知（薄 Controller）
@@ -58,7 +57,7 @@ def _send_department_notification(
         source_type=source_type,
         source_id=source_id,
         priority=priority,
-        extra_data=extra_data
+        extra_data=extra_data,
     )
 
 
@@ -71,7 +70,7 @@ def _send_project_department_notifications(
     source_type: str,
     source_id: int,
     priority: str = "NORMAL",
-    extra_data: Optional[dict] = None
+    extra_data: Optional[dict] = None,
 ) -> None:
     """
     发送项目相关部门通知（PMC、生产、采购等）（薄 Controller）
@@ -96,7 +95,7 @@ def _send_project_department_notifications(
         source_type=source_type,
         source_id=source_id,
         priority=priority,
-        extra_data=extra_data
+        extra_data=extra_data,
     )
 
 
@@ -163,7 +162,9 @@ def _to_invoice_request_response(invoice_request: InvoiceRequest) -> InvoiceRequ
     return service.to_invoice_request_response(invoice_request)
 
 
-def _to_registration_response(record: CustomerSupplierRegistration) -> CustomerSupplierRegistrationResponse:
+def _to_registration_response(
+    record: CustomerSupplierRegistration,
+) -> CustomerSupplierRegistrationResponse:
     """转换客户供应商入驻对象为响应对象（薄 Controller）"""
     # 需要一个临时 db session，从模型的 session 中获取
     db = Session.object_session(record)

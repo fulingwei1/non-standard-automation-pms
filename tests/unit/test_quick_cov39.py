@@ -4,13 +4,15 @@
 """
 import pytest
 
-pytest.importorskip("app.services.preset_stage_templates.templates.quick",
-                    reason="import failed, skip")
+pytest.importorskip(
+    "app.services.preset_stage_templates.templates.quick", reason="import failed, skip"
+)
 
 
 @pytest.fixture
 def template():
     from app.services.preset_stage_templates.templates.quick import QUICK_TEMPLATE
+
     return QUICK_TEMPLATE
 
 

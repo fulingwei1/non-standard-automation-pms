@@ -10,9 +10,9 @@ from .profile_service import ProfileService
 from .ranking_service import RankingService
 
 __all__ = [
-    'ProfileService',
-    'DimensionConfigService',
-    'PerformanceCalculator',
-    'RankingService',
-    'EngineerPerformanceService',
+    "ProfileService",
+    "DimensionConfigService",
+    "PerformanceCalculator",
+    "RankingService",
+    "EngineerPerformanceService",
 ]

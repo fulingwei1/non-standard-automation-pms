@@ -7,23 +7,24 @@
 """
 
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Path, Body, Query
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.api import deps
+from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.core import security
 from app.models.project import Project
 from app.models.project.resource_plan import ProjectStageResourcePlan
 from app.models.user import User
 from app.schemas.resource_plan import (
     ResourcePlanCreate,
-    ResourcePlanUpdate,
     ResourcePlanResponse,
+    ResourcePlanUpdate,
 )
 from app.services.resource_plan_service import ResourcePlanService
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.utils.permission_helpers import check_project_access_or_raise
 
 
 def filter_by_stage(query, stage_code: str):
@@ -60,12 +61,10 @@ def create_resource_plan(
     current_user: User = Depends(security.require_permission("project:update")),
 ) -> Any:
     """创建资源计划（覆盖基类端点，使用服务层）"""
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限为该项目创建资源计划"
-    )
-    
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限为该项目创建资源计划")
+
     get_or_404(db, Project, project_id, detail="项目不存在")
-    
+
     plan = ResourcePlanService.create_resource_plan(db, project_id, plan_in)
     return plan
 
@@ -80,21 +79,25 @@ def delete_resource_plan(
 ) -> Any:
     """删除资源计划（覆盖基类端点，添加业务逻辑检查）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
-    plan = db.query(ProjectStageResourcePlan).filter(
-        ProjectStageResourcePlan.id == plan_id,
-        ProjectStageResourcePlan.project_id == project_id,
-    ).first()
-    
+
+    plan = (
+        db.query(ProjectStageResourcePlan)
+        .filter(
+            ProjectStageResourcePlan.id == plan_id,
+            ProjectStageResourcePlan.project_id == project_id,
+        )
+        .first()
+    )
+
     if not plan:
         raise HTTPException(status_code=404, detail="资源计划不存在")
-    
+
     if plan.assignment_status == "ASSIGNED":
         raise HTTPException(
             status_code=400,
             detail="该资源计划已分配人员，请先释放人员后再删除",
         )
-    
+
     delete_obj(db, plan)
 
 
@@ -108,7 +111,7 @@ def list_resource_plans(
 ) -> Any:
     """获取项目的资源计划列表（覆盖基类端点，使用服务层）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     plans = ResourcePlanService.get_project_resource_plans(db, project_id, stage_code)
     return plans
 
@@ -123,15 +126,19 @@ def get_resource_plan(
 ) -> Any:
     """获取单个资源计划详情"""
     check_project_access_or_raise(db, current_user, project_id)
-    
-    plan = db.query(ProjectStageResourcePlan).filter(
-        ProjectStageResourcePlan.id == plan_id,
-        ProjectStageResourcePlan.project_id == project_id,
-    ).first()
-    
+
+    plan = (
+        db.query(ProjectStageResourcePlan)
+        .filter(
+            ProjectStageResourcePlan.id == plan_id,
+            ProjectStageResourcePlan.project_id == project_id,
+        )
+        .first()
+    )
+
     if not plan:
         raise HTTPException(status_code=404, detail="资源计划不存在")
-    
+
     return plan
 
 
@@ -146,20 +153,24 @@ def update_resource_plan(
 ) -> Any:
     """更新资源计划"""
     check_project_access_or_raise(db, current_user, project_id)
-    
-    plan = db.query(ProjectStageResourcePlan).filter(
-        ProjectStageResourcePlan.id == plan_id,
-        ProjectStageResourcePlan.project_id == project_id,
-    ).first()
-    
+
+    plan = (
+        db.query(ProjectStageResourcePlan)
+        .filter(
+            ProjectStageResourcePlan.id == plan_id,
+            ProjectStageResourcePlan.project_id == project_id,
+        )
+        .first()
+    )
+
     if not plan:
         raise HTTPException(status_code=404, detail="资源计划不存在")
-    
+
     update_data = plan_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if hasattr(plan, field):
             setattr(plan, field, value)
-    
+
     save_obj(db, plan)
-    
+
     return plan

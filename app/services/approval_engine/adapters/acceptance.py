@@ -5,16 +5,14 @@
 将验收单(AcceptanceOrder)模块接入统一审批系统
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.approval import ApprovalInstance
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem, AcceptanceTemplate
-from app.models.project import Project, Machine
+from app.models.approval import ApprovalInstance
+from app.models.project import Machine, Project
 
 from .base import ApprovalAdapter
 
@@ -46,9 +44,7 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
 
     def get_entity(self, entity_id: int) -> Optional[AcceptanceOrder]:
         """获取验收单实体"""
-        return self.db.query(AcceptanceOrder).filter(
-            AcceptanceOrder.id == entity_id
-        ).first()
+        return self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == entity_id).first()
 
     def get_entity_data(self, entity_id: int) -> Dict[str, Any]:
         """
@@ -78,7 +74,7 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
                 project_info = {
                     "project_code": project.project_code,
                     "project_name": project.project_name,
-                    "project_status": project.status if hasattr(project, 'status') else None,
+                    "project_status": project.status if hasattr(project, "status") else None,
                 }
 
         # 获取设备信息（如果有）
@@ -88,15 +84,19 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
             if machine:
                 machine_info = {
                     "machine_code": machine.machine_code,
-                    "machine_name": machine.machine_name if hasattr(machine, 'machine_name') else None,
+                    "machine_name": (
+                        machine.machine_name if hasattr(machine, "machine_name") else None
+                    ),
                 }
 
         # 获取模板信息
         template_info = {}
         if order.template_id:
-            template = self.db.query(AcceptanceTemplate).filter(
-                AcceptanceTemplate.id == order.template_id
-            ).first()
+            template = (
+                self.db.query(AcceptanceTemplate)
+                .filter(AcceptanceTemplate.id == order.template_id)
+                .first()
+            )
             if template:
                 template_info = {
                     "template_name": template.template_name,
@@ -108,11 +108,15 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
         has_critical_failure = False
         if order.failed_items and order.failed_items > 0:
             # 查询是否有关键项不合格
-            critical_failed_items = self.db.query(AcceptanceOrderItem).filter(
-                AcceptanceOrderItem.order_id == entity_id,
-                AcceptanceOrderItem.is_key_item,
-                AcceptanceOrderItem.result_status == "NG"
-            ).count()
+            critical_failed_items = (
+                self.db.query(AcceptanceOrderItem)
+                .filter(
+                    AcceptanceOrderItem.order_id == entity_id,
+                    AcceptanceOrderItem.is_key_item,
+                    AcceptanceOrderItem.result_status == "NG",
+                )
+                .count()
+            )
             has_critical_failure = critical_failed_items > 0
 
         return {
@@ -120,7 +124,9 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
             "acceptance_type": order.acceptance_type,
             "status": order.status,
             "planned_date": order.planned_date.isoformat() if order.planned_date else None,
-            "actual_start_date": order.actual_start_date.isoformat() if order.actual_start_date else None,
+            "actual_start_date": (
+                order.actual_start_date.isoformat() if order.actual_start_date else None
+            ),
             "actual_end_date": order.actual_end_date.isoformat() if order.actual_end_date else None,
             "location": order.location,
             "overall_result": order.overall_result,
@@ -221,11 +227,7 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
             return f"验收单审批 - {entity_id}"
 
         # 根据验收类型生成标题
-        type_name_map = {
-            "FAT": "出厂验收",
-            "SAT": "现场验收",
-            "FINAL": "终验收"
-        }
+        type_name_map = {"FAT": "出厂验收", "SAT": "现场验收", "FINAL": "终验收"}
         type_name = type_name_map.get(order.acceptance_type, order.acceptance_type)
 
         title = f"{type_name}审批 - {order.order_no}"
@@ -259,20 +261,14 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
         ]
 
         if order.overall_result:
-            result_name_map = {
-                "PASSED": "合格",
-                "FAILED": "不合格",
-                "CONDITIONAL": "有条件通过"
-            }
+            result_name_map = {"PASSED": "合格", "FAILED": "不合格", "CONDITIONAL": "有条件通过"}
             result_name = result_name_map.get(order.overall_result, order.overall_result)
             summary_parts.append(f"验收结果: {result_name}")
 
         if order.pass_rate is not None:
             summary_parts.append(f"通过率: {order.pass_rate:.1f}%")
 
-        summary_parts.append(
-            f"检查项: {order.passed_items}/{order.total_items}项通过"
-        )
+        summary_parts.append(f"检查项: {order.passed_items}/{order.total_items}项通过")
 
         if order.failed_items and order.failed_items > 0:
             summary_parts.append(f"不合格: {order.failed_items}项")
@@ -284,7 +280,7 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
 
         if order.machine_id:
             machine = self.db.query(Machine).filter(Machine.id == order.machine_id).first()
-            if machine and hasattr(machine, 'machine_code'):
+            if machine and hasattr(machine, "machine_code"):
                 summary_parts.append(f"设备: {machine.machine_code}")
 
         if order.location:
@@ -364,22 +360,22 @@ class AcceptanceOrderApprovalAdapter(ApprovalAdapter):
         # 关联项目的项目经理
         if order.project_id:
             project = self.db.query(Project).filter(Project.id == order.project_id).first()
-            if project and hasattr(project, 'manager_id') and project.manager_id:
+            if project and hasattr(project, "manager_id") and project.manager_id:
                 cc_users.append(project.manager_id)
 
         # 质量部门负责人
-        qa_dept_codes = ['QA', 'QC', 'QUALITY', '质量部', '品质部']
+        qa_dept_codes = ["QA", "QC", "QUALITY", "质量部", "品质部"]
         qa_manager_ids = self.get_department_manager_user_ids_by_codes(qa_dept_codes)
         cc_users.extend(qa_manager_ids)
 
         # 如果没找到，尝试通过部门名称查找
         if not qa_manager_ids:
-            qa_manager = self.get_department_manager_user_id('质量部')
+            qa_manager = self.get_department_manager_user_id("质量部")
             if qa_manager:
                 cc_users.append(qa_manager)
 
         # 对于SAT/FINAL类型，添加销售负责人
-        if order.acceptance_type in ['SAT', 'FINAL'] and order.project_id:
+        if order.acceptance_type in ["SAT", "FINAL"] and order.project_id:
             sales_user_id = self.get_project_sales_user_id(order.project_id)
             if sales_user_id:
                 cc_users.append(sales_user_id)

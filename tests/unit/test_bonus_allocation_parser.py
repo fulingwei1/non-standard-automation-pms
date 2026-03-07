@@ -8,9 +8,13 @@ import pandas as pd
 import pytest
 
 from app.services.bonus_allocation_parser import (
-    validate_file_type, parse_excel_file, validate_required_columns,
-    get_column_value, parse_date, validate_row_data,
+    get_column_value,
     parse_allocation_sheet,
+    parse_date,
+    parse_excel_file,
+    validate_file_type,
+    validate_required_columns,
+    validate_row_data,
 )
 
 
@@ -20,6 +24,7 @@ class TestValidateFileType:
 
     def test_invalid(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_file_type("test.csv")
 
@@ -27,6 +32,7 @@ class TestValidateFileType:
 class TestParseExcelFile:
     def test_valid(self):
         import io
+
         # Create a minimal Excel in memory
         df = pd.DataFrame({"A": [1, 2]})
         buf = io.BytesIO()
@@ -36,27 +42,32 @@ class TestParseExcelFile:
 
     def test_invalid(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             parse_excel_file(b"not an excel file")
 
 
 class TestValidateRequiredColumns:
     def test_valid_with_calc_id(self):
-        df = pd.DataFrame({
-            "计算记录ID*": [1], "受益人ID*": [1],
-            "发放金额*": [100], "发放日期*": ["2026-01-01"]
-        })
+        df = pd.DataFrame(
+            {"计算记录ID*": [1], "受益人ID*": [1], "发放金额*": [100], "发放日期*": ["2026-01-01"]}
+        )
         validate_required_columns(df)
 
     def test_valid_with_allocation_id(self):
-        df = pd.DataFrame({
-            "团队奖金分配ID*": [1], "受益人ID*": [1],
-            "发放金额*": [100], "发放日期*": ["2026-01-01"]
-        })
+        df = pd.DataFrame(
+            {
+                "团队奖金分配ID*": [1],
+                "受益人ID*": [1],
+                "发放金额*": [100],
+                "发放日期*": ["2026-01-01"],
+            }
+        )
         validate_required_columns(df)
 
     def test_missing_id_column(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"受益人ID*": [1], "发放金额*": [100], "发放日期*": ["2026-01-01"]})
         with pytest.raises(HTTPException):
             validate_required_columns(df)
@@ -107,10 +118,7 @@ class TestValidateRowData:
 class TestParseAllocationSheet:
     def test_empty(self):
         db = MagicMock()
-        df = pd.DataFrame({
-            "计算记录ID*": [], "受益人ID*": [],
-            "发放金额*": [], "发放日期*": []
-        })
+        df = pd.DataFrame({"计算记录ID*": [], "受益人ID*": [], "发放金额*": [], "发放日期*": []})
         valid, errors = parse_allocation_sheet(df, db)
         assert valid == []
         assert errors == {}

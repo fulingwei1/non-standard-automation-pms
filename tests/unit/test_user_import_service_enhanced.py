@@ -5,15 +5,15 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, mock_open
-from io import BytesIO
 from datetime import datetime
+from io import BytesIO
+from unittest.mock import MagicMock, mock_open, patch
 
 import pandas as pd
 import pytest
 
+from app.models.user import Role, User, UserRole
 from app.services.user_import_service import UserImportService
-from app.models.user import User, Role, UserRole
 
 
 class TestUserImportServiceValidation(unittest.TestCase):
@@ -44,7 +44,7 @@ class TestUserImportServiceValidation(unittest.TestCase):
 class TestUserImportServiceReadFile(unittest.TestCase):
     """文件读取测试"""
 
-    @patch('pandas.read_excel')
+    @patch("pandas.read_excel")
     def test_read_excel_file_from_path(self, mock_read_excel):
         """测试从路径读取 Excel 文件"""
         mock_df = pd.DataFrame({"用户名": ["test"]})
@@ -55,7 +55,7 @@ class TestUserImportServiceReadFile(unittest.TestCase):
         mock_read_excel.assert_called_once()
         self.assertIsInstance(result, pd.DataFrame)
 
-    @patch('pandas.read_csv')
+    @patch("pandas.read_csv")
     def test_read_csv_file_from_path(self, mock_read_csv):
         """测试从路径读取 CSV 文件"""
         mock_df = pd.DataFrame({"用户名": ["test"]})
@@ -66,7 +66,7 @@ class TestUserImportServiceReadFile(unittest.TestCase):
         mock_read_csv.assert_called_once()
         self.assertIsInstance(result, pd.DataFrame)
 
-    @patch('pandas.read_excel')
+    @patch("pandas.read_excel")
     def test_read_excel_from_bytes(self, mock_read_excel):
         """测试从字节流读取 Excel"""
         mock_df = pd.DataFrame({"用户名": ["test"]})
@@ -78,7 +78,7 @@ class TestUserImportServiceReadFile(unittest.TestCase):
         mock_read_excel.assert_called_once()
         self.assertIsInstance(result, pd.DataFrame)
 
-    @patch('pandas.read_csv')
+    @patch("pandas.read_csv")
     def test_read_csv_from_bytes(self, mock_read_csv):
         """测试从字节流读取 CSV"""
         mock_df = pd.DataFrame({"用户名": ["test"]})
@@ -90,7 +90,7 @@ class TestUserImportServiceReadFile(unittest.TestCase):
         mock_read_csv.assert_called_once()
         self.assertIsInstance(result, pd.DataFrame)
 
-    @patch('pandas.read_excel')
+    @patch("pandas.read_excel")
     def test_read_file_with_whitespace_columns(self, mock_read_excel):
         """测试读取带空格的列名"""
         mock_df = pd.DataFrame({" 用户名 ": ["test"], "邮箱  ": ["test@example.com"]})
@@ -102,7 +102,7 @@ class TestUserImportServiceReadFile(unittest.TestCase):
         self.assertIn("用户名", result.columns)
         self.assertIn("邮箱", result.columns)
 
-    @patch('pandas.read_excel')
+    @patch("pandas.read_excel")
     def test_read_file_exception(self, mock_read_excel):
         """测试文件读取异常"""
         mock_read_excel.side_effect = Exception("File not found")
@@ -118,11 +118,7 @@ class TestUserImportServiceNormalizeColumns(unittest.TestCase):
 
     def test_normalize_chinese_columns(self):
         """测试标准化中文列名"""
-        df = pd.DataFrame({
-            "用户名": ["test"],
-            "真实姓名": ["测试"],
-            "邮箱": ["test@example.com"]
-        })
+        df = pd.DataFrame({"用户名": ["test"], "真实姓名": ["测试"], "邮箱": ["test@example.com"]})
 
         result = UserImportService.normalize_columns(df)
 
@@ -132,11 +128,9 @@ class TestUserImportServiceNormalizeColumns(unittest.TestCase):
 
     def test_normalize_english_columns(self):
         """测试标准化英文列名"""
-        df = pd.DataFrame({
-            "Username": ["test"],
-            "Real Name": ["Test User"],
-            "Email": ["test@example.com"]
-        })
+        df = pd.DataFrame(
+            {"Username": ["test"], "Real Name": ["Test User"], "Email": ["test@example.com"]}
+        )
 
         result = UserImportService.normalize_columns(df)
 
@@ -146,11 +140,9 @@ class TestUserImportServiceNormalizeColumns(unittest.TestCase):
 
     def test_normalize_mixed_columns(self):
         """测试标准化混合列名"""
-        df = pd.DataFrame({
-            "用户名": ["test"],
-            "Email": ["test@example.com"],
-            "手机号": ["13800138000"]
-        })
+        df = pd.DataFrame(
+            {"用户名": ["test"], "Email": ["test@example.com"], "手机号": ["13800138000"]}
+        )
 
         result = UserImportService.normalize_columns(df)
 
@@ -160,10 +152,7 @@ class TestUserImportServiceNormalizeColumns(unittest.TestCase):
 
     def test_normalize_unmapped_columns(self):
         """测试未映射的列名保持不变"""
-        df = pd.DataFrame({
-            "用户名": ["test"],
-            "Custom Field": ["value"]
-        })
+        df = pd.DataFrame({"用户名": ["test"], "Custom Field": ["value"]})
 
         result = UserImportService.normalize_columns(df)
 
@@ -176,11 +165,9 @@ class TestUserImportServiceValidateDataFrame(unittest.TestCase):
 
     def test_validate_dataframe_success(self):
         """测试有效的 DataFrame"""
-        df = pd.DataFrame({
-            "username": ["test"],
-            "real_name": ["测试"],
-            "email": ["test@example.com"]
-        })
+        df = pd.DataFrame(
+            {"username": ["test"], "real_name": ["测试"], "email": ["test@example.com"]}
+        )
 
         errors = UserImportService.validate_dataframe(df)
 
@@ -188,10 +175,7 @@ class TestUserImportServiceValidateDataFrame(unittest.TestCase):
 
     def test_validate_dataframe_missing_required_fields(self):
         """测试缺少必填字段"""
-        df = pd.DataFrame({
-            "username": ["test"],
-            "email": ["test@example.com"]
-        })
+        df = pd.DataFrame({"username": ["test"], "email": ["test@example.com"]})
 
         errors = UserImportService.validate_dataframe(df)
 
@@ -201,11 +185,7 @@ class TestUserImportServiceValidateDataFrame(unittest.TestCase):
 
     def test_validate_dataframe_empty(self):
         """测试空 DataFrame"""
-        df = pd.DataFrame({
-            "username": [],
-            "real_name": [],
-            "email": []
-        })
+        df = pd.DataFrame({"username": [], "real_name": [], "email": []})
 
         errors = UserImportService.validate_dataframe(df)
 
@@ -218,7 +198,7 @@ class TestUserImportServiceValidateDataFrame(unittest.TestCase):
         data = {
             "username": [f"user{i}" for i in range(501)],
             "real_name": [f"User {i}" for i in range(501)],
-            "email": [f"user{i}@example.com" for i in range(501)]
+            "email": [f"user{i}@example.com" for i in range(501)],
         }
         df = pd.DataFrame(data)
 
@@ -230,9 +210,7 @@ class TestUserImportServiceValidateDataFrame(unittest.TestCase):
 
     def test_validate_dataframe_multiple_errors(self):
         """测试多个验证错误"""
-        df = pd.DataFrame({
-            "username": []
-        })
+        df = pd.DataFrame({"username": []})
 
         errors = UserImportService.validate_dataframe(df)
 
@@ -249,12 +227,14 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_success(self):
         """测试有效的行数据"""
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试用户",
-            "email": "test@example.com",
-            "phone": "13800138000"
-        })
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "real_name": "测试用户",
+                "email": "test@example.com",
+                "phone": "13800138000",
+            }
+        )
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
@@ -266,11 +246,7 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_missing_required_field(self):
         """测试缺少必填字段"""
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "",
-            "email": "test@example.com"
-        })
+        row = pd.Series({"username": "testuser", "real_name": "", "email": "test@example.com"})
 
         error = UserImportService.validate_row(
             row, 2, self.mock_db, self.existing_usernames, self.existing_emails
@@ -281,11 +257,7 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_username_too_short(self):
         """测试用户名过短"""
-        row = pd.Series({
-            "username": "ab",
-            "real_name": "测试",
-            "email": "test@example.com"
-        })
+        row = pd.Series({"username": "ab", "real_name": "测试", "email": "test@example.com"})
 
         error = UserImportService.validate_row(
             row, 2, self.mock_db, self.existing_usernames, self.existing_emails
@@ -296,11 +268,7 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_username_too_long(self):
         """测试用户名过长"""
-        row = pd.Series({
-            "username": "a" * 51,
-            "real_name": "测试",
-            "email": "test@example.com"
-        })
+        row = pd.Series({"username": "a" * 51, "real_name": "测试", "email": "test@example.com"})
 
         error = UserImportService.validate_row(
             row, 2, self.mock_db, self.existing_usernames, self.existing_emails
@@ -313,11 +281,7 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
         """测试文件内用户名重复"""
         self.existing_usernames.add("testuser")
 
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "test@example.com"
-        })
+        row = pd.Series({"username": "testuser", "real_name": "测试", "email": "test@example.com"})
 
         error = UserImportService.validate_row(
             row, 2, self.mock_db, self.existing_usernames, self.existing_emails
@@ -328,11 +292,7 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_username_exists_in_db(self):
         """测试用户名在数据库中已存在"""
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "test@example.com"
-        })
+        row = pd.Series({"username": "testuser", "real_name": "测试", "email": "test@example.com"})
 
         mock_user = MagicMock()
         self.mock_db.query.return_value.filter.return_value.first.return_value = mock_user
@@ -346,11 +306,7 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_invalid_email_format(self):
         """测试无效的邮箱格式"""
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "invalid-email"
-        })
+        row = pd.Series({"username": "testuser", "real_name": "测试", "email": "invalid-email"})
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
@@ -365,11 +321,7 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
         """测试邮箱重复"""
         self.existing_emails.add("test@example.com")
 
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "test@example.com"
-        })
+        row = pd.Series({"username": "testuser", "real_name": "测试", "email": "test@example.com"})
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
@@ -383,12 +335,14 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_invalid_phone(self):
         """测试无效的手机号"""
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "test@example.com",
-            "phone": "123"
-        })
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "real_name": "测试",
+                "email": "test@example.com",
+                "phone": "123",
+            }
+        )
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
@@ -401,12 +355,14 @@ class TestUserImportServiceValidateRow(unittest.TestCase):
 
     def test_validate_row_valid_phone_with_dashes(self):
         """测试带连字符的有效手机号"""
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "test@example.com",
-            "phone": "138-0013-8000"
-        })
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "real_name": "测试",
+                "email": "test@example.com",
+                "phone": "138-0013-8000",
+            }
+        )
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
@@ -459,26 +415,26 @@ class TestUserImportServiceCreateUserFromRow(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
 
-    @patch('app.services.user_import_service.get_password_hash')
+    @patch("app.services.user_import_service.get_password_hash")
     def test_create_user_with_all_fields(self, mock_hash):
         """测试创建包含所有字段的用户"""
         mock_hash.return_value = "hashed_password"
 
-        row = pd.Series({
-            "username": "testuser",
-            "password": "mypassword",
-            "real_name": "测试用户",
-            "email": "test@example.com",
-            "phone": "13800138000",
-            "employee_no": "EMP001",
-            "department": "技术部",
-            "position": "工程师",
-            "is_active": "是"
-        })
-
-        user = UserImportService.create_user_from_row(
-            self.mock_db, row, operator_id=1, tenant_id=1
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "password": "mypassword",
+                "real_name": "测试用户",
+                "email": "test@example.com",
+                "phone": "13800138000",
+                "employee_no": "EMP001",
+                "department": "技术部",
+                "position": "工程师",
+                "is_active": "是",
+            }
         )
+
+        user = UserImportService.create_user_from_row(self.mock_db, row, operator_id=1, tenant_id=1)
 
         self.assertEqual(user.username, "testuser")
         self.assertEqual(user.real_name, "测试用户")
@@ -490,25 +446,25 @@ class TestUserImportServiceCreateUserFromRow(unittest.TestCase):
         self.assertTrue(user.is_active)
         mock_hash.assert_called_with("mypassword")
 
-    @patch('app.services.user_import_service.get_password_hash')
+    @patch("app.services.user_import_service.get_password_hash")
     def test_create_user_with_default_password(self, mock_hash):
         """测试使用默认密码创建用户"""
         mock_hash.return_value = "hashed_default"
 
-        row = pd.Series({
-            "username": "testuser",
-            "password": "",
-            "real_name": "测试用户",
-            "email": "test@example.com"
-        })
-
-        user = UserImportService.create_user_from_row(
-            self.mock_db, row, operator_id=1, tenant_id=1
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "password": "",
+                "real_name": "测试用户",
+                "email": "test@example.com",
+            }
         )
+
+        user = UserImportService.create_user_from_row(self.mock_db, row, operator_id=1, tenant_id=1)
 
         mock_hash.assert_called_with("123456")
 
-    @patch('app.services.user_import_service.get_password_hash')
+    @patch("app.services.user_import_service.get_password_hash")
     def test_create_user_with_roles(self, mock_hash):
         """测试创建带角色的用户"""
         mock_hash.return_value = "hashed"
@@ -525,13 +481,17 @@ class TestUserImportServiceCreateUserFromRow(unittest.TestCase):
                 return mock_role2
             return None
 
-        with patch.object(UserImportService, 'get_or_create_role', side_effect=get_role_side_effect):
-            row = pd.Series({
-                "username": "testuser",
-                "real_name": "测试用户",
-                "email": "test@example.com",
-                "roles": "管理员,普通用户"
-            })
+        with patch.object(
+            UserImportService, "get_or_create_role", side_effect=get_role_side_effect
+        ):
+            row = pd.Series(
+                {
+                    "username": "testuser",
+                    "real_name": "测试用户",
+                    "email": "test@example.com",
+                    "roles": "管理员,普通用户",
+                }
+            )
 
             user = UserImportService.create_user_from_row(
                 self.mock_db, row, operator_id=1, tenant_id=1
@@ -540,7 +500,7 @@ class TestUserImportServiceCreateUserFromRow(unittest.TestCase):
             # 验证添加了2个角色
             self.assertEqual(self.mock_db.add.call_count, 3)  # 1 user + 2 user_roles
 
-    @patch('app.services.user_import_service.get_password_hash')
+    @patch("app.services.user_import_service.get_password_hash")
     def test_create_user_is_active_variants(self, mock_hash):
         """测试不同格式的 is_active 值"""
         mock_hash.return_value = "hashed"
@@ -561,12 +521,14 @@ class TestUserImportServiceCreateUserFromRow(unittest.TestCase):
         for is_active_value, expected in test_cases:
             self.mock_db.reset_mock()
 
-            row = pd.Series({
-                "username": "testuser",
-                "real_name": "测试用户",
-                "email": "test@example.com",
-                "is_active": is_active_value
-            })
+            row = pd.Series(
+                {
+                    "username": "testuser",
+                    "real_name": "测试用户",
+                    "email": "test@example.com",
+                    "is_active": is_active_value,
+                }
+            )
 
             user = UserImportService.create_user_from_row(
                 self.mock_db, row, operator_id=1, tenant_id=1
@@ -574,24 +536,24 @@ class TestUserImportServiceCreateUserFromRow(unittest.TestCase):
 
             self.assertEqual(user.is_active, expected, f"Failed for value: {is_active_value}")
 
-    @patch('app.services.user_import_service.get_password_hash')
+    @patch("app.services.user_import_service.get_password_hash")
     def test_create_user_optional_fields_none(self, mock_hash):
         """测试可选字段为空"""
         mock_hash.return_value = "hashed"
 
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试用户",
-            "email": "test@example.com",
-            "phone": pd.NA,
-            "employee_no": pd.NA,
-            "department": pd.NA,
-            "position": pd.NA
-        })
-
-        user = UserImportService.create_user_from_row(
-            self.mock_db, row, operator_id=1, tenant_id=1
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "real_name": "测试用户",
+                "email": "test@example.com",
+                "phone": pd.NA,
+                "employee_no": pd.NA,
+                "department": pd.NA,
+                "position": pd.NA,
+            }
         )
+
+        user = UserImportService.create_user_from_row(self.mock_db, row, operator_id=1, tenant_id=1)
 
         self.assertIsNone(user.phone)
         self.assertIsNone(user.employee_no)
@@ -605,17 +567,21 @@ class TestUserImportServiceImportUsers(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
 
-    @patch.object(UserImportService, 'create_user_from_row')
-    @patch.object(UserImportService, 'validate_row')
-    @patch.object(UserImportService, 'validate_dataframe')
-    @patch.object(UserImportService, 'normalize_columns')
-    def test_import_users_success(self, mock_normalize, mock_validate_df, mock_validate_row, mock_create_user):
+    @patch.object(UserImportService, "create_user_from_row")
+    @patch.object(UserImportService, "validate_row")
+    @patch.object(UserImportService, "validate_dataframe")
+    @patch.object(UserImportService, "normalize_columns")
+    def test_import_users_success(
+        self, mock_normalize, mock_validate_df, mock_validate_row, mock_create_user
+    ):
         """测试成功导入所有用户"""
-        df = pd.DataFrame({
-            "username": ["user1", "user2"],
-            "real_name": ["用户1", "用户2"],
-            "email": ["user1@example.com", "user2@example.com"]
-        })
+        df = pd.DataFrame(
+            {
+                "username": ["user1", "user2"],
+                "real_name": ["用户1", "用户2"],
+                "email": ["user1@example.com", "user2@example.com"],
+            }
+        )
 
         mock_normalize.return_value = df
         mock_validate_df.return_value = []
@@ -636,9 +602,7 @@ class TestUserImportServiceImportUsers(unittest.TestCase):
         # Mock query for validation
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = UserImportService.import_users(
-            self.mock_db, df, operator_id=1, tenant_id=1
-        )
+        result = UserImportService.import_users(self.mock_db, df, operator_id=1, tenant_id=1)
 
         self.assertEqual(result["total"], 2)
         self.assertEqual(result["success_count"], 2)
@@ -647,35 +611,35 @@ class TestUserImportServiceImportUsers(unittest.TestCase):
         self.assertEqual(len(result["success_users"]), 2)
         self.mock_db.commit.assert_called_once()
 
-    @patch.object(UserImportService, 'normalize_columns')
-    @patch.object(UserImportService, 'validate_dataframe')
+    @patch.object(UserImportService, "normalize_columns")
+    @patch.object(UserImportService, "validate_dataframe")
     def test_import_users_structure_validation_failed(self, mock_validate_df, mock_normalize):
         """测试结构验证失败"""
-        df = pd.DataFrame({
-            "username": ["user1"]
-        })
+        df = pd.DataFrame({"username": ["user1"]})
 
         mock_normalize.return_value = df
         mock_validate_df.return_value = ["缺少必填列: real_name, email"]
 
-        result = UserImportService.import_users(
-            self.mock_db, df, operator_id=1, tenant_id=1
-        )
+        result = UserImportService.import_users(self.mock_db, df, operator_id=1, tenant_id=1)
 
         self.assertEqual(result["failed_count"], 1)
         self.assertEqual(len(result["errors"]), 1)
         self.assertIn("缺少必填列", result["errors"][0])
 
-    @patch.object(UserImportService, 'validate_row')
-    @patch.object(UserImportService, 'validate_dataframe')
-    @patch.object(UserImportService, 'normalize_columns')
-    def test_import_users_row_validation_failed(self, mock_normalize, mock_validate_df, mock_validate_row):
+    @patch.object(UserImportService, "validate_row")
+    @patch.object(UserImportService, "validate_dataframe")
+    @patch.object(UserImportService, "normalize_columns")
+    def test_import_users_row_validation_failed(
+        self, mock_normalize, mock_validate_df, mock_validate_row
+    ):
         """测试行验证失败"""
-        df = pd.DataFrame({
-            "username": ["user1", "user2"],
-            "real_name": ["用户1", "用户2"],
-            "email": ["user1@example.com", "invalid-email"]
-        })
+        df = pd.DataFrame(
+            {
+                "username": ["user1", "user2"],
+                "real_name": ["用户1", "用户2"],
+                "email": ["user1@example.com", "invalid-email"],
+            }
+        )
 
         mock_normalize.return_value = df
         mock_validate_df.return_value = []
@@ -684,24 +648,22 @@ class TestUserImportServiceImportUsers(unittest.TestCase):
         # Mock query for validation
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = UserImportService.import_users(
-            self.mock_db, df, operator_id=1, tenant_id=1
-        )
+        result = UserImportService.import_users(self.mock_db, df, operator_id=1, tenant_id=1)
 
         self.assertEqual(result["failed_count"], 2)
         self.assertGreater(len(result["errors"]), 0)
 
-    @patch.object(UserImportService, 'create_user_from_row')
-    @patch.object(UserImportService, 'validate_row')
-    @patch.object(UserImportService, 'validate_dataframe')
-    @patch.object(UserImportService, 'normalize_columns')
-    def test_import_users_creation_exception_rollback(self, mock_normalize, mock_validate_df, mock_validate_row, mock_create_user):
+    @patch.object(UserImportService, "create_user_from_row")
+    @patch.object(UserImportService, "validate_row")
+    @patch.object(UserImportService, "validate_dataframe")
+    @patch.object(UserImportService, "normalize_columns")
+    def test_import_users_creation_exception_rollback(
+        self, mock_normalize, mock_validate_df, mock_validate_row, mock_create_user
+    ):
         """测试创建用户异常时回滚"""
-        df = pd.DataFrame({
-            "username": ["user1"],
-            "real_name": ["用户1"],
-            "email": ["user1@example.com"]
-        })
+        df = pd.DataFrame(
+            {"username": ["user1"], "real_name": ["用户1"], "email": ["user1@example.com"]}
+        )
 
         mock_normalize.return_value = df
         mock_validate_df.return_value = []
@@ -711,9 +673,7 @@ class TestUserImportServiceImportUsers(unittest.TestCase):
         # Mock query for validation
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = UserImportService.import_users(
-            self.mock_db, df, operator_id=1, tenant_id=1
-        )
+        result = UserImportService.import_users(self.mock_db, df, operator_id=1, tenant_id=1)
 
         self.assertEqual(result["success_count"], 0)
         self.assertEqual(result["failed_count"], 1)
@@ -760,10 +720,7 @@ class TestUserImportServiceEdgeCases(unittest.TestCase):
 
     def test_required_fields_constant(self):
         """测试必填字段常量"""
-        self.assertEqual(
-            UserImportService.REQUIRED_FIELDS,
-            ["username", "real_name", "email"]
-        )
+        self.assertEqual(UserImportService.REQUIRED_FIELDS, ["username", "real_name", "email"])
 
     def test_field_mapping_has_chinese_and_english(self):
         """测试字段映射包含中英文"""
@@ -782,38 +739,38 @@ class TestUserImportServiceEdgeCases(unittest.TestCase):
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "test@example.com",
-            "phone": pd.NA
-        })
-
-        error = UserImportService.validate_row(
-            row, 2, mock_db, set(), set()
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "real_name": "测试",
+                "email": "test@example.com",
+                "phone": pd.NA,
+            }
         )
+
+        error = UserImportService.validate_row(row, 2, mock_db, set(), set())
 
         self.assertIsNone(error)
 
-    @patch('app.services.user_import_service.get_password_hash')
+    @patch("app.services.user_import_service.get_password_hash")
     def test_create_user_with_na_password(self, mock_hash):
         """测试密码为 NA 时使用默认密码"""
         mock_hash.return_value = "hashed"
         mock_db = MagicMock()
 
-        row = pd.Series({
-            "username": "testuser",
-            "real_name": "测试",
-            "email": "test@example.com",
-            "password": pd.NA
-        })
-
-        user = UserImportService.create_user_from_row(
-            mock_db, row, operator_id=1, tenant_id=1
+        row = pd.Series(
+            {
+                "username": "testuser",
+                "real_name": "测试",
+                "email": "test@example.com",
+                "password": pd.NA,
+            }
         )
+
+        user = UserImportService.create_user_from_row(mock_db, row, operator_id=1, tenant_id=1)
 
         mock_hash.assert_called_with("123456")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

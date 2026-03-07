@@ -3,7 +3,7 @@
 Unit tests for ServiceRecordsService (第三十批)
 """
 from datetime import date, datetime, timezone
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -32,6 +32,7 @@ def mock_user():
 # get_record_statistics
 # ---------------------------------------------------------------------------
 
+
 class TestGetRecordStatistics:
     def test_returns_statistics_no_filters(self, service, mock_db):
         mock_query = MagicMock()
@@ -52,6 +53,7 @@ class TestGetRecordStatistics:
 
         # Make with_entities chain return different things on consecutive calls
         call_count = [0]
+
         def with_entities_side_effect(*args):
             call_count[0] += 1
             mock_chain = MagicMock()
@@ -84,6 +86,7 @@ class TestGetRecordStatistics:
         mock_query.filter.return_value.all.return_value = []
 
         call_count = [0]
+
         def with_entities_side_effect(*args):
             call_count[0] += 1
             mock_chain = MagicMock()
@@ -113,16 +116,18 @@ class TestGetRecordStatistics:
 # get_service_records
 # ---------------------------------------------------------------------------
 
+
 class TestGetServiceRecords:
     @patch("app.services.service.service_records_service.ServiceRecord")
     @patch("app.services.service.service_records_service.joinedload")
     @patch("app.services.service.service_records_service.apply_keyword_filter")
     @patch("app.services.service.service_records_service.apply_pagination")
     @patch("app.services.service.service_records_service.get_pagination_params")
-    def test_returns_paginated_list(self, mock_params, mock_apag, mock_kw, mock_jl, mock_sr, service, mock_db):
+    def test_returns_paginated_list(
+        self, mock_params, mock_apag, mock_kw, mock_jl, mock_sr, service, mock_db
+    ):
         mock_params.return_value = MagicMock(
-            page=1, page_size=20, offset=0, limit=20,
-            pages_for_total=lambda t: 1
+            page=1, page_size=20, offset=0, limit=20, pages_for_total=lambda t: 1
         )
         mock_jl.return_value = MagicMock()
         mock_query = MagicMock()
@@ -137,7 +142,9 @@ class TestGetServiceRecords:
         record = MagicMock()
         mock_query.all.return_value = [record]
 
-        with patch("app.services.service.service_records_service.ServiceRecordResponse.model_validate") as mv:
+        with patch(
+            "app.services.service.service_records_service.ServiceRecordResponse.model_validate"
+        ) as mv:
             mv.return_value = MagicMock()
             result = service.get_service_records(page=1, page_size=20)
 
@@ -148,10 +155,11 @@ class TestGetServiceRecords:
     @patch("app.services.service.service_records_service.apply_keyword_filter")
     @patch("app.services.service.service_records_service.apply_pagination")
     @patch("app.services.service.service_records_service.get_pagination_params")
-    def test_filters_by_status(self, mock_params, mock_apag, mock_kw, mock_jl, mock_sr, service, mock_db):
+    def test_filters_by_status(
+        self, mock_params, mock_apag, mock_kw, mock_jl, mock_sr, service, mock_db
+    ):
         mock_params.return_value = MagicMock(
-            page=1, page_size=20, offset=0, limit=20,
-            pages_for_total=lambda t: 0
+            page=1, page_size=20, offset=0, limit=20, pages_for_total=lambda t: 0
         )
         mock_jl.return_value = MagicMock()
         mock_query = MagicMock()
@@ -172,10 +180,13 @@ class TestGetServiceRecords:
 # create_service_record
 # ---------------------------------------------------------------------------
 
+
 class TestCreateServiceRecord:
     @patch("app.services.service.service_records_service.save_obj")
     @patch("app.services.service.service_records_service.ServiceRecord")
-    def test_creates_record_with_defaults(self, mock_sr_cls, mock_save, service, mock_user, mock_db):
+    def test_creates_record_with_defaults(
+        self, mock_sr_cls, mock_save, service, mock_user, mock_db
+    ):
         mock_record = MagicMock()
         mock_sr_cls.return_value = mock_record
 
@@ -204,11 +215,13 @@ class TestCreateServiceRecord:
 # upload_record_photos
 # ---------------------------------------------------------------------------
 
+
 class TestUploadRecordPhotos:
     def test_raises_404_when_record_not_found(self, service, mock_db, mock_user):
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException) as exc:
             service.upload_record_photos(999, [], mock_user)
         assert exc.value.status_code == 404
@@ -218,11 +231,13 @@ class TestUploadRecordPhotos:
 # delete_record_photo
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteRecordPhoto:
     def test_raises_404_when_record_not_found(self, service, mock_db, mock_user):
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             service.delete_record_photo(999, 0, mock_user)
 
@@ -232,6 +247,7 @@ class TestDeleteRecordPhoto:
         mock_db.query.return_value.filter.return_value.first.return_value = record
 
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException) as exc:
             service.delete_record_photo(1, 5, mock_user)
         assert exc.value.status_code == 400

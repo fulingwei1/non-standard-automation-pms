@@ -35,14 +35,12 @@ router = APIRouter()
 
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="",
-    tags=["detail"]
-)
+router = APIRouter(prefix="", tags=["detail"])
 
 # 共 1 个路由
 
 # ==================== 任务详情 ====================
+
 
 @router.get("/tasks/{task_id}", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK)
 def get_task_detail(
@@ -63,7 +61,9 @@ def get_task_detail(
     today = datetime.now().date()
     is_overdue = False
     if task.deadline and task.status in ["PENDING", "ACCEPTED", "IN_PROGRESS"]:
-        deadline_date = task.deadline.date() if isinstance(task.deadline, datetime) else task.deadline
+        deadline_date = (
+            task.deadline.date() if isinstance(task.deadline, datetime) else task.deadline
+        )
         if deadline_date < today:
             is_overdue = True
 
@@ -99,8 +99,5 @@ def get_task_detail(
         category=task.category,
         is_overdue=is_overdue,
         created_at=task.created_at,
-        updated_at=task.updated_at
+        updated_at=task.updated_at,
     )
-
-
-

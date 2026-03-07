@@ -46,8 +46,8 @@ def export_report(
 
         # 如果报表有对应的报表代码，使用统一报表框架导出
         # 否则使用旧服务（向后兼容）
-        report_code = getattr(generation, 'report_code', None)
-        
+        report_code = getattr(generation, "report_code", None)
+
         if report_code:
             # 使用统一报表框架导出
             engine = ReportEngine(db)
@@ -58,7 +58,7 @@ def export_report(
                 user=current_user,
                 skip_cache=True,
             )
-            
+
             # 获取文件流
             file_stream = result.data.get("file_stream")
             if file_stream:
@@ -68,82 +68,113 @@ def export_report(
                     media_type=result.content_type,
                     headers={
                         "Content-Disposition": f"attachment; filename={filename}.{export_format}"
-                    }
+                    },
                 )
-        
+
         # 如果没有报表代码或统一框架导出失败，使用统一报表框架的渲染器
         try:
-            if export_format == 'xlsx':
+            if export_format == "xlsx":
                 from app.services.report_framework.renderers.excel_renderer import ExcelRenderer
+
                 renderer = ExcelRenderer()
                 # 将report_data转换为sections格式
                 sections = []
                 if isinstance(report_data, dict):
-                    if 'summary' in report_data:
-                        sections.append({
-                            "id": "summary",
-                            "title": "汇总",
-                            "type": "metrics",
-                            "items": [{"label": k, "value": v} for k, v in report_data['summary'].items()]
-                        })
-                    if 'details' in report_data:
-                        sections.append({
-                            "id": "details",
-                            "title": "明细",
-                            "type": "table",
-                            "source": report_data['details']
-                        })
+                    if "summary" in report_data:
+                        sections.append(
+                            {
+                                "id": "summary",
+                                "title": "汇总",
+                                "type": "metrics",
+                                "items": [
+                                    {"label": k, "value": v}
+                                    for k, v in report_data["summary"].items()
+                                ],
+                            }
+                        )
+                    if "details" in report_data:
+                        sections.append(
+                            {
+                                "id": "details",
+                                "title": "明细",
+                                "type": "table",
+                                "source": report_data["details"],
+                            }
+                        )
                 else:
-                    sections = [{"id": "data", "title": report_title, "type": "table", "source": report_data}]
+                    sections = [
+                        {
+                            "id": "data",
+                            "title": report_title,
+                            "type": "table",
+                            "source": report_data,
+                        }
+                    ]
                 metadata = {"code": f"REPORT_{generation.id}", "name": report_title}
                 result = renderer.render(sections, metadata)
                 filepath = result.file_path or ""
-            elif export_format == 'pdf':
+            elif export_format == "pdf":
                 from app.services.report_framework.renderers.pdf_renderer import PdfRenderer
+
                 renderer = PdfRenderer()
                 sections = []
                 if isinstance(report_data, dict):
-                    if 'summary' in report_data:
-                        sections.append({
-                            "id": "summary",
-                            "title": "汇总",
-                            "type": "metrics",
-                            "items": [{"label": k, "value": v} for k, v in report_data['summary'].items()]
-                        })
-                    if 'details' in report_data:
-                        sections.append({
-                            "id": "details",
-                            "title": "明细",
-                            "type": "table",
-                            "source": report_data['details']
-                        })
+                    if "summary" in report_data:
+                        sections.append(
+                            {
+                                "id": "summary",
+                                "title": "汇总",
+                                "type": "metrics",
+                                "items": [
+                                    {"label": k, "value": v}
+                                    for k, v in report_data["summary"].items()
+                                ],
+                            }
+                        )
+                    if "details" in report_data:
+                        sections.append(
+                            {
+                                "id": "details",
+                                "title": "明细",
+                                "type": "table",
+                                "source": report_data["details"],
+                            }
+                        )
                 else:
-                    sections = [{"id": "data", "title": report_title, "type": "table", "source": report_data}]
+                    sections = [
+                        {
+                            "id": "data",
+                            "title": report_title,
+                            "type": "table",
+                            "source": report_data,
+                        }
+                    ]
                 metadata = {"code": f"REPORT_{generation.id}", "name": report_title}
                 result = renderer.render(sections, metadata)
                 filepath = result.file_path or ""
-            elif export_format == 'csv':
+            elif export_format == "csv":
                 # CSV导出暂时使用简单实现
                 import csv
                 import os
                 from datetime import datetime
+
                 csv_dir = os.path.join(settings.UPLOAD_DIR, "exports")
                 os.makedirs(csv_dir, exist_ok=True)
                 csv_filename = f"{filename}_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
                 csv_path = os.path.join(csv_dir, csv_filename)
-                
+
                 # 写入CSV
-                with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-                    if isinstance(report_data, dict) and 'details' in report_data:
-                        if report_data['details']:
-                            writer = csv.DictWriter(f, fieldnames=report_data['details'][0].keys())
+                with open(csv_path, "w", newline="", encoding="utf-8") as f:
+                    if isinstance(report_data, dict) and "details" in report_data:
+                        if report_data["details"]:
+                            writer = csv.DictWriter(f, fieldnames=report_data["details"][0].keys())
                             writer.writeheader()
-                            writer.writerows(report_data['details'])
+                            writer.writerows(report_data["details"])
                     else:
                         writer = csv.writer(f)
                         writer.writerow([report_title])
                         writer.writerow([str(report_data)])
-                
+
                 filepath = os.path.join("exports", csv_filename)
             else:
                 raise HTTPException(status_code=400, detail=f"不支持的导出格式: {export_format}")
@@ -165,8 +196,8 @@ def export_report(
                 "report_id": generation.id,
                 "format": export_format.upper(),
                 "file_path": filepath,
-                "download_url": f"/api/v1/reports/download/{generation.id}"
-            }
+                "download_url": f"/api/v1/reports/download/{generation.id}",
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
@@ -193,9 +224,9 @@ def export_direct(
 
     # 根据报表类型映射到报表代码
     report_code_map = {
-        'PROJECT_LIST': 'PROJECT_LIST',
-        'HEALTH_DISTRIBUTION': 'PROJECT_HEALTH_DISTRIBUTION',
-        'UTILIZATION': 'TIMESHEET_UTILIZATION',
+        "PROJECT_LIST": "PROJECT_LIST",
+        "HEALTH_DISTRIBUTION": "PROJECT_HEALTH_DISTRIBUTION",
+        "UTILIZATION": "TIMESHEET_UTILIZATION",
     }
 
     report_code = report_code_map.get(report_type)
@@ -207,13 +238,13 @@ def export_direct(
         engine = ReportEngine(db)
         params = {}
         if start_date:
-            params['start_date'] = start_date.isoformat()
+            params["start_date"] = start_date.isoformat()
         if end_date:
-            params['end_date'] = end_date.isoformat()
+            params["end_date"] = end_date.isoformat()
         if project_id:
-            params['project_id'] = project_id
+            params["project_id"] = project_id
         if department_id:
-            params['department_id'] = department_id
+            params["department_id"] = department_id
 
         result = engine.generate(
             report_code=report_code,
@@ -225,7 +256,9 @@ def export_direct(
 
         # 如果返回文件流，直接返回
         if result.data.get("file_stream"):
-            filename = f"{report_type.lower()}_{datetime.now().strftime('%Y%m%d')}.{export_format.lower()}"
+            filename = (
+                f"{report_type.lower()}_{datetime.now().strftime('%Y%m%d')}.{export_format.lower()}"
+            )
             return StreamingResponse(
                 result.data.get("file_stream"),
                 media_type=result.content_type,
@@ -240,8 +273,8 @@ def export_direct(
             data={
                 "file_path": filepath,
                 "report_type": report_type,
-                "format": export_format.upper()
-            }
+                "format": export_format.upper(),
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")

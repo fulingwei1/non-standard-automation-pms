@@ -27,7 +27,7 @@ def validate_file_type(filename: str) -> None:
     Raises:
         HTTPException: 如果文件类型不支持
     """
-    if not filename.endswith(('.xlsx', '.xls')):
+    if not filename.endswith((".xlsx", ".xls")):
         raise HTTPException(status_code=400, detail="只支持Excel文件(.xlsx, .xls)")
 
 
@@ -86,28 +86,26 @@ def validate_required_columns(df: pd.DataFrame) -> None:
         HTTPException: 如果缺少必需的列
     """
     # 验证必需列（支持两种模式）
-    has_calculation_id = '计算记录ID*' in df.columns or '计算记录ID' in df.columns
-    has_allocation_id = '团队奖金分配ID*' in df.columns or '团队奖金分配ID' in df.columns
+    has_calculation_id = "计算记录ID*" in df.columns or "计算记录ID" in df.columns
+    has_allocation_id = "团队奖金分配ID*" in df.columns or "团队奖金分配ID" in df.columns
 
     if not has_calculation_id and not has_allocation_id:
         raise HTTPException(
-            status_code=400,
-            detail="Excel文件必须包含'计算记录ID*'或'团队奖金分配ID*'列之一"
+            status_code=400, detail="Excel文件必须包含'计算记录ID*'或'团队奖金分配ID*'列之一"
         )
 
     # 验证其他必需列
-    required_columns = ['受益人ID*', '发放金额*', '发放日期*']
+    required_columns = ["受益人ID*", "发放金额*", "发放日期*"]
     missing_columns = []
     for col in required_columns:
         if col not in df.columns:
-            alt_col = col.replace('*', '')
+            alt_col = col.replace("*", "")
             if alt_col not in df.columns:
                 missing_columns.append(col)
 
     if missing_columns:
         raise HTTPException(
-            status_code=400,
-            detail=f"Excel文件缺少必需的列：{', '.join(missing_columns)}"
+            status_code=400, detail=f"Excel文件缺少必需的列：{', '.join(missing_columns)}"
         )
 
 
@@ -119,14 +117,12 @@ def get_column_value(row: pd.Series, primary_col: str, alt_col: str = None) -> A
         Any: 列值
     """
     if alt_col is None:
-        alt_col = primary_col.replace('*', '')
+        alt_col = primary_col.replace("*", "")
     return row.get(primary_col) or row.get(alt_col)
 
 
 def parse_row_data(
-    row: pd.Series,
-    row_num: int,
-    db: Session
+    row: pd.Series, row_num: int, db: Session
 ) -> Tuple[Optional[Dict[str, Any]], List[str]]:
     """
     解析单行数据
@@ -141,11 +137,11 @@ def parse_row_data(
         calc_id = None
         team_allocation_id = None
 
-        calc_id_raw = get_column_value(row, '计算记录ID*', '计算记录ID')
+        calc_id_raw = get_column_value(row, "计算记录ID*", "计算记录ID")
         if not pd.isna(calc_id_raw):
             calc_id = int(float(calc_id_raw))
 
-        allocation_id_raw = get_column_value(row, '团队奖金分配ID*', '团队奖金分配ID')
+        allocation_id_raw = get_column_value(row, "团队奖金分配ID*", "团队奖金分配ID")
         if not pd.isna(allocation_id_raw):
             team_allocation_id = int(float(allocation_id_raw))
 
@@ -153,7 +149,7 @@ def parse_row_data(
             errors.append("必须提供'计算记录ID'或'团队奖金分配ID'之一")
 
         # 获取受益人ID
-        user_id_raw = get_column_value(row, '受益人ID*', '受益人ID')
+        user_id_raw = get_column_value(row, "受益人ID*", "受益人ID")
         if pd.isna(user_id_raw):
             errors.append("受益人ID不能为空")
             return None, errors
@@ -162,7 +158,7 @@ def parse_row_data(
 
         # 获取计算金额（如果使用团队奖金分配ID，计算金额可选）
         calc_amount = None
-        calc_amount_raw = get_column_value(row, '计算金额*', '计算金额')
+        calc_amount_raw = get_column_value(row, "计算金额*", "计算金额")
         if not pd.isna(calc_amount_raw):
             calc_amount = Decimal(str(float(calc_amount_raw)))
         elif team_allocation_id:
@@ -172,7 +168,7 @@ def parse_row_data(
             errors.append("计算金额不能为空")
 
         # 获取发放金额
-        dist_amount_raw = get_column_value(row, '发放金额*', '发放金额')
+        dist_amount_raw = get_column_value(row, "发放金额*", "发放金额")
         if pd.isna(dist_amount_raw):
             errors.append("发放金额不能为空")
             return None, errors
@@ -180,7 +176,7 @@ def parse_row_data(
             dist_amount = Decimal(str(float(dist_amount_raw)))
 
         # 获取发放日期
-        dist_date_raw = get_column_value(row, '发放日期*', '发放日期')
+        dist_date_raw = get_column_value(row, "发放日期*", "发放日期")
         if pd.isna(dist_date_raw):
             errors.append("发放日期不能为空")
             return None, errors
@@ -188,11 +184,11 @@ def parse_row_data(
             dist_date = parse_date(dist_date_raw)
 
         # 可选字段
-        user_name = row.get('受益人姓名', '')
-        payment_method = row.get('发放方式', '')
-        voucher_no = row.get('凭证号', '')
-        payment_account = row.get('付款账户', '')
-        payment_remark = row.get('付款备注', '')
+        user_name = row.get("受益人姓名", "")
+        payment_method = row.get("发放方式", "")
+        voucher_no = row.get("凭证号", "")
+        payment_account = row.get("付款账户", "")
+        payment_remark = row.get("付款备注", "")
 
         # 验证数据
         validation_errors = validate_row_data(
@@ -208,17 +204,17 @@ def parse_row_data(
             calc_amount = dist_amount
 
         return {
-            'calculation_id': calc_id,
-            'team_allocation_id': team_allocation_id,
-            'user_id': user_id,
-            'user_name': str(user_name) if user_name else None,
-            'calculated_amount': float(calc_amount),
-            'distributed_amount': float(dist_amount),
-            'distribution_date': dist_date.isoformat(),
-            'payment_method': str(payment_method) if payment_method else None,
-            'voucher_no': str(voucher_no) if voucher_no else None,
-            'payment_account': str(payment_account) if payment_account else None,
-            'payment_remark': str(payment_remark) if payment_remark else None,
+            "calculation_id": calc_id,
+            "team_allocation_id": team_allocation_id,
+            "user_id": user_id,
+            "user_name": str(user_name) if user_name else None,
+            "calculated_amount": float(calc_amount),
+            "distributed_amount": float(dist_amount),
+            "distribution_date": dist_date.isoformat(),
+            "payment_method": str(payment_method) if payment_method else None,
+            "voucher_no": str(voucher_no) if voucher_no else None,
+            "payment_account": str(payment_account) if payment_account else None,
+            "payment_remark": str(payment_remark) if payment_remark else None,
         }, []
 
     except Exception as e:
@@ -233,7 +229,7 @@ def parse_date(date_value: Any) -> date:
         date: 解析后的日期对象
     """
     if isinstance(date_value, str):
-        return datetime.strptime(date_value, '%Y-%m-%d').date()
+        return datetime.strptime(date_value, "%Y-%m-%d").date()
     elif isinstance(date_value, datetime):
         return date_value.date()
     else:
@@ -246,7 +242,7 @@ def validate_row_data(
     team_allocation_id: Optional[int],
     user_id: int,
     calc_amount: Optional[Decimal],
-    dist_amount: Decimal
+    dist_amount: Decimal,
 ) -> List[str]:
     """
     验证行数据
@@ -258,17 +254,17 @@ def validate_row_data(
 
     # 如果使用团队奖金分配ID，验证分配记录是否存在
     if team_allocation_id:
-        allocation = db.query(TeamBonusAllocation).filter(
-            TeamBonusAllocation.id == team_allocation_id
-        ).first()
+        allocation = (
+            db.query(TeamBonusAllocation)
+            .filter(TeamBonusAllocation.id == team_allocation_id)
+            .first()
+        )
         if not allocation:
             errors.append(f"团队奖金分配ID {team_allocation_id} 不存在")
     else:
         # 验证计算记录是否存在
         if calc_id:
-            calculation = db.query(BonusCalculation).filter(
-                BonusCalculation.id == calc_id
-            ).first()
+            calculation = db.query(BonusCalculation).filter(BonusCalculation.id == calc_id).first()
             if not calculation:
                 errors.append(f"计算记录ID {calc_id} 不存在")
 
@@ -281,8 +277,7 @@ def validate_row_data(
 
 
 def parse_allocation_sheet(
-    df: pd.DataFrame,
-    db: Session
+    df: pd.DataFrame, db: Session
 ) -> Tuple[List[Dict[str, Any]], Dict[int, List[str]]]:
     """
     解析整个分配表

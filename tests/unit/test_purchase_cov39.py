@@ -2,12 +2,12 @@
 """
 第三十九批覆盖率测试 - approval_engine/adapters/purchase.py
 """
-import pytest
-from datetime import datetime, date
+from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
-pytest.importorskip("app.services.approval_engine.adapters.purchase",
-                    reason="import failed, skip")
+import pytest
+
+pytest.importorskip("app.services.approval_engine.adapters.purchase", reason="import failed, skip")
 
 
 @pytest.fixture
@@ -18,6 +18,7 @@ def mock_db():
 @pytest.fixture
 def adapter(mock_db):
     from app.services.approval_engine.adapters.purchase import PurchaseOrderApprovalAdapter
+
     return PurchaseOrderApprovalAdapter(mock_db)
 
 

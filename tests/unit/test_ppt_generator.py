@@ -10,12 +10,13 @@ PPT生成器单元测试
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
 try:
     from pptx.util import Inches, Pt
+
     from app.services.ppt_generator.generator import PresentationGenerator
 except ImportError:
     pytest.skip("python-pptx not available", allow_module_level=True)
@@ -38,15 +39,9 @@ class TestPresentationGenerator(unittest.TestCase):
 
         # Patch外部依赖
         self.patcher_prs = patch("app.services.ppt_generator.generator.Presentation")
-        self.patcher_base = patch(
-            "app.services.ppt_generator.generator.BaseSlideBuilder"
-        )
-        self.patcher_content = patch(
-            "app.services.ppt_generator.generator.ContentSlideBuilder"
-        )
-        self.patcher_table = patch(
-            "app.services.ppt_generator.generator.TableSlideBuilder"
-        )
+        self.patcher_base = patch("app.services.ppt_generator.generator.BaseSlideBuilder")
+        self.patcher_content = patch("app.services.ppt_generator.generator.ContentSlideBuilder")
+        self.patcher_table = patch("app.services.ppt_generator.generator.TableSlideBuilder")
 
         # 启动patches
         self.mock_prs_class = self.patcher_prs.start()
@@ -225,9 +220,7 @@ class TestPresentationGenerator(unittest.TestCase):
 
     def test_create_part1_calls_create_painpoint_slides(self):
         """测试create_part1调用_create_painpoint_slides"""
-        with patch.object(
-            self.generator, "_create_painpoint_slides"
-        ) as mock_painpoint:
+        with patch.object(self.generator, "_create_painpoint_slides") as mock_painpoint:
             self.generator.create_part1_industry_insights()
             mock_painpoint.assert_called_once()
 
@@ -367,25 +360,17 @@ class TestPresentationGenerator(unittest.TestCase):
 
     def test_generate_creates_all_parts(self):
         """测试generate调用所有创建方法"""
-        with patch.object(
-            self.generator, "create_cover_slide"
-        ) as mock_cover, patch.object(
-            self.generator, "create_toc_slide"
-        ) as mock_toc, patch.object(
-            self.generator, "create_part1_industry_insights"
-        ) as mock_part1, patch.object(
-            self.generator, "create_part2_solution_overview"
-        ) as mock_part2, patch.object(
-            self.generator, "create_part3_core_features"
-        ) as mock_part3, patch.object(
-            self.generator, "create_part4_customer_portal"
-        ) as mock_part4, patch.object(
-            self.generator, "create_part5_ai_capabilities"
-        ) as mock_part5, patch.object(
-            self.generator, "create_part6_customer_value"
-        ) as mock_part6, patch.object(
-            self.generator, "create_part7_cooperation"
-        ) as mock_part7:
+        with (
+            patch.object(self.generator, "create_cover_slide") as mock_cover,
+            patch.object(self.generator, "create_toc_slide") as mock_toc,
+            patch.object(self.generator, "create_part1_industry_insights") as mock_part1,
+            patch.object(self.generator, "create_part2_solution_overview") as mock_part2,
+            patch.object(self.generator, "create_part3_core_features") as mock_part3,
+            patch.object(self.generator, "create_part4_customer_portal") as mock_part4,
+            patch.object(self.generator, "create_part5_ai_capabilities") as mock_part5,
+            patch.object(self.generator, "create_part6_customer_value") as mock_part6,
+            patch.object(self.generator, "create_part7_cooperation") as mock_part7,
+        ):
 
             result = self.generator.generate("test_output.pptx")
 
@@ -402,22 +387,16 @@ class TestPresentationGenerator(unittest.TestCase):
 
     def test_generate_saves_presentation(self):
         """测试generate保存PPT文件"""
-        with patch.object(self.generator, "create_cover_slide"), patch.object(
-            self.generator, "create_toc_slide"
-        ), patch.object(
-            self.generator, "create_part1_industry_insights"
-        ), patch.object(
-            self.generator, "create_part2_solution_overview"
-        ), patch.object(
-            self.generator, "create_part3_core_features"
-        ), patch.object(
-            self.generator, "create_part4_customer_portal"
-        ), patch.object(
-            self.generator, "create_part5_ai_capabilities"
-        ), patch.object(
-            self.generator, "create_part6_customer_value"
-        ), patch.object(
-            self.generator, "create_part7_cooperation"
+        with (
+            patch.object(self.generator, "create_cover_slide"),
+            patch.object(self.generator, "create_toc_slide"),
+            patch.object(self.generator, "create_part1_industry_insights"),
+            patch.object(self.generator, "create_part2_solution_overview"),
+            patch.object(self.generator, "create_part3_core_features"),
+            patch.object(self.generator, "create_part4_customer_portal"),
+            patch.object(self.generator, "create_part5_ai_capabilities"),
+            patch.object(self.generator, "create_part6_customer_value"),
+            patch.object(self.generator, "create_part7_cooperation"),
         ):
 
             result = self.generator.generate("test_output.pptx")
@@ -427,22 +406,16 @@ class TestPresentationGenerator(unittest.TestCase):
 
     def test_generate_returns_output_path(self):
         """测试generate返回输出路径"""
-        with patch.object(self.generator, "create_cover_slide"), patch.object(
-            self.generator, "create_toc_slide"
-        ), patch.object(
-            self.generator, "create_part1_industry_insights"
-        ), patch.object(
-            self.generator, "create_part2_solution_overview"
-        ), patch.object(
-            self.generator, "create_part3_core_features"
-        ), patch.object(
-            self.generator, "create_part4_customer_portal"
-        ), patch.object(
-            self.generator, "create_part5_ai_capabilities"
-        ), patch.object(
-            self.generator, "create_part6_customer_value"
-        ), patch.object(
-            self.generator, "create_part7_cooperation"
+        with (
+            patch.object(self.generator, "create_cover_slide"),
+            patch.object(self.generator, "create_toc_slide"),
+            patch.object(self.generator, "create_part1_industry_insights"),
+            patch.object(self.generator, "create_part2_solution_overview"),
+            patch.object(self.generator, "create_part3_core_features"),
+            patch.object(self.generator, "create_part4_customer_portal"),
+            patch.object(self.generator, "create_part5_ai_capabilities"),
+            patch.object(self.generator, "create_part6_customer_value"),
+            patch.object(self.generator, "create_part7_cooperation"),
         ):
 
             result = self.generator.generate("test_output.pptx")
@@ -451,22 +424,16 @@ class TestPresentationGenerator(unittest.TestCase):
 
     def test_generate_with_default_output_path(self):
         """测试generate使用默认输出路径"""
-        with patch.object(self.generator, "create_cover_slide"), patch.object(
-            self.generator, "create_toc_slide"
-        ), patch.object(
-            self.generator, "create_part1_industry_insights"
-        ), patch.object(
-            self.generator, "create_part2_solution_overview"
-        ), patch.object(
-            self.generator, "create_part3_core_features"
-        ), patch.object(
-            self.generator, "create_part4_customer_portal"
-        ), patch.object(
-            self.generator, "create_part5_ai_capabilities"
-        ), patch.object(
-            self.generator, "create_part6_customer_value"
-        ), patch.object(
-            self.generator, "create_part7_cooperation"
+        with (
+            patch.object(self.generator, "create_cover_slide"),
+            patch.object(self.generator, "create_toc_slide"),
+            patch.object(self.generator, "create_part1_industry_insights"),
+            patch.object(self.generator, "create_part2_solution_overview"),
+            patch.object(self.generator, "create_part3_core_features"),
+            patch.object(self.generator, "create_part4_customer_portal"),
+            patch.object(self.generator, "create_part5_ai_capabilities"),
+            patch.object(self.generator, "create_part6_customer_value"),
+            patch.object(self.generator, "create_part7_cooperation"),
         ):
 
             result = self.generator.generate()
@@ -507,7 +474,9 @@ class TestPresentationGenerator(unittest.TestCase):
             self.assertIn("text", item)
             self.assertIn("size", item)
             self.assertIn("bold", item)
-            self.assertTrue(item["text"].startswith(("一、", "二、", "三", "四、", "五、", "六、", "七、")))
+            self.assertTrue(
+                item["text"].startswith(("一、", "二、", "三", "四、", "五、", "六、", "七、"))
+            )
 
     def test_part1_customer_table_structure(self):
         """测试part1客户表格数据结构"""
@@ -563,15 +532,9 @@ class TestPresentationGeneratorEdgeCases(unittest.TestCase):
         self.mock_prs.slide_height = Inches(7.5)
 
         self.patcher_prs = patch("app.services.ppt_generator.generator.Presentation")
-        self.patcher_base = patch(
-            "app.services.ppt_generator.generator.BaseSlideBuilder"
-        )
-        self.patcher_content = patch(
-            "app.services.ppt_generator.generator.ContentSlideBuilder"
-        )
-        self.patcher_table = patch(
-            "app.services.ppt_generator.generator.TableSlideBuilder"
-        )
+        self.patcher_base = patch("app.services.ppt_generator.generator.BaseSlideBuilder")
+        self.patcher_content = patch("app.services.ppt_generator.generator.ContentSlideBuilder")
+        self.patcher_table = patch("app.services.ppt_generator.generator.TableSlideBuilder")
 
         self.mock_prs_class = self.patcher_prs.start()
         self.mock_base_class = self.patcher_base.start()
@@ -594,22 +557,16 @@ class TestPresentationGeneratorEdgeCases(unittest.TestCase):
         """测试带特殊字符的输出路径"""
         generator = PresentationGenerator()
 
-        with patch.object(generator, "create_cover_slide"), patch.object(
-            generator, "create_toc_slide"
-        ), patch.object(
-            generator, "create_part1_industry_insights"
-        ), patch.object(
-            generator, "create_part2_solution_overview"
-        ), patch.object(
-            generator, "create_part3_core_features"
-        ), patch.object(
-            generator, "create_part4_customer_portal"
-        ), patch.object(
-            generator, "create_part5_ai_capabilities"
-        ), patch.object(
-            generator, "create_part6_customer_value"
-        ), patch.object(
-            generator, "create_part7_cooperation"
+        with (
+            patch.object(generator, "create_cover_slide"),
+            patch.object(generator, "create_toc_slide"),
+            patch.object(generator, "create_part1_industry_insights"),
+            patch.object(generator, "create_part2_solution_overview"),
+            patch.object(generator, "create_part3_core_features"),
+            patch.object(generator, "create_part4_customer_portal"),
+            patch.object(generator, "create_part5_ai_capabilities"),
+            patch.object(generator, "create_part6_customer_value"),
+            patch.object(generator, "create_part7_cooperation"),
         ):
 
             special_path = "test/路径/中文PPT文件.pptx"

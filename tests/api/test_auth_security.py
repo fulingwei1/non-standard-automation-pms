@@ -31,10 +31,7 @@ class TestLogin:
             "password": "admin123",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         if response.status_code == 200:
             data = response.json()
@@ -57,10 +54,7 @@ class TestLogin:
             "password": "wrong_password_12345",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 429 表示速率限制，跳过测试
         if response.status_code == 429:
@@ -77,10 +71,7 @@ class TestLogin:
             "password": "any_password",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 429 表示速率限制，跳过测试
         if response.status_code == 429:
@@ -102,10 +93,7 @@ class TestLogin:
             "password": "test_password",  # 密码可能不对，但应该先检查is_active
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 应该返回401（密码错误）或403（账号未激活）
         assert response.status_code in [401, 403]
@@ -117,10 +105,7 @@ class TestLogin:
             "password": "",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 应该返回401或422（验证错误）
         assert response.status_code in [401, 422]
@@ -131,10 +116,7 @@ class TestLogin:
             "username": "admin",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         assert response.status_code == 422
 
@@ -148,10 +130,7 @@ class TestLogout:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/logout",
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/logout", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -167,10 +146,7 @@ class TestLogout:
     def test_logout_invalid_token(self, client: TestClient):
         """测试无效Token登出"""
         headers = {"Authorization": "Bearer invalid_token_xyz"}
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/logout",
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/logout", headers=headers)
 
         assert response.status_code == 401
 
@@ -182,10 +158,7 @@ class TestLogout:
             "password": "admin123",
         }
 
-        login_response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        login_response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         if login_response.status_code != 200:
             pytest.skip("Admin login not available")
@@ -194,17 +167,11 @@ class TestLogout:
         headers = {"Authorization": f"Bearer {token}"}
 
         # 登出
-        logout_response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/logout",
-            headers=headers
-        )
+        logout_response = client.post(f"{settings.API_V1_PREFIX}/auth/logout", headers=headers)
         assert logout_response.status_code == 200
 
         # 尝试使用已登出的token访问受保护资源
-        me_response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        me_response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         # Token应该已失效
         assert me_response.status_code == 401
@@ -219,10 +186,7 @@ class TestTokenRefresh:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/refresh",
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/refresh", headers=headers)
 
         # Token 可能因为各种原因失效（过期、被撤销等）
         if response.status_code == 401:
@@ -244,10 +208,7 @@ class TestTokenRefresh:
     def test_refresh_token_invalid(self, client: TestClient):
         """测试无效Token刷新"""
         headers = {"Authorization": "Bearer invalid_token"}
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/refresh",
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/refresh", headers=headers)
 
         assert response.status_code == 401
 
@@ -261,10 +222,7 @@ class TestGetCurrentUser:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         # Token 可能因为各种原因失效（过期、被撤销等）
         if response.status_code == 401:
@@ -287,10 +245,7 @@ class TestGetCurrentUser:
         """测试过期Token获取用户信息"""
         # 模拟过期token（这里使用无效token模拟）
         headers = {"Authorization": "Bearer expired_token_simulation"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         assert response.status_code == 401
 
@@ -338,10 +293,7 @@ class TestPasswordChange:
             "password": "old_password123",
         }
 
-        login_response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        login_response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         if login_response.status_code != 200:
             pytest.skip("Failed to login test user")
@@ -356,9 +308,7 @@ class TestPasswordChange:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/auth/password",
-            json=password_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/auth/password", json=password_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -385,9 +335,7 @@ class TestPasswordChange:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/auth/password",
-            json=password_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/auth/password", json=password_data, headers=headers
         )
 
         # Token 可能因为各种原因失效（过期、被撤销等）
@@ -404,10 +352,7 @@ class TestPasswordChange:
             "new_password": "new",
         }
 
-        response = client.put(
-            f"{settings.API_V1_PREFIX}/auth/password",
-            json=password_data
-        )
+        response = client.put(f"{settings.API_V1_PREFIX}/auth/password", json=password_data)
 
         assert response.status_code == 401
 
@@ -454,30 +399,21 @@ class TestAuthorizationHeaders:
         """测试Bearer Token格式"""
         # 错误格式的Authorization头
         headers = {"Authorization": "Token invalid_format"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         assert response.status_code == 401
 
     def test_empty_bearer_token(self, client: TestClient):
         """测试空Bearer Token"""
         headers = {"Authorization": "Bearer "}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         assert response.status_code in [401, 403]
 
     def test_malformed_token(self, client: TestClient):
         """测试格式错误的Token"""
         headers = {"Authorization": "Bearer not.a.valid.jwt.token"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         assert response.status_code == 401
 
@@ -493,10 +429,7 @@ class TestPermissionChecks:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         # 获取用户信息检查是否是超级用户
-        me_response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        me_response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         if me_response.status_code == 200:
             user_data = me_response.json()
@@ -504,14 +437,11 @@ class TestPermissionChecks:
                 # 超级用户应该能访问所有需要权限的接口
                 # 测试访问一个需要权限的接口
                 projects_response = client.get(
-                    f"{settings.API_V1_PREFIX}/projects/",
-                    headers=headers
+                    f"{settings.API_V1_PREFIX}/projects/", headers=headers
                 )
                 assert projects_response.status_code == 200
 
-    def test_regular_user_limited_permissions(
-        self, client: TestClient, normal_user_token: str
-    ):
+    def test_regular_user_limited_permissions(self, client: TestClient, normal_user_token: str):
         """测试普通用户权限受限"""
         if not normal_user_token:
             pytest.skip("Normal user token not available")
@@ -520,10 +450,7 @@ class TestPermissionChecks:
 
         # 普通用户可能无法访问某些管理接口
         # 具体取决于用户的角色和权限配置
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/auth/me",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/auth/me", headers=headers)
 
         # 至少应该能获取自己的信息
         assert response.status_code == 200
@@ -539,10 +466,7 @@ class TestSecurityEdgeCases:
             "password": "password",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 应该返回401（用户不存在），而不是成功登录；429表示速率限制
         assert response.status_code in [401, 429]
@@ -554,10 +478,7 @@ class TestSecurityEdgeCases:
             "password": "password",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 应该正常处理，返回401；429表示速率限制
         assert response.status_code in [401, 429]
@@ -572,10 +493,7 @@ class TestSecurityEdgeCases:
             "password": "a" * 100,  # 长密码（在bcrypt限制内）
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 应该正常处理，返回401或422；429表示速率限制
         assert response.status_code in [401, 422, 429]
@@ -587,10 +505,7 @@ class TestSecurityEdgeCases:
             "password": "密码测试123",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/auth/login",
-            data=login_data
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
 
         # 应该正常处理（可能返回401用户不存在，或429速率限制）
         assert response.status_code in [401, 200, 429]

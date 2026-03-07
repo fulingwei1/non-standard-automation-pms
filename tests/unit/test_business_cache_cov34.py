@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """业务缓存服务单元测试 - 第三十四批"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.cache.business_cache")
 

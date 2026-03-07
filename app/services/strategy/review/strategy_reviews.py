@@ -23,16 +23,13 @@ from app.schemas.strategy import (
     StrategyReviewUpdate,
 )
 
-
-
 # ============================================
 # 战略审视管理
 # ============================================
 
+
 def create_strategy_review(
-    db: Session,
-    data: StrategyReviewCreate,
-    created_by: int
+    db: Session, data: StrategyReviewCreate, created_by: int
 ) -> StrategyReview:
     """
     创建战略审视记录
@@ -92,18 +89,15 @@ def get_strategy_review(db: Session, review_id: int) -> Optional[StrategyReview]
     Returns:
         Optional[StrategyReview]: 审视记录
     """
-    return db.query(StrategyReview).filter(
-        StrategyReview.id == review_id,
-        StrategyReview.is_active
-    ).first()
+    return (
+        db.query(StrategyReview)
+        .filter(StrategyReview.id == review_id, StrategyReview.is_active)
+        .first()
+    )
 
 
 def list_strategy_reviews(
-    db: Session,
-    strategy_id: int,
-    review_type: Optional[str] = None,
-    skip: int = 0,
-    limit: int = 20
+    db: Session, strategy_id: int, review_type: Optional[str] = None, skip: int = 0, limit: int = 20
 ) -> tuple[List[StrategyReview], int]:
     """
     获取战略审视记录列表
@@ -119,8 +113,7 @@ def list_strategy_reviews(
         tuple: (审视记录列表, 总数)
     """
     query = db.query(StrategyReview).filter(
-        StrategyReview.strategy_id == strategy_id,
-        StrategyReview.is_active
+        StrategyReview.strategy_id == strategy_id, StrategyReview.is_active
     )
 
     if review_type:
@@ -133,9 +126,7 @@ def list_strategy_reviews(
 
 
 def update_strategy_review(
-    db: Session,
-    review_id: int,
-    data: StrategyReviewUpdate
+    db: Session, review_id: int, data: StrategyReviewUpdate
 ) -> Optional[StrategyReview]:
     """
     更新战略审视记录
@@ -192,10 +183,12 @@ def get_latest_review(db: Session, strategy_id: int) -> Optional[StrategyReviewR
     Returns:
         Optional[StrategyReviewResponse]: 最新审视记录
     """
-    review = db.query(StrategyReview).filter(
-        StrategyReview.strategy_id == strategy_id,
-        StrategyReview.is_active
-    ).order_by(desc(StrategyReview.review_date)).first()
+    review = (
+        db.query(StrategyReview)
+        .filter(StrategyReview.strategy_id == strategy_id, StrategyReview.is_active)
+        .order_by(desc(StrategyReview.review_date))
+        .first()
+    )
 
     if not review:
         return None
@@ -221,5 +214,3 @@ def get_latest_review(db: Session, strategy_id: int) -> Optional[StrategyReviewR
         created_at=review.created_at,
         updated_at=review.updated_at,
     )
-
-

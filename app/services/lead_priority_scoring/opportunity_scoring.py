@@ -16,9 +16,7 @@ class OpportunityScoringMixin:
 
     def calculate_opportunity_priority(self, opportunity_id: int) -> Dict[str, Any]:
         """计算商机优先级评分"""
-        opportunity = (
-            self.db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
-        )
+        opportunity = self.db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
         if not opportunity:
             raise ValueError(f"商机 {opportunity_id} 不存在")
 
@@ -26,11 +24,7 @@ class OpportunityScoringMixin:
         total_score = 0
 
         # 1. 客户重要性（20分）
-        customer = (
-            self.db.query(Customer)
-            .filter(Customer.id == opportunity.customer_id)
-            .first()
-        )
+        customer = self.db.query(Customer).filter(Customer.id == opportunity.customer_id).first()
         customer_score = self._get_customer_score(customer)
         scores["customer_importance"] = {
             "score": customer_score,
@@ -79,23 +73,17 @@ class OpportunityScoringMixin:
         total_score += urgency_score
 
         # 6. 客户关系（10分）
-        relationship_score = self._calculate_opportunity_relationship(
-            opportunity, customer
-        )
+        relationship_score = self._calculate_opportunity_relationship(opportunity, customer)
         scores["relationship"] = {
             "score": relationship_score,
             "max": 10,
-            "description": self._get_relationship_description_for_opp(
-                opportunity, customer
-            ),
+            "description": self._get_relationship_description_for_opp(opportunity, customer),
         }
         total_score += relationship_score
 
         # 计算优先级等级
         urgency_level_score = urgency_score
-        priority_level = self._determine_priority_level(
-            total_score, urgency_level_score
-        )
+        priority_level = self._determine_priority_level(total_score, urgency_level_score)
         is_key_opportunity = total_score >= 70
         importance_level = self._determine_importance_level(total_score)
         urgency_level = self._determine_urgency_level(urgency_level_score)

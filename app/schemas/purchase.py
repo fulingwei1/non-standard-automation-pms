@@ -13,8 +13,10 @@ from .common import BaseSchema, TimestampSchema
 
 # ==================== 采购订单 ====================
 
+
 class PurchaseOrderItemCreate(BaseModel):
     """采购订单明细创建"""
+
     material_id: Optional[int] = None
     bom_item_id: Optional[int] = None
     material_code: str = Field(max_length=50)
@@ -30,6 +32,7 @@ class PurchaseOrderItemCreate(BaseModel):
 
 class PurchaseOrderCreate(BaseModel):
     """创建采购订单"""
+
     supplier_id: int = Field(description="供应商ID")
     project_id: Optional[int] = None
     order_type: str = Field(default="NORMAL")
@@ -44,6 +47,7 @@ class PurchaseOrderCreate(BaseModel):
 
 class PurchaseOrderUpdate(BaseModel):
     """更新采购订单"""
+
     order_title: Optional[str] = None
     required_date: Optional[date] = None
     promised_date: Optional[date] = None
@@ -55,6 +59,7 @@ class PurchaseOrderUpdate(BaseModel):
 
 class PurchaseOrderItemResponse(BaseSchema):
     """采购订单明细响应"""
+
     id: int
     item_no: int
     material_code: str
@@ -75,6 +80,7 @@ class PurchaseOrderItemResponse(BaseSchema):
 
 class PurchaseOrderResponse(TimestampSchema):
     """采购订单响应"""
+
     id: int
     order_no: str
     supplier_id: int
@@ -98,6 +104,7 @@ class PurchaseOrderResponse(TimestampSchema):
 
 class PurchaseOrderListResponse(BaseSchema):
     """采购订单列表响应"""
+
     id: int
     order_no: str
     supplier_name: str
@@ -113,8 +120,10 @@ class PurchaseOrderListResponse(BaseSchema):
 
 # ==================== 收货单 ====================
 
+
 class GoodsReceiptItemCreate(BaseModel):
     """收货明细创建"""
+
     order_item_id: int = Field(description="订单明细ID")
     delivery_qty: Decimal = Field(gt=0, description="送货数量")
     received_qty: Optional[Decimal] = None
@@ -123,6 +132,7 @@ class GoodsReceiptItemCreate(BaseModel):
 
 class GoodsReceiptCreate(BaseModel):
     """创建收货单"""
+
     order_id: int = Field(description="采购订单ID")
     receipt_date: date = Field(description="收货日期")
     receipt_type: str = Field(default="NORMAL")
@@ -135,6 +145,7 @@ class GoodsReceiptCreate(BaseModel):
 
 class GoodsReceiptItemResponse(BaseSchema):
     """收货明细响应"""
+
     id: int
     material_code: str
     material_name: str
@@ -148,6 +159,7 @@ class GoodsReceiptItemResponse(BaseSchema):
 
 class GoodsReceiptResponse(TimestampSchema):
     """收货单响应"""
+
     id: int
     receipt_no: str
     order_id: int
@@ -162,8 +174,10 @@ class GoodsReceiptResponse(TimestampSchema):
 
 # ==================== 采购申请 ====================
 
+
 class PurchaseRequestItemCreate(BaseModel):
     """采购申请明细创建"""
+
     bom_item_id: Optional[int] = None
     material_id: Optional[int] = None
     material_code: str = Field(max_length=50)
@@ -178,6 +192,7 @@ class PurchaseRequestItemCreate(BaseModel):
 
 class PurchaseRequestCreate(BaseModel):
     """创建采购申请"""
+
     project_id: Optional[int] = None
     machine_id: Optional[int] = None
     supplier_id: Optional[int] = None
@@ -190,6 +205,7 @@ class PurchaseRequestCreate(BaseModel):
 
 class PurchaseRequestUpdate(BaseModel):
     """更新采购申请"""
+
     request_reason: Optional[str] = None
     required_date: Optional[date] = None
     remark: Optional[str] = None
@@ -198,6 +214,7 @@ class PurchaseRequestUpdate(BaseModel):
 
 class PurchaseRequestItemResponse(BaseSchema):
     """采购申请明细响应"""
+
     id: int
     bom_item_id: Optional[int] = None
     material_code: str
@@ -214,6 +231,7 @@ class PurchaseRequestItemResponse(BaseSchema):
 
 class PurchaseRequestResponse(TimestampSchema):
     """采购申请响应"""
+
     id: int
     request_no: str
     project_id: Optional[int] = None
@@ -246,6 +264,7 @@ class PurchaseRequestResponse(TimestampSchema):
 
 class PurchaseRequestListResponse(BaseSchema):
     """采购申请列表响应"""
+
     id: int
     request_no: str
     project_name: Optional[str] = None
@@ -261,6 +280,7 @@ class PurchaseRequestListResponse(BaseSchema):
 
 class PurchaseRequestGeneratedOrder(BaseSchema):
     """采购申请已生成订单"""
+
     id: int
     order_no: str
     status: str

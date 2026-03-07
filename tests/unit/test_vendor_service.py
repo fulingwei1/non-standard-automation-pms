@@ -4,10 +4,11 @@ Tests for vendor_service
 供应商服务测试
 """
 
-import pytest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.vendor import Vendor
@@ -26,11 +27,13 @@ class TestVendorService:
     def service(self, mock_db):
         """创建 VendorService 实例"""
         from app.services.vendor_service import VendorService
+
         return VendorService(mock_db)
 
     def test_init(self, mock_db):
         """测试服务初始化"""
         from app.services.vendor_service import VendorService
+
         service = VendorService(mock_db)
         assert service.db == mock_db
         assert service.model == Vendor
@@ -57,7 +60,7 @@ class TestVendorService:
             cooperation_start=date(2025, 1, 1),
             last_order_date=date(2026, 1, 15),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         result = service._to_response(mock_vendor)
@@ -90,7 +93,7 @@ class TestVendorService:
             cooperation_start=None,
             last_order_date=None,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         result = service._to_response(mock_vendor)
@@ -104,7 +107,7 @@ class TestVendorService:
 
     def test_list_suppliers_basic(self, service, mock_db):
         """测试基本供应商列表"""
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 0
@@ -123,7 +126,7 @@ class TestVendorService:
 
     def test_list_suppliers_with_filters(self, service, mock_db):
         """测试带过滤条件的供应商列表"""
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 5
@@ -132,9 +135,7 @@ class TestVendorService:
             mock_list.return_value = mock_result
 
             result = service.list_suppliers(
-                supplier_type="MATERIAL",
-                status="ACTIVE",
-                supplier_level="A"
+                supplier_type="MATERIAL", status="ACTIVE", supplier_level="A"
             )
 
             assert result["total"] == 5
@@ -145,7 +146,7 @@ class TestVendorService:
 
     def test_list_suppliers_with_keyword(self, service, mock_db):
         """测试带关键词搜索的供应商列表"""
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 3
@@ -162,7 +163,7 @@ class TestVendorService:
 
     def test_list_suppliers_pagination(self, service, mock_db):
         """测试供应商列表分页"""
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 55
@@ -179,7 +180,7 @@ class TestVendorService:
 
     def test_list_suppliers_vendor_type_filter(self, service, mock_db):
         """测试供应商类型过滤"""
-        with patch.object(service, 'list') as mock_list:
+        with patch.object(service, "list") as mock_list:
             mock_result = Mock()
             mock_result.items = []
             mock_result.total = 10

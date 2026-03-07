@@ -3,8 +3,9 @@
 第三十七批覆盖率测试 - 物料管理服务
 tests/unit/test_material_service_cov37.py
 """
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 pytest.importorskip("app.services.material_service")
 
@@ -81,8 +82,10 @@ class TestMaterialServiceListMaterials:
     def test_list_materials_returns_dict(self):
         svc, db = _make_service()
         mock_result = self._mock_list(svc)
-        with patch.object(svc, "list", return_value=mock_result), \
-             patch("app.common.crud.types.QueryParams", MagicMock()):
+        with (
+            patch.object(svc, "list", return_value=mock_result),
+            patch("app.common.crud.types.QueryParams", MagicMock()),
+        ):
             result = svc.list_materials()
         assert "items" in result
         assert "total" in result
@@ -90,16 +93,20 @@ class TestMaterialServiceListMaterials:
     def test_list_materials_zero_total_gives_zero_pages(self):
         svc, db = _make_service()
         mock_result = self._mock_list(svc, total=0, page_size=20)
-        with patch.object(svc, "list", return_value=mock_result), \
-             patch("app.common.crud.types.QueryParams", MagicMock()):
+        with (
+            patch.object(svc, "list", return_value=mock_result),
+            patch("app.common.crud.types.QueryParams", MagicMock()),
+        ):
             result = svc.list_materials()
         assert result["pages"] == 0
 
     def test_pages_calculated_correctly(self):
         svc, db = _make_service()
         mock_result = self._mock_list(svc, total=45, page_size=20)
-        with patch.object(svc, "list", return_value=mock_result), \
-             patch("app.common.crud.types.QueryParams", MagicMock()):
+        with (
+            patch.object(svc, "list", return_value=mock_result),
+            patch("app.common.crud.types.QueryParams", MagicMock()),
+        ):
             result = svc.list_materials()
         assert result["pages"] == 3  # ceil(45/20)
 

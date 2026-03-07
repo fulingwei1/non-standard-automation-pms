@@ -60,10 +60,10 @@ class ImportExportMixin:
                             "deliverables": node.deliverables,
                         }
                         for node in sorted(stage.nodes, key=lambda n: n.sequence)
-                    ]
+                    ],
                 }
                 for stage in sorted(template.stages, key=lambda s: s.sequence)
-            ]
+            ],
         }
 
     def import_template(
@@ -136,11 +136,13 @@ class ImportExportMixin:
                 dep_codes = node_data.get("dependency_node_codes", [])
                 if dep_codes:
                     node_id = node_code_to_id[node_data["node_code"]]
-                    dep_ids = [node_code_to_id[code] for code in dep_codes if code in node_code_to_id]
+                    dep_ids = [
+                        node_code_to_id[code] for code in dep_codes if code in node_code_to_id
+                    ]
                     if dep_ids:
-                        self.db.query(NodeDefinition).filter(
-                            NodeDefinition.id == node_id
-                        ).update({"dependency_node_ids": dep_ids})
+                        self.db.query(NodeDefinition).filter(NodeDefinition.id == node_id).update(
+                            {"dependency_node_ids": dep_ids}
+                        )
 
         self.db.flush()
         return template

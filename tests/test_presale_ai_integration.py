@@ -2,19 +2,21 @@
 售前AI系统集成 - 单元测试
 Team 10: 售前AI系统集成与前端UI
 """
-import pytest
+
 from datetime import date, datetime, timedelta
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.main import app
 from app.models.presale_ai import (
-    PresaleAIUsageStats,
-    PresaleAIFeedback,
-    PresaleAIConfig,
-    PresaleAIWorkflowLog,
-    PresaleAIAuditLog,
     AIFunctionEnum,
+    PresaleAIAuditLog,
+    PresaleAIConfig,
+    PresaleAIFeedback,
+    PresaleAIUsageStats,
+    PresaleAIWorkflowLog,
     WorkflowStatusEnum,
 )
 from app.services.presale_ai_integration import PresaleAIIntegrationService
@@ -23,6 +25,7 @@ client = TestClient(app)
 
 
 # ============ Fixtures ============
+
 
 @pytest.fixture
 def ai_service(db: Session):
@@ -78,6 +81,7 @@ def sample_config(db: Session):
 
 
 # ============ Service Layer Tests ============
+
 
 class TestPresaleAIService:
     """AI服务层测试"""
@@ -267,6 +271,7 @@ class TestPresaleAIService:
 
 
 # ============ API Endpoint Tests ============
+
 
 class TestPresaleAIAPI:
     """AI API端点测试"""

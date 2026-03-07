@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 from app.models.approval import ApprovalCarbonCopy, ApprovalInstance, ApprovalTask
 
+
 class BasicNotificationsMixin:
     """基础通知 Mixin"""
 

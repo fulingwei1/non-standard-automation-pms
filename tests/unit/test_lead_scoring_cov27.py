@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - lead_scoring 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.lead_priority_scoring.lead_scoring")
 
@@ -120,7 +121,7 @@ class TestCalculateLeadPriority:
             win_score=15,
             maturity_score=10,
             urgency_score=8,
-            relationship_score=7
+            relationship_score=7,
         )
         self.db.query.return_value.filter.return_value.first.return_value = lead
         result = self.scorer.calculate_lead_priority(1)
@@ -133,7 +134,7 @@ class TestCalculateLeadPriority:
             win_score=15,
             maturity_score=10,
             urgency_score=8,
-            relationship_score=7
+            relationship_score=7,
         )
         self.db.query.return_value.filter.return_value.first.return_value = lead
         result = self.scorer.calculate_lead_priority(1)
@@ -146,7 +147,7 @@ class TestCalculateLeadPriority:
             win_score=10,
             maturity_score=5,
             urgency_score=5,
-            relationship_score=5
+            relationship_score=5,
         )
         self.db.query.return_value.filter.return_value.first.return_value = lead
         result = self.scorer.calculate_lead_priority(1)
@@ -205,7 +206,7 @@ class TestCalculateLeadPriority:
             win_score=20,
             maturity_score=15,
             urgency_score=10,
-            relationship_score=10
+            relationship_score=10,
         )
         self.db.query.return_value.filter.return_value.first.return_value = lead
         result = self.scorer.calculate_lead_priority(1)

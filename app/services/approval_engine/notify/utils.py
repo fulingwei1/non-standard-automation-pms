@@ -59,7 +59,8 @@ class NotificationUtilsMixin:
 
         # 清理过期的缓存项（基于用户配置的去重窗口）
         expired_keys = [
-            k for k, v in _notification_dedup_cache.items()
+            k
+            for k, v in _notification_dedup_cache.items()
             if now - v > timedelta(hours=dedup_window_hours)
         ]
         for k in expired_keys:

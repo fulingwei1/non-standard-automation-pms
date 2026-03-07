@@ -4,9 +4,10 @@
 注意：health_calculator 为相对导入，使用 sys.modules patch
 """
 import sys
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.strategy.review.health_summary")
 
@@ -49,8 +50,11 @@ def inject_hc_mock(request):
 
 def test_get_health_score_summary_basic(inject_hc_mock):
     """基本调用返回 HealthScoreResponse"""
+    import importlib
+
     from app.services.strategy.review import health_summary
-    import importlib; importlib.reload(health_summary)
+
+    importlib.reload(health_summary)
     inject_hc_mock.calculate_strategy_health.return_value = 78.0
     inject_hc_mock.get_health_level.return_value = "GOOD"
     inject_hc_mock.get_dimension_health_details.return_value = [_make_dimension_detail()]
@@ -65,8 +69,11 @@ def test_get_health_score_summary_basic(inject_hc_mock):
 
 def test_get_health_score_summary_dimensions(inject_hc_mock):
     """维度详情正确映射"""
+    import importlib
+
     from app.services.strategy.review import health_summary
-    import importlib; importlib.reload(health_summary)
+
+    importlib.reload(health_summary)
     inject_hc_mock.calculate_strategy_health.return_value = 65.0
     inject_hc_mock.get_health_level.return_value = "FAIR"
     inject_hc_mock.get_dimension_health_details.return_value = [
@@ -85,8 +92,11 @@ def test_get_health_score_summary_dimensions(inject_hc_mock):
 
 def test_get_health_score_summary_no_score(inject_hc_mock):
     """无评分时 overall_level 为 None"""
+    import importlib
+
     from app.services.strategy.review import health_summary
-    import importlib; importlib.reload(health_summary)
+
+    importlib.reload(health_summary)
     inject_hc_mock.calculate_strategy_health.return_value = None
     inject_hc_mock.get_dimension_health_details.return_value = []
     inject_hc_mock.get_health_trend.return_value = []
@@ -99,8 +109,11 @@ def test_get_health_score_summary_no_score(inject_hc_mock):
 
 def test_get_health_score_summary_trend(inject_hc_mock):
     """趋势数据正确传递"""
+    import importlib
+
     from app.services.strategy.review import health_summary
-    import importlib; importlib.reload(health_summary)
+
+    importlib.reload(health_summary)
     trend = [{"date": "2024-01", "score": 75}]
     inject_hc_mock.calculate_strategy_health.return_value = 80.0
     inject_hc_mock.get_health_level.return_value = "GOOD"
@@ -114,8 +127,11 @@ def test_get_health_score_summary_trend(inject_hc_mock):
 
 def test_get_health_score_summary_calculated_at(inject_hc_mock):
     """calculated_at 字段为 datetime 类型"""
+    import importlib
+
     from app.services.strategy.review import health_summary
-    import importlib; importlib.reload(health_summary)
+
+    importlib.reload(health_summary)
     inject_hc_mock.calculate_strategy_health.return_value = 55.0
     inject_hc_mock.get_health_level.return_value = "POOR"
     inject_hc_mock.get_dimension_health_details.return_value = []
@@ -128,8 +144,11 @@ def test_get_health_score_summary_calculated_at(inject_hc_mock):
 
 def test_get_health_score_summary_kpi_fields(inject_hc_mock):
     """维度 KPI 字段正确映射"""
+    import importlib
+
     from app.services.strategy.review import health_summary
-    import importlib; importlib.reload(health_summary)
+
+    importlib.reload(health_summary)
     detail = _make_dimension_detail()
     detail["kpi_on_track"] = 5
     detail["kpi_at_risk"] = 3

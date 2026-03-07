@@ -5,8 +5,6 @@
 聚合成本分析、成本统计与利润分析等常用逻辑，减少各处重复计算。
 """
 
-from __future__ import annotations
-
 from typing import Any, Dict, Optional
 
 from sqlalchemy import func
@@ -47,7 +45,9 @@ class CostService:
             .group_by(ProjectCost.cost_category)
             .all()
         )
-        cost_by_category = {cc or "其他": float(amount or 0) for cc, amount in cost_by_category_result}
+        cost_by_category = {
+            cc or "其他": float(amount or 0) for cc, amount in cost_by_category_result
+        }
 
         return {
             "total_cost": total_cost,
@@ -83,7 +83,9 @@ class CostService:
 
         variance = self.calculate_variance(budget_amount, actual_cost)
         contract_variance = contract_amount - actual_cost if contract_amount > 0 else 0
-        contract_variance_pct = (contract_variance / contract_amount * 100) if contract_amount > 0 else 0
+        contract_variance_pct = (
+            (contract_variance / contract_amount * 100) if contract_amount > 0 else 0
+        )
 
         result = {
             "project_id": project_id,
@@ -101,7 +103,8 @@ class CostService:
                 {"type": k, "amount": round(v, 2)} for k, v in breakdown["cost_by_type"].items()
             ],
             "cost_by_category": [
-                {"category": k, "amount": round(v, 2)} for k, v in breakdown["cost_by_category"].items()
+                {"category": k, "amount": round(v, 2)}
+                for k, v in breakdown["cost_by_category"].items()
             ],
         }
 
@@ -161,11 +164,13 @@ class CostService:
         cost_breakdown = []
         for cost_type, amount in breakdown["cost_by_type"].items():
             pct = (amount / actual_cost * 100) if actual_cost > 0 else 0
-            cost_breakdown.append({
-                "cost_type": cost_type,
-                "amount": round(amount, 2),
-                "percentage": round(pct, 2),
-            })
+            cost_breakdown.append(
+                {
+                    "cost_type": cost_type,
+                    "amount": round(amount, 2),
+                    "percentage": round(pct, 2),
+                }
+            )
 
         return {
             "project_id": project_id,

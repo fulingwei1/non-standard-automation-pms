@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - milestone_reminders 单元测试"""
 
-import pytest
 from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.sales_reminder.milestone_reminders")
 
 from app.services.sales_reminder.milestone_reminders import (
-    notify_milestone_upcoming,
     notify_milestone_overdue,
+    notify_milestone_upcoming,
 )
 
 
@@ -135,9 +136,7 @@ class TestNotifyMilestoneUpcoming:
         milestones = [_make_milestone(ms_id=i, owner_id=i) for i in range(1, 4)]
         self.db.query.return_value.filter.return_value.all.return_value = milestones
         self.db.query.return_value.filter.return_value.first.return_value = None
-        with patch(
-            "app.services.sales_reminder.milestone_reminders.create_notification"
-        ):
+        with patch("app.services.sales_reminder.milestone_reminders.create_notification"):
             result = notify_milestone_upcoming(self.db, days_before=7)
         assert result == 3
 

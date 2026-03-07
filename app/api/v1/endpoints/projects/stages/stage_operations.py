@@ -41,9 +41,7 @@ def start_stage(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post(
-    "/{stage_instance_id}/complete", response_model=ProjectStageInstanceResponse
-)
+@router.post("/{stage_instance_id}/complete", response_model=ProjectStageInstanceResponse)
 def complete_stage(
     stage_instance_id: int,
     actual_end_date: Optional[date] = Query(None, description="实际结束日期"),
@@ -91,9 +89,7 @@ def update_stage_instance(
 ) -> Any:
     """更新阶段实例信息"""
     stage = (
-        db.query(ProjectStageInstance)
-        .filter(ProjectStageInstance.id == stage_instance_id)
-        .first()
+        db.query(ProjectStageInstance).filter(ProjectStageInstance.id == stage_instance_id).first()
     )
 
     if not stage:

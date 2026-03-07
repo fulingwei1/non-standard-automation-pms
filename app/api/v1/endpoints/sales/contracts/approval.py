@@ -14,10 +14,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.services.contract_approval import ContractApprovalService
 
 logger = logging.getLogger(__name__)
@@ -159,9 +159,7 @@ def perform_approval_action(
                 comment=request.comment,
             )
         else:
-            raise HTTPException(
-                status_code=400, detail=f"不支持的操作类型: {request.action}"
-            )
+            raise HTTPException(status_code=400, detail=f"不支持的操作类型: {request.action}")
 
         db.commit()
 
@@ -179,9 +177,7 @@ def perform_approval_action(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post(
-    "/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.post("/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def perform_batch_approval(
     *,
     db: Session = Depends(deps.get_db),
@@ -210,9 +206,7 @@ def perform_batch_approval(
     )
 
 
-@router.get(
-    "/status/{contract_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.get("/status/{contract_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_approval_status(
     contract_id: int,
     db: Session = Depends(deps.get_db),
@@ -224,15 +218,15 @@ def get_approval_status(
     获取指定合同的审批流程状态和历史。
     """
     service = ContractApprovalService(db)
-    
+
     try:
         status_data = service.get_contract_approval_status(contract_id)
-        
+
         if not status_data:
             # 获取合同基本信息
             from app.models.sales.contracts import Contract
             from app.utils.db_helpers import get_or_404
-            
+
             contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
             return ResponseModel(
                 code=200,
@@ -244,7 +238,7 @@ def get_approval_status(
                     "approval_instance": None,
                 },
             )
-        
+
         return ResponseModel(
             code=200,
             message="获取审批状态成功",
@@ -267,16 +261,16 @@ def withdraw_approval(
     撤回正在审批中的合同。
     """
     service = ContractApprovalService(db)
-    
+
     try:
         result = service.withdraw_approval(
             contract_id=request.contract_id,
             user_id=current_user.id,
             reason=request.reason,
         )
-        
+
         db.commit()
-        
+
         return ResponseModel(
             code=200,
             message="审批撤回成功",

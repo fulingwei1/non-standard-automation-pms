@@ -25,13 +25,13 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models.service import ServiceTicket
 from app.models.production import WorkOrder, Workstation
 from app.models.production.workshop import Workshop
-from app.models.stage_instance import ProjectStageInstance
-from app.models.user import User
 from app.models.project import Project
 from app.models.project.customer import Customer
+from app.models.service import ServiceTicket
+from app.models.stage_instance import ProjectStageInstance
+from app.models.user import User
 
 
 def _unique(prefix: str = "TST") -> str:
@@ -142,9 +142,7 @@ class TestServiceTicketStatusUpdate:
         # 应返回 400（无效的状态值）或其他非 200 状态
         assert response.status_code in (400, 422, 500)
 
-    def test_close_ticket_success(
-        self, client: TestClient, admin_token: str, db_session: Session
-    ):
+    def test_close_ticket_success(self, client: TestClient, admin_token: str, db_session: Session):
         """测试关闭工单"""
         project = db_session.query(Project).first()
         customer = db_session.query(Customer).first()
@@ -201,7 +199,9 @@ class TestServiceTicketStatusUpdate:
 class TestWorkOrderStatusUpdate:
     """测试生产工单状态更新端点"""
 
-    def _create_workstation(self, db_session: Session, code_suffix: str, ws_status: str = "IDLE") -> Workstation:
+    def _create_workstation(
+        self, db_session: Session, code_suffix: str, ws_status: str = "IDLE"
+    ) -> Workstation:
         """创建工位（需要先创建车间满足FK约束）"""
         workshop = _get_or_create_workshop(db_session)
         workstation = Workstation(
@@ -215,8 +215,13 @@ class TestWorkOrderStatusUpdate:
         return workstation
 
     def _create_work_order(
-        self, db_session: Session, order_suffix: str, ws_status: str,
-        workstation_id=None, assigned_to=None, progress=0,
+        self,
+        db_session: Session,
+        order_suffix: str,
+        ws_status: str,
+        workstation_id=None,
+        assigned_to=None,
+        progress=0,
     ) -> WorkOrder:
         """创建工单（使用正确的列名）"""
         order = WorkOrder(
@@ -241,6 +246,7 @@ class TestWorkOrderStatusUpdate:
         worker_id = None
         try:
             from app.models.production.workshop import Worker
+
             worker = db_session.query(Worker).first()
             if worker:
                 worker_id = worker.id
@@ -248,7 +254,9 @@ class TestWorkOrderStatusUpdate:
             pass
 
         order = self._create_work_order(
-            db_session, "A", "ASSIGNED",
+            db_session,
+            "A",
+            "ASSIGNED",
             workstation_id=workstation.id,
             assigned_to=worker_id,
         )
@@ -297,7 +305,9 @@ class TestWorkOrderStatusUpdate:
         """测试完成工单"""
         workstation = self._create_workstation(db_session, "C", ws_status="WORKING")
         order = self._create_work_order(
-            db_session, "C", "STARTED",
+            db_session,
+            "C",
+            "STARTED",
             workstation_id=workstation.id,
             progress=80,
         )
@@ -329,7 +339,9 @@ class TestWorkOrderStatusUpdate:
         """测试暂停工单"""
         workstation = self._create_workstation(db_session, "D", ws_status="WORKING")
         order = self._create_work_order(
-            db_session, "D", "STARTED",
+            db_session,
+            "D",
+            "STARTED",
             workstation_id=workstation.id,
         )
         db_session.commit()
@@ -363,6 +375,7 @@ class TestWorkOrderStatusUpdate:
         worker_id = None
         try:
             from app.models.production.workshop import Worker
+
             worker = db_session.query(Worker).first()
             if worker:
                 worker_id = worker.id
@@ -370,7 +383,9 @@ class TestWorkOrderStatusUpdate:
             pass
 
         order = self._create_work_order(
-            db_session, "E", "PAUSED",
+            db_session,
+            "E",
+            "PAUSED",
             workstation_id=workstation.id,
             assigned_to=worker_id,
         )
@@ -401,7 +416,9 @@ class TestWorkOrderStatusUpdate:
         """测试取消工单"""
         workstation = self._create_workstation(db_session, "F", ws_status="WORKING")
         order = self._create_work_order(
-            db_session, "F", "STARTED",
+            db_session,
+            "F",
+            "STARTED",
             workstation_id=workstation.id,
         )
         db_session.commit()

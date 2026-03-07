@@ -5,30 +5,24 @@ Tests for permission_service
 
 from sqlalchemy.orm import Session
 
-from app.models.user import User, Role, UserRole
+from app.models.user import Role, User, UserRole
 from app.services.permission_service import PermissionService
 
 
 def test_superuser_always_has_permission(db_session: Session):
     """Superuser always returns True regardless of permissions."""
-    user = User(username="admin", is_superuser=True,
-        password_hash="test_hash_123"
-    )
+    user = User(username="admin", is_superuser=True, password_hash="test_hash_123")
     db_session.add(user)
     db_session.flush()
 
-    has_perm = PermissionService.check_permission(
-        db_session, user.id, "any:permission", user
-    )
+    has_perm = PermissionService.check_permission(db_session, user.id, "any:permission", user)
 
     assert has_perm is True
 
 
 def test_user_has_direct_roles(db_session: Session):
     """User with direct assigned roles only."""
-    user = User(username="testuser", is_superuser=False,
-        password_hash="test_hash_123"
-    )
+    user = User(username="testuser", is_superuser=False, password_hash="test_hash_123")
     db_session.add(user)
     db_session.flush()
 

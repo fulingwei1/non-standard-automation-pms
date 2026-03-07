@@ -2,8 +2,9 @@
 """
 Tests for app/services/procurement_analysis/base.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.procurement_analysis.base import ProcurementAnalysisService
@@ -29,7 +30,9 @@ def test_get_price_fluctuation_delegates():
 
 def test_get_delivery_performance_delegates():
     """get_delivery_performance_data 委托给 DeliveryPerformanceAnalyzer"""
-    with patch("app.services.procurement_analysis.base.DeliveryPerformanceAnalyzer") as MockAnalyzer:
+    with patch(
+        "app.services.procurement_analysis.base.DeliveryPerformanceAnalyzer"
+    ) as MockAnalyzer:
         MockAnalyzer.get_delivery_performance_data.return_value = {}
         result = ProcurementAnalysisService.get_delivery_performance_data("db")
         MockAnalyzer.get_delivery_performance_data.assert_called_once()

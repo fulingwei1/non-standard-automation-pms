@@ -44,19 +44,20 @@ from app.services.bonus import BonusCalculator
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/bonus/calculation",
-    tags=["calculation"]
-)
+router = APIRouter(prefix="/bonus/calculation", tags=["calculation"])
 
 # 共 4 个路由
 
 # ==================== 奖金计算 ====================
 
-@router.post("/calculate/performance", response_model=ResponseModel[List[BonusCalculationResponse]], status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/calculate/performance",
+    response_model=ResponseModel[List[BonusCalculationResponse]],
+    status_code=status.HTTP_200_OK,
+)
 def calculate_performance_bonus(
     *,
     db: Session = Depends(deps.get_db),
@@ -69,9 +70,7 @@ def calculate_performance_bonus(
     calculator = BonusCalculator(db)
 
     # 获取绩效结果
-    query = db.query(PerformanceResult).filter(
-        PerformanceResult.period_id == request.period_id
-    )
+    query = db.query(PerformanceResult).filter(PerformanceResult.period_id == request.period_id)
     if request.user_id:
         query = query.filter(PerformanceResult.user_id == request.user_id)
     performance_results = query.all()
@@ -85,7 +84,7 @@ def calculate_performance_bonus(
         if not rules[0]:
             raise HTTPException(status_code=404, detail="规则不存在")
     else:
-        rules = calculator.get_active_rules(bonus_type='PERFORMANCE_BASED')
+        rules = calculator.get_active_rules(bonus_type="PERFORMANCE_BASED")
 
     calculations = []
     for perf_result in performance_results:
@@ -103,7 +102,11 @@ def calculate_performance_bonus(
     return ResponseModel(code=200, message="计算完成", data=calculations)
 
 
-@router.post("/calculate/project", response_model=ResponseModel[List[BonusCalculationResponse]], status_code=status.HTTP_200_OK)
+@router.post(
+    "/calculate/project",
+    response_model=ResponseModel[List[BonusCalculationResponse]],
+    status_code=status.HTTP_200_OK,
+)
 def calculate_project_bonus(
     *,
     db: Session = Depends(deps.get_db),
@@ -120,9 +123,11 @@ def calculate_project_bonus(
     calculator = BonusCalculator(db)
 
     # 获取项目贡献记录
-    contributions = db.query(ProjectContribution).filter(
-        ProjectContribution.project_id == request.project_id
-    ).all()
+    contributions = (
+        db.query(ProjectContribution)
+        .filter(ProjectContribution.project_id == request.project_id)
+        .all()
+    )
 
     if not contributions:
         return ResponseModel(code=200, message="未找到项目贡献记录", data=[])
@@ -133,7 +138,7 @@ def calculate_project_bonus(
         if not rules[0]:
             raise HTTPException(status_code=404, detail="规则不存在")
     else:
-        rules = calculator.get_active_rules(bonus_type='PROJECT_BASED')
+        rules = calculator.get_active_rules(bonus_type="PROJECT_BASED")
 
     calculations = []
     for contrib in contributions:
@@ -151,7 +156,11 @@ def calculate_project_bonus(
     return ResponseModel(code=200, message="计算完成", data=calculations)
 
 
-@router.post("/calculate/milestone", response_model=ResponseModel[List[BonusCalculationResponse]], status_code=status.HTTP_200_OK)
+@router.post(
+    "/calculate/milestone",
+    response_model=ResponseModel[List[BonusCalculationResponse]],
+    status_code=status.HTTP_200_OK,
+)
 def calculate_milestone_bonus(
     *,
     db: Session = Depends(deps.get_db),
@@ -161,7 +170,9 @@ def calculate_milestone_bonus(
     """
     计算里程碑奖金
     """
-    milestone = db.query(ProjectMilestone).filter(ProjectMilestone.id == request.milestone_id).first()
+    milestone = (
+        db.query(ProjectMilestone).filter(ProjectMilestone.id == request.milestone_id).first()
+    )
     if not milestone:
         raise HTTPException(status_code=404, detail="里程碑不存在")
 
@@ -177,7 +188,7 @@ def calculate_milestone_bonus(
         if not rules[0]:
             raise HTTPException(status_code=404, detail="规则不存在")
     else:
-        rules = calculator.get_active_rules(bonus_type='MILESTONE_BASED')
+        rules = calculator.get_active_rules(bonus_type="MILESTONE_BASED")
 
     calculations = []
     for rule in rules:
@@ -194,7 +205,11 @@ def calculate_milestone_bonus(
     return ResponseModel(code=200, message="计算完成", data=calculations)
 
 
-@router.post("/calculate/team", response_model=ResponseModel[TeamBonusAllocationResponse], status_code=status.HTTP_200_OK)
+@router.post(
+    "/calculate/team",
+    response_model=ResponseModel[TeamBonusAllocationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def calculate_team_bonus(
     *,
     db: Session = Depends(deps.get_db),
@@ -216,7 +231,7 @@ def calculate_team_bonus(
         if not rule:
             raise HTTPException(status_code=404, detail="规则不存在")
     else:
-        rules = calculator.get_active_rules(bonus_type='TEAM_BASED')
+        rules = calculator.get_active_rules(bonus_type="TEAM_BASED")
         if not rules:
             raise HTTPException(status_code=404, detail="未找到团队奖金规则")
         rule = rules[0]
@@ -227,6 +242,3 @@ def calculate_team_bonus(
     db.refresh(allocation)
 
     return ResponseModel(code=200, message="计算完成", data=allocation)
-
-
-

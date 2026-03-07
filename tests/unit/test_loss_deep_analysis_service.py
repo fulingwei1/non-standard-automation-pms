@@ -35,7 +35,7 @@ class TestDetermineInvestmentStage:
         project.id = 1
         project.stage = "S1"
 
-        with patch.object(service, '_get_project_hours', return_value=10.0):
+        with patch.object(service, "_get_project_hours", return_value=10.0):
             result = service._determine_investment_stage(project)
 
             assert result == "requirement_only"
@@ -78,7 +78,7 @@ class TestDetermineInvestmentStage:
         project.id = 1
         project.stage = None
 
-        with patch.object(service, '_get_project_hours', return_value=100.0):
+        with patch.object(service, "_get_project_hours", return_value=100.0):
             result = service._determine_investment_stage(project)
 
             assert result == "detailed_design"
@@ -93,7 +93,7 @@ class TestDetermineInvestmentStage:
         project.id = 1
         project.stage = None
 
-        with patch.object(service, '_get_project_hours', return_value=50.0):
+        with patch.object(service, "_get_project_hours", return_value=50.0):
             result = service._determine_investment_stage(project)
 
             assert result == "design"
@@ -108,7 +108,7 @@ class TestDetermineInvestmentStage:
         project.id = 1
         project.stage = None
 
-        with patch.object(service, '_get_project_hours', return_value=20.0):
+        with patch.object(service, "_get_project_hours", return_value=20.0):
             result = service._determine_investment_stage(project)
 
             assert result == "requirement_only"
@@ -123,7 +123,7 @@ class TestDetermineInvestmentStage:
         project.id = 1
         project.stage = None
 
-        with patch.object(service, '_get_project_hours', return_value=0.0):
+        with patch.object(service, "_get_project_hours", return_value=0.0):
             result = service._determine_investment_stage(project)
 
             assert result == "unknown"
@@ -177,8 +177,7 @@ class TestAnalyzeLostProjects:
 
         service = LossDeepAnalysisService(db_session)
         result = service.analyze_lost_projects(
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31)
+            start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
         )
 
         assert result["analysis_period"]["start_date"] == "2025-01-01"
@@ -266,9 +265,7 @@ class TestAnalyzeByStage:
 
         service = LossDeepAnalysisService(db_session)
         result = service.analyze_by_stage(
-        "design",
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31)
+            "design", start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
         )
 
         assert result["stage"] == "design"
@@ -281,6 +278,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")
@@ -297,15 +295,15 @@ def db_session():
 # G4 补充测试（纯 MagicMock，不依赖真实数据库）
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 class TestLossDeepAnalysisServiceG4:
     """G4 补充：LossDeepAnalysisService 额外覆盖"""
 
     def _make_service(self):
         from app.services.loss_deep_analysis_service import LossDeepAnalysisService
+
         db = MagicMock()
-        with patch(
-            "app.services.loss_deep_analysis_service.HourlyRateService"
-        ) as MockHRS:
+        with patch("app.services.loss_deep_analysis_service.HourlyRateService") as MockHRS:
             MockHRS.return_value = MagicMock()
             service = LossDeepAnalysisService(db)
         return service, db
@@ -336,8 +334,7 @@ class TestLossDeepAnalysisServiceG4:
         db.query.return_value = q
 
         result = service.analyze_lost_projects(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
+            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
         )
         assert isinstance(result, dict)
 
@@ -360,7 +357,7 @@ class TestLossDeepAnalysisServiceG4:
         project.stage = None
         project.id = 1
 
-        with patch.object(service, '_get_project_hours', return_value=150.0):
+        with patch.object(service, "_get_project_hours", return_value=150.0):
             result = service._determine_investment_stage(project)
         assert result == "detailed_design"
 

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第十批：AIQuotationGeneratorService 单元测试"""
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.presale_ai_quotation_service import AIQuotationGeneratorService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -55,6 +57,7 @@ def test_generate_quotation(service, db):
 
     with patch.object(service, "generate_quotation", return_value=mock_quotation):
         from app.schemas.presale_ai_quotation import QuotationGenerateRequest
+
         request = MagicMock(spec=QuotationGenerateRequest)
         result = service.generate_quotation(request=request, user_id=1)
         assert result.id == 1

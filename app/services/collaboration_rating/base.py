@@ -14,10 +14,10 @@ class CollaborationRatingService:
 
     # 岗位类型映射（用于识别跨部门合作）
     JOB_TYPE_DEPARTMENT_MAP = {
-        'mechanical': '机械部',
-        'test': '测试部',
-        'electrical': '电气部',
-        'solution': '售前部'  # 方案工程师
+        "mechanical": "机械部",
+        "test": "测试部",
+        "electrical": "电气部",
+        "solution": "售前部",  # 方案工程师
     }
 
     def __init__(self, db: Session):

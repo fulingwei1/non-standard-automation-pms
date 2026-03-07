@@ -61,30 +61,22 @@ def get_sla_statistics(
     # 计算按时率
     response_rate = Decimal("0")
     if monitored_tickets > 0:
-        response_rate = (
-            Decimal(response_on_time) / Decimal(monitored_tickets) * Decimal("100")
-        )
+        response_rate = Decimal(response_on_time) / Decimal(monitored_tickets) * Decimal("100")
 
     resolve_rate = Decimal("0")
     if monitored_tickets > 0:
-        resolve_rate = (
-            Decimal(resolve_on_time) / Decimal(monitored_tickets) * Decimal("100")
-        )
+        resolve_rate = Decimal(resolve_on_time) / Decimal(monitored_tickets) * Decimal("100")
 
     # 计算平均时间
     response_times = [
-        m.response_time_diff_hours
-        for m in monitors
-        if m.response_time_diff_hours is not None
+        m.response_time_diff_hours for m in monitors if m.response_time_diff_hours is not None
     ]
     avg_response_time_hours = None
     if response_times:
         avg_response_time_hours = sum(response_times) / len(response_times)
 
     resolve_times = [
-        m.resolve_time_diff_hours
-        for m in monitors
-        if m.resolve_time_diff_hours is not None
+        m.resolve_time_diff_hours for m in monitors if m.resolve_time_diff_hours is not None
     ]
     avg_resolve_time_hours = None
     if resolve_times:
@@ -118,9 +110,7 @@ def get_sla_statistics(
 
     for stats in policy_stats.values():
         stats["response_rate"] = (
-            Decimal(stats["response_on_time"])
-            / Decimal(stats["total"])
-            * Decimal("100")
+            Decimal(stats["response_on_time"]) / Decimal(stats["total"]) * Decimal("100")
             if stats["total"] > 0
             else Decimal("0")
         )
@@ -159,9 +149,7 @@ def get_sla_statistics(
 
     for stats in problem_type_stats.values():
         stats["response_rate"] = (
-            Decimal(stats["response_on_time"])
-            / Decimal(stats["total"])
-            * Decimal("100")
+            Decimal(stats["response_on_time"]) / Decimal(stats["total"]) * Decimal("100")
             if stats["total"] > 0
             else Decimal("0")
         )
@@ -200,9 +188,7 @@ def get_sla_statistics(
 
     for stats in urgency_stats.values():
         stats["response_rate"] = (
-            Decimal(stats["response_on_time"])
-            / Decimal(stats["total"])
-            * Decimal("100")
+            Decimal(stats["response_on_time"]) / Decimal(stats["total"]) * Decimal("100")
             if stats["total"] > 0
             else Decimal("0")
         )
@@ -224,12 +210,12 @@ def get_sla_statistics(
         resolve_warning=resolve_warning,
         response_rate=response_rate,
         resolve_rate=resolve_rate,
-        avg_response_time_hours=Decimal(str(avg_response_time_hours))
-        if avg_response_time_hours
-        else None,
-        avg_resolve_time_hours=Decimal(str(avg_resolve_time_hours))
-        if avg_resolve_time_hours
-        else None,
+        avg_response_time_hours=(
+            Decimal(str(avg_response_time_hours)) if avg_response_time_hours else None
+        ),
+        avg_resolve_time_hours=(
+            Decimal(str(avg_resolve_time_hours)) if avg_resolve_time_hours else None
+        ),
         by_policy=by_policy,
         by_problem_type=by_problem_type,
         by_urgency=by_urgency,

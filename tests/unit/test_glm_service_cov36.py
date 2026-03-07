@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """GLM API包装服务单元测试 - 第三十六批"""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 pytest.importorskip("app.services.glm_service")
 
 try:
-    from app.services.glm_service import get_glm_service, call_glm_api, _generate_mock_response
     import app.services.glm_service as glm_module
+    from app.services.glm_service import _generate_mock_response, call_glm_api, get_glm_service
 except ImportError:
     pytestmark = pytest.mark.skip(reason="导入失败")
     get_glm_service = None

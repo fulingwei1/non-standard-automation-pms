@@ -13,7 +13,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional, Union
 
-
 # 状态到颜色/标签的映射
 _STATUS_BADGES = {
     "COMPLETED": {"label": "已完成", "color": "green"},

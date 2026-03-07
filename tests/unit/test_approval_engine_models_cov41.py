@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """Unit tests for app/services/approval_engine/models.py - batch 41"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.models")
 
 from app.services.approval_engine.models import (
+    ApprovalDecision,
     ApprovalFlowType,
     ApprovalNodeRole,
     ApprovalStatus,
-    ApprovalDecision,
     LegacyApprovalFlow,
-    LegacyApprovalNode,
     LegacyApprovalInstance,
+    LegacyApprovalNode,
     LegacyApprovalRecord,
 )
 

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/sales_reminder/sales_flow_reminders.py"""
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.services.sales_reminder.sales_flow_reminders import (
+    notify_approval_pending,
     notify_gate_timeout,
     notify_quote_expiring,
-    notify_approval_pending,
 )
 
 

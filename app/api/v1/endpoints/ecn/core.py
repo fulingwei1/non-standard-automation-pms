@@ -17,9 +17,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.ecn import Ecn, EcnEvaluation, EcnLog, EcnType
 from app.models.project import Machine, Project
 from app.models.user import User
@@ -34,9 +34,9 @@ from app.services.ecn_auto_assign_service import auto_assign_evaluation
 from app.services.ecn_notification import (
     notify_evaluation_assigned,
 )
+from app.utils.db_helpers import get_or_404
 
 from .utils import build_ecn_list_response, build_ecn_response, generate_ecn_no
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -82,16 +82,16 @@ def read_ecns(
         query = query.filter(Ecn.priority == priority)
 
     total = query.count()
-    ecns = apply_pagination(query.order_by(desc(Ecn.created_at)), pagination.offset, pagination.limit).all()
+    ecns = apply_pagination(
+        query.order_by(desc(Ecn.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [build_ecn_list_response(db, ecn) for ecn in ecns]
 
     return pagination.to_response(items, total)
 
 
-@router.get(
-    "/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def read_ecn(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -156,9 +156,7 @@ def create_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put(
-    "/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK
-)
+@router.put("/ecns/{ecn_id}", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def update_ecn(
     *,
     db: Session = Depends(deps.get_db),
@@ -185,9 +183,7 @@ def update_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put(
-    "/ecns/{ecn_id}/submit", response_model=EcnResponse, status_code=status.HTTP_200_OK
-)
+@router.put("/ecns/{ecn_id}/submit", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def submit_ecn(
     *,
     db: Session = Depends(deps.get_db),
@@ -220,9 +216,7 @@ def submit_ecn(
     db.add(log)
 
     # 自动触发评估流程：根据ECN类型获取需要评估的部门
-    ecn_type_config = (
-        db.query(EcnType).filter(EcnType.type_code == ecn.ecn_type).first()
-    )
+    ecn_type_config = db.query(EcnType).filter(EcnType.type_code == ecn.ecn_type).first()
     if ecn_type_config and ecn_type_config.required_depts:
         ecn.status = "EVALUATING"
         preferred_evaluators = submit_in.preferred_evaluators or {}
@@ -250,9 +244,7 @@ def submit_ecn(
                         .first()
                     )
                     if not evaluator:
-                        evaluator_id = (
-                            None  # 如果用户不存在或不属于该部门，使用自动分配
-                        )
+                        evaluator_id = None  # 如果用户不存在或不属于该部门，使用自动分配
 
                 # 2. 如果没有手动指定或手动指定无效，则自动分配
                 if not evaluator_id:
@@ -273,9 +265,7 @@ def submit_ecn(
     return build_ecn_response(db, ecn)
 
 
-@router.put(
-    "/ecns/{ecn_id}/cancel", response_model=EcnResponse, status_code=status.HTTP_200_OK
-)
+@router.put("/ecns/{ecn_id}/cancel", response_model=EcnResponse, status_code=status.HTTP_200_OK)
 def cancel_ecn(
     *,
     db: Session = Depends(deps.get_db),

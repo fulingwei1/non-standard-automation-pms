@@ -10,6 +10,7 @@ class TestRatingStatistics:
 
     def _make_stats(self):
         from app.services.collaboration_rating.statistics import RatingStatistics
+
         db = MagicMock()
         service = MagicMock()
         return RatingStatistics(db, service), db

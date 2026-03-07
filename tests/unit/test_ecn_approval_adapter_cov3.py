@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - approval_engine/adapters/ecn"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.approval_engine.adapters.ecn")
 
@@ -166,9 +167,21 @@ class TestCheckEvaluationComplete:
 
     def test_all_evaluations_complete(self):
         db = make_db()
-        eval1 = MagicMock(status="COMPLETED", cost_estimate=5000, schedule_estimate=3, eval_dept="Engineering", eval_result="APPROVE")
-        eval2 = MagicMock(status="COMPLETED", cost_estimate=3000, schedule_estimate=2, eval_dept="Quality", eval_result="APPROVE")
-        
+        eval1 = MagicMock(
+            status="COMPLETED",
+            cost_estimate=5000,
+            schedule_estimate=3,
+            eval_dept="Engineering",
+            eval_result="APPROVE",
+        )
+        eval2 = MagicMock(
+            status="COMPLETED",
+            cost_estimate=3000,
+            schedule_estimate=2,
+            eval_dept="Quality",
+            eval_result="APPROVE",
+        )
+
         db.query.return_value.filter.return_value.all.return_value = [eval1, eval2]
 
         svc = EcnApprovalAdapter(db)
@@ -178,8 +191,14 @@ class TestCheckEvaluationComplete:
 
     def test_pending_evaluations_returns_false(self):
         db = make_db()
-        eval1 = MagicMock(status="PENDING", cost_estimate=None, schedule_estimate=None, eval_dept="Engineering", eval_result=None)
-        
+        eval1 = MagicMock(
+            status="PENDING",
+            cost_estimate=None,
+            schedule_estimate=None,
+            eval_dept="Engineering",
+            eval_result=None,
+        )
+
         db.query.return_value.filter.return_value.all.return_value = [eval1]
 
         svc = EcnApprovalAdapter(db)

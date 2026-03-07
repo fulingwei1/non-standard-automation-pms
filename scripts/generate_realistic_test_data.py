@@ -62,7 +62,7 @@ def generate_customer_data(db):
         credit_level="A",
         credit_limit=Decimal("5000000.00"),
         payment_terms="30%预付款，60%发货前，10%验收后",
-        status="ACTIVE"
+        status="ACTIVE",
     )
     db.add(customer)
     db.flush()
@@ -86,10 +86,7 @@ def generate_users_data(db):
         sales_emp = db.query(Employee).filter(Employee.employee_code == "EMP001").first()
         if not sales_emp:
             sales_emp = Employee(
-                employee_code="EMP001",
-                name="张销售",
-                department="销售部",
-                role="销售经理"
+                employee_code="EMP001", name="张销售", department="销售部", role="销售经理"
             )
             db.add(sales_emp)
             db.flush()
@@ -100,7 +97,7 @@ def generate_users_data(db):
             real_name="张销售",
             email="zhang.sales@company.com",
             password_hash=get_password_hash("sales123"),
-            is_active=True
+            is_active=True,
         )
         db.add(sales_user)
         db.flush()
@@ -109,13 +106,11 @@ def generate_users_data(db):
     pm_user = db.query(User).filter(User.username == "pm_li").first()
     if not pm_user:
         from app.core.security import get_password_hash
+
         pm_emp = db.query(Employee).filter(Employee.employee_code == "EMP002").first()
         if not pm_emp:
             pm_emp = Employee(
-                employee_code="EMP002",
-                name="李项目经理",
-                department="项目部",
-                role="项目经理"
+                employee_code="EMP002", name="李项目经理", department="项目部", role="项目经理"
             )
             db.add(pm_emp)
             db.flush()
@@ -126,7 +121,7 @@ def generate_users_data(db):
             real_name="李项目经理",
             email="li.pm@company.com",
             password_hash=get_password_hash("pm123"),
-            is_active=True
+            is_active=True,
         )
         db.add(pm_user)
         db.flush()
@@ -135,13 +130,11 @@ def generate_users_data(db):
     mech_user = db.query(User).filter(User.username == "mech_wang").first()
     if not mech_user:
         from app.core.security import get_password_hash
+
         mech_emp = db.query(Employee).filter(Employee.employee_code == "EMP003").first()
         if not mech_emp:
             mech_emp = Employee(
-                employee_code="EMP003",
-                name="王机械工程师",
-                department="技术部",
-                role="机械工程师"
+                employee_code="EMP003", name="王机械工程师", department="技术部", role="机械工程师"
             )
             db.add(mech_emp)
             db.flush()
@@ -152,7 +145,7 @@ def generate_users_data(db):
             real_name="王机械工程师",
             email="wang.mech@company.com",
             password_hash=get_password_hash("mech123"),
-            is_active=True
+            is_active=True,
         )
         db.add(mech_user)
         db.flush()
@@ -161,13 +154,11 @@ def generate_users_data(db):
     elec_user = db.query(User).filter(User.username == "elec_zhao").first()
     if not elec_user:
         from app.core.security import get_password_hash
+
         elec_emp = db.query(Employee).filter(Employee.employee_code == "EMP004").first()
         if not elec_emp:
             elec_emp = Employee(
-                employee_code="EMP004",
-                name="赵电气工程师",
-                department="技术部",
-                role="电气工程师"
+                employee_code="EMP004", name="赵电气工程师", department="技术部", role="电气工程师"
             )
             db.add(elec_emp)
             db.flush()
@@ -178,7 +169,7 @@ def generate_users_data(db):
             real_name="赵电气工程师",
             email="zhao.elec@company.com",
             password_hash=get_password_hash("elec123"),
-            is_active=True
+            is_active=True,
         )
         db.add(elec_user)
         db.flush()
@@ -187,13 +178,11 @@ def generate_users_data(db):
     soft_user = db.query(User).filter(User.username == "soft_chen").first()
     if not soft_user:
         from app.core.security import get_password_hash
+
         soft_emp = db.query(Employee).filter(Employee.employee_code == "EMP005").first()
         if not soft_emp:
             soft_emp = Employee(
-                employee_code="EMP005",
-                name="陈软件工程师",
-                department="技术部",
-                role="软件工程师"
+                employee_code="EMP005", name="陈软件工程师", department="技术部", role="软件工程师"
             )
             db.add(soft_emp)
             db.flush()
@@ -204,7 +193,7 @@ def generate_users_data(db):
             real_name="陈软件工程师",
             email="chen.soft@company.com",
             password_hash=get_password_hash("soft123"),
-            is_active=True
+            is_active=True,
         )
         db.add(soft_user)
         db.flush()
@@ -220,7 +209,7 @@ def generate_users_data(db):
         "pm": pm_user,
         "mech": mech_user,
         "elec": elec_user,
-        "soft": soft_user
+        "soft": soft_user,
     }
 
 
@@ -237,14 +226,14 @@ def generate_sales_flow(db, customer, users):
         contact_name="王总",
         contact_phone="0755-88888888",
         demand_summary="需要BMS（电池管理系统）FCT功能测试设备，要求：\n"
-                      "1. 支持8通道同时测试\n"
-                      "2. 测试精度：电压±0.1%，电流±0.2%\n"
-                      "3. 节拍要求：≤15秒/件\n"
-                      "4. 支持CAN总线通信\n"
-                      "5. 具备数据记录和追溯功能",
+        "1. 支持8通道同时测试\n"
+        "2. 测试精度：电压±0.1%，电流±0.2%\n"
+        "3. 节拍要求：≤15秒/件\n"
+        "4. 支持CAN总线通信\n"
+        "5. 具备数据记录和追溯功能",
         owner_id=users["sales"].id,
         status="CONVERTED",
-        created_at=datetime(2025, 1, 5, 10, 0, 0)
+        created_at=datetime(2025, 1, 5, 10, 0, 0),
     )
     db.add(lead)
     db.flush()
@@ -270,7 +259,7 @@ def generate_sales_flow(db, customer, users):
         owner_id=users["sales"].id,
         gate_status="PASSED",
         gate_passed_at=datetime(2025, 1, 10, 14, 0, 0),
-        created_at=datetime(2025, 1, 8, 9, 0, 0)
+        created_at=datetime(2025, 1, 8, 9, 0, 0),
     )
     db.add(opportunity)
     db.flush()
@@ -291,7 +280,7 @@ def generate_sales_flow(db, customer, users):
         valid_until=date(2025, 2, 15),
         status="APPROVED",
         created_by=users["sales"].id,
-        created_at=datetime(2025, 1, 12, 10, 0, 0)
+        created_at=datetime(2025, 1, 12, 10, 0, 0),
     )
     db.add(quote)
     db.flush()
@@ -304,7 +293,7 @@ def generate_sales_flow(db, customer, users):
             "specification": "8通道，精度±0.1%",
             "quantity": Decimal("1.00"),
             "unit_price": Decimal("1800000.00"),
-            "amount": Decimal("1800000.00")
+            "amount": Decimal("1800000.00"),
         },
         {
             "item_name": "测试治具",
@@ -312,7 +301,7 @@ def generate_sales_flow(db, customer, users):
             "specification": "定制化，适配客户产品",
             "quantity": Decimal("8.00"),
             "unit_price": Decimal("50000.00"),
-            "amount": Decimal("400000.00")
+            "amount": Decimal("400000.00"),
         },
         {
             "item_name": "上位机软件",
@@ -320,7 +309,7 @@ def generate_sales_flow(db, customer, users):
             "specification": "测试程序、数据管理",
             "quantity": Decimal("1.00"),
             "unit_price": Decimal("200000.00"),
-            "amount": Decimal("200000.00")
+            "amount": Decimal("200000.00"),
         },
         {
             "item_name": "安装调试服务",
@@ -328,7 +317,7 @@ def generate_sales_flow(db, customer, users):
             "specification": "现场安装、调试、培训",
             "quantity": Decimal("1.00"),
             "unit_price": Decimal("200000.00"),
-            "amount": Decimal("200000.00")
+            "amount": Decimal("200000.00"),
         },
         {
             "item_name": "质保服务",
@@ -336,8 +325,8 @@ def generate_sales_flow(db, customer, users):
             "specification": "1年质保，免费维护",
             "quantity": Decimal("1.00"),
             "unit_price": Decimal("200000.00"),
-            "amount": Decimal("200000.00")
-        }
+            "amount": Decimal("200000.00"),
+        },
     ]
 
     for item_data in quote_items:
@@ -348,7 +337,7 @@ def generate_sales_flow(db, customer, users):
             specification=item_data["specification"],
             quantity=item_data["quantity"],
             unit_price=item_data["unit_price"],
-            amount=item_data["amount"]
+            amount=item_data["amount"],
         )
         db.add(item)
     db.flush()
@@ -373,25 +362,22 @@ def generate_sales_flow(db, customer, users):
         payment_terms="30%预付款，60%发货前，10%验收后",
         status="SIGNED",
         owner_id=users["sales"].id,
-        created_at=datetime(2025, 1, 20, 15, 0, 0)
+        created_at=datetime(2025, 1, 20, 15, 0, 0),
     )
     db.add(contract)
     db.flush()
 
     # 合同明细（合同模型可能不包含明细表，使用备注记录）
-    contract_items_summary = "\n".join([
-        f"{i+1}. {item['item_name']} - {item['specification']} - 数量:{item['quantity']} - 金额:¥{item['amount']:,.2f}"
-        for i, item in enumerate(quote_items)
-    ])
+    contract_items_summary = "\n".join(
+        [
+            f"{i+1}. {item['item_name']} - {item['specification']} - 数量:{item['quantity']} - 金额:¥{item['amount']:,.2f}"
+            for i, item in enumerate(quote_items)
+        ]
+    )
     contract.remark = f"合同明细：\n{contract_items_summary}"
     print(f"  ✓ 创建合同: {contract.contract_code}")
 
-    return {
-        "lead": lead,
-        "opportunity": opportunity,
-        "quote": quote,
-        "contract": contract
-    }
+    return {"lead": lead, "opportunity": opportunity, "quote": quote, "contract": contract}
 
 
 def generate_project_data(db, customer, contract, users):
@@ -425,16 +411,16 @@ def generate_project_data(db, customer, contract, users):
         pm_name=users["pm"].full_name,
         priority="HIGH",
         description="为智行新能源开发BMS FCT功能测试设备，支持8通道同时测试，"
-                   "测试精度要求高，节拍≤15秒/件，具备完整的数据记录和追溯功能。",
+        "测试精度要求高，节拍≤15秒/件，具备完整的数据记录和追溯功能。",
         requirements="1. 支持8通道同时测试\n"
-                     "2. 测试精度：电压±0.1%，电流±0.2%\n"
-                     "3. 节拍要求：≤15秒/件\n"
-                     "4. 支持CAN总线通信\n"
-                     "5. 具备数据记录和追溯功能\n"
-                     "6. 通过客户FAT验收",
+        "2. 测试精度：电压±0.1%，电流±0.2%\n"
+        "3. 节拍要求：≤15秒/件\n"
+        "4. 支持CAN总线通信\n"
+        "5. 具备数据记录和追溯功能\n"
+        "6. 通过客户FAT验收",
         opportunity_id=contract.opportunity_id,
         contract_id=contract.id,
-        created_at=datetime(2025, 1, 22, 9, 0, 0)
+        created_at=datetime(2025, 1, 22, 9, 0, 0),
     )
     db.add(project)
     db.flush()
@@ -447,64 +433,64 @@ def generate_project_data(db, customer, contract, users):
             "milestone_type": "REQUIREMENT_CONFIRMED",
             "planned_date": date(2025, 1, 30),
             "actual_date": date(2025, 1, 28),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "milestone_name": "方案设计完成",
             "milestone_type": "DESIGN_COMPLETED",
             "planned_date": date(2025, 2, 15),
             "actual_date": date(2025, 2, 12),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "milestone_name": "BOM发布",
             "milestone_type": "BOM_RELEASED",
             "planned_date": date(2025, 2, 20),
             "actual_date": date(2025, 2, 18),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "milestone_name": "物料到齐",
             "milestone_type": "MATERIAL_ARRIVED",
             "planned_date": date(2025, 3, 15),
             "actual_date": None,
-            "status": "IN_PROGRESS"
+            "status": "IN_PROGRESS",
         },
         {
             "milestone_name": "机械加工完成",
             "milestone_type": "MACHINING_COMPLETED",
             "planned_date": date(2025, 4, 10),
             "actual_date": None,
-            "status": "PENDING"
+            "status": "PENDING",
         },
         {
             "milestone_name": "装配完成",
             "milestone_type": "ASSEMBLY_COMPLETED",
             "planned_date": date(2025, 4, 25),
             "actual_date": None,
-            "status": "PENDING"
+            "status": "PENDING",
         },
         {
             "milestone_name": "调试完成",
             "milestone_type": "DEBUG_COMPLETED",
             "planned_date": date(2025, 5, 10),
             "actual_date": None,
-            "status": "PENDING"
+            "status": "PENDING",
         },
         {
             "milestone_name": "FAT验收通过",
             "milestone_type": "FAT_PASS",
             "planned_date": date(2025, 5, 20),
             "actual_date": None,
-            "status": "PENDING"
+            "status": "PENDING",
         },
         {
             "milestone_name": "发货",
             "milestone_type": "SHIPPED",
             "planned_date": date(2025, 5, 30),
             "actual_date": None,
-            "status": "PENDING"
-        }
+            "status": "PENDING",
+        },
     ]
 
     milestones = []
@@ -515,7 +501,7 @@ def generate_project_data(db, customer, contract, users):
             milestone_type=ms_data["milestone_type"],
             planned_date=ms_data["planned_date"],
             actual_date=ms_data["actual_date"],
-            status=ms_data["status"]
+            status=ms_data["status"],
         )
         db.add(milestone)
         milestones.append(milestone)
@@ -530,7 +516,7 @@ def generate_project_data(db, customer, contract, users):
             "planned_amount": Decimal("840000.00"),  # 30%
             "planned_date": date(2025, 1, 25),
             "actual_date": date(2025, 1, 25),
-            "status": "PAID"
+            "status": "PAID",
         },
         {
             "payment_name": "发货前付款",
@@ -538,7 +524,7 @@ def generate_project_data(db, customer, contract, users):
             "planned_amount": Decimal("1680000.00"),  # 60%
             "planned_date": date(2025, 5, 25),
             "actual_date": None,
-            "status": "PENDING"
+            "status": "PENDING",
         },
         {
             "payment_name": "验收后尾款",
@@ -546,8 +532,8 @@ def generate_project_data(db, customer, contract, users):
             "planned_amount": Decimal("280000.00"),  # 10%
             "planned_date": date(2025, 6, 15),
             "actual_date": None,
-            "status": "PENDING"
-        }
+            "status": "PENDING",
+        },
     ]
 
     for pp_data in payment_plans_data:
@@ -559,7 +545,7 @@ def generate_project_data(db, customer, contract, users):
             planned_amount=pp_data["planned_amount"],
             planned_date=pp_data["planned_date"],
             actual_date=pp_data["actual_date"],
-            status=pp_data["status"]
+            status=pp_data["status"],
         )
         db.add(payment_plan)
     db.flush()
@@ -585,7 +571,7 @@ def generate_machine_data(db, project):
         planned_end_date=date(2025, 5, 30),
         actual_start_date=date(2025, 1, 25),
         description="8通道BMS FCT功能测试设备，支持CAN总线通信，"
-                   "测试精度：电压±0.1%，电流±0.2%，节拍≤15秒/件"
+        "测试精度：电压±0.1%，电流±0.2%，节拍≤15秒/件",
     )
     db.add(machine)
     db.flush()
@@ -615,7 +601,7 @@ def generate_material_data(db):
             category_name=cat_data["name"],
             parent_id=categories.get(cat_data["parent"]) if cat_data["parent"] else None,
             level=1 if not cat_data["parent"] else 2,
-            is_active=True
+            is_active=True,
         )
         db.add(category)
         db.flush()
@@ -629,22 +615,22 @@ def generate_material_data(db):
             "name": "深圳精密机械加工有限公司",
             "type": "机加工",
             "contact": "李经理",
-            "phone": "0755-12345678"
+            "phone": "0755-12345678",
         },
         {
             "code": "SUP002",
             "name": "东莞电气元件供应商",
             "type": "电气",
             "contact": "张经理",
-            "phone": "0769-87654321"
+            "phone": "0769-87654321",
         },
         {
             "code": "SUP003",
             "name": "上海标准件贸易公司",
             "type": "标准件",
             "contact": "王经理",
-            "phone": "021-11223344"
-        }
+            "phone": "021-11223344",
+        },
     ]
 
     for sup_data in supplier_data:
@@ -655,7 +641,7 @@ def generate_material_data(db):
             vendor_type="MATERIAL",
             contact_person=sup_data["contact"],
             contact_phone=sup_data["phone"],
-            status="ACTIVE"
+            status="ACTIVE",
         )
         db.add(supplier)
         db.flush()
@@ -673,7 +659,7 @@ def generate_material_data(db):
             "spec": "6061铝合金，800×600×50mm",
             "unit": "件",
             "price": Decimal("3500.00"),
-            "supplier": "SUP001"
+            "supplier": "SUP001",
         },
         {
             "code": "MAT002",
@@ -683,7 +669,7 @@ def generate_material_data(db):
             "spec": "45#钢，表面镀铬，1200×800×30mm",
             "unit": "件",
             "price": Decimal("5800.00"),
-            "supplier": "SUP001"
+            "supplier": "SUP001",
         },
         {
             "code": "MAT003",
@@ -693,7 +679,7 @@ def generate_material_data(db):
             "spec": "2mm冷轧钢板，喷塑",
             "unit": "套",
             "price": Decimal("4200.00"),
-            "supplier": "SUP001"
+            "supplier": "SUP001",
         },
         # 电气件
         {
@@ -704,7 +690,7 @@ def generate_material_data(db):
             "spec": "西门子S7-1200，CPU 1214C",
             "unit": "台",
             "price": Decimal("3500.00"),
-            "supplier": "SUP002"
+            "supplier": "SUP002",
         },
         {
             "code": "MAT005",
@@ -714,7 +700,7 @@ def generate_material_data(db):
             "spec": "威纶通MT8102iE，10.1寸",
             "unit": "台",
             "price": Decimal("2800.00"),
-            "supplier": "SUP002"
+            "supplier": "SUP002",
         },
         {
             "code": "MAT006",
@@ -724,7 +710,7 @@ def generate_material_data(db):
             "spec": "8通道，定制化设计",
             "unit": "套",
             "price": Decimal("12000.00"),
-            "supplier": "SUP002"
+            "supplier": "SUP002",
         },
         {
             "code": "MAT007",
@@ -734,7 +720,7 @@ def generate_material_data(db):
             "spec": "CANopen协议，8通道",
             "unit": "套",
             "price": Decimal("4500.00"),
-            "supplier": "SUP002"
+            "supplier": "SUP002",
         },
         {
             "code": "MAT008",
@@ -744,7 +730,7 @@ def generate_material_data(db):
             "spec": "24V/10A开关电源",
             "unit": "台",
             "price": Decimal("380.00"),
-            "supplier": "SUP002"
+            "supplier": "SUP002",
         },
         # 标准件
         {
@@ -755,7 +741,7 @@ def generate_material_data(db):
             "spec": "THK HRW21，长度1000mm",
             "unit": "根",
             "price": Decimal("1200.00"),
-            "supplier": "SUP003"
+            "supplier": "SUP003",
         },
         {
             "code": "MAT010",
@@ -765,7 +751,7 @@ def generate_material_data(db):
             "spec": "安川SGMJV-08ADA6S，750W",
             "unit": "台",
             "price": Decimal("3200.00"),
-            "supplier": "SUP003"
+            "supplier": "SUP003",
         },
         {
             "code": "MAT011",
@@ -775,8 +761,8 @@ def generate_material_data(db):
             "spec": "SMC CDM2B25-50，双作用",
             "unit": "个",
             "price": Decimal("280.00"),
-            "supplier": "SUP003"
-        }
+            "supplier": "SUP003",
+        },
     ]
 
     for mat_data in material_data:
@@ -790,7 +776,7 @@ def generate_material_data(db):
             standard_price=mat_data["price"],
             last_price=mat_data["price"],
             default_supplier_id=suppliers[mat_data["supplier"]].id,
-            is_active=True
+            is_active=True,
         )
         db.add(material)
         db.flush()
@@ -802,7 +788,7 @@ def generate_material_data(db):
             supplier_id=suppliers[mat_data["supplier"]].id,
             is_default=True,
             price=mat_data["price"],
-            lead_time_days=15
+            lead_time_days=15,
         )
         db.add(mat_supplier)
 
@@ -823,7 +809,7 @@ def generate_bom_data(db, project, machine, materials):
         bom_name=f"{machine.machine_name}物料清单",
         version="V1.0",
         status="RELEASED",
-        created_at=datetime(2025, 2, 18, 10, 0, 0)
+        created_at=datetime(2025, 2, 18, 10, 0, 0),
     )
     db.add(bom_header)
     db.flush()
@@ -840,7 +826,7 @@ def generate_bom_data(db, project, machine, materials):
         {"material": "MAT008", "qty": 2, "level": 1, "remark": "电源模块"},
         {"material": "MAT009", "qty": 2, "level": 1, "remark": "直线导轨"},
         {"material": "MAT010", "qty": 1, "level": 1, "remark": "伺服电机"},
-        {"material": "MAT011", "qty": 4, "level": 1, "remark": "气缸"}
+        {"material": "MAT011", "qty": 4, "level": 1, "remark": "气缸"},
     ]
 
     for item_data in bom_items_data:
@@ -856,7 +842,7 @@ def generate_bom_data(db, project, machine, materials):
             unit_price=material.standard_price,
             total_price=material.standard_price * Decimal(str(item_data["qty"])),
             level=item_data["level"],
-            remark=item_data["remark"]
+            remark=item_data["remark"],
         )
         db.add(bom_item)
 
@@ -893,7 +879,7 @@ def generate_purchase_orders(db, bom_header, suppliers):
             status="CONFIRMED",
             order_date=date(2025, 2, 20),
             expected_delivery_date=date(2025, 3, 15),
-            created_at=datetime(2025, 2, 20, 14, 0, 0)
+            created_at=datetime(2025, 2, 20, 14, 0, 0),
         )
         db.add(po)
         db.flush()
@@ -908,7 +894,7 @@ def generate_purchase_orders(db, bom_header, suppliers):
                 quantity=item.quantity,
                 unit=item.unit,
                 unit_price=item.unit_price,
-                total_price=item.total_price
+                total_price=item.total_price,
             )
             db.add(po_item)
 
@@ -931,7 +917,7 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["mech"],
             "priority": "HIGH",
             "due_date": date(2025, 2, 10),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "title": "设备外壳钣金设计",
@@ -940,7 +926,7 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["mech"],
             "priority": "MEDIUM",
             "due_date": date(2025, 2, 15),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "title": "电气原理图设计",
@@ -949,7 +935,7 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["elec"],
             "priority": "HIGH",
             "due_date": date(2025, 2, 12),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "title": "测试工装板电路设计",
@@ -958,7 +944,7 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["elec"],
             "priority": "HIGH",
             "due_date": date(2025, 2, 18),
-            "status": "IN_PROGRESS"
+            "status": "IN_PROGRESS",
         },
         {
             "title": "上位机软件架构设计",
@@ -967,7 +953,7 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["soft"],
             "priority": "HIGH",
             "due_date": date(2025, 2, 15),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "title": "测试程序开发",
@@ -976,7 +962,7 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["soft"],
             "priority": "HIGH",
             "due_date": date(2025, 4, 30),
-            "status": "IN_PROGRESS"
+            "status": "IN_PROGRESS",
         },
         {
             "title": "CAN总线通信程序开发",
@@ -985,7 +971,7 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["soft"],
             "priority": "HIGH",
             "due_date": date(2025, 4, 25),
-            "status": "IN_PROGRESS"
+            "status": "IN_PROGRESS",
         },
         {
             "title": "数据记录和追溯功能开发",
@@ -994,8 +980,8 @@ def generate_tasks(db, project, machine, users):
             "assignee": users["soft"],
             "priority": "MEDIUM",
             "due_date": date(2025, 5, 5),
-            "status": "PENDING"
-        }
+            "status": "PENDING",
+        },
     ]
 
     tasks = []
@@ -1005,14 +991,22 @@ def generate_tasks(db, project, machine, users):
             machine_id=machine.id,
             task_name=task_data["title"],
             stage=project.stage,
-            status="DONE" if task_data["status"] == "COMPLETED" else "IN_PROGRESS" if task_data["status"] == "IN_PROGRESS" else "TODO",
+            status=(
+                "DONE"
+                if task_data["status"] == "COMPLETED"
+                else "IN_PROGRESS" if task_data["status"] == "IN_PROGRESS" else "TODO"
+            ),
             owner_id=task_data["assignee"].id,
             plan_start=date(2025, 2, 1),
             plan_end=task_data["due_date"],
             actual_start=date(2025, 2, 1) if task_data["status"] != "PENDING" else None,
             actual_end=task_data["due_date"] if task_data["status"] == "COMPLETED" else None,
-            progress_percent=100 if task_data["status"] == "COMPLETED" else 50 if task_data["status"] == "IN_PROGRESS" else 0,
-            block_reason=None
+            progress_percent=(
+                100
+                if task_data["status"] == "COMPLETED"
+                else 50 if task_data["status"] == "IN_PROGRESS" else 0
+            ),
+            block_reason=None,
         )
         db.add(task)
         tasks.append(task)
@@ -1077,6 +1071,7 @@ def main():
             db.rollback()
             print(f"\n错误: {e}")
             import traceback
+
             traceback.print_exc()
             raise
 

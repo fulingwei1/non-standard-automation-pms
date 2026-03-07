@@ -14,9 +14,6 @@
 
 from app.services.cost.cost_alert_service import CostAlertService
 from app.services.cost.cost_dashboard_service import CostDashboardService
-from app.services.cost.cost_forecast_service import CostForecastService
-from app.services.cost.cost_overrun_analysis_service import CostOverrunAnalysisService
-from app.services.cost.cost_prediction_service import CostPredictionService, GLM5CostPredictor
 
 # 公共数据查询层
 from app.services.cost.cost_data_queries import (
@@ -26,6 +23,9 @@ from app.services.cost.cost_data_queries import (
     get_project_actual_cost_from_records,
     get_project_budget_stats,
 )
+from app.services.cost.cost_forecast_service import CostForecastService
+from app.services.cost.cost_overrun_analysis_service import CostOverrunAnalysisService
+from app.services.cost.cost_prediction_service import CostPredictionService, GLM5CostPredictor
 
 __all__ = [
     # 统一数据查询

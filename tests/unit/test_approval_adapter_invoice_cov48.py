@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """单元测试 - InvoiceApprovalAdapter (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False

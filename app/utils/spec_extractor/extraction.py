@@ -26,7 +26,7 @@ def extract_from_document(
     document_id: int,
     project_id: int,
     extracted_by: int,
-    auto_extract: bool = False
+    auto_extract: bool = False,
 ) -> List[TechnicalSpecRequirement]:
     """
     从文档中提取规格要求
@@ -46,10 +46,11 @@ def extract_from_document(
     # 未来可以扩展支持Excel、Word、PDF等格式的自动解析
 
     # 验证文档存在
-    document = db.query(ProjectDocument).filter(
-        ProjectDocument.id == document_id,
-        ProjectDocument.project_id == project_id
-    ).first()
+    document = (
+        db.query(ProjectDocument)
+        .filter(ProjectDocument.id == document_id, ProjectDocument.project_id == project_id)
+        .first()
+    )
 
     if not document:
         raise ValueError(f"文档 {document_id} 不存在或不属于项目 {project_id}")
@@ -62,7 +63,7 @@ def extract_from_document(
                 db=db,
                 document=document,
                 project_id=project_id,
-                extracted_by=extracted_by
+                extracted_by=extracted_by,
             )
             if requirements:
                 return requirements
@@ -79,7 +80,7 @@ def auto_extract_from_file(
     db: Session,
     document: ProjectDocument,
     project_id: int,
-    extracted_by: int
+    extracted_by: int,
 ) -> List[TechnicalSpecRequirement]:
     """
     从文件中自动提取规格要求
@@ -95,7 +96,11 @@ def auto_extract_from_file(
         提取的规格要求列表
     """
     # 获取文件路径
-    file_path = Path(settings.UPLOAD_DIR) / document.file_path if not Path(document.file_path).is_absolute() else Path(document.file_path)
+    file_path = (
+        Path(settings.UPLOAD_DIR) / document.file_path
+        if not Path(document.file_path).is_absolute()
+        else Path(document.file_path)
+    )
 
     if not file_path.exists():
         raise FileNotFoundError(f"文件不存在: {file_path}")
@@ -104,12 +109,18 @@ def auto_extract_from_file(
     file_type = document.file_type or file_path.suffix.lower()
 
     # 根据文件类型选择解析方法
-    if file_type in ['.xlsx', '.xls']:
-        requirements = extract_from_excel(service, db, file_path, project_id, document.id, extracted_by)
-    elif file_type in ['.docx', '.doc']:
-        requirements = extract_from_word(service, db, file_path, project_id, document.id, extracted_by)
-    elif file_type == '.pdf':
-        requirements = extract_from_pdf(service, db, file_path, project_id, document.id, extracted_by)
+    if file_type in [".xlsx", ".xls"]:
+        requirements = extract_from_excel(
+            service, db, file_path, project_id, document.id, extracted_by
+        )
+    elif file_type in [".docx", ".doc"]:
+        requirements = extract_from_word(
+            service, db, file_path, project_id, document.id, extracted_by
+        )
+    elif file_type == ".pdf":
+        requirements = extract_from_pdf(
+            service, db, file_path, project_id, document.id, extracted_by
+        )
     else:
         raise ValueError(f"不支持的文件类型: {file_type}")
 

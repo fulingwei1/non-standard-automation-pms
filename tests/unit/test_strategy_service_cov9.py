@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第九批: test_strategy_service_cov9.py - strategy_service 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.strategy.strategy_service")
 
@@ -84,7 +85,9 @@ class TestListStrategies:
 
     def test_list_strategies_empty(self, mock_db):
         mock_db.query.return_value.order_by.return_value.count.return_value = 0
-        mock_db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = ss.list_strategies(mock_db)
         assert result is not None
 

@@ -2,9 +2,10 @@
 """
 project_statistics_service.py 单元测试（第二批）
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 # ─── 1. calculate_status_statistics ──────────────────────────────────────────

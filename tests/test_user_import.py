@@ -4,14 +4,15 @@
 """
 
 import io
-import pytest
+
 import pandas as pd
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.services.user_import_service import UserImportService
-from app.models.user import User, Role
 from app.core.security import get_password_hash
+from app.models.user import Role, User
+from app.services.user_import_service import UserImportService
 
 
 class TestUserImportService:
@@ -27,25 +28,29 @@ class TestUserImportService:
 
     def test_normalize_columns(self):
         """测试列名标准化"""
-        df = pd.DataFrame({
-            "用户名": ["test1"],
-            "真实姓名": ["测试"],
-            "邮箱": ["test@example.com"],
-        })
-        
+        df = pd.DataFrame(
+            {
+                "用户名": ["test1"],
+                "真实姓名": ["测试"],
+                "邮箱": ["test@example.com"],
+            }
+        )
+
         normalized_df = UserImportService.normalize_columns(df)
-        
+
         assert "username" in normalized_df.columns
         assert "real_name" in normalized_df.columns
         assert "email" in normalized_df.columns
 
     def test_validate_dataframe_missing_fields(self):
         """测试必填字段缺失验证"""
-        df = pd.DataFrame({
-            "username": ["test1"],
-            # 缺少 real_name 和 email
-        })
-        
+        df = pd.DataFrame(
+            {
+                "username": ["test1"],
+                # 缺少 real_name 和 email
+            }
+        )
+
         errors = UserImportService.validate_dataframe(df)
         assert len(errors) > 0
         assert any("real_name" in err for err in errors)
@@ -53,7 +58,7 @@ class TestUserImportService:
     def test_validate_dataframe_empty(self):
         """测试空数据验证"""
         df = pd.DataFrame()
-        
+
         errors = UserImportService.validate_dataframe(df)
         assert len(errors) > 0
         assert any("没有数据" in err for err in errors)
@@ -67,7 +72,7 @@ class TestUserImportService:
             "email": [f"user{i}@example.com" for i in range(600)],
         }
         df = pd.DataFrame(data)
-        
+
         errors = UserImportService.validate_dataframe(df)
         assert len(errors) > 0
         assert any("不能超过" in err for err in errors)
@@ -75,7 +80,7 @@ class TestUserImportService:
     def test_generate_template(self):
         """测试模板生成"""
         df = UserImportService.generate_template()
-        
+
         assert len(df) > 0
         assert "用户名" in df.columns
         assert "真实姓名" in df.columns
@@ -87,22 +92,20 @@ class TestUserImportService:
         """测试成功导入用户"""
         # 创建测试角色
         test_role = Role(
-            role_code="TEST_USER_ROLE",
-            role_name="测试用户角色",
-            description="用于测试的角色"
+            role_code="TEST_USER_ROLE", role_name="测试用户角色", description="用于测试的角色"
         )
         db.add(test_role)
-        
+
         # 创建操作用户
         operator = User(
             username="test_operator",
             password_hash=get_password_hash("test123"),
             email="operator@test.com",
-            real_name="测试操作员"
+            real_name="测试操作员",
         )
         db.add(operator)
         db.commit()
-        
+
         # 准备测试数据
         data = {
             "用户名": ["testuser1", "testuser2"],
@@ -141,11 +144,11 @@ class TestUserImportService:
             username="test_operator2",
             password_hash=get_password_hash("test123"),
             email="operator2@test.com",
-            real_name="测试操作员2"
+            real_name="测试操作员2",
         )
         db.add(operator)
         db.commit()
-        
+
         data = {
             "用户名": ["duplicate", "duplicate"],
             "真实姓名": ["用户1", "用户2"],
@@ -172,11 +175,11 @@ class TestUserImportService:
             username="test_operator3",
             password_hash=get_password_hash("test123"),
             email="operator3@test.com",
-            real_name="测试操作员3"
+            real_name="测试操作员3",
         )
         db.add(operator)
         db.commit()
-        
+
         data = {
             "用户名": ["testuser"],
             "真实姓名": ["测试用户"],
@@ -202,21 +205,22 @@ class TestUserImportAPI:
     def test_download_template_xlsx(self, client: TestClient, superuser_token_headers: dict):
         """测试下载Excel模板"""
         response = client.get(
-            "/api/v1/users/import/template?format=xlsx",
-            headers=superuser_token_headers
+            "/api/v1/users/import/template?format=xlsx", headers=superuser_token_headers
         )
-        
+
         assert response.status_code == 200
-        assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        assert (
+            response.headers["content-type"]
+            == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
         assert "user_import_template.xlsx" in response.headers.get("content-disposition", "")
 
     def test_download_template_csv(self, client: TestClient, superuser_token_headers: dict):
         """测试下载CSV模板"""
         response = client.get(
-            "/api/v1/users/import/template?format=csv",
-            headers=superuser_token_headers
+            "/api/v1/users/import/template?format=csv", headers=superuser_token_headers
         )
-        
+
         assert response.status_code == 200
         assert "text/csv" in response.headers["content-type"]
         assert "user_import_template.csv" in response.headers.get("content-disposition", "")
@@ -224,12 +228,14 @@ class TestUserImportAPI:
     def test_preview_import_valid_data(self, client: TestClient, superuser_token_headers: dict):
         """测试预览有效数据"""
         # 创建测试Excel文件
-        df = pd.DataFrame({
-            "用户名": ["preview1", "preview2"],
-            "真实姓名": ["预览用户1", "预览用户2"],
-            "邮箱": ["preview1@example.com", "preview2@example.com"],
-        })
-        
+        df = pd.DataFrame(
+            {
+                "用户名": ["preview1", "preview2"],
+                "真实姓名": ["预览用户1", "预览用户2"],
+                "邮箱": ["preview1@example.com", "preview2@example.com"],
+            }
+        )
+
         excel_buffer = io.BytesIO()
         df.to_excel(excel_buffer, index=False, engine="openpyxl")
         excel_buffer.seek(0)
@@ -238,7 +244,13 @@ class TestUserImportAPI:
         response = client.post(
             "/api/v1/users/import/preview",
             headers=superuser_token_headers,
-            files={"file": ("test.xlsx", excel_buffer, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
+            files={
+                "file": (
+                    "test.xlsx",
+                    excel_buffer,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            },
         )
 
         assert response.status_code == 200
@@ -251,11 +263,11 @@ class TestUserImportAPI:
         """测试预览无效文件格式"""
         # 创建文本文件
         text_buffer = io.BytesIO(b"This is not an Excel file")
-        
+
         response = client.post(
             "/api/v1/users/import/preview",
             headers=superuser_token_headers,
-            files={"file": ("test.txt", text_buffer, "text/plain")}
+            files={"file": ("test.txt", text_buffer, "text/plain")},
         )
 
         assert response.status_code == 400
@@ -265,21 +277,21 @@ class TestUserImportAPI:
         """测试批量导入API"""
         # 创建测试角色
         test_role = Role(
-            role_code="API_TEST_ROLE",
-            role_name="API测试角色",
-            description="用于API测试的角色"
+            role_code="API_TEST_ROLE", role_name="API测试角色", description="用于API测试的角色"
         )
         db.add(test_role)
         db.commit()
-        
+
         # 创建测试Excel文件
-        df = pd.DataFrame({
-            "用户名": ["apitest1", "apitest2"],
-            "真实姓名": ["API测试1", "API测试2"],
-            "邮箱": ["apitest1@example.com", "apitest2@example.com"],
-            "角色": [test_role.role_name, test_role.role_name],
-        })
-        
+        df = pd.DataFrame(
+            {
+                "用户名": ["apitest1", "apitest2"],
+                "真实姓名": ["API测试1", "API测试2"],
+                "邮箱": ["apitest1@example.com", "apitest2@example.com"],
+                "角色": [test_role.role_name, test_role.role_name],
+            }
+        )
+
         excel_buffer = io.BytesIO()
         df.to_excel(excel_buffer, index=False, engine="openpyxl")
         excel_buffer.seek(0)
@@ -288,7 +300,13 @@ class TestUserImportAPI:
         response = client.post(
             "/api/v1/users/import",
             headers=superuser_token_headers,
-            files={"file": ("test.xlsx", excel_buffer, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
+            files={
+                "file": (
+                    "test.xlsx",
+                    excel_buffer,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            },
         )
 
         assert response.status_code == 200

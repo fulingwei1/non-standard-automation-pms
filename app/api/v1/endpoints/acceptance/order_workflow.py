@@ -21,16 +21,20 @@ from app.schemas.acceptance import (
     AcceptanceOrderResponse,
     AcceptanceOrderStart,
 )
+from app.utils.db_helpers import get_or_404
 
 from .order_crud import read_acceptance_order
 from .utils import validate_completion_rules, validate_edit_rules
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/acceptance-orders/{order_id}/submit", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/acceptance-orders/{order_id}/submit",
+    response_model=AcceptanceOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def submit_acceptance_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -60,7 +64,11 @@ def submit_acceptance_order(
     return read_acceptance_order(order_id, db, current_user)
 
 
-@router.put("/acceptance-orders/{order_id}/start", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/acceptance-orders/{order_id}/start",
+    response_model=AcceptanceOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def start_acceptance(
     *,
     db: Session = Depends(deps.get_db),
@@ -91,7 +99,11 @@ def start_acceptance(
     return read_acceptance_order(order_id, db, current_user)
 
 
-@router.put("/acceptance-orders/{order_id}/complete", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/acceptance-orders/{order_id}/complete",
+    response_model=AcceptanceOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def complete_acceptance(
     *,
     db: Session = Depends(deps.get_db),
@@ -127,11 +139,7 @@ def complete_acceptance(
 
     # 更新验收单状态
     update_acceptance_order_status(
-        db,
-        order,
-        complete_in.overall_result,
-        complete_in.conclusion,
-        complete_in.conditions
+        db, order, complete_in.overall_result, complete_in.conclusion, complete_in.conditions
     )
 
     # Issue 7.4: 如果验收通过，检查是否有绑定的收款计划，自动触发开票

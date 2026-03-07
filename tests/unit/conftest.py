@@ -21,6 +21,8 @@ from sqlalchemy import create_engine, text
 def _init_test_database():
     """No-op override: unit tests use MagicMock, not real DB."""
     yield
+
+
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -44,8 +46,8 @@ def db_engine():
 
     # 导入所有模型以确保表结构被注册
     import app.models  # noqa: F401
-    import app.models.tenant  # noqa: F401
     import app.models.permission  # noqa: F401
+    import app.models.tenant  # noqa: F401
     from app.models.base import Base
 
     Base.metadata.create_all(bind=engine)
@@ -88,9 +90,7 @@ def db_engine():
 @pytest.fixture(scope="function")
 def db_session(db_engine) -> Session:
     """创建测试数据库会话"""
-    TestingSessionLocal = sessionmaker(
-        autocommit=False, autoflush=False, bind=db_engine
-    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
     session = TestingSessionLocal()
     try:
         yield session
@@ -108,7 +108,7 @@ def db_session(db_engine) -> Session:
 @pytest.fixture
 def mock_project(db_session: Session):
     """创建测试项目"""
-    from app.models import Project, Customer
+    from app.models import Customer, Project
 
     # 创建测试客户
     customer = Customer(

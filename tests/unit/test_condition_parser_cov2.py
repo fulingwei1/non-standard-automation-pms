@@ -2,12 +2,14 @@
 """
 approval_engine/condition_parser.py 单元测试（第二批）
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 
 def _make_evaluator():
     from app.services.approval_engine.condition_parser import ConditionEvaluator
+
     return ConditionEvaluator()
 
 
@@ -130,6 +132,7 @@ def test_get_field_value_missing():
 
 def test_get_field_value_today():
     from datetime import date
+
     ev = _make_evaluator()
     result = ev._get_field_value("today()", {})
     assert result == date.today()
@@ -149,7 +152,7 @@ def test_evaluate_simple_conditions_and_true():
         "items": [
             {"field": "amount", "op": ">", "value": 0},
             {"field": "days", "op": "<=", "value": 10},
-        ]
+        ],
     }
     context = {"amount": 5, "days": 3}
     assert ev._evaluate_simple_conditions(conditions, context) is True
@@ -161,7 +164,7 @@ def test_evaluate_simple_conditions_and_false():
         "operator": "AND",
         "items": [
             {"field": "amount", "op": ">", "value": 100},
-        ]
+        ],
     }
     context = {"amount": 5}
     assert ev._evaluate_simple_conditions(conditions, context) is False
@@ -174,7 +177,7 @@ def test_evaluate_simple_conditions_or():
         "items": [
             {"field": "amount", "op": ">", "value": 100},
             {"field": "days", "op": ">", "value": 1},
-        ]
+        ],
     }
     context = {"amount": 5, "days": 3}
     assert ev._evaluate_simple_conditions(conditions, context) is True
@@ -195,6 +198,7 @@ def test_evaluate_jinja2_expression():
 
 def test_evaluate_json_conditions():
     import json
+
     ev = _make_evaluator()
     cond = json.dumps({"operator": "AND", "items": [{"field": "x", "op": ">", "value": 0}]})
     result = ev.evaluate(cond, {"x": 5})

@@ -19,12 +19,12 @@ from app.services.timesheet_reminder.reminder_manager import TimesheetReminderMa
 
 def init_default_rules():
     """初始化默认提醒规则"""
-    
+
     with get_db_session() as db:
         manager = TimesheetReminderManager(db)
-        
+
         print("开始初始化工时提醒规则...")
-        
+
         # 1. 未填报工时提醒规则
         try:
             config1 = manager.create_reminder_config(
@@ -45,7 +45,7 @@ def init_default_rules():
             print(f"✅ 创建规则: {config1.rule_name}")
         except Exception as e:
             print(f"⚠️  规则已存在或创建失败: DEFAULT_MISSING_DAILY - {str(e)}")
-        
+
         # 2. 审批超时提醒规则
         try:
             config2 = manager.create_reminder_config(
@@ -64,7 +64,7 @@ def init_default_rules():
             print(f"✅ 创建规则: {config2.rule_name}")
         except Exception as e:
             print(f"⚠️  规则已存在或创建失败: DEFAULT_APPROVAL_TIMEOUT - {str(e)}")
-        
+
         # 3. 异常工时检测规则
         try:
             config3 = manager.create_reminder_config(
@@ -86,7 +86,7 @@ def init_default_rules():
             print(f"✅ 创建规则: {config3.rule_name}")
         except Exception as e:
             print(f"⚠️  规则已存在或创建失败: DEFAULT_ANOMALY_DETECTION - {str(e)}")
-        
+
         # 4. 周工时提醒规则
         try:
             config4 = manager.create_reminder_config(
@@ -106,7 +106,7 @@ def init_default_rules():
             print(f"✅ 创建规则: {config4.rule_name}")
         except Exception as e:
             print(f"⚠️  规则已存在或创建失败: DEFAULT_WEEKLY_REMINDER - {str(e)}")
-        
+
         # 5. 周末工时提醒（可选）
         try:
             config5 = manager.create_reminder_config(
@@ -126,7 +126,7 @@ def init_default_rules():
             print(f"✅ 创建规则: {config5.rule_name} (默认未启用)")
         except Exception as e:
             print(f"⚠️  规则已存在或创建失败: DEFAULT_WEEKEND_WORK - {str(e)}")
-        
+
         print("\n初始化完成！")
         print("\n提示：")
         print("- 可以通过 API 接口修改规则配置")

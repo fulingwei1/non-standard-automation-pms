@@ -57,9 +57,7 @@ class TestGetPendingTasks:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = mock_tasks
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value = (
-            mock_query
-        )
+        mock_db.query.return_value.filter.return_value.order_by.return_value = mock_query
 
         result = query_mixin.get_pending_tasks(user_id=100, page=1, page_size=20)
 
@@ -104,9 +102,7 @@ class TestGetPendingTasks:
         mock_query.limit.return_value = mock_query
         mock_query.all.return_value = all_tasks[5:10]  # 第2页
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value = (
-            mock_query
-        )
+        mock_db.query.return_value.filter.return_value.order_by.return_value = mock_query
 
         result = query_mixin.get_pending_tasks(user_id=100, page=2, page_size=5)
 
@@ -354,9 +350,7 @@ class TestGetCCRecords:
         mock_core = ApprovalEngineCore(mock_db)
         query_mixin = ApprovalQueryMixin(mock_core)
 
-        page1_records = [
-            MagicMock(spec=ApprovalCarbonCopy, id=i) for i in range(1, 6)
-        ]
+        page1_records = [MagicMock(spec=ApprovalCarbonCopy, id=i) for i in range(1, 6)]
 
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query

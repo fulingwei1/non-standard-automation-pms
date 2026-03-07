@@ -20,7 +20,6 @@ from app.services.notification_dispatcher import NotificationDispatcher
 logger = logging.getLogger(__name__)
 
 
-
 def create_timesheet_notification(
     db: Session,
     user_id: int,
@@ -48,4 +47,3 @@ def create_timesheet_notification(
         priority=priority,
         extra_data=extra_data or {},
     )
-

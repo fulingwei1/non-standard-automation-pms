@@ -15,13 +15,13 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.approval_workflow import (
-    OrderSubmitRequest,
     ApprovalActionRequest,
     BatchApprovalRequest,
+    OrderSubmitRequest,
     WithdrawRequest,
 )
+from app.schemas.common import ResponseModel
 from app.services.outsourcing_workflow import OutsourcingWorkflowService
 
 logger = logging.getLogger(__name__)
@@ -127,9 +127,7 @@ def perform_approval_action(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post(
-    "/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.post("/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def perform_batch_approval(
     *,
     db: Session = Depends(deps.get_db),
@@ -161,9 +159,7 @@ def perform_batch_approval(
     )
 
 
-@router.get(
-    "/status/{order_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.get("/status/{order_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_approval_status(
     order_id: int,
     db: Session = Depends(deps.get_db),

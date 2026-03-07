@@ -24,7 +24,9 @@ from ..number_utils import generate_ticket_no
 router = APIRouter()
 
 
-@router.get("", response_model=PaginatedResponse[ServiceTicketResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "", response_model=PaginatedResponse[ServiceTicketResponse], status_code=status.HTTP_200_OK
+)
 def read_service_tickets(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -53,7 +55,9 @@ def read_service_tickets(
     query = apply_keyword_filter(query, ServiceTicket, keyword, ["ticket_no", "problem_desc"])
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(ServiceTicket.created_at)), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(desc(ServiceTicket.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     # 获取项目名称和客户名称
     for item in items:
@@ -132,27 +136,33 @@ def create_service_ticket(
         urgency=ticket_in.urgency,
         reported_by=ticket_in.reported_by,
         reported_time=ticket_in.reported_time,
-        status="PENDING" if not ticket_in.assignee_id else "IN_PROGRESS",  # 如果指定了处理人，直接变为处理中
+        status=(
+            "PENDING" if not ticket_in.assignee_id else "IN_PROGRESS"
+        ),  # 如果指定了处理人，直接变为处理中
         assigned_to_id=ticket_in.assignee_id,
         assigned_to_name=(assignee.name or assignee.username) if assignee else None,
         assigned_time=datetime.now() if ticket_in.assignee_id else None,
         response_time=datetime.now() if ticket_in.assignee_id else None,
-        timeline=[{
-            "type": "REPORTED",
-            "timestamp": ticket_in.reported_time.isoformat(),
-            "user": ticket_in.reported_by,
-            "description": "客户报告问题",
-        }],
+        timeline=[
+            {
+                "type": "REPORTED",
+                "timestamp": ticket_in.reported_time.isoformat(),
+                "user": ticket_in.reported_by,
+                "description": "客户报告问题",
+            }
+        ],
     )
 
     # 如果创建时指定了处理人，添加分配记录
     if ticket_in.assignee_id and assignee:
-        ticket.timeline.append({
-            "type": "ASSIGNED",
-            "timestamp": datetime.now().isoformat(),
-            "user": current_user.real_name or current_user.username,
-            "description": f"工单已分配给 {assignee.name or assignee.username}",
-        })
+        ticket.timeline.append(
+            {
+                "type": "ASSIGNED",
+                "timestamp": datetime.now().isoformat(),
+                "user": current_user.real_name or current_user.username,
+                "description": f"工单已分配给 {assignee.name or assignee.username}",
+            }
+        )
 
     db.add(ticket)
     db.commit()
@@ -160,11 +170,9 @@ def create_service_ticket(
 
     # 创建项目关联
     for project_id in all_project_ids:
-        is_primary = (project_id == ticket_in.project_id)
+        is_primary = project_id == ticket_in.project_id
         ticket_project = ServiceTicketProject(
-            ticket_id=ticket.id,
-            project_id=project_id,
-            is_primary=is_primary
+            ticket_id=ticket.id, project_id=project_id, is_primary=is_primary
         )
         db.add(ticket_project)
 
@@ -173,9 +181,7 @@ def create_service_ticket(
         for user_id in ticket_in.cc_user_ids:
             if user_id != ticket.assignee_id:  # 处理人不作为抄送人
                 cc_user = ServiceTicketCcUser(
-                    ticket_id=ticket.id,
-                    user_id=user_id,
-                    notified_at=datetime.now()
+                    ticket_id=ticket.id, user_id=user_id, notified_at=datetime.now()
                 )
                 db.add(cc_user)
 
@@ -184,12 +190,14 @@ def create_service_ticket(
     # 创建SLA监控记录
     try:
         from app.services.sla_service import create_sla_monitor, match_sla_policy
+
         policy = match_sla_policy(db, ticket.problem_type, ticket.urgency)
         if policy:
             create_sla_monitor(db, ticket, policy)
     except Exception as e:
         # SLA监控创建失败不影响工单创建
         import logging
+
         logging.error(f"创建SLA监控记录失败: {e}")
 
     # 获取项目名称和客户名称

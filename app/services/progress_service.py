@@ -10,8 +10,6 @@
 保持原有函数签名不变，确保向后兼容。
 """
 
-from __future__ import annotations
-
 import logging
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
@@ -35,6 +33,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # 进度更新 (原 task_progress_service.py)
 # =============================================================================
+
 
 def progress_error_to_http(exc: ValueError) -> HTTPException:
     """将服务层 ValueError 映射为 HTTP 异常"""
@@ -155,6 +154,7 @@ def update_task_progress(
 # 进度聚合 (原 progress_aggregation_service.py)
 # =============================================================================
 
+
 def aggregate_task_progress(db: Session, task_id: int) -> dict:
     """
     任务进度聚合到阶段和项目
@@ -167,12 +167,12 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
         dict: 聚合结果
     """
     result = {
-        'project_progress_updated': False,
-        'stage_progress_updated': False,
-        'project_id': None,
-        'stage_code': None,
-        'new_project_progress': None,
-        'new_stage_progress': None
+        "project_progress_updated": False,
+        "stage_progress_updated": False,
+        "project_id": None,
+        "stage_code": None,
+        "new_project_progress": None,
+        "new_stage_progress": None,
     }
 
     # 1. 获取任务信息
@@ -181,27 +181,21 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
         return result
 
     project_id = task.project_id
-    result['project_id'] = project_id
+    result["project_id"] = project_id
 
     # 2. 计算项目整体进度（使用聚合函数优化）
     base_filter = and_(
         TaskUnified.project_id == project_id,
         TaskUnified.is_active,
-        TaskUnified.status.notin_(['CANCELLED'])
+        TaskUnified.status.notin_(["CANCELLED"]),
     )
 
-    total_tasks_result = (
-        db.query(func.count(TaskUnified.id))
-        .filter(base_filter)
-        .scalar()
-    )
+    total_tasks_result = db.query(func.count(TaskUnified.id)).filter(base_filter).scalar()
 
     if total_tasks_result:
         # 使用SQL聚合计算加权平均
         weighted_progress_result = (
-            db.query(func.sum(TaskUnified.progress))
-            .filter(base_filter)
-            .scalar()
+            db.query(func.sum(TaskUnified.progress)).filter(base_filter).scalar()
         )
         project_progress = round(float(weighted_progress_result or 0) / total_tasks_result, 2)
 
@@ -212,51 +206,52 @@ def aggregate_task_progress(db: Session, task_id: int) -> dict:
             project.updated_at = datetime.now()
             db.commit()
 
-            result['project_progress_updated'] = True
-            result['new_project_progress'] = project_progress
+            result["project_progress_updated"] = True
+            result["new_project_progress"] = project_progress
 
     # 3. 如果任务关联了阶段，计算阶段进度
-    if hasattr(task, 'stage') and task.stage:
+    if hasattr(task, "stage") and task.stage:
         stage_code = task.stage
-        result['stage_code'] = stage_code
+        result["stage_code"] = stage_code
 
         # 获取该阶段的所有任务（使用聚合函数优化）
         stage_filter = and_(
             TaskUnified.project_id == project_id,
             TaskUnified.stage == stage_code,
             TaskUnified.is_active,
-            TaskUnified.status.notin_(['CANCELLED'])
+            TaskUnified.status.notin_(["CANCELLED"]),
         )
 
         total_stage_tasks_result = (
-            db.query(func.count(TaskUnified.id))
-            .filter(stage_filter)
-            .scalar()
+            db.query(func.count(TaskUnified.id)).filter(stage_filter).scalar()
         )
 
         if total_stage_tasks_result:
             weighted_stage_progress_result = (
-                db.query(func.sum(TaskUnified.progress))
-                .filter(stage_filter)
-                .scalar()
+                db.query(func.sum(TaskUnified.progress)).filter(stage_filter).scalar()
             )
-            stage_progress = round(float(weighted_stage_progress_result or 0) / total_stage_tasks_result, 2)
+            stage_progress = round(
+                float(weighted_stage_progress_result or 0) / total_stage_tasks_result, 2
+            )
 
             # 更新阶段进度
-            project_stage = db.query(ProjectStage).filter(
-                and_(
-                    ProjectStage.project_id == project_id,
-                    ProjectStage.stage_code == stage_code
+            project_stage = (
+                db.query(ProjectStage)
+                .filter(
+                    and_(
+                        ProjectStage.project_id == project_id, ProjectStage.stage_code == stage_code
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if project_stage:
                 project_stage.progress_pct = stage_progress
                 project_stage.updated_at = datetime.now()
                 db.commit()
 
-                result['stage_progress_updated'] = True
-                result['new_stage_progress'] = stage_progress
+                result["stage_progress_updated"] = True
+                result["new_stage_progress"] = stage_progress
 
     # 4. 检查并更新健康度
     _check_and_update_health(db, project_id)
@@ -281,14 +276,10 @@ def _check_and_update_health(db: Session, project_id: int):
     active_filter = and_(
         TaskUnified.project_id == project_id,
         TaskUnified.is_active,
-        TaskUnified.status.notin_(['CANCELLED', 'COMPLETED'])
+        TaskUnified.status.notin_(["CANCELLED", "COMPLETED"]),
     )
 
-    total_tasks = (
-        db.query(func.count(TaskUnified.id))
-        .filter(active_filter)
-        .scalar()
-    ) or 0
+    total_tasks = (db.query(func.count(TaskUnified.id)).filter(active_filter).scalar()) or 0
 
     # 统计延期和逾期任务
     delayed_count = (
@@ -299,10 +290,7 @@ def _check_and_update_health(db: Session, project_id: int):
 
     overdue_count = (
         db.query(func.count(TaskUnified.id))
-        .filter(and_(
-            active_filter,
-            TaskUnified.deadline < datetime.now()
-        ))
+        .filter(and_(active_filter, TaskUnified.deadline < datetime.now()))
         .scalar()
     ) or 0
 
@@ -317,12 +305,12 @@ def _check_and_update_health(db: Session, project_id: int):
     # H2: 有风险（黄色） - 延期10-25%，或逾期5-15%
     # H3: 阻塞（红色） - 延期>25%，或逾期>15%
 
-    new_health = 'H1'  # 默认正常
+    new_health = "H1"  # 默认正常
 
     if delayed_ratio > 0.25 or overdue_ratio > 0.15:
-        new_health = 'H3'  # 阻塞
+        new_health = "H3"  # 阻塞
     elif delayed_ratio > 0.10 or overdue_ratio > 0.05:
-        new_health = 'H2'  # 有风险
+        new_health = "H2"  # 有风险
 
     # 只有当健康度需要变化时才更新
     if project.health != new_health:
@@ -337,7 +325,7 @@ def create_progress_log_entry(
     progress: int,
     actual_hours: Optional[float],
     note: Optional[str],
-    updater_id: int
+    updater_id: int,
 ):
     """
     创建进度日志
@@ -356,7 +344,7 @@ def create_progress_log_entry(
             progress_percent=progress,
             update_note=note or f"进度更新至 {progress}%",
             updated_by=updater_id,
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         save_obj(db, progress_log)
         return progress_log
@@ -387,21 +375,21 @@ def get_project_progress_summary(db: Session, project_id: int) -> dict:
     # 统计任务总数
     total_tasks = (
         db.query(func.count(TaskUnified.id))
-        .filter(and_(base_filter, TaskUnified.status != 'CANCELLED'))
+        .filter(and_(base_filter, TaskUnified.status != "CANCELLED"))
         .scalar()
     ) or 0
 
     # 按状态聚合
     status_counts = (
-        db.query(TaskUnified.status, func.count(TaskUnified.id).label('count'))
+        db.query(TaskUnified.status, func.count(TaskUnified.id).label("count"))
         .filter(base_filter)
         .group_by(TaskUnified.status)
         .all()
     )
     status_dict = {status: count for status, count in status_counts}
 
-    completed_tasks = status_dict.get('COMPLETED', 0)
-    in_progress_tasks = status_dict.get('IN_PROGRESS', 0)
+    completed_tasks = status_dict.get("COMPLETED", 0)
+    in_progress_tasks = status_dict.get("IN_PROGRESS", 0)
 
     # 统计延期任务
     delayed_tasks = (
@@ -413,31 +401,29 @@ def get_project_progress_summary(db: Session, project_id: int) -> dict:
     # 统计逾期任务
     overdue_tasks = (
         db.query(func.count(TaskUnified.id))
-        .filter(and_(
-            base_filter,
-            TaskUnified.deadline < datetime.now(),
-            TaskUnified.status.notin_(['COMPLETED', 'CANCELLED'])
-        ))
+        .filter(
+            and_(
+                base_filter,
+                TaskUnified.deadline < datetime.now(),
+                TaskUnified.status.notin_(["COMPLETED", "CANCELLED"]),
+            )
+        )
         .scalar()
     ) or 0
 
     # 计算整体进度
-    overall_progress_result = (
-        db.query(func.avg(TaskUnified.progress))
-        .filter(base_filter)
-        .scalar()
-    )
+    overall_progress_result = db.query(func.avg(TaskUnified.progress)).filter(base_filter).scalar()
     overall_progress = float(overall_progress_result or 0)
 
     return {
-        'project_id': project_id,
-        'total_tasks': total_tasks,
-        'completed_tasks': completed_tasks,
-        'in_progress_tasks': in_progress_tasks,
-        'delayed_tasks': delayed_tasks,
-        'overdue_tasks': overdue_tasks,
-        'overall_progress': round(overall_progress, 2),
-        'completion_rate': round(completed_tasks / total_tasks * 100, 2) if total_tasks > 0 else 0
+        "project_id": project_id,
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks,
+        "in_progress_tasks": in_progress_tasks,
+        "delayed_tasks": delayed_tasks,
+        "overdue_tasks": overdue_tasks,
+        "overall_progress": round(overall_progress, 2),
+        "completion_rate": round(completed_tasks / total_tasks * 100, 2) if total_tasks > 0 else 0,
     }
 
 
@@ -465,28 +451,24 @@ class ProgressAggregationService:
         base_filter = and_(
             TaskUnified.project_id == project_id,
             TaskUnified.is_active,
-            TaskUnified.status.notin_(['CANCELLED'])
+            TaskUnified.status.notin_(["CANCELLED"]),
         )
 
         # 统计任务总数
-        total_tasks = (
-            db.query(func.count(TaskUnified.id))
-            .filter(base_filter)
-            .scalar()
-        ) or 0
+        total_tasks = (db.query(func.count(TaskUnified.id)).filter(base_filter).scalar()) or 0
 
         # 按状态聚合
         status_counts = (
-            db.query(TaskUnified.status, func.count(TaskUnified.id).label('count'))
+            db.query(TaskUnified.status, func.count(TaskUnified.id).label("count"))
             .filter(base_filter)
             .group_by(TaskUnified.status)
             .all()
         )
         status_dict = {status.upper(): count for status, count in status_counts}
 
-        completed_tasks = status_dict.get('COMPLETED', 0)
-        in_progress_tasks = status_dict.get('IN_PROGRESS', 0) + status_dict.get('ACCEPTED', 0)
-        pending_approval_tasks = status_dict.get('PENDING_APPROVAL', 0)
+        completed_tasks = status_dict.get("COMPLETED", 0)
+        in_progress_tasks = status_dict.get("IN_PROGRESS", 0) + status_dict.get("ACCEPTED", 0)
+        pending_approval_tasks = status_dict.get("PENDING_APPROVAL", 0)
 
         # 计算加权平均进度（按预估工时加权）
         total_hours_result = (
@@ -494,9 +476,9 @@ class ProgressAggregationService:
                 func.sum(
                     case(
                         (TaskUnified.estimated_hours.isnot(None), TaskUnified.estimated_hours),
-                        else_=1.0
+                        else_=1.0,
                     )
-                ).label('total_weight')
+                ).label("total_weight")
             )
             .filter(base_filter)
             .scalar()
@@ -505,12 +487,12 @@ class ProgressAggregationService:
         weighted_progress_result = (
             db.query(
                 func.sum(
-                    TaskUnified.progress *
-                    case(
+                    TaskUnified.progress
+                    * case(
                         (TaskUnified.estimated_hours.isnot(None), TaskUnified.estimated_hours),
-                        else_=1.0
+                        else_=1.0,
                     )
-                ).label('weighted_sum')
+                ).label("weighted_sum")
             )
             .filter(base_filter)
             .scalar()
@@ -520,9 +502,7 @@ class ProgressAggregationService:
             overall_progress = weighted_progress_result / total_hours_result
         elif total_tasks > 0:
             avg_progress_result = (
-                db.query(func.avg(TaskUnified.progress))
-                .filter(base_filter)
-                .scalar()
+                db.query(func.avg(TaskUnified.progress)).filter(base_filter).scalar()
             )
             overall_progress = float(avg_progress_result or 0)
         else:
@@ -537,10 +517,7 @@ class ProgressAggregationService:
 
         overdue_tasks = (
             db.query(func.count(TaskUnified.id))
-            .filter(and_(
-                base_filter,
-                TaskUnified.deadline < datetime.now()
-            ))
+            .filter(and_(base_filter, TaskUnified.deadline < datetime.now()))
             .scalar()
         ) or 0
 
@@ -561,6 +538,7 @@ class ProgressAggregationService:
 # 自动化处理 (原 progress_auto_service.py)
 # =============================================================================
 
+
 class ProgressAutoService:
     """进度跟踪自动化服务"""
 
@@ -572,7 +550,7 @@ class ProgressAutoService:
         project_id: int,
         forecast_items: List[TaskForecastItem],
         auto_block: bool = False,
-        delay_threshold: int = 3
+        delay_threshold: int = 3,
     ) -> Dict[str, any]:
         """
         将进度预测结果自动应用到任务
@@ -591,11 +569,7 @@ class ProgressAutoService:
         task_map = {item.task_id: item for item in forecast_items}
         task_ids = list(task_map.keys())
 
-        tasks = (
-            self.db.query(Task)
-            .filter(Task.id.in_(task_ids))
-            .all()
-        )
+        tasks = self.db.query(Task).filter(Task.id.in_(task_ids)).all()
 
         stats = {
             "total": len(tasks),
@@ -603,7 +577,7 @@ class ProgressAutoService:
             "risk_tagged": 0,
             "deadline_updated": 0,
             "notifications_sent": 0,
-            "skipped": 0
+            "skipped": 0,
         }
 
         for task in tasks:
@@ -615,7 +589,9 @@ class ProgressAutoService:
             if auto_block and forecast.delay_days and forecast.delay_days > delay_threshold:
                 if task.status != "DONE" and task.status != "CANCELLED":
                     task.status = "BLOCKED"
-                    task.block_reason = f"预测延迟 {forecast.delay_days} 天，超过阈值 {delay_threshold} 天"
+                    task.block_reason = (
+                        f"预测延迟 {forecast.delay_days} 天，超过阈值 {delay_threshold} 天"
+                    )
                     stats["blocked"] += 1
                     logger.info(f"任务 {task.task_name} (ID:{task.id}) 已自动阻塞")
 
@@ -626,7 +602,7 @@ class ProgressAutoService:
                         task_id=task.id,
                         progress_percent=task.progress_percent or 0,
                         update_note=f"高风险预警：预测延迟 {forecast.delay_days} 天，请关注",
-                        updated_by=0
+                        updated_by=0,
                     )
                     self.db.add(progress_log)
                     stats["risk_tagged"] += 1
@@ -641,7 +617,7 @@ class ProgressAutoService:
         project_id: int,
         issues: List[DependencyIssue],
         auto_fix_timing: bool = True,
-        auto_fix_missing: bool = False
+        auto_fix_missing: bool = False,
     ) -> Dict[str, any]:
         """
         自动修复依赖问题
@@ -662,7 +638,7 @@ class ProgressAutoService:
             "timing_fixed": 0,
             "missing_removed": 0,
             "cycles_skipped": 0,
-            "errors": 0
+            "errors": 0,
         }
 
         for issue in issues:
@@ -695,9 +671,7 @@ class ProgressAutoService:
             return False
 
         dependencies = (
-            self.db.query(TaskDependency)
-            .filter(TaskDependency.task_id == issue.task_id)
-            .all()
+            self.db.query(TaskDependency).filter(TaskDependency.task_id == issue.task_id).all()
         )
 
         if not dependencies:
@@ -733,7 +707,7 @@ class ProgressAutoService:
                 task_id=task.id,
                 progress_percent=task.progress_percent or 0,
                 update_note=f"系统自动调整计划时间：原计划 {old_start} - {old_end}，新计划 {new_start} - {task.plan_end}",
-                updated_by=0
+                updated_by=0,
             )
             self.db.add(progress_log)
 
@@ -745,9 +719,7 @@ class ProgressAutoService:
     def _remove_missing_dependency(self, issue: DependencyIssue) -> bool:
         """移除缺失的依赖关系"""
         dependencies = (
-            self.db.query(TaskDependency)
-            .filter(TaskDependency.task_id == issue.task_id)
-            .all()
+            self.db.query(TaskDependency).filter(TaskDependency.task_id == issue.task_id).all()
         )
 
         removed_count = 0
@@ -759,7 +731,7 @@ class ProgressAutoService:
                     task_id=issue.task_id,
                     progress_percent=task.progress_percent if task else 0,
                     update_note=f"系统自动移除缺失依赖: 任务ID {dep.depends_on_task_id}",
-                    updated_by=0
+                    updated_by=0,
                 )
                 self.db.add(progress_log)
                 self.db.delete(dep)
@@ -768,16 +740,14 @@ class ProgressAutoService:
         return removed_count > 0
 
     def send_forecast_notifications(
-        self,
-        project_id: int,
-        project: Project,
-        forecast_items: List[TaskForecastItem]
+        self, project_id: int, project: Project, forecast_items: List[TaskForecastItem]
     ) -> Dict[str, any]:
         """发送进度预测通知"""
         logger.info(f"开始发送项目 {project_id} 的进度预测通知")
 
         critical_tasks = [
-            item for item in forecast_items
+            item
+            for item in forecast_items
             if item.critical and item.delay_days and item.delay_days > 0
         ]
 
@@ -828,8 +798,8 @@ class ProgressAutoService:
                 extra_data={
                     "critical_task_count": critical_count,
                     "max_delay_days": max_delay,
-                    "task_ids": [item.task_id for item in critical_tasks]
-                }
+                    "task_ids": [item.task_id for item in critical_tasks],
+                },
             )
             notification_sent += 1
 
@@ -839,13 +809,11 @@ class ProgressAutoService:
         return {
             "total": len(recipients),
             "sent": notification_sent,
-            "critical_task_count": len(critical_tasks)
+            "critical_task_count": len(critical_tasks),
         }
 
     def run_auto_processing(
-        self,
-        project_id: int,
-        options: Dict[str, any] = None
+        self, project_id: int, options: Dict[str, any] = None
     ) -> Dict[str, any]:
         """
         执行完整的自动处理流程（预测应用 + 依赖修复 + 通知）
@@ -863,7 +831,7 @@ class ProgressAutoService:
                 "delay_threshold": 7,
                 "auto_fix_timing": False,
                 "auto_fix_missing": True,
-                "send_notifications": True
+                "send_notifications": True,
             }
 
         logger.info(f"开始执行项目 {project_id} 的自动处理流程")
@@ -873,7 +841,7 @@ class ProgressAutoService:
             "forecast_stats": {},
             "dependency_stats": {},
             "notification_stats": {},
-            "success": False
+            "success": False,
         }
 
         try:
@@ -881,11 +849,7 @@ class ProgressAutoService:
             if not project:
                 raise Exception("项目不存在")
 
-            tasks = (
-                self.db.query(Task)
-                .filter(Task.project_id == project_id)
-                .all()
-            )
+            tasks = self.db.query(Task).filter(Task.project_id == project_id).all()
 
             if not tasks:
                 logger.info(f"项目 {project_id} 没有任务，跳过自动处理")
@@ -902,7 +866,7 @@ class ProgressAutoService:
                 "task_count": len(tasks),
                 "current_progress": forecast.current_progress,
                 "predicted_delay_days": forecast.predicted_delay_days,
-                "critical_task_count": len([t for t in forecast.tasks if t.critical])
+                "critical_task_count": len([t for t in forecast.tasks if t.critical]),
             }
 
             if options["auto_block"]:
@@ -910,7 +874,7 @@ class ProgressAutoService:
                     project_id=project_id,
                     forecast_items=forecast.tasks,
                     auto_block=options["auto_block"],
-                    delay_threshold=options["delay_threshold"]
+                    delay_threshold=options["delay_threshold"],
                 )
                 result["forecast_stats"]["applied"] = forecast_stats
             else:
@@ -926,7 +890,7 @@ class ProgressAutoService:
             cycle_paths, issues = _analyze_dependency_graph(task_map, dependencies)
             result["dependency_stats"] = {
                 "cycle_count": len(cycle_paths),
-                "issue_count": len(issues)
+                "issue_count": len(issues),
             }
 
             if options["auto_fix_timing"] or options["auto_fix_missing"]:
@@ -934,7 +898,7 @@ class ProgressAutoService:
                     project_id=project_id,
                     issues=issues,
                     auto_fix_timing=options["auto_fix_timing"],
-                    auto_fix_missing=options["auto_fix_missing"]
+                    auto_fix_missing=options["auto_fix_missing"],
                 )
                 result["dependency_stats"]["fixed"] = dep_stats
             else:
@@ -942,23 +906,24 @@ class ProgressAutoService:
 
             if options["send_notifications"]:
                 notify_stats = self.send_forecast_notifications(
-                    project_id=project_id,
-                    project=project,
-                    forecast_items=forecast.tasks
+                    project_id=project_id, project=project, forecast_items=forecast.tasks
                 )
                 result["notification_stats"]["forecast"] = notify_stats
 
-                high_issues = [i for i in issues if (i.severity or "").upper() in ["HIGH", "URGENT"]]
+                high_issues = [
+                    i for i in issues if (i.severity or "").upper() in ["HIGH", "URGENT"]
+                ]
                 if high_issues or cycle_paths:
                     from app.api.v1.endpoints.progress.utils import (
                         _notify_dependency_alerts,
                     )
+
                     _notify_dependency_alerts(
                         db=self.db,
                         project=project,
                         task_map=task_map,
                         cycle_paths=cycle_paths,
-                        issues=issues
+                        issues=issues,
                     )
                     result["notification_stats"]["dependency"] = {
                         "sent": len(high_issues) > 0 or len(cycle_paths) > 0

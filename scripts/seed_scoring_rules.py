@@ -33,37 +33,57 @@ def seed_scoring_rules():
         rules_file = project_root / "data" / "scoring_rules" / "scoring_rules_v2.0.json"
         # 2. 如果不存在，尝试从presales-project读取（向后兼容）
         if not rules_file.exists():
-            rules_file = project_root / "presales-project" / "presales-evaluation-system" / "scoring_rules_v2.0.json"
+            rules_file = (
+                project_root
+                / "presales-project"
+                / "presales-evaluation-system"
+                / "scoring_rules_v2.0.json"
+            )
         # 3. 如果都不存在，使用默认规则
         if not rules_file.exists():
             print(f"警告: 评分规则文件不存在: {rules_file}")
             # 使用简化的规则
-            rules_json = json.dumps({
-                "version": "2.0",
-                "scales": {
-                    "total_score_max": 100,
-                    "pass_threshold": 60,
-                    "decision_thresholds": [
-                        {"min_score": 75, "decision": "推荐立项", "description": "项目质量优秀"},
-                        {"min_score": 60, "decision": "有条件立项", "description": "项目基本合格"},
-                        {"min_score": 45, "decision": "暂缓", "description": "项目存在风险"},
-                        {"min_score": 0, "decision": "不建议立项", "description": "项目不符合标准"}
-                    ]
+            rules_json = json.dumps(
+                {
+                    "version": "2.0",
+                    "scales": {
+                        "total_score_max": 100,
+                        "pass_threshold": 60,
+                        "decision_thresholds": [
+                            {
+                                "min_score": 75,
+                                "decision": "推荐立项",
+                                "description": "项目质量优秀",
+                            },
+                            {
+                                "min_score": 60,
+                                "decision": "有条件立项",
+                                "description": "项目基本合格",
+                            },
+                            {"min_score": 45, "decision": "暂缓", "description": "项目存在风险"},
+                            {
+                                "min_score": 0,
+                                "decision": "不建议立项",
+                                "description": "项目不符合标准",
+                            },
+                        ],
+                    },
+                    "evaluation_criteria": {
+                        "customer_nature": {
+                            "name": "客户性质",
+                            "field": "customerType",
+                            "max_points": 10,
+                            "options": [
+                                {"value": "老客户成交", "points": 10},
+                                {"value": "新客户", "points": 6},
+                            ],
+                        }
+                    },
                 },
-                "evaluation_criteria": {
-                    "customer_nature": {
-                        "name": "客户性质",
-                        "field": "customerType",
-                        "max_points": 10,
-                        "options": [
-                            {"value": "老客户成交", "points": 10},
-                            {"value": "新客户", "points": 6}
-                        ]
-                    }
-                }
-            }, ensure_ascii=False)
+                ensure_ascii=False,
+            )
         else:
-            with open(rules_file, 'r', encoding='utf-8') as f:
+            with open(rules_file, "r", encoding="utf-8") as f:
                 rules_data = json.load(f)
                 rules_json = json.dumps(rules_data, ensure_ascii=False)
 
@@ -77,7 +97,7 @@ def seed_scoring_rules():
             rules_json=rules_json,
             is_active=True,
             description="技术评估评分规则 v2.0",
-            created_by=created_by
+            created_by=created_by,
         )
 
         db.add(rule)
@@ -90,6 +110,7 @@ def seed_scoring_rules():
     except Exception as e:
         print(f"❌ 初始化失败: {e}")
         import traceback
+
         traceback.print_exc()
         db.rollback()
     finally:
@@ -98,4 +119,3 @@ def seed_scoring_rules():
 
 if __name__ == "__main__":
     seed_scoring_rules()
-

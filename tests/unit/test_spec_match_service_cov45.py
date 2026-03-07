@@ -3,15 +3,16 @@
 第四十五批覆盖：spec_match_service.py
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.spec_match_service")
 
 from app.services.spec_match_service import (
-    get_project_requirements,
-    check_po_item_match,
     check_bom_item_match,
+    check_po_item_match,
+    get_project_requirements,
 )
 
 

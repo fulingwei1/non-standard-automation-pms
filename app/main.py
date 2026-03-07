@@ -5,16 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from app.core.config import settings
-from app.core.rate_limiting import limiter
-from app.core.security_headers import setup_security_headers
-from app.core.csrf import CSRFMiddleware
-from app.core.logging_config import setup_logging
-from app.core.exception_handlers import setup_exception_handlers
 from app.api.v1.api import api_router
-from app.middleware.audit import AuditMiddleware
+from app.core.config import settings
+from app.core.csrf import CSRFMiddleware
+from app.core.exception_handlers import setup_exception_handlers
+from app.core.logging_config import setup_logging
 from app.core.middleware.auth_middleware import GlobalAuthMiddleware
 from app.core.middleware.tenant_middleware import TenantContextMiddleware
+from app.core.rate_limiting import limiter
+from app.core.security_headers import setup_security_headers
+from app.middleware.audit import AuditMiddleware
 
 # 导入统一响应格式（确保可用）
 
@@ -75,8 +75,12 @@ app.add_middleware(GlobalAuthMiddleware)
 # 位于 GlobalAuthMiddleware 之后 → 执行顺序最靠前，优先拒绝高频请求
 # 可通过环境变量 RATE_LIMIT_ENABLED=false 禁用
 import os
+
 if os.getenv("RATE_LIMIT_ENABLED", "true").lower() != "false":
-    from app.core.middleware.rate_limiting import RateLimitMiddleware as InMemoryRateLimitMiddleware  # noqa: E402
+    from app.core.middleware.rate_limiting import (  # noqa: E402
+        RateLimitMiddleware as InMemoryRateLimitMiddleware,
+    )
+
     app.add_middleware(InMemoryRateLimitMiddleware)
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
@@ -128,15 +132,14 @@ try:
         if stop_progress_scheduler:
             stop_progress_scheduler()
         shutdown_scheduler()
+
 except ImportError:
     pass
 
 
 @app.get("/")
 def root():
-    return {
-        "message": "Welcome to Non-standard Automation Project Management System API"
-    }
+    return {"message": "Welcome to Non-standard Automation Project Management System API"}
 
 
 @app.get("/health")

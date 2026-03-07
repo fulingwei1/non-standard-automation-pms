@@ -26,17 +26,18 @@ class TestResourceWasteAnalysisService:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         return ResourceWasteAnalysisService(db_session)
 
     def test_service_initialization(self, service):
         """测试服务初始化"""
         assert service is not None
-        assert hasattr(service, 'db')
+        assert hasattr(service, "db")
 
     def test_default_hourly_rate(self, service):
         """测试默认工时费率"""
         # 默认费率应为300元/小时
-        assert hasattr(service, 'DEFAULT_HOURLY_RATE') or True
+        assert hasattr(service, "DEFAULT_HOURLY_RATE") or True
 
     def test_role_based_rates(self):
         """测试基于角色的费率"""
@@ -60,6 +61,7 @@ class TestWasteCalculation:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         return ResourceWasteAnalysisService(db_session)
 
     def test_calculate_labor_waste(self, service, db_session):
@@ -94,6 +96,7 @@ class TestInvestmentAnalysis:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         return ResourceWasteAnalysisService(db_session)
 
     def test_analyze_project_investment(self, service, db_session):
@@ -121,6 +124,7 @@ class TestSalespersonAnalysis:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         return ResourceWasteAnalysisService(db_session)
 
     def test_analyze_salesperson_efficiency(self, service, db_session):
@@ -151,6 +155,7 @@ class TestFailurePatterns:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         return ResourceWasteAnalysisService(db_session)
 
     def test_identify_failure_patterns(self, service, db_session):
@@ -177,6 +182,7 @@ class TestTrendsComparison:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         return ResourceWasteAnalysisService(db_session)
 
     def test_compare_monthly_trends(self, service, db_session):
@@ -205,6 +211,7 @@ class TestReportGeneration:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         return ResourceWasteAnalysisService(db_session)
 
     def test_generate_waste_report(self, service, db_session):
@@ -234,6 +241,7 @@ class TestResourceWasteAnalysisModule:
     def test_import_module(self):
         """测试导入模块"""
         from app.services.resource_waste_analysis import ResourceWasteAnalysisService
+
         assert ResourceWasteAnalysisService is not None
 
     def test_service_has_methods(self):

@@ -60,17 +60,17 @@ def generate_purchase_request_from_bom(
     bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
 
     # 获取BOM明细
-    bom_items = db.query(BomItem).filter(
-        BomItem.bom_id == bom_id,
-        BomItem.source_type.in_(['PURCHASE', 'OUTSOURCE'])  # 只选择需要采购/外协的物料
-    ).all()
+    bom_items = (
+        db.query(BomItem)
+        .filter(
+            BomItem.bom_id == bom_id,
+            BomItem.source_type.in_(["PURCHASE", "OUTSOURCE"]),  # 只选择需要采购/外协的物料
+        )
+        .all()
+    )
 
     if not bom_items:
-        return ResponseModel(
-            code=400,
-            message="BOM中没有需要采购的物料",
-            data={"bom_id": bom_id}
-        )
+        return ResponseModel(code=400, message="BOM中没有需要采购的物料", data={"bom_id": bom_id})
 
     # 创建采购申请单
     pr = PurchaseRequest(
@@ -78,21 +78,21 @@ def generate_purchase_request_from_bom(
         project_id=bom.project_id,
         machine_id=bom.machine_id,
         supplier_id=supplier_id,
-        source_type='BOM',
+        source_type="BOM",
         source_id=bom_id,
         request_reason=f"从BOM {bom.bom_no} 生成",
-        status='DRAFT',
+        status="DRAFT",
         requested_by=current_user.id,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
     db.add(pr)
     db.flush()
 
     # 创建采购申请明细
-    total_amount = Decimal('0')
+    total_amount = Decimal("0")
     for item in bom_items:
-        unit_price = item.unit_price or Decimal('0')
-        quantity = item.quantity or Decimal('0')
+        unit_price = item.unit_price or Decimal("0")
+        quantity = item.quantity or Decimal("0")
         amount = unit_price * quantity
 
         pr_item = PurchaseRequestItem(
@@ -105,7 +105,7 @@ def generate_purchase_request_from_bom(
             unit=item.unit,
             quantity=quantity,
             unit_price=unit_price,
-            amount=amount
+            amount=amount,
         )
         db.add(pr_item)
         total_amount += amount
@@ -123,6 +123,6 @@ def generate_purchase_request_from_bom(
             "request_id": pr.id,
             "request_no": pr.request_no,
             "item_count": len(bom_items),
-            "total_amount": float(total_amount)
-        }
+            "total_amount": float(total_amount),
+        },
     )

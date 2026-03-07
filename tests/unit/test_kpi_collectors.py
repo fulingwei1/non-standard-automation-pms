@@ -11,15 +11,15 @@ KPI采集器单元测试
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date, datetime, timedelta
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 from app.services.strategy.kpi_collector.collectors import (
-    collect_project_metrics,
     collect_finance_metrics,
-    collect_purchase_metrics,
     collect_hr_metrics,
+    collect_project_metrics,
+    collect_purchase_metrics,
 )
 
 
@@ -851,9 +851,7 @@ class TestEdgeCases(unittest.TestCase):
         mock_query.count.return_value = 10
         self.db.query.return_value = mock_query
 
-        result = collect_project_metrics(
-            self.db, "PROJECT_COUNT", aggregation="SUM"
-        )
+        result = collect_project_metrics(self.db, "PROJECT_COUNT", aggregation="SUM")
 
         # aggregation参数当前未使用，但不应影响结果
         self.assertEqual(result, Decimal(10))

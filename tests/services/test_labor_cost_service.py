@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """工时成本服务单元测试 (LaborCostService)"""
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def _make_db():
@@ -32,18 +33,21 @@ def _make_project(**kw):
 class TestLaborCostServiceInit:
     def test_init_sets_db(self):
         from app.services.labor_cost_service import LaborCostService
+
         db = _make_db()
         svc = LaborCostService(db)
         assert svc.db is db
 
     def test_default_hourly_rate_exists(self):
         from app.services.labor_cost_service import LaborCostService
+
         assert LaborCostService.DEFAULT_HOURLY_RATE == Decimal("100")
 
 
 class TestCalculateProjectLaborCost:
     def test_project_not_found_returns_failure(self):
         from app.services.labor_cost_service import LaborCostService
+
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
         result = LaborCostService.calculate_project_labor_cost(db, project_id=999)
@@ -52,19 +56,30 @@ class TestCalculateProjectLaborCost:
 
     def test_no_approved_timesheets_returns_success_zero_cost(self):
         from app.services.labor_cost_service import LaborCostService
+
         db = _make_db()
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
 
-        with patch('app.services.labor_cost_service.LaborCostService.calculate_project_labor_cost') as mock_calc:
+        with patch(
+            "app.services.labor_cost_service.LaborCostService.calculate_project_labor_cost"
+        ) as mock_calc:
             # Directly test the logic by patching inner utils
             pass
 
         # Test through the actual function with mocked utils
-        with patch('app.services.labor_cost.utils.query_approved_timesheets', return_value=[]) as mock_query, \
-             patch('app.services.labor_cost.utils.group_timesheets_by_user', return_value={}) as mock_group, \
-             patch('app.services.labor_cost.utils.delete_existing_costs') as mock_delete, \
-             patch('app.services.labor_cost.utils.process_user_costs', return_value=([], Decimal("0"))) as mock_process:
+        with (
+            patch(
+                "app.services.labor_cost.utils.query_approved_timesheets", return_value=[]
+            ) as mock_query,
+            patch(
+                "app.services.labor_cost.utils.group_timesheets_by_user", return_value={}
+            ) as mock_group,
+            patch("app.services.labor_cost.utils.delete_existing_costs") as mock_delete,
+            patch(
+                "app.services.labor_cost.utils.process_user_costs", return_value=([], Decimal("0"))
+            ) as mock_process,
+        ):
             result = LaborCostService.calculate_project_labor_cost(db, project_id=1)
             # 无工时记录时应返回 cost_count=0
             assert result["success"] is True
@@ -72,6 +87,7 @@ class TestCalculateProjectLaborCost:
 
     def test_with_timesheets_returns_cost_result(self):
         from app.services.labor_cost_service import LaborCostService
+
         db = _make_db()
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
@@ -81,14 +97,21 @@ class TestCalculateProjectLaborCost:
         mock_timesheet.hours = Decimal("8")
         mock_timesheet.work_date = date(2024, 1, 15)
 
-        with patch('app.services.labor_cost.utils.query_approved_timesheets', return_value=[mock_timesheet]), \
-             patch('app.services.labor_cost.utils.group_timesheets_by_user', return_value={
-                 1: {"total_hours": Decimal("8"), "timesheets": [mock_timesheet]}
-             }), \
-             patch('app.services.labor_cost.utils.delete_existing_costs'), \
-             patch('app.services.labor_cost.utils.process_user_costs', return_value=(
-                 [MagicMock()], Decimal("800")
-             )):
+        with (
+            patch(
+                "app.services.labor_cost.utils.query_approved_timesheets",
+                return_value=[mock_timesheet],
+            ),
+            patch(
+                "app.services.labor_cost.utils.group_timesheets_by_user",
+                return_value={1: {"total_hours": Decimal("8"), "timesheets": [mock_timesheet]}},
+            ),
+            patch("app.services.labor_cost.utils.delete_existing_costs"),
+            patch(
+                "app.services.labor_cost.utils.process_user_costs",
+                return_value=([MagicMock()], Decimal("800")),
+            ),
+        ):
             result = LaborCostService.calculate_project_labor_cost(db, project_id=1)
             assert result["success"] is True
             assert result["cost_count"] == 1
@@ -98,6 +121,7 @@ class TestCalculateProjectLaborCost:
 class TestCalculateAllProjectsLaborCost:
     def test_no_timesheets_returns_empty_results(self):
         from app.services.labor_cost_service import LaborCostService
+
         db = _make_db()
         # query returns empty list of project ids
         db.query.return_value.filter.return_value.distinct.return_value.all.return_value = []
@@ -110,8 +134,9 @@ class TestCalculateAllProjectsLaborCost:
 class TestCalculateMonthlyLaborCost:
     def test_delegates_to_all_projects(self):
         from app.services.labor_cost_service import LaborCostService
+
         db = _make_db()
-        with patch.object(LaborCostService, 'calculate_all_projects_labor_cost') as mock_all:
+        with patch.object(LaborCostService, "calculate_all_projects_labor_cost") as mock_all:
             mock_all.return_value = {"success": True, "total_projects": 0}
             result = LaborCostService.calculate_monthly_labor_cost(db, year=2024, month=1)
             mock_all.assert_called_once()
@@ -121,6 +146,7 @@ class TestCalculateMonthlyLaborCost:
 class TestLaborCostExpenseServiceIdentifyLostProjects:
     def test_identify_lost_projects_no_outcome_filter(self):
         from app.services.labor_cost_service import LaborCostExpenseService
+
         db = _make_db()
         project = _make_project(id=1, outcome="LOST")
         db.query.return_value.filter.return_value.all.return_value = [project]
@@ -137,6 +163,7 @@ class TestLaborCostExpenseServiceIdentifyLostProjects:
 
     def test_identify_lost_projects_empty(self):
         from app.services.labor_cost_service import LaborCostExpenseService
+
         db = _make_db()
         db.query.return_value.filter.return_value.all.return_value = []
 

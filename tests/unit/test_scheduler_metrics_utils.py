@@ -4,17 +4,19 @@ Unit tests for app/utils/scheduler_metrics.py
 Covers: SchedulerMetrics class (additional/edge cases)
 """
 
-import pytest
 import threading
+
+import pytest
+
 from app.utils.scheduler_metrics import (
+    METRICS,
     SchedulerMetrics,
-    record_job_success,
-    record_job_failure,
-    record_notification_success,
-    record_notification_failure,
     get_metrics_snapshot,
     get_metrics_statistics,
-    METRICS,
+    record_job_failure,
+    record_job_success,
+    record_notification_failure,
+    record_notification_success,
 )
 
 

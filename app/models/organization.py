@@ -3,23 +3,26 @@
 组织架构模型 (员工、部门、人事档案、人事事务)
 """
 
+from enum import Enum
+from typing import TYPE_CHECKING, List
+
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
-from enum import Enum
-from typing import List, TYPE_CHECKING
-from sqlalchemy import JSON, Index, UniqueConstraint
 
 if TYPE_CHECKING:
     pass
@@ -29,6 +32,7 @@ def __getattr__(name):
     """兼容导出：部分调用方从 organization 模块导入 Customer"""
     if name == "Customer":
         from app.models.project.customer import Customer
+
         return Customer
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
@@ -82,9 +86,7 @@ class Employee(Base, TimestampMixin):
 
     # 关系
     # user = relationship('User', back_populates='employee')
-    hr_profile = relationship(
-        "EmployeeHrProfile", back_populates="employee", uselist=False
-    )
+    hr_profile = relationship("EmployeeHrProfile", back_populates="employee", uselist=False)
 
     def __repr__(self):
         return f"<Employee {self.name}>"
@@ -164,9 +166,7 @@ class HrTransaction(Base, TimestampMixin):
     __tablename__ = "hr_transactions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    employee_id = Column(
-        Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID"
-    )
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     transaction_type = Column(
         String(20),
         nullable=False,
@@ -238,9 +238,7 @@ class HrTransaction(Base, TimestampMixin):
     handover_employee = relationship("Employee", foreign_keys=[handover_to])
 
     def __repr__(self):
-        return (
-            f"<HrTransaction {self.transaction_type} for employee {self.employee_id}>"
-        )
+        return f"<HrTransaction {self.transaction_type} for employee {self.employee_id}>"
 
 
 class EmployeeContract(Base, TimestampMixin):
@@ -249,9 +247,7 @@ class EmployeeContract(Base, TimestampMixin):
     __tablename__ = "employee_contracts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    employee_id = Column(
-        Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID"
-    )
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
     contract_no = Column(String(50), comment="合同编号")
     contract_type = Column(
         String(20),
@@ -284,9 +280,7 @@ class EmployeeContract(Base, TimestampMixin):
 
     # 续签相关
     is_renewed = Column(Boolean, default=False, comment="是否已续签")
-    renewed_contract_id = Column(
-        Integer, ForeignKey("employee_contracts.id"), comment="续签合同ID"
-    )
+    renewed_contract_id = Column(Integer, ForeignKey("employee_contracts.id"), comment="续签合同ID")
     renewal_count = Column(Integer, default=0, comment="续签次数")
 
     # 提醒相关
@@ -314,9 +308,7 @@ class ContractReminder(Base, TimestampMixin):
     contract_id = Column(
         Integer, ForeignKey("employee_contracts.id"), nullable=False, comment="合同ID"
     )
-    employee_id = Column(
-        Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID"
-    )
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
 
     reminder_type = Column(
         String(20),
@@ -342,30 +334,25 @@ class ContractReminder(Base, TimestampMixin):
 
     # 通知相关
     notified_at = Column(DateTime, comment="通知时间")
-    notification_method = Column(
-        String(50), comment="通知方式: email, wechat, sms, system"
-    )
+    notification_method = Column(String(50), comment="通知方式: email, wechat, sms, system")
 
     # 关系
     contract = relationship("EmployeeContract")
     employee = relationship("Employee")
 
     def __repr__(self):
-        return (
-            f"<ContractReminder {self.reminder_type} for contract {self.contract_id}>"
-        )
+        return f"<ContractReminder {self.reminder_type} for contract {self.contract_id}>"
 
 
 class SalaryRecord(Base, TimestampMixin):
     """薪资记录表（记录员工薪资变动历史）
-    
+
     【状态】未启用 - 薪资记录"""
+
     __tablename__ = "salary_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    employee_id = Column(
-        Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID"
-    )
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False, comment="员工ID")
 
     # 薪资信息
     effective_date = Column(Date, nullable=False, comment="生效日期")
@@ -387,9 +374,7 @@ class SalaryRecord(Base, TimestampMixin):
     change_ratio = Column(Numeric(5, 2), comment="变动比例(%)")
 
     # 关联事务
-    transaction_id = Column(
-        Integer, ForeignKey("hr_transactions.id"), comment="关联人事事务ID"
-    )
+    transaction_id = Column(Integer, ForeignKey("hr_transactions.id"), comment="关联人事事务ID")
 
     # 状态
     is_current = Column(Boolean, default=True, comment="是否当前薪资")
@@ -454,9 +439,7 @@ class OrganizationUnit(Base, TimestampMixin):
         nullable=False,
         comment="类型: COMPANY/BUSINESS_UNIT/DEPARTMENT/TEAM",
     )
-    parent_id = Column(
-        Integer, ForeignKey("organization_units.id"), comment="上级组织ID"
-    )
+    parent_id = Column(Integer, ForeignKey("organization_units.id"), comment="上级组织ID")
     manager_id = Column(Integer, ForeignKey("employees.id"), comment="负责人ID")
     level = Column(Integer, default=1, comment="层级深度")
     path = Column(String(500), comment="路径(如: /1/3/5/)")
@@ -467,9 +450,7 @@ class OrganizationUnit(Base, TimestampMixin):
     parent = relationship("OrganizationUnit", remote_side=[id], backref="children")
     manager = relationship("Employee", foreign_keys=[manager_id])
     positions = relationship("Position", back_populates="org_unit")
-    employee_assignments = relationship(
-        "EmployeeOrgAssignment", back_populates="org_unit"
-    )
+    employee_assignments = relationship("EmployeeOrgAssignment", back_populates="org_unit")
 
     __table_args__ = (
         Index("idx_org_unit_type", "unit_type"),
@@ -511,9 +492,7 @@ class Position(Base, TimestampMixin):
         nullable=False,
         comment="类别: MANAGEMENT/TECHNICAL/SUPPORT/SALES/PRODUCTION",
     )
-    org_unit_id = Column(
-        Integer, ForeignKey("organization_units.id"), comment="所属组织单元ID"
-    )
+    org_unit_id = Column(Integer, ForeignKey("organization_units.id"), comment="所属组织单元ID")
     description = Column(Text, comment="岗位描述")
     responsibilities = Column(JSON, comment="岗位职责")
     is_active = Column(Boolean, default=True, comment="是否启用")
@@ -522,9 +501,7 @@ class Position(Base, TimestampMixin):
     # 关系
     org_unit = relationship("OrganizationUnit", back_populates="positions")
     position_roles = relationship("PositionRole", back_populates="position")
-    employee_assignments = relationship(
-        "EmployeeOrgAssignment", back_populates="position"
-    )
+    employee_assignments = relationship("EmployeeOrgAssignment", back_populates="position")
 
     __table_args__ = (
         Index("idx_position_category", "position_category"),
@@ -551,9 +528,7 @@ class JobLevel(Base, TimestampMixin):
     sort_order = Column(Integer, default=0, comment="排序")
 
     # 关系
-    employee_assignments = relationship(
-        "EmployeeOrgAssignment", back_populates="job_level"
-    )
+    employee_assignments = relationship("EmployeeOrgAssignment", back_populates="job_level")
 
     def __repr__(self):
         return f"<JobLevel {self.level_code}>"
@@ -577,16 +552,12 @@ class EmployeeOrgAssignment(Base, TimestampMixin):
         nullable=False,
         comment="组织单元ID",
     )
-    position_id = Column(
-        Integer, ForeignKey("positions.id", ondelete="SET NULL"), comment="岗位ID"
-    )
+    position_id = Column(Integer, ForeignKey("positions.id", ondelete="SET NULL"), comment="岗位ID")
     job_level_id = Column(
         Integer, ForeignKey("job_levels.id", ondelete="SET NULL"), comment="职级ID"
     )
     is_primary = Column(Boolean, default=True, comment="是否主要归属")
-    assignment_type = Column(
-        String(20), default=AssignmentType.PERMANENT.value, comment="分配类型"
-    )
+    assignment_type = Column(String(20), default=AssignmentType.PERMANENT.value, comment="分配类型")
     start_date = Column(Date, comment="开始日期")
     end_date = Column(Date, comment="结束日期")
     is_active = Column(Boolean, default=True, comment="是否有效")
@@ -598,9 +569,7 @@ class EmployeeOrgAssignment(Base, TimestampMixin):
     job_level = relationship("JobLevel", back_populates="employee_assignments")
 
     __table_args__ = (
-        UniqueConstraint(
-            "employee_id", "org_unit_id", "is_primary", name="uk_eoa_emp_org_primary"
-        ),
+        UniqueConstraint("employee_id", "org_unit_id", "is_primary", name="uk_eoa_emp_org_primary"),
     )
 
 
@@ -610,12 +579,8 @@ class PositionRole(Base):
     __tablename__ = "position_roles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    position_id = Column(
-        Integer, ForeignKey("positions.id", ondelete="CASCADE"), nullable=False
-    )
-    role_id = Column(
-        Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False
-    )
+    position_id = Column(Integer, ForeignKey("positions.id", ondelete="CASCADE"), nullable=False)
+    role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), nullable=False)
     is_active = Column(Boolean, default=True)
 
     # 关系

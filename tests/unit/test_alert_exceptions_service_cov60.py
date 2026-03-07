@@ -8,8 +8,8 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from app.services.alert_exceptions import AlertExceptionsService
 from app.schemas.alert import ExceptionEventCreate
+from app.services.alert_exceptions import AlertExceptionsService
 
 
 class TestAlertExceptionsService(unittest.TestCase):
@@ -25,8 +25,8 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.assertIsNotNone(self.service)
         self.assertEqual(self.service.db, self.db)
 
-    @patch('app.services.alert_exceptions.service.apply_keyword_filter')
-    @patch('app.services.alert_exceptions.service.apply_pagination')
+    @patch("app.services.alert_exceptions.service.apply_keyword_filter")
+    @patch("app.services.alert_exceptions.service.apply_pagination")
     def test_get_exception_events_basic(self, mock_pagination, mock_filter):
         """测试获取异常事件列表（基础场景）"""
         # Mock 数据
@@ -49,8 +49,8 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.assertEqual(events, [])
         self.db.query.assert_called_once()
 
-    @patch('app.services.alert_exceptions.service.apply_keyword_filter')
-    @patch('app.services.alert_exceptions.service.apply_pagination')
+    @patch("app.services.alert_exceptions.service.apply_keyword_filter")
+    @patch("app.services.alert_exceptions.service.apply_pagination")
     def test_get_exception_events_with_filters(self, mock_pagination, mock_filter):
         """测试获取异常事件列表（带筛选条件）"""
         # Mock 数据
@@ -126,9 +126,9 @@ class TestAlertExceptionsService(unittest.TestCase):
 
         def query_side_effect(model):
             mock_query = MagicMock()
-            if model.__name__ == 'Project':
+            if model.__name__ == "Project":
                 mock_query.filter.return_value.first.return_value = mock_project
-            elif model.__name__ == 'Machine':
+            elif model.__name__ == "Machine":
                 mock_query.filter.return_value.first.return_value = mock_machine
             return mock_query
 
@@ -146,7 +146,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         )
 
         # 调用方法
-        with patch('app.services.alert_exceptions.service.ExceptionEvent') as MockEvent:
+        with patch("app.services.alert_exceptions.service.ExceptionEvent") as MockEvent:
             mock_instance = MagicMock()
             MockEvent.return_value = mock_instance
 
@@ -184,7 +184,7 @@ class TestAlertExceptionsService(unittest.TestCase):
 
         self.assertIn("项目不存在", str(context.exception))
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_get_exception_event_detail(self, mock_get_or_404):
         """测试获取异常事件详情"""
         # Mock 事件对象
@@ -213,7 +213,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.assertEqual(result["status"], "OPEN")
         self.assertEqual(result["discovered_by_name"], "张三")
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_update_exception_status(self, mock_get_or_404):
         """测试更新异常状态"""
         # Mock 事件对象
@@ -238,7 +238,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.db.add.assert_called_once()
         self.db.commit.assert_called_once()
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_add_exception_action(self, mock_get_or_404):
         """测试添加处理记录"""
         # Mock 事件对象
@@ -249,7 +249,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_get_or_404.return_value = mock_event
 
         # 调用方法
-        with patch('app.services.alert_exceptions.service.ExceptionAction') as MockAction:
+        with patch("app.services.alert_exceptions.service.ExceptionAction") as MockAction:
             mock_action = MagicMock()
             mock_action.id = 1
             MockAction.return_value = mock_action
@@ -266,7 +266,7 @@ class TestAlertExceptionsService(unittest.TestCase):
             self.db.add.assert_called_once()
             self.db.commit.assert_called_once()
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_escalate_exception(self, mock_get_or_404):
         """测试异常升级"""
         # Mock 事件对象
@@ -278,7 +278,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_get_or_404.return_value = mock_event
 
         # 调用方法
-        with patch('app.services.alert_exceptions.service.ExceptionEscalation') as MockEscalation:
+        with patch("app.services.alert_exceptions.service.ExceptionEscalation") as MockEscalation:
             result = self.service.escalate_exception(
                 event_id=1,
                 escalate_to_user_id=2,
@@ -294,7 +294,7 @@ class TestAlertExceptionsService(unittest.TestCase):
             MockEscalation.assert_called_once()  # 创建升级记录
             self.db.commit.assert_called_once()
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_create_exception_from_issue(self, mock_get_or_404):
         """测试从问题创建异常事件"""
         # Mock 问题对象
@@ -310,7 +310,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_get_or_404.return_value = mock_issue
 
         # 调用方法
-        with patch('app.services.alert_exceptions.service.ExceptionEvent') as MockEvent:
+        with patch("app.services.alert_exceptions.service.ExceptionEvent") as MockEvent:
             mock_instance = MagicMock()
             MockEvent.return_value = mock_instance
 
@@ -329,5 +329,5 @@ class TestAlertExceptionsService(unittest.TestCase):
             MockEvent.assert_called_once()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """ECN级联影响分析单元测试"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.ecn_bom_analysis_service.cascade import analyze_cascade_impact
 
 
@@ -22,7 +24,7 @@ class TestAnalyzeCascadeImpact:
         child.material_code = "M002"
         child.material_name = "子物料"
         result = analyze_cascade_impact(MagicMock(), [parent, child], {2})
-        assert any(r['cascade_type'] == 'UPWARD' for r in result)
+        assert any(r["cascade_type"] == "UPWARD" for r in result)
 
     def test_downward_cascade(self):
         parent = MagicMock()
@@ -36,7 +38,7 @@ class TestAnalyzeCascadeImpact:
         child.material_code = "M002"
         child.material_name = "子物料"
         result = analyze_cascade_impact(MagicMock(), [parent, child], {1})
-        assert any(r['cascade_type'] == 'DOWNWARD' for r in result)
+        assert any(r["cascade_type"] == "DOWNWARD" for r in result)
 
     def test_no_cascade_needed(self):
         item = MagicMock()

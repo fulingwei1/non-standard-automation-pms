@@ -11,19 +11,19 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch, call
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, Mock, call, patch
 
 from sqlalchemy.orm import Session
 
-from app.services.timesheet_reminders.service import TimesheetReminderService
 from app.models.timesheet_reminder import (
     ReminderStatusEnum,
     ReminderTypeEnum,
+    TimesheetAnomalyRecord,
     TimesheetReminderConfig,
     TimesheetReminderRecord,
-    TimesheetAnomalyRecord,
 )
+from app.services.timesheet_reminders.service import TimesheetReminderService
 
 
 class TestTimesheetReminderServiceCreateConfig(unittest.TestCase):
@@ -54,7 +54,7 @@ class TestTimesheetReminderServiceCreateConfig(unittest.TestCase):
             reminder_type="MISSING_TIMESHEET",
             created_by=1,
             rule_parameters={"check_days_ago": 1},
-            priority="HIGH"
+            priority="HIGH",
         )
 
         # 验证
@@ -77,9 +77,9 @@ class TestTimesheetReminderServiceCreateConfig(unittest.TestCase):
                 rule_code="EXISTING_RULE",
                 rule_name="重复规则",
                 reminder_type="MISSING_TIMESHEET",
-                created_by=1
+                created_by=1,
             )
-        
+
         self.assertIn("规则编码已存在", str(context.exception))
 
     def test_create_reminder_config_with_all_parameters(self):
@@ -107,15 +107,15 @@ class TestTimesheetReminderServiceCreateConfig(unittest.TestCase):
             notification_template="您有工时待审批",
             remind_frequency="TWICE_DAILY",
             max_reminders_per_day=2,
-            priority="URGENT"
+            priority="URGENT",
         )
 
         # 验证
         self.assertIsNotNone(result)
         call_kwargs = self.service.manager.create_reminder_config.call_args[1]
-        self.assertEqual(call_kwargs['rule_code'], "FULL_RULE")
-        self.assertEqual(call_kwargs['apply_to_departments'], [1, 2])
-        self.assertEqual(call_kwargs['notification_channels'], ["EMAIL", "WECHAT"])
+        self.assertEqual(call_kwargs["rule_code"], "FULL_RULE")
+        self.assertEqual(call_kwargs["apply_to_departments"], [1, 2])
+        self.assertEqual(call_kwargs["notification_channels"], ["EMAIL", "WECHAT"])
 
 
 class TestTimesheetReminderServiceUpdateConfig(unittest.TestCase):
@@ -135,18 +135,14 @@ class TestTimesheetReminderServiceUpdateConfig(unittest.TestCase):
 
         # 执行
         result = self.service.update_reminder_config(
-            config_id=1,
-            rule_name="更新后的规则",
-            is_active=False
+            config_id=1, rule_name="更新后的规则", is_active=False
         )
 
         # 验证
         self.assertIsNotNone(result)
         self.assertEqual(result.rule_name, "更新后的规则")
         self.service.manager.update_reminder_config.assert_called_once_with(
-            config_id=1,
-            rule_name="更新后的规则",
-            is_active=False
+            config_id=1, rule_name="更新后的规则", is_active=False
         )
 
     def test_update_reminder_config_not_found(self):
@@ -155,10 +151,7 @@ class TestTimesheetReminderServiceUpdateConfig(unittest.TestCase):
         self.service.manager.update_reminder_config = MagicMock(return_value=None)
 
         # 执行
-        result = self.service.update_reminder_config(
-            config_id=999,
-            rule_name="不存在的规则"
-        )
+        result = self.service.update_reminder_config(config_id=999, rule_name="不存在的规则")
 
         # 验证
         self.assertIsNone(result)
@@ -178,10 +171,12 @@ class TestTimesheetReminderServiceListConfigs(unittest.TestCase):
             MagicMock(spec=TimesheetReminderConfig, id=1, rule_code="RULE1"),
             MagicMock(spec=TimesheetReminderConfig, id=2, rule_code="RULE2"),
         ]
-        
+
         query_mock = MagicMock()
         query_mock.count.return_value = 2
-        query_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_configs
+        query_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_configs
+        )
         self.db.query.return_value = query_mock
 
         # 执行
@@ -198,18 +193,18 @@ class TestTimesheetReminderServiceListConfigs(unittest.TestCase):
         mock_configs = [
             MagicMock(spec=TimesheetReminderConfig, id=1, reminder_type="MISSING_TIMESHEET"),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_configs
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_configs
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
         # 执行
-        configs, total = self.service.list_reminder_configs(
-            reminder_type="MISSING_TIMESHEET"
-        )
+        configs, total = self.service.list_reminder_configs(reminder_type="MISSING_TIMESHEET")
 
         # 验证
         self.assertEqual(total, 1)
@@ -222,11 +217,13 @@ class TestTimesheetReminderServiceListConfigs(unittest.TestCase):
         mock_configs = [
             MagicMock(spec=TimesheetReminderConfig, id=1, is_active=True),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_configs
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_configs
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
@@ -243,7 +240,7 @@ class TestTimesheetReminderServiceListConfigs(unittest.TestCase):
         mock_configs = [
             MagicMock(spec=TimesheetReminderConfig, id=3, rule_code="RULE3"),
         ]
-        
+
         query_mock = MagicMock()
         query_mock.count.return_value = 10
         limit_mock = MagicMock()
@@ -275,11 +272,13 @@ class TestTimesheetReminderServicePendingReminders(unittest.TestCase):
             MagicMock(spec=TimesheetReminderRecord, id=1, status=ReminderStatusEnum.PENDING),
             MagicMock(spec=TimesheetReminderRecord, id=2, status=ReminderStatusEnum.SENT),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 2
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
@@ -296,20 +295,21 @@ class TestTimesheetReminderServicePendingReminders(unittest.TestCase):
         mock_reminders = [
             MagicMock(spec=TimesheetReminderRecord, id=1, reminder_type="MISSING_TIMESHEET"),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         # 多次filter调用需要返回同一个对象
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
         # 执行
         reminders, total = self.service.list_pending_reminders(
-            user_id=1,
-            reminder_type="MISSING_TIMESHEET"
+            user_id=1, reminder_type="MISSING_TIMESHEET"
         )
 
         # 验证
@@ -321,21 +321,20 @@ class TestTimesheetReminderServicePendingReminders(unittest.TestCase):
         mock_reminders = [
             MagicMock(spec=TimesheetReminderRecord, id=1, priority="URGENT"),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         # 多次filter调用需要返回同一个对象
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
         # 执行
-        reminders, total = self.service.list_pending_reminders(
-            user_id=1,
-            priority="URGENT"
-        )
+        reminders, total = self.service.list_pending_reminders(user_id=1, priority="URGENT")
 
         # 验证
         self.assertEqual(total, 1)
@@ -355,11 +354,13 @@ class TestTimesheetReminderServiceReminderHistory(unittest.TestCase):
             MagicMock(spec=TimesheetReminderRecord, id=1),
             MagicMock(spec=TimesheetReminderRecord, id=2),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 2
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
@@ -376,21 +377,20 @@ class TestTimesheetReminderServiceReminderHistory(unittest.TestCase):
         mock_reminders = [
             MagicMock(spec=TimesheetReminderRecord, id=1, status="RESOLVED"),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         # 多次filter调用需要返回同一个对象
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
         # 执行
-        reminders, total = self.service.list_reminder_history(
-            user_id=1,
-            status="RESOLVED"
-        )
+        reminders, total = self.service.list_reminder_history(user_id=1, status="RESOLVED")
 
         # 验证
         self.assertEqual(total, 1)
@@ -401,13 +401,15 @@ class TestTimesheetReminderServiceReminderHistory(unittest.TestCase):
         mock_reminders = [
             MagicMock(spec=TimesheetReminderRecord, id=1),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         # 多次filter调用需要返回同一个对象
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
@@ -415,9 +417,7 @@ class TestTimesheetReminderServiceReminderHistory(unittest.TestCase):
         start_date = datetime(2024, 2, 1)
         end_date = datetime(2024, 2, 28)
         reminders, total = self.service.list_reminder_history(
-            user_id=1,
-            start_date=start_date,
-            end_date=end_date
+            user_id=1, start_date=start_date, end_date=end_date
         )
 
         # 验证
@@ -448,19 +448,14 @@ class TestTimesheetReminderServiceDismissReminder(unittest.TestCase):
 
         # 执行
         result = self.service.dismiss_reminder(
-            reminder_id=1,
-            user_id=1,
-            dismissed_by=1,
-            reason="误报"
+            reminder_id=1, user_id=1, dismissed_by=1, reason="误报"
         )
 
         # 验证
         self.assertIsNotNone(result)
         self.assertEqual(result.status, ReminderStatusEnum.DISMISSED)
         self.service.manager.dismiss_reminder.assert_called_once_with(
-            reminder_id=1,
-            dismissed_by=1,
-            reason="误报"
+            reminder_id=1, dismissed_by=1, reason="误报"
         )
 
     def test_dismiss_reminder_not_found(self):
@@ -471,11 +466,7 @@ class TestTimesheetReminderServiceDismissReminder(unittest.TestCase):
         self.db.query.return_value = query_mock
 
         # 执行
-        result = self.service.dismiss_reminder(
-            reminder_id=999,
-            user_id=1,
-            dismissed_by=1
-        )
+        result = self.service.dismiss_reminder(reminder_id=999, user_id=1, dismissed_by=1)
 
         # 验证
         self.assertIsNone(result)
@@ -492,9 +483,7 @@ class TestTimesheetReminderServiceDismissReminder(unittest.TestCase):
 
         # 执行
         result = self.service.dismiss_reminder(
-            reminder_id=1,
-            user_id=1,  # 请求用户ID为1
-            dismissed_by=1
+            reminder_id=1, user_id=1, dismissed_by=1  # 请求用户ID为1
         )
 
         # 验证
@@ -559,11 +548,13 @@ class TestTimesheetReminderServiceAnomalies(unittest.TestCase):
             MagicMock(spec=TimesheetAnomalyRecord, id=1),
             MagicMock(spec=TimesheetAnomalyRecord, id=2),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 2
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_anomalies
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_anomalies
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
@@ -580,21 +571,20 @@ class TestTimesheetReminderServiceAnomalies(unittest.TestCase):
         mock_anomalies = [
             MagicMock(spec=TimesheetAnomalyRecord, id=1, anomaly_type="DAILY_OVER_12"),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         # 多次filter调用需要返回同一个对象
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_anomalies
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_anomalies
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
         # 执行
-        anomalies, total = self.service.list_anomalies(
-            user_id=1,
-            anomaly_type="DAILY_OVER_12"
-        )
+        anomalies, total = self.service.list_anomalies(user_id=1, anomaly_type="DAILY_OVER_12")
 
         # 验证
         self.assertEqual(total, 1)
@@ -605,21 +595,20 @@ class TestTimesheetReminderServiceAnomalies(unittest.TestCase):
         mock_anomalies = [
             MagicMock(spec=TimesheetAnomalyRecord, id=1, is_resolved=False),
         ]
-        
+
         query_mock = MagicMock()
         filter_mock = MagicMock()
         # 多次filter调用需要返回同一个对象
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_anomalies
+        filter_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_anomalies
+        )
         query_mock.filter.return_value = filter_mock
         self.db.query.return_value = query_mock
 
         # 执行
-        anomalies, total = self.service.list_anomalies(
-            user_id=1,
-            is_resolved=False
-        )
+        anomalies, total = self.service.list_anomalies(user_id=1, is_resolved=False)
 
         # 验证
         self.assertEqual(total, 1)
@@ -649,19 +638,14 @@ class TestTimesheetReminderServiceResolveAnomaly(unittest.TestCase):
 
         # 执行
         result = self.service.resolve_anomaly(
-            anomaly_id=1,
-            user_id=1,
-            resolved_by=1,
-            resolution_note="已修正"
+            anomaly_id=1, user_id=1, resolved_by=1, resolution_note="已修正"
         )
 
         # 验证
         self.assertIsNotNone(result)
         self.assertTrue(result.is_resolved)
         self.service.manager.resolve_anomaly.assert_called_once_with(
-            anomaly_id=1,
-            resolved_by=1,
-            resolution_note="已修正"
+            anomaly_id=1, resolved_by=1, resolution_note="已修正"
         )
 
     def test_resolve_anomaly_not_found(self):
@@ -672,11 +656,7 @@ class TestTimesheetReminderServiceResolveAnomaly(unittest.TestCase):
         self.db.query.return_value = query_mock
 
         # 执行
-        result = self.service.resolve_anomaly(
-            anomaly_id=999,
-            user_id=1,
-            resolved_by=1
-        )
+        result = self.service.resolve_anomaly(anomaly_id=999, user_id=1, resolved_by=1)
 
         # 验证
         self.assertIsNone(result)
@@ -693,11 +673,11 @@ class TestTimesheetReminderServiceStatistics(unittest.TestCase):
         """测试获取提醒统计信息"""
         # Mock返回值
         query_mock = MagicMock()
-        
+
         # Mock count查询（多次调用，返回不同值）
         count_results = [10, 3, 2, 4, 1]  # total, pending, sent, dismissed, resolved
         query_mock.filter.return_value.count.side_effect = count_results
-        
+
         # Mock按类型统计
         by_type_results = [
             ("MISSING_TIMESHEET", 5),
@@ -705,42 +685,48 @@ class TestTimesheetReminderServiceStatistics(unittest.TestCase):
             ("ANOMALY_TIMESHEET", 2),
         ]
         query_mock.filter.return_value.group_by.return_value.all.return_value = by_type_results
-        
+
         # Mock按优先级统计
         by_priority_results = [
             ("HIGH", 3),
             ("NORMAL", 5),
             ("LOW", 2),
         ]
-        
+
         # Mock最近提醒
         recent_reminders = [
             MagicMock(spec=TimesheetReminderRecord, id=1),
             MagicMock(spec=TimesheetReminderRecord, id=2),
         ]
-        
+
         # 配置复杂的mock链
         def query_side_effect(*args, **kwargs):
             mock = MagicMock()
-            
+
             # 为不同的查询返回不同的mock
             if len(args) > 0:
                 model = args[0]
-                if hasattr(model, '__name__') and 'reminder_type' in str(model):
+                if hasattr(model, "__name__") and "reminder_type" in str(model):
                     # 按类型统计
-                    mock.filter.return_value.group_by.return_value.all.return_value = by_type_results
-                elif hasattr(model, '__name__') and 'priority' in str(model):
+                    mock.filter.return_value.group_by.return_value.all.return_value = (
+                        by_type_results
+                    )
+                elif hasattr(model, "__name__") and "priority" in str(model):
                     # 按优先级统计
-                    mock.filter.return_value.group_by.return_value.all.return_value = by_priority_results
+                    mock.filter.return_value.group_by.return_value.all.return_value = (
+                        by_priority_results
+                    )
                 else:
                     # 最近提醒
-                    mock.filter.return_value.order_by.return_value.limit.return_value.all.return_value = recent_reminders
-            
+                    mock.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                        recent_reminders
+                    )
+
             # count查询
             mock.filter.return_value.count.side_effect = count_results
-            
+
             return mock
-        
+
         self.db.query.side_effect = query_side_effect
 
         # 执行
@@ -752,7 +738,7 @@ class TestTimesheetReminderServiceStatistics(unittest.TestCase):
         self.assertIn("sent_reminders", stats)
         self.assertIn("dismissed_reminders", stats)
         self.assertIn("resolved_reminders", stats)
-        
+
         # 验证分组统计
         self.assertIn("by_type", stats)
         self.assertIn("by_priority", stats)
@@ -762,36 +748,38 @@ class TestTimesheetReminderServiceStatistics(unittest.TestCase):
         """测试获取异常统计信息"""
         # Mock返回值
         query_mock = MagicMock()
-        
+
         # Mock count查询
         count_results = [10, 3, 7]  # total, unresolved, resolved
         query_mock.filter.return_value.count.side_effect = count_results
-        
+
         # Mock按类型统计
         by_type_results = [
             ("DAILY_OVER_12", 4),
             ("WEEKLY_OVER_60", 2),
         ]
-        
+
         # Mock按严重度统计
         by_severity_results = [
             ("WARNING", 6),
             ("ERROR", 4),
         ]
-        
+
         # Mock最近异常
         recent_anomalies = [
             MagicMock(spec=TimesheetAnomalyRecord, id=1),
         ]
-        
+
         # 配置复杂的mock链
         def query_side_effect(*args, **kwargs):
             mock = MagicMock()
             mock.filter.return_value.count.side_effect = count_results
             mock.filter.return_value.group_by.return_value.all.return_value = by_type_results
-            mock.filter.return_value.order_by.return_value.limit.return_value.all.return_value = recent_anomalies
+            mock.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                recent_anomalies
+            )
             return mock
-        
+
         self.db.query.side_effect = query_side_effect
 
         # 执行
@@ -835,12 +823,12 @@ class TestTimesheetReminderServiceDashboard(unittest.TestCase):
         ]
         query_mock = MagicMock()
         query_mock.filter.return_value.limit.return_value.all.return_value = active_configs
-        
+
         # Mock urgent_items
         urgent_items = [
             MagicMock(spec=TimesheetReminderRecord, id=1, priority="URGENT"),
         ]
-        
+
         # 配置db.query的返回
         def query_side_effect(model):
             if model == TimesheetReminderConfig:
@@ -848,9 +836,11 @@ class TestTimesheetReminderServiceDashboard(unittest.TestCase):
             else:
                 # TimesheetReminderRecord
                 mock = MagicMock()
-                mock.filter.return_value.order_by.return_value.limit.return_value.all.return_value = urgent_items
+                mock.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+                    urgent_items
+                )
                 return mock
-        
+
         self.db.query.side_effect = query_side_effect
 
         # 执行
@@ -861,7 +851,7 @@ class TestTimesheetReminderServiceDashboard(unittest.TestCase):
         self.assertIn("anomaly_stats", dashboard)
         self.assertIn("active_configs", dashboard)
         self.assertIn("urgent_items", dashboard)
-        
+
         self.assertEqual(dashboard["reminder_stats"]["total_reminders"], 10)
         self.assertEqual(dashboard["anomaly_stats"]["total_anomalies"], 5)
         self.assertEqual(len(dashboard["active_configs"]), 1)
@@ -879,11 +869,13 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
         """测试查询结果为空"""
         query_mock = MagicMock()
         query_mock.count.return_value = 0
-        query_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = []
+        query_mock.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            []
+        )
         self.db.query.return_value = query_mock
 
         configs, total = self.service.list_reminder_configs()
-        
+
         self.assertEqual(total, 0)
         self.assertEqual(len(configs), 0)
 
@@ -891,11 +883,13 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
         """测试limit为0的情况"""
         query_mock = MagicMock()
         query_mock.filter.return_value.count.return_value = 10
-        query_mock.filter.return_value.order_by.return_value.limit.return_value.offset.return_value.all.return_value = []
+        query_mock.filter.return_value.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            []
+        )
         self.db.query.return_value = query_mock
 
         reminders, total = self.service.list_pending_reminders(user_id=1, limit=0)
-        
+
         self.assertEqual(total, 10)
         self.assertEqual(len(reminders), 0)
 
@@ -915,14 +909,14 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
             rule_code="MIN_RULE",
             rule_name="最小规则",
             reminder_type="MISSING_TIMESHEET",
-            created_by=1
+            created_by=1,
         )
 
         # 验证
         self.assertIsNotNone(result)
         call_kwargs = self.service.manager.create_reminder_config.call_args[1]
-        self.assertIsNone(call_kwargs.get('rule_parameters'))
-        self.assertIsNone(call_kwargs.get('apply_to_departments'))
+        self.assertIsNone(call_kwargs.get("rule_parameters"))
+        self.assertIsNone(call_kwargs.get("apply_to_departments"))
 
     def test_dismiss_reminder_without_reason(self):
         """测试忽略提醒时不提供原因"""
@@ -937,16 +931,12 @@ class TestTimesheetReminderServiceEdgeCases(unittest.TestCase):
         self.service.manager.dismiss_reminder = MagicMock(return_value=updated_reminder)
 
         # 执行（不提供reason）
-        result = self.service.dismiss_reminder(
-            reminder_id=1,
-            user_id=1,
-            dismissed_by=1
-        )
+        result = self.service.dismiss_reminder(reminder_id=1, user_id=1, dismissed_by=1)
 
         # 验证
         self.assertIsNotNone(result)
         call_kwargs = self.service.manager.dismiss_reminder.call_args[1]
-        self.assertIsNone(call_kwargs.get('reason'))
+        self.assertIsNone(call_kwargs.get("reason"))
 
 
 if __name__ == "__main__":

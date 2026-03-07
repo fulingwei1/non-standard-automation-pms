@@ -27,23 +27,15 @@ def find_users_by_department(db: Session, department_name: str) -> List[User]:
         return []
 
     # 首先查找部门ID
-    department = db.query(Department).filter(
-        Department.name == department_name
-    ).first()
+    department = db.query(Department).filter(Department.name == department_name).first()
 
     if not department:
         # 如果找不到部门，尝试通过用户表的department字段匹配
-        users = db.query(User).filter(
-            User.department == department_name,
-            User.is_active
-        ).all()
+        users = db.query(User).filter(User.department == department_name, User.is_active).all()
         return users
 
     # 通过部门ID查找用户
-    users = db.query(User).filter(
-        User.department_id == department.id,
-        User.is_active
-    ).all()
+    users = db.query(User).filter(User.department_id == department.id, User.is_active).all()
 
     return users
 
@@ -62,19 +54,15 @@ def find_users_by_role(db: Session, role_code: str) -> List[User]:
     if not role_code:
         return []
 
-    users = db.query(User).join(
-        User.roles
-    ).filter(
-        User.is_active
-    ).all()
+    users = db.query(User).join(User.roles).filter(User.is_active).all()
 
     # 过滤匹配的角色
     matched_users = []
     for user in users:
         for user_role in user.roles:
             if user_role.role:
-                rc = user_role.role.role_code.lower() if user_role.role.role_code else ''
-                rn = user_role.role.role_name.lower() if user_role.role.role_name else ''
+                rc = user_role.role.role_code.lower() if user_role.role.role_code else ""
+                rn = user_role.role.role_name.lower() if user_role.role.role_name else ""
                 if rc == role_code.lower() or rn == role_code.lower():
                     matched_users.append(user)
                     break
@@ -116,11 +104,9 @@ def check_all_evaluations_completed(db: Session, ecn_id: int) -> bool:
     """
     from app.models.ecn import EcnEvaluation
 
-    evaluations = db.query(EcnEvaluation).filter(
-        EcnEvaluation.ecn_id == ecn_id
-    ).all()
+    evaluations = db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn_id).all()
 
     if not evaluations:
         return False
 
-    return all(eval.status == 'COMPLETED' for eval in evaluations)
+    return all(eval.status == "COMPLETED" for eval in evaluations)

@@ -12,7 +12,7 @@ DashboardAdapter 和 DashboardRegistry 综合单元测试
 - register_dashboard: 装饰器
 """
 
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -151,7 +151,7 @@ class TestDashboardRegistry:
 
     def test_register_adds_adapter(self):
         """测试注册添加适配器"""
-        from app.services.dashboard_adapter import DashboardRegistry, DashboardAdapter
+        from app.services.dashboard_adapter import DashboardAdapter, DashboardRegistry
 
         class TestAdapter(DashboardAdapter):
             @property
@@ -179,7 +179,7 @@ class TestDashboardRegistry:
 
     def test_register_raises_error_for_duplicate(self):
         """测试重复注册抛出错误"""
-        from app.services.dashboard_adapter import DashboardRegistry, DashboardAdapter
+        from app.services.dashboard_adapter import DashboardAdapter, DashboardRegistry
 
         class TestAdapter(DashboardAdapter):
             @property
@@ -210,7 +210,7 @@ class TestDashboardRegistry:
 
     def test_get_adapter_returns_instance(self):
         """测试获取适配器返回实例"""
-        from app.services.dashboard_adapter import DashboardRegistry, DashboardAdapter
+        from app.services.dashboard_adapter import DashboardAdapter, DashboardRegistry
 
         class TestAdapter(DashboardAdapter):
             @property
@@ -255,7 +255,7 @@ class TestDashboardRegistry:
 
     def test_get_adapters_for_role(self):
         """测试按角色获取适配器"""
-        from app.services.dashboard_adapter import DashboardRegistry, DashboardAdapter
+        from app.services.dashboard_adapter import DashboardAdapter, DashboardRegistry
 
         class AdminAdapter(DashboardAdapter):
             @property
@@ -312,7 +312,7 @@ class TestDashboardRegistry:
 
     def test_list_modules(self):
         """测试列出所有模块"""
-        from app.services.dashboard_adapter import DashboardRegistry, DashboardAdapter
+        from app.services.dashboard_adapter import DashboardAdapter, DashboardRegistry
 
         class Module1(DashboardAdapter):
             @property
@@ -359,7 +359,7 @@ class TestDashboardRegistry:
         modules = registry.list_modules()
 
         assert len(modules) == 2
-        module_ids = [m['module_id'] for m in modules]
+        module_ids = [m["module_id"] for m in modules]
         assert "module1" in module_ids
         assert "module2" in module_ids
 
@@ -400,7 +400,7 @@ class TestRegisterDashboardDecorator:
 
     def test_decorator_returns_class(self):
         """测试装饰器返回类本身"""
-        from app.services.dashboard_adapter import register_dashboard, DashboardAdapter
+        from app.services.dashboard_adapter import DashboardAdapter, register_dashboard
 
         # 由于全局注册表可能已有注册，我们测试装饰器的返回值
         class TestClass(DashboardAdapter):

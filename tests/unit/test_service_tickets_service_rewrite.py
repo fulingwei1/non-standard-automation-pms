@@ -12,8 +12,9 @@ ServiceTicketsService 单元测试 - 重写版本
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, call
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+from unittest.mock import MagicMock, call, patch
+
 from fastapi import HTTPException
 
 
@@ -292,7 +293,7 @@ class TestGetTicketStatistics(unittest.TestCase):
         mock_query.all.side_effect = [
             [mock_status_stat1, mock_status_stat2],
             [mock_priority_stat1],
-            []
+            [],
         ]
 
         mock_db.query.return_value = mock_query
@@ -326,8 +327,7 @@ class TestGetTicketStatistics(unittest.TestCase):
         service = ServiceTicketsService(mock_db)
 
         result = service.get_ticket_statistics(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 31)
+            start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
         )
 
         self.assertEqual(result["total_tickets"], 15)
@@ -357,7 +357,7 @@ class TestGetTicketStatistics(unittest.TestCase):
         mock_query.all.side_effect = [
             [],  # status_stats
             [],  # priority_stats
-            [mock_ticket1, mock_ticket2]  # completed tickets
+            [mock_ticket1, mock_ticket2],  # completed tickets
         ]
 
         mock_db.query.return_value = mock_query
@@ -387,7 +387,7 @@ class TestGetTicketStatistics(unittest.TestCase):
         mock_query.all.side_effect = [
             [mock_status_stat],  # status_stats
             [],  # priority_stats
-            []  # completed tickets
+            [],  # completed tickets
         ]
 
         mock_db.query.return_value = mock_query
@@ -448,7 +448,9 @@ class TestGetServiceTickets(unittest.TestCase):
 
         service = ServiceTicketsService(mock_db)
 
-        with patch('app.services.service.service_tickets_service.ServiceTicketResponse') as mock_response:
+        with patch(
+            "app.services.service.service_tickets_service.ServiceTicketResponse"
+        ) as mock_response:
             mock_response.model_validate.side_effect = lambda x: x
             result = service.get_service_tickets(page=1, page_size=20)
 
@@ -476,7 +478,7 @@ class TestGetServiceTickets(unittest.TestCase):
 
         service = ServiceTicketsService(mock_db)
 
-        with patch('app.services.service.service_tickets_service.ServiceTicketResponse'):
+        with patch("app.services.service.service_tickets_service.ServiceTicketResponse"):
             result = service.get_service_tickets(
                 page=1,
                 page_size=10,
@@ -488,7 +490,7 @@ class TestGetServiceTickets(unittest.TestCase):
                 customer_id=2,
                 project_id=3,
                 start_date=date(2024, 1, 1),
-                end_date=date(2024, 1, 31)
+                end_date=date(2024, 1, 31),
             )
 
         # 验证filter被调用了多次
@@ -570,7 +572,7 @@ class TestCreateServiceTicket(unittest.TestCase):
         current_user = MagicMock()
         current_user.id = 1
 
-        with patch('app.services.service.service_tickets_service.save_obj') as mock_save:
+        with patch("app.services.service.service_tickets_service.save_obj") as mock_save:
             result = service.create_service_ticket(ticket_data, current_user)
 
         mock_save.assert_called_once()
@@ -1018,7 +1020,7 @@ class TestAutoAssignTicket(unittest.TestCase):
 class TestSendTicketNotification(unittest.TestCase):
     """测试 _send_ticket_notification 方法"""
 
-    @patch('app.services.unified_notification_service.get_notification_service')
+    @patch("app.services.unified_notification_service.get_notification_service")
     def test_sends_notification_successfully(self, mock_get_service):
         """测试成功发送通知"""
         from app.services.service.service_tickets_service import ServiceTicketsService
@@ -1047,7 +1049,7 @@ class TestSendTicketNotification(unittest.TestCase):
         # 验证发送通知方法被调用（可能调用1-2次，取决于工单数据）
         self.assertGreaterEqual(mock_notification_service.send_notification.call_count, 0)
 
-    @patch('app.services.unified_notification_service.get_notification_service')
+    @patch("app.services.unified_notification_service.get_notification_service")
     def test_handles_notification_exception(self, mock_get_service):
         """测试处理通知异常"""
         from app.services.service.service_tickets_service import ServiceTicketsService

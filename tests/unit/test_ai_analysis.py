@@ -2,6 +2,7 @@
 """AIAnalysisMixin 单元测试"""
 from datetime import date
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.work_log_ai.ai_analysis import AIAnalysisMixin
@@ -30,9 +31,11 @@ class TestAIAnalysisMixin:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.post.return_value = mock_response
 
-        with patch("httpx.Client", return_value=mock_client), \
-             patch.object(self.ai, "_build_ai_prompt", return_value="test prompt"), \
-             patch.object(self.ai, "_parse_ai_response", return_value={"items": []}):
+        with (
+            patch("httpx.Client", return_value=mock_client),
+            patch.object(self.ai, "_build_ai_prompt", return_value="test prompt"),
+            patch.object(self.ai, "_parse_ai_response", return_value={"items": []}),
+        ):
             result = self.ai._analyze_with_ai_sync("content", [], date.today())
             assert result == {"items": []}
 
@@ -48,7 +51,9 @@ class TestAIAnalysisMixin:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.post.return_value = mock_response
 
-        with patch("httpx.Client", return_value=mock_client), \
-             patch.object(self.ai, "_build_ai_prompt", return_value="test"):
+        with (
+            patch("httpx.Client", return_value=mock_client),
+            patch.object(self.ai, "_build_ai_prompt", return_value="test"),
+        ):
             with pytest.raises(ValueError, match="格式异常"):
                 self.ai._analyze_with_ai_sync("content", [], date.today())

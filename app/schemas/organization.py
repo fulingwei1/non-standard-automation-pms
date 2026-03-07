@@ -102,9 +102,7 @@ class EmployeeHrProfileCreate(BaseModel):
     dept_level1: Optional[str] = Field(None, max_length=50, description="一级部门")
     dept_level2: Optional[str] = Field(None, max_length=50, description="二级部门")
     dept_level3: Optional[str] = Field(None, max_length=50, description="三级部门")
-    direct_supervisor: Optional[str] = Field(
-        None, max_length=50, description="直接上级"
-    )
+    direct_supervisor: Optional[str] = Field(None, max_length=50, description="直接上级")
     position: Optional[str] = Field(None, max_length=100, description="职务")
     job_level: Optional[str] = Field(None, max_length=50, description="级别")
     # 入职相关
@@ -126,12 +124,8 @@ class EmployeeHrProfileCreate(BaseModel):
     # 联系地址
     home_address: Optional[str] = Field(None, max_length=200, description="家庭住址")
     current_address: Optional[str] = Field(None, max_length=200, description="目前住址")
-    emergency_contact: Optional[str] = Field(
-        None, max_length=50, description="紧急联系人"
-    )
-    emergency_phone: Optional[str] = Field(
-        None, max_length=20, description="紧急联系电话"
-    )
+    emergency_contact: Optional[str] = Field(None, max_length=50, description="紧急联系人")
+    emergency_phone: Optional[str] = Field(None, max_length=20, description="紧急联系电话")
     # 教育背景
     graduate_school: Optional[str] = Field(None, max_length=100, description="毕业院校")
     graduate_date: Optional[str] = Field(None, max_length=20, description="毕业时间")
@@ -146,9 +140,7 @@ class EmployeeHrProfileCreate(BaseModel):
     housing_fund_no: Optional[str] = Field(None, max_length=50, description="公积金号")
     # 离职信息
     resignation_date: Optional[date] = Field(None, description="离职日期")
-    old_department: Optional[str] = Field(
-        None, max_length=100, description="部门（旧）"
-    )
+    old_department: Optional[str] = Field(None, max_length=100, description="部门（旧）")
 
 
 class EmployeeHrProfileUpdate(BaseModel):

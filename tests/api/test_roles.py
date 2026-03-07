@@ -13,8 +13,8 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from tests.helpers.response_helpers import (
-    assert_success_response,
     assert_list_response,
+    assert_success_response,
 )
 
 
@@ -31,10 +31,7 @@ class TestRoleCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -48,10 +45,7 @@ class TestRoleCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/permissions",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/permissions", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -75,11 +69,7 @@ class TestRoleCRUD:
             "description": "测试角色描述",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/roles/",
-            json=role_data,
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/roles/", json=role_data, headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have permission to create role")
@@ -101,10 +91,7 @@ class TestRoleCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取角色列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -118,10 +105,7 @@ class TestRoleCRUD:
 
         role_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/{role_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/{role_id}", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -135,10 +119,7 @@ class TestRoleCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -150,10 +131,7 @@ class TestRoleCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取角色列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -172,9 +150,7 @@ class TestRoleCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/roles/{role_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/roles/{role_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -199,10 +175,7 @@ class TestRolePermissions:
         headers = _auth_headers(admin_token)
 
         # 先获取角色列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -223,7 +196,7 @@ class TestRolePermissions:
         response = client.put(
             f"{settings.API_V1_PREFIX}/roles/{role_id}/permissions",
             json=permissions_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -290,10 +263,7 @@ class TestRoleNavigation:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/config/all",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/config/all", headers=headers)
 
         assert response.status_code == 200
 
@@ -303,10 +273,7 @@ class TestRoleNavigation:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/my/nav-groups",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/my/nav-groups", headers=headers)
 
         assert response.status_code == 200
 
@@ -318,10 +285,7 @@ class TestRoleNavigation:
         headers = _auth_headers(admin_token)
 
         # 先获取角色列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -336,8 +300,7 @@ class TestRoleNavigation:
         role_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/{role_id}/nav-groups",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/nav-groups", headers=headers
         )
 
         assert response.status_code == 200
@@ -352,10 +315,7 @@ class TestRoleHierarchy:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/hierarchy/tree",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/hierarchy/tree", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -370,10 +330,7 @@ class TestRoleHierarchy:
         headers = _auth_headers(admin_token)
 
         # 先获取角色列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -387,8 +344,7 @@ class TestRoleHierarchy:
         role_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/{role_id}/ancestors",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/ancestors", headers=headers
         )
 
         assert response.status_code == 200
@@ -404,10 +360,7 @@ class TestRoleHierarchy:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/99999/ancestors",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/99999/ancestors", headers=headers)
 
         assert response.status_code == 404
 
@@ -419,10 +372,7 @@ class TestRoleHierarchy:
         headers = _auth_headers(admin_token)
 
         # 先获取角色列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -436,8 +386,7 @@ class TestRoleHierarchy:
         role_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/{role_id}/descendants",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/descendants", headers=headers
         )
 
         assert response.status_code == 200
@@ -453,10 +402,7 @@ class TestRoleHierarchy:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/99999/descendants",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/roles/99999/descendants", headers=headers)
 
         assert response.status_code == 404
 
@@ -468,10 +414,7 @@ class TestRoleHierarchy:
         headers = _auth_headers(admin_token)
 
         # 先获取角色列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -495,10 +438,7 @@ class TestRoleHierarchy:
         role_id = non_system_role["id"]
 
         # 设置为顶级角色（parent_id = null）
-        response = client.put(
-            f"{settings.API_V1_PREFIX}/roles/{role_id}/parent",
-            headers=headers
-        )
+        response = client.put(f"{settings.API_V1_PREFIX}/roles/{role_id}/parent", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have permission")
@@ -516,10 +456,7 @@ class TestRoleHierarchy:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.put(
-            f"{settings.API_V1_PREFIX}/roles/99999/parent",
-            headers=headers
-        )
+        response = client.put(f"{settings.API_V1_PREFIX}/roles/99999/parent", headers=headers)
 
         assert response.status_code == 404
 
@@ -531,10 +468,7 @@ class TestRoleHierarchy:
         headers = _auth_headers(admin_token)
 
         # 先获取角色���表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/roles/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/roles/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get roles list")
@@ -558,8 +492,7 @@ class TestRoleHierarchy:
         role_id = non_system_role["id"]
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/roles/{role_id}/parent?parent_id=99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/roles/{role_id}/parent?parent_id=99999", headers=headers
         )
 
         if response.status_code == 403:

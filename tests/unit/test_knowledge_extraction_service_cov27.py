@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - knowledge_extraction_service 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.knowledge_extraction_service")
 
@@ -24,7 +25,9 @@ def make_ticket(**kwargs):
     ticket.urgency = kwargs.get("urgency", "HIGH")
     ticket.root_cause = kwargs.get("root_cause", "电源线接触不良")
     ticket.preventive_action = kwargs.get("preventive_action", "定期检查电源连接")
-    ticket.resolved_time = kwargs.get("resolved_time", MagicMock(strftime=lambda fmt: "2024-06-10 14:30"))
+    ticket.resolved_time = kwargs.get(
+        "resolved_time", MagicMock(strftime=lambda fmt: "2024-06-10 14:30")
+    )
     ticket.assigned_to_id = kwargs.get("assigned_to_id", 10)
     ticket.assigned_to_name = kwargs.get("assigned_to_name", "张工")
 
@@ -72,11 +75,15 @@ class TestAutoExtractKnowledgeFromTicket:
         # No existing knowledge
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
-            with patch("app.services.knowledge_extraction_service.generate_sequential_no") as mock_gen:
+            with patch(
+                "app.services.knowledge_extraction_service.generate_sequential_no"
+            ) as mock_gen:
                 mock_gen.return_value = "KB-240001-001"
                 with patch("app.services.knowledge_extraction_service.save_obj") as mock_save:
                     with patch("app.services.knowledge_extraction_service.KnowledgeBase") as MockKB:
-                        with patch("app.services.knowledge_extraction_service.create_solution_template_from_ticket"):
+                        with patch(
+                            "app.services.knowledge_extraction_service.create_solution_template_from_ticket"
+                        ):
                             article_instance = MagicMock()
                             MockKB.return_value = article_instance
                             result = auto_extract_knowledge_from_ticket(self.db, ticket)
@@ -87,10 +94,15 @@ class TestAutoExtractKnowledgeFromTicket:
         ticket = make_ticket()
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
-            with patch("app.services.knowledge_extraction_service.generate_sequential_no", return_value="KB-001"):
+            with patch(
+                "app.services.knowledge_extraction_service.generate_sequential_no",
+                return_value="KB-001",
+            ):
                 with patch("app.services.knowledge_extraction_service.save_obj"):
                     with patch("app.services.knowledge_extraction_service.KnowledgeBase") as MockKB:
-                        with patch("app.services.knowledge_extraction_service.create_solution_template_from_ticket"):
+                        with patch(
+                            "app.services.knowledge_extraction_service.create_solution_template_from_ticket"
+                        ):
                             auto_extract_knowledge_from_ticket(self.db, ticket, auto_publish=True)
                             call_kwargs = MockKB.call_args[1]
                             assert call_kwargs.get("status") == "PUBLISHED"
@@ -99,10 +111,15 @@ class TestAutoExtractKnowledgeFromTicket:
         ticket = make_ticket()
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
-            with patch("app.services.knowledge_extraction_service.generate_sequential_no", return_value="KB-001"):
+            with patch(
+                "app.services.knowledge_extraction_service.generate_sequential_no",
+                return_value="KB-001",
+            ):
                 with patch("app.services.knowledge_extraction_service.save_obj"):
                     with patch("app.services.knowledge_extraction_service.KnowledgeBase") as MockKB:
-                        with patch("app.services.knowledge_extraction_service.create_solution_template_from_ticket"):
+                        with patch(
+                            "app.services.knowledge_extraction_service.create_solution_template_from_ticket"
+                        ):
                             auto_extract_knowledge_from_ticket(self.db, ticket, auto_publish=False)
                             call_kwargs = MockKB.call_args[1]
                             assert call_kwargs.get("status") == "DRAFT"
@@ -111,10 +128,15 @@ class TestAutoExtractKnowledgeFromTicket:
         ticket = make_ticket(problem_type="ELECTRICAL")
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
-            with patch("app.services.knowledge_extraction_service.generate_sequential_no", return_value="KB-001"):
+            with patch(
+                "app.services.knowledge_extraction_service.generate_sequential_no",
+                return_value="KB-001",
+            ):
                 with patch("app.services.knowledge_extraction_service.save_obj"):
                     with patch("app.services.knowledge_extraction_service.KnowledgeBase") as MockKB:
-                        with patch("app.services.knowledge_extraction_service.create_solution_template_from_ticket"):
+                        with patch(
+                            "app.services.knowledge_extraction_service.create_solution_template_from_ticket"
+                        ):
                             auto_extract_knowledge_from_ticket(self.db, ticket)
                             call_kwargs = MockKB.call_args[1]
                             assert call_kwargs.get("category") == "电气问题"
@@ -123,10 +145,15 @@ class TestAutoExtractKnowledgeFromTicket:
         ticket = make_ticket(problem_type="SOFTWARE")
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
-            with patch("app.services.knowledge_extraction_service.generate_sequential_no", return_value="KB-001"):
+            with patch(
+                "app.services.knowledge_extraction_service.generate_sequential_no",
+                return_value="KB-001",
+            ):
                 with patch("app.services.knowledge_extraction_service.save_obj"):
                     with patch("app.services.knowledge_extraction_service.KnowledgeBase") as MockKB:
-                        with patch("app.services.knowledge_extraction_service.create_solution_template_from_ticket"):
+                        with patch(
+                            "app.services.knowledge_extraction_service.create_solution_template_from_ticket"
+                        ):
                             auto_extract_knowledge_from_ticket(self.db, ticket)
                             call_kwargs = MockKB.call_args[1]
                             assert call_kwargs.get("category") == "软件问题"
@@ -135,10 +162,15 @@ class TestAutoExtractKnowledgeFromTicket:
         ticket = make_ticket(problem_type="UNKNOWN_TYPE")
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
-            with patch("app.services.knowledge_extraction_service.generate_sequential_no", return_value="KB-001"):
+            with patch(
+                "app.services.knowledge_extraction_service.generate_sequential_no",
+                return_value="KB-001",
+            ):
                 with patch("app.services.knowledge_extraction_service.save_obj"):
                     with patch("app.services.knowledge_extraction_service.KnowledgeBase") as MockKB:
-                        with patch("app.services.knowledge_extraction_service.create_solution_template_from_ticket"):
+                        with patch(
+                            "app.services.knowledge_extraction_service.create_solution_template_from_ticket"
+                        ):
                             auto_extract_knowledge_from_ticket(self.db, ticket)
                             call_kwargs = MockKB.call_args[1]
                             assert call_kwargs.get("category") == "其他问题"
@@ -166,7 +198,9 @@ class TestCreateSolutionTemplateFromTicket:
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
             with patch("app.services.knowledge_extraction_service.save_obj") as mock_save:
-                with patch("app.services.knowledge_extraction_service.SolutionTemplate") as MockTemplate:
+                with patch(
+                    "app.services.knowledge_extraction_service.SolutionTemplate"
+                ) as MockTemplate:
                     template_instance = MagicMock()
                     MockTemplate.return_value = template_instance
                     result = create_solution_template_from_ticket(self.db, ticket)
@@ -178,7 +212,9 @@ class TestCreateSolutionTemplateFromTicket:
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
             with patch("app.services.knowledge_extraction_service.save_obj"):
-                with patch("app.services.knowledge_extraction_service.SolutionTemplate") as MockTemplate:
+                with patch(
+                    "app.services.knowledge_extraction_service.SolutionTemplate"
+                ) as MockTemplate:
                     create_solution_template_from_ticket(self.db, ticket)
                     call_kwargs = MockTemplate.call_args[1]
                     steps = call_kwargs.get("solution_steps", [])
@@ -189,7 +225,9 @@ class TestCreateSolutionTemplateFromTicket:
         with patch("app.services.knowledge_extraction_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value.first.return_value = None
             with patch("app.services.knowledge_extraction_service.save_obj"):
-                with patch("app.services.knowledge_extraction_service.SolutionTemplate") as MockTemplate:
+                with patch(
+                    "app.services.knowledge_extraction_service.SolutionTemplate"
+                ) as MockTemplate:
                     create_solution_template_from_ticket(self.db, ticket)
                     call_kwargs = MockTemplate.call_args[1]
                     assert call_kwargs.get("template_code") == "SOL-TK-240001"
@@ -210,7 +248,9 @@ class TestRecommendKnowledgeForTicket:
             a.view_count = 10
             a.like_count = 5
 
-        self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = articles
+        self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            articles
+        )
         result = recommend_knowledge_for_ticket(self.db, ticket)
         assert isinstance(result, list)
 
@@ -224,7 +264,9 @@ class TestRecommendKnowledgeForTicket:
         article.view_count = 100
         article.like_count = 20
 
-        self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [article]
+        self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            article
+        ]
         result = recommend_knowledge_for_ticket(self.db, ticket)
         if result:
             assert "id" in result[0]
@@ -234,14 +276,18 @@ class TestRecommendKnowledgeForTicket:
 
     def test_limit_default_is_5(self):
         ticket = make_ticket()
-        query_chain = self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value
+        query_chain = (
+            self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value
+        )
         query_chain.limit.return_value.all.return_value = []
         recommend_knowledge_for_ticket(self.db, ticket)
         query_chain.limit.assert_called_with(5)
 
     def test_custom_limit(self):
         ticket = make_ticket()
-        query_chain = self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value
+        query_chain = (
+            self.db.query.return_value.filter.return_value.filter.return_value.order_by.return_value
+        )
         query_chain.limit.return_value.all.return_value = []
         recommend_knowledge_for_ticket(self.db, ticket, limit=10)
         query_chain.limit.assert_called_with(10)

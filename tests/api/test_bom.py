@@ -23,10 +23,7 @@ def _get_first_machine(client: TestClient, token: str) -> dict:
     headers = _auth_headers(token)
 
     # 先获取项目列表
-    projects_response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if projects_response.status_code != 200:
         return None
@@ -40,8 +37,7 @@ def _get_first_machine(client: TestClient, token: str) -> dict:
 
     # 获取项目的机台列表
     machines_response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
-        headers=headers
+        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/", headers=headers
     )
 
     if machines_response.status_code != 200:
@@ -71,8 +67,7 @@ class TestBomCRUD:
         machine_id = result["machine"]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         assert response.status_code == 200
@@ -85,10 +80,7 @@ class TestBomCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/99999/bom",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/machines/99999/bom", headers=headers)
 
         assert response.status_code == 404
 
@@ -130,14 +122,14 @@ class TestBomCRUD:
                     "unit_price": 200.00,
                     "source_type": "PURCHASE",
                     "is_key_item": True,
-                }
-            ]
+                },
+            ],
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
             json=bom_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -167,8 +159,7 @@ class TestBomCRUD:
 
         # 先获取机台的 BOM 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -176,10 +167,7 @@ class TestBomCRUD:
 
         bom_id = list_response.json()[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -191,10 +179,7 @@ class TestBomCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -212,8 +197,7 @@ class TestBomCRUD:
 
         # 获取草稿状态的 BOM
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -238,9 +222,7 @@ class TestBomCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/{bom_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 400:
@@ -268,8 +250,7 @@ class TestBomItems:
 
         # 获取 BOM 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -277,10 +258,7 @@ class TestBomItems:
 
         bom_id = list_response.json()[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}/items",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}/items", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -300,8 +278,7 @@ class TestBomItems:
 
         # 获取草稿状态的 BOM
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -332,9 +309,7 @@ class TestBomItems:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}/items",
-            json=item_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/{bom_id}/items", json=item_data, headers=headers
         )
 
         if response.status_code == 400:
@@ -360,8 +335,7 @@ class TestBomItems:
 
         # 获取草稿状态的 BOM
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -392,9 +366,7 @@ class TestBomItems:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/bom/items/{item_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/items/{item_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 400:
@@ -432,13 +404,13 @@ class TestBomItems:
                     "source_type": "PURCHASE",
                     "is_key_item": False,
                 }
-            ]
+            ],
         }
 
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
             json=bom_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -450,10 +422,7 @@ class TestBomItems:
 
         item_id = bom["items"][0]["id"]
 
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/bom/items/{item_id}",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/bom/items/{item_id}", headers=headers)
 
         if response.status_code == 400:
             pytest.skip("BOM is not in DRAFT status")
@@ -478,8 +447,7 @@ class TestBomVersions:
 
         # 获取 BOM 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -487,10 +455,7 @@ class TestBomVersions:
 
         bom_id = list_response.json()[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}/versions",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}/versions", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -510,8 +475,7 @@ class TestBomVersions:
 
         # 获取 BOM 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -520,8 +484,7 @@ class TestBomVersions:
         bom_id = list_response.json()[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}/versions/compare",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/{bom_id}/versions/compare", headers=headers
         )
 
         assert response.status_code == 200
@@ -562,13 +525,13 @@ class TestBomRelease:
                     "source_type": "PURCHASE",
                     "is_key_item": False,
                 }
-            ]
+            ],
         }
 
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
             json=bom_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -580,7 +543,7 @@ class TestBomRelease:
         response = client.post(
             f"{settings.API_V1_PREFIX}/bom/{bom_id}/release",
             params={"change_note": "测试发布"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 400:
@@ -611,13 +574,13 @@ class TestBomRelease:
             "bom_name": f"空BOM测试-{uuid.uuid4().hex[:4]}",
             "project_id": project_id,
             "version": "V1.0",
-            "items": []
+            "items": [],
         }
 
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
             json=bom_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -626,10 +589,7 @@ class TestBomRelease:
         bom = create_response.json()
         bom_id = bom["id"]
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}/release",
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/bom/{bom_id}/release", headers=headers)
 
         # 应该返回 400 错误
         assert response.status_code == 400
@@ -644,16 +604,16 @@ class TestBomExcelOperations:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/template/download",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/template/download", headers=headers)
 
         if response.status_code == 500:
             pytest.skip("Excel library not available")
 
         assert response.status_code == 200
-        assert "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" in response.headers.get("content-type", "")
+        assert (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            in response.headers.get("content-type", "")
+        )
 
     def test_export_bom(self, client: TestClient, admin_token: str):
         """测试导出 BOM"""
@@ -669,8 +629,7 @@ class TestBomExcelOperations:
 
         # 获取 BOM 列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -678,16 +637,16 @@ class TestBomExcelOperations:
 
         bom_id = list_response.json()[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/{bom_id}/export",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}/export", headers=headers)
 
         if response.status_code == 500:
             pytest.skip("Excel library not available")
 
         assert response.status_code == 200
-        assert "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" in response.headers.get("content-type", "")
+        assert (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            in response.headers.get("content-type", "")
+        )
 
 
 class TestBomPurchaseRequest:
@@ -707,8 +666,7 @@ class TestBomPurchaseRequest:
 
         # 获取已发布的 BOM
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -730,7 +688,7 @@ class TestBomPurchaseRequest:
         response = client.post(
             f"{settings.API_V1_PREFIX}/bom/{bom_id}/generate-pr",
             params={"create_requests": False},  # 只预览不创建
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 400:

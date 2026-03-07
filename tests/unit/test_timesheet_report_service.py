@@ -14,6 +14,7 @@ pytest.importorskip("openpyxl")
 pytest.importorskip("app.services.timesheet_report_service")
 
 from openpyxl import load_workbook
+
 from app.services.timesheet_report_service import TimesheetReportService
 
 
@@ -38,9 +39,7 @@ def mock_hourly_rate_service():
 
 
 @pytest.fixture
-def timesheet_report_service(
-    db_session, mock_aggregation_service, mock_overtime_service
-):
+def timesheet_report_service(db_session, mock_aggregation_service, mock_overtime_service):
     """创建 TimesheetReportService 实例"""
     with patch(
         "app.services.timesheet_report_service.TimesheetAggregationService",
@@ -100,9 +99,7 @@ class TestGenerateHrReportExcel:
         ) as mock_rate_service_class:
             mock_rate_service = MagicMock()
             mock_rate_service.get_user_hourly_rate.return_value = Decimal("50.0")
-            mock_rate_service_class.get_user_hourly_rate = (
-                mock_rate_service.get_user_hourly_rate
-            )
+            mock_rate_service_class.get_user_hourly_rate = mock_rate_service.get_user_hourly_rate
 
             # Mock User 和 Department
             mock_user = MagicMock()
@@ -110,14 +107,10 @@ class TestGenerateHrReportExcel:
             mock_department = MagicMock()
             mock_department.name = "工程部"
 
-            with patch.object(
-                timesheet_report_service.db.query(), "first"
-            ) as mock_query:
+            with patch.object(timesheet_report_service.db.query(), "first") as mock_query:
                 mock_query.return_value = mock_user
 
-                with patch.object(
-                    timesheet_report_service.db.query(), "filter"
-                ) as mock_filter:
+                with patch.object(timesheet_report_service.db.query(), "filter") as mock_filter:
                     mock_filter.return_value.first.return_value = mock_department
 
                     # 生成报表
@@ -197,9 +190,7 @@ class TestGenerateHrReportExcel:
         with patch("app.services.timesheet_report_service.HourlyRateService"):
             timesheet_report_service.generate_hr_report_excel(2024, 1, department_id=5)
 
-            mock_aggregation_service.generate_hr_report.assert_called_once_with(
-                2024, 1, 5
-            )
+            mock_aggregation_service.generate_hr_report.assert_called_once_with(2024, 1, 5)
 
 
 class TestGenerateFinanceReportExcel:
@@ -229,15 +220,11 @@ class TestGenerateFinanceReportExcel:
         mock_aggregation_service.generate_finance_report.return_value = finance_data
 
         # 生成报表
-        result = timesheet_report_service.generate_finance_report_excel(
-            2024, 1, project_id=None
-        )
+        result = timesheet_report_service.generate_finance_report_excel(2024, 1, project_id=None)
 
         # 验证
         assert isinstance(result, io.BytesIO)
-        mock_aggregation_service.generate_finance_report.assert_called_once_with(
-            2024, 1, None
-        )
+        mock_aggregation_service.generate_finance_report.assert_called_once_with(2024, 1, None)
 
         # 验证 Excel 文件
         result.seek(0)
@@ -276,22 +263,16 @@ class TestGenerateFinanceReportExcel:
         """测试带项目过滤的财务报表"""
         mock_aggregation_service.generate_finance_report.return_value = []
 
-        result = timesheet_report_service.generate_finance_report_excel(
-            2024, 1, project_id=10
-        )
+        result = timesheet_report_service.generate_finance_report_excel(2024, 1, project_id=10)
 
         assert isinstance(result, io.BytesIO)
-        mock_aggregation_service.generate_finance_report.assert_called_once_with(
-            2024, 1, 10
-        )
+        mock_aggregation_service.generate_finance_report.assert_called_once_with(2024, 1, 10)
 
 
 class TestGenerateRdReportExcel:
     """测试生成研发报表"""
 
-    def test_generate_rd_report_success(
-        self, timesheet_report_service, mock_aggregation_service
-    ):
+    def test_generate_rd_report_success(self, timesheet_report_service, mock_aggregation_service):
         """测试成功生成研发报表"""
         # Mock 数据
         rd_data = [
@@ -312,15 +293,11 @@ class TestGenerateRdReportExcel:
         mock_aggregation_service.generate_rd_report.return_value = rd_data
 
         # 生成报表
-        result = timesheet_report_service.generate_rd_report_excel(
-            2024, 1, rd_project_id=None
-        )
+        result = timesheet_report_service.generate_rd_report_excel(2024, 1, rd_project_id=None)
 
         # 验证
         assert isinstance(result, io.BytesIO)
-        mock_aggregation_service.generate_rd_report.assert_called_once_with(
-            2024, 1, None
-        )
+        mock_aggregation_service.generate_rd_report.assert_called_once_with(2024, 1, None)
 
         # 验证 Excel 文件
         result.seek(0)
@@ -353,16 +330,12 @@ class TestEdgeCases:
         ) as mock_rate_service_class:
             mock_rate_service = MagicMock()
             mock_rate_service.get_user_hourly_rate.return_value = Decimal("50.0")
-            mock_rate_service_class.get_user_hourly_rate = (
-                mock_rate_service.get_user_hourly_rate
-            )
+            mock_rate_service_class.get_user_hourly_rate = mock_rate_service.get_user_hourly_rate
 
             mock_user = MagicMock()
             mock_user.department_id = None
 
-            with patch.object(
-                timesheet_report_service.db.query(), "first"
-            ) as mock_query:
+            with patch.object(timesheet_report_service.db.query(), "first") as mock_query:
                 mock_query.return_value = mock_user
 
                 result = timesheet_report_service.generate_hr_report_excel(2024, 1)
@@ -400,16 +373,12 @@ class TestEdgeCases:
         ) as mock_rate_service_class:
             mock_rate_service = MagicMock()
             mock_rate_service.get_user_hourly_rate.return_value = Decimal("100.0")
-            mock_rate_service_class.get_user_hourly_rate = (
-                mock_rate_service.get_user_hourly_rate
-            )
+            mock_rate_service_class.get_user_hourly_rate = mock_rate_service.get_user_hourly_rate
 
             mock_user = MagicMock()
             mock_user.department_id = None
 
-            with patch.object(
-                timesheet_report_service.db.query(), "first"
-            ) as mock_query:
+            with patch.object(timesheet_report_service.db.query(), "first") as mock_query:
                 mock_query.return_value = mock_user
 
                 result = timesheet_report_service.generate_hr_report_excel(2024, 1)
@@ -537,15 +506,11 @@ class TestGenerateProjectReportExcelAlternate:
         mock_aggregation_service.generate_project_report.return_value = project_data
 
         # 生成报表
-        result = timesheet_report_service.generate_project_report_excel(
-            2024, 1, project_id=1
-        )
+        result = timesheet_report_service.generate_project_report_excel(2024, 1, project_id=1)
 
         # 验证
         assert isinstance(result, io.BytesIO)
-        mock_aggregation_service.generate_project_report.assert_called_once_with(
-            2024, 1, 1
-        )
+        mock_aggregation_service.generate_project_report.assert_called_once_with(2024, 1, 1)
 
         # 验证 Excel 文件
         result.seek(0)
@@ -582,9 +547,7 @@ class TestGenerateProjectReportExcelAlternate:
         """测试生成空数据的项目报表"""
         mock_aggregation_service.generate_project_report.return_value = []
 
-        result = timesheet_report_service.generate_project_report_excel(
-            2024, 1, project_id=1
-        )
+        result = timesheet_report_service.generate_project_report_excel(2024, 1, project_id=1)
 
         assert isinstance(result, io.BytesIO)
         result.seek(0)

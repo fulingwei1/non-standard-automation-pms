@@ -184,9 +184,11 @@ def test_approve_bom_creates_purchase_order():
     po = MagicMock()
     po.id = 100
 
-    with patch(SELECTINLOAD_PATCH, return_value=MagicMock()), \
-         patch("app.services.material.bom_service.PurchaseOrder", return_value=po), \
-         patch("app.services.material.bom_service.PurchaseOrderItem"):
+    with (
+        patch(SELECTINLOAD_PATCH, return_value=MagicMock()),
+        patch("app.services.material.bom_service.PurchaseOrder", return_value=po),
+        patch("app.services.material.bom_service.PurchaseOrderItem"),
+    ):
         result = run(BOMService.approve_bom_and_create_purchase_orders(db, bom_id=4, approved_by=1))
 
     assert result["success"] is True

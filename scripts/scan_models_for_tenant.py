@@ -7,7 +7,7 @@
 import ast
 import os
 from pathlib import Path
-from typing import List, Dict, Set
+from typing import Dict, List, Set
 
 # 工作目录
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -158,7 +158,9 @@ class ModelScanner:
 
         # 缺少 tenant_id 的表（按模块分组）
         if self.tables_without_tenant:
-            lines.append(f"\n## ⚠️  缺少 tenant_id 的核心业务表 ({len(self.tables_without_tenant)})\n")
+            lines.append(
+                f"\n## ⚠️  缺少 tenant_id 的核心业务表 ({len(self.tables_without_tenant)})\n"
+            )
 
             # 按模块分组
             models_by_module = {}

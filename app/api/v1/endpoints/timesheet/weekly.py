@@ -43,9 +43,7 @@ router = APIRouter(prefix="/weekly", tags=["timesheets"])
 # ==================== 周工时表 ====================
 
 
-@router.get(
-    "/week", response_model=WeekTimesheetResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/week", response_model=WeekTimesheetResponse, status_code=status.HTTP_200_OK)
 def get_week_timesheet(
     *,
     db: Session = Depends(deps.get_db),
@@ -69,10 +67,7 @@ def get_week_timesheet(
         if not dims["is_admin"] and target_user_id not in dims["subordinate_user_ids"]:
             # 检查是否属于我管理的部门
             target_user = db.query(User).filter(User.id == target_user_id).first()
-            if (
-                not target_user
-                or target_user.department_id not in dims["department_ids"]
-            ):
+            if not target_user or target_user.department_id not in dims["department_ids"]:
                 raise HTTPException(status_code=403, detail="无权查看其他用户的工时")
 
     # 计算周开始日期
@@ -156,9 +151,7 @@ def get_week_timesheet(
     )
 
 
-@router.post(
-    "/week/submit", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.post("/week/submit", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def submit_week_timesheet(
     *,
     db: Session = Depends(deps.get_db),

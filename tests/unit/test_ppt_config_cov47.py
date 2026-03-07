@@ -16,6 +16,7 @@ def test_config_instantiable():
 
 def test_colors_are_rgb():
     from pptx.dml.color import RGBColor as RgbColor
+
     cfg = PresentationConfig()
     for attr in ("DARK_BLUE", "TECH_BLUE", "SILVER", "ORANGE", "GREEN", "WHITE", "LIGHT_BLUE"):
         val = getattr(cfg, attr)
@@ -24,6 +25,7 @@ def test_colors_are_rgb():
 
 def test_font_sizes_positive():
     from pptx.util import Pt
+
     cfg = PresentationConfig()
     sizes = [
         cfg.TITLE_FONT_SIZE,

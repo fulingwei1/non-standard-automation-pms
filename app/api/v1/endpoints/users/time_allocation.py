@@ -22,7 +22,9 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/{user_id}/time-allocation", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{user_id}/time-allocation", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def get_user_time_allocation(
     *,
     db: Session = Depends(deps.get_db),
@@ -37,20 +39,21 @@ def get_user_time_allocation(
         if not security.check_permission(current_user, "USER_VIEW"):
             raise HTTPException(status_code=403, detail="无权查看其他用户的工时分配")
 
-    query = db.query(Timesheet).filter(
-        Timesheet.user_id == user_id,
-        Timesheet.status == 'APPROVED'
-    )
+    query = db.query(Timesheet).filter(Timesheet.user_id == user_id, Timesheet.status == "APPROVED")
 
     if year:
-        query = query.filter(func.extract('year', Timesheet.work_date) == year)
+        query = query.filter(func.extract("year", Timesheet.work_date) == year)
 
     timesheets = query.all()
 
-    rd_projects = db.query(RdProject).filter(
-        RdProject.status.in_(['APPROVED', 'IN_PROGRESS', 'COMPLETED']),
-        RdProject.linked_project_id.isnot(None)
-    ).all()
+    rd_projects = (
+        db.query(RdProject)
+        .filter(
+            RdProject.status.in_(["APPROVED", "IN_PROGRESS", "COMPLETED"]),
+            RdProject.linked_project_id.isnot(None),
+        )
+        .all()
+    )
 
     rd_linked_project_ids = {p.linked_project_id for p in rd_projects if p.linked_project_id}
 
@@ -84,7 +87,7 @@ def get_user_time_allocation(
                     "rd_project_id": rd_project.id if rd_project else None,
                     "rd_project_name": rd_project.project_name if rd_project else None,
                     "total_hours": Decimal(0),
-                    "days": 0
+                    "days": 0,
                 }
             rd_projects_detail[project_key]["total_hours"] += hours
             rd_projects_detail[project_key]["days"] += 1
@@ -92,12 +95,16 @@ def get_user_time_allocation(
             non_rd_hours += hours
             project_key = f"P-{ts.project_id}" if ts.project_id else "未分配"
             if project_key not in non_rd_projects_detail:
-                project = db.query(Project).filter(Project.id == ts.project_id).first() if ts.project_id else None
+                project = (
+                    db.query(Project).filter(Project.id == ts.project_id).first()
+                    if ts.project_id
+                    else None
+                )
                 non_rd_projects_detail[project_key] = {
                     "project_id": ts.project_id,
                     "project_name": project.project_name if project else "未分配项目",
                     "total_hours": Decimal(0),
-                    "days": 0
+                    "days": 0,
                 }
             non_rd_projects_detail[project_key]["total_hours"] += hours
             non_rd_projects_detail[project_key]["days"] += 1
@@ -126,5 +133,5 @@ def get_user_time_allocation(
             "non_rd_ratio_percent": f"{non_rd_ratio:.2f}%",
             "rd_projects": list(rd_projects_detail.values()),
             "non_rd_projects": list(non_rd_projects_detail.values()),
-        }
+        },
     )

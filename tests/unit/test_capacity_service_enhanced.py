@@ -5,21 +5,22 @@
 测试 app/services/production/capacity/capacity_service.py
 目标覆盖率: 60%+
 """
-import pytest
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
-from app.services.production.capacity.capacity_service import CapacityAnalysisService
+import pytest
+
 from app.models.production import (
     Equipment,
     EquipmentOEERecord,
     Worker,
     WorkerEfficiencyRecord,
+    WorkOrder,
     Workshop,
     Workstation,
-    WorkOrder,
 )
+from app.services.production.capacity.capacity_service import CapacityAnalysisService
 
 
 @pytest.fixture
@@ -112,11 +113,7 @@ class TestIdentifyBottlenecks:
 
         # 执行
         result = capacity_service.identify_bottlenecks(
-            workshop_id=None,
-            start_date=None,
-            end_date=None,
-            threshold=80.0,
-            limit=10
+            workshop_id=None, start_date=None, end_date=None, threshold=80.0, limit=10
         )
 
         # 验证
@@ -150,16 +147,17 @@ class TestIdentifyBottlenecks:
         mock_query.having.return_value = mock_query
         mock_query.order_by.return_value = mock_query
         mock_query.limit.return_value = mock_query
-        
+
         # 第一次调用返回设备瓶颈，后面返回空
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
             if call_count == 1:
                 return [mock_row]
             return []
-        
+
         mock_query.all.side_effect = all_side_effect
         mock_db.query.return_value = mock_query
 
@@ -169,7 +167,7 @@ class TestIdentifyBottlenecks:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=5
+            limit=5,
         )
 
         # 验证
@@ -203,6 +201,7 @@ class TestIdentifyBottlenecks:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -218,7 +217,7 @@ class TestIdentifyBottlenecks:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=5
+            limit=5,
         )
 
         assert len(result["workstation_bottlenecks"]) == 1
@@ -247,6 +246,7 @@ class TestIdentifyBottlenecks:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -262,7 +262,7 @@ class TestIdentifyBottlenecks:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=5
+            limit=5,
         )
 
         assert len(result["low_efficiency_workers"]) == 1
@@ -296,6 +296,7 @@ class TestIdentifyBottlenecks:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -311,7 +312,7 @@ class TestIdentifyBottlenecks:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=5
+            limit=5,
         )
 
         bottleneck = result["equipment_bottlenecks"][0]
@@ -327,7 +328,7 @@ class TestGetEquipmentSuggestion:
     def test_get_equipment_suggestion_exists(self, capacity_service):
         """测试获取设备建议（方法存在的情况）"""
         # 检查方法是否存在
-        if hasattr(capacity_service, '_get_equipment_suggestion'):
+        if hasattr(capacity_service, "_get_equipment_suggestion"):
             mock_row = MagicMock()
             mock_row.utilization_rate = 95.0
             mock_row.avg_oee = 70.0
@@ -360,11 +361,7 @@ class TestBottleneckAnalysisPeriod:
         end = date(2024, 2, 28)
 
         result = capacity_service.identify_bottlenecks(
-            workshop_id=None,
-            start_date=start,
-            end_date=end,
-            threshold=75.0,
-            limit=20
+            workshop_id=None, start_date=start, end_date=end, threshold=75.0, limit=20
         )
 
         assert result["analysis_period"]["start_date"] == "2024-02-01"
@@ -385,11 +382,7 @@ class TestBottleneckAnalysisPeriod:
         mock_db.query.return_value = mock_query
 
         result = capacity_service.identify_bottlenecks(
-            workshop_id=None,
-            start_date=None,
-            end_date=None,
-            threshold=80.0,
-            limit=10
+            workshop_id=None, start_date=None, end_date=None, threshold=80.0, limit=10
         )
 
         # 验证日期范围大约是30天
@@ -421,7 +414,7 @@ class TestBottleneckThreshold:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=95.0,
-            limit=5
+            limit=5,
         )
 
         assert result["analysis_period"]["threshold"] == 95.0
@@ -444,7 +437,7 @@ class TestBottleneckThreshold:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=50.0,
-            limit=5
+            limit=5,
         )
 
         assert result["analysis_period"]["threshold"] == 50.0
@@ -481,6 +474,7 @@ class TestBottleneckLimit:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -496,7 +490,7 @@ class TestBottleneckLimit:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=5
+            limit=5,
         )
 
         assert len(result["equipment_bottlenecks"]) <= 5
@@ -523,7 +517,7 @@ class TestWorkshopFilter:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=10
+            limit=10,
         )
 
         # 验证查询被调用
@@ -547,7 +541,7 @@ class TestWorkshopFilter:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=10
+            limit=10,
         )
 
         assert mock_db.query.called
@@ -580,6 +574,7 @@ class TestBottleneckImpactLevel:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -595,7 +590,7 @@ class TestBottleneckImpactLevel:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=5
+            limit=5,
         )
 
         bottleneck = result["equipment_bottlenecks"][0]
@@ -625,6 +620,7 @@ class TestBottleneckImpactLevel:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -640,7 +636,7 @@ class TestBottleneckImpactLevel:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=5
+            limit=5,
         )
 
         bottleneck = result["equipment_bottlenecks"][0]
@@ -674,6 +670,7 @@ class TestDataAggregation:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -689,7 +686,7 @@ class TestDataAggregation:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=75.0,
-            limit=10
+            limit=10,
         )
 
         bottleneck = result["equipment_bottlenecks"][0]
@@ -719,6 +716,7 @@ class TestDataAggregation:
         mock_query.limit.return_value = mock_query
 
         call_count = 0
+
         def all_side_effect():
             nonlocal call_count
             call_count += 1
@@ -734,7 +732,7 @@ class TestDataAggregation:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=10
+            limit=10,
         )
 
         bottleneck = result["workstation_bottlenecks"][0]
@@ -765,7 +763,7 @@ class TestEdgeCases:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=10
+            limit=10,
         )
 
         assert len(result["equipment_bottlenecks"]) == 0
@@ -787,11 +785,7 @@ class TestEdgeCases:
 
         single_date = date(2024, 1, 15)
         result = capacity_service.identify_bottlenecks(
-            workshop_id=1,
-            start_date=single_date,
-            end_date=single_date,
-            threshold=80.0,
-            limit=10
+            workshop_id=1, start_date=single_date, end_date=single_date, threshold=80.0, limit=10
         )
 
         assert result["analysis_period"]["start_date"] == "2024-01-15"
@@ -815,7 +809,7 @@ class TestEdgeCases:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             threshold=80.0,
-            limit=1000
+            limit=1000,
         )
 
         # 验证执行成功

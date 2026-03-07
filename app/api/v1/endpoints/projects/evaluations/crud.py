@@ -8,11 +8,14 @@
 
 from decimal import Decimal
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Path, Body, status
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
-from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.api import deps
+from app.api.v1.core.project_crud_base import create_project_crud_router
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project import Project
 from app.models.project_evaluation import ProjectEvaluation
@@ -20,14 +23,12 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.project_evaluation import (
     ProjectEvaluationCreate,
-    ProjectEvaluationUpdate,
     ProjectEvaluationResponse,
+    ProjectEvaluationUpdate,
 )
 from app.services.project_evaluation_service import ProjectEvaluationService
-from app.utils.permission_helpers import check_project_access_or_raise
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.utils.db_helpers import get_or_404, save_obj
+from app.utils.permission_helpers import check_project_access_or_raise
 
 
 def filter_by_status(query, status: str):
@@ -56,7 +57,11 @@ router = APIRouter()
 
 
 # 覆盖创建端点，使用服务层创建评价
-@router.post("/", response_model=ResponseModel[ProjectEvaluationResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=ResponseModel[ProjectEvaluationResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def create_project_evaluation(
     project_id: int = Path(..., description="项目ID"),
     eval_in: ProjectEvaluationCreate = Body(..., description="创建数据"),
@@ -64,14 +69,12 @@ def create_project_evaluation(
     current_user: User = Depends(security.require_permission("project_evaluation:create")),
 ) -> Any:
     """创建项目评价（覆盖基类端点，使用服务层）"""
-    check_project_access_or_raise(
-        db, current_user, project_id, "您没有权限为该项目创建评价"
-    )
-    
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限为该项目创建评价")
+
     get_or_404(db, Project, project_id, detail="项目不存在")
-    
+
     eval_service = ProjectEvaluationService(db)
-    
+
     # 转换weights中的Decimal为float（如果提供）
     weights_dict = None
     if eval_in.weights:
@@ -79,7 +82,7 @@ def create_project_evaluation(
             k: Decimal(str(v)) if not isinstance(v, Decimal) else v
             for k, v in eval_in.weights.items()
         }
-    
+
     evaluation = eval_service.create_evaluation(
         project_id=project_id,
         novelty_score=eval_in.novelty_score,
@@ -93,16 +96,15 @@ def create_project_evaluation(
         evaluation_detail=eval_in.evaluation_detail,
         evaluation_note=eval_in.evaluation_note,
     )
-    
+
     # 转换weights中的Decimal为float，以便JSON序列化
     if evaluation.weights:
         evaluation.weights = {
-            k: float(v) if isinstance(v, Decimal) else v
-            for k, v in evaluation.weights.items()
+            k: float(v) if isinstance(v, Decimal) else v for k, v in evaluation.weights.items()
         }
-    
+
     save_obj(db, evaluation)
-    
+
     return ResponseModel(code=200, message="创建成功", data=evaluation)
 
 
@@ -117,17 +119,21 @@ def update_project_evaluation(
 ) -> Any:
     """更新项目评价（覆盖基类端点，使用服务层重新计算得分）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
-    evaluation = db.query(ProjectEvaluation).filter(
-        ProjectEvaluation.id == eval_id,
-        ProjectEvaluation.project_id == project_id,
-    ).first()
-    
+
+    evaluation = (
+        db.query(ProjectEvaluation)
+        .filter(
+            ProjectEvaluation.id == eval_id,
+            ProjectEvaluation.project_id == project_id,
+        )
+        .first()
+    )
+
     if not evaluation:
         raise HTTPException(status_code=404, detail="评价记录不存在")
-    
+
     update_data = eval_in.model_dump(exclude_unset=True)
-    
+
     # 如果有得分更新，需要重新计算综合得分
     if any(
         key in update_data
@@ -141,14 +147,14 @@ def update_project_evaluation(
         ]
     ):
         eval_service = ProjectEvaluationService(db)
-        
+
         novelty_score = update_data.get("novelty_score", evaluation.novelty_score)
         new_tech_score = update_data.get("new_tech_score", evaluation.new_tech_score)
         difficulty_score = update_data.get("difficulty_score", evaluation.difficulty_score)
         workload_score = update_data.get("workload_score", evaluation.workload_score)
         amount_score = update_data.get("amount_score", evaluation.amount_score)
         weights = update_data.get("weights", evaluation.weights)
-        
+
         total_score = eval_service.calculate_total_score(
             novelty_score,
             new_tech_score,
@@ -158,16 +164,16 @@ def update_project_evaluation(
             weights,
         )
         evaluation_level = eval_service.determine_evaluation_level(total_score)
-        
+
         update_data["total_score"] = total_score
         update_data["evaluation_level"] = evaluation_level
-    
+
     for field, value in update_data.items():
         setattr(evaluation, field, value)
-    
+
     db.commit()
     db.refresh(evaluation)
-    
+
     return ResponseModel(code=200, message="更新成功", data=evaluation)
 
 
@@ -185,19 +191,19 @@ def list_project_evaluations(
 ) -> Any:
     """获取项目的所有评价记录（覆盖基类端点，使用正确的响应格式）"""
     from app.schemas.project_evaluation import ProjectEvaluationListResponse
-    
+
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     # 构建查询
     query = db.query(ProjectEvaluation).filter(ProjectEvaluation.project_id == project_id)
-    
+
     # 状态筛选
     if status:
         query = query.filter(ProjectEvaluation.status == status)
-    
+
     # 关键词搜索
     query = apply_keyword_filter(query, ProjectEvaluation, keyword, "evaluation_note")
-    
+
     # 排序
     order_field = getattr(ProjectEvaluation, order_by or "evaluation_date", None)
     if order_field:
@@ -205,18 +211,18 @@ def list_project_evaluations(
             query = query.order_by(order_field.asc())
         else:
             query = query.order_by(order_field.desc())
-    
+
     # 分页
     total = query.count()
     evaluations = apply_pagination(query, pagination.offset, pagination.limit).all()
-    
+
     # 使用正确的响应格式（ProjectEvaluationListResponse是PaginatedResponse的别名）
     return ProjectEvaluationListResponse(
         items=evaluations,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -230,13 +236,17 @@ def get_project_evaluation(
 ) -> Any:
     """获取项目评价详情（覆盖基类端点，使用正确的响应格式）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
-    evaluation = db.query(ProjectEvaluation).filter(
-        ProjectEvaluation.id == eval_id,
-        ProjectEvaluation.project_id == project_id,
-    ).first()
-    
+
+    evaluation = (
+        db.query(ProjectEvaluation)
+        .filter(
+            ProjectEvaluation.id == eval_id,
+            ProjectEvaluation.project_id == project_id,
+        )
+        .first()
+    )
+
     if not evaluation:
         raise HTTPException(status_code=404, detail="评价记录不存在")
-    
+
     return ResponseModel(code=200, data=evaluation)

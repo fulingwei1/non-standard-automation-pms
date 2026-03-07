@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - timesheet_forecast_service"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.timesheet_forecast_service import TimesheetForecastService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for pitfall/pitfall_service.py"""
 from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -10,6 +10,7 @@ class TestPitfallService:
 
     def _make_service(self):
         from app.services.pitfall.pitfall_service import PitfallService
+
         db = MagicMock()
         return PitfallService(db), db
 
@@ -27,11 +28,16 @@ class TestPitfallService:
         today = datetime.now()
         prefix = f"PF{today.strftime('%y%m%d')}"
         existing.pitfall_no = f"{prefix}005"
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = existing
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            existing
+        )
         no = svc.generate_pitfall_no()
         assert no == f"{prefix}006"
 
-    @patch("app.services.pitfall.pitfall_service.PitfallService.generate_pitfall_no", return_value="PF240101001")
+    @patch(
+        "app.services.pitfall.pitfall_service.PitfallService.generate_pitfall_no",
+        return_value="PF240101001",
+    )
     def test_create_pitfall(self, mock_gen):
         svc, db = self._make_service()
         pitfall_mock = MagicMock()
@@ -39,11 +45,7 @@ class TestPitfallService:
         db.commit = MagicMock()
         db.refresh = MagicMock()
 
-        result = svc.create_pitfall(
-            title="测试坑点",
-            description="描述",
-            created_by=1
-        )
+        result = svc.create_pitfall(title="测试坑点", description="描述", created_by=1)
         db.add.assert_called_once()
         db.commit.assert_called_once()
 

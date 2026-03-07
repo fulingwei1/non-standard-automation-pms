@@ -12,6 +12,7 @@
 
 import unittest
 from unittest.mock import MagicMock, Mock, patch
+
 from app.services.approval_engine.router import ApprovalRouterService
 
 
@@ -31,9 +32,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_rule = MagicMock()
         mock_rule.conditions = {
             "operator": "AND",
-            "items": [
-                {"field": "form.amount", "op": ">=", "value": 1000}
-            ]
+            "items": [{"field": "form.amount", "op": ">=", "value": 1000}],
         }
         mock_flow = MagicMock()
         mock_flow.id = 1
@@ -66,7 +65,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_default_flow = MagicMock()
         mock_default_flow.id = 2
         mock_default_flow.name = "默认流程"
-        
+
         # 第二次query调用（获取默认流程）
         mock_query.first.return_value = mock_default_flow
 
@@ -83,9 +82,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_rule = MagicMock()
         mock_rule.conditions = {
             "operator": "AND",
-            "items": [
-                {"field": "form.amount", "op": ">=", "value": 10000}
-            ]
+            "items": [{"field": "form.amount", "op": ">=", "value": 10000}],
         }
 
         mock_query = self.mock_db.query.return_value
@@ -136,11 +133,11 @@ class TestApprovalRouterService(unittest.TestCase):
             "operator": "AND",
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 1000},
-                {"field": "form.days", "op": "<=", "value": 7}
-            ]
+                {"field": "form.days", "op": "<=", "value": 7},
+            ],
         }
         context = {"form": {"amount": 5000, "days": 3}}
-        
+
         result = self.service._evaluate_conditions(conditions, context)
         self.assertTrue(result)
 
@@ -150,11 +147,11 @@ class TestApprovalRouterService(unittest.TestCase):
             "operator": "AND",
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 1000},
-                {"field": "form.days", "op": "<=", "value": 7}
-            ]
+                {"field": "form.days", "op": "<=", "value": 7},
+            ],
         }
         context = {"form": {"amount": 5000, "days": 10}}
-        
+
         result = self.service._evaluate_conditions(conditions, context)
         self.assertFalse(result)
 
@@ -164,11 +161,11 @@ class TestApprovalRouterService(unittest.TestCase):
             "operator": "OR",
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 10000},
-                {"field": "form.urgent", "op": "==", "value": True}
-            ]
+                {"field": "form.urgent", "op": "==", "value": True},
+            ],
         }
         context = {"form": {"amount": 500, "urgent": True}}
-        
+
         result = self.service._evaluate_conditions(conditions, context)
         self.assertTrue(result)
 
@@ -178,11 +175,11 @@ class TestApprovalRouterService(unittest.TestCase):
             "operator": "OR",
             "items": [
                 {"field": "form.amount", "op": ">=", "value": 10000},
-                {"field": "form.urgent", "op": "==", "value": True}
-            ]
+                {"field": "form.urgent", "op": "==", "value": True},
+            ],
         }
         context = {"form": {"amount": 500, "urgent": False}}
-        
+
         result = self.service._evaluate_conditions(conditions, context)
         self.assertFalse(result)
 
@@ -198,7 +195,7 @@ class TestApprovalRouterService(unittest.TestCase):
         """测试评估单个条件 - 简单字段"""
         condition = {"field": "amount", "op": ">=", "value": 1000}
         context = {"amount": 5000}
-        
+
         result = self.service._evaluate_single(condition, context)
         self.assertTrue(result)
 
@@ -206,7 +203,7 @@ class TestApprovalRouterService(unittest.TestCase):
         """测试评估单个条件 - 嵌套字段"""
         condition = {"field": "form.data.amount", "op": ">=", "value": 1000}
         context = {"form": {"data": {"amount": 5000}}}
-        
+
         result = self.service._evaluate_single(condition, context)
         self.assertTrue(result)
 
@@ -230,7 +227,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_obj.user = MagicMock()
         mock_obj.user.name = "张三"
         context = {"entity": mock_obj}
-        
+
         result = self.service._get_field_value("entity.user.name", context)
         self.assertEqual(result, "张三")
 
@@ -364,7 +361,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [1, 2, 3])
 
     def test_resolve_approvers_role(self):
@@ -386,7 +383,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [10, 20])
 
     def test_resolve_approvers_role_single_code(self):
@@ -405,7 +402,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [10])
 
     def test_resolve_approvers_role_empty(self):
@@ -416,7 +413,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_department_head(self):
@@ -427,7 +424,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         # mock发起人
         mock_initiator = {"dept_id": 5}
-        
+
         # mock部门
         mock_dept = MagicMock()
         mock_dept.manager_id = 100
@@ -438,7 +435,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": mock_initiator}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [100])
 
     def test_resolve_approvers_department_head_no_dept(self):
@@ -449,7 +446,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": {}}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_department_head_no_manager(self):
@@ -459,7 +456,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_node.approver_config = {}
 
         mock_initiator = {"dept_id": 5}
-        
+
         mock_dept = MagicMock()
         mock_dept.manager_id = None
 
@@ -469,7 +466,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": mock_initiator}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_direct_manager(self):
@@ -479,7 +476,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_node.approver_config = {}
 
         mock_initiator = {"id": 10}
-        
+
         mock_user = MagicMock()
         mock_user.reporting_to = 50
 
@@ -489,7 +486,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": mock_initiator}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [50])
 
     def test_resolve_approvers_direct_manager_no_user(self):
@@ -500,7 +497,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": {}}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_direct_manager_no_reporting_to(self):
@@ -510,7 +507,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_node.approver_config = {}
 
         mock_initiator = {"id": 10}
-        
+
         mock_user = MagicMock()
         mock_user.reporting_to = None
 
@@ -520,7 +517,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": mock_initiator}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_form_field(self):
@@ -531,7 +528,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"form_data": {"approver_id": 100}}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [100])
 
     def test_resolve_approvers_form_field_list(self):
@@ -542,7 +539,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"form_data": {"approver_ids": [100, 200]}}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [100, 200])
 
     def test_resolve_approvers_form_field_not_found(self):
@@ -553,7 +550,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"form_data": {}}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_multi_dept(self):
@@ -574,7 +571,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [10, 20])
 
     def test_resolve_approvers_multi_dept_empty(self):
@@ -585,7 +582,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_dynamic(self):
@@ -600,7 +597,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"adapter": mock_adapter}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [100, 200])
         mock_adapter.resolve_approvers.assert_called_once_with(mock_node, context)
 
@@ -612,7 +609,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_initiator_dict(self):
@@ -623,7 +620,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": {"id": 100}}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [100])
 
     def test_resolve_approvers_initiator_object(self):
@@ -638,7 +635,7 @@ class TestApprovalRouterService(unittest.TestCase):
         mock_initiator.id = 100
         context = {"initiator": mock_initiator}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [100])
 
     def test_resolve_approvers_initiator_no_initiator(self):
@@ -649,7 +646,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_approvers_unknown_type(self):
@@ -660,7 +657,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.resolve_approvers(mock_node, context)
-        
+
         self.assertEqual(result, [])
 
     # ========== get_next_nodes() 测试 ==========
@@ -682,7 +679,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.get_next_nodes(mock_current, context)
-        
+
         self.assertEqual(result, [mock_next])
 
     def test_get_next_nodes_no_more_nodes(self):
@@ -698,7 +695,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service.get_next_nodes(mock_current, context)
-        
+
         self.assertEqual(result, [])
 
     def test_get_next_nodes_condition_node(self):
@@ -718,17 +715,17 @@ class TestApprovalRouterService(unittest.TestCase):
 
         # mock条件分支解析结果
         mock_target_node = MagicMock()
-        
+
         # 临时替换 _resolve_condition_branch 方法
         original_method = self.service._resolve_condition_branch
         self.service._resolve_condition_branch = MagicMock(return_value=[mock_target_node])
 
         context = {}
         result = self.service.get_next_nodes(mock_current, context)
-        
+
         self.assertEqual(result, [mock_target_node])
         self.service._resolve_condition_branch.assert_called_once_with(mock_condition_node, context)
-        
+
         # 恢复原方法
         self.service._resolve_condition_branch = original_method
 
@@ -742,19 +739,19 @@ class TestApprovalRouterService(unittest.TestCase):
                 {
                     "conditions": {
                         "operator": "AND",
-                        "items": [{"field": "form.amount", "op": ">=", "value": 5000}]
+                        "items": [{"field": "form.amount", "op": ">=", "value": 5000}],
                     },
-                    "target_node_id": 100
+                    "target_node_id": 100,
                 },
                 {
                     "conditions": {
                         "operator": "AND",
-                        "items": [{"field": "form.amount", "op": ">=", "value": 1000}]
+                        "items": [{"field": "form.amount", "op": ">=", "value": 1000}],
                     },
-                    "target_node_id": 200
-                }
+                    "target_node_id": 200,
+                },
             ],
-            "default_node_id": 300
+            "default_node_id": 300,
         }
 
         mock_target = MagicMock()
@@ -766,7 +763,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"form": {"amount": 8000}}
         result = self.service._resolve_condition_branch(mock_condition_node, context)
-        
+
         self.assertEqual(result, [mock_target])
 
     def test_resolve_condition_branch_match_second(self):
@@ -777,19 +774,19 @@ class TestApprovalRouterService(unittest.TestCase):
                 {
                     "conditions": {
                         "operator": "AND",
-                        "items": [{"field": "form.amount", "op": ">=", "value": 10000}]
+                        "items": [{"field": "form.amount", "op": ">=", "value": 10000}],
                     },
-                    "target_node_id": 100
+                    "target_node_id": 100,
                 },
                 {
                     "conditions": {
                         "operator": "AND",
-                        "items": [{"field": "form.amount", "op": ">=", "value": 5000}]
+                        "items": [{"field": "form.amount", "op": ">=", "value": 5000}],
                     },
-                    "target_node_id": 200
-                }
+                    "target_node_id": 200,
+                },
             ],
-            "default_node_id": 300
+            "default_node_id": 300,
         }
 
         mock_target = MagicMock()
@@ -802,7 +799,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"form": {"amount": 8000}}
         result = self.service._resolve_condition_branch(mock_condition_node, context)
-        
+
         self.assertEqual(result, [mock_target])
 
     def test_resolve_condition_branch_default(self):
@@ -813,12 +810,12 @@ class TestApprovalRouterService(unittest.TestCase):
                 {
                     "conditions": {
                         "operator": "AND",
-                        "items": [{"field": "form.amount", "op": ">=", "value": 10000}]
+                        "items": [{"field": "form.amount", "op": ">=", "value": 10000}],
                     },
-                    "target_node_id": 100
+                    "target_node_id": 100,
                 }
             ],
-            "default_node_id": 300
+            "default_node_id": 300,
         }
 
         mock_default = MagicMock()
@@ -830,7 +827,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"form": {"amount": 500}}
         result = self.service._resolve_condition_branch(mock_condition_node, context)
-        
+
         self.assertEqual(result, [mock_default])
 
     def test_resolve_condition_branch_no_match_no_default(self):
@@ -841,16 +838,16 @@ class TestApprovalRouterService(unittest.TestCase):
                 {
                     "conditions": {
                         "operator": "AND",
-                        "items": [{"field": "form.amount", "op": ">=", "value": 10000}]
+                        "items": [{"field": "form.amount", "op": ">=", "value": 10000}],
                     },
-                    "target_node_id": 100
+                    "target_node_id": 100,
                 }
             ]
         }
 
         context = {"form": {"amount": 500}}
         result = self.service._resolve_condition_branch(mock_condition_node, context)
-        
+
         self.assertEqual(result, [])
 
     def test_resolve_condition_branch_empty_config(self):
@@ -860,7 +857,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {}
         result = self.service._resolve_condition_branch(mock_condition_node, context)
-        
+
         self.assertEqual(result, [])
 
     # ========== _resolve_department_head() with object initiator ==========
@@ -879,7 +876,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": mock_initiator}
         result = self.service._resolve_department_head(context)
-        
+
         self.assertEqual(result, [100])
 
     # ========== _resolve_direct_manager() with object initiator ==========
@@ -898,7 +895,7 @@ class TestApprovalRouterService(unittest.TestCase):
 
         context = {"initiator": mock_initiator}
         result = self.service._resolve_direct_manager(context)
-        
+
         self.assertEqual(result, [50])
 
 
@@ -924,7 +921,7 @@ class TestApprovalRouterServiceEdgeCases(unittest.TestCase):
 
         context = {}
         result = self.service.select_flow(template_id=1, context=context)
-        
+
         # 条件为None应跳过，返回默认流程
         self.assertIsNotNone(result)
 
@@ -955,9 +952,9 @@ class TestApprovalRouterServiceEdgeCases(unittest.TestCase):
 
         config = {"departments": ["研发部", "测试部", "产品部"]}
         context = {}
-        
+
         result = self.service._resolve_multi_dept_approvers(config, context)
-        
+
         # 应该只包含有主管的部门
         self.assertEqual(result, [10, 30])
 

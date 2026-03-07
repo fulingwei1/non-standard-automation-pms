@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 项目管理模块 - 健康度计算单元测试
@@ -42,9 +43,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -52,8 +51,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200
@@ -77,9 +75,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -87,8 +83,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200
@@ -112,9 +107,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -122,8 +115,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200
@@ -147,9 +139,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -157,8 +147,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200
@@ -182,9 +171,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -192,8 +179,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200
@@ -221,9 +207,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -231,8 +215,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200
@@ -260,9 +243,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -270,8 +251,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200
@@ -295,9 +275,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -305,8 +283,7 @@ class TestHealthCalculator:
 
             # 获取健康度详情
             details_response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/details",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/details", headers=headers
             )
 
             assert details_response.status_code == 200
@@ -335,9 +312,7 @@ class TestHealthCalculator:
             }
 
             response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/",
-                json=project_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
             )
 
             if response.status_code == 201:
@@ -348,7 +323,7 @@ class TestHealthCalculator:
             batch_response = client.post(
                 f"{settings.API_V1_PREFIX}/projects/health/batch-calculate",
                 json={"project_ids": project_ids},
-                headers=headers
+                headers=headers,
             )
 
             assert batch_response.status_code == 200
@@ -376,9 +351,7 @@ class TestHealthCalculator:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if response.status_code == 201:
@@ -386,8 +359,7 @@ class TestHealthCalculator:
 
             # 手动触发健康度计算
             calc_response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
             )
 
             assert calc_response.status_code == 200

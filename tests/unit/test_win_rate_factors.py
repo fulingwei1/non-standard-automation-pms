@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 from decimal import Decimal
+
 from app.services.win_rate_prediction_service.factors import (
-    calculate_salesperson_factor, calculate_customer_factor,
-    calculate_competitor_factor, calculate_amount_factor, calculate_product_factor
+    calculate_amount_factor,
+    calculate_competitor_factor,
+    calculate_customer_factor,
+    calculate_product_factor,
+    calculate_salesperson_factor,
 )
 
 

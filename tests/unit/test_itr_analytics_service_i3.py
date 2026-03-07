@@ -55,12 +55,18 @@ class TestAnalyzeResolutionTime:
 
     def test_multiple_tickets_statistics(self):
         t1 = MagicMock()
-        t1.id = 1; t1.ticket_no = "T001"; t1.problem_type = "HW"; t1.urgency = "HIGH"
+        t1.id = 1
+        t1.ticket_no = "T001"
+        t1.problem_type = "HW"
+        t1.urgency = "HIGH"
         t1.reported_time = datetime(2024, 1, 1, 0, 0)
-        t1.resolved_time = datetime(2024, 1, 1, 4, 0)   # 4 hours
+        t1.resolved_time = datetime(2024, 1, 1, 4, 0)  # 4 hours
 
         t2 = MagicMock()
-        t2.id = 2; t2.ticket_no = "T002"; t2.problem_type = "SW"; t2.urgency = "LOW"
+        t2.id = 2
+        t2.ticket_no = "T002"
+        t2.problem_type = "SW"
+        t2.urgency = "LOW"
         t2.reported_time = datetime(2024, 1, 2, 0, 0)
         t2.resolved_time = datetime(2024, 1, 2, 12, 0)  # 12 hours
 
@@ -75,7 +81,8 @@ class TestAnalyzeResolutionTime:
 
     def test_ticket_missing_times_skipped(self):
         ticket = MagicMock()
-        ticket.id = 1; ticket.ticket_no = "T001"
+        ticket.id = 1
+        ticket.ticket_no = "T001"
         ticket.reported_time = None
         ticket.resolved_time = datetime(2024, 1, 1)
         db = _make_query_db([ticket])
@@ -94,7 +101,10 @@ class TestAnalyzeResolutionTime:
         tickets = []
         for i, hours in enumerate([2, 4, 6, 8]):
             t = MagicMock()
-            t.id = i; t.ticket_no = f"T{i}"; t.problem_type = "X"; t.urgency = "M"
+            t.id = i
+            t.ticket_no = f"T{i}"
+            t.problem_type = "X"
+            t.urgency = "M"
             t.reported_time = datetime(2024, 1, 1, 0, 0)
             t.resolved_time = datetime(2024, 1, 1, hours, 0)
             tickets.append(t)
@@ -108,7 +118,10 @@ class TestAnalyzeResolutionTime:
         tickets = []
         for i in range(110):
             t = MagicMock()
-            t.id = i; t.ticket_no = f"T{i}"; t.problem_type = "X"; t.urgency = "M"
+            t.id = i
+            t.ticket_no = f"T{i}"
+            t.problem_type = "X"
+            t.urgency = "M"
             t.reported_time = datetime(2024, 1, 1, 0, 0)
             t.resolved_time = datetime(2024, 1, 1, 1, 0)
             tickets.append(t)
@@ -155,15 +168,27 @@ class TestAnalyzeSatisfactionTrend:
         assert result["trend_by_month"][0]["count"] == 3
 
     def test_grouped_by_type(self):
-        s1 = MagicMock(); s1.survey_date = datetime(2024, 1, 1); s1.overall_score = 4.0; s1.survey_type = "DELIVERY"
-        s2 = MagicMock(); s2.survey_date = datetime(2024, 2, 1); s2.overall_score = 5.0; s2.survey_type = "SUPPORT"
+        s1 = MagicMock()
+        s1.survey_date = datetime(2024, 1, 1)
+        s1.overall_score = 4.0
+        s1.survey_type = "DELIVERY"
+        s2 = MagicMock()
+        s2.survey_date = datetime(2024, 2, 1)
+        s2.overall_score = 5.0
+        s2.survey_type = "SUPPORT"
         db = _make_query_db([s1, s2])
         result = analyze_satisfaction_trend(db)
         assert len(result["trend_by_type"]) == 2
 
     def test_none_score_survey_excluded_from_avg(self):
-        s1 = MagicMock(); s1.survey_date = datetime(2024, 1, 1); s1.overall_score = 4.0; s1.survey_type = "X"
-        s2 = MagicMock(); s2.survey_date = datetime(2024, 2, 1); s2.overall_score = None; s2.survey_type = "X"
+        s1 = MagicMock()
+        s1.survey_date = datetime(2024, 1, 1)
+        s1.overall_score = 4.0
+        s1.survey_type = "X"
+        s2 = MagicMock()
+        s2.survey_date = datetime(2024, 2, 1)
+        s2.overall_score = None
+        s2.survey_type = "X"
         db = _make_query_db([s1, s2])
         result = analyze_satisfaction_trend(db)
         assert result["total_surveys"] == 2
@@ -172,8 +197,9 @@ class TestAnalyzeSatisfactionTrend:
 
     def test_with_date_and_project_filter(self):
         db = _make_query_db([])
-        result = analyze_satisfaction_trend(db, start_date=datetime(2024, 1, 1),
-                                            end_date=datetime(2024, 12, 31), project_id=1)
+        result = analyze_satisfaction_trend(
+            db, start_date=datetime(2024, 1, 1), end_date=datetime(2024, 12, 31), project_id=1
+        )
         assert result["total_surveys"] == 0
 
 
@@ -189,9 +215,11 @@ class TestIdentifyBottlenecks:
 
     def test_pending_to_progress_bottleneck(self):
         t = MagicMock()
-        t.id = 1; t.problem_type = "HW"; t.status = "IN_PROGRESS"
+        t.id = 1
+        t.problem_type = "HW"
+        t.status = "IN_PROGRESS"
         t.reported_time = datetime(2024, 1, 1, 0, 0)
-        t.assigned_time = datetime(2024, 1, 2, 8, 0)   # 32 hours → HIGH
+        t.assigned_time = datetime(2024, 1, 2, 8, 0)  # 32 hours → HIGH
         t.resolved_time = None
         t.timeline = None
         db = _make_query_db([t])
@@ -204,7 +232,9 @@ class TestIdentifyBottlenecks:
 
     def test_in_progress_to_resolved_medium_severity(self):
         t = MagicMock()
-        t.id = 1; t.problem_type = "SW"; t.status = "RESOLVED"
+        t.id = 1
+        t.problem_type = "SW"
+        t.status = "RESOLVED"
         t.reported_time = None
         t.assigned_time = datetime(2024, 1, 1, 0, 0)
         t.resolved_time = datetime(2024, 1, 2, 12, 0)  # 36 hours → HIGH
@@ -216,7 +246,9 @@ class TestIdentifyBottlenecks:
 
     def test_resolved_to_closed_bottleneck(self):
         t = MagicMock()
-        t.id = 1; t.problem_type = "HW"; t.status = "CLOSED"
+        t.id = 1
+        t.problem_type = "HW"
+        t.status = "CLOSED"
         t.reported_time = None
         t.assigned_time = None
         t.resolved_time = datetime(2024, 1, 1, 0, 0)
@@ -229,7 +261,9 @@ class TestIdentifyBottlenecks:
 
     def test_bottlenecks_sorted_by_severity(self):
         t1 = MagicMock()
-        t1.id = 1; t1.problem_type = "X"; t1.status = "IN_PROGRESS"
+        t1.id = 1
+        t1.problem_type = "X"
+        t1.status = "IN_PROGRESS"
         t1.reported_time = datetime(2024, 1, 1, 0, 0)
         t1.assigned_time = datetime(2024, 1, 2, 8, 0)  # 32h HIGH
         t1.resolved_time = datetime(2024, 1, 3, 0, 0)  # 40h HIGH
@@ -242,7 +276,9 @@ class TestIdentifyBottlenecks:
 
     def test_with_date_filter(self):
         db = _make_query_db([])
-        result = identify_bottlenecks(db, start_date=datetime(2024, 1, 1), end_date=datetime(2024, 12, 31))
+        result = identify_bottlenecks(
+            db, start_date=datetime(2024, 1, 1), end_date=datetime(2024, 12, 31)
+        )
         assert result["total_analyzed"] == 0
 
     def test_critical_bottlenecks_list(self):
@@ -264,10 +300,18 @@ class TestAnalyzeSlaPerformance:
         assert result["by_policy"] == []
 
     def test_all_on_time(self):
-        m1 = MagicMock(); m1.policy_id = 1; m1.response_status = "ON_TIME"; m1.resolve_status = "ON_TIME"
-        m1.policy = MagicMock(); m1.policy.policy_name = "SLA-1"
-        m2 = MagicMock(); m2.policy_id = 1; m2.response_status = "ON_TIME"; m2.resolve_status = "ON_TIME"
-        m2.policy = MagicMock(); m2.policy.policy_name = "SLA-1"
+        m1 = MagicMock()
+        m1.policy_id = 1
+        m1.response_status = "ON_TIME"
+        m1.resolve_status = "ON_TIME"
+        m1.policy = MagicMock()
+        m1.policy.policy_name = "SLA-1"
+        m2 = MagicMock()
+        m2.policy_id = 1
+        m2.response_status = "ON_TIME"
+        m2.resolve_status = "ON_TIME"
+        m2.policy = MagicMock()
+        m2.policy.policy_name = "SLA-1"
         db = _make_query_db([m1, m2])
         result = analyze_sla_performance(db)
         assert result["total_monitors"] == 2
@@ -275,10 +319,18 @@ class TestAnalyzeSlaPerformance:
         assert result["resolve_rate"] == 100.0
 
     def test_partial_on_time(self):
-        m1 = MagicMock(); m1.policy_id = 1; m1.response_status = "ON_TIME"; m1.resolve_status = "ON_TIME"
-        m1.policy = MagicMock(); m1.policy.policy_name = "SLA-1"
-        m2 = MagicMock(); m2.policy_id = 1; m2.response_status = "OVERDUE"; m2.resolve_status = "OVERDUE"
-        m2.policy = MagicMock(); m2.policy.policy_name = "SLA-1"
+        m1 = MagicMock()
+        m1.policy_id = 1
+        m1.response_status = "ON_TIME"
+        m1.resolve_status = "ON_TIME"
+        m1.policy = MagicMock()
+        m1.policy.policy_name = "SLA-1"
+        m2 = MagicMock()
+        m2.policy_id = 1
+        m2.response_status = "OVERDUE"
+        m2.resolve_status = "OVERDUE"
+        m2.policy = MagicMock()
+        m2.policy.policy_name = "SLA-1"
         db = _make_query_db([m1, m2])
         result = analyze_sla_performance(db)
         assert result["response_rate"] == 50.0
@@ -287,16 +339,27 @@ class TestAnalyzeSlaPerformance:
         assert result["resolve_overdue"] == 1
 
     def test_policy_grouping(self):
-        m1 = MagicMock(); m1.policy_id = 1; m1.response_status = "ON_TIME"; m1.resolve_status = "ON_TIME"
-        m1.policy = MagicMock(); m1.policy.policy_name = "SLA-1"
-        m2 = MagicMock(); m2.policy_id = 2; m2.response_status = "OVERDUE"; m2.resolve_status = "OVERDUE"
-        m2.policy = MagicMock(); m2.policy.policy_name = "SLA-2"
+        m1 = MagicMock()
+        m1.policy_id = 1
+        m1.response_status = "ON_TIME"
+        m1.resolve_status = "ON_TIME"
+        m1.policy = MagicMock()
+        m1.policy.policy_name = "SLA-1"
+        m2 = MagicMock()
+        m2.policy_id = 2
+        m2.response_status = "OVERDUE"
+        m2.resolve_status = "OVERDUE"
+        m2.policy = MagicMock()
+        m2.policy.policy_name = "SLA-2"
         db = _make_query_db([m1, m2])
         result = analyze_sla_performance(db)
         assert len(result["by_policy"]) == 2
 
     def test_policy_none_uses_default_name(self):
-        m1 = MagicMock(); m1.policy_id = 99; m1.response_status = "ON_TIME"; m1.resolve_status = "ON_TIME"
+        m1 = MagicMock()
+        m1.policy_id = 99
+        m1.response_status = "ON_TIME"
+        m1.resolve_status = "ON_TIME"
         m1.policy = None
         db = _make_query_db([m1])
         result = analyze_sla_performance(db)
@@ -304,6 +367,7 @@ class TestAnalyzeSlaPerformance:
 
     def test_date_and_policy_filter(self):
         db = _make_query_db([])
-        result = analyze_sla_performance(db, start_date=datetime(2024, 1, 1),
-                                         end_date=datetime(2024, 12, 31), policy_id=1)
+        result = analyze_sla_performance(
+            db, start_date=datetime(2024, 1, 1), end_date=datetime(2024, 12, 31), policy_id=1
+        )
         assert result["total_monitors"] == 0

@@ -2,12 +2,14 @@
 """
 第三十三批覆盖率测试 - 绩效数据聚合器 (PerformanceDataAggregator)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.performance_collector.aggregator import PerformanceDataAggregator
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -30,18 +32,30 @@ def _make_aggregator():
     return aggregator
 
 
-def _setup_all_collectors(aggregator, self_eval=None, task=None, project=None,
-                           ecn=None, bom=None, design_review=None,
-                           debug=None, knowledge=None):
+def _setup_all_collectors(
+    aggregator,
+    self_eval=None,
+    task=None,
+    project=None,
+    ecn=None,
+    bom=None,
+    design_review=None,
+    debug=None,
+    knowledge=None,
+):
     """为所有收集器设置返回值"""
-    aggregator.work_log_collector.extract_self_evaluation_from_work_logs.return_value = self_eval or {}
+    aggregator.work_log_collector.extract_self_evaluation_from_work_logs.return_value = (
+        self_eval or {}
+    )
     aggregator.project_collector.collect_task_completion_data.return_value = task or {}
     aggregator.project_collector.collect_project_participation_data.return_value = project or {}
     aggregator.ecn_collector.collect_ecn_responsibility_data.return_value = ecn or {}
     aggregator.bom_collector.collect_bom_data.return_value = bom or {}
     aggregator.design_collector.collect_design_review_data.return_value = design_review or {}
     aggregator.design_collector.collect_debug_issue_data.return_value = debug or {}
-    aggregator.knowledge_collector.collect_knowledge_contribution_data.return_value = knowledge or {}
+    aggregator.knowledge_collector.collect_knowledge_contribution_data.return_value = (
+        knowledge or {}
+    )
 
 
 class TestCollectAllData:
@@ -51,9 +65,7 @@ class TestCollectAllData:
         _setup_all_collectors(aggregator)
 
         result = aggregator.collect_all_data(
-            engineer_id=1,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=1, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         assert "data" in result
@@ -72,9 +84,7 @@ class TestCollectAllData:
         )
 
         result = aggregator.collect_all_data(
-            engineer_id=2,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=2, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         stats = result["statistics"]
@@ -84,7 +94,9 @@ class TestCollectAllData:
     def test_exception_in_collector_captured(self):
         """某个收集器抛出异常时不影响其他收集器"""
         aggregator = _make_aggregator()
-        aggregator.work_log_collector.extract_self_evaluation_from_work_logs.side_effect = RuntimeError("DB连接失败")
+        aggregator.work_log_collector.extract_self_evaluation_from_work_logs.side_effect = (
+            RuntimeError("DB连接失败")
+        )
         aggregator.project_collector.collect_task_completion_data.return_value = {"total_tasks": 1}
         aggregator.project_collector.collect_project_participation_data.return_value = {}
         aggregator.ecn_collector.collect_ecn_responsibility_data.return_value = {}
@@ -94,9 +106,7 @@ class TestCollectAllData:
         aggregator.knowledge_collector.collect_knowledge_contribution_data.return_value = {}
 
         result = aggregator.collect_all_data(
-            engineer_id=3,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=3, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         stats = result["statistics"]
@@ -110,9 +120,7 @@ class TestCollectAllData:
         _setup_all_collectors(aggregator)  # 全部返回空dict
 
         result = aggregator.collect_all_data(
-            engineer_id=4,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=4, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         stats = result["statistics"]
@@ -124,9 +132,7 @@ class TestCollectAllData:
         _setup_all_collectors(aggregator)
 
         result = aggregator.collect_all_data(
-            engineer_id=5,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=5, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         assert result["start_date"] == "2026-01-01"
@@ -146,9 +152,7 @@ class TestGenerateCollectionReport:
         )
 
         report = aggregator.generate_collection_report(
-            engineer_id=5,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=5, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         assert "engineer_id" in report
@@ -169,9 +173,7 @@ class TestGenerateCollectionReport:
         )
 
         report = aggregator.generate_collection_report(
-            engineer_id=6,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=6, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         assert len(report["suggestions"]) > 0
@@ -189,9 +191,7 @@ class TestGenerateCollectionReport:
         )
 
         report = aggregator.generate_collection_report(
-            engineer_id=7,
-            start_date=date(2026, 1, 1),
-            end_date=date(2026, 1, 31)
+            engineer_id=7, start_date=date(2026, 1, 1), end_date=date(2026, 1, 31)
         )
 
         assert report["data_completeness"]["score"] > 0

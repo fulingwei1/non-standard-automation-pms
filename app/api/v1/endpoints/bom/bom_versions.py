@@ -119,9 +119,11 @@ def compare_bom_versions(
                     "material_code": material_code,
                     "material_name": items1[material_code].material_name,
                     "quantity": float(items1[material_code].quantity),
-                    "unit_price": float(items1[material_code].unit_price)
-                    if items1[material_code].unit_price
-                    else 0,
+                    "unit_price": (
+                        float(items1[material_code].unit_price)
+                        if items1[material_code].unit_price
+                        else 0
+                    ),
                 }
             )
         elif material_code not in items1 and material_code in items2:
@@ -130,9 +132,11 @@ def compare_bom_versions(
                     "material_code": material_code,
                     "material_name": items2[material_code].material_name,
                     "quantity": float(items2[material_code].quantity),
-                    "unit_price": float(items2[material_code].unit_price)
-                    if items2[material_code].unit_price
-                    else 0,
+                    "unit_price": (
+                        float(items2[material_code].unit_price)
+                        if items2[material_code].unit_price
+                        else 0
+                    ),
                 }
             )
         else:
@@ -149,16 +153,12 @@ def compare_bom_versions(
                         "material_name": item1.material_name,
                         "v1": {
                             "quantity": float(item1.quantity),
-                            "unit_price": float(item1.unit_price)
-                            if item1.unit_price
-                            else 0,
+                            "unit_price": float(item1.unit_price) if item1.unit_price else 0,
                             "specification": item1.specification,
                         },
                         "v2": {
                             "quantity": float(item2.quantity),
-                            "unit_price": float(item2.unit_price)
-                            if item2.unit_price
-                            else 0,
+                            "unit_price": float(item2.unit_price) if item2.unit_price else 0,
                             "specification": item2.specification,
                         },
                     }
@@ -169,9 +169,7 @@ def compare_bom_versions(
                         "material_code": material_code,
                         "material_name": item1.material_name,
                         "quantity": float(item1.quantity),
-                        "unit_price": float(item1.unit_price)
-                        if item1.unit_price
-                        else 0,
+                        "unit_price": float(item1.unit_price) if item1.unit_price else 0,
                     }
                 )
 

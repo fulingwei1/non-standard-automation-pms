@@ -28,10 +28,5 @@ FULL_LIFECYCLE_TEMPLATE: Dict[str, Any] = {
     "template_name": "完整生命周期模板",
     "description": "非标自动化测试设备项目全流程，从市场开拓、销售、售前、项目执行到售后服务的完整22阶段管理",
     "project_type": "NEW",
-    "stages": (
-        SALES_STAGES
-        + PRESALES_STAGES
-        + EXECUTION_STAGES
-        + CLOSURE_STAGES
-    ),
+    "stages": (SALES_STAGES + PRESALES_STAGES + EXECUTION_STAGES + CLOSURE_STAGES),
 }

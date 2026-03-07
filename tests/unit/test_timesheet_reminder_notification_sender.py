@@ -12,15 +12,16 @@ NotificationSender 单元测试
 - send_batch_reminders (批量发送)
 """
 
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 from app.services.timesheet_reminder.notification_sender import NotificationSender
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def db():
@@ -69,6 +70,7 @@ def _make_user(user_id=1, username="testuser", email=None):
 # ---------------------------------------------------------------------------
 # Tests: send_reminder_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendReminderNotification:
     def test_user_not_found_returns_empty(self, sender, db):
@@ -122,8 +124,10 @@ class TestSendReminderNotification:
         user = _make_user(email="u@example.com")
         db.query.return_value.filter.return_value.first.return_value = user
 
-        with patch.object(sender, "_send_system_notification", return_value=True), \
-             patch.object(sender, "_send_email_notification", return_value=True):
+        with (
+            patch.object(sender, "_send_system_notification", return_value=True),
+            patch.object(sender, "_send_email_notification", return_value=True),
+        ):
             result = sender.send_reminder_notification(
                 _make_reminder(),
                 channels=["SYSTEM", "EMAIL"],
@@ -135,6 +139,7 @@ class TestSendReminderNotification:
 # ---------------------------------------------------------------------------
 # Tests: _send_system_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendSystemNotification:
     def test_success(self, sender, db):
@@ -161,6 +166,7 @@ class TestSendSystemNotification:
 # Tests: _send_email_notification
 # ---------------------------------------------------------------------------
 
+
 class TestSendEmailNotification:
     def test_no_smtp_config_returns_false(self, sender, db):
         """settings 中没有 SMTP_HOST → 直接返回 False"""
@@ -178,8 +184,10 @@ class TestSendEmailNotification:
         assert result is False
 
     def test_smtp_send_success(self, sender, db):
-        with patch("app.services.timesheet_reminder.notification_sender.settings") as mock_settings, \
-             patch("app.services.timesheet_reminder.notification_sender.smtplib.SMTP") as mock_smtp:
+        with (
+            patch("app.services.timesheet_reminder.notification_sender.settings") as mock_settings,
+            patch("app.services.timesheet_reminder.notification_sender.smtplib.SMTP") as mock_smtp,
+        ):
             mock_settings.SMTP_HOST = "smtp.example.com"
             mock_settings.SMTP_PORT = 587
             mock_settings.SMTP_FROM = "noreply@example.com"
@@ -199,6 +207,7 @@ class TestSendEmailNotification:
 # ---------------------------------------------------------------------------
 # Tests: _send_wechat_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendWechatNotification:
     def test_no_corp_id_returns_false(self, sender, db):
@@ -230,6 +239,7 @@ class TestSendWechatNotification:
 # Tests: _generate_email_html
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateEmailHtml:
     def test_contains_title_and_content(self, sender):
         reminder = _make_reminder(title="工时提醒", content="请填报工时")
@@ -255,6 +265,7 @@ class TestGenerateEmailHtml:
 # Tests: _generate_reminder_url
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateReminderUrl:
     def test_timesheet_source_url(self, sender):
         reminder = _make_reminder(source_type="timesheet", source_id=42)
@@ -274,6 +285,7 @@ class TestGenerateReminderUrl:
 # ---------------------------------------------------------------------------
 # Tests: send_batch_reminders
 # ---------------------------------------------------------------------------
+
 
 class TestSendBatchReminders:
     def test_all_success(self, sender, db):

@@ -26,16 +26,16 @@ def get_or_create_admin_role_id(db):
     else:
         # 创建 ADMIN 角色
         db.execute(
-            text("""
+            text(
+                """
             INSERT INTO roles (role_code, role_name, description, data_scope, is_system, status, role_type, scope_type, level, created_at)
             VALUES ('ADMIN', '系统管理员', '系统最高权限，可管理所有功能和数据', 'ALL', 1, 'ACTIVE', 'SYSTEM', 'GLOBAL', 0, CURRENT_TIMESTAMP)
-        """)
+        """
+            )
         )
         db.commit()
         # 重新查询获取 ID
-        result = db.execute(
-            text("SELECT id FROM roles WHERE role_code = 'ADMIN'")
-        ).first()
+        result = db.execute(text("SELECT id FROM roles WHERE role_code = 'ADMIN'")).first()
         admin_role_id = result[0]
         print(f"✓ 已创建 ADMIN 角色 (ID: {admin_role_id})")
         return admin_role_id
@@ -60,30 +60,28 @@ def create_or_update_admin_user(db, username, password):
         # 更新密码和权限
         password_hash = security.get_password_hash(password)
         db.execute(
-            text("""
+            text(
+                """
                 UPDATE users
                 SET password_hash = :password_hash,
                     is_superuser = 1,
                     is_active = 1,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = :user_id
-            """),
+            """
+            ),
             {"password_hash": password_hash, "user_id": user_id},
         )
 
         # 检查是否已关联 ADMIN 角色
         role_result = db.execute(
-            text(
-                "SELECT id FROM user_roles WHERE user_id = :user_id AND role_id = :role_id"
-            ),
+            text("SELECT id FROM user_roles WHERE user_id = :user_id AND role_id = :role_id"),
             {"user_id": user_id, "role_id": admin_role_id},
         ).first()
 
         if not role_result:
             db.execute(
-                text(
-                    "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)"
-                ),
+                text("INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)"),
                 {"user_id": user_id, "role_id": admin_role_id},
             )
             print(f"✓ 已为用户 '{username}' 分配 ADMIN 角色")
@@ -104,10 +102,12 @@ def create_or_update_admin_user(db, username, password):
         else:
             # 创建员工记录
             db.execute(
-                text("""
+                text(
+                    """
                 INSERT INTO employees (employee_code, name, department, role, is_active, created_at)
                 VALUES ('E0001', '系统管理员', 'IT', '系统管理员', 1, CURRENT_TIMESTAMP)
-            """)
+            """
+                )
             )
             db.commit()
             emp_result = db.execute(
@@ -119,7 +119,8 @@ def create_or_update_admin_user(db, username, password):
         # 创建用户
         password_hash = security.get_password_hash(password)
         db.execute(
-            text("""
+            text(
+                """
             INSERT INTO users (
                 username, employee_id, password_hash, real_name, employee_no,
                 department, position, is_active, is_superuser, auth_type, created_at
@@ -127,7 +128,8 @@ def create_or_update_admin_user(db, username, password):
                 :username, :employee_id, :password_hash, '系统管理员', 'E0001',
                 'IT', '系统管理员', 1, 1, 'password', CURRENT_TIMESTAMP
             )
-        """),
+        """
+            ),
             {
                 "username": username,
                 "employee_id": employee_id,
@@ -145,9 +147,7 @@ def create_or_update_admin_user(db, username, password):
 
         # 分配 ADMIN 角色
         db.execute(
-            text(
-                "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)"
-            ),
+            text("INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)"),
             {"user_id": user_id, "role_id": admin_role_id},
         )
         print(f"✓ 已为用户 '{username}' 分配 ADMIN 角色")

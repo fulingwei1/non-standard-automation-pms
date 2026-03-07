@@ -2,8 +2,9 @@
 """第二十九批 - notification_handlers/wechat_handler.py 单元测试（WeChatNotificationHandler）"""
 
 import sys
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 # 预先 mock 可能导致循环导入的模块
 _mock_unified = MagicMock()
@@ -17,8 +18,8 @@ pytest.importorskip("app.services.notification_handlers.wechat_handler")
 
 from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -56,6 +57,7 @@ def _make_user(**kwargs):
 
 
 # ─── 测试类 ────────────────────────────────────────────────
+
 
 class TestWeChatNotificationHandlerInit:
     """测试初始化"""

@@ -3,10 +3,11 @@
 第四十五批覆盖：resource_waste_analysis/trends_comparison.py
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.resource_waste_analysis.trends_comparison")
 

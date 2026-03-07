@@ -3,13 +3,14 @@
 Unit tests for app/services/invoice_auto_service/notifications.py (cov52)
 """
 import json
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.invoice_auto_service.notifications import (
-        send_invoice_notifications,
         log_auto_invoice,
+        send_invoice_notifications,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -30,6 +31,7 @@ def _make_order(order_id=1, order_no="ORD-001", project_id=10):
 
 
 # ──────────────────────── send_invoice_notifications ────────────────────────
+
 
 def test_send_invoice_notifications_no_project():
     """order.project 为 None 时，函数直接返回，不报错"""
@@ -57,8 +59,8 @@ def test_send_invoice_notifications_with_recipients(mock_dispatcher_cls):
     contract = MagicMock(owner_id=200)
 
     service.db.query.return_value.filter.return_value.all.side_effect = [
-        role_ids,   # finance_role_ids
-        user_ids,   # finance_user_ids
+        role_ids,  # finance_role_ids
+        user_ids,  # finance_user_ids
     ]
     service.db.query.return_value.filter.return_value.first.return_value = contract
 
@@ -91,6 +93,7 @@ def test_send_invoice_notifications_auto_create(mock_dispatcher_cls):
 
 
 # ──────────────────────── log_auto_invoice ────────────────────────
+
 
 def test_log_auto_invoice_no_existing_conditions():
     """conditions 为 None 时，初始化日志列表并追加"""

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class AIService:
     """AI 服务类，提供 Kimi API 调用功能"""
-    
+
     def __init__(self):
         self.api_key = settings.KIMI_API_KEY
         self.base_url = settings.KIMI_API_BASE
@@ -27,15 +27,15 @@ class AIService:
         self.temperature = settings.KIMI_TEMPERATURE
         self.timeout = settings.KIMI_TIMEOUT
         self.enabled = settings.KIMI_ENABLED and self.api_key is not None
-        
+
         if self.enabled:
             self.client = httpx.AsyncClient(
                 base_url=self.base_url,
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                timeout=self.timeout
+                timeout=self.timeout,
             )
         else:
             self.client = None
@@ -47,59 +47,59 @@ class AIService:
         model: Optional[str] = None,
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
-        stream: bool = False
+        stream: bool = False,
     ) -> Dict[str, Any]:
         """
         调用 Kimi 聊天完成接口
-        
+
         Args:
             messages: 消息列表，格式为 [{"role": "user", "content": "..."}]
             model: 模型名称，默认使用配置中的模型
             max_tokens: 最大token数，默认使用配置中的值
             temperature: 温度参数，默认使用配置中的值
             stream: 是否流式返回
-            
+
         Returns:
             API 响应数据
-            
+
         Raises:
             HTTPException: API 调用失败
         """
         if not self.enabled:
             raise HTTPException(status_code=503, detail="AI 服务未启用")
-        
+
         if not self.client:
             raise HTTPException(status_code=500, detail="AI 客户端未初始化")
-        
+
         try:
             payload = {
                 "model": model or self.model,
                 "messages": messages,
                 "max_tokens": max_tokens or self.max_tokens,
                 "temperature": temperature or self.temperature,
-                "stream": stream
+                "stream": stream,
             }
-            
+
             response = await self.client.post("/chat/completions", json=payload)
-            
+
             if response.status_code != 200:
                 error_data = response.json() if response.content else {}
                 logger.error(f"Kimi API 错误: {response.status_code} - {error_data}")
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"AI API 调用失败: {error_data.get('error', {}).get('message', '未知错误')}"
+                    detail=f"AI API 调用失败: {error_data.get('error', {}).get('message', '未知错误')}",
                 )
-            
+
             return response.json()
-            
+
         except httpx.TimeoutException:
             logger.error("Kimi API 请求超时")
             raise HTTPException(status_code=504, detail="AI 服务请求超时")
-            
+
         except httpx.RequestError as e:
             logger.error(f"Kimi API 请求错误: {e}")
             raise HTTPException(status_code=502, detail=f"AI 服务请求失败: {str(e)}")
-            
+
         except Exception as e:
             logger.error(f"Kimi API 未知错误: {e}")
             raise HTTPException(status_code=500, detail=f"AI 服务内部错误: {str(e)}")
@@ -107,23 +107,23 @@ class AIService:
     async def simple_chat(self, prompt: str, context: Optional[str] = None) -> str:
         """
         简单聊天接口
-        
+
         Args:
             prompt: 用户提示词
             context: 可选的上下文信息
-            
+
         Returns:
             AI 响应文本
         """
         messages = []
-        
+
         if context:
             messages.append({"role": "system", "content": context})
-        
+
         messages.append({"role": "user", "content": prompt})
-        
+
         response = await self.chat_completion(messages)
-        
+
         try:
             return response["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as e:
@@ -133,10 +133,10 @@ class AIService:
     async def project_analysis(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         项目分析功能
-        
+
         Args:
             project_data: 项目数据
-            
+
         Returns:
             分析结果
         """
@@ -164,12 +164,12 @@ class AIService:
             "overall_summary": "整体分析总结"
         }}
         """
-        
+
         response_text = await self.simple_chat(
             prompt=prompt,
-            context="你是一个专业的非标自动化项目管理专家，擅长项目风险分析和决策支持。"
+            context="你是一个专业的非标自动化项目管理专家，擅长项目风险分析和决策支持。",
         )
-        
+
         try:
             return json.loads(response_text)
         except json.JSONDecodeError:
@@ -189,7 +189,7 @@ ai_service = AIService()
 async def get_ai_service() -> AIService:
     """
     获取AI服务实例
-    
+
     Returns:
         AIService实例
     """
@@ -199,10 +199,10 @@ async def get_ai_service() -> AIService:
 async def analyze_project_with_ai(project_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     使用AI分析项目的便捷函数
-    
+
     Args:
         project_data: 项目数据
-        
+
     Returns:
         AI分析结果
     """
@@ -213,11 +213,11 @@ async def analyze_project_with_ai(project_data: Dict[str, Any]) -> Dict[str, Any
 async def chat_with_ai(prompt: str, context: Optional[str] = None) -> str:
     """
     与AI聊天的便捷函数
-    
+
     Args:
         prompt: 用户提示
         context: 可选上下文
-        
+
     Returns:
         AI响应
     """

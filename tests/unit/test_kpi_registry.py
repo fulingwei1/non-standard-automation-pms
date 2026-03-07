@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """KPI采集器注册器单元测试"""
 import pytest
-from app.services.strategy.kpi_collector.registry import register_collector, get_collector, _collectors
+
+from app.services.strategy.kpi_collector.registry import (
+    _collectors,
+    get_collector,
+    register_collector,
+)
 
 
 class TestKpiRegistry:
@@ -16,6 +21,7 @@ class TestKpiRegistry:
         @register_collector("test_module")
         def my_collector():
             return "data"
+
         assert get_collector("test_module") is my_collector
         assert my_collector() == "data"
 

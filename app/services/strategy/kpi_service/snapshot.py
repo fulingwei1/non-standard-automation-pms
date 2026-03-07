@@ -33,9 +33,13 @@ def _get_current_period(frequency: str) -> str:
 def _calculate_trend(db: Session, kpi_id: int) -> Optional[str]:
     """计算 KPI 趋势"""
     # 获取最近两条历史记录
-    history = db.query(KPIHistory).filter(
-        KPIHistory.kpi_id == kpi_id
-    ).order_by(desc(KPIHistory.snapshot_date)).limit(2).all()
+    history = (
+        db.query(KPIHistory)
+        .filter(KPIHistory.kpi_id == kpi_id)
+        .order_by(desc(KPIHistory.snapshot_date))
+        .limit(2)
+        .all()
+    )
 
     if len(history) < 2:
         return None
@@ -59,7 +63,7 @@ def create_kpi_snapshot(
     kpi_id: int,
     source_type: str,
     recorded_by: Optional[int] = None,
-    remark: Optional[str] = None
+    remark: Optional[str] = None,
 ) -> KPIHistory:
     """
     创建 KPI 快照
@@ -80,6 +84,7 @@ def create_kpi_snapshot(
 
     # 计算完成率和健康度
     from .health_calculator import calculate_kpi_completion_rate, get_health_level
+
     completion_rate = calculate_kpi_completion_rate(kpi)
     health_level = None
     if completion_rate is not None:

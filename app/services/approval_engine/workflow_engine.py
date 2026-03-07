@@ -9,16 +9,17 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.utils.db_helpers import save_obj
+
 from .models import (
-    LegacyApprovalFlow as ApprovalFlow,
-    LegacyApprovalInstance as ApprovalInstance,
-    LegacyApprovalNode as ApprovalNode,
-    LegacyApprovalRecord as ApprovalRecord,
-    ApprovalStatus,
     ApprovalDecision,
     ApprovalNodeRole,
+    ApprovalStatus,
 )
-from app.utils.db_helpers import save_obj
+from .models import LegacyApprovalFlow as ApprovalFlow
+from .models import LegacyApprovalInstance as ApprovalInstance
+from .models import LegacyApprovalNode as ApprovalNode
+from .models import LegacyApprovalRecord as ApprovalRecord
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +71,7 @@ class WorkflowEngine:
             current_status=ApprovalStatus.PENDING.value,
             total_nodes=len(flow.nodes),
             completed_nodes=0,
-            due_date=datetime.now()
-            + timedelta(hours=self._get_first_node_timeout(flow)),
+            due_date=datetime.now() + timedelta(hours=self._get_first_node_timeout(flow)),
         )
 
         save_obj(self.db, instance)
@@ -83,7 +83,7 @@ class WorkflowEngine:
         获取当前待审批节点
         """
         # 状态检查：仅对真实字符串值进行过滤，MagicMock等对象视为有效状态
-        current_status = getattr(instance, 'current_status', None)
+        current_status = getattr(instance, "current_status", None)
         if isinstance(current_status, str) and current_status not in [
             ApprovalStatus.PENDING.value,
             ApprovalStatus.IN_PROGRESS.value,
@@ -108,9 +108,7 @@ class WorkflowEngine:
             )
             return node
 
-    def evaluate_node_conditions(
-        self, node: ApprovalNode, instance: ApprovalInstance
-    ) -> bool:
+    def evaluate_node_conditions(self, node: ApprovalNode, instance: ApprovalInstance) -> bool:
         """
         评估节点条件是否满足
 
@@ -125,9 +123,9 @@ class WorkflowEngine:
             条件是否满足
         """
         # 兼容 condition_expr 和 condition_expression 两种属性名
-        condition = getattr(node, 'condition_expression', None)
+        condition = getattr(node, "condition_expression", None)
         if not isinstance(condition, str):
-            condition = getattr(node, 'condition_expr', None)
+            condition = getattr(node, "condition_expr", None)
         if not condition or not isinstance(condition, str):
             return True
 
@@ -147,7 +145,7 @@ class WorkflowEngine:
             elif isinstance(result, (int, float)):
                 return result > 0
             elif isinstance(result, str):
-                return result.lower() in ('true', '1', 'yes')
+                return result.lower() in ("true", "1", "yes")
             else:
                 return bool(result)
 
@@ -197,16 +195,13 @@ class WorkflowEngine:
                 context["user"] = context["initiator"]
 
         # 获取业务实体数据
-        entity_data = self._get_business_entity_data(
-            instance.business_type,
-            instance.business_id
-        )
+        entity_data = self._get_business_entity_data(instance.business_type, instance.business_id)
         if entity_data:
             context["entity"] = entity_data
             context["form"] = entity_data  # 兼容表单字段访问
 
         # 兼容：如果实例包含 form_data 字典，将其合并到上下文顶层
-        form_data = getattr(instance, 'form_data', None)
+        form_data = getattr(instance, "form_data", None)
         if isinstance(form_data, dict):
             context["form"].update(form_data)
             context.update(form_data)
@@ -222,6 +217,7 @@ class WorkflowEngine:
         try:
             if business_type == "ECN":
                 from app.models.ecn import Ecn
+
                 ecn = self.db.query(Ecn).filter(Ecn.id == business_id).first()
                 if ecn:
                     return {
@@ -229,13 +225,14 @@ class WorkflowEngine:
                         "ecn_no": ecn.ecn_no,
                         "ecn_type": ecn.ecn_type,
                         "status": ecn.status,
-                        "priority": getattr(ecn, 'priority', None),
+                        "priority": getattr(ecn, "priority", None),
                         "change_reason": ecn.change_reason,
-                        "estimated_cost": getattr(ecn, 'estimated_cost', 0),
+                        "estimated_cost": getattr(ecn, "estimated_cost", 0),
                     }
 
             elif business_type == "SALES_QUOTE":
                 from app.models.sales import SalesQuote
+
                 quote = self.db.query(SalesQuote).filter(SalesQuote.id == business_id).first()
                 if quote:
                     return {
@@ -243,23 +240,29 @@ class WorkflowEngine:
                         "quote_no": quote.quote_no,
                         "status": quote.status,
                         "total_amount": float(quote.total_amount) if quote.total_amount else 0,
-                        "gross_margin": float(quote.gross_margin) if hasattr(quote, 'gross_margin') and quote.gross_margin else 0,
+                        "gross_margin": (
+                            float(quote.gross_margin)
+                            if hasattr(quote, "gross_margin") and quote.gross_margin
+                            else 0
+                        ),
                         "customer_id": quote.customer_id,
                     }
 
             elif business_type == "SALES_INVOICE":
                 from app.models.sales import SalesInvoice
+
                 invoice = self.db.query(SalesInvoice).filter(SalesInvoice.id == business_id).first()
                 if invoice:
                     return {
                         "id": invoice.id,
-                        "invoice_no": getattr(invoice, 'invoice_no', None),
+                        "invoice_no": getattr(invoice, "invoice_no", None),
                         "status": invoice.status,
                         "amount": float(invoice.amount) if invoice.amount else 0,
                     }
 
             elif business_type == "PURCHASE_ORDER":
                 from app.models.purchase import PurchaseOrder
+
                 po = self.db.query(PurchaseOrder).filter(PurchaseOrder.id == business_id).first()
                 if po:
                     return {
@@ -272,7 +275,10 @@ class WorkflowEngine:
 
             elif business_type == "ACCEPTANCE":
                 from app.models.acceptance import AcceptanceOrder
-                order = self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == business_id).first()
+
+                order = (
+                    self.db.query(AcceptanceOrder).filter(AcceptanceOrder.id == business_id).first()
+                )
                 if order:
                     return {
                         "id": order.id,
@@ -284,7 +290,12 @@ class WorkflowEngine:
 
             elif business_type == "OUTSOURCING":
                 from app.models.outsourcing import OutsourcingOrder
-                order = self.db.query(OutsourcingOrder).filter(OutsourcingOrder.id == business_id).first()
+
+                order = (
+                    self.db.query(OutsourcingOrder)
+                    .filter(OutsourcingOrder.id == business_id)
+                    .first()
+                )
                 if order:
                     return {
                         "id": order.id,
@@ -335,12 +346,12 @@ class WorkflowEngine:
         self.db.commit()
 
         # 基础实例更新（即使 _update_instance_status 被覆盖也生效）
-        decision_val = decision.value if hasattr(decision, 'value') else decision
+        decision_val = decision.value if hasattr(decision, "value") else decision
         if decision_val == ApprovalDecision.APPROVED.value:
             next_node = self._find_next_node(node)
             if next_node:
                 instance.current_node_id = next_node.id
-                instance.completed_nodes = (getattr(instance, 'completed_nodes', 0) or 0) + 1
+                instance.completed_nodes = (getattr(instance, "completed_nodes", 0) or 0) + 1
 
         # 更新实例状态
         self._update_instance_status(instance, record)
@@ -386,7 +397,9 @@ class WorkflowEngine:
         is_direct_status = isinstance(record_or_status, (str, _Enum))
         if is_direct_status:
             # 简化接口：直接设置状态
-            status_value = record_or_status.value if isinstance(record_or_status, _Enum) else record_or_status
+            status_value = (
+                record_or_status.value if isinstance(record_or_status, _Enum) else record_or_status
+            )
             instance.status = record_or_status
             instance.current_status = status_value
             if completed_nodes is not None:
@@ -450,11 +463,13 @@ class WorkflowEngine:
             # 新接口：_find_next_node(node)
             flow_id = node_or_instance.flow_id
             node = node_or_instance
-        seq_field = getattr(ApprovalNode, 'sequence', None) or getattr(ApprovalNode, 'node_order', None)
+        seq_field = getattr(ApprovalNode, "sequence", None) or getattr(
+            ApprovalNode, "node_order", None
+        )
         return (
             self.db.query(ApprovalNode)
             .filter(ApprovalNode.flow_id == flow_id)
-            .filter(seq_field > (getattr(node, 'sequence', None) or getattr(node, 'node_order', 0)))
+            .filter(seq_field > (getattr(node, "sequence", None) or getattr(node, "node_order", 0)))
             .order_by(seq_field)
             .first()
         )
@@ -469,18 +484,20 @@ class WorkflowEngine:
         else:
             flow_id = node_or_instance.flow_id
             node = node_or_instance
-        seq_field = getattr(ApprovalNode, 'sequence', None) or getattr(ApprovalNode, 'node_order', None)
+        seq_field = getattr(ApprovalNode, "sequence", None) or getattr(
+            ApprovalNode, "node_order", None
+        )
         return (
             self.db.query(ApprovalNode)
             .filter(ApprovalNode.flow_id == flow_id)
-            .filter(seq_field < (getattr(node, 'sequence', None) or getattr(node, 'node_order', 0)))
+            .filter(seq_field < (getattr(node, "sequence", None) or getattr(node, "node_order", 0)))
             .order_by(seq_field.desc())
             .first()
         )
 
     def _get_first_node_timeout(self, flow: ApprovalFlow) -> int:
         """获取第一个节点的超时时间（小时）"""
-        timeout = getattr(flow, 'first_node_timeout', None)
+        timeout = getattr(flow, "first_node_timeout", None)
         if isinstance(timeout, int):
             return timeout
         return 48
@@ -488,15 +505,15 @@ class WorkflowEngine:
     def is_expired(self, instance: ApprovalInstance) -> bool:
         """检查实例是否超时（兼容 due_date 和 created_at 两种方式）"""
         # 优先使用 due_date（必须是真正的 datetime 对象）
-        due_date = getattr(instance, 'due_date', None)
+        due_date = getattr(instance, "due_date", None)
         if isinstance(due_date, datetime):
             return datetime.now() > due_date
         # 兼容：通过 created_at + flow 超时时间判定
-        created_at = getattr(instance, 'created_at', None)
+        created_at = getattr(instance, "created_at", None)
         if isinstance(created_at, datetime):
             flow = (
                 self.db.query(ApprovalFlow)
-                .filter(ApprovalFlow.id == getattr(instance, 'flow_id', None))
+                .filter(ApprovalFlow.id == getattr(instance, "flow_id", None))
                 .first()
             )
             timeout_hours = self._get_first_node_timeout(flow) if flow else 48

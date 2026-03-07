@@ -16,6 +16,7 @@ from typing import Any, Dict, List
 
 import pytest
 
+
 # 测试报告
 class PermissionTestReport:
     """权限测试报告生成器"""
@@ -92,7 +93,11 @@ class PermissionTestReport:
             f"- **总测试数**: {self.summary['total']}",
             f"- **通过数**: {self.summary['passed']}",
             f"- **失败数**: {self.summary['failed']}",
-            f"- **通过率**: {self.summary['passed'] / self.summary['total'] * 100:.2f}%" if self.summary['total'] > 0 else "- **通过率**: 0%",
+            (
+                f"- **通过率**: {self.summary['passed'] / self.summary['total'] * 100:.2f}%"
+                if self.summary["total"] > 0
+                else "- **通过率**: 0%"
+            ),
             "",
             "## 按角色统计",
             "",
@@ -102,9 +107,7 @@ class PermissionTestReport:
 
         for role, stats in sorted(self.summary["by_role"].items()):
             pass_rate = (
-                f"{stats['passed'] / stats['total'] * 100:.2f}%"
-                if stats['total'] > 0
-                else "0%"
+                f"{stats['passed'] / stats['total'] * 100:.2f}%" if stats["total"] > 0 else "0%"
             )
             report_lines.append(
                 f"| {role} | {stats['total']} | {stats['passed']} | {stats['failed']} | {pass_rate} |"
@@ -122,9 +125,7 @@ class PermissionTestReport:
 
         for endpoint, stats in sorted(self.summary["by_endpoint"].items()):
             pass_rate = (
-                f"{stats['passed'] / stats['total'] * 100:.2f}%"
-                if stats['total'] > 0
-                else "0%"
+                f"{stats['passed'] / stats['total'] * 100:.2f}%" if stats["total"] > 0 else "0%"
             )
             report_lines.append(
                 f"| {endpoint} | {stats['total']} | {stats['passed']} | {stats['failed']} | {pass_rate} |"

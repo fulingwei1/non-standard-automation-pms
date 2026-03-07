@@ -14,7 +14,7 @@ ShortageReportsService 单元测试 - G2组覆盖率提升
 
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -24,6 +24,7 @@ class TestShortageReportsServiceInit:
 
     def test_init_stores_db(self):
         from app.services.shortage.shortage_reports_service import ShortageReportsService
+
         db = MagicMock()
         service = ShortageReportsService(db)
         assert service.db is db
@@ -34,6 +35,7 @@ class TestCreateShortageReport:
 
     def setup_method(self):
         from app.services.shortage.shortage_reports_service import ShortageReportsService
+
         self.db = MagicMock()
         self.service = ShortageReportsService(self.db)
 
@@ -92,6 +94,7 @@ class TestGetShortageReport:
 
     def setup_method(self):
         from app.services.shortage.shortage_reports_service import ShortageReportsService
+
         self.db = MagicMock()
         self.service = ShortageReportsService(self.db)
 
@@ -99,19 +102,17 @@ class TestGetShortageReport:
         mock_report = MagicMock()
         mock_report.id = 1
         # Simulate: db.query().options().filter().first() = mock_report
-        (self.db.query.return_value
-             .options.return_value
-             .filter.return_value
-             .first.return_value) = mock_report
+        (self.db.query.return_value.options.return_value.filter.return_value.first.return_value) = (
+            mock_report
+        )
 
         result = self.service.get_shortage_report(1)
         assert result == mock_report
 
     def test_returns_none_when_not_found(self):
-        (self.db.query.return_value
-             .options.return_value
-             .filter.return_value
-             .first.return_value) = None
+        (self.db.query.return_value.options.return_value.filter.return_value.first.return_value) = (
+            None
+        )
 
         result = self.service.get_shortage_report(999)
         assert result is None
@@ -122,6 +123,7 @@ class TestConfirmShortageReport:
 
     def setup_method(self):
         from app.services.shortage.shortage_reports_service import ShortageReportsService
+
         self.db = MagicMock()
         self.service = ShortageReportsService(self.db)
 
@@ -160,6 +162,7 @@ class TestHandleShortageReport:
 
     def setup_method(self):
         from app.services.shortage.shortage_reports_service import ShortageReportsService
+
         self.db = MagicMock()
         self.service = ShortageReportsService(self.db)
 
@@ -194,6 +197,7 @@ class TestResolveShortageReport:
 
     def setup_method(self):
         from app.services.shortage.shortage_reports_service import ShortageReportsService
+
         self.db = MagicMock()
         self.service = ShortageReportsService(self.db)
 

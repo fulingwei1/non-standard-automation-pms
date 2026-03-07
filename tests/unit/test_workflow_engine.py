@@ -9,18 +9,18 @@ WorkflowEngine 单元测试
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timedelta
 from typing import List
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from app.services.approval_engine.workflow_engine import (
-    WorkflowEngine,
-    ApprovalRouter,
-)
 from app.services.approval_engine.models import (
-    ApprovalStatus,
     ApprovalDecision,
     ApprovalNodeRole,
+    ApprovalStatus,
+)
+from app.services.approval_engine.workflow_engine import (
+    ApprovalRouter,
+    WorkflowEngine,
 )
 
 
@@ -41,7 +41,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
         mock_flow.id = 1
         mock_flow.flow_code = "ECN_FLOW"
         mock_flow.nodes = [MagicMock(), MagicMock()]  # 2个节点
-        
+
         mock_query = MagicMock()
         self.db.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
@@ -83,7 +83,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
                 business_title="测试",
                 submitted_by=1,
             )
-        
+
         self.assertIn("不存在或未启用", str(ctx.exception))
 
     def test_generate_instance_no(self):
@@ -174,13 +174,13 @@ class TestWorkflowEngineCore(unittest.TestCase):
 
         self.assertTrue(result)
 
-    @patch('app.services.approval_engine.condition_parser.ConditionEvaluator')
+    @patch("app.services.approval_engine.condition_parser.ConditionEvaluator")
     def test_evaluate_node_conditions_simple_true(self, mock_evaluator_class):
         """测试条件评估返回True"""
         mock_node = MagicMock()
         mock_node.condition_expression = "amount >= 1000"
         mock_node.id = 1
-        
+
         mock_instance = MagicMock()
         mock_instance.id = 1
         mock_instance.flow_code = "ECN_FLOW"
@@ -206,13 +206,13 @@ class TestWorkflowEngineCore(unittest.TestCase):
         self.assertTrue(result)
         mock_evaluator.evaluate.assert_called_once()
 
-    @patch('app.services.approval_engine.condition_parser.ConditionEvaluator')
+    @patch("app.services.approval_engine.condition_parser.ConditionEvaluator")
     def test_evaluate_node_conditions_simple_false(self, mock_evaluator_class):
         """测试条件评估返回False"""
         mock_node = MagicMock()
         mock_node.condition_expression = "amount >= 10000"
         mock_node.id = 1
-        
+
         mock_instance = MagicMock()
         mock_instance.id = 1
         mock_instance.flow_code = "ECN_FLOW"
@@ -236,15 +236,15 @@ class TestWorkflowEngineCore(unittest.TestCase):
 
         self.assertFalse(result)
 
-    @patch('app.services.approval_engine.condition_parser.ConditionEvaluator')
+    @patch("app.services.approval_engine.condition_parser.ConditionEvaluator")
     def test_evaluate_node_conditions_parse_error(self, mock_evaluator_class):
         """测试条件解析失败，默认允许"""
         from app.services.approval_engine.condition_parser import ConditionParseError
-        
+
         mock_node = MagicMock()
         mock_node.condition_expression = "invalid {{ syntax"
         mock_node.id = 1
-        
+
         mock_instance = MagicMock()
         mock_instance.id = 1
         mock_instance.submitted_by = 1
@@ -345,7 +345,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
     def test_get_business_entity_data_sales_quote(self):
         """测试获取销售报价数据 - 模型可能不存在的情况"""
         data = self.engine._get_business_entity_data("SALES_QUOTE", 456)
-        
+
         # 根据环境，可能返回数据或空字典（模型不存在时）
         # 两种情况都是有效的，测试应该容忍
         self.assertIsInstance(data, dict)
@@ -388,31 +388,31 @@ class TestWorkflowEngineCore(unittest.TestCase):
         mock_flow.total_nodes = 2
 
         # Mock get_current_node
-        with patch.object(self.engine, 'get_current_node', return_value=mock_node):
+        with patch.object(self.engine, "get_current_node", return_value=mock_node):
             # Mock用户查询
             mock_user = MagicMock()
             mock_user.real_name = "审批人"
-            
+
             # Mock _find_next_node
             next_node = MagicMock()
             next_node.id = 2
-            
+
             def mock_query_side_effect(*args, **kwargs):
                 mock_q = MagicMock()
                 mock_q.filter.return_value = mock_q
                 mock_q.order_by.return_value = mock_q
                 # 第一次调用返回用户，第二次返回下一个节点
-                if hasattr(mock_query_side_effect, 'call_count'):
+                if hasattr(mock_query_side_effect, "call_count"):
                     mock_query_side_effect.call_count += 1
                 else:
                     mock_query_side_effect.call_count = 1
-                
+
                 if mock_query_side_effect.call_count == 1:
                     mock_q.first.return_value = mock_user
                 else:
                     mock_q.first.return_value = next_node
                 return mock_q
-            
+
             self.db.query.side_effect = mock_query_side_effect
 
             record = self.engine.submit_approval(
@@ -432,14 +432,14 @@ class TestWorkflowEngineCore(unittest.TestCase):
         """测试提交审批 - 无当前节点"""
         mock_instance = MagicMock()
 
-        with patch.object(self.engine, 'get_current_node', return_value=None):
+        with patch.object(self.engine, "get_current_node", return_value=None):
             with self.assertRaises(ValueError) as ctx:
                 self.engine.submit_approval(
                     mock_instance,
                     approver_id=10,
                     decision=ApprovalDecision.APPROVED,
                 )
-            
+
             self.assertIn("没有可审批的节点", str(ctx.exception))
 
     def test_submit_approval_condition_not_met(self):
@@ -447,15 +447,15 @@ class TestWorkflowEngineCore(unittest.TestCase):
         mock_instance = MagicMock()
         mock_node = MagicMock()
 
-        with patch.object(self.engine, 'get_current_node', return_value=mock_node):
-            with patch.object(self.engine, 'evaluate_node_conditions', return_value=False):
+        with patch.object(self.engine, "get_current_node", return_value=mock_node):
+            with patch.object(self.engine, "evaluate_node_conditions", return_value=False):
                 with self.assertRaises(ValueError) as ctx:
                     self.engine.submit_approval(
                         mock_instance,
                         approver_id=10,
                         decision=ApprovalDecision.APPROVED,
                     )
-                
+
                 self.assertIn("不满足审批条件", str(ctx.exception))
 
     # ========== _get_approver_name() 测试 ==========
@@ -514,9 +514,7 @@ class TestWorkflowEngineCore(unittest.TestCase):
         mock_instance.completed_nodes = 0
 
         self.engine._update_instance_status(
-            mock_instance,
-            ApprovalStatus.APPROVED,
-            completed_nodes=2
+            mock_instance, ApprovalStatus.APPROVED, completed_nodes=2
         )
 
         self.assertEqual(mock_instance.current_status, ApprovalStatus.APPROVED.value)
@@ -698,14 +696,14 @@ class TestApprovalFlowResolver(unittest.TestCase):
         mock_flow.module_name = "ECN"
 
         call_count = [0]
-        
+
         def mock_first():
             call_count[0] += 1
             if call_count[0] == 1:
                 return None  # 第一次按flow_code查询返回None
             else:
                 return mock_flow  # 第二次按module_name查询返回flow
-        
+
         mock_query = MagicMock()
         self.db.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
@@ -724,7 +722,7 @@ class TestApprovalFlowResolver(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.resolver.get_approval_flow("INVALID_FLOW")
-        
+
         self.assertIn("不存在或未启用", str(ctx.exception))
 
     def test_determine_approval_flow_ecn(self):
@@ -783,18 +781,12 @@ class TestApprovalRouter(unittest.TestCase):
 
     def test_determine_approval_flow_sales_invoice_small(self):
         """测试确定销售发票审批流程 - 小额"""
-        flow_code = self.router.determine_approval_flow(
-            "SALES_INVOICE",
-            {"amount": 30000}
-        )
+        flow_code = self.router.determine_approval_flow("SALES_INVOICE", {"amount": 30000})
         self.assertEqual(flow_code, "SALES_INVOICE_SINGLE")
 
     def test_determine_approval_flow_sales_invoice_large(self):
         """测试确定销售发票审批流程 - 大额"""
-        flow_code = self.router.determine_approval_flow(
-            "SALES_INVOICE",
-            {"amount": 80000}
-        )
+        flow_code = self.router.determine_approval_flow("SALES_INVOICE", {"amount": 80000})
         self.assertEqual(flow_code, "SALES_INVOICE_MULTI")
 
     def test_determine_approval_flow_sales_quote(self):

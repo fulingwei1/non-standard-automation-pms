@@ -37,9 +37,9 @@ def get_bom_item(db: Session, bom_id: int, material_id: int) -> dict:
         "unit": material.unit if material else None,
         "unit_price": float(material.unit_price) if material.unit_price else 0,
         "supplier_id": material.supplier_id if material else None,
-        "supplier_name": material.supplier.supplier_name
-        if material and material.supplier
-        else None,
+        "supplier_name": (
+            material.supplier.supplier_name if material and material.supplier else None
+        ),
     }
 
 
@@ -82,9 +82,9 @@ def get_bom_detail(
                 "unit_price": float(item.unit_price) if item.unit_price else 0,
                 "amount": float(item.amount) if item.amount else 0,
                 "source_type": item.source_type,
-                "required_date": item.required_date.strftime("%Y-%m-%d")
-                if item.required_date
-                else None,
+                "required_date": (
+                    item.required_date.strftime("%Y-%m-%d") if item.required_date else None
+                ),
                 "purchased_qty": item.purchased_qty or 0,
                 "received_qty": item.received_qty or 0,
                 "is_key_item": item.is_key_item,
@@ -160,9 +160,9 @@ def update_bom(
                 "unit_price": float(item.unit_price) if item.unit_price else 0,
                 "amount": float(item.amount) if item.amount else 0,
                 "source_type": item.source_type,
-                "required_date": item.required_date.strftime("%Y-%m-%d")
-                if item.required_date
-                else None,
+                "required_date": (
+                    item.required_date.strftime("%Y-%m-%d") if item.required_date else None
+                ),
                 "purchased_qty": item.purchased_qty or 0,
                 "received_qty": item.received_qty or 0,
                 "is_key_item": item.is_key_item,

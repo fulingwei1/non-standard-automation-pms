@@ -4,8 +4,9 @@ import pytest
 
 pytest.importorskip("app.services.project_review_ai.lesson_extractor")
 
-from unittest.mock import MagicMock, patch
 import json
+from unittest.mock import MagicMock, patch
+
 from app.services.project_review_ai.lesson_extractor import ProjectLessonExtractor
 
 
@@ -25,6 +26,7 @@ def test_extract_lessons_review_not_found():
 def _make_ai_response(lessons_data):
     """Build the expected dict format: {'content': '[...]'}"""
     import json
+
     return {"content": json.dumps(lessons_data)}
 
 

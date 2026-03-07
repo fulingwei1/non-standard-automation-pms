@@ -75,14 +75,14 @@ except ImportError:
 
 # 导出所有任务函数
 __all__ = [
-    'calculate_project_health',
-    'daily_health_snapshot',
-    'check_overdue_issues',
-    'check_blocking_issues',
-    'check_timeout_issues',
-    'daily_issue_statistics_snapshot',
-    'check_milestone_alerts',
-    'check_milestone_status_and_adjust_payments',
-    'check_milestone_risk_alerts',
-    'check_cost_overrun_alerts',
+    "calculate_project_health",
+    "daily_health_snapshot",
+    "check_overdue_issues",
+    "check_blocking_issues",
+    "check_timeout_issues",
+    "daily_issue_statistics_snapshot",
+    "check_milestone_alerts",
+    "check_milestone_status_and_adjust_payments",
+    "check_milestone_risk_alerts",
+    "check_cost_overrun_alerts",
 ]

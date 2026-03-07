@@ -35,9 +35,9 @@ def get_lead_requirement_detail(
     """
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
-    detail = db.query(LeadRequirementDetail).filter(
-        LeadRequirementDetail.lead_id == lead_id
-    ).first()
+    detail = (
+        db.query(LeadRequirementDetail).filter(LeadRequirementDetail.lead_id == lead_id).first()
+    )
 
     if not detail:
         raise HTTPException(status_code=404, detail="需求详情不存在")
@@ -50,13 +50,17 @@ def get_lead_requirement_detail(
 
     # 构建响应，包含 frozen_by_name
     response_data = LeadRequirementDetailResponse.model_validate(detail)
-    if hasattr(response_data, 'frozen_by_name'):
+    if hasattr(response_data, "frozen_by_name"):
         response_data.frozen_by_name = frozen_by_name
 
     return response_data
 
 
-@router.post("/leads/{lead_id}/requirement-detail", response_model=LeadRequirementDetailResponse, status_code=201)
+@router.post(
+    "/leads/{lead_id}/requirement-detail",
+    response_model=LeadRequirementDetailResponse,
+    status_code=201,
+)
 def create_lead_requirement_detail(
     *,
     db: Session = Depends(deps.get_db),
@@ -70,17 +74,14 @@ def create_lead_requirement_detail(
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 检查是否已存在
-    existing = db.query(LeadRequirementDetail).filter(
-        LeadRequirementDetail.lead_id == lead_id
-    ).first()
+    existing = (
+        db.query(LeadRequirementDetail).filter(LeadRequirementDetail.lead_id == lead_id).first()
+    )
 
     if existing:
         raise HTTPException(status_code=400, detail="该线索已存在需求详情，请使用更新接口")
 
-    detail = LeadRequirementDetail(
-        lead_id=lead_id,
-        **detail_in.model_dump()
-    )
+    detail = LeadRequirementDetail(lead_id=lead_id, **detail_in.model_dump())
 
     save_obj(db, detail)
 
@@ -100,9 +101,9 @@ def update_lead_requirement_detail(
     """
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
-    detail = db.query(LeadRequirementDetail).filter(
-        LeadRequirementDetail.lead_id == lead_id
-    ).first()
+    detail = (
+        db.query(LeadRequirementDetail).filter(LeadRequirementDetail.lead_id == lead_id).first()
+    )
 
     if not detail:
         raise HTTPException(status_code=404, detail="需求详情不存在")

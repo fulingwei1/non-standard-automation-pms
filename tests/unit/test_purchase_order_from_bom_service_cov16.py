@@ -2,15 +2,17 @@
 """
 第十六批：从BOM创建采购订单服务 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.purchase_order_from_bom_service import (
-        get_purchase_items_from_bom,
         determine_supplier_for_item,
+        get_purchase_items_from_bom,
         group_items_by_supplier,
     )
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -92,7 +94,7 @@ class TestGroupItemsBySupplier:
         # determine_supplier_for_item 会被调用
         with patch(
             "app.services.purchase_order_from_bom_service.determine_supplier_for_item",
-            side_effect=[5, 5]
+            side_effect=[5, 5],
         ):
             result = group_items_by_supplier(db, [item1, item2], default_supplier_id=5)
         assert 5 in result
@@ -104,7 +106,7 @@ class TestGroupItemsBySupplier:
         item2 = make_bom_item(id=2)
         with patch(
             "app.services.purchase_order_from_bom_service.determine_supplier_for_item",
-            side_effect=[3, 7]
+            side_effect=[3, 7],
         ):
             result = group_items_by_supplier(db, [item1, item2], default_supplier_id=None)
         assert 3 in result
@@ -115,7 +117,7 @@ class TestGroupItemsBySupplier:
         item = make_bom_item()
         with patch(
             "app.services.purchase_order_from_bom_service.determine_supplier_for_item",
-            return_value=None
+            return_value=None,
         ):
             result = group_items_by_supplier(db, [item], default_supplier_id=None)
         assert 0 in result

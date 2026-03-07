@@ -7,8 +7,8 @@ import logging
 from datetime import date, datetime
 
 from app.common.query_filters import apply_keyword_filter
-from app.models.alert import AlertRecord
 from app.dependencies import get_db_session
+from app.models.alert import AlertRecord
 from app.models.enums import AlertLevelEnum, AlertStatusEnum
 from app.models.project import ProjectMilestone
 
@@ -30,20 +30,15 @@ def check_milestone_alerts():
 
             db.commit()
 
-            logger.info(
-                f"[{datetime.now()}] 里程碑预警检查完成: "
-                f"生成 {alert_count} 个预警"
-            )
+            logger.info(f"[{datetime.now()}] 里程碑预警检查完成: " f"生成 {alert_count} 个预警")
 
-            return {
-                'alert_count': alert_count,
-                'timestamp': datetime.now().isoformat()
-            }
+            return {"alert_count": alert_count, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"[{datetime.now()}] 里程碑预警检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def check_milestone_status_and_adjust_payments():
@@ -68,8 +63,9 @@ def check_milestone_status_and_adjust_payments():
     except Exception as e:
         logger.error(f"[{datetime.now()}] 里程碑-收款计划调整检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def check_milestone_risk_alerts():
@@ -84,27 +80,27 @@ def check_milestone_risk_alerts():
             today = date.today()
 
             # 查询活跃项目
-            projects = db.query(Project).filter(
-                Project.is_active,
-                not Project.is_archived
-            ).all()
+            projects = db.query(Project).filter(Project.is_active, not Project.is_archived).all()
 
             risk_count = 0
 
             for project in projects:
                 # 获取项目的里程碑
-                milestones = db.query(ProjectMilestone).filter(
-                    ProjectMilestone.project_id == project.id,
-                    ProjectMilestone.status != 'COMPLETED'
-                ).all()
+                milestones = (
+                    db.query(ProjectMilestone)
+                    .filter(
+                        ProjectMilestone.project_id == project.id,
+                        ProjectMilestone.status != "COMPLETED",
+                    )
+                    .all()
+                )
 
                 if not milestones:
                     continue
 
                 # 计算风险指标
                 overdue_count = sum(
-                    1 for m in milestones
-                    if m.planned_date and m.planned_date < today
+                    1 for m in milestones if m.planned_date and m.planned_date < today
                 )
 
                 total_count = len(milestones)
@@ -114,9 +110,9 @@ def check_milestone_risk_alerts():
                 if risk_ratio >= 0.3:
                     # 检查是否已有预警
                     existing_query = db.query(AlertRecord).filter(
-                        AlertRecord.target_type == 'PROJECT',
+                        AlertRecord.target_type == "PROJECT",
                         AlertRecord.target_id == project.id,
-                        AlertRecord.status == 'PENDING'
+                        AlertRecord.status == "PENDING",
                     )
                     existing_query = apply_keyword_filter(
                         existing_query,
@@ -132,18 +128,21 @@ def check_milestone_risk_alerts():
 
                         alert = AlertRecord(
                             alert_no=alert_no,
-                            target_type='PROJECT',
+                            target_type="PROJECT",
                             target_id=project.id,
                             target_no=project.project_code,
                             target_name=project.project_name,
                             project_id=project.id,
-                            alert_level=AlertLevelEnum.WARNING.value
-                            if risk_ratio < 0.5 else AlertLevelEnum.CRITICAL.value,
-                            alert_title=f'里程碑风险预警：{project.project_name}',
-                            alert_content=f'项目 {project.project_code} 有 {overdue_count}/{total_count} '
-                                          f'个里程碑已逾期（{risk_ratio * 100:.1f}%），请及时关注',
+                            alert_level=(
+                                AlertLevelEnum.WARNING.value
+                                if risk_ratio < 0.5
+                                else AlertLevelEnum.CRITICAL.value
+                            ),
+                            alert_title=f"里程碑风险预警：{project.project_name}",
+                            alert_content=f"项目 {project.project_code} 有 {overdue_count}/{total_count} "
+                            f"个里程碑已逾期（{risk_ratio * 100:.1f}%），请及时关注",
                             status=AlertStatusEnum.PENDING.value,
-                            triggered_at=datetime.now()
+                            triggered_at=datetime.now(),
                         )
                         db.add(alert)
                         risk_count += 1
@@ -156,12 +155,13 @@ def check_milestone_risk_alerts():
             )
 
             return {
-                'checked_projects': len(projects),
-                'risk_alerts': risk_count,
-                'timestamp': datetime.now().isoformat()
+                "checked_projects": len(projects),
+                "risk_alerts": risk_count,
+                "timestamp": datetime.now().isoformat(),
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 里程碑风险预警检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}

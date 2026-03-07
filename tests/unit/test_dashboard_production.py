@@ -32,6 +32,7 @@ class TestGetStats:
     @patch("app.services.dashboard_adapters.production.month_start")
     def test_returns_five_cards(self, mock_ms):
         from datetime import date
+
         mock_ms.return_value = date(2025, 1, 1)
         a = _make_adapter()
 
@@ -65,6 +66,7 @@ class TestGetDetailedData:
     @patch("app.services.dashboard_adapters.production.month_start")
     def test_returns_response(self, mock_ms, mock_stats):
         from datetime import date
+
         mock_ms.return_value = date(2025, 1, 1)
         mock_stats.return_value = [
             MagicMock(key="k1", value="v1"),

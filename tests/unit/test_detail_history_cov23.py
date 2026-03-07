@@ -2,10 +2,11 @@
 """第二十三批：strategy/kpi_service/detail_history 单元测试"""
 import sys
 import types
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # 注入缺失的 health_calculator 模块，避免 ImportError
 _hc_mod = types.ModuleType("app.services.strategy.kpi_service.health_calculator")
@@ -91,8 +92,13 @@ class TestGetKpiDetail:
 
         with patch("app.services.strategy.kpi_service.detail_history.get_kpi", return_value=kpi):
             with patch.object(_hc_mod, "calculate_kpi_health", return_value={"level": "GOOD"}):
-                with patch.object(_hc_mod, "calculate_kpi_completion_rate", return_value=Decimal("80")):
-                    with patch("app.services.strategy.kpi_service.detail_history._calculate_trend", return_value="UP"):
+                with patch.object(
+                    _hc_mod, "calculate_kpi_completion_rate", return_value=Decimal("80")
+                ):
+                    with patch(
+                        "app.services.strategy.kpi_service.detail_history._calculate_trend",
+                        return_value="UP",
+                    ):
                         result = get_kpi_detail(db, 1)
         assert result is not None
         assert result.id == 1
@@ -110,8 +116,13 @@ class TestGetKpiDetail:
 
         with patch("app.services.strategy.kpi_service.detail_history.get_kpi", return_value=kpi):
             with patch.object(_hc_mod, "calculate_kpi_health", return_value={"level": "GOOD"}):
-                with patch.object(_hc_mod, "calculate_kpi_completion_rate", return_value=Decimal("80")):
-                    with patch("app.services.strategy.kpi_service.detail_history._calculate_trend", return_value="STABLE"):
+                with patch.object(
+                    _hc_mod, "calculate_kpi_completion_rate", return_value=Decimal("80")
+                ):
+                    with patch(
+                        "app.services.strategy.kpi_service.detail_history._calculate_trend",
+                        return_value="STABLE",
+                    ):
                         result = get_kpi_detail(db, 1)
         assert result.owner_name is None
 
@@ -158,7 +169,9 @@ class TestGetKpiHistory:
 class TestGetKpiWithHistory:
     def test_returns_none_when_no_detail(self):
         db = _make_db()
-        with patch("app.services.strategy.kpi_service.detail_history.get_kpi_detail", return_value=None):
+        with patch(
+            "app.services.strategy.kpi_service.detail_history.get_kpi_detail", return_value=None
+        ):
             result = get_kpi_with_history(db, 999)
         assert result is None
 
@@ -166,22 +179,43 @@ class TestGetKpiWithHistory:
         db = _make_db()
         mock_detail = MagicMock()
         mock_detail.model_dump.return_value = {
-            "id": 1, "name": "KPI", "csf_id": 10,
-            "code": "K1", "description": "", "ipooc_type": "O",
-            "unit": "%", "direction": "HIGHER",
-            "target_value": Decimal("100"), "baseline_value": Decimal("0"),
-            "current_value": Decimal("80"), "excellent_threshold": Decimal("95"),
-            "good_threshold": Decimal("80"), "warning_threshold": Decimal("60"),
-            "data_source_type": "MANUAL", "frequency": "MONTHLY",
-            "last_collected_at": None, "weight": 10,
-            "owner_user_id": None, "is_active": True,
-            "created_at": None, "updated_at": None,
-            "owner_name": None, "csf_name": None,
-            "csf_dimension": None, "completion_rate": Decimal("80"),
-            "health_level": "GOOD", "trend": "UP"
+            "id": 1,
+            "name": "KPI",
+            "csf_id": 10,
+            "code": "K1",
+            "description": "",
+            "ipooc_type": "O",
+            "unit": "%",
+            "direction": "HIGHER",
+            "target_value": Decimal("100"),
+            "baseline_value": Decimal("0"),
+            "current_value": Decimal("80"),
+            "excellent_threshold": Decimal("95"),
+            "good_threshold": Decimal("80"),
+            "warning_threshold": Decimal("60"),
+            "data_source_type": "MANUAL",
+            "frequency": "MONTHLY",
+            "last_collected_at": None,
+            "weight": 10,
+            "owner_user_id": None,
+            "is_active": True,
+            "created_at": None,
+            "updated_at": None,
+            "owner_name": None,
+            "csf_name": None,
+            "csf_dimension": None,
+            "completion_rate": Decimal("80"),
+            "health_level": "GOOD",
+            "trend": "UP",
         }
         mock_history = []
-        with patch("app.services.strategy.kpi_service.detail_history.get_kpi_detail", return_value=mock_detail):
-            with patch("app.services.strategy.kpi_service.detail_history.get_kpi_history", return_value=mock_history):
+        with patch(
+            "app.services.strategy.kpi_service.detail_history.get_kpi_detail",
+            return_value=mock_detail,
+        ):
+            with patch(
+                "app.services.strategy.kpi_service.detail_history.get_kpi_history",
+                return_value=mock_history,
+            ):
                 result = get_kpi_with_history(db, 1)
         assert result is not None

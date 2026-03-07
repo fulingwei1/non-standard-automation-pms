@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """质量管理服务单元测试 (QualityService)"""
-import pytest
 import statistics
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 
 def _make_db():
@@ -39,6 +40,7 @@ def _make_inspection(**kw):
 class TestCalculateSPCControlLimits:
     def test_insufficient_samples_raises_error(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         # 返回少于5个样本
         db.query.return_value.filter.return_value.all.return_value = [
@@ -50,11 +52,12 @@ class TestCalculateSPCControlLimits:
                 db=db,
                 material_id=10,
                 start_date=datetime(2024, 1, 1),
-                end_date=datetime(2024, 12, 31)
+                end_date=datetime(2024, 12, 31),
             )
 
     def test_spc_with_enough_samples(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         # 返回6个样本
         inspections = [
@@ -63,10 +66,7 @@ class TestCalculateSPCControlLimits:
         ]
         db.query.return_value.filter.return_value.all.return_value = inspections
         result = QualityService.calculate_spc_control_limits(
-            db=db,
-            material_id=10,
-            start_date=datetime(2024, 1, 1),
-            end_date=datetime(2024, 12, 31)
+            db=db, material_id=10, start_date=datetime(2024, 1, 1), end_date=datetime(2024, 12, 31)
         )
         assert "control_limits" in result
         assert "data_points" in result
@@ -77,6 +77,7 @@ class TestCalculateSPCControlLimits:
 class TestGetQualityTrend:
     def test_empty_inspections_returns_zero_stats(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         db.query.return_value.filter.return_value.all.return_value = []
         start = datetime(2024, 1, 1)
@@ -88,6 +89,7 @@ class TestGetQualityTrend:
 
     def test_with_inspections_calculates_avg_defect_rate(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         insp1 = _make_inspection(inspection_qty=100, defect_qty=5)
         insp2 = _make_inspection(inspection_qty=200, defect_qty=10)
@@ -105,6 +107,7 @@ class TestGetQualityTrend:
 class TestGetQualityStatistics:
     def test_returns_statistics_dict_structure(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         # 模拟 inspections 查询
         insp1 = _make_inspection(inspection_qty=100, qualified_qty=95, defect_qty=5)
@@ -114,7 +117,9 @@ class TestGetQualityStatistics:
         db.query.return_value = query_mock
         query_mock.filter.return_value.all.return_value = [insp1, insp2]
         query_mock.filter.return_value.count.return_value = 0
-        query_mock.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        query_mock.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         result = QualityService.get_quality_statistics(db)
         assert "total_inspections" in result
@@ -124,12 +129,15 @@ class TestGetQualityStatistics:
 
     def test_empty_data_returns_zero_rates(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         query_mock = MagicMock()
         db.query.return_value = query_mock
         query_mock.filter.return_value.all.return_value = []
         query_mock.filter.return_value.count.return_value = 0
-        query_mock.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        query_mock.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         result = QualityService.get_quality_statistics(db)
         assert result["overall_defect_rate"] == 0
@@ -139,6 +147,7 @@ class TestGetQualityStatistics:
 class TestBatchTracing:
     def test_no_records_raises_value_error(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         db.query.return_value.filter.return_value.all.return_value = []
         with pytest.raises(ValueError, match="未找到批次号"):
@@ -146,12 +155,13 @@ class TestBatchTracing:
 
     def test_existing_batch_returns_tracing_dict(self):
         from app.services.quality_service import QualityService
+
         db = _make_db()
         insp = _make_inspection(id=1, batch_no="BATCH-001")
         db.query.return_value.filter.return_value.all.side_effect = [
-            [insp],   # inspection 查询
-            [],       # defect analysis 查询
-            [],       # rework orders 查询
+            [insp],  # inspection 查询
+            [],  # defect analysis 查询
+            [],  # rework orders 查询
         ]
         result = QualityService.batch_tracing(db, "BATCH-001")
         assert "batch_no" in result
@@ -161,13 +171,20 @@ class TestBatchTracing:
 class TestAggregateByTime:
     def test_aggregate_by_day(self):
         from app.services.quality_service import QualityService
+
         insp1 = _make_inspection(
             inspection_date=datetime(2024, 1, 1),
-            inspection_qty=100, qualified_qty=95, defect_qty=5, defect_rate=Decimal("5.0")
+            inspection_qty=100,
+            qualified_qty=95,
+            defect_qty=5,
+            defect_rate=Decimal("5.0"),
         )
         insp2 = _make_inspection(
             inspection_date=datetime(2024, 1, 1),
-            inspection_qty=50, qualified_qty=48, defect_qty=2, defect_rate=Decimal("4.0")
+            inspection_qty=50,
+            qualified_qty=48,
+            defect_qty=2,
+            defect_rate=Decimal("4.0"),
         )
         result = QualityService._aggregate_by_time([insp1, insp2], "day")
         assert len(result) == 1  # 同一天合并
@@ -175,13 +192,20 @@ class TestAggregateByTime:
 
     def test_aggregate_by_month(self):
         from app.services.quality_service import QualityService
+
         insp1 = _make_inspection(
             inspection_date=datetime(2024, 1, 15),
-            inspection_qty=100, qualified_qty=95, defect_qty=5, defect_rate=Decimal("5.0")
+            inspection_qty=100,
+            qualified_qty=95,
+            defect_qty=5,
+            defect_rate=Decimal("5.0"),
         )
         insp2 = _make_inspection(
             inspection_date=datetime(2024, 2, 10),
-            inspection_qty=80, qualified_qty=76, defect_qty=4, defect_rate=Decimal("5.0")
+            inspection_qty=80,
+            qualified_qty=76,
+            defect_qty=4,
+            defect_rate=Decimal("5.0"),
         )
         result = QualityService._aggregate_by_time([insp1, insp2], "month")
         assert len(result) == 2  # 不同月份

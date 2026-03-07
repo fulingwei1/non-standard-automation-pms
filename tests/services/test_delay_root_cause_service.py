@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """DelayRootCauseService 单元测试"""
 
-import pytest
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestDelayRootCauseService:
 
     def _make_service(self):
         from app.services.delay_root_cause_service import DelayRootCauseService
+
         db = MagicMock()
         return DelayRootCauseService(db), db
 
@@ -29,15 +31,39 @@ class TestDelayRootCauseService:
         """按 delay_reason 分组统计"""
         svc, db = self._make_service()
         today = date.today()
-        t1 = MagicMock(actual_end=date(2025, 1, 11), plan_end=date(2025, 1, 1), delay_reason="SUPPLIER", task_name="A", id=1, project_id=1,
-                       plan_start_date=today, plan_end_date=today - timedelta(days=3),
-                       actual_end_date=today)
-        t2 = MagicMock(actual_end=date(2025, 1, 11), plan_end=date(2025, 1, 1), delay_reason="SUPPLIER", task_name="B", id=2, project_id=1,
-                       plan_start_date=today, plan_end_date=today - timedelta(days=2),
-                       actual_end_date=today)
-        t3 = MagicMock(actual_end=date(2025, 1, 11), plan_end=date(2025, 1, 1), delay_reason="DESIGN", task_name="C", id=3, project_id=2,
-                       plan_start_date=today, plan_end_date=today - timedelta(days=5),
-                       actual_end_date=today)
+        t1 = MagicMock(
+            actual_end=date(2025, 1, 11),
+            plan_end=date(2025, 1, 1),
+            delay_reason="SUPPLIER",
+            task_name="A",
+            id=1,
+            project_id=1,
+            plan_start_date=today,
+            plan_end_date=today - timedelta(days=3),
+            actual_end_date=today,
+        )
+        t2 = MagicMock(
+            actual_end=date(2025, 1, 11),
+            plan_end=date(2025, 1, 1),
+            delay_reason="SUPPLIER",
+            task_name="B",
+            id=2,
+            project_id=1,
+            plan_start_date=today,
+            plan_end_date=today - timedelta(days=2),
+            actual_end_date=today,
+        )
+        t3 = MagicMock(
+            actual_end=date(2025, 1, 11),
+            plan_end=date(2025, 1, 1),
+            delay_reason="DESIGN",
+            task_name="C",
+            id=3,
+            project_id=2,
+            plan_start_date=today,
+            plan_end_date=today - timedelta(days=5),
+            actual_end_date=today,
+        )
         db.query.return_value.filter.return_value.all.return_value = [t1, t2, t3]
         result = svc.analyze_root_cause()
         assert result["total_delayed_tasks"] == 3
@@ -50,10 +76,24 @@ class TestDelayRootCauseService:
         svc, db = self._make_service()
         today = date.today()
         # t1: reason A with 5 days delay, t2: reason B with 10 days delay -> B should be first
-        t1 = MagicMock(delay_reason="A", task_name="T1", id=1, project_id=1,
-                       plan_start=today, plan_end=date(2025, 1, 1), actual_end=date(2025, 1, 6))
-        t2 = MagicMock(delay_reason="B", task_name="T2", id=2, project_id=1,
-                       plan_start=today, plan_end=date(2025, 1, 1), actual_end=date(2025, 1, 11))
+        t1 = MagicMock(
+            delay_reason="A",
+            task_name="T1",
+            id=1,
+            project_id=1,
+            plan_start=today,
+            plan_end=date(2025, 1, 1),
+            actual_end=date(2025, 1, 6),
+        )
+        t2 = MagicMock(
+            delay_reason="B",
+            task_name="T2",
+            id=2,
+            project_id=1,
+            plan_start=today,
+            plan_end=date(2025, 1, 1),
+            actual_end=date(2025, 1, 11),
+        )
         db.query.return_value.filter.return_value.all.return_value = [t1, t2]
         result = svc.analyze_root_cause()
         assert result["root_causes"][0]["reason"] == "B"
@@ -101,8 +141,12 @@ class TestDelayRootCauseService:
     def test_analyze_impact_no_delayed_projects(self):
         """无延期项目时成本影响为0"""
         svc, db = self._make_service()
-        p = MagicMock(status="IN_PROGRESS", plan_end_date=date.today() + timedelta(days=30),
-                      actual_end_date=None, contract_amount=None)
+        p = MagicMock(
+            status="IN_PROGRESS",
+            plan_end_date=date.today() + timedelta(days=30),
+            actual_end_date=None,
+            contract_amount=None,
+        )
         db.query.return_value.filter.return_value.all.return_value = [p]
         result = svc.analyze_impact()
         assert result["cost_impact"]["total"] == 0.0

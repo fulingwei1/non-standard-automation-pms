@@ -28,10 +28,7 @@ class TestMilestoneCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/milestones/", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -46,10 +43,7 @@ class TestMilestoneCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -62,8 +56,7 @@ class TestMilestoneCRUD:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/projects/{project_id}/milestones",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/milestones/projects/{project_id}/milestones", headers=headers
         )
 
         assert response.status_code == 200
@@ -78,9 +71,7 @@ class TestMilestoneCRUD:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/",
-            params={"status": "pending"},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/milestones/", params={"status": "pending"}, headers=headers
         )
 
         assert response.status_code == 200
@@ -96,10 +87,7 @@ class TestMilestoneCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -119,9 +107,7 @@ class TestMilestoneCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/milestones/",
-            json=milestone_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/milestones/", json=milestone_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -141,10 +127,7 @@ class TestMilestoneCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取里程碑列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/milestones/", headers=headers)
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No milestones available for testing")
@@ -152,8 +135,7 @@ class TestMilestoneCRUD:
         milestone_id = list_response.json()[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/{milestone_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/milestones/{milestone_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -166,10 +148,7 @@ class TestMilestoneCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/milestones/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -181,10 +160,7 @@ class TestMilestoneCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取里程碑列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/milestones/", headers=headers)
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No milestones available for testing")
@@ -197,9 +173,7 @@ class TestMilestoneCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/milestones/{milestone_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/milestones/{milestone_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -215,10 +189,7 @@ class TestMilestoneCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取里程碑列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/milestones/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/milestones/", headers=headers)
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No milestones available for testing")
@@ -237,8 +208,7 @@ class TestMilestoneCRUD:
         milestone_id = pending_milestone["id"]
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/milestones/{milestone_id}/complete",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/milestones/{milestone_id}/complete", headers=headers
         )
 
         if response.status_code == 403:
@@ -258,9 +228,6 @@ class TestMilestoneDelete:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/milestones/99999",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/milestones/99999", headers=headers)
 
         assert response.status_code in [404, 403]  # 可能返回403如果没有权限

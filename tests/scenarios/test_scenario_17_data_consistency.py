@@ -3,16 +3,19 @@
 
 测试跨表、跨模块的数据一致性保证
 """
-import pytest
+
 from datetime import date, datetime
 from decimal import Decimal
-from sqlalchemy.orm import Session
+
+import pytest
 from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 try:
-    from app.models.project import Project, Customer
+    from app.models.material import InventoryTransaction, Material, MaterialInventory
+    from app.models.project import Customer, Project
     from app.models.sales.contracts import Contract
     from app.models.sales.invoices import Invoice
-    from app.models.material import Material, MaterialInventory, InventoryTransaction
 except ImportError as e:
     pytest.skip(f"Required models not available: {e}", allow_module_level=True)
 
@@ -95,7 +98,7 @@ class TestDataConsistency:
 
         # 创建发票（含税）
         tax_rate = Decimal("0.13")
-        
+
         # 预付30%
         inv1_amount = contract.total_amount * Decimal("0.3")
         inv1_tax = inv1_amount * tax_rate
@@ -149,17 +152,15 @@ class TestDataConsistency:
         db_session.commit()
 
         # 验证发票总额（不含税）= 合同金额
-        total_invoice_amount = db_session.query(
-            func.sum(Invoice.amount)
-        ).filter(
-            Invoice.contract_id == contract.id
-        ).scalar()
+        total_invoice_amount = (
+            db_session.query(func.sum(Invoice.amount))
+            .filter(Invoice.contract_id == contract.id)
+            .scalar()
+        )
 
         assert total_invoice_amount == contract.total_amount
 
-    def test_03_inventory_transaction_balance(
-        self, db_session: Session
-    ):
+    def test_03_inventory_transaction_balance(self, db_session: Session):
         """测试3：库存交易流水与库存余额一致性"""
         # 创建物料
         material = Material(
@@ -208,22 +209,18 @@ class TestDataConsistency:
             else:
                 inventory.quantity -= trans_data["qty"]
                 inventory.available_quantity -= trans_data["qty"]
-        
+
         db_session.commit()
 
         # 验证库存余额 = 交易流水合计
-        total_in = db_session.query(
-            func.sum(InventoryTransaction.quantity)
-        ).filter(
+        total_in = db_session.query(func.sum(InventoryTransaction.quantity)).filter(
             InventoryTransaction.material_id == material.id,
-            InventoryTransaction.transaction_type == "IN"
+            InventoryTransaction.transaction_type == "IN",
         ).scalar() or Decimal("0")
 
-        total_out = db_session.query(
-            func.sum(InventoryTransaction.quantity)
-        ).filter(
+        total_out = db_session.query(func.sum(InventoryTransaction.quantity)).filter(
             InventoryTransaction.material_id == material.id,
-            InventoryTransaction.transaction_type == "OUT"
+            InventoryTransaction.transaction_type == "OUT",
         ).scalar() or Decimal("0")
 
         expected_balance = total_in - total_out
@@ -248,15 +245,13 @@ class TestDataConsistency:
         db_session.commit()
 
         # 统计项目数
-        project_count = db_session.query(Project).filter(
-            Project.customer_id == consistency_customer.id
-        ).count()
+        project_count = (
+            db_session.query(Project).filter(Project.customer_id == consistency_customer.id).count()
+        )
 
         assert project_count == 5
 
-    def test_05_foreign_key_integrity(
-        self, db_session: Session, consistency_customer: Customer
-    ):
+    def test_05_foreign_key_integrity(self, db_session: Session, consistency_customer: Customer):
         """测试5：外键完整性"""
         # 创建项目
         project = Project(
@@ -272,9 +267,7 @@ class TestDataConsistency:
         db_session.commit()
 
         # 验证外键关联
-        proj = db_session.query(Project).filter(
-            Project.id == project.id
-        ).first()
+        proj = db_session.query(Project).filter(Project.id == project.id).first()
         assert proj.customer_id == consistency_customer.id
 
         # 尝试删除被引用的客户（应该失败或级联）
@@ -285,9 +278,7 @@ class TestDataConsistency:
         except Exception:
             db_session.rollback()
             # 验证项目仍然存在
-            proj_after = db_session.query(Project).filter(
-                Project.id == project.id
-            ).first()
+            proj_after = db_session.query(Project).filter(Project.id == project.id).first()
             assert proj_after is not None
 
     def test_06_cascading_update_consistency(
@@ -325,15 +316,13 @@ class TestDataConsistency:
 
         # 如果配置了级联更新，发票可能也需要更新状态
         # 这里手动更新演示一致性
-        db_session.query(Invoice).filter(
-            Invoice.contract_id == contract.id
-        ).update({"related_contract_status": contract.status})
+        db_session.query(Invoice).filter(Invoice.contract_id == contract.id).update(
+            {"related_contract_status": contract.status}
+        )
         db_session.commit()
 
         # 验证所有发票都关联到正确的合同状态
-        invoices = db_session.query(Invoice).filter(
-            Invoice.contract_id == contract.id
-        ).all()
+        invoices = db_session.query(Invoice).filter(Invoice.contract_id == contract.id).all()
         assert all(inv.contract_id == contract.id for inv in invoices)
 
     def test_07_aggregate_data_consistency(
@@ -366,9 +355,7 @@ class TestDataConsistency:
         # 验证进度计算正确
         assert project.progress == 30
 
-    def test_08_denormalized_data_sync(
-        self, db_session: Session, consistency_customer: Customer
-    ):
+    def test_08_denormalized_data_sync(self, db_session: Session, consistency_customer: Customer):
         """测试8：冗余数据同步"""
         # 创建项目（冗余存储客户名称）
         project = Project(
@@ -389,17 +376,15 @@ class TestDataConsistency:
         db_session.commit()
 
         # 同步更新项目中的冗余数据
-        db_session.query(Project).filter(
-            Project.customer_id == consistency_customer.id
-        ).update({"customer_name": consistency_customer.customer_name})
+        db_session.query(Project).filter(Project.customer_id == consistency_customer.id).update(
+            {"customer_name": consistency_customer.customer_name}
+        )
         db_session.commit()
 
         db_session.refresh(project)
         assert project.customer_name == "更新后的客户名称"
 
-    def test_09_temporal_consistency(
-        self, db_session: Session, consistency_customer: Customer
-    ):
+    def test_09_temporal_consistency(self, db_session: Session, consistency_customer: Customer):
         """测试9：时间一致性"""
         from datetime import timedelta
 

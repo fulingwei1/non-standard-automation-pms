@@ -8,14 +8,14 @@ File Size: 60 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
+
 import app.services.job_duty_task_service
-
-
 
 
 class TestJobDutyTaskService:
@@ -25,29 +25,29 @@ class TestJobDutyTaskService:
         """测试 should_generate_task 函数"""
         # TODO: 实现测试逻辑
         from app.services.job_duty_task_service import should_generate_task
-        pass
 
+        pass
 
     def test_find_template_users(self):
         """测试 find_template_users 函数"""
         # TODO: 实现测试逻辑
         from app.services.job_duty_task_service import find_template_users
-        pass
 
+        pass
 
     def test_create_task_from_template(self):
         """测试 create_task_from_template 函数"""
         # TODO: 实现测试逻辑
         from app.services.job_duty_task_service import create_task_from_template
-        pass
 
+        pass
 
     def test_check_task_exists(self):
         """测试 check_task_exists 函数"""
         # TODO: 实现测试逻辑
         from app.services.job_duty_task_service import check_task_exists
-        pass
 
+        pass
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

@@ -46,9 +46,7 @@ def update_stage_status(
     支持设置 DELAYED（延期）和 BLOCKED（受阻）状态。
     """
     stage = (
-        db.query(ProjectStageInstance)
-        .filter(ProjectStageInstance.id == stage_instance_id)
-        .first()
+        db.query(ProjectStageInstance).filter(ProjectStageInstance.id == stage_instance_id).first()
     )
 
     if not stage:
@@ -101,9 +99,7 @@ def submit_stage_review(
     记录阶段的评审结果（通过/有条件通过/未通过）。
     """
     stage = (
-        db.query(ProjectStageInstance)
-        .filter(ProjectStageInstance.id == stage_instance_id)
-        .first()
+        db.query(ProjectStageInstance).filter(ProjectStageInstance.id == stage_instance_id).first()
     )
 
     if not stage:

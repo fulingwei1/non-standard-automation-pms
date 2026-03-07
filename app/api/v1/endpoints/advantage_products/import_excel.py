@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.services.import_export_engine import ImportExportEngine
 from app.models.user import User
 from app.schemas.advantage_product import AdvantageProductImportResult
+from app.services.import_export_engine import ImportExportEngine
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ async def import_from_excel(
     file: UploadFile = File(..., description="Excel 文件"),
     clear_existing: bool = Query(True, description="是否先清空现有数据"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("advantage_product:create"))
+    current_user: User = Depends(security.require_permission("advantage_product:create")),
 ):
     """从 Excel 文件导入优势产品"""
     from app.services.advantage_product_import_service import (
@@ -33,15 +33,13 @@ async def import_from_excel(
         import pandas as pd
     except ImportError:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="服务器未安装 pandas 库"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="服务器未安装 pandas 库"
         )
 
     # 验证文件类型
-    if not file.filename.endswith(('.xlsx', '.xls')):
+    if not file.filename.endswith((".xlsx", ".xls")):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="请上传 Excel 文件 (.xlsx 或 .xls)"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="请上传 Excel 文件 (.xlsx 或 .xls)"
         )
 
     errors = []
@@ -73,7 +71,9 @@ async def import_from_excel(
                 cell_str = str(cell_value).strip()
 
                 # 检查是否是系列编号
-                product_code, product_name = parse_product_from_cell(cell_str, current_series, row_idx, col_idx)
+                product_code, product_name = parse_product_from_cell(
+                    cell_str, current_series, row_idx, col_idx
+                )
 
                 if product_code is None:
                     current_series = product_name
@@ -100,7 +100,7 @@ async def import_from_excel(
             products_updated=products_updated,
             products_skipped=products_skipped,
             errors=errors,
-            message=f"导入成功：创建 {categories_created} 个类别，{products_created} 个产品"
+            message=f"导入成功：创建 {categories_created} 个类别，{products_created} 个产品",
         )
 
     except Exception as e:
@@ -113,5 +113,5 @@ async def import_from_excel(
             products_updated=0,
             products_skipped=0,
             errors=errors,
-            message=f"导入失败：{str(e)}"
+            message=f"导入失败：{str(e)}",
         )

@@ -6,7 +6,9 @@ import pytest
 
 try:
     from unittest.mock import MagicMock, patch
+
     from app.services.data_scope.custom_rule import CustomRuleService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -63,9 +65,7 @@ class TestValidateScopeConfig:
 
     def test_sql_expression_type_valid(self):
         config = {
-            "conditions": [
-                {"type": "sql_expression", "expression": "created_by = {{user_id}}"}
-            ]
+            "conditions": [{"type": "sql_expression", "expression": "created_by = {{user_id}}"}]
         }
         errors = CustomRuleService.validate_scope_config(config)
         assert errors == []

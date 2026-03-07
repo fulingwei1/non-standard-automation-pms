@@ -11,12 +11,12 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.core.schemas import paginated_response, success_response
 from app.models.notification import Notification
 from app.models.user import User
-from app.common.query_filters import apply_pagination
 from app.schemas.notification import (
     BatchReadRequest,
     NotificationResponse,
@@ -55,7 +55,9 @@ def read_notifications(
     total = query.count()
 
     # 分页
-    notifications = apply_pagination(query.order_by(desc(Notification.created_at)), pagination.offset, pagination.limit).all()
+    notifications = apply_pagination(
+        query.order_by(desc(Notification.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     # 构建响应数据（link_params/extra_data 仅接受 dict，避免 DB 中非 dict 导致校验失败）
     items = []
@@ -66,30 +68,29 @@ def read_notifications(
         extra_data = notification.extra_data
         if extra_data is not None and not isinstance(extra_data, dict):
             extra_data = None
-        items.append(NotificationResponse(
-            id=notification.id,
-            user_id=notification.user_id,
-            notification_type=notification.notification_type,
-            source_type=notification.source_type,
-            source_id=notification.source_id,
-            title=notification.title,
-            content=notification.content,
-            link_url=notification.link_url,
-            link_params=link_params,
-            is_read=notification.is_read,
-            read_at=notification.read_at,
-            priority=notification.priority,
-            extra_data=extra_data,
-            created_at=notification.created_at,
-            updated_at=notification.updated_at,
-        ))
+        items.append(
+            NotificationResponse(
+                id=notification.id,
+                user_id=notification.user_id,
+                notification_type=notification.notification_type,
+                source_type=notification.source_type,
+                source_id=notification.source_id,
+                title=notification.title,
+                content=notification.content,
+                link_url=notification.link_url,
+                link_params=link_params,
+                is_read=notification.is_read,
+                read_at=notification.read_at,
+                priority=notification.priority,
+                extra_data=extra_data,
+                created_at=notification.created_at,
+                updated_at=notification.updated_at,
+            )
+        )
 
     # 使用统一响应格式
     return paginated_response(
-        items=items,
-        total=total,
-        page=pagination.page,
-        page_size=pagination.page_size
+        items=items, total=total, page=pagination.page, page_size=pagination.page_size
     )
 
 
@@ -110,10 +111,7 @@ def get_unread_count(
     )
 
     # 使用统一响应格式
-    return success_response(
-        data={"unread_count": count},
-        message="获取未读数量成功"
-    )
+    return success_response(data={"unread_count": count}, message="获取未读数量成功")
 
 
 @router.put("/{notification_id}/read")
@@ -143,10 +141,7 @@ def mark_notification_read(
         db.commit()
 
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="通知已标记为已读"
-    )
+    return success_response(data=None, message="通知已标记为已读")
 
 
 @router.put("/batch-read")
@@ -184,8 +179,7 @@ def batch_mark_read(
 
     # 使用统一响应格式
     return success_response(
-        data={"count": len(notifications)},
-        message=f"已标记 {len(notifications)} 条通知为已读"
+        data={"count": len(notifications)}, message=f"已标记 {len(notifications)} 条通知为已读"
     )
 
 
@@ -202,19 +196,13 @@ def mark_all_read(
         db.query(Notification)
         .filter(Notification.user_id == current_user.id)
         .filter(not Notification.is_read)
-        .update({
-            Notification.is_read: True,
-            Notification.read_at: datetime.now()
-        })
+        .update({Notification.is_read: True, Notification.read_at: datetime.now()})
     )
 
     db.commit()
 
     # 使用统一响应格式
-    return success_response(
-        data={"count": count},
-        message=f"已标记 {count} 条通知为已读"
-    )
+    return success_response(data={"count": count}, message=f"已标记 {count} 条通知为已读")
 
 
 @router.delete("/{notification_id}")
@@ -241,7 +229,4 @@ def delete_notification(
     db.commit()
 
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="通知已删除"
-    )
+    return success_response(data=None, message="通知已删除")

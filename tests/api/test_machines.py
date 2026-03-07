@@ -6,9 +6,9 @@
 """
 
 import uuid
+from typing import Optional
 
 import pytest
-from typing import Optional
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
@@ -20,10 +20,7 @@ def _auth_headers(token: str) -> dict:
 
 def _get_first_project(client: TestClient, token: str) -> Optional[dict]:
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -39,8 +36,7 @@ def _get_first_project(client: TestClient, token: str) -> Optional[dict]:
 def _ensure_machine(client: TestClient, token: str, project_id: int) -> Optional[dict]:
     headers = _auth_headers(token)
     list_response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
-        headers=headers
+        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/", headers=headers
     )
 
     if list_response.status_code == 200:
@@ -58,7 +54,7 @@ def _ensure_machine(client: TestClient, token: str, project_id: int) -> Optional
     create_response = client.post(
         f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
         json=machine_data,
-        headers=headers
+        headers=headers,
     )
     if create_response.status_code in [200, 201]:
         return create_response.json()
@@ -81,7 +77,7 @@ class TestMachineCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -108,7 +104,7 @@ class TestMachineCRUD:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/",
             json=machine_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -138,7 +134,7 @@ class TestMachineCRUD:
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -166,7 +162,7 @@ class TestMachineCRUD:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -195,7 +191,7 @@ class TestMachineProgress:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/progress",
             params={"progress_pct": 50},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -225,7 +221,7 @@ class TestMachineBom:
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/bom",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -252,7 +248,7 @@ class TestMachineServiceHistory:
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/service-history",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -277,7 +273,7 @@ class TestMachineDocuments:
         headers = _auth_headers(admin_token)
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/{machine['id']}/documents",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -297,8 +293,7 @@ class TestMachineDelete:
 
         headers = _auth_headers(admin_token)
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project['id']}/machines/99999", headers=headers
         )
 
         assert response.status_code in [404, 403]  # 可能返回403如果没有权限

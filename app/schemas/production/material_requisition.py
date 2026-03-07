@@ -16,11 +16,12 @@ from pydantic import BaseModel, Field
 
 from ..common import BaseSchema, PaginatedResponse, TimestampSchema
 
-
 # ==================== 生产领料 ====================
+
 
 class MaterialRequisitionItemCreate(BaseModel):
     """创建领料单明细"""
+
     material_id: int = Field(description="物料ID")
     request_qty: Decimal = Field(description="申请数量")
     remark: Optional[str] = None
@@ -28,6 +29,7 @@ class MaterialRequisitionItemCreate(BaseModel):
 
 class MaterialRequisitionCreate(BaseModel):
     """创建领料单"""
+
     work_order_id: Optional[int] = Field(default=None, description="关联工单ID")
     project_id: Optional[int] = Field(default=None, description="项目ID")
     apply_reason: Optional[str] = Field(default=None, description="申请原因")
@@ -37,6 +39,7 @@ class MaterialRequisitionCreate(BaseModel):
 
 class MaterialRequisitionItemResponse(BaseSchema):
     """领料单明细响应"""
+
     id: int
     requisition_id: int
     material_id: int
@@ -51,6 +54,7 @@ class MaterialRequisitionItemResponse(BaseSchema):
 
 class MaterialRequisitionResponse(TimestampSchema):
     """领料单响应"""
+
     id: int
     requisition_no: str
     work_order_id: Optional[int] = None
@@ -73,6 +77,5 @@ class MaterialRequisitionResponse(TimestampSchema):
 
 class MaterialRequisitionListResponse(PaginatedResponse):
     """领料单列表响应"""
+
     items: List[MaterialRequisitionResponse]
-
-

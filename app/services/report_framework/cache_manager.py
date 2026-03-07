@@ -29,10 +29,11 @@ class ReportCacheManager:
         """
         self.default_ttl = default_ttl
         self._cache: Dict[str, Any] = {}
-        
+
         # 尝试使用Redis缓存
         try:
             from app.services.cache.redis_cache import get_cache
+
             self.redis_cache = get_cache()
             self.use_redis = self.redis_cache.is_available()
             if self.use_redis:
@@ -72,7 +73,7 @@ class ReportCacheManager:
             Any: 缓存的报告数据，不存在返回None
         """
         key = self._generate_key(report_code, params)
-        
+
         if self.use_redis:
             try:
                 return self.redis_cache.get(key)
@@ -100,7 +101,7 @@ class ReportCacheManager:
         """
         key = self._generate_key(report_code, params)
         ttl = ttl or self.default_ttl
-        
+
         if self.use_redis:
             try:
                 self.redis_cache.set(key, data, expire=ttl)

@@ -4,7 +4,7 @@
 用于存储法定节假日、调休日等，支持工时类型判断
 """
 
-from sqlalchemy import Column, Integer, String, Date, Boolean, Text, Index
+from sqlalchemy import Boolean, Column, Date, Index, Integer, String, Text
 
 from .base import Base, TimestampMixin
 
@@ -16,38 +16,39 @@ class Holiday(Base, TimestampMixin):
     - 法定节假日（如春节、国庆等）
     - 调休工作日（原本是周末但需要上班的日子）
     - 公司特殊假期（如年会等）
-    
-    【状态】未启用 - 节假日管理"""
-    __tablename__ = 'holidays'
 
-    id = Column(Integer, primary_key=True, autoincrement=True, comment='主键ID')
+    【状态】未启用 - 节假日管理"""
+
+    __tablename__ = "holidays"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
     # 日期信息
-    holiday_date = Column(Date, nullable=False, unique=True, comment='日期')
-    year = Column(Integer, nullable=False, comment='年份')
+    holiday_date = Column(Date, nullable=False, unique=True, comment="日期")
+    year = Column(Integer, nullable=False, comment="年份")
 
     # 类型
-    holiday_type = Column(String(20), nullable=False, comment='类型')
+    holiday_type = Column(String(20), nullable=False, comment="类型")
     # HOLIDAY: 法定节假日（放假）
     # WORKDAY: 调休工作日（周末上班）
     # COMPANY: 公司假期
 
     # 名称和说明
-    name = Column(String(100), nullable=False, comment='节假日名称')
-    description = Column(Text, comment='说明')
+    name = Column(String(100), nullable=False, comment="节假日名称")
+    description = Column(Text, comment="说明")
 
     # 状态
-    is_active = Column(Boolean, default=True, comment='是否启用')
+    is_active = Column(Boolean, default=True, comment="是否启用")
 
     __table_args__ = (
-        Index('idx_holiday_date', 'holiday_date'),
-        Index('idx_holiday_year', 'year'),
-        Index('idx_holiday_type', 'holiday_type'),
-        {'comment': '节假日配置表'}
+        Index("idx_holiday_date", "holiday_date"),
+        Index("idx_holiday_year", "year"),
+        Index("idx_holiday_type", "holiday_type"),
+        {"comment": "节假日配置表"},
     )
 
     def __repr__(self):
-        return f'<Holiday {self.holiday_date} {self.name}>'
+        return f"<Holiday {self.holiday_date} {self.name}>"
 
 
 class HolidayService:
@@ -65,11 +66,15 @@ class HolidayService:
         Returns:
             bool: 是否为节假日
         """
-        holiday = db.query(Holiday).filter(
-            Holiday.holiday_date == check_date,
-            Holiday.holiday_type == 'HOLIDAY',
-            Holiday.is_active
-        ).first()
+        holiday = (
+            db.query(Holiday)
+            .filter(
+                Holiday.holiday_date == check_date,
+                Holiday.holiday_type == "HOLIDAY",
+                Holiday.is_active,
+            )
+            .first()
+        )
         return holiday is not None
 
     @staticmethod
@@ -84,11 +89,15 @@ class HolidayService:
         Returns:
             bool: 是否为调休工作日
         """
-        workday = db.query(Holiday).filter(
-            Holiday.holiday_date == check_date,
-            Holiday.holiday_type == 'WORKDAY',
-            Holiday.is_active
-        ).first()
+        workday = (
+            db.query(Holiday)
+            .filter(
+                Holiday.holiday_date == check_date,
+                Holiday.holiday_type == "WORKDAY",
+                Holiday.is_active,
+            )
+            .first()
+        )
         return workday is not None
 
     @staticmethod
@@ -129,8 +138,7 @@ class HolidayService:
         Returns:
             str: 节假日名称，如果不是节假日返回None
         """
-        holiday = db.query(Holiday).filter(
-            Holiday.holiday_date == check_date,
-            Holiday.is_active
-        ).first()
+        holiday = (
+            db.query(Holiday).filter(Holiday.holiday_date == check_date, Holiday.is_active).first()
+        )
         return holiday.name if holiday else None

@@ -3,13 +3,14 @@
 Unit tests for app/services/win_rate_prediction_service/service.py
 (async service using AsyncSession)
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.win_rate_prediction_service.service import WinRatePredictionService
     from app.models.sales.presale_ai_win_rate import WinRateResultEnum
+    from app.services.win_rate_prediction_service.service import WinRatePredictionService
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -17,6 +18,7 @@ except ImportError as e:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_service():
     """Build a WinRatePredictionService with a mocked async db."""
@@ -47,6 +49,7 @@ def _sync_scalars_result(values):
 # get_prediction
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_prediction_found():
     svc, db = _make_service()
@@ -68,6 +71,7 @@ async def test_get_prediction_not_found():
 # get_predictions_by_ticket
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_predictions_by_ticket_returns_list():
     svc, db = _make_service()
@@ -80,6 +84,7 @@ async def test_get_predictions_by_ticket_returns_list():
 # ---------------------------------------------------------------------------
 # get_influencing_factors
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_influencing_factors_no_prediction():
@@ -111,6 +116,7 @@ async def test_get_influencing_factors_sorted_top5():
 # get_competitor_analysis / get_improvement_suggestions
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_competitor_analysis_none():
     svc, db = _make_service()
@@ -132,6 +138,7 @@ async def test_get_improvement_suggestions_returns_data():
 # ---------------------------------------------------------------------------
 # get_model_accuracy
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_model_accuracy_structure():

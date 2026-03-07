@@ -8,14 +8,14 @@ File Size: 8 lines
 Batch: 3
 """
 
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 from sqlalchemy.orm import Session
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
-from decimal import Decimal
+
 from app.services.alert_rule_engine.level_determiner import LevelDeterminer
-
-
 
 
 class TestLevelDeterminer:
@@ -25,9 +25,8 @@ class TestLevelDeterminer:
         """测试服务初始化"""
         service = LevelDeterminer(db_session)
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_determine_alert_level(self, db_session: Session):
         """测试 determine_alert_level 方法"""
@@ -36,7 +35,6 @@ class TestLevelDeterminer:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

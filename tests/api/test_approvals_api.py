@@ -35,10 +35,7 @@ class TestApprovalTemplatesAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Approvals templates endpoint not found")
@@ -56,7 +53,7 @@ class TestApprovalTemplatesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/approvals/templates",
             params={"is_active": True, "page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -78,9 +75,7 @@ class TestApprovalTemplatesAPI:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/approvals/templates",
-            json=template_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates", json=template_data, headers=headers
         )
 
         if response.status_code == 404:
@@ -100,10 +95,7 @@ class TestApprovalTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取模板列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates", headers=headers)
 
         if list_response.status_code == 404:
             pytest.skip("Approvals templates endpoint not found")
@@ -117,8 +109,7 @@ class TestApprovalTemplatesAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/{template_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/{template_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -131,10 +122,7 @@ class TestApprovalTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取模板列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates", headers=headers)
 
         if list_response.status_code == 404:
             pytest.skip("Approvals templates endpoint not found")
@@ -154,7 +142,7 @@ class TestApprovalTemplatesAPI:
         response = client.put(
             f"{settings.API_V1_PREFIX}/approvals/templates/{template_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -170,10 +158,7 @@ class TestApprovalTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取模板列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates", headers=headers)
 
         if list_response.status_code == 404:
             pytest.skip("Approvals templates endpoint not found")
@@ -187,8 +172,7 @@ class TestApprovalTemplatesAPI:
 
         # 获取流程列表
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/{template_id}/flows",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/{template_id}/flows", headers=headers
         )
 
         if response.status_code == 404:
@@ -204,10 +188,7 @@ class TestApprovalTemplatesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取模板列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/approvals/templates", headers=headers)
 
         if list_response.status_code == 404:
             pytest.skip("Approvals templates endpoint not found")
@@ -221,8 +202,7 @@ class TestApprovalTemplatesAPI:
 
         # 获取路由规则
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/{template_id}/rules",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/{template_id}/rules", headers=headers
         )
 
         if response.status_code == 404:
@@ -243,10 +223,7 @@ class TestApprovalInstancesAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/instances", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Approvals instances endpoint not found")
@@ -264,7 +241,7 @@ class TestApprovalInstancesAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/approvals/instances",
             params={"status": "PENDING", "page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -280,10 +257,7 @@ class TestApprovalInstancesAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取实例列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/approvals/instances", headers=headers)
 
         if list_response.status_code == 404:
             pytest.skip("Approvals instances endpoint not found")
@@ -297,8 +271,7 @@ class TestApprovalInstancesAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/{instance_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/{instance_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -312,8 +285,7 @@ class TestApprovalInstancesAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/by-entity/PROJECT/1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/by-entity/PROJECT/1", headers=headers
         )
 
         if response.status_code == 404:
@@ -336,10 +308,7 @@ class TestApprovalTasksAPI:
         headers = _auth_headers(admin_token)
 
         # 使用固定ID测试404情况
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/tasks/1", headers=headers)
 
         if response.status_code == 404:
             # 任务不存在是正常的
@@ -355,10 +324,7 @@ class TestApprovalTasksAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取实例列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/approvals/instances", headers=headers)
 
         if list_response.status_code == 404:
             pytest.skip("Approvals instances endpoint not found")
@@ -373,7 +339,7 @@ class TestApprovalTasksAPI:
         # 获取评论
         response = client.get(
             f"{settings.API_V1_PREFIX}/approvals/tasks/instances/{instance_id}/comments",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -394,10 +360,7 @@ class TestApprovalPendingAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/pending/mine",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/pending/mine", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Pending mine endpoint not found")
@@ -413,8 +376,7 @@ class TestApprovalPendingAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/pending/initiated",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/pending/initiated", headers=headers
         )
 
         if response.status_code == 404:
@@ -428,10 +390,7 @@ class TestApprovalPendingAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/pending/cc",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/pending/cc", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("CC endpoint not found")
@@ -445,8 +404,7 @@ class TestApprovalPendingAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/pending/processed",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/pending/processed", headers=headers
         )
 
         if response.status_code == 404:
@@ -460,10 +418,7 @@ class TestApprovalPendingAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/pending/counts",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/pending/counts", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Counts endpoint not found")
@@ -487,10 +442,7 @@ class TestApprovalDelegatesAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/delegates",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/delegates", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Delegates endpoint not found")
@@ -504,8 +456,7 @@ class TestApprovalDelegatesAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/delegates/delegated-to-me",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/delegates/delegated-to-me", headers=headers
         )
 
         if response.status_code == 404:
@@ -520,8 +471,7 @@ class TestApprovalDelegatesAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/delegates/active",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/delegates/active", headers=headers
         )
 
         if response.status_code == 404:
@@ -550,9 +500,7 @@ class TestApprovalDelegatesAPI:
 
         try:
             response = client.post(
-                f"{settings.API_V1_PREFIX}/approvals/delegates",
-                json=delegate_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/approvals/delegates", json=delegate_data, headers=headers
             )
         except Exception as e:
             # 可能是外键约束或其他数据库错误
@@ -580,8 +528,7 @@ class TestApprovalEdgeCases:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/templates/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/templates/99999", headers=headers
         )
 
         # 应该返回404
@@ -596,8 +543,7 @@ class TestApprovalEdgeCases:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/instances/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/approvals/instances/99999", headers=headers
         )
 
         if response.status_code != 404:
@@ -610,10 +556,7 @@ class TestApprovalEdgeCases:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/approvals/tasks/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/approvals/tasks/99999", headers=headers)
 
         if response.status_code != 404:
             pytest.skip("Tasks endpoint returns non-404 for missing resource")
@@ -630,7 +573,7 @@ class TestApprovalEdgeCases:
         response = client.get(
             f"{settings.API_V1_PREFIX}/approvals/instances",
             params={"page": 1, "page_size": 5},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -652,7 +595,7 @@ class TestApprovalEdgeCases:
         response = client.get(
             f"{settings.API_V1_PREFIX}/approvals/templates",
             params={"keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:

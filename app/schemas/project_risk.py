@@ -5,11 +5,13 @@
 
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel, Field, validator
 
 
 class ProjectRiskBase(BaseModel):
     """风险基础Schema"""
+
     risk_name: str = Field(..., min_length=1, max_length=200, description="风险名称")
     description: Optional[str] = Field(None, description="风险描述")
     risk_type: str = Field(..., description="风险类型：TECHNICAL/COST/SCHEDULE/QUALITY")
@@ -20,9 +22,9 @@ class ProjectRiskBase(BaseModel):
     owner_id: Optional[int] = Field(None, description="负责人ID")
     target_closure_date: Optional[datetime] = Field(None, description="计划关闭日期")
 
-    @validator('risk_type')
+    @validator("risk_type")
     def validate_risk_type(cls, v):
-        allowed = ['TECHNICAL', 'COST', 'SCHEDULE', 'QUALITY']
+        allowed = ["TECHNICAL", "COST", "SCHEDULE", "QUALITY"]
         if v not in allowed:
             raise ValueError(f'风险类型必须是以下之一: {", ".join(allowed)}')
         return v
@@ -30,11 +32,13 @@ class ProjectRiskBase(BaseModel):
 
 class ProjectRiskCreate(ProjectRiskBase):
     """创建风险Schema"""
+
     pass
 
 
 class ProjectRiskUpdate(BaseModel):
     """更新风险Schema"""
+
     risk_name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     risk_type: Optional[str] = None
@@ -50,18 +54,26 @@ class ProjectRiskUpdate(BaseModel):
     actual_impact: Optional[str] = None
     actual_closure_date: Optional[datetime] = None
 
-    @validator('risk_type')
+    @validator("risk_type")
     def validate_risk_type(cls, v):
         if v is not None:
-            allowed = ['TECHNICAL', 'COST', 'SCHEDULE', 'QUALITY']
+            allowed = ["TECHNICAL", "COST", "SCHEDULE", "QUALITY"]
             if v not in allowed:
                 raise ValueError(f'风险类型必须是以下之一: {", ".join(allowed)}')
         return v
 
-    @validator('status')
+    @validator("status")
     def validate_status(cls, v):
         if v is not None:
-            allowed = ['IDENTIFIED', 'ANALYZING', 'PLANNING', 'MONITORING', 'MITIGATED', 'OCCURRED', 'CLOSED']
+            allowed = [
+                "IDENTIFIED",
+                "ANALYZING",
+                "PLANNING",
+                "MONITORING",
+                "MITIGATED",
+                "OCCURRED",
+                "CLOSED",
+            ]
             if v not in allowed:
                 raise ValueError(f'状态必须是以下之一: {", ".join(allowed)}')
         return v
@@ -69,6 +81,7 @@ class ProjectRiskUpdate(BaseModel):
 
 class ProjectRiskResponse(BaseModel):
     """风险响应Schema"""
+
     id: int
     risk_code: str
     project_id: int
@@ -103,6 +116,7 @@ class ProjectRiskResponse(BaseModel):
 
 class RiskMatrixItem(BaseModel):
     """风险矩阵项"""
+
     probability: int
     impact: int
     count: int
@@ -111,12 +125,14 @@ class RiskMatrixItem(BaseModel):
 
 class RiskMatrixResponse(BaseModel):
     """风险矩阵响应"""
+
     matrix: list[RiskMatrixItem]
     summary: dict
 
 
 class RiskSummaryResponse(BaseModel):
     """风险汇总统计响应"""
+
     total_risks: int
     by_type: dict[str, int]
     by_level: dict[str, int]

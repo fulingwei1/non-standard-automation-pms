@@ -35,14 +35,16 @@ def _create_material(db_session: Session) -> Material:
 
 def _cleanup_arrivals(db_session: Session, arrival_ids: List[int], material_ids: List[int]) -> None:
     if arrival_ids:
-        db_session.query(ArrivalFollowUp).filter(ArrivalFollowUp.arrival_id.in_(arrival_ids)).delete(
-            synchronize_session=False
-        )
+        db_session.query(ArrivalFollowUp).filter(
+            ArrivalFollowUp.arrival_id.in_(arrival_ids)
+        ).delete(synchronize_session=False)
         db_session.query(MaterialArrival).filter(MaterialArrival.id.in_(arrival_ids)).delete(
             synchronize_session=False
         )
     if material_ids:
-        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(synchronize_session=False)
+        db_session.query(Material).filter(Material.id.in_(material_ids)).delete(
+            synchronize_session=False
+        )
     db_session.commit()
 
 

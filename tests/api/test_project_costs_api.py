@@ -30,10 +30,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -47,8 +44,7 @@ class TestProjectCostsAPI:
 
         # 测试项目中心API
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -68,10 +64,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -87,7 +80,7 @@ class TestProjectCostsAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -104,10 +97,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -123,7 +113,7 @@ class TestProjectCostsAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             params={"keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -136,10 +126,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -155,7 +142,7 @@ class TestProjectCostsAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             params={"cost_type": "LABOR"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -168,10 +155,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -195,7 +179,7 @@ class TestProjectCostsAPI:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             json=cost_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -216,10 +200,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -244,7 +225,7 @@ class TestProjectCostsAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             json=cost_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -254,8 +235,7 @@ class TestProjectCostsAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/{cost_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/{cost_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -271,10 +251,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -287,8 +264,7 @@ class TestProjectCostsAPI:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/99999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/99999", headers=headers
         )
 
         assert response.status_code == 404
@@ -301,10 +277,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -329,7 +302,7 @@ class TestProjectCostsAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             json=cost_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -346,7 +319,7 @@ class TestProjectCostsAPI:
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/{cost_id}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -365,10 +338,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -393,7 +363,7 @@ class TestProjectCostsAPI:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             json=cost_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -403,8 +373,7 @@ class TestProjectCostsAPI:
 
         # 删除成本
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/{cost_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/{cost_id}", headers=headers
         )
 
         if response.status_code == 403:
@@ -420,10 +389,7 @@ class TestProjectCostsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -437,8 +403,7 @@ class TestProjectCostsAPI:
 
         # 测试成本汇总
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/summary", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -460,10 +425,7 @@ class TestProjectCostsAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -477,8 +439,7 @@ class TestProjectCostsAdvanced:
 
         # 获取按月汇总
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/by-month",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/by-month", headers=headers
         )
 
         if response.status_code == 404:
@@ -496,10 +457,7 @@ class TestProjectCostsAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -513,8 +471,7 @@ class TestProjectCostsAdvanced:
 
         # 获取成本趋势
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/trend",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/trend", headers=headers
         )
 
         if response.status_code == 404:
@@ -532,10 +489,7 @@ class TestProjectCostsAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -554,7 +508,7 @@ class TestProjectCostsAdvanced:
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             params={"start_date": start_date, "end_date": end_date},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200, response.text
@@ -567,10 +521,7 @@ class TestProjectCostsAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -595,7 +546,7 @@ class TestProjectCostsAdvanced:
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/",
             json=cost_data,
-            headers=headers
+            headers=headers,
         )
 
         if create_response.status_code not in [200, 201]:
@@ -606,7 +557,7 @@ class TestProjectCostsAdvanced:
         # 审批成本
         response = client.put(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/{cost_id}/approve",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -624,10 +575,7 @@ class TestProjectCostsAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -642,7 +590,7 @@ class TestProjectCostsAdvanced:
         # 获取预算对比
         response = client.get(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/budget-comparison",
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -660,10 +608,7 @@ class TestProjectCostsAdvanced:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -683,14 +628,14 @@ class TestProjectCostsAdvanced:
                     "cost_category": "人工费",
                     "amount": "1000.00",
                     "cost_date": date.today().isoformat(),
-                    "description": "批量成本A"
+                    "description": "批量成本A",
                 },
                 {
                     "cost_type": "MATERIAL",
                     "cost_category": "物料费",
                     "amount": "2000.00",
                     "cost_date": date.today().isoformat(),
-                    "description": "批量成本B"
+                    "description": "批量成本B",
                 },
             ]
         }
@@ -698,7 +643,7 @@ class TestProjectCostsAdvanced:
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/costs/batch",
             json=costs_data,
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:

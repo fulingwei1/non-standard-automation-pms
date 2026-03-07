@@ -21,20 +21,20 @@ class ProjectEvaluationService:
 
     # 默认权重配置（仅作为后备，优先从数据库读取）
     DEFAULT_WEIGHTS = {
-        'novelty': Decimal('0.15'),      # 项目新旧 15%
-        'new_tech': Decimal('0.20'),     # 新技术 20%
-        'difficulty': Decimal('0.30'),    # 难度 30%
-        'workload': Decimal('0.20'),     # 工作量 20%
-        'amount': Decimal('0.15')        # 金额 15%
+        "novelty": Decimal("0.15"),  # 项目新旧 15%
+        "new_tech": Decimal("0.20"),  # 新技术 20%
+        "difficulty": Decimal("0.30"),  # 难度 30%
+        "workload": Decimal("0.20"),  # 工作量 20%
+        "amount": Decimal("0.15"),  # 金额 15%
     }
 
     # 默认评价等级阈值（仅作为后备，优先从数据库读取）
     DEFAULT_LEVEL_THRESHOLDS = {
-        ProjectEvaluationLevelEnum.S: Decimal('90'),
-        ProjectEvaluationLevelEnum.A: Decimal('80'),
-        ProjectEvaluationLevelEnum.B: Decimal('70'),
-        ProjectEvaluationLevelEnum.C: Decimal('60'),
-        ProjectEvaluationLevelEnum.D: Decimal('0')
+        ProjectEvaluationLevelEnum.S: Decimal("90"),
+        ProjectEvaluationLevelEnum.A: Decimal("80"),
+        ProjectEvaluationLevelEnum.B: Decimal("70"),
+        ProjectEvaluationLevelEnum.C: Decimal("60"),
+        ProjectEvaluationLevelEnum.D: Decimal("0"),
     }
 
     def __init__(self, db: Session):
@@ -47,25 +47,27 @@ class ProjectEvaluationService:
         Returns:
             Dict[str, Decimal]: 权重配置字典
         """
-        dimensions = self.db.query(ProjectEvaluationDimension).filter(
-            ProjectEvaluationDimension.is_active
-        ).all()
+        dimensions = (
+            self.db.query(ProjectEvaluationDimension)
+            .filter(ProjectEvaluationDimension.is_active)
+            .all()
+        )
 
         if not dimensions:
             # 如果没有配置，返回默认值
             return self.DEFAULT_WEIGHTS
 
         weights = {}
-        total_weight = Decimal('0')
+        total_weight = Decimal("0")
 
         for dim in dimensions:
             if dim.default_weight:
-                weight_decimal = dim.default_weight / Decimal('100')  # 转换为小数
+                weight_decimal = dim.default_weight / Decimal("100")  # 转换为小数
                 weights[dim.dimension_type.lower()] = weight_decimal
                 total_weight += weight_decimal
 
         # 如果权重总和不为1，进行归一化
-        if total_weight > 0 and total_weight != Decimal('1'):
+        if total_weight > 0 and total_weight != Decimal("1"):
             for key in weights:
                 weights[key] = weights[key] / total_weight
 
@@ -82,20 +84,22 @@ class ProjectEvaluationService:
             Dict[ProjectEvaluationLevelEnum, Decimal]: 等级阈值字典
         """
         # 尝试从数据库获取等级阈值配置
-        config = self.db.query(ProjectEvaluationDimension).filter(
-            ProjectEvaluationDimension.dimension_code == 'LEVEL_THRESHOLDS'
-        ).first()
+        config = (
+            self.db.query(ProjectEvaluationDimension)
+            .filter(ProjectEvaluationDimension.dimension_code == "LEVEL_THRESHOLDS")
+            .first()
+        )
 
         if config and config.scoring_rules:
             try:
                 rules = config.scoring_rules
                 thresholds = {}
                 level_mapping = {
-                    'S': ProjectEvaluationLevelEnum.S,
-                    'A': ProjectEvaluationLevelEnum.A,
-                    'B': ProjectEvaluationLevelEnum.B,
-                    'C': ProjectEvaluationLevelEnum.C,
-                    'D': ProjectEvaluationLevelEnum.D
+                    "S": ProjectEvaluationLevelEnum.S,
+                    "A": ProjectEvaluationLevelEnum.A,
+                    "B": ProjectEvaluationLevelEnum.B,
+                    "C": ProjectEvaluationLevelEnum.C,
+                    "D": ProjectEvaluationLevelEnum.D,
                 }
                 for level, enum_val in level_mapping.items():
                     if level in rules:
@@ -114,7 +118,7 @@ class ProjectEvaluationService:
         difficulty_score: Decimal,
         workload_score: Decimal,
         amount_score: Decimal,
-        weights: Optional[Dict[str, Decimal]] = None
+        weights: Optional[Dict[str, Decimal]] = None,
     ) -> Decimal:
         """
         计算综合得分（加权平均）
@@ -134,11 +138,11 @@ class ProjectEvaluationService:
             weights = self.get_dimension_weights()
 
         total = (
-            novelty_score * weights.get('novelty', Decimal('0.15')) +
-            new_tech_score * weights.get('new_tech', Decimal('0.20')) +
-            difficulty_score * weights.get('difficulty', Decimal('0.30')) +
-            workload_score * weights.get('workload', Decimal('0.20')) +
-            amount_score * weights.get('amount', Decimal('0.15'))
+            novelty_score * weights.get("novelty", Decimal("0.15"))
+            + new_tech_score * weights.get("new_tech", Decimal("0.20"))
+            + difficulty_score * weights.get("difficulty", Decimal("0.30"))
+            + workload_score * weights.get("workload", Decimal("0.20"))
+            + amount_score * weights.get("amount", Decimal("0.15"))
         )
 
         return total
@@ -177,35 +181,39 @@ class ProjectEvaluationService:
             Optional[Decimal]: 得分（如果无法自动计算则返回None）
         """
         # 查询历史相似项目
-        similar_projects = self.db.query(Project).filter(
-            Project.id != project.id,
-            Project.is_archived,  # 只查询已归档的项目
-            or_(
-                Project.project_type == project.project_type,
-                Project.product_category == project.product_category,
-                Project.industry == project.industry
+        similar_projects = (
+            self.db.query(Project)
+            .filter(
+                Project.id != project.id,
+                Project.is_archived,  # 只查询已归档的项目
+                or_(
+                    Project.project_type == project.project_type,
+                    Project.product_category == project.product_category,
+                    Project.industry == project.industry,
+                ),
             )
-        ).all()
+            .all()
+        )
 
         if not similar_projects:
             # 未找到相似项目，全新项目
-            return Decimal('2.0')  # 1-3分，取中值
+            return Decimal("2.0")  # 1-3分，取中值
 
         # 统计相似项目数量
         len(similar_projects)
 
         # 统计已完成的项目数量
-        completed_count = sum(1 for p in similar_projects if p.stage == 'S9')
+        completed_count = sum(1 for p in similar_projects if p.stage == "S9")
 
         if completed_count >= 3:
             # 做过3次以上，标准项目
-            return Decimal('9.0')
+            return Decimal("9.0")
         elif completed_count >= 1:
             # 做过1-2次，类似项目
-            return Decimal('6.0')
+            return Decimal("6.0")
         else:
             # 有类似项目但未完成，有一定经验
-            return Decimal('4.0')
+            return Decimal("4.0")
 
     def auto_calculate_amount_score(self, project: Project) -> Optional[Decimal]:
         """
@@ -223,16 +231,16 @@ class ProjectEvaluationService:
         Returns:
             Optional[Decimal]: 得分
         """
-        amount = project.contract_amount or Decimal('0')
+        amount = project.contract_amount or Decimal("0")
 
-        if amount >= Decimal('5000000'):
-            return Decimal('2.0')  # 1-3分
-        elif amount >= Decimal('2000000'):
-            return Decimal('5.0')  # 4-6分
-        elif amount >= Decimal('500000'):
-            return Decimal('7.5')  # 7-8分
+        if amount >= Decimal("5000000"):
+            return Decimal("2.0")  # 1-3分
+        elif amount >= Decimal("2000000"):
+            return Decimal("5.0")  # 4-6分
+        elif amount >= Decimal("500000"):
+            return Decimal("7.5")  # 7-8分
         else:
-            return Decimal('9.5')  # 9-10分
+            return Decimal("9.5")  # 9-10分
 
     def auto_calculate_workload_score(self, project: Project) -> Optional[Decimal]:
         """
@@ -256,11 +264,11 @@ class ProjectEvaluationService:
         from app.models.timesheet import Timesheet
 
         # 查询项目的总工时（小时）
-        total_hours_result = self.db.query(
-            func.coalesce(func.sum(Timesheet.total_hours), 0)
-        ).filter(
-            Timesheet.project_id == project.id
-        ).scalar()
+        total_hours_result = (
+            self.db.query(func.coalesce(func.sum(Timesheet.total_hours), 0))
+            .filter(Timesheet.project_id == project.id)
+            .scalar()
+        )
 
         if total_hours_result and total_hours_result > 0:
             # 将工时转换为人天（8小时/天）
@@ -268,13 +276,13 @@ class ProjectEvaluationService:
 
             # 根据人天数计算得分
             if total_days > 1000:
-                return Decimal('2')  # 1-3分，取中间值
+                return Decimal("2")  # 1-3分，取中间值
             elif total_days >= 500:
-                return Decimal('5')  # 4-6分
+                return Decimal("5")  # 4-6分
             elif total_days >= 200:
-                return Decimal('7.5')  # 7-8分
+                return Decimal("7.5")  # 7-8分
             else:
-                return Decimal('9.5')  # 9-10分
+                return Decimal("9.5")  # 9-10分
 
         # 如果没有工时数据，返回None需要手动评价
         return None
@@ -282,7 +290,8 @@ class ProjectEvaluationService:
     def generate_evaluation_code(self) -> str:
         """生成评价编号"""
         from datetime import datetime
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         return f"PE{timestamp}"
 
     def create_evaluation(
@@ -297,7 +306,7 @@ class ProjectEvaluationService:
         evaluator_name: str,
         weights: Optional[Dict[str, Decimal]] = None,
         evaluation_detail: Optional[Dict[str, Any]] = None,
-        evaluation_note: Optional[str] = None
+        evaluation_note: Optional[str] = None,
     ) -> ProjectEvaluation:
         """
         创建项目评价记录
@@ -320,8 +329,7 @@ class ProjectEvaluationService:
         """
         # 计算综合得分
         total_score = self.calculate_total_score(
-            novelty_score, new_tech_score, difficulty_score,
-            workload_score, amount_score, weights
+            novelty_score, new_tech_score, difficulty_score, workload_score, amount_score, weights
         )
 
         # 确定评价等级
@@ -348,7 +356,7 @@ class ProjectEvaluationService:
             evaluator_id=evaluator_id,
             evaluator_name=evaluator_name,
             evaluation_date=date.today(),
-            status='DRAFT'
+            status="DRAFT",
         )
 
         return evaluation
@@ -363,10 +371,14 @@ class ProjectEvaluationService:
         Returns:
             Optional[ProjectEvaluation]: 最新评价记录
         """
-        return self.db.query(ProjectEvaluation).filter(
-            ProjectEvaluation.project_id == project_id,
-            ProjectEvaluation.status == 'CONFIRMED'
-        ).order_by(ProjectEvaluation.evaluation_date.desc()).first()
+        return (
+            self.db.query(ProjectEvaluation)
+            .filter(
+                ProjectEvaluation.project_id == project_id, ProjectEvaluation.status == "CONFIRMED"
+            )
+            .order_by(ProjectEvaluation.evaluation_date.desc())
+            .first()
+        )
 
     def get_bonus_coefficient(self, project: Project) -> Decimal:
         """
@@ -382,19 +394,19 @@ class ProjectEvaluationService:
         """
         evaluation = self.get_latest_evaluation(project.id)
         if not evaluation:
-            return Decimal('1.0')
+            return Decimal("1.0")
 
         # 根据评价等级确定系数
         coefficient_map = {
-            ProjectEvaluationLevelEnum.S: Decimal('1.5'),  # S级项目：1.5倍
-            ProjectEvaluationLevelEnum.A: Decimal('1.3'),  # A级项目：1.3倍
-            ProjectEvaluationLevelEnum.B: Decimal('1.1'),  # B级项目：1.1倍
-            ProjectEvaluationLevelEnum.C: Decimal('1.0'),  # C级项目：1.0倍
-            ProjectEvaluationLevelEnum.D: Decimal('0.9')   # D级项目：0.9倍
+            ProjectEvaluationLevelEnum.S: Decimal("1.5"),  # S级项目：1.5倍
+            ProjectEvaluationLevelEnum.A: Decimal("1.3"),  # A级项目：1.3倍
+            ProjectEvaluationLevelEnum.B: Decimal("1.1"),  # B级项目：1.1倍
+            ProjectEvaluationLevelEnum.C: Decimal("1.0"),  # C级项目：1.0倍
+            ProjectEvaluationLevelEnum.D: Decimal("0.9"),  # D级项目：0.9倍
         }
 
         level = evaluation.evaluation_level
-        return coefficient_map.get(level, Decimal('1.0'))
+        return coefficient_map.get(level, Decimal("1.0"))
 
     def get_difficulty_bonus_coefficient(self, project: Project) -> Decimal:
         """
@@ -410,19 +422,19 @@ class ProjectEvaluationService:
         """
         evaluation = self.get_latest_evaluation(project.id)
         if not evaluation or not evaluation.difficulty_score:
-            return Decimal('1.0')
+            return Decimal("1.0")
 
         difficulty_score = float(evaluation.difficulty_score)
 
         # 难度得分越低，系数越高（难度越大，奖金越多）
         if difficulty_score <= 3:
-            return Decimal('1.5')  # 极高难度
+            return Decimal("1.5")  # 极高难度
         elif difficulty_score <= 6:
-            return Decimal('1.3')  # 高难度
+            return Decimal("1.3")  # 高难度
         elif difficulty_score <= 8:
-            return Decimal('1.1')  # 中等难度
+            return Decimal("1.1")  # 中等难度
         else:
-            return Decimal('1.0')  # 低难度
+            return Decimal("1.0")  # 低难度
 
     def get_new_tech_bonus_coefficient(self, project: Project) -> Decimal:
         """
@@ -438,15 +450,14 @@ class ProjectEvaluationService:
         """
         evaluation = self.get_latest_evaluation(project.id)
         if not evaluation or not evaluation.new_tech_score:
-            return Decimal('1.0')
+            return Decimal("1.0")
 
         new_tech_score = float(evaluation.new_tech_score)
 
         # 新技术得分越低，系数越高（新技术越多，奖金越多）
         if new_tech_score <= 3:
-            return Decimal('1.4')  # 大量新技术
+            return Decimal("1.4")  # 大量新技术
         elif new_tech_score <= 6:
-            return Decimal('1.2')  # 部分新技术
+            return Decimal("1.2")  # 部分新技术
         else:
-            return Decimal('1.0')  # 少量或无新技术
-
+            return Decimal("1.0")  # 少量或无新技术

@@ -4,15 +4,16 @@ Additional unit tests for app/utils/number_generator.py (H1 group supplement)
 Covers: generate_monthly_no, generate_employee_code, generate_customer_code
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.utils.number_generator import (
-    generate_sequential_no,
-    generate_monthly_no,
-    generate_employee_code,
     generate_customer_code,
+    generate_employee_code,
+    generate_monthly_no,
+    generate_sequential_no,
 )
 
 
@@ -173,8 +174,7 @@ class TestGenerateSequentialNoEdgeCases:
         db.query.return_value.order_by.return_value.first.return_value = None
 
         result = generate_sequential_no(
-            db, MagicMock(), "code", "ORD",
-            use_date=False, separator="-", seq_length=4
+            db, MagicMock(), "code", "ORD", use_date=False, separator="-", seq_length=4
         )
         assert result == "ORD-0001"
 
@@ -186,8 +186,7 @@ class TestGenerateSequentialNoEdgeCases:
         db.query.return_value.order_by.return_value.first.return_value = None
 
         result = generate_sequential_no(
-            db, MagicMock(), "code", "PJ",
-            use_date=False, separator="", seq_length=3
+            db, MagicMock(), "code", "PJ", use_date=False, separator="", seq_length=3
         )
         assert result == "PJ001"
 
@@ -201,8 +200,7 @@ class TestGenerateSequentialNoEdgeCases:
         with patch("app.utils.number_generator.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 1, 15)
             result = generate_sequential_no(
-                db, MagicMock(), "proj_code", "PJ",
-                date_format="%y%m%d", separator="", seq_length=3
+                db, MagicMock(), "proj_code", "PJ", date_format="%y%m%d", separator="", seq_length=3
             )
 
         assert result == "PJ260115001"

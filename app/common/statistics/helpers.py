@@ -28,11 +28,11 @@ def format_currency(amount: Union[Decimal, float, int, None]) -> str:
         '¥0'
     """
     if amount is None:
-        return '¥0'
+        return "¥0"
     amount = float(amount)
     if amount >= 10000:
-        return f'¥{amount / 10000:.1f}万'
-    return f'¥{amount:,.0f}'
+        return f"¥{amount / 10000:.1f}万"
+    return f"¥{amount:,.0f}"
 
 
 def format_hours(hours: Union[Decimal, float, int, None], precision: int = 1) -> str:
@@ -56,7 +56,7 @@ def format_hours(hours: Union[Decimal, float, int, None], precision: int = 1) ->
     """
     if hours is None:
         hours = 0
-    return f'{float(hours):.{precision}f}h'
+    return f"{float(hours):.{precision}f}h"
 
 
 def format_percentage(value: Union[float, int, None], precision: int = 1) -> str:
@@ -79,8 +79,8 @@ def format_percentage(value: Union[float, int, None], precision: int = 1) -> str
         '-'
     """
     if value is None:
-        return '-'
-    return f'{value:.{precision}f}%'
+        return "-"
+    return f"{value:.{precision}f}%"
 
 
 def create_stat_card(
@@ -89,7 +89,7 @@ def create_stat_card(
     value: Any,
     trend: Union[int, float] = 0,
     unit: Optional[str] = None,
-    icon: Optional[str] = None
+    icon: Optional[str] = None,
 ) -> dict:
     """
     创建统计卡片
@@ -112,17 +112,12 @@ def create_stat_card(
         >>> create_stat_card('revenue', '收入', '¥1.5万', trend=2000, unit='元', icon='money')
         {'key': 'revenue', 'label': '收入', 'value': '¥1.5万', 'trend': 2000, 'unit': '元', 'icon': 'money'}
     """
-    card = {
-        'key': key,
-        'label': label,
-        'value': value,
-        'trend': trend
-    }
+    card = {"key": key, "label": label, "value": value, "trend": trend}
 
     if unit is not None:
-        card['unit'] = unit
+        card["unit"] = unit
     if icon is not None:
-        card['icon'] = icon
+        card["icon"] = icon
 
     return card
 
@@ -142,10 +137,12 @@ def create_stats_response(stats: list) -> dict:
         >>> create_stats_response(stats)
         {'stats': [{'key': 'total', 'label': '总数', 'value': 100, 'trend': 0}]}
     """
-    return {'stats': stats}
+    return {"stats": stats}
 
 
-def calculate_trend(current: Union[int, float, Decimal], previous: Union[int, float, Decimal]) -> Union[int, float]:
+def calculate_trend(
+    current: Union[int, float, Decimal], previous: Union[int, float, Decimal]
+) -> Union[int, float]:
     """
     计算趋势值（当前值 - 上期值）
 

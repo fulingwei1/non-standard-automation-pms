@@ -26,7 +26,11 @@ from app.services.qualification_service import QualificationService
 router = APIRouter()
 
 
-@router.post("/employees/{employee_id}/certify", response_model=ResponseModel[EmployeeQualificationResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/employees/{employee_id}/certify",
+    response_model=ResponseModel[EmployeeQualificationResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def certify_employee_qualification(
     *,
     db: Session = Depends(deps.get_db),
@@ -44,14 +48,18 @@ def certify_employee_qualification(
             assessment_details=certify_in.assessment_details,
             certifier_id=current_user.id,
             certified_date=certify_in.certified_date,
-            valid_until=certify_in.valid_until
+            valid_until=certify_in.valid_until,
         )
         return ResponseModel(code=200, message="认证成功", data=qualification)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/employees/{employee_id}", response_model=ResponseModel[EmployeeQualificationResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/employees/{employee_id}",
+    response_model=ResponseModel[EmployeeQualificationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_employee_qualification(
     *,
     db: Session = Depends(deps.get_db),
@@ -60,16 +68,16 @@ def get_employee_qualification(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取员工任职资格"""
-    qualification = QualificationService.get_employee_qualification(
-        db, employee_id, position_type
-    )
+    qualification = QualificationService.get_employee_qualification(db, employee_id, position_type)
     if not qualification:
         raise HTTPException(status_code=404, detail="员工任职资格不存在")
 
     return ResponseModel(code=200, message="获取成功", data=qualification)
 
 
-@router.get("/employees", response_model=EmployeeQualificationListResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/employees", response_model=EmployeeQualificationListResponse, status_code=status.HTTP_200_OK
+)
 def get_employee_qualifications(
     *,
     db: Session = Depends(deps.get_db),
@@ -93,20 +101,25 @@ def get_employee_qualifications(
         query = query.filter(EmployeeQualification.status == cert_status)
 
     total = query.count()
-    qualifications = query.order_by(desc(EmployeeQualification.created_at)).offset(
-        pagination.offset
-    ).limit(pagination.limit).all()
+    qualifications = (
+        query.order_by(desc(EmployeeQualification.created_at))
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+        .all()
+    )
 
     return EmployeeQualificationListResponse(
         items=qualifications,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.post("/employees/{employee_id}/promote", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/employees/{employee_id}/promote", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def promote_employee_qualification(
     *,
     db: Session = Depends(deps.get_db),
@@ -120,10 +133,10 @@ def promote_employee_qualification(
         db, employee_id, promote_in.target_level_id
     )
 
-    if not eligibility.get('eligible'):
+    if not eligibility.get("eligible"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=eligibility.get('reason', '不满足晋升条件')
+            detail=eligibility.get("reason", "不满足晋升条件"),
         )
 
     # 获取当前任职资格
@@ -133,31 +146,31 @@ def promote_employee_qualification(
     assessment = QualificationService.assess_employee(
         db=db,
         employee_id=employee_id,
-        assessment_type='PROMOTION',
+        assessment_type="PROMOTION",
         scores=promote_in.assessment_details,
         assessor_id=current_user.id,
         qualification_id=qualification.id if qualification else None,
-        assessment_period=promote_in.assessment_period
+        assessment_period=promote_in.assessment_period,
     )
 
     # 如果评估通过，更新任职资格
-    if assessment.result == 'PASS':
+    if assessment.result == "PASS":
         QualificationService.certify_employee(
             db=db,
             employee_id=employee_id,
-            position_type=qualification.position_type if qualification else 'ENGINEER',
+            position_type=qualification.position_type if qualification else "ENGINEER",
             level_id=promote_in.target_level_id,
             assessment_details=promote_in.assessment_details,
-            certifier_id=current_user.id
+            certifier_id=current_user.id,
         )
 
     return ResponseModel(
         code=200,
         message="晋升评估完成",
         data={
-            'assessment_id': assessment.id,
-            'result': assessment.result,
-            'total_score': float(assessment.total_score) if assessment.total_score else None,
-            'promoted': assessment.result == 'PASS'
-        }
+            "assessment_id": assessment.id,
+            "result": assessment.result,
+            "total_score": float(assessment.total_score) if assessment.total_score else None,
+            "promoted": assessment.result == "PASS",
+        },
     )

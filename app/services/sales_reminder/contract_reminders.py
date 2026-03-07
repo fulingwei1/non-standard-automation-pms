@@ -37,8 +37,8 @@ def notify_contract_signed(db: Session, contract_id: int) -> Optional[Notificati
         extra_data={
             "contract_code": contract.contract_code,
             "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-            "signed_date": contract.signing_date.isoformat() if contract.signing_date else None
-        }
+            "signed_date": contract.signing_date.isoformat() if contract.signing_date else None,
+        },
     )
 
 
@@ -51,9 +51,11 @@ def notify_contract_expiring(db: Session) -> int:
     count = 0
 
     # 查询所有有效的合同（使用正确的枚举值）
-    contracts = db.query(Contract).filter(
-        Contract.status.in_([ContractStatusEnum.SIGNED, ContractStatusEnum.ACTIVE])
-    ).all()
+    contracts = (
+        db.query(Contract)
+        .filter(Contract.status.in_([ContractStatusEnum.SIGNED, ContractStatusEnum.ACTIVE]))
+        .all()
+    )
 
     for contract in contracts:
         if not contract.delivery_deadline:
@@ -74,24 +76,30 @@ def notify_contract_expiring(db: Session) -> int:
                     user_ids.add(project.pm_id)
 
             for user_id in user_ids:
-                existing = db.query(Notification).filter(
-                    and_(
-                        Notification.user_id == user_id,
-                        Notification.source_type == "contract",
-                        Notification.source_id == contract.id,
-                        Notification.notification_type == "CONTRACT_EXPIRING",
-                        Notification.created_at >= datetime.combine(today, datetime.min.time())
+                existing = (
+                    db.query(Notification)
+                    .filter(
+                        and_(
+                            Notification.user_id == user_id,
+                            Notification.source_type == "contract",
+                            Notification.source_id == contract.id,
+                            Notification.notification_type == "CONTRACT_EXPIRING",
+                            Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                        )
                     )
-                ).first()
+                    .first()
+                )
 
                 # 检查是否已发送过相同天数的提醒
                 if existing and existing.extra_data:
-                    existing_days_left = existing.extra_data.get('days_left')
+                    existing_days_left = existing.extra_data.get("days_left")
                     if existing_days_left == days_left:
                         continue
 
                 if not existing:
-                    priority = "URGENT" if days_left == 7 else ("HIGH" if days_left == 15 else "NORMAL")
+                    priority = (
+                        "URGENT" if days_left == 7 else ("HIGH" if days_left == 15 else "NORMAL")
+                    )
                     create_notification(
                         db=db,
                         user_id=user_id,
@@ -105,8 +113,8 @@ def notify_contract_expiring(db: Session) -> int:
                         extra_data={
                             "contract_code": contract.contract_code,
                             "delivery_deadline": deadline.isoformat(),
-                            "days_left": days_left
-                        }
+                            "days_left": days_left,
+                        },
                     )
                     count += 1
 

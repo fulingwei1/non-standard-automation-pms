@@ -1,11 +1,14 @@
 """
 第四批覆盖测试 - presale_ai_service
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.presale_ai_service import PresaleAIService
+
     HAS_SERVICE = True
 except Exception:
     HAS_SERVICE = False
@@ -17,8 +20,10 @@ def make_service():
     db = MagicMock()
     db.query.return_value.filter.return_value.all.return_value = []
     db.query.return_value.filter.return_value.first.return_value = None
-    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
-    with patch('app.services.presale_ai_service.AIClientService'):
+    db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+        []
+    )
+    with patch("app.services.presale_ai_service.AIClientService"):
         return PresaleAIService(db), db
 
 
@@ -47,11 +52,9 @@ class TestPresaleAIService:
     def test_match_templates_no_templates(self):
         try:
             from app.schemas.presale_ai_solution import TemplateMatchRequest
+
             request = TemplateMatchRequest(
-                keywords="焊接",
-                industry="汽车",
-                equipment_type="机器人",
-                top_k=5
+                keywords="焊接", industry="汽车", equipment_type="机器人", top_k=5
             )
         except Exception:
             pytest.skip("Schema导入失败")
@@ -80,7 +83,7 @@ class TestPresaleAIService:
         assert isinstance(result, dict)
 
     def test_calculate_confidence_no_template(self):
-        solution = {'equipment_list': [], 'process_steps': [], 'technical_parameters': []}
+        solution = {"equipment_list": [], "process_steps": [], "technical_parameters": []}
         conf = self.service._calculate_confidence(solution, None)
         assert 0 <= conf <= 1
 

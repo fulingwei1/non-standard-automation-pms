@@ -2,9 +2,10 @@
 """
 Unit tests for AIProjectPlanGenerator (第三十八批)
 """
-import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.ai_planning.plan_generator", reason="导入失败，跳过")
 
@@ -23,12 +24,14 @@ def mock_db():
 @pytest.fixture
 def mock_glm():
     glm = MagicMock()
-    glm.generate_project_plan = MagicMock(return_value={
-        "stages": [],
-        "milestones": [],
-        "estimated_duration": 60,
-        "summary": "AI生成的项目计划"
-    })
+    glm.generate_project_plan = MagicMock(
+        return_value={
+            "stages": [],
+            "milestones": [],
+            "estimated_duration": 60,
+            "summary": "AI生成的项目计划",
+        }
+    )
     return glm
 
 
@@ -119,7 +122,7 @@ class TestGeneratePlan:
             project_name="测试",
             project_type="automation",
             requirements="需求描述",
-            use_template=True
+            use_template=True,
         )
         assert result is mock_template
 
@@ -141,6 +144,6 @@ class TestGeneratePlan:
                 project_name="新项目",
                 project_type="automation",
                 requirements="自动化需求",
-                use_template=False
+                use_template=False,
             )
             assert mock_glm.generate_project_plan.called

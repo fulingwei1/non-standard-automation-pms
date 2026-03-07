@@ -2,13 +2,20 @@
 """Culture Wall Service 测试 - Batch 2"""
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.culture_wall_service import (
-    get_culture_wall_config, check_user_role_permission,
-    get_content_types_config, build_content_query,
-    query_content_by_type, get_read_records, format_content,
-    get_personal_goals, format_goal, get_notifications
+    build_content_query,
+    check_user_role_permission,
+    format_content,
+    format_goal,
+    get_content_types_config,
+    get_culture_wall_config,
+    get_notifications,
+    get_personal_goals,
+    get_read_records,
+    query_content_by_type,
 )
 
 
@@ -27,7 +34,7 @@ def mock_config():
         "NEWS": {"enabled": True, "max_count": 5},
         "PERSONAL_GOAL": {"enabled": True, "max_count": 3},
         "NOTIFICATION": {"enabled": True, "max_count": 10},
-        "DISABLED_TYPE": {"enabled": False}
+        "DISABLED_TYPE": {"enabled": False},
     }
     return c
 
@@ -40,13 +47,17 @@ class TestGetCultureWallConfig:
 
     def test_fallback_to_latest(self, mock_db, mock_config):
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_config
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_config
+        )
         result = get_culture_wall_config(mock_db)
         assert result == mock_config
 
     def test_no_config(self, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         result = get_culture_wall_config(mock_db)
         assert result is None
 
@@ -93,7 +104,9 @@ class TestQueryContentByType:
     def test_enabled_type(self):
         content_query = MagicMock()
         items = [MagicMock()]
-        content_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = items
+        content_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            items
+        )
         config = {"NEWS": {"enabled": True, "max_count": 5}}
         result = query_content_by_type(content_query, "NEWS", config)
         assert len(result) == 1
@@ -106,7 +119,9 @@ class TestQueryContentByType:
 
     def test_unknown_type_uses_default(self):
         content_query = MagicMock()
-        content_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        content_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = query_content_by_type(content_query, "UNKNOWN", {}, default_max_count=20)
         content_query.filter.return_value.order_by.return_value.limit.assert_called_with(20)
 
@@ -163,7 +178,10 @@ class TestGetPersonalGoals:
 
     def test_returns_goals(self, mock_db):
         goal = MagicMock()
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.side_effect = [[goal], []]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.side_effect = [
+            [goal],
+            [],
+        ]
         config = {"PERSONAL_GOAL": {"enabled": True, "max_count": 5}}
         result = get_personal_goals(mock_db, 1, date(2024, 6, 15), config)
         assert len(result) == 1
@@ -213,12 +231,16 @@ class TestGetNotifications:
         notif.notification_type = "SYSTEM"
         notif.priority = "HIGH"
         notif.created_at = datetime(2024, 1, 1)
-        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [notif]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            notif
+        ]
         result = get_notifications(mock_db, 1, {"NOTIFICATION": {"enabled": True, "max_count": 10}})
         assert len(result) == 1
         assert result[0]["title"] == "Alert"
 
     def test_empty_config(self, mock_db):
-        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = get_notifications(mock_db, 1, {})
         assert result == []

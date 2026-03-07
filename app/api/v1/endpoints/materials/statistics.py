@@ -12,16 +12,16 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range
-from app.utils.db_helpers import get_or_404
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.material import Material, MaterialCategory
-from app.models.vendor import Vendor
 from app.models.shortage import MaterialSubstitution
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.schemas.common import PaginatedResponse
 from app.schemas.material import MaterialSearchResponse, WarehouseStatistics
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -43,7 +43,7 @@ def get_material_alternatives(
     as_substitute = (
         db.query(MaterialSubstitution)
         .filter(MaterialSubstitution.substitute_material_id == material_id)
-        .filter(MaterialSubstitution.status.in_(['APPROVED', 'EXECUTED']))
+        .filter(MaterialSubstitution.status.in_(["APPROVED", "EXECUTED"]))
         .all()
     )
 
@@ -51,41 +51,57 @@ def get_material_alternatives(
     as_original = (
         db.query(MaterialSubstitution)
         .filter(MaterialSubstitution.original_material_id == material_id)
-        .filter(MaterialSubstitution.status.in_(['APPROVED', 'EXECUTED']))
+        .filter(MaterialSubstitution.status.in_(["APPROVED", "EXECUTED"]))
         .all()
     )
 
     # 构建替代物料列表（该物料可以替代的物料）
     can_substitute_for = []
     for sub in as_substitute:
-        original_material = db.query(Material).filter(Material.id == sub.original_material_id).first()
+        original_material = (
+            db.query(Material).filter(Material.id == sub.original_material_id).first()
+        )
         if original_material:
-            can_substitute_for.append({
-                "material_id": original_material.id,
-                "material_code": original_material.material_code,
-                "material_name": original_material.material_name,
-                "specification": original_material.specification,
-                "substitution_ratio": float(sub.substitute_qty / sub.original_qty) if sub.original_qty > 0 else 1.0,
-                "substitution_reason": sub.substitution_reason,
-                "status": sub.status,
-                "substitution_no": sub.substitution_no,
-            })
+            can_substitute_for.append(
+                {
+                    "material_id": original_material.id,
+                    "material_code": original_material.material_code,
+                    "material_name": original_material.material_name,
+                    "specification": original_material.specification,
+                    "substitution_ratio": (
+                        float(sub.substitute_qty / sub.original_qty)
+                        if sub.original_qty > 0
+                        else 1.0
+                    ),
+                    "substitution_reason": sub.substitution_reason,
+                    "status": sub.status,
+                    "substitution_no": sub.substitution_no,
+                }
+            )
 
     # 构建可替代该物料的物料列表
     can_be_substituted_by = []
     for sub in as_original:
-        substitute_material = db.query(Material).filter(Material.id == sub.substitute_material_id).first()
+        substitute_material = (
+            db.query(Material).filter(Material.id == sub.substitute_material_id).first()
+        )
         if substitute_material:
-            can_be_substituted_by.append({
-                "material_id": substitute_material.id,
-                "material_code": substitute_material.material_code,
-                "material_name": substitute_material.material_name,
-                "specification": substitute_material.specification,
-                "substitution_ratio": float(sub.substitute_qty / sub.original_qty) if sub.original_qty > 0 else 1.0,
-                "substitution_reason": sub.substitution_reason,
-                "status": sub.status,
-                "substitution_no": sub.substitution_no,
-            })
+            can_be_substituted_by.append(
+                {
+                    "material_id": substitute_material.id,
+                    "material_code": substitute_material.material_code,
+                    "material_name": substitute_material.material_name,
+                    "specification": substitute_material.specification,
+                    "substitution_ratio": (
+                        float(sub.substitute_qty / sub.original_qty)
+                        if sub.original_qty > 0
+                        else 1.0
+                    ),
+                    "substitution_reason": sub.substitution_reason,
+                    "status": sub.status,
+                    "substitution_no": sub.substitution_no,
+                }
+            )
 
     return {
         "material_id": material.id,
@@ -107,34 +123,34 @@ def get_warehouse_statistics(
 
     # 库存SKU统计
     total_items = db.query(Material).count()
-    in_stock_items = db.query(Material).filter(
-        Material.current_stock > 0
-    ).count()
+    in_stock_items = db.query(Material).filter(Material.current_stock > 0).count()
 
     # 低库存预警（当前库存 < 安全库存）
-    low_stock_items = db.query(Material).filter(
-        Material.current_stock < Material.safety_stock,
-        Material.current_stock > 0
-    ).count()
+    low_stock_items = (
+        db.query(Material)
+        .filter(Material.current_stock < Material.safety_stock, Material.current_stock > 0)
+        .count()
+    )
 
     # 缺货
-    out_of_stock_items = db.query(Material).filter(
-        Material.current_stock <= 0
-    ).count()
+    out_of_stock_items = db.query(Material).filter(Material.current_stock <= 0).count()
 
     # 库存周转率（简化计算：本月入库金额 / 平均库存金额）
     today = date.today()
     month_start, _ = get_month_range(today)
 
     # 本月入库金额（从入库单计算）
-    inbound_amount = db.query(func.sum(GoodsReceiptItem.amount)).filter(
-        GoodsReceiptItem.created_at >= datetime.combine(month_start, datetime.min.time())
-    ).scalar() or 0
+    inbound_amount = (
+        db.query(func.sum(GoodsReceiptItem.amount))
+        .filter(GoodsReceiptItem.created_at >= datetime.combine(month_start, datetime.min.time()))
+        .scalar()
+        or 0
+    )
 
     # 平均库存金额（简化：当前库存金额）
-    avg_inventory_amount = db.query(func.sum(
-        Material.current_stock * Material.standard_price
-    )).scalar() or 0
+    avg_inventory_amount = (
+        db.query(func.sum(Material.current_stock * Material.standard_price)).scalar() or 0
+    )
 
     inventory_turnover = 0.0
     if avg_inventory_amount and avg_inventory_amount > 0:
@@ -159,18 +175,28 @@ def get_warehouse_statistics(
 
     # 假设仓库总容量为 10000 单位体积（可根据实际仓库配置调整）
     total_warehouse_capacity = 10000.0
-    warehouse_utilization = min(100.0, (total_volume / total_warehouse_capacity) * 100) if total_warehouse_capacity > 0 else 0
+    warehouse_utilization = (
+        min(100.0, (total_volume / total_warehouse_capacity) * 100)
+        if total_warehouse_capacity > 0
+        else 0
+    )
 
     # 待入库（已采购但未完全到货的订单）
-    pending_inbound = db.query(PurchaseOrder).filter(
-        PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"])
-    ).count()
+    pending_inbound = (
+        db.query(PurchaseOrder)
+        .filter(PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]))
+        .count()
+    )
 
     # 待出库（从工单领料需求计算）
-    pending_outbound = db.query(WorkOrder).filter(
-        WorkOrder.status.in_(["ASSIGNED", "STARTED"]),
-        # 假设有领料状态字段
-    ).count()
+    pending_outbound = (
+        db.query(WorkOrder)
+        .filter(
+            WorkOrder.status.in_(["ASSIGNED", "STARTED"]),
+            # 假设有领料状态字段
+        )
+        .count()
+    )
 
     return WarehouseStatistics(
         total_items=total_items,
@@ -199,7 +225,9 @@ def search_materials(
     query = db.query(Material)
 
     # 应用关键词过滤（物料编码/名称/规格）
-    query = apply_keyword_filter(query, Material, keyword, ["material_code", "material_name", "specification"])
+    query = apply_keyword_filter(
+        query, Material, keyword, ["material_code", "material_name", "specification"]
+    )
 
     # 库存筛选
     if has_stock is not None:
@@ -210,9 +238,7 @@ def search_materials(
 
     # 类别筛选
     if category:
-        query = query.join(MaterialCategory).filter(
-            MaterialCategory.category_name == category
-        )
+        query = query.join(MaterialCategory).filter(MaterialCategory.category_name == category)
 
     # 分页
     total = query.count()
@@ -221,14 +247,16 @@ def search_materials(
     items = []
     for material in materials:
         # 计算在途数量
-        in_transit_qty = db.query(func.sum(
-            PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty
-        )).join(
-            PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
-        ).filter(
-            PurchaseOrderItem.material_id == material.id,
-            PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"])
-        ).scalar() or 0
+        in_transit_qty = (
+            db.query(func.sum(PurchaseOrderItem.quantity - PurchaseOrderItem.received_qty))
+            .join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id)
+            .filter(
+                PurchaseOrderItem.material_id == material.id,
+                PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]),
+            )
+            .scalar()
+            or 0
+        )
 
         # 可用数量 = 当前库存 + 在途数量
         available_qty = (material.current_stock or 0) + in_transit_qty
@@ -236,28 +264,34 @@ def search_materials(
         # 获取供应商名称
         supplier_name = None
         if material.default_supplier_id:
-            supplier = db.query(Vendor).filter(Vendor.id == material.default_supplier_id, Vendor.vendor_type == 'MATERIAL').first()
+            supplier = (
+                db.query(Vendor)
+                .filter(Vendor.id == material.default_supplier_id, Vendor.vendor_type == "MATERIAL")
+                .first()
+            )
             supplier_name = supplier.supplier_name if supplier else None
 
-        items.append(MaterialSearchResponse(
-            material_id=material.id,
-            material_code=material.material_code,
-            material_name=material.material_name,
-            specification=material.specification,
-            category=material.category.category_name if material.category else None,
-            current_stock=float(material.current_stock or 0),
-            safety_stock=float(material.safety_stock or 0),
-            in_transit_qty=float(in_transit_qty),
-            available_qty=float(available_qty),
-            unit=material.unit or "件",
-            unit_price=float(material.standard_price or 0),
-            supplier_name=supplier_name,
-        ))
+        items.append(
+            MaterialSearchResponse(
+                material_id=material.id,
+                material_code=material.material_code,
+                material_name=material.material_name,
+                specification=material.specification,
+                category=material.category.category_name if material.category else None,
+                current_stock=float(material.current_stock or 0),
+                safety_stock=float(material.safety_stock or 0),
+                in_transit_qty=float(in_transit_qty),
+                available_qty=float(available_qty),
+                unit=material.unit or "件",
+                unit_price=float(material.standard_price or 0),
+                supplier_name=supplier_name,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )

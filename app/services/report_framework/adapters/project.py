@@ -78,9 +78,7 @@ class ProjectReportAdapter(BaseReportAdapter):
                 self.db, project_id, start_date, end_date
             )
         else:
-            data = ProjectReportGenerator.generate_weekly(
-                self.db, project_id, start_date, end_date
-            )
+            data = ProjectReportGenerator.generate_weekly(self.db, project_id, start_date, end_date)
 
         # 添加报表元信息
         data["title"] = f"项目{'月' if self.report_type == 'monthly' else '周'}报"

@@ -5,8 +5,9 @@
 测试 ApprovalQueryMixin (查询相关方法)
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.services.approval_engine.engine.query import ApprovalQueryMixin
 
@@ -21,14 +22,19 @@ class TestApprovalQueryMixin:
 
     def test_has_get_pending_tasks(self):
         """测试有获取待办任务方法"""
-        assert hasattr(ApprovalQueryMixin, 'get_pending_tasks') or hasattr(ApprovalQueryMixin, 'get_pending_approvals')
+        assert hasattr(ApprovalQueryMixin, "get_pending_tasks") or hasattr(
+            ApprovalQueryMixin, "get_pending_approvals"
+        )
 
     def test_has_get_initiated_instances(self):
         """测试有获取发起实例方法"""
-        assert hasattr(ApprovalQueryMixin, 'get_initiated_instances') or hasattr(ApprovalQueryMixin, 'get_my_initiated')
+        assert hasattr(ApprovalQueryMixin, "get_initiated_instances") or hasattr(
+            ApprovalQueryMixin, "get_my_initiated"
+        )
 
     def test_mixin_initialization(self):
         """测试混入类可以被继承"""
+
         class TestService(ApprovalQueryMixin):
             def __init__(self):
                 self.db = MagicMock()
@@ -38,6 +44,7 @@ class TestApprovalQueryMixin:
 
     def test_query_mixin_with_mock_db(self):
         """测试使用模拟数据库的查询"""
+
         class TestService(ApprovalQueryMixin):
             def __init__(self, db):
                 self.db = db

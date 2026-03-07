@@ -55,7 +55,7 @@ def generate_archive_no(db: Session) -> str:
 async def create_document_archive(
     archive_data: DocumentArchiveCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:create"))
+    current_user: User = Depends(security.require_permission("business_support:create")),
 ):
     """创建文件归档"""
     try:
@@ -75,7 +75,7 @@ async def create_document_archive(
             archive_date=archive_data.archive_date,
             archiver_id=current_user.id,
             status="archived",
-            remark=archive_data.remark
+            remark=archive_data.remark,
         )
 
         db.add(archive)
@@ -100,15 +100,19 @@ async def create_document_archive(
                 status=archive.status,
                 remark=archive.remark,
                 created_at=archive.created_at,
-                updated_at=archive.updated_at
-            )
+                updated_at=archive.updated_at,
+            ),
         )
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"创建文件归档失败: {str(e)}")
 
 
-@router.get("", response_model=ResponseModel[PaginatedResponse[DocumentArchiveResponse]], summary="获取文件归档列表")
+@router.get(
+    "",
+    response_model=ResponseModel[PaginatedResponse[DocumentArchiveResponse]],
+    summary="获取文件归档列表",
+)
 async def get_document_archives(
     pagination: PaginationParams = Depends(get_pagination_query),
     document_type: Optional[str] = Query(None, description="文件类型筛选"),
@@ -116,7 +120,7 @@ async def get_document_archives(
     related_id: Optional[int] = Query(None, description="关联ID筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("business_support:read"))
+    current_user: User = Depends(security.require_permission("business_support:read")),
 ):
     """获取文件归档列表"""
     try:
@@ -131,7 +135,9 @@ async def get_document_archives(
             query = query.filter(DocumentArchive.related_id == related_id)
 
         # 应用关键词过滤（文件名称/归档编号）
-        query = apply_keyword_filter(query, DocumentArchive, search, ["document_name", "archive_no"])
+        query = apply_keyword_filter(
+            query, DocumentArchive, search, ["document_name", "archive_no"]
+        )
 
         # 总数
         total = query.count()
@@ -161,7 +167,7 @@ async def get_document_archives(
                 status=item.status,
                 remark=item.remark,
                 created_at=item.created_at,
-                updated_at=item.updated_at
+                updated_at=item.updated_at,
             )
             for item in items
         ]
@@ -174,8 +180,8 @@ async def get_document_archives(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取文件归档列表失败: {str(e)}")

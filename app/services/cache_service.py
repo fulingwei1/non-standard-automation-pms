@@ -25,6 +25,7 @@ from typing import Any, Dict, Optional
 # 尝试导入Redis（可选）
 try:
     import redis  # noqa: F401
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -46,6 +47,7 @@ class CacheService:
         if redis_client is None:
             try:
                 from app.utils.redis_client import get_redis_client
+
                 redis_client = get_redis_client()
             except Exception as e:
                 logger.warning(f"无法获取Redis客户端: {e}，将使用内存缓存")
@@ -56,13 +58,7 @@ class CacheService:
         self.use_redis = REDIS_AVAILABLE and redis_client is not None
 
         # Sprint 5.3: 缓存统计
-        self.stats = {
-            "hits": 0,
-            "misses": 0,
-            "sets": 0,
-            "deletes": 0,
-            "errors": 0
-        }
+        self.stats = {"hits": 0, "misses": 0, "sets": 0, "deletes": 0, "errors": 0}
 
     def _generate_cache_key(self, prefix: str, **kwargs) -> str:
         """
@@ -130,15 +126,13 @@ class CacheService:
         Returns:
             bool: 是否设置成功
         """
-        expire_at = datetime.now() + timedelta(seconds=expire_seconds) if expire_seconds > 0 else None
+        expire_at = (
+            datetime.now() + timedelta(seconds=expire_seconds) if expire_seconds > 0 else None
+        )
 
         if self.use_redis:
             try:
-                self.redis_client.setex(
-                    key,
-                    expire_seconds,
-                    json.dumps(value, default=str)
-                )
+                self.redis_client.setex(key, expire_seconds, json.dumps(value, default=str))
                 self.stats["sets"] += 1
                 return True
             except Exception as e:
@@ -199,7 +193,9 @@ class CacheService:
                 logger.debug("Redis 按模式删除缓存失败，已忽略", exc_info=True)
 
         # 内存缓存（简单实现，不支持通配符）
-        keys_to_delete = [k for k in self.memory_cache.keys() if k.startswith(pattern.replace("*", ""))]
+        keys_to_delete = [
+            k for k in self.memory_cache.keys() if k.startswith(pattern.replace("*", ""))
+        ]
         for key in keys_to_delete:
             del self.memory_cache[key]
             deleted_count += 1
@@ -229,7 +225,9 @@ class CacheService:
         key = f"project:detail:{project_id}"
         return self.get(key)
 
-    def set_project_detail(self, project_id: int, data: Dict[str, Any], expire_seconds: int = 600) -> bool:
+    def set_project_detail(
+        self, project_id: int, data: Dict[str, Any], expire_seconds: int = 600
+    ) -> bool:
         """设置项目详情缓存（默认10分钟）"""
         key = f"project:detail:{project_id}"
         return self.set(key, data, expire_seconds)
@@ -258,7 +256,9 @@ class CacheService:
         key = self._generate_cache_key("project:statistics", **filters)
         return self.get(key)
 
-    def set_project_statistics(self, data: Dict[str, Any], expire_seconds: int = 600, **filters) -> bool:
+    def set_project_statistics(
+        self, data: Dict[str, Any], expire_seconds: int = 600, **filters
+    ) -> bool:
         """设置项目统计缓存（默认10分钟）"""
         key = self._generate_cache_key("project:statistics", **filters)
         return self.set(key, data, expire_seconds)
@@ -297,13 +297,7 @@ class CacheService:
 
     def reset_stats(self) -> None:
         """重置缓存统计"""
-        self.stats = {
-            "hits": 0,
-            "misses": 0,
-            "sets": 0,
-            "deletes": 0,
-            "errors": 0
-        }
+        self.stats = {"hits": 0, "misses": 0, "sets": 0, "deletes": 0, "errors": 0}
 
     def get_redis_info(self) -> Optional[Dict[str, Any]]:
         """
@@ -323,9 +317,11 @@ class CacheService:
                 "used_memory_peak_human": info.get("used_memory_peak_human", "0B"),
                 "keyspace_hits": info.get("keyspace_hits", 0),
                 "keyspace_misses": info.get("keyspace_misses", 0),
-                "total_keys": sum([
-                    int(count) for count in info.get("db0", {}).get("keys", "0").split(",")
-                ]) if "db0" in info else 0,
+                "total_keys": (
+                    sum([int(count) for count in info.get("db0", {}).get("keys", "0").split(",")])
+                    if "db0" in info
+                    else 0
+                ),
             }
         except Exception as e:
             logger.error(f"获取Redis信息失败: {e}")

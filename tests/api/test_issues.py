@@ -35,9 +35,7 @@ class TestIssueCRUD:
             "is_blocking": False,
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers)
 
         assert response.status_code == 201
         data = response.json()
@@ -55,9 +53,7 @@ class TestIssueCRUD:
         issue_id = self.test_create_issue(client, admin_token)
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/issues/{issue_id}", headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/issues/{issue_id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -79,9 +75,7 @@ class TestIssueCRUD:
         assert "items" in data or isinstance(data, list)
         assert "total" in data or len(data) >= 0
 
-    def test_list_issues_ignores_all_filters(
-        self, client: TestClient, admin_token: str
-    ):
+    def test_list_issues_ignores_all_filters(self, client: TestClient, admin_token: str):
         """测试后端兼容 status=all 等筛选值"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -144,9 +138,7 @@ class TestIssueCRUD:
         issue_id = self.test_create_issue(client, admin_token)
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/issues/{issue_id}", headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/issues/{issue_id}", headers=headers)
 
         # 删除应该是软删除，状态码可能是200或204
         assert response.status_code in [200, 204, 404]
@@ -236,9 +228,7 @@ class TestIssueOperations:
 class TestIssueBlockingAlert:
     """阻塞问题预警集成测试"""
 
-    def test_create_blocking_issue_creates_alert(
-        self, client: TestClient, admin_token: str
-    ):
+    def test_create_blocking_issue_creates_alert(self, client: TestClient, admin_token: str):
         """测试创建阻塞问题时自动创建预警"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -255,9 +245,7 @@ class TestIssueBlockingAlert:
             "project_id": 1,  # 假设项目ID为1
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers)
 
         assert response.status_code == 201
         issue_id = response.json()["id"]
@@ -266,9 +254,7 @@ class TestIssueBlockingAlert:
         # 这里只验证问题创建成功，预警创建在后台完成
         assert response.json()["is_blocking"] is True
 
-    def test_resolve_blocking_issue_closes_alert(
-        self, client: TestClient, admin_token: str
-    ):
+    def test_resolve_blocking_issue_closes_alert(self, client: TestClient, admin_token: str):
         """测试解决阻塞问题时自动关闭预警"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -310,11 +296,7 @@ class TestIssueBlockingAlert:
 
 class TestIssueDataScope:
     def _ensure_perm(self, db_session, code: str, name: str) -> ApiPermission:
-        perm = (
-            db_session.query(ApiPermission)
-            .filter(ApiPermission.perm_code == code)
-            .first()
-        )
+        perm = db_session.query(ApiPermission).filter(ApiPermission.perm_code == code).first()
         if perm:
             return perm
         perm = ApiPermission(
@@ -330,9 +312,7 @@ class TestIssueDataScope:
         db_session.refresh(perm)
         return perm
 
-    def _ensure_role(
-        self, db_session, role_code: str, role_name: str, data_scope: str
-    ) -> Role:
+    def _ensure_role(self, db_session, role_code: str, role_name: str, data_scope: str) -> Role:
         role = db_session.query(Role).filter(Role.role_code == role_code).first()
         if role:
             if role.data_scope != data_scope:
@@ -423,12 +403,8 @@ class TestIssueDataScope:
         self._assign_perm_to_role(db_session, role_own, perm_read)
         self._assign_perm_to_role(db_session, role_own, perm_create)
 
-        user1 = self._create_user(
-            db_session, "issue_u1", "u1pass", "用户一", "工程部", role_own
-        )
-        user2 = self._create_user(
-            db_session, "issue_u2", "u2pass", "用户二", "销售部", role_own
-        )
+        user1 = self._create_user(db_session, "issue_u1", "u1pass", "用户一", "工程部", role_own)
+        user2 = self._create_user(db_session, "issue_u2", "u2pass", "用户二", "销售部", role_own)
 
         token1 = self._login(client, "issue_u1", "u1pass")
         token2 = self._login(client, "issue_u2", "u2pass")
@@ -455,29 +431,21 @@ class TestIssueDataScope:
             "is_blocking": False,
         }
 
-        r1 = client.post(
-            f"{settings.API_V1_PREFIX}/issues", json=issue_data_1, headers=headers1
-        )
+        r1 = client.post(f"{settings.API_V1_PREFIX}/issues", json=issue_data_1, headers=headers1)
         assert r1.status_code == 201
         id1 = r1.json()["id"]
 
-        r2 = client.post(
-            f"{settings.API_V1_PREFIX}/issues", json=issue_data_2, headers=headers2
-        )
+        r2 = client.post(f"{settings.API_V1_PREFIX}/issues", json=issue_data_2, headers=headers2)
         assert r2.status_code == 201
         id2 = r2.json()["id"]
 
-        list1 = client.get(
-            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers1
-        )
+        list1 = client.get(f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers1)
         assert list1.status_code == 200
         items1 = list1.json()["items"]
         assert any(it["id"] == id1 for it in items1)
         assert all(it["id"] != id2 for it in items1)
 
-        list2 = client.get(
-            f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers2
-        )
+        list2 = client.get(f"{settings.API_V1_PREFIX}/issues?page=1&page_size=50", headers=headers2)
         assert list2.status_code == 200
         items2 = list2.json()["items"]
         assert any(it["id"] == id2 for it in items2)

@@ -38,16 +38,18 @@ def list_scoring_rules(
             creator = db.query(User).filter(User.id == rule.created_by).first()
             creator_name = creator.real_name if creator else None
 
-        result.append(ScoringRuleResponse(
-            id=rule.id,
-            version=rule.version,
-            is_active=rule.is_active,
-            description=rule.description,
-            created_by=rule.created_by,
-            created_at=rule.created_at,
-            updated_at=rule.updated_at,
-            creator_name=creator_name
-        ))
+        result.append(
+            ScoringRuleResponse(
+                id=rule.id,
+                version=rule.version,
+                is_active=rule.is_active,
+                description=rule.description,
+                created_by=rule.created_by,
+                created_at=rule.created_at,
+                updated_at=rule.updated_at,
+                creator_name=creator_name,
+            )
+        )
 
     return result
 
@@ -69,7 +71,7 @@ def create_scoring_rule(
         version=request.version,
         rules_json=request.rules_json,
         description=request.description,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     save_obj(db, rule)
@@ -82,7 +84,7 @@ def create_scoring_rule(
         created_by=rule.created_by,
         created_at=rule.created_at,
         updated_at=rule.updated_at,
-        creator_name=current_user.real_name
+        creator_name=current_user.real_name,
     )
 
 

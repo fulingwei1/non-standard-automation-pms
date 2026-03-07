@@ -15,7 +15,7 @@
 from datetime import date, timedelta
 from typing import Optional
 
-from sqlalchemy import and_, func, case
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
 from app.models.production import (
@@ -23,9 +23,9 @@ from app.models.production import (
     EquipmentOEERecord,
     Worker,
     WorkerEfficiencyRecord,
+    WorkOrder,
     Workshop,
     Workstation,
-    WorkOrder,
 )
 
 
@@ -71,17 +71,34 @@ class CapacityAnalysisService:
                 func.sum(EquipmentOEERecord.planned_production_time).label("total_planned_time"),
                 func.sum(EquipmentOEERecord.unplanned_downtime).label("total_downtime"),
                 func.sum(EquipmentOEERecord.actual_output).label("total_output"),
-                (func.sum(EquipmentOEERecord.operating_time) * 100.0 /
-                 func.sum(EquipmentOEERecord.planned_production_time)).label("utilization_rate"),
+                (
+                    func.sum(EquipmentOEERecord.operating_time)
+                    * 100.0
+                    / func.sum(EquipmentOEERecord.planned_production_time)
+                ).label("utilization_rate"),
             )
             .join(Equipment, EquipmentOEERecord.equipment_id == Equipment.id)
             .join(Workshop, Equipment.workshop_id == Workshop.id)
             .filter(and_(*filters))
-            .group_by(Equipment.id, Equipment.equipment_code, Equipment.equipment_name, Workshop.workshop_name)
-            .having(func.sum(EquipmentOEERecord.operating_time) * 100.0 /
-                    func.sum(EquipmentOEERecord.planned_production_time) >= threshold)
-            .order_by((func.sum(EquipmentOEERecord.operating_time) * 100.0 /
-                       func.sum(EquipmentOEERecord.planned_production_time)).desc())
+            .group_by(
+                Equipment.id,
+                Equipment.equipment_code,
+                Equipment.equipment_name,
+                Workshop.workshop_name,
+            )
+            .having(
+                func.sum(EquipmentOEERecord.operating_time)
+                * 100.0
+                / func.sum(EquipmentOEERecord.planned_production_time)
+                >= threshold
+            )
+            .order_by(
+                (
+                    func.sum(EquipmentOEERecord.operating_time)
+                    * 100.0
+                    / func.sum(EquipmentOEERecord.planned_production_time)
+                ).desc()
+            )
             .limit(limit)
             .all()
         )
@@ -98,9 +115,13 @@ class CapacityAnalysisService:
                 func.sum(WorkOrder.completed_qty).label("total_completed"),
                 func.avg(
                     case(
-                        [(WorkOrder.actual_hours > 0,
-                          WorkOrder.standard_hours * 100.0 / WorkOrder.actual_hours)],
-                        else_=0
+                        [
+                            (
+                                WorkOrder.actual_hours > 0,
+                                WorkOrder.standard_hours * 100.0 / WorkOrder.actual_hours,
+                            )
+                        ],
+                        else_=0,
                     )
                 ).label("avg_efficiency"),
             )
@@ -108,7 +129,12 @@ class CapacityAnalysisService:
             .join(WorkOrder, Workstation.id == WorkOrder.workstation_id, isouter=True)
             .filter(WorkOrder.actual_start_time >= start_date)
             .filter(WorkOrder.actual_start_time <= end_date)
-            .group_by(Workstation.id, Workstation.workstation_code, Workstation.workstation_name, Workshop.workshop_name)
+            .group_by(
+                Workstation.id,
+                Workstation.workstation_code,
+                Workstation.workstation_name,
+                Workshop.workshop_name,
+            )
             .having(func.count(WorkOrder.id) > 0)
             .order_by(func.sum(WorkOrder.actual_hours).desc())
             .limit(limit)

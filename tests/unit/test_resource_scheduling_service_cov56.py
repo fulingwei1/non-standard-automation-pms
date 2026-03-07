@@ -25,7 +25,9 @@ class TestResourceSchedulingService(unittest.TestCase):
     # 1. 资源冲突检测测试
     # ============================================================================
 
-    @patch("app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService")
+    @patch(
+        "app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService"
+    )
     def test_detect_conflicts_success(self, mock_ai_service_class):
         """测试成功检测资源冲突"""
         # 准备mock数据
@@ -58,7 +60,9 @@ class TestResourceSchedulingService(unittest.TestCase):
         self.assertEqual(len(result["conflicts"]), 1)
         self.assertIn("detection_time_ms", result)
 
-    @patch("app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService")
+    @patch(
+        "app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService"
+    )
     def test_detect_conflicts_with_auto_suggestions(self, mock_ai_service_class):
         """测试自动生成调度方案"""
         # 准备mock数据
@@ -144,7 +148,9 @@ class TestResourceSchedulingService(unittest.TestCase):
     # 2. AI调度方案测试
     # ============================================================================
 
-    @patch("app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService")
+    @patch(
+        "app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService"
+    )
     def test_generate_suggestions_success(self, mock_ai_service_class):
         """测试成功生成调度方案"""
         # 准备mock数据
@@ -241,7 +247,9 @@ class TestResourceSchedulingService(unittest.TestCase):
     # 3. 资源需求预测测试
     # ============================================================================
 
-    @patch("app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService")
+    @patch(
+        "app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService"
+    )
     def test_generate_forecast(self, mock_ai_service_class):
         """测试生成资源需求预测"""
         # 准备mock数据
@@ -278,7 +286,9 @@ class TestResourceSchedulingService(unittest.TestCase):
     # 4. 资源利用率分析测试
     # ============================================================================
 
-    @patch("app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService")
+    @patch(
+        "app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService"
+    )
     def test_analyze_utilization_single_resource(self, mock_ai_service_class):
         """测试单个资源利用率分析"""
         # 准备mock数据
@@ -308,7 +318,9 @@ class TestResourceSchedulingService(unittest.TestCase):
         self.assertEqual(result["idle_count"], 0)
         self.assertEqual(result["overloaded_count"], 0)
 
-    @patch("app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService")
+    @patch(
+        "app.services.resource_scheduling.resource_scheduling_service.ResourceSchedulingAIService"
+    )
     @patch("app.services.resource_scheduling.resource_scheduling_service.User")
     def test_analyze_utilization_all_resources(self, mock_user_model, mock_ai_service_class):
         """测试批量资源利用率分析"""

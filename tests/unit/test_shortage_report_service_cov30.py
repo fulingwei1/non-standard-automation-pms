@@ -13,13 +13,17 @@ class TestShortageReportServiceDeprecated:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             import importlib
+
             import app.services.shortage_report_service as _mod
+
             importlib.reload(_mod)
 
             deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
             assert len(deprecation_warnings) >= 1
-            assert "shortage_report_service" in str(deprecation_warnings[0].message).lower() or \
-                   "shortage" in str(deprecation_warnings[0].message).lower()
+            assert (
+                "shortage_report_service" in str(deprecation_warnings[0].message).lower()
+                or "shortage" in str(deprecation_warnings[0].message).lower()
+            )
 
     def test_module_exports_expected_symbols(self):
         """验证废弃模块正确导出所有预期符号"""
@@ -40,6 +44,7 @@ class TestShortageReportServiceDeprecated:
     def test_module_all_is_defined(self):
         """验证 __all__ 已定义"""
         import app.services.shortage_report_service as mod
+
         assert hasattr(mod, "__all__")
         assert isinstance(mod.__all__, list)
         assert len(mod.__all__) > 0

@@ -118,7 +118,9 @@ def serialize_order_item(item: PurchaseOrderItem) -> Dict[str, Any]:
     }
 
 
-def serialize_purchase_order(order: PurchaseOrder, *, include_items: bool = False) -> Dict[str, Any]:
+def serialize_purchase_order(
+    order: PurchaseOrder, *, include_items: bool = False
+) -> Dict[str, Any]:
     """序列化采购订单"""
     data: Dict[str, Any] = {
         "id": order.id,
@@ -143,7 +145,9 @@ def serialize_purchase_order(order: PurchaseOrder, *, include_items: bool = Fals
     return data
 
 
-def serialize_purchase_request(request: PurchaseRequest, *, include_items: bool = False) -> Dict[str, Any]:
+def serialize_purchase_request(
+    request: PurchaseRequest, *, include_items: bool = False
+) -> Dict[str, Any]:
     """序列化采购申请"""
     data: Dict[str, Any] = {
         "id": request.id,

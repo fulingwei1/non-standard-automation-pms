@@ -23,6 +23,7 @@ import pytest
 class TestApprovalDelegateServiceInit:
     def test_init_stores_db(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         db = MagicMock()
         svc = ApprovalDelegateService(db)
         assert svc.db is db
@@ -33,6 +34,7 @@ class TestGetActiveDelegate:
 
     def setup_method(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         self.db = MagicMock()
         self.svc = ApprovalDelegateService(self.db)
 
@@ -92,6 +94,7 @@ class TestApplyDelegation:
 
     def setup_method(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         self.db = MagicMock()
         self.svc = ApprovalDelegateService(self.db)
 
@@ -135,6 +138,7 @@ class TestCreateDelegate:
 
     def setup_method(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         self.db = MagicMock()
         self.svc = ApprovalDelegateService(self.db)
 
@@ -194,6 +198,7 @@ class TestUpdateDelegate:
 
     def setup_method(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         self.db = MagicMock()
         self.svc = ApprovalDelegateService(self.db)
 
@@ -225,6 +230,7 @@ class TestCancelDelegate:
 
     def setup_method(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         self.db = MagicMock()
         self.svc = ApprovalDelegateService(self.db)
 
@@ -247,6 +253,7 @@ class TestGetUserDelegates:
 
     def setup_method(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         self.db = MagicMock()
         self.svc = ApprovalDelegateService(self.db)
 
@@ -277,6 +284,7 @@ class TestRecordDelegateAction:
 
     def setup_method(self):
         from app.services.approval_engine.delegate import ApprovalDelegateService
+
         self.db = MagicMock()
         self.svc = ApprovalDelegateService(self.db)
 

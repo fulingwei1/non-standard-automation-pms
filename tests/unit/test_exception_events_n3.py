@@ -19,15 +19,15 @@ ExceptionEventsService 深度覆盖测试（N3组）
 - create_event / get_event / list_events 别名
 """
 
-from datetime import datetime, timezone, date
-from unittest.mock import MagicMock, patch, call
+from datetime import date, datetime, timezone
+from unittest.mock import MagicMock, call, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_db():
@@ -37,6 +37,7 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.alert.exception_events_service import ExceptionEventsService
+
     return ExceptionEventsService(db=mock_db)
 
 
@@ -79,6 +80,7 @@ def _make_user(user_id=1, dept=None, position=None):
 # get_exception_event
 # ---------------------------------------------------------------------------
 
+
 class TestGetExceptionEvent:
     def test_returns_event_when_found(self, service, mock_db):
         ev = _make_event()
@@ -87,7 +89,9 @@ class TestGetExceptionEvent:
         assert result is ev
 
     def test_returns_none_when_not_found(self, service, mock_db):
-        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = (
+            None
+        )
         result = service.get_exception_event(999)
         assert result is None
 
@@ -96,9 +100,11 @@ class TestGetExceptionEvent:
 # create_exception_event
 # ---------------------------------------------------------------------------
 
+
 class TestCreateExceptionEvent:
     def test_creates_event_and_calls_auto_assign(self, service, mock_db):
         from app.schemas.alert import ExceptionEventCreate
+
         event_data = MagicMock(spec=ExceptionEventCreate)
         event_data.title = "设备故障"
         event_data.description = "描述"
@@ -111,9 +117,11 @@ class TestCreateExceptionEvent:
         event_data.immediate_actions = None
         current_user = _make_user()
 
-        with patch("app.services.alert.exception_events_service.save_obj") as mock_save, \
-             patch.object(service, "_auto_assign_handler") as mock_assign, \
-             patch.object(service, "_send_exception_notification") as mock_notify:
+        with (
+            patch("app.services.alert.exception_events_service.save_obj") as mock_save,
+            patch.object(service, "_auto_assign_handler") as mock_assign,
+            patch.object(service, "_send_exception_notification") as mock_notify,
+        ):
             result = service.create_exception_event(event_data, current_user)
         mock_save.assert_called_once()
         mock_assign.assert_called_once()
@@ -121,6 +129,7 @@ class TestCreateExceptionEvent:
 
     def test_sets_occurred_at_to_now_when_none(self, service, mock_db):
         from app.schemas.alert import ExceptionEventCreate
+
         event_data = MagicMock(spec=ExceptionEventCreate)
         event_data.title = "事件"
         event_data.description = ""
@@ -133,9 +142,11 @@ class TestCreateExceptionEvent:
         event_data.immediate_actions = None
         current_user = _make_user()
 
-        with patch("app.services.alert.exception_events_service.save_obj"), \
-             patch.object(service, "_auto_assign_handler"), \
-             patch.object(service, "_send_exception_notification"):
+        with (
+            patch("app.services.alert.exception_events_service.save_obj"),
+            patch.object(service, "_auto_assign_handler"),
+            patch.object(service, "_send_exception_notification"),
+        ):
             result = service.create_exception_event(event_data, current_user)
         # verify the ExceptionEvent was created with reported_by set
         assert result is not None
@@ -145,6 +156,7 @@ class TestCreateExceptionEvent:
 # update_exception_event
 # ---------------------------------------------------------------------------
 
+
 class TestUpdateExceptionEvent:
     def test_returns_none_when_event_not_found(self, service, mock_db):
         with patch.object(service, "get_exception_event", return_value=None):
@@ -153,6 +165,7 @@ class TestUpdateExceptionEvent:
 
     def test_updates_fields_and_commits(self, service, mock_db):
         from app.schemas.alert import ExceptionEventUpdate
+
         ev = _make_event()
         ev.status = "pending"
         event_data = MagicMock(spec=ExceptionEventUpdate)
@@ -170,6 +183,7 @@ class TestUpdateExceptionEvent:
 # resolve_exception_event
 # ---------------------------------------------------------------------------
 
+
 class TestResolveExceptionEvent:
     def test_returns_none_when_not_found(self, service, mock_db):
         with patch.object(service, "get_exception_event", return_value=None):
@@ -178,6 +192,7 @@ class TestResolveExceptionEvent:
 
     def test_raises_when_already_resolved(self, service, mock_db):
         from fastapi import HTTPException
+
         ev = _make_event(status="resolved")
         with patch.object(service, "get_exception_event", return_value=ev):
             with pytest.raises(HTTPException) as exc_info:
@@ -186,6 +201,7 @@ class TestResolveExceptionEvent:
 
     def test_resolves_event_successfully(self, service, mock_db):
         from app.schemas.alert import ExceptionEventResolve
+
         ev = _make_event(status="pending")
         resolve_data = MagicMock(spec=ExceptionEventResolve)
         resolve_data.resolution_method = "重启设备"
@@ -193,8 +209,10 @@ class TestResolveExceptionEvent:
         resolve_data.preventive_measures = "加强维护"
         current_user = _make_user(3)
 
-        with patch.object(service, "get_exception_event", return_value=ev), \
-             patch.object(service, "_send_exception_notification") as mock_notify:
+        with (
+            patch.object(service, "get_exception_event", return_value=ev),
+            patch.object(service, "_send_exception_notification") as mock_notify,
+        ):
             mock_db.refresh.return_value = None
             result = service.resolve_exception_event(1, resolve_data, current_user)
         assert ev.status == "resolved"
@@ -206,6 +224,7 @@ class TestResolveExceptionEvent:
 # verify_exception_event
 # ---------------------------------------------------------------------------
 
+
 class TestVerifyExceptionEvent:
     def test_returns_none_when_not_found(self, service, mock_db):
         with patch.object(service, "get_exception_event", return_value=None):
@@ -214,6 +233,7 @@ class TestVerifyExceptionEvent:
 
     def test_raises_when_not_resolved(self, service, mock_db):
         from fastapi import HTTPException
+
         ev = _make_event(status="pending")
         with patch.object(service, "get_exception_event", return_value=ev):
             with pytest.raises(HTTPException) as exc_info:
@@ -222,6 +242,7 @@ class TestVerifyExceptionEvent:
 
     def test_sets_verified_when_is_verified_true(self, service, mock_db):
         from app.schemas.alert import ExceptionEventVerify
+
         ev = _make_event(status="resolved")
         verify_data = MagicMock(spec=ExceptionEventVerify)
         verify_data.is_verified = True
@@ -235,6 +256,7 @@ class TestVerifyExceptionEvent:
 
     def test_sets_reopened_when_not_verified(self, service, mock_db):
         from app.schemas.alert import ExceptionEventVerify
+
         ev = _make_event(status="resolved")
         verify_data = MagicMock(spec=ExceptionEventVerify)
         verify_data.is_verified = False
@@ -249,6 +271,7 @@ class TestVerifyExceptionEvent:
 # ---------------------------------------------------------------------------
 # add_exception_action
 # ---------------------------------------------------------------------------
+
 
 class TestAddExceptionAction:
     def test_creates_exception_action(self, service, mock_db):
@@ -267,6 +290,7 @@ class TestAddExceptionAction:
 # escalate_exception_event
 # ---------------------------------------------------------------------------
 
+
 class TestEscalateExceptionEvent:
     def test_returns_none_when_event_not_found(self, service, mock_db):
         with patch.object(service, "get_exception_event", return_value=None):
@@ -280,8 +304,10 @@ class TestEscalateExceptionEvent:
             "escalated_to": 10,
             "escalation_reason": "需要高层处理",
         }
-        with patch.object(service, "get_exception_event", return_value=ev), \
-             patch.object(service, "_send_escalation_notification") as mock_notify:
+        with (
+            patch.object(service, "get_exception_event", return_value=ev),
+            patch.object(service, "_send_escalation_notification") as mock_notify,
+        ):
             mock_db.refresh.return_value = None
             result = service.escalate_exception_event(1, escalation_data, _make_user())
         assert ev.status == "escalated"
@@ -293,9 +319,11 @@ class TestEscalateExceptionEvent:
 # create_exception_from_issue
 # ---------------------------------------------------------------------------
 
+
 class TestCreateExceptionFromIssue:
     def test_raises_404_when_issue_not_found(self, service, mock_db):
         from fastapi import HTTPException
+
         mock_db.query.return_value.filter.return_value.first.return_value = None
         with pytest.raises(HTTPException) as exc_info:
             service.create_exception_from_issue(999, _make_user())
@@ -318,6 +346,7 @@ class TestCreateExceptionFromIssue:
 # ---------------------------------------------------------------------------
 # _auto_assign_handler
 # ---------------------------------------------------------------------------
+
 
 class TestAutoAssignHandler:
     def test_assigns_to_pm_when_project_has_pm(self, service, mock_db):
@@ -360,15 +389,19 @@ class TestAutoAssignHandler:
 # _determine_exception_severity
 # ---------------------------------------------------------------------------
 
+
 class TestDetermineExceptionSeverity:
-    @pytest.mark.parametrize("issue_severity,expected", [
-        ("critical", "critical"),
-        ("high", "high"),
-        ("medium", "medium"),
-        ("low", "low"),
-        ("unknown", "medium"),
-        (None, "medium"),
-    ])
+    @pytest.mark.parametrize(
+        "issue_severity,expected",
+        [
+            ("critical", "critical"),
+            ("high", "high"),
+            ("medium", "medium"),
+            ("low", "low"),
+            ("unknown", "medium"),
+            (None, "medium"),
+        ],
+    )
     def test_severity_mapping(self, service, issue_severity, expected):
         issue = MagicMock()
         issue.severity = issue_severity
@@ -379,6 +412,7 @@ class TestDetermineExceptionSeverity:
 # ---------------------------------------------------------------------------
 # _send_exception_notification
 # ---------------------------------------------------------------------------
+
 
 class TestSendExceptionNotification:
     def test_sends_notification_to_responsible_user(self, service, mock_db):
@@ -420,6 +454,7 @@ class TestSendExceptionNotification:
 # _send_escalation_notification
 # ---------------------------------------------------------------------------
 
+
 class TestSendEscalationNotification:
     def test_sends_notification_to_escalated_user(self, service, mock_db):
         ev = _make_event()
@@ -450,6 +485,7 @@ class TestSendEscalationNotification:
 # ---------------------------------------------------------------------------
 # Alias methods
 # ---------------------------------------------------------------------------
+
 
 class TestAliaseMethods:
     def test_get_event_alias(self, service):

@@ -44,9 +44,9 @@ def generate_budget_version(db: Session, project_id: int) -> str:
 
     if max_version:
         # 提取版本号并递增
-        version_parts = max_version.version.split('.')
+        version_parts = max_version.version.split(".")
         if len(version_parts) == 2:
-            major = int(version_parts[0].replace('V', ''))
+            major = int(version_parts[0].replace("V", ""))
             return f"V{major + 1}.0"
 
     return "V1.0"

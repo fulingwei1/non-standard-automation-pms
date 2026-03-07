@@ -11,8 +11,8 @@ QueryOptimizer 综合单元测试
 - cache_result: 缓存结果
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -38,7 +38,7 @@ class TestQueryOptimizerInit:
 
         optimizer = QueryOptimizer(mock_db)
 
-        assert hasattr(optimizer, 'cache') or hasattr(optimizer, '_cache')
+        assert hasattr(optimizer, "cache") or hasattr(optimizer, "_cache")
 
 
 class TestOptimizeQuery:
@@ -67,7 +67,7 @@ class TestOptimizeQuery:
         mock_query = MagicMock()
         mock_query.options.return_value = mock_query
 
-        result = optimizer.optimize_query(mock_query, eager_load=['relation1'])
+        result = optimizer.optimize_query(mock_query, eager_load=["relation1"])
 
         assert result is not None
 
@@ -81,7 +81,7 @@ class TestOptimizeQuery:
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query
 
-        filters = {'status': 'ACTIVE', 'is_deleted': False}
+        filters = {"status": "ACTIVE", "is_deleted": False}
 
         result = optimizer.optimize_query(mock_query, filters=filters)
 
@@ -111,7 +111,7 @@ class TestAnalyzeQuery:
         mock_db = MagicMock()
 
         mock_result = MagicMock()
-        mock_result.fetchall.return_value = [('EXPLAIN result',)]
+        mock_result.fetchall.return_value = [("EXPLAIN result",)]
         mock_db.execute.return_value = mock_result
 
         optimizer = QueryOptimizer(mock_db)
@@ -142,7 +142,7 @@ class TestPaginate:
 
         result = optimizer.paginate(mock_query, page=1, page_size=20)
 
-        assert 'items' in result or 'data' in result or isinstance(result, dict)
+        assert "items" in result or "data" in result or isinstance(result, dict)
 
     def test_calculates_total_pages(self):
         """测试计算总页数"""
@@ -160,7 +160,7 @@ class TestPaginate:
         result = optimizer.paginate(mock_query, page=1, page_size=20)
 
         # 45 / 20 = 3 pages (rounded up)
-        assert result.get('total_pages', 3) == 3 or result.get('pages', 3) == 3 or True
+        assert result.get("total_pages", 3) == 3 or result.get("pages", 3) == 3 or True
 
     def test_handles_empty_result(self):
         """测试处理空结果"""

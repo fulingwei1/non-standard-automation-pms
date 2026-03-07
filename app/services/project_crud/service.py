@@ -13,7 +13,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
-from sqlalchemy import desc, case
+from sqlalchemy import case, desc
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.common.pagination import PaginationParams
@@ -21,10 +21,10 @@ from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.models.project import Customer, Project, ProjectMember
 from app.models.user import User
 from app.schemas.project import (
-    ProjectCreate,
-    ProjectMemberResponse,
     MachineResponse,
     MilestoneResponse,
+    ProjectCreate,
+    ProjectMemberResponse,
 )
 from app.utils.db_helpers import save_obj
 
@@ -97,16 +97,14 @@ class ProjectCrudService:
         # 超支项目筛选
         if overrun_only:
             query = query.filter(
-                Project.actual_cost > Project.budget_amount,
-                Project.budget_amount > 0
+                Project.actual_cost > Project.budget_amount, Project.budget_amount > 0
             )
 
         # 应用数据权限过滤
         if current_user:
             from app.services.data_scope import DataScopeService
-            query = DataScopeService.filter_projects_by_scope(
-                self.db, query, current_user
-            )
+
+            query = DataScopeService.filter_projects_by_scope(self.db, query, current_user)
 
         return query
 
@@ -119,8 +117,7 @@ class ProjectCrudService:
         elif sort == "budget_used_pct":
             # 按预算使用率排序（避免除以0）
             budget_used_expr = case(
-                (Project.budget_amount > 0, Project.actual_cost / Project.budget_amount),
-                else_=0
+                (Project.budget_amount > 0, Project.actual_cost / Project.budget_amount), else_=0
             )
             query = query.order_by(desc(budget_used_expr))
         else:
@@ -163,10 +160,7 @@ class ProjectCrudService:
         )
 
         # 使用selectinload优化关联查询
-        query = query.options(
-            selectinload(Project.customer),
-            selectinload(Project.manager)
-        )
+        query = query.options(selectinload(Project.customer), selectinload(Project.manager))
 
         # 应用排序
         query = self.apply_sorting(query, sort)
@@ -194,11 +188,7 @@ class ProjectCrudService:
 
     def check_project_code_exists(self, project_code: str) -> bool:
         """检查项目编码是否已存在"""
-        project = (
-            self.db.query(Project)
-            .filter(Project.project_code == project_code)
-            .first()
-        )
+        project = self.db.query(Project).filter(Project.project_code == project_code).first()
         return project is not None
 
     def create_project(self, project_in: ProjectCreate) -> Project:
@@ -224,6 +214,7 @@ class ProjectCrudService:
 
         # 初始化标准阶段
         from app.utils.project_utils import init_project_stages
+
         init_project_stages(self.db, project.id)
 
         return project
@@ -267,7 +258,9 @@ class ProjectCrudService:
                 "project_id": member.project_id,
                 "user_id": member.user_id,
                 "username": member.user.username if member.user else f"user_{member.user_id}",
-                "real_name": member.user.real_name if member.user and member.user.real_name else None,
+                "real_name": (
+                    member.user.real_name if member.user and member.user.real_name else None
+                ),
                 "role_code": member.role_code,
                 "allocation_pct": member.allocation_pct,
                 "start_date": member.start_date,
@@ -281,12 +274,12 @@ class ProjectCrudService:
 
     def get_project_machines(self, project: Project) -> List[MachineResponse]:
         """获取项目设备列表"""
-        machines_query = project.machines.all() if hasattr(project.machines, 'all') else []
+        machines_query = project.machines.all() if hasattr(project.machines, "all") else []
         return [MachineResponse.model_validate(m) for m in machines_query]
 
     def get_project_milestones(self, project: Project) -> List[MilestoneResponse]:
         """获取项目里程碑列表"""
-        milestones_query = project.milestones.all() if hasattr(project.milestones, 'all') else []
+        milestones_query = project.milestones.all() if hasattr(project.milestones, "all") else []
         return [MilestoneResponse.model_validate(m) for m in milestones_query]
 
     def update_project(self, project: Project, update_data: Dict[str, Any]) -> Project:
@@ -318,6 +311,7 @@ class ProjectCrudService:
         """使项目缓存失效"""
         try:
             from app.services.cache_service import CacheService
+
             cache_service = CacheService()
             if project_id:
                 cache_service.invalidate_project_detail(project_id)

@@ -10,12 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.models.ecn import Ecn, EcnApproval, EcnEvaluation
 from app.models.user import User
-
-from app.services.notification_dispatcher import NotificationDispatcher
 from app.services.channel_handlers.base import (
-    NotificationRequest,
     NotificationPriority,
+    NotificationRequest,
 )
+from app.services.notification_dispatcher import NotificationDispatcher
+
 from .utils import (
     check_all_evaluations_completed,
     find_department_manager,
@@ -25,10 +25,7 @@ from .utils import (
 
 
 def notify_evaluation_assigned(
-    db: Session,
-    ecn: Ecn,
-    evaluation: EcnEvaluation,
-    evaluator_id: Optional[int] = None
+    db: Session, ecn: Ecn, evaluation: EcnEvaluation, evaluator_id: Optional[int] = None
 ) -> None:
     """
     通知评估任务分配
@@ -69,17 +66,13 @@ def notify_evaluation_assigned(
             "ecn_no": ecn.ecn_no,
             "ecn_title": ecn.ecn_title,
             "eval_dept": evaluation.eval_dept,
-            "eval_id": evaluation.id
-        }
+            "eval_id": evaluation.id,
+        },
     )
     dispatcher.send_notification_request(request)
 
 
-def notify_evaluation_completed(
-    db: Session,
-    ecn: Ecn,
-    evaluation: EcnEvaluation
-) -> None:
+def notify_evaluation_completed(db: Session, ecn: Ecn, evaluation: EcnEvaluation) -> None:
     """
     通知评估完成
     通知ECN申请人、项目相关人员和其他相关人员
@@ -103,8 +96,8 @@ def notify_evaluation_completed(
             extra_data={
                 "ecn_no": ecn.ecn_no,
                 "eval_dept": evaluation.eval_dept,
-                "eval_result": evaluation.eval_result
-            }
+                "eval_result": evaluation.eval_result,
+            },
         )
     dispatcher.send_notification_request(request)
 
@@ -113,11 +106,15 @@ def notify_evaluation_completed(
         from app.models.project import ProjectMember
 
         # 查找项目成员（排除申请人，避免重复通知）
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active,
-            ProjectMember.user_id != ecn.applicant_id
-        ).all()
+        project_members = (
+            db.query(ProjectMember)
+            .filter(
+                ProjectMember.project_id == ecn.project_id,
+                ProjectMember.is_active,
+                ProjectMember.user_id != ecn.applicant_id,
+            )
+            .all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
@@ -140,18 +137,20 @@ def notify_evaluation_completed(
                         "ecn_no": ecn.ecn_no,
                         "eval_dept": evaluation.eval_dept,
                         "eval_result": evaluation.eval_result,
-                        "is_cc": True  # 标记为抄送
-                    }
+                        "is_cc": True,  # 标记为抄送
+                    },
                 )
                 dispatcher.send_notification_request(request)
 
     # 通知审批人员（如果所有评估都完成，进入审批阶段）
     if check_all_evaluations_completed(db, ecn.id):
         # 查找下一级审批人员
-        pending_approvals = db.query(EcnApproval).filter(
-            EcnApproval.ecn_id == ecn.id,
-            EcnApproval.approval_status == 'PENDING'
-        ).order_by(EcnApproval.approval_level).all()
+        pending_approvals = (
+            db.query(EcnApproval)
+            .filter(EcnApproval.ecn_id == ecn.id, EcnApproval.approval_status == "PENDING")
+            .order_by(EcnApproval.approval_level)
+            .all()
+        )
 
         for approval in pending_approvals:
             # 根据角色查找审批人
@@ -176,7 +175,7 @@ def notify_evaluation_completed(
                         "ecn_no": ecn.ecn_no,
                         "ecn_title": ecn.ecn_title,
                         "approval_level": approval.approval_level,
-                        "approval_id": approval.id
-                    }
+                        "approval_id": approval.id,
+                    },
                 )
                 dispatcher.send_notification_request(request)

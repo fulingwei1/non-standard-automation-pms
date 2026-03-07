@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """绩效评价创建单元测试 - 第三十六批"""
 
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 pytest.importorskip("app.services.performance_service.evaluation")
 
 try:
-    from app.services.performance_service.evaluation import create_evaluation_tasks
     from app.models.performance import EvaluationStatusEnum, EvaluatorTypeEnum
+    from app.services.performance_service.evaluation import create_evaluation_tasks
 except ImportError:
     pytestmark = pytest.mark.skip(reason="导入失败")
     create_evaluation_tasks = None
@@ -34,8 +35,10 @@ def make_db_no_employee():
 def make_db_with_employee_no_dept():
     """有user但无部门"""
     db = MagicMock()
-    user = MagicMock(); user.employee_id = 5
-    emp = MagicMock(); emp.department = None
+    user = MagicMock()
+    user.employee_id = 5
+    emp = MagicMock()
+    emp.department = None
     db.query.return_value.get.side_effect = lambda *a, **kw: user if True else emp
     db.query.return_value.filter.return_value.first.return_value = None
     db.query.return_value.filter.return_value.all.return_value = []

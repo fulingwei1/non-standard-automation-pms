@@ -2,11 +2,13 @@
 """
 第十六批：收款计划服务 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.sales.payment_plan_service import PaymentPlanService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -102,6 +104,6 @@ class TestPaymentPlanService:
         contract = make_contract(contract_amount=500000.0)
         svc = PaymentPlanService(db)
         # _create_payment_plan 可能返回None，这里mock一下
-        with patch.object(svc, '_create_payment_plan', return_value=MagicMock()):
+        with patch.object(svc, "_create_payment_plan", return_value=MagicMock()):
             plans = svc.generate_payment_plans_from_contract(contract)
             assert isinstance(plans, list)

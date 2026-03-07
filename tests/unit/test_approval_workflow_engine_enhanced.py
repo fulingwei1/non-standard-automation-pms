@@ -4,22 +4,23 @@ WorkflowEngine 完整测试
 覆盖审批工作流引擎的核心功能
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from app.services.approval_engine.workflow_engine import (
-    WorkflowEngine,
-    ApprovalRouter,
-)
+import pytest
+
 from app.services.approval_engine.models import (
-    ApprovalStatus,
     ApprovalDecision,
     ApprovalNodeRole,
+    ApprovalStatus,
+)
+from app.services.approval_engine.workflow_engine import (
+    ApprovalRouter,
+    WorkflowEngine,
 )
 
-
 # ========== Fixture Setup ==========
+
 
 @pytest.fixture
 def db_session():
@@ -102,6 +103,7 @@ def mock_user():
 
 
 # ========== WorkflowEngine Tests ==========
+
 
 class TestWorkflowEngineInit:
     """测试工作流引擎初始化"""
@@ -195,14 +197,16 @@ class TestCreateInstance:
             submitted_by=1,
         )
 
-        assert hasattr(instance, 'due_date')
+        assert hasattr(instance, "due_date")
         assert instance.due_date > datetime.now()
 
 
 class TestGetCurrentNode:
     """测试获取当前节点"""
 
-    def test_get_current_node_with_node_id(self, workflow_engine, db_session, mock_instance, mock_node):
+    def test_get_current_node_with_node_id(
+        self, workflow_engine, db_session, mock_instance, mock_node
+    ):
         """测试通过节点ID获取当前节点"""
         mock_instance.current_node_id = 1
         db_session.query.return_value.filter.return_value.first.return_value = mock_node
@@ -210,10 +214,14 @@ class TestGetCurrentNode:
         node = workflow_engine.get_current_node(mock_instance)
         assert node == mock_node
 
-    def test_get_current_node_without_node_id(self, workflow_engine, db_session, mock_instance, mock_node):
+    def test_get_current_node_without_node_id(
+        self, workflow_engine, db_session, mock_instance, mock_node
+    ):
         """测试没有节点ID时返回第一个节点"""
         mock_instance.current_node_id = None
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_node
+        )
 
         node = workflow_engine.get_current_node(mock_instance)
         assert node == mock_node
@@ -232,7 +240,9 @@ class TestGetCurrentNode:
         node = workflow_engine.get_current_node(mock_instance)
         assert node is None
 
-    def test_get_current_node_in_progress(self, workflow_engine, db_session, mock_instance, mock_node):
+    def test_get_current_node_in_progress(
+        self, workflow_engine, db_session, mock_instance, mock_node
+    ):
         """测试进行中状态可以获取节点"""
         mock_instance.current_status = ApprovalStatus.IN_PROGRESS.value
         mock_instance.current_node_id = 1
@@ -260,67 +270,81 @@ class TestEvaluateNodeConditions:
     def test_evaluate_condition_success(self, workflow_engine, mock_node, mock_instance):
         """测试条件评估成功"""
         # 通过 patch 整个导入路径
-        with patch('app.services.approval_engine.condition_parser.ConditionEvaluator') as mock_evaluator_class:
+        with patch(
+            "app.services.approval_engine.condition_parser.ConditionEvaluator"
+        ) as mock_evaluator_class:
             mock_evaluator = MagicMock()
             mock_evaluator.evaluate.return_value = True
             mock_evaluator_class.return_value = mock_evaluator
-            
+
             mock_node.condition_expression = "{{ amount > 1000 }}"
             result = workflow_engine.evaluate_node_conditions(mock_node, mock_instance)
             assert result is True
 
     def test_evaluate_condition_false(self, workflow_engine, mock_node, mock_instance):
         """测试条件评估为假"""
-        with patch('app.services.approval_engine.condition_parser.ConditionEvaluator') as mock_evaluator_class:
+        with patch(
+            "app.services.approval_engine.condition_parser.ConditionEvaluator"
+        ) as mock_evaluator_class:
             mock_evaluator = MagicMock()
             mock_evaluator.evaluate.return_value = False
             mock_evaluator_class.return_value = mock_evaluator
-            
+
             mock_node.condition_expression = "{{ amount > 1000 }}"
             result = workflow_engine.evaluate_node_conditions(mock_node, mock_instance)
             assert result is False
 
     def test_evaluate_condition_parse_error(self, workflow_engine, mock_node, mock_instance):
         """测试条件解析错误时返回 True"""
-        with patch('app.services.approval_engine.condition_parser.ConditionEvaluator') as mock_evaluator_class:
-            with patch('app.services.approval_engine.condition_parser.ConditionParseError', Exception):
+        with patch(
+            "app.services.approval_engine.condition_parser.ConditionEvaluator"
+        ) as mock_evaluator_class:
+            with patch(
+                "app.services.approval_engine.condition_parser.ConditionParseError", Exception
+            ):
                 mock_evaluator = MagicMock()
                 mock_evaluator.evaluate.side_effect = Exception("语法错误")
                 mock_evaluator_class.return_value = mock_evaluator
-                
+
                 mock_node.condition_expression = "invalid {{ syntax"
                 result = workflow_engine.evaluate_node_conditions(mock_node, mock_instance)
                 assert result is True
 
     def test_evaluate_condition_runtime_error(self, workflow_engine, mock_node, mock_instance):
         """测试条件运行时错误返回 True"""
-        with patch('app.services.approval_engine.condition_parser.ConditionEvaluator') as mock_evaluator_class:
+        with patch(
+            "app.services.approval_engine.condition_parser.ConditionEvaluator"
+        ) as mock_evaluator_class:
             mock_evaluator = MagicMock()
             mock_evaluator.evaluate.side_effect = Exception("运行时错误")
             mock_evaluator_class.return_value = mock_evaluator
-            
+
             mock_node.condition_expression = "{{ 1 / 0 }}"
             result = workflow_engine.evaluate_node_conditions(mock_node, mock_instance)
             assert result is True
 
     def test_evaluate_condition_numeric_result(self, workflow_engine, mock_node, mock_instance):
         """测试数值结果转换为布尔值"""
-        with patch('app.services.approval_engine.condition_parser.ConditionEvaluator') as mock_evaluator_class:
+        with patch(
+            "app.services.approval_engine.condition_parser.ConditionEvaluator"
+        ) as mock_evaluator_class:
             mock_evaluator = MagicMock()
             mock_evaluator.evaluate.return_value = 100
             mock_evaluator_class.return_value = mock_evaluator
-            
+
             mock_node.condition_expression = "{{ amount }}"
             result = workflow_engine.evaluate_node_conditions(mock_node, mock_instance)
             assert result is True
 
     def test_evaluate_condition_string_result(self, workflow_engine, mock_node, mock_instance):
         """测试字符串结果转换为布尔值"""
-        with patch('app.services.approval_engine.condition_parser.ConditionEvaluator') as mock_evaluator_class:
+        with patch(
+            "app.services.approval_engine.condition_parser.ConditionEvaluator"
+        ) as mock_evaluator_class:
             mock_evaluator = MagicMock()
             mock_evaluator.evaluate.return_value = "true"
             mock_evaluator_class.return_value = mock_evaluator
-            
+
             mock_node.condition_expression = "{{ status }}"
             result = workflow_engine.evaluate_node_conditions(mock_node, mock_instance)
             assert result is True
@@ -332,33 +356,33 @@ class TestBuildConditionContext:
     def test_build_basic_context(self, workflow_engine, mock_instance, db_session):
         """测试构建基本上下文"""
         db_session.query.return_value.filter.return_value.first.return_value = None
-        
+
         context = workflow_engine._build_condition_context(mock_instance)
-        
-        assert 'instance' in context
-        assert 'form' in context
-        assert 'entity' in context
-        assert 'initiator' in context
+
+        assert "instance" in context
+        assert "form" in context
+        assert "entity" in context
+        assert "initiator" in context
 
     def test_build_context_with_user(self, workflow_engine, mock_instance, db_session, mock_user):
         """测试包含用户信息的上下文"""
         db_session.query.return_value.filter.return_value.first.return_value = mock_user
-        
+
         context = workflow_engine._build_condition_context(mock_instance)
-        
-        assert context['initiator']['id'] == mock_user.id
-        assert context['initiator']['username'] == mock_user.username
-        assert 'user' in context
+
+        assert context["initiator"]["id"] == mock_user.id
+        assert context["initiator"]["username"] == mock_user.username
+        assert "user" in context
 
     def test_build_context_with_form_data(self, workflow_engine, mock_instance, db_session):
         """测试包含表单数据的上下文"""
         mock_instance.form_data = {"amount": 5000, "priority": "high"}
         db_session.query.return_value.filter.return_value.first.return_value = None
-        
+
         context = workflow_engine._build_condition_context(mock_instance)
-        
-        assert context['form']['amount'] == 5000
-        assert context['amount'] == 5000
+
+        assert context["form"]["amount"] == 5000
+        assert context["amount"] == 5000
 
 
 class TestGetBusinessEntityData:
@@ -373,21 +397,21 @@ class TestGetBusinessEntityData:
         mock_ecn.status = "PENDING"
         mock_ecn.change_reason = "测试变更"
         mock_ecn.estimated_cost = 5000
-        
+
         db_session.query.return_value.filter.return_value.first.return_value = mock_ecn
-        
+
         data = workflow_engine._get_business_entity_data("ECN", 100)
-        
-        assert data['id'] == 100
-        assert data['ecn_no'] == "ECN-001"
-        assert data['estimated_cost'] == 5000
+
+        assert data["id"] == 100
+        assert data["ecn_no"] == "ECN-001"
+        assert data["estimated_cost"] == 5000
 
     def test_get_sales_quote_entity_data(self, workflow_engine, db_session):
         """测试获取销售报价业务数据（异常处理）"""
         # 注意：源代码中导入 SalesQuote 但模型包中实际是 Quote，
         # 导入会失败并触发异常处理，返回空字典
         data = workflow_engine._get_business_entity_data("SALES_QUOTE", 200)
-        
+
         # 由于导入错误，异常处理返回空字典
         assert data == {}
 
@@ -399,7 +423,7 @@ class TestGetBusinessEntityData:
     def test_get_entity_data_exception_handling(self, workflow_engine, db_session):
         """测试异常处理返回空字典"""
         db_session.query.side_effect = Exception("Database error")
-        
+
         data = workflow_engine._get_business_entity_data("ECN", 100)
         assert data == {}
 
@@ -407,17 +431,20 @@ class TestGetBusinessEntityData:
 class TestSubmitApproval:
     """测试提交审批"""
 
-    def test_submit_approval_approved(self, workflow_engine, db_session, mock_instance, mock_node, mock_user):
+    def test_submit_approval_approved(
+        self, workflow_engine, db_session, mock_instance, mock_node, mock_user
+    ):
         """测试提交审批通过"""
         db_session.query.return_value.filter.return_value.first.return_value = mock_node
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
-        
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_node
+        )
+
         # Mock user query
         user_query = MagicMock()
         user_query.filter.return_value.first.return_value = mock_user
         db_session.query.side_effect = lambda model: (
-            user_query if hasattr(model, 'username') else 
-            db_session.query.return_value
+            user_query if hasattr(model, "username") else db_session.query.return_value
         )
 
         record = workflow_engine.submit_approval(
@@ -434,7 +461,7 @@ class TestSubmitApproval:
     def test_submit_approval_no_current_node(self, workflow_engine, mock_instance):
         """测试没有当前节点时抛出异常"""
         mock_instance.current_status = ApprovalStatus.APPROVED.value
-        
+
         with pytest.raises(ValueError, match="没有可审批的节点"):
             workflow_engine.submit_approval(
                 instance=mock_instance,
@@ -442,12 +469,16 @@ class TestSubmitApproval:
                 decision=ApprovalDecision.APPROVED.value,
             )
 
-    @patch.object(WorkflowEngine, 'evaluate_node_conditions', return_value=False)
-    def test_submit_approval_condition_not_met(self, mock_evaluate, workflow_engine, db_session, mock_instance, mock_node):
+    @patch.object(WorkflowEngine, "evaluate_node_conditions", return_value=False)
+    def test_submit_approval_condition_not_met(
+        self, mock_evaluate, workflow_engine, db_session, mock_instance, mock_node
+    ):
         """测试条件不满足时抛出异常"""
         db_session.query.return_value.filter.return_value.first.return_value = mock_node
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
-        
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_node
+        )
+
         with pytest.raises(ValueError, match="不满足审批条件"):
             workflow_engine.submit_approval(
                 instance=mock_instance,
@@ -455,16 +486,19 @@ class TestSubmitApproval:
                 decision=ApprovalDecision.APPROVED.value,
             )
 
-    def test_submit_approval_rejected(self, workflow_engine, db_session, mock_instance, mock_node, mock_user):
+    def test_submit_approval_rejected(
+        self, workflow_engine, db_session, mock_instance, mock_node, mock_user
+    ):
         """测试提交驳回"""
         db_session.query.return_value.filter.return_value.first.return_value = mock_node
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
-        
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_node
+        )
+
         user_query = MagicMock()
         user_query.filter.return_value.first.return_value = mock_user
         db_session.query.side_effect = lambda model: (
-            user_query if hasattr(model, 'username') else 
-            db_session.query.return_value
+            user_query if hasattr(model, "username") else db_session.query.return_value
         )
 
         record = workflow_engine.submit_approval(
@@ -483,11 +517,9 @@ class TestUpdateInstanceStatus:
     def test_update_status_direct_mode(self, workflow_engine, db_session, mock_instance):
         """测试直接设置状态模式"""
         workflow_engine._update_instance_status(
-            mock_instance,
-            ApprovalStatus.APPROVED,
-            completed_nodes=3
+            mock_instance, ApprovalStatus.APPROVED, completed_nodes=3
         )
-        
+
         assert mock_instance.completed_nodes == 3
         db_session.add.assert_called_with(mock_instance)
         db_session.commit.assert_called()
@@ -497,13 +529,15 @@ class TestUpdateInstanceStatus:
         mock_record = MagicMock()
         mock_record.decision = ApprovalDecision.APPROVED
         mock_record.node = MagicMock()
-        
+
         mock_instance.flow = mock_flow
-        
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-        
+
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
+
         workflow_engine._update_instance_status(mock_instance, mock_record)
-        
+
         db_session.commit.assert_called()
 
 
@@ -514,15 +548,19 @@ class TestFindNextNode:
         """测试查找存在的下一个节点"""
         next_node = MagicMock()
         next_node.sequence = 2
-        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = next_node
-        
+        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            next_node
+        )
+
         result = workflow_engine._find_next_node(mock_node)
         assert result == next_node
 
     def test_find_next_node_not_exists(self, workflow_engine, db_session, mock_node):
         """测试最后一个节点返回 None"""
-        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
-        
+        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
+
         result = workflow_engine._find_next_node(mock_node)
         assert result is None
 
@@ -534,16 +572,20 @@ class TestFindPreviousNode:
         """测试查找存在的上一个节点"""
         prev_node = MagicMock()
         prev_node.sequence = 0
-        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = prev_node
-        
+        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            prev_node
+        )
+
         mock_node.sequence = 1
         result = workflow_engine._find_previous_node(mock_node)
         assert result == prev_node
 
     def test_find_previous_node_not_exists(self, workflow_engine, db_session, mock_node):
         """测试第一个节点返回 None"""
-        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
-        
+        db_session.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
+
         result = workflow_engine._find_previous_node(mock_node)
         assert result is None
 
@@ -561,23 +603,26 @@ class TestIsExpired:
         mock_instance.due_date = datetime.now() + timedelta(hours=24)
         assert workflow_engine.is_expired(mock_instance) is False
 
-    def test_is_expired_with_created_at(self, workflow_engine, db_session, mock_instance, mock_flow):
+    def test_is_expired_with_created_at(
+        self, workflow_engine, db_session, mock_instance, mock_flow
+    ):
         """测试通过 created_at 检查超时"""
         mock_instance.due_date = None
         mock_instance.created_at = datetime.now() - timedelta(hours=50)
         db_session.query.return_value.filter.return_value.first.return_value = mock_flow
-        
+
         assert workflow_engine.is_expired(mock_instance) is True
 
     def test_is_not_expired_fallback(self, workflow_engine, mock_instance):
         """测试无有效时间字段返回 False"""
         mock_instance.due_date = None
         mock_instance.created_at = None
-        
+
         assert workflow_engine.is_expired(mock_instance) is False
 
 
 # ========== ApprovalFlowResolver Tests ==========
+
 
 class TestApprovalFlowResolver:
     """测试审批流程解析器"""
@@ -591,7 +636,7 @@ class TestApprovalFlowResolver:
         """测试通过流程编码获取流程"""
         resolver = WorkflowEngine.ApprovalFlowResolver(db_session)
         db_session.query.return_value.filter.return_value.first.return_value = mock_flow
-        
+
         flow = resolver.get_approval_flow("TEST_FLOW")
         assert flow == mock_flow
 
@@ -599,7 +644,7 @@ class TestApprovalFlowResolver:
         """测试流程不存在抛出异常"""
         resolver = WorkflowEngine.ApprovalFlowResolver(db_session)
         db_session.query.return_value.filter.return_value.first.return_value = None
-        
+
         with pytest.raises(ValueError, match="审批流程.*不存在或未启用"):
             resolver.get_approval_flow("INVALID_FLOW")
 
@@ -618,6 +663,7 @@ class TestApprovalFlowResolver:
 
 # ========== ApprovalRouter Tests ==========
 
+
 class TestApprovalRouter:
     """测试审批路由器"""
 
@@ -628,14 +674,14 @@ class TestApprovalRouter:
     def test_get_approval_flow_by_business_type(self, approval_router, db_session, mock_flow):
         """测试通过业务类型获取流程"""
         db_session.query.return_value.filter.return_value.first.return_value = mock_flow
-        
+
         flow = approval_router.get_approval_flow("ECN")
         assert flow == mock_flow
 
     def test_get_approval_flow_not_found(self, approval_router, db_session):
         """测试业务类型无流程返回 None"""
         db_session.query.return_value.filter.return_value.first.return_value = None
-        
+
         flow = approval_router.get_approval_flow("UNKNOWN")
         assert flow is None
 
@@ -646,18 +692,12 @@ class TestApprovalRouter:
 
     def test_determine_approval_flow_invoice_small(self, approval_router):
         """测试小额发票单级流程"""
-        flow_code = approval_router.determine_approval_flow(
-            "SALES_INVOICE",
-            {"amount": 30000}
-        )
+        flow_code = approval_router.determine_approval_flow("SALES_INVOICE", {"amount": 30000})
         assert flow_code == "SALES_INVOICE_SINGLE"
 
     def test_determine_approval_flow_invoice_large(self, approval_router):
         """测试大额发票多级流程"""
-        flow_code = approval_router.determine_approval_flow(
-            "SALES_INVOICE",
-            {"amount": 60000}
-        )
+        flow_code = approval_router.determine_approval_flow("SALES_INVOICE", {"amount": 60000})
         assert flow_code == "SALES_INVOICE_MULTI"
 
     def test_determine_approval_flow_quote(self, approval_router):
@@ -673,10 +713,13 @@ class TestApprovalRouter:
 
 # ========== Integration Tests ==========
 
+
 class TestWorkflowIntegration:
     """集成测试"""
 
-    def test_full_approval_workflow(self, workflow_engine, db_session, mock_flow, mock_node, mock_user):
+    def test_full_approval_workflow(
+        self, workflow_engine, db_session, mock_flow, mock_node, mock_user
+    ):
         """测试完整审批流程"""
         # 1. 创建实例
         db_session.query.return_value.filter.return_value.first.return_value = mock_flow
@@ -688,35 +731,40 @@ class TestWorkflowIntegration:
             submitted_by=1,
         )
         assert instance is not None
-        
+
         # 2. 获取当前节点
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_node
+        )
         node = workflow_engine.get_current_node(instance)
         assert node == mock_node
-        
+
         # 3. 评估条件
         result = workflow_engine.evaluate_node_conditions(node, instance)
         assert result is True
 
-    def test_approval_rejection_flow(self, workflow_engine, db_session, mock_instance, mock_node, mock_user):
+    def test_approval_rejection_flow(
+        self, workflow_engine, db_session, mock_instance, mock_node, mock_user
+    ):
         """测试审批驳回流程"""
         db_session.query.return_value.filter.return_value.first.return_value = mock_node
-        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
-        
+        db_session.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_node
+        )
+
         user_query = MagicMock()
         user_query.filter.return_value.first.return_value = mock_user
         db_session.query.side_effect = lambda model: (
-            user_query if hasattr(model, 'username') else 
-            db_session.query.return_value
+            user_query if hasattr(model, "username") else db_session.query.return_value
         )
-        
+
         record = workflow_engine.submit_approval(
             instance=mock_instance,
             approver_id=1,
             decision=ApprovalDecision.REJECTED.value,
             comment="不符合要求",
         )
-        
+
         assert record is not None
         assert record.decision == ApprovalDecision.REJECTED.value
 

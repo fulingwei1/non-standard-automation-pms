@@ -34,18 +34,19 @@ class TestCalculateSolutionBonus:
 
     def test_no_solutions(self, db_session):
         """测试无方案"""
-        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-        from app.models.performance import PerformancePeriod
         from datetime import date
 
-            # 创建考核周期
+        from app.models.performance import PerformancePeriod
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+
+        # 创建考核周期
         period = PerformancePeriod(
-        period_code='202501',
-        period_name='2025-01',
-        period_type='MONTHLY',
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 1, 31),
-        status='ACTIVE'
+            period_code="202501",
+            period_name="2025-01",
+            period_type="MONTHLY",
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 1, 31),
+            status="ACTIVE",
         )
         db_session.add(period)
         db_session.flush()
@@ -53,12 +54,12 @@ class TestCalculateSolutionBonus:
         service = SolutionEngineerBonusService(db_session)
         result = service.calculate_solution_bonus(99999, period.id)
 
-        assert result['total_solutions'] == 0
-        assert result['completion_bonus'] == 0.0
-        assert result['won_bonus'] == 0.0
-        assert result['high_quality_compensation'] == 0.0
-        assert result['success_rate_bonus'] == 0.0
-        assert result['total_bonus'] == 0.0
+        assert result["total_solutions"] == 0
+        assert result["completion_bonus"] == 0.0
+        assert result["won_bonus"] == 0.0
+        assert result["high_quality_compensation"] == 0.0
+        assert result["success_rate_bonus"] == 0.0
+        assert result["total_bonus"] == 0.0
 
     def test_default_bonus_parameters(self, db_session):
         """测试默认奖金参数"""
@@ -66,45 +67,47 @@ class TestCalculateSolutionBonus:
 
         service = SolutionEngineerBonusService(db_session)
 
-            # 检查默认参数
+        # 检查默认参数
         import inspect
+
         sig = inspect.signature(service.calculate_solution_bonus)
         params = sig.parameters
 
-        assert params['base_bonus_per_solution'].default == Decimal('500')
-        assert params['won_bonus_ratio'].default == Decimal('0.001')
-        assert params['high_quality_compensation'].default == Decimal('300')
-        assert params['success_rate_bonus'].default == Decimal('2000')
+        assert params["base_bonus_per_solution"].default == Decimal("500")
+        assert params["won_bonus_ratio"].default == Decimal("0.001")
+        assert params["high_quality_compensation"].default == Decimal("300")
+        assert params["success_rate_bonus"].default == Decimal("2000")
 
     def test_custom_bonus_parameters(self, db_session):
         """测试自定义奖金参数"""
-        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-        from app.models.performance import PerformancePeriod
         from datetime import date
 
+        from app.models.performance import PerformancePeriod
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+
         period = PerformancePeriod(
-        period_code='202501',
-        period_name='2025-01',
-        period_type='MONTHLY',
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 1, 31),
-        status='ACTIVE'
+            period_code="202501",
+            period_name="2025-01",
+            period_type="MONTHLY",
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 1, 31),
+            status="ACTIVE",
         )
         db_session.add(period)
         db_session.flush()
 
         service = SolutionEngineerBonusService(db_session)
         result = service.calculate_solution_bonus(
-        engineer_id=1,
-        period_id=period.id,
-        base_bonus_per_solution=Decimal('1000'),
-        won_bonus_ratio=Decimal('0.002'),
-        high_quality_compensation=Decimal('500'),
-        success_rate_bonus=Decimal('3000')
+            engineer_id=1,
+            period_id=period.id,
+            base_bonus_per_solution=Decimal("1000"),
+            won_bonus_ratio=Decimal("0.002"),
+            high_quality_compensation=Decimal("500"),
+            success_rate_bonus=Decimal("3000"),
         )
 
-            # 验证方法接受自定义参数
-        assert 'total_bonus' in result
+        # 验证方法接受自定义参数
+        assert "total_bonus" in result
 
 
 class TestBonusCalculationLogic:
@@ -112,72 +115,72 @@ class TestBonusCalculationLogic:
 
     def test_completion_bonus_for_approved_solution(self):
         """测试已批准方案的完成奖金"""
-        base_bonus = Decimal('500')
-        status = 'APPROVED'
+        base_bonus = Decimal("500")
+        status = "APPROVED"
 
-        completion_bonus = Decimal('0')
-        if status in ['APPROVED', 'SUBMITTED']:
+        completion_bonus = Decimal("0")
+        if status in ["APPROVED", "SUBMITTED"]:
             completion_bonus += base_bonus
 
-            assert completion_bonus == Decimal('500')
+            assert completion_bonus == Decimal("500")
 
     def test_completion_bonus_for_submitted_solution(self):
         """测试已提交方案的完成奖金"""
-        base_bonus = Decimal('500')
-        status = 'SUBMITTED'
+        base_bonus = Decimal("500")
+        status = "SUBMITTED"
 
-        completion_bonus = Decimal('0')
-        if status in ['APPROVED', 'SUBMITTED']:
+        completion_bonus = Decimal("0")
+        if status in ["APPROVED", "SUBMITTED"]:
             completion_bonus += base_bonus
 
-            assert completion_bonus == Decimal('500')
+            assert completion_bonus == Decimal("500")
 
     def test_no_completion_bonus_for_draft(self):
         """测试草稿方案无完成奖金"""
-        base_bonus = Decimal('500')
-        status = 'DRAFT'
+        base_bonus = Decimal("500")
+        status = "DRAFT"
 
-        completion_bonus = Decimal('0')
-        if status in ['APPROVED', 'SUBMITTED']:
+        completion_bonus = Decimal("0")
+        if status in ["APPROVED", "SUBMITTED"]:
             completion_bonus += base_bonus
 
-            assert completion_bonus == Decimal('0')
+            assert completion_bonus == Decimal("0")
 
     def test_won_bonus_calculation(self):
         """测试中标奖金计算"""
-        contract_amount = Decimal('1000000')
-        won_bonus_ratio = Decimal('0.001')
+        contract_amount = Decimal("1000000")
+        won_bonus_ratio = Decimal("0.001")
 
         won_bonus = contract_amount * won_bonus_ratio
 
-        assert won_bonus == Decimal('1000')
+        assert won_bonus == Decimal("1000")
 
     def test_success_rate_bonus_threshold(self):
         """测试成功率奖励阈值"""
-        success_rate_bonus = Decimal('2000')
+        success_rate_bonus = Decimal("2000")
 
         # 中标率40%以上获得奖励
         win_rate_above = 45
         win_rate_below = 35
 
-        bonus_above = success_rate_bonus if win_rate_above >= 40 else Decimal('0')
-        bonus_below = success_rate_bonus if win_rate_below >= 40 else Decimal('0')
+        bonus_above = success_rate_bonus if win_rate_above >= 40 else Decimal("0")
+        bonus_below = success_rate_bonus if win_rate_below >= 40 else Decimal("0")
 
-        assert bonus_above == Decimal('2000')
-        assert bonus_below == Decimal('0')
+        assert bonus_above == Decimal("2000")
+        assert bonus_below == Decimal("0")
 
     def test_high_quality_compensation_threshold(self):
         """测试高质量方案补偿阈值"""
         satisfaction_score = 4.5
-        high_quality_compensation = Decimal('300')
+        high_quality_compensation = Decimal("300")
 
         # 满意度≥4.5获得补偿
         if satisfaction_score >= 4.5:
             compensation = high_quality_compensation
         else:
-            compensation = Decimal('0')
+            compensation = Decimal("0")
 
-            assert compensation == Decimal('300')
+            assert compensation == Decimal("300")
 
 
 class TestGetSolutionScoreDetails:
@@ -198,17 +201,18 @@ class TestBonusResultStructure:
 
     def test_result_fields(self, db_session):
         """测试结果字段"""
-        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-        from app.models.performance import PerformancePeriod
         from datetime import date
 
+        from app.models.performance import PerformancePeriod
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+
         period = PerformancePeriod(
-        period_code='202501',
-        period_name='2025-01',
-        period_type='MONTHLY',
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 1, 31),
-        status='ACTIVE'
+            period_code="202501",
+            period_name="2025-01",
+            period_type="MONTHLY",
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 1, 31),
+            status="ACTIVE",
         )
         db_session.add(period)
         db_session.flush()
@@ -217,9 +221,15 @@ class TestBonusResultStructure:
         result = service.calculate_solution_bonus(1, period.id)
 
         expected_fields = [
-        'engineer_id', 'period_id', 'total_solutions',
-        'completion_bonus', 'won_bonus', 'high_quality_compensation',
-        'success_rate_bonus', 'total_bonus', 'details'
+            "engineer_id",
+            "period_id",
+            "total_solutions",
+            "completion_bonus",
+            "won_bonus",
+            "high_quality_compensation",
+            "success_rate_bonus",
+            "total_bonus",
+            "details",
         ]
 
         for field in expected_fields:
@@ -227,17 +237,18 @@ class TestBonusResultStructure:
 
     def test_details_is_list(self, db_session):
         """测试详情是列表"""
-        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
-        from app.models.performance import PerformancePeriod
         from datetime import date
 
+        from app.models.performance import PerformancePeriod
+        from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+
         period = PerformancePeriod(
-        period_code='202501',
-        period_name='2025-01',
-        period_type='MONTHLY',
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 1, 31),
-        status='ACTIVE'
+            period_code="202501",
+            period_name="2025-01",
+            period_type="MONTHLY",
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 1, 31),
+            status="ACTIVE",
         )
         db_session.add(period)
         db_session.flush()
@@ -245,7 +256,7 @@ class TestBonusResultStructure:
         service = SolutionEngineerBonusService(db_session)
         result = service.calculate_solution_bonus(1, period.id)
 
-        assert isinstance(result['details'], list)
+        assert isinstance(result["details"], list)
 
 
 class TestWinRateCalculation:
@@ -286,6 +297,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

@@ -3,7 +3,8 @@
 I2组 - Word文档内容构建 单元测试
 覆盖: app/services/docx_content_builders.py
 """
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
 import pytest
 
 
@@ -44,9 +45,11 @@ def _make_table_mock(rows=7, cols=2):
 
 # ─── setup_document_formatting ───────────────────────────────────────────────
 
+
 class TestSetupDocumentFormatting:
     def test_sets_margins_when_docx_available(self):
-        from app.services.docx_content_builders import setup_document_formatting, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, setup_document_formatting
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -59,23 +62,28 @@ class TestSetupDocumentFormatting:
 
     def test_noop_when_docx_unavailable(self):
         with patch("app.services.docx_content_builders.DOCX_AVAILABLE", False):
-            from app.services import docx_content_builders
             # 重新加载以使补丁生效
             import importlib
+
+            from app.services import docx_content_builders
+
             importlib.reload(docx_content_builders)
 
         doc = _make_doc_mock()
         # 不应抛出任何异常
         from app.services.docx_content_builders import setup_document_formatting
+
         with patch("app.services.docx_content_builders.DOCX_AVAILABLE", False):
             setup_document_formatting(doc)
 
 
 # ─── add_document_header ─────────────────────────────────────────────────────
 
+
 class TestAddDocumentHeader:
     def test_adds_title_and_info(self):
-        from app.services.docx_content_builders import add_document_header, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_document_header
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -86,7 +94,8 @@ class TestAddDocumentHeader:
         assert doc.add_paragraph.called
 
     def test_with_rhythm_level(self):
-        from app.services.docx_content_builders import add_document_header, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_document_header
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -100,15 +109,18 @@ class TestAddDocumentHeader:
         doc = _make_doc_mock()
         with patch("app.services.docx_content_builders.DOCX_AVAILABLE", False):
             from app.services.docx_content_builders import add_document_header
+
             add_document_header(doc, "报告", "2024年")
         doc.add_heading.assert_not_called()
 
 
 # ─── add_summary_section ─────────────────────────────────────────────────────
 
+
 class TestAddSummarySection:
     def test_writes_summary_data(self):
-        from app.services.docx_content_builders import add_summary_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_summary_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -130,9 +142,11 @@ class TestAddSummarySection:
 
 # ─── add_comparison_section ───────────────────────────────────────────────────
 
+
 class TestAddComparisonSection:
     def test_empty_comparison_data(self):
-        from app.services.docx_content_builders import add_comparison_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_comparison_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -144,7 +158,8 @@ class TestAddComparisonSection:
         doc.add_paragraph.assert_called()
 
     def test_with_comparison_data(self):
-        from app.services.docx_content_builders import add_comparison_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_comparison_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -154,11 +169,36 @@ class TestAddComparisonSection:
         comparison_data = {
             "previous_period": "2023-12",
             "current_period": "2024-01",
-            "meetings_comparison": {"current": 10, "previous": 8, "change": 2, "change_rate": "25%"},
-            "completed_meetings_comparison": {"current": 8, "previous": 6, "change": 2, "change_rate": "33%"},
-            "action_items_comparison": {"current": 20, "previous": 15, "change": 5, "change_rate": "33%"},
-            "completed_action_items_comparison": {"current": 15, "previous": 10, "change": 5, "change_rate": "50%"},
-            "completion_rate_comparison": {"current": "75%", "previous": "67%", "change": "8%", "change_value": 8},
+            "meetings_comparison": {
+                "current": 10,
+                "previous": 8,
+                "change": 2,
+                "change_rate": "25%",
+            },
+            "completed_meetings_comparison": {
+                "current": 8,
+                "previous": 6,
+                "change": 2,
+                "change_rate": "33%",
+            },
+            "action_items_comparison": {
+                "current": 20,
+                "previous": 15,
+                "change": 5,
+                "change_rate": "33%",
+            },
+            "completed_action_items_comparison": {
+                "current": 15,
+                "previous": 10,
+                "change": 5,
+                "change_rate": "50%",
+            },
+            "completion_rate_comparison": {
+                "current": "75%",
+                "previous": "67%",
+                "change": "8%",
+                "change_value": 8,
+            },
         }
         add_comparison_section(doc, comparison_data)
         doc.add_heading.assert_called()
@@ -167,12 +207,14 @@ class TestAddComparisonSection:
 
 # ─── add_level_statistics_section ────────────────────────────────────────────
 
+
 class TestAddLevelStatisticsSection:
     def _fmt(self, level):
         return f"[{level}]"
 
     def test_empty_by_level(self):
-        from app.services.docx_content_builders import add_level_statistics_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_level_statistics_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -181,7 +223,8 @@ class TestAddLevelStatisticsSection:
         doc.add_heading.assert_called()
 
     def test_with_data(self):
-        from app.services.docx_content_builders import add_level_statistics_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_level_statistics_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -198,9 +241,11 @@ class TestAddLevelStatisticsSection:
 
 # ─── add_action_items_section ─────────────────────────────────────────────────
 
+
 class TestAddActionItemsSection:
     def test_action_items_rendered(self):
-        from app.services.docx_content_builders import add_action_items_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_action_items_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -220,9 +265,11 @@ class TestAddActionItemsSection:
 
 # ─── add_key_decisions_section ───────────────────────────────────────────────
 
+
 class TestAddKeyDecisionsSection:
     def test_empty_decisions(self):
-        from app.services.docx_content_builders import add_key_decisions_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_key_decisions_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -231,7 +278,8 @@ class TestAddKeyDecisionsSection:
         doc.add_paragraph.assert_called()
 
     def test_string_decisions(self):
-        from app.services.docx_content_builders import add_key_decisions_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_key_decisions_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -241,7 +289,8 @@ class TestAddKeyDecisionsSection:
         assert doc.add_paragraph.call_count >= len(decisions)
 
     def test_dict_decisions_with_maker(self):
-        from app.services.docx_content_builders import add_key_decisions_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_key_decisions_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -251,7 +300,8 @@ class TestAddKeyDecisionsSection:
         doc.add_paragraph.assert_called()
 
     def test_limits_to_20(self):
-        from app.services.docx_content_builders import add_key_decisions_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_key_decisions_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -265,9 +315,14 @@ class TestAddKeyDecisionsSection:
 
 # ─── add_strategic_structures_section ────────────────────────────────────────
 
+
 class TestAddStrategicStructuresSection:
     def test_empty_structures(self):
-        from app.services.docx_content_builders import add_strategic_structures_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import (
+            DOCX_AVAILABLE,
+            add_strategic_structures_section,
+        )
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -276,7 +331,11 @@ class TestAddStrategicStructuresSection:
         doc.add_heading.assert_called()
 
     def test_with_structures(self):
-        from app.services.docx_content_builders import add_strategic_structures_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import (
+            DOCX_AVAILABLE,
+            add_strategic_structures_section,
+        )
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -291,12 +350,14 @@ class TestAddStrategicStructuresSection:
 
 # ─── add_meetings_list_section ───────────────────────────────────────────────
 
+
 class TestAddMeetingsListSection:
     def _fmt(self, v):
         return str(v)
 
     def test_empty_meetings(self):
-        from app.services.docx_content_builders import add_meetings_list_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_meetings_list_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -305,7 +366,8 @@ class TestAddMeetingsListSection:
         doc.add_heading.assert_called()
 
     def test_with_meetings(self):
-        from app.services.docx_content_builders import add_meetings_list_section, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_meetings_list_section
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -327,9 +389,11 @@ class TestAddMeetingsListSection:
 
 # ─── add_document_footer ─────────────────────────────────────────────────────
 
+
 class TestAddDocumentFooter:
     def test_footer_added(self):
-        from app.services.docx_content_builders import add_document_footer, DOCX_AVAILABLE
+        from app.services.docx_content_builders import DOCX_AVAILABLE, add_document_footer
+
         if not DOCX_AVAILABLE:
             pytest.skip("python-docx 未安装")
 
@@ -341,5 +405,6 @@ class TestAddDocumentFooter:
         doc = _make_doc_mock()
         with patch("app.services.docx_content_builders.DOCX_AVAILABLE", False):
             from app.services.docx_content_builders import add_document_footer
+
             add_document_footer(doc)
         doc.add_paragraph.assert_not_called()

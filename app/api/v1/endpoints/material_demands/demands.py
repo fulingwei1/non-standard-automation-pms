@@ -37,7 +37,7 @@ def read_material_demands(
 ) -> Any:
     """
     获取物料需求列表
-    """"""
+    """ """
     物料需求汇总（多项目汇总）
     """
     # 从BOM明细汇总物料需求
@@ -46,10 +46,10 @@ def read_material_demands(
             BomItem.material_id,
             BomItem.material_code,
             BomItem.material_name,
-            func.sum(BomItem.quantity).label('total_demand'),
-            func.min(BomItem.required_date).label('earliest_date'),
-            func.max(BomItem.required_date).label('latest_date'),
-            func.count(BomItem.id).label('demand_count')
+            func.sum(BomItem.quantity).label("total_demand"),
+            func.min(BomItem.required_date).label("earliest_date"),
+            func.max(BomItem.required_date).label("latest_date"),
+            func.count(BomItem.id).label("demand_count"),
         )
         .join(BomHeader, BomItem.bom_id == BomHeader.id)
         .join(Machine, BomHeader.machine_id == Machine.id)
@@ -90,40 +90,44 @@ def read_material_demands(
                 .all()
             )
             for po_item in po_items:
-                in_transit_qty += (po_item.quantity or Decimal("0")) - (po_item.received_qty or Decimal("0"))
+                in_transit_qty += (po_item.quantity or Decimal("0")) - (
+                    po_item.received_qty or Decimal("0")
+                )
 
         total_available = available_stock + in_transit_qty
         shortage_qty = max(Decimal("0"), result.total_demand - total_available)
 
-        items.append({
-            "material_id": result.material_id,
-            "material_code": result.material_code,
-            "material_name": result.material_name,
-            "specification": material.specification if material else None,
-            "unit": material.unit if material else "件",
-            "total_demand": float(result.total_demand),
-            "available_stock": float(available_stock),
-            "in_transit_qty": float(in_transit_qty),
-            "total_available": float(total_available),
-            "shortage_qty": float(shortage_qty),
-            "earliest_date": result.earliest_date.isoformat() if result.earliest_date else None,
-            "latest_date": result.latest_date.isoformat() if result.latest_date else None,
-            "demand_count": result.demand_count,
-            "is_key_material": material.is_key_material if material else False
-        })
+        items.append(
+            {
+                "material_id": result.material_id,
+                "material_code": result.material_code,
+                "material_name": result.material_name,
+                "specification": material.specification if material else None,
+                "unit": material.unit if material else "件",
+                "total_demand": float(result.total_demand),
+                "available_stock": float(available_stock),
+                "in_transit_qty": float(in_transit_qty),
+                "total_available": float(total_available),
+                "shortage_qty": float(shortage_qty),
+                "earliest_date": result.earliest_date.isoformat() if result.earliest_date else None,
+                "latest_date": result.latest_date.isoformat() if result.latest_date else None,
+                "demand_count": result.demand_count,
+                "is_key_material": material.is_key_material if material else False,
+            }
+        )
 
     # 按短缺数量排序
-    items.sort(key=lambda x: x['shortage_qty'], reverse=True)
+    items.sort(key=lambda x: x["shortage_qty"], reverse=True)
 
     total = len(items)
-    paginated_items = items[pagination.offset:pagination.offset + pagination.limit]
+    paginated_items = items[pagination.offset : pagination.offset + pagination.limit]
 
     return PaginatedResponse(
         items=paginated_items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -153,7 +157,7 @@ def read_material_demands_vs_stock(
             BomItem.material_id,
             BomItem.material_code,
             BomItem.material_name,
-            func.sum(BomItem.quantity).label('total_demand')
+            func.sum(BomItem.quantity).label("total_demand"),
         )
         .join(BomHeader, BomItem.bom_id == BomHeader.id)
         .join(Machine, BomHeader.machine_id == Machine.id)
@@ -189,7 +193,9 @@ def read_material_demands_vs_stock(
             .all()
         )
         for po_item in po_items:
-            in_transit_qty += (po_item.quantity or Decimal("0")) - (po_item.received_qty or Decimal("0"))
+            in_transit_qty += (po_item.quantity or Decimal("0")) - (
+                po_item.received_qty or Decimal("0")
+            )
 
         # 可用库存 = 当前库存 + 在途数量 - 安全库存
         available_stock = current_stock + in_transit_qty - safety_stock
@@ -205,24 +211,26 @@ def read_material_demands_vs_stock(
             else:
                 stock_status = "INSUFFICIENT"
 
-        items.append({
-            "material_id": result.material_id,
-            "material_code": result.material_code,
-            "material_name": result.material_name,
-            "specification": material.specification,
-            "unit": material.unit,
-            "total_demand": float(result.total_demand),
-            "current_stock": float(current_stock),
-            "safety_stock": float(safety_stock),
-            "in_transit_qty": float(in_transit_qty),
-            "available_stock": float(available_stock),
-            "shortage_qty": float(shortage_qty),
-            "stock_status": stock_status,
-            "is_key_material": material.is_key_material,
-            "lead_time_days": material.lead_time_days or 0
-        })
+        items.append(
+            {
+                "material_id": result.material_id,
+                "material_code": result.material_code,
+                "material_name": result.material_name,
+                "specification": material.specification,
+                "unit": material.unit,
+                "total_demand": float(result.total_demand),
+                "current_stock": float(current_stock),
+                "safety_stock": float(safety_stock),
+                "in_transit_qty": float(in_transit_qty),
+                "available_stock": float(available_stock),
+                "shortage_qty": float(shortage_qty),
+                "stock_status": stock_status,
+                "is_key_material": material.is_key_material,
+                "lead_time_days": material.lead_time_days or 0,
+            }
+        )
 
     # 按短缺数量排序
-    items.sort(key=lambda x: (x['is_key_material'], x['shortage_qty']), reverse=True)
+    items.sort(key=lambda x: (x["is_key_material"], x["shortage_qty"]), reverse=True)
 
     return items

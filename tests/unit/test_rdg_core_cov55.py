@@ -3,8 +3,9 @@
 Tests for app/services/report_data_generation/core.py
 """
 import sys
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_data_generation.core import ReportDataGenerationCore

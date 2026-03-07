@@ -3,4 +3,4 @@
 
 from .service import PurchaseIntelligenceService
 
-__all__ = ['PurchaseIntelligenceService']
+__all__ = ["PurchaseIntelligenceService"]

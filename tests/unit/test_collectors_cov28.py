@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - collectors (KPI数据采集器) 单元测试"""
 
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.strategy.kpi_collector.collectors")
 
 # 采集器通过 @register_collector 装饰器注册，导入时即执行
 import app.services.strategy.kpi_collector.collectors  # noqa: F401
-
 from app.services.strategy.kpi_collector.collectors import (
-    collect_project_metrics,
     collect_finance_metrics,
-    collect_purchase_metrics,
     collect_hr_metrics,
+    collect_project_metrics,
+    collect_purchase_metrics,
 )
 
-
 # ─── collect_project_metrics ────────────────────────────────
+
 
 class TestCollectProjectMetrics:
 
@@ -105,6 +105,7 @@ class TestCollectProjectMetrics:
 
 # ─── collect_finance_metrics ─────────────────────────────────
 
+
 class TestCollectFinanceMetrics:
 
     def test_contract_total_amount(self):
@@ -136,9 +137,7 @@ class TestCollectFinanceMetrics:
 
     def test_project_profit_margin_no_project_id_returns_none(self):
         db = MagicMock()
-        result = collect_finance_metrics(
-            db, metric="PROJECT_PROFIT_MARGIN", filters={}
-        )
+        result = collect_finance_metrics(db, metric="PROJECT_PROFIT_MARGIN", filters={})
         assert result is None
 
     def test_project_profit_margin_no_project_returns_none(self):
@@ -171,6 +170,7 @@ class TestCollectFinanceMetrics:
 
 
 # ─── collect_purchase_metrics ────────────────────────────────
+
 
 class TestCollectPurchaseMetrics:
 
@@ -228,6 +228,7 @@ class TestCollectPurchaseMetrics:
 
 
 # ─── collect_hr_metrics ──────────────────────────────────────
+
 
 class TestCollectHrMetrics:
 

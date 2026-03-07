@@ -24,7 +24,7 @@ def build_tracking_response(tracking: AcceptanceTracking) -> AcceptanceTrackingR
             "result": r.result,
             "remark": r.remark,
             "created_at": r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else None,
-            "updated_at": r.updated_at.strftime("%Y-%m-%d %H:%M:%S") if r.updated_at else None
+            "updated_at": r.updated_at.strftime("%Y-%m-%d %H:%M:%S") if r.updated_at else None,
         }
         for r in tracking.tracking_records
     ]
@@ -63,5 +63,5 @@ def build_tracking_response(tracking: AcceptanceTracking) -> AcceptanceTrackingR
         remark=tracking.remark,
         tracking_records=records_data,
         created_at=tracking.created_at,
-        updated_at=tracking.updated_at
+        updated_at=tracking.updated_at,
     )

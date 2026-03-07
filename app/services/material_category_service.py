@@ -5,6 +5,7 @@
 """
 
 from typing import Any, List, Optional
+
 from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService
@@ -33,9 +34,7 @@ class MaterialCategoryService(
         """
         return MaterialCategoryResponse.model_validate(obj)
 
-    def get_tree(
-        self, parent_id: Optional[int] = None
-    ) -> List[MaterialCategoryResponse]:
+    def get_tree(self, parent_id: Optional[int] = None) -> List[MaterialCategoryResponse]:
         """
         获取分类树
         """

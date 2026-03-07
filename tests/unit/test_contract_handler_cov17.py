@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第十七批 - 合同状态处理器单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import datetime
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.status_handlers.contract_handler")
 
 
 def _make_handler(db=None):
     from app.services.status_handlers.contract_handler import ContractStatusHandler
+
     return ContractStatusHandler(db or MagicMock())
 
 
@@ -65,7 +67,7 @@ class TestContractStatusHandler:
             old_stage="S2",
             new_stage="S3",
             change_type="CONTRACT_SIGNED",
-            log_status_change=callback
+            log_status_change=callback,
         )
         callback.assert_called_once()
 
@@ -96,9 +98,14 @@ class TestContractStatusHandler:
 
         handler = _make_handler(db)
 
-        with patch("app.services.status_handlers.contract_handler.generate_project_code", return_value="P-001"), \
-             patch("app.services.status_handlers.contract_handler.init_project_stages"), \
-             patch("app.services.status_handlers.contract_handler.Project") as MockProject:
+        with (
+            patch(
+                "app.services.status_handlers.contract_handler.generate_project_code",
+                return_value="P-001",
+            ),
+            patch("app.services.status_handlers.contract_handler.init_project_stages"),
+            patch("app.services.status_handlers.contract_handler.Project") as MockProject,
+        ):
             mock_project = MagicMock()
             MockProject.return_value = mock_project
             result = handler.handle_contract_signed(1, auto_create_project=True)

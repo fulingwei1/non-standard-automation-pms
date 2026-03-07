@@ -43,18 +43,14 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
         # 获取各层级的最新快照
         strategic_snapshot = (
             self.db.query(RhythmDashboardSnapshot)
-            .filter(
-                RhythmDashboardSnapshot.rhythm_level == "STRATEGIC"
-            )
+            .filter(RhythmDashboardSnapshot.rhythm_level == "STRATEGIC")
             .order_by(desc(RhythmDashboardSnapshot.snapshot_date))
             .first()
         )
 
         (
             self.db.query(RhythmDashboardSnapshot)
-            .filter(
-                RhythmDashboardSnapshot.rhythm_level == "OPERATIONAL"
-            )
+            .filter(RhythmDashboardSnapshot.rhythm_level == "OPERATIONAL")
             .order_by(desc(RhythmDashboardSnapshot.snapshot_date))
             .first()
         )
@@ -79,9 +75,7 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
         )
 
         completion_rate = (
-            (completed_action_items / total_action_items * 100)
-            if total_action_items > 0
-            else 0
+            (completed_action_items / total_action_items * 100) if total_action_items > 0 else 0
         )
 
         return [
@@ -118,9 +112,7 @@ class ManagementRhythmDashboardAdapter(DashboardAdapter):
             DashboardStatCard(
                 key="strategic_health",
                 title="战略会议健康度",
-                value=(
-                    strategic_snapshot.health_status if strategic_snapshot else "N/A"
-                ),
+                value=(strategic_snapshot.health_status if strategic_snapshot else "N/A"),
             ),
         ]
 

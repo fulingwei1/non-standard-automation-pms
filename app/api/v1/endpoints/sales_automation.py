@@ -4,9 +4,10 @@
 提供自动跟进提醒、自动邮件序列、自动任务创建、自动报告生成
 """
 
-from typing import Any, Optional, List
-from datetime import datetime, timedelta, date
-from fastapi import APIRouter, Depends, Query, Body
+from datetime import date, datetime, timedelta
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -18,6 +19,7 @@ router = APIRouter()
 
 # ========== 1. 自动跟进提醒 ==========
 
+
 @router.get("/follow-up-reminders", summary="获取跟进提醒")
 def get_follow_up_reminders(
     days: int = Query(3, description="X天未联系"),
@@ -26,16 +28,16 @@ def get_follow_up_reminders(
 ) -> Any:
     """
     获取需要跟进的客户列表
-    
+
     自动识别X天未联系的客户
     优先级：
     - 高优先级：商机阶段靠后 + 长时间未联系
     - 中优先级：普通客户 + 较长时间未联系
     - 低优先级：新客户 + 短期未联系
     """
-    
+
     date.today() - timedelta(days=days)
-    
+
     # 模拟需要跟进的客户
     reminders = [
         {
@@ -72,10 +74,10 @@ def get_follow_up_reminders(
             "suggested_action": "发送公司介绍资料",
         },
     ]
-    
+
     # 过滤超过天数的
     filtered = [r for r in reminders if r["days_since_contact"] >= days]
-    
+
     return {
         "reminder_date": date.today().isoformat(),
         "days_threshold": days,
@@ -95,7 +97,7 @@ def send_follow_up_reminders(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """发送跟进提醒通知给销售"""
-    
+
     return {
         "message": "跟进提醒已发送",
         "sent_count": len(reminder_ids),
@@ -106,6 +108,7 @@ def send_follow_up_reminders(
 
 # ========== 2. 自动邮件序列 ==========
 
+
 @router.get("/email-sequences", summary="获取邮件序列模板")
 def get_email_sequences(
     sequence_type: str = Query("nurture", description="序列类型：nurture/cold/renewal"),
@@ -114,13 +117,13 @@ def get_email_sequences(
 ) -> Any:
     """
     获取邮件序列模板
-    
+
     序列类型：
     - nurture: 培育序列（新线索培育）
     - cold: 冷启动序列（激活沉睡客户）
     - renewal: 续约序列（续约提醒）
     """
-    
+
     sequences = {
         "nurture": [
             {
@@ -168,7 +171,7 @@ def get_email_sequences(
             },
         ],
     }
-    
+
     return {
         "sequence_type": sequence_type,
         "steps": sequences.get(sequence_type, []),
@@ -185,10 +188,10 @@ def start_email_sequence(
 ) -> Any:
     """
     为指定客户启动自动邮件序列
-    
+
     系统会按照预设的时间间隔自动发送邮件
     """
-    
+
     return {
         "message": "邮件序列已启动",
         "sequence_type": sequence_type,
@@ -200,6 +203,7 @@ def start_email_sequence(
 
 # ========== 3. 自动任务创建 ==========
 
+
 @router.post("/auto-tasks/rules", summary="创建自动任务规则")
 def create_auto_task_rule(
     rule: dict = Body(...),
@@ -208,13 +212,13 @@ def create_auto_task_rule(
 ) -> Any:
     """
     创建自动任务规则
-    
+
     规则示例：
     - 当商机进入STAGE3时，自动创建"方案演示"任务
     - 当报价审批通过后，自动创建"合同准备"任务
     - 当合同签订后，自动创建"项目启动"任务
     """
-    
+
     return {
         "message": "自动任务规则创建成功",
         "rule_id": 123,
@@ -228,7 +232,7 @@ def get_task_triggers(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取所有自动任务触发器配置"""
-    
+
     triggers = [
         {
             "id": 1,
@@ -263,7 +267,7 @@ def get_task_triggers(
             "is_active": True,
         },
     ]
-    
+
     return {
         "total_rules": len(triggers),
         "active_rules": len([t for t in triggers if t["is_active"]]),
@@ -272,6 +276,7 @@ def get_task_triggers(
 
 
 # ========== 4. 自动报告生成 ==========
+
 
 @router.post("/reports/generate", summary="生成销售报告")
 def generate_sales_report(
@@ -284,13 +289,13 @@ def generate_sales_report(
 ) -> Any:
     """
     自动生成销售报告
-    
+
     报告类型：
     - daily: 日报（今日关键指标）
     - weekly: 周报（本周业绩+下周计划）
     - monthly: 月报（月度总结+分析）
     """
-    
+
     # 模拟报告数据
     if report_type == "weekly":
         report_data = {
@@ -353,7 +358,7 @@ def generate_sales_report(
                 "sales_cycle": 65,
             },
         }
-    
+
     return {
         "report_type": report_type,
         "generated_at": datetime.now().isoformat(),
@@ -370,13 +375,13 @@ def schedule_auto_report(
 ) -> Any:
     """
     配置自动报告生成和发送
-    
+
     配置示例：
     - 每周一早上9点自动生成周报
     - 每天下班前生成日报
     - 每月1号生成月报
     """
-    
+
     return {
         "message": "自动报告配置成功",
         "schedule_id": 456,
@@ -393,7 +398,7 @@ def get_report_schedules(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取所有自动报告计划"""
-    
+
     schedules = [
         {
             "id": 1,
@@ -422,7 +427,7 @@ def get_report_schedules(
             "is_active": True,
         },
     ]
-    
+
     return {
         "total_schedules": len(schedules),
         "active_schedules": len([s for s in schedules if s["is_active"]]),
@@ -432,13 +437,14 @@ def get_report_schedules(
 
 # ========== 5. 自动化规则管理 ==========
 
+
 @router.get("/automation/rules", summary="获取所有自动化规则")
 def get_automation_rules(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取所有销售自动化规则"""
-    
+
     return {
         "categories": [
             {
@@ -474,7 +480,7 @@ def run_automation(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """手动触发自动化规则执行"""
-    
+
     return {
         "message": "自动化规则已执行",
         "rule_type": rule_type,

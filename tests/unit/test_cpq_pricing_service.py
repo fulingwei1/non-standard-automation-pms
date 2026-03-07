@@ -8,13 +8,14 @@ File Size: 107 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from app.services.cpq_pricing_service import CpqPricingService
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+from sqlalchemy.orm import Session
+
+from app.services.cpq_pricing_service import CpqPricingService
 
 
 @pytest.fixture
@@ -30,9 +31,8 @@ class TestCpqPricingService:
         """测试服务初始化"""
         service = CpqPricingService(db_session)
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_preview_price(self, cpq_pricing_service):
         """测试 preview_price 方法"""
@@ -41,7 +41,6 @@ class TestCpqPricingService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

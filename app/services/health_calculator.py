@@ -60,7 +60,7 @@ class HealthCalculator:
         条件：
         - 状态为 ST30(已结项) 或 ST99(项目取消)
         """
-        closed_statuses = ['ST30', 'ST99']
+        closed_statuses = ["ST30", "ST99"]
         return project.status in closed_statuses
 
     def _is_blocked(self, project: Project) -> bool:
@@ -74,7 +74,7 @@ class HealthCalculator:
         4. 有严重缺料预警
         """
         # 1. 检查状态
-        blocked_statuses = ['ST14', 'ST19']  # 缺料阻塞、技术阻塞
+        blocked_statuses = ["ST14", "ST19"]  # 缺料阻塞、技术阻塞
         if project.status in blocked_statuses:
             return True
 
@@ -105,7 +105,7 @@ class HealthCalculator:
         6. 进度偏差超过阈值
         """
         # 1. 检查整改状态
-        rectification_statuses = ['ST22', 'ST26']  # FAT整改中、SAT整改中
+        rectification_statuses = ["ST22", "ST26"]  # FAT整改中、SAT整改中
         if project.status in rectification_statuses:
             return True
 
@@ -140,10 +140,11 @@ class HealthCalculator:
         """
         # 查询项目的关键任务，状态为阻塞
         # 注意：Task表中没有is_critical字段，这里先查询阻塞的任务
-        blocked_tasks = self.db.query(Task).filter(
-            Task.project_id == project.id,
-            Task.status == 'BLOCKED'
-        ).count()
+        blocked_tasks = (
+            self.db.query(Task)
+            .filter(Task.project_id == project.id, Task.status == "BLOCKED")
+            .count()
+        )
 
         return blocked_tasks > 0
 
@@ -155,11 +156,15 @@ class HealthCalculator:
             bool: 如果有严重阻塞问题返回True
         """
         # 查询项目的阻塞类型问题，状态为开放或处理中
-        blocking_issues = self.db.query(Issue).filter(
-            Issue.project_id == project.id,
-            Issue.issue_type == IssueTypeEnum.BLOCKER,
-            Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value])
-        ).count()
+        blocking_issues = (
+            self.db.query(Issue)
+            .filter(
+                Issue.project_id == project.id,
+                Issue.issue_type == IssueTypeEnum.BLOCKER,
+                Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]),
+            )
+            .count()
+        )
 
         return blocking_issues > 0
 
@@ -171,14 +176,17 @@ class HealthCalculator:
             bool: 如果有严重缺料预警返回True
         """
         # 查询项目的严重级别缺料预警（通过AlertRecord）
-        critical_alerts = self.db.query(AlertRecord).join(
-            AlertRule, AlertRecord.rule_id == AlertRule.id
-        ).filter(
-            AlertRecord.project_id == project.id,
-            AlertRecord.alert_level == AlertLevelEnum.CRITICAL.value,
-            AlertRecord.status == 'PENDING',  # 未处理的预警
-            AlertRule.rule_type == 'MATERIAL_SHORTAGE'  # 缺料预警类型
-        ).count()
+        critical_alerts = (
+            self.db.query(AlertRecord)
+            .join(AlertRule, AlertRecord.rule_id == AlertRule.id)
+            .filter(
+                AlertRecord.project_id == project.id,
+                AlertRecord.alert_level == AlertLevelEnum.CRITICAL.value,
+                AlertRecord.status == "PENDING",  # 未处理的预警
+                AlertRule.rule_type == "MATERIAL_SHORTAGE",  # 缺料预警类型
+            )
+            .count()
+        )
 
         return critical_alerts > 0
 
@@ -212,12 +220,16 @@ class HealthCalculator:
         today = date.today()
 
         # 查询项目的逾期里程碑（计划日期已过但未完成）
-        overdue_milestones = self.db.query(ProjectMilestone).filter(
-            ProjectMilestone.project_id == project.id,
-            ProjectMilestone.planned_date < today,
-            ProjectMilestone.status != 'COMPLETED',
-            ProjectMilestone.is_key  # 只检查关键里程碑
-        ).count()
+        overdue_milestones = (
+            self.db.query(ProjectMilestone)
+            .filter(
+                ProjectMilestone.project_id == project.id,
+                ProjectMilestone.planned_date < today,
+                ProjectMilestone.status != "COMPLETED",
+                ProjectMilestone.is_key,  # 只检查关键里程碑
+            )
+            .count()
+        )
 
         return overdue_milestones > 0
 
@@ -229,17 +241,19 @@ class HealthCalculator:
             bool: 如果有缺料预警返回True
         """
         # 查询项目的警告级别缺料预警（通过AlertRecord）
-        warning_alerts = self.db.query(AlertRecord).join(
-            AlertRule, AlertRecord.rule_id == AlertRule.id
-        ).filter(
-            AlertRecord.project_id == project.id,
-            AlertRecord.alert_level.in_([
-                AlertLevelEnum.WARNING.value,
-                AlertLevelEnum.URGENT.value
-            ]),
-            AlertRecord.status == 'PENDING',  # 未处理的预警
-            AlertRule.rule_type == 'MATERIAL_SHORTAGE'  # 缺料预警类型
-        ).count()
+        warning_alerts = (
+            self.db.query(AlertRecord)
+            .join(AlertRule, AlertRecord.rule_id == AlertRule.id)
+            .filter(
+                AlertRecord.project_id == project.id,
+                AlertRecord.alert_level.in_(
+                    [AlertLevelEnum.WARNING.value, AlertLevelEnum.URGENT.value]
+                ),
+                AlertRecord.status == "PENDING",  # 未处理的预警
+                AlertRule.rule_type == "MATERIAL_SHORTAGE",  # 缺料预警类型
+            )
+            .count()
+        )
 
         return warning_alerts > 0
 
@@ -251,11 +265,15 @@ class HealthCalculator:
             bool: 如果有高优先级问题返回True
         """
         # 查询项目的高优先级问题，状态为开放或处理中
-        high_priority_issues = self.db.query(Issue).filter(
-            Issue.project_id == project.id,
-            Issue.priority.in_(['HIGH', 'URGENT']),
-            Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value])
-        ).count()
+        high_priority_issues = (
+            self.db.query(Issue)
+            .filter(
+                Issue.project_id == project.id,
+                Issue.priority.in_(["HIGH", "URGENT"]),
+                Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]),
+            )
+            .count()
+        )
 
         return high_priority_issues > 0
 
@@ -367,12 +385,12 @@ class HealthCalculator:
         new_health = self.calculate_health(project)
 
         result = {
-            'project_id': project.id,
-            'project_code': project.project_code,
-            'old_health': old_health,
-            'new_health': new_health,
-            'changed': old_health != new_health,
-            'calculation_time': datetime.now().isoformat()
+            "project_id": project.id,
+            "project_code": project.project_code,
+            "old_health": old_health,
+            "new_health": new_health,
+            "changed": old_health != new_health,
+            "calculation_time": datetime.now().isoformat(),
         }
 
         # 如果健康度发生变化，更新项目
@@ -392,7 +410,7 @@ class HealthCalculator:
                 change_type="HEALTH_AUTO_CALCULATED",
                 changed_by=None,  # 系统自动计算
                 changed_at=datetime.now(),
-                change_note=f"系统自动计算健康度：{old_health} -> {new_health}"
+                change_note=f"系统自动计算健康度：{old_health} -> {new_health}",
             )
             self.db.add(status_log)
             self.db.commit()
@@ -400,7 +418,9 @@ class HealthCalculator:
 
         return result
 
-    def batch_calculate(self, project_ids: Optional[list] = None, batch_size: int = 100) -> Dict[str, Any]:
+    def batch_calculate(
+        self, project_ids: Optional[list] = None, batch_size: int = 100
+    ) -> Dict[str, Any]:
         """
         Issue 5.2: 批量计算项目健康度（性能优化）
 
@@ -413,8 +433,7 @@ class HealthCalculator:
         """
         # 查询项目（Sprint 5.2: 性能优化 - 只查询必要字段）
         query = self.db.query(Project).filter(
-            Project.is_active == True,
-            Project.is_archived == False
+            Project.is_active == True, Project.is_archived == False
         )
 
         if project_ids:
@@ -422,12 +441,7 @@ class HealthCalculator:
 
         # Sprint 5.2: 性能优化 - 分批处理，避免一次性加载过多数据
         total_count = query.count()
-        results = {
-            'total': total_count,
-            'updated': 0,
-            'unchanged': 0,
-            'details': []
-        }
+        results = {"total": total_count, "updated": 0, "unchanged": 0, "details": []}
 
         # 分批处理
         for offset in range(0, total_count, batch_size):
@@ -435,12 +449,12 @@ class HealthCalculator:
 
             for project in projects:
                 result = self.calculate_and_update(project, auto_save=False)  # 先不保存，批量提交
-                results['details'].append(result)
+                results["details"].append(result)
 
-                if result['changed']:
-                    results['updated'] += 1
+                if result["changed"]:
+                    results["updated"] += 1
                 else:
-                    results['unchanged'] += 1
+                    results["unchanged"] += 1
 
             # 每批处理完后提交一次，减少数据库事务开销
             try:
@@ -448,6 +462,7 @@ class HealthCalculator:
             except Exception as e:
                 self.db.rollback()
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.error(f"批量计算健康度提交失败：{str(e)}", exc_info=True)
 
@@ -464,44 +479,48 @@ class HealthCalculator:
             dict: 健康度详细信息
         """
         return {
-            'project_id': project.id,
-            'project_code': project.project_code,
-            'current_health': project.health,
-            'calculated_health': self.calculate_health(project),
-            'status': project.status,
-            'stage': project.stage,
-            'checks': {
-                'is_closed': self._is_closed(project),
-                'is_blocked': self._is_blocked(project),
-                'has_risks': self._has_risks(project),
-                'has_blocked_critical_tasks': self._has_blocked_critical_tasks(project),
-                'has_blocking_issues': self._has_blocking_issues(project),
-                'has_critical_shortage_alerts': self._has_critical_shortage_alerts(project),
-                'is_deadline_approaching': self._is_deadline_approaching(project),
-                'has_overdue_milestones': self._has_overdue_milestones(project),
-                'has_shortage_warnings': self._has_shortage_warnings(project),
-                'has_high_priority_issues': self._has_high_priority_issues(project),
-                'has_schedule_variance': self._has_schedule_variance(project)
+            "project_id": project.id,
+            "project_code": project.project_code,
+            "current_health": project.health,
+            "calculated_health": self.calculate_health(project),
+            "status": project.status,
+            "stage": project.stage,
+            "checks": {
+                "is_closed": self._is_closed(project),
+                "is_blocked": self._is_blocked(project),
+                "has_risks": self._has_risks(project),
+                "has_blocked_critical_tasks": self._has_blocked_critical_tasks(project),
+                "has_blocking_issues": self._has_blocking_issues(project),
+                "has_critical_shortage_alerts": self._has_critical_shortage_alerts(project),
+                "is_deadline_approaching": self._is_deadline_approaching(project),
+                "has_overdue_milestones": self._has_overdue_milestones(project),
+                "has_shortage_warnings": self._has_shortage_warnings(project),
+                "has_high_priority_issues": self._has_high_priority_issues(project),
+                "has_schedule_variance": self._has_schedule_variance(project),
             },
-            'statistics': {
-                'blocked_tasks': self.db.query(Task).filter(
-                    Task.project_id == project.id,
-                    Task.status == 'BLOCKED'
-                ).count(),
-                'blocking_issues': self.db.query(Issue).filter(
+            "statistics": {
+                "blocked_tasks": self.db.query(Task)
+                .filter(Task.project_id == project.id, Task.status == "BLOCKED")
+                .count(),
+                "blocking_issues": self.db.query(Issue)
+                .filter(
                     Issue.project_id == project.id,
                     Issue.issue_type == IssueTypeEnum.BLOCKER,
-                    Issue.status.in_([IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value])
-                ).count(),
-                'overdue_milestones': self.db.query(ProjectMilestone).filter(
+                    Issue.status.in_(
+                        [IssueStatusEnum.OPEN.value, IssueStatusEnum.IN_PROGRESS.value]
+                    ),
+                )
+                .count(),
+                "overdue_milestones": self.db.query(ProjectMilestone)
+                .filter(
                     ProjectMilestone.project_id == project.id,
                     ProjectMilestone.planned_date < date.today(),
-                    ProjectMilestone.status != 'COMPLETED',
-                    ProjectMilestone.is_key
-                ).count(),
-                'active_alerts': self.db.query(AlertRecord).filter(
-                    AlertRecord.project_id == project.id,
-                    AlertRecord.status == 'PENDING'
-                ).count()
-            }
+                    ProjectMilestone.status != "COMPLETED",
+                    ProjectMilestone.is_key,
+                )
+                .count(),
+                "active_alerts": self.db.query(AlertRecord)
+                .filter(AlertRecord.project_id == project.id, AlertRecord.status == "PENDING")
+                .count(),
+            },
         }

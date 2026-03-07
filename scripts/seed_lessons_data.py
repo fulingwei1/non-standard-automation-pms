@@ -161,17 +161,19 @@ def seed_lessons_data():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    
+
     # 检查表是否存在
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='lessons_learned'
-    """)
+    """
+    )
     if not cursor.fetchone():
         print("❌ lessons_learned 表不存在，请先启动后端创建表")
         conn.close()
         return False
-    
+
     # 检查是否已有数据
     cursor.execute("SELECT COUNT(*) as count FROM lessons_learned")
     existing_count = cursor.fetchone()["count"]
@@ -179,10 +181,10 @@ def seed_lessons_data():
         print(f"⚠️  已存在 {existing_count} 条经验教训数据，跳过插入")
         conn.close()
         return True
-    
+
     # 插入数据
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
     insert_sql = """
         INSERT INTO lessons_learned (
             project_id, title, category, lesson_type, description,
@@ -194,33 +196,36 @@ def seed_lessons_data():
             :applicable_to, :tags, :submitted_by, :reviewed, :now, :now
         )
     """
-    
+
     inserted_count = 0
     for lesson in LESSONS_DATA:
         try:
-            cursor.execute(insert_sql, {
-                "project_id": lesson["project_id"],
-                "title": lesson["title"],
-                "category": lesson["category"],
-                "lesson_type": lesson["lesson_type"],
-                "description": lesson["description"],
-                "root_cause": lesson["root_cause"],
-                "action_taken": lesson["action_taken"],
-                "recommendation": lesson["recommendation"],
-                "impact_level": lesson["impact_level"],
-                "applicable_to": lesson["applicable_to"],
-                "tags": lesson["tags"],
-                "submitted_by": 1,  # 默认管理员
-                "reviewed": lesson["reviewed"],
-                "now": now,
-            })
+            cursor.execute(
+                insert_sql,
+                {
+                    "project_id": lesson["project_id"],
+                    "title": lesson["title"],
+                    "category": lesson["category"],
+                    "lesson_type": lesson["lesson_type"],
+                    "description": lesson["description"],
+                    "root_cause": lesson["root_cause"],
+                    "action_taken": lesson["action_taken"],
+                    "recommendation": lesson["recommendation"],
+                    "impact_level": lesson["impact_level"],
+                    "applicable_to": lesson["applicable_to"],
+                    "tags": lesson["tags"],
+                    "submitted_by": 1,  # 默认管理员
+                    "reviewed": lesson["reviewed"],
+                    "now": now,
+                },
+            )
             inserted_count += 1
         except Exception as e:
             print(f"❌ 插入失败：{lesson['title']} - {e}")
-    
+
     conn.commit()
     conn.close()
-    
+
     print(f"✅ 成功插入 {inserted_count} 条经验教训数据")
     return True
 

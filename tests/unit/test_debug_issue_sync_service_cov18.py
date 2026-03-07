@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十八批 - 调试问题同步服务单元测试"""
 from datetime import datetime
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
 try:
     from app.services.debug_issue_sync_service import DebugIssueSyncService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -24,9 +25,16 @@ def service(db):
     return DebugIssueSyncService(db)
 
 
-def make_issue(category="PROJECT", issue_type="DEFECT", status="OPEN",
-               resolved_at=None, report_date=None, tags=None, issue_no="ISS-001",
-               issue_id=1):
+def make_issue(
+    category="PROJECT",
+    issue_type="DEFECT",
+    status="OPEN",
+    resolved_at=None,
+    report_date=None,
+    tags=None,
+    issue_no="ISS-001",
+    issue_id=1,
+):
     issue = MagicMock()
     issue.id = issue_id
     issue.category = category
@@ -96,7 +104,9 @@ class TestSyncMechanicalDebugIssue:
         db.refresh.return_value = None
         db.add.return_value = None
 
-        with patch("app.services.debug_issue_sync_service.MechanicalDebugIssue", return_value=new_debug):
+        with patch(
+            "app.services.debug_issue_sync_service.MechanicalDebugIssue", return_value=new_debug
+        ):
             result = service.sync_mechanical_debug_issue(1, force_update=False)
         db.add.assert_called_once()
         db.commit.assert_called()

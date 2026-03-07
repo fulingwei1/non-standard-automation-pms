@@ -8,16 +8,16 @@ File Size: 78 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 # Skip this module if the service doesn't exist yet
 pytest.importorskip("app.services.meeting_report_service")
 from app.services.meeting_report_service import MeetingReportService
-
 
 
 @pytest.fixture
@@ -33,9 +33,8 @@ class TestMeetingReportService:
         """测试服务初始化"""
         service = MeetingReportService()
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_generate_annual_report(self, meeting_report_service):
         """测试 generate_annual_report 方法"""
@@ -45,7 +44,6 @@ class TestMeetingReportService:
         # 3. 验证结果
         pass
 
-
     def test_generate_monthly_report(self, meeting_report_service):
         """测试 generate_monthly_report 方法"""
         # TODO: 实现测试逻辑
@@ -53,7 +51,6 @@ class TestMeetingReportService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

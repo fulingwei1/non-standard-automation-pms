@@ -11,25 +11,27 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.outsourcing import OutsourcingOrder, OutsourcingPayment
-from app.models.vendor import Vendor
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.schemas.common import PaginatedResponse
 from app.schemas.outsourcing import (
     OutsourcingPaymentCreate,
     OutsourcingPaymentResponse,
 )
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_payment_no
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
 
-@router.get("/outsourcing-payments", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/outsourcing-payments", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
+)
 def read_outsourcing_payments(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -65,21 +67,26 @@ def read_outsourcing_payments(
         query = query.filter(OutsourcingPayment.payment_date <= end_date)
 
     total = query.count()
-    payments = apply_pagination(query.order_by(desc(OutsourcingPayment.payment_date)), pagination.offset, pagination.limit).all()
+    payments = apply_pagination(
+        query.order_by(desc(OutsourcingPayment.payment_date)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for payment in payments:
         vendor_name = None
         if payment.vendor_id:
-            vendor = db.query(Vendor).filter(
-                Vendor.id == payment.vendor_id,
-                Vendor.vendor_type == 'OUTSOURCING'
-            ).first()
+            vendor = (
+                db.query(Vendor)
+                .filter(Vendor.id == payment.vendor_id, Vendor.vendor_type == "OUTSOURCING")
+                .first()
+            )
             vendor_name = vendor.supplier_name if vendor else None
 
         order_no = None
         if payment.order_id:
-            order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment.order_id).first()
+            order = (
+                db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment.order_id).first()
+            )
             order_no = order.order_no if order else None
 
         approved_by_name = None
@@ -87,33 +94,39 @@ def read_outsourcing_payments(
             approver = db.query(User).filter(User.id == payment.approved_by).first()
             approved_by_name = approver.real_name or approver.username if approver else None
 
-        items.append(OutsourcingPaymentResponse(
-            id=payment.id,
-            payment_no=payment.payment_no,
-            vendor_id=payment.vendor_id,
-            vendor_name=vendor_name,
-            order_id=payment.order_id,
-            order_no=order_no,
-            payment_type=payment.payment_type,
-            payment_amount=payment.payment_amount,
-            payment_date=payment.payment_date,
-            payment_method=payment.payment_method,
-            invoice_no=payment.invoice_no,
-            invoice_amount=payment.invoice_amount,
-            invoice_date=payment.invoice_date,
-            status=payment.status,
-            approved_by=payment.approved_by,
-            approved_by_name=approved_by_name,
-            approved_at=payment.approved_at,
-            remark=payment.remark,
-            created_at=payment.created_at,
-            updated_at=payment.updated_at
-        ))
+        items.append(
+            OutsourcingPaymentResponse(
+                id=payment.id,
+                payment_no=payment.payment_no,
+                vendor_id=payment.vendor_id,
+                vendor_name=vendor_name,
+                order_id=payment.order_id,
+                order_no=order_no,
+                payment_type=payment.payment_type,
+                payment_amount=payment.payment_amount,
+                payment_date=payment.payment_date,
+                payment_method=payment.payment_method,
+                invoice_no=payment.invoice_no,
+                invoice_amount=payment.invoice_amount,
+                invoice_date=payment.invoice_date,
+                status=payment.status,
+                approved_by=payment.approved_by,
+                approved_by_name=approved_by_name,
+                approved_at=payment.approved_at,
+                remark=payment.remark,
+                created_at=payment.created_at,
+                updated_at=payment.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
 
-@router.post("/outsourcing-payments", response_model=OutsourcingPaymentResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/outsourcing-payments",
+    response_model=OutsourcingPaymentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_outsourcing_payment(
     *,
     db: Session = Depends(deps.get_db),
@@ -124,10 +137,11 @@ def create_outsourcing_payment(
     创建外协付款记录
     """
     # 验证外协商是否存在
-    vendor = db.query(Vendor).filter(
-        Vendor.id == payment_in.vendor_id,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+    vendor = (
+        db.query(Vendor)
+        .filter(Vendor.id == payment_in.vendor_id, Vendor.vendor_type == "OUTSOURCING")
+        .first()
+    )
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
@@ -151,14 +165,16 @@ def create_outsourcing_payment(
         invoice_amount=payment_in.invoice_amount,
         invoice_date=payment_in.invoice_date,
         status="DRAFT",
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     db.add(payment)
 
     # 如果关联了订单，更新订单的已付金额和付款状态
     if payment_in.order_id:
-        order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment_in.order_id).first()
+        order = (
+            db.query(OutsourcingOrder).filter(OutsourcingOrder.id == payment_in.order_id).first()
+        )
         if order:
             order.paid_amount = (order.paid_amount or Decimal("0")) + payment_in.payment_amount
             # 判断付款状态
@@ -199,5 +215,5 @@ def create_outsourcing_payment(
         approved_at=payment.approved_at,
         remark=payment.remark,
         created_at=payment.created_at,
-        updated_at=payment.updated_at
+        updated_at=payment.updated_at,
     )

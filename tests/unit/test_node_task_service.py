@@ -51,7 +51,7 @@ class TestListTasks:
     def test_list_tasks_with_status_filter(self, db_session: Session):
         """测试按状态筛选"""
         service = NodeTaskService(db_session)
-        result = service.list_tasks(node_instance_id=1, status='PENDING')
+        result = service.list_tasks(node_instance_id=1, status="PENDING")
         assert isinstance(result, list)
 
     def test_list_tasks_with_assignee_filter(self, db_session: Session):
@@ -68,10 +68,7 @@ class TestCreateTask:
         """测试节点不存在时抛出异常"""
         service = NodeTaskService(db_session)
         with pytest.raises(ValueError, match="节点实例.*不存在"):
-            service.create_task(
-            node_instance_id=99999,
-            task_name="测试任务"
-            )
+            service.create_task(node_instance_id=99999, task_name="测试任务")
 
 
 class TestUpdateTask:
@@ -158,14 +155,14 @@ class TestGetNodeTaskProgress:
         service = NodeTaskService(db_session)
         result = service.get_node_task_progress(node_instance_id=99999)
 
-        assert result['total'] == 0
-        assert result['completed'] == 0
-        assert result['in_progress'] == 0
-        assert result['pending'] == 0
-        assert result['skipped'] == 0
-        assert result['progress_pct'] == 0
-        assert result['total_estimated_hours'] == 0
-        assert result['total_actual_hours'] == 0
+        assert result["total"] == 0
+        assert result["completed"] == 0
+        assert result["in_progress"] == 0
+        assert result["pending"] == 0
+        assert result["skipped"] == 0
+        assert result["progress_pct"] == 0
+        assert result["total_estimated_hours"] == 0
+        assert result["total_actual_hours"] == 0
 
 
 class TestGetUserTasks:
@@ -186,7 +183,7 @@ class TestGetUserTasks:
     def test_get_user_tasks_with_status_filter(self, db_session: Session):
         """测试按状态筛选"""
         service = NodeTaskService(db_session)
-        result = service.get_user_tasks(user_id=1, status='PENDING')
+        result = service.get_user_tasks(user_id=1, status="PENDING")
         assert isinstance(result, list)
 
 
@@ -207,7 +204,4 @@ class TestBatchCreateTasks:
         """测试节点不存在时抛出异常"""
         service = NodeTaskService(db_session)
         with pytest.raises(ValueError):
-            service.batch_create_tasks(
-            node_instance_id=99999,
-            tasks_data=[{"task_name": "任务1"}]
-            )
+            service.batch_create_tasks(node_instance_id=99999, tasks_data=[{"task_name": "任务1"}])

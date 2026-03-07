@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - KPI采集状态单元测试"""
-import pytest
 from datetime import datetime
 
-pytest.importorskip("app.services.strategy.kpi_collector.status",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.strategy.kpi_collector.status", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock
+
 from app.services.strategy.kpi_collector.status import get_collection_status
 
 

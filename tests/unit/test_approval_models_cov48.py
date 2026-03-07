@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """单元测试 - approval_engine models (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.approval_engine.models import (
+        ApprovalDecision,
         ApprovalFlowType,
         ApprovalNodeRole,
         ApprovalStatus,
-        ApprovalDecision,
     )
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False

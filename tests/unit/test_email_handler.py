@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """EmailNotificationHandler 单元测试"""
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 try:
     from app.services.notification_handlers.email_handler import EmailNotificationHandler
+
     _IMPORT_OK = True
 except ImportError:
     _IMPORT_OK = False
@@ -60,6 +62,8 @@ class TestEmailNotificationHandler:
         alert.project = None
         alert.triggered_at = None
         alert.status = "PENDING"
-        html = self.handler._build_simple_html(alert, "Title", "Content", "#ff0000", "http://example.com")
+        html = self.handler._build_simple_html(
+            alert, "Title", "Content", "#ff0000", "http://example.com"
+        )
         assert "Title" in html
         assert "CRITICAL" in html

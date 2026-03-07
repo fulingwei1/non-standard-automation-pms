@@ -3,8 +3,6 @@
 CPQ 配置化报价服务
 """
 
-from __future__ import annotations
-
 from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
 
@@ -41,12 +39,20 @@ class CpqPricingService:
             currency = rule_set.currency or "CNY"
             base_price = Decimal(rule_set.base_price or 0)
         elif template_version_id:
-            version = self.db.query(QuoteTemplateVersion).filter(QuoteTemplateVersion.id == template_version_id).first()
+            version = (
+                self.db.query(QuoteTemplateVersion)
+                .filter(QuoteTemplateVersion.id == template_version_id)
+                .first()
+            )
             if version:
                 config_schema = version.config_schema or {}
                 pricing_matrix = version.pricing_rules or {}
                 currency = "CNY"
-                base_price = Decimal(version.pricing_rules.get("base_price", 0)) if version.pricing_rules else Decimal("0")
+                base_price = (
+                    Decimal(version.pricing_rules.get("base_price", 0))
+                    if version.pricing_rules
+                    else Decimal("0")
+                )
         selections = selections or {}
 
         adjustments = []
@@ -56,34 +62,40 @@ class CpqPricingService:
             delta, reason = self._calculate_adjustment(key, value, pricing_matrix)
             if delta:
                 adjustment_total += delta
-                adjustments.append({
-                    "key": key,
-                    "label": str(value),
-                    "value": delta,
-                    "reason": reason or f"配置项 {key}",
-                })
+                adjustments.append(
+                    {
+                        "key": key,
+                        "label": str(value),
+                        "value": delta,
+                        "reason": reason or f"配置项 {key}",
+                    }
+                )
 
         if manual_markup_pct:
             markup_value = (base_price + adjustment_total) * manual_markup_pct / Decimal("100")
             if markup_value:
                 adjustment_total += markup_value
-                adjustments.append({
-                    "key": "manual_markup",
-                    "label": "附加费用",
-                    "value": markup_value,
-                    "reason": f"人工加成 {manual_markup_pct}%",
-                })
+                adjustments.append(
+                    {
+                        "key": "manual_markup",
+                        "label": "附加费用",
+                        "value": markup_value,
+                        "reason": f"人工加成 {manual_markup_pct}%",
+                    }
+                )
 
         if manual_discount_pct:
             discount_value = (base_price + adjustment_total) * manual_discount_pct / Decimal("100")
             if discount_value:
                 adjustment_total -= discount_value
-                adjustments.append({
-                    "key": "manual_discount",
-                    "label": "手动折扣",
-                    "value": -discount_value,
-                    "reason": f"人工折扣 {manual_discount_pct}%",
-                })
+                adjustments.append(
+                    {
+                        "key": "manual_discount",
+                        "label": "手动折扣",
+                        "value": -discount_value,
+                        "reason": f"人工折扣 {manual_discount_pct}%",
+                    }
+                )
 
         final_price = base_price + adjustment_total
         requires_approval, approval_reason = self._evaluate_approvals(
@@ -106,7 +118,9 @@ class CpqPricingService:
             "confidence_level": confidence_level,
         }
 
-    def _resolve_rule_set(self, rule_set_id: Optional[int], template_version_id: Optional[int]) -> Optional[CpqRuleSet]:
+    def _resolve_rule_set(
+        self, rule_set_id: Optional[int], template_version_id: Optional[int]
+    ) -> Optional[CpqRuleSet]:
         if rule_set_id:
             return self.db.query(CpqRuleSet).filter(CpqRuleSet.id == rule_set_id).first()
         if template_version_id:
@@ -116,10 +130,14 @@ class CpqPricingService:
                 .first()
             )
             if version and version.rule_set_id:
-                return self.db.query(CpqRuleSet).filter(CpqRuleSet.id == version.rule_set_id).first()
+                return (
+                    self.db.query(CpqRuleSet).filter(CpqRuleSet.id == version.rule_set_id).first()
+                )
         return None
 
-    def _calculate_adjustment(self, key: str, value: Any, pricing_matrix: Dict[str, Any]) -> Tuple[Decimal, Optional[str]]:
+    def _calculate_adjustment(
+        self, key: str, value: Any, pricing_matrix: Dict[str, Any]
+    ) -> Tuple[Decimal, Optional[str]]:
         if not pricing_matrix:
             return Decimal("0"), None
         rules = pricing_matrix.get(key)
@@ -171,10 +189,16 @@ class CpqPricingService:
 
         return False, None
 
-    def _calculate_confidence(self, config_schema: Dict[str, Any], selections: Dict[str, Any]) -> str:
+    def _calculate_confidence(
+        self, config_schema: Dict[str, Any], selections: Dict[str, Any]
+    ) -> str:
         if not config_schema:
             return "MEDIUM"
-        required_keys = [key for key, meta in config_schema.items() if isinstance(meta, dict) and meta.get("required")]
+        required_keys = [
+            key
+            for key, meta in config_schema.items()
+            if isinstance(meta, dict) and meta.get("required")
+        ]
         if not required_keys:
             return "HIGH"
         provided = [key for key in required_keys if selections.get(key) is not None]

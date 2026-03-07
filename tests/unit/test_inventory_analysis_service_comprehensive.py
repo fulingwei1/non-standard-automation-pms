@@ -37,13 +37,13 @@ class TestGetTurnoverRateData:
         mock_material.standard_price = 50.0
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
         mock_db.query.return_value.join.return_value.filter.return_value.scalar.return_value = 500.0
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            mock_db,
-            date.today() - timedelta(days=30),
-            date.today()
+            mock_db, date.today() - timedelta(days=30), date.today()
         )
 
         assert "summary" in result
@@ -59,9 +59,7 @@ class TestGetTurnoverRateData:
         mock_db.query.return_value.join.return_value.filter.return_value.scalar.return_value = 0
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            mock_db,
-            date.today() - timedelta(days=30),
-            date.today()
+            mock_db, date.today() - timedelta(days=30), date.today()
         )
 
         assert result["summary"]["total_inventory_value"] == 0
@@ -72,14 +70,13 @@ class TestGetTurnoverRateData:
         from app.services.inventory_analysis_service import InventoryAnalysisService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         mock_db.query.return_value.join.return_value.filter.return_value.scalar.return_value = 0
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            mock_db,
-            date.today() - timedelta(days=30),
-            date.today(),
-            category_id=1
+            mock_db, date.today() - timedelta(days=30), date.today(), category_id=1
         )
 
         assert result["summary"]["total_materials"] == 0
@@ -111,14 +108,13 @@ class TestGetTurnoverRateData:
         mock_material2.unit = "个"
 
         mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
-            mock_material1, mock_material2
+            mock_material1,
+            mock_material2,
         ]
         mock_db.query.return_value.join.return_value.filter.return_value.scalar.return_value = 100.0
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            mock_db,
-            date.today() - timedelta(days=30),
-            date.today()
+            mock_db, date.today() - timedelta(days=30), date.today()
         )
 
         assert len(result["category_breakdown"]) == 2
@@ -139,13 +135,13 @@ class TestGetTurnoverRateData:
         mock_material.standard_price = 50.0
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
         mock_db.query.return_value.join.return_value.filter.return_value.scalar.return_value = 0
 
         result = InventoryAnalysisService.get_turnover_rate_data(
-            mock_db,
-            date.today() - timedelta(days=30),
-            date.today()
+            mock_db, date.today() - timedelta(days=30), date.today()
         )
 
         assert len(result["category_breakdown"]) == 1
@@ -171,7 +167,9 @@ class TestGetStaleMaterialsData:
         mock_material.updated_at = datetime.now() - timedelta(days=100)
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_stale_materials_data(mock_db, threshold_days=90)
 
@@ -194,7 +192,9 @@ class TestGetStaleMaterialsData:
         mock_material.updated_at = datetime.now() - timedelta(days=10)
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_stale_materials_data(mock_db, threshold_days=90)
 
@@ -219,7 +219,9 @@ class TestGetStaleMaterialsData:
             m.unit = "个"
             materials.append(m)
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = materials
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
+            materials
+        )
 
         result = InventoryAnalysisService.get_stale_materials_data(mock_db, threshold_days=90)
 
@@ -241,7 +243,9 @@ class TestGetStaleMaterialsData:
         mock_material.updated_at = None
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_stale_materials_data(mock_db, threshold_days=90)
 
@@ -264,7 +268,9 @@ class TestGetStaleMaterialsData:
         mock_material.updated_at = datetime.now() - timedelta(days=50)
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         # 使用30天阈值，50天未更新应该算呆滞
         result = InventoryAnalysisService.get_stale_materials_data(mock_db, threshold_days=30)
@@ -293,7 +299,9 @@ class TestGetSafetyStockComplianceData:
         mock_material.safety_stock = 50
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(mock_db)
 
@@ -315,7 +323,9 @@ class TestGetSafetyStockComplianceData:
         mock_material.safety_stock = 50
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(mock_db)
 
@@ -337,7 +347,9 @@ class TestGetSafetyStockComplianceData:
         mock_material.safety_stock = 50
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(mock_db)
 
@@ -359,7 +371,9 @@ class TestGetSafetyStockComplianceData:
         mock_material.safety_stock = 0
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(mock_db)
 
@@ -384,7 +398,9 @@ class TestGetSafetyStockComplianceData:
             m.unit = "个"
             materials.append(m)
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = materials
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.all.return_value = (
+            materials
+        )
 
         result = InventoryAnalysisService.get_safety_stock_compliance_data(mock_db)
 
@@ -411,12 +427,12 @@ class TestGetAbcAnalysisData:
         mock_result.total_amount = 10000.0
         mock_result.order_count = 5
 
-        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = [mock_result]
+        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            mock_result
+        ]
 
         result = InventoryAnalysisService.get_abc_analysis_data(
-            mock_db,
-            date.today() - timedelta(days=365),
-            date.today()
+            mock_db, date.today() - timedelta(days=365), date.today()
         )
 
         assert "abc_materials" in result
@@ -428,12 +444,12 @@ class TestGetAbcAnalysisData:
         from app.services.inventory_analysis_service import InventoryAnalysisService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
 
         result = InventoryAnalysisService.get_abc_analysis_data(
-            mock_db,
-            date.today() - timedelta(days=365),
-            date.today()
+            mock_db, date.today() - timedelta(days=365), date.today()
         )
 
         assert result["total_materials"] == 0
@@ -456,12 +472,12 @@ class TestGetAbcAnalysisData:
             m.order_count = 1
             materials.append(m)
 
-        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = materials
+        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            materials
+        )
 
         result = InventoryAnalysisService.get_abc_analysis_data(
-            mock_db,
-            date.today() - timedelta(days=365),
-            date.today()
+            mock_db, date.today() - timedelta(days=365), date.today()
         )
 
         assert result["abc_summary"]["A"]["count"] == 1
@@ -481,12 +497,12 @@ class TestGetAbcAnalysisData:
         mock_result.total_amount = 10000.0
         mock_result.order_count = 5
 
-        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = [mock_result]
+        mock_db.query.return_value.join.return_value.outerjoin.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            mock_result
+        ]
 
         result = InventoryAnalysisService.get_abc_analysis_data(
-            mock_db,
-            date.today() - timedelta(days=365),
-            date.today()
+            mock_db, date.today() - timedelta(days=365), date.today()
         )
 
         # 单个物料应该是100%
@@ -508,7 +524,9 @@ class TestGetCostOccupancyData:
         mock_category.inventory_value = 50000.0
         mock_category.material_count = 10
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = [mock_category]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            mock_category
+        ]
 
         # Mock top materials query
         mock_material = MagicMock()
@@ -519,7 +537,9 @@ class TestGetCostOccupancyData:
         mock_material.current_stock = 100
         mock_material.unit = "个"
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [mock_material]
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            mock_material
+        ]
 
         result = InventoryAnalysisService.get_cost_occupancy_data(mock_db)
 
@@ -542,8 +562,12 @@ class TestGetCostOccupancyData:
             c.material_count = 5
             categories.append(c)
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = categories
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            categories
+        )
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         result = InventoryAnalysisService.get_cost_occupancy_data(mock_db)
 
@@ -556,7 +580,9 @@ class TestGetCostOccupancyData:
 
         mock_db = MagicMock()
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
 
         materials = []
         for i in range(3):
@@ -569,7 +595,9 @@ class TestGetCostOccupancyData:
             m.unit = "个"
             materials.append(m)
 
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = materials
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            materials
+        )
 
         result = InventoryAnalysisService.get_cost_occupancy_data(mock_db)
 
@@ -580,8 +608,12 @@ class TestGetCostOccupancyData:
         from app.services.inventory_analysis_service import InventoryAnalysisService
 
         mock_db = MagicMock()
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = []
-        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
+        mock_db.query.return_value.outerjoin.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         result = InventoryAnalysisService.get_cost_occupancy_data(mock_db)
 

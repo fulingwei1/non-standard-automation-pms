@@ -18,11 +18,7 @@ class AlertGenerator(AlertRuleEngineBase):
     """预警内容生成器"""
 
     @staticmethod
-    def generate_alert_no(
-        db: Session,
-        rule: AlertRule,
-        target_data: Dict[str, Any]
-    ) -> str:
+    def generate_alert_no(db: Session, rule: AlertRule, target_data: Dict[str, Any]) -> str:
         """
         生成预警编号
 
@@ -34,7 +30,7 @@ class AlertGenerator(AlertRuleEngineBase):
         Returns:
             str: 预警编号
         """
-        today = datetime.now().strftime('%Y%m%d')
+        today = datetime.now().strftime("%Y%m%d")
         rule_code = rule.rule_code[:3].upper()
 
         # 查询今天的预警数量
@@ -42,13 +38,13 @@ class AlertGenerator(AlertRuleEngineBase):
         count_query = apply_like_filter(
             count_query,
             AlertRecord,
-            f'{rule_code}{today}%',
+            f"{rule_code}{today}%",
             "alert_no",
             use_ilike=False,
         )
         count = count_query.count()
 
-        return f'{rule_code}{today}{str(count + 1).zfill(4)}'
+        return f"{rule_code}{today}{str(count + 1).zfill(4)}"
 
     @staticmethod
     def generate_alert_title(
@@ -56,7 +52,7 @@ class AlertGenerator(AlertRuleEngineBase):
         target_data: Dict[str, Any],
         alert_level: str,
         context: Optional[Dict[str, Any]] = None,
-        engine: Optional[AlertRuleEngineBase] = None
+        engine: Optional[AlertRuleEngineBase] = None,
     ) -> str:
         """
         生成预警标题（子类可重写）
@@ -71,8 +67,8 @@ class AlertGenerator(AlertRuleEngineBase):
         Returns:
             str: 预警标题
         """
-        target_name = target_data.get('target_name') or target_data.get('target_no') or '对象'
-        return f'{rule.rule_name}：{target_name}'
+        target_name = target_data.get("target_name") or target_data.get("target_no") or "对象"
+        return f"{rule.rule_name}：{target_name}"
 
     @staticmethod
     def generate_alert_content(
@@ -80,7 +76,7 @@ class AlertGenerator(AlertRuleEngineBase):
         target_data: Dict[str, Any],
         alert_level: str,
         context: Optional[Dict[str, Any]] = None,
-        engine: Optional[AlertRuleEngineBase] = None
+        engine: Optional[AlertRuleEngineBase] = None,
     ) -> str:
         """
         生成预警内容（子类可重写）
@@ -95,19 +91,19 @@ class AlertGenerator(AlertRuleEngineBase):
         Returns:
             str: 预警内容
         """
-        content = f'{rule.rule_name}\n'
+        content = f"{rule.rule_name}\n"
         if rule.description:
-            content += f'说明：{rule.description}\n'
+            content += f"说明：{rule.description}\n"
 
         if rule.target_field and engine:
             trigger_value = engine.get_field_value(rule.target_field, target_data, context)
             if trigger_value is not None:
-                content += f'当前值：{trigger_value}\n'
+                content += f"当前值：{trigger_value}\n"
 
         if rule.threshold_value:
-            content += f'阈值：{rule.threshold_value}\n'
+            content += f"阈值：{rule.threshold_value}\n"
 
         if rule.solution_guide:
-            content += f'\n处理建议：{rule.solution_guide}'
+            content += f"\n处理建议：{rule.solution_guide}"
 
         return content

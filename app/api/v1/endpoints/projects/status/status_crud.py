@@ -24,6 +24,7 @@ router = APIRouter()
 def _create_project_status_log(db, project, old_values, new_values, change_type, reason, user_id):
     """创建项目状态变更日志（内部辅助）"""
     from datetime import datetime
+
     log = ProjectStatusLog(
         project_id=project.id,
         old_stage=old_values.get("stage", project.stage),
@@ -61,7 +62,8 @@ def _update_project_field(
     # 使用 StatusUpdateService 进行验证和更新
     def history_cb(entity, old_status, new_status, operator, reason_text):
         _create_project_status_log(
-            db, project,
+            db,
+            project,
             {field: old_status},
             {field: new_status},
             change_type,
@@ -113,10 +115,12 @@ def update_project_stage(
 ) -> Any:
     """更新项目阶段"""
     return _update_project_field(
-        db, current_user, project_id,
+        db,
+        current_user,
+        project_id,
         field="stage",
         new_value=new_stage,
-        valid_values=['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9'],
+        valid_values=["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"],
         change_type="STAGE_CHANGE",
         reason=reason,
         label="阶段",
@@ -132,6 +136,7 @@ def get_project_status(
 ) -> Any:
     """获取项目状态信息"""
     from app.utils.permission_helpers import check_project_access_or_raise
+
     project = check_project_access_or_raise(db, current_user, project_id)
 
     return ResponseModel(
@@ -160,7 +165,9 @@ def update_project_status(
 ) -> Any:
     """更新项目状态"""
     return _update_project_field(
-        db, current_user, project_id,
+        db,
+        current_user,
+        project_id,
         field="status",
         new_value=new_status,
         valid_values=[f"ST{i:02d}" for i in range(1, 31)],
@@ -181,10 +188,12 @@ def update_project_health(
 ) -> Any:
     """更新项目健康度"""
     return _update_project_field(
-        db, current_user, project_id,
+        db,
+        current_user,
+        project_id,
         field="health",
         new_value=new_health,
-        valid_values=['H1', 'H2', 'H3', 'H4'],
+        valid_values=["H1", "H2", "H3", "H4"],
         change_type="HEALTH_CHANGE",
         reason=reason,
         label="健康度",

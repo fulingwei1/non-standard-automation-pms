@@ -10,8 +10,9 @@
 
 import logging
 import re
+
 try:
-    from jinja2 import Environment, TemplateSyntaxError, StrictUndefined
+    from jinja2 import Environment, StrictUndefined, TemplateSyntaxError
 except ImportError:  # pragma: no cover - 可选依赖
     Environment = None
     TemplateSyntaxError = Exception
@@ -307,35 +308,21 @@ class ConditionEvaluator:
             elif op == "not_in":
                 return actual not in (expected if expected else [])
             elif op == "between":
-                if (
-                    actual is None
-                    or not isinstance(expected, (list, tuple))
-                    or len(expected) != 2
-                ):
+                if actual is None or not isinstance(expected, (list, tuple)) or len(expected) != 2:
                     return False
                 return expected[0] <= actual <= expected[1]
             elif op == "contains":
                 return expected in str(actual) if actual is not None else False
             elif op == "starts_with":
-                return (
-                    str(actual).startswith(str(expected))
-                    if actual is not None
-                    else False
-                )
+                return str(actual).startswith(str(expected)) if actual is not None else False
             elif op == "ends_with":
-                return (
-                    str(actual).endswith(str(expected)) if actual is not None else False
-                )
+                return str(actual).endswith(str(expected)) if actual is not None else False
             elif op == "is_null":
                 return (actual is None) == expected
             elif op == "regex":
                 import re
 
-                return (
-                    bool(re.match(expected, str(actual)))
-                    if actual is not None
-                    else False
-                )
+                return bool(re.match(expected, str(actual))) if actual is not None else False
             elif op == "and":
                 if isinstance(expected, (list, tuple)) and len(expected) == 2:
                     return self._compare_values(actual, expected[0], expected[1])
@@ -389,15 +376,11 @@ class ConditionEvaluator:
 
         if and_parts:
             # AND逻辑
-            items = [
-                self._parse_sql_condition(part.strip(), context) for part in and_parts
-            ]
+            items = [self._parse_sql_condition(part.strip(), context) for part in and_parts]
             return all(items)
         elif or_parts:
             # OR逻辑
-            items = [
-                self._parse_sql_condition(part.strip(), context) for part in or_parts
-            ]
+            items = [self._parse_sql_condition(part.strip(), context) for part in or_parts]
             return any(items)
         else:
             # 单个条件
@@ -451,9 +434,7 @@ class ConditionEvaluator:
                 return str(actual) in values
 
         # 处理 BETWEEN
-        between_match = re.match(
-            r"(.+?)\s+BETWEEN\s+(.+?)\s+AND\s+(.+)", condition, re.IGNORECASE
-        )
+        between_match = re.match(r"(.+?)\s+BETWEEN\s+(.+?)\s+AND\s+(.+)", condition, re.IGNORECASE)
         if between_match:
             field = between_match.group(1).strip()
             min_val = self._parse_value(between_match.group(2).strip())

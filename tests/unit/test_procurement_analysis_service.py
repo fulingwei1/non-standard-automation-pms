@@ -23,6 +23,7 @@ class TestPriceAnalyzer:
     def test_import_analyzer(self):
         """测试导入分析器"""
         from app.services.procurement_analysis.price_analyzer import PriceAnalyzer
+
         assert PriceAnalyzer is not None
 
     def test_get_price_fluctuation_data_empty(self, db_session):
@@ -31,8 +32,7 @@ class TestPriceAnalyzer:
 
         analyzer = PriceAnalyzer(db_session)
         result = analyzer.get_price_fluctuation_data(
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+            start_date=date.today() - timedelta(days=30), end_date=date.today()
         )
 
         assert isinstance(result, (list, dict))
@@ -43,9 +43,7 @@ class TestPriceAnalyzer:
 
         analyzer = PriceAnalyzer(db_session)
         result = analyzer.get_price_fluctuation_data(
-            material_id=1,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+            material_id=1, start_date=date.today() - timedelta(days=30), end_date=date.today()
         )
 
         assert isinstance(result, (list, dict))
@@ -56,9 +54,7 @@ class TestPriceAnalyzer:
 
         analyzer = PriceAnalyzer(db_session)
         result = analyzer.get_price_fluctuation_data(
-            supplier_id=1,
-            start_date=date.today() - timedelta(days=30),
-            end_date=date.today()
+            supplier_id=1, start_date=date.today() - timedelta(days=30), end_date=date.today()
         )
 
         assert isinstance(result, (list, dict))
@@ -70,6 +66,7 @@ class TestCostTrendAnalyzer:
     def test_import_analyzer(self):
         """测试导入分析器"""
         from app.services.procurement_analysis.cost_trend_analyzer import CostTrendAnalyzer
+
         assert CostTrendAnalyzer is not None
 
 
@@ -79,6 +76,7 @@ class TestDeliveryPerformanceAnalyzer:
     def test_import_analyzer(self):
         """测试导入分析器"""
         from app.services.procurement_analysis.delivery_analyzer import DeliveryPerformanceAnalyzer
+
         assert DeliveryPerformanceAnalyzer is not None
 
 
@@ -88,6 +86,7 @@ class TestRequestEfficiencyAnalyzer:
     def test_import_analyzer(self):
         """测试导入分析器"""
         from app.services.procurement_analysis.efficiency_analyzer import RequestEfficiencyAnalyzer
+
         assert RequestEfficiencyAnalyzer is not None
 
 
@@ -97,6 +96,7 @@ class TestQualityAnalyzer:
     def test_import_analyzer(self):
         """测试导入分析器"""
         from app.services.procurement_analysis.quality_analyzer import QualityAnalyzer
+
         assert QualityAnalyzer is not None
 
 
@@ -107,10 +107,10 @@ class TestProcurementAnalysisModule:
         """测试导入所有分析器"""
         from app.services.procurement_analysis import (
             CostTrendAnalyzer,
-            PriceAnalyzer,
             DeliveryPerformanceAnalyzer,
-            RequestEfficiencyAnalyzer,
+            PriceAnalyzer,
             QualityAnalyzer,
+            RequestEfficiencyAnalyzer,
         )
 
         assert CostTrendAnalyzer is not None

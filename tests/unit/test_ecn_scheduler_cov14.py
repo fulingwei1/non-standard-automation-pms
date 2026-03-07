@@ -2,12 +2,14 @@
 """
 第十四批：ECN定时任务服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services import ecn_scheduler
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -82,6 +84,7 @@ class TestEcnScheduler:
     def test_check_task_overdue_with_overdue(self):
         db = make_db()
         from datetime import date
+
         task = MagicMock()
         task.ecn_id = 1
         task.id = 30

@@ -15,13 +15,13 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.project import Project
 from app.models.project.risk_history import ProjectRiskHistory, ProjectRiskSnapshot
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.project.project_risk_service import ProjectRiskService
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -211,9 +211,7 @@ def trigger_risk_calculation(
 
     service = ProjectRiskService(db)
     try:
-        result = service.auto_upgrade_risk_level(
-            project_id, triggered_by=f"USER:{current_user.id}"
-        )
+        result = service.auto_upgrade_risk_level(project_id, triggered_by=f"USER:{current_user.id}")
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"计算风险失败: {str(e)}")
@@ -280,9 +278,7 @@ def get_risk_summary_report(
     high_risk_projects = []
     for risk in latest_risks:
         if risk.new_risk_level in ("HIGH", "CRITICAL"):
-            project = (
-                db.query(Project).filter(Project.id == risk.project_id).first()
-            )
+            project = db.query(Project).filter(Project.id == risk.project_id).first()
             if project and project.is_active:
                 high_risk_projects.append(
                     {
@@ -290,9 +286,9 @@ def get_risk_summary_report(
                         "project_code": project.project_code,
                         "project_name": project.project_name,
                         "risk_level": risk.new_risk_level,
-                        "last_updated": risk.triggered_at.isoformat()
-                        if risk.triggered_at
-                        else None,
+                        "last_updated": (
+                            risk.triggered_at.isoformat() if risk.triggered_at else None
+                        ),
                     }
                 )
 
@@ -372,13 +368,14 @@ def get_global_risk_trend(
             trend_data[date_str][row.risk_level] = row.count
 
     # 转换为列表格式
-    trend_list = [
-        {"date": d, **levels} for d, levels in sorted(trend_data.items())
-    ]
+    trend_list = [{"date": d, **levels} for d, levels in sorted(trend_data.items())]
 
     # 升级事件列表
     upgrade_events = [
-        {"date": row.date.isoformat() if hasattr(row.date, "isoformat") else str(row.date), "count": row.upgrade_count}
+        {
+            "date": row.date.isoformat() if hasattr(row.date, "isoformat") else str(row.date),
+            "count": row.upgrade_count,
+        }
         for row in upgrades_by_date
     ]
 

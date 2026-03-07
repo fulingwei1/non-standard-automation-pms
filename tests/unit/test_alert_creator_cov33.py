@@ -2,12 +2,14 @@
 """
 第三十三批覆盖率测试 - 预警创建器 (AlertCreator)
 """
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.alert_rule_engine.alert_creator import AlertCreator
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -53,9 +55,7 @@ class TestShouldCreateAlert:
         creator.db.query.return_value = q
 
         result = creator.should_create_alert(
-            rule,
-            {"target_type": "PROJECT", "target_id": 10},
-            "RED"
+            rule, {"target_type": "PROJECT", "target_id": 10}, "RED"
         )
 
         assert result is mock_alert
@@ -73,9 +73,7 @@ class TestShouldCreateAlert:
         creator.db.query.return_value = q
 
         result = creator.should_create_alert(
-            rule,
-            {"target_type": "PROJECT", "target_id": 10},
-            "YELLOW"
+            rule, {"target_type": "PROJECT", "target_id": 10}, "YELLOW"
         )
 
         assert result is None
@@ -94,7 +92,7 @@ class TestCreateAlert:
         mock_subscription_svc = MagicMock()
         mock_subscription_svc.get_notification_recipients.return_value = {
             "user_ids": [1, 2],
-            "channels": ["wechat"]
+            "channels": ["wechat"],
         }
         creator = self._setup_creator_with_services(subscription_svc=mock_subscription_svc)
 
@@ -112,18 +110,21 @@ class TestCreateAlert:
             "machine_id": None,
         }
 
-        with patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_no",
-            return_value="PD202601010001"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
-            return_value="测试预警标题"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
-            return_value="预警内容"
-        ), patch(
-            "app.services.alert_rule_engine.alert_creator.AlertRecord"
-        ) as mock_alert_cls:
+        with (
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_no",
+                return_value="PD202601010001",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
+                return_value="测试预警标题",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
+                return_value="预警内容",
+            ),
+            patch("app.services.alert_rule_engine.alert_creator.AlertRecord") as mock_alert_cls,
+        ):
             mock_alert_cls.return_value = MagicMock()
             creator.create_alert(rule, target_data, "RED")
 
@@ -133,7 +134,9 @@ class TestCreateAlert:
     def test_create_alert_handles_notification_failure(self):
         """通知失败不影响预警记录创建"""
         mock_subscription_svc = MagicMock()
-        mock_subscription_svc.get_notification_recipients.side_effect = RuntimeError("通知服务不可用")
+        mock_subscription_svc.get_notification_recipients.side_effect = RuntimeError(
+            "通知服务不可用"
+        )
         creator = self._setup_creator_with_services(subscription_svc=mock_subscription_svc)
         creator.get_field_value = MagicMock(return_value=None)
 
@@ -151,18 +154,21 @@ class TestCreateAlert:
             "machine_id": 5,
         }
 
-        with patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_no",
-            return_value="AL202601010001"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
-            return_value="标题"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
-            return_value="内容"
-        ), patch(
-            "app.services.alert_rule_engine.alert_creator.AlertRecord"
-        ) as mock_alert_cls:
+        with (
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_no",
+                return_value="AL202601010001",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
+                return_value="标题",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
+                return_value="内容",
+            ),
+            patch("app.services.alert_rule_engine.alert_creator.AlertRecord") as mock_alert_cls,
+        ):
             mock_alert_cls.return_value = MagicMock()
             # 不应该抛出异常
             creator.create_alert(rule, target_data, "YELLOW")
@@ -176,12 +182,12 @@ class TestCreateAlert:
 
         mock_svc = MagicMock()
         with patch(
-            "app.services.notification_service.AlertNotificationService",
-            return_value=mock_svc
+            "app.services.notification_service.AlertNotificationService", return_value=mock_svc
         ):
             # 直接调用 property 逻辑
             if creator._notification_service is None:
                 from app.services.notification_service import AlertNotificationService
+
                 creator._notification_service = AlertNotificationService(creator.db)
 
         assert creator._notification_service is not None
@@ -200,11 +206,10 @@ class TestCreateAlert:
         mock_subscription_svc = MagicMock()
         mock_subscription_svc.get_notification_recipients.return_value = {
             "user_ids": [],  # 无匹配订阅
-            "channels": []
+            "channels": [],
         }
         creator = self._setup_creator_with_services(
-            notification_svc=mock_notification_svc,
-            subscription_svc=mock_subscription_svc
+            notification_svc=mock_notification_svc, subscription_svc=mock_subscription_svc
         )
         creator.get_field_value = MagicMock(return_value=None)
 
@@ -222,20 +227,25 @@ class TestCreateAlert:
             "machine_id": None,
         }
 
-        with patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_no",
-            return_value="PD202601010002"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
-            return_value="标题"
-        ), patch(
-            "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
-            return_value="内容"
-        ), patch(
-            "app.services.alert_rule_engine.alert_creator.AlertRecord"
-        ) as mock_alert_cls:
+        with (
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_no",
+                return_value="PD202601010002",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_title",
+                return_value="标题",
+            ),
+            patch(
+                "app.services.alert_rule_engine.alert_generator.AlertGenerator.generate_alert_content",
+                return_value="内容",
+            ),
+            patch("app.services.alert_rule_engine.alert_creator.AlertRecord") as mock_alert_cls,
+        ):
             mock_alert_cls.return_value = MagicMock()
             creator.create_alert(rule, target_data, "YELLOW")
 
         # 无订阅时使用默认配置
-        mock_notification_svc.send_alert_notification.assert_called_once_with(alert=mock_alert_cls.return_value)
+        mock_notification_svc.send_alert_notification.assert_called_once_with(
+            alert=mock_alert_cls.return_value
+        )

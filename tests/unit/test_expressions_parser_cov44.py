@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - Jinja2 表达式解析器"""
 
-import pytest
 from datetime import date, timedelta
 
+import pytest
+
 try:
-    from app.services.report_framework.expressions.parser import ExpressionParser, ExpressionError
+    from app.services.report_framework.expressions.parser import ExpressionError, ExpressionParser
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

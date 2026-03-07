@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十批：SolutionCreditService 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.solution_credit_service import SolutionCreditService, CreditTransactionType
+    from app.services.solution_credit_service import CreditTransactionType, SolutionCreditService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

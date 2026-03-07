@@ -12,6 +12,7 @@ class TestCheckWorkerAvailability:
     @patch("app.services.resource_allocation_service.worker.calculate_overlap_days", return_value=2)
     def test_worker_not_found(self, mock_overlap, mock_wd):
         from app.services.resource_allocation_service.worker import check_worker_availability
+
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         ok, reason, hours = check_worker_availability(db, 1, date(2024, 1, 1), date(2024, 1, 5))
@@ -22,6 +23,7 @@ class TestCheckWorkerAvailability:
     @patch("app.services.resource_allocation_service.worker.calculate_overlap_days", return_value=0)
     def test_worker_inactive(self, mock_overlap, mock_wd):
         from app.services.resource_allocation_service.worker import check_worker_availability
+
         db = MagicMock()
         worker = MagicMock()
         worker.is_active = False
@@ -34,6 +36,7 @@ class TestCheckWorkerAvailability:
     @patch("app.services.resource_allocation_service.worker.calculate_overlap_days", return_value=0)
     def test_worker_available(self, mock_overlap, mock_wd):
         from app.services.resource_allocation_service.worker import check_worker_availability
+
         db = MagicMock()
         worker = MagicMock()
         worker.is_active = True
@@ -41,7 +44,9 @@ class TestCheckWorkerAvailability:
         db.query.return_value.filter.return_value.first.return_value = worker
         # No work orders, no allocations, no tasks
         db.query.return_value.filter.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.filter.return_value = MagicMock(__iter__=lambda s: iter([]))
+        db.query.return_value.filter.return_value.filter.return_value = MagicMock(
+            __iter__=lambda s: iter([])
+        )
 
         ok, reason, hours = check_worker_availability(db, 1, date(2024, 1, 1), date(2024, 1, 5))
         assert ok is True
@@ -53,6 +58,7 @@ class TestFindAvailableWorkers:
     @patch("app.services.resource_allocation_service.worker.check_worker_availability")
     def test_find_no_workers(self, mock_check):
         from app.services.resource_allocation_service.worker import find_available_workers
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
@@ -62,6 +68,7 @@ class TestFindAvailableWorkers:
     @patch("app.services.resource_allocation_service.worker.check_worker_availability")
     def test_find_available_workers_happy(self, mock_check):
         from app.services.resource_allocation_service.worker import find_available_workers
+
         db = MagicMock()
         worker = MagicMock()
         worker.id = 1
@@ -83,6 +90,7 @@ class TestCheckWorkerSkill:
 
     def test_no_skills(self):
         from app.services.resource_allocation_service.worker import check_worker_skill
+
         db = MagicMock()
         db.query.return_value.join.return_value.filter.return_value.all.return_value = []
         ok, matched = check_worker_skill(db, 1, "焊接")
@@ -91,6 +99,7 @@ class TestCheckWorkerSkill:
 
     def test_skill_match(self):
         from app.services.resource_allocation_service.worker import check_worker_skill
+
         db = MagicMock()
         ws = MagicMock()
         proc = MagicMock()

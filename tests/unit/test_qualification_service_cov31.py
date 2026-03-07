@@ -29,6 +29,7 @@ def _make_chain(mock_db, first_val=None, all_val=None):
 # get_qualification_levels
 # ---------------------------------------------------------------------------
 
+
 class TestGetQualificationLevels:
     def test_returns_all_levels(self, mock_db):
         level = MagicMock()
@@ -49,6 +50,7 @@ class TestGetQualificationLevels:
 # ---------------------------------------------------------------------------
 # get_competency_model
 # ---------------------------------------------------------------------------
+
 
 class TestGetCompetencyModel:
     def test_returns_model_when_found(self, mock_db):
@@ -74,6 +76,7 @@ class TestGetCompetencyModel:
 # ---------------------------------------------------------------------------
 # certify_employee
 # ---------------------------------------------------------------------------
+
 
 class TestCertifyEmployee:
     def test_raises_when_employee_not_found(self, mock_db):
@@ -135,9 +138,7 @@ class TestCertifyEmployee:
 
         mock_db.query.side_effect = query_side_effect
 
-        with patch(
-            "app.services.qualification_service.EmployeeQualification"
-        ) as MockQual:
+        with patch("app.services.qualification_service.EmployeeQualification") as MockQual:
             mock_qual = MagicMock()
             MockQual.return_value = mock_qual
             mock_db.refresh.return_value = None
@@ -159,15 +160,13 @@ class TestCertifyEmployee:
 # assess_employee
 # ---------------------------------------------------------------------------
 
+
 class TestAssessEmployee:
     def test_creates_assessment(self, mock_db):
-        with patch(
-            "app.services.qualification_service.QualificationAssessment"
-        ) as MockAssessment, \
-             patch.object(
-            QualificationService, "_calculate_total_score", return_value=85.0
-        ), patch.object(
-            QualificationService, "_determine_result", return_value=MagicMock()
+        with (
+            patch("app.services.qualification_service.QualificationAssessment") as MockAssessment,
+            patch.object(QualificationService, "_calculate_total_score", return_value=85.0),
+            patch.object(QualificationService, "_determine_result", return_value=MagicMock()),
         ):
             mock_assessment = MagicMock()
             MockAssessment.return_value = mock_assessment

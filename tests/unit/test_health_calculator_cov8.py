@@ -2,11 +2,13 @@
 """
 第八批覆盖率测试 - 项目健康度计算器
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.health_calculator import HealthCalculator
+
     HAS_HC = True
 except Exception:
     HAS_HC = False
@@ -51,7 +53,7 @@ class TestHealthCalculatorBlocked:
         calc = HealthCalculator(db)
         proj = make_project(status="ST14")
         # 阻塞判断内部可能还查DB，mock掉
-        with patch.object(calc, '_is_blocked', return_value=True):
+        with patch.object(calc, "_is_blocked", return_value=True):
             result = calc.calculate_health(proj)
         assert result == "H3"
 
@@ -60,7 +62,7 @@ class TestHealthCalculatorBlocked:
         db = MagicMock()
         calc = HealthCalculator(db)
         proj = make_project(status="ST19")
-        with patch.object(calc, '_is_blocked', return_value=True):
+        with patch.object(calc, "_is_blocked", return_value=True):
             result = calc.calculate_health(proj)
         assert result == "H3"
 
@@ -73,8 +75,8 @@ class TestHealthCalculatorRisk:
         db = MagicMock()
         calc = HealthCalculator(db)
         proj = make_project(status="ST10")
-        with patch.object(calc, '_is_blocked', return_value=False):
-            with patch.object(calc, '_has_risks', return_value=True):
+        with patch.object(calc, "_is_blocked", return_value=False):
+            with patch.object(calc, "_has_risks", return_value=True):
                 result = calc.calculate_health(proj)
         assert result == "H2"
 
@@ -87,8 +89,8 @@ class TestHealthCalculatorNormal:
         db = MagicMock()
         calc = HealthCalculator(db)
         proj = make_project(status="ST10")
-        with patch.object(calc, '_is_blocked', return_value=False):
-            with patch.object(calc, '_has_risks', return_value=False):
+        with patch.object(calc, "_is_blocked", return_value=False):
+            with patch.object(calc, "_has_risks", return_value=False):
                 result = calc.calculate_health(proj)
         assert result == "H1"
 

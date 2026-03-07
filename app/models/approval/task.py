@@ -28,16 +28,24 @@ class ApprovalTask(Base, TimestampMixin):
     __tablename__ = "approval_tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    instance_id = Column(Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID")
-    node_id = Column(Integer, ForeignKey("approval_node_definitions.id"), nullable=False, comment="节点定义ID")
+    instance_id = Column(
+        Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID"
+    )
+    node_id = Column(
+        Integer, ForeignKey("approval_node_definitions.id"), nullable=False, comment="节点定义ID"
+    )
 
     # 任务类型
-    task_type = Column(String(20), default="APPROVAL", comment="""
+    task_type = Column(
+        String(20),
+        default="APPROVAL",
+        comment="""
         任务类型：
         APPROVAL: 审批任务
         CC: 抄送任务（只读）
         EVALUATION: 评估任务（ECN等）
-    """)
+    """,
+    )
 
     # 任务序号（同一节点可能有多个任务，如会签）
     task_order = Column(Integer, default=1, comment="任务序号")
@@ -48,18 +56,27 @@ class ApprovalTask(Base, TimestampMixin):
     assignee_dept_id = Column(Integer, ForeignKey("departments.id"), comment="被分配人部门ID")
 
     # 分配来源
-    assignee_type = Column(String(20), default="NORMAL", comment="""
+    assignee_type = Column(
+        String(20),
+        default="NORMAL",
+        comment="""
         分配类型：
         NORMAL: 正常分配
         DELEGATED: 代理分配
         TRANSFERRED: 转审分配
         ADDED_BEFORE: 前加签
         ADDED_AFTER: 后加签
-    """)
-    original_assignee_id = Column(Integer, ForeignKey("users.id"), comment="原审批人ID（委托/转审时）")
+    """,
+    )
+    original_assignee_id = Column(
+        Integer, ForeignKey("users.id"), comment="原审批人ID（委托/转审时）"
+    )
 
     # 任务状态
-    status = Column(String(20), default="PENDING", comment="""
+    status = Column(
+        String(20),
+        default="PENDING",
+        comment="""
         任务状态：
         PENDING: 待处理
         COMPLETED: 已完成
@@ -68,20 +85,26 @@ class ApprovalTask(Base, TimestampMixin):
         SKIPPED: 已跳过（条件跳过）
         EXPIRED: 已超时
         CANCELLED: 已取消（实例撤销时）
-    """)
+    """,
+    )
 
     # 审批结果
-    action = Column(String(20), comment="""
+    action = Column(
+        String(20),
+        comment="""
         审批操作：
         APPROVE: 通过
         REJECT: 驳回
         RETURN: 退回（退回到指定节点）
-    """)
+    """,
+    )
     comment = Column(Text, comment="审批意见")
     attachments = Column(JSON, comment="附件列表")
 
     # 评估内容（用于ECN等需要填写评估的场景）
-    eval_data = Column(JSON, comment="""
+    eval_data = Column(
+        JSON,
+        comment="""
         评估数据，示例：
         {
             "impact_analysis": "影响生产排期",
@@ -89,10 +112,13 @@ class ApprovalTask(Base, TimestampMixin):
             "schedule_estimate": 3,
             "risk_assessment": "中"
         }
-    """)
+    """,
+    )
 
     # 退回目标（当action=RETURN时）
-    return_to_node_id = Column(Integer, ForeignKey("approval_node_definitions.id"), comment="退回到的节点ID")
+    return_to_node_id = Column(
+        Integer, ForeignKey("approval_node_definitions.id"), comment="退回到的节点ID"
+    )
 
     # 时间记录
     due_at = Column(DateTime, comment="截止时间")
@@ -132,7 +158,9 @@ class ApprovalCarbonCopy(Base, TimestampMixin):
     __tablename__ = "approval_carbon_copies"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    instance_id = Column(Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID")
+    instance_id = Column(
+        Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID"
+    )
     node_id = Column(Integer, comment="触发抄送的节点ID（可为空，表示发起时抄送）")
 
     # 抄送人
@@ -140,12 +168,16 @@ class ApprovalCarbonCopy(Base, TimestampMixin):
     cc_user_name = Column(String(50), comment="抄送人姓名（冗余）")
 
     # 抄送来源
-    cc_source = Column(String(20), default="FLOW", comment="""
+    cc_source = Column(
+        String(20),
+        default="FLOW",
+        comment="""
         抄送来源：
         FLOW: 流程配置抄送
         INITIATOR: 发起人手动抄送
         APPROVER: 审批人手动加抄送
-    """)
+    """,
+    )
     added_by = Column(Integer, ForeignKey("users.id"), comment="添加人ID（手动抄送时）")
 
     # 阅读状态
@@ -173,8 +205,12 @@ class ApprovalCountersignResult(Base, TimestampMixin):
     __tablename__ = "approval_countersign_results"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    instance_id = Column(Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID")
-    node_id = Column(Integer, ForeignKey("approval_node_definitions.id"), nullable=False, comment="节点ID")
+    instance_id = Column(
+        Integer, ForeignKey("approval_instances.id"), nullable=False, comment="审批实例ID"
+    )
+    node_id = Column(
+        Integer, ForeignKey("approval_node_definitions.id"), nullable=False, comment="节点ID"
+    )
 
     # 统计信息
     total_count = Column(Integer, default=0, comment="总任务数")
@@ -183,16 +219,21 @@ class ApprovalCountersignResult(Base, TimestampMixin):
     pending_count = Column(Integer, default=0, comment="待处理数")
 
     # 最终结果
-    final_result = Column(String(20), comment="""
+    final_result = Column(
+        String(20),
+        comment="""
         最终结果：
         PENDING: 进行中
         PASSED: 通过
         FAILED: 未通过
-    """)
+    """,
+    )
     result_reason = Column(Text, comment="结果说明")
 
     # 汇总数据
-    summary_data = Column(JSON, comment="""
+    summary_data = Column(
+        JSON,
+        comment="""
         汇总数据，示例（ECN评估）：
         {
             "total_cost": 15000,
@@ -203,7 +244,8 @@ class ApprovalCountersignResult(Base, TimestampMixin):
                 {"dept": "采购部", "result": "通过", "cost": 10000}
             ]
         }
-    """)
+    """,
+    )
 
     __table_args__ = (
         Index("idx_countersign_instance", "instance_id"),

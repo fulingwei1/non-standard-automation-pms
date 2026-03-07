@@ -13,8 +13,10 @@ from .common import BaseSchema, TimestampSchema
 
 # ==================== 预警规则 ====================
 
+
 class AlertRuleCreate(BaseModel):
     """创建预警规则"""
+
     rule_code: str = Field(max_length=50)
     rule_name: str = Field(max_length=200)
     rule_type: str = Field(description="规则类型")
@@ -38,6 +40,7 @@ class AlertRuleCreate(BaseModel):
 
 class AlertRuleUpdate(BaseModel):
     """更新预警规则"""
+
     rule_name: Optional[str] = None
     target_field: Optional[str] = None
     condition_operator: Optional[str] = None
@@ -58,6 +61,7 @@ class AlertRuleUpdate(BaseModel):
 
 class AlertRuleResponse(TimestampSchema):
     """预警规则响应"""
+
     id: int
     rule_code: str
     rule_name: str
@@ -73,14 +77,17 @@ class AlertRuleResponse(TimestampSchema):
 
 # ==================== 预警记录 ====================
 
+
 class AlertRecordHandle(BaseModel):
     """处理预警"""
+
     handle_result: str
     handle_note: Optional[str] = None
 
 
 class AlertRecordResponse(TimestampSchema):
     """预警记录响应"""
+
     id: int
     alert_no: str
     rule_id: int
@@ -109,6 +116,7 @@ class AlertRecordResponse(TimestampSchema):
 
 class AlertRecordListResponse(BaseSchema):
     """预警记录列表响应"""
+
     id: int
     alert_no: str
     alert_level: str
@@ -123,8 +131,10 @@ class AlertRecordListResponse(BaseSchema):
 
 # ==================== 异常事件 ====================
 
+
 class ExceptionEventCreate(BaseModel):
     """创建异常事件"""
+
     source_type: str = Field(description="来源类型")
     source_id: Optional[int] = None
     alert_id: Optional[int] = None
@@ -147,6 +157,7 @@ class ExceptionEventCreate(BaseModel):
 
 class ExceptionEventUpdate(BaseModel):
     """更新异常事件"""
+
     severity: Optional[str] = None
     event_title: Optional[str] = None
     event_description: Optional[str] = None
@@ -166,6 +177,7 @@ class ExceptionEventUpdate(BaseModel):
 
 class ExceptionEventResolve(BaseModel):
     """解决异常"""
+
     solution: str
     preventive_measures: Optional[str] = None
     resolution_note: Optional[str] = None
@@ -173,12 +185,14 @@ class ExceptionEventResolve(BaseModel):
 
 class ExceptionEventVerify(BaseModel):
     """验证异常"""
+
     verification_result: str = Field(description="VERIFIED/REJECTED")
     note: Optional[str] = None
 
 
 class ExceptionEventResponse(TimestampSchema):
     """异常事件响应"""
+
     id: int
     event_no: str
     source_type: str
@@ -210,6 +224,7 @@ class ExceptionEventResponse(TimestampSchema):
 
 class ExceptionEventListResponse(BaseSchema):
     """异常事件列表响应"""
+
     id: int
     event_no: str
     event_type: str
@@ -225,8 +240,10 @@ class ExceptionEventListResponse(BaseSchema):
 
 # ==================== 项目健康度 ====================
 
+
 class ProjectHealthResponse(BaseSchema):
     """项目健康度响应"""
+
     project_id: int
     project_name: str
     snapshot_date: date
@@ -244,8 +261,10 @@ class ProjectHealthResponse(BaseSchema):
 
 # ==================== 统计 ====================
 
+
 class AlertStatisticsResponse(BaseSchema):
     """预警统计响应"""
+
     stat_date: date
     stat_type: str
     total_alerts: int = 0
@@ -263,8 +282,10 @@ class AlertStatisticsResponse(BaseSchema):
 
 # ==================== 预警订阅 ====================
 
+
 class AlertSubscriptionCreate(BaseModel):
     """创建预警订阅"""
+
     alert_type: Optional[str] = Field(None, description="预警类型（空表示全部）")
     project_id: Optional[int] = Field(None, description="项目ID（空表示全部）")
     min_level: str = Field(default="WARNING", description="最低接收级别")
@@ -276,6 +297,7 @@ class AlertSubscriptionCreate(BaseModel):
 
 class AlertSubscriptionUpdate(BaseModel):
     """更新预警订阅"""
+
     alert_type: Optional[str] = None
     project_id: Optional[int] = None
     min_level: Optional[str] = None
@@ -287,6 +309,7 @@ class AlertSubscriptionUpdate(BaseModel):
 
 class AlertSubscriptionResponse(TimestampSchema):
     """预警订阅响应"""
+
     id: int
     user_id: int
     alert_type: Optional[str] = None

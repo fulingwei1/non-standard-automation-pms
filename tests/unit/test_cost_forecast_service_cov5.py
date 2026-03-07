@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第五批：cost_forecast_service.py 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.cost_forecast_service import CostForecastService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -43,9 +45,17 @@ class TestLinearForecast:
         db.query.return_value.filter.return_value.first.return_value = make_project()
         svc = make_service(db)
         # Mock _get_monthly_costs to return only 1 item
-        with patch.object(svc, "_get_monthly_costs", return_value=[
-            {"month": "2024-01", "monthly_cost": Decimal("5000"), "cumulative_cost": Decimal("5000")}
-        ]):
+        with patch.object(
+            svc,
+            "_get_monthly_costs",
+            return_value=[
+                {
+                    "month": "2024-01",
+                    "monthly_cost": Decimal("5000"),
+                    "cumulative_cost": Decimal("5000"),
+                }
+            ],
+        ):
             result = svc.linear_forecast(1)
             assert "error" in result
 
@@ -91,8 +101,16 @@ class TestGetCostTrend:
         db.query.return_value.filter.return_value.first.return_value = project
         svc = make_service(db)
         monthly = [
-            {"month": "2024-01", "monthly_cost": Decimal("5000"), "cumulative_cost": Decimal("5000")},
-            {"month": "2024-02", "monthly_cost": Decimal("6000"), "cumulative_cost": Decimal("11000")},
+            {
+                "month": "2024-01",
+                "monthly_cost": Decimal("5000"),
+                "cumulative_cost": Decimal("5000"),
+            },
+            {
+                "month": "2024-02",
+                "monthly_cost": Decimal("6000"),
+                "cumulative_cost": Decimal("11000"),
+            },
         ]
         with patch.object(svc, "_get_monthly_costs", return_value=monthly):
             result = svc.get_cost_trend(1)

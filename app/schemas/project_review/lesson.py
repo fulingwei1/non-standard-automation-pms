@@ -1,13 +1,16 @@
 """
 项目经验教训Schema
 """
+
 from datetime import date, datetime
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class ProjectLessonBase(BaseModel):
     """经验教训基础Schema"""
+
     lesson_type: str = Field(..., description="类型：SUCCESS/FAILURE")
     title: str = Field(..., min_length=1, max_length=200, description="标题")
     description: str = Field(..., description="问题/经验描述")
@@ -21,6 +24,7 @@ class ProjectLessonBase(BaseModel):
 
 class ProjectLessonCreate(ProjectLessonBase):
     """创建经验教训"""
+
     review_id: int = Field(..., description="复盘报告ID")
     project_id: int = Field(..., description="项目ID")
     responsible_person: Optional[str] = None
@@ -29,6 +33,7 @@ class ProjectLessonCreate(ProjectLessonBase):
 
 class ProjectLessonUpdate(BaseModel):
     """更新经验教训"""
+
     title: Optional[str] = Field(None, max_length=200)
     description: Optional[str] = None
     root_cause: Optional[str] = None
@@ -44,6 +49,7 @@ class ProjectLessonUpdate(BaseModel):
 
 class ProjectLessonResponse(BaseModel):
     """经验教训响应"""
+
     id: int
     review_id: int
     project_id: int
@@ -64,13 +70,14 @@ class ProjectLessonResponse(BaseModel):
     ai_confidence: Optional[float] = None
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
 
 class LessonExtractRequest(BaseModel):
     """提取经验教训请求"""
+
     review_id: int = Field(..., description="复盘报告ID")
     min_confidence: float = Field(default=0.6, ge=0.0, le=1.0, description="最小置信度")
     auto_save: bool = Field(default=True, description="是否自动保存")
@@ -78,6 +85,7 @@ class LessonExtractRequest(BaseModel):
 
 class LessonExtractResponse(BaseModel):
     """提取经验教训响应"""
+
     success: bool
     review_id: int
     extracted_count: int

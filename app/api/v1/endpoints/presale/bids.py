@@ -17,10 +17,10 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.date_range import get_month_range
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.presale import (
     PresaleTenderRecord,
 )
@@ -32,22 +32,21 @@ from app.schemas.presale import (
     TenderResponse,
     TenderResultUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 # 使用统一的编码生成工具
 from app.utils.domain_codes import presale as presale_codes
-from app.utils.db_helpers import get_or_404, save_obj
 
 generate_ticket_no = presale_codes.generate_ticket_no
 generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
 
-router = APIRouter(
-    tags=["bids"]
-)
+router = APIRouter(tags=["bids"])
 
 # 共 5 个路由
 
 # ==================== 投标管理 ====================
+
 
 @router.get("/tenders", response_model=PaginatedResponse)
 def read_tenders(
@@ -72,31 +71,37 @@ def read_tenders(
     query = apply_keyword_filter(query, PresaleTenderRecord, customer_name, ["customer_name"])
 
     total = query.count()
-    tenders = apply_pagination(query.order_by(desc(PresaleTenderRecord.created_at)), pagination.offset, pagination.limit).all()
+    tenders = apply_pagination(
+        query.order_by(desc(PresaleTenderRecord.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for tender in tenders:
-        items.append(TenderResponse(
-            id=tender.id,
-            ticket_id=tender.ticket_id,
-            opportunity_id=tender.opportunity_id,
-            tender_no=tender.tender_no,
-            tender_name=tender.tender_name,
-            customer_name=tender.customer_name,
-            publish_date=tender.publish_date,
-            deadline=tender.deadline,
-            bid_opening_date=tender.bid_opening_date,
-            budget_amount=float(tender.budget_amount) if tender.budget_amount else None,
-            our_bid_amount=float(tender.our_bid_amount) if tender.our_bid_amount else None,
-            technical_score=float(tender.technical_score) if tender.technical_score else None,
-            commercial_score=float(tender.commercial_score) if tender.commercial_score else None,
-            total_score=float(tender.total_score) if tender.total_score else None,
-            result=tender.result,
-            result_reason=tender.result_reason,
-            leader_id=tender.leader_id,
-            created_at=tender.created_at,
-            updated_at=tender.updated_at,
-        ))
+        items.append(
+            TenderResponse(
+                id=tender.id,
+                ticket_id=tender.ticket_id,
+                opportunity_id=tender.opportunity_id,
+                tender_no=tender.tender_no,
+                tender_name=tender.tender_name,
+                customer_name=tender.customer_name,
+                publish_date=tender.publish_date,
+                deadline=tender.deadline,
+                bid_opening_date=tender.bid_opening_date,
+                budget_amount=float(tender.budget_amount) if tender.budget_amount else None,
+                our_bid_amount=float(tender.our_bid_amount) if tender.our_bid_amount else None,
+                technical_score=float(tender.technical_score) if tender.technical_score else None,
+                commercial_score=(
+                    float(tender.commercial_score) if tender.commercial_score else None
+                ),
+                total_score=float(tender.total_score) if tender.total_score else None,
+                result=tender.result,
+                result_reason=tender.result_reason,
+                leader_id=tender.leader_id,
+                created_at=tender.created_at,
+                updated_at=tender.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
@@ -125,9 +130,9 @@ def create_tender(
         technical_requirements=tender_in.technical_requirements,
         our_bid_amount=tender_in.our_bid_amount,
         competitors=tender_in.competitors,
-        result='PENDING',
+        result="PENDING",
         leader_id=tender_in.leader_id,
-        team_members=tender_in.team_members
+        team_members=tender_in.team_members,
     )
 
     save_obj(db, tender)
@@ -256,23 +261,27 @@ def get_tender_analysis(
         _, end_date = get_month_range(today)
 
     # 获取时间段内的投标记录
-    tenders = db.query(PresaleTenderRecord).filter(
-        PresaleTenderRecord.created_at >= datetime.combine(start_date, datetime.min.time()),
-        PresaleTenderRecord.created_at <= datetime.combine(end_date, datetime.max.time())
-    ).all()
+    tenders = (
+        db.query(PresaleTenderRecord)
+        .filter(
+            PresaleTenderRecord.created_at >= datetime.combine(start_date, datetime.min.time()),
+            PresaleTenderRecord.created_at <= datetime.combine(end_date, datetime.max.time()),
+        )
+        .all()
+    )
 
     # 统计结果
     total_tenders = len(tenders)
-    won_count = len([t for t in tenders if t.result == 'WON'])
-    lost_count = len([t for t in tenders if t.result == 'LOST'])
-    pending_count = len([t for t in tenders if t.result == 'PENDING'])
+    won_count = len([t for t in tenders if t.result == "WON"])
+    lost_count = len([t for t in tenders if t.result == "LOST"])
+    pending_count = len([t for t in tenders if t.result == "PENDING"])
 
     win_rate = (won_count / total_tenders * 100) if total_tenders > 0 else 0.0
 
     # 统计金额
     total_budget = sum(float(t.budget_amount or 0) for t in tenders)
     total_bid = sum(float(t.our_bid_amount or 0) for t in tenders)
-    won_bid = sum(float(t.our_bid_amount or 0) for t in tenders if t.result == 'WON')
+    won_bid = sum(float(t.our_bid_amount or 0) for t in tenders if t.result == "WON")
 
     # 按行业统计
     industry_stats = {}
@@ -288,9 +297,9 @@ def get_tender_analysis(
             industry_stats[industry] = {"total": 0, "won": 0, "lost": 0, "pending": 0}
 
         industry_stats[industry]["total"] += 1
-        if tender.result == 'WON':
+        if tender.result == "WON":
             industry_stats[industry]["won"] += 1
-        elif tender.result == 'LOST':
+        elif tender.result == "LOST":
             industry_stats[industry]["lost"] += 1
         else:
             industry_stats[industry]["pending"] += 1
@@ -303,9 +312,9 @@ def get_tender_analysis(
             monthly_stats[month_key] = {"total": 0, "won": 0, "lost": 0}
 
         monthly_stats[month_key]["total"] += 1
-        if tender.result == 'WON':
+        if tender.result == "WON":
             monthly_stats[month_key]["won"] += 1
-        elif tender.result == 'LOST':
+        elif tender.result == "LOST":
             monthly_stats[month_key]["lost"] += 1
 
     return ResponseModel(
@@ -321,7 +330,7 @@ def get_tender_analysis(
                 "win_rate": round(win_rate, 2),
                 "total_budget": round(total_budget, 2),
                 "total_bid": round(total_bid, 2),
-                "won_bid": round(won_bid, 2)
+                "won_bid": round(won_bid, 2),
             },
             "by_industry": [
                 {
@@ -330,7 +339,9 @@ def get_tender_analysis(
                     "won": stats["won"],
                     "lost": stats["lost"],
                     "pending": stats["pending"],
-                    "win_rate": round((stats["won"] / stats["total"] * 100) if stats["total"] > 0 else 0.0, 2)
+                    "win_rate": round(
+                        (stats["won"] / stats["total"] * 100) if stats["total"] > 0 else 0.0, 2
+                    ),
                 }
                 for industry, stats in industry_stats.items()
             ],
@@ -340,12 +351,11 @@ def get_tender_analysis(
                     "total": stats["total"],
                     "won": stats["won"],
                     "lost": stats["lost"],
-                    "win_rate": round((stats["won"] / stats["total"] * 100) if stats["total"] > 0 else 0.0, 2)
+                    "win_rate": round(
+                        (stats["won"] / stats["total"] * 100) if stats["total"] > 0 else 0.0, 2
+                    ),
                 }
                 for month, stats in sorted(monthly_stats.items())
-            ]
-        }
+            ],
+        },
     )
-
-
-

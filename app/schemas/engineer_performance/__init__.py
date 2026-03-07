@@ -18,6 +18,36 @@
  └── calculate_task.py    # 计算任务 Schemas
 """
 
+# Bug记录
+from .bug_record import (
+    TestBugRecordBase,
+    TestBugRecordCreate,
+    TestBugRecordResponse,
+    TestBugRecordUpdate,
+)
+
+# 计算任务
+from .calculate_task import (
+    CalculateTaskCreate,
+    CalculateTaskStatus,
+)
+
+# 代码模块
+from .code_module import (
+    CodeModuleBase,
+    CodeModuleCreate,
+    CodeModuleResponse,
+    CodeModuleUpdate,
+)
+
+# 跨部门协作
+from .collaboration import (
+    CollaborationMatrixResponse,
+    CollaborationRatingBase,
+    CollaborationRatingCreate,
+    CollaborationRatingResponse,
+)
+
 # 枚举值常量
 from .constants import (
     BUG_FOUND_STAGES,
@@ -31,12 +61,20 @@ from .constants import (
     REVIEW_RESULTS,
 )
 
-# 工程师档案
-from .profile import (
-    EngineerProfileBase,
-    EngineerProfileCreate,
-    EngineerProfileResponse,
-    EngineerProfileUpdate,
+# 调试问题
+from .debug_issue import (
+    MechanicalDebugIssueBase,
+    MechanicalDebugIssueCreate,
+    MechanicalDebugIssueResponse,
+    MechanicalDebugIssueUpdate,
+)
+
+# 设计评审
+from .design_review import (
+    DesignReviewBase,
+    DesignReviewCreate,
+    DesignReviewResponse,
+    DesignReviewUpdate,
 )
 
 # 五维配置
@@ -45,14 +83,6 @@ from .dimension_config import (
     DimensionConfigCreate,
     DimensionConfigResponse,
     DimensionConfigUpdate,
-)
-
-# 跨部门协作
-from .collaboration import (
-    CollaborationMatrixResponse,
-    CollaborationRatingBase,
-    CollaborationRatingCreate,
-    CollaborationRatingResponse,
 )
 
 # 知识贡献
@@ -64,36 +94,12 @@ from .knowledge import (
     KnowledgeReuseCreate,
 )
 
-# 设计评审
-from .design_review import (
-    DesignReviewBase,
-    DesignReviewCreate,
-    DesignReviewResponse,
-    DesignReviewUpdate,
-)
-
-# 调试问题
-from .debug_issue import (
-    MechanicalDebugIssueBase,
-    MechanicalDebugIssueCreate,
-    MechanicalDebugIssueResponse,
-    MechanicalDebugIssueUpdate,
-)
-
-# Bug记录
-from .bug_record import (
-    TestBugRecordBase,
-    TestBugRecordCreate,
-    TestBugRecordResponse,
-    TestBugRecordUpdate,
-)
-
-# 代码模块
-from .code_module import (
-    CodeModuleBase,
-    CodeModuleCreate,
-    CodeModuleResponse,
-    CodeModuleUpdate,
+# PLC模块库
+from .plc_module import (
+    PlcModuleLibraryBase,
+    PlcModuleLibraryCreate,
+    PlcModuleLibraryResponse,
+    PlcModuleLibraryUpdate,
 )
 
 # PLC程序
@@ -104,12 +110,12 @@ from .plc_program import (
     PlcProgramVersionUpdate,
 )
 
-# PLC模块库
-from .plc_module import (
-    PlcModuleLibraryBase,
-    PlcModuleLibraryCreate,
-    PlcModuleLibraryResponse,
-    PlcModuleLibraryUpdate,
+# 工程师档案
+from .profile import (
+    EngineerProfileBase,
+    EngineerProfileCreate,
+    EngineerProfileResponse,
+    EngineerProfileUpdate,
 )
 
 # 绩效汇总
@@ -121,12 +127,6 @@ from .summary import (
     EngineerTrendResponse,
     RankingQueryParams,
     RankingResponse,
-)
-
-# 计算任务
-from .calculate_task import (
-    CalculateTaskCreate,
-    CalculateTaskStatus,
 )
 
 __all__ = [

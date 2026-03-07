@@ -39,7 +39,7 @@ def scan_and_notify_all(db: Session) -> dict:
         "quote_expiring": 0,
         "quote_expired": 0,
         "contract_expiring": 0,
-        "approval_pending": 0
+        "approval_pending": 0,
     }
 
     # 里程碑提醒（7天前）
@@ -90,7 +90,7 @@ def scan_sales_reminders(db: Session) -> dict:
         "quote_expiring": 0,
         "quote_expired": 0,
         "contract_expiring": 0,
-        "approval_pending": 0
+        "approval_pending": 0,
     }
 
     # 阶段门超时提醒

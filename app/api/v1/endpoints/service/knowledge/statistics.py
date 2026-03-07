@@ -12,6 +12,7 @@ from app.api import deps
 from app.core import security
 from app.models.service import KnowledgeBase
 from app.models.user import User
+
 from .utils import USER_UPLOAD_QUOTA, get_user_total_upload_size
 
 router = APIRouter()

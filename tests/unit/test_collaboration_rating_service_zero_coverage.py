@@ -23,12 +23,13 @@ class TestCollaborationRatingService:
     def service(self, db_session):
         """创建服务实例"""
         from app.services.collaboration_rating import CollaborationRatingService
+
         return CollaborationRatingService(db_session)
 
     def test_service_initialization(self, service):
         """测试服务初始化"""
         assert service is not None
-        assert hasattr(service, 'db')
+        assert hasattr(service, "db")
 
 
 class TestRatingManager:
@@ -38,6 +39,7 @@ class TestRatingManager:
     def manager(self, db_session):
         """创建管理器实例"""
         from app.services.collaboration_rating.rating_manager import RatingManager
+
         return RatingManager(db_session)
 
     def test_manager_initialization(self, manager):
@@ -127,6 +129,7 @@ class TestSelector:
     def test_import_class(self):
         """测试导入类"""
         from app.services.collaboration_rating.selector import Selector
+
         assert Selector is not None
 
     def test_select_collaborators(self, db_session):
@@ -148,6 +151,7 @@ class TestStatistics:
     def test_import_class(self):
         """测试导入类"""
         from app.services.collaboration_rating.statistics import Statistics
+
         assert Statistics is not None
 
     def test_get_user_statistics(self, db_session):
@@ -176,6 +180,7 @@ class TestCollaborationRatingModule:
     def test_import_module(self):
         """测试导入模块"""
         from app.services.collaboration_rating import CollaborationRatingService
+
         assert CollaborationRatingService is not None
 
     def test_import_all_components(self):

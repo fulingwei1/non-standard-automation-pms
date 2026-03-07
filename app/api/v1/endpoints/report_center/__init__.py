@@ -21,4 +21,4 @@ router.include_router(rd_expense_router)
 router.include_router(bi_router)
 router.include_router(unified_router)
 
-__all__ = ['router']
+__all__ = ["router"]

@@ -12,22 +12,26 @@ logger = logging.getLogger(__name__)
 
 def _stub_task(task_name: str, description: str):
     """创建存根任务的通用装饰器"""
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             logger.info(f"[STUB] {task_name}: {description} - 功能待实现")
             return {
-                'status': 'stub',
-                'task': task_name,
-                'message': f'{description} - 功能待实现',
-                'timestamp': datetime.now().isoformat()
+                "status": "stub",
+                "task": task_name,
+                "message": f"{description} - 功能待实现",
+                "timestamp": datetime.now().isoformat(),
             }
+
         return wrapper
+
     return decorator
 
 
 # ==================== 问题管理 ====================
 
-@_stub_task('check_issue_timeout_escalation', '问题超时升级检查')
+
+@_stub_task("check_issue_timeout_escalation", "问题超时升级检查")
 def check_issue_timeout_escalation():
     """
     问题超时升级检查
@@ -38,7 +42,8 @@ def check_issue_timeout_escalation():
 
 # ==================== 缺料管理 ====================
 
-@_stub_task('generate_shortage_alerts', '生成缺料预警')
+
+@_stub_task("generate_shortage_alerts", "生成缺料预警")
 def generate_shortage_alerts():
     """
     生成缺料预警
@@ -47,7 +52,7 @@ def generate_shortage_alerts():
     pass
 
 
-@_stub_task('auto_trigger_urgent_purchase_from_shortage_alerts', '自动触发紧急采购')
+@_stub_task("auto_trigger_urgent_purchase_from_shortage_alerts", "自动触发紧急采购")
 def auto_trigger_urgent_purchase_from_shortage_alerts():
     """
     自动触发紧急采购
@@ -56,7 +61,7 @@ def auto_trigger_urgent_purchase_from_shortage_alerts():
     pass
 
 
-@_stub_task('daily_kit_check', '每日齐套检查')
+@_stub_task("daily_kit_check", "每日齐套检查")
 def daily_kit_check():
     """
     每日齐套检查
@@ -65,7 +70,7 @@ def daily_kit_check():
     pass
 
 
-@_stub_task('generate_shortage_daily_report', '生成缺料日报')
+@_stub_task("generate_shortage_daily_report", "生成缺料日报")
 def generate_shortage_daily_report():
     """
     生成缺料日报
@@ -76,7 +81,8 @@ def generate_shortage_daily_report():
 
 # ==================== 设备管理 ====================
 
-@_stub_task('check_equipment_maintenance_reminder', '设备保养提醒检查')
+
+@_stub_task("check_equipment_maintenance_reminder", "设备保养提醒检查")
 def check_equipment_maintenance_reminder():
     """
     设备保养提醒检查
@@ -87,7 +93,8 @@ def check_equipment_maintenance_reminder():
 
 # ==================== 成本管理 ====================
 
-@_stub_task('check_cost_overrun_alerts', '成本超支预警检查')
+
+@_stub_task("check_cost_overrun_alerts", "成本超支预警检查")
 def check_cost_overrun_alerts():
     """
     成本超支预警检查
@@ -98,7 +105,8 @@ def check_cost_overrun_alerts():
 
 # ==================== 任务管理 ====================
 
-@_stub_task('check_task_delay_alerts', '任务延期预警检查')
+
+@_stub_task("check_task_delay_alerts", "任务延期预警检查")
 def check_task_delay_alerts():
     """
     任务延期预警检查
@@ -107,7 +115,7 @@ def check_task_delay_alerts():
     pass
 
 
-@_stub_task('check_task_deadline_reminder', '任务截止提醒')
+@_stub_task("check_task_deadline_reminder", "任务截止提醒")
 def check_task_deadline_reminder():
     """
     任务截止提醒
@@ -118,7 +126,8 @@ def check_task_deadline_reminder():
 
 # ==================== 报表生成 ====================
 
-@_stub_task('generate_monthly_reports_task', '生成月度报表')
+
+@_stub_task("generate_monthly_reports_task", "生成月度报表")
 def generate_monthly_reports_task():
     """
     生成月度报表
@@ -129,7 +138,8 @@ def generate_monthly_reports_task():
 
 # ==================== 工作量管理 ====================
 
-@_stub_task('check_workload_overload_alerts', '工作量超载预警')
+
+@_stub_task("check_workload_overload_alerts", "工作量超载预警")
 def check_workload_overload_alerts():
     """
     工作量超载预警
@@ -140,7 +150,8 @@ def check_workload_overload_alerts():
 
 # ==================== 交付管理 ====================
 
-@_stub_task('check_delivery_delay', '交付延期检查')
+
+@_stub_task("check_delivery_delay", "交付延期检查")
 def check_delivery_delay():
     """
     交付延期检查
@@ -149,7 +160,7 @@ def check_delivery_delay():
     pass
 
 
-@_stub_task('check_outsourcing_delivery_alerts', '外协交付预警')
+@_stub_task("check_outsourcing_delivery_alerts", "外协交付预警")
 def check_outsourcing_delivery_alerts():
     """
     外协交付预警
@@ -160,7 +171,8 @@ def check_outsourcing_delivery_alerts():
 
 # ==================== 岗位职责 ====================
 
-@_stub_task('generate_job_duty_tasks', '生成岗位职责任务')
+
+@_stub_task("generate_job_duty_tasks", "生成岗位职责任务")
 def generate_job_duty_tasks():
     """
     生成岗位职责任务
@@ -171,7 +183,8 @@ def generate_job_duty_tasks():
 
 # ==================== 售前管理 ====================
 
-@_stub_task('check_presale_workorder_timeout', '售前工单超时检查')
+
+@_stub_task("check_presale_workorder_timeout", "售前工单超时检查")
 def check_presale_workorder_timeout():
     """
     售前工单超时检查
@@ -182,19 +195,19 @@ def check_presale_workorder_timeout():
 
 # ==================== 导出 ====================
 __all__ = [
-    'check_issue_timeout_escalation',
-    'generate_shortage_alerts',
-    'auto_trigger_urgent_purchase_from_shortage_alerts',
-    'daily_kit_check',
-    'generate_shortage_daily_report',
-    'check_equipment_maintenance_reminder',
-    'check_cost_overrun_alerts',
-    'check_task_delay_alerts',
-    'check_task_deadline_reminder',
-    'generate_monthly_reports_task',
-    'check_workload_overload_alerts',
-    'check_delivery_delay',
-    'check_outsourcing_delivery_alerts',
-    'generate_job_duty_tasks',
-    'check_presale_workorder_timeout',
+    "check_issue_timeout_escalation",
+    "generate_shortage_alerts",
+    "auto_trigger_urgent_purchase_from_shortage_alerts",
+    "daily_kit_check",
+    "generate_shortage_daily_report",
+    "check_equipment_maintenance_reminder",
+    "check_cost_overrun_alerts",
+    "check_task_delay_alerts",
+    "check_task_deadline_reminder",
+    "generate_monthly_reports_task",
+    "check_workload_overload_alerts",
+    "check_delivery_delay",
+    "check_outsourcing_delivery_alerts",
+    "generate_job_duty_tasks",
+    "check_presale_workorder_timeout",
 ]

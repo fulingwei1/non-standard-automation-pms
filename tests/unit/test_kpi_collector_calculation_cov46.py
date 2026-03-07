@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - KPI采集计算单元测试"""
-import pytest
 from decimal import Decimal
 
-pytest.importorskip("app.services.strategy.kpi_collector.calculation",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.strategy.kpi_collector.calculation", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.strategy.kpi_collector.calculation import (
-    calculate_formula,
-    collect_kpi_value,
     auto_collect_kpi,
     batch_collect_kpis,
+    calculate_formula,
+    collect_kpi_value,
 )
 
 
@@ -21,9 +22,10 @@ class TestCalculateFormula:
         assert result is None
 
     def test_calculates_simple_expression(self):
-        with patch("app.services.strategy.kpi_collector.calculation.HAS_SIMPLEEVAL", True), \
-             patch("app.services.strategy.kpi_collector.calculation.simple_eval",
-                   return_value=50.0):
+        with (
+            patch("app.services.strategy.kpi_collector.calculation.HAS_SIMPLEEVAL", True),
+            patch("app.services.strategy.kpi_collector.calculation.simple_eval", return_value=50.0),
+        ):
             result = calculate_formula("a / b * 100", {"a": 10, "b": 20})
         assert result == Decimal("50.0")
 
@@ -33,9 +35,13 @@ class TestCalculateFormula:
                 calculate_formula("a + b", {"a": 1, "b": 2})
 
     def test_returns_none_on_eval_exception(self):
-        with patch("app.services.strategy.kpi_collector.calculation.HAS_SIMPLEEVAL", True), \
-             patch("app.services.strategy.kpi_collector.calculation.simple_eval",
-                   side_effect=Exception("bad formula")):
+        with (
+            patch("app.services.strategy.kpi_collector.calculation.HAS_SIMPLEEVAL", True),
+            patch(
+                "app.services.strategy.kpi_collector.calculation.simple_eval",
+                side_effect=Exception("bad formula"),
+            ),
+        ):
             result = calculate_formula("invalid!!!", {})
         assert result is None
 
@@ -93,8 +99,9 @@ class TestCollectKpiValue:
 class TestAutoCollectKpi:
     def test_returns_none_when_collect_value_returns_none(self):
         db = MagicMock()
-        with patch("app.services.strategy.kpi_collector.calculation.collect_kpi_value",
-                   return_value=None):
+        with patch(
+            "app.services.strategy.kpi_collector.calculation.collect_kpi_value", return_value=None
+        ):
             result = auto_collect_kpi(db, 1)
         assert result is None
 
@@ -104,9 +111,13 @@ class TestAutoCollectKpi:
         kpi.id = 1
         db.query.return_value.filter.return_value.first.return_value = kpi
 
-        with patch("app.services.strategy.kpi_collector.calculation.collect_kpi_value",
-                   return_value=Decimal("55")), \
-             patch("app.services.strategy.kpi_collector.calculation.create_kpi_snapshot"):
+        with (
+            patch(
+                "app.services.strategy.kpi_collector.calculation.collect_kpi_value",
+                return_value=Decimal("55"),
+            ),
+            patch("app.services.strategy.kpi_collector.calculation.create_kpi_snapshot"),
+        ):
             result = auto_collect_kpi(db, 1, recorded_by=10)
 
         assert kpi.current_value == Decimal("55")
@@ -137,8 +148,10 @@ class TestBatchCollectKpis:
 
         side_effects = [MagicMock(), None]
 
-        with patch("app.services.strategy.kpi_collector.calculation.auto_collect_kpi",
-                   side_effect=side_effects):
+        with patch(
+            "app.services.strategy.kpi_collector.calculation.auto_collect_kpi",
+            side_effect=side_effects,
+        ):
             result = batch_collect_kpis(db)
 
         assert result["success"] == 1

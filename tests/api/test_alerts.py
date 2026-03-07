@@ -30,7 +30,7 @@ class TestAlertRules:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/alert-rules",
                 params={"page": 1, "page_size": 10},
-                headers=headers
+                headers=headers,
             )
 
             if response.status_code == 500:
@@ -48,10 +48,7 @@ class TestAlertRules:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/alert-rule-templates",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/alert-rule-templates", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -72,9 +69,7 @@ class TestAlertRules:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/alert-rules",
-            json=rule_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/alert-rules", json=rule_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -96,7 +91,7 @@ class TestAlertRules:
             list_response = client.get(
                 f"{settings.API_V1_PREFIX}/alert-rules",
                 params={"page": 1, "page_size": 10},
-                headers=headers
+                headers=headers,
             )
 
             if list_response.status_code != 200:
@@ -110,8 +105,7 @@ class TestAlertRules:
             rule_id = items[0]["id"]
 
             response = client.get(
-                f"{settings.API_V1_PREFIX}/alert-rules/{rule_id}",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/alert-rules/{rule_id}", headers=headers
             )
 
             assert response.status_code == 200
@@ -129,9 +123,7 @@ class TestAlerts:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/alerts",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/alerts", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         assert response.status_code == 200
@@ -147,7 +139,7 @@ class TestAlerts:
         response = client.get(
             f"{settings.API_V1_PREFIX}/alerts",
             params={"page": 1, "page_size": 10, "status": "PENDING"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -161,9 +153,7 @@ class TestAlerts:
 
         # 先获取预警列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/alerts",
-            params={"page": 1, "page_size": 10},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/alerts", params={"page": 1, "page_size": 10}, headers=headers
         )
 
         if list_response.status_code != 200:
@@ -176,10 +166,7 @@ class TestAlerts:
 
         alert_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/alerts/{alert_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/alerts/{alert_id}", headers=headers)
 
         assert response.status_code == 200
 
@@ -197,7 +184,7 @@ class TestAlertNotifications:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/alert-notifications",
                 params={"page": 1, "page_size": 10},
-                headers=headers
+                headers=headers,
             )
 
             if response.status_code == 500:

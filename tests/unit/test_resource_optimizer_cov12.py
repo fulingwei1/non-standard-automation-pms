@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十二批：AI资源优化器单元测试"""
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 try:
     from app.services.ai_planning.resource_optimizer import AIResourceOptimizer
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -61,7 +63,7 @@ class TestAllocateResources:
         wbs = _make_wbs()
         db.query.return_value.get.return_value = wbs
 
-        with patch.object(optimizer, '_get_available_users', return_value=[]):
+        with patch.object(optimizer, "_get_available_users", return_value=[]):
             result = asyncio.run(optimizer.allocate_resources(wbs_suggestion_id=1))
             assert result == []
 
@@ -70,22 +72,24 @@ class TestAllocateResources:
         wbs = _make_wbs()
         db.query.return_value.get.return_value = wbs
 
-        with patch.object(optimizer, '_get_available_users', return_value=[]), \
-             patch.object(optimizer, '_optimize_allocations', return_value=[]):
-            result = asyncio.run(optimizer.allocate_resources(
-                wbs_suggestion_id=1,
-                available_user_ids=[1, 2, 3]
-            ))
+        with (
+            patch.object(optimizer, "_get_available_users", return_value=[]),
+            patch.object(optimizer, "_optimize_allocations", return_value=[]),
+        ):
+            result = asyncio.run(
+                optimizer.allocate_resources(wbs_suggestion_id=1, available_user_ids=[1, 2, 3])
+            )
             assert isinstance(result, list)
 
     def test_with_constraints(self):
         optimizer, db, _ = _make_optimizer()
         db.query.return_value.get.return_value = None
 
-        result = asyncio.run(optimizer.allocate_resources(
-            wbs_suggestion_id=1,
-            constraints={"max_hours": 40, "required_skills": ["Python"]}
-        ))
+        result = asyncio.run(
+            optimizer.allocate_resources(
+                wbs_suggestion_id=1, constraints={"max_hours": 40, "required_skills": ["Python"]}
+            )
+        )
         assert result == []
 
 
@@ -94,7 +98,7 @@ class TestGetAvailableUsers:
 
     def test_returns_list(self):
         optimizer, db, _ = _make_optimizer()
-        if not hasattr(optimizer, '_get_available_users'):
+        if not hasattr(optimizer, "_get_available_users"):
             pytest.skip("无此方法")
         users = [MagicMock(), MagicMock()]
         mock_q = MagicMock()
@@ -112,7 +116,7 @@ class TestOptimizeAllocations:
 
     def test_returns_list(self):
         optimizer, _, _ = _make_optimizer()
-        if not hasattr(optimizer, '_optimize_allocations'):
+        if not hasattr(optimizer, "_optimize_allocations"):
             pytest.skip("无此方法")
         wbs = _make_wbs()
         result = optimizer._optimize_allocations([], wbs)
@@ -120,7 +124,7 @@ class TestOptimizeAllocations:
 
     def test_preserves_allocations_order(self):
         optimizer, _, _ = _make_optimizer()
-        if not hasattr(optimizer, '_optimize_allocations'):
+        if not hasattr(optimizer, "_optimize_allocations"):
             pytest.skip("无此方法")
         a1 = MagicMock()
         a1.overall_match_score = 0.9

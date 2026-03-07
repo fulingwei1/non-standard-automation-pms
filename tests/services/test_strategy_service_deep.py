@@ -14,10 +14,19 @@ import pytest
 def _make_strategy(**overrides):
     s = MagicMock()
     defaults = dict(
-        id=1, code="S-2025", name="战略2025", vision="愿景", mission="使命",
-        slogan="口号", year=2025, start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31), status="DRAFT", is_active=True,
-        created_by=1, approved_by=None,
+        id=1,
+        code="S-2025",
+        name="战略2025",
+        vision="愿景",
+        mission="使命",
+        slogan="口号",
+        year=2025,
+        start_date=date(2025, 1, 1),
+        end_date=date(2025, 12, 31),
+        status="DRAFT",
+        is_active=True,
+        created_by=1,
+        approved_by=None,
     )
     defaults.update(overrides)
     for k, v in defaults.items():
@@ -42,13 +51,20 @@ class TestCreateStrategyValidation(unittest.TestCase):
     def test_creates_with_draft_status(self):
         """新建战略默认为 DRAFT 状态"""
         from app.services.strategy.strategy_service import create_strategy
+
         db = MagicMock()
         data = MagicMock(
-            code="S-2025", name="战略", vision="V", mission="M", slogan="S",
-            year=2025, start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
+            code="S-2025",
+            name="战略",
+            vision="V",
+            mission="M",
+            slogan="S",
+            year=2025,
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 12, 31),
         )
 
-        with patch('app.services.strategy.strategy_service.Strategy') as MockStrategy:
+        with patch("app.services.strategy.strategy_service.Strategy") as MockStrategy:
             MockStrategy.return_value = MagicMock(status="DRAFT")
             result = create_strategy(db, data, created_by=1)
             # Should call db.add/commit/refresh
@@ -58,13 +74,20 @@ class TestCreateStrategyValidation(unittest.TestCase):
     def test_create_passes_created_by(self):
         """创建战略时应传递 created_by"""
         from app.services.strategy.strategy_service import create_strategy
+
         db = MagicMock()
         data = MagicMock(
-            code="S-2025", name="战略", vision="V", mission="M", slogan="S",
-            year=2025, start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
+            code="S-2025",
+            name="战略",
+            vision="V",
+            mission="M",
+            slogan="S",
+            year=2025,
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 12, 31),
         )
 
-        with patch('app.services.strategy.strategy_service.Strategy') as MockStrategy:
+        with patch("app.services.strategy.strategy_service.Strategy") as MockStrategy:
             mock_instance = MagicMock()
             MockStrategy.return_value = mock_instance
             create_strategy(db, data, created_by=99)
@@ -78,6 +101,7 @@ class TestListStrategiesFiltering(unittest.TestCase):
     def test_filter_by_year_only(self):
         """仅按年度过滤"""
         from app.services.strategy.strategy_service import list_strategies
+
         db = MagicMock()
         q = _mock_query(db, count_val=2)
 
@@ -90,6 +114,7 @@ class TestListStrategiesFiltering(unittest.TestCase):
     def test_filter_by_status_only(self):
         """仅按状态过滤"""
         from app.services.strategy.strategy_service import list_strategies
+
         db = MagicMock()
         _mock_query(db, count_val=1)
 
@@ -101,6 +126,7 @@ class TestListStrategiesFiltering(unittest.TestCase):
     def test_filter_by_year_and_status(self):
         """同时按年度和状态过滤"""
         from app.services.strategy.strategy_service import list_strategies
+
         db = MagicMock()
         _mock_query(db, count_val=0)
 
@@ -112,6 +138,7 @@ class TestListStrategiesFiltering(unittest.TestCase):
     def test_no_filter_returns_all(self):
         """无过滤条件返回所有"""
         from app.services.strategy.strategy_service import list_strategies
+
         db = MagicMock()
         strategies = [_make_strategy(id=i) for i in range(1, 4)]
         _mock_query(db, count_val=3)
@@ -129,6 +156,7 @@ class TestPublishStrategyStateTransition(unittest.TestCase):
     def test_publish_sets_active_and_approved_by(self, mock_get):
         """发布战略应设置状态为ACTIVE并记录审批人"""
         from app.services.strategy.strategy_service import publish_strategy
+
         db = MagicMock()
         strategy = _make_strategy(status="DRAFT")
         mock_get.return_value = strategy
@@ -146,6 +174,7 @@ class TestPublishStrategyStateTransition(unittest.TestCase):
     def test_publish_deactivates_old_active(self, mock_get):
         """发布新战略时应将旧的ACTIVE战略停用"""
         from app.services.strategy.strategy_service import publish_strategy
+
         db = MagicMock()
         strategy = _make_strategy(status="DRAFT")
         mock_get.return_value = strategy
@@ -166,6 +195,7 @@ class TestArchiveAndDeleteStrategy(unittest.TestCase):
     def test_archive_sets_archived_status(self, mock_get):
         """归档战略应设置状态为 ARCHIVED"""
         from app.services.strategy.strategy_service import archive_strategy
+
         db = MagicMock()
         strategy = _make_strategy(status="ACTIVE")
         mock_get.return_value = strategy
@@ -178,6 +208,7 @@ class TestArchiveAndDeleteStrategy(unittest.TestCase):
     def test_delete_soft_deletes(self, mock_get):
         """删除战略应软删除（is_active=False）"""
         from app.services.strategy.strategy_service import delete_strategy
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -190,6 +221,7 @@ class TestArchiveAndDeleteStrategy(unittest.TestCase):
     def test_archive_not_found_returns_none(self, mock_get):
         """归档不存在的战略时返回 None"""
         from app.services.strategy.strategy_service import archive_strategy
+
         db = MagicMock()
         mock_get.return_value = None
 
@@ -203,6 +235,7 @@ class TestStrategyServiceClassMethods(unittest.TestCase):
     def test_get_active_strategy(self):
         """get_active_strategy 返回激活战略"""
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         active = _make_strategy(status="ACTIVE")
         _mock_query(db, first_val=active)
@@ -214,6 +247,7 @@ class TestStrategyServiceClassMethods(unittest.TestCase):
     def test_publish_strategy_via_class(self):
         """通过 StrategyService.publish 发布战略"""
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         svc = StrategyService(db)
 
@@ -225,6 +259,7 @@ class TestStrategyServiceClassMethods(unittest.TestCase):
     def test_get_by_code_not_found(self):
         """按编码查找不存在时返回 None"""
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         _mock_query(db, first_val=None)
         svc = StrategyService(db)
@@ -235,6 +270,7 @@ class TestStrategyServiceClassMethods(unittest.TestCase):
     def test_archive_strategy_via_class(self):
         """通过 StrategyService.archive 归档战略"""
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         svc = StrategyService(db)
 
@@ -246,6 +282,7 @@ class TestStrategyServiceClassMethods(unittest.TestCase):
     def test_update_via_class(self):
         """通过 StrategyService.update 更新战略"""
         from app.services.strategy.strategy_service import StrategyService
+
         db = MagicMock()
         svc = StrategyService(db)
         data = MagicMock()
@@ -265,6 +302,7 @@ class TestGetStrategyDetailEdgeCases(unittest.TestCase):
     def test_detail_includes_health_score(self, mock_get):
         """战略详情应包含健康分"""
         from app.services.strategy.strategy_service import get_strategy_detail
+
         db = MagicMock()
         strategy = _make_strategy()
         mock_get.return_value = strategy
@@ -275,7 +313,9 @@ class TestGetStrategyDetailEdgeCases(unittest.TestCase):
         q.count.return_value = 0
         db.query.return_value = q
 
-        with patch("app.services.strategy.health_calculator.calculate_strategy_health", return_value=75):
+        with patch(
+            "app.services.strategy.health_calculator.calculate_strategy_health", return_value=75
+        ):
             result = get_strategy_detail(db, 1)
             self.assertIsNotNone(result)
 
@@ -283,6 +323,7 @@ class TestGetStrategyDetailEdgeCases(unittest.TestCase):
     def test_detail_not_found_returns_none(self, mock_get):
         """不存在的战略应返回 None"""
         from app.services.strategy.strategy_service import get_strategy_detail
+
         db = MagicMock()
         mock_get.return_value = None
 

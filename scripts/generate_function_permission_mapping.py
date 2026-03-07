@@ -27,7 +27,7 @@ def extract_api_endpoints() -> Dict[str, List[Dict]]:
             continue
 
         module_name = file_path.stem
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # 提取路由装饰器
@@ -51,12 +51,14 @@ def extract_api_endpoints() -> Dict[str, List[Dict]]:
             func_pattern = rf'def\s+(\w+)\s*\([^)]*\)[^:]*:'
             re.findall(func_pattern, content)
 
-            endpoints[module_name].append({
-                'method': method.upper(),
-                'path': path,
-                'permission': permission,
-                'module': module_name,
-            })
+            endpoints[module_name].append(
+                {
+                    "method": method.upper(),
+                    "path": path,
+                    "permission": permission,
+                    "module": module_name,
+                }
+            )
 
     return dict(endpoints)
 
@@ -68,24 +70,27 @@ def extract_permissions_from_db() -> List[Dict]:
 
     # 查找所有权限相关的迁移文件
     permission_files = [
-        f for f in migrations_dir.glob("*permission*.sql")
+        f
+        for f in migrations_dir.glob("*permission*.sql")
         if "seed" in f.name or "permission" in f.name
     ]
 
     for file_path in permission_files:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # 提取权限插入语句
         # 支持两种字段名：perm_code/permission_code, perm_name/permission_name
-        pattern = r'INSERT\s+(?:OR\s+IGNORE\s+)?INTO\s+permissions\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)'
+        pattern = (
+            r"INSERT\s+(?:OR\s+IGNORE\s+)?INTO\s+permissions\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)"
+        )
         matches = re.findall(pattern, content, re.IGNORECASE | re.MULTILINE)
 
         for columns_str, values_str in matches:
             # 解析列名
-            columns = [c.strip() for c in columns_str.split(',')]
+            columns = [c.strip() for c in columns_str.split(",")]
             # 解析VALUES中的值
-            values = [v.strip().strip("'\"") for v in values_str.split(',')]
+            values = [v.strip().strip("'\"") for v in values_str.split(",")]
 
             # 创建列名到值的映射
             perm_dict = {}
@@ -94,21 +99,23 @@ def extract_permissions_from_db() -> List[Dict]:
                     perm_dict[col.lower()] = values[i]
 
             # 统一字段名（支持perm_code和permission_code）
-            code = perm_dict.get('perm_code') or perm_dict.get('permission_code') or ''
-            name = perm_dict.get('perm_name') or perm_dict.get('permission_name') or ''
-            module = perm_dict.get('module') or ''
-            resource = perm_dict.get('resource') or ''
-            action = perm_dict.get('action') or ''
+            code = perm_dict.get("perm_code") or perm_dict.get("permission_code") or ""
+            name = perm_dict.get("perm_name") or perm_dict.get("permission_name") or ""
+            module = perm_dict.get("module") or ""
+            resource = perm_dict.get("resource") or ""
+            action = perm_dict.get("action") or ""
 
             if code:
-                permissions.append({
-                    'code': code,
-                    'name': name,
-                    'module': module,
-                    'resource': resource,
-                    'action': action,
-                    'source_file': file_path.name,
-                })
+                permissions.append(
+                    {
+                        "code": code,
+                        "name": name,
+                        "module": module,
+                        "resource": resource,
+                        "action": action,
+                        "source_file": file_path.name,
+                    }
+                )
 
     return permissions
 
@@ -122,7 +129,7 @@ def extract_permissions_from_code() -> List[Dict]:
         return permissions_used
 
     for file_path in endpoints_dir.glob("*.py"):
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # 查找所有 require_permission 调用
@@ -130,11 +137,13 @@ def extract_permissions_from_code() -> List[Dict]:
         matches = re.findall(pattern, content)
 
         for perm_code in matches:
-            permissions_used.append({
-                'code': perm_code,
-                'file': file_path.name,
-                'module': file_path.stem,
-            })
+            permissions_used.append(
+                {
+                    "code": perm_code,
+                    "file": file_path.name,
+                    "module": file_path.stem,
+                }
+            )
 
     return permissions_used
 
@@ -147,13 +156,15 @@ def generate_mapping_report() -> str:
 
     report = []
     report.append("# 系统功能与权限映射关系\n")
-    report.append(f"> 生成时间：{__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    report.append(
+        f"> 生成时间：{__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+    )
     report.append("\n## 一、统计概览\n")
 
     # 统计
     total_endpoints = sum(len(v) for v in endpoints.values())
     total_db_permissions = len(db_permissions)
-    total_code_permissions = len(set(p['code'] for p in code_permissions))
+    total_code_permissions = len(set(p["code"] for p in code_permissions))
     modules_count = len(endpoints)
 
     report.append(f"- **API模块数量**：{modules_count}")
@@ -168,8 +179,8 @@ def generate_mapping_report() -> str:
     report.append("|------|------|------|----------|\n")
 
     for module, module_endpoints in sorted(endpoints.items()):
-        for ep in sorted(module_endpoints, key=lambda x: (x['method'], x['path'])):
-            permission = ep.get('permission') or '-'
+        for ep in sorted(module_endpoints, key=lambda x: (x["method"], x["path"])):
+            permission = ep.get("permission") or "-"
             report.append(f"| {module} | {ep['method']} | {ep['path']} | {permission} |\n")
 
     # 权限列表
@@ -177,8 +188,10 @@ def generate_mapping_report() -> str:
     report.append("| 权限编码 | 权限名称 | 模块 | 资源 | 操作 | 来源文件 |\n")
     report.append("|---------|---------|------|------|------|----------|\n")
 
-    for perm in sorted(db_permissions, key=lambda x: (x.get('module', ''), x.get('code', ''))):
-        report.append(f"| {perm.get('code', '')} | {perm.get('name', '')} | {perm.get('module', '')} | {perm.get('resource', '')} | {perm.get('action', '')} | {perm.get('source_file', '')} |\n")
+    for perm in sorted(db_permissions, key=lambda x: (x.get("module", ""), x.get("code", ""))):
+        report.append(
+            f"| {perm.get('code', '')} | {perm.get('name', '')} | {perm.get('module', '')} | {perm.get('resource', '')} | {perm.get('action', '')} | {perm.get('source_file', '')} |\n"
+        )
 
     # 权限使用情况
     report.append("\n## 四、权限使用情况\n")
@@ -187,26 +200,28 @@ def generate_mapping_report() -> str:
 
     perm_usage = defaultdict(set)
     for perm in code_permissions:
-        perm_usage[perm['code']].add((perm['module'], perm['file']))
+        perm_usage[perm["code"]].add((perm["module"], perm["file"]))
 
     for perm_code in sorted(perm_usage.keys()):
         usages = perm_usage[perm_code]
-        modules = ', '.join(set(m for m, _ in usages))
-        files = ', '.join(set(f for _, f in usages))
+        modules = ", ".join(set(m for m, _ in usages))
+        files = ", ".join(set(f for _, f in usages))
         report.append(f"| {perm_code} | {modules} | {files} |\n")
 
     # 未使用的权限
-    db_perm_codes = set(p.get('code', '') for p in db_permissions)
-    used_perm_codes = set(p['code'] for p in code_permissions)
+    db_perm_codes = set(p.get("code", "") for p in db_permissions)
+    used_perm_codes = set(p["code"] for p in code_permissions)
     unused_perms = db_perm_codes - used_perm_codes
 
     if unused_perms:
         report.append("\n## 五、未使用的权限\n")
         report.append("以下权限在数据库中定义但未在代码中使用：\n\n")
         for perm_code in sorted(unused_perms):
-            perm = next((p for p in db_permissions if p.get('code') == perm_code), None)
+            perm = next((p for p in db_permissions if p.get("code") == perm_code), None)
             if perm:
-                report.append(f"- `{perm_code}` - {perm.get('name', '')} ({perm.get('module', '')})\n")
+                report.append(
+                    f"- `{perm_code}` - {perm.get('name', '')} ({perm.get('module', '')})\n"
+                )
 
     # 代码中使用但未定义的权限
     undefined_perms = used_perm_codes - db_perm_codes
@@ -216,7 +231,7 @@ def generate_mapping_report() -> str:
         for perm_code in sorted(undefined_perms):
             report.append(f"- `{perm_code}`\n")
 
-    return ''.join(report)
+    return "".join(report)
 
 
 if __name__ == "__main__":
@@ -226,7 +241,7 @@ if __name__ == "__main__":
     output_file = PROJECT_ROOT / "docs" / "FUNCTION_PERMISSION_MAPPING.md"
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(report)
 
     print(f"✅ 功能权限映射报告已生成：{output_file}")

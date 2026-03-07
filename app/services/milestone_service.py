@@ -6,11 +6,12 @@
 
 from datetime import date
 from typing import List, Optional
+
 from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService
 from app.models.project import ProjectMilestone
-from app.schemas.project import MilestoneCreate, MilestoneUpdate, MilestoneResponse
+from app.schemas.project import MilestoneCreate, MilestoneResponse, MilestoneUpdate
 
 
 class MilestoneService(
@@ -58,8 +59,4 @@ class MilestoneService(
         # Convert back to model if response_schema was used
         # Note: BaseService.update returns response_schema
         # If we need the model itself for further DB operations:
-        return (
-            self.db.query(ProjectMilestone)
-            .filter(ProjectMilestone.id == milestone_id)
-            .first()
-        )
+        return self.db.query(ProjectMilestone).filter(ProjectMilestone.id == milestone_id).first()

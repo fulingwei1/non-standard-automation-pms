@@ -2,7 +2,7 @@
 """ECN变更状态处理器"""
 
 from datetime import datetime, timedelta
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Session
 
@@ -52,9 +52,7 @@ class ECNStatusHandler:
         # 更新协商交期（使用planned_end_date作为协商交期）
         if project.planned_end_date and impact_days > 0:
             # 更新计划结束日期（作为协商交期）
-            project.planned_end_date = project.planned_end_date + timedelta(
-                days=impact_days
-            )
+            project.planned_end_date = project.planned_end_date + timedelta(days=impact_days)
 
         # 记录风险信息
         risk_desc = f"ECN变更影响交期：{impact_days}天，ECN编号：{ecn.ecn_no}"

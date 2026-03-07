@@ -42,7 +42,7 @@ def create_test_lead():
             contact_phone="13800138000",
             demand_summary="电池测试设备需求",
             owner_id=admin.id,
-            status=LeadStatusEnum.NEW.value
+            status=LeadStatusEnum.NEW.value,
         )
 
         db.add(lead)
@@ -54,6 +54,7 @@ def create_test_lead():
     except Exception as e:
         print(f"❌ 创建失败: {e}")
         import traceback
+
         traceback.print_exc()
         db.rollback()
         return None
@@ -63,9 +64,3 @@ def create_test_lead():
 
 if __name__ == "__main__":
     create_test_lead()
-
-
-
-
-
-

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 # from app.models.inventory_tracking import MaterialStock, MaterialTransaction, MaterialReservation  # FIXME: Classes do not exist
 # Use correct class names:
-from app.models.inventory_tracking import MaterialStock, MaterialTransaction, MaterialReservation
+from app.models.inventory_tracking import MaterialReservation, MaterialStock, MaterialTransaction
 from app.models.material import Material, ProjectMaterial
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
@@ -26,9 +26,7 @@ class MaterialTransferService:
 
     @staticmethod
     def get_project_material_stock(
-        db: Session,
-        project_id: int,
-        material_id: int
+        db: Session, project_id: int, material_id: int
     ) -> Dict[str, Any]:
         """
         获取项目指定物料的库存数量
@@ -45,57 +43,67 @@ class MaterialTransferService:
             "available_qty": Decimal("0"),
             "reserved_qty": Decimal("0"),
             "total_qty": Decimal("0"),
-            "source": "未设置"
+            "source": "未设置",
         }
 
         # 1. 首先尝试从项目物料表查询
-        project_material = db.query(ProjectMaterial).filter(
-            ProjectMaterial.project_id == project_id,
-            ProjectMaterial.material_id == material_id
-        ).first()
+        project_material = (
+            db.query(ProjectMaterial)
+            .filter(
+                ProjectMaterial.project_id == project_id, ProjectMaterial.material_id == material_id
+            )
+            .first()
+        )
 
         if project_material:
-            result.update({
-                "available_qty": project_material.available_qty or Decimal("0"),
-                "reserved_qty": project_material.reserved_qty or Decimal("0"),
-                "total_qty": project_material.total_qty or Decimal("0"),
-                "source": "项目物料表"
-            })
+            result.update(
+                {
+                    "available_qty": project_material.available_qty or Decimal("0"),
+                    "reserved_qty": project_material.reserved_qty or Decimal("0"),
+                    "total_qty": project_material.total_qty or Decimal("0"),
+                    "source": "项目物料表",
+                }
+            )
             return result
 
         # 2. 尝试从库存表查询
-        inventory = db.query(MaterialReservation).filter(
-            MaterialReservation.project_id == project_id,
-            MaterialReservation.material_id == material_id
-        ).first()
+        inventory = (
+            db.query(MaterialReservation)
+            .filter(
+                MaterialReservation.project_id == project_id,
+                MaterialReservation.material_id == material_id,
+            )
+            .first()
+        )
 
         if inventory:
-            result.update({
-                "available_qty": inventory.available_qty or Decimal("0"),
-                "reserved_qty": inventory.reserved_qty or Decimal("0"),
-                "total_qty": inventory.total_qty or Decimal("0"),
-                "source": "库存表"
-            })
+            result.update(
+                {
+                    "available_qty": inventory.available_qty or Decimal("0"),
+                    "reserved_qty": inventory.reserved_qty or Decimal("0"),
+                    "total_qty": inventory.total_qty or Decimal("0"),
+                    "source": "库存表",
+                }
+            )
             return result
 
         # 3. 使用物料档案的通用库存
         material = db.query(Material).filter(Material.id == material_id).first()
         if material:
-            result.update({
-                "available_qty": material.current_stock or Decimal("0"),
-                "reserved_qty": Decimal("0"),
-                "total_qty": material.current_stock or Decimal("0"),
-                "source": "物料档案"
-            })
+            result.update(
+                {
+                    "available_qty": material.current_stock or Decimal("0"),
+                    "reserved_qty": Decimal("0"),
+                    "total_qty": material.current_stock or Decimal("0"),
+                    "source": "物料档案",
+                }
+            )
 
         return result
 
     @staticmethod
     def check_transfer_available(
-        db: Session,
-        from_project_id: int,
-        material_id: int,
-        transfer_qty: Decimal
+        db: Session, from_project_id: int, material_id: int, transfer_qty: Decimal
     ) -> Dict[str, Any]:
         """
         检查调出项目的物料是否足够
@@ -121,14 +129,12 @@ class MaterialTransferService:
             "available_qty": float(available),
             "transfer_qty": float(transfer_qty),
             "shortage_qty": float(transfer_qty - available) if not is_sufficient else 0,
-            "stock_source": stock_info["source"]
+            "stock_source": stock_info["source"],
         }
 
     @staticmethod
     def execute_stock_update(
-        db: Session,
-        transfer: MaterialTransfer,
-        actual_qty: Optional[Decimal] = None
+        db: Session, transfer: MaterialTransfer, actual_qty: Optional[Decimal] = None
     ) -> Dict[str, Any]:
         """
         执行库存更新（调出项目减少，调入项目增加）
@@ -145,7 +151,7 @@ class MaterialTransferService:
 
         updates = {
             "from_project": {"before": 0, "after": 0, "success": False},
-            "to_project": {"before": 0, "after": 0, "success": False}
+            "to_project": {"before": 0, "after": 0, "success": False},
         }
 
         # 1. 更新调出项目库存
@@ -191,7 +197,7 @@ class MaterialTransferService:
         material_id: int,
         qty_change: Decimal,
         transaction_type: str,
-        remark: str
+        remark: str,
     ) -> Dict[str, Any]:
         """
         更新项目物料库存（内部方法）
@@ -210,20 +216,21 @@ class MaterialTransferService:
         result = {"before": 0, "after": 0, "success": False}
 
         # 1. 尝试更新项目物料表
-        project_material = db.query(ProjectMaterial).filter(
-            ProjectMaterial.project_id == project_id,
-            ProjectMaterial.material_id == material_id
-        ).first()
+        project_material = (
+            db.query(ProjectMaterial)
+            .filter(
+                ProjectMaterial.project_id == project_id, ProjectMaterial.material_id == material_id
+            )
+            .first()
+        )
 
         if project_material:
             result["before"] = float(project_material.available_qty or 0)
             project_material.available_qty = max(
-                Decimal("0"),
-                (project_material.available_qty or Decimal("0")) + qty_change
+                Decimal("0"), (project_material.available_qty or Decimal("0")) + qty_change
             )
             project_material.total_qty = max(
-                Decimal("0"),
-                (project_material.total_qty or Decimal("0")) + qty_change
+                Decimal("0"), (project_material.total_qty or Decimal("0")) + qty_change
             )
             result["after"] = float(project_material.available_qty)
             result["success"] = True
@@ -237,20 +244,22 @@ class MaterialTransferService:
             return result
 
         # 2. 如果项目物料表没有记录，尝试更新库存表
-        inventory = db.query(MaterialReservation).filter(
-            MaterialReservation.project_id == project_id,
-            MaterialReservation.material_id == material_id
-        ).first()
+        inventory = (
+            db.query(MaterialReservation)
+            .filter(
+                MaterialReservation.project_id == project_id,
+                MaterialReservation.material_id == material_id,
+            )
+            .first()
+        )
 
         if inventory:
             result["before"] = float(inventory.available_qty or 0)
             inventory.available_qty = max(
-                Decimal("0"),
-                (inventory.available_qty or Decimal("0")) + qty_change
+                Decimal("0"), (inventory.available_qty or Decimal("0")) + qty_change
             )
             inventory.total_qty = max(
-                Decimal("0"),
-                (inventory.total_qty or Decimal("0")) + qty_change
+                Decimal("0"), (inventory.total_qty or Decimal("0")) + qty_change
             )
             result["after"] = float(inventory.available_qty)
             result["success"] = True
@@ -270,7 +279,7 @@ class MaterialTransferService:
                 material_id=material_id,
                 available_qty=qty_change,
                 reserved_qty=Decimal("0"),
-                total_qty=qty_change
+                total_qty=qty_change,
             )
             db.add(new_project_material)
             db.flush()  # 获取ID
@@ -298,7 +307,7 @@ class MaterialTransferService:
         material_id: int,
         qty_change: Decimal,
         transaction_type: str,
-        remark: str
+        remark: str,
     ):
         """记录库存交易日志"""
         try:
@@ -313,10 +322,10 @@ class MaterialTransferService:
                 transaction_type=transaction_type,
                 quantity=qty_change,
                 before_qty=Decimal("0"),  # 已在调用前记录
-                after_qty=Decimal("0"),   # 已在调用前记录
+                after_qty=Decimal("0"),  # 已在调用前记录
                 transaction_time=datetime.now(),
                 reference_type="MATERIAL_TRANSFER",
-                remark=remark
+                remark=remark,
             )
             db.add(transaction)
         except Exception:
@@ -325,10 +334,7 @@ class MaterialTransferService:
 
     @staticmethod
     def suggest_transfer_sources(
-        db: Session,
-        to_project_id: int,
-        material_id: int,
-        required_qty: Decimal
+        db: Session, to_project_id: int, material_id: int, required_qty: Decimal
     ) -> List[Dict[str, Any]]:
         """
         推荐物料调拨来源
@@ -345,10 +351,12 @@ class MaterialTransferService:
         suggestions = []
 
         # 1. 查找有该物料库存的其他项目
-        project_materials = db.query(ProjectMaterial).filter(
-            ProjectMaterial.material_id == material_id,
-            ProjectMaterial.available_qty > 0
-        ).order_by(ProjectMaterial.available_qty.desc()).all()
+        project_materials = (
+            db.query(ProjectMaterial)
+            .filter(ProjectMaterial.material_id == material_id, ProjectMaterial.available_qty > 0)
+            .order_by(ProjectMaterial.available_qty.desc())
+            .all()
+        )
 
         for pm in project_materials:
             if pm.project_id == to_project_id:
@@ -361,34 +369,38 @@ class MaterialTransferService:
             available = pm.available_qty or Decimal("0")
             can_fully_supply = available >= required_qty
 
-            suggestions.append({
-                "project_id": pm.project_id,
-                "project_name": project.project_name,
-                "project_code": project.project_code if hasattr(project, 'project_code') else "",
-                "available_qty": float(available),
-                "can_fully_supply": can_fully_supply,
-                "supply_ratio": float(available / required_qty) if required_qty > 0 else 0,
-                "priority": "HIGH" if can_fully_supply else "MEDIUM"
-            })
+            suggestions.append(
+                {
+                    "project_id": pm.project_id,
+                    "project_name": project.project_name,
+                    "project_code": (
+                        project.project_code if hasattr(project, "project_code") else ""
+                    ),
+                    "available_qty": float(available),
+                    "can_fully_supply": can_fully_supply,
+                    "supply_ratio": float(available / required_qty) if required_qty > 0 else 0,
+                    "priority": "HIGH" if can_fully_supply else "MEDIUM",
+                }
+            )
 
         # 2. 检查中心仓库库存
-        inventory = db.query(MaterialStock).filter(
-            MaterialStock.material_id == material_id
-        ).first()
+        inventory = db.query(MaterialStock).filter(MaterialStock.material_id == material_id).first()
 
         if inventory and inventory.available_qty > 0:
             available = inventory.available_qty or Decimal("0")
             can_fully_supply = available >= required_qty
 
-            suggestions.append({
-                "project_id": None,
-                "project_name": "中心仓库",
-                "project_code": "WAREHOUSE",
-                "available_qty": float(available),
-                "can_fully_supply": can_fully_supply,
-                "supply_ratio": float(available / required_qty) if required_qty > 0 else 0,
-                "priority": "HIGH" if can_fully_supply else "LOW"
-            })
+            suggestions.append(
+                {
+                    "project_id": None,
+                    "project_name": "中心仓库",
+                    "project_code": "WAREHOUSE",
+                    "available_qty": float(available),
+                    "can_fully_supply": can_fully_supply,
+                    "supply_ratio": float(available / required_qty) if required_qty > 0 else 0,
+                    "priority": "HIGH" if can_fully_supply else "LOW",
+                }
+            )
 
         # 按优先级排序
         priority_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
@@ -397,10 +409,7 @@ class MaterialTransferService:
         return suggestions
 
     @staticmethod
-    def validate_transfer_before_execute(
-        db: Session,
-        transfer: MaterialTransfer
-    ) -> Dict[str, Any]:
+    def validate_transfer_before_execute(db: Session, transfer: MaterialTransfer) -> Dict[str, Any]:
         """
         执行调拨前的最终校验
 
@@ -437,10 +446,7 @@ class MaterialTransferService:
         # 4. 检查调出数量是否足够
         if transfer.from_project_id:
             check_result = MaterialTransferService.check_transfer_available(
-                db,
-                transfer.from_project_id,
-                transfer.material_id,
-                transfer.transfer_qty
+                db, transfer.from_project_id, transfer.material_id, transfer.transfer_qty
             )
             if not check_result["is_sufficient"]:
                 errors.append(
@@ -453,11 +459,7 @@ class MaterialTransferService:
         if transfer.status != "APPROVED":
             errors.append(f"调拨单状态不正确，当前状态: {transfer.status}，需要: APPROVED")
 
-        return {
-            "is_valid": len(errors) == 0,
-            "errors": errors,
-            "warnings": warnings
-        }
+        return {"is_valid": len(errors) == 0, "errors": errors, "warnings": warnings}
 
 
 # 创建单例

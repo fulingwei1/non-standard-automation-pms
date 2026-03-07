@@ -3,8 +3,9 @@
 app/common/crud/sync_filters.py 覆盖率测试（当前 21%）
 SyncQueryBuilder - 同步版查询构建器
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import DeclarativeBase
 
@@ -26,6 +27,7 @@ class TestSyncQueryBuilder:
 
     def test_build_basic_query(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_query = MagicMock()
         db.query.return_value = mock_query
@@ -34,6 +36,7 @@ class TestSyncQueryBuilder:
 
     def test_build_with_skip_limit(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -46,6 +49,7 @@ class TestSyncQueryBuilder:
 
     def test_build_with_exact_filter(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -59,6 +63,7 @@ class TestSyncQueryBuilder:
 
     def test_build_with_list_filter(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -72,6 +77,7 @@ class TestSyncQueryBuilder:
 
     def test_build_with_range_filter(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -85,6 +91,7 @@ class TestSyncQueryBuilder:
 
     def test_build_with_like_filter(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -98,6 +105,7 @@ class TestSyncQueryBuilder:
 
     def test_build_with_keyword(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -111,6 +119,7 @@ class TestSyncQueryBuilder:
 
     def test_build_order_asc(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -125,6 +134,7 @@ class TestSyncQueryBuilder:
 
     def test_build_order_desc(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -139,6 +149,7 @@ class TestSyncQueryBuilder:
 
     def test_none_filter_value(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -152,6 +163,7 @@ class TestSyncQueryBuilder:
 
     def test_empty_filters(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -163,6 +175,7 @@ class TestSyncQueryBuilder:
 
     def test_nonexistent_order_field(self):
         from app.common.crud.sync_filters import SyncQueryBuilder
+
         db = MagicMock()
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q

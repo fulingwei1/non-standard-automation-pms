@@ -12,10 +12,10 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.models.base import get_db_session
-from app.models.user import User, Role, UserRole
-from app.models.organization import Employee
 from app.core.security import get_password_hash
+from app.models.base import get_db_session
+from app.models.organization import Employee
+from app.models.user import Role, User, UserRole
 
 # 演示用户配置
 DEMO_USERS = [
@@ -91,17 +91,21 @@ def create_demo_users():
         for user_config in DEMO_USERS:
             try:
                 # 获取角色（先检查，避免后续回滚影响其他用户）
-                role = session.query(Role).filter(
-                    Role.role_code == user_config["role_code"]
-                ).first()
+                role = (
+                    session.query(Role).filter(Role.role_code == user_config["role_code"]).first()
+                )
                 if not role:
-                    print(f"✗ 角色 '{user_config['role_code']}' 不存在，跳过用户: {user_config['username']}")
+                    print(
+                        f"✗ 角色 '{user_config['role_code']}' 不存在，跳过用户: {user_config['username']}"
+                    )
                     continue
 
                 # 创建或获取员工
-                employee = session.query(Employee).filter(
-                    Employee.employee_code == user_config["employee_code"]
-                ).first()
+                employee = (
+                    session.query(Employee)
+                    .filter(Employee.employee_code == user_config["employee_code"])
+                    .first()
+                )
 
                 if not employee:
                     employee = Employee(
@@ -125,9 +129,9 @@ def create_demo_users():
                     session.add(employee)
 
                 # 检查用户是否已存在（存在则重置密码/信息，确保可登录）
-                existing_user = session.query(User).filter(
-                    User.username == user_config["username"]
-                ).first()
+                existing_user = (
+                    session.query(User).filter(User.username == user_config["username"]).first()
+                )
 
                 if existing_user:
                     existing_user.employee_id = employee.id
@@ -137,7 +141,7 @@ def create_demo_users():
                     existing_user.department = user_config["department"]
                     existing_user.position = user_config["position"]
                     existing_user.is_active = True
-                    existing_user.is_superuser = (user_config["role_code"] == "ADMIN")
+                    existing_user.is_superuser = user_config["role_code"] == "ADMIN"
                     existing_user.auth_type = "password"
                     session.add(existing_user)
                     session.flush()
@@ -163,9 +167,11 @@ def create_demo_users():
                     user_action = "创建"
 
                 # 确保角色关联存在（避免重复插入）
-                existing_user_role = session.query(UserRole).filter(
-                    UserRole.user_id == user.id, UserRole.role_id == role.id
-                ).first()
+                existing_user_role = (
+                    session.query(UserRole)
+                    .filter(UserRole.user_id == user.id, UserRole.role_id == role.id)
+                    .first()
+                )
                 if not existing_user_role:
                     session.add(UserRole(user_id=user.id, role_id=role.id))
                     role_action = "绑定角色"
@@ -185,7 +191,9 @@ def create_demo_users():
         print("\n✓ 演示用户创建完成！")
         print("\n=== 演示账户登录信息 ===")
         for user in DEMO_USERS:
-            print(f"用户名: {user['username']}, 密码: {user['password']}, 角色: {user['real_name']}")
+            print(
+                f"用户名: {user['username']}, 密码: {user['password']}, 角色: {user['real_name']}"
+            )
 
 
 if __name__ == "__main__":

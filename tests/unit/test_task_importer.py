@@ -21,10 +21,14 @@ class TestTaskImporter(unittest.TestCase):
             TaskImporter.import_task_data(self.db, df, 1)
 
     def test_empty_required_fields(self):
-        df = pd.DataFrame([{
-            "任务名称*": "",
-            "项目编码*": "",
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "任务名称*": "",
+                    "项目编码*": "",
+                }
+            ]
+        )
         imported, updated, failed = TaskImporter.import_task_data(self.db, df, 1)
         self.assertEqual(imported, 0)
         self.assertEqual(len(failed), 1)
@@ -32,10 +36,14 @@ class TestTaskImporter(unittest.TestCase):
 
     def test_project_not_found(self):
         self.db.query.return_value.filter.return_value.first.return_value = None
-        df = pd.DataFrame([{
-            "任务名称*": "Task1",
-            "项目编码*": "P999",
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "任务名称*": "Task1",
+                    "项目编码*": "P999",
+                }
+            ]
+        )
         imported, updated, failed = TaskImporter.import_task_data(self.db, df, 1)
         self.assertEqual(imported, 0)
         self.assertEqual(len(failed), 1)
@@ -48,14 +56,16 @@ class TestTaskImporter(unittest.TestCase):
         # query(Project).filter().first() -> project
         # query(User).filter().first() -> None (no owner)
         # query(Task).filter().first() -> None (no existing)
-        self.db.query.return_value.filter.return_value.first.side_effect = [
-            project, None, None
-        ]
+        self.db.query.return_value.filter.return_value.first.side_effect = [project, None, None]
 
-        df = pd.DataFrame([{
-            "任务名称*": "Task1",
-            "项目编码*": "P001",
-        }])
+        df = pd.DataFrame(
+            [
+                {
+                    "任务名称*": "Task1",
+                    "项目编码*": "P001",
+                }
+            ]
+        )
         imported, updated, failed = TaskImporter.import_task_data(self.db, df, 1)
         self.assertEqual(imported, 1)
         self.assertEqual(updated, 0)

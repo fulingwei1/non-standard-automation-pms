@@ -31,10 +31,7 @@ class TestPresaleTicketsAPI:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/presale/tickets",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/presale/tickets", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Presale tickets endpoint not found")
@@ -52,7 +49,7 @@ class TestPresaleTicketsAPI:
         response = client.get(
             f"{settings.API_V1_PREFIX}/presale/tickets",
             params={"status": "PENDING", "page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:
@@ -67,9 +64,7 @@ class TestPresaleTicketsAPI:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/presale/tickets",
-            params={"keyword": "测试"},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/presale/tickets", params={"keyword": "测试"}, headers=headers
         )
 
         if response.status_code == 404:
@@ -92,9 +87,7 @@ class TestPresaleTicketsAPI:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/presale/tickets",
-            json=ticket_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/presale/tickets", json=ticket_data, headers=headers
         )
 
         if response.status_code == 404:
@@ -112,10 +105,7 @@ class TestPresaleTicketsAPI:
         headers = _auth_headers(admin_token)
 
         # 先获取工单列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/presale/tickets",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/presale/tickets", headers=headers)
 
         if list_response.status_code == 404:
             pytest.skip("Presale tickets endpoint not found")
@@ -129,8 +119,7 @@ class TestPresaleTicketsAPI:
 
         # 获取详情
         response = client.get(
-            f"{settings.API_V1_PREFIX}/presale/tickets/{ticket_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/presale/tickets/{ticket_id}", headers=headers
         )
 
         assert response.status_code == 200, response.text
@@ -148,10 +137,7 @@ class TestPresaleEdgeCases:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/presale/tickets/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/presale/tickets/99999", headers=headers)
 
         if response.status_code != 404:
             pytest.skip("Tickets endpoint returns non-404 for missing resource")
@@ -163,10 +149,7 @@ class TestPresaleEdgeCases:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/presale/proposals/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/presale/proposals/99999", headers=headers)
 
         if response.status_code != 404:
             pytest.skip("Proposals endpoint returns non-404 for missing resource")
@@ -183,7 +166,7 @@ class TestPresaleEdgeCases:
         response = client.get(
             f"{settings.API_V1_PREFIX}/presale/tickets",
             params={"page": 9999, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 404:

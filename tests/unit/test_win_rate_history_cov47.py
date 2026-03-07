@@ -23,6 +23,7 @@ def _make_service_with_query_result(result):
 
 # ---------- get_salesperson_historical_win_rate ----------
 
+
 def test_salesperson_win_rate_no_data():
     svc = MagicMock()
     stats = MagicMock()
@@ -46,6 +47,7 @@ def test_salesperson_win_rate_with_data():
 
 
 # ---------- get_customer_cooperation_history ----------
+
 
 def test_customer_history_no_ids():
     svc = MagicMock()
@@ -75,6 +77,7 @@ def test_customer_history_by_name_not_found():
 
 # ---------- get_similar_leads_statistics ----------
 
+
 def test_similar_leads_empty():
     svc = MagicMock()
     q = MagicMock()
@@ -90,6 +93,7 @@ def test_similar_leads_empty():
 
 def test_similar_leads_with_data():
     from app.models.enums import LeadOutcomeEnum
+
     svc = MagicMock()
 
     won_p = MagicMock()

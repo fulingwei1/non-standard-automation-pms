@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """第二十二批：bom_importer 单元测试"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     import pandas as pd
+
     from app.services.unified_import.bom_importer import BomImporter
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -29,6 +32,7 @@ class TestBomImporterMissingColumns:
     def test_missing_required_columns_raises_http_error(self, db):
         """缺少必需列时抛出HTTPException"""
         from fastapi import HTTPException
+
         df = pd.DataFrame([{"SomeCol": "val"}])
         with pytest.raises(HTTPException) as exc_info:
             BomImporter.import_bom_data(db, df, current_user_id=1)
@@ -36,12 +40,9 @@ class TestBomImporterMissingColumns:
 
     def test_all_required_columns_present_no_error(self, db):
         """所有必需列存在时不报列缺失错误"""
-        df = make_df([{
-            "BOM编码*": "B001",
-            "项目编码*": "PRJ001",
-            "物料编码*": "MAT001",
-            "用量*": "2.0"
-        }])
+        df = make_df(
+            [{"BOM编码*": "B001", "项目编码*": "PRJ001", "物料编码*": "MAT001", "用量*": "2.0"}]
+        )
         # Project not found → should return (0, 0, [failed_row])
         db.query.return_value.filter.return_value.first.return_value = None
         result = BomImporter.import_bom_data(db, df, current_user_id=1)
@@ -53,57 +54,52 @@ class TestBomImporterRowValidation:
     def test_quantity_nan_goes_to_failed(self, db):
         """用量为NaN时行进入失败列表"""
         import numpy as np
-        df = make_df([{
-            "BOM编码*": "B001",
-            "项目编码*": "PRJ001",
-            "物料编码*": "MAT001",
-            "用量*": np.nan
-        }])
+
+        df = make_df(
+            [{"BOM编码*": "B001", "项目编码*": "PRJ001", "物料编码*": "MAT001", "用量*": np.nan}]
+        )
         imported, updated, failed = BomImporter.import_bom_data(db, df, current_user_id=1)
         assert any("用量" in str(r.get("error", "")) for r in failed)
 
     def test_quantity_zero_goes_to_failed(self, db):
         """用量为0时行进入失败列表"""
-        df = make_df([{
-            "BOM编码*": "B001",
-            "项目编码*": "PRJ001",
-            "物料编码*": "MAT001",
-            "用量*": "0"
-        }])
+        df = make_df(
+            [{"BOM编码*": "B001", "项目编码*": "PRJ001", "物料编码*": "MAT001", "用量*": "0"}]
+        )
         imported, updated, failed = BomImporter.import_bom_data(db, df, current_user_id=1)
         assert any("用量" in str(r.get("error", "")) for r in failed)
 
     def test_invalid_quantity_format_goes_to_failed(self, db):
         """用量格式错误时行进入失败列表"""
-        df = make_df([{
-            "BOM编码*": "B001",
-            "项目编码*": "PRJ001",
-            "物料编码*": "MAT001",
-            "用量*": "abc"
-        }])
+        df = make_df(
+            [{"BOM编码*": "B001", "项目编码*": "PRJ001", "物料编码*": "MAT001", "用量*": "abc"}]
+        )
         imported, updated, failed = BomImporter.import_bom_data(db, df, current_user_id=1)
-        assert any("格式" in str(r.get("error", "")) or "量" in str(r.get("error", "")) for r in failed)
+        assert any(
+            "格式" in str(r.get("error", "")) or "量" in str(r.get("error", "")) for r in failed
+        )
 
     def test_project_not_found_goes_to_failed(self, db):
         """项目不存在时行进入失败列表"""
-        df = make_df([{
-            "BOM编码*": "B001",
-            "项目编码*": "NONEXIST",
-            "物料编码*": "MAT001",
-            "用量*": "2.5"
-        }])
+        df = make_df(
+            [{"BOM编码*": "B001", "项目编码*": "NONEXIST", "物料编码*": "MAT001", "用量*": "2.5"}]
+        )
         db.query.return_value.filter.return_value.first.return_value = None
         imported, updated, failed = BomImporter.import_bom_data(db, df, current_user_id=1)
         assert any("项目" in str(r.get("error", "")) for r in failed)
 
     def test_material_not_found_goes_to_failed(self, db):
         """物料不存在时行进入失败列表"""
-        df = make_df([{
-            "BOM编码*": "B001",
-            "项目编码*": "PRJ001",
-            "物料编码*": "NONEXIST_MAT",
-            "用量*": "2.5"
-        }])
+        df = make_df(
+            [
+                {
+                    "BOM编码*": "B001",
+                    "项目编码*": "PRJ001",
+                    "物料编码*": "NONEXIST_MAT",
+                    "用量*": "2.5",
+                }
+            ]
+        )
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.project_name = "测试项目"
@@ -125,12 +121,9 @@ class TestBomImporterRowValidation:
 class TestBomImporterUpdateExisting:
     def test_update_existing_flag_updates_count(self, db):
         """update_existing=True 时更新计数增加"""
-        df = make_df([{
-            "BOM编码*": "B001",
-            "项目编码*": "PRJ001",
-            "物料编码*": "MAT001",
-            "用量*": "3.0"
-        }])
+        df = make_df(
+            [{"BOM编码*": "B001", "项目编码*": "PRJ001", "物料编码*": "MAT001", "用量*": "3.0"}]
+        )
         mock_project = MagicMock()
         mock_project.id = 1
         mock_project.project_name = "测试项目"
@@ -148,8 +141,9 @@ class TestBomImporterUpdateExisting:
         mock_bom_item = MagicMock()
 
         def query_side(model):
-            from app.models.material import Material, BomHeader, BomItem
+            from app.models.material import BomHeader, BomItem, Material
             from app.models.project import Project
+
             m = MagicMock()
             m.filter.return_value = m
             if model is Project:

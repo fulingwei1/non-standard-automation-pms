@@ -45,9 +45,7 @@ class HrDashboardAdapter(DashboardAdapter):
         this_month_start = date(today.year, today.month, 1)
 
         # 在职员工总数
-        total_active = (
-            self.db.query(Employee).filter(Employee.is_active).count()
-        )
+        total_active = self.db.query(Employee).filter(Employee.is_active).count()
 
         # 试用期员工数
         probation_count = (
@@ -80,9 +78,7 @@ class HrDashboardAdapter(DashboardAdapter):
 
         # 待处理事务
         pending_transactions = (
-            self.db.query(HrTransaction)
-            .filter(HrTransaction.status == "pending")
-            .count()
+            self.db.query(HrTransaction).filter(HrTransaction.status == "pending").count()
         )
 
         # 即将到期合同（60天内）
@@ -132,9 +128,7 @@ class HrDashboardAdapter(DashboardAdapter):
                 value=onboarding_this_month,
                 unit="人",
                 trend=(
-                    onboarding_this_month - resignation_this_month
-                    if resignation_this_month
-                    else 0
+                    onboarding_this_month - resignation_this_month if resignation_this_month else 0
                 ),
                 icon="join",
                 color="green",
@@ -227,18 +221,14 @@ class HrDashboardAdapter(DashboardAdapter):
 
         # 按部门统计人数
         dept_stats = (
-            self.db.query(
-                EmployeeHrProfile.dept_level1, func.count(EmployeeHrProfile.id)
-            )
+            self.db.query(EmployeeHrProfile.dept_level1, func.count(EmployeeHrProfile.id))
             .join(Employee)
             .filter(Employee.is_active)
             .group_by(EmployeeHrProfile.dept_level1)
             .all()
         )
 
-        by_department = [
-            {"department": d[0] or "未分配", "count": d[1]} for d in dept_stats
-        ]
+        by_department = [{"department": d[0] or "未分配", "count": d[1]} for d in dept_stats]
 
         details = {"by_department": by_department}
 

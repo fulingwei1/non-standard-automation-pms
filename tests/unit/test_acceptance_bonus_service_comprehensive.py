@@ -227,9 +227,9 @@ class TestCalculatePresaleBonus:
         # Setup query chain
         def query_side_effect(model):
             query_mock = MagicMock()
-            if model.__name__ == 'PresaleSupportTicket':
+            if model.__name__ == "PresaleSupportTicket":
                 query_mock.filter.return_value.all.return_value = [mock_ticket]
-            elif model.__name__ == 'Opportunity':
+            elif model.__name__ == "Opportunity":
                 query_mock.filter.return_value.first.return_value = mock_opportunity
             return query_mock
 
@@ -311,7 +311,9 @@ class TestCalculateProjectBonus:
         mock_rule.coefficient = Decimal("3")  # 3%
 
         # Mock evaluation service
-        with patch('app.services.acceptance_bonus_service.ProjectEvaluationService') as mock_eval_service:
+        with patch(
+            "app.services.acceptance_bonus_service.ProjectEvaluationService"
+        ) as mock_eval_service:
             mock_eval_instance = MagicMock()
             mock_eval_instance.get_difficulty_bonus_coefficient.return_value = Decimal("1.2")
             mock_eval_instance.get_new_tech_bonus_coefficient.return_value = Decimal("1.0")
@@ -340,7 +342,9 @@ class TestCalculateProjectBonus:
         mock_rule.rule_name = "项目奖金规则"
         mock_rule.coefficient = Decimal("5")
 
-        with patch('app.services.acceptance_bonus_service.ProjectEvaluationService') as mock_eval_service:
+        with patch(
+            "app.services.acceptance_bonus_service.ProjectEvaluationService"
+        ) as mock_eval_service:
             mock_eval_instance = MagicMock()
             mock_eval_instance.get_difficulty_bonus_coefficient.return_value = Decimal("1.1")
             mock_eval_instance.get_new_tech_bonus_coefficient.return_value = Decimal("1.5")  # 更大
@@ -370,7 +374,9 @@ class TestCalculateProjectBonus:
         mock_member = MagicMock()
         mock_contribution = MagicMock()
 
-        with patch('app.services.acceptance_bonus_service.ProjectEvaluationService') as mock_eval_service:
+        with patch(
+            "app.services.acceptance_bonus_service.ProjectEvaluationService"
+        ) as mock_eval_service:
             mock_eval_instance = MagicMock()
             mock_eval_instance.get_difficulty_bonus_coefficient.return_value = Decimal("1.0")
             mock_eval_instance.get_new_tech_bonus_coefficient.return_value = Decimal("1.0")
@@ -379,9 +385,9 @@ class TestCalculateProjectBonus:
             # Setup query chain for members and contributions
             def query_side_effect(model):
                 query_mock = MagicMock()
-                if model.__name__ == 'ProjectMember':
+                if model.__name__ == "ProjectMember":
                     query_mock.filter.return_value.all.return_value = [mock_member, mock_member]
-                elif model.__name__ == 'ProjectContribution':
+                elif model.__name__ == "ProjectContribution":
                     query_mock.filter.return_value.all.return_value = [mock_contribution]
                 return query_mock
 
@@ -402,7 +408,9 @@ class TestCalculateProjectBonus:
         mock_rule = MagicMock()
         mock_rule.coefficient = Decimal("5")
 
-        with patch('app.services.acceptance_bonus_service.ProjectEvaluationService') as mock_eval_service:
+        with patch(
+            "app.services.acceptance_bonus_service.ProjectEvaluationService"
+        ) as mock_eval_service:
             mock_eval_service.side_effect = Exception("服务错误")
 
             result = calculate_project_bonus(mock_db, mock_project, [mock_rule])

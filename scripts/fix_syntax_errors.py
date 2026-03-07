@@ -42,7 +42,7 @@ def fix_syntax_errors():
         "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service/statistics.py",
         "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service/survey_templates.py",
         "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service/surveys.py",
-        "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service/tickets.py"
+        "/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service/tickets.py",
     ]
 
     fixed_count = 0
@@ -57,6 +57,7 @@ def fix_syntax_errors():
     print(f"\n🎉 修复完成! 共修复 {fixed_count} 个文件")
     return fixed_count
 
+
 def fix_single_file(file_path):
     """修复单个文件的语法错误"""
 
@@ -64,7 +65,7 @@ def fix_single_file(file_path):
         return False
 
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # 如果文件看起来是正常的，跳过
@@ -75,7 +76,7 @@ def fix_single_file(file_path):
         fixed_content = generate_fixed_content(file_path, content)
 
         # 写入修复后的内容
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(fixed_content)
 
         return True
@@ -84,40 +85,48 @@ def fix_single_file(file_path):
         print(f"修复文件 {file_path} 时出错: {str(e)}")
         return False
 
+
 def has_syntax_issues(content):
     """检查内容是否有明显的语法问题"""
 
     # 检查是否有悬挂的导入语句
-    lines = content.strip().split('\n')
+    lines = content.strip().split("\n")
 
     for i, line in enumerate(lines):
         line = line.strip()
 
         # 检查不完整的导入语句
-        if line.startswith('from ') and '(' in line and ')' not in line and i < len(lines) - 1:
+        if line.startswith("from ") and "(" in line and ")" not in line and i < len(lines) - 1:
             next_line = lines[i + 1].strip()
-            if not next_line or next_line.startswith('from ') or next_line.startswith('import ') or next_line.startswith('#'):
+            if (
+                not next_line
+                or next_line.startswith("from ")
+                or next_line.startswith("import ")
+                or next_line.startswith("#")
+            ):
                 return True
 
     return False
+
 
 def generate_fixed_content(file_path, original_content):
     """生成修复后的内容"""
 
     # 根据文件路径确定模块类型和生成相应的内容
-    if '/projects/ext_' in file_path:
+    if "/projects/ext_" in file_path:
         return generate_project_ext_content(file_path)
-    elif '/sales/quote_' in file_path:
+    elif "/sales/quote_" in file_path:
         return generate_sales_quote_content(file_path)
-    elif '/service/' in file_path:
+    elif "/service/" in file_path:
         return generate_service_content(file_path)
     else:
         return generate_default_content(file_path)
 
+
 def generate_project_ext_content(file_path):
     """生成项目扩展模块的标准内容"""
 
-    module_name = os.path.basename(file_path).replace('.py', '').replace('ext_', '')
+    module_name = os.path.basename(file_path).replace(".py", "").replace("ext_", "")
 
     return f'''# -*- coding: utf-8 -*-
 """
@@ -197,10 +206,11 @@ def create_project_{module_name}(
         return Response.error(message=f"创建项目{module_name}失败: {{str(e)}}")
 '''
 
+
 def generate_sales_quote_content(file_path):
     """生成销售报价模块的标准内容"""
 
-    module_name = os.path.basename(file_path).replace('.py', '').replace('quote_', '')
+    module_name = os.path.basename(file_path).replace(".py", "").replace("quote_", "")
 
     return f'''# -*- coding: utf-8 -*-
 """
@@ -282,10 +292,11 @@ def create_quote_{module_name}(
         return Response.error(message=f"创建报价{module_name}失败: {{str(e)}}")
 '''
 
+
 def generate_service_content(file_path):
     """生成服务模块的标准内容"""
 
-    module_name = os.path.basename(file_path).replace('.py', '')
+    module_name = os.path.basename(file_path).replace(".py", "")
 
     return f'''# -*- coding: utf-8 -*-
 """
@@ -365,10 +376,11 @@ def create_service_{module_name}(
         return Response.error(message=f"创建客服{module_name}失败: {{str(e)}}")
 '''
 
+
 def generate_default_content(file_path):
     """生成默认的标准内容"""
 
-    module_name = os.path.basename(file_path).replace('.py', '')
+    module_name = os.path.basename(file_path).replace(".py", "")
 
     return f'''# -*- coding: utf-8 -*-
 """
@@ -434,6 +446,7 @@ def create_{module_name}(
     except Exception as e:
         return Response.error(message=f"创建{module_name}失败: {{str(e)}}")
 '''
+
 
 if __name__ == "__main__":
     print("🔧 开始修复语法错误...")

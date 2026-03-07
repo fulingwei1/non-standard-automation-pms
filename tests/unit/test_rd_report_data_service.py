@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 """Tests for rd_report_data_service"""
-from unittest.mock import MagicMock, patch, PropertyMock
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 
 class TestRdReportDataService:
 
-    def _make_cost(self, project_id=1, cost_type_id=1, cost_date="2024-01-15",
-                   cost_no="C001", cost_description="测试", cost_amount=1000,
-                   deductible_amount=0):
+    def _make_cost(
+        self,
+        project_id=1,
+        cost_type_id=1,
+        cost_date="2024-01-15",
+        cost_no="C001",
+        cost_description="测试",
+        cost_amount=1000,
+        deductible_amount=0,
+    ):
         c = MagicMock()
         c.rd_project_id = project_id
         c.cost_type_id = cost_type_id
@@ -36,6 +43,7 @@ class TestRdReportDataService:
     @patch("app.services.rd_report_data_service.func")
     def test_build_auxiliary_ledger_data_happy(self, mock_func):
         from app.services.rd_report_data_service import build_auxiliary_ledger_data
+
         db = MagicMock()
         cost = self._make_cost()
         proj = self._make_project()
@@ -55,6 +63,7 @@ class TestRdReportDataService:
     @patch("app.services.rd_report_data_service.func")
     def test_build_auxiliary_ledger_data_empty(self, mock_func):
         from app.services.rd_report_data_service import build_auxiliary_ledger_data
+
         db = MagicMock()
         q = MagicMock()
         db.query.return_value.join.return_value.filter.return_value = q
@@ -65,6 +74,7 @@ class TestRdReportDataService:
     @patch("app.services.rd_report_data_service.func")
     def test_build_deduction_detail_data(self, mock_func):
         from app.services.rd_report_data_service import build_deduction_detail_data
+
         db = MagicMock()
         cost = self._make_cost(deductible_amount=500)
         proj = self._make_project()
@@ -82,6 +92,7 @@ class TestRdReportDataService:
     @patch("app.services.rd_report_data_service.func")
     def test_build_high_tech_data(self, mock_func):
         from app.services.rd_report_data_service import build_high_tech_data
+
         db = MagicMock()
         cost = self._make_cost(cost_amount=2000)
         ctype = self._make_cost_type()
@@ -94,6 +105,7 @@ class TestRdReportDataService:
     @patch("app.services.rd_report_data_service.func")
     def test_build_intensity_data(self, mock_func):
         from app.services.rd_report_data_service import build_intensity_data
+
         db = MagicMock()
         db.query.return_value.filter.return_value.scalar.return_value = 50000
 
@@ -106,6 +118,7 @@ class TestRdReportDataService:
     @patch("app.services.rd_report_data_service.User")
     def test_build_personnel_data(self, mock_user_cls, mock_ts_cls, mock_rdp_cls, mock_func):
         from app.services.rd_report_data_service import build_personnel_data
+
         db = MagicMock()
         proj = MagicMock()
         proj.linked_project_id = 10
@@ -133,6 +146,7 @@ class TestRdReportDataService:
 
     def test_get_rd_report_data_invalid_type(self):
         from app.services.rd_report_data_service import get_rd_report_data
+
         db = MagicMock()
         with pytest.raises(ValueError, match="不支持的报表类型"):
             get_rd_report_data(db, "invalid-type", 2024)
@@ -140,6 +154,7 @@ class TestRdReportDataService:
     @patch("app.services.rd_report_data_service.build_auxiliary_ledger_data")
     def test_get_rd_report_data_dispatch(self, mock_fn):
         from app.services.rd_report_data_service import get_rd_report_data
+
         db = MagicMock()
         mock_fn.return_value = {"details": [], "title": "test"}
         result = get_rd_report_data(db, "auxiliary-ledger", 2024)

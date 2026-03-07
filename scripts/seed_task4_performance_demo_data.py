@@ -20,7 +20,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-
 RNG_SEED = 20260301
 TARGET_COMPANY_SIZE = 190
 EVALUATION_COUNT = 150
@@ -81,18 +80,14 @@ def allocate_counts(total: int, weights: list[int]) -> list[int]:
     weight_sum = sum(weights)
     base = [int(total * w / weight_sum) for w in weights]
     remainder = total - sum(base)
-    remainders = [
-        (idx, (total * w / weight_sum) - base[idx]) for idx, w in enumerate(weights)
-    ]
+    remainders = [(idx, (total * w / weight_sum) - base[idx]) for idx, w in enumerate(weights)]
     remainders.sort(key=lambda x: x[1], reverse=True)
     for idx, _ in remainders[:remainder]:
         base[idx] += 1
     return base
 
 
-def ensure_departments(
-    conn: sqlite3.Connection, timestamp: str
-) -> dict[str, dict[str, Any]]:
+def ensure_departments(conn: sqlite3.Connection, timestamp: str) -> dict[str, dict[str, Any]]:
     cur = conn.cursor()
     cur.execute("SELECT COALESCE(MAX(id), 0) FROM departments")
     max_dept_id = int(cur.fetchone()[0])
@@ -239,9 +234,7 @@ def clean_previous_task4_data(conn: sqlite3.Connection) -> None:
             f"DELETE FROM performance_evaluation_record WHERE summary_id IN ({placeholders})",
             summary_ids,
         )
-        cur.execute(
-            f"DELETE FROM monthly_work_summary WHERE id IN ({placeholders})", summary_ids
-        )
+        cur.execute(f"DELETE FROM monthly_work_summary WHERE id IN ({placeholders})", summary_ids)
 
     cur.execute(
         "DELETE FROM hr_project_performance WHERE role_code LIKE ?",
@@ -278,7 +271,9 @@ def build_evaluation_user_pool(
               AND real_name IS NOT NULL
             ORDER BY id
             LIMIT ?
-            """.format(",".join("?" * len(selected_ids)) if selected_ids else "SELECT 0"),
+            """.format(
+                ",".join("?" * len(selected_ids)) if selected_ids else "SELECT 0"
+            ),
             (*selected_ids, remaining) if selected_ids else (remaining,),
         )
         selected_ids.extend(int(row[0]) for row in cur.fetchall())
@@ -292,16 +287,16 @@ def build_evaluation_user_pool(
             WHERE id NOT IN ({})
             ORDER BY id
             LIMIT ?
-            """.format(",".join("?" * len(selected_ids)) if selected_ids else "SELECT 0"),
+            """.format(
+                ",".join("?" * len(selected_ids)) if selected_ids else "SELECT 0"
+            ),
             (*selected_ids, remaining) if selected_ids else (remaining,),
         )
         selected_ids.extend(int(row[0]) for row in cur.fetchall())
 
     selected_ids = selected_ids[:required_count]
     if len(selected_ids) < required_count:
-        raise RuntimeError(
-            f"可用用户不足，期望 {required_count} 人，实际 {len(selected_ids)} 人。"
-        )
+        raise RuntimeError(f"可用用户不足，期望 {required_count} 人，实际 {len(selected_ids)} 人。")
 
     placeholders = ",".join("?" * len(selected_ids))
     cur.execute(
@@ -401,12 +396,8 @@ def build_department_performance(
 
         financial = round(clamp(actual_score + rng.gauss(1.5, 2.0), 75.0, 100.0), 1)
         customer = round(clamp(actual_score + rng.gauss(0.8, 2.4), 75.0, 100.0), 1)
-        internal_process = round(
-            clamp(actual_score + rng.gauss(0.5, 2.6), 75.0, 100.0), 1
-        )
-        learning_growth = round(
-            clamp(actual_score + rng.gauss(-0.2, 2.8), 70.0, 100.0), 1
-        )
+        internal_process = round(clamp(actual_score + rng.gauss(0.5, 2.6), 75.0, 100.0), 1)
+        learning_growth = round(clamp(actual_score + rng.gauss(-0.2, 2.8), 70.0, 100.0), 1)
 
         if coefficient >= 1.15:
             contribution = "CORE"
@@ -564,7 +555,9 @@ def generate_personal_evaluations(
         base_bonus = 3000 + ((score - 70) / 28.0) * 12000
         coeff_bonus = (dept_coeff - 1.0) * 3200
         noise = rng.gauss(0, 600)
-        bonus_amount = int(round(clamp(base_bonus + coeff_bonus + noise, 3000, 20000) / 100.0) * 100)
+        bonus_amount = int(
+            round(clamp(base_bonus + coeff_bonus + noise, 3000, 20000) / 100.0) * 100
+        )
 
         qualification_payload = {
             "source": "task4_demo_seed",

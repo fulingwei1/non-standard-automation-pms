@@ -5,15 +5,16 @@
       release_employee, check_assignment_conflict, detect_employee_conflicts,
       detect_project_conflicts, ResourcePlanningService 全部方法
 """
-import pytest
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.resource_plan_service import ResourcePlanService, ResourcePlanningService
+import pytest
 
+from app.services.resource_plan_service import ResourcePlanningService, ResourcePlanService
 
 # ======================= get_project_resource_plans =======================
+
 
 class TestGetProjectResourcePlans:
     def test_returns_all_plans_without_stage_filter(self):
@@ -30,11 +31,14 @@ class TestGetProjectResourcePlans:
         q.filter.return_value = q
         q.order_by.return_value.all.return_value = plans
         db.query.return_value = q
-        result = ResourcePlanService.get_project_resource_plans(db, project_id=1, stage_code="DESIGN")
+        result = ResourcePlanService.get_project_resource_plans(
+            db, project_id=1, stage_code="DESIGN"
+        )
         assert result == plans
 
 
 # ======================= create_resource_plan =======================
+
 
 class TestCreateResourcePlan:
     @patch("app.services.resource_plan_service.save_obj")
@@ -57,6 +61,7 @@ class TestCreateResourcePlan:
 
 # ======================= assign_employee =======================
 
+
 class TestAssignEmployee:
     def test_raises_when_plan_not_found(self):
         db = MagicMock()
@@ -74,7 +79,9 @@ class TestAssignEmployee:
         db.query.return_value.filter.return_value.first.return_value = plan
 
         with patch.object(ResourcePlanService, "check_assignment_conflict", return_value=None):
-            result_plan, conflict = ResourcePlanService.assign_employee(db, plan_id=1, employee_id=5)
+            result_plan, conflict = ResourcePlanService.assign_employee(
+                db, plan_id=1, employee_id=5
+            )
 
         assert result_plan.assigned_employee_id == 5
         assert result_plan.assignment_status == "ASSIGNED"
@@ -90,7 +97,9 @@ class TestAssignEmployee:
         db.query.return_value.filter.return_value.first.return_value = plan
 
         mock_conflict = MagicMock()
-        with patch.object(ResourcePlanService, "check_assignment_conflict", return_value=mock_conflict):
+        with patch.object(
+            ResourcePlanService, "check_assignment_conflict", return_value=mock_conflict
+        ):
             result_plan, conflict = ResourcePlanService.assign_employee(
                 db, plan_id=1, employee_id=5, force=False
             )
@@ -108,7 +117,9 @@ class TestAssignEmployee:
         db.query.return_value.filter.return_value.first.return_value = plan
 
         mock_conflict = MagicMock()
-        with patch.object(ResourcePlanService, "check_assignment_conflict", return_value=mock_conflict):
+        with patch.object(
+            ResourcePlanService, "check_assignment_conflict", return_value=mock_conflict
+        ):
             result_plan, conflict = ResourcePlanService.assign_employee(
                 db, plan_id=1, employee_id=5, force=True
             )
@@ -118,6 +129,7 @@ class TestAssignEmployee:
 
 
 # ======================= release_employee =======================
+
 
 class TestReleaseEmployee:
     def test_raises_when_plan_not_found(self):
@@ -141,13 +153,17 @@ class TestReleaseEmployee:
 
 # ======================= check_assignment_conflict =======================
 
+
 class TestCheckAssignmentConflict:
     def test_no_conflict_when_no_dates(self):
         db = MagicMock()
         result = ResourcePlanService.check_assignment_conflict(
-            db, employee_id=1, project_id=1,
-            start_date=None, end_date=None,
-            allocation_pct=Decimal("50")
+            db,
+            employee_id=1,
+            project_id=1,
+            start_date=None,
+            end_date=None,
+            allocation_pct=Decimal("50"),
         )
         assert result is None
 
@@ -155,9 +171,12 @@ class TestCheckAssignmentConflict:
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = ResourcePlanService.check_assignment_conflict(
-            db, employee_id=1, project_id=1,
-            start_date=date(2026, 1, 1), end_date=date(2026, 3, 31),
-            allocation_pct=Decimal("50")
+            db,
+            employee_id=1,
+            project_id=1,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 3, 31),
+            allocation_pct=Decimal("50"),
         )
         assert result is None
 
@@ -180,6 +199,7 @@ class TestCheckAssignmentConflict:
         project.project_name = "Project B"
 
         call_count = [0]
+
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -190,12 +210,16 @@ class TestCheckAssignmentConflict:
             else:
                 q.filter.return_value.first.return_value = project
             return q
+
         db.query.side_effect = query_side
 
         result = ResourcePlanService.check_assignment_conflict(
-            db, employee_id=1, project_id=1,
-            start_date=date(2026, 1, 1), end_date=date(2026, 3, 31),
-            allocation_pct=Decimal("60")  # 60 + 70 = 130 > 100
+            db,
+            employee_id=1,
+            project_id=1,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 3, 31),
+            allocation_pct=Decimal("60"),  # 60 + 70 = 130 > 100
         )
         assert result is not None
         assert result.total_allocation == Decimal("130")
@@ -211,14 +235,18 @@ class TestCheckAssignmentConflict:
         db.query.return_value.filter.return_value.all.return_value = [existing]
 
         result = ResourcePlanService.check_assignment_conflict(
-            db, employee_id=1, project_id=1,
-            start_date=date(2026, 1, 1), end_date=date(2026, 3, 31),
-            allocation_pct=Decimal("40")  # 40 + 30 = 70 <= 100
+            db,
+            employee_id=1,
+            project_id=1,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 3, 31),
+            allocation_pct=Decimal("40"),  # 40 + 30 = 70 <= 100
         )
         assert result is None
 
 
 # ======================= detect_employee_conflicts =======================
+
 
 class TestDetectEmployeeConflicts:
     def test_no_assignments_returns_empty(self):
@@ -266,6 +294,7 @@ class TestDetectEmployeeConflicts:
         project2.project_name = "Project B"
 
         call_count = [0]
+
         def q_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -278,6 +307,7 @@ class TestDetectEmployeeConflicts:
             else:
                 q.filter.return_value.first.return_value = project2
             return q
+
         db.query.side_effect = q_side
 
         result = ResourcePlanService.detect_employee_conflicts(db, employee_id=1)
@@ -286,6 +316,7 @@ class TestDetectEmployeeConflicts:
 
 
 # ======================= detect_project_conflicts =======================
+
 
 class TestDetectProjectConflicts:
     def test_no_plans_returns_empty(self):
@@ -306,6 +337,7 @@ class TestDetectProjectConflicts:
 
 
 # ======================= ResourcePlanningService =======================
+
 
 class TestResourcePlanningService:
     def setup_method(self):
@@ -339,6 +371,7 @@ class TestResourcePlanningService:
         project.project_name = "Test Project"
 
         call_count = [0]
+
         def q_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -351,6 +384,7 @@ class TestResourcePlanningService:
             else:  # Project
                 q.filter.return_value.first.return_value = project
             return q
+
         self.db.query.side_effect = q_side
 
         result = self.service.analyze_user_workload(user_id=1)
@@ -379,6 +413,7 @@ class TestResourcePlanningService:
         project.project_name = "Heavy Project"
 
         call_count = [0]
+
         def q_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -391,12 +426,11 @@ class TestResourcePlanningService:
             else:
                 q.filter.return_value.first.return_value = project
             return q
+
         self.db.query.side_effect = q_side
 
         result = self.service.analyze_user_workload(
-            user_id=1,
-            start_date=date.today(),
-            end_date=date.today() + timedelta(days=1)
+            user_id=1, start_date=date.today(), end_date=date.today() + timedelta(days=1)
         )
         assert result["is_overloaded"] is True
 
@@ -424,6 +458,7 @@ class TestResourcePlanningService:
         task.plan_end_date = date.today() + timedelta(days=5)
 
         call_count = [0]
+
         def q_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -434,6 +469,7 @@ class TestResourcePlanningService:
             else:
                 q.filter.return_value.first.return_value = user
             return q
+
         self.db.query.side_effect = q_side
 
         result = self.service.predict_project_resource_needs(project_id=1)
@@ -450,6 +486,7 @@ class TestResourcePlanningService:
         dept.name = "Engineering"
 
         call_count = [0]
+
         def q_side(model):
             call_count[0] += 1
             q = MagicMock()
@@ -458,6 +495,7 @@ class TestResourcePlanningService:
             else:
                 q.filter.return_value.all.return_value = []
             return q
+
         self.db.query.side_effect = q_side
 
         result = self.service.get_department_workload_stats(department_id=1)
@@ -466,6 +504,7 @@ class TestResourcePlanningService:
 
 
 # ======================= _calculate_work_days =======================
+
 
 class TestCalculateWorkDays:
     def setup_method(self):
@@ -497,7 +536,7 @@ class TestCalculateWorkDays:
 
     def test_two_weeks_gives_10_work_days(self):
         start = date(2026, 2, 16)  # Monday
-        end = date(2026, 2, 27)    # Friday 2 weeks later
+        end = date(2026, 2, 27)  # Friday 2 weeks later
         result = self.service._calculate_work_days(start, end)
         assert result == 10
 

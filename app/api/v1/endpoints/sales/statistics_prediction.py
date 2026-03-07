@@ -6,7 +6,6 @@
 """
 
 from datetime import date
-
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -43,18 +42,18 @@ def get_revenue_forecast(
 
         # 统计该月预计签约的合同金额（基于商机预计金额）
         opps_in_month = (
-            db.query(Opportunity)
-            .filter(Opportunity.stage.in_(["PROPOSAL", "NEGOTIATION"]))
-            .all()
+            db.query(Opportunity).filter(Opportunity.stage.in_(["PROPOSAL", "NEGOTIATION"])).all()
         )
 
         # 简化处理：假设进行中的商机在接下来几个月平均分布
         estimated_revenue = sum([float(opp.est_amount or 0) for opp in opps_in_month]) / months
 
-        forecast.append({
-            "month": forecast_date.strftime("%Y-%m"),
-            "estimated_revenue": round(estimated_revenue, 2)
-        })
+        forecast.append(
+            {
+                "month": forecast_date.strftime("%Y-%m"),
+                "estimated_revenue": round(estimated_revenue, 2),
+            }
+        )
 
     return ResponseModel(code=200, message="success", data={"forecast": forecast})
 
@@ -64,7 +63,9 @@ def get_sales_prediction(
     *,
     db: Session = Depends(deps.get_db),
     days: int = Query(90, ge=30, le=365, description="预测天数（30/60/90）"),
-    method: str = Query("moving_average", description="预测方法：moving_average/exponential_smoothing"),
+    method: str = Query(
+        "moving_average", description="预测方法：moving_average/exponential_smoothing"
+    ),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
     current_user: User = Depends(security.get_current_active_user),
@@ -81,11 +82,7 @@ def get_sales_prediction(
         owner_id=owner_id,
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=prediction
-    )
+    return ResponseModel(code=200, message="success", data=prediction)
 
 
 @router.get("/statistics/prediction/accuracy", response_model=ResponseModel)
@@ -102,8 +99,4 @@ def get_prediction_accuracy(
     service = SalesPredictionService(db)
     accuracy = service.evaluate_prediction_accuracy(days_back=days_back)
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=accuracy
-    )
+    return ResponseModel(code=200, message="success", data=accuracy)

@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.organization import Employee
 from app.models.project import Project
@@ -16,8 +18,6 @@ from app.models.staff_matching import HrProjectPerformance
 from app.models.user import User
 from app.schemas import staff_matching as schemas
 from app.services.staff_matching import StaffMatchingService
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 
@@ -29,7 +29,7 @@ def list_performance(
     contribution_level: Optional[str] = Query(None, description="贡献等级"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """获取项目绩效列表"""
     query = db.query(HrProjectPerformance)
@@ -41,38 +41,46 @@ def list_performance(
     if contribution_level:
         query = query.filter(HrProjectPerformance.contribution_level == contribution_level)
 
-    performances = apply_pagination(query.order_by(HrProjectPerformance.evaluation_date.desc()), pagination.offset, pagination.limit).all()
+    performances = apply_pagination(
+        query.order_by(HrProjectPerformance.evaluation_date.desc()),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     result = []
     for perf in performances:
-        result.append({
-            'id': perf.id,
-            'employee_id': perf.employee_id,
-            'project_id': perf.project_id,
-            'role_code': perf.role_code,
-            'role_name': perf.role_name,
-            'performance_score': perf.performance_score,
-            'quality_score': perf.quality_score,
-            'collaboration_score': perf.collaboration_score,
-            'on_time_rate': perf.on_time_rate,
-            'contribution_level': perf.contribution_level,
-            'hours_spent': perf.hours_spent,
-            'evaluation_date': perf.evaluation_date,
-            'evaluator_id': perf.evaluator_id,
-            'comments': perf.comments,
-            'created_at': perf.created_at,
-            'project_name': perf.project.name if perf.project else None,
-            'employee_name': perf.employee.name if perf.employee else None
-        })
+        result.append(
+            {
+                "id": perf.id,
+                "employee_id": perf.employee_id,
+                "project_id": perf.project_id,
+                "role_code": perf.role_code,
+                "role_name": perf.role_name,
+                "performance_score": perf.performance_score,
+                "quality_score": perf.quality_score,
+                "collaboration_score": perf.collaboration_score,
+                "on_time_rate": perf.on_time_rate,
+                "contribution_level": perf.contribution_level,
+                "hours_spent": perf.hours_spent,
+                "evaluation_date": perf.evaluation_date,
+                "evaluator_id": perf.evaluator_id,
+                "comments": perf.comments,
+                "created_at": perf.created_at,
+                "project_name": perf.project.name if perf.project else None,
+                "employee_name": perf.employee.name if perf.employee else None,
+            }
+        )
 
     return result
 
 
-@router.post("/", response_model=schemas.ProjectPerformanceResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=schemas.ProjectPerformanceResponse, status_code=status.HTTP_201_CREATED
+)
 def create_performance(
     perf_data: schemas.ProjectPerformanceCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:create"))
+    current_user: User = Depends(security.require_permission("staff_matching:create")),
 ):
     """创建项目绩效记录"""
     # 验证员工和项目存在
@@ -85,18 +93,19 @@ def create_performance(
         raise HTTPException(status_code=404, detail="项目不存在")
 
     # 检查是否已存在
-    existing = db.query(HrProjectPerformance).filter(
-        HrProjectPerformance.employee_id == perf_data.employee_id,
-        HrProjectPerformance.project_id == perf_data.project_id
-    ).first()
+    existing = (
+        db.query(HrProjectPerformance)
+        .filter(
+            HrProjectPerformance.employee_id == perf_data.employee_id,
+            HrProjectPerformance.project_id == perf_data.project_id,
+        )
+        .first()
+    )
 
     if existing:
         raise HTTPException(status_code=400, detail="该员工在此项目的绩效记录已存在")
 
-    performance = HrProjectPerformance(
-        **perf_data.model_dump(),
-        evaluator_id=current_user.id
-    )
+    performance = HrProjectPerformance(**perf_data.model_dump(), evaluator_id=current_user.id)
     db.add(performance)
     db.commit()
     db.refresh(performance)
@@ -105,23 +114,23 @@ def create_performance(
     StaffMatchingService.aggregate_employee_profile(db, perf_data.employee_id)
 
     return {
-        'id': performance.id,
-        'employee_id': performance.employee_id,
-        'project_id': performance.project_id,
-        'role_code': performance.role_code,
-        'role_name': performance.role_name,
-        'performance_score': performance.performance_score,
-        'quality_score': performance.quality_score,
-        'collaboration_score': performance.collaboration_score,
-        'on_time_rate': performance.on_time_rate,
-        'contribution_level': performance.contribution_level,
-        'hours_spent': performance.hours_spent,
-        'evaluation_date': performance.evaluation_date,
-        'evaluator_id': performance.evaluator_id,
-        'comments': performance.comments,
-        'created_at': performance.created_at,
-        'project_name': project.name,
-        'employee_name': employee.name
+        "id": performance.id,
+        "employee_id": performance.employee_id,
+        "project_id": performance.project_id,
+        "role_code": performance.role_code,
+        "role_name": performance.role_name,
+        "performance_score": performance.performance_score,
+        "quality_score": performance.quality_score,
+        "collaboration_score": performance.collaboration_score,
+        "on_time_rate": performance.on_time_rate,
+        "contribution_level": performance.contribution_level,
+        "hours_spent": performance.hours_spent,
+        "evaluation_date": performance.evaluation_date,
+        "evaluator_id": performance.evaluator_id,
+        "comments": performance.comments,
+        "created_at": performance.created_at,
+        "project_name": project.name,
+        "employee_name": employee.name,
     }
 
 
@@ -129,33 +138,38 @@ def create_performance(
 def get_employee_performance_history(
     employee_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("staff_matching:read"))
+    current_user: User = Depends(security.require_permission("staff_matching:read")),
 ):
     """获取员工项目绩效历史"""
-    performances = db.query(HrProjectPerformance).filter(
-        HrProjectPerformance.employee_id == employee_id
-    ).order_by(HrProjectPerformance.evaluation_date.desc()).all()
+    performances = (
+        db.query(HrProjectPerformance)
+        .filter(HrProjectPerformance.employee_id == employee_id)
+        .order_by(HrProjectPerformance.evaluation_date.desc())
+        .all()
+    )
 
     result = []
     for perf in performances:
-        result.append({
-            'id': perf.id,
-            'employee_id': perf.employee_id,
-            'project_id': perf.project_id,
-            'role_code': perf.role_code,
-            'role_name': perf.role_name,
-            'performance_score': perf.performance_score,
-            'quality_score': perf.quality_score,
-            'collaboration_score': perf.collaboration_score,
-            'on_time_rate': perf.on_time_rate,
-            'contribution_level': perf.contribution_level,
-            'hours_spent': perf.hours_spent,
-            'evaluation_date': perf.evaluation_date,
-            'evaluator_id': perf.evaluator_id,
-            'comments': perf.comments,
-            'created_at': perf.created_at,
-            'project_name': perf.project.name if perf.project else None,
-            'employee_name': perf.employee.name if perf.employee else None
-        })
+        result.append(
+            {
+                "id": perf.id,
+                "employee_id": perf.employee_id,
+                "project_id": perf.project_id,
+                "role_code": perf.role_code,
+                "role_name": perf.role_name,
+                "performance_score": perf.performance_score,
+                "quality_score": perf.quality_score,
+                "collaboration_score": perf.collaboration_score,
+                "on_time_rate": perf.on_time_rate,
+                "contribution_level": perf.contribution_level,
+                "hours_spent": perf.hours_spent,
+                "evaluation_date": perf.evaluation_date,
+                "evaluator_id": perf.evaluator_id,
+                "comments": perf.comments,
+                "created_at": perf.created_at,
+                "project_name": perf.project.name if perf.project else None,
+                "employee_name": perf.employee.name if perf.employee else None,
+            }
+        )
 
     return result

@@ -23,7 +23,11 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-@router.get("/outsourcing-vendors/{vendor_id}/statement", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/outsourcing-vendors/{vendor_id}/statement",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def get_vendor_statement(
     vendor_id: int,
     db: Session = Depends(deps.get_db),
@@ -36,10 +40,10 @@ def get_vendor_statement(
     生成指定供应商的对账单，包含订单、交付、付款等明细
     """
     from app.models.vendor import Vendor
-    vendor = db.query(Vendor).filter(
-        Vendor.id == vendor_id,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+
+    vendor = (
+        db.query(Vendor).filter(Vendor.id == vendor_id, Vendor.vendor_type == "OUTSOURCING").first()
+    )
     if not vendor:
         raise HTTPException(status_code=404, detail="外协供应商不存在")
 
@@ -59,18 +63,21 @@ def get_vendor_statement(
 
     for order in orders:
         # 获取订单明细
-        order_items = db.query(OutsourcingOrderItem).filter(
-            OutsourcingOrderItem.order_id == order.id
-        ).all()
+        order_items = (
+            db.query(OutsourcingOrderItem).filter(OutsourcingOrderItem.order_id == order.id).all()
+        )
 
-        order_total = sum(float(item.unit_price or 0) * float(item.quantity or 0) for item in order_items)
+        order_total = sum(
+            float(item.unit_price or 0) * float(item.quantity or 0) for item in order_items
+        )
         total_order_amount += Decimal(str(order_total))
 
         # 获取付款记录
-        payments = db.query(OutsourcingPayment).filter(
-            OutsourcingPayment.order_id == order.id,
-            OutsourcingPayment.status == 'PAID'
-        ).all()
+        payments = (
+            db.query(OutsourcingPayment)
+            .filter(OutsourcingPayment.order_id == order.id, OutsourcingPayment.status == "PAID")
+            .all()
+        )
 
         paid_amount = sum(float(payment.payment_amount or 0) for payment in payments)
         total_paid_amount += Decimal(str(paid_amount))
@@ -79,36 +86,38 @@ def get_vendor_statement(
         total_pending_amount += Decimal(str(pending_amount))
 
         # 获取交付记录
-        deliveries = db.query(OutsourcingDelivery).filter(
-            OutsourcingDelivery.order_id == order.id
-        ).all()
+        deliveries = (
+            db.query(OutsourcingDelivery).filter(OutsourcingDelivery.order_id == order.id).all()
+        )
 
-        statement_items.append({
-            "order_id": order.id,
-            "order_no": order.order_no,
-            "order_date": order.order_date.isoformat() if order.order_date else None,
-            "order_amount": round(order_total, 2),
-            "paid_amount": round(paid_amount, 2),
-            "pending_amount": round(pending_amount, 2),
-            "order_status": order.status,
-            "deliveries": [
-                {
-                    "delivery_no": d.delivery_no,
-                    "delivery_date": d.delivery_date.isoformat() if d.delivery_date else None,
-                    "delivery_qty": float(d.total_qty or 0)
-                }
-                for d in deliveries
-            ],
-            "payments": [
-                {
-                    "payment_no": p.payment_no,
-                    "payment_date": p.payment_date.isoformat() if p.payment_date else None,
-                    "payment_amount": float(p.payment_amount or 0),
-                    "payment_type": p.payment_type
-                }
-                for p in payments
-            ]
-        })
+        statement_items.append(
+            {
+                "order_id": order.id,
+                "order_no": order.order_no,
+                "order_date": order.order_date.isoformat() if order.order_date else None,
+                "order_amount": round(order_total, 2),
+                "paid_amount": round(paid_amount, 2),
+                "pending_amount": round(pending_amount, 2),
+                "order_status": order.status,
+                "deliveries": [
+                    {
+                        "delivery_no": d.delivery_no,
+                        "delivery_date": d.delivery_date.isoformat() if d.delivery_date else None,
+                        "delivery_qty": float(d.total_qty or 0),
+                    }
+                    for d in deliveries
+                ],
+                "payments": [
+                    {
+                        "payment_no": p.payment_no,
+                        "payment_date": p.payment_date.isoformat() if p.payment_date else None,
+                        "payment_amount": float(p.payment_amount or 0),
+                        "payment_type": p.payment_type,
+                    }
+                    for p in payments
+                ],
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -119,15 +128,15 @@ def get_vendor_statement(
             "vendor_code": vendor.supplier_code,
             "period": {
                 "start_date": start_date.isoformat() if start_date else None,
-                "end_date": end_date.isoformat() if end_date else None
+                "end_date": end_date.isoformat() if end_date else None,
             },
             "summary": {
                 "total_orders": len(orders),
                 "total_order_amount": float(total_order_amount),
                 "total_paid_amount": float(total_paid_amount),
-                "total_pending_amount": float(total_pending_amount)
+                "total_pending_amount": float(total_pending_amount),
             },
             "items": statement_items,
-            "generated_at": datetime.now().isoformat()
-        }
+            "generated_at": datetime.now().isoformat(),
+        },
     )

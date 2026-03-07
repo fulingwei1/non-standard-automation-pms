@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """用户权限范围服务单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.data_scope.user_scope import UserScopeService
 
 

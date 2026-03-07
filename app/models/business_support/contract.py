@@ -27,7 +27,9 @@ class ContractReview(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
     review_type = Column(String(20), comment="审核类型：business/legal/finance")
-    review_status = Column(String(20), default="pending", comment="审核状态：pending/passed/rejected")
+    review_status = Column(
+        String(20), default="pending", comment="审核状态：pending/passed/rejected"
+    )
     reviewer_id = Column(Integer, ForeignKey("users.id"), comment="审核人ID")
     review_comment = Column(Text, comment="审核意见")
     reviewed_at = Column(DateTime, comment="审核时间")
@@ -53,7 +55,9 @@ class ContractSealRecord(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     contract_id = Column(Integer, ForeignKey("contracts.id"), nullable=False, comment="合同ID")
-    seal_status = Column(String(20), default="pending", comment="盖章状态：pending/sealed/sent/received/archived")
+    seal_status = Column(
+        String(20), default="pending", comment="盖章状态：pending/sealed/sent/received/archived"
+    )
     seal_date = Column(Date, comment="盖章日期")
     seal_operator_id = Column(Integer, ForeignKey("users.id"), comment="盖章操作人ID")
     send_date = Column(Date, comment="邮寄日期")

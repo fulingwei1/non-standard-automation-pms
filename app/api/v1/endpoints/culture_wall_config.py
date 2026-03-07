@@ -11,6 +11,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.culture_wall_config import CultureWallConfig
 from app.models.user import User
@@ -20,7 +21,6 @@ from app.schemas.culture_wall_config import (
     CultureWallConfigResponse,
     CultureWallConfigUpdate,
 )
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -67,12 +67,8 @@ def get_culture_wall_config(
                 "IMPORTANT": ContentTypeConfig(enabled=True, max_count=10, priority=3),
                 "NOTICE": ContentTypeConfig(enabled=True, max_count=10, priority=4),
                 "REWARD": ContentTypeConfig(enabled=True, max_count=10, priority=5),
-                "PERSONAL_GOAL": ContentTypeConfig(
-                    enabled=True, max_count=5, priority=6
-                ),
-                "NOTIFICATION": ContentTypeConfig(
-                    enabled=True, max_count=10, priority=7
-                ),
+                "PERSONAL_GOAL": ContentTypeConfig(enabled=True, max_count=5, priority=6),
+                "NOTIFICATION": ContentTypeConfig(enabled=True, max_count=10, priority=7),
             },
             visible_roles=[],
             play_settings=PlaySettings(),
@@ -95,23 +91,19 @@ def list_culture_wall_configs(
     admin_roles = {"admin", "super_admin", "管理员", "系统管理员"}
     user_roles = set(current_user.role_codes)
     if not (current_user.is_superuser or (user_roles & admin_roles)):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能")
 
-    configs = (
-        db.query(CultureWallConfig).order_by(desc(CultureWallConfig.created_at)).all()
-    )
+    configs = db.query(CultureWallConfig).order_by(desc(CultureWallConfig.created_at)).all()
 
     total = len(configs)
-    items = configs[pagination.offset:pagination.offset + pagination.limit]
+    items = configs[pagination.offset : pagination.offset + pagination.limit]
 
     return PaginatedResponse(
         items=[CultureWallConfigResponse.model_validate(c) for c in items],
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -128,9 +120,7 @@ def create_culture_wall_config(
     admin_roles = {"admin", "super_admin", "管理员", "系统管理员"}
     user_roles = set(current_user.role_codes)
     if not (current_user.is_superuser or (user_roles & admin_roles)):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能")
 
     # 如果设置为默认配置，需要取消其他默认配置
     if config_data.is_default:
@@ -143,9 +133,7 @@ def create_culture_wall_config(
         .first()
     )
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="配置名称已存在"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="配置名称已存在")
 
     config = CultureWallConfig(**config_data.dict(), created_by=current_user.id)
     db.add(config)
@@ -155,9 +143,7 @@ def create_culture_wall_config(
     return config
 
 
-@router.put(
-    "/config/{config_id}", response_model=CultureWallConfigResponse
-)
+@router.put("/config/{config_id}", response_model=CultureWallConfigResponse)
 def update_culture_wall_config(
     config_id: int,
     config_data: CultureWallConfigUpdate,
@@ -171,13 +157,9 @@ def update_culture_wall_config(
     admin_roles = {"admin", "super_admin", "管理员", "系统管理员"}
     user_roles = set(current_user.role_codes)
     if not (current_user.is_superuser or (user_roles & admin_roles)):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能")
 
-    config = (
-        db.query(CultureWallConfig).filter(CultureWallConfig.id == config_id).first()
-    )
+    config = db.query(CultureWallConfig).filter(CultureWallConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="配置不存在")
 
@@ -211,21 +193,15 @@ def delete_culture_wall_config(
     admin_roles = {"admin", "super_admin", "管理员", "系统管理员"}
     user_roles = set(current_user.role_codes)
     if not (current_user.is_superuser or (user_roles & admin_roles)):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权限访问此功能")
 
-    config = (
-        db.query(CultureWallConfig).filter(CultureWallConfig.id == config_id).first()
-    )
+    config = db.query(CultureWallConfig).filter(CultureWallConfig.id == config_id).first()
     if not config:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="配置不存在")
 
     # 不能删除默认配置
     if config.is_default:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="不能删除默认配置"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="不能删除默认配置")
 
     db.delete(config)
     db.commit()

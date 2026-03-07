@@ -21,12 +21,12 @@ from app.models.management_rhythm import (
     StrategicMeeting,
 )
 from app.models.material import Material
-from app.models.shortage import ShortageReport
 from app.models.outsourcing import OutsourcingOrder
 from app.models.performance import PerformanceResult
 from app.models.project import Project
 from app.models.purchase import GoodsReceipt, PurchaseOrder, PurchaseOrderItem
 from app.models.sales import Contract, Invoice, Lead, Opportunity
+from app.models.shortage import ShortageReport
 from app.models.task_center import TaskUnified
 from app.models.timesheet import Timesheet
 
@@ -101,9 +101,7 @@ class MetricCalculationService:
         query = self.db.query(model_class)
 
         # 应用时间筛选（根据指标定义中的字段）
-        query = self._apply_period_filter(
-            query, model_class, period_start, period_end, metric_def
-        )
+        query = self._apply_period_filter(query, model_class, period_start, period_end, metric_def)
 
         # 应用指标定义中的筛选条件
         if metric_def.filter_conditions:
@@ -150,14 +148,9 @@ class MetricCalculationService:
             # 根据指标类型选择时间字段
             if "new" in metric_def.metric_code or "新增" in metric_def.metric_name:
                 time_field = model_class.created_at
-            elif (
-                "completed" in metric_def.metric_code
-                or "完成" in metric_def.metric_name
-            ):
+            elif "completed" in metric_def.metric_code or "完成" in metric_def.metric_name:
                 time_field = model_class.actual_end_date
-            elif (
-                "contract" in metric_def.metric_code or "合同" in metric_def.metric_name
-            ):
+            elif "contract" in metric_def.metric_code or "合同" in metric_def.metric_name:
                 time_field = model_class.contract_date
         elif metric_def.data_source in [
             "Lead",
@@ -207,9 +200,7 @@ class MetricCalculationService:
                 )
             else:
                 # 日期字段
-                query = query.filter(
-                    and_(time_field >= period_start, time_field <= period_end)
-                )
+                query = query.filter(and_(time_field >= period_start, time_field <= period_end))
 
         return query
 
@@ -267,9 +258,7 @@ class MetricCalculationService:
 
         return query
 
-    def _calculate_by_type(
-        self, query, model_class, metric_def: ReportMetricDefinition
-    ):
+    def _calculate_by_type(self, query, model_class, metric_def: ReportMetricDefinition):
         """根据计算类型计算结果"""
         calculation_type = metric_def.calculation_type
 
@@ -278,36 +267,28 @@ class MetricCalculationService:
 
         elif calculation_type == "SUM":
             if not metric_def.data_field:
-                raise ValueError(
-                    f"SUM计算类型需要指定data_field: {metric_def.metric_code}"
-                )
+                raise ValueError(f"SUM计算类型需要指定data_field: {metric_def.metric_code}")
             field = getattr(model_class, metric_def.data_field)
             result = query.with_entities(func.sum(field)).scalar()
             return float(result) if result else 0.0
 
         elif calculation_type == "AVG":
             if not metric_def.data_field:
-                raise ValueError(
-                    f"AVG计算类型需要指定data_field: {metric_def.metric_code}"
-                )
+                raise ValueError(f"AVG计算类型需要指定data_field: {metric_def.metric_code}")
             field = getattr(model_class, metric_def.data_field)
             result = query.with_entities(func.avg(field)).scalar()
             return float(result) if result else 0.0
 
         elif calculation_type == "MAX":
             if not metric_def.data_field:
-                raise ValueError(
-                    f"MAX计算类型需要指定data_field: {metric_def.metric_code}"
-                )
+                raise ValueError(f"MAX计算类型需要指定data_field: {metric_def.metric_code}")
             field = getattr(model_class, metric_def.data_field)
             result = query.with_entities(func.max(field)).scalar()
             return float(result) if result else 0.0
 
         elif calculation_type == "MIN":
             if not metric_def.data_field:
-                raise ValueError(
-                    f"MIN计算类型需要指定data_field: {metric_def.metric_code}"
-                )
+                raise ValueError(f"MIN计算类型需要指定data_field: {metric_def.metric_code}")
             field = getattr(model_class, metric_def.data_field)
             result = query.with_entities(func.min(field)).scalar()
             return float(result) if result else 0.0
@@ -329,9 +310,7 @@ class MetricCalculationService:
         formula = metric_def.calculation_formula or ""
 
         if not formula:
-            raise ValueError(
-                f"RATIO计算类型需要提供calculation_formula: {metric_def.metric_code}"
-            )
+            raise ValueError(f"RATIO计算类型需要提供calculation_formula: {metric_def.metric_code}")
 
         # 简单的比率计算：分子/分母
         # 例如：已完成数 / 总数
@@ -343,9 +322,7 @@ class MetricCalculationService:
 
             # 根据数据源确定完成状态字段
             if hasattr(model_class, "status"):
-                completed_count = query.filter(
-                    model_class.status == "COMPLETED"
-                ).count()
+                completed_count = query.filter(model_class.status == "COMPLETED").count()
             elif hasattr(model_class, "status"):
                 completed_count = query.filter(
                     model_class.status.in_(["COMPLETED", "RESOLVED", "APPROVED"])
@@ -362,9 +339,7 @@ class MetricCalculationService:
         """自定义公式计算"""
         formula = metric_def.calculation_formula
         if not formula:
-            raise ValueError(
-                f"CUSTOM计算类型需要提供calculation_formula: {metric_def.metric_code}"
-            )
+            raise ValueError(f"CUSTOM计算类型需要提供calculation_formula: {metric_def.metric_code}")
 
         # 这里可以实现更复杂的公式解析和计算
         # 目前先返回0，后续可以扩展
@@ -399,9 +374,7 @@ class MetricCalculationService:
 
         return results
 
-    def format_metric_value(
-        self, value: Any, format_type: str, decimal_places: int = 2
-    ) -> str:
+    def format_metric_value(self, value: Any, format_type: str, decimal_places: int = 2) -> str:
         """格式化指标值"""
         if value is None:
             return "-"

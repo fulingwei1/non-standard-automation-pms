@@ -5,8 +5,9 @@ import pytest
 pytest.importorskip("app.services.lead_priority_scoring.scoring_helpers")
 
 from unittest.mock import MagicMock
-from app.services.lead_priority_scoring.scoring_helpers import ScoringHelpersMixin
+
 from app.services.lead_priority_scoring.constants import ScoringConstants
+from app.services.lead_priority_scoring.scoring_helpers import ScoringHelpersMixin
 
 
 class ConcreteScoringService(ScoringConstants, ScoringHelpersMixin):

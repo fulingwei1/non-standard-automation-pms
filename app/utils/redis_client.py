@@ -61,5 +61,3 @@ def close_redis_client():
             logger.error(f"关闭Redis连接时出错: {e}")
         finally:
             _redis_client = None
-
-

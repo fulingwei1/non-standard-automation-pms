@@ -17,8 +17,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.models.sales.contracts import Contract
 from app.models.approval import ApprovalInstance, ApprovalTask
+from app.models.sales.contracts import Contract
 from app.services.approval_engine import ApprovalEngineService
 
 logger = logging.getLogger(__name__)
@@ -71,9 +71,7 @@ class ContractApprovalService:
 
             # 验证合同金额
             if not contract.contract_amount or contract.contract_amount <= 0:
-                errors.append(
-                    {"contract_id": contract_id, "error": "合同金额必须大于0"}
-                )
+                errors.append({"contract_id": contract_id, "error": "合同金额必须大于0"})
                 continue
 
             try:
@@ -93,7 +91,9 @@ class ContractApprovalService:
                     {
                         "contract_id": contract_id,
                         "contract_code": contract.contract_code,
-                        "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
+                        "contract_amount": (
+                            float(contract.contract_amount) if contract.contract_amount else 0
+                        ),
                         "instance_id": instance.id,
                         "status": "submitted",
                     }
@@ -146,15 +146,15 @@ class ContractApprovalService:
         filtered_tasks = []
         for task in tasks:
             contract = (
-                self.db.query(Contract)
-                .filter(Contract.id == task.instance.entity_id)
-                .first()
+                self.db.query(Contract).filter(Contract.id == task.instance.entity_id).first()
             )
             if not contract:
                 continue
             if customer_id and contract.customer_id != customer_id:
                 continue
-            if min_amount and (not contract.contract_amount or float(contract.contract_amount) < min_amount):
+            if min_amount and (
+                not contract.contract_amount or float(contract.contract_amount) < min_amount
+            ):
                 continue
             filtered_tasks.append(task)
 
@@ -165,9 +165,7 @@ class ContractApprovalService:
         items = []
         for task in paginated_tasks:
             instance = task.instance
-            contract = (
-                self.db.query(Contract).filter(Contract.id == instance.entity_id).first()
-            )
+            contract = self.db.query(Contract).filter(Contract.id == instance.entity_id).first()
 
             items.append(
                 {
@@ -176,11 +174,21 @@ class ContractApprovalService:
                     "contract_id": instance.entity_id,
                     "contract_code": contract.contract_code if contract else None,
                     "customer_contract_no": contract.customer_contract_no if contract else None,
-                    "customer_name": contract.customer.name if contract and contract.customer else None,
-                    "contract_amount": float(contract.contract_amount) if contract and contract.contract_amount else 0,
-                    "project_name": contract.project.project_name if contract and contract.project else None,
+                    "customer_name": (
+                        contract.customer.name if contract and contract.customer else None
+                    ),
+                    "contract_amount": (
+                        float(contract.contract_amount)
+                        if contract and contract.contract_amount
+                        else 0
+                    ),
+                    "project_name": (
+                        contract.project.project_name if contract and contract.project else None
+                    ),
                     "initiator_name": instance.initiator.real_name if instance.initiator else None,
-                    "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
+                    "submitted_at": (
+                        instance.created_at.isoformat() if instance.created_at else None
+                    ),
                     "urgency": instance.urgency,
                     "node_name": task.node.node_name if task.node else None,
                 }
@@ -271,9 +279,7 @@ class ContractApprovalService:
                         comment=comment,
                     )
                 else:
-                    errors.append(
-                        {"task_id": task_id, "error": f"不支持的操作: {action}"}
-                    )
+                    errors.append({"task_id": task_id, "error": f"不支持的操作: {action}"})
                     continue
 
                 results.append({"task_id": task_id, "status": "success"})
@@ -282,9 +288,7 @@ class ContractApprovalService:
 
         return results, errors
 
-    def get_contract_approval_status(
-        self, contract_id: int
-    ) -> Optional[Dict[str, Any]]:
+    def get_contract_approval_status(self, contract_id: int) -> Optional[Dict[str, Any]]:
         """
         查询合同审批状态
 
@@ -328,9 +332,7 @@ class ContractApprovalService:
                     "status": task.status,
                     "action": task.action,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 
@@ -344,12 +346,8 @@ class ContractApprovalService:
             "instance_id": instance.id,
             "instance_status": instance.status,
             "urgency": instance.urgency,
-            "submitted_at": instance.created_at.isoformat()
-            if instance.created_at
-            else None,
-            "completed_at": instance.completed_at.isoformat()
-            if instance.completed_at
-            else None,
+            "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
+            "completed_at": instance.completed_at.isoformat() if instance.completed_at else None,
             "task_history": task_history,
         }
 
@@ -433,34 +431,31 @@ class ContractApprovalService:
         total = query.count()
         offset = (page - 1) * page_size
         tasks = (
-            query.order_by(ApprovalTask.completed_at.desc())
-            .offset(offset)
-            .limit(page_size)
-            .all()
+            query.order_by(ApprovalTask.completed_at.desc()).offset(offset).limit(page_size).all()
         )
 
         items = []
         for task in tasks:
             instance = task.instance
-            contract = (
-                self.db.query(Contract)
-                .filter(Contract.id == instance.entity_id)
-                .first()
-            )
+            contract = self.db.query(Contract).filter(Contract.id == instance.entity_id).first()
 
             items.append(
                 {
                     "task_id": task.id,
                     "contract_id": instance.entity_id,
                     "contract_code": contract.contract_code if contract else None,
-                    "customer_name": contract.customer.name if contract and contract.customer else None,
-                    "contract_amount": float(contract.contract_amount) if contract and contract.contract_amount else 0,
+                    "customer_name": (
+                        contract.customer.name if contract and contract.customer else None
+                    ),
+                    "contract_amount": (
+                        float(contract.contract_amount)
+                        if contract and contract.contract_amount
+                        else 0
+                    ),
                     "action": task.action,
                     "status": task.status,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 

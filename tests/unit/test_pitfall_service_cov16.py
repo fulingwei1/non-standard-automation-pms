@@ -2,12 +2,14 @@
 """
 第十六批：踩坑服务 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.pitfall.pitfall_service import PitfallService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -72,14 +74,13 @@ class TestPitfallService:
         q_mock.order_by.return_value.first.return_value = None
         db.query.return_value = q_mock
         svc = PitfallService(db)
-        with patch("app.services.pitfall.pitfall_service.apply_like_filter", return_value=q_mock), \
-             patch("app.services.pitfall.pitfall_service.save_obj") as mock_save:
+        with (
+            patch("app.services.pitfall.pitfall_service.apply_like_filter", return_value=q_mock),
+            patch("app.services.pitfall.pitfall_service.save_obj") as mock_save,
+        ):
             mock_save.return_value = None
             result = svc.create_pitfall(
-                title="测试标题",
-                description="测试描述",
-                created_by=1,
-                solution="解决办法"
+                title="测试标题", description="测试描述", created_by=1, solution="解决办法"
             )
             mock_save.assert_called_once()
 
@@ -101,8 +102,12 @@ class TestPitfallService:
         q_mock.count.return_value = 3
         db.query.return_value = q_mock
         svc = PitfallService(db)
-        with patch("app.services.pitfall.pitfall_service.apply_keyword_filter", return_value=q_mock), \
-             patch("app.services.pitfall.pitfall_service.apply_pagination", return_value=(pitfalls, 3)):
+        with (
+            patch("app.services.pitfall.pitfall_service.apply_keyword_filter", return_value=q_mock),
+            patch(
+                "app.services.pitfall.pitfall_service.apply_pagination", return_value=(pitfalls, 3)
+            ),
+        ):
             try:
                 result = svc.search_pitfalls(keyword="测试")
                 assert result is not None

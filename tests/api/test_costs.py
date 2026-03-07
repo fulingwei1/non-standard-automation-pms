@@ -12,6 +12,7 @@
 注意: /costs/ 路由未注册到 api_router，整个测试文件跳过
 """
 import pytest
+
 pytestmark = pytest.mark.skip(reason="/costs/ 路由未注册到 api_router")
 
 from datetime import date, timedelta
@@ -35,8 +36,7 @@ class TestCostCRUD:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -67,11 +67,7 @@ class TestCostCRUD:
             "description": "测试物料成本",
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/",
-            json=cost_data,
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/costs/", json=cost_data, headers=headers)
 
         assert response.status_code in [200, 201]
         data = response.json()
@@ -92,11 +88,7 @@ class TestCostCRUD:
             "cost_date": date.today().isoformat(),
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/",
-            json=cost_data,
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/costs/", json=cost_data, headers=headers)
 
         # API 可能返回 404（项目不存在）或 422（验证失败）
         assert response.status_code in [404, 422]
@@ -112,10 +104,7 @@ class TestCostCRUD:
             pytest.skip("No cost record available for testing")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/{cost.id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/costs/{cost.id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -127,10 +116,7 @@ class TestCostCRUD:
             pytest.skip("Admin token not available")
 
         headers = {"Authorization": f"Bearer {admin_token}"}
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/999999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/costs/999999", headers=headers)
 
         assert response.status_code == 404
 
@@ -151,9 +137,7 @@ class TestCostCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/costs/{cost.id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/{cost.id}", json=update_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -182,9 +166,7 @@ class TestCostCRUD:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/",
-            json=cost_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/", json=cost_data, headers=headers
         )
 
         if create_response.status_code not in [200, 201]:
@@ -194,17 +176,13 @@ class TestCostCRUD:
 
         # 删除成本记录
         delete_response = client.delete(
-            f"{settings.API_V1_PREFIX}/costs/{cost_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/{cost_id}", headers=headers
         )
 
         assert delete_response.status_code == 200
 
         # 验证已删除
-        get_response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/{cost_id}",
-            headers=headers
-        )
+        get_response = client.get(f"{settings.API_V1_PREFIX}/costs/{cost_id}", headers=headers)
         assert get_response.status_code == 404
 
 
@@ -222,8 +200,7 @@ class TestCostFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/?project_id={project.id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/?project_id={project.id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -239,8 +216,7 @@ class TestCostFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/?cost_type=MATERIAL",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/?cost_type=MATERIAL", headers=headers
         )
 
         assert response.status_code == 200
@@ -256,7 +232,7 @@ class TestCostFilters:
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/costs/?start_date={start_date}&end_date={end_date}",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -268,8 +244,7 @@ class TestCostFilters:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/?start_date=invalid-date",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/?start_date=invalid-date", headers=headers
         )
 
         # API 返回 400 或 422 用于验证错误（取决于验证方式）
@@ -279,7 +254,9 @@ class TestCostFilters:
 class TestProjectCostSummary:
     """项目成本汇总统计测试"""
 
-    def test_get_project_cost_summary(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_get_project_cost_summary(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试获取项目成本汇总"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -290,8 +267,7 @@ class TestProjectCostSummary:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/costs/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/costs/summary", headers=headers
         )
 
         assert response.status_code == 200
@@ -308,8 +284,7 @@ class TestProjectCostSummary:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/projects/999999/costs/summary",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/projects/999999/costs/summary", headers=headers
         )
 
         assert response.status_code == 404
@@ -318,7 +293,9 @@ class TestProjectCostSummary:
 class TestCostAnalysis:
     """成本分析测试"""
 
-    def test_get_project_cost_analysis(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_get_project_cost_analysis(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试获取项目成本分析"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -329,8 +306,7 @@ class TestCostAnalysis:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/cost-analysis",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/cost-analysis", headers=headers
         )
 
         assert response.status_code == 200
@@ -353,7 +329,7 @@ class TestCostAnalysis:
         response = client.get(
             f"{settings.API_V1_PREFIX}/costs/projects/{projects[0].id}/cost-analysis"
             f"?compare_project_id={projects[1].id}",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -365,7 +341,9 @@ class TestCostAnalysis:
 class TestProfitAnalysis:
     """利润分析测试"""
 
-    def test_get_project_profit_analysis(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_get_project_profit_analysis(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试获取项目利润分析"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -376,8 +354,7 @@ class TestProfitAnalysis:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/profit-analysis",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/projects/{project.id}/profit-analysis", headers=headers
         )
 
         assert response.status_code == 200
@@ -403,7 +380,7 @@ class TestCostTrends:
         response = client.get(
             f"{settings.API_V1_PREFIX}/costs/cost-trends"
             f"?group_by=day&start_date={start_date}&end_date={end_date}",
-            headers=headers
+            headers=headers,
         )
 
         # API 可能返回 200 或 422（取决于权限或参数验证）
@@ -423,7 +400,7 @@ class TestCostTrends:
         response = client.get(
             f"{settings.API_V1_PREFIX}/costs/cost-trends"
             f"?group_by=month&start_date={start_date}&end_date={end_date}",
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code in [200, 422]
@@ -438,8 +415,7 @@ class TestCostTrends:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
-            f"{settings.API_V1_PREFIX}/costs/cost-trends?group_by=invalid",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/cost-trends?group_by=invalid", headers=headers
         )
 
         # FastAPI 返回 400 或 422 用于参数验证错误
@@ -449,7 +425,9 @@ class TestCostTrends:
 class TestBudgetExecution:
     """预算执行分析测试"""
 
-    def test_get_budget_execution_analysis(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_get_budget_execution_analysis(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试获取预算执行分析"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -461,7 +439,7 @@ class TestBudgetExecution:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.get(
             f"{settings.API_V1_PREFIX}/costs/budget/projects/{project.id}/execution",
-            headers=headers
+            headers=headers,
         )
 
         # 可能返回200或400（如果没有预算数据）
@@ -471,7 +449,9 @@ class TestBudgetExecution:
 class TestLaborCostCalculation:
     """人工成本计算测试"""
 
-    def test_calculate_project_labor_cost(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_calculate_project_labor_cost(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试计算项目人工成本"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -483,7 +463,7 @@ class TestLaborCostCalculation:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
             f"{settings.API_V1_PREFIX}/costs/labor/projects/{project.id}/calculate-labor-cost",
-            headers=headers
+            headers=headers,
         )
 
         # 可能返回200或500（如果没有工时数据）
@@ -493,7 +473,9 @@ class TestLaborCostCalculation:
 class TestCostAllocation:
     """成本分摊测试"""
 
-    def test_allocate_cost_missing_params(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_allocate_cost_missing_params(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试成本分摊缺少参数"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -509,7 +491,7 @@ class TestCostAllocation:
         response = client.post(
             f"{settings.API_V1_PREFIX}/costs/allocation/{cost.id}/allocate",
             json=allocation_request,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code in [400, 422]
@@ -518,7 +500,9 @@ class TestCostAllocation:
 class TestCostBudgetAlert:
     """成本预警测试"""
 
-    def test_check_project_budget_alert(self, client: TestClient, admin_token: str, db_session: Session):
+    def test_check_project_budget_alert(
+        self, client: TestClient, admin_token: str, db_session: Session
+    ):
         """测试检查项目预算预警"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -530,7 +514,7 @@ class TestCostBudgetAlert:
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
             f"{settings.API_V1_PREFIX}/costs/alert/projects/{project.id}/check-budget-alert",
-            headers=headers
+            headers=headers,
         )
 
         # 可能返回200或500（取决于项目是否有预算）
@@ -543,8 +527,7 @@ class TestCostBudgetAlert:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/costs/alert/check-all-projects-budget",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/costs/alert/check-all-projects-budget", headers=headers
         )
 
         assert response.status_code in [200, 500]

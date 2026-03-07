@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """描述生成模块单元测试 - 第三十六批"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.lead_priority_scoring.descriptions")
 
@@ -21,13 +22,26 @@ def make_lead(completeness=80, **kwargs):
 
 def make_service_with_scores(**score_map):
     """创建一个拥有 DescriptionsMixin 和 mock 评分方法的服务"""
+
     class FakeService(DescriptionsMixin):
-        def _calculate_customer_importance(self, lead): return score_map.get("customer_importance", 20)
-        def _calculate_contract_amount_score(self, lead): return score_map.get("contract_amount_score", 25)
-        def _calculate_win_rate_score(self, lead): return score_map.get("win_rate_score", 20)
-        def _calculate_urgency_score(self, lead): return score_map.get("urgency_score", 10)
-        def _calculate_relationship_score(self, lead): return score_map.get("relationship_score", 10)
-        def _calculate_opportunity_relationship(self, opp, cust): return score_map.get("opp_relationship", 10)
+        def _calculate_customer_importance(self, lead):
+            return score_map.get("customer_importance", 20)
+
+        def _calculate_contract_amount_score(self, lead):
+            return score_map.get("contract_amount_score", 25)
+
+        def _calculate_win_rate_score(self, lead):
+            return score_map.get("win_rate_score", 20)
+
+        def _calculate_urgency_score(self, lead):
+            return score_map.get("urgency_score", 10)
+
+        def _calculate_relationship_score(self, lead):
+            return score_map.get("relationship_score", 10)
+
+        def _calculate_opportunity_relationship(self, opp, cust):
+            return score_map.get("opp_relationship", 10)
+
     return FakeService()
 
 

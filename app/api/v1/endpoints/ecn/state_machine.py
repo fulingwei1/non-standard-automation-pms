@@ -6,14 +6,15 @@ ECN 状态机管理 API 端点
 
 import logging
 from typing import Any, Dict, List
+
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import get_current_active_user
-from app.core.state_machine.ecn_status import EcnStatus
 from app.core.state_machine.ecn import EcnStateMachine
+from app.core.state_machine.ecn_status import EcnStatus
 from app.models.ecn import Ecn
 from app.schemas.common import ResponseModel
 
@@ -122,9 +123,7 @@ async def transition_ecn_state(
         try:
             target_status = EcnStatus(request.target_state)
         except ValueError:
-            raise HTTPException(
-                status_code=400, detail=f"无效的状态值: {request.target_state}"
-            )
+            raise HTTPException(status_code=400, detail=f"无效的状态值: {request.target_state}")
 
         # 检查是否可以转换
         can_transition, reason = state_machine.can_transition_to(target_status.value)
@@ -132,16 +131,14 @@ async def transition_ecn_state(
             raise HTTPException(status_code=400, detail=f"不允许的状态转换: {reason}")
 
         # 执行转换
-        state_machine.transition_to(
-            request.target_status.value, comment=request.comment
-        )
+        state_machine.transition_to(request.target_status.value, comment=request.comment)
 
         return ResponseModel(
             success=True,
             data={
-                "previous_state": state_machine.previous_state.value
-                if state_machine.previous_state
-                else None,
+                "previous_state": (
+                    state_machine.previous_state.value if state_machine.previous_state else None
+                ),
                 "current_state": state_machine.current_state.value,
                 "timestamp": state_machine._transition_history[-1].get("timestamp"),
                 "actor": current_user.username,
@@ -202,9 +199,7 @@ def get_transition_history(
 # ========== 允许的转换查询端点 ==========
 
 
-@router.get(
-    "/{ecn_id}/allowed-transitions", response_model=ResponseModel[StateInfoResponse]
-)
+@router.get("/{ecn_id}/allowed-transitions", response_model=ResponseModel[StateInfoResponse])
 def get_allowed_transitions(
     ecn_id: int,
     current_user: Any = Depends(get_current_active_user),
@@ -262,14 +257,10 @@ async def batch_transition_ecns(
             # 验证目标状态
             target_status = EcnStatus(target_state)
             if not isinstance(target_status, EcnStatus):
-                raise HTTPException(
-                    status_code=400, detail=f"无效的状态值: {target_state}"
-                )
+                raise HTTPException(status_code=400, detail=f"无效的状态值: {target_state}")
 
             # 检查是否可以转换
-            can_transition, reason = state_machine.can_transition_to(
-                target_status.value
-            )
+            can_transition, reason = state_machine.can_transition_to(target_status.value)
 
             if not can_transition:
                 results.append(
@@ -288,9 +279,9 @@ async def batch_transition_ecns(
                 {
                     "ecn_id": ecn_id,
                     "success": True,
-                    "previous_state": state_machine.previous_state.value
-                    if state_machine.previous_state
-                    else None,
+                    "previous_state": (
+                        state_machine.previous_state.value if state_machine.previous_state else None
+                    ),
                     "current_state": state_machine.current_state.value,
                 }
             )

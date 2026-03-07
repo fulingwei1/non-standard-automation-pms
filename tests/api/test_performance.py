@@ -25,10 +25,7 @@ class TestPersonalPerformance:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/performance/my",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/performance/my", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have performance:read permission")
@@ -43,10 +40,7 @@ class TestPersonalPerformance:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/performance/user/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/performance/user/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have permission to view this user's performance")
@@ -64,7 +58,7 @@ class TestPersonalPerformance:
         response = client.get(
             f"{settings.API_V1_PREFIX}/performance/trends/1",
             params={"period_type": "MONTHLY", "periods_count": 6},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -85,10 +79,7 @@ class TestTeamPerformance:
 
         headers = _auth_headers(admin_token)
         try:
-            response = client.get(
-                f"{settings.API_V1_PREFIX}/performance/team/1",
-                headers=headers
-            )
+            response = client.get(f"{settings.API_V1_PREFIX}/performance/team/1", headers=headers)
 
             if response.status_code == 403:
                 pytest.skip("User does not have permission")
@@ -109,8 +100,7 @@ class TestTeamPerformance:
         headers = _auth_headers(admin_token)
         try:
             response = client.get(
-                f"{settings.API_V1_PREFIX}/performance/department/1",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/performance/department/1", headers=headers
             )
 
             if response.status_code == 403:
@@ -137,7 +127,7 @@ class TestPerformanceRanking:
         response = client.get(
             f"{settings.API_V1_PREFIX}/performance/ranking",
             params={"ranking_type": "COMPANY"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -156,7 +146,7 @@ class TestPerformanceRanking:
         response = client.get(
             f"{settings.API_V1_PREFIX}/performance/ranking",
             params={"ranking_type": "TEAM"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -176,10 +166,7 @@ class TestProjectPerformance:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/performance/project/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/performance/project/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have permission")
@@ -198,7 +185,7 @@ class TestProjectPerformance:
             response = client.get(
                 f"{settings.API_V1_PREFIX}/performance/project/1/progress",
                 params={"report_type": "WEEKLY"},
-                headers=headers
+                headers=headers,
             )
 
             if response.status_code == 403:
@@ -225,7 +212,7 @@ class TestPerformanceCompare:
         response = client.get(
             f"{settings.API_V1_PREFIX}/performance/compare",
             params={"user_ids": "1,2"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -248,7 +235,7 @@ class TestNewPerformanceSystem:
         response = client.get(
             f"{settings.API_V1_PREFIX}/performance/monthly-summary/history",
             params={"limit": 12},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -265,8 +252,7 @@ class TestNewPerformanceSystem:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/performance/my-performance",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/performance/my-performance", headers=headers
         )
 
         if response.status_code == 403:
@@ -286,7 +272,7 @@ class TestNewPerformanceSystem:
         response = client.get(
             f"{settings.API_V1_PREFIX}/performance/evaluation-tasks",
             params={"period": current_period},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -310,7 +296,7 @@ class TestIntegratedPerformance:
         response = client.get(
             f"{settings.API_V1_PREFIX}/performance/integrated/1",
             params={"period": current_period},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:

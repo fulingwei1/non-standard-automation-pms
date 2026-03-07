@@ -28,7 +28,7 @@ class TestInitiations:
         response = client.get(
             f"{settings.API_V1_PREFIX}/pmo/initiations",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -47,9 +47,7 @@ class TestInitiations:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/initiations",
-            params={"status": "DRAFT"},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/pmo/initiations", params={"status": "DRAFT"}, headers=headers
         )
 
         if response.status_code == 403:
@@ -65,10 +63,7 @@ class TestInitiations:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/initiations/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/initiations/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")
@@ -88,9 +83,7 @@ class TestProjectPhases:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/phases",
-            params={"project_id": 1},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/pmo/phases", params={"project_id": 1}, headers=headers
         )
 
         if response.status_code == 403:
@@ -108,10 +101,7 @@ class TestProjectPhases:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/phases/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/phases/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")
@@ -133,7 +123,7 @@ class TestProjectRisks:
         response = client.get(
             f"{settings.API_V1_PREFIX}/pmo/risks",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -150,9 +140,7 @@ class TestProjectRisks:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/risks",
-            params={"project_id": 1},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/pmo/risks", params={"project_id": 1}, headers=headers
         )
 
         if response.status_code == 403:
@@ -168,10 +156,7 @@ class TestProjectRisks:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/risks/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/risks/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")
@@ -193,7 +178,7 @@ class TestProjectClosures:
         response = client.get(
             f"{settings.API_V1_PREFIX}/pmo/closures",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -209,10 +194,7 @@ class TestProjectClosures:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/closures/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/closures/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")
@@ -231,10 +213,7 @@ class TestPmoDashboard:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/dashboard",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/dashboard", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")
@@ -249,10 +228,7 @@ class TestPmoDashboard:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/weekly-report",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/weekly-report", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")
@@ -269,8 +245,7 @@ class TestPmoDashboard:
         headers = _auth_headers(admin_token)
         try:
             response = client.get(
-                f"{settings.API_V1_PREFIX}/pmo/resource-overview",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/pmo/resource-overview", headers=headers
             )
 
             if response.status_code == 403:
@@ -290,10 +265,7 @@ class TestPmoDashboard:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/risk-wall",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/risk-wall", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")
@@ -316,7 +288,7 @@ class TestPmoMeetings:
         response = client.get(
             f"{settings.API_V1_PREFIX}/pmo/meetings",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -332,10 +304,7 @@ class TestPmoMeetings:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/pmo/meetings/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/pmo/meetings/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have pmo:read permission")

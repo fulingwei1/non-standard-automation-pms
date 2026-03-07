@@ -11,7 +11,7 @@ ApprovalNodeExecutor 单元测试 - G2组覆盖率提升
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -19,6 +19,7 @@ import pytest
 class TestApprovalNodeExecutorInit:
     def test_init_stores_db(self):
         from app.services.approval_engine.executor import ApprovalNodeExecutor
+
         db = MagicMock()
         ex = ApprovalNodeExecutor(db)
         assert ex.db is db
@@ -29,6 +30,7 @@ class TestCreateTasksForNode:
 
     def setup_method(self):
         from app.services.approval_engine.executor import ApprovalNodeExecutor
+
         self.db = MagicMock()
         self.ex = ApprovalNodeExecutor(self.db)
 
@@ -87,16 +89,12 @@ class TestCreateTasksForNode:
 
     def test_due_at_set_when_timeout_hours_given(self):
         node = self._make_node("SINGLE", timeout_hours=24)
-        result = self.ex.create_tasks_for_node(
-            self._make_instance(), node, approver_ids=[1]
-        )
+        result = self.ex.create_tasks_for_node(self._make_instance(), node, approver_ids=[1])
         assert result[0].due_at is not None
 
     def test_due_at_none_when_no_timeout(self):
         node = self._make_node("SINGLE", timeout_hours=None)
-        result = self.ex.create_tasks_for_node(
-            self._make_instance(), node, approver_ids=[1]
-        )
+        result = self.ex.create_tasks_for_node(self._make_instance(), node, approver_ids=[1])
         assert result[0].due_at is None
 
 
@@ -105,6 +103,7 @@ class TestProcessApproval:
 
     def setup_method(self):
         from app.services.approval_engine.executor import ApprovalNodeExecutor
+
         self.db = MagicMock()
         self.ex = ApprovalNodeExecutor(self.db)
 
@@ -190,6 +189,7 @@ class TestProcessCountersign:
 
     def setup_method(self):
         from app.services.approval_engine.executor import ApprovalNodeExecutor
+
         self.db = MagicMock()
         self.ex = ApprovalNodeExecutor(self.db)
 
@@ -270,6 +270,7 @@ class TestCreateCcRecords:
 
     def setup_method(self):
         from app.services.approval_engine.executor import ApprovalNodeExecutor
+
         self.db = MagicMock()
         self.ex = ApprovalNodeExecutor(self.db)
 

@@ -2,8 +2,9 @@
 """
 Tests for app/services/project/core_service.py
 """
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 try:
     from app.services.project.core_service import ProjectCoreService
@@ -65,8 +66,10 @@ def test_paginate_static():
     mock_query = MagicMock()
     mock_query.count.return_value = 50
 
-    with patch("app.services.project.core_service.get_pagination_params") as mock_paging, \
-         patch("app.services.project.core_service.apply_pagination") as mock_apply:
+    with (
+        patch("app.services.project.core_service.get_pagination_params") as mock_paging,
+        patch("app.services.project.core_service.apply_pagination") as mock_apply,
+    ):
         pagination = MagicMock()
         pagination.offset = 0
         pagination.limit = 20
@@ -89,10 +92,14 @@ def test_list_user_projects_with_projects(service, mock_db):
     mock_list_resp = MagicMock()
     mock_list_resp.total = 1
 
-    with patch("app.services.project.core_service.get_pagination_params") as mock_paging, \
-         patch("app.services.project.core_service.apply_pagination") as mock_apply, \
-         patch("app.services.project.core_service.MyProjectResponse") as mock_resp, \
-         patch("app.services.project.core_service.MyProjectListResponse", return_value=mock_list_resp):
+    with (
+        patch("app.services.project.core_service.get_pagination_params") as mock_paging,
+        patch("app.services.project.core_service.apply_pagination") as mock_apply,
+        patch("app.services.project.core_service.MyProjectResponse") as mock_resp,
+        patch(
+            "app.services.project.core_service.MyProjectListResponse", return_value=mock_list_resp
+        ),
+    ):
         pagination = MagicMock()
         pagination.offset = 0
         pagination.limit = 20

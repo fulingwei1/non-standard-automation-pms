@@ -23,6 +23,7 @@ router = APIRouter()
 
 class OEECalculateRequest(BaseModel):
     """OEE计算请求"""
+
     equipment_id: int
     record_date: date
     shift: Optional[str] = None
@@ -43,6 +44,7 @@ class OEECalculateRequest(BaseModel):
 
 class WorkerEfficiencyCalculateRequest(BaseModel):
     """工人效率计算请求"""
+
     worker_id: int
     record_date: date
     shift: Optional[str] = None
@@ -64,7 +66,7 @@ async def calculate_oee(
 ):
     """
     触发OEE计算
-    
+
     OEE计算公式(严格遵循国际标准):
     1. 可用率(Availability) = 运行时间 / 计划生产时间
     2. 性能率(Performance) = (理想周期时间 × 实际产量) / 运行时间
@@ -73,38 +75,40 @@ async def calculate_oee(
     """
     # 验证设备存在
     equipment = get_or_404(db, Equipment, request.equipment_id, "设备不存在")
-    
+
     # 计算运行时间
-    operating_time = request.planned_production_time - request.planned_downtime - request.unplanned_downtime
-    
+    operating_time = (
+        request.planned_production_time - request.planned_downtime - request.unplanned_downtime
+    )
+
     if operating_time <= 0:
         raise HTTPException(status_code=400, detail="运行时间必须大于0")
-    
+
     if request.actual_output <= 0:
         raise HTTPException(status_code=400, detail="实际产量必须大于0")
-    
+
     # 1. 计算可用率
     availability = (operating_time / request.planned_production_time) * 100
-    
+
     # 2. 计算性能率
     ideal_production_time = request.ideal_cycle_time * request.actual_output
     performance = (ideal_production_time / operating_time) * 100
-    
+
     # 限制性能率不超过100%(如果超过,说明实际比理想更快,可能是数据错误)
     if performance > 100:
         performance = 100
-    
+
     # 3. 计算合格率
     quality = (request.qualified_qty / request.actual_output) * 100
-    
+
     # 4. 计算OEE
     oee = (availability / 100) * (performance / 100) * (quality / 100) * 100
-    
+
     # 5. 计算损失
     availability_loss = request.planned_downtime + request.unplanned_downtime
     performance_loss = operating_time - int(ideal_production_time)
     quality_loss = int((request.defect_qty + request.rework_qty) * request.ideal_cycle_time)
-    
+
     # 创建OEE记录
     oee_record = EquipmentOEERecord(
         equipment_id=request.equipment_id,
@@ -135,9 +139,9 @@ async def calculate_oee(
         is_auto_calculated=True,
         calculated_at=datetime.now(),
     )
-    
+
     save_obj(db, oee_record)
-    
+
     return {
         "code": 200,
         "message": "OEE计算成功",
@@ -165,31 +169,31 @@ async def calculate_worker_efficiency(
 ):
     """
     计算工人效率
-    
+
     工人效率 = 标准工时 / 实际工时 × 100%
     """
     # 验证工人存在
     get_or_404(db, Worker, request.worker_id, "工人不存在")
-    
+
     if request.actual_hours <= 0:
         raise HTTPException(status_code=400, detail="实际工时必须大于0")
-    
+
     if request.completed_qty <= 0:
         raise HTTPException(status_code=400, detail="完成数量必须大于0")
-    
+
     # 1. 计算工作效率
     efficiency = (request.standard_hours / request.actual_hours) * 100
-    
+
     # 2. 计算合格率
     quality_rate = (request.qualified_qty / request.completed_qty) * 100
-    
+
     # 3. 计算利用率
     effective_hours = request.actual_hours - request.idle_hours - request.break_hours
     utilization_rate = (effective_hours / request.actual_hours) * 100
-    
+
     # 4. 计算综合效率
     overall_efficiency = (efficiency / 100) * (quality_rate / 100) * (utilization_rate / 100) * 100
-    
+
     # 创建效率记录
     efficiency_record = WorkerEfficiencyRecord(
         worker_id=request.worker_id,
@@ -211,9 +215,9 @@ async def calculate_worker_efficiency(
         is_auto_calculated=True,
         calculated_at=datetime.now(),
     )
-    
+
     save_obj(db, efficiency_record)
-    
+
     return {
         "code": 200,
         "message": "工人效率计算成功",

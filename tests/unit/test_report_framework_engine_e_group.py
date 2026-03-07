@@ -3,12 +3,12 @@
 E组 - 报告引擎 单元测试
 覆盖: app/services/report_framework/engine.py
 """
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-
 # ─── fixtures ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def mock_config_loader():
@@ -25,8 +25,11 @@ def mock_data_resolver(db_session):
 @pytest.fixture
 def engine(db_session, mock_config_loader, mock_data_resolver):
     from app.services.report_framework.engine import ReportEngine
-    with patch("app.services.report_framework.engine.ConfigLoader", return_value=mock_config_loader), \
-         patch("app.services.report_framework.engine.DataResolver", return_value=mock_data_resolver):
+
+    with (
+        patch("app.services.report_framework.engine.ConfigLoader", return_value=mock_config_loader),
+        patch("app.services.report_framework.engine.DataResolver", return_value=mock_data_resolver),
+    ):
         eng = ReportEngine(db=db_session, config_dir="/fake/config")
     eng.config_loader = mock_config_loader
     eng.data_resolver = mock_data_resolver
@@ -36,9 +39,14 @@ def engine(db_session, mock_config_loader, mock_data_resolver):
 def _make_report_config(code="report_001", roles=None, params=None, sections=None):
     """构建模拟报告配置"""
     from app.services.report_framework.models import (
-        ReportConfig, ReportMeta, PermissionConfig, ExportConfig,
-        ExportOptions, JsonExportOptions
+        ExportConfig,
+        ExportOptions,
+        JsonExportOptions,
+        PermissionConfig,
+        ReportConfig,
+        ReportMeta,
     )
+
     meta = MagicMock()
     meta.code = code
     meta.name = f"Report {code}"
@@ -66,6 +74,7 @@ def _make_report_config(code="report_001", roles=None, params=None, sections=Non
 
 # ─── _check_permission ──────────────────────────────────────────────────────
 
+
 class TestCheckPermission:
 
     def test_superuser_bypasses_permission(self, engine):
@@ -88,6 +97,7 @@ class TestCheckPermission:
 
     def test_user_without_matching_role_raises(self, engine):
         from app.services.report_framework.engine import PermissionError
+
         config = _make_report_config(roles=["admin"])
         user = MagicMock(is_superuser=False)
         role = MagicMock(role_code="viewer")
@@ -111,10 +121,12 @@ class TestCheckPermission:
 
 # ─── _validate_params ───────────────────────────────────────────────────────
 
+
 class TestValidateParams:
 
     def _make_param(self, name, required=False, default=None, param_type="string"):
         from app.services.report_framework.models import ParameterType
+
         param = MagicMock()
         param.name = name
         param.required = required
@@ -124,6 +136,7 @@ class TestValidateParams:
 
     def test_required_param_missing_raises(self, engine):
         from app.services.report_framework.engine import ParameterError
+
         config = _make_report_config()
         config.parameters = [self._make_param("start_date", required=True)]
         with pytest.raises(ParameterError):
@@ -131,7 +144,9 @@ class TestValidateParams:
 
     def test_optional_param_uses_default(self, engine):
         config = _make_report_config()
-        config.parameters = [self._make_param("limit", required=False, default=10, param_type="integer")]
+        config.parameters = [
+            self._make_param("limit", required=False, default=10, param_type="integer")
+        ]
         result = engine._validate_params(config, {})
         assert result["limit"] == 10
 
@@ -149,6 +164,7 @@ class TestValidateParams:
 
 
 # ─── _convert_param_type ────────────────────────────────────────────────────
+
 
 class TestConvertParamType:
 
@@ -175,11 +191,13 @@ class TestConvertParamType:
 
     def test_date_conversion(self, engine):
         from datetime import date
+
         result = engine._convert_param_type("2025-06-01", self._type("date"))
         assert result == date(2025, 6, 1)
 
     def test_date_already_date_obj(self, engine):
         from datetime import date
+
         d = date(2025, 1, 1)
         result = engine._convert_param_type(d, self._type("date"))
         assert result == d
@@ -198,11 +216,13 @@ class TestConvertParamType:
 
     def test_invalid_integer_raises(self, engine):
         from app.services.report_framework.engine import ParameterError
+
         with pytest.raises(ParameterError):
             engine._convert_param_type("not_a_number", self._type("integer"))
 
 
 # ─── _get_context_value ──────────────────────────────────────────────────────
+
 
 class TestGetContextValue:
 
@@ -228,10 +248,12 @@ class TestGetContextValue:
 
 # ─── _render_sections / _render_section ─────────────────────────────────────
 
+
 class TestRenderSections:
 
     def _make_section(self, section_id, section_type, source=None, columns=None, items=None):
         from app.services.report_framework.models import SectionType
+
         section = MagicMock()
         section.id = section_id
         section.title = f"Section {section_id}"
@@ -244,6 +266,7 @@ class TestRenderSections:
 
     def test_render_metrics_section(self, engine):
         from app.services.report_framework.models import SectionType
+
         item = MagicMock(label="Total", value="total_count")
         section = self._make_section("s1", SectionType.METRICS, items=[item])
 
@@ -258,6 +281,7 @@ class TestRenderSections:
 
     def test_render_table_section(self, engine):
         from app.services.report_framework.models import SectionType
+
         section = self._make_section("s2", SectionType.TABLE, source="users")
         context = {"users": [{"name": "Alice"}, {"name": "Bob"}]}
         result = engine._render_section(section, context)
@@ -267,6 +291,7 @@ class TestRenderSections:
 
     def test_render_chart_section_list(self, engine):
         from app.services.report_framework.models import SectionType
+
         section = self._make_section("s3", SectionType.CHART, source="stats")
         context = {"stats": [{"label": "Jan", "value": 10}]}
         result = engine._render_section(section, context)
@@ -274,6 +299,7 @@ class TestRenderSections:
 
     def test_render_chart_section_dict(self, engine):
         from app.services.report_framework.models import SectionType
+
         section = self._make_section("s4", SectionType.CHART, source="dept_hours")
         context = {"dept_hours": {"Dev": 100, "QA": 50}}
         result = engine._render_section(section, context)
@@ -282,12 +308,14 @@ class TestRenderSections:
 
     def test_render_empty_source_returns_empty(self, engine):
         from app.services.report_framework.models import SectionType
+
         section = self._make_section("s5", SectionType.TABLE, source=None)
         result = engine._render_section(section, {})
         assert result["data"] == []
 
 
 # ─── get_schema ──────────────────────────────────────────────────────────────
+
 
 class TestGetSchema:
 
@@ -314,6 +342,7 @@ class TestGetSchema:
 
 # ─── register_renderer ───────────────────────────────────────────────────────
 
+
 class TestRegisterRenderer:
 
     def test_register_custom_renderer(self, engine):
@@ -323,6 +352,7 @@ class TestRegisterRenderer:
 
     def test_unsupported_format_in_generate_raises(self, engine):
         from app.services.report_framework.engine import ConfigError
+
         config = _make_report_config()
         engine.config_loader.get.return_value = config
         engine.data_resolver.resolve_all.return_value = {}
@@ -332,6 +362,7 @@ class TestRegisterRenderer:
 
 
 # ─── list_available ──────────────────────────────────────────────────────────
+
 
 class TestListAvailable:
 
@@ -343,6 +374,7 @@ class TestListAvailable:
 
     def test_list_filters_by_permission(self, engine):
         from app.services.report_framework.engine import PermissionError
+
         meta1 = MagicMock()
         meta1.code = "r1"
         meta2 = MagicMock()

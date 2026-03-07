@@ -9,12 +9,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ─── fixtures ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def service(db_session):
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
     with patch("app.services.resource_scheduling_ai_service.AIClientService"):
         svc = ResourceSchedulingAIService(db_session)
         svc.ai_client = MagicMock()
@@ -22,6 +23,7 @@ def service(db_session):
 
 
 # ─── _calculate_severity ────────────────────────────────────────────────────
+
 
 class TestCalculateSeverity:
 
@@ -52,6 +54,7 @@ class TestCalculateSeverity:
 
 # ─── _calculate_priority_score ──────────────────────────────────────────────
 
+
 class TestCalculatePriorityScore:
 
     def test_critical_high_score(self, service):
@@ -77,6 +80,7 @@ class TestCalculatePriorityScore:
 
 
 # ─── _determine_utilization_status ──────────────────────────────────────────
+
 
 class TestDetermineUtilizationStatus:
 
@@ -104,16 +108,20 @@ class TestDetermineUtilizationStatus:
 
 # ─── _ai_assess_conflict (mocked AI) ────────────────────────────────────────
 
+
 class TestAiAssessConflict:
 
     def test_ai_success_returns_values(self, service):
         import json
+
         service.ai_client.generate_solution.return_value = {
-            "content": json.dumps({
-                "risk_factors": ["风险1", "风险2"],
-                "impact_analysis": {"schedule_impact": "可能延期"},
-                "confidence": 0.85
-            })
+            "content": json.dumps(
+                {
+                    "risk_factors": ["风险1", "风险2"],
+                    "impact_analysis": {"schedule_impact": "可能延期"},
+                    "confidence": 0.85,
+                }
+            )
         }
         factors, impact, confidence = service._ai_assess_conflict(
             resource_id=1,
@@ -151,18 +159,22 @@ class TestAiAssessConflict:
 
 # ─── _ai_forecast_demand (mocked AI) ─────────────────────────────────────────
 
+
 class TestAiForecastDemand:
 
     def test_successful_forecast(self, service):
         import json
+
         service.ai_client.generate_solution.return_value = {
-            "content": json.dumps({
-                "predicted_demand": 15,
-                "demand_gap": 3,
-                "gap_severity": "SHORTAGE",
-                "predicted_utilization": 85,
-                "ai_confidence": 0.78
-            })
+            "content": json.dumps(
+                {
+                    "predicted_demand": 15,
+                    "demand_gap": 3,
+                    "gap_severity": "SHORTAGE",
+                    "predicted_utilization": 85,
+                    "ai_confidence": 0.78,
+                }
+            )
         }
         result = service._ai_forecast_demand(
             projects=[],
@@ -186,6 +198,7 @@ class TestAiForecastDemand:
 
 
 # ─── _get_default_suggestions ────────────────────────────────────────────────
+
 
 class TestGetDefaultSuggestions:
 
@@ -211,10 +224,12 @@ class TestGetDefaultSuggestions:
 
 # ─── _ai_generate_solutions ──────────────────────────────────────────────────
 
+
 class TestAiGenerateSolutions:
 
     def test_successful_generation(self, service):
         import json
+
         suggestions = [
             {
                 "solution_type": "REALLOCATE",
@@ -235,12 +250,12 @@ class TestAiGenerateSolutions:
                 "cost_score": 5,
                 "risk_score": 15,
                 "efficiency_score": 80,
-                "ai_reasoning": "综合考虑最优"
+                "ai_reasoning": "综合考虑最优",
             }
         ]
         service.ai_client.generate_solution.return_value = {
             "content": json.dumps(suggestions),
-            "tokens_used": 100
+            "tokens_used": 100,
         }
         conflict = MagicMock()
         conflict.resource_name = "张三"
@@ -274,10 +289,12 @@ class TestAiGenerateSolutions:
 
 # ─── detect_resource_conflicts ───────────────────────────────────────────────
 
+
 class TestDetectResourceConflicts:
 
     def test_no_allocations_returns_empty(self, db_session):
         from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
             svc = ResourceSchedulingAIService(db_session)
             svc.ai_client = MagicMock()
@@ -290,6 +307,7 @@ class TestDetectResourceConflicts:
 
     def test_no_overlap_returns_empty(self, db_session):
         from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
             svc = ResourceSchedulingAIService(db_session)
             svc.ai_client = MagicMock()
@@ -316,23 +334,28 @@ class TestDetectResourceConflicts:
 
 # ─── forecast_resource_demand (mocked) ──────────────────────────────────────
 
+
 class TestForecastResourceDemand:
 
     def test_creates_forecast_record(self, db_session):
         import json
+
         from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
         with patch("app.services.resource_scheduling_ai_service.AIClientService"):
             svc = ResourceSchedulingAIService(db_session)
             svc.ai_client = MagicMock()
 
         svc.ai_client.generate_solution.return_value = {
-            "content": json.dumps({
-                "predicted_demand": 8,
-                "demand_gap": 2,
-                "gap_severity": "SHORTAGE",
-                "predicted_utilization": 80,
-                "ai_confidence": 0.75
-            })
+            "content": json.dumps(
+                {
+                    "predicted_demand": 8,
+                    "demand_gap": 2,
+                    "gap_severity": "SHORTAGE",
+                    "predicted_utilization": 80,
+                    "ai_confidence": 0.75,
+                }
+            )
         }
         db_session.query.return_value.filter.return_value.all.return_value = []
 

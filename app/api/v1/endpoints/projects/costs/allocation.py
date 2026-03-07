@@ -37,10 +37,11 @@ def allocate_cost(
     from app.services.cost_allocation_service import CostAllocationService
 
     # 验证成本记录存在且属于指定项目
-    cost = db.query(ProjectCost).filter(
-        ProjectCost.id == cost_id,
-        ProjectCost.project_id == project_id
-    ).first()
+    cost = (
+        db.query(ProjectCost)
+        .filter(ProjectCost.id == cost_id, ProjectCost.project_id == project_id)
+        .first()
+    )
     if not cost:
         raise HTTPException(status_code=404, detail="成本记录不存在或不属于该项目")
 
@@ -65,7 +66,9 @@ def allocate_cost(
                     db, cost_id, allocation_request.allocation_targets, created_by=current_user.id
                 )
             else:
-                raise HTTPException(status_code=400, detail="allocation_targets必须包含machine_id或project_id")
+                raise HTTPException(
+                    status_code=400, detail="allocation_targets必须包含machine_id或project_id"
+                )
         else:
             raise HTTPException(status_code=400, detail="必须提供rule_id或allocation_targets")
 
@@ -81,11 +84,11 @@ def allocate_cost(
                         "id": cost.id,
                         "project_id": cost.project_id,
                         "machine_id": cost.machine_id,
-                        "amount": float(cost.amount)
+                        "amount": float(cost.amount),
                     }
                     for cost in allocated_costs
-                ]
-            }
+                ],
+            },
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

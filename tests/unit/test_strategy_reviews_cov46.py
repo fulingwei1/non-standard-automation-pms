@@ -2,17 +2,17 @@
 """第四十六批 - 战略审视单元测试"""
 import pytest
 
-pytest.importorskip("app.services.strategy.review.strategy_reviews",
-                    reason="依赖不满足，跳过")
+pytest.importorskip("app.services.strategy.review.strategy_reviews", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.strategy.review.strategy_reviews import (
     create_strategy_review,
+    delete_strategy_review,
+    get_latest_review,
     get_strategy_review,
     list_strategy_reviews,
     update_strategy_review,
-    delete_strategy_review,
-    get_latest_review,
 )
 
 
@@ -43,10 +43,16 @@ class TestCreateStrategyReview:
         data.next_steps = ""
 
         health_mock = {"score": 80}
-        with patch("app.services.strategy.review.strategy_reviews.calculate_strategy_health",
-                   return_value=80), \
-             patch("app.services.strategy.review.strategy_reviews.calculate_dimension_health",
-                   return_value=health_mock):
+        with (
+            patch(
+                "app.services.strategy.review.strategy_reviews.calculate_strategy_health",
+                return_value=80,
+            ),
+            patch(
+                "app.services.strategy.review.strategy_reviews.calculate_dimension_health",
+                return_value=health_mock,
+            ),
+        ):
             create_strategy_review(db, data, created_by=1)
 
         db.add.assert_called_once()

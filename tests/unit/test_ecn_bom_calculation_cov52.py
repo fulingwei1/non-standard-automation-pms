@@ -2,9 +2,10 @@
 """
 Unit tests for app/services/ecn_bom_analysis_service/calculation.py (cov52)
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.ecn_bom_analysis_service.calculation import (
@@ -21,8 +22,9 @@ def _make_service():
     return service
 
 
-def _make_affected_mat(change_type="UPDATE", cost_impact=None,
-                       material_code="MAT-001", material_id=1):
+def _make_affected_mat(
+    change_type="UPDATE", cost_impact=None, material_code="MAT-001", material_id=1
+):
     mat = MagicMock()
     mat.change_type = change_type
     mat.cost_impact = cost_impact
@@ -41,6 +43,7 @@ def _make_bom_item(item_id=1, material_code="MAT-001", material_id=1, amount=Non
 
 
 # ──────────────────────── calculate_cost_impact ────────────────────────
+
 
 def test_calculate_cost_impact_empty():
     """无物料时成本影响为 0"""
@@ -78,6 +81,7 @@ def test_calculate_cost_impact_add_uses_cost_impact():
 
 
 # ──────────────────────── calculate_schedule_impact ────────────────────────
+
 
 def test_calculate_schedule_impact_empty():
     """无受影响物料时天数为 0"""

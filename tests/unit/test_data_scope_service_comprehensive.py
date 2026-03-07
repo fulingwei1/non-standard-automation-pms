@@ -11,7 +11,7 @@ DataScopeService 综合单元测试
 - can_access_data: 检查数据访问权限
 """
 
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -109,9 +109,7 @@ class TestGetAccessibleOrgUnits:
 
         mock_db = MagicMock()
 
-        with patch.object(
-            DataScopeService, "get_user_org_units", return_value=[]
-        ):
+        with patch.object(DataScopeService, "get_user_org_units", return_value=[]):
             result = DataScopeService.get_accessible_org_units(
                 mock_db, user_id=1, scope_type=ScopeType.DEPARTMENT.value
             )
@@ -128,9 +126,7 @@ class TestGetAccessibleOrgUnits:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_org
 
-        with patch.object(
-            DataScopeService, "get_user_org_units", return_value=[10]
-        ):
+        with patch.object(DataScopeService, "get_user_org_units", return_value=[10]):
             result = DataScopeService.get_accessible_org_units(
                 mock_db, user_id=1, scope_type=ScopeType.TEAM.value
             )
@@ -147,12 +143,8 @@ class TestGetAccessibleOrgUnits:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_org
 
-        with patch.object(
-            DataScopeService, "get_user_org_units", return_value=[10]
-        ):
-            with patch.object(
-                DataScopeService, "_find_ancestor_by_type", return_value=None
-            ):
+        with patch.object(DataScopeService, "get_user_org_units", return_value=[10]):
+            with patch.object(DataScopeService, "_find_ancestor_by_type", return_value=None):
                 result = DataScopeService.get_accessible_org_units(
                     mock_db, user_id=1, scope_type=ScopeType.DEPARTMENT.value
                 )
@@ -173,15 +165,9 @@ class TestGetAccessibleOrgUnits:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_org
 
-        with patch.object(
-            DataScopeService, "get_user_org_units", return_value=[10]
-        ):
-            with patch.object(
-                DataScopeService, "_find_ancestor_by_type", return_value=mock_bu
-            ):
-                with patch.object(
-                    DataScopeService, "_get_subtree_ids", return_value={5, 10, 11}
-                ):
+        with patch.object(DataScopeService, "get_user_org_units", return_value=[10]):
+            with patch.object(DataScopeService, "_find_ancestor_by_type", return_value=mock_bu):
+                with patch.object(DataScopeService, "_get_subtree_ids", return_value={5, 10, 11}):
                     result = DataScopeService.get_accessible_org_units(
                         mock_db, user_id=1, scope_type=ScopeType.BUSINESS_UNIT.value
                     )
@@ -201,9 +187,7 @@ class TestFindAncestorByType:
         mock_org.unit_type = "DEPARTMENT"
         mock_org.parent_id = None
 
-        result = DataScopeService._find_ancestor_by_type(
-            mock_db, mock_org, "DEPARTMENT"
-        )
+        result = DataScopeService._find_ancestor_by_type(mock_db, mock_org, "DEPARTMENT")
 
         assert result == mock_org
 
@@ -216,9 +200,7 @@ class TestFindAncestorByType:
         mock_org.unit_type = "TEAM"
         mock_org.parent_id = None
 
-        result = DataScopeService._find_ancestor_by_type(
-            mock_db, mock_org, "BUSINESS_UNIT"
-        )
+        result = DataScopeService._find_ancestor_by_type(mock_db, mock_org, "BUSINESS_UNIT")
 
         assert result is None
 
@@ -240,9 +222,7 @@ class TestFindAncestorByType:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
-        result = DataScopeService._find_ancestor_by_type(
-            mock_db, mock_team, "DEPARTMENT"
-        )
+        result = DataScopeService._find_ancestor_by_type(mock_db, mock_team, "DEPARTMENT")
 
         assert result == mock_dept
 
@@ -261,9 +241,7 @@ class TestGetSubtreeIds:
 
         # 只返回自身
         mock_db.query.return_value.filter.return_value.first.return_value = mock_org
-        mock_db.query.return_value.filter.return_value.all.return_value = [
-            MagicMock(id=1)
-        ]
+        mock_db.query.return_value.filter.return_value.all.return_value = [MagicMock(id=1)]
 
         result = DataScopeService._get_subtree_ids(mock_db, org_unit_id=1)
 
@@ -324,9 +302,7 @@ class TestApplyDataScope:
         mock_user = MagicMock()
         mock_user.is_superuser = True
 
-        result = DataScopeService.apply_data_scope(
-            mock_query, mock_db, mock_user, "project"
-        )
+        result = DataScopeService.apply_data_scope(mock_query, mock_db, mock_user, "project")
 
         assert result == mock_query
 
@@ -347,9 +323,7 @@ class TestApplyDataScope:
             "get_user_data_scopes",
             return_value={"project": ScopeType.ALL.value},
         ):
-            result = DataScopeService.apply_data_scope(
-                mock_query, mock_db, mock_user, "project"
-            )
+            result = DataScopeService.apply_data_scope(mock_query, mock_db, mock_user, "project")
 
         assert result == mock_query
 
@@ -376,9 +350,7 @@ class TestApplyDataScope:
             "get_user_data_scopes",
             return_value={"project": ScopeType.OWN.value},
         ):
-            result = DataScopeService.apply_data_scope(
-                mock_query, mock_db, mock_user, "project"
-            )
+            result = DataScopeService.apply_data_scope(mock_query, mock_db, mock_user, "project")
 
         # 验证过滤器被调用
         mock_query.filter.assert_called()
@@ -405,9 +377,7 @@ class TestApplyDataScope:
             "get_user_data_scopes",
             return_value={"project": ScopeType.DEPARTMENT.value},
         ):
-            with patch.object(
-                DataScopeService, "get_accessible_org_units", return_value=[10, 20]
-            ):
+            with patch.object(DataScopeService, "get_accessible_org_units", return_value=[10, 20]):
                 result = DataScopeService.apply_data_scope(
                     mock_query, mock_db, mock_user, "project"
                 )
@@ -432,9 +402,7 @@ class TestApplyDataScope:
             "get_user_data_scopes",
             return_value={"project": ScopeType.DEPARTMENT.value},
         ):
-            with patch.object(
-                DataScopeService, "get_accessible_org_units", return_value=[]
-            ):
+            with patch.object(DataScopeService, "get_accessible_org_units", return_value=[]):
                 result = DataScopeService.apply_data_scope(
                     mock_query, mock_db, mock_user, "project"
                 )
@@ -454,9 +422,7 @@ class TestCanAccessData:
         mock_user.is_superuser = True
         mock_data = MagicMock()
 
-        result = DataScopeService.can_access_data(
-            mock_db, mock_user, "project", mock_data
-        )
+        result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is True
 
@@ -476,9 +442,7 @@ class TestCanAccessData:
             "get_user_data_scopes",
             return_value={"project": ScopeType.ALL.value},
         ):
-            result = DataScopeService.can_access_data(
-                mock_db, mock_user, "project", mock_data
-            )
+            result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is True
 
@@ -502,9 +466,7 @@ class TestCanAccessData:
             "get_user_data_scopes",
             return_value={"project": ScopeType.OWN.value},
         ):
-            result = DataScopeService.can_access_data(
-                mock_db, mock_user, "project", mock_data
-            )
+            result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is True
 
@@ -528,9 +490,7 @@ class TestCanAccessData:
             "get_user_data_scopes",
             return_value={"project": ScopeType.OWN.value},
         ):
-            result = DataScopeService.can_access_data(
-                mock_db, mock_user, "project", mock_data
-            )
+            result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is False
 
@@ -552,12 +512,8 @@ class TestCanAccessData:
             "get_user_data_scopes",
             return_value={"project": ScopeType.DEPARTMENT.value},
         ):
-            with patch.object(
-                DataScopeService, "get_accessible_org_units", return_value=[10, 20]
-            ):
-                result = DataScopeService.can_access_data(
-                    mock_db, mock_user, "project", mock_data
-                )
+            with patch.object(DataScopeService, "get_accessible_org_units", return_value=[10, 20]):
+                result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is True
 
@@ -580,12 +536,8 @@ class TestCanAccessData:
             "get_user_data_scopes",
             return_value={"project": ScopeType.DEPARTMENT.value},
         ):
-            with patch.object(
-                DataScopeService, "get_accessible_org_units", return_value=[10, 20]
-            ):
-                result = DataScopeService.can_access_data(
-                    mock_db, mock_user, "project", mock_data
-                )
+            with patch.object(DataScopeService, "get_accessible_org_units", return_value=[10, 20]):
+                result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is False
 
@@ -606,12 +558,8 @@ class TestCanAccessData:
             "get_user_data_scopes",
             return_value={"project": ScopeType.DEPARTMENT.value},
         ):
-            with patch.object(
-                DataScopeService, "get_accessible_org_units", return_value=[10]
-            ):
-                result = DataScopeService.can_access_data(
-                    mock_db, mock_user, "project", mock_data
-                )
+            with patch.object(DataScopeService, "get_accessible_org_units", return_value=[10]):
+                result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is True
 
@@ -632,12 +580,8 @@ class TestEdgeCases:
         mock_data.created_by = 1
 
         # 返回空字典，应该使用默认 OWN 范围
-        with patch.object(
-            PermissionService, "get_user_data_scopes", return_value={}
-        ):
-            result = DataScopeService.can_access_data(
-                mock_db, mock_user, "project", mock_data
-            )
+        with patch.object(PermissionService, "get_user_data_scopes", return_value={}):
+            result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         # 默认 OWN 范围，用户是创建者，应该有权限
         assert result is True
@@ -662,8 +606,6 @@ class TestEdgeCases:
             "get_user_data_scopes",
             return_value={"project": ScopeType.OWN.value},
         ):
-            result = DataScopeService.can_access_data(
-                mock_db, mock_user, "project", mock_data
-            )
+            result = DataScopeService.can_access_data(mock_db, mock_user, "project", mock_data)
 
         assert result is True

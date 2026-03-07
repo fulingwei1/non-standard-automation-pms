@@ -9,8 +9,9 @@ PMO管理模块 API 集成测试
 - PMO资源概览 (Resource Overview)
 """
 
-import pytest
 from datetime import date, timedelta
+
+import pytest
 
 from tests.integration.api_test_helper import APITestHelper
 
@@ -34,9 +35,7 @@ class TestPMODashboardAPI:
             "view_type": "executive",
         }
 
-        response = self.helper.get(
-            "/pmo/dashboard", params=params, resource_type="pmo_dashboard"
-        )
+        response = self.helper.get("/pmo/dashboard", params=params, resource_type="pmo_dashboard")
 
         if self.helper.assert_success(response):
             self.helper.print_success("PMO仪表板数据获取成功")
@@ -110,9 +109,7 @@ class TestPMOMeetingsAPI:
             "agenda": "1. 项目进度汇报\n2. 风险评估\n3. 下一步计划",
         }
 
-        response = self.helper.post(
-            "/pmo/meetings", meeting_data, resource_type="pmo_meeting"
-        )
+        response = self.helper.post("/pmo/meetings", meeting_data, resource_type="pmo_meeting")
 
         result = self.helper.assert_success(response)
         if result:
@@ -174,9 +171,7 @@ class TestPMOWeeklyReportAPI:
         """测试获取周报"""
         self.helper.print_info("测试获取周报...")
 
-        response = self.helper.get(
-            "/pmo/weekly-report", resource_type="pmo_weekly_report"
-        )
+        response = self.helper.get("/pmo/weekly-report", resource_type="pmo_weekly_report")
 
         if self.helper.assert_success(response):
             self.helper.print_success("周报数据获取成功")

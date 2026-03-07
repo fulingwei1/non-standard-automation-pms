@@ -4,15 +4,16 @@ Unit tests for app/utils/cache_decorator.py  — L4组补充
 重点覆盖 cache_response 装饰器（原有测试覆盖率较低的部分）
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from app.utils.cache_decorator import cache_response, get_cache_service
+import pytest
 
+from app.utils.cache_decorator import cache_response, get_cache_service
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _mock_cache(cached_value=None):
     """Return a MagicMock CacheService whose get() returns cached_value."""
@@ -25,6 +26,7 @@ def _mock_cache(cached_value=None):
 # cache_response decorator
 # ---------------------------------------------------------------------------
 
+
 class TestCacheResponse:
     """Tests for the @cache_response decorator."""
 
@@ -33,6 +35,7 @@ class TestCacheResponse:
         mock_cache = _mock_cache(cached_value=None)
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="test", ttl=60)
             def get_data(item_id=1):
                 return {"id": item_id, "value": "fresh"}
@@ -50,6 +53,7 @@ class TestCacheResponse:
         call_count = 0
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="test", ttl=60)
             def get_data(item_id=1):
                 nonlocal call_count
@@ -67,6 +71,7 @@ class TestCacheResponse:
         mock_cache = _mock_cache(cached_value=None)
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="items", ttl=120)
             def get_items(page=1):
                 return {"page": page, "items": []}
@@ -80,6 +85,7 @@ class TestCacheResponse:
         mock_cache = _mock_cache(cached_value=None)
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="data", ttl=300)
             def get_data(**kwargs):
                 return {"ok": True}
@@ -101,6 +107,7 @@ class TestCacheResponse:
             return key
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="user", ttl=60, key_func=my_key_func)
             def get_user(user_id=None):
                 return {"user_id": user_id}
@@ -117,6 +124,7 @@ class TestCacheResponse:
         mock_cache = _mock_cache(cached_value=None)
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="str_result", ttl=60)
             def get_string(**kwargs):
                 return "hello world"
@@ -130,6 +138,7 @@ class TestCacheResponse:
         mock_cache = _mock_cache(cached_value=[1, 2, 3])
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="list_result", ttl=60)
             def get_list(**kwargs):
                 return []
@@ -144,11 +153,14 @@ class TestCacheResponse:
         captured_keys = []
 
         original_set = mock_cache.set
+
         def capture_set(key, value, **kwargs):
             captured_keys.append(key)
+
         mock_cache.set.side_effect = capture_set
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="myprefix", ttl=60)
             def my_func(**kwargs):
                 return {"data": 1}
@@ -161,6 +173,7 @@ class TestCacheResponse:
 
     def test_invalidate_cache_attribute_exists(self):
         """Decorated function has invalidate_cache attribute."""
+
         @cache_response(prefix="check", ttl=60)
         def some_func():
             return {}
@@ -185,6 +198,7 @@ class TestCacheResponse:
 
     def test_invalidate_cache_returns_none_without_func(self):
         """invalidate_cache returns None when no invalidate_func provided."""
+
         @cache_response(prefix="noinv", ttl=60)
         def some_func():
             return {}
@@ -194,6 +208,7 @@ class TestCacheResponse:
 
     def test_functools_wraps_preserves_name(self):
         """@cache_response preserves the original function __name__."""
+
         @cache_response(prefix="test", ttl=60)
         def my_special_function():
             return {}
@@ -208,9 +223,11 @@ class TestCacheResponse:
         def capture_get(key):
             queried_keys.append(key)
             return None
+
         mock_cache.get.side_effect = capture_get
 
         with patch("app.utils.cache_decorator.get_cache_service", return_value=mock_cache):
+
             @cache_response(prefix="items", ttl=60)
             def get_items(**kwargs):
                 return {"items": []}
@@ -228,6 +245,7 @@ class TestGetCacheService:
     def test_returns_cache_service_instance(self):
         """get_cache_service returns a CacheService instance."""
         import app.utils.cache_decorator as mod
+
         original = mod._cache_service
         try:
             mod._cache_service = None
@@ -241,6 +259,7 @@ class TestGetCacheService:
     def test_singleton_returns_same_instance(self):
         """get_cache_service always returns the same object."""
         import app.utils.cache_decorator as mod
+
         original = mod._cache_service
 
         try:

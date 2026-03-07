@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("app.services.bonus.base")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -16,6 +16,7 @@ def db():
 @pytest.fixture
 def calculator(db):
     from app.services.bonus.base import BonusCalculatorBase
+
     return BonusCalculatorBase(db)
 
 
@@ -59,6 +60,7 @@ def test_get_coefficient_by_level_excellent(calculator):
         MockEnum.AVERAGE = "AVERAGE"
         MockEnum.POOR = "POOR"
         from app.services.bonus.base import BonusCalculatorBase
+
         calc = BonusCalculatorBase(MagicMock())
         result = calc.get_coefficient_by_level("EXCELLENT")
         assert result == Decimal("1.5")
@@ -79,8 +81,11 @@ def test_get_role_coefficient_from_rule_config(calculator):
 
 
 def test_get_active_rules_returns_list(calculator, db):
-    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+        []
+    )
     from app.services.bonus.base import BonusCalculatorBase
+
     # Just ensure no error
     result = calculator.get_active_rules()
     assert isinstance(result, list)

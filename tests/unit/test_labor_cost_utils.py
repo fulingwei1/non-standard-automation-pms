@@ -7,13 +7,13 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from app.services.labor_cost.utils import (
-    query_approved_timesheets,
-    delete_existing_costs,
-    group_timesheets_by_user,
-    find_existing_cost,
-    update_existing_cost,
-    create_new_cost,
     check_budget_alert,
+    create_new_cost,
+    delete_existing_costs,
+    find_existing_cost,
+    group_timesheets_by_user,
+    query_approved_timesheets,
+    update_existing_cost,
 )
 
 
@@ -111,9 +111,12 @@ class TestUpdateExistingCost(unittest.TestCase):
         existing.amount = Decimal("200")
 
         update_existing_cost(
-            db, project, existing, Decimal("300"),
+            db,
+            project,
+            existing,
+            Decimal("300"),
             {"user_name": "A", "total_hours": Decimal("10")},
-            date(2025, 1, 31)
+            date(2025, 1, 31),
         )
         self.assertEqual(existing.amount, Decimal("300"))
         # actual_cost = 1000 - 200 + 300 = 1100
@@ -128,9 +131,13 @@ class TestCreateNewCost(unittest.TestCase):
         project.actual_cost = 0
 
         cost = create_new_cost(
-            db, project, 1, 1, Decimal("500"),
+            db,
+            project,
+            1,
+            1,
+            Decimal("500"),
             {"user_name": "A", "total_hours": Decimal("10")},
-            date(2025, 1, 31)
+            date(2025, 1, 31),
         )
         db.add.assert_called_once()
         self.assertEqual(project.actual_cost, 500.0)

@@ -2,8 +2,9 @@
 """
 Tests for app/services/timesheet_reminder/base.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.timesheet_reminder.base import create_timesheet_notification

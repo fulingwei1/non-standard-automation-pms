@@ -35,6 +35,7 @@ class TestGetConfigPriorityLogic(unittest.TestCase):
         global_config = MagicMock(id=2, is_global=True)
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -57,6 +58,7 @@ class TestGetConfigPriorityLogic(unittest.TestCase):
         global_config = MagicMock(id=5, is_global=True)
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -123,15 +125,19 @@ class TestCreateConfigValidation(unittest.TestCase):
     def test_weights_sum_exactly_100_success(self):
         """权重总和恰好为100时创建成功"""
         data = self._make_data()  # 30+25+20+15+10=100
-        with patch('app.services.engineer_performance.dimension_config_service.save_obj') as mock_save:
+        with patch(
+            "app.services.engineer_performance.dimension_config_service.save_obj"
+        ) as mock_save:
             result = self.svc.create_config(data, operator_id=1)
             mock_save.assert_called_once()
 
     def test_global_config_auto_approved(self):
         """全局配置（无部门）自动审批通过"""
         data = self._make_data()
-        with patch('app.services.engineer_performance.dimension_config_service.save_obj'):
-            with patch('app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig') as MockConfig:
+        with patch("app.services.engineer_performance.dimension_config_service.save_obj"):
+            with patch(
+                "app.services.engineer_performance.dimension_config_service.EngineerDimensionConfig"
+            ) as MockConfig:
                 MockConfig.return_value = MagicMock()
                 self.svc.create_config(data, operator_id=1, department_id=None)
                 # 无部门ID时 is_global=True, approval_status='APPROVED'
@@ -283,9 +289,13 @@ class TestFormatConfig(unittest.TestCase):
         result = self.svc._format_config(config)
         self.assertIsNotNone(result)
         # Weight sum can be verified in output
-        total = result.get("technical_weight", 0) + result.get("execution_weight", 0) + \
-                result.get("cost_quality_weight", 0) + result.get("knowledge_weight", 0) + \
-                result.get("collaboration_weight", 0)
+        total = (
+            result.get("technical_weight", 0)
+            + result.get("execution_weight", 0)
+            + result.get("cost_quality_weight", 0)
+            + result.get("knowledge_weight", 0)
+            + result.get("collaboration_weight", 0)
+        )
         self.assertEqual(total, 100)
 
 

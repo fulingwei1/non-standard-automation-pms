@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.schemas.common import PageResponse
 from app.schemas.strategy import (
     DecompositionTreeResponse,
@@ -25,7 +26,6 @@ from app.schemas.strategy import (
     TraceToStrategyResponse,
 )
 from app.services import strategy as strategy_service
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
@@ -34,11 +34,16 @@ router = APIRouter()
 # 部门目标
 # ============================================
 
-@router.post("/department-objectives", response_model=DepartmentObjectiveResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/department-objectives",
+    response_model=DepartmentObjectiveResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_department_objective(
     data: DepartmentObjectiveCreate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     创建部门目标
@@ -64,7 +69,7 @@ def list_department_objectives(
         department_id=department_id,
         year=year,
         skip=pagination.offset,
-        limit=pagination.limit
+        limit=pagination.limit,
     )
     return PageResponse(
         items=items,
@@ -74,7 +79,9 @@ def list_department_objectives(
     )
 
 
-@router.get("/department-objectives/{objective_id}", response_model=DepartmentObjectiveDetailResponse)
+@router.get(
+    "/department-objectives/{objective_id}", response_model=DepartmentObjectiveDetailResponse
+)
 def get_department_objective(
     objective_id: int,
     db: Session = Depends(deps.get_db),
@@ -84,10 +91,7 @@ def get_department_objective(
     """
     detail = strategy_service.get_department_objective_detail(db, objective_id)
     if not detail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="部门目标不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="部门目标不存在")
     return detail
 
 
@@ -96,17 +100,14 @@ def update_department_objective(
     objective_id: int,
     data: DepartmentObjectiveUpdate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     更新部门目标
     """
     obj = strategy_service.update_department_objective(db, objective_id, data)
     if not obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="部门目标不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="部门目标不存在")
     return obj
 
 
@@ -114,17 +115,14 @@ def update_department_objective(
 def delete_department_objective(
     objective_id: int,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     删除部门目标（软删除）
     """
     success = strategy_service.delete_department_objective(db, objective_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="部门目标不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="部门目标不存在")
     return None
 
 
@@ -132,11 +130,14 @@ def delete_department_objective(
 # 个人 KPI
 # ============================================
 
-@router.post("/personal-kpis", response_model=PersonalKPIResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/personal-kpis", response_model=PersonalKPIResponse, status_code=status.HTTP_201_CREATED
+)
 def create_personal_kpi(
     data: PersonalKPICreate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     创建个人 KPI
@@ -145,11 +146,15 @@ def create_personal_kpi(
     return kpi
 
 
-@router.post("/personal-kpis/batch", response_model=List[PersonalKPIResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/personal-kpis/batch",
+    response_model=List[PersonalKPIResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def batch_create_personal_kpis(
     data: PersonalKPIBatchCreate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     批量创建个人 KPI
@@ -177,7 +182,7 @@ def list_personal_kpis(
         year=year,
         period=period,
         skip=pagination.offset,
-        limit=pagination.limit
+        limit=pagination.limit,
     )
     return PageResponse(
         items=items,
@@ -193,7 +198,7 @@ def list_my_personal_kpis(
     period: Optional[str] = Query(None, description="周期筛选"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     获取我的个人 KPI 列表
@@ -204,7 +209,7 @@ def list_my_personal_kpis(
         year=year,
         period=period,
         skip=pagination.offset,
-        limit=pagination.limit
+        limit=pagination.limit,
     )
     return PageResponse(
         items=items,
@@ -224,10 +229,7 @@ def get_personal_kpi(
     """
     kpi = strategy_service.get_personal_kpi(db, kpi_id)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="个人 KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
     return kpi
 
 
@@ -236,17 +238,14 @@ def update_personal_kpi(
     kpi_id: int,
     data: PersonalKPIUpdate,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     更新个人 KPI
     """
     kpi = strategy_service.update_personal_kpi(db, kpi_id, data)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="个人 KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
     return kpi
 
 
@@ -255,7 +254,7 @@ def self_rating(
     kpi_id: int,
     data: PersonalKPISelfRatingRequest,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     员工自评
@@ -264,10 +263,7 @@ def self_rating(
         db, kpi_id, data.actual_value, data.self_score, data.self_comment
     )
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="个人 KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
     return kpi
 
 
@@ -276,19 +272,14 @@ def manager_rating(
     kpi_id: int,
     data: PersonalKPIManagerRatingRequest,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     主管评分
     """
-    kpi = strategy_service.manager_rating(
-        db, kpi_id, data.manager_score, data.manager_comment
-    )
+    kpi = strategy_service.manager_rating(db, kpi_id, data.manager_score, data.manager_comment)
     if not kpi:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="个人 KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
     return kpi
 
 
@@ -296,23 +287,21 @@ def manager_rating(
 def delete_personal_kpi(
     kpi_id: int,
     db: Session = Depends(deps.get_db),
-    current_user = Depends(deps.get_current_user),
+    current_user=Depends(deps.get_current_user),
 ):
     """
     删除个人 KPI（软删除）
     """
     success = strategy_service.delete_personal_kpi(db, kpi_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="个人 KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
     return None
 
 
 # ============================================
 # 分解追溯
 # ============================================
+
 
 @router.get("/tree/{strategy_id}", response_model=DecompositionTreeResponse)
 def get_decomposition_tree(
@@ -335,10 +324,7 @@ def trace_to_strategy(
     """
     result = strategy_service.trace_to_strategy(db, personal_kpi_id)
     if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="个人 KPI 不存在"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
     return result
 
 

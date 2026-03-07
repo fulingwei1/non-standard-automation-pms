@@ -14,9 +14,9 @@ def convert_lead_code_to_project_code(lead_id: str) -> str:
 
     XS2501001 -> PJ2501001
     """
-    if lead_id.upper().startswith('XS'):
-        return 'PJ' + lead_id[2:]
-    return 'PJ' + lead_id
+    if lead_id.upper().startswith("XS"):
+        return "PJ" + lead_id[2:]
+    return "PJ" + lead_id
 
 
 def calculate_win_rate(
@@ -24,7 +24,7 @@ def calculate_win_rate(
     salesperson_win_rate: float,
     customer_cooperation_count: int,
     competitor_count: int = 3,
-    is_repeat_customer: bool = False
+    is_repeat_customer: bool = False,
 ) -> Tuple[float, str, Dict[str, Any]]:
     """计算中标率预测
 
@@ -88,17 +88,14 @@ def calculate_win_rate(
             "technical_feasibility": dimension_scores.technical_feasibility,
             "business_feasibility": dimension_scores.business_feasibility,
             "delivery_risk": dimension_scores.delivery_risk,
-            "customer_relationship": dimension_scores.customer_relationship
-        }
+            "customer_relationship": dimension_scores.customer_relationship,
+        },
     }
 
     return predicted_rate, level, factors
 
 
-def get_win_rate_recommendations(
-    predicted_rate: float,
-    factors: Dict[str, Any]
-) -> List[str]:
+def get_win_rate_recommendations(predicted_rate: float, factors: Dict[str, Any]) -> List[str]:
     """根据预测结果生成提升中标率的建议"""
     recommendations = []
 

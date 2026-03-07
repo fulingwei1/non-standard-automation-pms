@@ -14,16 +14,16 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
 from datetime import datetime
-from typing import List, Any
+from typing import Any, List
+from unittest.mock import MagicMock, Mock, patch
 
-from sqlalchemy.orm import Session
 from sqlalchemy.engine import Result, Row
+from sqlalchemy.orm import Session
 
-from app.services.role_service import RoleService
 from app.models.user import Role
-from app.schemas.role import RoleCreate, RoleUpdate, RoleResponse
+from app.schemas.role import RoleCreate, RoleResponse, RoleUpdate
+from app.services.role_service import RoleService
 
 
 class TestRoleServiceToResponse(unittest.TestCase):
@@ -282,7 +282,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         self.mock_db = MagicMock(spec=Session)
         self.service = RoleService(db=self.mock_db)
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_basic(self, mock_list):
         """测试基本列表功能"""
         # 准备测试数据
@@ -333,7 +333,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         parent_mock = MagicMock()
         parent_mock.id = 1
         parent_mock.role_name = "管理员"
-        
+
         parent_query = MagicMock()
         parent_filter = MagicMock()
         parent_query.filter.return_value = parent_filter
@@ -371,7 +371,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         self.assertEqual(item2.permissions[0], "task:view")
         self.assertEqual(item2.parent_name, "管理员")
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_with_keyword_search(self, mock_list):
         """测试关键词搜索"""
         role = Role(
@@ -414,7 +414,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         self.assertIn("role_code", params.search_fields)
         self.assertIn("role_name", params.search_fields)
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_with_is_active_filter(self, mock_list):
         """测试is_active过滤"""
         role = Role(
@@ -455,7 +455,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         params = call_args[0][0]
         self.assertEqual(params.filters.get("is_active"), False)
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_pagination(self, mock_list):
         """测试分页功能"""
         roles = [
@@ -501,7 +501,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         self.assertEqual(result["pages"], 3)  # (25 + 10 - 1) // 10 = 3
         self.assertEqual(len(result["items"]), 10)
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_empty_result(self, mock_list):
         """测试空结果"""
         mock_result = MagicMock()
@@ -528,7 +528,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         self.assertEqual(result["pages"], 0)
         self.assertEqual(len(result["items"]), 0)
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_batch_permissions_loading(self, mock_list):
         """测试批量权限预加载（N+1查询优化）"""
         roles = [
@@ -569,7 +569,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
 
         parent_query = MagicMock()
         parent_query.all.return_value = []
-        
+
         self.mock_db.execute.return_value = perm_result
         self.mock_db.query.return_value = parent_query
 
@@ -587,7 +587,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         # 验证db.execute只被调用一次（批量查询）
         self.assertEqual(self.mock_db.execute.call_count, 1)
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_batch_parent_loading(self, mock_list):
         """测试批量父角色预加载（N+1查询优化）"""
         roles = [
@@ -648,12 +648,12 @@ class TestRoleServiceListRoles(unittest.TestCase):
         parent_mock = MagicMock()
         parent_mock.id = 1
         parent_mock.role_name = "父角色1"
-        
+
         parent_query = MagicMock()
         parent_filter = MagicMock()
         parent_query.filter.return_value = parent_filter
         parent_filter.all.return_value = [parent_mock]
-        
+
         self.mock_db.query.return_value = parent_query
 
         # 执行测试
@@ -665,7 +665,7 @@ class TestRoleServiceListRoles(unittest.TestCase):
         self.assertEqual(items[1].parent_name, "父角色1")  # 第二个角色的父角色
         self.assertEqual(items[2].parent_name, "父角色1")  # 第三个角色的父角色
 
-    @patch.object(RoleService, 'list')
+    @patch.object(RoleService, "list")
     def test_list_roles_combined_filters(self, mock_list):
         """测试组合过滤条件"""
         role = Role(
@@ -699,19 +699,14 @@ class TestRoleServiceListRoles(unittest.TestCase):
         self.mock_db.query.return_value = parent_query
 
         # 执行测试（同时使用关键词和is_active过滤）
-        result = self.service.list_roles(
-            page=1,
-            page_size=20,
-            keyword="项目",
-            is_active=True
-        )
+        result = self.service.list_roles(page=1, page_size=20, keyword="项目", is_active=True)
 
         # 验证list方法被正确调用
         call_args = mock_list.call_args
         params = call_args[0][0]
         self.assertEqual(params.search, "项目")
         self.assertEqual(params.filters.get("is_active"), True)
-        
+
         # 验证结果
         self.assertEqual(len(result["items"]), 1)
         self.assertEqual(result["items"][0].role_code, "ACTIVE_PM")
@@ -760,7 +755,7 @@ class TestRoleServiceIntegration(unittest.TestCase):
         # 验证特殊字符未被转义或修改
         self.assertEqual(response.role_code, "SPECIAL@#$")
         self.assertEqual(response.role_name, "特殊<>角色&")
-        self.assertIn("\"引号\"", response.description)
+        self.assertIn('"引号"', response.description)
         self.assertIn("'单引号'", response.description)
 
     def test_to_response_with_long_description(self):

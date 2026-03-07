@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 销售报表适配器"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_framework.adapters.sales import SalesReportAdapter
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -34,6 +36,7 @@ class TestSalesReportAdapter:
         """未传 month 时应使用当前月（不抛 ValueError）"""
         with patch("app.common.date_range.get_month_range_by_ym") as mock_range:
             from datetime import date
+
             mock_range.return_value = (date(2024, 1, 1), date(2024, 1, 31))
             adapter.db.query.return_value.filter.return_value.scalar.return_value = 0
             adapter.db.query.return_value.filter.return_value.count.return_value = 0
@@ -45,12 +48,19 @@ class TestSalesReportAdapter:
 
     def test_adapter_inherits_base(self, adapter):
         from app.services.report_framework.adapters.base import BaseReportAdapter
+
         assert isinstance(adapter, BaseReportAdapter)
 
     def test_generate_falls_back_when_engine_raises(self, adapter):
         adapter.engine.generate.side_effect = Exception("no yaml")
-        with patch.object(adapter, "generate_data", return_value={"title": "销售", "summary": {}, "details": []}), \
-             patch.object(adapter, "_convert_to_report_result", return_value={"ok": True}):
+        with (
+            patch.object(
+                adapter,
+                "generate_data",
+                return_value={"title": "销售", "summary": {}, "details": []},
+            ),
+            patch.object(adapter, "_convert_to_report_result", return_value={"ok": True}),
+        ):
             result = adapter.generate(params={})
         assert result == {"ok": True}
 

@@ -15,9 +15,9 @@
 
 from fastapi import APIRouter
 
+from .analytics import router as analytics_router
 from .detection import router as detection_router
 from .handling import router as handling_router
-from .analytics import router as analytics_router
 from .smart_alerts import router as smart_alerts_router
 
 router = APIRouter()
@@ -38,4 +38,4 @@ router.include_router(handling_router, prefix="/handling", tags=["缺料-问题�
 # 路由: /statistics/..., /dashboard, /daily-report, /trends
 router.include_router(analytics_router, prefix="/analytics", tags=["缺料-统计报表"])
 
-__all__ = ['router']
+__all__ = ["router"]

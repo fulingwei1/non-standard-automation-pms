@@ -45,9 +45,7 @@ class MaterialTrackingService:
         if material_id:
             query = query.filter(Material.id == material_id)
         if material_code:
-            query = apply_keyword_filter(
-                query, Material, material_code, ["material_code"]
-            )
+            query = apply_keyword_filter(query, Material, material_code, ["material_code"])
         if category_id:
             query = query.filter(Material.category_id == category_id)
 
@@ -64,8 +62,7 @@ class MaterialTrackingService:
         for mat in materials:
             # 查询批次明细
             batch_query = self.db.query(MaterialBatch).filter(
-                MaterialBatch.material_id == mat.id,
-                MaterialBatch.status == 'ACTIVE'
+                MaterialBatch.material_id == mat.id, MaterialBatch.status == "ACTIVE"
             )
 
             if warehouse_location:
@@ -82,7 +79,11 @@ class MaterialTrackingService:
                     "batch_no": b.batch_no,
                     "current_qty": float(b.current_qty) if b.current_qty else 0,
                     "reserved_qty": float(b.reserved_qty) if b.reserved_qty else 0,
-                    "available_qty": float(b.current_qty - b.reserved_qty) if b.current_qty and b.reserved_qty else 0,
+                    "available_qty": (
+                        float(b.current_qty - b.reserved_qty)
+                        if b.current_qty and b.reserved_qty
+                        else 0
+                    ),
                     "warehouse_location": b.warehouse_location,
                     "production_date": b.production_date.isoformat() if b.production_date else None,
                     "expire_date": b.expire_date.isoformat() if b.expire_date else None,
@@ -95,20 +96,22 @@ class MaterialTrackingService:
             total_reserved = sum([float(b.reserved_qty or 0) for b in batches])
             available_stock = float(mat.current_stock or 0) - total_reserved
 
-            stock_data.append({
-                "material_id": mat.id,
-                "material_code": mat.material_code,
-                "material_name": mat.material_name,
-                "specification": mat.specification,
-                "unit": mat.unit,
-                "current_stock": float(mat.current_stock) if mat.current_stock else 0,
-                "safety_stock": float(mat.safety_stock) if mat.safety_stock else 0,
-                "available_stock": available_stock,
-                "reserved_stock": total_reserved,
-                "is_low_stock": (mat.current_stock or 0) < (mat.safety_stock or 0),
-                "batch_count": len(batches),
-                "batches": batch_list,
-            })
+            stock_data.append(
+                {
+                    "material_id": mat.id,
+                    "material_code": mat.material_code,
+                    "material_name": mat.material_name,
+                    "specification": mat.specification,
+                    "unit": mat.unit,
+                    "current_stock": float(mat.current_stock) if mat.current_stock else 0,
+                    "safety_stock": float(mat.safety_stock) if mat.safety_stock else 0,
+                    "available_stock": available_stock,
+                    "reserved_stock": total_reserved,
+                    "is_low_stock": (mat.current_stock or 0) < (mat.safety_stock or 0),
+                    "batch_count": len(batches),
+                    "batches": batch_list,
+                }
+            )
 
         return {
             "items": stock_data,
@@ -133,7 +136,7 @@ class MaterialTrackingService:
         if not material_id or not consumption_qty:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="material_id 和 consumption_qty 为必填项"
+                detail="material_id 和 consumption_qty 为必填项",
             )
 
         # 查询物料
@@ -145,10 +148,11 @@ class MaterialTrackingService:
 
         if barcode and not batch_id:
             # 通过条码查找批次
-            batch = self.db.query(MaterialBatch).filter(
-                MaterialBatch.barcode == barcode,
-                MaterialBatch.material_id == material_id
-            ).first()
+            batch = (
+                self.db.query(MaterialBatch)
+                .filter(MaterialBatch.barcode == barcode, MaterialBatch.material_id == material_id)
+                .first()
+            )
             if batch:
                 batch_id = batch.id
 
@@ -206,7 +210,7 @@ class MaterialTrackingService:
                 batch.current_qty = (batch.current_qty or 0) - consumption_qty
                 batch.consumed_qty = (batch.consumed_qty or 0) + consumption_qty
                 if batch.current_qty <= 0:
-                    batch.status = 'DEPLETED'
+                    batch.status = "DEPLETED"
 
         # 更新物料总库存
         material.current_stock = (material.current_stock or 0) - consumption_qty
@@ -417,7 +421,7 @@ class MaterialTrackingService:
 
         query = self.db.query(MaterialConsumption).filter(
             MaterialConsumption.is_waste == True,
-            MaterialConsumption.variance_rate >= min_variance_rate
+            MaterialConsumption.variance_rate >= min_variance_rate,
         )
 
         if material_id:
@@ -451,28 +455,32 @@ class MaterialTrackingService:
                 if wo:
                     work_order_no = wo.work_order_no
 
-            waste_data.append({
-                "id": w.id,
-                "consumption_no": w.consumption_no,
-                "material_code": w.material_code,
-                "material_name": w.material_name,
-                "consumption_date": w.consumption_date.isoformat() if w.consumption_date else None,
-                "actual_qty": float(w.consumption_qty) if w.consumption_qty else 0,
-                "standard_qty": float(w.standard_qty) if w.standard_qty else 0,
-                "variance_qty": float(w.variance_qty) if w.variance_qty else 0,
-                "variance_rate": float(w.variance_rate) if w.variance_rate else 0,
-                "consumption_type": w.consumption_type,
-                "project_name": project_name,
-                "work_order_no": work_order_no,
-                "total_cost": float(w.total_cost) if w.total_cost else 0,
-                "remark": w.remark,
-            })
+            waste_data.append(
+                {
+                    "id": w.id,
+                    "consumption_no": w.consumption_no,
+                    "material_code": w.material_code,
+                    "material_name": w.material_name,
+                    "consumption_date": (
+                        w.consumption_date.isoformat() if w.consumption_date else None
+                    ),
+                    "actual_qty": float(w.consumption_qty) if w.consumption_qty else 0,
+                    "standard_qty": float(w.standard_qty) if w.standard_qty else 0,
+                    "variance_qty": float(w.variance_qty) if w.variance_qty else 0,
+                    "variance_rate": float(w.variance_rate) if w.variance_rate else 0,
+                    "consumption_type": w.consumption_type,
+                    "project_name": project_name,
+                    "work_order_no": work_order_no,
+                    "total_cost": float(w.total_cost) if w.total_cost else 0,
+                    "remark": w.remark,
+                }
+            )
 
         # 统计汇总
         total_waste_qty = sum([float(w.variance_qty or 0) for w in wastes])
-        total_waste_cost = sum([
-            float(w.variance_qty or 0) * float(w.unit_price or 0) for w in wastes
-        ])
+        total_waste_cost = sum(
+            [float(w.variance_qty or 0) * float(w.unit_price or 0) for w in wastes]
+        )
 
         return {
             "items": waste_data,
@@ -506,10 +514,7 @@ class MaterialTrackingService:
             batch = self.db.query(MaterialBatch).filter(MaterialBatch.barcode == barcode).first()
 
         if not batch:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="未找到批次记录"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="未找到批次记录")
 
         # 批次基本信息
         material = self.db.query(Material).filter(Material.id == batch.material_id).first()
@@ -531,9 +536,12 @@ class MaterialTrackingService:
         }
 
         # 正向追溯: 查询消耗记录
-        consumptions = self.db.query(MaterialConsumption).filter(
-            MaterialConsumption.batch_id == batch.id
-        ).order_by(desc(MaterialConsumption.consumption_date)).all()
+        consumptions = (
+            self.db.query(MaterialConsumption)
+            .filter(MaterialConsumption.batch_id == batch.id)
+            .order_by(desc(MaterialConsumption.consumption_date))
+            .all()
+        )
 
         consumption_trail = []
         projects_used = set()
@@ -563,15 +571,19 @@ class MaterialTrackingService:
                     }
                     work_orders_used.add(wo.id)
 
-            consumption_trail.append({
-                "consumption_no": c.consumption_no,
-                "consumption_date": c.consumption_date.isoformat() if c.consumption_date else None,
-                "consumption_qty": float(c.consumption_qty) if c.consumption_qty else 0,
-                "consumption_type": c.consumption_type,
-                "project": project_info,
-                "work_order": work_order_info,
-                "operator_id": c.operator_id,
-            })
+            consumption_trail.append(
+                {
+                    "consumption_no": c.consumption_no,
+                    "consumption_date": (
+                        c.consumption_date.isoformat() if c.consumption_date else None
+                    ),
+                    "consumption_qty": float(c.consumption_qty) if c.consumption_qty else 0,
+                    "consumption_type": c.consumption_type,
+                    "project": project_info,
+                    "work_order": work_order_info,
+                    "operator_id": c.operator_id,
+                }
+            )
 
         return {
             "batch_info": batch_info,
@@ -580,7 +592,7 @@ class MaterialTrackingService:
                 "total_consumptions": len(consumptions),
                 "projects_count": len(projects_used),
                 "work_orders_count": len(work_orders_used),
-            }
+            },
         }
 
     # ================== 8. 物料成本分析 ==================
@@ -620,9 +632,7 @@ class MaterialTrackingService:
 
         # 排序获取 Top N
         sorted_materials = sorted(
-            material_costs.values(),
-            key=lambda x: x["total_cost"],
-            reverse=True
+            material_costs.values(), key=lambda x: x["total_cost"], reverse=True
         )[:top_n]
 
         total_cost = sum([m["total_cost"] for m in material_costs.values()])
@@ -656,11 +666,15 @@ class MaterialTrackingService:
         turnover_data = []
         for mat in materials:
             # 查询期间内消耗
-            consumptions = self.db.query(MaterialConsumption).filter(
-                MaterialConsumption.material_id == mat.id,
-                MaterialConsumption.consumption_date >= start_dt,
-                MaterialConsumption.consumption_date <= end_dt
-            ).all()
+            consumptions = (
+                self.db.query(MaterialConsumption)
+                .filter(
+                    MaterialConsumption.material_id == mat.id,
+                    MaterialConsumption.consumption_date >= start_dt,
+                    MaterialConsumption.consumption_date <= end_dt,
+                )
+                .all()
+            )
 
             total_consumption = sum([float(c.consumption_qty or 0) for c in consumptions])
 
@@ -671,15 +685,17 @@ class MaterialTrackingService:
             turnover_rate = (total_consumption / avg_stock) if avg_stock > 0 else 0
             turnover_days = (days / turnover_rate) if turnover_rate > 0 else 0
 
-            turnover_data.append({
-                "material_id": mat.id,
-                "material_code": mat.material_code,
-                "material_name": mat.material_name,
-                "current_stock": avg_stock,
-                "consumption_qty": total_consumption,
-                "turnover_rate": round(turnover_rate, 2),
-                "turnover_days": round(turnover_days, 1),
-            })
+            turnover_data.append(
+                {
+                    "material_id": mat.id,
+                    "material_code": mat.material_code,
+                    "material_name": mat.material_name,
+                    "current_stock": avg_stock,
+                    "consumption_qty": total_consumption,
+                    "turnover_rate": round(turnover_rate, 2),
+                    "turnover_days": round(turnover_days, 1),
+                }
+            )
 
         # 按周转率排序
         turnover_data.sort(key=lambda x: x["turnover_rate"], reverse=True)
@@ -693,13 +709,17 @@ class MaterialTrackingService:
     def check_and_create_alerts(self, material: Material):
         """检查并创建物料预警"""
         # 查询适用的预警规则
-        rules = self.db.query(MaterialAlertRule).filter(
-            MaterialAlertRule.is_active == True,
-            or_(
-                MaterialAlertRule.material_id == material.id,
-                MaterialAlertRule.material_id == None  # 全局规则
+        rules = (
+            self.db.query(MaterialAlertRule)
+            .filter(
+                MaterialAlertRule.is_active == True,
+                or_(
+                    MaterialAlertRule.material_id == material.id,
+                    MaterialAlertRule.material_id == None,  # 全局规则
+                ),
             )
-        ).all()
+            .all()
+        )
 
         for rule in rules:
             should_alert = False
@@ -709,15 +729,21 @@ class MaterialTrackingService:
             # 低库存预警
             if rule.alert_type == "LOW_STOCK":
                 if rule.threshold_type == "PERCENTAGE":
-                    threshold = float(material.safety_stock or 0) * (float(rule.threshold_value) / 100)
+                    threshold = float(material.safety_stock or 0) * (
+                        float(rule.threshold_value) / 100
+                    )
                     if float(material.current_stock or 0) < threshold:
                         should_alert = True
                         shortage_qty = threshold - float(material.current_stock or 0)
-                        alert_message = f"{material.material_name} 库存低于安全库存的{rule.threshold_value}%"
+                        alert_message = (
+                            f"{material.material_name} 库存低于安全库存的{rule.threshold_value}%"
+                        )
                 elif rule.threshold_type == "FIXED":
                     if float(material.current_stock or 0) < float(rule.threshold_value):
                         should_alert = True
-                        shortage_qty = float(rule.threshold_value) - float(material.current_stock or 0)
+                        shortage_qty = float(rule.threshold_value) - float(
+                            material.current_stock or 0
+                        )
                         alert_message = f"{material.material_name} 库存低于{rule.threshold_value}"
 
             # 缺料预警
@@ -728,21 +754,31 @@ class MaterialTrackingService:
 
             if should_alert:
                 # 检查是否已存在活动预警
-                existing = self.db.query(MaterialAlert).filter(
-                    MaterialAlert.material_id == material.id,
-                    MaterialAlert.alert_type == rule.alert_type,
-                    MaterialAlert.status == 'ACTIVE'
-                ).first()
+                existing = (
+                    self.db.query(MaterialAlert)
+                    .filter(
+                        MaterialAlert.material_id == material.id,
+                        MaterialAlert.alert_type == rule.alert_type,
+                        MaterialAlert.status == "ACTIVE",
+                    )
+                    .first()
+                )
 
                 if not existing:
                     # 创建新预警
-                    alert_no = f"ALERT-{datetime.now().strftime('%Y%m%d%H%M%S')}-{material.material_code}"
+                    alert_no = (
+                        f"ALERT-{datetime.now().strftime('%Y%m%d%H%M%S')}-{material.material_code}"
+                    )
 
                     # 计算消耗速率和缺货天数
-                    avg_daily_consumption = self.calculate_avg_daily_consumption(material.id, days=30)
+                    avg_daily_consumption = self.calculate_avg_daily_consumption(
+                        material.id, days=30
+                    )
                     days_to_stockout = 0
                     if avg_daily_consumption > 0:
-                        days_to_stockout = int(float(material.current_stock or 0) / avg_daily_consumption)
+                        days_to_stockout = int(
+                            float(material.current_stock or 0) / avg_daily_consumption
+                        )
 
                     alert = MaterialAlert(
                         alert_no=alert_no,
@@ -759,7 +795,7 @@ class MaterialTrackingService:
                         days_to_stockout=days_to_stockout,
                         alert_message=alert_message,
                         recommendation=f"建议采购数量: {shortage_qty + float(material.safety_stock or 0)}",
-                        status='ACTIVE',
+                        status="ACTIVE",
                     )
 
                     self.db.add(alert)
@@ -770,11 +806,15 @@ class MaterialTrackingService:
         end_dt = datetime.now()
         start_dt = end_dt - timedelta(days=days)
 
-        consumptions = self.db.query(MaterialConsumption).filter(
-            MaterialConsumption.material_id == material_id,
-            MaterialConsumption.consumption_date >= start_dt,
-            MaterialConsumption.consumption_date <= end_dt
-        ).all()
+        consumptions = (
+            self.db.query(MaterialConsumption)
+            .filter(
+                MaterialConsumption.material_id == material_id,
+                MaterialConsumption.consumption_date >= start_dt,
+                MaterialConsumption.consumption_date <= end_dt,
+            )
+            .all()
+        )
 
         total_consumption = sum([float(c.consumption_qty or 0) for c in consumptions])
 

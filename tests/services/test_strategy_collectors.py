@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # We need to mock the registry decorator before importing
 # The collectors are auto-registered on import via @register_collector
 
@@ -14,6 +13,7 @@ import pytest
 class TestCollectProjectMetrics:
     def _call(self, db, metric, filters=None, aggregation="COUNT"):
         from app.services.strategy.kpi_collector.collectors import collect_project_metrics
+
         return collect_project_metrics(db, metric, filters, aggregation)
 
     def test_project_count(self):
@@ -58,6 +58,7 @@ class TestCollectProjectMetrics:
 
     def test_project_on_time_rate(self):
         from datetime import date
+
         db = MagicMock()
         p1 = MagicMock(actual_end_date=date(2025, 1, 10), planned_end_date=date(2025, 1, 15))
         p2 = MagicMock(actual_end_date=date(2025, 1, 20), planned_end_date=date(2025, 1, 15))
@@ -112,6 +113,7 @@ class TestCollectProjectMetrics:
 class TestCollectFinanceMetrics:
     def _call(self, db, metric, filters=None, aggregation="SUM"):
         from app.services.strategy.kpi_collector.collectors import collect_finance_metrics
+
         return collect_finance_metrics(db, metric, filters, aggregation)
 
     def test_contract_total_amount(self):
@@ -209,6 +211,7 @@ class TestCollectFinanceMetrics:
 class TestCollectPurchaseMetrics:
     def _call(self, db, metric, filters=None, aggregation="SUM"):
         from app.services.strategy.kpi_collector.collectors import collect_purchase_metrics
+
         return collect_purchase_metrics(db, metric, filters, aggregation)
 
     def test_po_count(self):
@@ -244,9 +247,14 @@ class TestCollectPurchaseMetrics:
 
     def test_po_on_time_rate(self):
         from datetime import date
+
         db = MagicMock()
-        po1 = MagicMock(actual_delivery_date=date(2025, 1, 10), expected_delivery_date=date(2025, 1, 15))
-        po2 = MagicMock(actual_delivery_date=date(2025, 1, 20), expected_delivery_date=date(2025, 1, 15))
+        po1 = MagicMock(
+            actual_delivery_date=date(2025, 1, 10), expected_delivery_date=date(2025, 1, 15)
+        )
+        po2 = MagicMock(
+            actual_delivery_date=date(2025, 1, 20), expected_delivery_date=date(2025, 1, 15)
+        )
 
         q = MagicMock()
         q.filter.return_value = q
@@ -267,6 +275,7 @@ class TestCollectPurchaseMetrics:
 class TestCollectHRMetrics:
     def _call(self, db, metric, filters=None, aggregation="COUNT"):
         from app.services.strategy.kpi_collector.collectors import collect_hr_metrics
+
         return collect_hr_metrics(db, metric, filters, aggregation)
 
     def test_employee_count(self):

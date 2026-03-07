@@ -34,22 +34,19 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/assembly-kit/stages",
-    tags=["stages"]
-)
+router = APIRouter(prefix="/assembly-kit/stages", tags=["stages"])
 
 # 共 2 个路由
 
 # ==================== 装配阶段管理 ====================
 
+
 @router.get("/stages", response_model=ResponseModel)
 async def get_assembly_stages(
     db: Session = Depends(deps.get_db),
-    include_inactive: bool = Query(False, description="是否包含已禁用阶段")
+    include_inactive: bool = Query(False, description="是否包含已禁用阶段"),
 ):
     """获取所有装配阶段"""
     query = db.query(AssemblyStage)
@@ -58,9 +55,7 @@ async def get_assembly_stages(
     stages = query.order_by(AssemblyStage.stage_order).all()
 
     return ResponseModel(
-        code=200,
-        message="success",
-        data=[AssemblyStageResponse.model_validate(s) for s in stages]
+        code=200, message="success", data=[AssemblyStageResponse.model_validate(s) for s in stages]
     )
 
 
@@ -69,7 +64,7 @@ async def update_assembly_stage(
     stage_code: str,
     stage_data: AssemblyStageUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:update"))
+    current_user: User = Depends(security.require_permission("assembly_kit:update")),
 ):
     """更新装配阶段"""
     stage = db.query(AssemblyStage).filter(AssemblyStage.stage_code == stage_code).first()
@@ -85,10 +80,5 @@ async def update_assembly_stage(
     db.refresh(stage)
 
     return ResponseModel(
-        code=200,
-        message="更新成功",
-        data=AssemblyStageResponse.model_validate(stage)
+        code=200, message="更新成功", data=AssemblyStageResponse.model_validate(stage)
     )
-
-
-

@@ -127,12 +127,11 @@ def update_personal_goal(
     """
     更新个人目标
     """
-    goal = db.query(PersonalGoal).filter(
-        and_(
-            PersonalGoal.id == goal_id,
-            PersonalGoal.user_id == current_user.id
-        )
-    ).first()
+    goal = (
+        db.query(PersonalGoal)
+        .filter(and_(PersonalGoal.id == goal_id, PersonalGoal.user_id == current_user.id))
+        .first()
+    )
 
     if not goal:
         raise HTTPException(status_code=404, detail="目标不存在")
@@ -142,7 +141,7 @@ def update_personal_goal(
         setattr(goal, field, value)
 
     # 如果状态更新为已完成，自动设置完成日期
-    if goal_data.status == 'COMPLETED' and not goal.completed_date:
+    if goal_data.status == "COMPLETED" and not goal.completed_date:
         goal.completed_date = date.today()
         # 自动计算进度为100%
         if goal.progress < 100:

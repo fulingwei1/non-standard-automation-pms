@@ -18,12 +18,13 @@ from app.utils.db_helpers import get_or_404
 
 # ==================== 验收约束规则验证 ====================
 
+
 def validate_acceptance_rules(
     db: Session,
     acceptance_type: str,
     project_id: int,
     machine_id: Optional[int] = None,
-    order_id: Optional[int] = None
+    order_id: Optional[int] = None,
 ) -> None:
     """
     验证验收约束规则
@@ -57,14 +58,14 @@ def validate_acceptance_rules(
         if machine.stage not in ["S5", "S6"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"设备尚未完成调试，当前阶段：{machine.stage}。FAT验收需要在设备调试完成后（S5阶段）进行"
+                detail=f"设备尚未完成调试，当前阶段：{machine.stage}。FAT验收需要在设备调试完成后（S5阶段）进行",
             )
 
         # 检查项目阶段是否在S6（出厂验收）阶段
         if project.stage not in ["S5", "S6"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"项目尚未进入调试出厂阶段，当前阶段：{project.stage}。FAT验收需要在S5或S6阶段进行"
+                detail=f"项目尚未进入调试出厂阶段，当前阶段：{project.stage}。FAT验收需要在S5或S6阶段进行",
             )
 
     elif acceptance_type == "SAT":
@@ -75,25 +76,29 @@ def validate_acceptance_rules(
         machine = get_or_404(db, Machine, machine_id, "设备不存在")
 
         # 检查该设备是否有通过的FAT验收
-        fat_orders = db.query(AcceptanceOrder).filter(
-            AcceptanceOrder.project_id == project_id,
-            AcceptanceOrder.machine_id == machine_id,
-            AcceptanceOrder.acceptance_type == "FAT",
-            AcceptanceOrder.status == "COMPLETED",
-            AcceptanceOrder.overall_result == "PASSED"
-        ).all()
+        fat_orders = (
+            db.query(AcceptanceOrder)
+            .filter(
+                AcceptanceOrder.project_id == project_id,
+                AcceptanceOrder.machine_id == machine_id,
+                AcceptanceOrder.acceptance_type == "FAT",
+                AcceptanceOrder.status == "COMPLETED",
+                AcceptanceOrder.overall_result == "PASSED",
+            )
+            .all()
+        )
 
         if not fat_orders:
             raise HTTPException(
                 status_code=400,
-                detail="SAT验收必须在FAT验收通过后进行。请先完成并通过该设备的FAT验收"
+                detail="SAT验收必须在FAT验收通过后进行。请先完成并通过该设备的FAT验收",
             )
 
         # 检查项目阶段是否在S7或S8阶段（现场安装）
         if project.stage not in ["S7", "S8"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"项目尚未进入现场安装阶段，当前阶段：{project.stage}。SAT验收需要在S7或S8阶段进行"
+                detail=f"项目尚未进入现场安装阶段，当前阶段：{project.stage}。SAT验收需要在S7或S8阶段进行",
             )
 
     elif acceptance_type == "FINAL":
@@ -106,32 +111,33 @@ def validate_acceptance_rules(
 
         for machine in machines:
             # 检查该设备是否有通过的SAT验收
-            sat_orders = db.query(AcceptanceOrder).filter(
-                AcceptanceOrder.project_id == project_id,
-                AcceptanceOrder.machine_id == machine.id,
-                AcceptanceOrder.acceptance_type == "SAT",
-                AcceptanceOrder.status == "COMPLETED",
-                AcceptanceOrder.overall_result == "PASSED"
-            ).all()
+            sat_orders = (
+                db.query(AcceptanceOrder)
+                .filter(
+                    AcceptanceOrder.project_id == project_id,
+                    AcceptanceOrder.machine_id == machine.id,
+                    AcceptanceOrder.acceptance_type == "SAT",
+                    AcceptanceOrder.status == "COMPLETED",
+                    AcceptanceOrder.overall_result == "PASSED",
+                )
+                .all()
+            )
 
             if not sat_orders:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"设备 {machine.machine_name} (编码: {machine.machine_code}) 尚未通过SAT验收，无法进行终验收。请先完成所有设备的SAT验收"
+                    detail=f"设备 {machine.machine_name} (编码: {machine.machine_code}) 尚未通过SAT验收，无法进行终验收。请先完成所有设备的SAT验收",
                 )
 
         # 检查项目阶段是否在S8或S9阶段（验收结项）
         if project.stage not in ["S8", "S9"]:
             raise HTTPException(
                 status_code=400,
-                detail=f"项目尚未进入验收结项阶段，当前阶段：{project.stage}。终验收需要在S8或S9阶段进行"
+                detail=f"项目尚未进入验收结项阶段，当前阶段：{project.stage}。终验收需要在S8或S9阶段进行",
             )
 
 
-def validate_completion_rules(
-    db: Session,
-    order_id: int
-) -> None:
+def validate_completion_rules(db: Session, order_id: int) -> None:
     """
     验证完成验收的约束规则
 
@@ -149,11 +155,15 @@ def validate_completion_rules(
     get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
     # AR004: 检查是否存在未闭环的阻塞问题
-    blocking_issues = db.query(AcceptanceIssue).filter(
-        AcceptanceIssue.order_id == order_id,
-        AcceptanceIssue.is_blocking,
-        AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"])
-    ).all()
+    blocking_issues = (
+        db.query(AcceptanceIssue)
+        .filter(
+            AcceptanceIssue.order_id == order_id,
+            AcceptanceIssue.is_blocking,
+            AcceptanceIssue.status.in_(["OPEN", "PROCESSING", "RESOLVED", "DEFERRED"]),
+        )
+        .all()
+    )
 
     # 如果问题状态是RESOLVED，需要检查是否已验证通过
     unresolved_blocking_issues = []
@@ -169,14 +179,11 @@ def validate_completion_rules(
         issue_nos = [issue.issue_no for issue in unresolved_blocking_issues]
         raise HTTPException(
             status_code=400,
-            detail=f"存在 {len(unresolved_blocking_issues)} 个未闭环的阻塞问题，无法通过验收。问题编号：{', '.join(issue_nos)}"
+            detail=f"存在 {len(unresolved_blocking_issues)} 个未闭环的阻塞问题，无法通过验收。问题编号：{', '.join(issue_nos)}",
         )
 
 
-def validate_edit_rules(
-    db: Session,
-    order_id: int
-) -> None:
+def validate_edit_rules(db: Session, order_id: int) -> None:
     """
     验证编辑验收单的约束规则
 
@@ -195,23 +202,18 @@ def validate_edit_rules(
     # AR006: 检查是否有客户签字
     if order.customer_signed_at or order.customer_signer:
         raise HTTPException(
-            status_code=400,
-            detail="客户已签字确认，验收单不可修改。如需修改，请联系管理员"
+            status_code=400, detail="客户已签字确认，验收单不可修改。如需修改，请联系管理员"
         )
 
     # 检查是否有客户签署文件上传
     if order.is_officially_completed:
         raise HTTPException(
-            status_code=400,
-            detail="验收单已正式完成（已上传客户签署文件），不可修改"
+            status_code=400, detail="验收单已正式完成（已上传客户签署文件），不可修改"
         )
 
 
 def generate_order_no(
-    db: Session,
-    acceptance_type: str,
-    project_code: str,
-    machine_no: Optional[int] = None
+    db: Session, acceptance_type: str, project_code: str, machine_no: Optional[int] = None
 ) -> str:
     """
     生成验收单号

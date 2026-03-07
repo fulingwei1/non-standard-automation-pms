@@ -11,7 +11,9 @@
 """
 
 import json
+
 import pytest
+
 from app.services.approval_engine.condition_parser import (
     ConditionEvaluator,
     ConditionParseError,
@@ -30,8 +32,8 @@ class TestConditionEvaluator:
     def test_jinja2_simple_variable(self):
         """测试简单变量替换"""
         context = {
-        "user": {"name": "张三"},
-        "entity": {"amount": 1000},
+            "user": {"name": "张三"},
+            "entity": {"amount": 1000},
         }
         result = self.parser.evaluate("{{ user.name }}", context)
         assert result == "张三"
@@ -39,9 +41,9 @@ class TestConditionEvaluator:
     def test_jinja2_nested_field(self):
         """测试嵌套字段访问"""
         context = {
-        "form": {"leave_days": 3},
-        "initiator": {"dept_name": "技术部"},
-        "entity": {"project": {"id": 1, "title": "测试项目"}},
+            "form": {"leave_days": 3},
+            "initiator": {"dept_name": "技术部"},
+            "entity": {"project": {"id": 1, "title": "测试项目"}},
         }
 
         result = self.parser.evaluate("{{ form.leave_days }} 天", context)
@@ -50,12 +52,12 @@ class TestConditionEvaluator:
     def test_jinja2_length_filter(self):
         """测试length过滤器"""
         context = {
-        "items": [1, 2, 3, 4, 5],
-        "tasks": [
-        {"id": 1, "status": "DONE"},
-        {"id": 2, "status": "DONE"},
-        {"id": 3, "status": "PENDING"},
-        ],
+            "items": [1, 2, 3, 4, 5],
+            "tasks": [
+                {"id": 1, "status": "DONE"},
+                {"id": 2, "status": "DONE"},
+                {"id": 3, "status": "PENDING"},
+            ],
         }
         result = self.parser.evaluate("{{ items | length }}", context)
         assert result == 5
@@ -63,11 +65,11 @@ class TestConditionEvaluator:
     def test_jinja2_sum_by_filter(self):
         """测试sum_by过滤器"""
         context = {
-        "items": [
-        {"amount": 100},
-        {"amount": 200},
-        {"amount": 150},
-        ],
+            "items": [
+                {"amount": 100},
+                {"amount": 200},
+                {"amount": 150},
+            ],
         }
         result = self.parser.evaluate('{{ items | sum_by("amount") }}', context)
         assert result == 450
@@ -75,22 +77,20 @@ class TestConditionEvaluator:
     def test_jinja2_count_by_filter(self):
         """测试count_by过滤器"""
         context = {
-        "tasks": [
-        {"id": 1, "status": "DONE"},
-        {"id": 2, "status": "DONE"},
-        {"id": 3, "status": "PENDING"},
-        ],
+            "tasks": [
+                {"id": 1, "status": "DONE"},
+                {"id": 2, "status": "DONE"},
+                {"id": 3, "status": "PENDING"},
+            ],
         }
-        result = self.parser.evaluate(
-        '{{ tasks | count_by("status", "DONE") }}', context
-        )
+        result = self.parser.evaluate('{{ tasks | count_by("status", "DONE") }}', context)
         assert result == 2
 
     def test_jinja2_percentage_filter(self):
         """测试percentage过滤器"""
         context = {
-        "value": 85.5,
-        "decimals": 1,
+            "value": 85.5,
+            "decimals": 1,
         }
         result = self.parser.evaluate("{{ value | percentage(1) }}", context)
         assert result == 85.5
@@ -303,16 +303,16 @@ class TestConditionEvaluator:
     def test_nested_field_path(self):
         """测试嵌套字段路径"""
         context = {
-        "entity": {
-        "project": {
-        "customer": {
-        "name": "测试客户",
-        },
-        "contract": {
-        "amount": 50000,
-        },
-        }
-        },
+            "entity": {
+                "project": {
+                    "customer": {
+                        "name": "测试客户",
+                    },
+                    "contract": {
+                        "amount": 50000,
+                    },
+                }
+            },
         }
 
         result = self.parser.evaluate("{{ entity.project.customer.name }}", context)
@@ -321,7 +321,7 @@ class TestConditionEvaluator:
     def test_user_context(self):
         """测试用户上下文"""
         context = {
-        "user": {"id": 1, "name": "测试用户", "role": "manager"},
+            "user": {"id": 1, "name": "测试用户", "role": "manager"},
         }
 
         result = self.parser.evaluate("{{ user.id }}", context)
@@ -395,9 +395,7 @@ class TestConditionEvaluator:
 
     def test_sql_like_complex(self):
         """测试复杂SQL-like表达式"""
-        expression = (
-            'entity.amount > 100000 AND entity.status IN (APPROVED, COMPLETED)'
-        )
+        expression = "entity.amount > 100000 AND entity.status IN (APPROVED, COMPLETED)"
         context = {"entity": {"amount": 150000, "status": "COMPLETED"}}
         result = self.parser.evaluate(expression, context)
         assert result is True
@@ -493,6 +491,7 @@ class TestConditionEvaluator:
     def test_today_function(self):
         """测试today()系统函数"""
         from datetime import date
+
         conditions = {
             "operator": "AND",
             "items": [
@@ -505,6 +504,7 @@ class TestConditionEvaluator:
 
     def test_user_context_with_object(self):
         """测试用户上下文-对象属性访问"""
+
         class User:
             def __init__(self):
                 self.name = "测试用户"
@@ -518,6 +518,7 @@ class TestConditionEvaluator:
 # =============================================================================
 # 补充测试 A组覆盖率提升 (2026-02-17)
 # =============================================================================
+
 
 class TestConditionEvaluatorAdditional:
     """额外的边界情况测试"""
@@ -626,8 +627,7 @@ class TestConditionEvaluatorAdditional:
 
     def test_sql_like_and_conditions(self):
         result = self.evaluator._evaluate_sql_like(
-            "amount > 100 AND days <= 30",
-            {"amount": 200, "days": 15}
+            "amount > 100 AND days <= 30", {"amount": 200, "days": 15}
         )
         assert result is True
 

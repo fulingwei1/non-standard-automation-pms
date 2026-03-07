@@ -2,16 +2,16 @@
 """第四十六批 - 年度重点工作 CRUD 单元测试"""
 import pytest
 
-pytest.importorskip("app.services.strategy.annual_work_service.crud",
-                    reason="依赖不满足，跳过")
+pytest.importorskip("app.services.strategy.annual_work_service.crud", reason="依赖不满足，跳过")
 
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
 from app.services.strategy.annual_work_service.crud import (
     create_annual_work,
+    delete_annual_work,
     get_annual_work,
     list_annual_works,
     update_annual_work,
-    delete_annual_work,
 )
 
 

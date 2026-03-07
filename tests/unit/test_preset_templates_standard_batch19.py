@@ -79,9 +79,7 @@ class TestStandardStagesStructure:
             STANDARD_STAGES,
         )
 
-        expected_count = (
-            len(PLANNING_STAGES) + len(PRODUCTION_STAGES) + len(DELIVERY_STAGES)
-        )
+        expected_count = len(PLANNING_STAGES) + len(PRODUCTION_STAGES) + len(DELIVERY_STAGES)
 
         assert len(STANDARD_STAGES) == expected_count
 
@@ -101,8 +99,7 @@ class TestStandardStagesStructure:
         # 验证中间是生产阶段
         production_count = len(PRODUCTION_STAGES)
         assert (
-            STANDARD_STAGES[planning_count : planning_count + production_count]
-            == PRODUCTION_STAGES
+            STANDARD_STAGES[planning_count : planning_count + production_count] == PRODUCTION_STAGES
         )
 
         # 验证最后是交付阶段

@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - project_workspace_service 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.project_workspace_service")
 
 from app.services.project_workspace_service import (
-    build_project_basic_info,
-    build_team_info,
-    build_task_info,
     build_bonus_info,
-    build_meeting_info,
-    build_issue_info,
-    build_solution_info,
     build_document_info,
+    build_issue_info,
+    build_meeting_info,
+    build_project_basic_info,
+    build_solution_info,
+    build_task_info,
+    build_team_info,
 )
 
 
@@ -35,11 +36,21 @@ def _make_project():
 
 # ── build_project_basic_info ──────────────────────────────────────────────────
 
+
 class TestBuildProjectBasicInfo:
     def test_returns_dict_with_correct_keys(self):
         result = build_project_basic_info(_make_project())
-        expected = {"id", "project_code", "project_name", "stage", "status",
-                    "health", "progress_pct", "contract_amount", "pm_name"}
+        expected = {
+            "id",
+            "project_code",
+            "project_name",
+            "stage",
+            "status",
+            "health",
+            "progress_pct",
+            "contract_amount",
+            "pm_name",
+        }
         assert expected.issubset(result.keys())
 
     def test_progress_pct_is_float(self):
@@ -71,6 +82,7 @@ class TestBuildProjectBasicInfo:
 
 
 # ── build_team_info ───────────────────────────────────────────────────────────
+
 
 class TestBuildTeamInfo:
     def test_returns_list_of_member_dicts(self):
@@ -136,6 +148,7 @@ class TestBuildTeamInfo:
 
 # ── build_task_info ───────────────────────────────────────────────────────────
 
+
 class TestBuildTaskInfo:
     def test_returns_list_of_task_dicts(self):
         db = MagicMock()
@@ -186,6 +199,7 @@ class TestBuildTaskInfo:
 
 # ── build_bonus_info ──────────────────────────────────────────────────────────
 
+
 class TestBuildBonusInfo:
     def test_returns_dict_with_expected_keys(self):
         db = MagicMock()
@@ -197,7 +211,13 @@ class TestBuildBonusInfo:
             mock_svc.get_project_bonus_statistics.return_value = {}
             mock_svc.get_project_member_bonus_summary.return_value = []
             result = build_bonus_info(db, project_id=1)
-        assert set(result.keys()) == {"rules", "calculations", "distributions", "statistics", "member_summary"}
+        assert set(result.keys()) == {
+            "rules",
+            "calculations",
+            "distributions",
+            "statistics",
+            "member_summary",
+        }
 
     def test_returns_empty_on_exception(self):
         db = MagicMock()
@@ -210,6 +230,7 @@ class TestBuildBonusInfo:
 
 
 # ── build_meeting_info ────────────────────────────────────────────────────────
+
 
 class TestBuildMeetingInfo:
     def test_returns_dict_with_meetings_and_statistics(self):
@@ -233,6 +254,7 @@ class TestBuildMeetingInfo:
 
 # ── build_issue_info ──────────────────────────────────────────────────────────
 
+
 class TestBuildIssueInfo:
     def test_returns_dict_with_issues_key(self):
         db = MagicMock()
@@ -246,7 +268,9 @@ class TestBuildIssueInfo:
         issue.solution = "方案"
         issue.assignee_name = "张三"
         issue.report_date = date(2025, 4, 1)
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [issue]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            issue
+        ]
         result = build_issue_info(db, project_id=1)
         assert "issues" in result
         assert len(result["issues"]) == 1
@@ -263,7 +287,9 @@ class TestBuildIssueInfo:
         issue.solution = "解决方案内容"
         issue.assignee_name = None
         issue.report_date = None
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [issue]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            issue
+        ]
         result = build_issue_info(db, project_id=1)
         assert result["issues"][0]["has_solution"] is True
 
@@ -279,12 +305,15 @@ class TestBuildIssueInfo:
         issue.solution = ""
         issue.assignee_name = "李四"
         issue.report_date = None
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [issue]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            issue
+        ]
         result = build_issue_info(db, project_id=1)
         assert result["issues"][0]["has_solution"] is False
 
 
 # ── build_solution_info ───────────────────────────────────────────────────────
+
 
 class TestBuildSolutionInfo:
     def test_returns_dict_with_solutions_and_statistics(self):
@@ -317,6 +346,7 @@ class TestBuildSolutionInfo:
 
 # ── build_document_info ───────────────────────────────────────────────────────
 
+
 class TestBuildDocumentInfo:
     def test_returns_list_of_document_dicts(self):
         db = MagicMock()
@@ -328,13 +358,17 @@ class TestBuildDocumentInfo:
         doc.status = "APPROVED"
         doc.created_at = MagicMock()
         doc.created_at.isoformat.return_value = "2025-01-01T00:00:00"
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [doc]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            doc
+        ]
         result = build_document_info(db, project_id=1)
         assert len(result) == 1
         assert result[0]["doc_name"] == "需求文档"
 
     def test_returns_empty_when_no_documents(self):
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = build_document_info(db, project_id=1)
         assert result == []

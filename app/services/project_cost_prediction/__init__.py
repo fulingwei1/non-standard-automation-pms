@@ -8,6 +8,6 @@ from app.services.project_cost_prediction.ai_predictor import GLM5CostPredictor
 from app.services.project_cost_prediction.service import ProjectCostPredictionService
 
 __all__ = [
-    'ProjectCostPredictionService',
-    'GLM5CostPredictor',
+    "ProjectCostPredictionService",
+    "GLM5CostPredictor",
 ]

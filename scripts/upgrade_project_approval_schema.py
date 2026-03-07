@@ -18,7 +18,6 @@ from app.models.approval import (
 )
 from app.models.base import get_engine
 
-
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("upgrade_project_approval_schema")
 
@@ -28,9 +27,7 @@ REQUIRED_PROJECT_COLUMNS: Iterable[tuple[str, str]] = (
     ("template_version_id", "INTEGER"),
 )
 
-REQUIRED_INSTANCE_COLUMNS: Iterable[tuple[str, str]] = (
-    ("initiator_name", "VARCHAR(100)"),
-)
+REQUIRED_INSTANCE_COLUMNS: Iterable[tuple[str, str]] = (("initiator_name", "VARCHAR(100)"),)
 
 PROJECT_TEMPLATE_CODE = "PROJECT_TEMPLATE"
 

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第十一批：dimension_config_service 单元测试"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.engineer_performance.dimension_config_service import DimensionConfigService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

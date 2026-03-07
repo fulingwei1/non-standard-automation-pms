@@ -12,10 +12,7 @@ if TYPE_CHECKING:
 
 
 def find_similar_ecns(
-    service: "EcnKnowledgeService",
-    ecn_id: int,
-    top_n: int = 5,
-    min_similarity: float = 0.3
+    service: "EcnKnowledgeService", ecn_id: int, top_n: int = 5, min_similarity: float = 0.3
 ) -> List[Dict[str, Any]]:
     """
     查找相似的ECN
@@ -34,12 +31,16 @@ def find_similar_ecns(
         raise ValueError(f"ECN {ecn_id} 不存在")
 
     # 获取所有已完成的ECN（排除当前ECN）
-    completed_ecns = service.db.query(Ecn).filter(
-        Ecn.id != ecn_id,
-        Ecn.status.in_(['COMPLETED', 'CLOSED']),
-        Ecn.solution.isnot(None),
-        Ecn.solution != ''
-    ).all()
+    completed_ecns = (
+        service.db.query(Ecn)
+        .filter(
+            Ecn.id != ecn_id,
+            Ecn.status.in_(["COMPLETED", "CLOSED"]),
+            Ecn.solution.isnot(None),
+            Ecn.solution != "",
+        )
+        .all()
+    )
 
     similar_ecns = []
 
@@ -47,22 +48,24 @@ def find_similar_ecns(
         similarity_score = _calculate_similarity(service, current_ecn, ecn)
 
         if similarity_score >= min_similarity:
-            similar_ecns.append({
-                "ecn_id": ecn.id,
-                "ecn_no": ecn.ecn_no,
-                "ecn_title": ecn.ecn_title,
-                "ecn_type": ecn.ecn_type,
-                "similarity_score": similarity_score,
-                "solution": ecn.solution,
-                "root_cause_category": ecn.root_cause_category,
-                "cost_impact": float(ecn.cost_impact or 0),
-                "schedule_impact_days": ecn.schedule_impact_days or 0,
-                "completed_at": ecn.execution_end.isoformat() if ecn.execution_end else None,
-                "match_reasons": _get_match_reasons(current_ecn, ecn, similarity_score)
-            })
+            similar_ecns.append(
+                {
+                    "ecn_id": ecn.id,
+                    "ecn_no": ecn.ecn_no,
+                    "ecn_title": ecn.ecn_title,
+                    "ecn_type": ecn.ecn_type,
+                    "similarity_score": similarity_score,
+                    "solution": ecn.solution,
+                    "root_cause_category": ecn.root_cause_category,
+                    "cost_impact": float(ecn.cost_impact or 0),
+                    "schedule_impact_days": ecn.schedule_impact_days or 0,
+                    "completed_at": ecn.execution_end.isoformat() if ecn.execution_end else None,
+                    "match_reasons": _get_match_reasons(current_ecn, ecn, similarity_score),
+                }
+            )
 
     # 按相似度排序
-    similar_ecns.sort(key=lambda x: x['similarity_score'], reverse=True)
+    similar_ecns.sort(key=lambda x: x["similarity_score"], reverse=True)
 
     return similar_ecns[:top_n]
 
@@ -86,10 +89,7 @@ def _calculate_similarity(service: "EcnKnowledgeService", ecn1: Ecn, ecn2: Ecn) 
     # 3. 变更描述相似度（权重：20%）
     max_score += 20
     if ecn1.change_description and ecn2.change_description:
-        text_similarity = _text_similarity(
-            ecn1.change_description,
-            ecn2.change_description
-        )
+        text_similarity = _text_similarity(ecn1.change_description, ecn2.change_description)
         score += 20 * text_similarity
 
     # 4. 受影响物料相似度（权重：15%）
@@ -99,10 +99,7 @@ def _calculate_similarity(service: "EcnKnowledgeService", ecn1: Ecn, ecn2: Ecn) 
 
     # 5. 成本影响相似度（权重：10%）
     max_score += 10
-    cost_similarity = _cost_similarity(
-        float(ecn1.cost_impact or 0),
-        float(ecn2.cost_impact or 0)
-    )
+    cost_similarity = _cost_similarity(float(ecn1.cost_impact or 0), float(ecn2.cost_impact or 0))
     score += 10 * cost_similarity
 
     # 归一化到0-1
@@ -115,8 +112,8 @@ def _text_similarity(text1: str, text2: str) -> float:
         return 0.0
 
     # 提取关键词
-    words1 = set(re.findall(r'\w+', text1.lower()))
-    words2 = set(re.findall(r'\w+', text2.lower()))
+    words1 = set(re.findall(r"\w+", text1.lower()))
+    words2 = set(re.findall(r"\w+", text2.lower()))
 
     if not words1 or not words2:
         return 0.0
@@ -130,13 +127,13 @@ def _text_similarity(text1: str, text2: str) -> float:
 
 def _material_similarity(service: "EcnKnowledgeService", ecn_id1: int, ecn_id2: int) -> float:
     """计算受影响物料的相似度"""
-    mats1 = service.db.query(EcnAffectedMaterial).filter(
-        EcnAffectedMaterial.ecn_id == ecn_id1
-    ).all()
+    mats1 = (
+        service.db.query(EcnAffectedMaterial).filter(EcnAffectedMaterial.ecn_id == ecn_id1).all()
+    )
 
-    mats2 = service.db.query(EcnAffectedMaterial).filter(
-        EcnAffectedMaterial.ecn_id == ecn_id2
-    ).all()
+    mats2 = (
+        service.db.query(EcnAffectedMaterial).filter(EcnAffectedMaterial.ecn_id == ecn_id2).all()
+    )
 
     if not mats1 or not mats2:
         return 0.0

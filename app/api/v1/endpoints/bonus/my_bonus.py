@@ -35,17 +35,14 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/bonus/my",
-    tags=["my_bonus"]
-)
+router = APIRouter(prefix="/bonus/my", tags=["my_bonus"])
 
 # 共 1 个路由
 
 # ==================== 我的奖金 ====================
+
 
 @router.get("/my", response_model=ResponseModel[MyBonusResponse], status_code=status.HTTP_200_OK)
 def get_my_bonus(
@@ -57,18 +54,24 @@ def get_my_bonus(
     获取我的奖金
     """
     # 获取计算记录
-    calculations = db.query(BonusCalculation).filter(
-        BonusCalculation.user_id == current_user.id
-    ).order_by(desc(BonusCalculation.calculated_at)).all()
+    calculations = (
+        db.query(BonusCalculation)
+        .filter(BonusCalculation.user_id == current_user.id)
+        .order_by(desc(BonusCalculation.calculated_at))
+        .all()
+    )
 
     # 获取发放记录
-    distributions = db.query(BonusDistribution).filter(
-        BonusDistribution.user_id == current_user.id
-    ).order_by(desc(BonusDistribution.distribution_date)).all()
+    distributions = (
+        db.query(BonusDistribution)
+        .filter(BonusDistribution.user_id == current_user.id)
+        .order_by(desc(BonusDistribution.distribution_date))
+        .all()
+    )
 
     # 计算总金额
     total_amount = sum(float(c.calculated_amount) for c in calculations)
-    paid_amount = sum(float(d.distributed_amount) for d in distributions if d.status == 'PAID')
+    paid_amount = sum(float(d.distributed_amount) for d in distributions if d.status == "PAID")
     pending_amount = total_amount - paid_amount
 
     return ResponseModel(
@@ -78,9 +81,6 @@ def get_my_bonus(
             pending_amount=Decimal(str(pending_amount)),
             paid_amount=Decimal(str(paid_amount)),
             calculations=calculations,
-            distributions=distributions
-        )
+            distributions=distributions,
+        ),
     )
-
-
-

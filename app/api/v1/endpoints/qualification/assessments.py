@@ -25,7 +25,11 @@ from app.services.qualification_service import QualificationService
 router = APIRouter()
 
 
-@router.post("/assessments", response_model=ResponseModel[QualificationAssessmentResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/assessments",
+    response_model=ResponseModel[QualificationAssessmentResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 def create_assessment(
     *,
     db: Session = Depends(deps.get_db),
@@ -41,13 +45,17 @@ def create_assessment(
         assessor_id=assessment_in.assessor_id or current_user.id,
         qualification_id=assessment_in.qualification_id,
         assessment_period=assessment_in.assessment_period,
-        comments=assessment_in.comments
+        comments=assessment_in.comments,
     )
 
     return ResponseModel(code=200, message="创建成功", data=assessment)
 
 
-@router.get("/assessments/{employee_id}", response_model=QualificationAssessmentListResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/assessments/{employee_id}",
+    response_model=QualificationAssessmentListResponse,
+    status_code=status.HTTP_200_OK,
+)
 def get_employee_assessments(
     *,
     db: Session = Depends(deps.get_db),
@@ -56,20 +64,18 @@ def get_employee_assessments(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取员工评估历史"""
-    assessments = QualificationService.get_assessment_history(
-        db, employee_id, qualification_id
-    )
+    assessments = QualificationService.get_assessment_history(db, employee_id, qualification_id)
 
     return QualificationAssessmentListResponse(
-        items=assessments,
-        total=len(assessments),
-        page=1,
-        page_size=len(assessments),
-        pages=1
+        items=assessments, total=len(assessments), page=1, page_size=len(assessments), pages=1
     )
 
 
-@router.post("/assessments/{assessment_id}/submit", response_model=ResponseModel[QualificationAssessmentResponse], status_code=status.HTTP_200_OK)
+@router.post(
+    "/assessments/{assessment_id}/submit",
+    response_model=ResponseModel[QualificationAssessmentResponse],
+    status_code=status.HTTP_200_OK,
+)
 def submit_assessment(
     *,
     db: Session = Depends(deps.get_db),
@@ -78,9 +84,11 @@ def submit_assessment(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """提交评估结果"""
-    assessment = db.query(QualificationAssessment).filter(
-        QualificationAssessment.id == assessment_id
-    ).first()
+    assessment = (
+        db.query(QualificationAssessment)
+        .filter(QualificationAssessment.id == assessment_id)
+        .first()
+    )
     if not assessment:
         raise HTTPException(status_code=404, detail="评估记录不存在")
 

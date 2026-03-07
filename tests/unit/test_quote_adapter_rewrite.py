@@ -9,16 +9,16 @@
 """
 
 import unittest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.approval_engine.adapters.quote import QuoteApprovalAdapter
-from app.models.sales.quotes import Quote, QuoteVersion
-from app.models.sales.technical_assessment import QuoteApproval
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.project.customer import Customer
+from app.models.sales.quotes import Quote, QuoteVersion
+from app.models.sales.technical_assessment import QuoteApproval
 from app.models.user import User
+from app.services.approval_engine.adapters.quote import QuoteApprovalAdapter
 
 
 class TestQuoteAdapterCore(unittest.TestCase):
@@ -57,10 +57,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
     def test_get_entity_data_basic(self):
         """测试获取基础报价数据"""
         mock_quote = self._create_mock_quote(
-            quote_code="QT-2024-001",
-            status="DRAFT",
-            customer_id=10,
-            owner_id=20
+            quote_code="QT-2024-001", status="DRAFT", customer_id=10, owner_id=20
         )
 
         mock_customer = MagicMock(spec=Customer)
@@ -92,7 +89,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
             cost_total=Decimal("70000.00"),
             gross_margin=Decimal("0.3"),  # 30%（小数形式）
             lead_time_days=30,
-            delivery_date=date(2024, 3, 15)
+            delivery_date=date(2024, 3, 15),
         )
 
         mock_quote = self._create_mock_quote(quote_code="QT-2024-001")
@@ -113,8 +110,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
     def test_get_entity_data_gross_margin_already_percentage(self):
         """测试毛利率已经是百分比形式"""
         mock_version = self._create_mock_version(
-            total_price=Decimal("100000.00"),
-            gross_margin=Decimal("30.0")  # 已经是百分比
+            total_price=Decimal("100000.00"), gross_margin=Decimal("30.0")  # 已经是百分比
         )
 
         mock_quote = self._create_mock_quote()
@@ -130,8 +126,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
     def test_get_entity_data_gross_margin_none(self):
         """测试毛利率为None"""
         mock_version = self._create_mock_version(
-            total_price=Decimal("100000.00"),
-            gross_margin=None
+            total_price=Decimal("100000.00"), gross_margin=None
         )
 
         mock_quote = self._create_mock_quote()
@@ -146,10 +141,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_no_current_version_fallback(self):
         """测试没有current_version时回退到最新版本"""
-        mock_version = self._create_mock_version(
-            version_no=2,
-            total_price=Decimal("200000.00")
-        )
+        mock_version = self._create_mock_version(version_no=2, total_price=Decimal("200000.00"))
 
         mock_quote = self._create_mock_quote()
         mock_quote.current_version = None
@@ -160,7 +152,9 @@ class TestQuoteAdapterCore(unittest.TestCase):
                 mock_query.filter.return_value.first.return_value = mock_quote
             elif model == QuoteVersion:
                 # 模拟order_by和first的链式调用
-                mock_query.filter.return_value.order_by.return_value.first.return_value = mock_version
+                mock_query.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_version
+                )
             return mock_query
 
         self.db.query.side_effect = query_side_effect
@@ -355,10 +349,10 @@ class TestQuoteAdapterCore(unittest.TestCase):
             "customer_name": "华为技术",
             "total_price": 100000.00,
             "gross_margin": 30.5,
-            "lead_time_days": 45
+            "lead_time_days": 45,
         }
 
-        with patch.object(self.adapter, 'get_entity_data', return_value=data):
+        with patch.object(self.adapter, "get_entity_data", return_value=data):
             summary = self.adapter.get_summary(self.entity_id)
 
         # 验证摘要包含所有关键信息
@@ -369,12 +363,9 @@ class TestQuoteAdapterCore(unittest.TestCase):
 
     def test_get_summary_partial_data(self):
         """测试生成部分数据的摘要"""
-        data = {
-            "customer_name": "测试客户",
-            "total_price": 50000.00
-        }
+        data = {"customer_name": "测试客户", "total_price": 50000.00}
 
-        with patch.object(self.adapter, 'get_entity_data', return_value=data):
+        with patch.object(self.adapter, "get_entity_data", return_value=data):
             summary = self.adapter.get_summary(self.entity_id)
 
         # 只包含存在的字段
@@ -385,7 +376,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
 
     def test_get_summary_no_data(self):
         """测试生成空数据的摘要"""
-        with patch.object(self.adapter, 'get_entity_data', return_value={}):
+        with patch.object(self.adapter, "get_entity_data", return_value={}):
             summary = self.adapter.get_summary(self.entity_id)
 
         # 应返回空字符串
@@ -393,12 +384,9 @@ class TestQuoteAdapterCore(unittest.TestCase):
 
     def test_get_summary_zero_gross_margin(self):
         """测试毛利率为0的情况"""
-        data = {
-            "customer_name": "测试客户",
-            "gross_margin": 0.0
-        }
+        data = {"customer_name": "测试客户", "gross_margin": 0.0}
 
-        with patch.object(self.adapter, 'get_entity_data', return_value=data):
+        with patch.object(self.adapter, "get_entity_data", return_value=data):
             summary = self.adapter.get_summary(self.entity_id)
 
         # 毛利率为0也应该显示
@@ -502,7 +490,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
             quote_code="QT-2024-001",
             quote_total=Decimal("100000.00"),
             margin_percent=Decimal("30.0"),
-            status="DRAFT"
+            status="DRAFT",
         )
         mock_version.approval_instance_id = None
 
@@ -511,7 +499,7 @@ class TestQuoteAdapterCore(unittest.TestCase):
         mock_instance.status = "PENDING"
 
         # Mock WorkflowEngine
-        with patch('app.services.approval_engine.workflow_engine.WorkflowEngine') as MockEngine:
+        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as MockEngine:
             mock_engine = MockEngine.return_value
             mock_engine.create_instance.return_value = mock_instance
 
@@ -519,13 +507,13 @@ class TestQuoteAdapterCore(unittest.TestCase):
                 quote_version=mock_version,
                 initiator_id=10,
                 title="测试报价审批",
-                summary="测试摘要"
+                summary="测试摘要",
             )
 
             # 验证WorkflowEngine被正确调用
             MockEngine.assert_called_once_with(self.db)
             mock_engine.create_instance.assert_called_once()
-            
+
             call_kwargs = mock_engine.create_instance.call_args[1]
             self.assertEqual(call_kwargs["flow_code"], "SALES_QUOTE")
             self.assertEqual(call_kwargs["business_type"], "SALES_QUOTE")
@@ -551,15 +539,12 @@ class TestQuoteAdapterCore(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = mock_instance
 
-        with patch('app.services.approval_engine.adapters.quote.logger') as mock_logger:
-            result = self.adapter.submit_for_approval(
-                quote_version=mock_version,
-                initiator_id=10
-            )
+        with patch("app.services.approval_engine.adapters.quote.logger") as mock_logger:
+            result = self.adapter.submit_for_approval(quote_version=mock_version, initiator_id=10)
 
             # 验证记录警告
             mock_logger.warning.assert_called_once()
-            
+
             # 验证返回现有实例
             self.assertEqual(result, mock_instance)
 
@@ -571,14 +556,11 @@ class TestQuoteAdapterCore(unittest.TestCase):
         mock_instance = MagicMock(spec=ApprovalInstance)
         mock_instance.id = 300
 
-        with patch('app.services.approval_engine.workflow_engine.WorkflowEngine') as MockEngine:
+        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as MockEngine:
             mock_engine = MockEngine.return_value
             mock_engine.create_instance.return_value = mock_instance
 
-            self.adapter.submit_for_approval(
-                quote_version=mock_version,
-                initiator_id=10
-            )
+            self.adapter.submit_for_approval(quote_version=mock_version, initiator_id=10)
 
             # 验证使用默认标题
             call_kwargs = mock_engine.create_instance.call_args[1]
@@ -594,68 +576,70 @@ class TestQuoteAdapterCore(unittest.TestCase):
         mock_task.assignee_id = 50
 
         mock_instance = MagicMock(spec=ApprovalInstance)
+
     def _create_mock_quote(self, **kwargs):
         """创建模拟报价对象"""
         mock_quote = MagicMock(spec=Quote)
-        
+
         # 设置默认值
         defaults = {
-            'id': self.entity_id,
-            'quote_code': 'QT-TEST-001',
-            'status': 'DRAFT',
-            'customer_id': None,
-            'owner_id': None,
-            'current_version': None,
+            "id": self.entity_id,
+            "quote_code": "QT-TEST-001",
+            "status": "DRAFT",
+            "customer_id": None,
+            "owner_id": None,
+            "current_version": None,
         }
-        
+
         # 合并自定义值
         defaults.update(kwargs)
-        
+
         # 设置属性
         for key, value in defaults.items():
             setattr(mock_quote, key, value)
-        
+
         # 设置默认的customer和owner为None
-        if not hasattr(mock_quote, 'customer'):
+        if not hasattr(mock_quote, "customer"):
             mock_quote.customer = None
-        if not hasattr(mock_quote, 'owner'):
+        if not hasattr(mock_quote, "owner"):
             mock_quote.owner = None
-        
+
         return mock_quote
 
     def _create_mock_version(self, **kwargs):
         """创建模拟报价版本对象"""
         mock_version = MagicMock(spec=QuoteVersion)
-        
+
         # 设置默认值
         defaults = {
-            'id': 1,
-            'quote_id': self.entity_id,
-            'version_no': 1,
-            'quote_code': 'QT-TEST-001',
-            'total_price': Decimal("100000.00"),
-            'cost_total': Decimal("70000.00"),
-            'gross_margin': Decimal("0.3"),
-            'lead_time_days': 30,
-            'delivery_date': None,
-            'quote_total': Decimal("100000.00"),
-            'margin_percent': Decimal("30.0"),
-            'status': 'DRAFT',
-            'approval_instance_id': None,
-            'approval_status': None,
+            "id": 1,
+            "quote_id": self.entity_id,
+            "version_no": 1,
+            "quote_code": "QT-TEST-001",
+            "total_price": Decimal("100000.00"),
+            "cost_total": Decimal("70000.00"),
+            "gross_margin": Decimal("0.3"),
+            "lead_time_days": 30,
+            "delivery_date": None,
+            "quote_total": Decimal("100000.00"),
+            "margin_percent": Decimal("30.0"),
+            "status": "DRAFT",
+            "approval_instance_id": None,
+            "approval_status": None,
         }
-        
+
         # 合并自定义值
         defaults.update(kwargs)
-        
+
         # 设置属性
         for key, value in defaults.items():
             setattr(mock_version, key, value)
-        
+
         return mock_version
 
     def _setup_basic_query(self, mock_quote):
         """设置基础查询返回"""
+
         def query_side_effect(model):
             mock_query = MagicMock()
             if model == Quote:
@@ -676,5 +660,5 @@ class TestAdapterEntityType(unittest.TestCase):
         self.assertEqual(QuoteApprovalAdapter.entity_type, "QUOTE")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

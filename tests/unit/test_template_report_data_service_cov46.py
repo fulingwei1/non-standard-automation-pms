@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - 模板报表数据服务单元测试"""
-import pytest
 from datetime import date
 
-pytest.importorskip("app.services.template_report_data_service",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.template_report_data_service", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.template_report_data_service import TemplateReportDataService
 
 
@@ -98,11 +99,13 @@ class TestBuildContext:
             "period": {"start_date": "2024-01-01", "end_date": "2024-01-31"},
             "sections": {},
             "metrics": {},
-            "charts": []
+            "charts": [],
         }
 
-        with patch("app.services.template_report_data_service.TemplateReportCore.generate_from_template",
-                   return_value=report_data):
+        with patch(
+            "app.services.template_report_data_service.TemplateReportCore.generate_from_template",
+            return_value=report_data,
+        ):
             result = svc.build_context(1)
 
         assert "template_info" in result

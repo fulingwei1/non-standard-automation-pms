@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第九批: test_service_tickets_service_cov9.py - ServiceTicketsService 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.service.service_tickets_service")
 
@@ -65,7 +66,10 @@ class TestGetServiceTickets:
         mock_db.query.return_value.options.return_value = mock_q
         mock_q.filter.return_value = mock_q
         mock_q.count.return_value = 2
-        mock_q.offset.return_value.limit.return_value.all.return_value = [make_ticket(), make_ticket(id=2)]
+        mock_q.offset.return_value.limit.return_value.all.return_value = [
+            make_ticket(),
+            make_ticket(id=2),
+        ]
         result = service.get_service_tickets(status="PENDING")
         assert result is not None
 
@@ -75,12 +79,16 @@ class TestGetServiceTicket:
 
     def test_get_service_ticket_found(self, service, mock_db):
         ticket = make_ticket()
-        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = ticket
+        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = (
+            ticket
+        )
         result = service.get_service_ticket(ticket_id=1)
         assert result is not None
 
     def test_get_service_ticket_not_found(self, service, mock_db):
-        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = None
+        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = (
+            None
+        )
         result = service.get_service_ticket(ticket_id=9999)
         assert result is None
 
@@ -115,7 +123,9 @@ class TestCloseTicket:
     def test_close_ticket(self, service, mock_db):
         ticket = make_ticket(status="IN_PROGRESS")
         # get_service_ticket uses options().filter().first()
-        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = ticket
+        mock_db.query.return_value.options.return_value.filter.return_value.first.return_value = (
+            ticket
+        )
         close_data = MagicMock()
         close_data.resolution_summary = "已修复"
         close_data.solution = "更换零件"

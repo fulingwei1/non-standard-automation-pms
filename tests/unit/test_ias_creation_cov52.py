@@ -2,14 +2,15 @@
 """
 Unit tests for app/services/invoice_auto_service/creation.py (cov52)
 """
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.invoice_auto_service.creation import (
-        create_invoice_request,
         create_invoice_directly,
+        create_invoice_request,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -24,8 +25,14 @@ def _make_service(query_return=None):
     return service
 
 
-def _make_plan(contract_id=1, project_id=10, planned_amount=Decimal("1000"),
-               planned_date=None, invoice_id=None, milestone_id=None):
+def _make_plan(
+    contract_id=1,
+    project_id=10,
+    planned_amount=Decimal("1000"),
+    planned_date=None,
+    invoice_id=None,
+    milestone_id=None,
+):
     plan = MagicMock()
     plan.id = 1
     plan.contract_id = contract_id
@@ -52,6 +59,7 @@ def _make_milestone(milestone_name="FAT里程碑"):
 
 
 # ──────────────────────── create_invoice_request ────────────────────────
+
 
 def test_create_invoice_request_existing_request():
     """如果已有 PENDING/APPROVED 申请，返回 success=False"""
@@ -117,6 +125,7 @@ def test_create_invoice_request_success(mock_alf):
 
 
 # ──────────────────────── create_invoice_directly ────────────────────────
+
 
 def test_create_invoice_directly_already_invoiced():
     """plan.invoice_id 非空时返回 success=False"""

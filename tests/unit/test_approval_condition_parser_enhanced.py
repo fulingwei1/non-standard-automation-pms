@@ -7,17 +7,18 @@
 测试数量: 40+ 个测试用例
 """
 
+from datetime import date, datetime
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date
 
 from app.services.approval_engine.condition_parser import (
     ConditionEvaluator,
     ConditionParseError,
 )
 
-
 # ==================== Fixture 定义 ====================
+
 
 @pytest.fixture
 def evaluator():
@@ -120,9 +121,7 @@ class TestJinja2Evaluation:
 
     def test_count_by_filter_with_value(self, evaluator, list_context):
         """测试count_by过滤器带值"""
-        result = evaluator.evaluate(
-            '{{ items | count_by("status", "DONE") }}', list_context
-        )
+        result = evaluator.evaluate('{{ items | count_by("status", "DONE") }}', list_context)
         assert result == 2
 
     def test_count_by_filter_without_value(self, evaluator, list_context):
@@ -132,9 +131,7 @@ class TestJinja2Evaluation:
 
     def test_percentage_filter(self, evaluator, basic_context):
         """测试percentage过滤器"""
-        result = evaluator.evaluate(
-            "{{ entity.gross_margin | percentage(2) }}", basic_context
-        )
+        result = evaluator.evaluate("{{ entity.gross_margin | percentage(2) }}", basic_context)
         assert result == 0.25
 
     def test_default_filter_with_null(self, evaluator):
@@ -177,13 +174,17 @@ class TestSimpleConditions:
 
     def test_simple_equals_condition(self, evaluator, basic_context):
         """测试简单等值条件"""
-        condition = '{"operator": "AND", "items": [{"field": "form.leave_days", "op": "==", "value": 5}]}'
+        condition = (
+            '{"operator": "AND", "items": [{"field": "form.leave_days", "op": "==", "value": 5}]}'
+        )
         result = evaluator.evaluate(condition, basic_context)
         assert result is True
 
     def test_greater_than_condition(self, evaluator, basic_context):
         """测试大于条件"""
-        condition = '{"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 500}]}'
+        condition = (
+            '{"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 500}]}'
+        )
         result = evaluator.evaluate(condition, basic_context)
         assert result is True
 
@@ -588,7 +589,9 @@ class TestIntegrationScenarios:
         assert jinja_result == 5
 
         # JSON条件
-        json_condition = '{"operator": "AND", "items": [{"field": "form.leave_days", "op": "==", "value": 5}]}'
+        json_condition = (
+            '{"operator": "AND", "items": [{"field": "form.leave_days", "op": "==", "value": 5}]}'
+        )
         json_result = evaluator.evaluate(json_condition, basic_context)
         assert json_result is True
 

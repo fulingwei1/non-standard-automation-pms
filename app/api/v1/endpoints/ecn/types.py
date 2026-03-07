@@ -37,18 +37,20 @@ def list_ecn_types(
 
     items = []
     for et in ecn_types:
-        items.append(EcnTypeResponse(
-            id=et.id,
-            type_code=et.type_code,
-            type_name=et.type_name,
-            description=et.description,
-            required_depts=et.required_depts,
-            optional_depts=et.optional_depts,
-            approval_matrix=et.approval_matrix,
-            is_active=et.is_active,
-            created_at=et.created_at,
-            updated_at=et.updated_at
-        ))
+        items.append(
+            EcnTypeResponse(
+                id=et.id,
+                type_code=et.type_code,
+                type_name=et.type_name,
+                description=et.description,
+                required_depts=et.required_depts,
+                optional_depts=et.optional_depts,
+                approval_matrix=et.approval_matrix,
+                is_active=et.is_active,
+                created_at=et.created_at,
+                updated_at=et.updated_at,
+            )
+        )
 
     return items
 
@@ -76,7 +78,7 @@ def get_ecn_type(
         approval_matrix=ecn_type.approval_matrix,
         is_active=ecn_type.is_active,
         created_at=ecn_type.created_at,
-        updated_at=ecn_type.updated_at
+        updated_at=ecn_type.updated_at,
     )
 
 
@@ -102,7 +104,7 @@ def create_ecn_type(
         required_depts=type_in.required_depts,
         optional_depts=type_in.optional_depts,
         approval_matrix=type_in.approval_matrix,
-        is_active=type_in.is_active
+        is_active=type_in.is_active,
     )
 
     db.add(ecn_type)

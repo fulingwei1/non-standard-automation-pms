@@ -18,18 +18,20 @@ from fastapi import APIRouter
 router = APIRouter()
 
 # 导入子路由
-from . import alerts
-from . import analysis
-from . import approval
-from . import core
-from . import evaluations
-from . import execution
-from . import impacts
-from . import integration
-from . import statistics
-from . import state_machine
-from . import tasks
-from . import types
+from . import (
+    alerts,
+    analysis,
+    approval,
+    core,
+    evaluations,
+    execution,
+    impacts,
+    integration,
+    state_machine,
+    statistics,
+    tasks,
+    types,
+)
 
 # 聚合所有子路由（保持原有路由路径）
 # 注意：路由的顺序很重要，更具体的路由应该放在前面

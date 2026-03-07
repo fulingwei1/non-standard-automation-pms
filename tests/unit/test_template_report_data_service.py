@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for template_report_data_service.py"""
-from unittest.mock import MagicMock, patch
-from datetime import date
 import json
+from datetime import date
+from unittest.mock import MagicMock, patch
 
 from app.services.template_report_data_service import TemplateReportDataService
 
@@ -45,7 +45,7 @@ class TestTemplateReportDataService:
     def test_build_metrics_list(self):
         result = self.service._build_metrics_list({"total": 100, "avg": 50})
         assert len(result) == 2
-        assert result[0]['value'] == 100
+        assert result[0]["value"] == 100
 
     def test_build_sections_overview(self):
         sections = {
@@ -54,8 +54,8 @@ class TestTemplateReportDataService:
         }
         result = self.service._build_sections_overview(sections)
         assert len(result) == 2
-        assert result[0]['item_count'] == 3
-        assert result[1]['has_summary'] is True
+        assert result[0]["item_count"] == 3
+        assert result[1]["has_summary"] is True
 
     def test_build_section_rows_list_data(self):
         sections = {"sec1": {"title": "S1", "data": [{"a": 1}, {"a": 2}]}}
@@ -71,16 +71,17 @@ class TestTemplateReportDataService:
         sections = {"sec1": {"title": "S1", "data": 42}}
         result = self.service._build_section_rows(sections)
         assert len(result) == 1
-        assert result[0]['data_preview'] == "42"
+        assert result[0]["data_preview"] == "42"
 
     def test_build_charts_overview(self):
         charts = [{"title": "Chart 1", "type": "bar", "data": [1, 2, 3]}]
         result = self.service._build_charts_overview(charts)
-        assert result[0]['data_points'] == 3
+        assert result[0]["data_points"] == 3
 
     def test_get_template_not_found(self):
         self.db.query.return_value.filter.return_value.first.return_value = None
         import pytest
+
         with pytest.raises(ValueError, match="不存在"):
             self.service._get_template(999)
 
@@ -88,13 +89,15 @@ class TestTemplateReportDataService:
         template = MagicMock(is_active=False)
         self.db.query.return_value.filter.return_value.first.return_value = template
         import pytest
+
         with pytest.raises(ValueError, match="已停用"):
             self.service._get_template(1)
 
     @patch("app.services.template_report_data_service.TemplateReportCore.generate_from_template")
     def test_build_context(self, mock_gen):
-        template = MagicMock(id=1, template_code="T001", template_name="测试",
-                             report_type="MONTHLY", is_active=True)
+        template = MagicMock(
+            id=1, template_code="T001", template_name="测试", report_type="MONTHLY", is_active=True
+        )
         self.db.query.return_value.filter.return_value.first.return_value = template
         mock_gen.return_value = {
             "sections": {"s1": {"title": "S", "data": []}},
@@ -104,5 +107,5 @@ class TestTemplateReportDataService:
             "period": {"start_date": "2025-01-01", "end_date": "2025-01-31"},
         }
         result = self.service.build_context(1)
-        assert 'template_info' in result
-        assert 'metrics_list' in result
+        assert "template_info" in result
+        assert "metrics_list" in result

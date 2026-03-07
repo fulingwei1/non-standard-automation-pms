@@ -3,10 +3,12 @@
 
 详细测试场景
 """
-import pytest
-from sqlalchemy.orm import Session
+
 from datetime import datetime
 from decimal import Decimal
+
+import pytest
+from sqlalchemy.orm import Session
 
 
 class TestScenario14:

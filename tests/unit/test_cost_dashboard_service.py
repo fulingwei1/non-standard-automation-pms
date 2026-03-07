@@ -3,11 +3,11 @@
 成本仪表盘服务单元测试
 """
 
-import pytest
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectCost, ProjectPaymentPlan
@@ -34,18 +34,18 @@ class TestCostOverview:
         """测试基本的成本总览获取"""
         # Mock查询结果
         mock_db.query.return_value.filter.return_value.count.return_value = 10
-        
+
         # Mock预算和成本统计
         mock_stats = MagicMock()
         mock_stats.total_budget = Decimal("1000000")
         mock_stats.total_actual_cost = Decimal("800000")
         mock_stats.total_contract_amount = Decimal("1200000")
-        
+
         mock_db.query.return_value.filter.return_value.first.return_value = mock_stats
-        
+
         # 执行
         result = service.get_cost_overview()
-        
+
         # 验证
         assert result["total_projects"] == 10
         assert result["total_budget"] == 1000000
@@ -55,16 +55,16 @@ class TestCostOverview:
     def test_get_cost_overview_zero_budget(self, service, mock_db):
         """测试预算为零的情况"""
         mock_db.query.return_value.filter.return_value.count.return_value = 5
-        
+
         mock_stats = MagicMock()
         mock_stats.total_budget = 0
         mock_stats.total_actual_cost = Decimal("100000")
         mock_stats.total_contract_amount = Decimal("150000")
-        
+
         mock_db.query.return_value.filter.return_value.first.return_value = mock_stats
-        
+
         result = service.get_cost_overview()
-        
+
         assert result["budget_execution_rate"] == 0
 
     def test_cost_overrun_count(self, service, mock_db):
@@ -72,16 +72,16 @@ class TestCostOverview:
         # 设置不同的count返回值
         count_values = [10, 3, 5, 2]  # total, overrun, normal, alert
         mock_db.query.return_value.filter.return_value.count.side_effect = count_values
-        
+
         mock_stats = MagicMock()
         mock_stats.total_budget = Decimal("1000000")
         mock_stats.total_actual_cost = Decimal("900000")
         mock_stats.total_contract_amount = Decimal("1200000")
-        
+
         mock_db.query.return_value.filter.return_value.first.return_value = mock_stats
-        
+
         result = service.get_cost_overview()
-        
+
         assert result["cost_overrun_count"] == 3
         assert result["cost_normal_count"] == 5
         assert result["cost_alert_count"] == 2
@@ -109,17 +109,17 @@ class TestTopProjects:
             )
             for i in range(1, 16)
         ]
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = projects
-        
+
         result = service.get_top_projects(limit=10)
-        
+
         # 验证返回的TOP项目
         assert len(result["top_cost_projects"]) == 10
         assert len(result["top_overrun_projects"]) <= 10
         assert len(result["top_profit_margin_projects"]) == 10
         assert len(result["bottom_profit_margin_projects"]) == 10
-        
+
         # 验证成本最高项目排序（降序）
         costs = [p["actual_cost"] for p in result["top_cost_projects"]]
         assert costs == sorted(costs, reverse=True)
@@ -139,16 +139,16 @@ class TestTopProjects:
             status="ST03",
             health="H2",
         )
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         result = service.get_top_projects(limit=10)
-        
+
         project_data = result["top_cost_projects"][0]
-        
+
         # 利润 = 合同金额 - 实际成本 = 120000 - 80000 = 40000
         assert project_data["profit"] == 40000
-        
+
         # 利润率 = (40000 / 120000) * 100 = 33.33%
         assert abs(project_data["profit_margin"] - 33.33) < 0.01
 
@@ -167,15 +167,15 @@ class TestCostAlerts:
             actual_cost=Decimal("125000"),  # 超支25%
             stage="S3",
         )
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = [project]
         mock_db.query.return_value.filter.return_value.first.return_value = MagicMock(total=0)
-        
+
         result = service.get_cost_alerts()
-        
+
         assert result["total_alerts"] == 1
         assert result["high_alerts"] == 1
-        
+
         alert = result["alerts"][0]
         assert alert["alert_type"] == "overrun"
         assert alert["alert_level"] == "high"
@@ -191,14 +191,14 @@ class TestCostAlerts:
             actual_cost=Decimal("96000"),  # 96%
             stage="S3",
         )
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = [project]
         mock_db.query.return_value.filter.return_value.first.return_value = MagicMock(total=0)
-        
+
         result = service.get_cost_alerts()
-        
+
         assert result["total_alerts"] == 1
-        
+
         alert = result["alerts"][0]
         assert alert["alert_type"] == "budget_critical"
         assert alert["alert_level"] == "high"
@@ -213,12 +213,12 @@ class TestCostAlerts:
             actual_cost=Decimal("50000"),  # 50%
             stage="S3",
         )
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = [project]
         mock_db.query.return_value.filter.return_value.first.return_value = MagicMock(total=0)
-        
+
         result = service.get_cost_alerts()
-        
+
         assert result["total_alerts"] == 0
         assert result["high_alerts"] == 0
 
@@ -229,7 +229,7 @@ class TestProjectCostDashboard:
     def test_get_project_dashboard_not_found(self, service, mock_db):
         """测试项目不存在"""
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        
+
         with pytest.raises(ValueError):
             service.get_project_cost_dashboard(999)
 
@@ -243,12 +243,12 @@ class TestProjectCostDashboard:
             actual_cost=Decimal("80000"),
             contract_amount=Decimal("120000"),
         )
-        
+
         mock_db.query.return_value.filter.return_value.first.return_value = project
         mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
-        
+
         result = service.get_project_cost_dashboard(1)
-        
+
         assert result["project_id"] == 1
         assert result["project_code"] == "P001"
         assert result["budget_amount"] == 100000
@@ -266,30 +266,30 @@ class TestProjectCostDashboard:
             actual_cost=Decimal("80000"),
             contract_amount=Decimal("120000"),
         )
-        
+
         # Mock成本分类数据
         cost_data = [
             ("物料成本", Decimal("50000")),
             ("人工成本", Decimal("20000")),
             ("其他", Decimal("10000")),
         ]
-        
+
         mock_db.query.return_value.filter.return_value.first.return_value = project
-        
+
         # 配置多个查询的返回值
         mock_query_result = MagicMock()
         mock_query_result.group_by.return_value.all.side_effect = [cost_data, []]
         mock_db.query.return_value.filter.return_value = mock_query_result
-        
+
         result = service.get_project_cost_dashboard(1)
-        
+
         breakdown = result["cost_breakdown"]
         assert len(breakdown) == 3
-        
+
         # 验证百分比计算
         total = 80000
         for item in breakdown:
-            expected_pct = (item["amount"] / total * 100)
+            expected_pct = item["amount"] / total * 100
             assert abs(item["percentage"] - expected_pct) < 0.01
 
     def test_monthly_costs(self, service, mock_db):
@@ -302,17 +302,17 @@ class TestProjectCostDashboard:
             actual_cost=Decimal("80000"),
             contract_amount=Decimal("150000"),
         )
-        
+
         mock_db.query.return_value.filter.return_value.first.return_value = project
         mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
-        
+
         result = service.get_project_cost_dashboard(1)
-        
+
         monthly_costs = result["monthly_costs"]
-        
+
         # 应该有12个月的数据
         assert len(monthly_costs) == 12
-        
+
         # 月度预算应该是年预算/12
         expected_month_budget = 120000 / 12
         for month_data in monthly_costs:
@@ -325,16 +325,16 @@ class TestEdgeCases:
     def test_empty_database(self, service, mock_db):
         """测试空数据库"""
         mock_db.query.return_value.filter.return_value.count.return_value = 0
-        
+
         mock_stats = MagicMock()
         mock_stats.total_budget = None
         mock_stats.total_actual_cost = None
         mock_stats.total_contract_amount = None
-        
+
         mock_db.query.return_value.filter.return_value.first.return_value = mock_stats
-        
+
         result = service.get_cost_overview()
-        
+
         assert result["total_projects"] == 0
         assert result["total_budget"] == 0
         assert result["total_actual_cost"] == 0
@@ -352,11 +352,11 @@ class TestEdgeCases:
             status="ST03",
             health="H2",
         )
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         result = service.get_top_projects(limit=10)
-        
+
         project_data = result["top_cost_projects"][0]
         assert project_data["actual_cost"] == -10000
 
@@ -373,11 +373,11 @@ class TestEdgeCases:
             status="ST03",
             health="H2",
         )
-        
+
         mock_db.query.return_value.filter.return_value.all.return_value = [project]
-        
+
         result = service.get_top_projects(limit=10)
-        
+
         project_data = result["top_cost_projects"][0]
         assert project_data["budget_amount"] == 999999999.99
         assert project_data["actual_cost"] == 888888888.88
@@ -386,6 +386,7 @@ class TestEdgeCases:
 # ──────────────────────────────────────────────────────────────────────────────
 # G4 补充测试 - CostDashboardService
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 class TestCostDashboardServiceG4:
     """G4 补充：CostDashboardService 额外覆盖"""

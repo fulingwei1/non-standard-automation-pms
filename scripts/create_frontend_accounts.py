@@ -12,10 +12,10 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.models.base import get_db_session
-from app.models.user import User, Role, UserRole
-from app.models.organization import Employee
 from app.core.auth import get_password_hash
+from app.models.base import get_db_session
+from app.models.organization import Employee
+from app.models.user import Role, User, UserRole
 
 # 前端13个快捷登录账号配置
 FRONTEND_ACCOUNTS = [
@@ -149,19 +149,21 @@ def create_frontend_accounts():
         for account in FRONTEND_ACCOUNTS:
             try:
                 # 获取角色
-                role = session.query(Role).filter(
-                    Role.role_code == account["role_code"]
-                ).first()
+                role = session.query(Role).filter(Role.role_code == account["role_code"]).first()
 
                 if not role:
-                    print(f"⚠️  角色 '{account['role_code']}' 不存在，跳过用户: {account['username']}")
+                    print(
+                        f"⚠️  角色 '{account['role_code']}' 不存在，跳过用户: {account['username']}"
+                    )
                     skipped_count += 1
                     continue
 
                 # 创建或获取员工
-                employee = session.query(Employee).filter(
-                    Employee.employee_code == account["employee_code"]
-                ).first()
+                employee = (
+                    session.query(Employee)
+                    .filter(Employee.employee_code == account["employee_code"])
+                    .first()
+                )
 
                 if not employee:
                     employee = Employee(
@@ -176,9 +178,9 @@ def create_frontend_accounts():
                     session.flush()
 
                 # 检查用户是否已存在
-                existing_user = session.query(User).filter(
-                    User.username == account["username"]
-                ).first()
+                existing_user = (
+                    session.query(User).filter(User.username == account["username"]).first()
+                )
 
                 if existing_user:
                     # 更新现有用户
@@ -216,10 +218,11 @@ def create_frontend_accounts():
                     created_count += 1
 
                 # 确保角色关联存在
-                existing_role = session.query(UserRole).filter(
-                    UserRole.user_id == user.id,
-                    UserRole.role_id == role.id
-                ).first()
+                existing_role = (
+                    session.query(UserRole)
+                    .filter(UserRole.user_id == user.id, UserRole.role_id == role.id)
+                    .first()
+                )
 
                 if not existing_role:
                     session.add(UserRole(user_id=user.id, role_id=role.id))
@@ -228,7 +231,9 @@ def create_frontend_accounts():
                     role_action = "角色已存在"
 
                 session.commit()
-                print(f"✓ {action}用户: {account['username']} ({account['real_name']}) - {account['position']} [{role.role_name}]（{role_action}）")
+                print(
+                    f"✓ {action}用户: {account['username']} ({account['real_name']}) - {account['position']} [{role.role_name}]（{role_action}）"
+                )
 
             except Exception as e:
                 print(f"✗ 创建用户 '{account['username']}' 失败: {str(e)}")

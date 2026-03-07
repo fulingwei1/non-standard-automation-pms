@@ -20,7 +20,8 @@ SERVICE_IMPORTS = sorted(
 )
 
 # 添加项目路径
-sys.path.insert(0, '.')
+sys.path.insert(0, ".")
+
 
 def test_imports():
     """测试所有服务的导入"""
@@ -85,12 +86,14 @@ def test_scheduler_config():
 
         print("\n已注册的任务列表:")
         for job in sorted(jobs, key=lambda j: j.id):
-            next_run = job.next_run_time.strftime('%Y-%m-%d %H:%M:%S') if job.next_run_time else "未计划"
+            next_run = (
+                job.next_run_time.strftime("%Y-%m-%d %H:%M:%S") if job.next_run_time else "未计划"
+            )
             print(f"  - {job.id}: {job.name} (下次执行: {next_run})")
 
         return not missing
     except ImportError as e:
-        if 'apscheduler' in str(e):
+        if "apscheduler" in str(e):
             print("⚠️  APScheduler未安装，跳过调度器测试")
             print("   提示: 运行 'pip install apscheduler' 安装依赖")
             return True  # 不算失败，只是缺少依赖
@@ -149,6 +152,7 @@ def test_database_connection():
         with get_db_session() as db:
             # 简单查询测试
             from app.models.project import Project
+
             count = db.query(Project).count()
             print(f"✅ 数据库连接成功（项目数: {count}）")
             return True

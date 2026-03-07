@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - notification_handlers/unified_adapter.py 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.notification_handlers.unified_adapter")
 
+from app.services.channel_handlers.base import NotificationPriority
 from app.services.notification_handlers.unified_adapter import (
     map_alert_level_to_priority,
     resolve_recipient_id,
     send_alert_via_unified,
 )
-from app.services.channel_handlers.base import NotificationPriority
-
 
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -48,6 +49,7 @@ def _make_user(user_id=10):
 
 # ─── 测试：map_alert_level_to_priority ────────────────────────────────────────
 
+
 class TestMapAlertLevelToPriority:
     """测试预警级别到优先级的映射"""
 
@@ -78,6 +80,7 @@ class TestMapAlertLevelToPriority:
 
 
 # ─── 测试：resolve_recipient_id ───────────────────────────────────────────────
+
 
 class TestResolveRecipientId:
     """测试收件人ID解析"""
@@ -129,6 +132,7 @@ class TestResolveRecipientId:
 
 
 # ─── 测试：send_alert_via_unified ─────────────────────────────────────────────
+
 
 class TestSendAlertViaUnified:
     """测试统一发送预警通知"""

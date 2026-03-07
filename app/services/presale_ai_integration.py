@@ -2,26 +2,28 @@
 售前AI系统集成服务
 Team 10: 售前AI系统集成与前端UI
 """
-from datetime import datetime, date, timedelta
-from typing import List, Dict, Any, Optional
+
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, desc
 
 from app.models.presale_ai import (
-    PresaleAIUsageStats,
-    PresaleAIFeedback,
-    PresaleAIConfig,
-    PresaleAIWorkflowLog,
     PresaleAIAuditLog,
+    PresaleAIConfig,
+    PresaleAIFeedback,
+    PresaleAIUsageStats,
+    PresaleAIWorkflowLog,
+    WorkflowStatusEnum,
     WorkflowStepEnum,
-    WorkflowStatusEnum
 )
 from app.schemas.presale_ai import (
-    AIFeedbackCreate,
     AIConfigUpdate,
+    AIFeedbackCreate,
     DashboardStatsResponse,
+    HealthCheckResponse,
     WorkflowStatusResponse,
-    HealthCheckResponse
 )
 from app.utils.db_helpers import save_obj
 
@@ -35,30 +37,30 @@ class PresaleAIIntegrationService:
     # ============ AI使用统计 ============
 
     def record_usage(
-        self,
-        user_id: int,
-        ai_function: str,
-        success: bool,
-        response_time: Optional[int] = None
+        self, user_id: int, ai_function: str, success: bool, response_time: Optional[int] = None
     ) -> PresaleAIUsageStats:
         """记录AI使用情况"""
         today = date.today()
-        
+
         # 查找今日统计记录
-        stat = self.db.query(PresaleAIUsageStats).filter(
-            and_(
-                PresaleAIUsageStats.user_id == user_id,
-                PresaleAIUsageStats.ai_function == ai_function,
-                PresaleAIUsageStats.date == today
+        stat = (
+            self.db.query(PresaleAIUsageStats)
+            .filter(
+                and_(
+                    PresaleAIUsageStats.user_id == user_id,
+                    PresaleAIUsageStats.ai_function == ai_function,
+                    PresaleAIUsageStats.date == today,
+                )
             )
-        ).first()
+            .first()
+        )
 
         if stat:
             # 更新现有记录
             stat.usage_count += 1
             if success:
                 stat.success_count += 1
-            
+
             # 更新平均响应时间
             if response_time is not None:
                 if stat.avg_response_time:
@@ -75,7 +77,7 @@ class PresaleAIIntegrationService:
                 usage_count=1,
                 success_count=1 if success else 0,
                 avg_response_time=response_time,
-                date=today
+                date=today,
             )
             self.db.add(stat)
 
@@ -88,7 +90,7 @@ class PresaleAIIntegrationService:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         ai_functions: Optional[List[str]] = None,
-        user_ids: Optional[List[int]] = None
+        user_ids: Optional[List[int]] = None,
     ) -> List[PresaleAIUsageStats]:
         """获取使用统计"""
         query = self.db.query(PresaleAIUsageStats)
@@ -110,13 +112,15 @@ class PresaleAIIntegrationService:
         start_date = end_date - timedelta(days=days)
 
         # 总体统计
-        total_stats = self.db.query(
-            func.sum(PresaleAIUsageStats.usage_count).label('total_usage'),
-            func.sum(PresaleAIUsageStats.success_count).label('total_success'),
-            func.avg(PresaleAIUsageStats.avg_response_time).label('avg_time')
-        ).filter(
-            PresaleAIUsageStats.date >= start_date
-        ).first()
+        total_stats = (
+            self.db.query(
+                func.sum(PresaleAIUsageStats.usage_count).label("total_usage"),
+                func.sum(PresaleAIUsageStats.success_count).label("total_success"),
+                func.avg(PresaleAIUsageStats.avg_response_time).label("avg_time"),
+            )
+            .filter(PresaleAIUsageStats.date >= start_date)
+            .first()
+        )
 
         total_usage = total_stats.total_usage or 0
         total_success = total_stats.total_success or 0
@@ -124,54 +128,50 @@ class PresaleAIIntegrationService:
         avg_response_time = total_stats.avg_time or 0
 
         # Top功能
-        top_functions = self.db.query(
-            PresaleAIUsageStats.ai_function,
-            func.sum(PresaleAIUsageStats.usage_count).label('count'),
-            func.sum(PresaleAIUsageStats.success_count).label('success')
-        ).filter(
-            PresaleAIUsageStats.date >= start_date
-        ).group_by(
-            PresaleAIUsageStats.ai_function
-        ).order_by(
-            desc('count')
-        ).limit(5).all()
+        top_functions = (
+            self.db.query(
+                PresaleAIUsageStats.ai_function,
+                func.sum(PresaleAIUsageStats.usage_count).label("count"),
+                func.sum(PresaleAIUsageStats.success_count).label("success"),
+            )
+            .filter(PresaleAIUsageStats.date >= start_date)
+            .group_by(PresaleAIUsageStats.ai_function)
+            .order_by(desc("count"))
+            .limit(5)
+            .all()
+        )
 
         top_functions_list = [
             {
-                'function': item.ai_function,
-                'usage_count': item.count,
-                'success_count': item.success,
-                'success_rate': (item.success / item.count * 100) if item.count > 0 else 0
+                "function": item.ai_function,
+                "usage_count": item.count,
+                "success_count": item.success,
+                "success_rate": (item.success / item.count * 100) if item.count > 0 else 0,
             }
             for item in top_functions
         ]
 
         # 使用趋势
-        usage_trend = self.db.query(
-            PresaleAIUsageStats.date,
-            func.sum(PresaleAIUsageStats.usage_count).label('count')
-        ).filter(
-            PresaleAIUsageStats.date >= start_date
-        ).group_by(
-            PresaleAIUsageStats.date
-        ).order_by(
-            PresaleAIUsageStats.date
-        ).all()
+        usage_trend = (
+            self.db.query(
+                PresaleAIUsageStats.date, func.sum(PresaleAIUsageStats.usage_count).label("count")
+            )
+            .filter(PresaleAIUsageStats.date >= start_date)
+            .group_by(PresaleAIUsageStats.date)
+            .order_by(PresaleAIUsageStats.date)
+            .all()
+        )
 
         usage_trend_list = [
-            {
-                'date': item.date.isoformat(),
-                'count': item.count
-            }
-            for item in usage_trend
+            {"date": item.date.isoformat(), "count": item.count} for item in usage_trend
         ]
 
         # 用户统计
-        user_count = self.db.query(
-            func.count(func.distinct(PresaleAIUsageStats.user_id))
-        ).filter(
-            PresaleAIUsageStats.date >= start_date
-        ).scalar()
+        user_count = (
+            self.db.query(func.count(func.distinct(PresaleAIUsageStats.user_id)))
+            .filter(PresaleAIUsageStats.date >= start_date)
+            .scalar()
+        )
 
         return DashboardStatsResponse(
             total_usage=total_usage,
@@ -180,21 +180,14 @@ class PresaleAIIntegrationService:
             avg_response_time=round(avg_response_time, 2),
             top_functions=top_functions_list,
             usage_trend=usage_trend_list,
-            user_stats={'active_users': user_count}
+            user_stats={"active_users": user_count},
         )
 
     # ============ AI反馈 ============
 
-    def create_feedback(
-        self,
-        user_id: int,
-        feedback_data: AIFeedbackCreate
-    ) -> PresaleAIFeedback:
+    def create_feedback(self, user_id: int, feedback_data: AIFeedbackCreate) -> PresaleAIFeedback:
         """创建AI反馈"""
-        feedback = PresaleAIFeedback(
-            user_id=user_id,
-            **feedback_data.dict()
-        )
+        feedback = PresaleAIFeedback(user_id=user_id, **feedback_data.dict())
         save_obj(self.db, feedback)
         return feedback
 
@@ -206,7 +199,7 @@ class PresaleAIIntegrationService:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[PresaleAIFeedback]:
         """获取反馈列表"""
         query = self.db.query(PresaleAIFeedback)
@@ -228,9 +221,11 @@ class PresaleAIIntegrationService:
 
     def get_or_create_config(self, ai_function: str) -> PresaleAIConfig:
         """获取或创建AI配置"""
-        config = self.db.query(PresaleAIConfig).filter(
-            PresaleAIConfig.ai_function == ai_function
-        ).first()
+        config = (
+            self.db.query(PresaleAIConfig)
+            .filter(PresaleAIConfig.ai_function == ai_function)
+            .first()
+        )
 
         if not config:
             config = PresaleAIConfig(
@@ -238,17 +233,13 @@ class PresaleAIIntegrationService:
                 enabled=True,
                 temperature=0.7,
                 max_tokens=2000,
-                timeout_seconds=30
+                timeout_seconds=30,
             )
             save_obj(self.db, config)
 
         return config
 
-    def update_config(
-        self,
-        ai_function: str,
-        config_data: AIConfigUpdate
-    ) -> PresaleAIConfig:
+    def update_config(self, ai_function: str, config_data: AIConfigUpdate) -> PresaleAIConfig:
         """更新AI配置"""
         config = self.get_or_create_config(ai_function)
 
@@ -269,7 +260,7 @@ class PresaleAIIntegrationService:
         self,
         presale_ticket_id: int,
         initial_data: Optional[Dict[str, Any]] = None,
-        auto_run: bool = True
+        auto_run: bool = True,
     ) -> List[PresaleAIWorkflowLog]:
         """启动AI工作流"""
         workflow_steps = [
@@ -277,7 +268,7 @@ class PresaleAIIntegrationService:
             WorkflowStepEnum.SOLUTION,
             WorkflowStepEnum.COST,
             WorkflowStepEnum.WINRATE,
-            WorkflowStepEnum.QUOTATION
+            WorkflowStepEnum.QUOTATION,
         ]
 
         logs = []
@@ -286,7 +277,7 @@ class PresaleAIIntegrationService:
                 presale_ticket_id=presale_ticket_id,
                 workflow_step=step,
                 status=WorkflowStatusEnum.PENDING,
-                input_data=initial_data if step == WorkflowStepEnum.REQUIREMENT else None
+                input_data=initial_data if step == WorkflowStepEnum.REQUIREMENT else None,
             )
             self.db.add(log)
             logs.append(log)
@@ -303,9 +294,12 @@ class PresaleAIIntegrationService:
 
     def get_workflow_status(self, presale_ticket_id: int) -> Optional[WorkflowStatusResponse]:
         """获取工作流状态"""
-        logs = self.db.query(PresaleAIWorkflowLog).filter(
-            PresaleAIWorkflowLog.presale_ticket_id == presale_ticket_id
-        ).order_by(PresaleAIWorkflowLog.id).all()
+        logs = (
+            self.db.query(PresaleAIWorkflowLog)
+            .filter(PresaleAIWorkflowLog.presale_ticket_id == presale_ticket_id)
+            .order_by(PresaleAIWorkflowLog.id)
+            .all()
+        )
 
         if not logs:
             return None
@@ -318,7 +312,7 @@ class PresaleAIIntegrationService:
         # 确定当前步骤和整体状态
         current_step = "completed"
         overall_status = "completed"
-        
+
         for log in logs:
             if log.status == WorkflowStatusEnum.RUNNING:
                 current_step = log.workflow_step
@@ -339,7 +333,7 @@ class PresaleAIIntegrationService:
             overall_status=overall_status,
             steps=[log for log in logs],
             progress=round(progress, 2),
-            estimated_completion=None  # 可以根据平均时间估算
+            estimated_completion=None,  # 可以根据平均时间估算
         )
 
     def update_workflow_step(
@@ -347,12 +341,10 @@ class PresaleAIIntegrationService:
         log_id: int,
         status: WorkflowStatusEnum,
         output_data: Optional[Dict[str, Any]] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> PresaleAIWorkflowLog:
         """更新工作流步骤"""
-        log = self.db.query(PresaleAIWorkflowLog).filter(
-            PresaleAIWorkflowLog.id == log_id
-        ).first()
+        log = self.db.query(PresaleAIWorkflowLog).filter(PresaleAIWorkflowLog.id == log_id).first()
 
         if not log:
             raise ValueError(f"Workflow log {log_id} not found")
@@ -380,7 +372,7 @@ class PresaleAIIntegrationService:
         resource_id: Optional[int] = None,
         details: Optional[Dict[str, Any]] = None,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ) -> PresaleAIAuditLog:
         """创建审计日志"""
         log = PresaleAIAuditLog(
@@ -391,7 +383,7 @@ class PresaleAIIntegrationService:
             resource_id=resource_id,
             details=details,
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
         save_obj(self.db, log)
         return log
@@ -403,7 +395,7 @@ class PresaleAIIntegrationService:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[PresaleAIAuditLog]:
         """获取审计日志"""
         query = self.db.query(PresaleAIAuditLog)
@@ -429,32 +421,32 @@ class PresaleAIIntegrationService:
         # 检查数据库连接
         try:
             self.db.execute("SELECT 1")
-            services['database'] = {'status': 'healthy', 'message': 'Connected'}
+            services["database"] = {"status": "healthy", "message": "Connected"}
         except Exception as e:
-            services['database'] = {'status': 'unhealthy', 'message': str(e)}
+            services["database"] = {"status": "unhealthy", "message": str(e)}
             overall_status = "unhealthy"
 
         # 检查各AI功能配置
         ai_configs = self.get_all_configs()
         enabled_count = sum(1 for c in ai_configs if c.enabled)
-        services['ai_functions'] = {
-            'status': 'healthy' if enabled_count > 0 else 'degraded',
-            'enabled_count': enabled_count,
-            'total_count': len(ai_configs)
+        services["ai_functions"] = {
+            "status": "healthy" if enabled_count > 0 else "degraded",
+            "enabled_count": enabled_count,
+            "total_count": len(ai_configs),
         }
 
         # 检查最近使用情况
-        recent_usage = self.db.query(func.count(PresaleAIUsageStats.id)).filter(
-            PresaleAIUsageStats.date >= date.today() - timedelta(days=1)
-        ).scalar()
+        recent_usage = (
+            self.db.query(func.count(PresaleAIUsageStats.id))
+            .filter(PresaleAIUsageStats.date >= date.today() - timedelta(days=1))
+            .scalar()
+        )
 
-        services['recent_activity'] = {
-            'status': 'healthy' if recent_usage > 0 else 'degraded',
-            'usage_count_24h': recent_usage
+        services["recent_activity"] = {
+            "status": "healthy" if recent_usage > 0 else "degraded",
+            "usage_count_24h": recent_usage,
         }
 
         return HealthCheckResponse(
-            status=overall_status,
-            services=services,
-            timestamp=datetime.now()
+            status=overall_status, services=services, timestamp=datetime.now()
         )

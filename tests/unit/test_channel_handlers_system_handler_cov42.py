@@ -5,15 +5,21 @@ import pytest
 pytest.importorskip("app.services.channel_handlers.system_handler")
 
 from unittest.mock import MagicMock, patch
-from app.services.channel_handlers.system_handler import SystemChannelHandler
+
 from app.services.channel_handlers.base import NotificationRequest
+from app.services.channel_handlers.system_handler import SystemChannelHandler
 
 
 def make_request(**kw):
     defaults = dict(
-        recipient_id=10, notification_type="TASK_UPDATE", category="task",
-        title="任务更新", content="您的任务已更新",
-        source_type="task", source_id=42, link_url="/tasks/42",
+        recipient_id=10,
+        notification_type="TASK_UPDATE",
+        category="task",
+        title="任务更新",
+        content="您的任务已更新",
+        source_type="task",
+        source_id=42,
+        link_url="/tasks/42",
         extra_data={"key": "val"},
     )
     defaults.update(kw)
@@ -26,6 +32,7 @@ def make_handler():
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_handler_channel_is_system():
     h, _ = make_handler()

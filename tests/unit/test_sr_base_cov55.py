@@ -2,14 +2,15 @@
 """
 Tests for app/services/sales_reminder/base.py
 """
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 try:
     from app.services.sales_reminder.base import (
-        find_users_by_role,
-        find_users_by_department,
         create_notification,
+        find_users_by_department,
+        find_users_by_role,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -47,9 +48,7 @@ def test_find_users_by_role_returns_users(mock_db):
     with patch("app.services.sales_reminder.base.apply_keyword_filter") as mock_filter:
         mock_filter.return_value = MagicMock()
         mock_filter.return_value.all.return_value = [role]
-        mock_db.query.return_value.filter.return_value.all.side_effect = [
-            [user_role], [user]
-        ]
+        mock_db.query.return_value.filter.return_value.all.side_effect = [[user_role], [user]]
         result = find_users_by_role(mock_db, "sales")
         # 应调用了 db.query 多次
 

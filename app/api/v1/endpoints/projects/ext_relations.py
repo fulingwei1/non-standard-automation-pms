@@ -55,30 +55,34 @@ def get_project_relations(
     relations = []
 
     # 如果项目有 parent_project_id，添加父项目关联
-    if hasattr(project, 'parent_project_id') and project.parent_project_id:
+    if hasattr(project, "parent_project_id") and project.parent_project_id:
         parent = db.query(Project).filter(Project.id == project.parent_project_id).first()
         if parent:
-            relations.append({
-                "relation_type": "PARENT_CHILD",
-                "relation_name": "父项目",
-                "related_project_id": parent.id,
-                "related_project_code": parent.project_code,
-                "related_project_name": parent.project_name,
-                "related_project_status": parent.status,
-            })
+            relations.append(
+                {
+                    "relation_type": "PARENT_CHILD",
+                    "relation_name": "父项目",
+                    "related_project_id": parent.id,
+                    "related_project_code": parent.project_code,
+                    "related_project_name": parent.project_name,
+                    "related_project_status": parent.status,
+                }
+            )
 
     # 查找子项目
-    if hasattr(Project, 'parent_project_id'):
+    if hasattr(Project, "parent_project_id"):
         children = db.query(Project).filter(Project.parent_project_id == project_id).all()
         for child in children:
-            relations.append({
-                "relation_type": "CHILD_PARENT",
-                "relation_name": "子项目",
-                "related_project_id": child.id,
-                "related_project_code": child.project_code,
-                "related_project_name": child.project_name,
-                "related_project_status": child.status,
-            })
+            relations.append(
+                {
+                    "relation_type": "CHILD_PARENT",
+                    "relation_name": "子项目",
+                    "related_project_id": child.id,
+                    "related_project_code": child.project_code,
+                    "related_project_name": child.project_name,
+                    "related_project_status": child.status,
+                }
+            )
 
     # 按类型筛选
     if relation_type:
@@ -91,8 +95,8 @@ def get_project_relations(
             "project_id": project_id,
             "project_code": project.project_code,
             "total": len(relations),
-            "relations": relations
-        }
+            "relations": relations,
+        },
     )
 
 
@@ -109,17 +113,12 @@ def get_relation_types(
     Returns:
         ResponseModel: 关联类型列表
     """
-    types = [{
-        "code": code,
-        "name": info["name"],
-        "reverse_type": info["reverse"]
-    } for code, info in RELATION_TYPES.items()]
+    types = [
+        {"code": code, "name": info["name"], "reverse_type": info["reverse"]}
+        for code, info in RELATION_TYPES.items()
+    ]
 
-    return ResponseModel(
-        code=200,
-        message="获取关联类型成功",
-        data={"types": types}
-    )
+    return ResponseModel(code=200, message="获取关联类型成功", data={"types": types})
 
 
 @router.post("/{project_id}/relations", response_model=ResponseModel)
@@ -156,13 +155,13 @@ def create_project_relation(
 
     # 处理父子关系
     if relation_type == "PARENT_CHILD":
-        if hasattr(project, 'parent_project_id'):
+        if hasattr(project, "parent_project_id"):
             project.parent_project_id = related_project_id
             db.commit()
             return ResponseModel(
                 code=200,
                 message="父项目关联成功",
-                data={"project_id": project_id, "parent_project_id": related_project_id}
+                data={"project_id": project_id, "parent_project_id": related_project_id},
             )
 
     # 其他关系类型可以存储在 JSON 字段中
@@ -172,8 +171,8 @@ def create_project_relation(
         data={
             "project_id": project_id,
             "related_project_id": related_project_id,
-            "relation_type": relation_type
-        }
+            "relation_type": relation_type,
+        },
     )
 
 
@@ -202,15 +201,20 @@ def delete_project_relation(
 
     # 处理父子关系删除
     if relation_type == "PARENT_CHILD":
-        if hasattr(project, 'parent_project_id') and project.parent_project_id == related_project_id:
+        if (
+            hasattr(project, "parent_project_id")
+            and project.parent_project_id == related_project_id
+        ):
             project.parent_project_id = None
             db.commit()
-            return ResponseModel(code=200, message="父项目关联已删除", data={"project_id": project_id})
+            return ResponseModel(
+                code=200, message="父项目关联已删除", data={"project_id": project_id}
+            )
 
     return ResponseModel(
         code=200,
         message="项目关联删除成功",
-        data={"project_id": project_id, "related_project_id": related_project_id}
+        data={"project_id": project_id, "related_project_id": related_project_id},
     )
 
 
@@ -242,22 +246,28 @@ def get_dependency_chain(
         "project_code": project.project_code,
         "project_name": project.project_name,
         "upstream": [],
-        "downstream": []
+        "downstream": [],
     }
 
     # 获取上游（父项目链）
     if direction in ["upstream", "both"]:
         current = project
         depth = 0
-        while hasattr(current, 'parent_project_id') and current.parent_project_id and depth < max_depth:
+        while (
+            hasattr(current, "parent_project_id")
+            and current.parent_project_id
+            and depth < max_depth
+        ):
             parent = db.query(Project).filter(Project.id == current.parent_project_id).first()
             if parent:
-                chain["upstream"].append({
-                    "project_id": parent.id,
-                    "project_code": parent.project_code,
-                    "project_name": parent.project_name,
-                    "depth": depth + 1
-                })
+                chain["upstream"].append(
+                    {
+                        "project_id": parent.id,
+                        "project_code": parent.project_code,
+                        "project_name": parent.project_name,
+                        "depth": depth + 1,
+                    }
+                )
                 current = parent
                 depth += 1
             else:
@@ -265,27 +275,26 @@ def get_dependency_chain(
 
     # 获取下游（子项目链）
     if direction in ["downstream", "both"]:
+
         def get_children(parent_id, current_depth):
             if current_depth >= max_depth:
                 return []
-            if not hasattr(Project, 'parent_project_id'):
+            if not hasattr(Project, "parent_project_id"):
                 return []
             children = db.query(Project).filter(Project.parent_project_id == parent_id).all()
             result = []
             for child in children:
-                result.append({
-                    "project_id": child.id,
-                    "project_code": child.project_code,
-                    "project_name": child.project_name,
-                    "depth": current_depth + 1,
-                    "children": get_children(child.id, current_depth + 1)
-                })
+                result.append(
+                    {
+                        "project_id": child.id,
+                        "project_code": child.project_code,
+                        "project_name": child.project_name,
+                        "depth": current_depth + 1,
+                        "children": get_children(child.id, current_depth + 1),
+                    }
+                )
             return result
 
         chain["downstream"] = get_children(project_id, 0)
 
-    return ResponseModel(
-        code=200,
-        message="获取依赖链成功",
-        data=chain
-    )
+    return ResponseModel(code=200, message="获取依赖链成功", data=chain)

@@ -32,7 +32,11 @@ logger = logging.getLogger(__name__)
 # 这里保留导入以便向后兼容（如果需要）
 
 
-@router.post("/acceptance-orders/{order_id}/report", response_model=AcceptanceReportResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/acceptance-orders/{order_id}/report",
+    response_model=AcceptanceReportResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def generate_acceptance_report(
     *,
     db: Session = Depends(deps.get_db),
@@ -81,9 +85,8 @@ def generate_acceptance_report(
         if not report_content:
             # 如果没有内容，使用工具函数生成
             from app.services.acceptance.report_utils import build_report_content
-            report_content = build_report_content(
-                db, order, report_no, version, current_user
-            )
+
+            report_content = build_report_content(db, order, report_no, version, current_user)
 
         # 保存报告文件
         file_rel_path, file_size, file_hash = save_report_file(
@@ -158,7 +161,9 @@ def download_acceptance_report(
     下载验收报告（支持PDF和文本格式）
     """
     import os
+
     from fastapi.responses import Response
+
     from app.core.config import settings
 
     report = get_or_404(db, AcceptanceReport, report_id, "验收报告不存在")
@@ -177,11 +182,9 @@ def download_acceptance_report(
         # 如果文件不存在，返回报告内容作为文本
         content = report.report_content or "报告内容为空"
         return Response(
-            content=content.encode('utf-8'),
+            content=content.encode("utf-8"),
             media_type="text/plain",
-            headers={
-                "Content-Disposition": f"attachment; filename={report.report_no}.txt"
-            }
+            headers={"Content-Disposition": f"attachment; filename={report.report_no}.txt"},
         )
 
     filename = os.path.basename(file_path)
@@ -193,14 +196,14 @@ def download_acceptance_report(
     else:
         media_type = "application/octet-stream"
 
-    return FileResponse(
-        path=file_path,
-        filename=filename,
-        media_type=media_type
-    )
+    return FileResponse(path=file_path, filename=filename, media_type=media_type)
 
 
-@router.get("/acceptance-orders/{order_id}/report", response_model=List[AcceptanceReportResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-orders/{order_id}/report",
+    response_model=List[AcceptanceReportResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_acceptance_reports(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -211,21 +214,28 @@ def read_acceptance_reports(
     """
     get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
-    reports = db.query(AcceptanceReport).filter(AcceptanceReport.order_id == order_id).order_by(desc(AcceptanceReport.created_at)).all()
+    reports = (
+        db.query(AcceptanceReport)
+        .filter(AcceptanceReport.order_id == order_id)
+        .order_by(desc(AcceptanceReport.created_at))
+        .all()
+    )
 
     items = []
     for report in reports:
-        items.append(AcceptanceReportResponse(
-            id=report.id,
-            order_id=report.order_id,
-            report_no=report.report_no,
-            report_type=report.report_type,
-            version=report.version,
-            generated_by=report.generated_by,
-            file_size=report.file_size,
-            include_signatures=report.include_signatures,
-            created_at=report.created_at,
-            updated_at=report.updated_at
-        ))
+        items.append(
+            AcceptanceReportResponse(
+                id=report.id,
+                order_id=report.order_id,
+                report_no=report.report_no,
+                report_type=report.report_type,
+                version=report.version,
+                generated_by=report.generated_by,
+                file_size=report.file_size,
+                include_signatures=report.include_signatures,
+                created_at=report.created_at,
+                updated_at=report.updated_at,
+            )
+        )
 
     return items

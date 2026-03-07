@@ -30,7 +30,7 @@ def report_task_delay(
     task_id: int,
     delay_data: schemas.DelayReportRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("engineer:read"))
+    current_user: User = Depends(security.require_permission("engineer:read")),
 ):
     """
     报告任务延期（创建异常事件，自动通知相关方）
@@ -57,9 +57,9 @@ def report_task_delay(
     # 创建异常事件
     exception_event = ExceptionEvent(
         event_no=f"EXC-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-        event_type='SCHEDULE_DELAY',
-        severity='MEDIUM' if delay_data.schedule_impact_days <= 5 else 'HIGH',
-        source_type='TASK_DELAY',
+        event_type="SCHEDULE_DELAY",
+        severity="MEDIUM" if delay_data.schedule_impact_days <= 5 else "HIGH",
+        source_type="TASK_DELAY",
         source_id=task_id,
         project_id=task.project_id,
         title=f"任务延期：{task.title}",
@@ -72,7 +72,7 @@ def report_task_delay(
         cost_impact=delay_data.cost_impact,
         root_cause=delay_data.root_cause_analysis,
         preventive_measures=delay_data.preventive_measures,
-        status='OPEN'
+        status="OPEN",
     )
 
     db.add(exception_event)
@@ -83,19 +83,20 @@ def report_task_delay(
     visible_roles = []
     notifications_count = 0
 
-    if delay_data.delay_impact_scope == 'LOCAL':
-        visible_roles = ['PROJECT_TEAM']
+    if delay_data.delay_impact_scope == "LOCAL":
+        visible_roles = ["PROJECT_TEAM"]
         notifications_count = 1
-    elif delay_data.delay_impact_scope == 'PROJECT':
-        visible_roles = ['PROJECT_TEAM', 'DEPT_HEAD', 'PM']
+    elif delay_data.delay_impact_scope == "PROJECT":
+        visible_roles = ["PROJECT_TEAM", "DEPT_HEAD", "PM"]
         notifications_count = 3
-    elif delay_data.delay_impact_scope == 'MULTI_PROJECT':
-        visible_roles = ['PROJECT_TEAM', 'DEPT_HEAD', 'PM', 'PMO', 'MANAGEMENT']
+    elif delay_data.delay_impact_scope == "MULTI_PROJECT":
+        visible_roles = ["PROJECT_TEAM", "DEPT_HEAD", "PM", "PMO", "MANAGEMENT"]
         notifications_count = 5
 
     # 发送异常通知
+    from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
     from app.services.notification_dispatcher import NotificationDispatcher
-    from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
+
     try:
         # 通知项目经理
         project = db.query(Project).filter(Project.id == task.project_id).first()
@@ -125,5 +126,5 @@ def report_task_delay(
         exception_event_id=exception_event.id,
         delay_visible_to=visible_roles,
         notifications_sent_count=notifications_count,
-        health_status_updated=True
+        health_status_updated=True,
     )

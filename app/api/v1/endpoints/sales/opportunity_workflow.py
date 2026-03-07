@@ -17,9 +17,9 @@ from app.models.sales import Opportunity, OpportunityRequirement
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.sales import OpportunityRequirementResponse, OpportunityResponse
+from app.utils.db_helpers import get_or_404
 
 from .utils import validate_g2_opportunity_to_quote
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -58,8 +58,7 @@ def submit_opportunity_gate(
 
     if validation_errors and gate_request.gate_status == "PASS":
         raise HTTPException(
-            status_code=400,
-            detail=f"{gate_type}阶段门验证失败: {', '.join(validation_errors)}"
+            status_code=400, detail=f"{gate_type}阶段门验证失败: {', '.join(validation_errors)}"
         )
 
     opportunity.gate_status = gate_request.gate_status
@@ -72,7 +71,7 @@ def submit_opportunity_gate(
     return ResponseModel(
         code=200,
         message=f"{gate_type}阶段门{'通过' if gate_request.gate_status == 'PASS' else '拒绝'}",
-        data={"validation_errors": validation_errors} if validation_errors else None
+        data={"validation_errors": validation_errors} if validation_errors else None,
     )
 
 
@@ -91,14 +90,20 @@ def update_opportunity_stage(
 
     valid_stages = ["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
     if stage not in valid_stages:
-        raise HTTPException(status_code=400, detail=f"无效的阶段，必须是: {', '.join(valid_stages)}")
+        raise HTTPException(
+            status_code=400, detail=f"无效的阶段，必须是: {', '.join(valid_stages)}"
+        )
 
     opportunity.stage = stage
     opportunity.updated_by = current_user.id
     db.commit()
     db.refresh(opportunity)
 
-    req = db.query(OpportunityRequirement).filter(OpportunityRequirement.opportunity_id == opportunity.id).first()
+    req = (
+        db.query(OpportunityRequirement)
+        .filter(OpportunityRequirement.opportunity_id == opportunity.id)
+        .first()
+    )
     opp_dict = {
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
@@ -107,7 +112,9 @@ def update_opportunity_stage(
         "requirement": None,
     }
     if req:
-        opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+        opp_dict["requirement"] = OpportunityRequirementResponse(
+            **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+        )
 
     return OpportunityResponse(**opp_dict)
 
@@ -141,7 +148,11 @@ def update_opportunity_score(
     db.commit()
     db.refresh(opportunity)
 
-    req = db.query(OpportunityRequirement).filter(OpportunityRequirement.opportunity_id == opportunity.id).first()
+    req = (
+        db.query(OpportunityRequirement)
+        .filter(OpportunityRequirement.opportunity_id == opportunity.id)
+        .first()
+    )
     opp_dict = {
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
@@ -150,7 +161,9 @@ def update_opportunity_score(
         "requirement": None,
     }
     if req:
-        opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+        opp_dict["requirement"] = OpportunityRequirementResponse(
+            **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+        )
 
     return OpportunityResponse(**opp_dict)
 
@@ -174,7 +187,11 @@ def win_opportunity(
     db.commit()
     db.refresh(opportunity)
 
-    req = db.query(OpportunityRequirement).filter(OpportunityRequirement.opportunity_id == opportunity.id).first()
+    req = (
+        db.query(OpportunityRequirement)
+        .filter(OpportunityRequirement.opportunity_id == opportunity.id)
+        .first()
+    )
     opp_dict = {
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
@@ -183,7 +200,9 @@ def win_opportunity(
         "requirement": None,
     }
     if req:
-        opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+        opp_dict["requirement"] = OpportunityRequirementResponse(
+            **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+        )
 
     return OpportunityResponse(**opp_dict)
 
@@ -209,7 +228,11 @@ def lose_opportunity(
     db.commit()
     db.refresh(opportunity)
 
-    req = db.query(OpportunityRequirement).filter(OpportunityRequirement.opportunity_id == opportunity.id).first()
+    req = (
+        db.query(OpportunityRequirement)
+        .filter(OpportunityRequirement.opportunity_id == opportunity.id)
+        .first()
+    )
     opp_dict = {
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},
         "customer_name": opportunity.customer.customer_name if opportunity.customer else None,
@@ -218,6 +241,8 @@ def lose_opportunity(
         "requirement": None,
     }
     if req:
-        opp_dict["requirement"] = OpportunityRequirementResponse(**{c.name: getattr(req, c.name) for c in req.__table__.columns})
+        opp_dict["requirement"] = OpportunityRequirementResponse(
+            **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+        )
 
     return OpportunityResponse(**opp_dict)

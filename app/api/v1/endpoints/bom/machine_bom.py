@@ -97,9 +97,7 @@ def generate_bom_no(db: Session, project_id: int) -> str:
     project = get_or_404(db, Project, project_id, "项目不存在")
 
     # 使用项目编码的前缀
-    project_prefix = (
-        project.project_code[:8] if project.project_code else f"PJ{project_id:06d}"
-    )
+    project_prefix = project.project_code[:8] if project.project_code else f"PJ{project_id:06d}"
 
     # 查询该项目下最大的序号
     from sqlalchemy import desc
@@ -174,13 +172,9 @@ def create_bom(
         # 如果提供了物料ID，获取物料信息
         material = None
         if item_in.material_id:
-            material = (
-                db.query(Material).filter(Material.id == item_in.material_id).first()
-            )
+            material = db.query(Material).filter(Material.id == item_in.material_id).first()
             if not material:
-                raise HTTPException(
-                    status_code=404, detail=f"物料ID {item_in.material_id} 不存在"
-                )
+                raise HTTPException(status_code=404, detail=f"物料ID {item_in.material_id} 不存在")
 
         # 计算金额
         amount = item_in.quantity * (item_in.unit_price or 0)

@@ -3,10 +3,11 @@
 第四十五批覆盖：resource_waste_analysis/report_generation.py
 """
 
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.resource_waste_analysis.report_generation")
 

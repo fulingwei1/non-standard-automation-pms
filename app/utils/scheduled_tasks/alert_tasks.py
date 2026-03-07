@@ -8,8 +8,8 @@ from datetime import datetime
 
 from sqlalchemy import or_
 
-from app.models.alert import AlertNotification, AlertRecord
 from app.dependencies import get_db_session
+from app.models.alert import AlertNotification, AlertRecord
 from app.services.notification_dispatcher import NotificationDispatcher
 from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
 
@@ -38,8 +38,9 @@ def check_alert_escalation():
     except Exception as e:
         logger.error(f"[{datetime.now()}] 预警升级检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def retry_failed_notifications():
@@ -55,14 +56,18 @@ def retry_failed_notifications():
             max_retries = 3
 
             # 查询需要重试的通知
-            failed_notifications = db.query(AlertNotification).filter(
-                AlertNotification.status == 'FAILED',
-                AlertNotification.retry_count < max_retries,
-                or_(
-                    AlertNotification.next_retry_at.is_(None),
-                    AlertNotification.next_retry_at <= current_time
+            failed_notifications = (
+                db.query(AlertNotification)
+                .filter(
+                    AlertNotification.status == "FAILED",
+                    AlertNotification.retry_count < max_retries,
+                    or_(
+                        AlertNotification.next_retry_at.is_(None),
+                        AlertNotification.next_retry_at <= current_time,
+                    ),
                 )
-            ).all()
+                .all()
+            )
 
             retry_count = 0
             success_count = 0
@@ -79,7 +84,7 @@ def retry_failed_notifications():
                     user = db.query(User).filter(User.id == notification.notify_user_id).first()
 
                 if not alert or not user:
-                    notification.status = 'ABANDONED'
+                    notification.status = "ABANDONED"
                     notification.error_message = "Alert or user not found"
                     abandoned_count += 1
                     continue
@@ -94,7 +99,7 @@ def retry_failed_notifications():
                 else:
                     failed_count += 1
                     if notification.retry_count >= max_retries:
-                        notification.status = 'ABANDONED'
+                        notification.status = "ABANDONED"
                         notification.error_message = f"Max retries ({max_retries}) exceeded"
                         abandoned_count += 1
                     logger.warning(
@@ -110,18 +115,19 @@ def retry_failed_notifications():
             )
 
             return {
-                'retry_count': retry_count,
-                'success_count': success_count,
-                'failed_count': failed_count,
-                'abandoned_count': abandoned_count,
-                'timestamp': datetime.now().isoformat()
+                "retry_count": retry_count,
+                "success_count": success_count,
+                "failed_count": failed_count,
+                "abandoned_count": abandoned_count,
+                "timestamp": datetime.now().isoformat(),
             }
 
     except Exception as e:
         logger.error(f"[{datetime.now()}] 通知重试失败: {str(e)}", exc_info=True)
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def send_alert_notifications():
@@ -137,9 +143,13 @@ def send_alert_notifications():
             from app.models.user import User
 
             # 1) 生成通知队列
-            pending_alerts = db.query(AlertRecord).filter(
-                AlertRecord.status == 'PENDING'
-            ).order_by(AlertRecord.triggered_at.desc().nulls_last()).limit(50).all()
+            pending_alerts = (
+                db.query(AlertRecord)
+                .filter(AlertRecord.status == "PENDING")
+                .order_by(AlertRecord.triggered_at.desc().nulls_last())
+                .limit(50)
+                .all()
+            )
 
             queue_created = 0
             queued_from_alerts = 0
@@ -155,10 +165,19 @@ def send_alert_notifications():
 
             # 2) 发送通知（包含失败重试）
             now = datetime.now()
-            pending_notifications = db.query(AlertNotification).filter(
-                AlertNotification.status.in_(["PENDING", "FAILED"]),
-                or_(AlertNotification.next_retry_at.is_(None), AlertNotification.next_retry_at <= now)
-            ).order_by(AlertNotification.created_at.asc()).limit(100).all()
+            pending_notifications = (
+                db.query(AlertNotification)
+                .filter(
+                    AlertNotification.status.in_(["PENDING", "FAILED"]),
+                    or_(
+                        AlertNotification.next_retry_at.is_(None),
+                        AlertNotification.next_retry_at <= now,
+                    ),
+                )
+                .order_by(AlertNotification.created_at.asc())
+                .limit(100)
+                .all()
+            )
 
             sent_count = 0
             queued_notifications = 0
@@ -191,22 +210,23 @@ def send_alert_notifications():
             )
 
             return {
-                'queued_alerts': len(pending_alerts),
-                'queue_created': queue_created,
-                'queued_from_alerts': queued_from_alerts,
-                'sent_from_alerts': sent_from_alerts,
-                'failed_from_alerts': failed_from_alerts,
-                'processed_notifications': len(pending_notifications),
-                'queued_notifications': queued_notifications,
-                'sent_count': sent_count,
-                'timestamp': datetime.now().isoformat()
+                "queued_alerts": len(pending_alerts),
+                "queue_created": queue_created,
+                "queued_from_alerts": queued_from_alerts,
+                "sent_from_alerts": sent_from_alerts,
+                "failed_from_alerts": failed_from_alerts,
+                "processed_notifications": len(pending_notifications),
+                "queued_notifications": queued_notifications,
+                "sent_count": sent_count,
+                "timestamp": datetime.now().isoformat(),
             }
 
     except Exception as e:
         logger.error(f"[{datetime.now()}] 消息推送服务失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def calculate_response_metrics():
@@ -227,5 +247,6 @@ def calculate_response_metrics():
     except Exception as e:
         logger.error(f"[{datetime.now()}] 预警响应指标计算失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}

@@ -3,19 +3,20 @@
 N1组深度覆盖: PresaleAIKnowledgeService
 针对已有测试未覆盖的分支、辅助方法进行补充
 """
-import pytest
-import numpy as np
 from unittest.mock import MagicMock, patch
 
-from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+import numpy as np
+import pytest
+
 from app.schemas.presale_ai_knowledge import (
+    AIQARequest,
+    BestPracticeRequest,
     KnowledgeCaseCreate,
     KnowledgeCaseUpdate,
-    SemanticSearchRequest,
-    BestPracticeRequest,
     KnowledgeExtractionRequest,
-    AIQARequest,
+    SemanticSearchRequest,
 )
+from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
 
 
 def _make_service():
@@ -44,6 +45,7 @@ def _make_mock_case(**kwargs):
 # 1. create_case - 默认质量分分支
 # ============================================================
 
+
 class TestCreateCaseDeep:
     def test_create_case_default_quality_score(self):
         """quality_score 为 None 时默认赋 0.5"""
@@ -63,9 +65,11 @@ class TestCreateCaseDeep:
         )
         called = []
         original = service._generate_embedding
+
         def mock_embed(text):
             called.append(text)
             return original(text)
+
         service._generate_embedding = mock_embed
 
         with patch("app.services.presale_ai_knowledge_service.save_obj"):
@@ -85,6 +89,7 @@ class TestCreateCaseDeep:
 # ============================================================
 # 2. update_case - summary 更新/不更新分支
 # ============================================================
+
 
 class TestUpdateCaseDeep:
     def test_update_case_no_summary_change_no_embedding(self):
@@ -112,6 +117,7 @@ class TestUpdateCaseDeep:
 # ============================================================
 # 3. semantic_search - 过滤条件、排序、相似度
 # ============================================================
+
 
 class TestSemanticSearchDeep:
     def test_semantic_search_top_k_limited(self):
@@ -168,6 +174,7 @@ class TestSemanticSearchDeep:
 # 4. recommend_best_practices - 高质量/无高质量两条路径
 # ============================================================
 
+
 class TestRecommendBestPracticesDeep:
     def test_recommend_falls_back_when_no_high_quality(self):
         """没有高质量案例时降级到普通案例"""
@@ -200,6 +207,7 @@ class TestRecommendBestPracticesDeep:
 # ============================================================
 # 5. extract_case_knowledge - auto_save 条件分支
 # ============================================================
+
 
 class TestExtractCaseKnowledgeDeep:
     def test_auto_save_skipped_when_confidence_low(self):
@@ -238,6 +246,7 @@ class TestExtractCaseKnowledgeDeep:
 # 6. _analyze_success_patterns - 有/无案例
 # ============================================================
 
+
 class TestAnalyzeSuccessPatterns:
     def test_no_cases_returns_default_text(self):
         service, _ = _make_service()
@@ -265,6 +274,7 @@ class TestAnalyzeSuccessPatterns:
 # 7. _extract_risk_warnings
 # ============================================================
 
+
 class TestExtractRiskWarnings:
     def test_no_lessons_returns_defaults(self):
         service, _ = _make_service()
@@ -290,14 +300,11 @@ class TestExtractRiskWarnings:
 # 8. _generate_summary / _extract_highlights / _extract_success_factors / _extract_lessons
 # ============================================================
 
+
 class TestPrivateExtractors:
     def test_generate_summary_full_data(self):
         service, _ = _make_service()
-        data = {
-            "project_name": "装配线",
-            "description": "自动化改造",
-            "objectives": "提升效率"
-        }
+        data = {"project_name": "装配线", "description": "自动化改造", "objectives": "提升效率"}
         summary = service._generate_summary(data)
         assert "装配线" in summary
         assert "自动化改造" in summary
@@ -345,6 +352,7 @@ class TestPrivateExtractors:
 # 9. _suggest_tags - 不同分支
 # ============================================================
 
+
 class TestSuggestTags:
     def test_suggest_tags_with_large_amount(self):
         service, _ = _make_service()
@@ -374,6 +382,7 @@ class TestSuggestTags:
 # 10. _assess_quality - 不同分支
 # ============================================================
 
+
 class TestAssessQuality:
     def test_base_score_empty(self):
         service, _ = _make_service()
@@ -397,11 +406,7 @@ class TestAssessQuality:
 
     def test_max_score_capped_at_one(self):
         service, _ = _make_service()
-        data = {
-            "description": "详细",
-            "technical_highlights": "高亮",
-            "status": "completed"
-        }
+        data = {"description": "详细", "technical_highlights": "高亮", "status": "completed"}
         score = service._assess_quality(data)
         assert score <= 1.0
 
@@ -409,6 +414,7 @@ class TestAssessQuality:
 # ============================================================
 # 11. _calculate_qa_confidence - 边界
 # ============================================================
+
 
 class TestCalculateQAConfidence:
     def test_single_case_confidence(self):
@@ -433,6 +439,7 @@ class TestCalculateQAConfidence:
 # ============================================================
 # 12. _keyword_similarity - 各字段匹配
 # ============================================================
+
 
 class TestKeywordSimilarityDeep:
     def test_case_name_match_score(self):
@@ -465,7 +472,7 @@ class TestKeywordSimilarityDeep:
             case_name="激光激光",
             project_summary="激光焊接激光",
             technical_highlights="激光激光",
-            tags=["激光"]
+            tags=["激光"],
         )
         score = service._keyword_similarity("激光", case)
         assert score <= 1.0
@@ -475,13 +482,16 @@ class TestKeywordSimilarityDeep:
 # 13. search_knowledge_base - 多过滤条件组合
 # ============================================================
 
+
 class TestSearchKnowledgeBaseDeep:
     def test_search_with_min_quality_score(self):
         service, db = _make_service()
         filter_mock = MagicMock()
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 2
-        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value = filter_mock
 
         cases, total = service.search_knowledge_base(min_quality_score=0.7)
@@ -491,7 +501,9 @@ class TestSearchKnowledgeBaseDeep:
         service, db = _make_service()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 0
-        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value = filter_mock
 
         cases, total = service.search_knowledge_base(industry="汽车")
@@ -501,7 +513,9 @@ class TestSearchKnowledgeBaseDeep:
         service, db = _make_service()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 50
-        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value = filter_mock
 
         cases, total = service.search_knowledge_base(page=2, page_size=10)
@@ -511,6 +525,7 @@ class TestSearchKnowledgeBaseDeep:
 # ============================================================
 # 14. ask_question - _generate_answer 分支
 # ============================================================
+
 
 class TestAskQuestionDeep:
     def test_answer_no_cases_message(self):
@@ -525,7 +540,7 @@ class TestAskQuestionDeep:
         c = _make_mock_case(
             id=5,
             case_name="视觉检测案例",
-            embedding=service._serialize_embedding(service._generate_embedding("视觉"))
+            embedding=service._serialize_embedding(service._generate_embedding("视觉")),
         )
         db.query.return_value.filter.return_value.all.return_value = [c]
         req = AIQARequest(question="视觉检测方案")
@@ -537,8 +552,9 @@ class TestAskQuestionDeep:
         cases = [
             _make_mock_case(
                 id=i,
-                embedding=service._serialize_embedding(service._generate_embedding(f"案例{i}"))
-            ) for i in range(5)
+                embedding=service._serialize_embedding(service._generate_embedding(f"案例{i}")),
+            )
+            for i in range(5)
         ]
         db.query.return_value.filter.return_value.all.return_value = cases[:2]  # only 2 returned
         req = AIQARequest(question="问题")

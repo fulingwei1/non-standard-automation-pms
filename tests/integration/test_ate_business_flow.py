@@ -10,22 +10,22 @@
 不依赖外部服务，完全使用内存DB运行。
 """
 
-import pytest
+import uuid
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from tests.fixtures.industry_data import (
-    SAMPLE_PROJECTS,
     CUSTOMERS,
-    SAMPLE_MATERIALS,
-    SAMPLE_TIMESHEETS,
     KPI_BENCHMARKS,
     PROJECT_TYPES,
-    make_mock_project,
+    SAMPLE_MATERIALS,
+    SAMPLE_PROJECTS,
+    SAMPLE_TIMESHEETS,
     make_mock_db_with_projects,
+    make_mock_project,
 )
-
-import uuid
 
 _MAT_KK_001 = f"MAT-KK-001-{uuid.uuid4().hex[:8]}"
 _MAT_KK_004 = f"MAT-KK-004-{uuid.uuid4().hex[:8]}"
@@ -65,6 +65,7 @@ class TimesheetStatus:
 
 class SimpleProject:
     """轻量级项目模型"""
+
     def __init__(self, **kwargs):
         self.id = kwargs.get("id")
         self.project_code = kwargs.get("project_code", "")
@@ -85,6 +86,7 @@ class SimpleProject:
 
 class BOMItem:
     """BOM物料条目"""
+
     def __init__(self, **kwargs):
         self.material_code = kwargs.get("material_code", "")
         self.material_name = kwargs.get("material_name", "")
@@ -104,6 +106,7 @@ class BOMItem:
 
 class PurchaseRequest:
     """采购申请"""
+
     def __init__(self, **kwargs):
         self.id = kwargs.get("id")
         self.project_code = kwargs.get("project_code", "")
@@ -119,6 +122,7 @@ class PurchaseRequest:
 
 class TimesheetEntry:
     """工时条目"""
+
     def __init__(self, **kwargs):
         self.id = kwargs.get("id")
         self.engineer_id = kwargs.get("engineer_id")
@@ -141,9 +145,15 @@ class ICTProjectService:
 
     STAGE_SEQUENCE = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
     STAGE_NAMES = {
-        "S1": "立项评估", "S2": "合同签订", "S3": "需求确认",
-        "S4": "方案设计", "S5": "物料采购", "S6": "装配联调",
-        "S7": "FAT验收", "S8": "安装调试", "S9": "质保结项",
+        "S1": "立项评估",
+        "S2": "合同签订",
+        "S3": "需求确认",
+        "S4": "方案设计",
+        "S5": "物料采购",
+        "S6": "装配联调",
+        "S7": "FAT验收",
+        "S8": "安装调试",
+        "S9": "质保结项",
     }
 
     def __init__(self):
@@ -187,7 +197,9 @@ class ICTProjectService:
             project.status = "IN_PROGRESS"
         return project
 
-    def record_fat_result(self, project_id: int, passed: bool, fat_date: date = None) -> SimpleProject:
+    def record_fat_result(
+        self, project_id: int, passed: bool, fat_date: date = None
+    ) -> SimpleProject:
         """记录FAT验收结果"""
         project = self._projects[project_id]
         project.fat_result = "PASS" if passed else "FAIL"
@@ -219,7 +231,9 @@ class BOMShortageService:
         """检查BOM缺料，返回缺料列表"""
         return [item for item in bom_items if item.is_short]
 
-    def trigger_purchase_request(self, project_code: str, shortage_item: BOMItem) -> PurchaseRequest:
+    def trigger_purchase_request(
+        self, project_code: str, shortage_item: BOMItem
+    ) -> PurchaseRequest:
         """根据缺料自动触发采购申请"""
         pr = PurchaseRequest(
             id=self._next_pr_id,
@@ -329,6 +343,7 @@ class TimesheetService:
 # 测试 Fixture
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def project_service():
     return ICTProjectService()
@@ -364,14 +379,38 @@ def ict_project_data():
 def ict_bom_items():
     """ICT项目典型BOM"""
     return [
-        BOMItem(material_code=_MAT_NI_001, material_name="NI PXI机箱",
-                required_qty=1, received_qty=0, unit_price=35000, lead_time_days=30),
-        BOMItem(material_code=_MAT_NI_002, material_name="NI数字IO板卡",
-                required_qty=6, received_qty=0, unit_price=8500, lead_time_days=21),
-        BOMItem(material_code=_MAT_KK_001, material_name="气缸",
-                required_qty=20, received_qty=15, unit_price=280, lead_time_days=7),
-        BOMItem(material_code=_MAT_KK_004, material_name="铝合金型材",
-                required_qty=50, received_qty=50, unit_price=45, lead_time_days=3),
+        BOMItem(
+            material_code=_MAT_NI_001,
+            material_name="NI PXI机箱",
+            required_qty=1,
+            received_qty=0,
+            unit_price=35000,
+            lead_time_days=30,
+        ),
+        BOMItem(
+            material_code=_MAT_NI_002,
+            material_name="NI数字IO板卡",
+            required_qty=6,
+            received_qty=0,
+            unit_price=8500,
+            lead_time_days=21,
+        ),
+        BOMItem(
+            material_code=_MAT_KK_001,
+            material_name="气缸",
+            required_qty=20,
+            received_qty=15,
+            unit_price=280,
+            lead_time_days=7,
+        ),
+        BOMItem(
+            material_code=_MAT_KK_004,
+            material_name="铝合金型材",
+            required_qty=50,
+            received_qty=50,
+            unit_price=45,
+            lead_time_days=3,
+        ),
     ]
 
 
@@ -379,12 +418,11 @@ def ict_bom_items():
 # 测试类 1：ICT 项目全流程
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestICTProjectFullLifecycle:
     """ICT项目从立项到FAT验收的完整业务流程集成测试"""
 
-    def test_project_creation_with_correct_initial_status(
-        self, project_service, ict_project_data
-    ):
+    def test_project_creation_with_correct_initial_status(self, project_service, ict_project_data):
         """立项后状态应为DRAFT，阶段S1"""
         project = project_service.create_project(ict_project_data)
         assert project.id is not None
@@ -393,9 +431,7 @@ class TestICTProjectFullLifecycle:
         assert project.name == ict_project_data["name"]
         assert project.budget == 320000
 
-    def test_project_approval_changes_status_to_approved(
-        self, project_service, ict_project_data
-    ):
+    def test_project_approval_changes_status_to_approved(self, project_service, ict_project_data):
         """审批立项：状态从DRAFT变为APPROVED"""
         project = project_service.create_project(ict_project_data)
         approved = project_service.approve_project(project.id)
@@ -430,16 +466,12 @@ class TestICTProjectFullLifecycle:
         """FAT一次通过：记录PASS结果和日期"""
         project = project_service.create_project(ict_project_data)
         fat_date = date(2026, 5, 10)
-        result = project_service.record_fat_result(
-            project.id, passed=True, fat_date=fat_date
-        )
+        result = project_service.record_fat_result(project.id, passed=True, fat_date=fat_date)
         assert result.fat_result == "PASS"
         assert result.fat_date == fat_date
         assert result.status == "FAT_PASSED"
 
-    def test_fat_fail_result_does_not_complete_project(
-        self, project_service, ict_project_data
-    ):
+    def test_fat_fail_result_does_not_complete_project(self, project_service, ict_project_data):
         """FAT不通过：项目不进入已完成状态，需要整改"""
         project = project_service.create_project(ict_project_data)
         result = project_service.record_fat_result(project.id, passed=False)
@@ -447,16 +479,12 @@ class TestICTProjectFullLifecycle:
         assert result.status != "COMPLETED"
         assert result.status != "FAT_PASSED"
 
-    def test_project_completion_with_on_time_delivery(
-        self, project_service, ict_project_data
-    ):
+    def test_project_completion_with_on_time_delivery(self, project_service, ict_project_data):
         """项目按期结项：实际结束日≤计划结束日"""
         project = project_service.create_project(ict_project_data)
         project_service.record_fat_result(project.id, passed=True)
         actual_end = date(2026, 5, 15)  # 提前2天完成
-        completed = project_service.complete_project(
-            project.id, actual_end_date=actual_end
-        )
+        completed = project_service.complete_project(project.id, actual_end_date=actual_end)
         assert completed.status == "COMPLETED"
         assert completed.actual_end_date == actual_end
         assert completed.actual_end_date <= completed.planned_end_date
@@ -479,12 +507,11 @@ class TestICTProjectFullLifecycle:
 # 测试类 2：BOM缺料触发采购申请流程
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestBOMShortageAndPurchaseRequestFlow:
     """BOM缺料检测→采购申请→到货确认完整流程"""
 
-    def test_bom_shortage_detection_identifies_all_short_items(
-        self, bom_service, ict_bom_items
-    ):
+    def test_bom_shortage_detection_identifies_all_short_items(self, bom_service, ict_bom_items):
         """BOM缺料检测：正确识别所有缺料物料"""
         # MAT-NI-001: 需1个，已0个（缺货）
         # MAT-NI-002: 需6个，已0个（缺货）
@@ -504,17 +531,13 @@ class TestBOMShortageAndPurchaseRequestFlow:
         ni_002 = next(i for i in ict_bom_items if i.material_code == _MAT_NI_002)
         kk_001 = next(i for i in ict_bom_items if i.material_code == _MAT_KK_001)
 
-        assert ni_001.shortage_qty == 1    # 需1个，有0个
-        assert ni_002.shortage_qty == 6    # 需6个，有0个
-        assert kk_001.shortage_qty == 5    # 需20个，有15个
+        assert ni_001.shortage_qty == 1  # 需1个，有0个
+        assert ni_002.shortage_qty == 6  # 需6个，有0个
+        assert kk_001.shortage_qty == 5  # 需20个，有15个
 
-    def test_purchase_request_triggered_from_bom_shortage(
-        self, bom_service, ict_bom_items
-    ):
+    def test_purchase_request_triggered_from_bom_shortage(self, bom_service, ict_bom_items):
         """缺料触发采购申请：申请信息正确"""
-        shortage_item = next(
-            i for i in ict_bom_items if i.material_code == _MAT_NI_001
-        )
+        shortage_item = next(i for i in ict_bom_items if i.material_code == _MAT_NI_001)
         pr = bom_service.trigger_purchase_request(_PJ260201001, shortage_item)
 
         assert pr.id is not None
@@ -525,15 +548,10 @@ class TestBOMShortageAndPurchaseRequestFlow:
         assert pr.status == PurchaseRequestStatus.PENDING
         assert "BOM缺料" in pr.trigger_reason
 
-    def test_batch_purchase_requests_for_all_shortages(
-        self, bom_service, ict_bom_items
-    ):
+    def test_batch_purchase_requests_for_all_shortages(self, bom_service, ict_bom_items):
         """为所有缺料物料批量触发采购申请"""
         shortages = bom_service.check_bom_shortage(_PJ260201001, ict_bom_items)
-        prs = [
-            bom_service.trigger_purchase_request(_PJ260201001, item)
-            for item in shortages
-        ]
+        prs = [bom_service.trigger_purchase_request(_PJ260201001, item) for item in shortages]
         assert len(prs) == 3
         # 总采购金额 = NI机箱35000 + IO板卡(6×8500=51000) + 气缸(5×280=1400) = 87400
         total_amount = sum(pr.total_amount for pr in prs)
@@ -541,9 +559,7 @@ class TestBOMShortageAndPurchaseRequestFlow:
 
     def test_purchase_request_approval_flow(self, bom_service, ict_bom_items):
         """采购申请审批流程：PENDING → APPROVED"""
-        shortage_item = next(
-            i for i in ict_bom_items if i.material_code == _MAT_NI_002
-        )
+        shortage_item = next(i for i in ict_bom_items if i.material_code == _MAT_NI_002)
         pr = bom_service.trigger_purchase_request(_PJ260201001, shortage_item)
         assert pr.status == PurchaseRequestStatus.PENDING
 
@@ -586,20 +602,23 @@ class TestBOMShortageAndPurchaseRequestFlow:
 # 测试类 3：工时录入→审批→统计报表流程
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestTimesheetWorkflow:
     """工时录入→审批→报表统计完整流程"""
 
     def test_engineer_submits_timesheet_correctly(self, timesheet_service):
         """工程师提交工时：状态为SUBMITTED"""
-        entry = timesheet_service.submit_timesheet({
-            "engineer_id": 10,
-            "engineer_name": "张工（机械）",
-            "project_id": 1,
-            "date": date(2026, 2, 17),
-            "hours": 8.0,
-            "type": "HARDWARE",
-            "description": "ICT夹具上压板机械设计",
-        })
+        entry = timesheet_service.submit_timesheet(
+            {
+                "engineer_id": 10,
+                "engineer_name": "张工（机械）",
+                "project_id": 1,
+                "date": date(2026, 2, 17),
+                "hours": 8.0,
+                "type": "HARDWARE",
+                "description": "ICT夹具上压板机械设计",
+            }
+        )
         assert entry.id is not None
         assert entry.status == TimesheetStatus.SUBMITTED
         assert entry.hours == 8.0
@@ -607,33 +626,37 @@ class TestTimesheetWorkflow:
 
     def test_pm_approves_timesheet_changes_status(self, timesheet_service):
         """PM审批工时：状态变为APPROVED"""
-        entry = timesheet_service.submit_timesheet({
-            "engineer_id": 11,
-            "project_id": 1,
-            "hours": 8.0,
-            "type": "SOFTWARE",
-            "description": "ICT测试程序基础框架开发",
-        })
+        entry = timesheet_service.submit_timesheet(
+            {
+                "engineer_id": 11,
+                "project_id": 1,
+                "hours": 8.0,
+                "type": "SOFTWARE",
+                "description": "ICT测试程序基础框架开发",
+            }
+        )
         approved = timesheet_service.approve_timesheet(entry.id)
         assert approved.status == TimesheetStatus.APPROVED
 
     def test_pm_rejects_invalid_timesheet(self, timesheet_service):
         """PM驳回不合规工时"""
-        entry = timesheet_service.submit_timesheet({
-            "engineer_id": 12,
-            "project_id": 1,
-            "hours": 16.0,  # 异常：超过12小时
-            "type": "HARDWARE",
-            "description": "",  # 描述为空
-        })
+        entry = timesheet_service.submit_timesheet(
+            {
+                "engineer_id": 12,
+                "project_id": 1,
+                "hours": 16.0,  # 异常：超过12小时
+                "type": "HARDWARE",
+                "description": "",  # 描述为空
+            }
+        )
         rejected = timesheet_service.reject_timesheet(entry.id, reason="工时超过正常范围，描述为空")
         assert rejected.status == TimesheetStatus.REJECTED
 
     def test_approve_already_approved_raises_error(self, timesheet_service):
         """重复审批工时应报错"""
-        entry = timesheet_service.submit_timesheet({
-            "engineer_id": 10, "project_id": 1, "hours": 8.0, "type": "DESIGN"
-        })
+        entry = timesheet_service.submit_timesheet(
+            {"engineer_id": 10, "project_id": 1, "hours": 8.0, "type": "DESIGN"}
+        )
         timesheet_service.approve_timesheet(entry.id)
         with pytest.raises(ValueError, match="not in SUBMITTED status"):
             timesheet_service.approve_timesheet(entry.id)
@@ -642,16 +665,31 @@ class TestTimesheetWorkflow:
         """工时报表只统计已审批的工时"""
         # 提交3条工时
         e1 = timesheet_service.submit_timesheet(
-            {"engineer_id": 10, "project_id": 1, "hours": 8.0, "type": "HARDWARE",
-             "description": "夹具设计"}
+            {
+                "engineer_id": 10,
+                "project_id": 1,
+                "hours": 8.0,
+                "type": "HARDWARE",
+                "description": "夹具设计",
+            }
         )
         e2 = timesheet_service.submit_timesheet(
-            {"engineer_id": 11, "project_id": 1, "hours": 6.0, "type": "SOFTWARE",
-             "description": "程序开发"}
+            {
+                "engineer_id": 11,
+                "project_id": 1,
+                "hours": 6.0,
+                "type": "SOFTWARE",
+                "description": "程序开发",
+            }
         )
         e3 = timesheet_service.submit_timesheet(
-            {"engineer_id": 10, "project_id": 1, "hours": 4.0, "type": "DEBUGGING",
-             "description": "联调调试"}
+            {
+                "engineer_id": 10,
+                "project_id": 1,
+                "hours": 4.0,
+                "type": "DEBUGGING",
+                "description": "联调调试",
+            }
         )
         # 只审批前两条
         timesheet_service.approve_timesheet(e1.id)
@@ -662,17 +700,32 @@ class TestTimesheetWorkflow:
         assert report["project_id"] == 1
         assert report["total_entries"] == 3
         assert report["approved_hours"] == pytest.approx(14.0)  # 8 + 6
-        assert report["total_hours"] == pytest.approx(18.0)     # 8 + 6 + 4
+        assert report["total_hours"] == pytest.approx(18.0)  # 8 + 6 + 4
 
     def test_timesheet_report_breakdown_by_type(self, timesheet_service):
         """工时报表：按工时类型统计分布"""
         submissions = [
-            {"engineer_id": 10, "project_id": 2, "hours": 8.0, "type": "HARDWARE",
-             "description": "EOL夹具结构设计"},
-            {"engineer_id": 11, "project_id": 2, "hours": 6.0, "type": "SOFTWARE",
-             "description": "EOL测试程序开发"},
-            {"engineer_id": 11, "project_id": 2, "hours": 4.0, "type": "DESIGN",
-             "description": "EOL系统方案设计"},
+            {
+                "engineer_id": 10,
+                "project_id": 2,
+                "hours": 8.0,
+                "type": "HARDWARE",
+                "description": "EOL夹具结构设计",
+            },
+            {
+                "engineer_id": 11,
+                "project_id": 2,
+                "hours": 6.0,
+                "type": "SOFTWARE",
+                "description": "EOL测试程序开发",
+            },
+            {
+                "engineer_id": 11,
+                "project_id": 2,
+                "hours": 4.0,
+                "type": "DESIGN",
+                "description": "EOL系统方案设计",
+            },
         ]
         entry_ids = []
         for s in submissions:
@@ -691,12 +744,27 @@ class TestTimesheetWorkflow:
     def test_timesheet_report_breakdown_by_engineer(self, timesheet_service):
         """工时报表：按工程师统计各人工时"""
         for data in [
-            {"engineer_id": 10, "project_id": 3, "hours": 8.0, "type": "HARDWARE",
-             "description": "机械设计"},
-            {"engineer_id": 10, "project_id": 3, "hours": 4.0, "type": "DEBUGGING",
-             "description": "现场调试"},
-            {"engineer_id": 11, "project_id": 3, "hours": 6.0, "type": "SOFTWARE",
-             "description": "软件开发"},
+            {
+                "engineer_id": 10,
+                "project_id": 3,
+                "hours": 8.0,
+                "type": "HARDWARE",
+                "description": "机械设计",
+            },
+            {
+                "engineer_id": 10,
+                "project_id": 3,
+                "hours": 4.0,
+                "type": "DEBUGGING",
+                "description": "现场调试",
+            },
+            {
+                "engineer_id": 11,
+                "project_id": 3,
+                "hours": 6.0,
+                "type": "SOFTWARE",
+                "description": "软件开发",
+            },
         ]:
             e = timesheet_service.submit_timesheet(data)
             timesheet_service.approve_timesheet(e.id)
@@ -718,14 +786,16 @@ class TestTimesheetWorkflow:
         entries = []
         for day in range(10):
             work_date = date(2026, 2, 17) + timedelta(days=day)
-            e = timesheet_service.submit_timesheet({
-                "engineer_id": 10,
-                "project_id": project.id,
-                "date": work_date,
-                "hours": 8.0,
-                "type": "HARDWARE",
-                "description": f"ICT夹具设计第{day+1}天",
-            })
+            e = timesheet_service.submit_timesheet(
+                {
+                    "engineer_id": 10,
+                    "project_id": project.id,
+                    "date": work_date,
+                    "hours": 8.0,
+                    "type": "HARDWARE",
+                    "description": f"ICT夹具设计第{day+1}天",
+                }
+            )
             entries.append(e)
 
         # 3. PM批量审批
@@ -734,7 +804,7 @@ class TestTimesheetWorkflow:
 
         # 4. 生成报表
         report = timesheet_service.get_project_report(project_id=project.id)
-        assert report["approved_hours"] == pytest.approx(80.0)   # 10天 × 8小时
+        assert report["approved_hours"] == pytest.approx(80.0)  # 10天 × 8小时
         assert report["total_entries"] == 10
         assert report["by_type"].get("HARDWARE") == pytest.approx(80.0)
 

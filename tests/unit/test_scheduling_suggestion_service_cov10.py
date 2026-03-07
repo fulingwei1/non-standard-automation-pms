@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十批：SchedulingSuggestionService 单元测试"""
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.scheduling_suggestion_service import SchedulingSuggestionService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -74,9 +76,7 @@ def test_calculate_priority_score_p1(db):
 def test_calculate_priority_score_p5(db):
     """P5优先级项目"""
     project = _make_full_project(priority="P5", planned_end_date=date.today() + timedelta(days=90))
-    result = SchedulingSuggestionService.calculate_priority_score(
-        db=db, project=project
-    )
+    result = SchedulingSuggestionService.calculate_priority_score(db=db, project=project)
     assert result is not None
 
 
@@ -97,16 +97,12 @@ def test_contract_amount_scores_defined():
 def test_calculate_priority_score_unknown_priority(db):
     """未知优先级 - 映射到默认值"""
     project = _make_full_project(priority="UNKNOWN")
-    result = SchedulingSuggestionService.calculate_priority_score(
-        db=db, project=project
-    )
+    result = SchedulingSuggestionService.calculate_priority_score(db=db, project=project)
     assert result is not None
 
 
 def test_calculate_priority_score_high(db):
     """HIGH 优先级映射到 P1"""
     project = _make_full_project(priority="HIGH")
-    result = SchedulingSuggestionService.calculate_priority_score(
-        db=db, project=project
-    )
+    result = SchedulingSuggestionService.calculate_priority_score(db=db, project=project)
     assert result is not None

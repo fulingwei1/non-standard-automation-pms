@@ -23,11 +23,7 @@ def count_active_contracts(db: Session) -> int:
     Returns:
         int: 合同数量
     """
-    return (
-        db.query(Contract)
-        .filter(Contract.status.in_(["SIGNED", "EXECUTING"]))
-        .count()
-    )
+    return db.query(Contract).filter(Contract.status.in_(["SIGNED", "EXECUTING"])).count()
 
 
 def calculate_pending_amount(db: Session, today: date) -> Decimal:
@@ -39,11 +35,15 @@ def calculate_pending_amount(db: Session, today: date) -> Decimal:
     """
     today.strftime("%Y-%m-%d")
 
-    pending_result = db.execute(text("""
+    pending_result = db.execute(
+        text(
+            """
         SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as pending
         FROM project_payment_plans
         WHERE status IN ('PENDING', 'PARTIAL', 'INVOICED')
-    """)).fetchone()
+    """
+        )
+    ).fetchone()
 
     return Decimal(str(pending_result[0])) if pending_result else Decimal("0")
 
@@ -57,12 +57,17 @@ def calculate_overdue_amount(db: Session, today: date) -> Decimal:
     """
     today_str = today.strftime("%Y-%m-%d")
 
-    overdue_result = db.execute(text("""
+    overdue_result = db.execute(
+        text(
+            """
         SELECT COALESCE(SUM(planned_amount - actual_amount), 0) as overdue
         FROM project_payment_plans
         WHERE status IN ('PENDING', 'PARTIAL', 'INVOICED')
         AND planned_date < :today
-    """), {"today": today_str}).fetchone()
+    """
+        ),
+        {"today": today_str},
+    ).fetchone()
 
     return Decimal(str(overdue_result[0])) if overdue_result else Decimal("0")
 
@@ -81,14 +86,18 @@ def calculate_invoice_rate(db: Session, today: date) -> Decimal:
         .filter(
             Invoice.issue_date >= month_start,
             Invoice.issue_date <= today,
-            Invoice.status == "ISSUED"
+            Invoice.status == "ISSUED",
         )
         .count()
     )
 
     total_invoices = db.query(Invoice).count()
 
-    return Decimal("0") if total_invoices == 0 else Decimal(month_invoices) / Decimal(total_invoices) * 100
+    return (
+        Decimal("0")
+        if total_invoices == 0
+        else Decimal(month_invoices) / Decimal(total_invoices) * 100
+    )
 
 
 def count_active_bidding(db: Session) -> int:
@@ -117,15 +126,14 @@ def calculate_acceptance_rate(db: Session) -> Decimal:
 
         if total_acceptance > 0:
             on_time_acceptance = (
-                db.query(AcceptanceOrder)
-                .filter(AcceptanceOrder.status == "COMPLETED")
-                .count()
+                db.query(AcceptanceOrder).filter(AcceptanceOrder.status == "COMPLETED").count()
             )
             return Decimal(on_time_acceptance) / Decimal(total_acceptance) * 100
         else:
             return Decimal("0")
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).error(f"计算验收按期率失败: {e}")
         return Decimal("0")
 
@@ -144,10 +152,7 @@ def get_urgent_tasks(db: Session, current_user_id: int, today: date) -> List[Dic
         .filter(
             TaskUnified.assignee_id == current_user_id,
             TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
-            or_(
-                TaskUnified.is_urgent,
-                TaskUnified.priority == "URGENT"
-            )
+            or_(TaskUnified.is_urgent, TaskUnified.priority == "URGENT"),
         )
         .order_by(TaskUnified.deadline.asc())
         .limit(10)
@@ -164,7 +169,7 @@ def get_urgent_tasks(db: Session, current_user_id: int, today: date) -> List[Dic
             "deadline": task.deadline.strftime("%Y-%m-%d") if task.deadline else None,
             "daysLeft": (task.deadline.date() - today).days if task.deadline else None,
             "priority": "high",
-            "status": task.status.lower()
+            "status": task.status.lower(),
         }
         for task in urgent_tasks_list
     ]
@@ -186,11 +191,8 @@ def get_today_todos(db: Session, current_user_id: int, today: date) -> List[Dict
             TaskUnified.status.in_(["PENDING", "ACCEPTED", "IN_PROGRESS"]),
             or_(
                 TaskUnified.deadline == today,
-                and_(
-                    TaskUnified.deadline.isnot(None),
-                    TaskUnified.deadline < today_start
-                )
-            )
+                and_(TaskUnified.deadline.isnot(None), TaskUnified.deadline < today_start),
+            ),
         )
         .order_by(TaskUnified.priority.desc(), TaskUnified.deadline.asc())
         .limit(20)
@@ -207,7 +209,7 @@ def get_today_todos(db: Session, current_user_id: int, today: date) -> List[Dict
             "deadline": task.deadline.strftime("%Y-%m-%d") if task.deadline else None,
             "daysLeft": (task.deadline.date() - today).days if task.deadline else None,
             "priority": task.priority.lower() if task.priority else "medium",
-            "status": task.status.lower()
+            "status": task.status.lower(),
         }
         for task in today_todos_list
     ]

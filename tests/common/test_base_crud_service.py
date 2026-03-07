@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for BaseCRUDService (sync, with QueryParams/PaginatedResult)"""
 
+from typing import Optional
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
 
-from app.common.crud.types import QueryParams, PaginatedResult, SortOrder
+from app.common.crud.types import PaginatedResult, QueryParams, SortOrder
 
 
 # ---------------------------------------------------------------------------
@@ -32,8 +34,8 @@ class FakeCreate(BaseModel):
 
 
 class FakeUpdate(BaseModel):
-    name: str | None = None
-    status: str | None = None
+    name: Optional[str] = None
+    status: Optional[str] = None
 
 
 class FakeResponse(BaseModel):

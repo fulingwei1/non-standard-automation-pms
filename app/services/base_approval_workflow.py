@@ -98,11 +98,7 @@ class BaseApprovalWorkflowService(ABC):
         errors = []
 
         for order_id in order_ids:
-            entity = (
-                self.db.query(self.model_class)
-                .filter(self.model_class.id == order_id)
-                .first()
-            )
+            entity = self.db.query(self.model_class).filter(self.model_class.id == order_id).first()
             if not entity:
                 errors.append({"order_id": order_id, "error": f"{self.entity_label}不存在"})
                 continue
@@ -146,9 +142,7 @@ class BaseApprovalWorkflowService(ABC):
         limit: int = 20,
     ) -> Dict[str, Any]:
         """获取待审批任务列表"""
-        tasks = self.engine.get_pending_tasks(
-            user_id=user_id, entity_type=self.entity_type
-        )
+        tasks = self.engine.get_pending_tasks(user_id=user_id, entity_type=self.entity_type)
 
         total = len(tasks)
         paginated_tasks = tasks[offset : offset + limit]
@@ -166,12 +160,8 @@ class BaseApprovalWorkflowService(ABC):
                 "task_id": task.id,
                 "instance_id": instance.id,
                 "order_id": instance.entity_id,
-                "initiator_name": instance.initiator.real_name
-                if instance.initiator
-                else None,
-                "submitted_at": instance.created_at.isoformat()
-                if instance.created_at
-                else None,
+                "initiator_name": instance.initiator.real_name if instance.initiator else None,
+                "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
                 "urgency": instance.urgency,
                 "node_name": task.node.node_name if task.node else None,
             }
@@ -189,15 +179,11 @@ class BaseApprovalWorkflowService(ABC):
     ) -> Dict[str, Any]:
         """执行审批操作"""
         if action == "approve":
-            result = self.engine.approve(
-                task_id=task_id, approver_id=approver_id, comment=comment
-            )
+            result = self.engine.approve(task_id=task_id, approver_id=approver_id, comment=comment)
             if hasattr(result, "status") and result.status == "APPROVED":
                 self._on_approved(result.entity_id, approver_id)
         elif action == "reject":
-            result = self.engine.reject(
-                task_id=task_id, approver_id=approver_id, comment=comment
-            )
+            result = self.engine.reject(task_id=task_id, approver_id=approver_id, comment=comment)
             if hasattr(result, "status") and result.status == "REJECTED":
                 self._on_rejected(result.entity_id, approver_id)
         else:
@@ -236,11 +222,7 @@ class BaseApprovalWorkflowService(ABC):
 
     def get_approval_status(self, order_id: int) -> Dict[str, Any]:
         """查询审批状态"""
-        entity = (
-            self.db.query(self.model_class)
-            .filter(self.model_class.id == order_id)
-            .first()
-        )
+        entity = self.db.query(self.model_class).filter(self.model_class.id == order_id).first()
         if not entity:
             raise ValueError(f"{self.entity_label}不存在")
 
@@ -277,15 +259,11 @@ class BaseApprovalWorkflowService(ABC):
                 {
                     "task_id": task.id,
                     "node_name": task.node.node_name if task.node else None,
-                    "assignee_name": task.assignee.real_name
-                    if task.assignee
-                    else None,
+                    "assignee_name": task.assignee.real_name if task.assignee else None,
                     "status": task.status,
                     "action": task.action,
                     "comment": task.comment,
-                    "completed_at": task.completed_at.isoformat()
-                    if task.completed_at
-                    else None,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 }
             )
 
@@ -296,12 +274,8 @@ class BaseApprovalWorkflowService(ABC):
             "instance_id": instance.id,
             "instance_status": instance.status,
             "urgency": instance.urgency,
-            "submitted_at": instance.created_at.isoformat()
-            if instance.created_at
-            else None,
-            "completed_at": instance.completed_at.isoformat()
-            if instance.completed_at
-            else None,
+            "submitted_at": instance.created_at.isoformat() if instance.created_at else None,
+            "completed_at": instance.completed_at.isoformat() if instance.completed_at else None,
             "task_history": task_history,
         }
 
@@ -312,11 +286,7 @@ class BaseApprovalWorkflowService(ABC):
         reason: Optional[str] = None,
     ) -> Dict[str, Any]:
         """撤回审批"""
-        entity = (
-            self.db.query(self.model_class)
-            .filter(self.model_class.id == order_id)
-            .first()
-        )
+        entity = self.db.query(self.model_class).filter(self.model_class.id == order_id).first()
         if not entity:
             raise ValueError(f"{self.entity_label}不存在")
 
@@ -366,12 +336,7 @@ class BaseApprovalWorkflowService(ABC):
             query = query.filter(ApprovalTask.status == status_filter)
 
         total = query.count()
-        tasks = (
-            query.order_by(ApprovalTask.completed_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        tasks = query.order_by(ApprovalTask.completed_at.desc()).offset(offset).limit(limit).all()
 
         items = []
         for task in tasks:
@@ -388,9 +353,7 @@ class BaseApprovalWorkflowService(ABC):
                 "action": task.action,
                 "status": task.status,
                 "comment": task.comment,
-                "completed_at": task.completed_at.isoformat()
-                if task.completed_at
-                else None,
+                "completed_at": task.completed_at.isoformat() if task.completed_at else None,
             }
             base_item.update(self._build_history_item(task, entity))
             items.append(base_item)

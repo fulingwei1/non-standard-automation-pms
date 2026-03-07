@@ -38,9 +38,7 @@ def load_baseline():
     """Load stored OpenAPI baseline."""
     baseline_path = Path("tests/openapi_baseline.json")
     if not baseline_path.exists():
-        raise FileNotFoundError(
-            "Baseline not found. Run generate_openapi_baseline.py first"
-        )
+        raise FileNotFoundError("Baseline not found. Run generate_openapi_baseline.py first")
 
     with open(baseline_path) as f:
         return json.load(f)
@@ -93,9 +91,7 @@ def check_breaking_changes(current_openapi, baseline_openapi):
 
         # Check for type changes
         for field_name, field_schema in current_schema.get("properties", {}).items():
-            baseline_type = (
-                baseline_schema.get("properties", {}).get(field_name, {}).get("type")
-            )
+            baseline_type = baseline_schema.get("properties", {}).get(field_name, {}).get("type")
             current_type = field_schema.get("type")
 
             if baseline_type != current_type:
@@ -123,10 +119,7 @@ def extract_schemas(openapi_schema):
         get_spec = path_spec.get("get", {})
         if get_spec:
             schema_ref = (
-                get_spec.get("responses", {})
-                .get("200", {})
-                .get("content", {})
-                .get("schema", {})
+                get_spec.get("responses", {}).get("200", {}).get("content", {}).get("schema", {})
             )
             if "$ref" in schema_ref:
                 schemas[path] = schema_ref
@@ -166,6 +159,7 @@ def main():
             # Try to use importlib to load app module
             try:
                 import importlib
+
                 import app
 
                 openapi_schema = app.openapi()

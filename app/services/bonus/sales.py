@@ -25,7 +25,7 @@ class SalesBonusCalculator(BonusCalculatorBase):
         self,
         contract: Contract,
         bonus_rule: BonusRule,
-        based_on: str = 'CONTRACT'  # CONTRACT: 合同签订, PAYMENT: 回款
+        based_on: str = "CONTRACT",  # CONTRACT: 合同签订, PAYMENT: 回款
     ) -> Optional[BonusCalculation]:
         """
         计算销售奖金
@@ -43,18 +43,18 @@ class SalesBonusCalculator(BonusCalculatorBase):
             BonusCalculation: 计算记录
         """
         # 检查触发条件
-        context = {'contract': contract, 'based_on': based_on}
+        context = {"contract": contract, "based_on": based_on}
         if not self.check_trigger_condition(bonus_rule, context):
             return None
 
         if not contract.owner_id:
             return None
 
-        contract_amount = contract.contract_amount or Decimal('0')
+        contract_amount = contract.contract_amount or Decimal("0")
 
-        if based_on == 'CONTRACT':
+        if based_on == "CONTRACT":
             # 基于合同金额计算
-            bonus_ratio = (bonus_rule.coefficient or Decimal('0')) / Decimal('100')
+            bonus_ratio = (bonus_rule.coefficient or Decimal("0")) / Decimal("100")
             calculated_amount = contract_amount * bonus_ratio
 
             calculation = BonusCalculation(
@@ -67,31 +67,32 @@ class SalesBonusCalculator(BonusCalculatorBase):
                     "contract_code": contract.contract_code,
                     "contract_amount": float(contract_amount),
                     "bonus_ratio": float(bonus_ratio),
-                    "based_on": "CONTRACT"
+                    "based_on": "CONTRACT",
                 },
                 calculation_basis={
                     "type": "sales",
                     "contract_id": contract.id,
-                    "based_on": "CONTRACT"
+                    "based_on": "CONTRACT",
                 },
-                status='CALCULATED'
+                status="CALCULATED",
             )
             return calculation
 
-        elif based_on == 'PAYMENT':
+        elif based_on == "PAYMENT":
             # 基于回款金额计算
             # 获取该合同的所有已回款发票
-            invoices = self.db.query(Invoice).filter(
-                Invoice.contract_id == contract.id,
-                Invoice.payment_status == 'PAID'
-            ).all()
+            invoices = (
+                self.db.query(Invoice)
+                .filter(Invoice.contract_id == contract.id, Invoice.payment_status == "PAID")
+                .all()
+            )
 
             total_paid = sum(float(inv.paid_amount or inv.total_amount or 0) for inv in invoices)
 
             if total_paid <= 0:
                 return None
 
-            bonus_ratio = (bonus_rule.coefficient or Decimal('0')) / Decimal('100')
+            bonus_ratio = (bonus_rule.coefficient or Decimal("0")) / Decimal("100")
             calculated_amount = Decimal(str(total_paid)) * bonus_ratio
 
             calculation = BonusCalculation(
@@ -105,26 +106,22 @@ class SalesBonusCalculator(BonusCalculatorBase):
                     "total_paid": total_paid,
                     "bonus_ratio": float(bonus_ratio),
                     "based_on": "PAYMENT",
-                    "invoice_count": len(invoices)
+                    "invoice_count": len(invoices),
                 },
                 calculation_basis={
                     "type": "sales",
                     "contract_id": contract.id,
                     "based_on": "PAYMENT",
-                    "invoice_ids": [inv.id for inv in invoices]
+                    "invoice_ids": [inv.id for inv in invoices],
                 },
-                status='CALCULATED'
+                status="CALCULATED",
             )
             return calculation
 
         return None
 
     def calculate_director_bonus(
-        self,
-        director_id: int,
-        period_start: date,
-        period_end: date,
-        bonus_rule: BonusRule
+        self, director_id: int, period_start: date, period_end: date, bonus_rule: BonusRule
     ) -> Optional[BonusCalculation]:
         """
         计算销售总监奖金（基于团队业绩）
@@ -140,9 +137,9 @@ class SalesBonusCalculator(BonusCalculatorBase):
         """
         # 检查触发条件
         context = {
-            'director_id': director_id,
-            'period_start': period_start,
-            'period_end': period_end
+            "director_id": director_id,
+            "period_start": period_start,
+            "period_end": period_end,
         }
         if not self.check_trigger_condition(bonus_rule, context):
             return None
@@ -153,11 +150,15 @@ class SalesBonusCalculator(BonusCalculatorBase):
         # 这里先简化处理，查询该周期内所有合同
 
         # 查询周期内签订的合同
-        contracts = self.db.query(Contract).filter(
-            Contract.signing_date >= period_start,
-            Contract.signing_date <= period_end,
-            Contract.status == 'SIGNED'
-        ).all()
+        contracts = (
+            self.db.query(Contract)
+            .filter(
+                Contract.signing_date >= period_start,
+                Contract.signing_date <= period_end,
+                Contract.status == "SIGNED",
+            )
+            .all()
+        )
 
         if not contracts:
             return None
@@ -166,7 +167,7 @@ class SalesBonusCalculator(BonusCalculatorBase):
         total_amount = sum(float(c.contract_amount or 0) for c in contracts)
 
         # 计算奖金（按团队业绩的百分比）
-        bonus_ratio = (bonus_rule.coefficient or Decimal('0')) / Decimal('100')
+        bonus_ratio = (bonus_rule.coefficient or Decimal("0")) / Decimal("100")
         calculated_amount = Decimal(str(total_amount)) * bonus_ratio
 
         # 统计信息
@@ -184,7 +185,7 @@ class SalesBonusCalculator(BonusCalculatorBase):
                 "total_team_amount": total_amount,
                 "contract_count": contract_count,
                 "sales_person_count": len(sales_person_ids),
-                "bonus_ratio": float(bonus_ratio)
+                "bonus_ratio": float(bonus_ratio),
             },
             calculation_basis={
                 "type": "sales_director",
@@ -192,9 +193,9 @@ class SalesBonusCalculator(BonusCalculatorBase):
                 "period_start": period_start.isoformat(),
                 "period_end": period_end.isoformat(),
                 "contract_ids": [c.id for c in contracts],
-                "sales_person_ids": sales_person_ids
+                "sales_person_ids": sales_person_ids,
             },
-            status='CALCULATED'
+            status="CALCULATED",
         )
 
         return calculation

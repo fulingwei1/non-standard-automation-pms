@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - notification_handlers/email_handler 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.notification_handlers.email_handler")
 

@@ -21,7 +21,9 @@ from app.schemas.report_center import (
 router = APIRouter()
 
 
-@router.post("/generate", response_model=ReportGenerateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/generate", response_model=ReportGenerateResponse, status_code=status.HTTP_201_CREATED
+)
 def generate_report(
     *,
     db: Session = Depends(deps.get_db),
@@ -33,14 +35,17 @@ def generate_report(
     """
     from app.services.report_data_generation.core import ReportDataGenerationCore
     from app.services.report_framework import ConfigError
-    from app.services.report_framework.adapters.report_data_generation import ReportDataGenerationAdapter
+    from app.services.report_framework.adapters.report_data_generation import (
+        ReportDataGenerationAdapter,
+    )
     from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     # 检查权限（使用原有的权限检查逻辑）
-    if not ReportDataGenerationCore.check_permission(db, current_user, generate_in.report_type, generate_in.role):
+    if not ReportDataGenerationCore.check_permission(
+        db, current_user, generate_in.report_type, generate_in.role
+    ):
         raise HTTPException(
-            status_code=403,
-            detail=f"您没有权限生成 {generate_in.report_type} 类型的报表"
+            status_code=403, detail=f"您没有权限生成 {generate_in.report_type} 类型的报表"
         )
 
     # 生成报表编码
@@ -52,7 +57,7 @@ def generate_report(
         report_code_mapped = ReportDataGenerationAdapter.REPORT_TYPE_MAP.get(
             generate_in.report_type, generate_in.report_type
         )
-        
+
         try:
             # 尝试使用统一报表框架
             result = engine.generate(
@@ -60,7 +65,9 @@ def generate_report(
                 params={
                     "project_id": generate_in.project_id,
                     "department_id": generate_in.department_id,
-                    "start_date": generate_in.start_date.isoformat() if generate_in.start_date else None,
+                    "start_date": (
+                        generate_in.start_date.isoformat() if generate_in.start_date else None
+                    ),
                     "end_date": generate_in.end_date.isoformat() if generate_in.end_date else None,
                 },
                 format="json",
@@ -81,7 +88,7 @@ def generate_report(
                 format="json",
                 user=current_user,
             )
-            report_data = result.data if hasattr(result, 'data') else result
+            report_data = result.data if hasattr(result, "data") else result
 
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -95,13 +102,17 @@ def generate_report(
         report_type=generate_in.report_type,
         report_title=report_data.get("title", f"{generate_in.report_type}报表"),
         viewer_role=generate_in.role,
-        scope_type="PROJECT" if generate_in.project_id else ("DEPARTMENT" if generate_in.department_id else None),
+        scope_type=(
+            "PROJECT"
+            if generate_in.project_id
+            else ("DEPARTMENT" if generate_in.department_id else None)
+        ),
         scope_id=generate_in.project_id or generate_in.department_id,
         period_start=generate_in.start_date,
         period_end=generate_in.end_date,
         report_data=report_data,
         status="GENERATED",
-        generated_by=current_user.id
+        generated_by=current_user.id,
     )
 
     db.add(generation)
@@ -114,11 +125,13 @@ def generate_report(
         report_name=generation.report_title or f"{generate_in.report_type}报表",
         report_type=generation.report_type,
         generated_at=generation.generated_at or datetime.now(),
-        data=generation.report_data or {}
+        data=generation.report_data or {},
     )
 
 
-@router.get("/preview/{report_type}", response_model=ReportPreviewResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/preview/{report_type}", response_model=ReportPreviewResponse, status_code=status.HTTP_200_OK
+)
 def preview_report(
     *,
     db: Session = Depends(deps.get_db),
@@ -130,7 +143,9 @@ def preview_report(
     预览报表（简化版预览）（使用统一报表框架）
     """
     from app.services.report_framework import ConfigError
-    from app.services.report_framework.adapters.report_data_generation import ReportDataGenerationAdapter
+    from app.services.report_framework.adapters.report_data_generation import (
+        ReportDataGenerationAdapter,
+    )
     from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
 
     # 生成预览数据（使用默认时间范围）
@@ -143,7 +158,7 @@ def preview_report(
         report_code_mapped = ReportDataGenerationAdapter.REPORT_TYPE_MAP.get(
             report_type, report_type
         )
-        
+
         try:
             # 尝试使用统一报表框架
             result = engine.generate(
@@ -172,7 +187,7 @@ def preview_report(
                 format="json",
                 user=current_user,
             )
-            preview_data = result.data if hasattr(result, 'data') else result
+            preview_data = result.data if hasattr(result, "data") else result
 
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -183,9 +198,8 @@ def preview_report(
 
     # 添加可用的字段列表
     preview_data["available_fields"] = list(preview_data.get("summary", {}).keys())
-    preview_data["sections"] = [k for k in preview_data.keys() if k not in ["summary", "available_fields", "error"]]
+    preview_data["sections"] = [
+        k for k in preview_data.keys() if k not in ["summary", "available_fields", "error"]
+    ]
 
-    return ReportPreviewResponse(
-        report_type=report_type,
-        preview_data=preview_data
-    )
+    return ReportPreviewResponse(report_type=report_type, preview_data=preview_data)

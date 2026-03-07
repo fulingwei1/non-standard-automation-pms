@@ -12,14 +12,18 @@ if TYPE_CHECKING:
     from app.services.win_rate_prediction_service import WinRatePredictionService
 
 
-def calculate_base_score(service: "WinRatePredictionService", dimension_scores: DimensionScore) -> float:
+def calculate_base_score(
+    service: "WinRatePredictionService", dimension_scores: DimensionScore
+) -> float:
     """计算基础分数（五维加权平均）"""
     return (
-        dimension_scores.requirement_maturity * service.DIMENSION_WEIGHTS['requirement_maturity'] +
-        dimension_scores.technical_feasibility * service.DIMENSION_WEIGHTS['technical_feasibility'] +
-        dimension_scores.business_feasibility * service.DIMENSION_WEIGHTS['business_feasibility'] +
-        dimension_scores.delivery_risk * service.DIMENSION_WEIGHTS['delivery_risk'] +
-        dimension_scores.customer_relationship * service.DIMENSION_WEIGHTS['customer_relationship']
+        dimension_scores.requirement_maturity * service.DIMENSION_WEIGHTS["requirement_maturity"]
+        + dimension_scores.technical_feasibility
+        * service.DIMENSION_WEIGHTS["technical_feasibility"]
+        + dimension_scores.business_feasibility * service.DIMENSION_WEIGHTS["business_feasibility"]
+        + dimension_scores.delivery_risk * service.DIMENSION_WEIGHTS["delivery_risk"]
+        + dimension_scores.customer_relationship
+        * service.DIMENSION_WEIGHTS["customer_relationship"]
     ) / 100  # 转换为0-1
 
 
@@ -33,9 +37,7 @@ def calculate_salesperson_factor(historical_win_rate: float) -> float:
 
 
 def calculate_customer_factor(
-    cooperation_count: int,
-    success_count: int,
-    is_repeat_customer: bool = False
+    cooperation_count: int, success_count: int, is_repeat_customer: bool = False
 ) -> float:
     """计算客户关系因子"""
     if cooperation_count >= 5 and success_count >= 3:

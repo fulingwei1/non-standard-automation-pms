@@ -5,9 +5,10 @@
 测试合同的创建、查询、更新、审批、归档等功能
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestSalesContractsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/contracts/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Contracts API not implemented")
@@ -56,13 +54,11 @@ class TestSalesContractsAPI:
             "payment_terms": "分期付款，按进度支付",
             "delivery_terms": "3个月内交付",
             "warranty_period": "12个月",
-            "remarks": "重要合同"
+            "remarks": "重要合同",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/",
-            headers=headers,
-            json=contract_data
+            f"{settings.API_V1_PREFIX}/sales/contracts/", headers=headers, json=contract_data
         )
 
         if response.status_code == 404:
@@ -77,10 +73,7 @@ class TestSalesContractsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/contracts/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No contract data or API not implemented")
@@ -94,15 +87,10 @@ class TestSalesContractsAPI:
 
         headers = _auth_headers(admin_token)
 
-        update_data = {
-            "remarks": "更新后的备注",
-            "warranty_period": "24个月"
-        }
+        update_data = {"remarks": "更新后的备注", "warranty_period": "24个月"}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/sales/contracts/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -117,10 +105,7 @@ class TestSalesContractsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/sales/contracts/999",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/sales/contracts/999", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Contract API not implemented")
@@ -135,8 +120,7 @@ class TestSalesContractsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/submit",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/1/submit", headers=headers
         )
 
         if response.status_code == 404:
@@ -151,15 +135,12 @@ class TestSalesContractsAPI:
 
         headers = _auth_headers(admin_token)
 
-        approval_data = {
-            "action": "approve",
-            "comments": "审批通过"
-        }
+        approval_data = {"action": "approve", "comments": "审批通过"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/contracts/1/approve",
             headers=headers,
-            json=approval_data
+            json=approval_data,
         )
 
         if response.status_code == 404:
@@ -177,13 +158,11 @@ class TestSalesContractsAPI:
         signing_data = {
             "sign_date": datetime.now().strftime("%Y-%m-%d"),
             "signed_by": "张总",
-            "customer_signed_by": "李经理"
+            "customer_signed_by": "李经理",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/sign",
-            headers=headers,
-            json=signing_data
+            f"{settings.API_V1_PREFIX}/sales/contracts/1/sign", headers=headers, json=signing_data
         )
 
         if response.status_code == 404:
@@ -199,8 +178,7 @@ class TestSalesContractsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/archive",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/1/archive", headers=headers
         )
 
         if response.status_code == 404:
@@ -216,8 +194,7 @@ class TestSalesContractsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/?status=signed",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/?status=signed", headers=headers
         )
 
         if response.status_code == 404:
@@ -233,8 +210,7 @@ class TestSalesContractsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/?customer_id=1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/?customer_id=1", headers=headers
         )
 
         if response.status_code == 404:
@@ -250,8 +226,7 @@ class TestSalesContractsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/expiring?days=30",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/expiring?days=30", headers=headers
         )
 
         if response.status_code == 404:
@@ -267,8 +242,7 @@ class TestSalesContractsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/contracts/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -283,10 +257,7 @@ class TestSalesContractsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/1/export",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/contracts/1/export", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Contract export API not implemented")
@@ -295,8 +266,6 @@ class TestSalesContractsAPI:
 
     def test_contract_unauthorized(self, client: TestClient):
         """测试未授权访问合同"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/contracts/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/contracts/")
 
         assert response.status_code in [401, 403], response.text

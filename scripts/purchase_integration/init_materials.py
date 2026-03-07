@@ -3,6 +3,7 @@
 物料数据初始化脚本
 """
 from decimal import Decimal
+
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
@@ -11,7 +12,7 @@ from app.models.material import Material, MaterialCategory
 
 def init_material_categories(db: Session):
     """初始化物料分类"""
-    
+
     categories_data = [
         {"code": "RAW_METAL", "name": "原材料-金属", "level": 1, "parent": None},
         {"code": "RAW_PLASTIC", "name": "原材料-塑料", "level": 1, "parent": None},
@@ -22,16 +23,18 @@ def init_material_categories(db: Session):
         {"code": "FASTENER", "name": "紧固件", "level": 1, "parent": None},
         {"code": "HYDRAULIC", "name": "液压气动", "level": 1, "parent": None},
         {"code": "ELECTRONIC", "name": "电子元器件", "level": 1, "parent": None},
-        {"code": "SEMI_FINISHED", "name": "半成品", "level": 1, "parent": None}
+        {"code": "SEMI_FINISHED", "name": "半成品", "level": 1, "parent": None},
     ]
-    
+
     category_map = {}
-    
+
     for cat_data in categories_data:
-        existing = db.query(MaterialCategory).filter(
-            MaterialCategory.category_code == cat_data["code"]
-        ).first()
-        
+        existing = (
+            db.query(MaterialCategory)
+            .filter(MaterialCategory.category_code == cat_data["code"])
+            .first()
+        )
+
         if existing:
             category_map[cat_data["code"]] = existing
             print(f"  分类已存在: {cat_data['name']}")
@@ -40,23 +43,23 @@ def init_material_categories(db: Session):
                 category_code=cat_data["code"],
                 category_name=cat_data["name"],
                 level=cat_data["level"],
-                is_active=True
+                is_active=True,
             )
             db.add(category)
             db.flush()
             category_map[cat_data["code"]] = category
             print(f"  创建分类: {cat_data['name']}")
-    
+
     db.commit()
     return category_map
 
 
 def init_materials(db: Session):
     """初始化物料数据"""
-    
+
     # 先初始化分类
     categories = init_material_categories(db)
-    
+
     materials_data = [
         # 金属材料
         {
@@ -72,7 +75,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("80"),
             "lead_time": 7,
             "min_qty": Decimal("10"),
-            "is_key": True
+            "is_key": True,
         },
         {
             "code": "M_ALUMINUM_6061_50",
@@ -87,7 +90,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("350"),
             "lead_time": 5,
             "min_qty": Decimal("50"),
-            "is_key": False
+            "is_key": False,
         },
         {
             "code": "M_STEEL_Q235_3",
@@ -102,9 +105,8 @@ def init_materials(db: Session):
             "current_stock": Decimal("45"),
             "lead_time": 7,
             "min_qty": Decimal("5"),
-            "is_key": True
+            "is_key": True,
         },
-        
         # 电机
         {
             "code": "M_MOTOR_AC220_0.75KW",
@@ -119,7 +121,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("15"),
             "lead_time": 10,
             "min_qty": Decimal("5"),
-            "is_key": True
+            "is_key": True,
         },
         {
             "code": "M_MOTOR_AC380_1.5KW",
@@ -134,7 +136,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("8"),
             "lead_time": 15,
             "min_qty": Decimal("2"),
-            "is_key": True
+            "is_key": True,
         },
         {
             "code": "M_STEPPER_MOTOR_57",
@@ -149,9 +151,8 @@ def init_materials(db: Session):
             "current_stock": Decimal("35"),
             "lead_time": 7,
             "min_qty": Decimal("10"),
-            "is_key": False
+            "is_key": False,
         },
-        
         # 轴承
         {
             "code": "M_BEARING_6205",
@@ -166,7 +167,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("150"),
             "lead_time": 5,
             "min_qty": Decimal("50"),
-            "is_key": False
+            "is_key": False,
         },
         {
             "code": "M_BEARING_6305",
@@ -181,9 +182,8 @@ def init_materials(db: Session):
             "current_stock": Decimal("120"),
             "lead_time": 5,
             "min_qty": Decimal("40"),
-            "is_key": False
+            "is_key": False,
         },
-        
         # 传感器
         {
             "code": "M_SENSOR_PROX_M18",
@@ -198,7 +198,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("45"),
             "lead_time": 7,
             "min_qty": Decimal("10"),
-            "is_key": True
+            "is_key": True,
         },
         {
             "code": "M_SENSOR_PHOTO_E3Z",
@@ -213,9 +213,8 @@ def init_materials(db: Session):
             "current_stock": Decimal("28"),
             "lead_time": 7,
             "min_qty": Decimal("10"),
-            "is_key": True
+            "is_key": True,
         },
-        
         # 紧固件
         {
             "code": "M_BOLT_M8_30",
@@ -230,7 +229,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("2500"),
             "lead_time": 3,
             "min_qty": Decimal("500"),
-            "is_key": False
+            "is_key": False,
         },
         {
             "code": "M_NUT_M8",
@@ -245,9 +244,8 @@ def init_materials(db: Session):
             "current_stock": Decimal("3000"),
             "lead_time": 3,
             "min_qty": Decimal("500"),
-            "is_key": False
+            "is_key": False,
         },
-        
         # 液压气动
         {
             "code": "M_CYLINDER_MAL25_100",
@@ -262,7 +260,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("12"),
             "lead_time": 10,
             "min_qty": Decimal("5"),
-            "is_key": True
+            "is_key": True,
         },
         {
             "code": "M_VALVE_SY5120",
@@ -277,9 +275,8 @@ def init_materials(db: Session):
             "current_stock": Decimal("18"),
             "lead_time": 10,
             "min_qty": Decimal("5"),
-            "is_key": True
+            "is_key": True,
         },
-        
         # 电子元器件
         {
             "code": "M_PLC_FX3U_32MT",
@@ -294,7 +291,7 @@ def init_materials(db: Session):
             "current_stock": Decimal("5"),
             "lead_time": 15,
             "min_qty": Decimal("1"),
-            "is_key": True
+            "is_key": True,
         },
         {
             "code": "M_HMI_7INCH",
@@ -309,25 +306,23 @@ def init_materials(db: Session):
             "current_stock": Decimal("6"),
             "lead_time": 10,
             "min_qty": Decimal("2"),
-            "is_key": True
-        }
+            "is_key": True,
+        },
     ]
-    
+
     created_count = 0
     updated_count = 0
-    
+
     for mat_data in materials_data:
         category_code = mat_data["category"]
         category = categories.get(category_code)
-        
+
         if not category:
             print(f"  警告: 分类 {category_code} 不存在，跳过物料 {mat_data['name']}")
             continue
-        
-        existing = db.query(Material).filter(
-            Material.material_code == mat_data["code"]
-        ).first()
-        
+
+        existing = db.query(Material).filter(Material.material_code == mat_data["code"]).first()
+
         if existing:
             # 更新现有物料
             existing.material_name = mat_data["name"]
@@ -360,19 +355,19 @@ def init_materials(db: Session):
                 lead_time_days=mat_data["lead_time"],
                 min_order_qty=mat_data["min_qty"],
                 is_key_material=mat_data["is_key"],
-                is_active=True
+                is_active=True,
             )
             db.add(material)
             created_count += 1
             print(f"  创建物料: {mat_data['name']}")
-    
+
     db.commit()
-    
+
     print(f"\n✅ 物料数据初始化完成")
     print(f"   新创建: {created_count}个")
     print(f"   已更新: {updated_count}个")
     print(f"   总计: {created_count + updated_count}个物料")
-    
+
     return created_count + updated_count
 
 

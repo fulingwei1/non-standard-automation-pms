@@ -18,7 +18,7 @@ def check_worker_availability(
     start_date: date,
     end_date: date,
     required_hours: float = 8.0,
-    exclude_allocation_id: Optional[int] = None
+    exclude_allocation_id: Optional[int] = None,
 ) -> Tuple[bool, Optional[str], float]:
     """
     检查人员可用性
@@ -38,7 +38,7 @@ def check_worker_availability(
     if not worker:
         return (False, "工人不存在", 0.0)
 
-    if not worker.is_active or worker.status != 'ACTIVE':
+    if not worker.is_active or worker.status != "ACTIVE":
         return (False, "工人不在职或状态异常", 0.0)
 
     # 计算总可用工时
@@ -49,27 +49,30 @@ def check_worker_availability(
     assigned_hours = 0.0
 
     # 1. 检查工单分配
-    work_orders = db.query(WorkOrder).filter(
-        WorkOrder.assigned_to == worker_id,
-        WorkOrder.status.in_(['PLANNED', 'IN_PROGRESS', 'PAUSED']),
-        WorkOrder.plan_start_date <= end_date,
-        WorkOrder.plan_end_date >= start_date
-    ).all()
+    work_orders = (
+        db.query(WorkOrder)
+        .filter(
+            WorkOrder.assigned_to == worker_id,
+            WorkOrder.status.in_(["PLANNED", "IN_PROGRESS", "PAUSED"]),
+            WorkOrder.plan_start_date <= end_date,
+            WorkOrder.plan_end_date >= start_date,
+        )
+        .all()
+    )
 
     for wo in work_orders:
         if wo.plan_start_date and wo.plan_end_date:
             overlap_days = calculate_overlap_days(
-                start_date, end_date,
-                wo.plan_start_date, wo.plan_end_date
+                start_date, end_date, wo.plan_start_date, wo.plan_end_date
             )
             assigned_hours += overlap_days * 8.0
 
     # 2. 检查资源分配（PMO模块）
     allocations = db.query(PmoResourceAllocation).filter(
         PmoResourceAllocation.resource_id == worker_id,
-        PmoResourceAllocation.status != 'CANCELLED',
+        PmoResourceAllocation.status != "CANCELLED",
         PmoResourceAllocation.start_date <= end_date,
-        PmoResourceAllocation.end_date >= start_date
+        PmoResourceAllocation.end_date >= start_date,
     )
 
     if exclude_allocation_id:
@@ -81,24 +84,26 @@ def check_worker_availability(
         else:
             # 如果没有planned_hours，按天数计算
             overlap_days = calculate_overlap_days(
-                start_date, end_date,
-                alloc.start_date, alloc.end_date
+                start_date, end_date, alloc.start_date, alloc.end_date
             )
             assigned_hours += overlap_days * 8.0
 
     # 3. 检查任务分配（进度模块）
-    tasks = db.query(Task).filter(
-        Task.owner_id == worker_id,
-        Task.status != 'CANCELLED',
-        Task.plan_start <= end_date,
-        Task.plan_end >= start_date
-    ).all()
+    tasks = (
+        db.query(Task)
+        .filter(
+            Task.owner_id == worker_id,
+            Task.status != "CANCELLED",
+            Task.plan_start <= end_date,
+            Task.plan_end >= start_date,
+        )
+        .all()
+    )
 
     for task in tasks:
         if task.plan_start and task.plan_end:
             overlap_days = calculate_overlap_days(
-                start_date, end_date,
-                task.plan_start, task.plan_end
+                start_date, end_date, task.plan_start, task.plan_end
             )
             # 假设任务占用50%时间（可配置）
             assigned_hours += overlap_days * 4.0
@@ -112,7 +117,7 @@ def check_worker_availability(
         return (
             False,
             f"可用工时不足（需要 {required_total_hours:.1f} 小时，可用 {available_hours:.1f} 小时）",
-            available_hours
+            available_hours,
         )
 
     return (True, None, available_hours)
@@ -124,7 +129,7 @@ def find_available_workers(
     skill_required: Optional[str] = None,
     start_date: date = None,
     end_date: date = None,
-    min_available_hours: float = 8.0
+    min_available_hours: float = 8.0,
 ) -> List[Dict]:
     """
     查找可用人员
@@ -146,10 +151,7 @@ def find_available_workers(
         end_date = start_date + timedelta(days=7)
 
     # 查询工人
-    query = db.query(Worker).filter(
-        Worker.is_active,
-        Worker.status == 'ACTIVE'
-    )
+    query = db.query(Worker).filter(Worker.is_active, Worker.status == "ACTIVE")
 
     if workshop_id:
         query = query.filter(Worker.workshop_id == workshop_id)
@@ -162,9 +164,7 @@ def find_available_workers(
         skill_match = True
         matched_skills = []
         if skill_required:
-            skill_match, matched_skills = check_worker_skill(
-                db, worker.id, skill_required
-            )
+            skill_match, matched_skills = check_worker_skill(db, worker.id, skill_required)
             if not skill_match:
                 continue  # 技能不匹配，跳过
 
@@ -173,30 +173,28 @@ def find_available_workers(
         )
 
         if is_available and available_hours >= min_available_hours:
-            available_workers.append({
-                'worker_id': worker.id,
-                'worker_no': worker.worker_no,
-                'worker_name': worker.worker_name,
-                'workshop_id': worker.workshop_id,
-                'position': worker.position,
-                'skill_level': worker.skill_level,
-                'available_hours': round(available_hours, 2),
-                'matched_skills': matched_skills,
-                'available_from': start_date,
-                'available_until': end_date
-            })
+            available_workers.append(
+                {
+                    "worker_id": worker.id,
+                    "worker_no": worker.worker_no,
+                    "worker_name": worker.worker_name,
+                    "workshop_id": worker.workshop_id,
+                    "position": worker.position,
+                    "skill_level": worker.skill_level,
+                    "available_hours": round(available_hours, 2),
+                    "matched_skills": matched_skills,
+                    "available_from": start_date,
+                    "available_until": end_date,
+                }
+            )
 
     # 按可用工时降序排序
-    available_workers.sort(key=lambda x: x['available_hours'], reverse=True)
+    available_workers.sort(key=lambda x: x["available_hours"], reverse=True)
 
     return available_workers
 
 
-def check_worker_skill(
-    db: Session,
-    worker_id: int,
-    skill_required: str
-) -> Tuple[bool, List[str]]:
+def check_worker_skill(db: Session, worker_id: int, skill_required: str) -> Tuple[bool, List[str]]:
     """
     检查工人技能匹配
 
@@ -211,12 +209,12 @@ def check_worker_skill(
     from app.models import ProcessDict, WorkerSkill
 
     # 查询工人的技能
-    worker_skills = db.query(WorkerSkill).join(
-        ProcessDict, WorkerSkill.process_id == ProcessDict.id
-    ).filter(
-        WorkerSkill.worker_id == worker_id,
-        ProcessDict.is_active
-    ).all()
+    worker_skills = (
+        db.query(WorkerSkill)
+        .join(ProcessDict, WorkerSkill.process_id == ProcessDict.id)
+        .filter(WorkerSkill.worker_id == worker_id, ProcessDict.is_active)
+        .all()
+    )
 
     if not worker_skills:
         return (False, [])
@@ -230,13 +228,17 @@ def check_worker_skill(
             continue
 
         # 匹配工序编码、名称或类型
-        if (skill_required_lower in process.process_code.lower() or
-            skill_required_lower in process.process_name.lower() or
-            skill_required_lower in (process.process_type or '').lower()):
-            matched_skills.append({
-                'process_code': process.process_code,
-                'process_name': process.process_name,
-                'skill_level': ws.skill_level
-            })
+        if (
+            skill_required_lower in process.process_code.lower()
+            or skill_required_lower in process.process_name.lower()
+            or skill_required_lower in (process.process_type or "").lower()
+        ):
+            matched_skills.append(
+                {
+                    "process_code": process.process_code,
+                    "process_name": process.process_name,
+                    "skill_level": ws.skill_level,
+                }
+            )
 
     return (len(matched_skills) > 0, matched_skills)

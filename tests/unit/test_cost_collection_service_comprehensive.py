@@ -41,6 +41,7 @@ class TestCollectFromPurchaseOrder:
 
         # First query returns order, second returns None (no existing cost)
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -76,6 +77,7 @@ class TestCollectFromPurchaseOrder:
         mock_project.actual_cost = 0
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -89,7 +91,7 @@ class TestCollectFromPurchaseOrder:
 
         mock_db.query.return_value.filter = filter_side_effect
 
-        with patch('app.services.cost_collection_service.CostAlertService'):
+        with patch("app.services.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_purchase_order(mock_db, 1, created_by=100)
 
         mock_db.add.assert_called()
@@ -119,6 +121,7 @@ class TestCollectFromPurchaseOrder:
         mock_project.actual_cost = 5000
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -176,6 +179,7 @@ class TestCollectFromOutsourcingOrder:
         mock_project.actual_cost = 0
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -189,7 +193,7 @@ class TestCollectFromOutsourcingOrder:
 
         mock_db.query.return_value.filter = filter_side_effect
 
-        with patch('app.services.cost_collection_service.CostAlertService'):
+        with patch("app.services.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_outsourcing_order(mock_db, 1)
 
         assert result.cost_type == "OUTSOURCING"
@@ -260,6 +264,7 @@ class TestCollectFromEcn:
         mock_project.actual_cost = 0
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -273,7 +278,7 @@ class TestCollectFromEcn:
 
         mock_db.query.return_value.filter = filter_side_effect
 
-        with patch('app.services.cost_collection_service.CostAlertService'):
+        with patch("app.services.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_ecn(mock_db, 1)
 
         assert result.cost_type == "CHANGE"
@@ -312,6 +317,7 @@ class TestRemoveCostFromSource:
         mock_project.actual_cost = 10000
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -346,6 +352,7 @@ class TestRemoveCostFromSource:
         mock_project.actual_cost = 10000
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -357,9 +364,7 @@ class TestRemoveCostFromSource:
 
         mock_db.query.return_value.filter = filter_side_effect
 
-        CostCollectionService.remove_cost_from_source(
-            mock_db, "PURCHASE", "PURCHASE_ORDER", 1
-        )
+        CostCollectionService.remove_cost_from_source(mock_db, "PURCHASE", "PURCHASE_ORDER", 1)
 
         assert mock_project.actual_cost == 0
 
@@ -429,6 +434,7 @@ class TestCollectFromBom:
         mock_project.actual_cost = 0
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -444,7 +450,7 @@ class TestCollectFromBom:
 
         mock_db.query.return_value.filter = filter_side_effect
 
-        with patch('app.services.cost_collection_service.CostAlertService'):
+        with patch("app.services.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_bom(mock_db, 1)
 
         assert result.cost_type == "MATERIAL"
@@ -464,6 +470,7 @@ class TestCollectFromBom:
         mock_bom.total_amount = None
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -504,6 +511,7 @@ class TestCollectFromBom:
         mock_project.actual_cost = 0
 
         call_count = [0]
+
         def filter_side_effect(*args, **kwargs):
             call_count[0] += 1
             result = MagicMock()
@@ -519,7 +527,7 @@ class TestCollectFromBom:
 
         mock_db.query.return_value.filter = filter_side_effect
 
-        with patch('app.services.cost_collection_service.CostAlertService'):
+        with patch("app.services.cost_collection_service.CostAlertService"):
             result = CostCollectionService.collect_from_bom(mock_db, 1)
 
         # 使用BOM表头的total_amount而非明细之和

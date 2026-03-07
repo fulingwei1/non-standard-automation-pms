@@ -1,38 +1,44 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/performance.py"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.performance import (
-    PersonalPerformanceResponse,
-    PerformanceTrendResponse,
-    TeamPerformanceResponse,
     DepartmentPerformanceResponse,
-    PerformanceRankingResponse,
-    ProjectPerformanceResponse,
-    PerformanceCompareResponse,
-    MonthlyWorkSummaryCreate,
-    MonthlyWorkSummaryUpdate,
-    MonthlyWorkSummaryResponse,
-    PerformanceEvaluationRecordCreate,
-    PerformanceEvaluationRecordUpdate,
     EvaluationTaskItem,
     EvaluationWeightConfigCreate,
     EvaluationWeightConfigResponse,
-    MyPerformanceResult,
+    MonthlyWorkSummaryCreate,
+    MonthlyWorkSummaryResponse,
+    MonthlyWorkSummaryUpdate,
     MyPerformanceCurrentStatus,
+    MyPerformanceResult,
+    PerformanceCompareResponse,
+    PerformanceEvaluationRecordCreate,
+    PerformanceEvaluationRecordUpdate,
+    PerformanceRankingResponse,
+    PerformanceTrendResponse,
+    PersonalPerformanceResponse,
+    ProjectPerformanceResponse,
+    TeamPerformanceResponse,
 )
 
 
 class TestPersonalPerformanceResponse:
     def test_valid(self):
         p = PersonalPerformanceResponse(
-            user_id=1, user_name="张三", period_id=1,
-            period_name="2024Q1", period_type="QUARTERLY",
-            start_date=date(2024, 1, 1), end_date=date(2024, 3, 31),
-            total_score=Decimal("85.5"), level="B",
+            user_id=1,
+            user_name="张三",
+            period_id=1,
+            period_name="2024Q1",
+            period_type="QUARTERLY",
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 3, 31),
+            total_score=Decimal("85.5"),
+            level="B",
         )
         assert p.indicators == []
         assert p.project_contributions == []
@@ -46,10 +52,13 @@ class TestPersonalPerformanceResponse:
 class TestPerformanceTrendResponse:
     def test_valid(self):
         t = PerformanceTrendResponse(
-            user_id=1, user_name="张三",
+            user_id=1,
+            user_name="张三",
             periods=[{"period": "Q1", "score": 85}],
             trend_direction="UP",
-            avg_score=Decimal("85"), max_score=Decimal("90"), min_score=Decimal("80"),
+            avg_score=Decimal("85"),
+            max_score=Decimal("90"),
+            min_score=Decimal("80"),
         )
         assert t.trend_direction == "UP"
 
@@ -57,10 +66,14 @@ class TestPerformanceTrendResponse:
 class TestTeamPerformanceResponse:
     def test_valid(self):
         t = TeamPerformanceResponse(
-            team_id=1, team_name="开发团队",
-            period_id=1, period_name="Q1",
+            team_id=1,
+            team_name="开发团队",
+            period_id=1,
+            period_name="Q1",
             member_count=10,
-            avg_score=Decimal("82"), max_score=Decimal("95"), min_score=Decimal("70"),
+            avg_score=Decimal("82"),
+            max_score=Decimal("95"),
+            min_score=Decimal("70"),
             level_distribution={"A": 2, "B": 5, "C": 3},
             members=[],
         )
@@ -142,15 +155,19 @@ class TestPerformanceEvaluationRecordCreate:
 
     def test_with_project(self):
         e = PerformanceEvaluationRecordCreate(
-            score=85, comment="x" * 10,
-            project_id=1, project_weight=60,
+            score=85,
+            comment="x" * 10,
+            project_id=1,
+            project_weight=60,
         )
         assert e.project_weight == 60
 
     def test_weight_out_of_range(self):
         with pytest.raises(ValidationError):
             PerformanceEvaluationRecordCreate(
-                score=85, comment="x" * 10, project_weight=101,
+                score=85,
+                comment="x" * 10,
+                project_weight=101,
             )
 
 
@@ -199,8 +216,12 @@ class TestMyPerformanceResult:
 
     def test_with_data(self):
         r = MyPerformanceResult(
-            period="2026-01", final_score=88.5, level="B",
-            rank=3, dept_score=85, project_score=92.0,
+            period="2026-01",
+            final_score=88.5,
+            level="B",
+            rank=3,
+            dept_score=85,
+            project_score=92.0,
         )
         assert r.final_score == 88.5
 

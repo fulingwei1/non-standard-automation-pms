@@ -3,8 +3,8 @@
 测试脚本：Phase 1.1 合同→项目自动生成功能验证
 """
 
-import sys
 import os
+import sys
 
 # 切换到项目根目录
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -12,13 +12,13 @@ os.chdir(project_root)
 
 # 导入必要模块
 sys.path.insert(0, project_root)
-from app.models.base import get_db_session
-from app.models.sales.contracts import Contract
-from app.models.project import Project
-from app.models.project import ProjectMilestone
-from app.models.user import User
-from app.core.security import get_password_hash
 from sqlalchemy import select
+
+from app.core.security import get_password_hash
+from app.models.base import get_db_session
+from app.models.project import Project, ProjectMilestone
+from app.models.sales.contracts import Contract
+from app.models.user import User
 
 
 def setup_test_data(db):
@@ -158,9 +158,7 @@ def test_create_project_from_contract(db):
                 "password": "admin123",
             }
 
-            login_response = requests.post(
-                f"{base_url}/api/v1/auth/login", json=login_data
-            )
+            login_response = requests.post(f"{base_url}/api/v1/auth/login", json=login_data)
 
             if login_response.status_code != 200:
                 print(f"❌ 登录失败：{login_response.text}")

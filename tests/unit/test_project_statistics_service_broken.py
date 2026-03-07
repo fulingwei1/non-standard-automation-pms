@@ -19,34 +19,33 @@ pytestmark = pytest.mark.skip(
 )
 
 from datetime import date, datetime
+
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.services.project_statistics_service import (
-    calculate_status_statistics,
-    calculate_stage_statistics,
-    calculate_health_statistics,
-    calculate_pm_statistics,
-    calculate_customer_statistics,
-    calculate_monthly_statistics,
     build_project_statistics,
+    calculate_customer_statistics,
+    calculate_health_statistics,
+    calculate_monthly_statistics,
+    calculate_pm_statistics,
+    calculate_stage_statistics,
+    calculate_status_statistics,
 )
 
 
 class TestCalculateStatusStatistics:
     """Test suite for calculate_status_statistics function."""
 
-    def test_calculate_status_statistics_with_various_statuses(
-        self, db_session: Session
-    ):
+    def test_calculate_status_statistics_with_various_statuses(self, db_session: Session):
         """Test status calculation with various project statuses."""
         # Create projects with different statuses
         projects = [
-        Project(project_code="PJ001", status="ST01", progress_pct=10),
-        Project(project_code="PJ002", status="ST01", progress_pct=15),
-        Project(project_code="PJ003", status="ST02", progress_pct=30),
-        Project(project_code="PJ004", status="ST03", progress_pct=50),
-        Project(project_code="PJ005", status="ST04", progress_pct=70),
+            Project(project_code="PJ001", status="ST01", progress_pct=10),
+            Project(project_code="PJ002", status="ST01", progress_pct=15),
+            Project(project_code="PJ003", status="ST02", progress_pct=30),
+            Project(project_code="PJ004", status="ST03", progress_pct=50),
+            Project(project_code="PJ005", status="ST04", progress_pct=70),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -69,9 +68,9 @@ class TestCalculateStatusStatistics:
     def test_calculate_status_statistics_filters_null_status(self, db_session: Session):
         """Test that null statuses are filtered out."""
         projects = [
-        Project(project_code="PJ001", status="ST01", progress_pct=10),
-        Project(project_code="PJ002", status=None, progress_pct=0),
-        Project(project_code="PJ003", status="ST02", progress_pct=20),
+            Project(project_code="PJ001", status="ST01", progress_pct=10),
+            Project(project_code="PJ002", status=None, progress_pct=0),
+            Project(project_code="PJ003", status="ST02", progress_pct=20),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -91,11 +90,11 @@ class TestCalculateStageStatistics:
     def test_calculate_stage_statistics_with_various_stages(self, db_session: Session):
         """Test stage calculation with various project stages."""
         projects = [
-        Project(project_code="PJ001", stage="S1", progress_pct=5),
-        Project(project_code="PJ002", stage="S1", progress_pct=10),
-        Project(project_code="PJ003", stage="S2", progress_pct=25),
-        Project(project_code="PJ004", stage="S2", progress_pct=30),
-        Project(project_code="PJ005", stage="S3", progress_pct=40),
+            Project(project_code="PJ001", stage="S1", progress_pct=5),
+            Project(project_code="PJ002", stage="S1", progress_pct=10),
+            Project(project_code="PJ003", stage="S2", progress_pct=25),
+            Project(project_code="PJ004", stage="S2", progress_pct=30),
+            Project(project_code="PJ005", stage="S3", progress_pct=40),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -121,11 +120,11 @@ class TestCalculateHealthStatistics:
     def test_calculate_health_statistics_with_various_health(self, db_session: Session):
         """Test health calculation with various health statuses."""
         projects = [
-        Project(project_code="PJ001", health="H1", progress_pct=50),
-        Project(project_code="PJ002", health="H1", progress_pct=60),
-        Project(project_code="PJ003", health="H2", progress_pct=40),
-        Project(project_code="PJ004", health="H3", progress_pct=20),
-        Project(project_code="PJ005", health="H4", progress_pct=100),
+            Project(project_code="PJ001", health="H1", progress_pct=50),
+            Project(project_code="PJ002", health="H1", progress_pct=60),
+            Project(project_code="PJ003", health="H2", progress_pct=40),
+            Project(project_code="PJ004", health="H3", progress_pct=20),
+            Project(project_code="PJ005", health="H4", progress_pct=100),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -152,10 +151,10 @@ class TestCalculatePMStatistics:
     def test_calculate_pm_statistics_with_assigned_pms(self, db_session: Session):
         """Test PM calculation with assigned project managers."""
         projects = [
-        Project(project_code="PJ001", pm_id=1, pm_name="张三"),
-        Project(project_code="PJ002", pm_id=1, pm_name="张三"),
-        Project(project_code="PJ003", pm_id=2, pm_name="李四"),
-        Project(project_code="PJ004", pm_id=3, pm_name="王五"),
+            Project(project_code="PJ001", pm_id=1, pm_name="张三"),
+            Project(project_code="PJ002", pm_id=1, pm_name="张三"),
+            Project(project_code="PJ003", pm_id=2, pm_name="李四"),
+            Project(project_code="PJ004", pm_id=3, pm_name="王五"),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -180,9 +179,9 @@ class TestCalculatePMStatistics:
     def test_calculate_pm_statistics_with_null_pm(self, db_session: Session):
         """Test that projects without PM are filtered out."""
         projects = [
-        Project(project_code="PJ001", pm_id=1, pm_name="张三"),
-        Project(project_code="PJ002", pm_id=None, pm_name=None),
-        Project(project_code="PJ003", pm_id=2, pm_name="李四"),
+            Project(project_code="PJ001", pm_id=1, pm_name="张三"),
+            Project(project_code="PJ002", pm_id=None, pm_name=None),
+            Project(project_code="PJ003", pm_id=2, pm_name="李四"),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -200,7 +199,7 @@ class TestCalculatePMStatistics:
     def test_calculate_pm_statistics_empty_result(self, db_session: Session):
         """Test PM calculation with no assigned PMs."""
         projects = [
-        Project(project_code="PJ001", pm_id=None, pm_name=None),
+            Project(project_code="PJ001", pm_id=None, pm_name=None),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -217,24 +216,24 @@ class TestCalculateCustomerStatistics:
     def test_calculate_customer_statistics_with_customers(self, db_session: Session):
         """Test customer calculation with various customers."""
         projects = [
-        Project(
-        project_code="PJ001",
-        customer_id=1,
-        customer_name="客户A",
-        contract_amount=50000.0,
-        ),
-        Project(
-        project_code="PJ002",
-        customer_id=1,
-        customer_name="客户A",
-        contract_amount=30000.0,
-        ),
-        Project(
-        project_code="PJ003",
-        customer_id=2,
-        customer_name="客户B",
-        contract_amount=60000.0,
-        ),
+            Project(
+                project_code="PJ001",
+                customer_id=1,
+                customer_name="客户A",
+                contract_amount=50000.0,
+            ),
+            Project(
+                project_code="PJ002",
+                customer_id=1,
+                customer_name="客户A",
+                contract_amount=30000.0,
+            ),
+            Project(
+                project_code="PJ003",
+                customer_id=2,
+                customer_name="客户B",
+                contract_amount=60000.0,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -256,23 +255,21 @@ class TestCalculateCustomerStatistics:
         assert customer_b["count"] == 1
         assert customer_b["total_amount"] == 60000.0
 
-    def test_calculate_customer_statistics_with_null_customer(
-        self, db_session: Session
-    ):
+    def test_calculate_customer_statistics_with_null_customer(self, db_session: Session):
         """Test that projects without customer are filtered out."""
         projects = [
-        Project(
-        project_code="PJ001",
-        customer_id=1,
-        customer_name="客户A",
-        contract_amount=50000.0,
-        ),
-        Project(
-        project_code="PJ002",
-        customer_id=None,
-        customer_name=None,
-        contract_amount=0.0,
-        ),
+            Project(
+                project_code="PJ001",
+                customer_id=1,
+                customer_name="客户A",
+                contract_amount=50000.0,
+            ),
+            Project(
+                project_code="PJ002",
+                customer_id=None,
+                customer_name=None,
+                contract_amount=0.0,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -287,12 +284,12 @@ class TestCalculateCustomerStatistics:
     def test_calculate_customer_statistics_null_name(self, db_session: Session):
         """Test that null customer names default to '未知客户'."""
         projects = [
-        Project(
-        project_code="PJ001",
-        customer_id=1,
-        customer_name=None,
-        contract_amount=50000.0,
-        ),
+            Project(
+                project_code="PJ001",
+                customer_id=1,
+                customer_name=None,
+                contract_amount=50000.0,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -310,26 +307,26 @@ class TestCalculateMonthlyStatistics:
         """Test monthly calculation with specific date range."""
         # Create projects in different months
         projects = [
-        Project(
-        project_code="PJ001",
-        created_at=datetime(2025, 1, 15),
-        contract_amount=50000.0,
-        ),
-        Project(
-        project_code="PJ002",
-        created_at=datetime(2025, 1, 20),
-        contract_amount=30000.0,
-        ),
-        Project(
-        project_code="PJ003",
-        created_at=datetime(2025, 2, 10),
-        contract_amount=60000.0,
-        ),
-        Project(
-        project_code="PJ004",
-        created_at=datetime(2025, 3, 5),
-        contract_amount=40000.0,
-        ),
+            Project(
+                project_code="PJ001",
+                created_at=datetime(2025, 1, 15),
+                contract_amount=50000.0,
+            ),
+            Project(
+                project_code="PJ002",
+                created_at=datetime(2025, 1, 20),
+                contract_amount=30000.0,
+            ),
+            Project(
+                project_code="PJ003",
+                created_at=datetime(2025, 2, 10),
+                contract_amount=60000.0,
+            ),
+            Project(
+                project_code="PJ004",
+                created_at=datetime(2025, 3, 5),
+                contract_amount=40000.0,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -366,11 +363,11 @@ class TestCalculateMonthlyStatistics:
     def test_calculate_monthly_statistics_empty_result(self, db_session: Session):
         """Test monthly calculation with no projects in date range."""
         projects = [
-        Project(
-        project_code="PJ001",
-        created_at=datetime(2024, 1, 1),
-        contract_amount=50000.0,
-        ),
+            Project(
+                project_code="PJ001",
+                created_at=datetime(2024, 1, 1),
+                contract_amount=50000.0,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -386,21 +383,21 @@ class TestCalculateMonthlyStatistics:
     def test_calculate_monthly_statistics_order(self, db_session: Session):
         """Test that monthly statistics are ordered by year and month."""
         projects = [
-        Project(
-        project_code="PJ001",
-        created_at=datetime(2025, 3, 1),
-        contract_amount=10000.0,
-        ),
-        Project(
-        project_code="PJ002",
-        created_at=datetime(2025, 1, 1),
-        contract_amount=10000.0,
-        ),
-        Project(
-        project_code="PJ003",
-        created_at=datetime(2025, 2, 1),
-        contract_amount=10000.0,
-        ),
+            Project(
+                project_code="PJ001",
+                created_at=datetime(2025, 3, 1),
+                contract_amount=10000.0,
+            ),
+            Project(
+                project_code="PJ002",
+                created_at=datetime(2025, 1, 1),
+                contract_amount=10000.0,
+            ),
+            Project(
+                project_code="PJ003",
+                created_at=datetime(2025, 2, 1),
+                contract_amount=10000.0,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
@@ -423,47 +420,47 @@ class TestBuildProjectStatistics:
     def test_build_project_statistics_basic(self, db_session: Session):
         """Test building basic project statistics."""
         projects = [
-        Project(
-        project_code="PJ001",
-        project_name="项目A",
-        status="ST01",
-        stage="S1",
-        health="H1",
-        progress_pct=20,
-        pm_id=1,
-        pm_name="张三",
-        ),
-        Project(
-        project_code="PJ002",
-        project_name="项目B",
-        status="ST02",
-        stage="S2",
-        health="H2",
-        progress_pct=40,
-        pm_id=2,
-        pm_name="李四",
-        ),
-        Project(
-        project_code="PJ003",
-        project_name="项目C",
-        status="ST01",
-        stage="S1",
-        health="H1",
-        progress_pct=30,
-        pm_id=1,
-        pm_name="张三",
-        ),
+            Project(
+                project_code="PJ001",
+                project_name="项目A",
+                status="ST01",
+                stage="S1",
+                health="H1",
+                progress_pct=20,
+                pm_id=1,
+                pm_name="张三",
+            ),
+            Project(
+                project_code="PJ002",
+                project_name="项目B",
+                status="ST02",
+                stage="S2",
+                health="H2",
+                progress_pct=40,
+                pm_id=2,
+                pm_name="李四",
+            ),
+            Project(
+                project_code="PJ003",
+                project_name="项目C",
+                status="ST01",
+                stage="S1",
+                health="H1",
+                progress_pct=30,
+                pm_id=1,
+                pm_name="张三",
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
 
         query = db_session.query(Project)
         result = build_project_statistics(
-        db=db_session,
-        query=query,
-        group_by=None,
-        start_date=None,
-        end_date=None,
+            db=db_session,
+            query=query,
+            group_by=None,
+            start_date=None,
+            end_date=None,
         )
 
         # Check basic stats
@@ -487,33 +484,33 @@ class TestBuildProjectStatistics:
     def test_build_project_statistics_group_by_customer(self, db_session: Session):
         """Test building statistics grouped by customer."""
         projects = [
-        Project(
-        project_code="PJ001",
-        project_name="客户项目A",
-        customer_id=1,
-        customer_name="客户A",
-        contract_amount=50000.0,
-        progress_pct=30,
-        ),
-        Project(
-        project_code="PJ002",
-        project_name="客户项目B",
-        customer_id=1,
-        customer_name="客户A",
-        contract_amount=30000.0,
-        progress_pct=40,
-        ),
+            Project(
+                project_code="PJ001",
+                project_name="客户项目A",
+                customer_id=1,
+                customer_name="客户A",
+                contract_amount=50000.0,
+                progress_pct=30,
+            ),
+            Project(
+                project_code="PJ002",
+                project_name="客户项目B",
+                customer_id=1,
+                customer_name="客户A",
+                contract_amount=30000.0,
+                progress_pct=40,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
 
         query = db_session.query(Project)
         result = build_project_statistics(
-        db=db_session,
-        query=query,
-        group_by="customer",
-        start_date=None,
-        end_date=None,
+            db=db_session,
+            query=query,
+            group_by="customer",
+            start_date=None,
+            end_date=None,
         )
 
         # Should include customer statistics
@@ -526,29 +523,29 @@ class TestBuildProjectStatistics:
         """Test building statistics grouped by month."""
         today = date(2025, 3, 1)
         projects = [
-        Project(
-        project_code="PJ001",
-        created_at=datetime(2025, 2, 15),
-        contract_amount=50000.0,
-        progress_pct=30,
-        ),
-        Project(
-        project_code="PJ002",
-        created_at=datetime(2025, 3, 1),
-        contract_amount=30000.0,
-        progress_pct=40,
-        ),
+            Project(
+                project_code="PJ001",
+                created_at=datetime(2025, 2, 15),
+                contract_amount=50000.0,
+                progress_pct=30,
+            ),
+            Project(
+                project_code="PJ002",
+                created_at=datetime(2025, 3, 1),
+                contract_amount=30000.0,
+                progress_pct=40,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
 
         query = db_session.query(Project)
         result = build_project_statistics(
-        db=db_session,
-        query=query,
-        group_by="month",
-        start_date=None,
-        end_date=None,
+            db=db_session,
+            query=query,
+            group_by="month",
+            start_date=None,
+            end_date=None,
         )
 
         # Should include monthly statistics
@@ -559,34 +556,32 @@ class TestBuildProjectStatistics:
         assert result["by_month"][0]["month_label"] == "2025-02"
         assert result["by_month"][1]["month_label"] == "2025-03"
 
-    def test_build_project_statistics_group_by_month_with_custom_dates(
-        self, db_session: Session
-    ):
+    def test_build_project_statistics_group_by_month_with_custom_dates(self, db_session: Session):
         """Test building monthly statistics with custom date range."""
         projects = [
-        Project(
-        project_code="PJ001",
-        created_at=datetime(2025, 1, 15),
-        contract_amount=50000.0,
-        progress_pct=30,
-        ),
-        Project(
-        project_code="PJ002",
-        created_at=datetime(2025, 2, 1),
-        contract_amount=30000.0,
-        progress_pct=40,
-        ),
+            Project(
+                project_code="PJ001",
+                created_at=datetime(2025, 1, 15),
+                contract_amount=50000.0,
+                progress_pct=30,
+            ),
+            Project(
+                project_code="PJ002",
+                created_at=datetime(2025, 2, 1),
+                contract_amount=30000.0,
+                progress_pct=40,
+            ),
         ]
         db_session.add_all(projects)
         db_session.commit()
 
         query = db_session.query(Project)
         result = build_project_statistics(
-        db=db_session,
-        query=query,
-        group_by="month",
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 1, 31),
+            db=db_session,
+            query=query,
+            group_by="month",
+            start_date=date(2025, 1, 1),
+            end_date=date(2025, 1, 31),
         )
 
         # Should only include projects in January

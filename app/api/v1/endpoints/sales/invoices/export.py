@@ -19,6 +19,7 @@ from app.models.user import User
 logger = logging.getLogger(__name__)
 
 from app.utils.db_helpers import get_or_404
+
 router = APIRouter()
 
 
@@ -41,10 +42,12 @@ def export_invoices(
 
     query = db.query(Invoice)
     if keyword:
-        query = query.filter(or_(
-            Invoice.invoice_code.contains(keyword),
-            Invoice.contract.has(Contract.contract_code.contains(keyword))
-        ))
+        query = query.filter(
+            or_(
+                Invoice.invoice_code.contains(keyword),
+                Invoice.contract.has(Contract.contract_code.contains(keyword)),
+            )
+        )
     if status:
         query = query.filter(Invoice.status == status)
     if customer_id:
@@ -57,14 +60,39 @@ def export_invoices(
         {"key": "contract_code", "label": "合同编码", "width": 15},
         {"key": "customer_name", "label": "客户名称", "width": 25},
         {"key": "invoice_type", "label": "发票类型", "width": 12},
-        {"key": "amount", "label": "发票金额", "width": 15, "format": export_service.format_currency},
-        {"key": "paid_amount", "label": "已收金额", "width": 15, "format": export_service.format_currency},
-        {"key": "unpaid_amount", "label": "未收金额", "width": 15, "format": export_service.format_currency},
-        {"key": "issue_date", "label": "开票日期", "width": 12, "format": export_service.format_date},
+        {
+            "key": "amount",
+            "label": "发票金额",
+            "width": 15,
+            "format": export_service.format_currency,
+        },
+        {
+            "key": "paid_amount",
+            "label": "已收金额",
+            "width": 15,
+            "format": export_service.format_currency,
+        },
+        {
+            "key": "unpaid_amount",
+            "label": "未收金额",
+            "width": 15,
+            "format": export_service.format_currency,
+        },
+        {
+            "key": "issue_date",
+            "label": "开票日期",
+            "width": 12,
+            "format": export_service.format_date,
+        },
         {"key": "due_date", "label": "到期日期", "width": 12, "format": export_service.format_date},
         {"key": "payment_status", "label": "收款状态", "width": 12},
         {"key": "status", "label": "发票状态", "width": 12},
-        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+        {
+            "key": "created_at",
+            "label": "创建时间",
+            "width": 18,
+            "format": export_service.format_date,
+        },
     ]
 
     data = []
@@ -72,22 +100,30 @@ def export_invoices(
         total_amount = float(invoice.total_amount or invoice.amount or 0)
         paid_amount = float(invoice.paid_amount or 0)
         unpaid_amount = total_amount - paid_amount
-        data.append({
-            "invoice_code": invoice.invoice_code,
-            "contract_code": invoice.contract.contract_code if invoice.contract else '',
-            "customer_name": invoice.contract.customer.customer_name if invoice.contract and invoice.contract.customer else '',
-            "invoice_type": invoice.invoice_type or '',
-            "amount": total_amount,
-            "paid_amount": paid_amount,
-            "unpaid_amount": unpaid_amount,
-            "issue_date": invoice.issue_date,
-            "due_date": invoice.due_date,
-            "payment_status": invoice.payment_status or '',
-            "status": invoice.status,
-            "created_at": invoice.created_at,
-        })
+        data.append(
+            {
+                "invoice_code": invoice.invoice_code,
+                "contract_code": invoice.contract.contract_code if invoice.contract else "",
+                "customer_name": (
+                    invoice.contract.customer.customer_name
+                    if invoice.contract and invoice.contract.customer
+                    else ""
+                ),
+                "invoice_type": invoice.invoice_type or "",
+                "amount": total_amount,
+                "paid_amount": paid_amount,
+                "unpaid_amount": unpaid_amount,
+                "issue_date": invoice.issue_date,
+                "due_date": invoice.due_date,
+                "payment_status": invoice.payment_status or "",
+                "status": invoice.status,
+                "created_at": invoice.created_at,
+            }
+        )
 
-    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="发票列表", title="发票列表")
+    excel_data = export_service.export_to_excel(
+        data=data, columns=columns, sheet_name="发票列表", title="发票列表"
+    )
     filename = f"发票列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return create_excel_response(excel_data, filename)
 
@@ -112,15 +148,19 @@ def export_invoice_pdf(
 
     invoice_data = {
         "invoice_code": invoice.invoice_code,
-        "contract_code": invoice.contract.contract_code if invoice.contract else '',
-        "customer_name": invoice.contract.customer.customer_name if invoice.contract and invoice.contract.customer else '',
-        "invoice_type": invoice.invoice_type or '',
+        "contract_code": invoice.contract.contract_code if invoice.contract else "",
+        "customer_name": (
+            invoice.contract.customer.customer_name
+            if invoice.contract and invoice.contract.customer
+            else ""
+        ),
+        "invoice_type": invoice.invoice_type or "",
         "total_amount": total_amount,
         "amount": total_amount,
         "paid_amount": paid_amount,
         "issue_date": invoice.issue_date,
         "due_date": invoice.due_date,
-        "payment_status": invoice.payment_status or '',
+        "payment_status": invoice.payment_status or "",
         "status": invoice.status,
     }
 

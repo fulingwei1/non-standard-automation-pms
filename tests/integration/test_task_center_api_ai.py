@@ -232,7 +232,9 @@ class TestTaskCenterCompleteAPI:
         if status_code and 200 <= status_code < 300:
             self.helper.print_success("任务完成成功")
         elif status_code in (404, 422, 400, 500):
-            self.helper.print_warning(f"返回{status_code}是预期行为（任务不存在或状态不允许或服务端错误）")
+            self.helper.print_warning(
+                f"返回{status_code}是预期行为（任务不存在或状态不允许或服务端错误）"
+            )
         else:
             self.helper.print_warning("完成任务响应不符合预期")
 

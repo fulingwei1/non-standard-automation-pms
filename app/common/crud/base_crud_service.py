@@ -7,8 +7,6 @@ business module can inherit and immediately get pagination, filtering,
 sorting, soft delete helpers, and lifecycle hooks.
 """
 
-from __future__ import annotations
-
 from typing import (
     Any,
     Dict,
@@ -37,9 +35,7 @@ ResponseSchemaType = TypeVar("ResponseSchemaType", bound=BaseModel)
 UniqueCheckType = Optional[Union[Dict[str, Any], Sequence[str], str]]
 
 
-class BaseCRUDService(
-    Generic[ModelType, CreateSchemaType, UpdateSchemaType, ResponseSchemaType]
-):
+class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, ResponseSchemaType]):
     """
     Sync CRUD service with unified pagination/query semantics.
 
@@ -193,16 +189,12 @@ class BaseCRUDService(
         # Detect status change
         new_status = getattr(db_obj, "status", None)
         if new_status and str(new_status) != str(old_status):
-            self._on_status_change(
-                db_obj, str(old_status) if old_status else None, str(new_status)
-            )
+            self._on_status_change(db_obj, str(old_status) if old_status else None, str(new_status))
 
         db_obj = self._after_update(db_obj)
 
         # 记录审计日志
-        self._log_audit(
-            "UPDATE", db_obj, changes=processed_in.model_dump(exclude_unset=True)
-        )
+        self._log_audit("UPDATE", db_obj, changes=processed_in.model_dump(exclude_unset=True))
 
         return self._to_response(db_obj)
 
@@ -343,15 +335,11 @@ class BaseCRUDService(
             payload = dict(unique_fields)
         elif isinstance(unique_fields, str):
             if not data:
-                raise ValueError(
-                    "data is required when unique fields are provided as names"
-                )
+                raise ValueError("data is required when unique fields are provided as names")
             payload = {unique_fields: getattr(data, unique_fields)}
         elif isinstance(unique_fields, (list, tuple, set)):
             if not data:
-                raise ValueError(
-                    "data is required when unique fields are provided as names"
-                )
+                raise ValueError("data is required when unique fields are provided as names")
             payload = {field: getattr(data, field) for field in unique_fields}
 
         for field, value in payload.items():
@@ -395,9 +383,7 @@ class BaseCRUDService(
                 detail["changes"] = changes
 
             if not detail.get("description"):
-                detail["description"] = (
-                    f"{self.resource_name} {action_type.lower()}: {target_id}"
-                )
+                detail["description"] = f"{self.resource_name} {action_type.lower()}: {target_id}"
 
             PermissionAuditService.log_audit(
                 db=self.db,

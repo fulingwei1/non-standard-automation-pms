@@ -23,9 +23,11 @@ def run(coro):
 
 def make_svc():
     db = MagicMock()
+
     # db.execute should be awaitable (returns a MagicMock synchronously when awaited)
     async def fake_execute(*args, **kwargs):
         return MagicMock()
+
     db.execute = fake_execute
 
     with patch("app.services.win_rate_prediction_service.service.AIWinRatePredictionService"):
@@ -59,6 +61,7 @@ def _set_execute_scalars(db, items):
 
 # ---------- get_influencing_factors ----------
 
+
 def test_get_influencing_factors_no_prediction():
     svc, db = make_svc()
     _set_execute_result(db, None)
@@ -82,6 +85,7 @@ def test_get_influencing_factors_sorted():
 
 # ---------- get_competitor_analysis ----------
 
+
 def test_get_competitor_analysis_no_prediction():
     svc, db = make_svc()
     _set_execute_result(db, None)
@@ -100,6 +104,7 @@ def test_get_competitor_analysis_returns_data():
 
 # ---------- get_improvement_suggestions ----------
 
+
 def test_get_improvement_suggestions_none():
     svc, db = make_svc()
     _set_execute_result(db, None)
@@ -109,8 +114,10 @@ def test_get_improvement_suggestions_none():
 
 # ---------- update_actual_result ----------
 
+
 def test_update_actual_result_not_found():
     from app.models.sales.presale_ai_win_rate import WinRateResultEnum
+
     svc, db = make_svc()
     _set_execute_result(db, None)
     with pytest.raises(Exception):
@@ -118,6 +125,7 @@ def test_update_actual_result_not_found():
 
 
 # ---------- _get_historical_data ----------
+
 
 def test_get_historical_data_empty():
     svc, db = make_svc()

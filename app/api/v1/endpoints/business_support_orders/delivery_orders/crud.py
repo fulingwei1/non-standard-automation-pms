@@ -28,7 +28,11 @@ from ..utils import generate_delivery_no
 router = APIRouter()
 
 
-@router.get("/delivery-orders", response_model=ResponseModel[PaginatedResponse[DeliveryOrderResponse]], summary="获取发货单列表")
+@router.get(
+    "/delivery-orders",
+    response_model=ResponseModel[PaginatedResponse[DeliveryOrderResponse]],
+    summary="获取发货单列表",
+)
 async def get_delivery_orders(
     pagination: PaginationParams = Depends(get_pagination_query),
     order_id: Optional[int] = Query(None, description="销售订单ID筛选"),
@@ -37,7 +41,7 @@ async def get_delivery_orders(
     delivery_status: Optional[str] = Query(None, description="发货状态筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取发货单列表"""
     try:
@@ -54,7 +58,9 @@ async def get_delivery_orders(
             query = query.filter(DeliveryOrder.delivery_status == delivery_status)
 
         # 应用关键词过滤（发货单号/客户名称/物流单号）
-        query = apply_keyword_filter(query, DeliveryOrder, search, ["delivery_no", "customer_name", "tracking_no"])
+        query = apply_keyword_filter(
+            query, DeliveryOrder, search, ["delivery_no", "customer_name", "tracking_no"]
+        )
 
         # 总数
         total = query.count()
@@ -101,7 +107,7 @@ async def get_delivery_orders(
                 return_date=item.return_date,
                 remark=item.remark,
                 created_at=item.created_at,
-                updated_at=item.updated_at
+                updated_at=item.updated_at,
             )
             for item in items
         ]
@@ -114,18 +120,20 @@ async def get_delivery_orders(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取发货单列表失败: {str(e)}")
 
 
-@router.post("/delivery-orders", response_model=ResponseModel[DeliveryOrderResponse], summary="创建发货单")
+@router.post(
+    "/delivery-orders", response_model=ResponseModel[DeliveryOrderResponse], summary="创建发货单"
+)
 async def create_delivery_order(
     delivery_data: DeliveryOrderCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """创建发货单"""
     try:
@@ -163,7 +171,7 @@ async def create_delivery_order(
             special_approval=delivery_data.special_approval or False,
             special_approval_reason=delivery_data.special_approval_reason,
             delivery_status="draft",
-            remark=delivery_data.remark
+            remark=delivery_data.remark,
         )
 
         db.add(delivery_order)
@@ -205,8 +213,8 @@ async def create_delivery_order(
                 return_date=delivery_order.return_date,
                 remark=delivery_order.remark,
                 created_at=delivery_order.created_at,
-                updated_at=delivery_order.updated_at
-            )
+                updated_at=delivery_order.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -215,11 +223,15 @@ async def create_delivery_order(
         raise HTTPException(status_code=500, detail=f"创建发货单失败: {str(e)}")
 
 
-@router.get("/delivery-orders/{delivery_id}", response_model=ResponseModel[DeliveryOrderResponse], summary="获取发货单详情")
+@router.get(
+    "/delivery-orders/{delivery_id}",
+    response_model=ResponseModel[DeliveryOrderResponse],
+    summary="获取发货单详情",
+)
 async def get_delivery_order(
     delivery_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取发货单详情"""
     try:
@@ -260,8 +272,8 @@ async def get_delivery_order(
                 return_date=delivery_order.return_date,
                 remark=delivery_order.remark,
                 created_at=delivery_order.created_at,
-                updated_at=delivery_order.updated_at
-            )
+                updated_at=delivery_order.updated_at,
+            ),
         )
     except HTTPException:
         raise
@@ -269,12 +281,16 @@ async def get_delivery_order(
         raise HTTPException(status_code=500, detail=f"获取发货单详情失败: {str(e)}")
 
 
-@router.put("/delivery-orders/{delivery_id}", response_model=ResponseModel[DeliveryOrderResponse], summary="更新发货单")
+@router.put(
+    "/delivery-orders/{delivery_id}",
+    response_model=ResponseModel[DeliveryOrderResponse],
+    summary="更新发货单",
+)
 async def update_delivery_order(
     delivery_id: int,
     delivery_data: DeliveryOrderUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """更新发货单"""
     try:
@@ -323,8 +339,8 @@ async def update_delivery_order(
                 return_date=delivery_order.return_date,
                 remark=delivery_order.remark,
                 created_at=delivery_order.created_at,
-                updated_at=delivery_order.updated_at
-            )
+                updated_at=delivery_order.updated_at,
+            ),
         )
     except HTTPException:
         raise

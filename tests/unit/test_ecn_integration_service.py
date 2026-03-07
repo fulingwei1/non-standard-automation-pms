@@ -12,10 +12,10 @@ ECN集成服务单元测试
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
-from app.services.ecn_integration.ecn_integration_service import EcnIntegrationService
 from app.schemas.ecn import EcnTaskCreate
+from app.services.ecn_integration.ecn_integration_service import EcnIntegrationService
 
 
 class TestEcnIntegrationService(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestEcnIntegrationService(unittest.TestCase):
 
     # test_sync_to_bom_success 已被其他边界条件测试覆盖
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_bom_invalid_status(self, mock_get_or_404):
         """测试同步到BOM - ECN状态不允许"""
         mock_ecn = Mock()
@@ -42,7 +42,7 @@ class TestEcnIntegrationService(unittest.TestCase):
 
         self.assertIn("只能同步已审批或执行中的ECN", str(ctx.exception))
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_bom_no_affected_materials(self, mock_get_or_404):
         """测试同步到BOM - 无受影响物料"""
         mock_ecn = Mock()
@@ -58,7 +58,7 @@ class TestEcnIntegrationService(unittest.TestCase):
         self.assertEqual(result["updated_count"], 0)
         self.db.commit.assert_called_once()
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_bom_bom_item_not_found(self, mock_get_or_404):
         """测试同步到BOM - BOM项不存在"""
         mock_ecn = Mock()
@@ -84,7 +84,7 @@ class TestEcnIntegrationService(unittest.TestCase):
 
     # ========== sync_to_project() 测试 ==========
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_project_success(self, mock_get_or_404):
         """测试同步到项目成功"""
         mock_ecn = Mock()
@@ -109,7 +109,7 @@ class TestEcnIntegrationService(unittest.TestCase):
         self.assertEqual(mock_project.planned_end_date, datetime(2026, 3, 6).date())
         self.db.commit.assert_called_once()
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_project_no_project_id(self, mock_get_or_404):
         """测试同步到项目 - ECN未关联项目"""
         mock_ecn = Mock()
@@ -121,7 +121,7 @@ class TestEcnIntegrationService(unittest.TestCase):
 
         self.assertIn("ECN未关联项目", str(ctx.exception))
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_project_project_not_found(self, mock_get_or_404):
         """测试同步到项目 - 项目不存在"""
         mock_ecn = Mock()
@@ -137,7 +137,7 @@ class TestEcnIntegrationService(unittest.TestCase):
 
         self.assertIn("项目不存在", str(ctx.exception))
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_project_no_cost_impact(self, mock_get_or_404):
         """测试同步到项目 - 无成本影响"""
         mock_ecn = Mock()
@@ -161,7 +161,7 @@ class TestEcnIntegrationService(unittest.TestCase):
         self.assertEqual(result["schedule_impact_days"], 0)
         self.assertEqual(mock_project.total_cost, Decimal("10000.00"))
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_project_no_planned_end_date(self, mock_get_or_404):
         """测试同步到项目 - 项目无计划结束日期"""
         mock_ecn = Mock()
@@ -187,7 +187,7 @@ class TestEcnIntegrationService(unittest.TestCase):
 
     # test_sync_to_purchase_success 已被其他边界条件测试覆盖
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_sync_to_purchase_no_affected_orders(self, mock_get_or_404):
         """测试同步到采购 - 无受影响订单"""
         mock_ecn = Mock()
@@ -221,11 +221,8 @@ class TestEcnIntegrationService(unittest.TestCase):
         self.db.query.return_value = query
 
         # Mock sync_to_bom方法
-        with patch.object(self.service, 'sync_to_bom') as mock_sync:
-            mock_sync.side_effect = [
-                {"updated_count": 3},
-                {"updated_count": 5}
-            ]
+        with patch.object(self.service, "sync_to_bom") as mock_sync:
+            mock_sync.side_effect = [{"updated_count": 3}, {"updated_count": 5}]
 
             result = self.service.batch_sync_to_bom([1, 2])
 
@@ -273,7 +270,7 @@ class TestEcnIntegrationService(unittest.TestCase):
         query.filter.return_value.first.return_value = mock_ecn
         self.db.query.return_value = query
 
-        with patch.object(self.service, 'sync_to_bom') as mock_sync:
+        with patch.object(self.service, "sync_to_bom") as mock_sync:
             mock_sync.side_effect = Exception("数据库错误")
 
             result = self.service.batch_sync_to_bom([1])
@@ -301,7 +298,7 @@ class TestEcnIntegrationService(unittest.TestCase):
 
         self.db.query.side_effect = [query_ecn, query_project]
 
-        with patch.object(self.service, 'sync_to_project') as mock_sync:
+        with patch.object(self.service, "sync_to_project") as mock_sync:
             mock_sync.return_value = {"cost_impact": 1000, "schedule_impact_days": 3}
 
             result = self.service.batch_sync_to_project([1])
@@ -355,7 +352,7 @@ class TestEcnIntegrationService(unittest.TestCase):
         query.filter.return_value.first.return_value = mock_ecn
         self.db.query.return_value = query
 
-        with patch.object(self.service, 'sync_to_purchase') as mock_sync:
+        with patch.object(self.service, "sync_to_purchase") as mock_sync:
             mock_sync.return_value = {"updated_count": 2}
 
             result = self.service.batch_sync_to_purchase([1], current_user_id=100)
@@ -377,9 +374,9 @@ class TestEcnIntegrationService(unittest.TestCase):
 
     # ========== batch_create_tasks() 测试 ==========
 
-    @patch('app.services.ecn_integration.ecn_integration_service.notify_task_assigned')
-    @patch('app.services.ecn_integration.ecn_integration_service.auto_assign_task')
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.notify_task_assigned")
+    @patch("app.services.ecn_integration.ecn_integration_service.auto_assign_task")
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_batch_create_tasks_success(self, mock_get_or_404, mock_auto_assign, mock_notify):
         """测试批量创建任务成功"""
         mock_ecn = Mock()
@@ -403,7 +400,7 @@ class TestEcnIntegrationService(unittest.TestCase):
             task_description="描述1",
             assignee_id=10,
             planned_start=datetime(2026, 3, 1),
-            planned_end=datetime(2026, 3, 5)
+            planned_end=datetime(2026, 3, 5),
         )
 
         task2 = EcnTaskCreate(
@@ -414,7 +411,7 @@ class TestEcnIntegrationService(unittest.TestCase):
             task_description="描述2",
             assignee_id=None,  # 测试自动分配
             planned_start=datetime(2026, 3, 6),
-            planned_end=datetime(2026, 3, 10)
+            planned_end=datetime(2026, 3, 10),
         )
 
         mock_auto_assign.return_value = 20
@@ -430,7 +427,7 @@ class TestEcnIntegrationService(unittest.TestCase):
         self.assertEqual(result["ecn_id"], 1)
         self.assertEqual(result["created_count"], 2)
         self.assertEqual(len(result["task_ids"]), 2)
-        
+
         # 验证ECN状态更新
         self.assertEqual(mock_ecn.status, "EXECUTING")
         self.assertEqual(mock_ecn.current_step, "EXECUTION")
@@ -438,13 +435,13 @@ class TestEcnIntegrationService(unittest.TestCase):
 
         # 验证自动分配被调用
         mock_auto_assign.assert_called_once()
-        
+
         # 验证通知被发送（两次：一次是有assignee_id的，一次是自动分配的）
         self.assertEqual(mock_notify.call_count, 2)
 
         self.db.commit.assert_called_once()
 
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
     def test_batch_create_tasks_invalid_status(self, mock_get_or_404):
         """测试批量创建任务 - 状态不允许"""
         mock_ecn = Mock()
@@ -456,10 +453,12 @@ class TestEcnIntegrationService(unittest.TestCase):
 
         self.assertIn("ECN当前不在执行阶段", str(ctx.exception))
 
-    @patch('app.services.ecn_integration.ecn_integration_service.notify_task_assigned')
-    @patch('app.services.ecn_integration.ecn_integration_service.auto_assign_task')
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
-    def test_batch_create_tasks_no_existing_tasks(self, mock_get_or_404, mock_auto_assign, mock_notify):
+    @patch("app.services.ecn_integration.ecn_integration_service.notify_task_assigned")
+    @patch("app.services.ecn_integration.ecn_integration_service.auto_assign_task")
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
+    def test_batch_create_tasks_no_existing_tasks(
+        self, mock_get_or_404, mock_auto_assign, mock_notify
+    ):
         """测试批量创建任务 - 无现有任务"""
         mock_ecn = Mock()
         mock_ecn.status = "APPROVED"
@@ -478,7 +477,7 @@ class TestEcnIntegrationService(unittest.TestCase):
             task_description="描述",
             assignee_id=10,
             planned_start=datetime(2026, 3, 1),
-            planned_end=datetime(2026, 3, 5)
+            planned_end=datetime(2026, 3, 5),
         )
 
         def mock_refresh(task):
@@ -491,10 +490,12 @@ class TestEcnIntegrationService(unittest.TestCase):
         # 应该从1开始
         self.assertEqual(self.db.add.call_args_list[0][0][0].task_no, 1)
 
-    @patch('app.services.ecn_integration.ecn_integration_service.notify_task_assigned')
-    @patch('app.services.ecn_integration.ecn_integration_service.auto_assign_task')
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
-    def test_batch_create_tasks_auto_assign_fails(self, mock_get_or_404, mock_auto_assign, mock_notify):
+    @patch("app.services.ecn_integration.ecn_integration_service.notify_task_assigned")
+    @patch("app.services.ecn_integration.ecn_integration_service.auto_assign_task")
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
+    def test_batch_create_tasks_auto_assign_fails(
+        self, mock_get_or_404, mock_auto_assign, mock_notify
+    ):
         """测试批量创建任务 - 自动分配失败"""
         mock_ecn = Mock()
         mock_ecn.status = "EXECUTING"
@@ -512,7 +513,7 @@ class TestEcnIntegrationService(unittest.TestCase):
             task_description="描述",
             assignee_id=None,
             planned_start=datetime(2026, 3, 1),
-            planned_end=datetime(2026, 3, 5)
+            planned_end=datetime(2026, 3, 5),
         )
 
         # 自动分配失败
@@ -530,10 +531,12 @@ class TestEcnIntegrationService(unittest.TestCase):
         # 通知不应该被调用（因为没有assignee_id）
         mock_notify.assert_not_called()
 
-    @patch('app.services.ecn_integration.ecn_integration_service.notify_task_assigned')
-    @patch('app.services.ecn_integration.ecn_integration_service.auto_assign_task')
-    @patch('app.services.ecn_integration.ecn_integration_service.get_or_404')
-    def test_batch_create_tasks_notification_fails(self, mock_get_or_404, mock_auto_assign, mock_notify):
+    @patch("app.services.ecn_integration.ecn_integration_service.notify_task_assigned")
+    @patch("app.services.ecn_integration.ecn_integration_service.auto_assign_task")
+    @patch("app.services.ecn_integration.ecn_integration_service.get_or_404")
+    def test_batch_create_tasks_notification_fails(
+        self, mock_get_or_404, mock_auto_assign, mock_notify
+    ):
         """测试批量创建任务 - 通知发送失败"""
         mock_ecn = Mock()
         mock_ecn.status = "APPROVED"
@@ -551,7 +554,7 @@ class TestEcnIntegrationService(unittest.TestCase):
             task_description="描述",
             assignee_id=10,
             planned_start=datetime(2026, 3, 1),
-            planned_end=datetime(2026, 3, 5)
+            planned_end=datetime(2026, 3, 5),
         )
 
         # 通知失败

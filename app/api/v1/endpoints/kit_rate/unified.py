@@ -17,13 +17,15 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.project import Machine, Project
-from app.services.kit_rate import KitRateService
 from app.models.user import User
+from app.services.kit_rate import KitRateService
 
 router = APIRouter()
 
 
-def _get_stage_kit_rate(db: Session, project_id: int, machine_id: Optional[int] = None) -> Dict[str, Any]:
+def _get_stage_kit_rate(
+    db: Session, project_id: int, machine_id: Optional[int] = None
+) -> Dict[str, Any]:
     """
     获取基于装配阶段的齐套率（工艺齐套率）
 
@@ -35,9 +37,7 @@ def _get_stage_kit_rate(db: Session, project_id: int, machine_id: Optional[int] 
         from app.models import AssemblyStage, MaterialReadiness, ShortageDetail
 
         # 查询物料齐套状态（取最新一次分析）
-        query = db.query(MaterialReadiness).filter(
-            MaterialReadiness.project_id == project_id
-        )
+        query = db.query(MaterialReadiness).filter(MaterialReadiness.project_id == project_id)
         if machine_id:
             query = query.filter(MaterialReadiness.machine_id == machine_id)
 
@@ -79,9 +79,9 @@ def _get_stage_kit_rate(db: Session, project_id: int, machine_id: Optional[int] 
 
         if not stage_stats:
             # 兜底：用缺料明细估算（仅缺料项）
-            shortages = db.query(ShortageDetail).filter(
-                ShortageDetail.readiness_id == readiness.id
-            ).all()
+            shortages = (
+                db.query(ShortageDetail).filter(ShortageDetail.readiness_id == readiness.id).all()
+            )
             stage_map = {s.stage_code: s for s in stages_sorted}
             shortage_stats = {}
             for shortage in shortages:
@@ -89,9 +89,11 @@ def _get_stage_kit_rate(db: Session, project_id: int, machine_id: Optional[int] 
                 if stage_code not in shortage_stats:
                     shortage_stats[stage_code] = {
                         "stage_code": stage_code,
-                        "stage_name": stage_map.get(stage_code).stage_name
-                        if stage_map.get(stage_code)
-                        else stage_code,
+                        "stage_name": (
+                            stage_map.get(stage_code).stage_name
+                            if stage_map.get(stage_code)
+                            else stage_code
+                        ),
                         "total_items": 0,
                         "shortage_items": 0,
                     }
@@ -203,9 +205,11 @@ def get_unified_kit_rates(
         "fulfilled_items": quantity_result["fulfilled_items"],
         "shortage_items": quantity_result["shortage_items"],
         "in_transit_items": quantity_result["in_transit_items"],
-        "kit_rate": round(
-            quantity_result["fulfilled_items"] / quantity_result["total_items"] * 100, 2
-        ) if quantity_result["total_items"] > 0 else 0.0,
+        "kit_rate": (
+            round(quantity_result["fulfilled_items"] / quantity_result["total_items"] * 100, 2)
+            if quantity_result["total_items"] > 0
+            else 0.0
+        ),
         "kit_status": quantity_result["kit_status"],
     }
 
@@ -224,8 +228,14 @@ def get_unified_kit_rates(
             "stage_based": stage_kit_rate,
         },
         "summary": {
-            "recommended_method": "stage_based" if stage_kit_rate.get("available") else "quantity_based",
-            "primary_kit_rate": stage_kit_rate.get("overall_kit_rate") if stage_kit_rate.get("available") else quantity_kit_rate.get("kit_rate"),
+            "recommended_method": (
+                "stage_based" if stage_kit_rate.get("available") else "quantity_based"
+            ),
+            "primary_kit_rate": (
+                stage_kit_rate.get("overall_kit_rate")
+                if stage_kit_rate.get("available")
+                else quantity_kit_rate.get("kit_rate")
+            ),
             "has_blocking_shortage": stage_kit_rate.get("blocking_shortage_count", 0) > 0,
         },
     }
@@ -267,17 +277,25 @@ def compare_project_kit_rates(
         # 按阶段计算的齐套率
         stage_result = _get_stage_kit_rate(db, project_id)
 
-        results.append({
-            "project_id": project_id,
-            "project_no": project.project_code,
-            "project_name": project.project_name,
-            "quantity_kit_rate": quantity_result.get("kit_rate", 0),
-            "stage_kit_rate": stage_result.get("overall_kit_rate") if stage_result.get("available") else None,
-            "kit_status": quantity_result.get("kit_status", "unknown"),
-            "total_items": quantity_result.get("total_items", 0),
-            "shortage_items": quantity_result.get("shortage_items", 0),
-            "has_blocking_shortage": stage_result.get("blocking_shortage_count", 0) > 0 if stage_result.get("available") else False,
-        })
+        results.append(
+            {
+                "project_id": project_id,
+                "project_no": project.project_code,
+                "project_name": project.project_name,
+                "quantity_kit_rate": quantity_result.get("kit_rate", 0),
+                "stage_kit_rate": (
+                    stage_result.get("overall_kit_rate") if stage_result.get("available") else None
+                ),
+                "kit_status": quantity_result.get("kit_status", "unknown"),
+                "total_items": quantity_result.get("total_items", 0),
+                "shortage_items": quantity_result.get("shortage_items", 0),
+                "has_blocking_shortage": (
+                    stage_result.get("blocking_shortage_count", 0) > 0
+                    if stage_result.get("available")
+                    else False
+                ),
+            }
+        )
 
     # 按齐套率排序
     results.sort(key=lambda x: x.get("quantity_kit_rate", 0))
@@ -289,6 +307,10 @@ def compare_project_kit_rates(
             "complete_count": len([r for r in results if r.get("kit_status") == "complete"]),
             "partial_count": len([r for r in results if r.get("kit_status") == "partial"]),
             "shortage_count": len([r for r in results if r.get("kit_status") == "shortage"]),
-            "avg_kit_rate": round(sum(r.get("quantity_kit_rate", 0) for r in results) / len(results), 2) if results else 0,
+            "avg_kit_rate": (
+                round(sum(r.get("quantity_kit_rate", 0) for r in results) / len(results), 2)
+                if results
+                else 0
+            ),
         },
     }

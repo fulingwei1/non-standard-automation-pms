@@ -4,13 +4,14 @@ Unit tests for app/services/bonus/base.py
 批次: cov50
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
-    from app.services.bonus.base import BonusCalculatorBase
     from app.models.enums import PerformanceLevelEnum
+    from app.services.bonus.base import BonusCalculatorBase
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -78,7 +79,7 @@ def test_check_trigger_condition_min_score_pass():
     rule.trigger_condition = {"min_score": 80}
 
     perf = MagicMock()
-    perf.total_score = Decimal('90')
+    perf.total_score = Decimal("90")
     context = {"performance_result": perf}
 
     assert calc.check_trigger_condition(rule, context) is True
@@ -91,7 +92,7 @@ def test_check_trigger_condition_min_score_fail():
     rule.trigger_condition = {"min_score": 80}
 
     perf = MagicMock()
-    perf.total_score = Decimal('70')
+    perf.total_score = Decimal("70")
     context = {"performance_result": perf}
 
     assert calc.check_trigger_condition(rule, context) is False
@@ -112,7 +113,7 @@ def test_get_coefficient_by_level_unknown():
     """未知等级应返回默认系数1.0"""
     calc = _make_calculator()
     coef = calc.get_coefficient_by_level("UNKNOWN_LEVEL")
-    assert coef == Decimal('1.0')
+    assert coef == Decimal("1.0")
 
 
 def test_get_role_coefficient_default():
@@ -122,14 +123,16 @@ def test_get_role_coefficient_default():
     rule.trigger_condition = None
 
     coef = calc.get_role_coefficient("PM", rule)
-    assert coef >= Decimal('1.0')
+    assert coef >= Decimal("1.0")
 
 
 def test_get_active_rules():
     """获取活跃规则时应查询数据库"""
     calc = _make_calculator()
     mock_rule = MagicMock()
-    calc.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_rule]
+    calc.db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = [
+        mock_rule
+    ]
 
     rules = calc.get_active_rules()
     # Should call db.query

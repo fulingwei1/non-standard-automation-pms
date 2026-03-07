@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.models.organization import Department
 from app.models.performance import MonthlyWorkSummary, PerformanceEvaluationRecord
-from app.models.project import Project
 from app.models.progress import Task
+from app.models.project import Project
 from app.models.user import User
 from app.schemas.performance import (
     EvaluationTaskItem,
@@ -33,9 +33,7 @@ class ManagerPerformanceService:
         """
         self.db = db
 
-    def check_performance_view_permission(
-        self, current_user: User, target_user_id: int
-    ) -> bool:
+    def check_performance_view_permission(self, current_user: User, target_user_id: int) -> bool:
         """
         检查用户是否有权限查看指定用户的绩效
 
@@ -79,12 +77,8 @@ class ManagerPerformanceService:
 
         has_manager_role = False
         for user_role in current_user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower() if user_role.role.role_code else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower() if user_role.role.role_name else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
             if role_code in manager_roles or role_name in manager_roles:
                 has_manager_role = True
                 break
@@ -93,21 +87,14 @@ class ManagerPerformanceService:
             return False
 
         # 检查是否是同一部门
-        if (
-            target_user.department_id
-            and current_user.department_id == target_user.department_id
-        ):
+        if target_user.department_id and current_user.department_id == target_user.department_id:
             return True
 
         # 检查是否管理同一项目
-        user_projects = (
-            self.db.query(Project).filter(Project.pm_id == current_user.id).all()
-        )
+        user_projects = self.db.query(Project).filter(Project.pm_id == current_user.id).all()
         project_ids = [p.id for p in user_projects]
 
-        target_projects = (
-            self.db.query(Project).filter(Project.id.in_(project_ids)).all()
-        )
+        target_projects = self.db.query(Project).filter(Project.id.in_(project_ids)).all()
         for project in target_projects:
             # 检查目标用户是否是项目成员
             member_task = (
@@ -131,11 +118,7 @@ class ManagerPerformanceService:
             List[int]: 成员ID列表
         """
         # 临时使用部门作为团队
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == team_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == team_id, User.is_active).all()
         return [u.id for u in users]
 
     def get_department_members(self, dept_id: int) -> List[int]:
@@ -148,11 +131,7 @@ class ManagerPerformanceService:
         Returns:
             List[int]: 成员ID列表
         """
-        users = (
-            self.db.query(User)
-            .filter(User.department_id == dept_id, User.is_active)
-            .all()
-        )
+        users = self.db.query(User).filter(User.department_id == dept_id, User.is_active).all()
         return [u.id for u in users]
 
     def get_evaluator_type(self, user: User) -> str:
@@ -169,12 +148,8 @@ class ManagerPerformanceService:
         is_project_manager = False
 
         for user_role in user.roles or []:
-            role_code = (
-                user_role.role.role_code.lower() if user_role.role.role_code else ""
-            )
-            role_name = (
-                user_role.role.role_name.lower() if user_role.role.role_name else ""
-            )
+            role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+            role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
 
             if role_code in [
                 "dept_manager",
@@ -346,9 +321,7 @@ class ManagerPerformanceService:
             "tasks": tasks,
         }
 
-    def get_evaluation_detail(
-        self, current_user: User, task_id: int
-    ) -> Dict[str, Any]:
+    def get_evaluation_detail(self, current_user: User, task_id: int) -> Dict[str, Any]:
         """
         获取评价详情（工作总结+历史绩效）
 
@@ -363,11 +336,7 @@ class ManagerPerformanceService:
             ValueError: 工作总结不存在
         """
         # 获取工作总结
-        summary = (
-            self.db.query(MonthlyWorkSummary)
-            .filter(MonthlyWorkSummary.id == task_id)
-            .first()
-        )
+        summary = self.db.query(MonthlyWorkSummary).filter(MonthlyWorkSummary.id == task_id).first()
 
         if not summary:
             raise ValueError("工作总结不存在")
@@ -424,11 +393,7 @@ class ManagerPerformanceService:
             ValueError: 工作总结不存在或已完成评价
         """
         # 获取工作总结
-        summary = (
-            self.db.query(MonthlyWorkSummary)
-            .filter(MonthlyWorkSummary.id == task_id)
-            .first()
-        )
+        summary = self.db.query(MonthlyWorkSummary).filter(MonthlyWorkSummary.id == task_id).first()
 
         if not summary:
             raise ValueError("工作总结不存在")

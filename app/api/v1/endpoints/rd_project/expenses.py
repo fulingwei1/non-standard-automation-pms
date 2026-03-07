@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.rd_project import RdCost, RdCostType, RdProject
 from app.models.timesheet import Timesheet
@@ -24,14 +25,14 @@ from app.schemas.rd_project import (
     RdCostSummaryResponse,
     RdCostUpdate,
 )
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import generate_cost_no
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
 # ==================== 研发费用归集 ====================
+
 
 @router.get("/rd-costs", response_model=PaginatedResponse)
 def get_rd_costs(
@@ -64,7 +65,11 @@ def get_rd_costs(
     total = query.count()
 
     # 分页
-    costs = apply_pagination(query.order_by(desc(RdCost.cost_date), desc(RdCost.created_at)), pagination.offset, pagination.limit).all()
+    costs = apply_pagination(
+        query.order_by(desc(RdCost.cost_date), desc(RdCost.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = [RdCostResponse.model_validate(cost) for cost in costs]
 
@@ -73,7 +78,7 @@ def get_rd_costs(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -112,13 +117,13 @@ def create_rd_cost(
         material_price=cost_in.material_price,
         equipment_id=cost_in.equipment_id,
         depreciation_period=cost_in.depreciation_period,
-        source_type=cost_in.source_type or 'MANUAL',
+        source_type=cost_in.source_type or "MANUAL",
         source_id=cost_in.source_id,
         is_allocated=cost_in.is_allocated,
         allocation_rule_id=cost_in.allocation_rule_id,
         allocation_rate=cost_in.allocation_rate,
         deductible_amount=cost_in.deductible_amount,
-        status='DRAFT',
+        status="DRAFT",
         remark=cost_in.remark,
     )
 
@@ -131,9 +136,7 @@ def create_rd_cost(
     db.refresh(cost)
 
     return ResponseModel(
-        code=201,
-        message="研发费用录入成功",
-        data=RdCostResponse.model_validate(cost)
+        code=201, message="研发费用录入成功", data=RdCostResponse.model_validate(cost)
     )
 
 
@@ -151,7 +154,7 @@ def update_rd_cost(
     cost = get_or_404(db, RdCost, cost_id, "研发费用不存在")
 
     # 只有草稿状态才能更新
-    if cost.status != 'DRAFT':
+    if cost.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态的研发费用才能更新")
 
     # 更新字段
@@ -159,8 +162,8 @@ def update_rd_cost(
 
     # 如果更新了费用金额，需要更新项目总费用
     old_amount = cost.cost_amount
-    if 'cost_amount' in update_data:
-        new_amount = update_data['cost_amount']
+    if "cost_amount" in update_data:
+        new_amount = update_data["cost_amount"]
         project = db.query(RdProject).filter(RdProject.id == cost.rd_project_id).first()
         if project:
             project.total_cost = (project.total_cost or 0) - old_amount + new_amount
@@ -171,9 +174,7 @@ def update_rd_cost(
     save_obj(db, cost)
 
     return ResponseModel(
-        code=200,
-        message="研发费用更新成功",
-        data=RdCostResponse.model_validate(cost)
+        code=200, message="研发费用更新成功", data=RdCostResponse.model_validate(cost)
     )
 
 
@@ -190,10 +191,11 @@ def get_rd_project_cost_summary(
     project = get_or_404(db, RdProject, project_id, "研发项目不存在")
 
     # 查询所有费用
-    costs = db.query(RdCost).filter(
-        RdCost.rd_project_id == project_id,
-        RdCost.status == 'APPROVED'
-    ).all()
+    costs = (
+        db.query(RdCost)
+        .filter(RdCost.rd_project_id == project_id, RdCost.status == "APPROVED")
+        .all()
+    )
 
     # 按类型汇总
     total_cost = Decimal(0)
@@ -214,11 +216,11 @@ def get_rd_project_cost_summary(
         cost_type = db.query(RdCostType).filter(RdCostType.id == cost.cost_type_id).first()
         if cost_type:
             category = cost_type.category
-            if category == 'LABOR':
+            if category == "LABOR":
                 labor_cost += cost.cost_amount
-            elif category == 'MATERIAL':
+            elif category == "MATERIAL":
                 material_cost += cost.cost_amount
-            elif category == 'DEPRECIATION':
+            elif category == "DEPRECIATION":
                 depreciation_cost += cost.cost_amount
             else:
                 other_cost += cost.cost_amount
@@ -227,16 +229,16 @@ def get_rd_project_cost_summary(
             type_name = cost_type.type_name
             if type_name not in cost_by_type:
                 cost_by_type[type_name] = {
-                    'type_name': type_name,
-                    'category': category,
-                    'total_amount': Decimal(0),
-                    'deductible_amount': Decimal(0),
-                    'count': 0
+                    "type_name": type_name,
+                    "category": category,
+                    "total_amount": Decimal(0),
+                    "deductible_amount": Decimal(0),
+                    "count": 0,
                 }
-            cost_by_type[type_name]['total_amount'] += cost.cost_amount
+            cost_by_type[type_name]["total_amount"] += cost.cost_amount
             if cost.deductible_amount:
-                cost_by_type[type_name]['deductible_amount'] += cost.deductible_amount
-            cost_by_type[type_name]['count'] += 1
+                cost_by_type[type_name]["deductible_amount"] += cost.deductible_amount
+            cost_by_type[type_name]["count"] += 1
 
     summary = RdCostSummaryResponse(
         rd_project_id=project_id,
@@ -247,14 +249,10 @@ def get_rd_project_cost_summary(
         depreciation_cost=depreciation_cost,
         other_cost=other_cost,
         deductible_amount=deductible_amount,
-        cost_by_type=list(cost_by_type.values())
+        cost_by_type=list(cost_by_type.values()),
     )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=summary
-    )
+    return ResponseModel(code=200, message="success", data=summary)
 
 
 @router.post("/rd-costs/calc-labor", response_model=ResponseModel)
@@ -274,12 +272,16 @@ def calculate_labor_cost(
     user = get_or_404(db, User, calc_request.user_id, "用户不存在")
 
     # 查询工时记录（从timesheet表）
-    timesheets = db.query(Timesheet).filter(
-        Timesheet.user_id == calc_request.user_id,
-        Timesheet.work_date >= calc_request.start_date,
-        Timesheet.work_date <= calc_request.end_date,
-        Timesheet.status == 'APPROVED'
-    ).all()
+    timesheets = (
+        db.query(Timesheet)
+        .filter(
+            Timesheet.user_id == calc_request.user_id,
+            Timesheet.work_date >= calc_request.start_date,
+            Timesheet.work_date <= calc_request.end_date,
+            Timesheet.status == "APPROVED",
+        )
+        .all()
+    )
 
     # 计算总工时
     total_hours = Decimal(0)
@@ -290,22 +292,28 @@ def calculate_labor_cost(
     hourly_rate = calc_request.hourly_rate
     if not hourly_rate:
         from app.services.hourly_rate_service import HourlyRateService
-        hourly_rate = HourlyRateService.get_user_hourly_rate(db, calc_request.user_id, calc_request.start_date)
+
+        hourly_rate = HourlyRateService.get_user_hourly_rate(
+            db, calc_request.user_id, calc_request.start_date
+        )
 
     # 计算费用金额
     cost_amount = total_hours * hourly_rate
 
     # 获取人工费用类型
-    labor_cost_type = db.query(RdCostType).filter(
-        RdCostType.category == 'LABOR',
-        RdCostType.is_active
-    ).first()
+    labor_cost_type = (
+        db.query(RdCostType).filter(RdCostType.category == "LABOR", RdCostType.is_active).first()
+    )
 
     if not labor_cost_type:
         raise HTTPException(status_code=404, detail="未找到人工费用类型，请先配置费用类型")
 
     # 计算加计扣除金额
-    deductible_amount = cost_amount * (labor_cost_type.deduction_rate / 100) if labor_cost_type.is_deductible else Decimal(0)
+    deductible_amount = (
+        cost_amount * (labor_cost_type.deduction_rate / 100)
+        if labor_cost_type.is_deductible
+        else Decimal(0)
+    )
 
     return ResponseModel(
         code=200,
@@ -322,8 +330,5 @@ def calculate_labor_cost(
             "deductible_amount": float(deductible_amount),
             "cost_type_id": labor_cost_type.id,
             "cost_type_name": labor_cost_type.type_name,
-        }
+        },
     )
-
-
-

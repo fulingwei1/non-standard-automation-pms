@@ -12,8 +12,8 @@ import pytest
 
 from app.models.organization import Department
 from app.models.performance import MonthlyWorkSummary, PerformanceEvaluationRecord
-from app.models.project import Project
 from app.models.progress import Task
+from app.models.project import Project
 from app.models.user import User
 from app.schemas.performance import PerformanceEvaluationRecordCreate
 from app.services.manager_performance.manager_performance_service import (
@@ -61,9 +61,7 @@ class TestCheckPerformanceViewPermission(unittest.TestCase):
         """测试没有管理角色时返回False"""
         current_user = Mock(id=1, is_superuser=False, roles=[])
         target_user = Mock(id=2, department_id=10)
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = target_user
         result = self.service.check_performance_view_permission(current_user, 2)
         self.assertFalse(result)
 
@@ -74,14 +72,10 @@ class TestCheckPerformanceViewPermission(unittest.TestCase):
         mock_role.role.role_name = "部门经理"
         mock_user_role = Mock(role=mock_role.role)
 
-        current_user = Mock(
-            id=1, is_superuser=False, department_id=10, roles=[mock_user_role]
-        )
+        current_user = Mock(id=1, is_superuser=False, department_id=10, roles=[mock_user_role])
         target_user = Mock(id=2, department_id=10)
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = target_user
 
         result = self.service.check_performance_view_permission(current_user, 2)
         self.assertTrue(result)
@@ -93,14 +87,10 @@ class TestCheckPerformanceViewPermission(unittest.TestCase):
         mock_role.role.role_name = "部门经理"
         mock_user_role = Mock(role=mock_role.role)
 
-        current_user = Mock(
-            id=1, is_superuser=False, department_id=10, roles=[mock_user_role]
-        )
+        current_user = Mock(id=1, is_superuser=False, department_id=10, roles=[mock_user_role])
         target_user = Mock(id=2, department_id=20)
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = target_user
         self.mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = self.service.check_performance_view_permission(current_user, 2)
@@ -113,9 +103,7 @@ class TestCheckPerformanceViewPermission(unittest.TestCase):
         mock_role.role.role_name = "项目经理"
         mock_user_role = Mock(role=mock_role.role)
 
-        current_user = Mock(
-            id=1, is_superuser=False, department_id=10, roles=[mock_user_role]
-        )
+        current_user = Mock(id=1, is_superuser=False, department_id=10, roles=[mock_user_role])
         target_user = Mock(id=2, department_id=20)
 
         # 模拟项目查询
@@ -164,14 +152,10 @@ class TestCheckPerformanceViewPermission(unittest.TestCase):
         mock_role.role.role_name = "Department Manager"
         mock_user_role = Mock(role=mock_role.role)
 
-        current_user = Mock(
-            id=1, is_superuser=False, department_id=10, roles=[mock_user_role]
-        )
+        current_user = Mock(id=1, is_superuser=False, department_id=10, roles=[mock_user_role])
         target_user = Mock(id=2, department_id=10)
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = target_user
 
         result = self.service.check_performance_view_permission(current_user, 2)
         self.assertTrue(result)
@@ -183,14 +167,10 @@ class TestCheckPerformanceViewPermission(unittest.TestCase):
         mock_role.role.role_name = "管理员"
         mock_user_role = Mock(role=mock_role.role)
 
-        current_user = Mock(
-            id=1, is_superuser=False, department_id=10, roles=[mock_user_role]
-        )
+        current_user = Mock(id=1, is_superuser=False, department_id=10, roles=[mock_user_role])
         target_user = Mock(id=2, department_id=10)
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = target_user
 
         result = self.service.check_performance_view_permission(current_user, 2)
         self.assertTrue(result)
@@ -202,14 +182,10 @@ class TestCheckPerformanceViewPermission(unittest.TestCase):
         mock_role.role.role_name = "部门经理"
         mock_user_role = Mock(role=mock_role.role)
 
-        current_user = Mock(
-            id=1, is_superuser=False, department_id=10, roles=[mock_user_role]
-        )
+        current_user = Mock(id=1, is_superuser=False, department_id=10, roles=[mock_user_role])
         target_user = Mock(id=2, department_id=None)
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = target_user
         self.mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = self.service.check_performance_view_permission(current_user, 2)
@@ -226,9 +202,7 @@ class TestGetTeamMembers(unittest.TestCase):
     def test_get_team_members_success(self):
         """测试成功获取团队成员"""
         mock_users = [Mock(id=1), Mock(id=2), Mock(id=3)]
-        self.mock_db.query.return_value.filter.return_value.all.return_value = (
-            mock_users
-        )
+        self.mock_db.query.return_value.filter.return_value.all.return_value = mock_users
 
         result = self.service.get_team_members(team_id=10)
         self.assertEqual(result, [1, 2, 3])
@@ -251,9 +225,7 @@ class TestGetDepartmentMembers(unittest.TestCase):
     def test_get_department_members_success(self):
         """测试成功获取部门成员"""
         mock_users = [Mock(id=1), Mock(id=2), Mock(id=3)]
-        self.mock_db.query.return_value.filter.return_value.all.return_value = (
-            mock_users
-        )
+        self.mock_db.query.return_value.filter.return_value.all.return_value = mock_users
 
         result = self.service.get_department_members(dept_id=10)
         self.assertEqual(result, [1, 2, 3])
@@ -342,9 +314,7 @@ class TestGetTeamName(unittest.TestCase):
         """测试成功获取团队名称"""
         mock_dept = Mock()
         mock_dept.name = "研发部"
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_team_name(team_id=10)
         self.assertEqual(result, "研发部")
@@ -368,9 +338,7 @@ class TestGetDepartmentName(unittest.TestCase):
         """测试成功获取部门名称"""
         mock_dept = Mock()
         mock_dept.name = "技术部"
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_department_name(dept_id=10)
         self.assertEqual(result, "技术部")
@@ -695,10 +663,12 @@ class TestSubmitEvaluation(unittest.TestCase):
             score=85,
             comment="表现良好，工作认真负责，能按时完成任务",
             project_id=10,
-            project_weight=50
+            project_weight=50,
         )
 
-        result = self.service.submit_evaluation(current_user, task_id=100, evaluation_in=evaluation_in)
+        result = self.service.submit_evaluation(
+            current_user, task_id=100, evaluation_in=evaluation_in
+        )
 
         self.mock_db.add.assert_called_once()
         self.mock_db.commit.assert_called_once()
@@ -735,10 +705,12 @@ class TestSubmitEvaluation(unittest.TestCase):
             score=90,
             comment="表现优秀，超额完成任务，团队协作能力强",
             project_id=20,
-            project_weight=80
+            project_weight=80,
         )
 
-        result = self.service.submit_evaluation(current_user, task_id=100, evaluation_in=evaluation_in)
+        result = self.service.submit_evaluation(
+            current_user, task_id=100, evaluation_in=evaluation_in
+        )
 
         self.assertEqual(mock_existing_eval.score, 90)
         self.assertEqual(mock_existing_eval.comment, "表现优秀，超额完成任务，团队协作能力强")
@@ -776,11 +748,12 @@ class TestSubmitEvaluation(unittest.TestCase):
         self.mock_db.query.side_effect = [query_mock_1, query_mock_2, query_mock_3]
 
         evaluation_in = PerformanceEvaluationRecordCreate(
-            score=85,
-            comment="表现良好，工作态度积极，持续改进"
+            score=85, comment="表现良好，工作态度积极，持续改进"
         )
 
-        result = self.service.submit_evaluation(current_user, task_id=100, evaluation_in=evaluation_in)
+        result = self.service.submit_evaluation(
+            current_user, task_id=100, evaluation_in=evaluation_in
+        )
 
         self.assertEqual(mock_summary.status, "COMPLETED")
 

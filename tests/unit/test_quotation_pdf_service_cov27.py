@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - quotation_pdf_service 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 import os
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.quotation_pdf_service")
 
-from app.services.quotation_pdf_service import QuotationPDFService, REPORTLAB_AVAILABLE
+from app.services.quotation_pdf_service import REPORTLAB_AVAILABLE, QuotationPDFService
 
 
 def make_quotation(**kwargs):
@@ -81,10 +82,7 @@ class TestGeneratePDFWithReportlab:
         svc.output_dir = str(tmp_path) + "/"
 
         quotation = make_quotation()
-        company_info = {
-            "name": "测试科技有限公司",
-            "address": "测试地址"
-        }
+        company_info = {"name": "测试科技有限公司", "address": "测试地址"}
         result = svc.generate_pdf(quotation, company_info=company_info)
         assert result.endswith(".pdf")
 
@@ -95,7 +93,9 @@ class TestReportlabAvailability:
 
     def test_generate_pdf_requires_reportlab(self):
         """测试当REPORTLAB不可用时正确报错"""
-        original = __import__("app.services.quotation_pdf_service", fromlist=["REPORTLAB_AVAILABLE"])
+        original = __import__(
+            "app.services.quotation_pdf_service", fromlist=["REPORTLAB_AVAILABLE"]
+        )
         if not original.REPORTLAB_AVAILABLE:
             with patch("os.makedirs"):
                 svc = QuotationPDFService()

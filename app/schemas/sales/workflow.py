@@ -11,12 +11,12 @@ from pydantic import BaseModel, Field
 
 from app.schemas.common import TimestampSchema
 
-
 # ==================== 审批工作流 ====================
 
 
 class ApprovalWorkflowStepBase(BaseModel):
     """审批工作流步骤基础模型"""
+
     step_order: int = Field(..., description="步骤顺序")
     step_name: str = Field(..., description="步骤名称")
     approver_type: str = Field(..., description="审批人类型：ROLE/USER/DEPARTMENT")
@@ -26,11 +26,13 @@ class ApprovalWorkflowStepBase(BaseModel):
 
 class ApprovalWorkflowStepCreate(ApprovalWorkflowStepBase):
     """创建审批工作流步骤"""
+
     pass
 
 
 class ApprovalWorkflowStepResponse(ApprovalWorkflowStepBase):
     """审批工作流步骤响应"""
+
     id: int
     workflow_id: int
     created_at: Optional[datetime] = None
@@ -40,6 +42,7 @@ class ApprovalWorkflowStepResponse(ApprovalWorkflowStepBase):
 
 class ApprovalWorkflowBase(BaseModel):
     """审批工作流基础模型"""
+
     workflow_name: str = Field(..., description="工作流名称")
     workflow_type: str = Field(..., description="工作流类型：QUOTE/CONTRACT/LEAD")
     description: Optional[str] = Field(None, description="工作流描述")
@@ -48,11 +51,13 @@ class ApprovalWorkflowBase(BaseModel):
 
 class ApprovalWorkflowCreate(ApprovalWorkflowBase):
     """创建审批工作流"""
+
     steps: Optional[List[ApprovalWorkflowStepCreate]] = Field(None, description="工作流步骤")
 
 
 class ApprovalWorkflowUpdate(BaseModel):
     """更新审批工作流"""
+
     workflow_name: Optional[str] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
@@ -61,6 +66,7 @@ class ApprovalWorkflowUpdate(BaseModel):
 
 class ApprovalWorkflowResponse(ApprovalWorkflowBase):
     """审批工作流响应"""
+
     id: int
     steps: Optional[List[ApprovalWorkflowStepResponse]] = None
     created_at: Optional[datetime] = None
@@ -88,9 +94,7 @@ class SalesTargetCreate(BaseModel):
     period_value: str = Field(description="周期标识：2025-01/2025-Q1/2025")
     target_value: Decimal = Field(gt=0, description="目标值")
     description: Optional[str] = Field(default=None, description="目标描述")
-    status: Optional[str] = Field(
-        default="ACTIVE", description="状态：ACTIVE/COMPLETED/CANCELLED"
-    )
+    status: Optional[str] = Field(default="ACTIVE", description="状态：ACTIVE/COMPLETED/CANCELLED")
 
 
 class SalesTargetUpdate(BaseModel):
@@ -98,9 +102,7 @@ class SalesTargetUpdate(BaseModel):
 
     target_value: Optional[Decimal] = Field(default=None, description="目标值")
     description: Optional[str] = Field(default=None, description="目标描述")
-    status: Optional[str] = Field(
-        default=None, description="状态：ACTIVE/COMPLETED/CANCELLED"
-    )
+    status: Optional[str] = Field(default=None, description="状态：ACTIVE/COMPLETED/CANCELLED")
 
 
 class SalesTargetResponse(TimestampSchema):

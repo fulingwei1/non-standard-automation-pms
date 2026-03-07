@@ -3,14 +3,15 @@
 PurchaseRequest Model 测试
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.exc import IntegrityError
 
+import pytest
+from sqlalchemy.exc import IntegrityError
 
 try:
     from app.models.purchase import PurchaseRequest
+
     MODEL_AVAILABLE = True
 except ImportError:
     MODEL_AVAILABLE = False
@@ -64,7 +65,7 @@ class TestPurchaseRequestModel:
     def test_purchaserequest_attributes(self, db_session):
         """Test PurchaseRequest attributes"""
         obj = PurchaseRequest()
-        assert hasattr(PurchaseRequest, '__tablename__') or True
+        assert hasattr(PurchaseRequest, "__tablename__") or True
 
     def test_purchaserequest_relationships(self, db_session):
         """Test PurchaseRequest relationships"""

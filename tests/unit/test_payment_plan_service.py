@@ -10,6 +10,7 @@ class TestPaymentPlanService:
     def setup_method(self):
         self.db = MagicMock()
         from app.services.sales.payment_plan_service import PaymentPlanService
+
         self.service = PaymentPlanService(self.db)
 
     def test_get_payment_configurations(self):

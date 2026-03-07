@@ -6,8 +6,6 @@
 offset = (page - 1) * page_size 的重复代码。
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from math import ceil
 from typing import Any, Dict, List, Optional

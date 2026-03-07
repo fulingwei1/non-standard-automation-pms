@@ -5,18 +5,28 @@ import pytest
 pytest.importorskip("app.services.dashboard_adapter")
 
 from unittest.mock import MagicMock
+
 from app.services.dashboard_adapter import DashboardAdapter, DashboardRegistry
 
 
 class MinimalAdapter(DashboardAdapter):
     @property
-    def module_id(self): return "test_module"
+    def module_id(self):
+        return "test_module"
+
     @property
-    def module_name(self): return "测试模块"
+    def module_name(self):
+        return "测试模块"
+
     @property
-    def supported_roles(self): return ["admin", "user"]
-    def get_stats(self): return []
-    def get_widgets(self): return []
+    def supported_roles(self):
+        return ["admin", "user"]
+
+    def get_stats(self):
+        return []
+
+    def get_widgets(self):
+        return []
 
 
 def make_registry():
@@ -24,6 +34,7 @@ def make_registry():
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_registry_register_and_get():
     reg = make_registry()

@@ -26,9 +26,7 @@ def export_timesheet(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportTimesheetRequest,
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出工时数据（按日期范围，Excel）
@@ -79,22 +77,18 @@ def export_timesheet(
                 "任务名称": ts.task_name or "",
                 "工时(小时)": float(ts.hours or 0),
                 "加班类型": ts.overtime_type or "",
-                "加班类型名称": overtime_type_names.get(
-                    ts.overtime_type, ts.overtime_type or ""
-                ),
+                "加班类型名称": overtime_type_names.get(ts.overtime_type, ts.overtime_type or ""),
                 "工作内容": ts.work_content or "",
                 "工作成果": ts.work_result or "",
                 "更新前进度(%)": ts.progress_before or 0,
                 "更新后进度(%)": ts.progress_after or 0,
                 "状态": ts.status or "",
                 "状态名称": status_names.get(ts.status, ts.status or ""),
-                "提交时间": ts.submit_time.strftime("%Y-%m-%d %H:%M:%S")
-                if ts.submit_time
-                else "",
+                "提交时间": ts.submit_time.strftime("%Y-%m-%d %H:%M:%S") if ts.submit_time else "",
                 "审核人": ts.approver_name or "",
-                "审核时间": ts.approve_time.strftime("%Y-%m-%d %H:%M:%S")
-                if ts.approve_time
-                else "",
+                "审核时间": (
+                    ts.approve_time.strftime("%Y-%m-%d %H:%M:%S") if ts.approve_time else ""
+                ),
                 "审核意见": ts.approve_comment or "",
             }
         )

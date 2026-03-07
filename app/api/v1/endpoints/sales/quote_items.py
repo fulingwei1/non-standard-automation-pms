@@ -9,13 +9,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -42,40 +42,39 @@ def get_quote_items(
     """
     try:
         # 验证报价版本存在
-        quote_version = db.query(QuoteVersion).filter(
-            QuoteVersion.id == quote_version_id
-        ).first()
+        quote_version = db.query(QuoteVersion).filter(QuoteVersion.id == quote_version_id).first()
         if not quote_version:
             raise HTTPException(status_code=404, detail="报价版本不存在")
 
         # 查询明细列表
-        items = db.query(QuoteItem).filter(
-            QuoteItem.quote_version_id == quote_version_id
-        ).order_by(QuoteItem.id)
+        items = (
+            db.query(QuoteItem)
+            .filter(QuoteItem.quote_version_id == quote_version_id)
+            .order_by(QuoteItem.id)
+        )
         items = apply_pagination(items, pagination.offset, pagination.limit).all()
 
         # 转换为字典列表
-        items_data = [{
-            "id": item.id,
-            "quote_version_id": item.quote_version_id,
-            "item_type": item.item_type,
-            "item_name": item.item_name,
-            "qty": float(item.qty) if item.qty else None,
-            "unit_price": float(item.unit_price) if item.unit_price else None,
-            "cost": float(item.cost) if item.cost else None,
-            "lead_time_days": item.lead_time_days,
-            "remark": item.remark,
-            "cost_category": item.cost_category,
-            "cost_source": item.cost_source,
-            "specification": item.specification,
-            "unit": item.unit
-        } for item in items]
+        items_data = [
+            {
+                "id": item.id,
+                "quote_version_id": item.quote_version_id,
+                "item_type": item.item_type,
+                "item_name": item.item_name,
+                "qty": float(item.qty) if item.qty else None,
+                "unit_price": float(item.unit_price) if item.unit_price else None,
+                "cost": float(item.cost) if item.cost else None,
+                "lead_time_days": item.lead_time_days,
+                "remark": item.remark,
+                "cost_category": item.cost_category,
+                "cost_source": item.cost_source,
+                "specification": item.specification,
+                "unit": item.unit,
+            }
+            for item in items
+        ]
 
-        return ResponseModel(
-            code=200,
-            message="报价明细列表获取成功",
-            data=items_data
-        )
+        return ResponseModel(code=200, message="报价明细列表获取成功", data=items_data)
     except HTTPException:
         raise
     except Exception as e:
@@ -103,9 +102,7 @@ def create_quote_item(
     """
     try:
         # 验证报价版本存在
-        quote_version = db.query(QuoteVersion).filter(
-            QuoteVersion.id == quote_version_id
-        ).first()
+        quote_version = db.query(QuoteVersion).filter(QuoteVersion.id == quote_version_id).first()
         if not quote_version:
             raise HTTPException(status_code=404, detail="报价版本不存在")
 
@@ -122,15 +119,11 @@ def create_quote_item(
             cost_category=item_data.get("cost_category"),
             cost_source=item_data.get("cost_source", "MANUAL"),
             specification=item_data.get("specification"),
-            unit=item_data.get("unit")
+            unit=item_data.get("unit"),
         )
         save_obj(db, item)
 
-        return ResponseModel(
-            code=200,
-            message="报价明细创建成功",
-            data={"id": item.id}
-        )
+        return ResponseModel(code=200, message="报价明细创建成功", data={"id": item.id})
     except HTTPException:
         raise
     except Exception as e:
@@ -161,8 +154,18 @@ def update_quote_item(
         item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
 
         # 更新字段
-        for field in ["item_type", "item_name", "qty", "unit_price", "cost",
-                      "lead_time_days", "remark", "cost_category", "specification", "unit"]:
+        for field in [
+            "item_type",
+            "item_name",
+            "qty",
+            "unit_price",
+            "cost",
+            "lead_time_days",
+            "remark",
+            "cost_category",
+            "specification",
+            "unit",
+        ]:
             if field in item_data:
                 setattr(item, field, item_data[field])
 

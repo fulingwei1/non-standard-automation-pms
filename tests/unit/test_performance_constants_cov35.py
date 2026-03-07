@@ -6,14 +6,15 @@ import pytest
 
 try:
     from app.services.performance_collector.constants import (
-        POSITIVE_KEYWORDS,
-        NEGATIVE_KEYWORDS,
-        TECH_KEYWORDS,
         COLLABORATION_KEYWORDS,
-        PROBLEM_SOLVING_PATTERNS,
         KNOWLEDGE_SHARING_PATTERNS,
+        NEGATIVE_KEYWORDS,
+        POSITIVE_KEYWORDS,
+        PROBLEM_SOLVING_PATTERNS,
         TECH_BREAKTHROUGH_PATTERNS,
+        TECH_KEYWORDS,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -56,13 +57,15 @@ class TestPerformanceCollectorConstants:
         assert all(isinstance(p, str) for p in TECH_BREAKTHROUGH_PATTERNS)
 
     def test_keywords_are_lists(self):
-        for lst in [POSITIVE_KEYWORDS, NEGATIVE_KEYWORDS,
-                    TECH_KEYWORDS, COLLABORATION_KEYWORDS]:
+        for lst in [POSITIVE_KEYWORDS, NEGATIVE_KEYWORDS, TECH_KEYWORDS, COLLABORATION_KEYWORDS]:
             assert isinstance(lst, list)
 
     def test_patterns_are_lists(self):
-        for lst in [PROBLEM_SOLVING_PATTERNS, KNOWLEDGE_SHARING_PATTERNS,
-                    TECH_BREAKTHROUGH_PATTERNS]:
+        for lst in [
+            PROBLEM_SOLVING_PATTERNS,
+            KNOWLEDGE_SHARING_PATTERNS,
+            TECH_BREAKTHROUGH_PATTERNS,
+        ]:
             assert isinstance(lst, list)
 
     def test_no_duplicates_in_positive(self):

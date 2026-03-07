@@ -5,7 +5,7 @@ AI 自动组队 API
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Body
+from fastapi import APIRouter, Body, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -24,13 +24,13 @@ def generate_team(
 ) -> Any:
     """
     AI 自动生成项目组方案
-    
+
     流程：
     1. 分析项目需求
     2. 确定所需角色
     3. 匹配工程师
     4. 生成团队方案
-    
+
     返回：
     - 团队组成
     - 角色分配
@@ -39,10 +39,10 @@ def generate_team(
     """
     service = TeamGenerationService(db)
     team_plan = service.generate_team_plan(project_id)
-    
-    if 'error' in team_plan:
-        raise HTTPException(status_code=404, detail=team_plan['error'])
-    
+
+    if "error" in team_plan:
+        raise HTTPException(status_code=404, detail=team_plan["error"])
+
     return team_plan
 
 
@@ -55,18 +55,18 @@ def save_team_plan(
 ) -> Any:
     """保存 AI 生成的团队方案"""
     service = TeamGenerationService(db)
-    
+
     # 添加项目 ID
-    team_data['project_id'] = project_id
-    
+    team_data["project_id"] = project_id
+
     plan = service.save_team_plan(team_data, current_user.id)
-    
+
     return {
-        'plan_id': plan.id,
-        'plan_no': plan.plan_no,
-        'status': plan.status,
-        'total_members': plan.total_members,
-        'overall_score': plan.overall_score,
+        "plan_id": plan.id,
+        "plan_no": plan.plan_no,
+        "status": plan.status,
+        "total_members": plan.total_members,
+        "overall_score": plan.overall_score,
     }
 
 
@@ -77,28 +77,26 @@ def get_team_plan(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取团队方案详情"""
-    from app.models.project_team import ProjectTeamPlan, ProjectTeamMember
-    
+    from app.models.project_team import ProjectTeamMember, ProjectTeamPlan
+
     plan = db.query(ProjectTeamPlan).filter(ProjectTeamPlan.id == plan_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
-    members = db.query(ProjectTeamMember).filter(
-        ProjectTeamMember.team_plan_id == plan_id
-    ).all()
-    
+
+    members = db.query(ProjectTeamMember).filter(ProjectTeamMember.team_plan_id == plan_id).all()
+
     return {
-        'plan': plan,
-        'members': [
+        "plan": plan,
+        "members": [
             {
-                'id': m.id,
-                'engineer_id': m.engineer_id,
-                'engineer_name': m.engineer_name,
-                'role': m.role,
-                'role_name': m.role_name,
-                'estimated_hours': m.estimated_hours,
-                'match_score': m.match_score,
-                'match_reason': m.match_reason,
+                "id": m.id,
+                "engineer_id": m.engineer_id,
+                "engineer_name": m.engineer_name,
+                "role": m.role,
+                "role_name": m.role_name,
+                "estimated_hours": m.estimated_hours,
+                "match_score": m.match_score,
+                "match_reason": m.match_reason,
             }
             for m in members
         ],
@@ -112,20 +110,21 @@ def submit_team_plan(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """提交团队方案审批"""
-    from app.models.project_team import ProjectTeamPlan
     from datetime import datetime
-    
+
+    from app.models.project_team import ProjectTeamPlan
+
     plan = db.query(ProjectTeamPlan).filter(ProjectTeamPlan.id == plan_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
-    plan.status = 'PENDING'
+
+    plan.status = "PENDING"
     plan.submitted_at = datetime.now()
     plan.submitted_by = current_user.id
-    
+
     db.commit()
-    
-    return {'message': '方案已提交审批', 'status': plan.status}
+
+    return {"message": "方案已提交审批", "status": plan.status}
 
 
 @router.post("/team-plans/{plan_id}/approve", summary="审批团队方案")
@@ -137,20 +136,21 @@ def approve_team_plan(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """审批团队方案"""
-    from app.models.project_team import ProjectTeamPlan, ProjectTeamApproval
     from datetime import datetime
-    
+
+    from app.models.project_team import ProjectTeamApproval, ProjectTeamPlan
+
     plan = db.query(ProjectTeamPlan).filter(ProjectTeamPlan.id == plan_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="方案不存在")
-    
-    plan.status = 'APPROVED' if decision == 'APPROVE' else 'REJECTED'
+
+    plan.status = "APPROVED" if decision == "APPROVE" else "REJECTED"
     plan.approved_by = current_user.id
     plan.approved_at = datetime.now()
-    
-    if decision == 'REJECT':
+
+    if decision == "REJECT":
         plan.rejected_reason = comments
-    
+
     # 记录审批
     approval = ProjectTeamApproval(
         approval_no=f"APR{datetime.now().strftime('%Y%m%d%H%M%S')}",
@@ -162,5 +162,5 @@ def approve_team_plan(
     )
     db.add(approval)
     db.commit()
-    
-    return {'message': '方案已审批', 'status': plan.status}
+
+    return {"message": "方案已审批", "status": plan.status}

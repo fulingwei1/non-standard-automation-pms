@@ -9,8 +9,8 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from app.core import security
-from app.services.import_export_engine import ExcelExportEngine
 from app.models.user import User
+from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter()
 
@@ -57,7 +57,17 @@ def download_bom_import_template(
         },
     ]
 
-    labels = ["物料编码", "物料名称", "规格型号", "单位", "数量", "单价", "来源类型", "是否关键", "备注"]
+    labels = [
+        "物料编码",
+        "物料名称",
+        "规格型号",
+        "单位",
+        "数量",
+        "单价",
+        "来源类型",
+        "是否关键",
+        "备注",
+    ]
     widths = [15, 30, 20, 8, 10, 12, 12, 8, 30]
     columns = ExcelExportEngine.build_columns(labels, widths=widths)
 
@@ -74,7 +84,5 @@ def download_bom_import_template(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
-        },
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"},
     )

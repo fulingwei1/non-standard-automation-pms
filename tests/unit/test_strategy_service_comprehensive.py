@@ -12,9 +12,9 @@ StrategyService 综合单元测试
 - get_strategy_metrics: 获取战略指标
 """
 
-from unittest.mock import MagicMock, patch
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -287,8 +287,8 @@ class TestGetStrategyMetrics:
 # G4 补充测试 - strategy_service 模块级函数
 # ──────────────────────────────────────────────────────────────────────────────
 
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
 
 
 class TestStrategyServiceModuleFunctionsG4:
@@ -302,6 +302,7 @@ class TestStrategyServiceModuleFunctionsG4:
     def test_create_strategy_calls_db(self):
         """create_strategy 调用 db.add + commit + refresh"""
         from app.services.strategy.strategy_service import create_strategy
+
         data = MagicMock()
         data.code = "S-G4"
         data.name = "G4 战略"
@@ -318,8 +319,8 @@ class TestStrategyServiceModuleFunctionsG4:
 
     def test_create_strategy_status_is_draft(self):
         """新创建战略的 status 应设为 DRAFT"""
-        from app.services.strategy.strategy_service import create_strategy
         import app.models.strategy as strat_module
+        from app.services.strategy.strategy_service import create_strategy
 
         captured = {}
 
@@ -329,6 +330,7 @@ class TestStrategyServiceModuleFunctionsG4:
         with patch.object(strat_module.Strategy, "__init__", new=fake_init):
             try:
                 from app.services.strategy.strategy_service import create_strategy
+
                 data = MagicMock()
                 data.code = data.name = data.vision = data.mission = data.slogan = "x"
                 data.year = 2025
@@ -344,6 +346,7 @@ class TestStrategyServiceModuleFunctionsG4:
     def test_get_strategy_queries_by_id(self):
         """get_strategy 使用 db.query 并通过 filter 查找"""
         from app.services.strategy.strategy_service import get_strategy
+
         expected = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -358,6 +361,7 @@ class TestStrategyServiceModuleFunctionsG4:
     def test_get_active_strategy_returns_active(self):
         """get_active_strategy 返回 status=ACTIVE 的战略"""
         from app.services.strategy.strategy_service import get_active_strategy
+
         active = MagicMock()
         active.status = "ACTIVE"
         q = MagicMock()
@@ -371,6 +375,7 @@ class TestStrategyServiceModuleFunctionsG4:
     def test_get_active_strategy_none(self):
         """无生效战略时返回 None"""
         from app.services.strategy.strategy_service import get_active_strategy
+
         q = MagicMock()
         q.filter.return_value = q
         q.first.return_value = None
@@ -383,6 +388,7 @@ class TestStrategyServiceModuleFunctionsG4:
     def test_publish_strategy_sets_active(self):
         """publish_strategy 将战略状态改为 ACTIVE"""
         from app.services.strategy.strategy_service import publish_strategy
+
         strategy = MagicMock()
         strategy.year = 2025
         strategy.id = 1
@@ -402,6 +408,7 @@ class TestStrategyServiceModuleFunctionsG4:
     def test_archive_strategy_sets_archived(self):
         """archive_strategy 将战略状态改为 ARCHIVED"""
         from app.services.strategy.strategy_service import archive_strategy
+
         strategy = MagicMock()
         strategy.status = "ACTIVE"
 
@@ -412,5 +419,6 @@ class TestStrategyServiceModuleFunctionsG4:
     def test_archive_strategy_not_found(self):
         """战略不存在时 archive_strategy 返回 None"""
         from app.services.strategy.strategy_service import archive_strategy
+
         with patch("app.services.strategy.strategy_service.get_strategy", return_value=None):
             assert archive_strategy(self.db, 999) is None

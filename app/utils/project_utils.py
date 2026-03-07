@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectStage, ProjectStatus
@@ -16,11 +15,11 @@ def generate_project_code(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=Project,
-        no_field='project_code',
-        prefix='PJ',
-        date_format='%y%m%d',
-        separator='',  # 无分隔符
-        seq_length=3
+        no_field="project_code",
+        prefix="PJ",
+        date_format="%y%m%d",
+        separator="",  # 无分隔符
+        seq_length=3,
     )
 
 
@@ -130,10 +129,10 @@ class ProjectUtils:
           - quality_score (0-100): 20%
           - team_satisfaction (0-5): 20%
         """
-        spi = min(metrics.get('schedule_performance', 1.0), 1.0)
-        cpi = min(metrics.get('cost_performance', 1.0), 1.0)
-        quality = metrics.get('quality_score', 80) / 100
-        satisfaction = metrics.get('team_satisfaction', 4.0) / 5.0
+        spi = min(metrics.get("schedule_performance", 1.0), 1.0)
+        cpi = min(metrics.get("cost_performance", 1.0), 1.0)
+        quality = metrics.get("quality_score", 80) / 100
+        satisfaction = metrics.get("team_satisfaction", 4.0) / 5.0
 
         score = spi * 30 + cpi * 30 + quality * 20 + satisfaction * 20
         return round(min(max(score, 0), 100), 2)
@@ -144,9 +143,9 @@ class ProjectUtils:
 
         基于工作量、团队规模、复杂度估算。
         """
-        effort_person_days = params.get('effort_person_days', 30)
-        team_size = max(params.get('team_size', 1), 1)
-        complexity_factor = params.get('complexity_factor', 1.0)
+        effort_person_days = params.get("effort_person_days", 30)
+        team_size = max(params.get("team_size", 1), 1)
+        complexity_factor = params.get("complexity_factor", 1.0)
 
         weeks = (effort_person_days / team_size / 5) * complexity_factor
         return round(weeks, 1)

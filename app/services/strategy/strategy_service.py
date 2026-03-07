@@ -21,11 +21,7 @@ from app.schemas.strategy import (
 )
 
 
-def create_strategy(
-    db: Session,
-    data: StrategyCreate,
-    created_by: int
-) -> Strategy:
+def create_strategy(db: Session, data: StrategyCreate, created_by: int) -> Strategy:
     """
     创建战略
 
@@ -66,10 +62,7 @@ def get_strategy(db: Session, strategy_id: int) -> Optional[Strategy]:
     Returns:
         Optional[Strategy]: 战略对象
     """
-    return db.query(Strategy).filter(
-        Strategy.id == strategy_id,
-        Strategy.is_active
-    ).first()
+    return db.query(Strategy).filter(Strategy.id == strategy_id, Strategy.is_active).first()
 
 
 def get_strategy_by_code(db: Session, code: str) -> Optional[Strategy]:
@@ -83,10 +76,7 @@ def get_strategy_by_code(db: Session, code: str) -> Optional[Strategy]:
     Returns:
         Optional[Strategy]: 战略对象
     """
-    return db.query(Strategy).filter(
-        Strategy.code == code,
-        Strategy.is_active
-    ).first()
+    return db.query(Strategy).filter(Strategy.code == code, Strategy.is_active).first()
 
 
 def get_strategy_by_year(db: Session, year: int) -> Optional[Strategy]:
@@ -100,10 +90,7 @@ def get_strategy_by_year(db: Session, year: int) -> Optional[Strategy]:
     Returns:
         Optional[Strategy]: 战略对象
     """
-    return db.query(Strategy).filter(
-        Strategy.year == year,
-        Strategy.is_active
-    ).first()
+    return db.query(Strategy).filter(Strategy.year == year, Strategy.is_active).first()
 
 
 def get_active_strategy(db: Session) -> Optional[Strategy]:
@@ -116,10 +103,7 @@ def get_active_strategy(db: Session) -> Optional[Strategy]:
     Returns:
         Optional[Strategy]: 生效的战略对象
     """
-    return db.query(Strategy).filter(
-        Strategy.status == "ACTIVE",
-        Strategy.is_active
-    ).first()
+    return db.query(Strategy).filter(Strategy.status == "ACTIVE", Strategy.is_active).first()
 
 
 def list_strategies(
@@ -127,7 +111,7 @@ def list_strategies(
     year: Optional[int] = None,
     status: Optional[str] = None,
     skip: int = 0,
-    limit: int = 20
+    limit: int = 20,
 ) -> tuple[List[Strategy], int]:
     """
     获取战略列表
@@ -150,16 +134,14 @@ def list_strategies(
         query = query.filter(Strategy.status == status)
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(Strategy.year), desc(Strategy.created_at)), skip, limit).all()
+    items = apply_pagination(
+        query.order_by(desc(Strategy.year), desc(Strategy.created_at)), skip, limit
+    ).all()
 
     return items, total
 
 
-def update_strategy(
-    db: Session,
-    strategy_id: int,
-    data: StrategyUpdate
-) -> Optional[Strategy]:
+def update_strategy(db: Session, strategy_id: int, data: StrategyUpdate) -> Optional[Strategy]:
     """
     更新战略
 
@@ -184,11 +166,7 @@ def update_strategy(
     return strategy
 
 
-def publish_strategy(
-    db: Session,
-    strategy_id: int,
-    approved_by: int
-) -> Optional[Strategy]:
+def publish_strategy(db: Session, strategy_id: int, approved_by: int) -> Optional[Strategy]:
     """
     发布战略
 
@@ -206,9 +184,7 @@ def publish_strategy(
 
     # 将同年度其他战略设为归档
     db.query(Strategy).filter(
-        Strategy.year == strategy.year,
-        Strategy.id != strategy_id,
-        Strategy.status == "ACTIVE"
+        Strategy.year == strategy.year, Strategy.id != strategy_id, Strategy.status == "ACTIVE"
     ).update({"status": "ARCHIVED"})
 
     # 发布当前战略
@@ -281,25 +257,25 @@ def get_strategy_detail(db: Session, strategy_id: int) -> Optional[StrategyDetai
     # 统计 CSF、KPI、重点工作数量
     from app.models.strategy import CSF, KPI, AnnualKeyWork
 
-    csf_count = db.query(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active
-    ).count()
+    csf_count = db.query(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active).count()
 
-    kpi_count = db.query(KPI).join(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active,
-        KPI.is_active
-    ).count()
+    kpi_count = (
+        db.query(KPI)
+        .join(CSF)
+        .filter(CSF.strategy_id == strategy_id, CSF.is_active, KPI.is_active)
+        .count()
+    )
 
-    annual_work_count = db.query(AnnualKeyWork).join(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active,
-        AnnualKeyWork.is_active
-    ).count()
+    annual_work_count = (
+        db.query(AnnualKeyWork)
+        .join(CSF)
+        .filter(CSF.strategy_id == strategy_id, CSF.is_active, AnnualKeyWork.is_active)
+        .count()
+    )
 
     # 获取健康度评分
     from .health_calculator import calculate_strategy_health
+
     health_score = calculate_strategy_health(db, strategy_id)
 
     return StrategyDetailResponse(
@@ -343,6 +319,7 @@ def get_strategy_map_data(db: Session, strategy_id: int) -> Optional[StrategyMap
         return None
 
     from app.models.strategy import CSF, KPI
+
     from .health_calculator import calculate_csf_health, calculate_strategy_health
 
     # BSC 四维度名称映射
@@ -355,51 +332,50 @@ def get_strategy_map_data(db: Session, strategy_id: int) -> Optional[StrategyMap
 
     dimensions = []
     for dim_code in ["FINANCIAL", "CUSTOMER", "INTERNAL", "LEARNING"]:
-        csfs = db.query(CSF).filter(
-            CSF.strategy_id == strategy_id,
-            CSF.dimension == dim_code,
-            CSF.is_active
-        ).order_by(CSF.sort_order).all()
+        csfs = (
+            db.query(CSF)
+            .filter(CSF.strategy_id == strategy_id, CSF.dimension == dim_code, CSF.is_active)
+            .order_by(CSF.sort_order)
+            .all()
+        )
 
         csf_items = []
         total_weight = 0
         for csf in csfs:
-            kpi_count = db.query(KPI).filter(
-                KPI.csf_id == csf.id,
-                KPI.is_active
-            ).count()
+            kpi_count = db.query(KPI).filter(KPI.csf_id == csf.id, KPI.is_active).count()
 
             health_data = calculate_csf_health(db, csf.id)
 
-            csf_items.append({
-                "id": csf.id,
-                "code": csf.code,
-                "name": csf.name,
-                "weight": float(csf.weight or 0),
-                "health_score": health_data.get("score"),
-                "health_level": health_data.get("level"),
-                "kpi_count": kpi_count,
-                "kpi_completion_rate": health_data.get("kpi_completion_rate"),
-            })
+            csf_items.append(
+                {
+                    "id": csf.id,
+                    "code": csf.code,
+                    "name": csf.name,
+                    "weight": float(csf.weight or 0),
+                    "health_score": health_data.get("score"),
+                    "health_level": health_data.get("level"),
+                    "kpi_count": kpi_count,
+                    "kpi_completion_rate": health_data.get("kpi_completion_rate"),
+                }
+            )
             total_weight += float(csf.weight or 0)
 
         # 计算维度健康度（CSF 加权平均）
         dim_health = None
         if csf_items:
-            weighted_sum = sum(
-                (c["health_score"] or 0) * c["weight"]
-                for c in csf_items
-            )
+            weighted_sum = sum((c["health_score"] or 0) * c["weight"] for c in csf_items)
             if total_weight > 0:
                 dim_health = int(weighted_sum / total_weight)
 
-        dimensions.append(StrategyMapDimension(
-            dimension=dim_code,
-            dimension_name=dimension_names[dim_code],
-            csfs=csf_items,
-            health_score=dim_health,
-            total_weight=total_weight,
-        ))
+        dimensions.append(
+            StrategyMapDimension(
+                dimension=dim_code,
+                dimension_name=dimension_names[dim_code],
+                csfs=csf_items,
+                health_score=dim_health,
+                total_weight=total_weight,
+            )
+        )
 
     overall_health = calculate_strategy_health(db, strategy_id)
 
@@ -460,12 +436,12 @@ class StrategyService:
     # 兼容别名方法
     def get_strategies(self, **kwargs):
         # 将 page/page_size 转换为 skip/limit
-        if 'page' in kwargs or 'page_size' in kwargs:
-            page = kwargs.pop('page', 1)
-            page_size = kwargs.pop('page_size', 20)
+        if "page" in kwargs or "page_size" in kwargs:
+            page = kwargs.pop("page", 1)
+            page_size = kwargs.pop("page_size", 20)
             pagination = get_pagination_params(page=page, page_size=page_size)
-            kwargs['skip'] = pagination.offset
-            kwargs['limit'] = pagination.limit
+            kwargs["skip"] = pagination.offset
+            kwargs["limit"] = pagination.limit
         return self.list(**kwargs)
 
     def get_strategy(self, strategy_id: int):

@@ -17,6 +17,7 @@ from ..common import BaseSchema
 
 class ProjectHealthDetailsResponse(BaseModel):
     """项目健康度详情响应"""
+
     project_id: int
     project_code: str
     current_health: str
@@ -372,6 +373,7 @@ class ProjectDashboardResponse(BaseModel):
 
 class InProductionProjectSummary(BaseModel):
     """在产项目进度汇总（给生产总监/经理看）"""
+
     project_id: int
     project_code: str
     project_name: str

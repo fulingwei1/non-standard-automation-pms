@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/adapters/sales.py"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_framework.adapters.sales import SalesReportAdapter
@@ -50,8 +51,10 @@ def test_generate_falls_back_on_engine_failure():
         "invoice_statistics": {},
         "bidding_statistics": {},
     }
-    with patch.object(adapter, 'generate_data', return_value=mock_data), \
-         patch("app.services.report_framework.renderers.JsonRenderer") as mock_rend_cls:
+    with (
+        patch.object(adapter, "generate_data", return_value=mock_data),
+        patch("app.services.report_framework.renderers.JsonRenderer") as mock_rend_cls,
+    ):
         mock_renderer = MagicMock()
         mock_rend_cls.return_value = mock_renderer
         mock_renderer.render.return_value = MagicMock()

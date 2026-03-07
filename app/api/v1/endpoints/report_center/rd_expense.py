@@ -23,17 +23,14 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/rd-expense",
-    tags=["rd_expense"]
-)
+router = APIRouter(prefix="/rd-expense", tags=["rd_expense"])
 
 # 共 6 个路由
 
 # ==================== 研发费用报表 ====================
+
 
 @router.get("/rd-auxiliary-ledger", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_rd_auxiliary_ledger(
@@ -68,9 +65,13 @@ def get_rd_auxiliary_ledger(
                 user=current_user,
                 skip_cache=False,
             )
-            
+
             if format in ["excel", "pdf"]:
-                filename = f"研发费用辅助账_{year}年.xlsx" if format == "excel" else f"研发费用辅助账_{year}年.pdf"
+                filename = (
+                    f"研发费用辅助账_{year}年.xlsx"
+                    if format == "excel"
+                    else f"研发费用辅助账_{year}年.pdf"
+                )
                 return StreamingResponse(
                     result.data.get("file_stream"),
                     media_type=result.content_type,
@@ -86,7 +87,7 @@ def get_rd_auxiliary_ledger(
                 format=format,
                 user=current_user,
             )
-            data = result.data if hasattr(result, 'data') else result
+            data = result.data if hasattr(result, "data") else result
             return ResponseModel(code=200, message="success", data=data)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -128,9 +129,13 @@ def get_rd_deduction_detail(
                 user=current_user,
                 skip_cache=False,
             )
-            
+
             if format in ["excel", "pdf"]:
-                filename = f"研发费用加计扣除明细_{year}年.xlsx" if format == "excel" else f"研发费用加计扣除明细_{year}年.pdf"
+                filename = (
+                    f"研发费用加计扣除明细_{year}年.xlsx"
+                    if format == "excel"
+                    else f"研发费用加计扣除明细_{year}年.pdf"
+                )
                 return StreamingResponse(
                     result.data.get("file_stream"),
                     media_type=result.content_type,
@@ -146,7 +151,7 @@ def get_rd_deduction_detail(
                 format=format,
                 user=current_user,
             )
-            data = result.data if hasattr(result, 'data') else result
+            data = result.data if hasattr(result, "data") else result
             return ResponseModel(code=200, message="success", data=data)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -185,9 +190,13 @@ def get_rd_high_tech_report(
                 user=current_user,
                 skip_cache=False,
             )
-            
+
             if format in ["excel", "pdf"]:
-                filename = f"高新企业研发费用表_{year}年.xlsx" if format == "excel" else f"高新企业研发费用表_{year}年.pdf"
+                filename = (
+                    f"高新企业研发费用表_{year}年.xlsx"
+                    if format == "excel"
+                    else f"高新企业研发费用表_{year}年.pdf"
+                )
                 return StreamingResponse(
                     result.data.get("file_stream"),
                     media_type=result.content_type,
@@ -203,7 +212,7 @@ def get_rd_high_tech_report(
                 format=format,
                 user=current_user,
             )
-            data = result.data if hasattr(result, 'data') else result
+            data = result.data if hasattr(result, "data") else result
             return ResponseModel(code=200, message="success", data=data)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -246,9 +255,13 @@ def get_rd_intensity_report(
                 user=current_user,
                 skip_cache=False,
             )
-            
+
             if format in ["excel", "pdf"]:
-                filename = f"研发投入强度报表_{start_year}-{end_year}年.xlsx" if format == "excel" else f"研发投入强度报表_{start_year}-{end_year}年.pdf"
+                filename = (
+                    f"研发投入强度报表_{start_year}-{end_year}年.xlsx"
+                    if format == "excel"
+                    else f"研发投入强度报表_{start_year}-{end_year}年.pdf"
+                )
                 return StreamingResponse(
                     result.data.get("file_stream"),
                     media_type=result.content_type,
@@ -264,7 +277,7 @@ def get_rd_intensity_report(
                 format=format,
                 user=current_user,
             )
-            data = result.data if hasattr(result, 'data') else result
+            data = result.data if hasattr(result, "data") else result
             return ResponseModel(code=200, message="success", data=data)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -303,9 +316,13 @@ def get_rd_personnel_report(
                 user=current_user,
                 skip_cache=False,
             )
-            
+
             if format in ["excel", "pdf"]:
-                filename = f"研发人员统计_{year}年.xlsx" if format == "excel" else f"研发人员统计_{year}年.pdf"
+                filename = (
+                    f"研发人员统计_{year}年.xlsx"
+                    if format == "excel"
+                    else f"研发人员统计_{year}年.pdf"
+                )
                 return StreamingResponse(
                     result.data.get("file_stream"),
                     media_type=result.content_type,
@@ -321,7 +338,7 @@ def get_rd_personnel_report(
                 format=format,
                 user=current_user,
             )
-            data = result.data if hasattr(result, 'data') else result
+            data = result.data if hasattr(result, "data") else result
             return ResponseModel(code=200, message="success", data=data)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -335,7 +352,9 @@ def get_rd_personnel_report(
 def export_rd_report(
     *,
     db: Session = Depends(deps.get_db),
-    report_type: str = Query(..., description="报表类型：auxiliary-ledger/deduction-detail/high-tech/intensity/personnel"),
+    report_type: str = Query(
+        ..., description="报表类型：auxiliary-ledger/deduction-detail/high-tech/intensity/personnel"
+    ),
     year: int = Query(..., description="年度"),
     format: str = Query("xlsx", description="导出格式：xlsx/pdf"),
     project_id: Optional[int] = Query(None, description="研发项目ID"),
@@ -358,7 +377,7 @@ def export_rd_report(
         "intensity": "RD_INTENSITY",
         "personnel": "RD_PERSONNEL",
     }
-    
+
     mapped_report_type = report_type_map.get(report_type)
     if not mapped_report_type:
         raise HTTPException(status_code=400, detail=f"不支持的报表类型: {report_type}")
@@ -370,7 +389,7 @@ def export_rd_report(
             params = {"year": year}
             if project_id:
                 params["project_id"] = project_id
-            
+
             result = engine.generate(
                 report_code=mapped_report_type,
                 params=params,
@@ -378,7 +397,7 @@ def export_rd_report(
                 user=current_user,
                 skip_cache=False,
             )
-            
+
             filename = f"rd-{report_type}-{year}.{format.lower()}"
             return StreamingResponse(
                 result.data.get("file_stream"),
@@ -393,23 +412,23 @@ def export_rd_report(
                 format=format.lower(),
                 user=current_user,
             )
-            
+
             # 使用统一报表框架的渲染器导出
             from app.services.report_framework.renderers import ExcelRenderer, PdfRenderer
-            
+
             if format.lower() == "xlsx":
                 renderer = ExcelRenderer()
             elif format.lower() == "pdf":
                 renderer = PdfRenderer()
             else:
                 raise HTTPException(status_code=400, detail=f"不支持的导出格式: {format}")
-            
-            data = result.data if hasattr(result, 'data') else result
+
+            data = result.data if hasattr(result, "data") else result
             render_result = renderer.render(
                 sections=[{"id": "summary", "title": "汇总", "type": "metrics", "items": []}],
-                metadata={"code": mapped_report_type, "name": data.get("title", "研发费用报表")}
+                metadata={"code": mapped_report_type, "name": data.get("title", "研发费用报表")},
             )
-            
+
             filename = f"rd-{report_type}-{year}.{format.lower()}"
             return StreamingResponse(
                 render_result.data.get("file_stream"),
@@ -422,6 +441,3 @@ def export_rd_report(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
-
-
-

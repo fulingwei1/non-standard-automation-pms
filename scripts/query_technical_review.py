@@ -7,7 +7,7 @@
 
 import sys
 
-sys.path.insert(0, '.')
+sys.path.insert(0, ".")
 
 from sqlalchemy.orm import Session
 
@@ -36,15 +36,15 @@ def query_review_list(db: Session, project_id: int = None):
         print(f"  项目: {review.project_no}")
         print(f"  状态: {review.status} | 结论: {review.conclusion or '未完成'}")
         print(f"  计划时间: {review.scheduled_date}")
-        print(f"  问题统计: A类{review.issue_count_a} B类{review.issue_count_b} "
-              f"C类{review.issue_count_c} D类{review.issue_count_d}")
+        print(
+            f"  问题统计: A类{review.issue_count_a} B类{review.issue_count_b} "
+            f"C类{review.issue_count_c} D类{review.issue_count_d}"
+        )
 
 
 def query_review_detail(db: Session, review_no: str):
     """查询评审详情（包含所有关联数据）"""
-    review = db.query(TechnicalReview).filter(
-        TechnicalReview.review_no == review_no
-    ).first()
+    review = db.query(TechnicalReview).filter(TechnicalReview.review_no == review_no).first()
 
     if not review:
         print(f"❌ 未找到评审: {review_no}")
@@ -89,7 +89,9 @@ def query_review_detail(db: Session, review_no: str):
     print(f"\n评审材料 ({len(materials)} 份):")
     for m in materials:
         uploader = db.query(User).filter(User.id == m.upload_by).first()
-        uploader_name = uploader.real_name or uploader.username if uploader else f"用户{m.upload_by}"
+        uploader_name = (
+            uploader.real_name or uploader.username if uploader else f"用户{m.upload_by}"
+        )
         size_mb = m.file_size / 1024 / 1024
         required = "必需" if m.is_required else "可选"
         print(f"  - [{m.material_type}] {m.material_name}")
@@ -98,9 +100,9 @@ def query_review_detail(db: Session, review_no: str):
     # 检查项
     checklist = review.checklist_records.all()
     print(f"\n检查项记录 ({len(checklist)} 条):")
-    pass_count = sum(1 for c in checklist if c.result == 'PASS')
-    fail_count = sum(1 for c in checklist if c.result == 'FAIL')
-    na_count = sum(1 for c in checklist if c.result == 'NA')
+    pass_count = sum(1 for c in checklist if c.result == "PASS")
+    fail_count = sum(1 for c in checklist if c.result == "FAIL")
+    na_count = sum(1 for c in checklist if c.result == "NA")
     print(f"  统计: 通过 {pass_count} | 不通过 {fail_count} | 不适用 {na_count}")
 
     for c in checklist:
@@ -116,11 +118,15 @@ def query_review_detail(db: Session, review_no: str):
     print(f"\n评审问题 ({len(issues)} 个):")
     for i in issues:
         assignee = db.query(User).filter(User.id == i.assignee_id).first()
-        assignee_name = assignee.real_name or assignee.username if assignee else f"用户{i.assignee_id}"
+        assignee_name = (
+            assignee.real_name or assignee.username if assignee else f"用户{i.assignee_id}"
+        )
         verifier_name = None
         if i.verifier_id:
             verifier = db.query(User).filter(User.id == i.verifier_id).first()
-            verifier_name = verifier.real_name or verifier.username if verifier else f"用户{i.verifier_id}"
+            verifier_name = (
+                verifier.real_name or verifier.username if verifier else f"用户{i.verifier_id}"
+            )
 
         print(f"\n  [{i.issue_level}类] {i.issue_no}")
         print(f"    类别: {i.category}")
@@ -156,13 +162,13 @@ def query_issues_by_status(db: Session, status: str = None):
             by_level[level] = []
         by_level[level].append(issue)
 
-    for level in ['A', 'B', 'C', 'D']:
+    for level in ["A", "B", "C", "D"]:
         if level in by_level:
             print(f"\n{level}类问题 ({len(by_level[level])} 个):")
             for issue in by_level[level]:
-                review = db.query(TechnicalReview).filter(
-                    TechnicalReview.id == issue.review_id
-                ).first()
+                review = (
+                    db.query(TechnicalReview).filter(TechnicalReview.id == issue.review_id).first()
+                )
                 review_name = review.review_name if review else f"评审{issue.review_id}"
                 print(f"  - {issue.issue_no} [{issue.status}] {issue.description[:50]}...")
                 print(f"    评审: {review_name} | 期限: {issue.deadline}")
@@ -174,15 +180,15 @@ def main():
         query_review_list(db)
 
         # 2. 查询最新评审的详情
-        latest_review = db.query(TechnicalReview).order_by(
-            TechnicalReview.created_at.desc()
-        ).first()
+        latest_review = (
+            db.query(TechnicalReview).order_by(TechnicalReview.created_at.desc()).first()
+        )
 
         if latest_review:
             query_review_detail(db, latest_review.review_no)
 
         # 3. 查询所有开放状态的问题
-        query_issues_by_status(db, status='OPEN')
+        query_issues_by_status(db, status="OPEN")
 
         print("\n" + "=" * 70)
         print("查询完成")
@@ -191,9 +197,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-

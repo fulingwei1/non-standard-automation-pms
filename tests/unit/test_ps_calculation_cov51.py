@@ -3,8 +3,9 @@
 tests/unit/test_ps_calculation_cov51.py
 Unit tests for app/services/performance_service/calculation.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.performance_service.calculation import (
@@ -17,6 +18,7 @@ except ImportError as e:
 
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
+
 
 def _make_eval(evaluator_type, score, project_weight=None):
     e = MagicMock()
@@ -31,6 +33,7 @@ def _make_eval(evaluator_type, score, project_weight=None):
 
 
 # ─── get_score_level ─────────────────────────────────────────────────────────
+
 
 def test_get_score_level_A_plus():
     assert get_score_level(95) == "A+"
@@ -48,6 +51,7 @@ def test_get_score_level_boundaries():
 
 # ─── calculate_final_score ───────────────────────────────────────────────────
 
+
 def test_calculate_final_score_no_weight_config_no_evaluations():
     """No weight config + no evaluations → None"""
     db = MagicMock()
@@ -60,7 +64,7 @@ def test_calculate_final_score_no_weight_config_no_evaluations():
 
 def test_calculate_final_score_dept_only():
     """Only dept manager evaluation, uses 100% of dept score."""
-    from app.models.performance import EvaluatorTypeEnum, EvaluationStatusEnum
+    from app.models.performance import EvaluationStatusEnum, EvaluatorTypeEnum
 
     db = MagicMock()
     # No weight config
@@ -81,7 +85,7 @@ def test_calculate_final_score_dept_only():
 
 def test_calculate_final_score_both_managers_weighted():
     """Both dept + project evals with default 50/50 weights."""
-    from app.models.performance import EvaluatorTypeEnum, EvaluationStatusEnum
+    from app.models.performance import EvaluationStatusEnum, EvaluatorTypeEnum
 
     db = MagicMock()
     db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
@@ -104,7 +108,7 @@ def test_calculate_final_score_both_managers_weighted():
 
 def test_calculate_final_score_project_only():
     """Only project manager evaluation → uses 100% of project score."""
-    from app.models.performance import EvaluatorTypeEnum, EvaluationStatusEnum
+    from app.models.performance import EvaluationStatusEnum, EvaluatorTypeEnum
 
     db = MagicMock()
     db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
@@ -122,7 +126,7 @@ def test_calculate_final_score_project_only():
 
 def test_calculate_final_score_with_weight_config():
     """Uses explicit weight config (30 dept / 70 project)."""
-    from app.models.performance import EvaluatorTypeEnum, EvaluationStatusEnum
+    from app.models.performance import EvaluationStatusEnum, EvaluatorTypeEnum
 
     weight_cfg = MagicMock()
     weight_cfg.dept_manager_weight = 30
@@ -143,6 +147,7 @@ def test_calculate_final_score_with_weight_config():
 
 
 # ─── calculate_quarterly_score ───────────────────────────────────────────────
+
 
 def test_calculate_quarterly_score_no_summaries():
     db = MagicMock()
@@ -166,9 +171,7 @@ def test_calculate_quarterly_score_averages_monthly_scores():
 
     db.query.return_value.filter.return_value.all.return_value = [summary1, summary2]
 
-    with patch(
-        "app.services.performance_service.calculation.calculate_final_score"
-    ) as mock_calc:
+    with patch("app.services.performance_service.calculation.calculate_final_score") as mock_calc:
         mock_calc.side_effect = [
             {"final_score": 90.0},
             {"final_score": 80.0},

@@ -13,8 +13,6 @@
 
 from typing import Optional
 
-from app.services.strategy.decomposition.personal_kpis import get_personal_kpi
-
 from sqlalchemy.orm import Session
 
 from app.models.strategy import (
@@ -29,16 +27,14 @@ from app.schemas.strategy import (
     DecompositionTreeResponse,
     TraceToStrategyResponse,
 )
-
+from app.services.strategy.decomposition.personal_kpis import get_personal_kpi
 
 # ============================================
 # 分解追溯
 # ============================================
 
-def get_decomposition_tree(
-    db: Session,
-    strategy_id: int
-) -> DecompositionTreeResponse:
+
+def get_decomposition_tree(db: Session, strategy_id: int) -> DecompositionTreeResponse:
     """
     获取分解树
 
@@ -49,10 +45,7 @@ def get_decomposition_tree(
     Returns:
         DecompositionTreeResponse: 分解树数据
     """
-    strategy = db.query(Strategy).filter(
-        Strategy.id == strategy_id,
-        Strategy.is_active
-    ).first()
+    strategy = db.query(Strategy).filter(Strategy.id == strategy_id, Strategy.is_active).first()
 
     if not strategy:
         return DecompositionTreeResponse(
@@ -64,10 +57,12 @@ def get_decomposition_tree(
     nodes = []
 
     # 获取 CSF 节点
-    csfs = db.query(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active
-    ).order_by(CSF.dimension, CSF.sort_order).all()
+    csfs = (
+        db.query(CSF)
+        .filter(CSF.strategy_id == strategy_id, CSF.is_active)
+        .order_by(CSF.dimension, CSF.sort_order)
+        .all()
+    )
 
     for csf in csfs:
         csf_node = DecompositionTreeNode(
@@ -80,10 +75,7 @@ def get_decomposition_tree(
         )
 
         # 获取 KPI 子节点
-        kpis = db.query(KPI).filter(
-            KPI.csf_id == csf.id,
-            KPI.is_active
-        ).all()
+        kpis = db.query(KPI).filter(KPI.csf_id == csf.id, KPI.is_active).all()
 
         for kpi in kpis:
             kpi_node = DecompositionTreeNode(
@@ -96,13 +88,15 @@ def get_decomposition_tree(
             )
 
             # 获取部门目标子节点
-            dept_objs = db.query(DepartmentObjective).filter(
-                DepartmentObjective.kpi_id == kpi.id,
-                DepartmentObjective.is_active
-            ).all()
+            dept_objs = (
+                db.query(DepartmentObjective)
+                .filter(DepartmentObjective.kpi_id == kpi.id, DepartmentObjective.is_active)
+                .all()
+            )
 
             for obj in dept_objs:
                 from app.models.organization import Department
+
                 dept = db.query(Department).filter(Department.id == obj.department_id).first()
                 dept_name = dept.name if dept else f"部门{obj.department_id}"
 
@@ -116,13 +110,15 @@ def get_decomposition_tree(
                 )
 
                 # 获取个人 KPI 子节点
-                personal_kpis = db.query(PersonalKPI).filter(
-                    PersonalKPI.dept_objective_id == obj.id,
-                    PersonalKPI.is_active
-                ).all()
+                personal_kpis = (
+                    db.query(PersonalKPI)
+                    .filter(PersonalKPI.dept_objective_id == obj.id, PersonalKPI.is_active)
+                    .all()
+                )
 
                 for pkpi in personal_kpis:
                     from app.models.user import User
+
                     user = db.query(User).filter(User.id == pkpi.user_id).first()
                     user_name = user.name if user else f"用户{pkpi.user_id}"
 
@@ -149,10 +145,7 @@ def get_decomposition_tree(
     )
 
 
-def trace_to_strategy(
-    db: Session,
-    personal_kpi_id: int
-) -> Optional[TraceToStrategyResponse]:
+def trace_to_strategy(db: Session, personal_kpi_id: int) -> Optional[TraceToStrategyResponse]:
     """
     从个人 KPI 追溯到战略
 
@@ -169,6 +162,7 @@ def trace_to_strategy(
 
     # 获取用户信息
     from app.models.user import User
+
     user = db.query(User).filter(User.id == pkpi.user_id).first()
     user_name = user.name if user else None
 
@@ -176,11 +170,14 @@ def trace_to_strategy(
     dept_obj = None
     dept_name = None
     if pkpi.dept_objective_id:
-        dept_obj = db.query(DepartmentObjective).filter(
-            DepartmentObjective.id == pkpi.dept_objective_id
-        ).first()
+        dept_obj = (
+            db.query(DepartmentObjective)
+            .filter(DepartmentObjective.id == pkpi.dept_objective_id)
+            .first()
+        )
         if dept_obj and dept_obj.department_id:
             from app.models.organization import Department
+
             dept = db.query(Department).filter(Department.id == dept_obj.department_id).first()
             dept_name = dept.name if dept else None
 
@@ -216,5 +213,3 @@ def trace_to_strategy(
         strategy_id=strategy.id if strategy else None,
         strategy_name=strategy.name if strategy else None,
     )
-
-

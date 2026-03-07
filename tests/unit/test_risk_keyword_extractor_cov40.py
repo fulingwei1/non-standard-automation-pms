@@ -7,6 +7,7 @@ import pytest
 
 try:
     from app.services.quality_risk_ai.risk_keyword_extractor import RiskKeywordExtractor
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

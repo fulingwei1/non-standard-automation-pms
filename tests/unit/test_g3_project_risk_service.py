@@ -3,9 +3,10 @@
 G3组 - 项目风险服务单元测试（扩展）
 目标文件: app/services/project/project_risk_service.py
 """
-import pytest
 from datetime import date, datetime
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.services.project.project_risk_service import ProjectRiskService
 
@@ -27,7 +28,7 @@ class TestRiskLevelCalculation:
             "overdue_milestone_ratio": 0.6,
             "critical_risks_count": 0,
             "high_risks_count": 0,
-            "schedule_variance": 0
+            "schedule_variance": 0,
         }
         assert self.svc._calculate_risk_level(factors) == "CRITICAL"
 
@@ -36,7 +37,7 @@ class TestRiskLevelCalculation:
             "overdue_milestone_ratio": 0,
             "critical_risks_count": 2,
             "high_risks_count": 0,
-            "schedule_variance": 0
+            "schedule_variance": 0,
         }
         assert self.svc._calculate_risk_level(factors) == "CRITICAL"
 
@@ -45,7 +46,7 @@ class TestRiskLevelCalculation:
             "overdue_milestone_ratio": 0.3,
             "critical_risks_count": 0,
             "high_risks_count": 0,
-            "schedule_variance": 0
+            "schedule_variance": 0,
         }
         assert self.svc._calculate_risk_level(factors) == "HIGH"
 
@@ -54,7 +55,7 @@ class TestRiskLevelCalculation:
             "overdue_milestone_ratio": 0,
             "critical_risks_count": 0,
             "high_risks_count": 0,
-            "schedule_variance": -25
+            "schedule_variance": -25,
         }
         assert self.svc._calculate_risk_level(factors) == "HIGH"
 
@@ -63,7 +64,7 @@ class TestRiskLevelCalculation:
             "overdue_milestone_ratio": 0.15,
             "critical_risks_count": 0,
             "high_risks_count": 0,
-            "schedule_variance": 0
+            "schedule_variance": 0,
         }
         assert self.svc._calculate_risk_level(factors) == "MEDIUM"
 
@@ -72,7 +73,7 @@ class TestRiskLevelCalculation:
             "overdue_milestone_ratio": 0,
             "critical_risks_count": 0,
             "high_risks_count": 2,
-            "schedule_variance": 0
+            "schedule_variance": 0,
         }
         assert self.svc._calculate_risk_level(factors) in ("MEDIUM", "HIGH")
 
@@ -81,7 +82,7 @@ class TestRiskLevelCalculation:
             "overdue_milestone_ratio": 0,
             "critical_risks_count": 0,
             "high_risks_count": 0,
-            "schedule_variance": 0
+            "schedule_variance": 0,
         }
         assert self.svc._calculate_risk_level(factors) == "LOW"
 
@@ -191,6 +192,7 @@ class TestAutoUpgradeRiskLevel:
         def query_side_effect(model):
             from app.models.project import Project
             from app.models.project.risk_history import ProjectRiskHistory
+
             m = MagicMock()
             if model is Project:
                 m.filter.return_value.first.return_value = project
@@ -237,8 +239,9 @@ class TestBatchCalculateRisks:
         self.db.query.return_value.filter.return_value.all.return_value = [project]
         self.db.query.return_value.all.return_value = [project]
 
-        with patch.object(self.svc, "auto_upgrade_risk_level",
-                          side_effect=ValueError("项目不存在: 1")):
+        with patch.object(
+            self.svc, "auto_upgrade_risk_level", side_effect=ValueError("项目不存在: 1")
+        ):
             result = self.svc.batch_calculate_risks(project_ids=[1])
 
         assert len(result) == 1
@@ -252,22 +255,18 @@ class TestGetRiskHistory:
         self.svc, self.db = make_service()
 
     def test_empty_history(self):
-        (self.db.query.return_value
-            .filter.return_value
-            .order_by.return_value
-            .limit.return_value
-            .all.return_value) = []
+        (
+            self.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value
+        ) = []
 
         result = self.svc.get_risk_history(1)
         assert result == []
 
     def test_returns_history_records(self):
         mock_record = MagicMock()
-        (self.db.query.return_value
-            .filter.return_value
-            .order_by.return_value
-            .limit.return_value
-            .all.return_value) = [mock_record]
+        (
+            self.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value
+        ) = [mock_record]
 
         result = self.svc.get_risk_history(1, limit=10)
         assert len(result) == 1

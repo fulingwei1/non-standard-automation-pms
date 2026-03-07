@@ -6,8 +6,6 @@
 聚合服务（执行、资源、财务、分析）复用。
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -80,9 +78,7 @@ class ProjectCoreService:
             if not roles and project.pm_id == current_user.id:
                 roles = ["PM"]
 
-            avg_allocation = (
-                round(sum(allocations) / len(allocations), 2) if allocations else 100.0
-            )
+            avg_allocation = round(sum(allocations) / len(allocations), 2) if allocations else 100.0
             stats = task_stats.get(project.id, TaskStatsResponse())
 
             items.append(
@@ -130,7 +126,9 @@ class ProjectCoreService:
         ]
         return sorted({*member_ids, *owned_ids})
 
-    def _load_memberships(self, user_id: int, project_ids: List[int]) -> Dict[int, Dict[str, List[float]]]:
+    def _load_memberships(
+        self, user_id: int, project_ids: List[int]
+    ) -> Dict[int, Dict[str, List[float]]]:
         if not project_ids:
             return {}
 
@@ -153,7 +151,9 @@ class ProjectCoreService:
                 project_info["allocations"].append(float(member.allocation_pct))
         return mapping
 
-    def _build_task_stats(self, user_id: int, project_ids: List[int]) -> Dict[int, TaskStatsResponse]:
+    def _build_task_stats(
+        self, user_id: int, project_ids: List[int]
+    ) -> Dict[int, TaskStatsResponse]:
         if not project_ids:
             return {}
 

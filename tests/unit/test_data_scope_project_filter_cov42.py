@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("app.services.data_scope.project_filter")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.data_scope.project_filter import ProjectFilterService
 
 
@@ -24,6 +25,7 @@ def make_regular_user(scope="OWN"):
 
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_superuser_gets_all_projects():
     db = MagicMock()
@@ -85,8 +87,10 @@ def test_filter_related_superuser_returns_unchanged_query():
 def test_filter_related_no_accessible_returns_empty():
     db = MagicMock()
     user, _ = make_regular_user()
-    with patch("app.services.data_scope.project_filter.ProjectFilterService.get_accessible_project_ids",
-               return_value=set()):
+    with patch(
+        "app.services.data_scope.project_filter.ProjectFilterService.get_accessible_project_ids",
+        return_value=set(),
+    ):
         query = MagicMock()
         col = MagicMock()
         result = ProjectFilterService.filter_related_by_project(db, query, user, col)

@@ -27,7 +27,6 @@ from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
 
-
 # API Key Header名称
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
@@ -40,47 +39,49 @@ class APIKeyAuth:
     def generate_api_key(prefix: str = "pms") -> tuple[str, str]:
         """
         生成API Key
-        
+
         格式: {prefix}_{random_string}
-        
+
         Args:
             prefix: API Key前缀，用于识别来源
-            
+
         Returns:
             tuple: (原始key, 哈希后的key)
         """
         # 生成32字节随机字符串
         random_part = secrets.token_urlsafe(32)
         api_key = f"{prefix}_{random_part}"
-        
+
         # 计算哈希（用于存储）
         key_hash = APIKeyAuth.hash_api_key(api_key)
-        
+
         return api_key, key_hash
 
     @staticmethod
     def hash_api_key(api_key: str) -> str:
         """
         对API Key进行哈希（使用SHA256）
-        
+
         Args:
             api_key: 原始API Key
-            
+
         Returns:
             str: 哈希后的key
         """
         return hashlib.sha256(api_key.encode()).hexdigest()
 
     @staticmethod
-    def verify_api_key(db: Session, api_key: str, client_ip: Optional[str] = None) -> Optional[dict]:
+    def verify_api_key(
+        db: Session, api_key: str, client_ip: Optional[str] = None
+    ) -> Optional[dict]:
         """
         验证API Key
-        
+
         Args:
             db: 数据库会话
             api_key: 待验证的API Key
             client_ip: 客户端IP地址
-            
+
         Returns:
             Optional[dict]: 验证成功返回API Key信息，失败返回None
         """
@@ -93,11 +94,12 @@ class APIKeyAuth:
         # 从数据库查询（需要实现APIKey模型）
         try:
             from app.models.api_key import APIKey
-            
-            api_key_obj = db.query(APIKey).filter(
-                APIKey.key_hash == key_hash,
-                APIKey.is_active == True
-            ).first()
+
+            api_key_obj = (
+                db.query(APIKey)
+                .filter(APIKey.key_hash == key_hash, APIKey.is_active == True)
+                .first()
+            )
 
             if not api_key_obj:
                 return None
@@ -122,30 +124,30 @@ class APIKeyAuth:
                 "user_id": api_key_obj.user_id,
                 "tenant_id": api_key_obj.tenant_id,
                 "scopes": api_key_obj.scopes or [],
-                "metadata": api_key_obj.metadata or {}
+                "metadata": api_key_obj.metadata or {},
             }
 
         except ImportError:
             # APIKey模型未实现，返回None
             import logging
+
             logging.getLogger(__name__).warning("APIKey模型未实现，跳过API Key认证")
             return None
 
 
 async def get_api_key_user(
-    api_key: str = Security(api_key_header),
-    db: Session = None
+    api_key: str = Security(api_key_header), db: Session = None
 ) -> Optional[dict]:
     """
     从API Key获取用户信息（依赖注入）
-    
+
     Args:
         api_key: API Key（从请求头提取）
         db: 数据库会话
-        
+
     Returns:
         Optional[dict]: API Key信息
-        
+
     Raises:
         HTTPException: 认证失败
     """
@@ -157,12 +159,9 @@ async def get_api_key_user(
 
     # 验证API Key
     api_key_info = APIKeyAuth.verify_api_key(db, api_key)
-    
+
     if not api_key_info:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API Key"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API Key")
 
     return api_key_info
 
@@ -170,10 +169,10 @@ async def get_api_key_user(
 def require_api_key_scope(required_scope: str):
     """
     API Key权限装饰器
-    
+
     Args:
         required_scope: 必需的权限范围
-        
+
     Example:
         @router.get("/projects")
         async def list_projects(
@@ -181,22 +180,18 @@ def require_api_key_scope(required_scope: str):
         ):
             ...
     """
-    async def check_scope(
-        api_key_info: dict = Security(get_api_key_user)
-    ) -> dict:
+
+    async def check_scope(api_key_info: dict = Security(get_api_key_user)) -> dict:
         if not api_key_info:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="API Key required"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API Key required")
 
         scopes = api_key_info.get("scopes", [])
-        
+
         # 检查是否有管理员权限或特定权限
         if "admin" not in scopes and required_scope not in scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Insufficient API Key scope: {required_scope} required"
+                detail=f"Insufficient API Key scope: {required_scope} required",
             )
 
         return api_key_info
@@ -204,9 +199,4 @@ def require_api_key_scope(required_scope: str):
     return check_scope
 
 
-__all__ = [
-    "APIKeyAuth",
-    "get_api_key_user",
-    "require_api_key_scope",
-    "api_key_header"
-]
+__all__ = ["APIKeyAuth", "get_api_key_user", "require_api_key_scope", "api_key_header"]

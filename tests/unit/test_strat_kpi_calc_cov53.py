@@ -2,16 +2,17 @@
 """
 Unit tests for app/services/strategy/kpi_collector/calculation.py
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.strategy.kpi_collector.calculation import (
-        calculate_formula,
-        collect_kpi_value,
         auto_collect_kpi,
         batch_collect_kpis,
+        calculate_formula,
+        collect_kpi_value,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -20,6 +21,7 @@ except ImportError as e:
 # ---------------------------------------------------------------------------
 # calculate_formula
 # ---------------------------------------------------------------------------
+
 
 def test_calculate_formula_returns_none_for_empty():
     result = calculate_formula("", {"a": 1})
@@ -44,7 +46,10 @@ def test_calculate_formula_raises_without_simpleeval():
 
 def test_calculate_formula_returns_none_on_exception():
     with patch("app.services.strategy.kpi_collector.calculation.HAS_SIMPLEEVAL", True):
-        with patch("app.services.strategy.kpi_collector.calculation.simple_eval", side_effect=Exception("bad")):
+        with patch(
+            "app.services.strategy.kpi_collector.calculation.simple_eval",
+            side_effect=Exception("bad"),
+        ):
             result = calculate_formula("bad_formula", {"x": 1})
             assert result is None
 
@@ -52,6 +57,7 @@ def test_calculate_formula_returns_none_on_exception():
 # ---------------------------------------------------------------------------
 # collect_kpi_value
 # ---------------------------------------------------------------------------
+
 
 def test_collect_kpi_value_returns_none_when_kpi_not_found():
     db = MagicMock()
@@ -84,6 +90,7 @@ def test_collect_kpi_value_manual_returns_current_value():
 # auto_collect_kpi
 # ---------------------------------------------------------------------------
 
+
 def test_auto_collect_kpi_returns_none_when_no_value():
     db = MagicMock()
     with patch(
@@ -98,11 +105,12 @@ def test_auto_collect_kpi_updates_and_returns_kpi():
     db = MagicMock()
     kpi_mock = MagicMock()
     db.query.return_value.filter.return_value.first.return_value = kpi_mock
-    with patch(
-        "app.services.strategy.kpi_collector.calculation.collect_kpi_value",
-        return_value=Decimal("88"),
-    ), patch(
-        "app.services.strategy.kpi_service.create_kpi_snapshot"
+    with (
+        patch(
+            "app.services.strategy.kpi_collector.calculation.collect_kpi_value",
+            return_value=Decimal("88"),
+        ),
+        patch("app.services.strategy.kpi_service.create_kpi_snapshot"),
     ):
         result = auto_collect_kpi(db, kpi_id=1, recorded_by=7)
     assert result is kpi_mock
@@ -112,6 +120,7 @@ def test_auto_collect_kpi_updates_and_returns_kpi():
 # ---------------------------------------------------------------------------
 # batch_collect_kpis
 # ---------------------------------------------------------------------------
+
 
 def test_batch_collect_kpis_returns_stats():
     db = MagicMock()

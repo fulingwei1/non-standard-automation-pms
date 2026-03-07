@@ -10,6 +10,7 @@ class TestRatingManager:
 
     def _make_manager(self):
         from app.services.collaboration_rating.ratings import RatingManager
+
         db = MagicMock()
         service = MagicMock()
         return RatingManager(db, service), db, service
@@ -29,13 +30,20 @@ class TestRatingManager:
         profile.job_type = "MECHANICAL"
 
         call_count = [0]
+
         def query_side_effect(*args):
             return db.query.return_value
+
         db.query.side_effect = None
         db.query.return_value.filter.return_value.first.side_effect = [
-            None, profile, profile,  # for collaborator 2
-            None, profile, profile,  # for collaborator 3
-            rating_mock, rating_mock  # post-commit lookups
+            None,
+            profile,
+            profile,  # for collaborator 2
+            None,
+            profile,
+            profile,  # for collaborator 3
+            rating_mock,
+            rating_mock,  # post-commit lookups
         ]
 
         result = mgr.create_rating_invitations(engineer_id=1, period_id=1)

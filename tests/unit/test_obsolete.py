@@ -2,11 +2,12 @@
 """obsolete material risk 单元测试"""
 from decimal import Decimal
 from unittest.mock import MagicMock
+
 import pytest
 
 from app.services.ecn_bom_analysis_service.obsolete import (
-    check_obsolete_material_risk,
     calculate_obsolete_risk_level,
+    check_obsolete_material_risk,
 )
 
 
@@ -57,7 +58,10 @@ class TestCheckObsoleteMaterialRisk:
 
         # Setup query chain
         service.db.query.return_value.filter.return_value.first.side_effect = [ecn, material]
-        service.db.query.return_value.filter.return_value.all.side_effect = [[mat_affected], []]  # affected_materials, po_items
+        service.db.query.return_value.filter.return_value.all.side_effect = [
+            [mat_affected],
+            [],
+        ]  # affected_materials, po_items
 
         # Need to handle the join query for PO items
         service.db.query.return_value.join.return_value.filter.return_value.all.return_value = []

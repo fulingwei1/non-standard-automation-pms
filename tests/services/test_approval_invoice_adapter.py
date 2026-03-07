@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """InvoiceApprovalAdapter 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestInvoiceApprovalAdapter:
 
     def _make_adapter(self):
         from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
+
         db = MagicMock()
         return InvoiceApprovalAdapter(db), db
 
@@ -30,10 +32,19 @@ class TestInvoiceApprovalAdapter:
     def test_get_entity_data(self):
         adapter, db = self._make_adapter()
         invoice = MagicMock(
-            invoice_code="INV001", status="DRAFT", invoice_type="增值税专用发票",
-            amount=10000, tax_rate=0.13, tax_amount=1300, total_amount=11300,
-            contract_id=1, project_id=1, buyer_name="买家A", buyer_tax_no="123",
-            issue_date=None, due_date=None,
+            invoice_code="INV001",
+            status="DRAFT",
+            invoice_type="增值税专用发票",
+            amount=10000,
+            tax_rate=0.13,
+            tax_amount=1300,
+            total_amount=11300,
+            contract_id=1,
+            project_id=1,
+            buyer_name="买家A",
+            buyer_tax_no="123",
+            issue_date=None,
+            due_date=None,
         )
         invoice.contract = MagicMock(contract_code="C001")
         db.query.return_value.filter.return_value.first.return_value = invoice
@@ -102,16 +113,23 @@ class TestInvoiceApprovalAdapter:
 
     def test_get_summary(self):
         adapter, db = self._make_adapter()
-        with patch.object(adapter, 'get_entity_data', return_value={
-            "buyer_name": "买家", "total_amount": 11300, "invoice_type": "专票", "contract_code": "C001",
-        }):
+        with patch.object(
+            adapter,
+            "get_entity_data",
+            return_value={
+                "buyer_name": "买家",
+                "total_amount": 11300,
+                "invoice_type": "专票",
+                "contract_code": "C001",
+            },
+        ):
             s = adapter.get_summary(1)
         assert "买家" in s
         assert "11,300" in s
 
     def test_get_summary_empty(self):
         adapter, db = self._make_adapter()
-        with patch.object(adapter, 'get_entity_data', return_value={}):
+        with patch.object(adapter, "get_entity_data", return_value={}):
             assert adapter.get_summary(1) == ""
 
     # -- validate_submit --

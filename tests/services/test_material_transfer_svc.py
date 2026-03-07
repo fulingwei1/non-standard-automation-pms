@@ -2,15 +2,19 @@
 """物料调拨服务单元测试"""
 import sys
 import types
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 # Stub missing model modules before importing the service
 _inventory_stock_mock = MagicMock()
 _inventory_transaction_mock = MagicMock()
 _stubs = {
-    "app.models.inventory": {"InventoryStock": _inventory_stock_mock, "InventoryTransaction": _inventory_transaction_mock},
+    "app.models.inventory": {
+        "InventoryStock": _inventory_stock_mock,
+        "InventoryTransaction": _inventory_transaction_mock,
+    },
 }
 for mod_name, attrs in _stubs.items():
     if mod_name not in sys.modules:
@@ -20,6 +24,7 @@ for mod_name, attrs in _stubs.items():
         sys.modules[mod_name] = stub
 
 import app.models.material as _mat_mod
+
 if not hasattr(_mat_mod, "ProjectMaterial"):
     _mat_mod.ProjectMaterial = MagicMock()
 
@@ -45,7 +50,9 @@ def _make_db_with_query_results(results_by_call_index):
         chain.filter.return_value.first.return_value = result
         # Also support filter chaining
         chain.filter.return_value.filter.return_value.first.return_value = result
-        chain.filter.return_value.order_by.return_value.all.return_value = result if isinstance(result, list) else [result] if result else []
+        chain.filter.return_value.order_by.return_value.all.return_value = (
+            result if isinstance(result, list) else [result] if result else []
+        )
         chains.append(chain)
 
     db.query.side_effect = chains
@@ -54,14 +61,18 @@ def _make_db_with_query_results(results_by_call_index):
 
 class TestGetProjectMaterialStock:
     def test_from_project_material(self):
-        pm = MagicMock(available_qty=Decimal("100"), reserved_qty=Decimal("10"), total_qty=Decimal("110"))
+        pm = MagicMock(
+            available_qty=Decimal("100"), reserved_qty=Decimal("10"), total_qty=Decimal("110")
+        )
         db = _make_db_with_query_results([pm])
         result = MaterialTransferService.get_project_material_stock(db, 1, 1)
         assert result["available_qty"] == Decimal("100")
         assert result["source"] == "项目物料表"
 
     def test_from_inventory(self):
-        inv = MagicMock(available_qty=Decimal("50"), reserved_qty=Decimal("5"), total_qty=Decimal("55"))
+        inv = MagicMock(
+            available_qty=Decimal("50"), reserved_qty=Decimal("5"), total_qty=Decimal("55")
+        )
         db = _make_db_with_query_results([None, inv])
         result = MaterialTransferService.get_project_material_stock(db, 1, 1)
         assert result["available_qty"] == Decimal("50")
@@ -84,18 +95,22 @@ class TestGetProjectMaterialStock:
 class TestCheckTransferAvailable:
     def test_sufficient(self):
         db = MagicMock()
-        with patch.object(MaterialTransferService, "get_project_material_stock", return_value={
-            "available_qty": Decimal("100"), "source": "项目物料表"
-        }):
+        with patch.object(
+            MaterialTransferService,
+            "get_project_material_stock",
+            return_value={"available_qty": Decimal("100"), "source": "项目物料表"},
+        ):
             result = MaterialTransferService.check_transfer_available(db, 1, 1, Decimal("50"))
         assert result["is_sufficient"] is True
         assert result["shortage_qty"] == 0
 
     def test_insufficient(self):
         db = MagicMock()
-        with patch.object(MaterialTransferService, "get_project_material_stock", return_value={
-            "available_qty": Decimal("10"), "source": "项目物料表"
-        }):
+        with patch.object(
+            MaterialTransferService,
+            "get_project_material_stock",
+            return_value={"available_qty": Decimal("10"), "source": "项目物料表"},
+        ):
             result = MaterialTransferService.check_transfer_available(db, 1, 1, Decimal("50"))
         assert result["is_sufficient"] is False
         assert result["shortage_qty"] == 40.0
@@ -105,11 +120,13 @@ class TestExecuteStockUpdate:
     def test_basic(self):
         db = MagicMock()
         transfer = MagicMock(
-            from_project_id=1, to_project_id=2, material_id=10,
-            transfer_qty=Decimal("20")
+            from_project_id=1, to_project_id=2, material_id=10, transfer_qty=Decimal("20")
         )
-        with patch.object(MaterialTransferService, "_update_project_stock",
-                          return_value={"before": 100, "after": 80, "success": True}):
+        with patch.object(
+            MaterialTransferService,
+            "_update_project_stock",
+            return_value={"before": 100, "after": 80, "success": True},
+        ):
             result = MaterialTransferService.execute_stock_update(db, transfer)
         assert "from_project" in result
         assert "to_project" in result
@@ -117,11 +134,13 @@ class TestExecuteStockUpdate:
     def test_no_from_project(self):
         db = _make_db_with_query_results([MagicMock(current_stock=Decimal("100"))])
         transfer = MagicMock(
-            from_project_id=None, to_project_id=2, material_id=10,
-            transfer_qty=Decimal("20")
+            from_project_id=None, to_project_id=2, material_id=10, transfer_qty=Decimal("20")
         )
-        with patch.object(MaterialTransferService, "_update_project_stock",
-                          return_value={"before": 0, "after": 20, "success": True}):
+        with patch.object(
+            MaterialTransferService,
+            "_update_project_stock",
+            return_value={"before": 0, "after": 20, "success": True},
+        ):
             result = MaterialTransferService.execute_stock_update(db, transfer)
         assert result["from_project"]["before"] == 0
 
@@ -139,8 +158,10 @@ class TestUpdateProjectStock:
 
     def test_create_new_record_on_increase(self):
         db = _make_db_with_query_results([None, None])
-        with patch("app.services.material_transfer_service.ProjectMaterial") as MockPM, \
-             patch.object(MaterialTransferService, "_record_transaction"):
+        with (
+            patch("app.services.material_transfer_service.ProjectMaterial") as MockPM,
+            patch.object(MaterialTransferService, "_record_transaction"),
+        ):
             MockPM.return_value = MagicMock()
             result = MaterialTransferService._update_project_stock(
                 db, 1, 1, Decimal("20"), "TRANSFER_IN", "调入"
@@ -200,10 +221,17 @@ class TestValidateTransferBeforeExecute:
         material = MagicMock()
         db = _make_db_with_query_results([to_proj, from_proj, material])
         transfer = MagicMock(
-            to_project_id=2, from_project_id=1, material_id=10,
-            transfer_qty=Decimal("20"), status="APPROVED"
+            to_project_id=2,
+            from_project_id=1,
+            material_id=10,
+            transfer_qty=Decimal("20"),
+            status="APPROVED",
         )
-        with patch.object(MaterialTransferService, "check_transfer_available", return_value={"is_sufficient": True}):
+        with patch.object(
+            MaterialTransferService,
+            "check_transfer_available",
+            return_value={"is_sufficient": True},
+        ):
             result = MaterialTransferService.validate_transfer_before_execute(db, transfer)
         assert result["is_valid"] is True
 
@@ -212,8 +240,11 @@ class TestValidateTransferBeforeExecute:
         material = MagicMock()
         db = _make_db_with_query_results([to_proj, material])
         transfer = MagicMock(
-            to_project_id=2, from_project_id=None, material_id=10,
-            transfer_qty=Decimal("20"), status="DRAFT"
+            to_project_id=2,
+            from_project_id=None,
+            material_id=10,
+            transfer_qty=Decimal("20"),
+            status="DRAFT",
         )
         result = MaterialTransferService.validate_transfer_before_execute(db, transfer)
         assert result["is_valid"] is False

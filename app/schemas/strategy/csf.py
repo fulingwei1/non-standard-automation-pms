@@ -13,6 +13,7 @@ from ..common import TimestampSchema
 
 class CSFCreate(BaseModel):
     """创建 CSF"""
+
     strategy_id: int = Field(description="关联战略ID")
     dimension: str = Field(description="BSC维度：FINANCIAL/CUSTOMER/INTERNAL/LEARNING")
     code: str = Field(max_length=50, description="CSF 编码，如 CSF-F-001")
@@ -27,6 +28,7 @@ class CSFCreate(BaseModel):
 
 class CSFUpdate(BaseModel):
     """更新 CSF"""
+
     name: Optional[str] = Field(default=None, max_length=200)
     description: Optional[str] = None
     derivation_method: Optional[str] = None
@@ -38,6 +40,7 @@ class CSFUpdate(BaseModel):
 
 class CSFResponse(TimestampSchema):
     """CSF 响应"""
+
     id: int
     strategy_id: int
     dimension: str
@@ -60,6 +63,7 @@ class CSFResponse(TimestampSchema):
 
 class CSFDetailResponse(CSFResponse):
     """CSF 详情响应（包含健康度）"""
+
     health_score: Optional[int] = None
     health_level: Optional[str] = None
     kpi_completion_rate: Optional[float] = None
@@ -67,6 +71,7 @@ class CSFDetailResponse(CSFResponse):
 
 class CSFByDimensionItem(BaseModel):
     """按维度分组 - 单个 CSF"""
+
     id: int
     code: str
     name: str
@@ -77,6 +82,7 @@ class CSFByDimensionItem(BaseModel):
 
 class CSFByDimensionResponse(BaseModel):
     """按维度分组响应"""
+
     dimension: str
     dimension_name: str
     csfs: List[CSFByDimensionItem] = []
@@ -89,5 +95,6 @@ class CSFByDimensionResponse(BaseModel):
 
 class CSFBatchCreateRequest(BaseModel):
     """批量创建 CSF 请求"""
+
     strategy_id: int
     items: List[CSFCreate]

@@ -66,9 +66,7 @@ class TestValidateAnalysisInputs:
         ]
 
         with pytest.raises(Exception) as exc_info:
-            validate_analysis_inputs(
-                mock_db, project_id=1, bom_id=1, machine_id=999
-            )
+            validate_analysis_inputs(mock_db, project_id=1, bom_id=1, machine_id=999)
 
         assert "机台不存在" in str(exc_info.value.detail)
 
@@ -87,9 +85,7 @@ class TestValidateAnalysisInputs:
             mock_machine,
         ]
 
-        result = validate_analysis_inputs(
-            mock_db, project_id=1, bom_id=1, machine_id=1
-        )
+        result = validate_analysis_inputs(mock_db, project_id=1, bom_id=1, machine_id=1)
 
         assert result == (mock_project, mock_bom, mock_machine)
 
@@ -106,9 +102,7 @@ class TestValidateAnalysisInputs:
             mock_bom,
         ]
 
-        project, bom, machine = validate_analysis_inputs(
-            mock_db, project_id=1, bom_id=1
-        )
+        project, bom, machine = validate_analysis_inputs(mock_db, project_id=1, bom_id=1)
 
         assert project == mock_project
         assert bom == mock_bom
@@ -206,7 +200,9 @@ class TestAnalyzeBomItem:
         mock_bom_item.quantity = Decimal("10")
         mock_bom_item.required_date = None
 
-        stage_results = {"MECH": {"total": 0, "fulfilled": 0, "blocking_total": 0, "blocking_fulfilled": 0}}
+        stage_results = {
+            "MECH": {"total": 0, "fulfilled": 0, "blocking_total": 0, "blocking_fulfilled": 0}
+        }
 
         def calc_available(db, material_id, check_date):
             return (Decimal("20"), Decimal("0"), Decimal("0"), Decimal("20"))
@@ -250,13 +246,20 @@ class TestAnalyzeBomItem:
         mock_bom_item.quantity = Decimal("10")
         mock_bom_item.required_date = date.today() + timedelta(days=7)
 
-        stage_results = {"ELEC": {"total": 0, "fulfilled": 0, "blocking_total": 0, "blocking_fulfilled": 0}}
+        stage_results = {
+            "ELEC": {"total": 0, "fulfilled": 0, "blocking_total": 0, "blocking_fulfilled": 0}
+        }
 
         def calc_available(db, material_id, check_date):
             return (Decimal("5"), Decimal("0"), Decimal("0"), Decimal("5"))
 
-        with patch("app.services.assembly_kit_service.get_expected_arrival_date", return_value=None):
-            with patch("app.api.v1.endpoints.assembly_kit.kit_analysis.utils.determine_alert_level", return_value="WARNING"):
+        with patch(
+            "app.services.assembly_kit_service.get_expected_arrival_date", return_value=None
+        ):
+            with patch(
+                "app.api.v1.endpoints.assembly_kit.kit_analysis.utils.determine_alert_level",
+                return_value="WARNING",
+            ):
                 result = analyze_bom_item(
                     mock_db,
                     mock_bom_item,
@@ -296,7 +299,9 @@ class TestAnalyzeBomItem:
         mock_bom_item.quantity = Decimal("10")
         mock_bom_item.required_date = None
 
-        stage_results = {"MECH": {"total": 5, "fulfilled": 3, "blocking_total": 2, "blocking_fulfilled": 1}}
+        stage_results = {
+            "MECH": {"total": 5, "fulfilled": 3, "blocking_total": 2, "blocking_fulfilled": 1}
+        }
 
         def calc_available(db, material_id, check_date):
             return (Decimal("20"), Decimal("0"), Decimal("0"), Decimal("20"))
@@ -324,7 +329,9 @@ class TestGetExpectedArrivalDate:
         from app.services.assembly_kit_service import get_expected_arrival_date
 
         mock_db = MagicMock()
-        mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         result = get_expected_arrival_date(mock_db, material_id=1)
 
@@ -341,7 +348,9 @@ class TestGetExpectedArrivalDate:
         mock_po_item.order = MagicMock()
         mock_po_item.order.promised_date = expected_date
 
-        mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.first.return_value = mock_po_item
+        mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_po_item
+        )
 
         result = get_expected_arrival_date(mock_db, material_id=1)
 

@@ -23,6 +23,7 @@ def service(mock_db):
 # predict_project_cost
 # ---------------------------------------------------------------------------
 
+
 class TestPredictProjectCost:
     def test_returns_error_when_project_not_found(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -89,6 +90,7 @@ class TestPredictProjectCost:
 # ---------------------------------------------------------------------------
 # check_cost_overrun_alerts
 # ---------------------------------------------------------------------------
+
 
 class TestCheckCostOverrunAlerts:
     def test_returns_empty_when_no_projects(self, service, mock_db):
@@ -170,6 +172,7 @@ class TestCheckCostOverrunAlerts:
 # ---------------------------------------------------------------------------
 # compare_project_costs
 # ---------------------------------------------------------------------------
+
 
 class TestCompareProjectCosts:
     def test_returns_error_when_no_projects_found(self, service, mock_db):

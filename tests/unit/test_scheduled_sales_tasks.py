@@ -21,6 +21,7 @@ def _make_db():
 #  sales_reminder_scan
 # ================================================================
 
+
 class TestSalesReminderScan:
 
     @patch("app.utils.scheduled_tasks.sales_tasks.get_db_session")
@@ -35,6 +36,7 @@ class TestSalesReminderScan:
             return_value={"sent": 3},
         ) as mock_scan:
             from app.utils.scheduled_tasks.sales_tasks import sales_reminder_scan
+
             sales_reminder_scan()
 
         mock_scan.assert_called_once_with(db)
@@ -51,6 +53,7 @@ class TestSalesReminderScan:
             side_effect=Exception("scan error"),
         ):
             from app.utils.scheduled_tasks.sales_tasks import sales_reminder_scan
+
             # 不应抛出异常
             sales_reminder_scan()
 
@@ -58,6 +61,7 @@ class TestSalesReminderScan:
 # ================================================================
 #  check_payment_reminder
 # ================================================================
+
 
 class TestCheckPaymentReminder:
 
@@ -72,6 +76,7 @@ class TestCheckPaymentReminder:
             return_value=4,
         ):
             from app.utils.scheduled_tasks.sales_tasks import check_payment_reminder
+
             result = check_payment_reminder()
 
         assert result["reminder_count"] == 4
@@ -88,6 +93,7 @@ class TestCheckPaymentReminder:
             return_value=0,
         ):
             from app.utils.scheduled_tasks.sales_tasks import check_payment_reminder
+
             result = check_payment_reminder()
 
         assert result["reminder_count"] == 0
@@ -103,6 +109,7 @@ class TestCheckPaymentReminder:
             side_effect=Exception("payment error"),
         ):
             from app.utils.scheduled_tasks.sales_tasks import check_payment_reminder
+
             result = check_payment_reminder()
 
         assert "error" in result
@@ -112,10 +119,12 @@ class TestCheckPaymentReminder:
 #  check_overdue_receivable_alerts
 # ================================================================
 
+
 class TestCheckOverdueReceivableAlerts:
 
     def _make_invoice(self, overdue_days=10):
         from datetime import date, timedelta
+
         inv = MagicMock()
         inv.id = 1
         inv.invoice_code = "INV-001"
@@ -145,8 +154,9 @@ class TestCheckOverdueReceivableAlerts:
                 m.filter.return_value.first.return_value = MagicMock(id=1)
             else:
                 # Invoice 或 Contract 查询
-                m.join.return_value.filter.return_value.filter.return_value\
-                 .filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+                m.join.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+                    []
+                )
                 m.join.return_value.filter.return_value.all.return_value = []
                 m.filter.return_value.all.return_value = []
             return m
@@ -156,6 +166,7 @@ class TestCheckOverdueReceivableAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.sales_tasks import check_overdue_receivable_alerts
+
         result = check_overdue_receivable_alerts()
 
         assert result["alert_count"] == 0
@@ -184,6 +195,7 @@ class TestCheckOverdueReceivableAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.sales_tasks import check_overdue_receivable_alerts
+
         result = check_overdue_receivable_alerts()
 
         # 至少调用过 db.add
@@ -214,6 +226,7 @@ class TestCheckOverdueReceivableAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.sales_tasks import check_overdue_receivable_alerts
+
         result = check_overdue_receivable_alerts()
 
         # 验证 add 被调用
@@ -224,6 +237,7 @@ class TestCheckOverdueReceivableAlerts:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("overdue error")
 
         from app.utils.scheduled_tasks.sales_tasks import check_overdue_receivable_alerts
+
         result = check_overdue_receivable_alerts()
 
         assert "error" in result
@@ -239,8 +253,9 @@ class TestCheckOverdueReceivableAlerts:
             if "AlertRule" in name:
                 m.filter.return_value.first.return_value = None  # 不存在
             elif "Invoice" in name:
-                m.join.return_value.filter.return_value.filter.return_value\
-                 .filter.return_value.filter.return_value.all.return_value = []
+                m.join.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+                    []
+                )
             return m
 
         db.query.side_effect = q
@@ -248,6 +263,7 @@ class TestCheckOverdueReceivableAlerts:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.sales_tasks import check_overdue_receivable_alerts
+
         result = check_overdue_receivable_alerts()
 
         assert db.add.called  # 创建了规则
@@ -256,6 +272,7 @@ class TestCheckOverdueReceivableAlerts:
 # ================================================================
 #  check_opportunity_stage_timeout
 # ================================================================
+
 
 class TestCheckOpportunityStageTimeout:
 
@@ -268,6 +285,7 @@ class TestCheckOpportunityStageTimeout:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.sales_tasks import check_opportunity_stage_timeout
+
         result = check_opportunity_stage_timeout()
 
         assert result["checked_count"] == 0
@@ -300,6 +318,7 @@ class TestCheckOpportunityStageTimeout:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.sales_tasks import check_opportunity_stage_timeout
+
         result = check_opportunity_stage_timeout()
 
         assert result["reminder_count"] == 0
@@ -334,6 +353,7 @@ class TestCheckOpportunityStageTimeout:
             "app.services.sales_reminder.create_notification",
         ) as mock_create:
             from app.utils.scheduled_tasks.sales_tasks import check_opportunity_stage_timeout
+
             result = check_opportunity_stage_timeout()
 
         assert result["reminder_count"] == 1
@@ -368,6 +388,7 @@ class TestCheckOpportunityStageTimeout:
         mock_db_ctx.return_value.__exit__.return_value = False
 
         from app.utils.scheduled_tasks.sales_tasks import check_opportunity_stage_timeout
+
         result = check_opportunity_stage_timeout()
 
         assert result["reminder_count"] == 0
@@ -377,6 +398,7 @@ class TestCheckOpportunityStageTimeout:
         mock_db_ctx.return_value.__enter__.side_effect = Exception("opp error")
 
         from app.utils.scheduled_tasks.sales_tasks import check_opportunity_stage_timeout
+
         result = check_opportunity_stage_timeout()
 
         assert "error" in result

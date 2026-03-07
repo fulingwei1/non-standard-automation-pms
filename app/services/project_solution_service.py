@@ -24,7 +24,7 @@ class ProjectSolutionService:
         project_id: int,
         status: Optional[str] = None,
         issue_type: Optional[str] = None,
-        category: Optional[str] = None
+        category: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         获取项目已解决的问题及解决方案
@@ -39,18 +39,14 @@ class ProjectSolutionService:
             解决方案列表，包含问题信息和解决方案
         """
         query = self.db.query(Issue).filter(
-            Issue.project_id == project_id,
-            Issue.solution.isnot(None),
-            Issue.solution != ''
+            Issue.project_id == project_id, Issue.solution.isnot(None), Issue.solution != ""
         )
 
         if status:
             query = query.filter(Issue.status == status)
         else:
             # 默认只返回已解决或已关闭的
-            query = query.filter(
-                Issue.status.in_(['RESOLVED', 'CLOSED', 'VERIFIED'])
-            )
+            query = query.filter(Issue.status.in_(["RESOLVED", "CLOSED", "VERIFIED"]))
 
         if issue_type:
             query = query.filter(Issue.issue_type == issue_type)
@@ -62,18 +58,20 @@ class ProjectSolutionService:
 
         solutions = []
         for issue in issues:
-            solutions.append({
-                'issue_id': issue.id,
-                'issue_no': issue.issue_no,
-                'title': issue.title,
-                'issue_type': issue.issue_type,
-                'category': issue.category,
-                'severity': issue.severity,
-                'solution': issue.solution,
-                'resolved_at': issue.resolved_at.isoformat() if issue.resolved_at else None,
-                'resolved_by': issue.resolved_by_name,
-                'tags': issue.tags if isinstance(issue.tags, list) else []
-            })
+            solutions.append(
+                {
+                    "issue_id": issue.id,
+                    "issue_no": issue.issue_no,
+                    "title": issue.title,
+                    "issue_type": issue.issue_type,
+                    "category": issue.category,
+                    "severity": issue.severity,
+                    "solution": issue.solution,
+                    "resolved_at": issue.resolved_at.isoformat() if issue.resolved_at else None,
+                    "resolved_by": issue.resolved_by_name,
+                    "tags": issue.tags if isinstance(issue.tags, list) else [],
+                }
+            )
 
         return solutions
 
@@ -83,7 +81,7 @@ class ProjectSolutionService:
         category: Optional[str] = None,
         is_public: Optional[bool] = None,
         is_active: bool = True,
-        keyword: Optional[str] = None
+        keyword: Optional[str] = None,
     ) -> List[SolutionTemplate]:
         """
         获取解决方案模板列表
@@ -112,11 +110,12 @@ class ProjectSolutionService:
         if is_public is not None:
             query = query.filter(SolutionTemplate.is_public == is_public)
 
-        query = apply_keyword_filter(query, SolutionTemplate, keyword, ["template_name", "solution"])
+        query = apply_keyword_filter(
+            query, SolutionTemplate, keyword, ["template_name", "solution"]
+        )
 
         return query.order_by(
-            SolutionTemplate.usage_count.desc(),
-            SolutionTemplate.created_at.desc()
+            SolutionTemplate.usage_count.desc(), SolutionTemplate.created_at.desc()
         ).all()
 
     def create_solution_template_from_issue(
@@ -125,7 +124,7 @@ class ProjectSolutionService:
         template_name: str,
         template_code: Optional[str] = None,
         is_public: bool = True,
-        created_by: int = None
+        created_by: int = None,
     ) -> Optional[SolutionTemplate]:
         """
         从已解决的问题创建解决方案模板
@@ -147,6 +146,7 @@ class ProjectSolutionService:
         # 生成模板编码
         if not template_code:
             from datetime import datetime
+
             template_code = f'ST{datetime.now().strftime("%y%m%d%H%M%S")}'
 
         template = SolutionTemplate(
@@ -160,19 +160,14 @@ class ProjectSolutionService:
             source_issue_id=issue_id,
             created_by=created_by,
             is_public=is_public,
-            is_active=True
+            is_active=True,
         )
 
         save_obj(self.db, template)
 
         return template
 
-    def apply_solution_template(
-        self,
-        template_id: int,
-        issue_id: int,
-        user_id: int
-    ) -> bool:
+    def apply_solution_template(self, template_id: int, issue_id: int, user_id: int) -> bool:
         """
         应用解决方案模板到问题
 
@@ -184,9 +179,9 @@ class ProjectSolutionService:
         Returns:
             是否成功
         """
-        template = self.db.query(SolutionTemplate).filter(
-            SolutionTemplate.id == template_id
-        ).first()
+        template = (
+            self.db.query(SolutionTemplate).filter(SolutionTemplate.id == template_id).first()
+        )
 
         issue = self.db.query(Issue).filter(Issue.id == issue_id).first()
 
@@ -202,10 +197,7 @@ class ProjectSolutionService:
         self.db.commit()
         return True
 
-    def get_project_solution_statistics(
-        self,
-        project_id: int
-    ) -> Dict[str, Any]:
+    def get_project_solution_statistics(self, project_id: int) -> Dict[str, Any]:
         """
         获取项目解决方案统计信息
 
@@ -216,19 +208,13 @@ class ProjectSolutionService:
             统计信息字典
         """
         # 获取所有项目问题
-        all_issues = self.db.query(Issue).filter(
-            Issue.project_id == project_id
-        ).all()
+        all_issues = self.db.query(Issue).filter(Issue.project_id == project_id).all()
 
         total_issues = len(all_issues)
-        resolved_issues = len([
-            i for i in all_issues
-            if i.status in ['RESOLVED', 'CLOSED', 'VERIFIED']
-        ])
-        issues_with_solution = len([
-            i for i in all_issues
-            if i.solution and i.solution.strip()
-        ])
+        resolved_issues = len(
+            [i for i in all_issues if i.status in ["RESOLVED", "CLOSED", "VERIFIED"]]
+        )
+        issues_with_solution = len([i for i in all_issues if i.solution and i.solution.strip()])
 
         # 按类型统计
         by_type = {}
@@ -238,35 +224,31 @@ class ProjectSolutionService:
             # 按类型
             issue_type = issue.issue_type
             if issue_type not in by_type:
-                by_type[issue_type] = {'total': 0, 'resolved': 0, 'with_solution': 0}
-            by_type[issue_type]['total'] += 1
-            if issue.status in ['RESOLVED', 'CLOSED', 'VERIFIED']:
-                by_type[issue_type]['resolved'] += 1
+                by_type[issue_type] = {"total": 0, "resolved": 0, "with_solution": 0}
+            by_type[issue_type]["total"] += 1
+            if issue.status in ["RESOLVED", "CLOSED", "VERIFIED"]:
+                by_type[issue_type]["resolved"] += 1
             if issue.solution and issue.solution.strip():
-                by_type[issue_type]['with_solution'] += 1
+                by_type[issue_type]["with_solution"] += 1
 
             # 按分类
             category = issue.category
             if category not in by_category:
-                by_category[category] = {'total': 0, 'resolved': 0, 'with_solution': 0}
-            by_category[category]['total'] += 1
-            if issue.status in ['RESOLVED', 'CLOSED', 'VERIFIED']:
-                by_category[category]['resolved'] += 1
+                by_category[category] = {"total": 0, "resolved": 0, "with_solution": 0}
+            by_category[category]["total"] += 1
+            if issue.status in ["RESOLVED", "CLOSED", "VERIFIED"]:
+                by_category[category]["resolved"] += 1
             if issue.solution and issue.solution.strip():
-                by_category[category]['with_solution'] += 1
+                by_category[category]["with_solution"] += 1
 
         return {
-            'total_issues': total_issues,
-            'resolved_issues': resolved_issues,
-            'issues_with_solution': issues_with_solution,
-            'resolution_rate': (
-                resolved_issues / total_issues * 100
-                if total_issues > 0 else 0
+            "total_issues": total_issues,
+            "resolved_issues": resolved_issues,
+            "issues_with_solution": issues_with_solution,
+            "resolution_rate": (resolved_issues / total_issues * 100 if total_issues > 0 else 0),
+            "solution_coverage": (
+                issues_with_solution / resolved_issues * 100 if resolved_issues > 0 else 0
             ),
-            'solution_coverage': (
-                issues_with_solution / resolved_issues * 100
-                if resolved_issues > 0 else 0
-            ),
-            'by_type': by_type,
-            'by_category': by_category
+            "by_type": by_type,
+            "by_category": by_category,
         }

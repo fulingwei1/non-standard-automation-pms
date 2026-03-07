@@ -18,28 +18,22 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.business_rules import (
-    # 毛利率
+from app.services.business_rules import (  # 毛利率; 套件率; 进度绩效; 付款节点; 工时
     KPI_BENCHMARKS,
+    PaymentMilestone,
     calc_gross_margin,
+    calc_kit_rate,
+    calc_payment_overdue_days,
+    calc_spi,
+    create_standard_payment_milestones,
+    get_delay_alert_level,
+    is_daily_overtime,
+    is_overdue_escalation_required,
     is_warning_required,
     requires_gm_approval,
-    # 套件率
-    calc_kit_rate,
-    should_trigger_shortage_alert,
-    # 进度绩效
-    calc_spi,
-    get_delay_alert_level,
-    # 付款节点
-    PaymentMilestone,
-    create_standard_payment_milestones,
-    calc_payment_overdue_days,
-    is_overdue_escalation_required,
-    # 工时
-    is_daily_overtime,
     should_hr_review,
+    should_trigger_shortage_alert,
 )
-
 
 # ===========================================================================
 # 1. 毛利率计算规则
@@ -187,8 +181,7 @@ class TestKitRateCalculation:
         kit_rate = calc_kit_rate(actual_qty=95, bom_qty=100)
         assert kit_rate == pytest.approx(Decimal("0.95"), abs=Decimal("0.001"))
         # 恰好等于目标值，不触发预警
-        assert should_trigger_shortage_alert(kit_rate) is False, \
-            "套件率恰好95%不应触发预警"
+        assert should_trigger_shortage_alert(kit_rate) is False, "套件率恰好95%不应触发预警"
 
     def test_kit_rate_severe_shortage_zero_actual(self):
         """
@@ -230,8 +223,9 @@ class TestSchedulePerformanceAlert:
         spi = calc_spi(ev=48000, pv=60000)  # EV/PV = 0.8 精确边界
         assert spi == pytest.approx(Decimal("0.8"), abs=Decimal("0.001"))
         # SPI=0.8 不严格小于 0.8，故应为 WARNING 而非 URGENT
-        assert get_delay_alert_level(spi) == "WARNING", \
-            "SPI=0.8 处于延期预警区间 [0.8, 0.9)，应为 WARNING 而非 URGENT"
+        assert (
+            get_delay_alert_level(spi) == "WARNING"
+        ), "SPI=0.8 处于延期预警区间 [0.8, 0.9)，应为 WARNING 而非 URGENT"
 
     def test_schedule_performance_urgent_below_0_8(self):
         """
@@ -297,8 +291,9 @@ class TestPaymentMilestoneValidation:
         milestones = create_standard_payment_milestones(contract_amount)
 
         total = sum(m.amount for m in milestones)
-        assert total == Decimal(str(contract_amount)), \
-            f"付款节点总和 {total} 应等于合同金额 {contract_amount}"
+        assert total == Decimal(
+            str(contract_amount)
+        ), f"付款节点总和 {total} 应等于合同金额 {contract_amount}"
 
     def test_payment_milestone_first_is_30_percent(self):
         """
@@ -307,8 +302,7 @@ class TestPaymentMilestoneValidation:
         """
         milestones = create_standard_payment_milestones(300000)
         assert milestones[0].stage == "签约款"
-        assert milestones[0].amount == Decimal("90000"), \
-            "签约款 = 300000 × 30% = 90000"
+        assert milestones[0].amount == Decimal("90000"), "签约款 = 300000 × 30% = 90000"
 
     def test_payment_milestone_last_is_10_percent(self):
         """
@@ -317,8 +311,7 @@ class TestPaymentMilestoneValidation:
         """
         milestones = create_standard_payment_milestones(300000)
         assert milestones[-1].stage == "质保款"
-        assert milestones[-1].amount == Decimal("30000"), \
-            "质保款 = 300000 × 10% = 30000"
+        assert milestones[-1].amount == Decimal("30000"), "质保款 = 300000 × 10% = 30000"
 
     def test_payment_milestone_four_stages(self):
         """
@@ -337,8 +330,9 @@ class TestPaymentMilestoneValidation:
         contract_amount = Decimal("123456.78")
         milestones = create_standard_payment_milestones(contract_amount)
         total = sum(m.amount for m in milestones)
-        assert total == contract_amount, \
-            f"非整数合同金额拆分后总和 {total} 应等于 {contract_amount}"
+        assert (
+            total == contract_amount
+        ), f"非整数合同金额拆分后总和 {total} 应等于 {contract_amount}"
 
     def test_payment_overdue_days_calculation(self):
         """
@@ -361,8 +355,7 @@ class TestPaymentMilestoneValidation:
             today=date(2026, 3, 2),
         )
         assert overdue_days == 60
-        assert is_overdue_escalation_required(overdue_days) is True, \
-            "逾期60天 > 30天阈值，必须升级"
+        assert is_overdue_escalation_required(overdue_days) is True, "逾期60天 > 30天阈值，必须升级"
 
     def test_payment_overdue_no_escalation_within_30_days(self):
         """
@@ -391,8 +384,9 @@ class TestPaymentMilestoneValidation:
         精确边界：逾期恰好30天，不触发升级（规则为严格大于30天）。
         """
         overdue_days = 30
-        assert is_overdue_escalation_required(overdue_days) is False, \
-            "逾期恰好30天不应升级（需 > 30天才升级）"
+        assert (
+            is_overdue_escalation_required(overdue_days) is False
+        ), "逾期恰好30天不应升级（需 > 30天才升级）"
 
     def test_payment_zero_contract_raises_value_error(self):
         """
@@ -431,8 +425,7 @@ class TestOvertimeDetection:
         """
         精确边界：日工时恰好等于10小时，不触发异常（规则为严格大于）。
         """
-        assert is_daily_overtime(hours=10.0) is False, \
-            "日工时恰好10小时不应标记异常（需 > 10h）"
+        assert is_daily_overtime(hours=10.0) is False, "日工时恰好10小时不应标记异常（需 > 10h）"
 
     def test_daily_overtime_just_above_threshold(self):
         """
@@ -457,8 +450,9 @@ class TestOvertimeDetection:
         """
         精确边界：月工时恰好220小时，不触发HR关注（规则为严格大于）。
         """
-        assert should_hr_review(monthly_hours=220) is False, \
-            "月工时恰好220小时不应触发HR关注（需 > 220h）"
+        assert (
+            should_hr_review(monthly_hours=220) is False
+        ), "月工时恰好220小时不应触发HR关注（需 > 220h）"
 
     def test_monthly_extreme_overtime_hr_review(self):
         """

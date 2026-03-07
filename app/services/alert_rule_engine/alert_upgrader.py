@@ -29,6 +29,7 @@ class AlertUpgrader(AlertRuleEngineBase):
         """延迟加载通知服务"""
         if self._notification_service is None:
             from app.services.notification_service import AlertNotificationService
+
             self._notification_service = AlertNotificationService(self.db)
         return self._notification_service
 
@@ -37,6 +38,7 @@ class AlertUpgrader(AlertRuleEngineBase):
         """延迟加载订阅服务"""
         if self._subscription_service is None:
             from app.services.alert_subscription_service import AlertSubscriptionService
+
             self._subscription_service = AlertSubscriptionService(self.db)
         return self._subscription_service
 
@@ -45,7 +47,7 @@ class AlertUpgrader(AlertRuleEngineBase):
         alert: AlertRecord,
         new_level: str,
         target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> AlertRecord:
         """
         升级预警级别
@@ -68,8 +70,12 @@ class AlertUpgrader(AlertRuleEngineBase):
         # 更新预警内容
         rule = alert.rule
         if rule:
-            alert.alert_title = AlertGenerator.generate_alert_title(rule, target_data, new_level, context, self)
-            alert.alert_content = AlertGenerator.generate_alert_content(rule, target_data, new_level, context, self)
+            alert.alert_title = AlertGenerator.generate_alert_title(
+                rule, target_data, new_level, context, self
+            )
+            alert.alert_content = AlertGenerator.generate_alert_content(
+                rule, target_data, new_level, context, self
+            )
 
             # 更新触发值
             if rule.target_field:
@@ -84,30 +90,25 @@ class AlertUpgrader(AlertRuleEngineBase):
         try:
             # 获取通知接收人（基于订阅配置），rule 可能为 None
             if not rule:
-                self.notification_service.send_alert_notification(
-                    alert=alert,
-                    force_send=True
-                )
+                self.notification_service.send_alert_notification(alert=alert, force_send=True)
                 return alert
             recipients = self.subscription_service.get_notification_recipients(alert, rule)
 
-            if recipients['user_ids']:
+            if recipients["user_ids"]:
                 # 有匹配的订阅，发送通知（升级通知强制发送）
                 self.notification_service.send_alert_notification(
                     alert=alert,
-                    user_ids=recipients['user_ids'],
-                    channels=recipients['channels'],
-                    force_send=True  # 升级通知强制发送，忽略免打扰时段
+                    user_ids=recipients["user_ids"],
+                    channels=recipients["channels"],
+                    force_send=True,  # 升级通知强制发送，忽略免打扰时段
                 )
             else:
                 # 没有匹配的订阅，使用规则默认配置
-                self.notification_service.send_alert_notification(
-                    alert=alert,
-                    force_send=True
-                )
+                self.notification_service.send_alert_notification(alert=alert, force_send=True)
         except Exception as e:
             # 通知发送失败不影响升级操作
             import logging
+
             logging.getLogger(__name__).error(f"升级通知发送失败: {e}")
 
         return alert
@@ -116,7 +117,7 @@ class AlertUpgrader(AlertRuleEngineBase):
         self,
         alert: AlertRecord,
         target_data: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ) -> Optional[AlertRecord]:
         """
         检查预警级别是否需要动态提升
@@ -140,6 +141,7 @@ class AlertUpgrader(AlertRuleEngineBase):
 
         # 重新评估条件，确定新的预警级别
         from .level_determiner import LevelDeterminer
+
         new_level = LevelDeterminer.determine_alert_level(alert.rule, target_data, context, self)
 
         # 如果新级别更高，则升级

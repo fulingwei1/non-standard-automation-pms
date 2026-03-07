@@ -78,11 +78,7 @@ class TemplateReportDataService:
     # === Helpers ===
 
     def _get_template(self, template_id: int) -> ReportTemplate:
-        template = (
-            self.db.query(ReportTemplate)
-            .filter(ReportTemplate.id == template_id)
-            .first()
-        )
+        template = self.db.query(ReportTemplate).filter(ReportTemplate.id == template_id).first()
         if not template:
             raise ValueError(f"报表模板不存在: {template_id}")
         if template.is_active is False:

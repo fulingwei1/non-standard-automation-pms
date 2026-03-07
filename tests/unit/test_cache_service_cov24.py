@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - cache_service 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.cache_service")
 
@@ -14,7 +15,11 @@ from app.services.cache_service import CacheService
 def cache_no_redis():
     """无 Redis 的纯内存缓存"""
     with patch("app.services.cache_service.REDIS_AVAILABLE", False):
-        with patch("app.services.cache_service.get_redis_client", side_effect=Exception("no redis"), create=True):
+        with patch(
+            "app.services.cache_service.get_redis_client",
+            side_effect=Exception("no redis"),
+            create=True,
+        ):
             svc = CacheService(redis_client=None)
     return svc
 

@@ -68,29 +68,29 @@ def test_permissions_api():
 
                     if isinstance(created_at, str) and created_at:
                         try:
-                            created_at = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
+                            created_at = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
                         except Exception as e:
                             print(f"   ⚠️  行{i} created_at转换失败: {e}")
                             created_at = None
 
                     if isinstance(updated_at, str) and updated_at:
                         try:
-                            updated_at = datetime.strptime(updated_at, '%Y-%m-%d %H:%M:%S')
+                            updated_at = datetime.strptime(updated_at, "%Y-%m-%d %H:%M:%S")
                         except Exception as e:
                             print(f"   ⚠️  行{i} updated_at转换失败: {e}")
                             updated_at = None
 
                     perm_dict = {
-                        'id': row[0],
-                        'permission_code': row[1] if row[1] else '',
-                        'permission_name': row[2] if row[2] else '',
-                        'module': row[3],
-                        'resource': row[4],
-                        'action': row[5],
-                        'description': row[6],
-                        'is_active': bool(row[7]) if row[7] is not None else True,
-                        'created_at': created_at,
-                        'updated_at': updated_at,
+                        "id": row[0],
+                        "permission_code": row[1] if row[1] else "",
+                        "permission_name": row[2] if row[2] else "",
+                        "module": row[3],
+                        "resource": row[4],
+                        "action": row[5],
+                        "description": row[6],
+                        "is_active": bool(row[7]) if row[7] is not None else True,
+                        "created_at": created_at,
+                        "updated_at": updated_at,
                     }
 
                     # 3. 测试序列化
@@ -103,6 +103,7 @@ def test_permissions_api():
                     print(f"   ❌ {error_msg}")
                     print(f"      数据: {row}")
                     import traceback
+
                     traceback.print_exc()
 
             print(f"   ✅ 成功处理: {len(permissions)} 条")
@@ -112,21 +113,19 @@ def test_permissions_api():
 
             # 4. 测试认证流程
             print("\n3. 测试认证流程...")
-            result = db.execute(text('SELECT id, username FROM users LIMIT 1'))
+            result = db.execute(text("SELECT id, username FROM users LIMIT 1"))
             user_row = result.fetchone()
             if not user_row:
                 print("   ❌ 未找到用户")
                 return False
 
             user_id = user_row[0]
-            token_data = {'sub': str(user_id)}
+            token_data = {"sub": str(user_id)}
             token = create_access_token(token_data)
 
             # 解码token
             try:
-                payload = jwt.decode(
-                    token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-                )
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
                 decoded_user_id = int(payload.get("sub"))
                 print(f"   ✅ Token创建和解码成功: user_id={decoded_user_id}")
             except Exception as e:
@@ -136,8 +135,10 @@ def test_permissions_api():
             # 查询用户（使用SQL避免ORM错误）
             try:
                 result = db.execute(
-                    text("SELECT id, username, is_active, is_superuser FROM users WHERE id = :user_id"),
-                    {"user_id": decoded_user_id}
+                    text(
+                        "SELECT id, username, is_active, is_superuser FROM users WHERE id = :user_id"
+                    ),
+                    {"user_id": decoded_user_id},
                 )
                 user_row = result.fetchone()
                 if user_row:
@@ -161,8 +162,10 @@ def test_permissions_api():
     except Exception as e:
         print(f"\n❌ 诊断失败: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     success = test_permissions_api()

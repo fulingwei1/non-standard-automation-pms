@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class InfluencingFactor(BaseModel):
     """影响因素"""
+
     factor: str = Field(..., description="因素名称")
     impact: str = Field(..., description="影响类型: positive/negative/neutral")
     score: int = Field(..., ge=1, le=10, description="影响分数 1-10")
@@ -19,6 +20,7 @@ class InfluencingFactor(BaseModel):
 
 class CompetitorAnalysis(BaseModel):
     """竞品分析"""
+
     competitors: List[str] = Field(default_factory=list, description="竞争对手列表")
     our_advantages: List[str] = Field(default_factory=list, description="我方优势")
     competitor_advantages: List[str] = Field(default_factory=list, description="竞对优势")
@@ -27,6 +29,7 @@ class CompetitorAnalysis(BaseModel):
 
 class ImprovementSuggestions(BaseModel):
     """改进建议"""
+
     short_term: List[str] = Field(default_factory=list, description="短期行动清单（1周内）")
     mid_term: List[str] = Field(default_factory=list, description="中期策略（1个月内）")
     milestones: List[str] = Field(default_factory=list, description="关键里程碑监控")
@@ -34,8 +37,9 @@ class ImprovementSuggestions(BaseModel):
 
 class PredictWinRateRequest(BaseModel):
     """预测赢率请求"""
+
     presale_ticket_id: int = Field(..., description="售前工单ID")
-    
+
     # 基本信息
     ticket_no: Optional[str] = Field(None, description="工单编号")
     title: Optional[str] = Field(None, description="工单标题")
@@ -43,23 +47,23 @@ class PredictWinRateRequest(BaseModel):
     estimated_amount: Optional[Decimal] = Field(None, description="预估金额")
     ticket_type: Optional[str] = Field(None, description="工单类型")
     urgency: Optional[str] = Field(None, description="紧急程度")
-    
+
     # 客户信息
     is_repeat_customer: bool = Field(False, description="是否老客户")
     cooperation_count: int = Field(0, description="历史合作次数")
     success_count: int = Field(0, description="历史成功次数")
-    
+
     # 竞争态势
     competitor_count: int = Field(3, description="竞争对手数量")
     main_competitors: Optional[str] = Field(None, description="主要竞争对手")
-    
+
     # 技术评估
     requirement_maturity: Optional[int] = Field(None, description="需求成熟度")
     technical_feasibility: Optional[int] = Field(None, description="技术可行性")
     business_feasibility: Optional[int] = Field(None, description="商务可行性")
     delivery_risk: Optional[int] = Field(None, description="交付风险")
     customer_relationship: Optional[int] = Field(None, description="客户关系")
-    
+
     # 销售人员
     salesperson_id: Optional[int] = Field(None, description="销售人员ID")
     salesperson_win_rate: Optional[float] = Field(None, description="销售人员历史赢率")
@@ -67,6 +71,7 @@ class PredictWinRateRequest(BaseModel):
 
 class WinRatePredictionResponse(BaseModel):
     """赢率预测响应"""
+
     id: int = Field(..., description="预测记录ID")
     presale_ticket_id: int = Field(..., description="售前工单ID")
     win_rate_score: Decimal = Field(..., description="赢率分数 (0-100)")
@@ -78,13 +83,14 @@ class WinRatePredictionResponse(BaseModel):
     model_version: Optional[str] = Field(None, description="模型版本")
     predicted_at: datetime = Field(..., description="预测时间")
     created_by: Optional[int] = Field(None, description="创建人ID")
-    
+
     class Config:
         from_attributes = True
 
 
 class UpdateActualResultRequest(BaseModel):
     """更新实际结果请求"""
+
     presale_ticket_id: int = Field(..., description="售前工单ID")
     actual_result: str = Field(..., description="实际结果: won/lost/pending")
     win_date: Optional[datetime] = Field(None, description="赢单日期")
@@ -93,6 +99,7 @@ class UpdateActualResultRequest(BaseModel):
 
 class ModelAccuracyResponse(BaseModel):
     """模型准确度响应"""
+
     overall_accuracy: float = Field(..., description="总体准确率 (%)")
     total_predictions: int = Field(..., description="总预测数")
     correct_predictions: int = Field(..., description="正确预测数")

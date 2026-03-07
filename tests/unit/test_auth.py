@@ -92,9 +92,7 @@ class TestAccessToken:
         token = create_access_token(data)
 
         # 解码令牌验证内容
-        payload = jwt.decode(
-        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         assert payload["sub"] == user_id
 
     def test_create_access_token_has_expiry(self):
@@ -102,9 +100,7 @@ class TestAccessToken:
         data = {"sub": "123"}
         token = create_access_token(data)
 
-        payload = jwt.decode(
-        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         assert "exp" in payload
         assert "iat" in payload
 
@@ -113,9 +109,7 @@ class TestAccessToken:
         data = {"sub": "123"}
         token = create_access_token(data)
 
-        payload = jwt.decode(
-        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         assert "jti" in payload
         assert len(payload["jti"]) == 32  # 16字节的hex编码
 
@@ -125,9 +119,7 @@ class TestAccessToken:
         expires_delta = timedelta(hours=2)
         token = create_access_token(data, expires_delta=expires_delta)
 
-        payload = jwt.decode(
-        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         # 验证令牌已创建且可解码
         assert payload["sub"] == "123"
 
@@ -137,12 +129,8 @@ class TestAccessToken:
         token1 = create_access_token(data)
         token2 = create_access_token(data)
 
-        payload1 = jwt.decode(
-        token1, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        payload2 = jwt.decode(
-        token2, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload1 = jwt.decode(token1, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload2 = jwt.decode(token2, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
 
         assert payload1["jti"] != payload2["jti"]
 
@@ -250,7 +238,7 @@ class TestCheckPermission:
         user_role.role.is_active = True
         user_role.role.api_permissions = []
 
-        for perm_code in (permissions or []):
+        for perm_code in permissions or []:
             role_api_perm = MagicMock()
             role_api_perm.permission = MagicMock()
             role_api_perm.permission.perm_code = perm_code  # 使用新字段名
@@ -276,7 +264,9 @@ class TestCheckPermission:
         user = self._create_mock_user(is_superuser=False, roles=[role])
 
         # Mock 缓存服务返回 None，触发 ORM 回退
-        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+        with patch(
+            "app.services.permission_cache_service.get_permission_cache_service"
+        ) as mock_cache:
             mock_cache.return_value.get_user_permissions.return_value = None
             # 不提供db时使用ORM
             assert check_permission(user, "project:read") is True
@@ -288,7 +278,9 @@ class TestCheckPermission:
         user = self._create_mock_user(is_superuser=False, roles=[role])
 
         # Mock 缓存服务返回 None，触发 ORM 回退
-        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+        with patch(
+            "app.services.permission_cache_service.get_permission_cache_service"
+        ) as mock_cache:
             mock_cache.return_value.get_user_permissions.return_value = None
             assert check_permission(user, "project:delete") is False
 
@@ -300,7 +292,9 @@ class TestCheckPermission:
 
         # Mock 缓存服务返回 None，触发 DB 查询
         # Mock _load_user_permissions_from_db 返回包含所需权限的集合
-        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+        with patch(
+            "app.services.permission_cache_service.get_permission_cache_service"
+        ) as mock_cache:
             mock_cache.return_value.get_user_permissions.return_value = None
             with patch("app.core.auth._load_user_permissions_from_db") as mock_load:
                 mock_load.return_value = {"project:read", "project:write"}
@@ -315,7 +309,9 @@ class TestCheckPermission:
 
         # Mock 缓存服务返回 None，触发 DB 查询
         # Mock _load_user_permissions_from_db 返回不包含所需权限的集合
-        with patch("app.services.permission_cache_service.get_permission_cache_service") as mock_cache:
+        with patch(
+            "app.services.permission_cache_service.get_permission_cache_service"
+        ) as mock_cache:
             mock_cache.return_value.get_user_permissions.return_value = None
             with patch("app.core.auth._load_user_permissions_from_db") as mock_load:
                 mock_load.return_value = {"other:permission"}

@@ -14,12 +14,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-
-
 # ==================== 项目阶段实例 Schemas ====================
+
 
 class ProjectStageInstanceBase(BaseModel):
     """项目阶段实例基础"""
+
     stage_code: str = Field(..., max_length=20, description="阶段编码")
     stage_name: str = Field(..., max_length=100, description="阶段名称")
     sequence: int = Field(default=0, description="排序序号")
@@ -35,6 +35,7 @@ class ProjectStageInstanceBase(BaseModel):
 
 class ProjectStageInstanceUpdate(BaseModel):
     """更新项目阶段实例"""
+
     planned_start_date: Optional[date] = Field(default=None, description="计划开始日期")
     planned_end_date: Optional[date] = Field(default=None, description="计划结束日期")
     remark: Optional[str] = Field(default=None, description="备注")
@@ -42,6 +43,7 @@ class ProjectStageInstanceUpdate(BaseModel):
 
 class ProjectStageInstanceResponse(ProjectStageInstanceBase):
     """项目阶段实例响应"""
+
     id: int
     project_id: int
     stage_definition_id: Optional[int] = None
@@ -68,8 +70,10 @@ class ProjectStageInstanceResponse(ProjectStageInstanceBase):
 
 # ==================== 项目节点实例 Schemas ====================
 
+
 class ProjectNodeInstanceBase(BaseModel):
     """项目节点实例基础"""
+
     node_code: str = Field(..., max_length=20, description="节点编码")
     node_name: str = Field(..., max_length=100, description="节点名称")
     node_type: str = Field(default="TASK", description="节点类型")
@@ -82,17 +86,22 @@ class ProjectNodeInstanceBase(BaseModel):
     remark: Optional[str] = Field(default=None, description="备注")
     # 责任分配与交付物
     owner_role_code: Optional[str] = Field(default=None, description="负责角色编码")
-    participant_role_codes: Optional[List[str]] = Field(default=None, description="参与角色编码列表")
+    participant_role_codes: Optional[List[str]] = Field(
+        default=None, description="参与角色编码列表"
+    )
     deliverables: Optional[List[str]] = Field(default=None, description="交付物清单")
 
 
 class ProjectNodeInstanceUpdate(BaseModel):
     """更新项目节点实例"""
+
     planned_date: Optional[date] = Field(default=None, description="计划完成日期")
     remark: Optional[str] = Field(default=None, description="备注")
     # 责任分配与交付物（可在项目中调整）
     owner_role_code: Optional[str] = Field(default=None, description="负责角色编码")
-    participant_role_codes: Optional[List[str]] = Field(default=None, description="参与角色编码列表")
+    participant_role_codes: Optional[List[str]] = Field(
+        default=None, description="参与角色编码列表"
+    )
     deliverables: Optional[List[str]] = Field(default=None, description="交付物清单")
     owner_id: Optional[int] = Field(default=None, description="实际负责人ID")
     participant_ids: Optional[List[int]] = Field(default=None, description="实际参与人ID列表")
@@ -100,6 +109,7 @@ class ProjectNodeInstanceUpdate(BaseModel):
 
 class ProjectNodeInstanceComplete(BaseModel):
     """完成节点请求"""
+
     attachments: Optional[List[Dict[str, Any]]] = Field(default=None, description="附件列表")
     approval_record_id: Optional[int] = Field(default=None, description="审批记录ID")
     remark: Optional[str] = Field(default=None, description="备注")
@@ -107,6 +117,7 @@ class ProjectNodeInstanceComplete(BaseModel):
 
 class ProjectNodeInstanceResponse(ProjectNodeInstanceBase):
     """项目节点实例响应"""
+
     id: int
     project_id: int
     stage_instance_id: int
@@ -133,6 +144,7 @@ class ProjectNodeInstanceResponse(ProjectNodeInstanceBase):
 
 class ProjectStageInstanceDetail(ProjectStageInstanceResponse):
     """项目阶段实例详情(含节点)"""
+
     nodes: List[ProjectNodeInstanceResponse] = []
 
 

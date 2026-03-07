@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from app.models.approval import ApprovalInstance
 
+
 class CommentNotificationsMixin:
     """评论通知 Mixin"""
 

@@ -41,10 +41,19 @@ def list_satisfaction_templates(
         query = query.filter(SatisfactionSurveyTemplate.is_active == is_active)
 
     # 应用关键词过滤（模板名称/模板编码）
-    query = apply_keyword_filter(query, SatisfactionSurveyTemplate, keyword, ["template_name", "template_code"])
+    query = apply_keyword_filter(
+        query, SatisfactionSurveyTemplate, keyword, ["template_name", "template_code"]
+    )
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(SatisfactionSurveyTemplate.usage_count), desc(SatisfactionSurveyTemplate.created_at)), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(
+            desc(SatisfactionSurveyTemplate.usage_count),
+            desc(SatisfactionSurveyTemplate.created_at),
+        ),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     return {
         "items": items,

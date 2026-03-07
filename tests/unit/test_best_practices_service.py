@@ -10,11 +10,11 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
-from app.services.best_practices.best_practices_service import BestPracticesService
 from app.common.pagination import get_pagination_params
+from app.services.best_practices.best_practices_service import BestPracticesService
 
 
 class MockRow:
@@ -393,9 +393,7 @@ class TestBestPracticesService(unittest.TestCase):
             mock_update_result,
         ]
 
-        result = self.service.apply_practice(
-            practice_id=1, target_project_id=201, notes="测试应用"
-        )
+        result = self.service.apply_practice(practice_id=1, target_project_id=201, notes="测试应用")
 
         self.assertTrue(result)
         self.mock_db.commit.assert_called_once()
@@ -708,9 +706,7 @@ class TestBestPracticesServiceEdgeCases(unittest.TestCase):
             fixed_time = datetime(2024, 6, 15, 10, 30, 0)
             mock_datetime.now.return_value = fixed_time
 
-            result = self.service.apply_practice(
-                practice_id=1, target_project_id=201
-            )
+            result = self.service.apply_practice(practice_id=1, target_project_id=201)
 
             self.assertTrue(result)
 

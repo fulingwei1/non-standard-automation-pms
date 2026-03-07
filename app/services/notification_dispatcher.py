@@ -23,23 +23,22 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertNotification, AlertRecord
-from app.models.notification import Notification
-from app.models.notification import NotificationSettings
+from app.models.notification import Notification, NotificationSettings
 from app.models.user import User
-from app.services.unified_notification_service import get_notification_service
 from app.services.channel_handlers.base import (
-    NotificationRequest,
     NotificationChannel,
     NotificationPriority,
+    NotificationRequest,
 )
 from app.services.notification_utils import (
-    resolve_channels,
-    resolve_recipients,
-    resolve_channel_target,
     channel_allowed,
     is_quiet_hours,
     next_quiet_resume,
+    resolve_channel_target,
+    resolve_channels,
+    resolve_recipients,
 )
+from app.services.unified_notification_service import get_notification_service
 from app.utils.scheduler_metrics import (
     record_notification_failure,
     record_notification_success,
@@ -48,7 +47,7 @@ from app.utils.scheduler_metrics import (
 
 class NotificationDispatcher:
     """Dispatch alert notifications to specific channels (Coordinator).
-    
+
     Now uses unified NotificationService internally.
     """
 
@@ -99,10 +98,7 @@ class NotificationDispatcher:
         if not clean_ids:
             return {}
         users = (
-            self.db.query(User)
-            .filter(User.id.in_(list(clean_ids)))
-            .filter(User.is_active)
-            .all()
+            self.db.query(User).filter(User.id.in_(list(clean_ids))).filter(User.is_active).all()
         )
         if not users:
             return {}
@@ -112,10 +108,7 @@ class NotificationDispatcher:
             .all()
         )
         settings_map = {setting.user_id: setting for setting in settings_list}
-        return {
-            user.id: {"user": user, "settings": settings_map.get(user.id)}
-            for user in users
-        }
+        return {user.id: {"user": user, "settings": settings_map.get(user.id)} for user in users}
 
     def _compute_next_retry(self, retry_count: int) -> datetime:
         idx = min(retry_count, len(self.RETRY_SCHEDULE)) - 1
@@ -145,9 +138,7 @@ class NotificationDispatcher:
         }
         return mapping.get(level_upper, NotificationPriority.NORMAL)
 
-    def _resolve_recipient_id(
-        self, notification: AlertNotification, user: Optional[User]
-    ) -> int:
+    def _resolve_recipient_id(self, notification: AlertNotification, user: Optional[User]) -> int:
         recipient_id = notification.notify_user_id
         if not recipient_id and user:
             recipient_id = user.id
@@ -213,7 +204,7 @@ class NotificationDispatcher:
         channel = (notification.notify_channel or "SYSTEM").upper()
         unified_channel = self._map_channel_to_unified(channel)
         effective_force_send = force_send or (request.force_send if request else False)
-        
+
         try:
             # 确定接收者
             if request is not None:
@@ -234,9 +225,7 @@ class NotificationDispatcher:
             if not effective_force_send and settings and is_quiet_hours(settings, datetime.now()):
                 notification.status = "PENDING"
                 notification.error_message = "Delayed due to quiet hours"
-                notification.next_retry_at = next_quiet_resume(
-                    settings, datetime.now()
-                )
+                notification.next_retry_at = next_quiet_resume(settings, datetime.now())
                 notification.retry_count = notification.retry_count or 0
                 return True
 
@@ -252,7 +241,7 @@ class NotificationDispatcher:
 
             # 使用统一服务发送
             result = self.unified_service.send_notification(request)
-            
+
             if result.get("success", False):
                 notification.status = "SENT"
                 notification.sent_at = datetime.now()
@@ -267,23 +256,19 @@ class NotificationDispatcher:
                 notification.status = "FAILED"
                 notification.error_message = error_msg
                 notification.retry_count = (notification.retry_count or 0) + 1
-                notification.next_retry_at = self._compute_next_retry(
-                    notification.retry_count
-                )
+                notification.next_retry_at = self._compute_next_retry(notification.retry_count)
                 record_notification_failure(channel)
                 self.logger.error(
                     f"[notification] channel={channel} alert_id={alert.id} target={notification.notify_target} "
                     f"failed: {error_msg}"
                 )
                 return False
-                
+
         except Exception as exc:
             notification.status = "FAILED"
             notification.error_message = str(exc)
             notification.retry_count = (notification.retry_count or 0) + 1
-            notification.next_retry_at = self._compute_next_retry(
-                notification.retry_count
-            )
+            notification.next_retry_at = self._compute_next_retry(notification.retry_count)
             record_notification_failure(channel)
             self.logger.error(
                 f"[notification] channel={channel} alert_id={alert.id} target={notification.notify_target} "

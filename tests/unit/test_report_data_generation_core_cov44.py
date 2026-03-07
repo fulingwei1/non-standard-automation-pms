@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 报表数据生成服务核心类"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_data_generation.core import ReportDataGenerationCore
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -44,8 +46,7 @@ class TestReportDataGenerationCore:
     def test_check_permission_no_roles_returns_false(self):
         db = MagicMock()
         user = _make_user(is_superuser=False)
-        with patch("app.models.user.UserRole"), \
-             patch("app.models.user.Role"):
+        with patch("app.models.user.UserRole"), patch("app.models.user.Role"):
             db.query.return_value.join.return_value.filter.return_value.all.return_value = []
             result = ReportDataGenerationCore.check_permission(db, user, "PROJECT_WEEKLY")
         assert result is False
@@ -55,7 +56,9 @@ class TestReportDataGenerationCore:
         user = _make_user(is_superuser=False)
         mock_user_role = MagicMock()
         mock_user_role.role = MagicMock(role_code="PROJECT_MANAGER", is_active=True)
-        db.query.return_value.join.return_value.filter.return_value.all.return_value = [mock_user_role]
+        db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+            mock_user_role
+        ]
         result = ReportDataGenerationCore.check_permission(db, user, "PROJECT_WEEKLY")
         assert result is True
 
@@ -64,6 +67,8 @@ class TestReportDataGenerationCore:
         user = _make_user(is_superuser=False)
         mock_user_role = MagicMock()
         mock_user_role.role = MagicMock(role_code="ENGINEER", is_active=True)
-        db.query.return_value.join.return_value.filter.return_value.all.return_value = [mock_user_role]
+        db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+            mock_user_role
+        ]
         result = ReportDataGenerationCore.check_permission(db, user, "SALES_FUNNEL")
         assert result is False

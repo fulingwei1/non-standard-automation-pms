@@ -18,10 +18,7 @@ def _auth_headers(token: str) -> dict:
 def _get_first_user_id(client: TestClient, token: str) -> int:
     """获取第一个用户的 ID"""
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/users/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/users/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -49,10 +46,7 @@ class TestUserWorkload:
             pytest.skip("No users available for testing")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/workload/user/{user_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/workload/user/{user_id}", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Workload endpoint not found")
@@ -69,10 +63,7 @@ class TestTeamWorkload:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/workload/team",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/workload/team", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Workload endpoint not found")
@@ -90,10 +81,7 @@ class TestWorkloadDashboard:
 
         headers = _auth_headers(admin_token)
         try:
-            response = client.get(
-                f"{settings.API_V1_PREFIX}/workload/dashboard",
-                headers=headers
-            )
+            response = client.get(f"{settings.API_V1_PREFIX}/workload/dashboard", headers=headers)
 
             if response.status_code == 404:
                 pytest.skip("Workload endpoint not found")
@@ -110,10 +98,7 @@ class TestWorkloadDashboard:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/workload/heatmap",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/workload/heatmap", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Workload endpoint not found")
@@ -131,10 +116,7 @@ class TestAvailableResources:
 
         headers = _auth_headers(admin_token)
         try:
-            response = client.get(
-                f"{settings.API_V1_PREFIX}/workload/available",
-                headers=headers
-            )
+            response = client.get(f"{settings.API_V1_PREFIX}/workload/available", headers=headers)
 
             if response.status_code == 404:
                 pytest.skip("Workload endpoint not found")
@@ -155,10 +137,7 @@ class TestWorkloadGantt:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/workload/gantt",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/workload/gantt", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Workload endpoint not found")
@@ -175,10 +154,7 @@ class TestSkills:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/skills",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/skills", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Skills endpoint not found")
@@ -192,8 +168,7 @@ class TestSkills:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/workload/skills/processes",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/workload/skills/processes", headers=headers
         )
 
         if response.status_code == 404:
@@ -207,10 +182,7 @@ class TestSkills:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/workload/skills/matching",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/workload/skills/matching", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Skills endpoint not found")

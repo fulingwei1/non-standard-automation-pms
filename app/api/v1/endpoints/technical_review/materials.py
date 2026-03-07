@@ -22,7 +22,11 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.post("/technical-reviews/{review_id}/materials", response_model=ReviewMaterialResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/technical-reviews/{review_id}/materials",
+    response_model=ReviewMaterialResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_review_material(
     review_id: int,
     material_in: ReviewMaterialCreate,

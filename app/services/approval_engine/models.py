@@ -69,9 +69,7 @@ class LegacyApprovalFlow(Base, TimestampMixin):
     __tablename__ = "legacy_approval_flows"
 
     id = Column(Integer, primary_key=True, index=True)
-    flow_code = Column(
-        String(50), unique=True, nullable=False, comment="流程编码，如ECN_TECHNICAL"
-    )
+    flow_code = Column(String(50), unique=True, nullable=False, comment="流程编码，如ECN_TECHNICAL")
     flow_name = Column(String(100), nullable=False, comment="流程名称")
     flow_type = Column(String(50), nullable=False, comment="流程类型")
     module_name = Column(String(50), nullable=False, comment="所属模块，如ECN、SALES")
@@ -80,9 +78,7 @@ class LegacyApprovalFlow(Base, TimestampMixin):
     version = Column(Integer, default=1, comment="版本号")
 
     # 关系
-    nodes = relationship(
-        "LegacyApprovalNode", back_populates="flow", cascade="all, delete-orphan"
-    )
+    nodes = relationship("LegacyApprovalNode", back_populates="flow", cascade="all, delete-orphan")
 
 
 class LegacyApprovalNode(Base, TimestampMixin):
@@ -129,18 +125,12 @@ class LegacyApprovalInstance(Base, TimestampMixin):
     business_title = Column(String(200), comment="业务标题")
 
     # 提交人信息
-    submitted_by = Column(
-        Integer, ForeignKey("users.id"), nullable=False, comment="提交人ID"
-    )
+    submitted_by = Column(Integer, ForeignKey("users.id"), nullable=False, comment="提交人ID")
     submitted_at = Column(DateTime, default=datetime.now, comment="提交时间")
 
     # 当前状态
-    current_status = Column(
-        String(50), default=ApprovalStatus.PENDING.value, comment="当前状态"
-    )
-    current_node_id = Column(
-        Integer, ForeignKey("legacy_approval_nodes.id"), comment="当前节点ID"
-    )
+    current_status = Column(String(50), default=ApprovalStatus.PENDING.value, comment="当前状态")
+    current_node_id = Column(Integer, ForeignKey("legacy_approval_nodes.id"), comment="当前节点ID")
 
     # 统计信息
     total_nodes = Column(Integer, comment="总节点数")
@@ -156,7 +146,7 @@ class LegacyApprovalInstance(Base, TimestampMixin):
 
     @status.setter
     def status(self, value):
-        if hasattr(value, 'value'):
+        if hasattr(value, "value"):
             self.current_status = value.value
         else:
             self.current_status = value
@@ -191,9 +181,7 @@ class LegacyApprovalRecord(Base, TimestampMixin):
     )
 
     # 审批人信息
-    approver_id = Column(
-        Integer, ForeignKey("users.id"), nullable=False, comment="审批人ID"
-    )
+    approver_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="审批人ID")
     approver_name = Column(String(100), comment="审批人姓名")
     approver_role = Column(String(100), comment="审批人角色")
 

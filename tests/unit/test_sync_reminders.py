@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-import pytest
+from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
-from datetime import datetime, date, timedelta
+
+import pytest
 
 
 class TestNotifySyncFailure:
     @patch("app.services.timesheet_reminder.sync_reminders.create_timesheet_notification")
     def test_no_approved_timesheets(self, mock_notify):
         from app.services.timesheet_reminder.sync_reminders import notify_sync_failure
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
         result = notify_sync_failure(db)
@@ -17,6 +19,7 @@ class TestNotifySyncFailure:
     @patch("app.services.timesheet_reminder.sync_reminders.create_timesheet_notification")
     def test_with_sync_failure(self, mock_notify):
         from app.services.timesheet_reminder.sync_reminders import notify_sync_failure
+
         db = MagicMock()
         ts = MagicMock()
         ts.user_id = 1
@@ -32,6 +35,7 @@ class TestNotifySyncFailure:
     @patch("app.services.timesheet_reminder.sync_reminders.create_timesheet_notification")
     def test_already_notified(self, mock_notify):
         from app.services.timesheet_reminder.sync_reminders import notify_sync_failure
+
         db = MagicMock()
         ts = MagicMock()
         ts.user_id = 1

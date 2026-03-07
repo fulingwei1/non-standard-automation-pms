@@ -31,6 +31,7 @@ def service():
 # Singleton pattern
 # ---------------------------------------------------------------------------
 
+
 class TestSingleton:
     def test_same_instance_returned(self):
         with patch("app.services.permission_cache_service.CacheService"):
@@ -42,6 +43,7 @@ class TestSingleton:
 # ---------------------------------------------------------------------------
 # _build_key
 # ---------------------------------------------------------------------------
+
 
 class TestBuildKey:
     def test_builds_key_with_tenant_id(self, service):
@@ -60,6 +62,7 @@ class TestBuildKey:
 # ---------------------------------------------------------------------------
 # User permissions cache
 # ---------------------------------------------------------------------------
+
 
 class TestUserPermissionsCache:
     def test_get_user_permissions_returns_set_when_cached(self, service):
@@ -114,6 +117,7 @@ class TestUserPermissionsCache:
 # Role permissions cache
 # ---------------------------------------------------------------------------
 
+
 class TestRolePermissionsCache:
     def test_get_role_permissions_returns_cached_data(self, service):
         svc, mock_cache = service
@@ -150,6 +154,7 @@ class TestRolePermissionsCache:
 # User-role association cache
 # ---------------------------------------------------------------------------
 
+
 class TestUserRoleCache:
     def test_get_user_role_ids(self, service):
         svc, mock_cache = service
@@ -183,6 +188,7 @@ class TestUserRoleCache:
 # ---------------------------------------------------------------------------
 # invalidate_role_and_users
 # ---------------------------------------------------------------------------
+
 
 class TestInvalidateRoleAndUsers:
     def test_invalidates_role_and_specified_users(self, service):

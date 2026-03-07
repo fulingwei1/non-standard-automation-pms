@@ -3,8 +3,9 @@
 第三十七批覆盖率测试 - 发票提醒服务
 tests/unit/test_invoice_reminders_cov37.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.sales_reminder.invoice_reminders")
 

@@ -36,9 +36,7 @@ class TestIssueLifecycle:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/issues",
-            json=issue_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
         )
         assert create_response.status_code == 201
         issue_id = create_response.json()["id"]
@@ -52,9 +50,7 @@ class TestIssueLifecycle:
         }
 
         assign_response = client.post(
-            f"{settings.API_V1_PREFIX}/issues/{issue_id}/assign",
-            json=assign_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/{issue_id}/assign", json=assign_data, headers=headers
         )
         # 如果用户不存在可能返回404
         if assign_response.status_code == 200:
@@ -69,7 +65,7 @@ class TestIssueLifecycle:
         resolve_response = client.post(
             f"{settings.API_V1_PREFIX}/issues/{issue_id}/resolve",
             json=resolve_data,
-            headers=headers
+            headers=headers,
         )
         assert resolve_response.status_code in [200, 400]
         if resolve_response.status_code != 200:
@@ -84,9 +80,7 @@ class TestIssueLifecycle:
         }
 
         verify_response = client.post(
-            f"{settings.API_V1_PREFIX}/issues/{issue_id}/verify",
-            json=verify_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/{issue_id}/verify", json=verify_data, headers=headers
         )
         assert verify_response.status_code in [200, 400]
         # 验证通过后状态可能是 CLOSED 或保持 RESOLVED
@@ -115,11 +109,7 @@ class TestIssueRelations:
             "project_id": 1,
         }
 
-        response = client.post(
-            f"{settings.API_V1_PREFIX}/issues",
-            json=issue_data,
-            headers=headers
-        )
+        response = client.post(f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers)
 
         assert response.status_code == 201
         data = response.json()
@@ -143,9 +133,7 @@ class TestIssueRelations:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/issues",
-            json=issue_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
         )
         issue_id = create_response.json()["id"]
 
@@ -159,7 +147,7 @@ class TestIssueRelations:
         follow_up_response = client.post(
             f"{settings.API_V1_PREFIX}/issues/{issue_id}/follow-ups",
             json=follow_up_data,
-            headers=headers
+            headers=headers,
         )
 
         # 如果422可能是schema验证问题，跳过测试
@@ -170,8 +158,7 @@ class TestIssueRelations:
 
         # 获取跟进记录列表
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/issues/{issue_id}/follow-ups",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/{issue_id}/follow-ups", headers=headers
         )
 
         assert list_response.status_code == 200
@@ -202,9 +189,7 @@ class TestIssueBatchOperations:
                 "description": "测试批量分配",
             }
             response = client.post(
-                f"{settings.API_V1_PREFIX}/issues",
-                json=issue_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
             )
             if response.status_code == 201:
                 issue_ids.append(response.json()["id"])
@@ -220,9 +205,7 @@ class TestIssueBatchOperations:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/issues/batch-assign",
-            json=batch_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/batch-assign", json=batch_data, headers=headers
         )
 
         # 如果用户不存在可能返回404
@@ -247,9 +230,7 @@ class TestIssueBatchOperations:
                 "description": "测试批量状态变更",
             }
             response = client.post(
-                f"{settings.API_V1_PREFIX}/issues",
-                json=issue_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/issues", json=issue_data, headers=headers
             )
             if response.status_code == 201:
                 issue_ids.append(response.json()["id"])
@@ -264,9 +245,7 @@ class TestIssueBatchOperations:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/issues/batch-status",
-            json=batch_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/issues/batch-status", json=batch_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -282,10 +261,7 @@ class TestIssueImportExport:
 
         headers = {"Authorization": f"Bearer {admin_token}"}
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/issues/export",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/issues/export", headers=headers)
 
         # 如果422，可能是路由顺序问题（/export被/{issue_id}匹配）
         if response.status_code == 422:
@@ -295,5 +271,5 @@ class TestIssueImportExport:
         assert response.status_code == 200
         assert response.headers.get("content-type") in [
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "application/octet-stream"
+            "application/octet-stream",
         ]

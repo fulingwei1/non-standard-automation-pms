@@ -2,17 +2,19 @@
 """
 第六批覆盖测试 - itr_analytics_service.py
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.itr_analytics_service import (
         analyze_resolution_time,
         analyze_satisfaction_trend,
-        identify_bottlenecks,
         analyze_sla_performance,
+        identify_bottlenecks,
     )
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -23,8 +25,12 @@ pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="itr_analytics_service no
 @pytest.fixture
 def mock_db():
     db = MagicMock()
-    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
-    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+        []
+    )
+    db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+        []
+    )
     db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
     db.query.return_value.filter.return_value.all.return_value = []
     db.query.return_value.all.return_value = []
@@ -55,8 +61,12 @@ class TestAnalyzeResolutionTime:
         ticket.urgency = "HIGH"
         ticket.reported_time = datetime(2024, 1, 1, 9, 0)
         ticket.resolved_time = datetime(2024, 1, 1, 17, 0)
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [ticket]
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [ticket]
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            ticket
+        ]
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = [
+            ticket
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = [ticket]
         result = analyze_resolution_time(mock_db)
         assert isinstance(result, dict)

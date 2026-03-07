@@ -21,11 +21,7 @@ class ProjectBonusService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_project_bonus_rules(
-        self,
-        project_id: int,
-        is_active: bool = True
-    ) -> List[BonusRule]:
+    def get_project_bonus_rules(self, project_id: int, is_active: bool = True) -> List[BonusRule]:
         """
         获取项目适用的奖金规则
 
@@ -41,7 +37,7 @@ class ProjectBonusService:
             return []
 
         query = self.db.query(BonusRule).filter(
-            BonusRule.bonus_type.in_(['PROJECT_BASED', 'MILESTONE_BASED', 'STAGE_BASED'])
+            BonusRule.bonus_type.in_(["PROJECT_BASED", "MILESTONE_BASED", "STAGE_BASED"])
         )
 
         if is_active:
@@ -58,19 +54,19 @@ class ProjectBonusService:
     def _is_rule_applicable(self, rule: BonusRule, project: Project) -> bool:
         """检查规则是否适用于项目"""
         # 检查项目类型（如果规则有配置）
-        if hasattr(rule, 'apply_to_projects') and rule.apply_to_projects:
+        if hasattr(rule, "apply_to_projects") and rule.apply_to_projects:
             project_types = rule.apply_to_projects
             if isinstance(project_types, list) and len(project_types) > 0:
                 # 如果项目有 project_type 字段，则检查
-                if hasattr(project, 'project_type') and project.project_type:
+                if hasattr(project, "project_type") and project.project_type:
                     if project.project_type not in project_types:
                         return False
 
         # 检查生效日期
-        if hasattr(rule, 'effective_start_date') and rule.effective_start_date:
+        if hasattr(rule, "effective_start_date") and rule.effective_start_date:
             if rule.effective_start_date > date.today():
                 return False
-        if hasattr(rule, 'effective_end_date') and rule.effective_end_date:
+        if hasattr(rule, "effective_end_date") and rule.effective_end_date:
             if rule.effective_end_date < date.today():
                 return False
 
@@ -82,7 +78,7 @@ class ProjectBonusService:
         user_id: Optional[int] = None,
         status: Optional[str] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
     ) -> List[BonusCalculation]:
         """
         获取项目奖金计算记录
@@ -97,9 +93,7 @@ class ProjectBonusService:
         Returns:
             奖金计算记录列表
         """
-        query = self.db.query(BonusCalculation).filter(
-            BonusCalculation.project_id == project_id
-        )
+        query = self.db.query(BonusCalculation).filter(BonusCalculation.project_id == project_id)
 
         if user_id:
             query = query.filter(BonusCalculation.user_id == user_id)
@@ -108,18 +102,19 @@ class ProjectBonusService:
             query = query.filter(BonusCalculation.status == status)
 
         if start_date:
-            query = query.filter(BonusCalculation.calculated_at >= datetime.combine(start_date, datetime.min.time()))
+            query = query.filter(
+                BonusCalculation.calculated_at >= datetime.combine(start_date, datetime.min.time())
+            )
 
         if end_date:
-            query = query.filter(BonusCalculation.calculated_at <= datetime.combine(end_date, datetime.max.time()))
+            query = query.filter(
+                BonusCalculation.calculated_at <= datetime.combine(end_date, datetime.max.time())
+            )
 
         return query.order_by(BonusCalculation.calculated_at.desc()).all()
 
     def get_project_bonus_distributions(
-        self,
-        project_id: int,
-        user_id: Optional[int] = None,
-        status: Optional[str] = None
+        self, project_id: int, user_id: Optional[int] = None, status: Optional[str] = None
     ) -> List[BonusDistribution]:
         """
         获取项目奖金发放记录
@@ -133,9 +128,11 @@ class ProjectBonusService:
             奖金发放记录列表
         """
         # 先获取项目相关的计算记录
-        calculation_ids = self.db.query(BonusCalculation.id).filter(
-            BonusCalculation.project_id == project_id
-        ).subquery()
+        calculation_ids = (
+            self.db.query(BonusCalculation.id)
+            .filter(BonusCalculation.project_id == project_id)
+            .subquery()
+        )
 
         query = self.db.query(BonusDistribution).filter(
             BonusDistribution.calculation_id.in_(calculation_ids)
@@ -149,10 +146,7 @@ class ProjectBonusService:
 
         return query.order_by(BonusDistribution.distributed_at.desc()).all()
 
-    def get_project_member_bonus_summary(
-        self,
-        project_id: int
-    ) -> List[Dict[str, Any]]:
+    def get_project_member_bonus_summary(self, project_id: int) -> List[Dict[str, Any]]:
         """
         获取项目成员奖金汇总
 
@@ -178,16 +172,16 @@ class ProjectBonusService:
             if user_id not in member_summary:
                 user = self.db.query(User).filter(User.id == user_id).first()
                 member_summary[user_id] = {
-                    'user_id': user_id,
-                    'user_name': user.real_name or user.username if user else f'User {user_id}',
-                    'total_calculated': Decimal('0'),
-                    'total_distributed': Decimal('0'),
-                    'calculation_count': 0,
-                    'distribution_count': 0
+                    "user_id": user_id,
+                    "user_name": user.real_name or user.username if user else f"User {user_id}",
+                    "total_calculated": Decimal("0"),
+                    "total_distributed": Decimal("0"),
+                    "calculation_count": 0,
+                    "distribution_count": 0,
                 }
 
-            member_summary[user_id]['total_calculated'] += calc.calculated_amount or Decimal('0')
-            member_summary[user_id]['calculation_count'] += 1
+            member_summary[user_id]["total_calculated"] += calc.calculated_amount or Decimal("0")
+            member_summary[user_id]["calculation_count"] += 1
 
         # 获取发放记录
         distributions = self.get_project_bonus_distributions(project_id)
@@ -196,23 +190,20 @@ class ProjectBonusService:
             if user_id not in member_summary:
                 user = self.db.query(User).filter(User.id == user_id).first()
                 member_summary[user_id] = {
-                    'user_id': user_id,
-                    'user_name': user.real_name or user.username if user else f'User {user_id}',
-                    'total_calculated': Decimal('0'),
-                    'total_distributed': Decimal('0'),
-                    'calculation_count': 0,
-                    'distribution_count': 0
+                    "user_id": user_id,
+                    "user_name": user.real_name or user.username if user else f"User {user_id}",
+                    "total_calculated": Decimal("0"),
+                    "total_distributed": Decimal("0"),
+                    "calculation_count": 0,
+                    "distribution_count": 0,
                 }
 
-            member_summary[user_id]['total_distributed'] += dist.distributed_amount or Decimal('0')
-            member_summary[user_id]['distribution_count'] += 1
+            member_summary[user_id]["total_distributed"] += dist.distributed_amount or Decimal("0")
+            member_summary[user_id]["distribution_count"] += 1
 
         return list(member_summary.values())
 
-    def get_project_bonus_statistics(
-        self,
-        project_id: int
-    ) -> Dict[str, Any]:
+    def get_project_bonus_statistics(self, project_id: int) -> Dict[str, Any]:
         """
         获取项目奖金统计信息
 
@@ -231,12 +222,8 @@ class ProjectBonusService:
         calculations = self.get_project_bonus_calculations(project_id)
         distributions = self.get_project_bonus_distributions(project_id)
 
-        total_calculated = sum(
-            (calc.calculated_amount or Decimal('0')) for calc in calculations
-        )
-        total_distributed = sum(
-            (dist.distributed_amount or Decimal('0')) for dist in distributions
-        )
+        total_calculated = sum((calc.calculated_amount or Decimal("0")) for calc in calculations)
+        total_distributed = sum((dist.distributed_amount or Decimal("0")) for dist in distributions)
 
         # 获取涉及的用户数
         user_ids = set()
@@ -246,10 +233,10 @@ class ProjectBonusService:
             user_ids.add(dist.user_id)
 
         return {
-            'total_calculated': float(total_calculated),
-            'total_distributed': float(total_distributed),
-            'pending_amount': float(total_calculated - total_distributed),
-            'calculation_count': len(calculations),
-            'distribution_count': len(distributions),
-            'member_count': len(user_ids)
+            "total_calculated": float(total_calculated),
+            "total_distributed": float(total_distributed),
+            "pending_amount": float(total_calculated - total_distributed),
+            "calculation_count": len(calculations),
+            "distribution_count": len(distributions),
+            "member_count": len(user_ids),
         }

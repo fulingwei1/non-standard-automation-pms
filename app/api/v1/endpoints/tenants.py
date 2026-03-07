@@ -31,10 +31,7 @@ router = APIRouter(prefix="/tenants", tags=["租户管理"])
 def require_super_admin(current_user: User = Depends(get_current_active_user)) -> User:
     """要求超级管理员权限"""
     if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="需要超级管理员权限"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要超级管理员权限")
     return current_user
 
 
@@ -51,7 +48,7 @@ def create_tenant(
         return ResponseModel(
             code=201,
             message="创建租户成功",
-            data=TenantResponse.model_validate(tenant).model_dump()
+            data=TenantResponse.model_validate(tenant).model_dump(),
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -67,7 +64,9 @@ def list_tenants(
 ):
     """获取租户列表"""
     service = TenantService(db)
-    result = service.list_tenants(page=pagination.page, page_size=pagination.page_size, status=status, keyword=keyword)
+    result = service.list_tenants(
+        page=pagination.page, page_size=pagination.page_size, status=status, keyword=keyword
+    )
 
     # 转换为响应格式
     items = [TenantResponse.model_validate(t).model_dump() for t in result["items"]]
@@ -81,7 +80,7 @@ def list_tenants(
             "page": result["page"],
             "page_size": result["page_size"],
             "pages": result["pages"],
-        }
+        },
     )
 
 
@@ -98,9 +97,7 @@ def get_tenant(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="租户不存在")
 
     return ResponseModel(
-        code=200,
-        message="获取成功",
-        data=TenantResponse.model_validate(tenant).model_dump()
+        code=200, message="获取成功", data=TenantResponse.model_validate(tenant).model_dump()
     )
 
 
@@ -118,9 +115,7 @@ def update_tenant(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="租户不存在")
 
     return ResponseModel(
-        code=200,
-        message="更新成功",
-        data=TenantResponse.model_validate(tenant).model_dump()
+        code=200, message="更新成功", data=TenantResponse.model_validate(tenant).model_dump()
     )
 
 

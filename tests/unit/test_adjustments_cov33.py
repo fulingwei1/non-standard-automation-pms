@@ -2,12 +2,14 @@
 """
 第三十三批覆盖率测试 - 阶段调整混入 (AdjustmentsMixin)
 """
-import pytest
-from unittest.mock import MagicMock
 from datetime import date
+from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.stage_instance.adjustments import AdjustmentsMixin
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

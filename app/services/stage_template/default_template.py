@@ -16,23 +16,24 @@ class DefaultTemplateMixin:
     """默认模板管理功能混入类"""
 
     def get_default_template(
-        self,
-        project_type: str = TemplateProjectTypeEnum.CUSTOM.value
+        self, project_type: str = TemplateProjectTypeEnum.CUSTOM.value
     ) -> Optional[StageTemplate]:
         """获取指定项目类型的默认模板"""
-        return self.db.query(StageTemplate).filter(
-            and_(
-                StageTemplate.project_type == project_type,
-                StageTemplate.is_default,
-                StageTemplate.is_active
+        return (
+            self.db.query(StageTemplate)
+            .filter(
+                and_(
+                    StageTemplate.project_type == project_type,
+                    StageTemplate.is_default,
+                    StageTemplate.is_active,
+                )
             )
-        ).first()
+            .first()
+        )
 
     def set_default_template(self, template_id: int) -> StageTemplate:
         """设置模板为默认"""
-        template = self.db.query(StageTemplate).filter(
-            StageTemplate.id == template_id
-        ).first()
+        template = self.db.query(StageTemplate).filter(StageTemplate.id == template_id).first()
 
         if not template:
             raise ValueError(f"模板 {template_id} 不存在")

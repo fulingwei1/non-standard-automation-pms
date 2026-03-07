@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十一批：验收状态处理器单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, call
 from datetime import datetime
+from unittest.mock import MagicMock, call
+
+import pytest
 
 pytest.importorskip("app.services.status_handlers.acceptance_handler")
 
@@ -16,6 +17,7 @@ def mock_db():
 @pytest.fixture
 def handler(mock_db):
     from app.services.status_handlers.acceptance_handler import AcceptanceStatusHandler
+
     return AcceptanceStatusHandler(mock_db)
 
 

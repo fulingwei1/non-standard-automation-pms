@@ -10,10 +10,10 @@
 
 import logging
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 
-from app.dependencies import get_db_session
 from app.common.query_filters import apply_keyword_filter
+from app.dependencies import get_db_session
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ def calculate_all_project_risks() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"[{datetime.now()}] 项目风险批量计算失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
 
@@ -78,10 +79,14 @@ def create_daily_risk_snapshots() -> Dict[str, Any]:
             service = ProjectRiskService(db)
 
             # 获取所有活跃项目
-            projects = db.query(Project).filter(
-                Project.is_active,
-                not Project.is_archived,
-            ).all()
+            projects = (
+                db.query(Project)
+                .filter(
+                    Project.is_active,
+                    not Project.is_archived,
+                )
+                .all()
+            )
 
             success_count = 0
             error_count = 0
@@ -108,6 +113,7 @@ def create_daily_risk_snapshots() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"[{datetime.now()}] 风险快照创建失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
 
@@ -136,7 +142,8 @@ def check_high_risk_projects() -> Dict[str, Any]:
                 db.query(ProjectRiskHistory)
                 .filter(
                     ProjectRiskHistory.new_risk_level.in_(["HIGH", "CRITICAL"]),
-                    ProjectRiskHistory.triggered_at >= datetime.now().replace(hour=0, minute=0, second=0),
+                    ProjectRiskHistory.triggered_at
+                    >= datetime.now().replace(hour=0, minute=0, second=0),
                 )
                 .all()
             )
@@ -204,5 +211,6 @@ def check_high_risk_projects() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"[{datetime.now()}] 高风险项目预警检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}

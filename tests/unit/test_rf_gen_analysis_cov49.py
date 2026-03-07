@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/generators/analysis.py"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.report_framework.generators.analysis import AnalysisReportGenerator
@@ -48,7 +49,7 @@ def test_generate_workload_analysis_with_users():
 
 def test_generate_cost_analysis_no_projects():
     db = _make_db()
-    with patch.object(AnalysisReportGenerator, '_get_projects', return_value=[]):
+    with patch.object(AnalysisReportGenerator, "_get_projects", return_value=[]):
         result = AnalysisReportGenerator.generate_cost_analysis(
             db, project_id=None, start_date=date(2025, 1, 1), end_date=date(2025, 1, 31)
         )
@@ -64,7 +65,7 @@ def test_generate_cost_analysis_with_project():
     project.project_name = "Cost项目"
     project.budget_amount = 100000
     db.query.return_value.filter.return_value.all.return_value = []
-    with patch.object(AnalysisReportGenerator, '_get_projects', return_value=[project]):
+    with patch.object(AnalysisReportGenerator, "_get_projects", return_value=[project]):
         result = AnalysisReportGenerator.generate_cost_analysis(
             db, project_id=10, start_date=date(2025, 1, 1), end_date=date(2025, 1, 31)
         )

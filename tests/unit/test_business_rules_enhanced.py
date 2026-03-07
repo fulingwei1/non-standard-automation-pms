@@ -19,45 +19,36 @@ from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.business_rules import (
+from app.services.business_rules import (  # 1. 毛利率; 2. 套件率; 3. 项目延期预警; 4. 付款节点; 5. 工时; 6. FAT; 7. 最终毛利; 8. 工期偏差; 9. BOM 套件率 & 缺料预警
     KPI_BENCHMARKS,
-    # 1. 毛利率
-    calc_gross_margin,
-    is_warning_required,
-    requires_gm_approval,
-    # 2. 套件率
-    calc_kit_rate,
-    should_trigger_shortage_alert,
-    # 3. 项目延期预警
-    calc_spi,
-    get_delay_alert_level,
-    # 4. 付款节点
-    PaymentMilestone,
-    create_standard_payment_milestones,
-    calc_payment_overdue_days,
-    is_overdue_escalation_required,
-    # 5. 工时
-    is_daily_overtime,
-    should_hr_review,
-    # 6. FAT
     FATResult,
-    evaluate_fat_result,
-    # 7. 最终毛利
-    calc_final_margin,
-    requires_margin_review,
-    # 8. 工期偏差
-    analyze_delay_root_causes,
-    recalculate_delivery_date,
-    # 9. BOM 套件率 & 缺料预警
+    PaymentMilestone,
     ShortageAlert,
+    analyze_delay_root_causes,
     calc_bom_kit_rate,
+    calc_final_margin,
+    calc_gross_margin,
+    calc_kit_rate,
+    calc_payment_overdue_days,
+    calc_spi,
+    create_standard_payment_milestones,
+    evaluate_fat_result,
     generate_shortage_alert,
+    get_delay_alert_level,
+    is_daily_overtime,
+    is_overdue_escalation_required,
+    is_warning_required,
+    recalculate_delivery_date,
+    requires_gm_approval,
+    requires_margin_review,
+    should_hr_review,
+    should_trigger_shortage_alert,
 )
-
 
 # ===========================================================================
 # 1. 毛利率计算规则测试
 # ===========================================================================
+
 
 class TestGrossMarginRules(unittest.TestCase):
     """毛利率计算规则测试类"""
@@ -144,6 +135,7 @@ class TestGrossMarginRules(unittest.TestCase):
 # 2. 套件率计算规则测试
 # ===========================================================================
 
+
 class TestKitRateRules(unittest.TestCase):
     """套件率计算规则测试类"""
 
@@ -192,6 +184,7 @@ class TestKitRateRules(unittest.TestCase):
 # ===========================================================================
 # 3. 项目延期预警规则测试
 # ===========================================================================
+
 
 class TestDelayAlertRules(unittest.TestCase):
     """项目延期预警规则测试类"""
@@ -244,6 +237,7 @@ class TestDelayAlertRules(unittest.TestCase):
 # ===========================================================================
 # 4. 付款节点验证测试
 # ===========================================================================
+
 
 class TestPaymentMilestoneRules(unittest.TestCase):
     """付款节点验证测试类"""
@@ -314,6 +308,7 @@ class TestPaymentMilestoneRules(unittest.TestCase):
 # 5. 工时异常检测测试
 # ===========================================================================
 
+
 class TestOvertimeRules(unittest.TestCase):
     """工时异常检测测试类"""
 
@@ -341,6 +336,7 @@ class TestOvertimeRules(unittest.TestCase):
 # ===========================================================================
 # 6. FAT/SAT 验收判定规则测试
 # ===========================================================================
+
 
 class TestFATRules(unittest.TestCase):
     """FAT验收判定规则测试类"""
@@ -415,6 +411,7 @@ class TestFATRules(unittest.TestCase):
 # 7. 项目最终毛利核算测试
 # ===========================================================================
 
+
 class TestFinalMarginRules(unittest.TestCase):
     """项目最终毛利核算测试类"""
 
@@ -427,7 +424,7 @@ class TestFinalMarginRules(unittest.TestCase):
                 "labor": 200_000,
                 "outsource": 100_000,
                 "travel": 50_000,
-            }
+            },
         }
         margin = calc_final_margin(project_data)
         self.assertAlmostEqual(margin, 0.35, places=6)
@@ -441,7 +438,7 @@ class TestFinalMarginRules(unittest.TestCase):
                 "labor": 300_000,
                 "outsource": 200_000,
                 "travel": 100_000,
-            }
+            },
         }
         margin = calc_final_margin(project_data)
         self.assertAlmostEqual(margin, 0.0, places=6)
@@ -455,17 +452,14 @@ class TestFinalMarginRules(unittest.TestCase):
                 "labor": 400_000,
                 "outsource": 200_000,
                 "travel": 100_000,
-            }
+            },
         }
         margin = calc_final_margin(project_data)
         self.assertAlmostEqual(margin, -0.2, places=6)
 
     def test_calc_final_margin_invalid_contract_zero(self):
         """测试合同金额为0时抛出异常"""
-        project_data = {
-            "contract_amount": 0,
-            "costs": {"hardware": 100}
-        }
+        project_data = {"contract_amount": 0, "costs": {"hardware": 100}}
         with self.assertRaises(ValueError) as ctx:
             calc_final_margin(project_data)
         self.assertIn("合同金额必须大于 0", str(ctx.exception))
@@ -484,6 +478,7 @@ class TestFinalMarginRules(unittest.TestCase):
 # ===========================================================================
 # 8. 工期偏差分析测试
 # ===========================================================================
+
 
 class TestDelayAnalysisRules(unittest.TestCase):
     """工期偏差分析测试类"""
@@ -517,7 +512,7 @@ class TestDelayAnalysisRules(unittest.TestCase):
         """测试排序逻辑（频次优先，总天数次之）"""
         delays = [
             {"reason": "A", "days": 100, "project_id": 1},  # 1次100天
-            {"reason": "B", "days": 10, "project_id": 2},   # 2次共30天
+            {"reason": "B", "days": 10, "project_id": 2},  # 2次共30天
             {"reason": "B", "days": 20, "project_id": 3},
         ]
         result = analyze_delay_root_causes(delays)
@@ -549,15 +544,16 @@ class TestDelayAnalysisRules(unittest.TestCase):
 # 9. BOM 套件率计算 & 缺料预警测试
 # ===========================================================================
 
+
 class TestBOMKitRateAndShortageRules(unittest.TestCase):
     """BOM 套件率计算 & 缺料预警测试类"""
 
     def test_calc_bom_kit_rate_normal(self):
         """测试正常BOM综合套件率计算"""
         bom_items = [
-            {"material": "电机", "required": 10, "available": 9},   # 90%
+            {"material": "电机", "required": 10, "available": 9},  # 90%
             {"material": "传感器", "required": 20, "available": 19},  # 95%
-            {"material": "控制器", "required": 5, "available": 5},   # 100%
+            {"material": "控制器", "required": 5, "available": 5},  # 100%
         ]
         # 最小满足率为电机的90%
         kit_rate = calc_bom_kit_rate(bom_items)
@@ -618,7 +614,7 @@ class TestBOMKitRateAndShortageRules(unittest.TestCase):
     def test_generate_shortage_alert_warning_level(self):
         """测试WARNING级别缺料预警"""
         bom_items = [
-            {"material": "电机", "required": 10, "available": 8},   # 80%
+            {"material": "电机", "required": 10, "available": 8},  # 80%
             {"material": "传感器", "required": 20, "available": 19},  # 95%
         ]
         alert = generate_shortage_alert(bom_items, project_id=123)
@@ -636,7 +632,7 @@ class TestBOMKitRateAndShortageRules(unittest.TestCase):
     def test_generate_shortage_alert_critical_level(self):
         """测试CRITICAL级别缺料预警（零库存）"""
         bom_items = [
-            {"material": "电机", "required": 10, "available": 0},   # 0%
+            {"material": "电机", "required": 10, "available": 0},  # 0%
             {"material": "传感器", "required": 20, "available": 19},  # 95%
         ]
         alert = generate_shortage_alert(bom_items, project_id=456)
@@ -661,6 +657,7 @@ class TestBOMKitRateAndShortageRules(unittest.TestCase):
 # ===========================================================================
 # 边界条件和集成测试
 # ===========================================================================
+
 
 class TestEdgeCasesAndIntegration(unittest.TestCase):
     """边界条件和集成测试类"""

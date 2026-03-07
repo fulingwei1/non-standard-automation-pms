@@ -66,10 +66,13 @@ def build_user_response(user: User) -> UserResponse:
 def generate_employee_code(db: Session) -> str:
     """生成新的员工编码"""
     from app.utils.number_generator import generate_employee_code
+
     return generate_employee_code(db)
 
 
-def ensure_employee_unbound(db: Session, employee_id: int, current_user_id: Optional[int] = None) -> None:
+def ensure_employee_unbound(
+    db: Session, employee_id: int, current_user_id: Optional[int] = None
+) -> None:
     """确保员工尚未绑定其他账号"""
     existing = db.query(User).filter(User.employee_id == employee_id).first()
     if existing and existing.id != current_user_id:
@@ -86,11 +89,7 @@ def prepare_employee_for_new_user(db: Session, user_in: UserCreate) -> Employee:
         return employee
 
     if user_in.employee_no:
-        employee = (
-            db.query(Employee)
-                .filter(Employee.employee_code == user_in.employee_no)
-                .first()
-        )
+        employee = db.query(Employee).filter(Employee.employee_code == user_in.employee_no).first()
         if employee:
             ensure_employee_unbound(db, employee.id)
             return employee
@@ -144,6 +143,7 @@ def _invalidate_user_cache(user_id: int, old_role_ids: List[int], new_role_ids: 
     """使用户权限缓存失效"""
     try:
         from app.services.permission_cache_service import get_permission_cache_service
+
         cache_service = get_permission_cache_service()
         cache_service.invalidate_user_role_change(user_id, old_role_ids, new_role_ids)
         logger.debug(f"User permission cache invalidated: user_id={user_id}")

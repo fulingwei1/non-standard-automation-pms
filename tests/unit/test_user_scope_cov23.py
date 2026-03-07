@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """第二十三批：data_scope/user_scope 单元测试"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.data_scope.user_scope")
 

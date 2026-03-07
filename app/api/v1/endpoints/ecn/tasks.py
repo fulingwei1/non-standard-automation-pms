@@ -31,7 +31,9 @@ from .utils import get_user_display_name
 router = APIRouter()
 
 
-@router.get("/ecns/{ecn_id}/tasks", response_model=List[EcnTaskResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}/tasks", response_model=List[EcnTaskResponse], status_code=status.HTTP_200_OK
+)
 def read_ecn_tasks(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -44,35 +46,44 @@ def read_ecn_tasks(
     if not ecn:
         raise HTTPException(status_code=404, detail="ECN不存在")
 
-    tasks = db.query(EcnTask).filter(EcnTask.ecn_id == ecn_id).order_by(EcnTask.task_no, EcnTask.created_at).all()
+    tasks = (
+        db.query(EcnTask)
+        .filter(EcnTask.ecn_id == ecn_id)
+        .order_by(EcnTask.task_no, EcnTask.created_at)
+        .all()
+    )
 
     items = []
     for task in tasks:
         assignee_name = get_user_display_name(db, task.assignee_id)
 
-        items.append(EcnTaskResponse(
-            id=task.id,
-            ecn_id=task.ecn_id,
-            task_no=task.task_no,
-            task_name=task.task_name,
-            task_type=task.task_type,
-            task_dept=task.task_dept,
-            assignee_id=task.assignee_id,
-            assignee_name=assignee_name,
-            planned_start=task.planned_start,
-            planned_end=task.planned_end,
-            actual_start=task.actual_start,
-            actual_end=task.actual_end,
-            progress_pct=task.progress_pct or 0,
-            status=task.status,
-            created_at=task.created_at,
-            updated_at=task.updated_at
-        ))
+        items.append(
+            EcnTaskResponse(
+                id=task.id,
+                ecn_id=task.ecn_id,
+                task_no=task.task_no,
+                task_name=task.task_name,
+                task_type=task.task_type,
+                task_dept=task.task_dept,
+                assignee_id=task.assignee_id,
+                assignee_name=assignee_name,
+                planned_start=task.planned_start,
+                planned_end=task.planned_end,
+                actual_start=task.actual_start,
+                actual_end=task.actual_end,
+                progress_pct=task.progress_pct or 0,
+                status=task.status,
+                created_at=task.created_at,
+                updated_at=task.updated_at,
+            )
+        )
 
     return items
 
 
-@router.post("/ecns/{ecn_id}/tasks", response_model=EcnTaskResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/ecns/{ecn_id}/tasks", response_model=EcnTaskResponse, status_code=status.HTTP_201_CREATED
+)
 def create_ecn_task(
     *,
     db: Session = Depends(deps.get_db),
@@ -97,7 +108,9 @@ def create_ecn_task(
             raise HTTPException(status_code=404, detail="负责人不存在")
 
     # 获取最大任务序号
-    max_order = db.query(EcnTask).filter(EcnTask.ecn_id == ecn_id).order_by(desc(EcnTask.task_no)).first()
+    max_order = (
+        db.query(EcnTask).filter(EcnTask.ecn_id == ecn_id).order_by(desc(EcnTask.task_no)).first()
+    )
     task_no = (max_order.task_no + 1) if max_order else 1
 
     task = EcnTask(
@@ -111,7 +124,7 @@ def create_ecn_task(
         planned_start=task_in.planned_start,
         planned_end=task_in.planned_end,
         status="PENDING",
-        progress_pct=0
+        progress_pct=0,
     )
 
     # 分配执行任务：优先使用手动指定，否则自动分配
@@ -120,11 +133,13 @@ def create_ecn_task(
 
         # 如果手动指定了执行人员，验证用户
         if assignee_id:
-            assignee = db.query(User).filter(
-                User.id == assignee_id,
-                User.department == task_in.task_dept,
-                User.is_active
-            ).first()
+            assignee = (
+                db.query(User)
+                .filter(
+                    User.id == assignee_id, User.department == task_in.task_dept, User.is_active
+                )
+                .first()
+            )
 
             if not assignee:
                 assignee_id = None  # 用户不存在或不属于该部门，使用自动分配
@@ -176,7 +191,9 @@ def read_ecn_task(
     return _build_task_response(db, task)
 
 
-@router.put("/ecn-tasks/{task_id}/progress", response_model=EcnTaskResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecn-tasks/{task_id}/progress", response_model=EcnTaskResponse, status_code=status.HTTP_200_OK
+)
 def update_ecn_task_progress(
     *,
     db: Session = Depends(deps.get_db),
@@ -213,7 +230,9 @@ def update_ecn_task_progress(
     return _build_task_response(db, task)
 
 
-@router.put("/ecn-tasks/{task_id}/complete", response_model=EcnTaskResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecn-tasks/{task_id}/complete", response_model=EcnTaskResponse, status_code=status.HTTP_200_OK
+)
 def complete_ecn_task(
     *,
     db: Session = Depends(deps.get_db),
@@ -237,10 +256,11 @@ def complete_ecn_task(
     # 检查是否所有任务都已完成
     ecn = db.query(Ecn).filter(Ecn.id == task.ecn_id).first()
     if ecn:
-        pending_tasks = db.query(EcnTask).filter(
-            EcnTask.ecn_id == ecn.id,
-            EcnTask.status != "COMPLETED"
-        ).count()
+        pending_tasks = (
+            db.query(EcnTask)
+            .filter(EcnTask.ecn_id == ecn.id, EcnTask.status != "COMPLETED")
+            .count()
+        )
 
         if pending_tasks == 0:
             # 所有任务都已完成，更新ECN状态
@@ -284,5 +304,5 @@ def _build_task_response(db: Session, task: EcnTask) -> EcnTaskResponse:
         progress_pct=task.progress_pct or 0,
         status=task.status,
         created_at=task.created_at,
-        updated_at=task.updated_at
+        updated_at=task.updated_at,
     )

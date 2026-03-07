@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - channel_handlers/email_handler 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.channel_handlers.email_handler")
 

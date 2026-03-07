@@ -295,9 +295,7 @@ class PmoInitiationService:
         project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:03d}"
 
         # 检查项目编码是否已存在
-        existing = (
-            self.db.query(Project).filter(Project.project_code == project_code).first()
-        )
+        existing = self.db.query(Project).filter(Project.project_code == project_code).first()
         if existing:
             project_code = f"PJ{today.strftime('%y%m%d')}{initiation.id:04d}"
 

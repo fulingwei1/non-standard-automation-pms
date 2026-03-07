@@ -16,7 +16,7 @@
 import unittest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 from app.services.approval_engine.execution_logger import (
     ApprovalExecutionLogger,
@@ -375,9 +375,7 @@ class TestRoutingDecisionLogs(TestApprovalExecutionLogger):
 
     def test_log_node_transition_with_ids(self):
         """测试使用ID记录节点流转"""
-        self.logger.log_node_transition(
-            instance_id=1, from_node_id=1, to_node_id=2, trigger="AUTO"
-        )
+        self.logger.log_node_transition(instance_id=1, from_node_id=1, to_node_id=2, trigger="AUTO")
 
         # 验证数据库日志被创建
         self.db.add.assert_called_once()
@@ -613,9 +611,7 @@ class TestLogQueryMethods(TestApprovalExecutionLogger):
         mock_log1.id = 1
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.all.return_value = [
-            mock_log1
-        ]
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_log1]
         self.db.query.return_value = mock_query
 
         result = self.logger.get_approval_logs(instance_id=1)
@@ -656,9 +652,7 @@ class TestLogQueryMethods(TestApprovalExecutionLogger):
         mock_query.filter.return_value = filter_mock
         self.db.query.return_value = mock_query
 
-        result = self.logger.get_approval_logs(
-            instance_id=1, node_id=2, approver_id=10
-        )
+        result = self.logger.get_approval_logs(instance_id=1, node_id=2, approver_id=10)
 
         self.assertIsNotNone(result)
 
@@ -791,9 +785,7 @@ class TestConfigurationSwitches(TestApprovalExecutionLogger):
         instance = self._create_mock_instance()
         initiator = self._create_mock_user()
 
-        with patch(
-            "app.services.approval_engine.execution_logger.log_info_with_context"
-        ):
+        with patch("app.services.approval_engine.execution_logger.log_info_with_context"):
             self.logger.log_instance_created(instance, initiator)
 
         # 不应创建数据库日志
@@ -805,9 +797,7 @@ class TestConfigurationSwitches(TestApprovalExecutionLogger):
         self.logger.log_routing = False
         instance = self._create_mock_instance()
 
-        self.logger.log_flow_selection(
-            instance, flow_id=10, flow_name="测试流程"
-        )
+        self.logger.log_flow_selection(instance, flow_id=10, flow_name="测试流程")
 
         # 不应调用日志
         mock_log_info.assert_not_called()

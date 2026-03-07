@@ -3,24 +3,25 @@
 I1组: PresaleAIKnowledgeService 单元测试
 直接实例化类，用 MagicMock 替代 db session
 """
-import pytest
-import numpy as np
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
-from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+import numpy as np
+import pytest
+
 from app.schemas.presale_ai_knowledge import (
+    AIQARequest,
+    BestPracticeRequest,
     KnowledgeCaseCreate,
     KnowledgeCaseUpdate,
-    SemanticSearchRequest,
-    BestPracticeRequest,
     KnowledgeExtractionRequest,
-    AIQARequest,
+    SemanticSearchRequest,
 )
-
+from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
 
 # ============================================================
 # Helper factory
 # ============================================================
+
 
 def _make_service():
     db = MagicMock()
@@ -47,6 +48,7 @@ def _make_mock_case(**kwargs):
 # ============================================================
 # TestCreateCase
 # ============================================================
+
 
 class TestCreateCase:
     def test_create_case_basic(self):
@@ -92,6 +94,7 @@ class TestCreateCase:
 # TestUpdateCase
 # ============================================================
 
+
 class TestUpdateCase:
     def test_update_case_found(self):
         """更新存在的案例"""
@@ -132,6 +135,7 @@ class TestUpdateCase:
 # TestGetCase
 # ============================================================
 
+
 class TestGetCase:
     def test_get_case_found(self):
         """获取存在的案例"""
@@ -154,6 +158,7 @@ class TestGetCase:
 # ============================================================
 # TestDeleteCase
 # ============================================================
+
 
 class TestDeleteCase:
     def test_delete_case_success(self):
@@ -180,6 +185,7 @@ class TestDeleteCase:
 # ============================================================
 # TestSemanticSearch
 # ============================================================
+
 
 class TestSemanticSearch:
     def test_semantic_search_no_cases(self):
@@ -243,6 +249,7 @@ class TestSemanticSearch:
 # TestRecommendBestPractices
 # ============================================================
 
+
 class TestRecommendBestPractices:
     def test_recommend_best_practices_no_cases(self):
         """没有案例时也能返回结构"""
@@ -277,6 +284,7 @@ class TestRecommendBestPractices:
 # ============================================================
 # TestExtractCaseKnowledge
 # ============================================================
+
 
 class TestExtractCaseKnowledge:
     def test_extract_case_knowledge_basic(self):
@@ -327,6 +335,7 @@ class TestExtractCaseKnowledge:
 # TestAskQuestion
 # ============================================================
 
+
 class TestAskQuestion:
     def test_ask_question_no_cases(self):
         """无案例时的问答"""
@@ -376,6 +385,7 @@ class TestAskQuestion:
 # TestSubmitQAFeedback
 # ============================================================
 
+
 class TestSubmitQAFeedback:
     def test_submit_feedback_success(self):
         """提交反馈成功"""
@@ -402,6 +412,7 @@ class TestSubmitQAFeedback:
 # TestSearchKnowledgeBase
 # ============================================================
 
+
 class TestSearchKnowledgeBase:
     def test_search_with_keyword(self):
         """关键词搜索"""
@@ -411,7 +422,9 @@ class TestSearchKnowledgeBase:
         # count() 和 all() 各自 mock
         filter_mock = MagicMock()
         filter_mock.count.return_value = 1
-        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_cases
+        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_cases
+        )
         db.query.return_value.filter.return_value = filter_mock
 
         cases, total = service.search_knowledge_base(keyword="机器人")
@@ -422,7 +435,9 @@ class TestSearchKnowledgeBase:
         service, db = _make_service()
         filter_mock = MagicMock()
         filter_mock.count.return_value = 0
-        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         db.query.return_value = filter_mock
 
         cases, total = service.search_knowledge_base()
@@ -434,7 +449,9 @@ class TestSearchKnowledgeBase:
         filter_mock = MagicMock()
         filter_mock.filter.return_value = filter_mock
         filter_mock.count.return_value = 2
-        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        filter_mock.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value = filter_mock
 
         cases, total = service.search_knowledge_base(tags=["汽车", "机器人"])
@@ -444,6 +461,7 @@ class TestSearchKnowledgeBase:
 # ============================================================
 # TestGetAllTags
 # ============================================================
+
 
 class TestGetAllTags:
     def test_get_all_tags_empty(self):
@@ -479,6 +497,7 @@ class TestGetAllTags:
 # ============================================================
 # TestInternalHelpers
 # ============================================================
+
 
 class TestInternalHelpers:
     def test_generate_embedding_returns_normalized_vector(self):
@@ -547,6 +566,7 @@ class TestInternalHelpers:
         """高置信度评估"""
         service, _ = _make_service()
         from app.schemas.presale_ai_knowledge import KnowledgeCaseCreate
+
         case = KnowledgeCaseCreate(case_name="测试")
         msg = service._generate_quality_assessment(case, 0.85)
         assert "高质量" in msg
@@ -555,6 +575,7 @@ class TestInternalHelpers:
         """低置信度评估"""
         service, _ = _make_service()
         from app.schemas.presale_ai_knowledge import KnowledgeCaseCreate
+
         case = KnowledgeCaseCreate(case_name="测试")
         msg = service._generate_quality_assessment(case, 0.3)
         assert "低质量" in msg

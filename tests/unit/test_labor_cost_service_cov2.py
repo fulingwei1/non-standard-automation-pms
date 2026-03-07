@@ -2,10 +2,11 @@
 """
 labor_cost_service.py 单元测试（第二批）
 """
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 # ─── 1. LaborCostService.calculate_project_labor_cost - 项目不存在 ───────────
@@ -27,9 +28,12 @@ def test_calculate_project_labor_cost_no_timesheets():
     mock_project = MagicMock()
     mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
-    with patch("app.services.labor_cost.utils.query_approved_timesheets", return_value=[]) as mock_q:
+    with patch(
+        "app.services.labor_cost.utils.query_approved_timesheets", return_value=[]
+    ) as mock_q:
         # The function imports from labor_cost.utils inside, patch the utils module
         import app.services.labor_cost.utils as utils_mod
+
         original = utils_mod.query_approved_timesheets
         utils_mod.query_approved_timesheets = lambda *a, **kw: []
         try:
@@ -42,8 +46,8 @@ def test_calculate_project_labor_cost_no_timesheets():
 
 
 def test_calculate_project_labor_cost_with_timesheets():
-    from app.services.labor_cost_service import LaborCostService
     import app.services.labor_cost.utils as utils_mod
+    from app.services.labor_cost_service import LaborCostService
 
     mock_db = MagicMock()
     mock_project = MagicMock()
@@ -89,10 +93,16 @@ def test_calculate_all_projects_with_filter():
 
     mock_db = MagicMock()
     # Return two project IDs
-    mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(1,), (2,)]
+    mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [
+        (1,),
+        (2,),
+    ]
 
-    with patch.object(LaborCostService, "calculate_project_labor_cost",
-                      return_value={"success": True, "message": "ok", "cost_count": 1}):
+    with patch.object(
+        LaborCostService,
+        "calculate_project_labor_cost",
+        return_value={"success": True, "message": "ok", "cost_count": 1},
+    ):
         result = LaborCostService.calculate_all_projects_labor_cost(mock_db)
 
     assert result["total_projects"] == 2
@@ -107,8 +117,10 @@ def test_calculate_monthly_costs_basic():
     # No projects with timesheets in that month
     mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = []
 
-    with patch("app.services.labor_cost_service.get_month_range_by_ym",
-               return_value=(date(2024, 1, 1), date(2024, 1, 31))):
+    with patch(
+        "app.services.labor_cost_service.get_month_range_by_ym",
+        return_value=(date(2024, 1, 1), date(2024, 1, 31)),
+    ):
         svc = LaborCostCalculationService(mock_db)
         result = svc.calculate_monthly_costs(2024, 1)
 
@@ -121,6 +133,7 @@ def test_calculate_monthly_costs_basic():
 def _make_expense_service(mock_db):
     """辅助函数：创建 LaborCostExpenseService，绕过 HourlyRateService 导入"""
     from app.services.labor_cost_service import LaborCostExpenseService
+
     with patch("app.services.hourly_rate_service.HourlyRateService", MagicMock()):
         svc = LaborCostExpenseService.__new__(LaborCostExpenseService)
         svc.db = mock_db

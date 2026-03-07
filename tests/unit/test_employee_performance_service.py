@@ -11,7 +11,7 @@
 
 import unittest
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 from fastapi import HTTPException
 
@@ -476,9 +476,7 @@ class TestSaveMonthlySummaryDraft(unittest.TestCase):
         mock_query = self.mock_db.query.return_value
         mock_query.filter.return_value.first.return_value = None
 
-        result = self.service.save_monthly_summary_draft(
-            current_user, "2026-02", summary_update
-        )
+        result = self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         self.mock_db.add.assert_called_once()
         self.mock_db.commit.assert_called_once()
@@ -503,9 +501,7 @@ class TestSaveMonthlySummaryDraft(unittest.TestCase):
         mock_query = self.mock_db.query.return_value
         mock_query.filter.return_value.first.return_value = existing_draft
 
-        result = self.service.save_monthly_summary_draft(
-            current_user, "2026-02", summary_update
-        )
+        result = self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         # 验证字段被更新
         self.assertEqual(existing_draft.work_content, "更新的内容")
@@ -528,9 +524,7 @@ class TestSaveMonthlySummaryDraft(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = existing_summary
 
         with self.assertRaises(HTTPException) as context:
-            self.service.save_monthly_summary_draft(
-                current_user, "2026-02", summary_update
-            )
+            self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("只能更新草稿状态", context.exception.detail)
@@ -554,9 +548,7 @@ class TestSaveMonthlySummaryDraft(unittest.TestCase):
         mock_query = self.mock_db.query.return_value
         mock_query.filter.return_value.first.return_value = existing_draft
 
-        result = self.service.save_monthly_summary_draft(
-            current_user, "2026-02", summary_update
-        )
+        result = self.service.save_monthly_summary_draft(current_user, "2026-02", summary_update)
 
         # 验证原内容没有被None覆盖
         self.assertEqual(existing_draft.work_content, "原内容")
@@ -677,9 +669,7 @@ class TestGetMyPerformance(unittest.TestCase):
 
     @patch("app.services.employee_performance.employee_performance_service.date")
     @patch("app.services.employee_performance.employee_performance_service.PerformanceService")
-    def test_get_performance_with_current_summary(
-        self, mock_perf_service, mock_date
-    ):
+    def test_get_performance_with_current_summary(self, mock_perf_service, mock_date):
         """测试有当前周期的工作总结"""
         mock_date.today.return_value = date(2026, 2, 21)
 
@@ -739,20 +729,14 @@ class TestGetMyPerformance(unittest.TestCase):
 
         self.assertEqual(result["current_status"]["period"], "2026-02")
         self.assertEqual(result["current_status"]["summary_status"], "SUBMITTED")
-        self.assertEqual(
-            result["current_status"]["dept_evaluation"]["status"], "COMPLETED"
-        )
-        self.assertEqual(
-            result["current_status"]["dept_evaluation"]["evaluator"], "张经理"
-        )
+        self.assertEqual(result["current_status"]["dept_evaluation"]["status"], "COMPLETED")
+        self.assertEqual(result["current_status"]["dept_evaluation"]["evaluator"], "张经理")
         self.assertEqual(result["current_status"]["dept_evaluation"]["score"], 85)
         self.assertEqual(len(result["current_status"]["project_evaluations"]), 1)
 
     @patch("app.services.employee_performance.employee_performance_service.date")
     @patch("app.services.employee_performance.employee_performance_service.PerformanceService")
-    def test_get_performance_with_completed_summary(
-        self, mock_perf_service, mock_date
-    ):
+    def test_get_performance_with_completed_summary(self, mock_perf_service, mock_date):
         """测试已完成的工作总结"""
         mock_date.today.return_value = date(2026, 2, 21)
 
@@ -802,9 +786,7 @@ class TestGetMyPerformance(unittest.TestCase):
     @patch("app.services.employee_performance.employee_performance_service.date")
     @patch("app.services.employee_performance.employee_performance_service.PerformanceService")
     @patch("app.services.employee_performance.employee_performance_service.timedelta")
-    def test_get_performance_quarterly_trend(
-        self, mock_timedelta, mock_perf_service, mock_date
-    ):
+    def test_get_performance_quarterly_trend(self, mock_timedelta, mock_perf_service, mock_date):
         """测试季度趋势"""
         mock_date.today.return_value = date(2026, 2, 21)
 

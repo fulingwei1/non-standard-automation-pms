@@ -23,8 +23,8 @@ class AnalysisReportGenerator:
     # 负荷级别阈值（按月度工作日计算）
     LOAD_THRESHOLDS = {
         "OVERLOAD": 22,  # 超过22天
-        "HIGH": 18,      # 18-22天
-        "MEDIUM": 12,    # 12-18天
+        "HIGH": 18,  # 18-22天
+        "MEDIUM": 12,  # 12-18天
         # LOW: < 12天
     }
 
@@ -56,9 +56,7 @@ class AnalysisReportGenerator:
             end_date = date.today()
 
         # 获取人员范围
-        users, scope_name = AnalysisReportGenerator._get_user_scope(
-            db, department_id
-        )
+        users, scope_name = AnalysisReportGenerator._get_user_scope(db, department_id)
         user_ids = [u.id for u in users]
 
         # 工时统计
@@ -124,7 +122,7 @@ class AnalysisReportGenerator:
             报表数据字典
         """
         if not start_date:
-            start_date = month_start(date.today()) # 本月初
+            start_date = month_start(date.today())  # 本月初
         if not end_date:
             end_date = date.today()
 
@@ -133,9 +131,7 @@ class AnalysisReportGenerator:
 
         # 计算成本
         project_summaries, total_budget, total_actual = (
-            AnalysisReportGenerator._calculate_project_costs(
-                db, projects, start_date, end_date
-            )
+            AnalysisReportGenerator._calculate_project_costs(db, projects, start_date, end_date)
         )
 
         return {
@@ -159,16 +155,10 @@ class AnalysisReportGenerator:
         }
 
     @staticmethod
-    def _get_user_scope(
-        db: Session, department_id: Optional[int]
-    ) -> tuple[List[User], str]:
+    def _get_user_scope(db: Session, department_id: Optional[int]) -> tuple[List[User], str]:
         """获取用户范围"""
         if department_id:
-            dept = (
-                db.query(Department)
-                .filter(Department.id == department_id)
-                .first()
-            )
+            dept = db.query(Department).filter(Department.id == department_id).first()
             if dept:
                 # 尝试通过 department_id 查询
                 users = (
@@ -257,9 +247,7 @@ class AnalysisReportGenerator:
         return workload_list, load_summary
 
     @staticmethod
-    def _get_projects(
-        db: Session, project_id: Optional[int]
-    ) -> List[Project]:
+    def _get_projects(db: Session, project_id: Optional[int]) -> List[Project]:
         """获取项目列表"""
         if project_id:
             return db.query(Project).filter(Project.id == project_id).all()
@@ -286,11 +274,7 @@ class AnalysisReportGenerator:
         total_actual = 0
 
         for project in projects:
-            budget = (
-                float(project.budget_amount or 0)
-                if hasattr(project, "budget_amount")
-                else 0
-            )
+            budget = float(project.budget_amount or 0) if hasattr(project, "budget_amount") else 0
             total_budget += budget
 
             # 获取项目工时
@@ -305,9 +289,7 @@ class AnalysisReportGenerator:
             labor_hours = sum(float(t.hours or 0) for t in timesheets)
 
             # 估算人工成本
-            estimated_labor_cost = (
-                labor_hours * AnalysisReportGenerator.DEFAULT_HOURLY_RATE
-            )
+            estimated_labor_cost = labor_hours * AnalysisReportGenerator.DEFAULT_HOURLY_RATE
             total_actual += estimated_labor_cost
 
             variance = budget - estimated_labor_cost

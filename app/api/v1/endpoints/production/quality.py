@@ -39,12 +39,13 @@ router = APIRouter()
 
 # ==================== 质检记录 ====================
 
+
 @router.post("/inspection", response_model=QualityInspectionResponse, summary="创建质检记录")
 def create_quality_inspection(
     *,
     db: Session = Depends(deps.get_db),
     inspection_data: QualityInspectionCreate,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     创建质检记录
@@ -59,9 +60,7 @@ def create_quality_inspection(
     """
     try:
         inspection = QualityService.create_inspection(
-            db=db,
-            inspection_data=inspection_data,
-            current_user_id=current_user["id"]
+            db=db, inspection_data=inspection_data, current_user_id=current_user["id"]
         )
         return inspection
     except Exception as e:
@@ -78,7 +77,7 @@ def list_quality_inspections(
     inspection_result: Optional[str] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     查询质检记录列表
@@ -99,6 +98,7 @@ def list_quality_inspections(
 
 # ==================== 质量趋势分析 ====================
 
+
 @router.get("/trend", response_model=QualityTrendResponse, summary="质量趋势分析")
 def get_quality_trend(
     *,
@@ -108,7 +108,7 @@ def get_quality_trend(
     material_id: Optional[int] = Query(None, description="物料ID筛选"),
     inspection_type: Optional[str] = Query(None, description="检验类型筛选"),
     group_by: str = Query("day", regex="^(day|week|month)$", description="聚合维度"),
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     质量趋势分析
@@ -124,7 +124,7 @@ def get_quality_trend(
             end_date=end_date,
             material_id=material_id,
             inspection_type=inspection_type,
-            group_by=group_by
+            group_by=group_by,
         )
         return result
     except Exception as e:
@@ -133,12 +133,15 @@ def get_quality_trend(
 
 # ==================== 不良品根因分析 ====================
 
-@router.post("/defect-analysis", response_model=DefectAnalysisResponse, summary="创建不良品根因分析")
+
+@router.post(
+    "/defect-analysis", response_model=DefectAnalysisResponse, summary="创建不良品根因分析"
+)
 def create_defect_analysis(
     *,
     db: Session = Depends(deps.get_db),
     analysis_data: DefectAnalysisCreate,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     创建不良品根因分析
@@ -153,21 +156,23 @@ def create_defect_analysis(
     """
     try:
         analysis = QualityService.create_defect_analysis(
-            db=db,
-            analysis_data=analysis_data,
-            current_user_id=current_user["id"]
+            db=db, analysis_data=analysis_data, current_user_id=current_user["id"]
         )
         return analysis
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/defect-analysis/{analysis_id}", response_model=DefectAnalysisResponse, summary="获取不良品分析详情")
+@router.get(
+    "/defect-analysis/{analysis_id}",
+    response_model=DefectAnalysisResponse,
+    summary="获取不良品分析详情",
+)
 def get_defect_analysis(
     *,
     db: Session = Depends(deps.get_db),
     analysis_id: int,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """获取不良品分析详情"""
     analysis = get_or_404(db, DefectAnalysis, analysis_id, detail="不良品分析记录不存在")
@@ -176,13 +181,14 @@ def get_defect_analysis(
 
 # ==================== 质量预警 ====================
 
+
 @router.get("/alerts", response_model=QualityAlertListResponse, summary="质量预警列表")
 def list_quality_alerts(
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     alert_level: Optional[str] = None,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     质量预警列表
@@ -198,7 +204,7 @@ def create_quality_alert_rule(
     *,
     db: Session = Depends(deps.get_db),
     rule_data: QualityAlertRuleCreate,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     创建质量预警规则
@@ -217,7 +223,7 @@ def create_quality_alert_rule(
 def list_quality_alert_rules(
     db: Session = Depends(deps.get_db),
     enabled: Optional[int] = None,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """查询质量预警规则列表"""
     service = ProductionQualityService(db)
@@ -225,6 +231,7 @@ def list_quality_alert_rules(
 
 
 # ==================== SPC控制图 ====================
+
 
 @router.get("/spc", response_model=SPCDataResponse, summary="SPC控制图数据")
 def get_spc_data(
@@ -234,7 +241,7 @@ def get_spc_data(
     start_date: datetime = Query(..., description="开始日期"),
     end_date: datetime = Query(..., description="结束日期"),
     inspection_type: Optional[str] = Query(None, description="检验类型"),
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     获取SPC控制图数据
@@ -249,7 +256,7 @@ def get_spc_data(
             material_id=material_id,
             start_date=start_date,
             end_date=end_date,
-            inspection_type=inspection_type
+            inspection_type=inspection_type,
         )
         return result
     except ValueError as e:
@@ -260,12 +267,13 @@ def get_spc_data(
 
 # ==================== 返工管理 ====================
 
+
 @router.post("/rework", response_model=ReworkOrderResponse, summary="创建返工单")
 def create_rework_order(
     *,
     db: Session = Depends(deps.get_db),
     rework_data: ReworkOrderCreate,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     创建返工单
@@ -276,9 +284,7 @@ def create_rework_order(
     """
     try:
         rework_order = QualityService.create_rework_order(
-            db=db,
-            rework_data=rework_data.model_dump(),
-            current_user_id=current_user["id"]
+            db=db, rework_data=rework_data.model_dump(), current_user_id=current_user["id"]
         )
         return rework_order
     except Exception as e:
@@ -291,7 +297,7 @@ def complete_rework_order(
     db: Session = Depends(deps.get_db),
     id: int,
     completion_data: ReworkOrderCompleteRequest,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     完成返工单
@@ -301,9 +307,7 @@ def complete_rework_order(
     """
     try:
         rework_order = QualityService.complete_rework_order(
-            db=db,
-            rework_order_id=id,
-            completion_data=completion_data.model_dump()
+            db=db, rework_order_id=id, completion_data=completion_data.model_dump()
         )
         return rework_order
     except ValueError as e:
@@ -318,7 +322,7 @@ def list_rework_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     status: Optional[str] = None,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """查询返工单列表"""
     service = ProductionQualityService(db)
@@ -326,6 +330,7 @@ def list_rework_orders(
 
 
 # ==================== 帕累托分析 ====================
+
 
 @router.get("/pareto", response_model=ParetoAnalysisResponse, summary="帕累托分析")
 def get_pareto_analysis(
@@ -335,7 +340,7 @@ def get_pareto_analysis(
     end_date: datetime = Query(..., description="结束日期"),
     material_id: Optional[int] = Query(None, description="物料ID筛选"),
     top_n: int = Query(10, ge=1, le=50, description="显示Top N不良"),
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     帕累托分析 (80/20原则)
@@ -346,11 +351,7 @@ def get_pareto_analysis(
     """
     try:
         result = QualityService.pareto_analysis(
-            db=db,
-            start_date=start_date,
-            end_date=end_date,
-            material_id=material_id,
-            top_n=top_n
+            db=db, start_date=start_date, end_date=end_date, material_id=material_id, top_n=top_n
         )
         return result
     except Exception as e:
@@ -359,10 +360,10 @@ def get_pareto_analysis(
 
 # ==================== 质量统计看板 ====================
 
+
 @router.get("/statistics", response_model=QualityStatisticsResponse, summary="质量统计看板")
 def get_quality_statistics(
-    db: Session = Depends(deps.get_db),
-    current_user: dict = Depends(deps.get_current_user)
+    db: Session = Depends(deps.get_db), current_user: dict = Depends(deps.get_current_user)
 ):
     """
     质量统计看板
@@ -382,12 +383,13 @@ def get_quality_statistics(
 
 # ==================== 批次质量追溯 ====================
 
+
 @router.get("/batch-tracing", response_model=BatchTracingResponse, summary="批次质量追溯")
 def get_batch_tracing(
     *,
     db: Session = Depends(deps.get_db),
     batch_no: str = Query(..., description="批次号"),
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     批次质量追溯
@@ -408,12 +410,13 @@ def get_batch_tracing(
 
 # ==================== 纠正措施 ====================
 
+
 @router.post("/corrective-action", response_model=dict, summary="创建纠正措施")
 def create_corrective_action(
     *,
     db: Session = Depends(deps.get_db),
     action_data: CorrectiveActionCreate,
-    current_user: dict = Depends(deps.get_current_user)
+    current_user: dict = Depends(deps.get_current_user),
 ):
     """
     创建纠正措施记录

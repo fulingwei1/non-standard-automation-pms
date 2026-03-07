@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests for async BaseRepository - mock at method level to avoid select() issues"""
 
-import pytest
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from pydantic import BaseModel
 
 
@@ -22,11 +24,12 @@ class FCreate(BaseModel):
 
 
 class FUpdate(BaseModel):
-    name: str | None = None
+    name: Optional[str] = None
 
 
 def _make_repo():
     from app.common.crud.repository import BaseRepository
+
     db = AsyncMock()
     repo = BaseRepository(FakeModel, db, "Fake")
     return repo, db
@@ -40,6 +43,7 @@ class TestAsyncRepoInit:
 
     def test_default_resource_name(self):
         from app.common.crud.repository import BaseRepository
+
         db = AsyncMock()
         repo = BaseRepository(FakeModel, db)
         assert repo.resource_name == "FakeModel"
@@ -148,7 +152,9 @@ class TestAsyncRepoExists:
     @pytest.mark.asyncio
     async def test_exists_true(self):
         repo, db = _make_repo()
-        with patch.object(repo, "get", new_callable=AsyncMock, return_value=FakeModel(id=1, name="x")):
+        with patch.object(
+            repo, "get", new_callable=AsyncMock, return_value=FakeModel(id=1, name="x")
+        ):
             assert await repo.exists(1) is True
 
     @pytest.mark.asyncio
@@ -160,5 +166,7 @@ class TestAsyncRepoExists:
     @pytest.mark.asyncio
     async def test_exists_by_field(self):
         repo, db = _make_repo()
-        with patch.object(repo, "get_by_field", new_callable=AsyncMock, return_value=FakeModel(id=1, name="x")):
+        with patch.object(
+            repo, "get_by_field", new_callable=AsyncMock, return_value=FakeModel(id=1, name="x")
+        ):
             assert await repo.exists_by_field("name", "x") is True

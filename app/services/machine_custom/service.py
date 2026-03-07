@@ -14,13 +14,13 @@ from fastapi import HTTPException, UploadFile
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.common.query_filters import apply_pagination
 from app.core.config import settings
 from app.models.material import BomHeader
 from app.models.project import Machine, ProjectDocument
 from app.models.service import ServiceRecord
 from app.models.user import User
 from app.utils.db_helpers import save_obj
-from app.common.query_filters import apply_pagination
 
 # 文档类型到权限代码的映射
 DOC_TYPE_PERMISSION_MAP = {
@@ -49,11 +49,7 @@ class MachineCustomService:
     def __init__(self, db: Session):
         self.db = db
 
-    def update_machine_progress(
-        self,
-        machine: Machine,
-        progress_pct: Decimal
-    ) -> Machine:
+    def update_machine_progress(self, machine: Machine, progress_pct: Decimal) -> Machine:
         """
         更新机台进度并触发项目聚合计算
 
@@ -94,16 +90,18 @@ class MachineCustomService:
 
         result = []
         for bom in bom_headers:
-            result.append({
-                "id": bom.id,
-                "bom_no": bom.bom_no,
-                "bom_name": bom.bom_name,
-                "version": bom.version,
-                "is_latest": bom.is_latest,
-                "status": bom.status,
-                "total_items": bom.total_items,
-                "total_amount": float(bom.total_amount) if bom.total_amount else 0,
-            })
+            result.append(
+                {
+                    "id": bom.id,
+                    "bom_no": bom.bom_no,
+                    "bom_name": bom.bom_name,
+                    "version": bom.version,
+                    "is_latest": bom.is_latest,
+                    "status": bom.status,
+                    "total_items": bom.total_items,
+                    "total_amount": float(bom.total_amount) if bom.total_amount else 0,
+                }
+            )
 
         return result
 
@@ -156,13 +154,17 @@ class MachineCustomService:
         """
         # 验证文档类型
         valid_doc_types = [
-            "CIRCUIT_DIAGRAM", "PLC_PROGRAM", "LABELWORK_PROGRAM",
-            "BOM_DOCUMENT", "FAT_DOCUMENT", "SAT_DOCUMENT", "OTHER"
+            "CIRCUIT_DIAGRAM",
+            "PLC_PROGRAM",
+            "LABELWORK_PROGRAM",
+            "BOM_DOCUMENT",
+            "FAT_DOCUMENT",
+            "SAT_DOCUMENT",
+            "OTHER",
         ]
         if doc_type.upper() not in valid_doc_types:
             raise HTTPException(
-                status_code=400,
-                detail=f"无效的文档类型。有效值：{', '.join(valid_doc_types)}"
+                status_code=400, detail=f"无效的文档类型。有效值：{', '.join(valid_doc_types)}"
             )
 
         # 检查权限
@@ -210,7 +212,7 @@ class MachineCustomService:
         machine: Machine,
         user: User,
         doc_type: Optional[str] = None,
-        group_by_type: bool = True
+        group_by_type: bool = True,
     ) -> Dict[str, Any]:
         """
         获取机台文档列表
@@ -224,9 +226,7 @@ class MachineCustomService:
         Returns:
             文档列表数据
         """
-        query = self.db.query(ProjectDocument).filter(
-            ProjectDocument.machine_id == machine.id
-        )
+        query = self.db.query(ProjectDocument).filter(ProjectDocument.machine_id == machine.id)
         if doc_type:
             query = query.filter(ProjectDocument.doc_type == doc_type)
 
@@ -234,8 +234,7 @@ class MachineCustomService:
 
         # 权限过滤
         accessible_documents = [
-            doc for doc in all_documents
-            if self.check_document_permission(user, doc.doc_type)
+            doc for doc in all_documents if self.check_document_permission(user, doc.doc_type)
         ]
 
         if group_by_type:
@@ -263,16 +262,13 @@ class MachineCustomService:
                 "machine_code": machine.machine_code,
                 "machine_name": machine.machine_name,
                 "documents": [
-                    ProjectDocumentResponse.model_validate(doc)
-                    for doc in accessible_documents
+                    ProjectDocumentResponse.model_validate(doc) for doc in accessible_documents
                 ],
                 "total_count": len(accessible_documents),
             }
 
     def get_document_download_path(
-        self,
-        document: ProjectDocument,
-        user: User
+        self, document: ProjectDocument, user: User
     ) -> Tuple[FilePath, str]:
         """
         获取文档下载路径
@@ -306,11 +302,7 @@ class MachineCustomService:
 
         return resolved_path, document.file_name
 
-    def get_document_versions(
-        self,
-        document: ProjectDocument,
-        user: User
-    ) -> List[ProjectDocument]:
+    def get_document_versions(self, document: ProjectDocument, user: User) -> List[ProjectDocument]:
         """
         获取文档的所有版本
 
@@ -338,16 +330,10 @@ class MachineCustomService:
         all_versions = query.order_by(desc(ProjectDocument.created_at)).all()
 
         # 权限过滤
-        return [
-            doc for doc in all_versions
-            if self.check_document_permission(user, doc.doc_type)
-        ]
+        return [doc for doc in all_versions if self.check_document_permission(user, doc.doc_type)]
 
     def get_service_history(
-        self,
-        machine: Machine,
-        page: int = 1,
-        page_size: int = 20
+        self, machine: Machine, page: int = 1, page_size: int = 20
     ) -> Dict[str, Any]:
         """
         获取机台服务历史记录
@@ -360,46 +346,44 @@ class MachineCustomService:
         Returns:
             服务历史数据
         """
-        query = self.db.query(ServiceRecord).filter(
-            ServiceRecord.machine_no == machine.machine_no
-        )
+        query = self.db.query(ServiceRecord).filter(ServiceRecord.machine_no == machine.machine_no)
 
         total = query.count()
         offset = (page - 1) * page_size
         records = apply_pagination(
-            query.order_by(desc(ServiceRecord.service_date)),
-            offset,
-            page_size
+            query.order_by(desc(ServiceRecord.service_date)), offset, page_size
         ).all()
 
         history_items = []
         for record in records:
-            history_items.append({
-                "id": record.id,
-                "record_no": record.record_no,
-                "service_type": record.service_type,
-                "service_date": record.service_date.isoformat() if record.service_date else None,
-                "service_content": record.service_content,
-                "service_result": record.service_result,
-                "issues_found": record.issues_found,
-                "solution_provided": record.solution_provided,
-                "duration_hours": float(record.duration_hours) if record.duration_hours else None,
-                "service_engineer_name": record.service_engineer_name,
-                "customer_satisfaction": record.customer_satisfaction,
-                "customer_feedback": record.customer_feedback,
-                "location": record.location,
-                "created_at": record.created_at.isoformat() if record.created_at else None
-            })
+            history_items.append(
+                {
+                    "id": record.id,
+                    "record_no": record.record_no,
+                    "service_type": record.service_type,
+                    "service_date": (
+                        record.service_date.isoformat() if record.service_date else None
+                    ),
+                    "service_content": record.service_content,
+                    "service_result": record.service_result,
+                    "issues_found": record.issues_found,
+                    "solution_provided": record.solution_provided,
+                    "duration_hours": (
+                        float(record.duration_hours) if record.duration_hours else None
+                    ),
+                    "service_engineer_name": record.service_engineer_name,
+                    "customer_satisfaction": record.customer_satisfaction,
+                    "customer_feedback": record.customer_feedback,
+                    "location": record.location,
+                    "created_at": record.created_at.isoformat() if record.created_at else None,
+                }
+            )
 
         # 统计信息
         total_hours = sum([float(r.duration_hours or 0) for r in records])
-        satisfaction_scores = [
-            r.customer_satisfaction for r in records
-            if r.customer_satisfaction
-        ]
+        satisfaction_scores = [r.customer_satisfaction for r in records if r.customer_satisfaction]
         avg_satisfaction = (
-            sum(satisfaction_scores) / len(satisfaction_scores)
-            if satisfaction_scores else None
+            sum(satisfaction_scores) / len(satisfaction_scores) if satisfaction_scores else None
         )
 
         return {
@@ -409,13 +393,13 @@ class MachineCustomService:
             "summary": {
                 "total_records": total,
                 "total_service_hours": round(total_hours, 2),
-                "avg_satisfaction": round(avg_satisfaction, 2) if avg_satisfaction else None
+                "avg_satisfaction": round(avg_satisfaction, 2) if avg_satisfaction else None,
             },
             "items": history_items,
             "pagination": {
                 "page": page,
                 "page_size": page_size,
                 "total": total,
-                "pages": (total + page_size - 1) // page_size
-            }
+                "pages": (total + page_size - 1) // page_size,
+            },
         }

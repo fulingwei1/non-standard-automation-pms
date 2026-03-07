@@ -2,12 +2,14 @@
 """
 第三十二批覆盖率测试 - 知识贡献服务 (扩展)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.knowledge_contribution_service import KnowledgeContributionService
+
     HAS_KCS = True
 except Exception:
     HAS_KCS = False
@@ -39,8 +41,10 @@ class TestCreateContribution:
         data.file_path = "/path/to/file"
         data.tags = ["tag1", "tag2"]
 
-        with patch("app.services.knowledge_contribution_service.KnowledgeContribution") as MockKC, \
-             patch("app.services.knowledge_contribution_service.save_obj"):
+        with (
+            patch("app.services.knowledge_contribution_service.KnowledgeContribution") as MockKC,
+            patch("app.services.knowledge_contribution_service.save_obj"),
+        ):
             mock_contribution = MagicMock()
             MockKC.return_value = mock_contribution
             result = svc.create_contribution(data, contributor_id=1)
@@ -135,7 +139,9 @@ class TestListContributions:
         svc, db = make_service()
         mock_items = [MagicMock(), MagicMock()]
         db.query.return_value.count.return_value = 2
-        db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_items
+        db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_items
+        )
 
         items, total = svc.list_contributions()
         assert total == 2
@@ -145,9 +151,13 @@ class TestListContributions:
         svc, db = make_service()
         db.query.return_value.filter.return_value.count.return_value = 1
         mock_items = [MagicMock()]
-        db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_items
+        db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_items
+        )
         db.query.return_value.filter.return_value.filter.return_value.count.return_value = 1
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_items
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_items
+        )
 
         items, total = svc.list_contributions(contributor_id=1, status="approved")
         assert total >= 0
@@ -183,8 +193,10 @@ class TestDeleteContribution:
         mock_contrib = MagicMock()
         mock_contrib.contributor_id = 1
         mock_contrib.status = "draft"
-        with patch.object(svc, "get_contribution", return_value=mock_contrib), \
-             patch("app.services.knowledge_contribution_service.delete_obj"):
+        with (
+            patch.object(svc, "get_contribution", return_value=mock_contrib),
+            patch("app.services.knowledge_contribution_service.delete_obj"),
+        ):
             result = svc.delete_contribution(1, user_id=1)
         assert result is True
 

@@ -2,8 +2,9 @@
 """
 app/services/permission_cache_service.py 覆盖率测试（当前 41%）
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestPermissionCacheService:
@@ -13,6 +14,7 @@ class TestPermissionCacheService:
     def reset_singleton(self):
         """每个测试前重置单例"""
         from app.services.permission_cache_service import PermissionCacheService
+
         PermissionCacheService._instance = None
         yield
         PermissionCacheService._instance = None
@@ -27,24 +29,28 @@ class TestPermissionCacheService:
     @pytest.fixture
     def svc(self, mock_cache):
         from app.services.permission_cache_service import PermissionCacheService
+
         return PermissionCacheService()
 
     # ── 基础测试 ──────────────────────────────────
 
     def test_singleton(self, mock_cache):
         from app.services.permission_cache_service import PermissionCacheService
+
         s1 = PermissionCacheService()
         s2 = PermissionCacheService()
         assert s1 is s2
 
     def test_build_key_with_tenant(self, svc):
         from app.services.permission_cache_service import CACHE_PREFIX_USER_PERMISSIONS
+
         key = svc._build_key(CACHE_PREFIX_USER_PERMISSIONS, tenant_id=5, resource_id=42)
         assert "5" in key
         assert "42" in key
 
     def test_build_key_without_tenant(self, svc):
         from app.services.permission_cache_service import CACHE_PREFIX_USER_PERMISSIONS
+
         key = svc._build_key(CACHE_PREFIX_USER_PERMISSIONS, tenant_id=None, resource_id=1)
         assert "system" in key
         assert "1" in key
@@ -141,10 +147,7 @@ class TestPermissionCacheService:
         mock_cache.delete.return_value = True
         mock_cache.delete_pattern.return_value = 1
         result = svc.invalidate_user_role_change(
-            user_id=10,
-            old_role_ids=[1, 2],
-            new_role_ids=[3, 4],
-            tenant_id=1
+            user_id=10, old_role_ids=[1, 2], new_role_ids=[3, 4], tenant_id=1
         )
         assert isinstance(result, int)
 

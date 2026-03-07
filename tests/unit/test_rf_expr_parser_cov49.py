@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/expressions/parser.py"""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.report_framework.expressions.parser import ExpressionParser, ExpressionError
+    from app.services.report_framework.expressions.parser import ExpressionError, ExpressionParser
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 

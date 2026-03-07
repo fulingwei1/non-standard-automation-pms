@@ -18,7 +18,6 @@ from app.models.material import BomHeader, BomItem, Material, MaterialCategory, 
 from app.models.purchase import GoodsReceipt, GoodsReceiptItem, PurchaseOrder, PurchaseOrderItem
 from app.models.vendor import Vendor
 
-
 DROP_TABLES = [
     "goods_receipt_items",
     "goods_receipts",

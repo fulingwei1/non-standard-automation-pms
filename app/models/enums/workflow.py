@@ -126,8 +126,10 @@ class EcnChangeTypeEnum(str, Enum):
 
 # ==================== 项目变更管理枚举 ====================
 
+
 class ChangeTypeEnum(str, Enum):
     """变更类型"""
+
     REQUIREMENT = "REQUIREMENT"  # 需求变更
     DESIGN = "DESIGN"  # 设计变更
     SCOPE = "SCOPE"  # 范围变更
@@ -136,12 +138,14 @@ class ChangeTypeEnum(str, Enum):
 
 class ChangeSourceEnum(str, Enum):
     """变更来源"""
+
     CUSTOMER = "CUSTOMER"  # 客户提出
     INTERNAL = "INTERNAL"  # 内部提出
 
 
 class ChangeStatusEnum(str, Enum):
     """变更状态（工作流状态机）"""
+
     SUBMITTED = "SUBMITTED"  # 已提交
     ASSESSING = "ASSESSING"  # 影响评估中
     PENDING_APPROVAL = "PENDING_APPROVAL"  # 待审批
@@ -155,6 +159,7 @@ class ChangeStatusEnum(str, Enum):
 
 class ImpactLevelEnum(str, Enum):
     """影响程度"""
+
     LOW = "LOW"  # 低影响
     MEDIUM = "MEDIUM"  # 中等影响
     HIGH = "HIGH"  # 高影响
@@ -163,6 +168,7 @@ class ImpactLevelEnum(str, Enum):
 
 class ApprovalDecisionEnum(str, Enum):
     """审批决策"""
+
     PENDING = "PENDING"  # 待审批
     APPROVED = "APPROVED"  # 批准
     REJECTED = "REJECTED"  # 拒绝

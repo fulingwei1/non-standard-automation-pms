@@ -13,13 +13,17 @@ class TestDeptReportGenerator:
 
     def test_generate_weekly_department_not_found(self):
         from app.services.report_framework.generators.department import DeptReportGenerator
+
         self.db.query.return_value.filter.return_value.first.return_value = None
-        result = DeptReportGenerator.generate_weekly(self.db, 999, date(2024, 1, 1), date(2024, 1, 7))
+        result = DeptReportGenerator.generate_weekly(
+            self.db, 999, date(2024, 1, 1), date(2024, 1, 7)
+        )
         assert "error" in result
 
     @pytest.mark.skip(reason="User model lacks department_id attribute in test context")
     def test_generate_weekly_returns_dict(self):
         from app.services.report_framework.generators.department import DeptReportGenerator
+
         dept = MagicMock()
         dept.id = 1
         dept.dept_name = "测试部门"
@@ -31,14 +35,18 @@ class TestDeptReportGenerator:
 
     def test_generate_monthly_department_not_found(self):
         from app.services.report_framework.generators.department import DeptReportGenerator
+
         self.db.query.return_value.filter.return_value.first.return_value = None
-        result = DeptReportGenerator.generate_monthly(self.db, 999, date(2024, 1, 1), date(2024, 1, 31))
+        result = DeptReportGenerator.generate_monthly(
+            self.db, 999, date(2024, 1, 1), date(2024, 1, 31)
+        )
         assert "error" in result
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # G4 补充测试 - DeptReportGenerator
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 class TestDeptReportGeneratorG4:
     """G4 补充：DeptReportGenerator 额外覆盖"""
@@ -68,9 +76,7 @@ class TestDeptReportGeneratorG4:
         # 工时聚合返回 None
         self.db.query.return_value.filter.return_value.scalar.return_value = None
 
-        result = DeptReportGenerator.generate_weekly(
-            self.db, 1, date(2024, 1, 1), date(2024, 1, 7)
-        )
+        result = DeptReportGenerator.generate_weekly(self.db, 1, date(2024, 1, 1), date(2024, 1, 7))
         assert isinstance(result, dict)
         assert "summary" in result
 
@@ -145,8 +151,6 @@ class TestDeptReportGeneratorG4:
         self.db.query.return_value.join.return_value.filter.return_value.all.return_value = []
         self.db.query.return_value.filter.return_value.scalar.return_value = None
 
-        result = DeptReportGenerator.generate_weekly(
-            self.db, 1, date(2024, 6, 3), date(2024, 6, 9)
-        )
+        result = DeptReportGenerator.generate_weekly(self.db, 1, date(2024, 6, 3), date(2024, 6, 9))
         assert result["summary"]["period_start"] == "2024-06-03"
         assert result["summary"]["period_end"] == "2024-06-09"

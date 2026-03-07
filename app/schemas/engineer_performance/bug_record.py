@@ -16,28 +16,31 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ==================== Bug记录 Schemas ====================
+
 
 class TestBugRecordBase(BaseModel):
     """Bug记录基础"""
+
     project_id: Optional[int] = Field(None, description="项目ID")
     title: str = Field(..., max_length=200, description="标题")
     description: Optional[str] = Field(None, description="描述")
     severity: Optional[str] = Field(None, description="严重程度")
     bug_type: Optional[str] = Field(None, description="Bug类型")
     found_stage: Optional[str] = Field(None, description="发现阶段")
-    priority: Optional[str] = Field('normal', description="优先级")
+    priority: Optional[str] = Field("normal", description="优先级")
 
 
 class TestBugRecordCreate(TestBugRecordBase):
     """创建Bug记录"""
+
     assignee_id: int = Field(..., description="处理人ID")
     found_time: Optional[datetime] = Field(None, description="发现时间")
 
 
 class TestBugRecordUpdate(BaseModel):
     """更新Bug记录"""
+
     status: Optional[str] = None
     priority: Optional[str] = None
     assignee_id: Optional[int] = None
@@ -48,6 +51,7 @@ class TestBugRecordUpdate(BaseModel):
 
 class TestBugRecordResponse(TestBugRecordBase):
     """Bug记录响应"""
+
     id: int
     bug_code: Optional[str] = None
     assignee_id: int
@@ -62,5 +66,3 @@ class TestBugRecordResponse(TestBugRecordBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
-

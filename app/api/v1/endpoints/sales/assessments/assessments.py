@@ -45,7 +45,7 @@ def apply_lead_assessment(
         source_type=AssessmentSourceTypeEnum.LEAD.value,
         source_id=lead_id,
         evaluator_id=request.evaluator_id or current_user.id,
-        status=AssessmentStatusEnum.PENDING.value
+        status=AssessmentStatusEnum.PENDING.value,
     )
 
     db.add(assessment)
@@ -60,7 +60,9 @@ def apply_lead_assessment(
     return ResponseModel(message="技术评估申请已提交", data={"assessment_id": assessment.id})
 
 
-@router.post("/opportunities/{opp_id}/assessments/apply", response_model=ResponseModel, status_code=201)
+@router.post(
+    "/opportunities/{opp_id}/assessments/apply", response_model=ResponseModel, status_code=201
+)
 def apply_opportunity_assessment(
     *,
     db: Session = Depends(deps.get_db),
@@ -76,7 +78,7 @@ def apply_opportunity_assessment(
         source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
         source_id=opp_id,
         evaluator_id=request.evaluator_id or current_user.id,
-        status=AssessmentStatusEnum.PENDING.value
+        status=AssessmentStatusEnum.PENDING.value,
     )
 
     db.add(assessment)
@@ -91,7 +93,11 @@ def apply_opportunity_assessment(
     return ResponseModel(message="技术评估申请已提交", data={"assessment_id": assessment.id})
 
 
-@router.post("/assessments/{assessment_id}/evaluate", response_model=TechnicalAssessmentResponse, status_code=200)
+@router.post(
+    "/assessments/{assessment_id}/evaluate",
+    response_model=TechnicalAssessmentResponse,
+    status_code=200,
+)
 async def evaluate_assessment(
     *,
     db: Session = Depends(deps.get_db),
@@ -119,7 +125,7 @@ async def evaluate_assessment(
         assessment.source_id,
         current_user.id,
         request.requirement_data,
-        ai_analysis=ai_analysis
+        ai_analysis=ai_analysis,
     )
 
     db.commit()
@@ -150,7 +156,7 @@ async def evaluate_assessment(
         evaluated_at=assessment.evaluated_at,
         created_at=assessment.created_at,
         updated_at=assessment.updated_at,
-        evaluator_name=evaluator_name
+        evaluator_name=evaluator_name,
     )
 
 
@@ -162,12 +168,17 @@ def get_lead_assessments(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取线索的技术评估列表"""
-    assessments = db.query(TechnicalAssessment).filter(
-        and_(
-            TechnicalAssessment.source_type == AssessmentSourceTypeEnum.LEAD.value,
-            TechnicalAssessment.source_id == lead_id
+    assessments = (
+        db.query(TechnicalAssessment)
+        .filter(
+            and_(
+                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                TechnicalAssessment.source_id == lead_id,
+            )
         )
-    ).order_by(desc(TechnicalAssessment.created_at)).all()
+        .order_by(desc(TechnicalAssessment.created_at))
+        .all()
+    )
 
     result = []
     for assessment in assessments:
@@ -176,26 +187,28 @@ def get_lead_assessments(
             evaluator = db.query(User).filter(User.id == assessment.evaluator_id).first()
             evaluator_name = evaluator.real_name if evaluator else None
 
-        result.append(TechnicalAssessmentResponse(
-            id=assessment.id,
-            source_type=assessment.source_type,
-            source_id=assessment.source_id,
-            evaluator_id=assessment.evaluator_id,
-            status=assessment.status,
-            total_score=assessment.total_score,
-            dimension_scores=assessment.dimension_scores,
-            veto_triggered=assessment.veto_triggered,
-            veto_rules=assessment.veto_rules,
-            decision=assessment.decision,
-            risks=assessment.risks,
-            similar_cases=assessment.similar_cases,
-            ai_analysis=assessment.ai_analysis,
-            conditions=assessment.conditions,
-            evaluated_at=assessment.evaluated_at,
-            created_at=assessment.created_at,
-            updated_at=assessment.updated_at,
-            evaluator_name=evaluator_name
-        ))
+        result.append(
+            TechnicalAssessmentResponse(
+                id=assessment.id,
+                source_type=assessment.source_type,
+                source_id=assessment.source_id,
+                evaluator_id=assessment.evaluator_id,
+                status=assessment.status,
+                total_score=assessment.total_score,
+                dimension_scores=assessment.dimension_scores,
+                veto_triggered=assessment.veto_triggered,
+                veto_rules=assessment.veto_rules,
+                decision=assessment.decision,
+                risks=assessment.risks,
+                similar_cases=assessment.similar_cases,
+                ai_analysis=assessment.ai_analysis,
+                conditions=assessment.conditions,
+                evaluated_at=assessment.evaluated_at,
+                created_at=assessment.created_at,
+                updated_at=assessment.updated_at,
+                evaluator_name=evaluator_name,
+            )
+        )
 
     return result
 
@@ -208,12 +221,17 @@ def get_opportunity_assessments(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """获取商机的技术评估列表"""
-    assessments = db.query(TechnicalAssessment).filter(
-        and_(
-            TechnicalAssessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
-            TechnicalAssessment.source_id == opp_id
+    assessments = (
+        db.query(TechnicalAssessment)
+        .filter(
+            and_(
+                TechnicalAssessment.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                TechnicalAssessment.source_id == opp_id,
+            )
         )
-    ).order_by(desc(TechnicalAssessment.created_at)).all()
+        .order_by(desc(TechnicalAssessment.created_at))
+        .all()
+    )
 
     result = []
     for assessment in assessments:
@@ -222,26 +240,28 @@ def get_opportunity_assessments(
             evaluator = db.query(User).filter(User.id == assessment.evaluator_id).first()
             evaluator_name = evaluator.real_name if evaluator else None
 
-        result.append(TechnicalAssessmentResponse(
-            id=assessment.id,
-            source_type=assessment.source_type,
-            source_id=assessment.source_id,
-            evaluator_id=assessment.evaluator_id,
-            status=assessment.status,
-            total_score=assessment.total_score,
-            dimension_scores=assessment.dimension_scores,
-            veto_triggered=assessment.veto_triggered,
-            veto_rules=assessment.veto_rules,
-            decision=assessment.decision,
-            risks=assessment.risks,
-            similar_cases=assessment.similar_cases,
-            ai_analysis=assessment.ai_analysis,
-            conditions=assessment.conditions,
-            evaluated_at=assessment.evaluated_at,
-            created_at=assessment.created_at,
-            updated_at=assessment.updated_at,
-            evaluator_name=evaluator_name
-        ))
+        result.append(
+            TechnicalAssessmentResponse(
+                id=assessment.id,
+                source_type=assessment.source_type,
+                source_id=assessment.source_id,
+                evaluator_id=assessment.evaluator_id,
+                status=assessment.status,
+                total_score=assessment.total_score,
+                dimension_scores=assessment.dimension_scores,
+                veto_triggered=assessment.veto_triggered,
+                veto_rules=assessment.veto_rules,
+                decision=assessment.decision,
+                risks=assessment.risks,
+                similar_cases=assessment.similar_cases,
+                ai_analysis=assessment.ai_analysis,
+                conditions=assessment.conditions,
+                evaluated_at=assessment.evaluated_at,
+                created_at=assessment.created_at,
+                updated_at=assessment.updated_at,
+                evaluator_name=evaluator_name,
+            )
+        )
 
     return result
 
@@ -279,5 +299,5 @@ def get_assessment(
         evaluated_at=assessment.evaluated_at,
         created_at=assessment.created_at,
         updated_at=assessment.updated_at,
-        evaluator_name=evaluator_name
+        evaluator_name=evaluator_name,
     )

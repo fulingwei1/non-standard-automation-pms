@@ -40,9 +40,7 @@ class BaseSlideBuilder:
         background.line.fill.background()
 
         # 标题
-        title_box = slide.shapes.add_textbox(
-            Inches(0.5), Inches(2.5), Inches(9), Inches(1.5)
-        )
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(9), Inches(1.5))
         tf = title_box.text_frame
         tf.word_wrap = True
         p = tf.paragraphs[0]
@@ -54,9 +52,7 @@ class BaseSlideBuilder:
 
         # 副标题
         if subtitle:
-            sub_box = slide.shapes.add_textbox(
-                Inches(0.5), Inches(4.2), Inches(9), Inches(1)
-            )
+            sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.2), Inches(9), Inches(1))
             tf2 = sub_box.text_frame
             p2 = tf2.paragraphs[0]
             p2.text = subtitle
@@ -97,9 +93,7 @@ class BaseSlideBuilder:
         line.fill.background()
 
         # 标题
-        title_box = slide.shapes.add_textbox(
-            Inches(0.5), Inches(3.5), Inches(9), Inches(1)
-        )
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.5), Inches(9), Inches(1))
         tf = title_box.text_frame
         p = tf.paragraphs[0]
         p.text = section_title
@@ -108,9 +102,7 @@ class BaseSlideBuilder:
         p.font.color.rgb = self.config.WHITE
 
         if section_subtitle:
-            sub_box = slide.shapes.add_textbox(
-                Inches(0.5), Inches(4.5), Inches(9), Inches(0.8)
-            )
+            sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.5), Inches(9), Inches(0.8))
             tf2 = sub_box.text_frame
             p2 = tf2.paragraphs[0]
             p2.text = section_subtitle
@@ -141,9 +133,7 @@ class BaseSlideBuilder:
 
     def _add_slide_title(self, slide, title: str):
         """添加幻灯片标题"""
-        title_box = slide.shapes.add_textbox(
-            Inches(0.5), Inches(0.3), Inches(9), Inches(0.8)
-        )
+        title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(9), Inches(0.8))
         tf = title_box.text_frame
         p = tf.paragraphs[0]
         p.text = title
@@ -154,9 +144,7 @@ class BaseSlideBuilder:
 
     def _add_page_number(self, slide, page_num: int):
         """添加页码"""
-        page_box = slide.shapes.add_textbox(
-            Inches(9), Inches(7), Inches(0.8), Inches(0.3)
-        )
+        page_box = slide.shapes.add_textbox(Inches(9), Inches(7), Inches(0.8), Inches(0.3))
         pf = page_box.text_frame.paragraphs[0]
         pf.text = str(page_num)
         pf.font.size = self.config.PAGE_NUMBER_FONT_SIZE

@@ -12,8 +12,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # ==================== 基础响应模型 ====================
 
+
 class TaskStatsResponse(BaseModel):
     """任务统计"""
+
     total_tasks: int = Field(0, description="总任务数")
     pending_tasks: int = Field(0, description="待接收任务数")
     in_progress_tasks: int = Field(0, description="进行中任务数")
@@ -25,8 +27,10 @@ class TaskStatsResponse(BaseModel):
 
 # ==================== 我的项目列表 ====================
 
+
 class MyProjectResponse(BaseModel):
     """工程师-我的项目响应"""
+
     project_id: int = Field(..., description="项目ID")
     project_code: str = Field(..., description="项目编号")
     project_name: str = Field(..., description="项目名称")
@@ -51,6 +55,7 @@ class MyProjectResponse(BaseModel):
 
 class MyProjectListResponse(BaseModel):
     """我的项目列表响应"""
+
     items: List[MyProjectResponse]
     total: int
     page: int = 1
@@ -60,13 +65,15 @@ class MyProjectListResponse(BaseModel):
 
 # ==================== 任务创建与更新 ====================
 
+
 class TaskCreateRequest(BaseModel):
     """任务创建请求"""
+
     project_id: int = Field(..., description="项目ID")
     title: str = Field(..., min_length=1, max_length=200, description="任务标题")
     description: Optional[str] = Field(None, description="任务描述")
 
-    task_importance: str = Field('GENERAL', description="任务重要性：IMPORTANT/GENERAL")
+    task_importance: str = Field("GENERAL", description="任务重要性：IMPORTANT/GENERAL")
     justification: Optional[str] = Field(None, description="任务必要性说明（IMPORTANT任务必填）")
 
     wbs_code: Optional[str] = Field(None, description="WBS编码")
@@ -75,7 +82,7 @@ class TaskCreateRequest(BaseModel):
     deadline: Optional[datetime] = Field(None, description="截止时间")
 
     estimated_hours: Optional[Decimal] = Field(None, description="预估工时")
-    priority: str = Field('MEDIUM', description="优先级：URGENT/HIGH/MEDIUM/LOW")
+    priority: str = Field("MEDIUM", description="优先级：URGENT/HIGH/MEDIUM/LOW")
 
     tags: Optional[List[str]] = Field(default_factory=list, description="标签列表")
     category: Optional[str] = Field(None, description="分类")
@@ -83,6 +90,7 @@ class TaskCreateRequest(BaseModel):
 
 class TaskUpdateRequest(BaseModel):
     """任务更新请求"""
+
     title: Optional[str] = Field(None, min_length=1, max_length=200, description="任务标题")
     description: Optional[str] = Field(None, description="任务描述")
 
@@ -98,6 +106,7 @@ class TaskUpdateRequest(BaseModel):
 
 class TaskResponse(BaseModel):
     """任务响应"""
+
     id: int
     task_code: str
     title: str
@@ -137,7 +146,7 @@ class TaskResponse(BaseModel):
     approval_status: Optional[str] = None
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
-    task_importance: str = 'GENERAL'
+    task_importance: str = "GENERAL"
 
     # 延期相关
     is_delayed: bool = False
@@ -159,8 +168,10 @@ class TaskResponse(BaseModel):
 
 # ==================== 进度更新 ====================
 
+
 class ProgressUpdateRequest(BaseModel):
     """进度更新请求"""
+
     progress: int = Field(..., description="进度百分比(0-100)")
     actual_hours: Optional[Decimal] = Field(None, ge=0, description="实际工时")
     progress_note: Optional[str] = Field(None, description="进度说明")
@@ -168,6 +179,7 @@ class ProgressUpdateRequest(BaseModel):
 
 class ProgressUpdateResponse(BaseModel):
     """进度更新响应"""
+
     task_id: int
     progress: int
     actual_hours: Optional[float]
@@ -179,14 +191,17 @@ class ProgressUpdateResponse(BaseModel):
 
 # ==================== 任务完成 ====================
 
+
 class TaskCompleteRequest(BaseModel):
     """任务完成请求"""
+
     completion_note: str = Field(..., min_length=1, description="完成说明")
     skip_proof_validation: bool = Field(False, description="跳过证明材料验证")
 
 
 class TaskCompleteResponse(BaseModel):
     """任务完成响应"""
+
     task_id: int
     status: str
     progress: int
@@ -199,8 +214,10 @@ class TaskCompleteResponse(BaseModel):
 
 # ==================== 完成证明上传 ====================
 
+
 class ProofUploadResponse(BaseModel):
     """证明上传响应"""
+
     id: int
     task_id: int
     proof_type: str
@@ -216,6 +233,7 @@ class ProofUploadResponse(BaseModel):
 
 class TaskProofListResponse(BaseModel):
     """任务证明列表响应"""
+
     task_id: int
     proofs: List[ProofUploadResponse]
     total_count: int
@@ -223,8 +241,10 @@ class TaskProofListResponse(BaseModel):
 
 # ==================== 延期报告 ====================
 
+
 class DelayReportRequest(BaseModel):
     """延期报告请求"""
+
     delay_reason: str = Field(..., min_length=10, description="延期原因（详细说明）")
     delay_responsibility: str = Field(..., description="延期责任归属")
     delay_impact_scope: str = Field(..., description="延期影响范围：LOCAL/PROJECT/MULTI_PROJECT")
@@ -239,6 +259,7 @@ class DelayReportRequest(BaseModel):
 
 class DelayReportResponse(BaseModel):
     """延期报告响应"""
+
     task_id: int
     exception_event_id: int = Field(..., description="异常事件ID")
     delay_visible_to: List[str] = Field(default_factory=list, description="可见人员角色列表")
@@ -248,18 +269,22 @@ class DelayReportResponse(BaseModel):
 
 # ==================== 任务审批（PM端） ====================
 
+
 class TaskApprovalRequest(BaseModel):
     """任务审批请求"""
+
     comment: Optional[str] = Field(None, description="审批意见")
 
 
 class TaskRejectionRequest(BaseModel):
     """任务拒绝请求"""
+
     reason: str = Field(..., min_length=5, description="拒绝原因")
 
 
 class TaskApprovalResponse(BaseModel):
     """任务审批响应"""
+
     task_id: int
     status: str
     approval_status: str
@@ -270,8 +295,10 @@ class TaskApprovalResponse(BaseModel):
 
 # ==================== 跨部门进度视图 ====================
 
+
 class MemberProgressSummary(BaseModel):
     """人员进度汇总"""
+
     name: str
     total_tasks: int
     completed_tasks: int
@@ -281,6 +308,7 @@ class MemberProgressSummary(BaseModel):
 
 class DepartmentProgressSummary(BaseModel):
     """部门进度汇总"""
+
     department_id: int
     department_name: str
     total_tasks: int
@@ -293,12 +321,14 @@ class DepartmentProgressSummary(BaseModel):
 
 class StageProgressSummary(BaseModel):
     """阶段进度汇总"""
+
     progress: float
     status: str
 
 
 class ActiveDelayInfo(BaseModel):
     """活跃延期信息"""
+
     task_id: int
     task_title: str
     assignee_name: str
@@ -312,6 +342,7 @@ class ActiveDelayInfo(BaseModel):
 
 class ProjectProgressVisibilityResponse(BaseModel):
     """项目进度可见性响应"""
+
     project_id: int
     project_name: str
     overall_progress: float
@@ -327,8 +358,10 @@ class ProjectProgressVisibilityResponse(BaseModel):
 
 # ==================== 分页响应 ====================
 
+
 class TaskListResponse(BaseModel):
     """任务列表响应"""
+
     items: List[TaskResponse]
     total: int
     page: int = 1

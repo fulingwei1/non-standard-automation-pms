@@ -13,8 +13,10 @@ from .common import BaseSchema, PaginatedResponse, TimestampSchema
 
 # ==================== WBS 模板 ====================
 
+
 class WbsTemplateCreate(BaseModel):
     """创建WBS模板"""
+
     template_code: str = Field(max_length=20, description="模板编码")
     template_name: str = Field(max_length=100, description="模板名称")
     project_type: Optional[str] = Field(default=None, max_length=20, description="项目类型")
@@ -25,6 +27,7 @@ class WbsTemplateCreate(BaseModel):
 
 class WbsTemplateUpdate(BaseModel):
     """更新WBS模板"""
+
     template_name: Optional[str] = None
     project_type: Optional[str] = None
     equipment_type: Optional[str] = None
@@ -34,6 +37,7 @@ class WbsTemplateUpdate(BaseModel):
 
 class WbsTemplateResponse(TimestampSchema):
     """WBS模板响应"""
+
     id: int
     template_code: str
     template_name: str
@@ -45,16 +49,21 @@ class WbsTemplateResponse(TimestampSchema):
 
 class WbsTemplateListResponse(PaginatedResponse):
     """WBS模板列表响应"""
+
     items: List[WbsTemplateResponse]
 
 
 # ==================== WBS 模板任务 ====================
 
+
 class WbsTemplateTaskCreate(BaseModel):
     """创建WBS模板任务"""
+
     task_name: str = Field(max_length=200, description="任务名称")
     stage: Optional[str] = Field(default=None, max_length=20, description="阶段（S1-S9）")
-    default_owner_role: Optional[str] = Field(default=None, max_length=50, description="默认负责人角色")
+    default_owner_role: Optional[str] = Field(
+        default=None, max_length=50, description="默认负责人角色"
+    )
     plan_days: Optional[int] = Field(default=None, description="计划天数")
     weight: Optional[Decimal] = Field(default=Decimal("1.00"), description="权重")
     depends_on_template_task_id: Optional[int] = Field(default=None, description="依赖的模板任务ID")
@@ -62,6 +71,7 @@ class WbsTemplateTaskCreate(BaseModel):
 
 class WbsTemplateTaskUpdate(BaseModel):
     """更新WBS模板任务"""
+
     task_name: Optional[str] = None
     stage: Optional[str] = None
     default_owner_role: Optional[str] = None
@@ -72,6 +82,7 @@ class WbsTemplateTaskUpdate(BaseModel):
 
 class WbsTemplateTaskResponse(BaseSchema):
     """WBS模板任务响应"""
+
     id: int
     template_id: int
     task_name: str
@@ -84,8 +95,10 @@ class WbsTemplateTaskResponse(BaseSchema):
 
 # ==================== 项目任务 ====================
 
+
 class TaskCreate(BaseModel):
     """创建项目任务"""
+
     task_name: str = Field(max_length=200, description="任务名称")
     machine_id: Optional[int] = Field(default=None, description="机台ID")
     milestone_id: Optional[int] = Field(default=None, description="里程碑ID")
@@ -98,6 +111,7 @@ class TaskCreate(BaseModel):
 
 class TaskUpdate(BaseModel):
     """更新项目任务"""
+
     task_name: Optional[str] = None
     machine_id: Optional[int] = None
     milestone_id: Optional[int] = None
@@ -115,12 +129,14 @@ class TaskUpdate(BaseModel):
 
 class TaskProgressUpdate(BaseModel):
     """更新任务进度"""
+
     progress_percent: int = Field(ge=0, le=100, description="进度百分比")
     update_note: Optional[str] = Field(default=None, description="更新说明")
 
 
 class TaskResponse(TimestampSchema):
     """任务响应"""
+
     id: int
     project_id: int
     machine_id: Optional[int] = None
@@ -140,20 +156,28 @@ class TaskResponse(TimestampSchema):
 
 class TaskListResponse(PaginatedResponse):
     """任务列表响应"""
+
     items: List[TaskResponse]
 
 
 # ==================== 从模板初始化WBS ====================
 
+
 class InitWbsRequest(BaseModel):
     """从模板初始化WBS请求"""
+
     template_id: int = Field(description="WBS模板ID")
-    start_date: Optional[date] = Field(default=None, description="计划开始日期（可选，默认使用项目开始日期）")
-    assign_owners: Optional[bool] = Field(default=False, description="是否自动分配负责人（根据角色）")
+    start_date: Optional[date] = Field(
+        default=None, description="计划开始日期（可选，默认使用项目开始日期）"
+    )
+    assign_owners: Optional[bool] = Field(
+        default=False, description="是否自动分配负责人（根据角色）"
+    )
 
 
 class InitWbsResponse(BaseModel):
     """从模板初始化WBS响应"""
+
     code: int = 200
     message: str
     data: Optional[dict] = None
@@ -161,8 +185,10 @@ class InitWbsResponse(BaseModel):
 
 # ==================== 进度填报 ====================
 
+
 class ProgressReportCreate(BaseModel):
     """创建进度报告"""
+
     report_type: str = Field(description="报告类型：daily/weekly")
     report_date: date = Field(description="报告日期")
     project_id: Optional[int] = Field(default=None, description="项目ID（项目报告）")
@@ -177,6 +203,7 @@ class ProgressReportCreate(BaseModel):
 
 class ProgressReportUpdate(BaseModel):
     """更新进度报告"""
+
     report_type: Optional[str] = Field(default=None, description="报告类型：daily/weekly")
     report_date: Optional[date] = Field(default=None, description="报告日期")
     content: Optional[str] = Field(default=None, description="报告内容")
@@ -188,6 +215,7 @@ class ProgressReportUpdate(BaseModel):
 
 class ProgressReportResponse(TimestampSchema):
     """进度报告响应"""
+
     id: int
     report_type: str
     report_date: date
@@ -256,13 +284,16 @@ class DependencyCheckResponse(BaseModel):
 
 class ProgressReportListResponse(PaginatedResponse):
     """进度报告列表响应"""
+
     items: List[ProgressReportResponse]
 
 
 # ==================== 进度汇总 ====================
 
+
 class ProgressSummaryResponse(BaseModel):
     """进度汇总响应"""
+
     project_id: int
     project_name: str
     overall_progress: float = Field(description="整体进度百分比")
@@ -277,6 +308,7 @@ class ProgressSummaryResponse(BaseModel):
 
 class MachineProgressSummaryResponse(BaseModel):
     """机台进度汇总响应"""
+
     machine_id: int
     machine_name: str
     machine_code: str
@@ -289,8 +321,10 @@ class MachineProgressSummaryResponse(BaseModel):
 
 # ==================== 甘特图数据 ====================
 
+
 class GanttTaskItem(BaseModel):
     """甘特图任务项"""
+
     id: int
     name: str
     start: date
@@ -303,6 +337,7 @@ class GanttTaskItem(BaseModel):
 
 class GanttDataResponse(BaseModel):
     """甘特图数据响应"""
+
     project_id: int
     project_name: str
     tasks: List[GanttTaskItem]
@@ -310,8 +345,10 @@ class GanttDataResponse(BaseModel):
 
 # ==================== 进度看板 ====================
 
+
 class ProgressBoardColumn(BaseModel):
     """看板列"""
+
     status: str
     status_name: str
     tasks: List[TaskResponse]
@@ -319,6 +356,7 @@ class ProgressBoardColumn(BaseModel):
 
 class ProgressBoardResponse(BaseModel):
     """进度看板响应"""
+
     project_id: int
     project_name: str
     columns: List[ProgressBoardColumn]
@@ -327,8 +365,10 @@ class ProgressBoardResponse(BaseModel):
 
 # ==================== 任务依赖 ====================
 
+
 class TaskDependencyCreate(BaseModel):
     """创建任务依赖"""
+
     depends_on_task_id: int = Field(description="依赖的任务ID")
     dependency_type: str = Field(default="FS", description="依赖类型：FS/SS/FF/SF")
     lag_days: int = Field(default=0, description="滞后天数")
@@ -336,6 +376,7 @@ class TaskDependencyCreate(BaseModel):
 
 class TaskDependencyResponse(BaseSchema):
     """任务依赖响应"""
+
     id: int
     task_id: int
     depends_on_task_id: int
@@ -346,13 +387,16 @@ class TaskDependencyResponse(BaseSchema):
 
 # ==================== 任务分配 ====================
 
+
 class TaskAssigneeUpdate(BaseModel):
     """更新任务负责人"""
+
     owner_id: int = Field(description="负责人ID")
 
 
 class ProgressLogResponse(BaseModel):
     """进度日志响应"""
+
     id: int
     task_id: int
     progress_percent: Optional[int] = None
@@ -364,12 +408,14 @@ class ProgressLogResponse(BaseModel):
 
 class ProgressLogListResponse(BaseModel):
     """进度日志列表响应"""
+
     items: List[ProgressLogResponse]
     total: int
 
 
 class BatchTaskProgressUpdate(BaseModel):
     """批量更新任务进度"""
+
     task_ids: List[int] = Field(description="任务ID列表")
     progress_percent: int = Field(ge=0, le=100, description="进度百分比")
     update_note: Optional[str] = Field(default=None, description="更新说明")
@@ -377,14 +423,17 @@ class BatchTaskProgressUpdate(BaseModel):
 
 class BatchTaskAssigneeUpdate(BaseModel):
     """批量分配任务负责人"""
+
     task_ids: List[int] = Field(description="任务ID列表")
     owner_id: int = Field(description="负责人ID")
 
 
 # ==================== 里程碑统计 ====================
 
+
 class MilestoneRateResponse(BaseModel):
     """里程碑达成率响应"""
+
     project_id: int
     project_name: str
     total_milestones: int
@@ -397,8 +446,10 @@ class MilestoneRateResponse(BaseModel):
 
 # ==================== 延期原因统计 ====================
 
+
 class DelayReasonItem(BaseModel):
     """延期原因项"""
+
     reason: str = Field(description="延期原因")
     count: int = Field(description="数量")
     percentage: float = Field(description="占比百分比")
@@ -406,6 +457,7 @@ class DelayReasonItem(BaseModel):
 
 class DelayReasonsResponse(BaseModel):
     """延期原因统计响应"""
+
     project_id: Optional[int] = None
     total_delayed_tasks: int
     reasons: List[DelayReasonItem] = Field(description="延期原因列表（Top N）")
@@ -413,14 +465,19 @@ class DelayReasonsResponse(BaseModel):
 
 # ==================== 计划基线 ====================
 
+
 class BaselineCreate(BaseModel):
     """创建计划基线"""
-    baseline_no: Optional[str] = Field(default=None, max_length=10, description="基线编号（可选，默认自动生成）")
+
+    baseline_no: Optional[str] = Field(
+        default=None, max_length=10, description="基线编号（可选，默认自动生成）"
+    )
     description: Optional[str] = Field(default=None, description="基线说明")
 
 
 class BaselineResponse(TimestampSchema):
     """计划基线响应"""
+
     id: int
     project_id: int
     baseline_no: str
@@ -430,4 +487,5 @@ class BaselineResponse(TimestampSchema):
 
 class BaselineListResponse(PaginatedResponse):
     """计划基线列表响应"""
+
     items: List[BaselineResponse]

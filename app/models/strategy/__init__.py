@@ -3,6 +3,17 @@
 战略管理模块模型 - 按功能域聚合
 """
 
+# 年度重点工作
+from .annual_work import (
+    AnnualKeyWork,
+    AnnualKeyWorkProjectLink,
+)
+
+# 战略对比
+from .comparison import (
+    StrategyComparison,
+)
+
 # 核心模型
 from .core import (
     CSF,
@@ -10,12 +21,6 @@ from .core import (
     KPIDataSource,
     KPIHistory,
     Strategy,
-)
-
-# 年度重点工作
-from .annual_work import (
-    AnnualKeyWork,
-    AnnualKeyWorkProjectLink,
 )
 
 # 目标分解
@@ -28,11 +33,6 @@ from .decomposition import (
 from .review import (
     StrategyCalendarEvent,
     StrategyReview,
-)
-
-# 战略对比
-from .comparison import (
-    StrategyComparison,
 )
 
 __all__ = [

@@ -1,6 +1,8 @@
 """Tests for app/services/stage_template/helpers.py"""
-import pytest
+
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.stage_template.helpers import HelpersMixin

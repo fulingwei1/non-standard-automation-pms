@@ -29,18 +29,22 @@ with get_db_session() as session:
             # 获取外键
             foreign_keys = inspector.get_foreign_keys(table_name)
             for fk in foreign_keys:
-                if fk['referred_table'] == 'roles':
+                if fk["referred_table"] == "roles":
                     print(f"\n表: {table_name}")
                     print(f"  外键: {fk['name']}")
                     print(f"  列: {fk['constrained_columns']}")
                     print(f"  引用: {fk['referred_table']}.{fk['referred_columns']}")
 
                     # 检查是否有数据
-                    if fk['constrained_columns']:
-                        col = fk['constrained_columns'][0]
-                        result = session.execute(text(f"""
+                    if fk["constrained_columns"]:
+                        col = fk["constrained_columns"][0]
+                        result = session.execute(
+                            text(
+                                f"""
                             SELECT COUNT(*) FROM {table_name} WHERE {col} IS NOT NULL
-                        """))
+                        """
+                            )
+                        )
                         count = result.scalar()
                         print(f"  数据行数: {count}")
         except Exception:

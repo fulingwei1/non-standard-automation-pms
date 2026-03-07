@@ -3,21 +3,24 @@
 
 测试采购业务从需求申请到物料入库的完整链路
 """
-import pytest
+
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy.orm import Session
+
 try:
+    from app.models.approval.instance import ApprovalInstance
+    from app.models.material import Material
     from app.models.purchase import (
-        PurchaseRequest,
         PurchaseOrder,
         PurchaseOrderItem,
         PurchaseReceipt,
         PurchaseReceiptItem,
+        PurchaseRequest,
     )
     from app.models.vendor import Vendor
-    from app.models.material import Material
-    from app.models.approval.instance import ApprovalInstance
 except ImportError as e:
     pytest.skip(f"Required models not available: {e}", allow_module_level=True)
 
@@ -490,9 +493,7 @@ class TestPurchaseRequestToReceipt:
         assert po_item.received_quantity == po_item.quantity
         assert po.status == "RECEIVED"
 
-    def test_12_track_purchase_lead_time(
-        self, db_session: Session, test_supplier: Vendor
-    ):
+    def test_12_track_purchase_lead_time(self, db_session: Session, test_supplier: Vendor):
         """测试12：跟踪采购提前期"""
         # 记录时间戳
         request_date = date.today() - timedelta(days=50)

@@ -9,6 +9,6 @@ TPL_STANDARD - 标准全流程（新产品完整流程）
 """
 
 # 从拆分后的包重新导出
-from .standard import STANDARD_TEMPLATE, STANDARD_STAGES
+from .standard import STANDARD_STAGES, STANDARD_TEMPLATE
 
 __all__ = ["STANDARD_TEMPLATE", "STANDARD_STAGES"]

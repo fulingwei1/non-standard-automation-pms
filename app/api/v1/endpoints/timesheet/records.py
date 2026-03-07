@@ -84,9 +84,7 @@ def create_timesheet(
     return service.create_timesheet(timesheet_in, current_user)
 
 
-@router.post(
-    "/batch", response_model=ResponseModel, status_code=status.HTTP_201_CREATED
-)
+@router.post("/batch", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
 def batch_create_timesheets(
     *,
     db: Session = Depends(deps.get_db),
@@ -106,9 +104,7 @@ def batch_create_timesheets(
     )
 
 
-@router.get(
-    "/{timesheet_id}", response_model=TimesheetResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/{timesheet_id}", response_model=TimesheetResponse, status_code=status.HTTP_200_OK)
 def get_timesheet_detail(
     timesheet_id: int,
     db: Session = Depends(deps.get_db),
@@ -121,9 +117,7 @@ def get_timesheet_detail(
     return service.get_timesheet_detail(timesheet_id, current_user)
 
 
-@router.put(
-    "/{timesheet_id}", response_model=TimesheetResponse, status_code=status.HTTP_200_OK
-)
+@router.put("/{timesheet_id}", response_model=TimesheetResponse, status_code=status.HTTP_200_OK)
 def update_timesheet(
     *,
     db: Session = Depends(deps.get_db),
@@ -138,9 +132,7 @@ def update_timesheet(
     return service.update_timesheet(timesheet_id, timesheet_in, current_user)
 
 
-@router.delete(
-    "/{timesheet_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.delete("/{timesheet_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def delete_timesheet(
     *,
     db: Session = Depends(deps.get_db),

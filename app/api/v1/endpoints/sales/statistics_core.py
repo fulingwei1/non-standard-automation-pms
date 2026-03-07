@@ -42,20 +42,38 @@ def get_sales_funnel(
     query_leads = filter_sales_data_by_scope(query_leads, current_user, db, Lead, "owner_id")
     query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
     query_quotes = filter_sales_data_by_scope(query_quotes, current_user, db, Quote, "owner_id")
-    query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
+    query_contracts = filter_sales_data_by_scope(
+        query_contracts, current_user, db, Contract, "owner_id"
+    )
 
     # 日期过滤
     if start_date:
-        query_leads = query_leads.filter(Lead.created_at >= datetime.combine(start_date, datetime.min.time()))
-        query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
-        query_quotes = query_quotes.filter(Quote.created_at >= datetime.combine(start_date, datetime.min.time()))
-        query_contracts = query_contracts.filter(Contract.created_at >= datetime.combine(start_date, datetime.min.time()))
+        query_leads = query_leads.filter(
+            Lead.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+        query_opps = query_opps.filter(
+            Opportunity.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+        query_quotes = query_quotes.filter(
+            Quote.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+        query_contracts = query_contracts.filter(
+            Contract.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
 
     if end_date:
-        query_leads = query_leads.filter(Lead.created_at <= datetime.combine(end_date, datetime.max.time()))
-        query_opps = query_opps.filter(Opportunity.created_at <= datetime.combine(end_date, datetime.max.time()))
-        query_quotes = query_quotes.filter(Quote.created_at <= datetime.combine(end_date, datetime.max.time()))
-        query_contracts = query_contracts.filter(Contract.created_at <= datetime.combine(end_date, datetime.max.time()))
+        query_leads = query_leads.filter(
+            Lead.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+        query_opps = query_opps.filter(
+            Opportunity.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+        query_quotes = query_quotes.filter(
+            Quote.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+        query_contracts = query_contracts.filter(
+            Contract.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
 
     # 统计各阶段数量
     leads_count = query_leads.count()
@@ -68,7 +86,9 @@ def get_sales_funnel(
     total_opp_amount = sum([float(opp.est_amount or 0) for opp in won_opps])
 
     signed_contracts = query_contracts.filter(Contract.status == "SIGNED").all()
-    total_contract_amount = sum([float(contract.contract_amount or 0) for contract in signed_contracts])
+    total_contract_amount = sum(
+        [float(contract.contract_amount or 0) for contract in signed_contracts]
+    )
 
     return ResponseModel(
         code=200,
@@ -83,9 +103,11 @@ def get_sales_funnel(
             "conversion_rates": {
                 "lead_to_opp": round(opps_count / leads_count * 100, 2) if leads_count > 0 else 0,
                 "opp_to_quote": round(quotes_count / opps_count * 100, 2) if opps_count > 0 else 0,
-                "quote_to_contract": round(contracts_count / quotes_count * 100, 2) if quotes_count > 0 else 0,
-            }
-        }
+                "quote_to_contract": (
+                    round(contracts_count / quotes_count * 100, 2) if quotes_count > 0 else 0
+                ),
+            },
+        },
     )
 
 
@@ -115,20 +137,18 @@ def get_opportunities_by_stage(
         # 应用数据权限过滤（需要子查询方式）
         filtered_ids = [opp.id for opp in base_query.filter(Opportunity.stage == stage).all()]
         if filtered_ids:
-            total_amount = db.query(func.sum(Opportunity.est_amount)).filter(Opportunity.id.in_(filtered_ids)).scalar() or 0
+            total_amount = (
+                db.query(func.sum(Opportunity.est_amount))
+                .filter(Opportunity.id.in_(filtered_ids))
+                .scalar()
+                or 0
+            )
         else:
             total_amount = 0
 
-        result[stage] = {
-            "count": count,
-            "total_amount": float(total_amount)
-        }
+        result[stage] = {"count": count, "total_amount": float(total_amount)}
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=result
-    )
+    return ResponseModel(code=200, message="success", data=result)
 
 
 @router.get("/statistics/summary", response_model=ResponseModel)
@@ -149,39 +169,52 @@ def get_sales_summary(
     # 应用数据权限过滤
     query_leads = filter_sales_data_by_scope(query_leads, current_user, db, Lead, "owner_id")
     query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
-    query_contracts = filter_sales_data_by_scope(query_contracts, current_user, db, Contract, "owner_id")
+    query_contracts = filter_sales_data_by_scope(
+        query_contracts, current_user, db, Contract, "owner_id"
+    )
 
     # 日期过滤（先应用日期过滤，再获取合同ID用于发票过滤）
     if start_date:
-        query_leads = query_leads.filter(Lead.created_at >= datetime.combine(start_date, datetime.min.time()))
-        query_opps = query_opps.filter(Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()))
-        query_contracts = query_contracts.filter(Contract.created_at >= datetime.combine(start_date, datetime.min.time()))
+        query_leads = query_leads.filter(
+            Lead.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+        query_opps = query_opps.filter(
+            Opportunity.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
+        query_contracts = query_contracts.filter(
+            Contract.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
 
     if end_date:
-        query_leads = query_leads.filter(Lead.created_at <= datetime.combine(end_date, datetime.max.time()))
-        query_opps = query_opps.filter(Opportunity.created_at <= datetime.combine(end_date, datetime.max.time()))
-        query_contracts = query_contracts.filter(Contract.created_at <= datetime.combine(end_date, datetime.max.time()))
+        query_leads = query_leads.filter(
+            Lead.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+        query_opps = query_opps.filter(
+            Opportunity.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
+        query_contracts = query_contracts.filter(
+            Contract.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
 
     # 发票通过合同关联过滤（Invoice 没有 owner_id/created_by 字段）
     # 使用子查询方式，避免加载大量合同ID到内存，同时避免空列表导致的 SQL 错误
-    from sqlalchemy import select, func
-    
+    from sqlalchemy import func, select
+
     # 创建合同ID子查询
     contract_ids_subquery = query_contracts.with_entities(Contract.id).subquery()
-    
+
     # 检查是否有可访问的合同
     contract_count = db.query(func.count()).select_from(contract_ids_subquery).scalar() or 0
-    
+
     if contract_count > 0:
         # 使用子查询方式过滤发票
         query_invoices = db.query(Invoice).filter(
-            Invoice.contract_id.in_(
-                select(contract_ids_subquery.c.id)
-            )
+            Invoice.contract_id.in_(select(contract_ids_subquery.c.id))
         )
     else:
         # 用户没有可访问的合同时，检查是否有全局权限
         from app.core.sales_permissions import get_sales_data_scope
+
         scope = get_sales_data_scope(current_user, db)
         if scope in ["ALL", "FINANCE_ONLY"]:
             query_invoices = db.query(Invoice)
@@ -191,10 +224,14 @@ def get_sales_summary(
 
     # 对发票应用日期过滤
     if start_date:
-        query_invoices = query_invoices.filter(Invoice.created_at >= datetime.combine(start_date, datetime.min.time()))
+        query_invoices = query_invoices.filter(
+            Invoice.created_at >= datetime.combine(start_date, datetime.min.time())
+        )
 
     if end_date:
-        query_invoices = query_invoices.filter(Invoice.created_at <= datetime.combine(end_date, datetime.max.time()))
+        query_invoices = query_invoices.filter(
+            Invoice.created_at <= datetime.combine(end_date, datetime.max.time())
+        )
 
     # 线索统计
     total_leads = query_leads.count()
@@ -214,7 +251,9 @@ def get_sales_summary(
 
     # 计算转化率
     conversion_rate = round((converted_leads / total_leads * 100), 2) if total_leads > 0 else 0
-    win_rate = round((won_opportunities / total_opportunities * 100), 2) if total_opportunities > 0 else 0
+    win_rate = (
+        round((won_opportunities / total_opportunities * 100), 2) if total_opportunities > 0 else 0
+    )
 
     return ResponseModel(
         code=200,
@@ -228,5 +267,5 @@ def get_sales_summary(
             "paid_amount": paid_amount,
             "conversion_rate": conversion_rate,
             "win_rate": win_rate,
-        }
+        },
     )

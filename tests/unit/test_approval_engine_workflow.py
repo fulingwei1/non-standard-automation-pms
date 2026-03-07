@@ -11,8 +11,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.services.approval_engine.models import (
-    ApprovalStatus,
     ApprovalDecision,
+    ApprovalStatus,
 )
 from app.services.approval_engine.workflow_engine import WorkflowEngine
 
@@ -52,7 +52,9 @@ class TestCreateInstance:
             # Mock 节点查询
             mock_node = MagicMock()
             mock_node.id = 1
-            mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_node
+            mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                mock_node
+            )
 
             # Mock 保存
             mock_db.add = MagicMock()
@@ -219,7 +221,9 @@ class TestSubmitApproval:
         mock_next_node.id = 11
         mock_next_node.node_order = 3
 
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_next_node
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_next_node
+        )
 
         # Mock 审批记录
         mock_record = MagicMock()
@@ -296,9 +300,7 @@ class TestUpdateInstanceStatus:
         mock_db.commit = MagicMock()
 
         engine = WorkflowEngine(mock_db)
-        engine._update_instance_status(
-            mock_instance, ApprovalStatus.APPROVED, completed_nodes=2
-        )
+        engine._update_instance_status(mock_instance, ApprovalStatus.APPROVED, completed_nodes=2)
 
         assert mock_instance.status == ApprovalStatus.APPROVED
         assert mock_instance.completed_nodes == 2
@@ -333,7 +335,9 @@ class TestFindNextNode:
         mock_next_node.id = 11
         mock_next_node.node_order = 3
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = mock_next_node
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_next_node
+        )
 
         engine = WorkflowEngine(mock_db)
         result = engine._find_next_node(mock_node)
@@ -349,7 +353,9 @@ class TestFindNextNode:
         mock_node.node_order = 3
         mock_node.flow_id = 1
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         engine = WorkflowEngine(mock_db)
         result = engine._find_next_node(mock_node)
@@ -374,7 +380,9 @@ class TestFindPreviousNode:
         mock_prev_node.id = 9
         mock_prev_node.node_order = 1
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = mock_prev_node
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_prev_node
+        )
 
         engine = WorkflowEngine(mock_db)
         result = engine._find_previous_node(mock_node)
@@ -390,7 +398,9 @@ class TestFindPreviousNode:
         mock_node.node_order = 1
         mock_node.flow_id = 1
 
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
 
         engine = WorkflowEngine(mock_db)
         result = engine._find_previous_node(mock_node)
@@ -412,7 +422,9 @@ class TestIsExpired:
         mock_flow = MagicMock()
         mock_flow.first_node_timeout = 48  # 48小时超时
 
-        mock_db.query.return_value.filter.return_value.join.return_value.first.return_value = mock_flow
+        mock_db.query.return_value.filter.return_value.join.return_value.first.return_value = (
+            mock_flow
+        )
 
         engine = WorkflowEngine(mock_db)
         result = engine.is_expired(mock_instance)
@@ -429,7 +441,9 @@ class TestIsExpired:
         mock_flow = MagicMock()
         mock_flow.first_node_timeout = 48
 
-        mock_db.query.return_value.filter.return_value.join.return_value.first.return_value = mock_flow
+        mock_db.query.return_value.filter.return_value.join.return_value.first.return_value = (
+            mock_flow
+        )
 
         engine = WorkflowEngine(mock_db)
         result = engine.is_expired(mock_instance)
@@ -684,16 +698,19 @@ class TestEdgeCases:
 # 补充测试 A组覆盖率提升 (2026-02-17)
 # =============================================================================
 
+
 class TestWorkflowEngineAdditional:
     """WorkflowEngine 额外单元测试（MagicMock 版本）"""
 
     def _make_engine(self):
         db = MagicMock()
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         return WorkflowEngine(db), db
 
     def test_generate_instance_no_format(self):
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         no = WorkflowEngine._generate_instance_no()
         assert no.startswith("AP")
         assert len(no) > 5
@@ -712,8 +729,8 @@ class TestWorkflowEngineAdditional:
 
     def test_create_instance_success(self):
         engine, db = self._make_engine()
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import LegacyApprovalFlow as ApprovalFlow
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         flow = MagicMock()
         flow.id = 1
@@ -769,7 +786,9 @@ class TestWorkflowEngineAdditional:
         instance.flow_id = 1
 
         first_node = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = first_node
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            first_node
+        )
 
         result = engine.get_current_node(instance)
         assert result is first_node
@@ -847,6 +866,7 @@ class TestApprovalFlowResolverAdditional:
     def test_determine_flow_known_type(self):
         db = MagicMock()
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         resolver = WorkflowEngine.ApprovalFlowResolver(db)
         result = resolver.determine_approval_flow("ECN")
         assert result == "ECN_FLOW"
@@ -854,6 +874,7 @@ class TestApprovalFlowResolverAdditional:
     def test_determine_flow_unknown_type(self):
         db = MagicMock()
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         resolver = WorkflowEngine.ApprovalFlowResolver(db)
         result = resolver.determine_approval_flow("UNKNOWN_TYPE")
         assert result is None
@@ -862,6 +883,7 @@ class TestApprovalFlowResolverAdditional:
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         resolver = WorkflowEngine.ApprovalFlowResolver(db)
         with pytest.raises(ValueError, match="不存在或未启用"):
             resolver.get_approval_flow("NO_FLOW")
@@ -871,6 +893,7 @@ class TestApprovalFlowResolverAdditional:
         flow = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = flow
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         resolver = WorkflowEngine.ApprovalFlowResolver(db)
         result = resolver.get_approval_flow("ECN_FLOW")
         assert result is flow

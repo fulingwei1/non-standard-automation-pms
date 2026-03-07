@@ -21,4 +21,4 @@ router.include_router(closure_router)
 router.include_router(cockpit_router)
 router.include_router(meetings_router)
 
-__all__ = ['router']
+__all__ = ["router"]

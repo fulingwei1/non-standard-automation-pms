@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - detail_stats 单元测试（年度重点工作详情与统计）"""
 
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.strategy.annual_work_service.detail_stats")
 
 from unittest.mock import patch as _patch
 
+# AnnualKeyWorkProjectLink.is_active 在此模型中不存在，需要在模块级别打补丁
+import app.models.strategy as _strategy_models
 from app.services.strategy.annual_work_service.detail_stats import (
     get_annual_work_detail,
     get_annual_work_stats,
 )
 
-# AnnualKeyWorkProjectLink.is_active 在此模型中不存在，需要在模块级别打补丁
-import app.models.strategy as _strategy_models
 if not hasattr(_strategy_models.AnnualKeyWorkProjectLink, "is_active"):
     _strategy_models.AnnualKeyWorkProjectLink.is_active = MagicMock()
 
 
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_work(
     work_id=1,
@@ -67,6 +69,7 @@ def _make_csf(csf_id=10, name="战略重点", dimension="客户"):
 
 
 # ─── get_annual_work_detail ──────────────────────────────────
+
 
 class TestGetAnnualWorkDetail:
 
@@ -178,6 +181,7 @@ class TestGetAnnualWorkDetail:
 
 # ─── get_annual_work_stats ───────────────────────────────────
 
+
 class TestGetAnnualWorkStats:
 
     def test_returns_zero_stats_when_no_works(self):
@@ -223,6 +227,7 @@ class TestGetAnnualWorkStats:
     def test_default_year_uses_current_year(self):
         """不传 year 时应使用当前年份"""
         import datetime
+
         db = MagicMock()
         db.query.return_value.join.return_value.filter.return_value.all.return_value = []
 

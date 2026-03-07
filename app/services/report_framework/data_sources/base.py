@@ -15,6 +15,7 @@ from app.services.report_framework.models import DataSourceConfig
 
 class DataSourceError(Exception):
     """数据源错误"""
+
     pass
 
 

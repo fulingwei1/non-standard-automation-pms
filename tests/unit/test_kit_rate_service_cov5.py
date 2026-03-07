@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """第五批：kit_rate/kit_rate_service.py 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
-    from app.services.kit_rate.kit_rate_service import KitRateService
     from fastapi import HTTPException
+
+    from app.services.kit_rate.kit_rate_service import KitRateService
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -95,6 +98,7 @@ class TestListBomItemsForMachine:
     def test_no_bom_returns_empty(self):
         db = MagicMock()
         from app.utils.db_helpers import get_or_404
+
         machine = MagicMock()
         with patch("app.services.kit_rate.kit_rate_service.get_or_404", return_value=machine):
             # _get_latest_bom returns None

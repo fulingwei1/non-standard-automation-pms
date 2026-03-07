@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 try:
-    from simpleeval import simple_eval, InvalidExpression
+    from simpleeval import InvalidExpression, simple_eval
 except ImportError:
     # 如果 simpleeval 未安装，保留旧的（不安全）实现
     simple_eval = None
@@ -114,9 +114,7 @@ class ConditionEvaluator(AlertRuleEngineBase):
         """
         actual_field = rule.target_field or "actual_value"
         planned_field = (
-            rule.target_field.replace("actual", "planned")
-            if rule.target_field
-            else "planned_value"
+            rule.target_field.replace("actual", "planned") if rule.target_field else "planned_value"
         )
 
         actual_value = self.get_field_value(actual_field, target_data, context)

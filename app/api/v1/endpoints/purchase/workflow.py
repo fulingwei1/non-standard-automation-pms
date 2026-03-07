@@ -11,16 +11,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
-from app.schemas.common import ResponseModel
 from app.schemas.approval_workflow import (
-    OrderSubmitRequest,
     ApprovalActionRequest,
     BatchApprovalRequest,
+    OrderSubmitRequest,
     WithdrawRequest,
 )
-from app.common.pagination import PaginationParams, get_pagination_query
+from app.schemas.common import ResponseModel
 from app.services.purchase_workflow import PurchaseWorkflowService
 
 router = APIRouter(prefix="/workflow", tags=["采购审批工作流"])
@@ -127,9 +127,7 @@ def perform_approval_action(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post(
-    "/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.post("/batch-action", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def perform_batch_approval(
     *,
     db: Session = Depends(deps.get_db),
@@ -161,9 +159,7 @@ def perform_batch_approval(
     )
 
 
-@router.get(
-    "/status/{order_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK
-)
+@router.get("/status/{order_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_approval_status(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -177,7 +173,9 @@ def get_approval_status(
     service = PurchaseWorkflowService(db)
     result = service.get_approval_status(order_id=order_id)
 
-    message = "该订单暂无审批记录" if result.get("approval_instance") is None else "获取审批状态成功"
+    message = (
+        "该订单暂无审批记录" if result.get("approval_instance") is None else "获取审批状态成功"
+    )
 
     return ResponseModel(
         code=200,

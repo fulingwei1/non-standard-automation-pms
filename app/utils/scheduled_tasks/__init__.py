@@ -41,39 +41,6 @@ from .hr_tasks import (
     check_employee_confirmation_reminder,
 )
 
-# ==================== 存根任务（待实现）====================
-from .stub_tasks import (
-    check_cost_overrun_alerts,
-    check_delivery_delay,
-    check_equipment_maintenance_reminder,
-    check_issue_timeout_escalation,
-    check_outsourcing_delivery_alerts,
-    check_presale_workorder_timeout,
-    check_task_deadline_reminder,
-    check_task_delay_alerts,
-    check_workload_overload_alerts,
-    daily_kit_check,
-    generate_job_duty_tasks,
-    generate_monthly_reports_task,
-    generate_shortage_alerts,
-    generate_shortage_daily_report,
-    auto_trigger_urgent_purchase_from_shortage_alerts,
-)
-
-# ==================== 齐套率任务 ====================
-from .kit_rate_tasks import (
-    create_kit_rate_snapshot,
-    create_stage_change_snapshot,
-    daily_kit_rate_snapshot,
-)
-
-# ==================== 项目风险任务 ====================
-from .risk_tasks import (
-    calculate_all_project_risks,
-    check_high_risk_projects,
-    create_daily_risk_snapshots,
-)
-
 # ==================== 问题管理任务 ====================
 from .issue_scheduled_tasks import (
     check_blocking_issues,
@@ -82,6 +49,13 @@ from .issue_scheduled_tasks import (
     check_overdue_issues,
     check_timeout_issues,
     daily_issue_statistics_snapshot,
+)
+
+# ==================== 齐套率任务 ====================
+from .kit_rate_tasks import (
+    create_kit_rate_snapshot,
+    create_stage_change_snapshot,
+    daily_kit_rate_snapshot,
 )
 
 # ==================== 里程碑任务 ====================
@@ -108,12 +82,38 @@ from .project_scheduled_tasks import (
     daily_spec_match_check,
 )
 
+# ==================== 项目风险任务 ====================
+from .risk_tasks import (
+    calculate_all_project_risks,
+    check_high_risk_projects,
+    create_daily_risk_snapshots,
+)
+
 # ==================== 销售任务 ====================
 from .sales_tasks import (
     check_opportunity_stage_timeout,
     check_overdue_receivable_alerts,
     check_payment_reminder,
     sales_reminder_scan,
+)
+
+# ==================== 存根任务（待实现）====================
+from .stub_tasks import (
+    auto_trigger_urgent_purchase_from_shortage_alerts,
+    check_cost_overrun_alerts,
+    check_delivery_delay,
+    check_equipment_maintenance_reminder,
+    check_issue_timeout_escalation,
+    check_outsourcing_delivery_alerts,
+    check_presale_workorder_timeout,
+    check_task_deadline_reminder,
+    check_task_delay_alerts,
+    check_workload_overload_alerts,
+    daily_kit_check,
+    generate_job_duty_tasks,
+    generate_monthly_reports_task,
+    generate_shortage_alerts,
+    generate_shortage_daily_report,
 )
 
 # ==================== 工时任务 ====================
@@ -132,159 +132,150 @@ from .timesheet_tasks import (
 # ==================== 任务注册表 ====================
 SCHEDULED_TASKS = {
     # 项目管理任务
-    'daily_spec_match_check': daily_spec_match_check,
-    'calculate_project_health': calculate_project_health,
-    'daily_health_snapshot': daily_health_snapshot,
-    'calculate_progress_summary': calculate_progress_summary,
-    'check_project_deadline_alerts': check_project_deadline_alerts,
-    'check_project_cost_overrun': check_project_cost_overrun,
-
+    "daily_spec_match_check": daily_spec_match_check,
+    "calculate_project_health": calculate_project_health,
+    "daily_health_snapshot": daily_health_snapshot,
+    "calculate_progress_summary": calculate_progress_summary,
+    "check_project_deadline_alerts": check_project_deadline_alerts,
+    "check_project_cost_overrun": check_project_cost_overrun,
     # 问题管理任务
-    'check_overdue_issues': check_overdue_issues,
-    'check_blocking_issues': check_blocking_issues,
-    'check_timeout_issues': check_timeout_issues,
-    'daily_issue_statistics_snapshot': daily_issue_statistics_snapshot,
-    'check_issue_assignment_timeout': check_issue_assignment_timeout,
-    'check_issue_resolution_timeout': check_issue_resolution_timeout,
-
+    "check_overdue_issues": check_overdue_issues,
+    "check_blocking_issues": check_blocking_issues,
+    "check_timeout_issues": check_timeout_issues,
+    "daily_issue_statistics_snapshot": daily_issue_statistics_snapshot,
+    "check_issue_assignment_timeout": check_issue_assignment_timeout,
+    "check_issue_resolution_timeout": check_issue_resolution_timeout,
     # 销售任务
-    'sales_reminder_scan': sales_reminder_scan,
-    'check_payment_reminder': check_payment_reminder,
-    'check_overdue_receivable_alerts': check_overdue_receivable_alerts,
-    'check_opportunity_stage_timeout': check_opportunity_stage_timeout,
-
+    "sales_reminder_scan": sales_reminder_scan,
+    "check_payment_reminder": check_payment_reminder,
+    "check_overdue_receivable_alerts": check_overdue_receivable_alerts,
+    "check_opportunity_stage_timeout": check_opportunity_stage_timeout,
     # 里程碑任务
-    'check_milestone_alerts': check_milestone_alerts,
-    'check_milestone_status_and_adjust_payments': check_milestone_status_and_adjust_payments,
-    'check_milestone_risk_alerts': check_milestone_risk_alerts,
-
+    "check_milestone_alerts": check_milestone_alerts,
+    "check_milestone_status_and_adjust_payments": check_milestone_status_and_adjust_payments,
+    "check_milestone_risk_alerts": check_milestone_risk_alerts,
     # 工时任务
-    'daily_timesheet_reminder_task': daily_timesheet_reminder_task,
-    'weekly_timesheet_reminder_task': weekly_timesheet_reminder_task,
-    'timesheet_anomaly_alert_task': timesheet_anomaly_alert_task,
-    'timesheet_approval_timeout_reminder_task': timesheet_approval_timeout_reminder_task,
-    'timesheet_sync_failure_alert_task': timesheet_sync_failure_alert_task,
-    'daily_timesheet_aggregation_task': daily_timesheet_aggregation_task,
-    'weekly_timesheet_aggregation_task': weekly_timesheet_aggregation_task,
-    'monthly_timesheet_aggregation_task': monthly_timesheet_aggregation_task,
-    'calculate_monthly_labor_cost_task': calculate_monthly_labor_cost_task,
-
+    "daily_timesheet_reminder_task": daily_timesheet_reminder_task,
+    "weekly_timesheet_reminder_task": weekly_timesheet_reminder_task,
+    "timesheet_anomaly_alert_task": timesheet_anomaly_alert_task,
+    "timesheet_approval_timeout_reminder_task": timesheet_approval_timeout_reminder_task,
+    "timesheet_sync_failure_alert_task": timesheet_sync_failure_alert_task,
+    "daily_timesheet_aggregation_task": daily_timesheet_aggregation_task,
+    "weekly_timesheet_aggregation_task": weekly_timesheet_aggregation_task,
+    "monthly_timesheet_aggregation_task": monthly_timesheet_aggregation_task,
+    "calculate_monthly_labor_cost_task": calculate_monthly_labor_cost_task,
     # 生产任务
-    'check_production_plan_alerts': check_production_plan_alerts,
-    'check_work_report_timeout': check_work_report_timeout,
-    'generate_production_daily_reports': generate_production_daily_reports,
-
+    "check_production_plan_alerts": check_production_plan_alerts,
+    "check_work_report_timeout": check_work_report_timeout,
+    "generate_production_daily_reports": generate_production_daily_reports,
     # 预警与通知任务
-    'check_alert_escalation': check_alert_escalation,
-    'retry_failed_notifications': retry_failed_notifications,
-    'send_alert_notifications': send_alert_notifications,
-    'calculate_response_metrics': calculate_response_metrics,
-
+    "check_alert_escalation": check_alert_escalation,
+    "retry_failed_notifications": retry_failed_notifications,
+    "send_alert_notifications": send_alert_notifications,
+    "calculate_response_metrics": calculate_response_metrics,
     # HR任务
-    'check_contract_expiry_reminder': check_contract_expiry_reminder,
-    'check_employee_confirmation_reminder': check_employee_confirmation_reminder,
-
+    "check_contract_expiry_reminder": check_contract_expiry_reminder,
+    "check_employee_confirmation_reminder": check_employee_confirmation_reminder,
     # 齐套率任务
-    'daily_kit_rate_snapshot': daily_kit_rate_snapshot,
-
+    "daily_kit_rate_snapshot": daily_kit_rate_snapshot,
     # 项目风险任务
-    'calculate_all_project_risks': calculate_all_project_risks,
-    'create_daily_risk_snapshots': create_daily_risk_snapshots,
-    'check_high_risk_projects': check_high_risk_projects,
+    "calculate_all_project_risks": calculate_all_project_risks,
+    "create_daily_risk_snapshots": create_daily_risk_snapshots,
+    "check_high_risk_projects": check_high_risk_projects,
 }
 
 # ==================== 任务分组 ====================
 TASK_GROUPS = {
-    'project': {
-        'name': '项目管理',
-        'tasks': [
-            'daily_spec_match_check',
-            'calculate_project_health',
-            'daily_health_snapshot',
-            'calculate_progress_summary',
-            'check_project_deadline_alerts',
-            'check_project_cost_overrun',
-        ]
+    "project": {
+        "name": "项目管理",
+        "tasks": [
+            "daily_spec_match_check",
+            "calculate_project_health",
+            "daily_health_snapshot",
+            "calculate_progress_summary",
+            "check_project_deadline_alerts",
+            "check_project_cost_overrun",
+        ],
     },
-    'issue': {
-        'name': '问题管理',
-        'tasks': [
-            'check_overdue_issues',
-            'check_blocking_issues',
-            'check_timeout_issues',
-            'daily_issue_statistics_snapshot',
-            'check_issue_assignment_timeout',
-            'check_issue_resolution_timeout',
-        ]
+    "issue": {
+        "name": "问题管理",
+        "tasks": [
+            "check_overdue_issues",
+            "check_blocking_issues",
+            "check_timeout_issues",
+            "daily_issue_statistics_snapshot",
+            "check_issue_assignment_timeout",
+            "check_issue_resolution_timeout",
+        ],
     },
-    'sales': {
-        'name': '销售管理',
-        'tasks': [
-            'sales_reminder_scan',
-            'check_payment_reminder',
-            'check_overdue_receivable_alerts',
-            'check_opportunity_stage_timeout',
-        ]
+    "sales": {
+        "name": "销售管理",
+        "tasks": [
+            "sales_reminder_scan",
+            "check_payment_reminder",
+            "check_overdue_receivable_alerts",
+            "check_opportunity_stage_timeout",
+        ],
     },
-    'milestone': {
-        'name': '里程碑管理',
-        'tasks': [
-            'check_milestone_alerts',
-            'check_milestone_status_and_adjust_payments',
-            'check_milestone_risk_alerts',
-        ]
+    "milestone": {
+        "name": "里程碑管理",
+        "tasks": [
+            "check_milestone_alerts",
+            "check_milestone_status_and_adjust_payments",
+            "check_milestone_risk_alerts",
+        ],
     },
-    'timesheet': {
-        'name': '工时管理',
-        'tasks': [
-            'daily_timesheet_reminder_task',
-            'weekly_timesheet_reminder_task',
-            'timesheet_anomaly_alert_task',
-            'timesheet_approval_timeout_reminder_task',
-            'timesheet_sync_failure_alert_task',
-            'daily_timesheet_aggregation_task',
-            'weekly_timesheet_aggregation_task',
-            'monthly_timesheet_aggregation_task',
-            'calculate_monthly_labor_cost_task',
-        ]
+    "timesheet": {
+        "name": "工时管理",
+        "tasks": [
+            "daily_timesheet_reminder_task",
+            "weekly_timesheet_reminder_task",
+            "timesheet_anomaly_alert_task",
+            "timesheet_approval_timeout_reminder_task",
+            "timesheet_sync_failure_alert_task",
+            "daily_timesheet_aggregation_task",
+            "weekly_timesheet_aggregation_task",
+            "monthly_timesheet_aggregation_task",
+            "calculate_monthly_labor_cost_task",
+        ],
     },
-    'production': {
-        'name': '生产管理',
-        'tasks': [
-            'check_production_plan_alerts',
-            'check_work_report_timeout',
-            'generate_production_daily_reports',
-        ]
+    "production": {
+        "name": "生产管理",
+        "tasks": [
+            "check_production_plan_alerts",
+            "check_work_report_timeout",
+            "generate_production_daily_reports",
+        ],
     },
-    'alert': {
-        'name': '预警通知',
-        'tasks': [
-            'check_alert_escalation',
-            'retry_failed_notifications',
-            'send_alert_notifications',
-            'calculate_response_metrics',
-        ]
+    "alert": {
+        "name": "预警通知",
+        "tasks": [
+            "check_alert_escalation",
+            "retry_failed_notifications",
+            "send_alert_notifications",
+            "calculate_response_metrics",
+        ],
     },
-    'hr': {
-        'name': '人力资源',
-        'tasks': [
-            'check_contract_expiry_reminder',
-            'check_employee_confirmation_reminder',
-        ]
+    "hr": {
+        "name": "人力资源",
+        "tasks": [
+            "check_contract_expiry_reminder",
+            "check_employee_confirmation_reminder",
+        ],
     },
-    'kit_rate': {
-        'name': '齐套率管理',
-        'tasks': [
-            'daily_kit_rate_snapshot',
-        ]
+    "kit_rate": {
+        "name": "齐套率管理",
+        "tasks": [
+            "daily_kit_rate_snapshot",
+        ],
     },
-    'risk': {
-        'name': '项目风险',
-        'tasks': [
-            'calculate_all_project_risks',
-            'create_daily_risk_snapshots',
-            'check_high_risk_projects',
-        ]
+    "risk": {
+        "name": "项目风险",
+        "tasks": [
+            "calculate_all_project_risks",
+            "create_daily_risk_snapshots",
+            "check_high_risk_projects",
+        ],
     },
 }
 
@@ -303,7 +294,7 @@ def get_tasks_by_group(group_name: str) -> dict:
 
     return {
         task_name: SCHEDULED_TASKS.get(task_name)
-        for task_name in group['tasks']
+        for task_name in group["tasks"]
         if task_name in SCHEDULED_TASKS
     }
 
@@ -312,13 +303,15 @@ def list_all_tasks() -> list:
     """列出所有可用的定时任务"""
     task_info = []
     for group_name, group_info in TASK_GROUPS.items():
-        for task_name in group_info['tasks']:
-            task_info.append({
-                'name': task_name,
-                'group': group_name,
-                'group_name': group_info['name'],
-                'function': SCHEDULED_TASKS.get(task_name)
-            })
+        for task_name in group_info["tasks"]:
+            task_info.append(
+                {
+                    "name": task_name,
+                    "group": group_name,
+                    "group_name": group_info["name"],
+                    "function": SCHEDULED_TASKS.get(task_name),
+                }
+            )
     return task_info
 
 
@@ -338,80 +331,68 @@ def execute_task(task_name: str, *args, **kwargs):
 # ==================== 导出 ====================
 __all__ = [
     # 配置
-    'SCHEDULED_TASKS',
-    'TASK_GROUPS',
-
+    "SCHEDULED_TASKS",
+    "TASK_GROUPS",
     # 工具函数
-    'get_task',
-    'get_tasks_by_group',
-    'list_all_tasks',
-    'execute_task',
-
+    "get_task",
+    "get_tasks_by_group",
+    "list_all_tasks",
+    "execute_task",
     # 基础函数
-    'send_notification_for_alert',
-    'log_task_result',
-    'safe_task_execution',
-
+    "send_notification_for_alert",
+    "log_task_result",
+    "safe_task_execution",
     # 项目管理
-    'daily_spec_match_check',
-    'calculate_project_health',
-    'daily_health_snapshot',
-    'calculate_progress_summary',
-    'check_project_deadline_alerts',
-    'check_project_cost_overrun',
-
+    "daily_spec_match_check",
+    "calculate_project_health",
+    "daily_health_snapshot",
+    "calculate_progress_summary",
+    "check_project_deadline_alerts",
+    "check_project_cost_overrun",
     # 问题管理
-    'check_overdue_issues',
-    'check_blocking_issues',
-    'check_timeout_issues',
-    'daily_issue_statistics_snapshot',
-    'check_issue_assignment_timeout',
-    'check_issue_resolution_timeout',
-
+    "check_overdue_issues",
+    "check_blocking_issues",
+    "check_timeout_issues",
+    "daily_issue_statistics_snapshot",
+    "check_issue_assignment_timeout",
+    "check_issue_resolution_timeout",
     # 销售
-    'sales_reminder_scan',
-    'check_payment_reminder',
-    'check_overdue_receivable_alerts',
-    'check_opportunity_stage_timeout',
-
+    "sales_reminder_scan",
+    "check_payment_reminder",
+    "check_overdue_receivable_alerts",
+    "check_opportunity_stage_timeout",
     # 里程碑
-    'check_milestone_alerts',
-    'check_milestone_status_and_adjust_payments',
-    'check_milestone_risk_alerts',
-
+    "check_milestone_alerts",
+    "check_milestone_status_and_adjust_payments",
+    "check_milestone_risk_alerts",
     # 工时
-    'daily_timesheet_reminder_task',
-    'weekly_timesheet_reminder_task',
-    'timesheet_anomaly_alert_task',
-    'timesheet_approval_timeout_reminder_task',
-    'timesheet_sync_failure_alert_task',
-    'daily_timesheet_aggregation_task',
-    'weekly_timesheet_aggregation_task',
-    'monthly_timesheet_aggregation_task',
-    'calculate_monthly_labor_cost_task',
-
+    "daily_timesheet_reminder_task",
+    "weekly_timesheet_reminder_task",
+    "timesheet_anomaly_alert_task",
+    "timesheet_approval_timeout_reminder_task",
+    "timesheet_sync_failure_alert_task",
+    "daily_timesheet_aggregation_task",
+    "weekly_timesheet_aggregation_task",
+    "monthly_timesheet_aggregation_task",
+    "calculate_monthly_labor_cost_task",
     # 生产
-    'check_production_plan_alerts',
-    'check_work_report_timeout',
-    'generate_production_daily_reports',
-
+    "check_production_plan_alerts",
+    "check_work_report_timeout",
+    "generate_production_daily_reports",
     # 预警通知
-    'check_alert_escalation',
-    'retry_failed_notifications',
-    'send_alert_notifications',
-    'calculate_response_metrics',
-
+    "check_alert_escalation",
+    "retry_failed_notifications",
+    "send_alert_notifications",
+    "calculate_response_metrics",
     # HR
-    'check_contract_expiry_reminder',
-    'check_employee_confirmation_reminder',
-
+    "check_contract_expiry_reminder",
+    "check_employee_confirmation_reminder",
     # 齐套率
-    'daily_kit_rate_snapshot',
-    'create_kit_rate_snapshot',
-    'create_stage_change_snapshot',
-
+    "daily_kit_rate_snapshot",
+    "create_kit_rate_snapshot",
+    "create_stage_change_snapshot",
     # 项目风险
-    'calculate_all_project_risks',
-    'create_daily_risk_snapshots',
-    'check_high_risk_projects',
+    "calculate_all_project_risks",
+    "create_daily_risk_snapshots",
+    "check_high_risk_projects",
 ]

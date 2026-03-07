@@ -6,11 +6,11 @@
 
 import unittest
 from datetime import datetime
-from unittest.mock import MagicMock, patch
 from typing import Any
+from unittest.mock import MagicMock, patch
 
-from app.services.best_practices import BestPracticesService
 from app.common.pagination import PaginationParams
+from app.services.best_practices import BestPracticesService
 
 
 class TestBestPracticesService(unittest.TestCase):

@@ -7,9 +7,8 @@
 import logging
 from typing import Callable, Optional
 
-
 from app.core.config import settings
-from app.core.rate_limiting import limiter, user_limiter, strict_limiter
+from app.core.rate_limiting import limiter, strict_limiter, user_limiter
 
 logger = logging.getLogger(__name__)
 
@@ -22,27 +21,30 @@ def rate_limit(
 ):
     """
     速率限制装饰器（基于IP）
-    
+
     Args:
         limit: 限制字符串，如 "5/minute", "100/hour"
         key_func: 自定义键提取函数
         per_method: 是否按HTTP方法分别限制
         methods: 仅限制指定的HTTP方法
-    
+
     Example:
         @app.post("/api/v1/auth/login")
         @rate_limit("5/minute")
         async def login(...):
             pass
     """
+
     def decorator(func: Callable) -> Callable:
         if not settings.RATE_LIMIT_ENABLED:
             return func
-        
+
         actual_limit = limit or settings.RATE_LIMIT_DEFAULT
         # 直接应用 slowapi 装饰器，要求端点函数自身包含 response: Response 参数
-        return limiter.limit(actual_limit, key_func=key_func, per_method=per_method, methods=methods)(func)
-    
+        return limiter.limit(
+            actual_limit, key_func=key_func, per_method=per_method, methods=methods
+        )(func)
+
     return decorator
 
 
@@ -53,23 +55,24 @@ def user_rate_limit(
 ):
     """
     基于用户的速率限制装饰器
-    
+
     优先使用用户ID，未认证用户使用IP地址
     适用于需要区分用户行为的场景
-    
+
     Example:
         @app.post("/api/v1/data/batch-import")
         @user_rate_limit("10/minute")
         async def batch_import(...):
             pass
     """
+
     def decorator(func: Callable) -> Callable:
         if not settings.RATE_LIMIT_ENABLED:
             return func
-        
+
         actual_limit = limit or settings.RATE_LIMIT_DEFAULT
         return user_limiter.limit(actual_limit, per_method=per_method, methods=methods)(func)
-    
+
     return decorator
 
 
@@ -80,23 +83,24 @@ def strict_rate_limit(
 ):
     """
     严格速率限制装饰器（IP + 用户组合）
-    
+
     同时限制IP和用户ID，提供最严格的保护
     适用于极其敏感的操作（密码修改、账户删除等）
-    
+
     Example:
         @app.post("/api/v1/auth/change-password")
         @strict_rate_limit("3/hour")
         async def change_password(...):
             pass
     """
+
     def decorator(func: Callable) -> Callable:
         if not settings.RATE_LIMIT_ENABLED:
             return func
-        
+
         actual_limit = limit or settings.RATE_LIMIT_DEFAULT
         return strict_limiter.limit(actual_limit, per_method=per_method, methods=methods)(func)
-    
+
     return decorator
 
 

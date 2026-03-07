@@ -23,8 +23,15 @@ def _mock_strategy(**kw):
 
 def _mock_comparison(**kw):
     c = MagicMock()
-    defaults = dict(id=1, base_strategy_id=1, compare_strategy_id=2, is_active=True,
-                    comparison_type="YOY", base_year=2025, compare_year=2024)
+    defaults = dict(
+        id=1,
+        base_strategy_id=1,
+        compare_strategy_id=2,
+        is_active=True,
+        comparison_type="YOY",
+        base_year=2025,
+        compare_year=2024,
+    )
     defaults.update(kw)
     for k, v in defaults.items():
         setattr(c, k, v)
@@ -49,10 +56,15 @@ class TestCreateStrategyComparisonDetails(unittest.TestCase):
     def test_stores_all_fields(self, MockSC):
         """应存储所有字段"""
         from app.services.strategy.comparison_service import create_strategy_comparison
+
         db = MagicMock()
         data = MagicMock(
-            base_strategy_id=1, compare_strategy_id=2,
-            comparison_type="YOY", base_year=2025, compare_year=2024, summary="全面分析"
+            base_strategy_id=1,
+            compare_strategy_id=2,
+            comparison_type="YOY",
+            base_year=2025,
+            compare_year=2024,
+            summary="全面分析",
         )
         MockSC.return_value = MagicMock(id=1)
 
@@ -67,10 +79,15 @@ class TestCreateStrategyComparisonDetails(unittest.TestCase):
     def test_commit_and_refresh_called(self, MockSC):
         """应调用 commit 和 refresh"""
         from app.services.strategy.comparison_service import create_strategy_comparison
+
         db = MagicMock()
         data = MagicMock(
-            base_strategy_id=1, compare_strategy_id=2,
-            comparison_type="YOY", base_year=2025, compare_year=2024, summary=None
+            base_strategy_id=1,
+            compare_strategy_id=2,
+            comparison_type="YOY",
+            base_year=2025,
+            compare_year=2024,
+            summary=None,
         )
         MockSC.return_value = MagicMock()
 
@@ -85,6 +102,7 @@ class TestListStrategyComparisonsAdvanced(unittest.TestCase):
     def test_pagination_with_large_skip(self):
         """大 skip 值时应返回空列表"""
         from app.services.strategy.comparison_service import list_strategy_comparisons
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -101,6 +119,7 @@ class TestListStrategyComparisonsAdvanced(unittest.TestCase):
     def test_returns_both_list_and_total(self):
         """应返回列表和总数"""
         from app.services.strategy.comparison_service import list_strategy_comparisons
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -123,6 +142,7 @@ class TestDeleteStrategyComparisonEdgeCases(unittest.TestCase):
     def test_delete_sets_inactive(self, mock_get):
         """删除时应将 is_active 设为 False"""
         from app.services.strategy.comparison_service import delete_strategy_comparison
+
         db = MagicMock()
         comp = _mock_comparison()
         mock_get.return_value = comp
@@ -136,6 +156,7 @@ class TestDeleteStrategyComparisonEdgeCases(unittest.TestCase):
     def test_delete_nonexistent_returns_false(self, mock_get):
         """删除不存在记录返回 False"""
         from app.services.strategy.comparison_service import delete_strategy_comparison
+
         db = MagicMock()
         mock_get.return_value = None
 
@@ -150,6 +171,7 @@ class TestGenerateYoyReportAdvanced(unittest.TestCase):
     def test_uses_explicit_previous_year(self, MockResp):
         """明确指定 previous_year 时应使用该年份"""
         from app.services.strategy.comparison_service import generate_yoy_report
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -168,6 +190,7 @@ class TestGenerateYoyReportAdvanced(unittest.TestCase):
     def test_auto_previous_year_is_current_minus_1(self, MockResp):
         """不指定 previous_year 时应默认为 current_year - 1"""
         from app.services.strategy.comparison_service import generate_yoy_report
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -189,6 +212,7 @@ class TestCompareKpisTargetChange(unittest.TestCase):
     def test_kpi_target_increase(self, MockKPIItem):
         """KPI目标值增加时 target_change 应为正"""
         from app.services.strategy.comparison_service import _compare_kpis
+
         db = MagicMock()
 
         kpi_current = MagicMock(id=1, code="KPI-01", name="KPI增长", target_value=Decimal("120"))
@@ -201,8 +225,10 @@ class TestCompareKpisTargetChange(unittest.TestCase):
 
         MockKPIItem.return_value = MagicMock(is_new=False)
 
-        with patch("app.services.strategy.health_calculator.calculate_kpi_completion_rate",
-                   side_effect=[Decimal("90"), Decimal("80")]):
+        with patch(
+            "app.services.strategy.health_calculator.calculate_kpi_completion_rate",
+            side_effect=[Decimal("90"), Decimal("80")],
+        ):
             result = _compare_kpis(db, 1, 2)
             call_kwargs = MockKPIItem.call_args.kwargs
             self.assertEqual(call_kwargs.get("target_change"), Decimal("20"))
@@ -211,6 +237,7 @@ class TestCompareKpisTargetChange(unittest.TestCase):
     def test_kpi_target_decrease(self, MockKPIItem):
         """KPI目标值减少时 target_change 应为负"""
         from app.services.strategy.comparison_service import _compare_kpis
+
         db = MagicMock()
 
         kpi_current = MagicMock(id=1, code="KPI-02", name="KPI降低", target_value=Decimal("80"))
@@ -223,8 +250,10 @@ class TestCompareKpisTargetChange(unittest.TestCase):
 
         MockKPIItem.return_value = MagicMock(is_new=False)
 
-        with patch("app.services.strategy.health_calculator.calculate_kpi_completion_rate",
-                   side_effect=[Decimal("70"), Decimal("90")]):
+        with patch(
+            "app.services.strategy.health_calculator.calculate_kpi_completion_rate",
+            side_effect=[Decimal("70"), Decimal("90")],
+        ):
             result = _compare_kpis(db, 1, 2)
             call_kwargs = MockKPIItem.call_args.kwargs
             self.assertEqual(call_kwargs.get("target_change"), Decimal("-20"))
@@ -237,6 +266,7 @@ class TestGetMultiYearTrendAdvanced(unittest.TestCase):
     def test_trend_years_count_matches_param(self, mock_date):
         """返回年份数量应与参数一致"""
         from app.services.strategy.comparison_service import get_multi_year_trend
+
         mock_date.today.return_value = date(2025, 6, 15)
         mock_date.side_effect = lambda *a, **kw: date(*a, **kw)
 
@@ -254,6 +284,7 @@ class TestGetMultiYearTrendAdvanced(unittest.TestCase):
     def test_trend_years_are_descending(self, mock_date):
         """年份应从当前年向过去排列"""
         from app.services.strategy.comparison_service import get_multi_year_trend
+
         mock_date.today.return_value = date(2025, 1, 1)
         mock_date.side_effect = lambda *a, **kw: date(*a, **kw)
 
@@ -277,11 +308,13 @@ class TestGetKPIAchievementComparisonEdge(unittest.TestCase):
     def test_only_current_strategy_exists(self):
         """只有当年战略没有去年战略"""
         from app.services.strategy.comparison_service import get_kpi_achievement_comparison
+
         db = MagicMock()
 
         current_s = _mock_strategy(id=1, year=2025)
 
         call_count = [0]
+
         def make_query(*args):
             q = MagicMock()
             q.filter.return_value = q
@@ -304,6 +337,7 @@ class TestGetKPIAchievementComparisonEdge(unittest.TestCase):
     def test_no_strategies_at_all(self):
         """完全没有战略数据时"""
         from app.services.strategy.comparison_service import get_kpi_achievement_comparison
+
         db = MagicMock()
         q = MagicMock()
         q.filter.return_value = q

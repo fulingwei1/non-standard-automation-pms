@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """第二十批 - meeting (report_framework/adapters/meeting) 单元测试"""
 import pytest
+
 pytest.importorskip("app.services.report_framework.adapters.meeting")
 
 from unittest.mock import MagicMock
+
 from app.services.report_framework.adapters.meeting import MeetingReportAdapter
 
 

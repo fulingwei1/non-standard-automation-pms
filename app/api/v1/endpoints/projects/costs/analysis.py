@@ -38,11 +38,7 @@ def get_project_cost_analysis(
     if result.get("error"):
         raise HTTPException(status_code=404, detail=result["error"])
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=result
-    )
+    return ResponseModel(code=200, message="success", data=result)
 
 
 @router.get("/revenue-detail", response_model=ResponseModel)
@@ -62,11 +58,7 @@ def get_project_revenue_detail(
         raise HTTPException(status_code=404, detail="项目不存在")
     result = service.get_project_revenue_detail(project_id)
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=result
-    )
+    return ResponseModel(code=200, message="success", data=result)
 
 
 @router.get("/profit-analysis", response_model=ResponseModel)
@@ -103,25 +95,30 @@ def get_project_profit_analysis(
     machines = db.query(Machine).filter(Machine.project_id == project_id).all()
     machine_profit = []
     for machine in machines:
-        machine_costs = db.query(ProjectCost).filter(
-            ProjectCost.project_id == project_id,
-            ProjectCost.machine_id == machine.id
-        ).all()
+        machine_costs = (
+            db.query(ProjectCost)
+            .filter(ProjectCost.project_id == project_id, ProjectCost.machine_id == machine.id)
+            .all()
+        )
         machine_total_cost = sum([float(c.amount or 0) for c in machine_costs])
         # 假设按机台数量平均分配合同金额
         machine_revenue = contract_amount / len(machines) if machines else 0
         machine_profit_amount = machine_revenue - machine_total_cost
-        machine_profit_margin = (machine_profit_amount / machine_revenue * 100) if machine_revenue > 0 else 0
+        machine_profit_margin = (
+            (machine_profit_amount / machine_revenue * 100) if machine_revenue > 0 else 0
+        )
 
-        machine_profit.append({
-            "machine_id": machine.id,
-            "machine_code": machine.machine_code,
-            "machine_name": machine.machine_name,
-            "revenue": round(machine_revenue, 2),
-            "cost": round(machine_total_cost, 2),
-            "profit": round(machine_profit_amount, 2),
-            "profit_margin": round(machine_profit_margin, 2)
-        })
+        machine_profit.append(
+            {
+                "machine_id": machine.id,
+                "machine_code": machine.machine_code,
+                "machine_name": machine.machine_name,
+                "revenue": round(machine_revenue, 2),
+                "cost": round(machine_total_cost, 2),
+                "profit": round(machine_profit_amount, 2),
+                "profit_margin": round(machine_profit_margin, 2),
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -149,5 +146,5 @@ def get_project_profit_analysis(
             },
             "cost_breakdown": cost_breakdown,
             "machine_profit": machine_profit,
-        }
+        },
     )

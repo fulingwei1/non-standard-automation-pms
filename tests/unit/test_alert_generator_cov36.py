@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """预警内容生成器单元测试 - 第三十六批"""
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.alert_rule_engine.alert_generator")
 
@@ -44,7 +45,7 @@ class TestGenerateAlertNo:
         rule = make_rule(rule_code="SHORTAGE")
         result = AlertGenerator.generate_alert_no(db, rule, {"target_name": "项目A"})
         assert result.startswith("SHO")
-        today = datetime.now().strftime('%Y%m%d')
+        today = datetime.now().strftime("%Y%m%d")
         assert today in result
 
     @patch("app.services.alert_rule_engine.alert_generator.apply_like_filter")
@@ -81,5 +82,7 @@ class TestGenerateAlertTitle:
 
     def test_context_accepted(self):
         rule = make_rule(rule_name="测试")
-        result = AlertGenerator.generate_alert_title(rule, {"target_name": "T"}, "INFO", context={"key": "val"})
+        result = AlertGenerator.generate_alert_title(
+            rule, {"target_name": "T"}, "INFO", context={"key": "val"}
+        )
         assert isinstance(result, str)

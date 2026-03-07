@@ -16,6 +16,7 @@ print("=" * 50)
 # 测试1: 函数复杂度优化
 print("\n📊 测试1: 函数复杂度优化")
 
+
 # 模拟复杂函数拆分前后的性能对比
 def complex_function_simulation():
     """模拟原始的157行复杂函数"""
@@ -24,9 +25,11 @@ def complex_function_simulation():
         total += i * i
     return total
 
+
 def simple_function_simulation():
     """模拟拆分后的简化函数"""
     return sum(i * i for i in range(100000))
+
 
 # 测试多次
 iterations = 10
@@ -61,15 +64,18 @@ print(f"  性能提升: {improvement:.1f}%")
 # 测试2: 模拟缓存效果
 print("\n📊 测试2: 缓存机制模拟")
 
+
 def simulate_database_query():
     """模拟数据库查询"""
     time.sleep(0.1)  # 模拟数据库查询时间
     return {"data": "query_result"}
 
+
 def simulate_cache_lookup():
     """模拟缓存查询"""
     time.sleep(0.001)  # 模拟内存访问时间
     return {"data": "cached_result"}
+
 
 # 测试查询性能
 db_times = []
@@ -107,15 +113,15 @@ original_lines = {
     "milestone_alerts": 133,
     "alerts_py": 2232,
     "service_py": 2208,
-    "quotes_py": 2203
+    "quotes_py": 2203,
 }
 
 optimized_lines = {
     "payment_plan_function": 45,  # 拆分为多个小函数
-    "milestone_alerts": 40,       # 拆分为多个小函数
-    "alerts_py": 474,             # 模块化拆分
-    "service_py": 326,            # 模块化拆分
-    "quotes_py": 62               # 模块化拆分
+    "milestone_alerts": 40,  # 拆分为多个小函数
+    "alerts_py": 474,  # 模块化拆分
+    "service_py": 326,  # 模块化拆分
+    "quotes_py": 62,  # 模块化拆分
 }
 
 total_original = sum(original_lines.values())
@@ -140,30 +146,30 @@ report = {
     "function_complexity": {
         "improvement_percent": improvement,
         "complex_avg_time": avg_complex,
-        "simple_avg_time": avg_simple
+        "simple_avg_time": avg_simple,
     },
     "cache_performance": {
         "improvement_percent": cache_improvement,
         "db_avg_time": avg_db,
-        "cache_avg_time": avg_cache
+        "cache_avg_time": avg_cache,
     },
     "code_reduction": {
         "overall_reduction_percent": overall_reduction,
         "original_total_lines": total_original,
         "optimized_total_lines": total_optimized,
-        "file_details": original_lines
+        "file_details": original_lines,
     },
     "summary": {
         "function_improvement": improvement > 0,
         "cache_improvement": cache_improvement > 0,
         "code_reduction": overall_reduction > 0,
-        "overall_success": improvement > 0 and cache_improvement > 0 and overall_reduction > 0
-    }
+        "overall_success": improvement > 0 and cache_improvement > 0 and overall_reduction > 0,
+    },
 }
 
 # 保存报告
 report_file = f"performance_optimization_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-with open(report_file, 'w', encoding='utf-8') as f:
+with open(report_file, "w", encoding="utf-8") as f:
     json.dump(report, f, ensure_ascii=False, indent=2)
 
 print(f"\n📋 详细报告已保存到: {report_file}")

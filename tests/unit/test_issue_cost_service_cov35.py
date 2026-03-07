@@ -2,12 +2,14 @@
 """
 第三十五批 - issue_cost_service.py 单元测试
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.issue_cost_service import IssueCostService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -90,8 +92,10 @@ class TestIssueCostService:
     def test_get_issue_cost_summary_structure(self):
         """汇总结果包含所有必要字段"""
         db = MagicMock()
-        with patch.object(IssueCostService, "get_issue_related_costs") as mock_costs, \
-             patch.object(IssueCostService, "get_issue_related_hours") as mock_hours:
+        with (
+            patch.object(IssueCostService, "get_issue_related_costs") as mock_costs,
+            patch.object(IssueCostService, "get_issue_related_hours") as mock_hours,
+        ):
             mock_costs.return_value = {
                 "inventory_loss": Decimal(100),
                 "total_cost": Decimal(200),

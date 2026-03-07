@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """第十一批：data_scope_service_enhanced 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.data_scope_service_enhanced import (
-        DataScopeServiceEnhanced,
         SCOPE_TYPE_MAPPING,
+        DataScopeServiceEnhanced,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -96,7 +98,9 @@ class TestGetUserDataScope:
         db.query.return_value = mock_query
 
         try:
-            result = DataScopeServiceEnhanced.get_user_data_scope(db, user_id=1, permission_code="test")
+            result = DataScopeServiceEnhanced.get_user_data_scope(
+                db, user_id=1, permission_code="test"
+            )
             assert result is not None or result is None
         except (AttributeError, TypeError, Exception):
             pass

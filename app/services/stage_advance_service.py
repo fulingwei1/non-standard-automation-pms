@@ -24,18 +24,14 @@ def validate_target_stage(target_stage: str) -> None:
     """
     from fastapi import HTTPException
 
-    valid_stages = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9']
+    valid_stages = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]
     if target_stage not in valid_stages:
         raise HTTPException(
-            status_code=400,
-            detail=f"无效的目标阶段。有效值：{', '.join(valid_stages)}"
+            status_code=400, detail=f"无效的目标阶段。有效值：{', '.join(valid_stages)}"
         )
 
 
-def validate_stage_advancement(
-    current_stage: str,
-    target_stage: str
-) -> None:
+def validate_stage_advancement(current_stage: str, target_stage: str) -> None:
     """
     检查阶段是否向前推进
 
@@ -50,7 +46,7 @@ def validate_stage_advancement(
     if target_stage_num <= current_stage_num:
         raise HTTPException(
             status_code=400,
-            detail=f"目标阶段 {target_stage} 不能早于或等于当前阶段 {current_stage}"
+            detail=f"目标阶段 {target_stage} 不能早于或等于当前阶段 {current_stage}",
         )
 
 
@@ -59,7 +55,7 @@ def perform_gate_check(
     project: Project,
     target_stage: str,
     skip_gate_check: bool,
-    current_user_is_superuser: bool
+    current_user_is_superuser: bool,
 ) -> Tuple[bool, list, Optional[Dict[str, Any]]]:
     """
     执行阶段门校验
@@ -71,10 +67,7 @@ def perform_gate_check(
 
     if skip_gate_check:
         if not current_user_is_superuser:
-            raise HTTPException(
-                status_code=403,
-                detail="只有管理员可以跳过阶段门校验"
-            )
+            raise HTTPException(status_code=403, detail="只有管理员可以跳过阶段门校验")
         return True, [], None
 
     if current_user_is_superuser:
@@ -99,24 +92,20 @@ def get_stage_status_mapping() -> Dict[str, str]:
         Dict[str, str]: 阶段到状态的映射字典
     """
     return {
-        'S1': 'ST01',
-        'S2': 'ST03',
-        'S3': 'ST05',
-        'S4': 'ST07',
-        'S5': 'ST10',
-        'S6': 'ST15',
-        'S7': 'ST20',
-        'S8': 'ST25',
-        'S9': 'ST30',
+        "S1": "ST01",
+        "S2": "ST03",
+        "S3": "ST05",
+        "S4": "ST07",
+        "S5": "ST10",
+        "S6": "ST15",
+        "S7": "ST20",
+        "S8": "ST25",
+        "S9": "ST30",
     }
 
 
 def update_project_stage_and_status(
-    db: Session,
-    project: Project,
-    target_stage: str,
-    old_stage: str,
-    old_status: str
+    db: Session, project: Project, target_stage: str, old_stage: str, old_status: str
 ) -> str:
     """
     更新项目阶段和状态
@@ -154,7 +143,7 @@ def create_status_log(
     old_health: str,
     new_health: Optional[str] = None,
     reason: Optional[str] = None,
-    changed_by: int = 0
+    changed_by: int = 0,
 ) -> None:
     """
     创建状态变更历史记录
@@ -190,17 +179,14 @@ def create_status_log(
         change_type="STAGE_ADVANCEMENT",
         change_reason=actual_reason,
         changed_by=actual_changed_by,
-        changed_at=datetime.now()
+        changed_at=datetime.now(),
     )
     db.add(status_log)
     db.flush()
 
 
 def create_installation_dispatch_orders(
-    db: Session,
-    project: Project,
-    target_stage: str,
-    old_stage: str
+    db: Session, project: Project, target_stage: str, old_stage: str
 ) -> None:
     """
     如果项目进入S8阶段，自动创建安装调试派工单
@@ -218,11 +204,15 @@ def create_installation_dispatch_orders(
         # 为每个机台创建安装调试派工单
         for machine in machines:
             # 检查是否已存在该机台的安装调试派工单
-            existing_order = db.query(InstallationDispatchOrder).filter(
-                InstallationDispatchOrder.project_id == project.id,
-                InstallationDispatchOrder.machine_id == machine.id,
-                InstallationDispatchOrder.status != "CANCELLED"
-            ).first()
+            existing_order = (
+                db.query(InstallationDispatchOrder)
+                .filter(
+                    InstallationDispatchOrder.project_id == project.id,
+                    InstallationDispatchOrder.machine_id == machine.id,
+                    InstallationDispatchOrder.status != "CANCELLED",
+                )
+                .first()
+            )
 
             if not existing_order:
                 dispatch_order = InstallationDispatchOrder(
@@ -233,7 +223,7 @@ def create_installation_dispatch_orders(
                     task_type="INSTALLATION",
                     task_title=f"{machine.machine_no} 现场安装调试",
                     task_description=f"项目 {project.project_name} 的 {machine.machine_no} 设备现场安装调试",
-                    location=getattr(project, 'customer_address', None),
+                    location=getattr(project, "customer_address", None),
                     scheduled_date=date.today() + timedelta(days=7),  # 默认7天后
                     estimated_hours=Decimal("8.0"),
                     priority="HIGH",
@@ -246,11 +236,7 @@ def create_installation_dispatch_orders(
 
 
 def generate_cost_review_report(
-    db: Session,
-    project_id: int,
-    target_stage: str,
-    new_status: str,
-    current_user_id: int
+    db: Session, project_id: int, target_stage: str, new_status: str, current_user_id: int
 ) -> None:
     """
     如果项目进入S9阶段或状态变为ST30，自动生成成本复盘报告
@@ -263,14 +249,15 @@ def generate_cost_review_report(
         from app.services.cost_review_service import CostReviewService
 
         # 自动生成成本复盘报告（如果不存在）
-        existing_review = db.query(ProjectReview).filter(
-            ProjectReview.project_id == project_id,
-            ProjectReview.review_type == "POST_MORTEM"
-        ).first()
+        existing_review = (
+            db.query(ProjectReview)
+            .filter(
+                ProjectReview.project_id == project_id, ProjectReview.review_type == "POST_MORTEM"
+            )
+            .first()
+        )
 
         if not existing_review:
-            CostReviewService.generate_cost_review_report(
-                db, project_id, current_user_id
-            )
+            CostReviewService.generate_cost_review_report(db, project_id, current_user_id)
     except Exception as e:
         logger.warning(f"自动生成成本复盘报告失败：{str(e)}")

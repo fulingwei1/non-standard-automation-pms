@@ -14,11 +14,12 @@ from pydantic import BaseModel, Field
 
 from ..common import TimestampSchema
 
-
 # ==================== 工位管理 ====================
+
 
 class WorkstationCreate(BaseModel):
     """创建工位"""
+
     workstation_code: str = Field(max_length=50, description="工位编码")
     workstation_name: str = Field(max_length=100, description="工位名称")
     equipment_id: Optional[int] = Field(default=None, description="关联设备ID")
@@ -28,6 +29,7 @@ class WorkstationCreate(BaseModel):
 
 class WorkstationUpdate(BaseModel):
     """更新工位"""
+
     workstation_name: Optional[str] = None
     equipment_id: Optional[int] = None
     status: Optional[str] = None
@@ -37,6 +39,7 @@ class WorkstationUpdate(BaseModel):
 
 class WorkstationResponse(TimestampSchema):
     """工位响应"""
+
     id: int
     workstation_code: str
     workstation_name: str
@@ -53,6 +56,7 @@ class WorkstationResponse(TimestampSchema):
 
 class WorkstationStatusResponse(BaseModel):
     """工位状态响应"""
+
     workstation_id: int
     workstation_code: str
     workstation_name: str
@@ -62,5 +66,3 @@ class WorkstationStatusResponse(BaseModel):
     current_work_order_id: Optional[int] = None
     current_work_order_no: Optional[str] = None
     is_available: bool
-
-

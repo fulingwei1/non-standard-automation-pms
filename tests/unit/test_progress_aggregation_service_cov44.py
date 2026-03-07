@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第四十四批覆盖测试 - 进度聚合服务（兼容层/废弃模块）"""
 
-import pytest
 import warnings
+
+import pytest
 
 try:
     with warnings.catch_warnings():
@@ -39,6 +40,7 @@ class TestProgressAggregationServiceCompat:
     def test_import_raises_deprecation_warning(self):
         """导入时应发出 DeprecationWarning"""
         import importlib
+
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             importlib.reload(compat_module)

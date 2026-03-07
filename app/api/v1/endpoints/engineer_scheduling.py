@@ -3,10 +3,10 @@
 工程师智能排产与风险预警 API
 """
 
-from typing import Any, Optional
 from datetime import date
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -58,17 +58,17 @@ def analyze_workload(
 ) -> Any:
     """
     分析工程师任务量
-    
+
     返回：
     - 当前任务数
     - 总工时
     - 负载状态（过载/正常/空闲）
     - 预警级别
     """
-    
+
     start = date.fromisoformat(start_date) if start_date else None
     end = date.fromisoformat(end_date) if end_date else None
-    
+
     service = EngineerSchedulingService(db)
     workload = service.analyze_engineer_workload(engineer_id, start, end)
     return workload
@@ -83,7 +83,7 @@ def detect_conflicts(
 ) -> Any:
     """
     检测新任务与现有任务的冲突
-    
+
     task_data:
     - project_id: 项目 ID
     - task_type: 任务类型
@@ -134,7 +134,7 @@ def get_scheduling_report(
 ) -> Any:
     """
     生成项目排产决策支持报告
-    
+
     包含：
     - 项目任务总览
     - 工程师负载分析
@@ -143,10 +143,10 @@ def get_scheduling_report(
     """
     service = EngineerSchedulingService(db)
     report = service.generate_scheduling_report(project_id)
-    
+
     if "error" in report:
         raise HTTPException(status_code=404, detail=report["error"])
-    
+
     return report
 
 
@@ -158,7 +158,7 @@ def evaluate_ai_capability(
 ) -> Any:
     """
     评估工程师的 AI 使用能力
-    
+
     返回：
     - AI 技能等级（NONE/BASIC/INTERMEDIATE/ADVANCED/EXPERT）
     - 常用 AI 工具
@@ -200,7 +200,7 @@ def evaluate_core_capabilities(
 ) -> Any:
     """
     评估工程师的核心能力
-    
+
     返回：
     - 多项目并行能力（同时负责项目数/效率/切换成本）
     - 标准化/模块化能力（复用率/模块数量/文档质量）

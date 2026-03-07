@@ -19,9 +19,7 @@ class RevenueService:
 
     @staticmethod
     def get_project_revenue(
-        db: Session,
-        project_id: int,
-        revenue_type: str = "CONTRACT"
+        db: Session, project_id: int, revenue_type: str = "CONTRACT"
     ) -> Decimal:
         """
         获取项目营业收入
@@ -66,26 +64,24 @@ class RevenueService:
     def _get_received_amount(db: Session, project_id: int) -> Decimal:
         """获取已收款金额"""
         # 方法1：从发票中统计已支付金额
-        invoices = db.query(Invoice).filter(
-            Invoice.project_id == project_id,
-            Invoice.status == "PAID"
-        ).all()
+        invoices = (
+            db.query(Invoice)
+            .filter(Invoice.project_id == project_id, Invoice.status == "PAID")
+            .all()
+        )
 
-        received_from_invoices = sum([
-            Decimal(str(inv.paid_amount or inv.amount or 0))
-            for inv in invoices
-        ])
+        received_from_invoices = sum(
+            [Decimal(str(inv.paid_amount or inv.amount or 0)) for inv in invoices]
+        )
 
         # 方法2：从合同收款计划中统计实际收款
         from app.models.project import ProjectPaymentPlan
-        payment_plans = db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.project_id == project_id
-        ).all()
 
-        received_from_plans = sum([
-            Decimal(str(plan.actual_amount or 0))
-            for plan in payment_plans
-        ])
+        payment_plans = (
+            db.query(ProjectPaymentPlan).filter(ProjectPaymentPlan.project_id == project_id).all()
+        )
+
+        received_from_plans = sum([Decimal(str(plan.actual_amount or 0)) for plan in payment_plans])
 
         # 取两者中的较大值（避免重复计算）
         return max(received_from_invoices, received_from_plans)
@@ -93,34 +89,34 @@ class RevenueService:
     @staticmethod
     def _get_invoiced_amount(db: Session, project_id: int) -> Decimal:
         """获取已开票金额"""
-        invoices = db.query(Invoice).filter(
-            Invoice.project_id == project_id,
-            Invoice.status.in_(["ISSUED", "PAID", "PARTIAL"])
-        ).all()
+        invoices = (
+            db.query(Invoice)
+            .filter(
+                Invoice.project_id == project_id, Invoice.status.in_(["ISSUED", "PAID", "PARTIAL"])
+            )
+            .all()
+        )
 
-        return sum([
-            Decimal(str(inv.total_amount or inv.amount or 0))
-            for inv in invoices
-        ])
+        return sum([Decimal(str(inv.total_amount or inv.amount or 0)) for inv in invoices])
 
     @staticmethod
     def _get_paid_invoice_amount(db: Session, project_id: int) -> Decimal:
         """获取已开票且已收款金额"""
-        invoices = db.query(Invoice).filter(
-            Invoice.project_id == project_id,
-            Invoice.status == "PAID"
-        ).all()
+        invoices = (
+            db.query(Invoice)
+            .filter(Invoice.project_id == project_id, Invoice.status == "PAID")
+            .all()
+        )
 
-        return sum([
-            Decimal(str(inv.paid_amount or inv.total_amount or inv.amount or 0))
-            for inv in invoices
-        ])
+        return sum(
+            [
+                Decimal(str(inv.paid_amount or inv.total_amount or inv.amount or 0))
+                for inv in invoices
+            ]
+        )
 
     @staticmethod
-    def get_project_revenue_detail(
-        db: Session,
-        project_id: int
-    ) -> Dict:
+    def get_project_revenue_detail(db: Session, project_id: int) -> Dict:
         """
         获取项目收入详情（包含所有收入类型）
 
@@ -139,7 +135,7 @@ class RevenueService:
                 "received_amount": Decimal("0"),
                 "invoiced_amount": Decimal("0"),
                 "paid_invoice_amount": Decimal("0"),
-                "pending_amount": Decimal("0")
+                "pending_amount": Decimal("0"),
             }
 
         contract_amount = Decimal(str(project.contract_amount or 0))
@@ -157,14 +153,14 @@ class RevenueService:
             "invoiced_amount": invoiced_amount,
             "paid_invoice_amount": paid_invoice_amount,
             "pending_amount": pending_amount,
-            "receive_rate": (received_amount / contract_amount * 100) if contract_amount > 0 else Decimal("0")
+            "receive_rate": (
+                (received_amount / contract_amount * 100) if contract_amount > 0 else Decimal("0")
+            ),
         }
 
     @staticmethod
     def get_projects_revenue(
-        db: Session,
-        project_ids: List[int],
-        revenue_type: str = "CONTRACT"
+        db: Session, project_ids: List[int], revenue_type: str = "CONTRACT"
     ) -> Dict[int, Decimal]:
         """
         批量获取多个项目的营业收入
@@ -180,17 +176,13 @@ class RevenueService:
         result = {}
 
         for project_id in project_ids:
-            result[project_id] = RevenueService.get_project_revenue(
-                db, project_id, revenue_type
-            )
+            result[project_id] = RevenueService.get_project_revenue(db, project_id, revenue_type)
 
         return result
 
     @staticmethod
     def get_total_revenue(
-        db: Session,
-        project_ids: List[int],
-        revenue_type: str = "CONTRACT"
+        db: Session, project_ids: List[int], revenue_type: str = "CONTRACT"
     ) -> Decimal:
         """
         获取多个项目的总收入
@@ -205,8 +197,3 @@ class RevenueService:
         """
         revenues = RevenueService.get_projects_revenue(db, project_ids, revenue_type)
         return sum(revenues.values())
-
-
-
-
-

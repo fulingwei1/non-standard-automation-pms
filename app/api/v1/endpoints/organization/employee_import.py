@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.services.import_export_engine import ImportExportEngine
 from app.models.user import User
+from app.services.import_export_engine import ImportExportEngine
 
 router = APIRouter()
 
@@ -58,10 +58,10 @@ async def import_employees_from_excel(
     return {
         "success": True,
         "message": f"导入完成：新增 {result['imported']} 人，更新 {result['updated']} 人，跳过 {result['skipped']} 条",
-        "imported": result['imported'],
-        "updated": result['updated'],
-        "skipped": result['skipped'],
-        "errors": result['errors']
+        "imported": result["imported"],
+        "updated": result["updated"],
+        "skipped": result["skipped"],
+        "errors": result["errors"],
     }
 
 
@@ -89,6 +89,6 @@ async def download_import_template(
             "系统会根据 姓名+部门 判断员工是否已存在",
             "已存在的员工会更新其信息，不会重复创建",
             "支持直接导入企业微信导出的通讯录Excel",
-            "部门会自动按 一级部门-二级部门-三级部门 格式组合"
-        ]
+            "部门会自动按 一级部门-二级部门-三级部门 格式组合",
+        ],
     }

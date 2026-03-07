@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
 
+
 def generate_ticket_no(db: Session) -> str:
     """生成服务工单号：SRV-yymmdd-xxx"""
     from app.models.service import ServiceTicket
@@ -18,11 +19,11 @@ def generate_ticket_no(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=ServiceTicket,
-        no_field='ticket_no',
-        prefix='SRV',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="ticket_no",
+        prefix="SRV",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
 
@@ -34,11 +35,11 @@ def generate_record_no(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=ServiceRecord,
-        no_field='record_no',
-        prefix='REC',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="record_no",
+        prefix="REC",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
 

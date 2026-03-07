@@ -49,7 +49,9 @@ class TestGetBudgetExecutionAnalysis:
         mock_budget.items = []
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_budget
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_budget
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, project_id=1)
@@ -74,7 +76,9 @@ class TestGetBudgetExecutionAnalysis:
         mock_project.actual_cost = Decimal("30000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, project_id=1)
@@ -96,7 +100,9 @@ class TestGetBudgetExecutionAnalysis:
         mock_project.actual_cost = Decimal("120000")  # 超支
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, project_id=1)
@@ -133,15 +139,16 @@ class TestGetBudgetExecutionAnalysis:
         mock_cost.amount = Decimal("45000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_budget
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_budget
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_cost]
 
         result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, project_id=1)
 
         assert len(result["category_comparison"]) >= 1
         labor_category = next(
-            (c for c in result["category_comparison"] if c["category"] == "人工成本"),
-            None
+            (c for c in result["category_comparison"] if c["category"] == "人工成本"), None
         )
         assert labor_category is not None
         assert labor_category["budget_amount"] == 50000.0
@@ -169,12 +176,16 @@ class TestGetBudgetExecutionAnalysis:
             mock_project.actual_cost = Decimal(str(actual_cost))
 
             mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-            mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+            mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                None
+            )
             mock_db.query.return_value.filter.return_value.all.return_value = []
 
             result = BudgetAnalysisService.get_budget_execution_analysis(mock_db, project_id=1)
 
-            assert result["warning_status"] == expected_status, f"Expected {expected_status} for {actual_cost}"
+            assert (
+                result["warning_status"] == expected_status
+            ), f"Expected {expected_status} for {actual_cost}"
 
 
 class TestGetBudgetTrendAnalysis:
@@ -210,8 +221,12 @@ class TestGetBudgetTrendAnalysis:
         mock_cost.amount = Decimal("10000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_budget
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_cost]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_budget
+        )
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_cost
+        ]
 
         result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, project_id=1)
 
@@ -241,7 +256,9 @@ class TestGetBudgetTrendAnalysis:
         mock_cost2.amount = Decimal("20000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
             mock_cost1,
             mock_cost2,
@@ -278,7 +295,9 @@ class TestGetBudgetTrendAnalysis:
         mock_cost3.amount = Decimal("5000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
             mock_cost1,
             mock_cost2,
@@ -290,7 +309,10 @@ class TestGetBudgetTrendAnalysis:
         # 累计成本应该递增
         if len(result["monthly_trend"]) >= 2:
             for i in range(1, len(result["monthly_trend"])):
-                assert result["monthly_trend"][i]["cumulative_cost"] >= result["monthly_trend"][i-1]["cumulative_cost"]
+                assert (
+                    result["monthly_trend"][i]["cumulative_cost"]
+                    >= result["monthly_trend"][i - 1]["cumulative_cost"]
+                )
 
     def test_filters_by_date_range(self):
         """测试按日期范围筛选"""
@@ -303,17 +325,18 @@ class TestGetBudgetTrendAnalysis:
         mock_project.budget_amount = Decimal("100000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
+        mock_db.query.return_value.filter.return_value.filter.return_value.filter.return_value.order_by.return_value.all.return_value = (
+            []
+        )
 
         start_date = date.today() - timedelta(days=90)
         end_date = date.today()
 
         result = BudgetAnalysisService.get_budget_trend_analysis(
-            mock_db,
-            project_id=1,
-            start_date=start_date,
-            end_date=end_date
+            mock_db, project_id=1, start_date=start_date, end_date=end_date
         )
 
         assert result["project_id"] == 1
@@ -329,7 +352,9 @@ class TestGetBudgetTrendAnalysis:
         mock_project.budget_amount = Decimal("100000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
 
         result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, project_id=1)
@@ -352,8 +377,12 @@ class TestGetBudgetTrendAnalysis:
         mock_cost.amount = Decimal("50000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_cost]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_cost
+        ]
 
         result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, project_id=1)
 
@@ -376,8 +405,12 @@ class TestGetBudgetTrendAnalysis:
         mock_cost.amount = Decimal("10000")
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
-        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
-        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_cost]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
+        mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_cost
+        ]
 
         result = BudgetAnalysisService.get_budget_trend_analysis(mock_db, project_id=1)
 

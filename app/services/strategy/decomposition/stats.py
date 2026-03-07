@@ -23,15 +23,13 @@ from app.models.strategy import (
     PersonalKPI,
 )
 
-
 # ============================================
 # 统计分析
 # ============================================
 
+
 def get_decomposition_stats(
-    db: Session,
-    strategy_id: int,
-    year: Optional[int] = None
+    db: Session, strategy_id: int, year: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     获取分解统计
@@ -48,40 +46,51 @@ def get_decomposition_stats(
         year = date.today().year
 
     # 统计 CSF 数量
-    csf_count = db.query(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active
-    ).count()
+    csf_count = db.query(CSF).filter(CSF.strategy_id == strategy_id, CSF.is_active).count()
 
     # 统计 KPI 数量
-    kpi_count = db.query(KPI).join(CSF).filter(
-        CSF.strategy_id == strategy_id,
-        CSF.is_active,
-        KPI.is_active
-    ).count()
+    kpi_count = (
+        db.query(KPI)
+        .join(CSF)
+        .filter(CSF.strategy_id == strategy_id, CSF.is_active, KPI.is_active)
+        .count()
+    )
 
     # 统计部门目标数量
-    dept_obj_count = db.query(DepartmentObjective).filter(
-        DepartmentObjective.strategy_id == strategy_id,
-        DepartmentObjective.year == year,
-        DepartmentObjective.is_active
-    ).count()
+    dept_obj_count = (
+        db.query(DepartmentObjective)
+        .filter(
+            DepartmentObjective.strategy_id == strategy_id,
+            DepartmentObjective.year == year,
+            DepartmentObjective.is_active,
+        )
+        .count()
+    )
 
     # 统计个人 KPI 数量
-    personal_kpi_count = db.query(PersonalKPI).join(DepartmentObjective).filter(
-        DepartmentObjective.strategy_id == strategy_id,
-        DepartmentObjective.year == year,
-        DepartmentObjective.is_active,
-        PersonalKPI.is_active
-    ).count()
+    personal_kpi_count = (
+        db.query(PersonalKPI)
+        .join(DepartmentObjective)
+        .filter(
+            DepartmentObjective.strategy_id == strategy_id,
+            DepartmentObjective.year == year,
+            DepartmentObjective.is_active,
+            PersonalKPI.is_active,
+        )
+        .count()
+    )
 
     # 统计各部门分解情况
     dept_stats: Dict[int, Dict[str, int]] = {}
-    dept_objs = db.query(DepartmentObjective).filter(
-        DepartmentObjective.strategy_id == strategy_id,
-        DepartmentObjective.year == year,
-        DepartmentObjective.is_active
-    ).all()
+    dept_objs = (
+        db.query(DepartmentObjective)
+        .filter(
+            DepartmentObjective.strategy_id == strategy_id,
+            DepartmentObjective.year == year,
+            DepartmentObjective.is_active,
+        )
+        .all()
+    )
 
     for obj in dept_objs:
         dept_id = obj.department_id
@@ -89,10 +98,11 @@ def get_decomposition_stats(
             dept_stats[dept_id] = {"objectives": 0, "personal_kpis": 0}
         dept_stats[dept_id]["objectives"] += 1
 
-        pkpi_count = db.query(PersonalKPI).filter(
-            PersonalKPI.dept_objective_id == obj.id,
-            PersonalKPI.is_active
-        ).count()
+        pkpi_count = (
+            db.query(PersonalKPI)
+            .filter(PersonalKPI.dept_objective_id == obj.id, PersonalKPI.is_active)
+            .count()
+        )
         dept_stats[dept_id]["personal_kpis"] += pkpi_count
 
     return {

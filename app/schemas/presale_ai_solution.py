@@ -1,16 +1,19 @@
 """
 售前AI方案生成 - Pydantic Schemas
 """
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List, Dict, Any
+
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, ConfigDict, Field
 
 # ==================== 请求模型 ====================
 
+
 class TemplateMatchRequest(BaseModel):
     """模板匹配请求"""
+
     presale_ticket_id: int = Field(..., description="售前工单ID")
     requirement_analysis_id: Optional[int] = Field(None, description="需求分析ID")
     industry: Optional[str] = Field(None, description="行业")
@@ -21,6 +24,7 @@ class TemplateMatchRequest(BaseModel):
 
 class SolutionGenerationRequest(BaseModel):
     """方案生成请求"""
+
     presale_ticket_id: int = Field(..., description="售前工单ID")
     requirement_analysis_id: Optional[int] = Field(None, description="需求分析ID")
     template_id: Optional[int] = Field(None, description="参考模板ID")
@@ -32,14 +36,18 @@ class SolutionGenerationRequest(BaseModel):
 
 class ArchitectureGenerationRequest(BaseModel):
     """架构图生成请求"""
+
     solution_id: Optional[int] = Field(None, description="方案ID")
     requirements: Dict[str, Any] = Field(..., description="需求详情")
-    diagram_type: str = Field("architecture", description="图表类型: architecture/topology/signal_flow")
+    diagram_type: str = Field(
+        "architecture", description="图表类型: architecture/topology/signal_flow"
+    )
     format: str = Field("mermaid", description="输出格式: mermaid/plantuml")
 
 
 class BOMGenerationRequest(BaseModel):
     """BOM生成请求"""
+
     solution_id: Optional[int] = Field(None, description="方案ID")
     equipment_list: List[Dict[str, Any]] = Field(..., description="设备清单")
     include_cost: bool = Field(True, description="是否包含成本估算")
@@ -48,6 +56,7 @@ class BOMGenerationRequest(BaseModel):
 
 class SolutionUpdateRequest(BaseModel):
     """方案更新请求"""
+
     generated_solution: Optional[Dict[str, Any]] = Field(None, description="方案内容")
     architecture_diagram: Optional[str] = Field(None, description="架构图")
     bom_list: Optional[Dict[str, Any]] = Field(None, description="BOM清单")
@@ -57,12 +66,14 @@ class SolutionUpdateRequest(BaseModel):
 
 class SolutionReviewRequest(BaseModel):
     """方案审核请求"""
+
     status: str = Field(..., description="审核状态: approved/rejected")
     review_comments: Optional[str] = Field(None, description="审核意见")
 
 
 class PDFExportRequest(BaseModel):
     """PDF导出请求"""
+
     solution_id: int = Field(..., description="方案ID")
     include_diagrams: bool = Field(True, description="包含架构图")
     include_bom: bool = Field(True, description="包含BOM")
@@ -71,8 +82,10 @@ class PDFExportRequest(BaseModel):
 
 # ==================== 响应模型 ====================
 
+
 class TemplateMatchItem(BaseModel):
     """模板匹配项"""
+
     template_id: int
     template_name: str
     similarity_score: float = Field(..., ge=0, le=1, description="相似度评分")
@@ -80,12 +93,13 @@ class TemplateMatchItem(BaseModel):
     equipment_type: Optional[str] = None
     usage_count: int = 0
     avg_quality_score: Optional[float] = None
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class TemplateMatchResponse(BaseModel):
     """模板匹配响应"""
+
     matched_templates: List[TemplateMatchItem]
     total_templates: int
     search_time_ms: int
@@ -93,6 +107,7 @@ class TemplateMatchResponse(BaseModel):
 
 class BOMItem(BaseModel):
     """BOM项"""
+
     item_name: str = Field(..., description="项目名称")
     model: str = Field(..., description="型号")
     quantity: int = Field(..., description="数量")
@@ -106,6 +121,7 @@ class BOMItem(BaseModel):
 
 class SolutionResponse(BaseModel):
     """方案响应"""
+
     id: int
     presale_ticket_id: int
     requirement_analysis_id: Optional[int] = None
@@ -128,12 +144,13 @@ class SolutionResponse(BaseModel):
     created_by: int
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class SolutionGenerationResponse(BaseModel):
     """方案生成响应"""
+
     solution: SolutionResponse
     generation_time_seconds: float
     ai_model_used: str
@@ -142,6 +159,7 @@ class SolutionGenerationResponse(BaseModel):
 
 class ArchitectureGenerationResponse(BaseModel):
     """架构图生成响应"""
+
     diagram_code: str = Field(..., description="Mermaid/PlantUML代码")
     diagram_type: str
     format: str
@@ -150,6 +168,7 @@ class ArchitectureGenerationResponse(BaseModel):
 
 class BOMGenerationResponse(BaseModel):
     """BOM生成响应"""
+
     bom_items: List[BOMItem]
     total_cost: Optional[Decimal] = None
     item_count: int
@@ -158,8 +177,10 @@ class BOMGenerationResponse(BaseModel):
 
 # ==================== 模板相关模型 ====================
 
+
 class SolutionTemplateCreate(BaseModel):
     """创建方案模板"""
+
     name: str = Field(..., max_length=200)
     code: Optional[str] = Field(None, max_length=100)
     industry: Optional[str] = Field(None, max_length=100)
@@ -178,6 +199,7 @@ class SolutionTemplateCreate(BaseModel):
 
 class SolutionTemplateUpdate(BaseModel):
     """更新方案模板"""
+
     name: Optional[str] = Field(None, max_length=200)
     industry: Optional[str] = None
     equipment_type: Optional[str] = None
@@ -191,6 +213,7 @@ class SolutionTemplateUpdate(BaseModel):
 
 class SolutionTemplateResponse(BaseModel):
     """方案模板响应"""
+
     id: int
     name: str
     code: Optional[str] = None
@@ -210,14 +233,16 @@ class SolutionTemplateResponse(BaseModel):
     is_active: int
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== 统计分析模型 ====================
 
+
 class SolutionStatistics(BaseModel):
     """方案统计"""
+
     total_solutions: int
     solutions_by_status: Dict[str, int]
     avg_generation_time: float

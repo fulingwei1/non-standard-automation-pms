@@ -122,9 +122,7 @@ class TestTriggerInvoiceOnAcceptance:
 
         mock_db = MagicMock()
 
-        with patch(
-            "app.services.acceptance_completion_service.InvoiceAutoService"
-        ) as MockService:
+        with patch("app.services.acceptance_completion_service.InvoiceAutoService") as MockService:
             mock_service = MagicMock()
             mock_service.check_and_create_invoice_request.return_value = {
                 "success": True,
@@ -133,9 +131,7 @@ class TestTriggerInvoiceOnAcceptance:
             MockService.return_value = mock_service
 
             with patch.dict("os.environ", {"AUTO_CREATE_INVOICE_ON_ACCEPTANCE": "false"}):
-                result = trigger_invoice_on_acceptance(
-                    mock_db, order_id=1, auto_trigger=True
-                )
+                result = trigger_invoice_on_acceptance(mock_db, order_id=1, auto_trigger=True)
 
             assert result["success"] is True
             assert len(result["invoice_requests"]) == 1
@@ -148,14 +144,10 @@ class TestTriggerInvoiceOnAcceptance:
 
         mock_db = MagicMock()
 
-        with patch(
-            "app.services.acceptance_completion_service.InvoiceAutoService"
-        ) as MockService:
+        with patch("app.services.acceptance_completion_service.InvoiceAutoService") as MockService:
             MockService.side_effect = Exception("Service error")
 
-            result = trigger_invoice_on_acceptance(
-                mock_db, order_id=1, auto_trigger=True
-            )
+            result = trigger_invoice_on_acceptance(mock_db, order_id=1, auto_trigger=True)
 
             assert result["success"] is False
             assert "error" in result
@@ -330,9 +322,7 @@ class TestHandleProgressIntegration:
         mock_db = MagicMock()
         mock_order = MagicMock()
 
-        with patch(
-            "app.services.acceptance_completion_service.ProgressIntegrationService"
-        ):
+        with patch("app.services.acceptance_completion_service.ProgressIntegrationService"):
             result = handle_progress_integration(mock_db, mock_order, "CONDITIONAL")
 
         assert result == {}
@@ -350,9 +340,7 @@ class TestCheckAutoStageTransitionAfterAcceptance:
         mock_db = MagicMock()
         mock_order = MagicMock()
 
-        result = check_auto_stage_transition_after_acceptance(
-            mock_db, mock_order, "FAILED"
-        )
+        result = check_auto_stage_transition_after_acceptance(mock_db, mock_order, "FAILED")
 
         assert result == {}
 
@@ -366,9 +354,7 @@ class TestCheckAutoStageTransitionAfterAcceptance:
         mock_order = MagicMock()
         mock_order.project_id = None
 
-        result = check_auto_stage_transition_after_acceptance(
-            mock_db, mock_order, "PASSED"
-        )
+        result = check_auto_stage_transition_after_acceptance(mock_db, mock_order, "PASSED")
 
         assert result == {}
 
@@ -391,14 +377,10 @@ class TestCheckAutoStageTransitionAfterAcceptance:
             "app.services.acceptance_completion_service.StatusTransitionService"
         ) as MockService:
             mock_service = MagicMock()
-            mock_service.check_auto_stage_transition.return_value = {
-                "auto_advanced": True
-            }
+            mock_service.check_auto_stage_transition.return_value = {"auto_advanced": True}
             MockService.return_value = mock_service
 
-            result = check_auto_stage_transition_after_acceptance(
-                mock_db, mock_order, "PASSED"
-            )
+            result = check_auto_stage_transition_after_acceptance(mock_db, mock_order, "PASSED")
 
             assert result.get("auto_advanced") is True
 
@@ -483,9 +465,7 @@ class TestTriggerBonusCalculation:
         mock_project = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = mock_project
 
-        with patch(
-            "app.services.acceptance_completion_service.BonusCalculator"
-        ) as MockCalculator:
+        with patch("app.services.acceptance_completion_service.BonusCalculator") as MockCalculator:
             mock_calculator = MagicMock()
             MockCalculator.return_value = mock_calculator
 
@@ -507,9 +487,7 @@ class TestTriggerBonusCalculation:
 
         mock_db.query.return_value.filter.return_value.first.return_value = MagicMock()
 
-        with patch(
-            "app.services.acceptance_completion_service.BonusCalculator"
-        ) as MockCalculator:
+        with patch("app.services.acceptance_completion_service.BonusCalculator") as MockCalculator:
             MockCalculator.side_effect = Exception("Calculator error")
 
             # 应该不抛出异常

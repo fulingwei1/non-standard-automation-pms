@@ -37,12 +37,8 @@ class TestGetDashboard(unittest.TestCase):
         mock_query.scalar.return_value = 10
 
         # Mock 辅助方法
-        self.service._get_projects_by_status = MagicMock(
-            return_value={"ACTIVE": 5, "PENDING": 3}
-        )
-        self.service._get_projects_by_stage = MagicMock(
-            return_value={"S1": 2, "S2": 4}
-        )
+        self.service._get_projects_by_status = MagicMock(return_value={"ACTIVE": 5, "PENDING": 3})
+        self.service._get_projects_by_stage = MagicMock(return_value={"S1": 2, "S2": 4})
         self.service._get_recent_risks = MagicMock(return_value=[])
 
         result = self.service.get_dashboard()
@@ -144,7 +140,7 @@ class TestGetRiskWall(unittest.TestCase):
     def test_get_risk_wall_with_critical_risks(self):
         """测试包含严重风险的情况"""
         from app.schemas.pmo import RiskResponse
-        
+
         mock_risk = MagicMock()
         mock_risk.id = 1
         mock_risk.risk_level = "CRITICAL"
@@ -159,7 +155,7 @@ class TestGetRiskWall(unittest.TestCase):
 
         self.service._get_risks_by_category = MagicMock(return_value={})
         self.service._get_risks_by_project = MagicMock(return_value=[])
-        
+
         # 创建一个真实的 RiskResponse 对象而不是 MagicMock
         now = datetime.now()
         mock_response = RiskResponse(
@@ -179,7 +175,7 @@ class TestGetRiskWall(unittest.TestCase):
             status="ACTIVE",
             is_triggered=False,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
         self.service._convert_risk_to_response = MagicMock(return_value=mock_response)
 
@@ -213,7 +209,7 @@ class TestGetWeeklyReport(unittest.TestCase):
         self.mock_db = MagicMock()
         self.service = PmoCockpitService(self.mock_db)
 
-    @patch('app.services.pmo_cockpit.pmo_cockpit_service.date')
+    @patch("app.services.pmo_cockpit.pmo_cockpit_service.date")
     def test_get_weekly_report_default_week(self, mock_date):
         """测试使用默认周的周报"""
         mock_date.today.return_value = date(2024, 1, 15)  # Monday
@@ -389,7 +385,7 @@ class TestPrivateMethods(unittest.TestCase):
         """测试风险转换为响应对象"""
         now = datetime.now()
         today = date.today()
-        
+
         mock_risk = MagicMock()
         mock_risk.id = 1
         mock_risk.project_id = 10
@@ -638,7 +634,7 @@ class TestEdgeCases(unittest.TestCase):
         self.assertEqual(result.summary.total_projects, 0)
         self.assertEqual(result.summary.total_budget, 0.0)
 
-    @patch('app.services.pmo_cockpit.pmo_cockpit_service.date')
+    @patch("app.services.pmo_cockpit.pmo_cockpit_service.date")
     def test_weekly_report_week_calculation(self, mock_date):
         """测试周报周开始日期计算（非周一）"""
         mock_date.today.return_value = date(2024, 1, 17)  # Wednesday

@@ -4,8 +4,9 @@ import pytest
 
 pytest.importorskip("app.services.invoice_auto_service.creation")
 
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
 from app.services.invoice_auto_service.creation import create_invoice_request
 
 
@@ -78,8 +79,10 @@ def test_create_success():
     plan.planned_amount = Decimal("100000")
     plan.planned_date = None
 
-    with patch("app.services.invoice_auto_service.creation.apply_like_filter") as mock_filter, \
-         patch("app.services.invoice_auto_service.creation.apply_like_filter"):
+    with (
+        patch("app.services.invoice_auto_service.creation.apply_like_filter") as mock_filter,
+        patch("app.services.invoice_auto_service.creation.apply_like_filter"),
+    ):
         mock_q = MagicMock()
         mock_q.order_by.return_value.first.return_value = None
         mock_filter.return_value = mock_q
@@ -89,8 +92,8 @@ def test_create_success():
         # Third query: Invoice prefix search -> mock_q
         # Fourth query: InvoiceRequest prefix search -> mock_q
         svc.db.query.return_value.filter.return_value.first.side_effect = [
-            None,       # no existing InvoiceRequest
-            contract,   # contract found
+            None,  # no existing InvoiceRequest
+            contract,  # contract found
         ]
 
         invoice_mock = MagicMock()

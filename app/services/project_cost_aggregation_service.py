@@ -26,11 +26,11 @@ class ProjectCostAggregationService:
     ) -> Dict[int, ProjectCostSummary]:
         """
         批量获取项目成本摘要
-        
+
         Args:
             project_ids: 项目ID列表
             include_breakdown: 是否包含成本明细
-            
+
         Returns:
             dict: {project_id: ProjectCostSummary}
         """
@@ -70,18 +70,14 @@ class ProjectCostAggregationService:
 
             budget = project_info["budget"]
             actual_cost = project_info["actual_cost"]
-            
+
             # 计算差异
             variance = actual_cost - budget
-            variance_pct = (
-                (variance / budget * 100) if budget > 0 else Decimal("0")
-            )
-            
+            variance_pct = (variance / budget * 100) if budget > 0 else Decimal("0")
+
             # 计算使用率
-            budget_used_pct = (
-                (actual_cost / budget * 100) if budget > 0 else Decimal("0")
-            )
-            
+            budget_used_pct = (actual_cost / budget * 100) if budget > 0 else Decimal("0")
+
             # 判断是否超支
             overrun = actual_cost > budget and budget > 0
 
@@ -102,15 +98,13 @@ class ProjectCostAggregationService:
 
         return result
 
-    def _get_cost_breakdown_batch(
-        self, project_ids: List[int]
-    ) -> Dict[int, ProjectCostBreakdown]:
+    def _get_cost_breakdown_batch(self, project_ids: List[int]) -> Dict[int, ProjectCostBreakdown]:
         """
         批量获取成本明细（按类型分类）
-        
+
         Args:
             project_ids: 项目ID列表
-            
+
         Returns:
             dict: {project_id: ProjectCostBreakdown}
         """
@@ -144,19 +138,17 @@ class ProjectCostAggregationService:
             if project_id not in breakdown_data:
                 breakdown_data[project_id] = {}
             cost_type_key = self._map_cost_type(cost_type)
-            breakdown_data[project_id][cost_type_key] = (
-                breakdown_data[project_id].get(cost_type_key, Decimal("0"))
-                + Decimal(str(amount or 0))
-            )
+            breakdown_data[project_id][cost_type_key] = breakdown_data[project_id].get(
+                cost_type_key, Decimal("0")
+            ) + Decimal(str(amount or 0))
 
         for project_id, cost_type, amount in financial_cost_data:
             if project_id not in breakdown_data:
                 breakdown_data[project_id] = {}
             cost_type_key = self._map_cost_type(cost_type)
-            breakdown_data[project_id][cost_type_key] = (
-                breakdown_data[project_id].get(cost_type_key, Decimal("0"))
-                + Decimal(str(amount or 0))
-            )
+            breakdown_data[project_id][cost_type_key] = breakdown_data[project_id].get(
+                cost_type_key, Decimal("0")
+            ) + Decimal(str(amount or 0))
 
         # 转换为ProjectCostBreakdown对象
         result = {}
@@ -174,10 +166,10 @@ class ProjectCostAggregationService:
     def _map_cost_type(self, cost_type: Optional[str]) -> str:
         """
         将成本类型映射到标准类别
-        
+
         Args:
             cost_type: 原始成本类型
-            
+
         Returns:
             str: 标准成本类别 (labor/material/equipment/travel/other)
         """
@@ -185,23 +177,23 @@ class ProjectCostAggregationService:
             return "other"
 
         cost_type_upper = cost_type.upper()
-        
+
         # 人工成本
         if cost_type_upper in ["LABOR", "LABOUR", "人工", "工资", "薪资"]:
             return "labor"
-        
+
         # 材料成本
         if cost_type_upper in ["MATERIAL", "MATERIALS", "材料", "物料", "原材料"]:
             return "material"
-        
+
         # 设备成本
         if cost_type_upper in ["EQUIPMENT", "MACHINE", "设备", "机械", "工具"]:
             return "equipment"
-        
+
         # 差旅成本
         if cost_type_upper in ["TRAVEL", "差旅", "出差", "交通"]:
             return "travel"
-        
+
         # 其他成本
         return "other"
 
@@ -210,11 +202,11 @@ class ProjectCostAggregationService:
     ) -> Optional[ProjectCostSummary]:
         """
         获取单个项目的成本摘要（方便单独调用）
-        
+
         Args:
             project_id: 项目ID
             include_breakdown: 是否包含成本明细
-            
+
         Returns:
             ProjectCostSummary or None
         """

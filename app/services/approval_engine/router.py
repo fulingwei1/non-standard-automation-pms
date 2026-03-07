@@ -179,35 +179,21 @@ class ApprovalRouterService:
             elif op == "not_in":
                 return actual not in expected if expected else True
             elif op == "between":
-                if (
-                    actual is None
-                    or not isinstance(expected, (list, tuple))
-                    or len(expected) != 2
-                ):
+                if actual is None or not isinstance(expected, (list, tuple)) or len(expected) != 2:
                     return False
                 return expected[0] <= actual <= expected[1]
             elif op == "contains":
                 return expected in str(actual) if actual is not None else False
             elif op == "starts_with":
-                return (
-                    str(actual).startswith(str(expected))
-                    if actual is not None
-                    else False
-                )
+                return str(actual).startswith(str(expected)) if actual is not None else False
             elif op == "ends_with":
-                return (
-                    str(actual).endswith(str(expected)) if actual is not None else False
-                )
+                return str(actual).endswith(str(expected)) if actual is not None else False
             elif op == "is_null":
                 return (actual is None) == expected
             elif op == "regex":
                 import re
 
-                return (
-                    bool(re.match(expected, str(actual)))
-                    if actual is not None
-                    else False
-                )
+                return bool(re.match(expected, str(actual))) if actual is not None else False
             else:
                 return False
         except (TypeError, ValueError):
@@ -284,7 +270,7 @@ class ApprovalRouterService:
         context: Dict[str, Any],
     ) -> List[int]:
         """解析角色对应的用户"""
-        from app.models.user import User, UserRole, Role
+        from app.models.user import Role, User, UserRole
 
         role_codes = config.get("role_codes", [])
         if isinstance(role_codes, str):
@@ -333,9 +319,7 @@ class ApprovalRouterService:
 
         initiator = context.get("initiator", {})
         user_id = (
-            initiator.get("id")
-            if isinstance(initiator, dict)
-            else getattr(initiator, "id", None)
+            initiator.get("id") if isinstance(initiator, dict) else getattr(initiator, "id", None)
         )
 
         if not user_id:

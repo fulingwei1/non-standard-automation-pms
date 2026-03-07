@@ -34,25 +34,33 @@ def notify_gate_timeout(db: Session, timeout_days: int = 3) -> int:
     count = 0
 
     # 检查 G1 阶段门（Lead -> Opportunity）
-    leads = db.query(Lead).filter(
-        and_(
-            Lead.status == "QUALIFYING",  # 资格评估中
-            Lead.updated_at <= datetime.combine(threshold_date, datetime.min.time())
+    leads = (
+        db.query(Lead)
+        .filter(
+            and_(
+                Lead.status == "QUALIFYING",  # 资格评估中
+                Lead.updated_at <= datetime.combine(threshold_date, datetime.min.time()),
+            )
         )
-    ).all()
+        .all()
+    )
 
     for lead in leads:
         if lead.owner_id:
             # 检查今天是否已发送过提醒
-            existing = db.query(Notification).filter(
-                and_(
-                    Notification.user_id == lead.owner_id,
-                    Notification.source_type == "lead",
-                    Notification.source_id == lead.id,
-                    Notification.notification_type == "GATE_TIMEOUT",
-                    Notification.created_at >= datetime.combine(today, datetime.min.time())
+            existing = (
+                db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.user_id == lead.owner_id,
+                        Notification.source_type == "lead",
+                        Notification.source_id == lead.id,
+                        Notification.notification_type == "GATE_TIMEOUT",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not existing:
                 days_pending = (today - lead.updated_at.date()).days if lead.updated_at else 0
@@ -69,37 +77,51 @@ def notify_gate_timeout(db: Session, timeout_days: int = 3) -> int:
                     extra_data={
                         "gate_type": "G1",
                         "lead_code": lead.lead_code,
-                        "days_pending": days_pending
-                    }
+                        "days_pending": days_pending,
+                    },
                 )
                 count += 1
 
     # 检查 G2/G3/G4 阶段门（Opportunity）
-    opportunities = db.query(Opportunity).filter(
-        and_(
-            Opportunity.gate_status.in_([GateStatusEnum.G2_PENDING, GateStatusEnum.G3_PENDING, GateStatusEnum.G4_PENDING]),
-            Opportunity.updated_at <= datetime.combine(threshold_date, datetime.min.time())
+    opportunities = (
+        db.query(Opportunity)
+        .filter(
+            and_(
+                Opportunity.gate_status.in_(
+                    [
+                        GateStatusEnum.G2_PENDING,
+                        GateStatusEnum.G3_PENDING,
+                        GateStatusEnum.G4_PENDING,
+                    ]
+                ),
+                Opportunity.updated_at <= datetime.combine(threshold_date, datetime.min.time()),
+            )
         )
-    ).all()
+        .all()
+    )
 
     for opp in opportunities:
         if opp.owner_id:
-            existing = db.query(Notification).filter(
-                and_(
-                    Notification.user_id == opp.owner_id,
-                    Notification.source_type == "opportunity",
-                    Notification.source_id == opp.id,
-                    Notification.notification_type == "GATE_TIMEOUT",
-                    Notification.created_at >= datetime.combine(today, datetime.min.time())
+            existing = (
+                db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.user_id == opp.owner_id,
+                        Notification.source_type == "opportunity",
+                        Notification.source_id == opp.id,
+                        Notification.notification_type == "GATE_TIMEOUT",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not existing:
                 days_pending = (today - opp.updated_at.date()).days if opp.updated_at else 0
                 gate_name = {
                     GateStatusEnum.G2_PENDING: "G2（商机转报价）",
                     GateStatusEnum.G3_PENDING: "G3（报价转合同）",
-                    GateStatusEnum.G4_PENDING: "G4（合同转项目）"
+                    GateStatusEnum.G4_PENDING: "G4（合同转项目）",
                 }.get(opp.gate_status, "阶段门")
 
                 create_notification(
@@ -115,8 +137,8 @@ def notify_gate_timeout(db: Session, timeout_days: int = 3) -> int:
                     extra_data={
                         "gate_type": opp.gate_status,
                         "opp_code": opp.opp_code,
-                        "days_pending": days_pending
-                    }
+                        "days_pending": days_pending,
+                    },
                 )
                 count += 1
 
@@ -136,9 +158,11 @@ def notify_quote_expiring(db: Session) -> dict:
     expired_count = 0
 
     # 查询所有有效的报价（使用正确的枚举值，不需要join）
-    quotes = db.query(Quote).filter(
-        Quote.status.in_([QuoteStatusEnum.SUBMITTED, QuoteStatusEnum.APPROVED])
-    ).all()
+    quotes = (
+        db.query(Quote)
+        .filter(Quote.status.in_([QuoteStatusEnum.SUBMITTED, QuoteStatusEnum.APPROVED]))
+        .all()
+    )
 
     for quote in quotes:
         version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
@@ -151,15 +175,19 @@ def notify_quote_expiring(db: Session) -> dict:
         # 已过期
         if days_left < 0:
             if quote.owner_id:
-                existing = db.query(Notification).filter(
-                    and_(
-                        Notification.user_id == quote.owner_id,
-                        Notification.source_type == "quote",
-                        Notification.source_id == quote.id,
-                        Notification.notification_type == "QUOTE_EXPIRED",
-                        Notification.created_at >= datetime.combine(today, datetime.min.time())
+                existing = (
+                    db.query(Notification)
+                    .filter(
+                        and_(
+                            Notification.user_id == quote.owner_id,
+                            Notification.source_type == "quote",
+                            Notification.source_id == quote.id,
+                            Notification.notification_type == "QUOTE_EXPIRED",
+                            Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                        )
                     )
-                ).first()
+                    .first()
+                )
 
                 if not existing:
                     create_notification(
@@ -175,32 +203,38 @@ def notify_quote_expiring(db: Session) -> dict:
                         extra_data={
                             "quote_code": quote.quote_code,
                             "valid_until": valid_until.isoformat(),
-                            "days_overdue": abs(days_left)
-                        }
+                            "days_overdue": abs(days_left),
+                        },
                     )
                     expired_count += 1
 
         # 即将过期（7天、3天、1天前）
         elif days_left in settings.SALES_QUOTE_EXPIRE_REMINDER_DAYS:
             if quote.owner_id:
-                existing = db.query(Notification).filter(
-                    and_(
-                        Notification.user_id == quote.owner_id,
-                        Notification.source_type == "quote",
-                        Notification.source_id == quote.id,
-                        Notification.notification_type == "QUOTE_EXPIRING",
-                        Notification.created_at >= datetime.combine(today, datetime.min.time())
+                existing = (
+                    db.query(Notification)
+                    .filter(
+                        and_(
+                            Notification.user_id == quote.owner_id,
+                            Notification.source_type == "quote",
+                            Notification.source_id == quote.id,
+                            Notification.notification_type == "QUOTE_EXPIRING",
+                            Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                        )
                     )
-                ).first()
+                    .first()
+                )
 
                 # 检查是否已发送过相同天数的提醒
                 if existing and existing.extra_data:
-                    existing_days_left = existing.extra_data.get('days_left')
+                    existing_days_left = existing.extra_data.get("days_left")
                     if existing_days_left == days_left:
                         continue
 
                 if not existing:
-                    priority = "URGENT" if days_left == 1 else ("HIGH" if days_left == 3 else "NORMAL")
+                    priority = (
+                        "URGENT" if days_left == 1 else ("HIGH" if days_left == 3 else "NORMAL")
+                    )
                     create_notification(
                         db=db,
                         user_id=quote.owner_id,
@@ -214,8 +248,8 @@ def notify_quote_expiring(db: Session) -> dict:
                         extra_data={
                             "quote_code": quote.quote_code,
                             "valid_until": valid_until.isoformat(),
-                            "days_left": days_left
-                        }
+                            "days_left": days_left,
+                        },
                     )
                     expiring_count += 1
 
@@ -234,19 +268,27 @@ def notify_approval_pending(db: Session, timeout_hours: int = 24) -> int:
     count = 0
 
     # 查询所有待审批的记录
-    records = db.query(ApprovalRecord).filter(
-        ApprovalRecord.status == ApprovalRecordStatusEnum.PENDING,
-        ApprovalRecord.created_at <= threshold_time
-    ).all()
+    records = (
+        db.query(ApprovalRecord)
+        .filter(
+            ApprovalRecord.status == ApprovalRecordStatusEnum.PENDING,
+            ApprovalRecord.created_at <= threshold_time,
+        )
+        .all()
+    )
 
     for record in records:
         # 获取当前审批步骤
-        step = db.query(ApprovalWorkflowStep).filter(
-            and_(
-                ApprovalWorkflowStep.workflow_id == record.workflow_id,
-                ApprovalWorkflowStep.step_order == record.current_step
+        step = (
+            db.query(ApprovalWorkflowStep)
+            .filter(
+                and_(
+                    ApprovalWorkflowStep.workflow_id == record.workflow_id,
+                    ApprovalWorkflowStep.step_order == record.current_step,
+                )
             )
-        ).first()
+            .first()
+        )
 
         if not step:
             continue
@@ -264,23 +306,26 @@ def notify_approval_pending(db: Session, timeout_hours: int = 24) -> int:
             continue
 
         hours_pending = (now - record.created_at).total_seconds() / 3600
-        entity_name = {
-            "QUOTE": "报价",
-            "CONTRACT": "合同",
-            "INVOICE": "发票"
-        }.get(record.entity_type, "事项")
+        entity_name = {"QUOTE": "报价", "CONTRACT": "合同", "INVOICE": "发票"}.get(
+            record.entity_type, "事项"
+        )
 
         for approver_id in approver_ids:
             # 检查今天是否已发送过提醒
-            existing = db.query(Notification).filter(
-                and_(
-                    Notification.user_id == approver_id,
-                    Notification.source_type == record.entity_type.lower(),
-                    Notification.source_id == record.entity_id,
-                    Notification.notification_type == "APPROVAL_PENDING",
-                    Notification.created_at >= datetime.combine(now.date(), datetime.min.time())
+            existing = (
+                db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.user_id == approver_id,
+                        Notification.source_type == record.entity_type.lower(),
+                        Notification.source_id == record.entity_id,
+                        Notification.notification_type == "APPROVAL_PENDING",
+                        Notification.created_at
+                        >= datetime.combine(now.date(), datetime.min.time()),
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not existing:
                 create_notification(
@@ -298,8 +343,8 @@ def notify_approval_pending(db: Session, timeout_hours: int = 24) -> int:
                         "entity_id": record.entity_id,
                         "approval_record_id": record.id,
                         "hours_pending": int(hours_pending),
-                        "step_name": step.step_name
-                    }
+                        "step_name": step.step_name,
+                    },
                 )
                 count += 1
 

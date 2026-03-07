@@ -5,15 +5,13 @@
 将外协订单(OutsourcingOrder)模块接入统一审批系统
 """
 
-from __future__ import annotations
-
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.approval import ApprovalInstance
 from app.models.outsourcing import OutsourcingOrder, OutsourcingOrderItem
-from app.models.project import Project, Machine
+from app.models.project import Machine, Project
 from app.models.vendor import Vendor
 
 from .base import ApprovalAdapter
@@ -45,9 +43,7 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
 
     def get_entity(self, entity_id: int) -> Optional[OutsourcingOrder]:
         """获取外协订单实体"""
-        return self.db.query(OutsourcingOrder).filter(
-            OutsourcingOrder.id == entity_id
-        ).first()
+        return self.db.query(OutsourcingOrder).filter(OutsourcingOrder.id == entity_id).first()
 
     def get_entity_data(self, entity_id: int) -> Dict[str, Any]:
         """
@@ -61,9 +57,11 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
             return {}
 
         # 获取订单明细数量
-        item_count = self.db.query(OutsourcingOrderItem).filter(
-            OutsourcingOrderItem.order_id == entity_id
-        ).count()
+        item_count = (
+            self.db.query(OutsourcingOrderItem)
+            .filter(OutsourcingOrderItem.order_id == entity_id)
+            .count()
+        )
 
         # 获取项目信息
         project_info = {}
@@ -73,7 +71,7 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
                 project_info = {
                     "project_code": project.project_code,
                     "project_name": project.project_name,
-                    "project_status": project.status if hasattr(project, 'status') else None,
+                    "project_status": project.status if hasattr(project, "status") else None,
                 }
 
         # 获取设备信息（如果有）
@@ -83,7 +81,9 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
             if machine:
                 machine_info = {
                     "machine_code": machine.machine_code,
-                    "machine_name": machine.machine_name if hasattr(machine, 'machine_name') else None,
+                    "machine_name": (
+                        machine.machine_name if hasattr(machine, "machine_name") else None
+                    ),
                 }
 
         # 获取外协商信息
@@ -201,9 +201,11 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
             return ""
 
         # 获取订单明细数量
-        item_count = self.db.query(OutsourcingOrderItem).filter(
-            OutsourcingOrderItem.order_id == entity_id
-        ).count()
+        item_count = (
+            self.db.query(OutsourcingOrderItem)
+            .filter(OutsourcingOrderItem.order_id == entity_id)
+            .count()
+        )
 
         # 获取外协商名称
         vendor_name = "未指定"
@@ -217,7 +219,11 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
             f"订单编号: {order.order_no}",
             f"外协商: {vendor_name}",
             f"订单类型: {order.order_type}",
-            f"订单金额: ¥{order.amount_with_tax:,.2f}" if order.amount_with_tax else "订单金额: 未填写",
+            (
+                f"订单金额: ¥{order.amount_with_tax:,.2f}"
+                if order.amount_with_tax
+                else "订单金额: 未填写"
+            ),
             f"明细行数: {item_count}",
         ]
 
@@ -231,7 +237,7 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
 
         if order.machine_id:
             machine = self.db.query(Machine).filter(Machine.id == order.machine_id).first()
-            if machine and hasattr(machine, 'machine_code'):
+            if machine and hasattr(machine, "machine_code"):
                 summary_parts.append(f"关联设备: {machine.machine_code}")
 
         return " | ".join(summary_parts)
@@ -268,9 +274,11 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
             return False, "请选择订单类型"
 
         # 验证是否有订单明细
-        item_count = self.db.query(OutsourcingOrderItem).filter(
-            OutsourcingOrderItem.order_id == entity_id
-        ).count()
+        item_count = (
+            self.db.query(OutsourcingOrderItem)
+            .filter(OutsourcingOrderItem.order_id == entity_id)
+            .count()
+        )
 
         if item_count == 0:
             return False, "外协订单至少需要一条明细"
@@ -308,18 +316,18 @@ class OutsourcingOrderApprovalAdapter(ApprovalAdapter):
         # 关联项目的项目经理
         if order.project_id:
             project = self.db.query(Project).filter(Project.id == order.project_id).first()
-            if project and hasattr(project, 'manager_id') and project.manager_id:
+            if project and hasattr(project, "manager_id") and project.manager_id:
                 cc_users.append(project.manager_id)
 
         # 生产部门负责人
         # 常见的生产部门编码：PROD, PRODUCTION, MFG, MANUFACTURING
-        prod_dept_codes = ['PROD', 'PRODUCTION', 'MFG', '生产部']
+        prod_dept_codes = ["PROD", "PRODUCTION", "MFG", "生产部"]
         prod_manager_ids = self.get_department_manager_user_ids_by_codes(prod_dept_codes)
         cc_users.extend(prod_manager_ids)
 
         # 如果没找到，尝试通过部门名称查找
         if not prod_manager_ids:
-            prod_manager = self.get_department_manager_user_id('生产部')
+            prod_manager = self.get_department_manager_user_id("生产部")
             if prod_manager:
                 cc_users.append(prod_manager)
 

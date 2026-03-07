@@ -6,4 +6,5 @@
 
 class ResourceAllocationService:
     """资源分配服务"""
+
     pass

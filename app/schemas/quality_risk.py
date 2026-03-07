@@ -4,14 +4,16 @@
 """
 
 from datetime import date, datetime
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field
 
 # ==================== 质量风险检测 Schema ====================
 
+
 class QualityRiskDetectionBase(BaseModel):
     """质量风险检测基础Schema"""
+
     project_id: int = Field(..., description="项目ID")
     module_name: Optional[str] = Field(None, description="模块名称")
     task_id: Optional[int] = Field(None, description="任务ID")
@@ -22,6 +24,7 @@ class QualityRiskDetectionBase(BaseModel):
 
 class QualityRiskDetectionCreate(QualityRiskDetectionBase):
     """创建质量风险检测"""
+
     risk_signals: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     risk_keywords: Optional[Dict[str, List[str]]] = Field(default_factory=dict)
     abnormal_patterns: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
@@ -38,6 +41,7 @@ class QualityRiskDetectionCreate(QualityRiskDetectionBase):
 
 class QualityRiskDetectionUpdate(BaseModel):
     """更新质量风险检测"""
+
     status: Optional[str] = None
     confirmed_by: Optional[int] = None
     resolution_note: Optional[str] = None
@@ -45,6 +49,7 @@ class QualityRiskDetectionUpdate(BaseModel):
 
 class QualityRiskDetectionResponse(QualityRiskDetectionBase):
     """质量风险检测响应"""
+
     id: int
     risk_signals: Optional[List[Dict[str, Any]]] = None
     risk_keywords: Optional[Dict[str, List[str]]] = None
@@ -72,8 +77,10 @@ class QualityRiskDetectionResponse(QualityRiskDetectionBase):
 
 # ==================== 测试推荐 Schema ====================
 
+
 class QualityTestRecommendationBase(BaseModel):
     """测试推荐基础Schema"""
+
     project_id: int = Field(..., description="项目ID")
     detection_id: Optional[int] = Field(None, description="关联的风险检测ID")
     recommendation_date: date = Field(..., description="推荐日期")
@@ -81,6 +88,7 @@ class QualityTestRecommendationBase(BaseModel):
 
 class QualityTestRecommendationCreate(QualityTestRecommendationBase):
     """创建测试推荐"""
+
     focus_areas: List[Dict[str, Any]] = Field(..., description="测试重点区域")
     priority_modules: Optional[List[str]] = Field(default_factory=list)
     risk_modules: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
@@ -97,6 +105,7 @@ class QualityTestRecommendationCreate(QualityTestRecommendationBase):
 
 class QualityTestRecommendationUpdate(BaseModel):
     """更新测试推荐"""
+
     status: Optional[str] = None
     acceptance_note: Optional[str] = None
     actual_test_days: Optional[int] = None
@@ -108,6 +117,7 @@ class QualityTestRecommendationUpdate(BaseModel):
 
 class QualityTestRecommendationResponse(QualityTestRecommendationBase):
     """测试推荐响应"""
+
     id: int
     focus_areas: List[Dict[str, Any]]
     priority_modules: Optional[List[str]] = None
@@ -140,8 +150,10 @@ class QualityTestRecommendationResponse(QualityTestRecommendationBase):
 
 # ==================== 分析请求 Schema ====================
 
+
 class WorkLogAnalysisRequest(BaseModel):
     """工作日志分析请求"""
+
     project_id: int = Field(..., description="项目ID")
     start_date: Optional[date] = Field(None, description="开始日期")
     end_date: Optional[date] = Field(None, description="结束日期")
@@ -151,6 +163,7 @@ class WorkLogAnalysisRequest(BaseModel):
 
 class QualityReportRequest(BaseModel):
     """质量报告请求"""
+
     project_id: int = Field(..., description="项目ID")
     start_date: date = Field(..., description="开始日期")
     end_date: date = Field(..., description="结束日期")
@@ -159,6 +172,7 @@ class QualityReportRequest(BaseModel):
 
 class QualityReportResponse(BaseModel):
     """质量报告响应"""
+
     project_id: int
     project_name: str
     report_period: str

@@ -17,7 +17,7 @@ class TestValidateFileType:
         """测试有效的xlsx文件"""
         from app.services.bonus_allocation_parser import validate_file_type
 
-            # 不应抛出异常
+        # 不应抛出异常
         validate_file_type("test.xlsx")
 
     def test_valid_xls_file(self):
@@ -28,8 +28,9 @@ class TestValidateFileType:
 
     def test_invalid_file_type(self):
         """测试无效的文件类型"""
-        from app.services.bonus_allocation_parser import validate_file_type
         from fastapi import HTTPException
+
+        from app.services.bonus_allocation_parser import validate_file_type
 
         with pytest.raises(HTTPException) as exc_info:
             validate_file_type("test.csv")
@@ -62,21 +63,23 @@ class TestGetColumnValue:
 
     def test_primary_column_exists(self):
         """测试主列存在"""
-        from app.services.bonus_allocation_parser import get_column_value
         import pandas as pd
 
-        row = pd.Series({'计算记录ID*': 123, '计算记录ID': 456})
-        result = get_column_value(row, '计算记录ID*')
+        from app.services.bonus_allocation_parser import get_column_value
+
+        row = pd.Series({"计算记录ID*": 123, "计算记录ID": 456})
+        result = get_column_value(row, "计算记录ID*")
 
         assert result == 123
 
     def test_fallback_to_alt_column(self):
         """测试回退到备选列"""
-        from app.services.bonus_allocation_parser import get_column_value
         import pandas as pd
 
-        row = pd.Series({'计算记录ID': 456})
-        result = get_column_value(row, '计算记录ID*')
+        from app.services.bonus_allocation_parser import get_column_value
+
+        row = pd.Series({"计算记录ID": 456})
+        result = get_column_value(row, "计算记录ID*")
 
         assert result == 456
 
@@ -86,11 +89,12 @@ class TestValidateRequiredColumns:
 
     def test_missing_all_id_columns(self):
         """测试缺少所有ID列"""
-        from app.services.bonus_allocation_parser import validate_required_columns
-        from fastapi import HTTPException
         import pandas as pd
+        from fastapi import HTTPException
 
-        df = pd.DataFrame({'其他列': [1, 2, 3]})
+        from app.services.bonus_allocation_parser import validate_required_columns
+
+        df = pd.DataFrame({"其他列": [1, 2, 3]})
 
         with pytest.raises(HTTPException) as exc_info:
             validate_required_columns(df)
@@ -99,17 +103,15 @@ class TestValidateRequiredColumns:
 
     def test_has_calculation_id(self):
         """测试有计算记录ID"""
-        from app.services.bonus_allocation_parser import validate_required_columns
         import pandas as pd
 
-        df = pd.DataFrame({
-        '计算记录ID*': [1],
-        '受益人ID*': [1],
-        '发放金额*': [100],
-        '发放日期*': ['2025-01-15']
-        })
+        from app.services.bonus_allocation_parser import validate_required_columns
 
-            # 不应抛出异常
+        df = pd.DataFrame(
+            {"计算记录ID*": [1], "受益人ID*": [1], "发放金额*": [100], "发放日期*": ["2025-01-15"]}
+        )
+
+        # 不应抛出异常
         validate_required_columns(df)
 
 
@@ -121,12 +123,12 @@ class TestValidateRowData:
         from app.services.bonus_allocation_parser import validate_row_data
 
         errors = validate_row_data(
-        db_session,
-        calc_id=99999,
-        team_allocation_id=None,
-        user_id=1,
-        calc_amount=Decimal('100'),
-        dist_amount=Decimal('100')
+            db_session,
+            calc_id=99999,
+            team_allocation_id=None,
+            user_id=1,
+            calc_amount=Decimal("100"),
+            dist_amount=Decimal("100"),
         )
 
         assert len(errors) > 0
@@ -137,12 +139,12 @@ class TestValidateRowData:
         from app.services.bonus_allocation_parser import validate_row_data
 
         errors = validate_row_data(
-        db_session,
-        calc_id=None,
-        team_allocation_id=1,
-        user_id=99999,
-        calc_amount=Decimal('100'),
-        dist_amount=Decimal('100')
+            db_session,
+            calc_id=None,
+            team_allocation_id=1,
+            user_id=99999,
+            calc_amount=Decimal("100"),
+            dist_amount=Decimal("100"),
         )
 
         assert len(errors) > 0
@@ -154,8 +156,9 @@ class TestParseAllocationSheet:
 
     def test_empty_dataframe(self, db_session):
         """测试空数据框"""
-        from app.services.bonus_allocation_parser import parse_allocation_sheet
         import pandas as pd
+
+        from app.services.bonus_allocation_parser import parse_allocation_sheet
 
         df = pd.DataFrame()
         valid_rows, errors = parse_allocation_sheet(df, db_session)
@@ -169,8 +172,9 @@ class TestParseExcelFile:
 
     def test_invalid_excel_content(self):
         """测试无效的Excel内容"""
-        from app.services.bonus_allocation_parser import parse_excel_file
         from fastapi import HTTPException
+
+        from app.services.bonus_allocation_parser import parse_excel_file
 
         with pytest.raises(HTTPException) as exc_info:
             parse_excel_file(b"invalid content")
@@ -186,13 +190,13 @@ class TestDecimalConversion:
         """测试浮点数转Decimal"""
         value = 100.50
         result = Decimal(str(float(value)))
-        assert result == Decimal('100.5')
+        assert result == Decimal("100.5")
 
     def test_integer_to_decimal(self):
         """测试整数转Decimal"""
         value = 100
         result = Decimal(str(float(value)))
-        assert result == Decimal('100.0')
+        assert result == Decimal("100.0")
 
 
 class TestRowNumberCalculation:
@@ -215,22 +219,22 @@ class TestParsedDataStructure:
     def test_data_fields(self):
         """测试数据字段"""
         data = {
-        'calculation_id': 1,
-        'team_allocation_id': None,
-        'user_id': 10,
-        'user_name': '张三',
-        'calculated_amount': 1000.00,
-        'distributed_amount': 1000.00,
-        'distribution_date': '2025-01-15',
-        'payment_method': '银行转账',
-        'voucher_no': 'V001',
-        'payment_account': '1234567890',
-        'payment_remark': '测试备注',
+            "calculation_id": 1,
+            "team_allocation_id": None,
+            "user_id": 10,
+            "user_name": "张三",
+            "calculated_amount": 1000.00,
+            "distributed_amount": 1000.00,
+            "distribution_date": "2025-01-15",
+            "payment_method": "银行转账",
+            "voucher_no": "V001",
+            "payment_account": "1234567890",
+            "payment_remark": "测试备注",
         }
 
-        assert data['calculation_id'] == 1
-        assert data['user_id'] == 10
-        assert data['distributed_amount'] == 1000.00
+        assert data["calculation_id"] == 1
+        assert data["user_id"] == 10
+        assert data["distributed_amount"] == 1000.00
 
 
 class TestFilePathGeneration:
@@ -245,7 +249,7 @@ class TestFilePathGeneration:
         file_ext = Path(filename).suffix
         unique_filename = f"{uuid.uuid4().hex}{file_ext}"
 
-        assert unique_filename.endswith('.xlsx')
+        assert unique_filename.endswith(".xlsx")
         assert len(unique_filename) > 10  # UUID + 扩展名
 
 
@@ -256,6 +260,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

@@ -5,8 +5,10 @@ approval_engine/engine/router.py 单元测试 - 完整版
 测试审批路由决策服务的各个方法
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.approval_engine.router import ApprovalRouterService
 
 
@@ -191,16 +193,16 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-        "operator": "AND",
-        "items": [
-        {"field": "form.amount", "op": ">", "value": 1000},
-        {"field": "entity.status", "op": "==", "value": "APPROVED"},
-        ],
+            "operator": "AND",
+            "items": [
+                {"field": "form.amount", "op": ">", "value": 1000},
+                {"field": "entity.status", "op": "==", "value": "APPROVED"},
+            ],
         }
 
         context = {
-        "form": {"amount": 5000},
-        "entity": {"status": "APPROVED"},
+            "form": {"amount": 5000},
+            "entity": {"status": "APPROVED"},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -212,14 +214,14 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-        "operator": "AND",
-        "items": [
-        {"field": "form.amount", "op": ">", "value": 1000},
-        ],
+            "operator": "AND",
+            "items": [
+                {"field": "form.amount", "op": ">", "value": 1000},
+            ],
         }
 
         context = {
-        "form": {"amount": 500},
+            "form": {"amount": 500},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -231,15 +233,15 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-        "operator": "OR",
-        "items": [
-        {"field": "form.amount", "op": ">", "value": 1000},
-        {"field": "form.amount", "op": "<", "value": 1000},
-        ],
+            "operator": "OR",
+            "items": [
+                {"field": "form.amount", "op": ">", "value": 1000},
+                {"field": "form.amount", "op": "<", "value": 1000},
+            ],
         }
 
         context = {
-        "form": {"amount": 500},
+            "form": {"amount": 500},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -251,15 +253,15 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-        "operator": "OR",
-        "items": [
-        {"field": "form.amount", "op": ">", "value": 10000},
-        {"field": "form.amount", "op": "<", "value": 0},
-        ],
+            "operator": "OR",
+            "items": [
+                {"field": "form.amount", "op": ">", "value": 10000},
+                {"field": "form.amount", "op": "<", "value": 0},
+            ],
         }
 
         context = {
-        "form": {"amount": 500},
+            "form": {"amount": 500},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -271,12 +273,12 @@ class TestEvaluateConditions:
         service = ApprovalRouterService(db=mock_db)
 
         conditions = {
-        "operator": "AND",
-        "items": [],
+            "operator": "AND",
+            "items": [],
         }
 
         context = {
-        "form": {"amount": 5000},
+            "form": {"amount": 5000},
         }
 
         result = service._evaluate_conditions(conditions, context)
@@ -456,12 +458,14 @@ class TestRouterServiceIntegration:
 # 补充测试 A组覆盖率提升 (2026-02-17)
 # =============================================================================
 
+
 class TestApprovalRouterServiceMock:
     """ApprovalRouterService 快速单元测试（MagicMock）"""
 
     def _make_service(self):
         db = MagicMock()
         from app.services.approval_engine.router import ApprovalRouterService
+
         return ApprovalRouterService(db), db
 
     # ---- _compare 操作符 ----
@@ -566,7 +570,7 @@ class TestApprovalRouterServiceMock:
             "items": [
                 {"field": "form.amount", "op": ">", "value": 100},
                 {"field": "form.days", "op": "<=", "value": 30},
-            ]
+            ],
         }
         ctx = {"form": {"amount": 500, "days": 15}}
         assert svc._evaluate_conditions(conditions, ctx) is True
@@ -578,7 +582,7 @@ class TestApprovalRouterServiceMock:
             "items": [
                 {"field": "form.amount", "op": ">", "value": 100},
                 {"field": "form.days", "op": "<=", "value": 10},
-            ]
+            ],
         }
         ctx = {"form": {"amount": 500, "days": 20}}
         assert svc._evaluate_conditions(conditions, ctx) is False
@@ -590,7 +594,7 @@ class TestApprovalRouterServiceMock:
             "items": [
                 {"field": "form.amount", "op": ">", "value": 9999},
                 {"field": "form.type", "op": "==", "value": "STANDARD"},
-            ]
+            ],
         }
         ctx = {"form": {"amount": 100, "type": "STANDARD"}}
         assert svc._evaluate_conditions(conditions, ctx) is True
@@ -615,7 +619,10 @@ class TestApprovalRouterServiceMock:
         svc, db = self._make_service()
 
         rule = MagicMock()
-        rule.conditions = {"operator": "AND", "items": [{"field": "form.amount", "op": ">", "value": 1000}]}
+        rule.conditions = {
+            "operator": "AND",
+            "items": [{"field": "form.amount", "op": ">", "value": 1000}],
+        }
         matched_flow = MagicMock()
         rule.flow = matched_flow
 
@@ -681,10 +688,13 @@ class TestApprovalRouterServiceMock:
         next_node = MagicMock()
         next_node.node_type = "APPROVAL"
 
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [next_node]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            next_node
+        ]
         result = svc.get_next_nodes(current_node, {})
         assert result == [next_node]
 
 
 from unittest.mock import MagicMock, patch
+
 import pytest

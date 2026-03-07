@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十批：ReportEngine（report_framework/engine.py）单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.report_framework.engine import ReportEngine, PermissionError, ParameterError
+    from app.services.report_framework.engine import ParameterError, PermissionError, ReportEngine
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -19,9 +21,11 @@ def db():
 
 @pytest.fixture
 def engine(db):
-    with patch("app.services.report_framework.engine.ConfigLoader"), \
-         patch("app.services.report_framework.engine.DataResolver"), \
-         patch("app.services.report_framework.engine.ReportCacheManager"):
+    with (
+        patch("app.services.report_framework.engine.ConfigLoader"),
+        patch("app.services.report_framework.engine.DataResolver"),
+        patch("app.services.report_framework.engine.ReportCacheManager"),
+    ):
         return ReportEngine(db)
 
 
@@ -35,9 +39,11 @@ def _make_user(role="admin"):
 
 def test_engine_init(db):
     """引擎初始化"""
-    with patch("app.services.report_framework.engine.ConfigLoader"), \
-         patch("app.services.report_framework.engine.DataResolver"), \
-         patch("app.services.report_framework.engine.ReportCacheManager"):
+    with (
+        patch("app.services.report_framework.engine.ConfigLoader"),
+        patch("app.services.report_framework.engine.DataResolver"),
+        patch("app.services.report_framework.engine.ReportCacheManager"),
+    ):
         eng = ReportEngine(db)
         assert eng is not None
 
@@ -105,6 +111,7 @@ def test_convert_param_type_string(engine):
         pytest.skip("方法不存在")
     try:
         from app.services.report_framework.models import ParameterType
+
         result = engine._convert_param_type("test", ParameterType.STRING)
         assert result == "test"
     except Exception:

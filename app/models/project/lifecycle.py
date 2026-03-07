@@ -21,14 +21,18 @@ from ..base import Base, TimestampMixin
 
 class _StageValue:
     """模拟枚举值，提供 .value 属性"""
+
     def __init__(self, v: str):
         self.value = v
+
     def __str__(self):
         return self.value
+
     def __eq__(self, other):
         if isinstance(other, _StageValue):
             return self.value == other.value
         return self.value == other
+
     def __hash__(self):
         return hash(self.value)
 
@@ -69,9 +73,7 @@ class ProjectStage(Base, TimestampMixin):
     S9 = _StageValue("S9")
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="所属项目"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="所属项目")
     stage_code = Column(String(20), nullable=False, comment="阶段编码：S1-S9")
     stage_name = Column(String(50), nullable=False, comment="阶段名称")
     stage_order = Column(Integer, nullable=False, comment="阶段顺序")
@@ -172,12 +174,8 @@ class ProjectStatusLog(Base):
     __tablename__ = "project_status_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
-    )
-    machine_id = Column(
-        Integer, ForeignKey("machines.id"), nullable=True, comment="设备ID（可选）"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
+    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=True, comment="设备ID（可选）")
 
     # 变更前状态
     old_stage = Column(String(20), comment="变更前阶段")

@@ -14,10 +14,7 @@ router = APIRouter()
 
 
 @router.get("/analysis/{readiness_id}/optimize", response_model=ResponseModel)
-async def get_optimization_suggestions(
-    readiness_id: int,
-    db: Session = Depends(deps.get_db)
-):
+async def get_optimization_suggestions(readiness_id: int, db: Session = Depends(deps.get_db)):
     """获取齐套分析优化建议"""
     from app.services.assembly_kit_optimizer import AssemblyKitOptimizer
 
@@ -32,6 +29,10 @@ async def get_optimization_suggestions(
         data={
             "suggestions": suggestions,
             "optimized_ready_date": optimized_date.isoformat() if optimized_date else None,
-            "current_ready_date": readiness.estimated_ready_date.isoformat() if readiness.estimated_ready_date else None
-        }
+            "current_ready_date": (
+                readiness.estimated_ready_date.isoformat()
+                if readiness.estimated_ready_date
+                else None
+            ),
+        },
     )

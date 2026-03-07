@@ -26,6 +26,7 @@ class TestImportBase:
     def test_import_class(self):
         """测试导入基础类"""
         from app.services.unified_import.base import ImportBase
+
         assert ImportBase is not None
 
     def test_parse_work_date_valid(self):
@@ -96,6 +97,7 @@ class TestImportBase:
     def test_parse_progress_valid(self):
         """测试解析进度 - 有效"""
         import pandas as pd
+
         from app.services.unified_import.base import ImportBase
 
         base = ImportBase()
@@ -108,6 +110,7 @@ class TestImportBase:
     def test_parse_progress_percentage(self):
         """测试解析进度 - 带百分号"""
         import pandas as pd
+
         from app.services.unified_import.base import ImportBase
 
         base = ImportBase()
@@ -120,6 +123,7 @@ class TestImportBase:
     def test_parse_progress_out_of_range(self):
         """测试解析进度 - 超出范围"""
         import pandas as pd
+
         from app.services.unified_import.base import ImportBase
 
         base = ImportBase()
@@ -132,6 +136,7 @@ class TestImportBase:
     def test_check_required_columns_all_present(self):
         """测试检查必需列 - 全部存在"""
         import pandas as pd
+
         from app.services.unified_import.base import ImportBase
 
         base = ImportBase()
@@ -146,6 +151,7 @@ class TestImportBase:
     def test_check_required_columns_missing(self):
         """测试检查必需列 - 缺少列"""
         import pandas as pd
+
         from app.services.unified_import.base import ImportBase
 
         base = ImportBase()
@@ -165,6 +171,7 @@ class TestUnifiedImporter:
     def test_import_class(self):
         """测试导入类"""
         from app.services.unified_import.unified_importer import UnifiedImporter
+
         assert UnifiedImporter is not None
 
     def test_import_data_user(self, db_session):
@@ -172,12 +179,15 @@ class TestUnifiedImporter:
         from app.services.unified_import.unified_importer import UnifiedImporter
 
         # UnifiedImporter.import_data is a classmethod
-        with patch.object(UnifiedImporter, 'validate_file'):
-            with patch.object(UnifiedImporter, 'parse_file') as mock_parse:
+        with patch.object(UnifiedImporter, "validate_file"):
+            with patch.object(UnifiedImporter, "parse_file") as mock_parse:
                 import pandas as pd
+
                 mock_parse.return_value = pd.DataFrame({"name": ["test"]})
 
-                with patch('app.services.unified_import.unified_importer.UserImporter') as mock_user_importer:
+                with patch(
+                    "app.services.unified_import.unified_importer.UserImporter"
+                ) as mock_user_importer:
                     mock_user_importer.import_user_data.return_value = (1, 0, [])
 
                     result = UnifiedImporter.import_data(
@@ -199,6 +209,7 @@ class TestUserImporter:
     def test_import_class(self):
         """测试导入类"""
         from app.services.unified_import.user_importer import UserImporter
+
         assert UserImporter is not None
 
 
@@ -208,6 +219,7 @@ class TestTimesheetImporter:
     def test_import_class(self):
         """测试导入类"""
         from app.services.unified_import.timesheet_importer import TimesheetImporter
+
         assert TimesheetImporter is not None
 
 
@@ -217,6 +229,7 @@ class TestTaskImporter:
     def test_import_class(self):
         """测试导入类"""
         from app.services.unified_import.task_importer import TaskImporter
+
         assert TaskImporter is not None
 
 
@@ -226,6 +239,7 @@ class TestMaterialImporter:
     def test_import_class(self):
         """测试导入类"""
         from app.services.unified_import.material_importer import MaterialImporter
+
         assert MaterialImporter is not None
 
 
@@ -235,6 +249,7 @@ class TestBomImporter:
     def test_import_class(self):
         """测试导入类"""
         from app.services.unified_import.bom_importer import BomImporter
+
         assert BomImporter is not None
 
 

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十三批：delay_root_cause_service 单元测试"""
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.delay_root_cause_service")
 
@@ -13,8 +14,15 @@ def _make_db():
     return MagicMock()
 
 
-def _mock_task(task_id=1, plan_end=None, actual_end=None, delay_reason=None,
-               plan_start=None, project_id=1, task_name="任务A"):
+def _mock_task(
+    task_id=1,
+    plan_end=None,
+    actual_end=None,
+    delay_reason=None,
+    plan_start=None,
+    project_id=1,
+    task_name="任务A",
+):
     t = MagicMock()
     t.id = task_id
     t.plan_end = plan_end or date(2025, 1, 10)
@@ -26,8 +34,15 @@ def _mock_task(task_id=1, plan_end=None, actual_end=None, delay_reason=None,
     return t
 
 
-def _mock_project(pid=1, status="IN_PROGRESS", plan_end_date=None, actual_end_date=None,
-                  contract_amount=None, project_code="P001", project_name="项目1"):
+def _mock_project(
+    pid=1,
+    status="IN_PROGRESS",
+    plan_end_date=None,
+    actual_end_date=None,
+    contract_amount=None,
+    project_code="P001",
+    project_name="项目1",
+):
     p = MagicMock()
     p.id = pid
     p.status = status
@@ -54,8 +69,12 @@ class TestAnalyzeRootCause:
     def test_delayed_tasks_grouped_by_reason(self):
         db = _make_db()
         svc = DelayRootCauseService(db)
-        task1 = _mock_task(delay_reason="供应商延迟", plan_end=date(2025, 1, 10), actual_end=date(2025, 1, 15))
-        task2 = _mock_task(delay_reason="供应商延迟", plan_end=date(2025, 1, 10), actual_end=date(2025, 1, 20))
+        task1 = _mock_task(
+            delay_reason="供应商延迟", plan_end=date(2025, 1, 10), actual_end=date(2025, 1, 15)
+        )
+        task2 = _mock_task(
+            delay_reason="供应商延迟", plan_end=date(2025, 1, 10), actual_end=date(2025, 1, 20)
+        )
         q = MagicMock()
         q.filter.return_value = q
         q.all.return_value = [task1, task2]
@@ -104,7 +123,7 @@ class TestAnalyzeImpact:
         proj = _mock_project(
             plan_end_date=date(2024, 6, 1),
             actual_end_date=date(2024, 6, 11),  # 10 days late
-            contract_amount=100000
+            contract_amount=100000,
         )
         q = MagicMock()
         q.filter.return_value = q

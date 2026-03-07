@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """项目匹配模块单元测试"""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+
 from app.services.work_log_ai.project_matching import ProjectMatchingMixin
 
 

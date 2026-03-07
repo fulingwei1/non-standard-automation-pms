@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - project/finance_service 单元测试"""
 
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.project.finance_service")
 
@@ -47,7 +48,8 @@ class TestGetCostSummaryWithProjects:
         cost_q.with_entities.return_value.scalar.return_value = 50000.0
         # grouped rows
         cost_q.with_entities.return_value.group_by.return_value.all.return_value = [
-            ("人力", 30000.0), ("材料", 20000.0)
+            ("人力", 30000.0),
+            ("材料", 20000.0),
         ]
         # top projects
         cost_q.with_entities.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [

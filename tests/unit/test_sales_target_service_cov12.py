@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十二批：销售目标服务单元测试"""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 try:
     from app.services.sales_target_service import SalesTargetService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -24,13 +26,15 @@ def _make_target_data(**kwargs):
     data.target_period = kwargs.get("target_period", "monthly")
     data.target_year = kwargs.get("target_year", 2025)
     data.target_month = kwargs.get("target_month", 1)
-    data.model_dump = MagicMock(return_value={
-        "target_type": data.target_type,
-        "team_id": data.team_id,
-        "user_id": data.user_id,
-        "target_period": data.target_period,
-        "target_year": data.target_year,
-    })
+    data.model_dump = MagicMock(
+        return_value={
+            "target_type": data.target_type,
+            "team_id": data.team_id,
+            "user_id": data.user_id,
+            "target_period": data.target_period,
+            "target_year": data.target_year,
+        }
+    )
     return data
 
 
@@ -76,9 +80,7 @@ class TestGetTargets:
 
     def test_with_filters(self):
         db = self._make_chainable_db([])
-        result = SalesTargetService.get_targets(
-            db, target_type="team", target_year=2025
-        )
+        result = SalesTargetService.get_targets(db, target_type="team", target_year=2025)
         assert isinstance(result, list)
 
 
@@ -87,6 +89,7 @@ class TestCreateTarget:
 
     def test_raises_for_team_type_without_team_id(self):
         from fastapi import HTTPException
+
         db = _make_db()
         target_data = _make_target_data(target_type="team", team_id=None)
 
@@ -95,6 +98,7 @@ class TestCreateTarget:
 
     def test_raises_for_personal_type_without_user_id(self):
         from fastapi import HTTPException
+
         db = _make_db()
         target_data = _make_target_data(target_type="personal", team_id=None, user_id=None)
 
@@ -103,9 +107,10 @@ class TestCreateTarget:
 
     def test_raises_when_target_already_exists(self):
         from fastapi import HTTPException
+
         db = _make_db()
         target_data = _make_target_data(target_type="team", team_id=5)
-        
+
         existing = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = existing
 

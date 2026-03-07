@@ -6,6 +6,7 @@ import pytest
 
 try:
     from app.services.project.execution_service import ProjectExecutionService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -65,9 +66,18 @@ class TestGetProgressOverview:
         milestone_stats = {"total": 5, "completed": 3}
         task_stats = {"total": 10, "done": 7}
 
-        with patch("app.services.project.execution_service.calculate_progress_stats", return_value=progress_stats):
-            with patch("app.services.project.execution_service.calculate_milestone_stats", return_value=milestone_stats):
-                with patch("app.services.project.execution_service.calculate_task_stats", return_value=task_stats):
+        with patch(
+            "app.services.project.execution_service.calculate_progress_stats",
+            return_value=progress_stats,
+        ):
+            with patch(
+                "app.services.project.execution_service.calculate_milestone_stats",
+                return_value=milestone_stats,
+            ):
+                with patch(
+                    "app.services.project.execution_service.calculate_task_stats",
+                    return_value=task_stats,
+                ):
                     result = service.get_progress_overview(user)
 
         assert result["total_projects"] == 2
@@ -83,9 +93,16 @@ class TestGetProgressOverview:
         mock_query.order_by.return_value.limit.return_value.all.return_value = []
         service.core_service.get_scoped_query.return_value = mock_query
 
-        with patch("app.services.project.execution_service.calculate_progress_stats", return_value={"actual_progress": 0, "is_delayed": False}):
-            with patch("app.services.project.execution_service.calculate_milestone_stats", return_value={}):
-                with patch("app.services.project.execution_service.calculate_task_stats", return_value={}):
+        with patch(
+            "app.services.project.execution_service.calculate_progress_stats",
+            return_value={"actual_progress": 0, "is_delayed": False},
+        ):
+            with patch(
+                "app.services.project.execution_service.calculate_milestone_stats", return_value={}
+            ):
+                with patch(
+                    "app.services.project.execution_service.calculate_task_stats", return_value={}
+                ):
                     result = service.get_progress_overview(user)
 
         assert result["average_progress"] == 0.0
@@ -99,9 +116,16 @@ class TestGetProgressOverview:
         service.core_service.get_scoped_query.return_value = mock_query
 
         delayed_stats = {"actual_progress": 30.0, "is_delayed": True}
-        with patch("app.services.project.execution_service.calculate_progress_stats", return_value=delayed_stats):
-            with patch("app.services.project.execution_service.calculate_milestone_stats", return_value={}):
-                with patch("app.services.project.execution_service.calculate_task_stats", return_value={}):
+        with patch(
+            "app.services.project.execution_service.calculate_progress_stats",
+            return_value=delayed_stats,
+        ):
+            with patch(
+                "app.services.project.execution_service.calculate_milestone_stats", return_value={}
+            ):
+                with patch(
+                    "app.services.project.execution_service.calculate_task_stats", return_value={}
+                ):
                     result = service.get_progress_overview(user)
 
         assert result["delayed_projects"] == 1
@@ -116,14 +140,22 @@ class TestGetProgressOverview:
 
         progress_values = [50.0, 70.0, 90.0]
         call_count = [0]
+
         def progress_side(project, today):
             v = progress_values[call_count[0] % 3]
             call_count[0] += 1
             return {"actual_progress": v, "is_delayed": False}
 
-        with patch("app.services.project.execution_service.calculate_progress_stats", side_effect=progress_side):
-            with patch("app.services.project.execution_service.calculate_milestone_stats", return_value={}):
-                with patch("app.services.project.execution_service.calculate_task_stats", return_value={}):
+        with patch(
+            "app.services.project.execution_service.calculate_progress_stats",
+            side_effect=progress_side,
+        ):
+            with patch(
+                "app.services.project.execution_service.calculate_milestone_stats", return_value={}
+            ):
+                with patch(
+                    "app.services.project.execution_service.calculate_task_stats", return_value={}
+                ):
                     result = service.get_progress_overview(user)
 
         assert "slowest_projects" in result

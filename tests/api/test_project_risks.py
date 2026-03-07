@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
-from app.models.project_risk import ProjectRisk, RiskTypeEnum, RiskStatusEnum
-from app.models.user import User, ApiPermission, Role, RoleApiPermission
+from app.models.project_risk import ProjectRisk, RiskStatusEnum, RiskTypeEnum
+from app.models.user import ApiPermission, Role, RoleApiPermission, User
 
 
 class TestProjectRiskCRUD:
@@ -33,13 +33,13 @@ class TestProjectRiskCRUD:
             "mitigation_plan": "提前进行技术验证",
             "contingency_plan": "准备备用方案",
         }
-        
+
         response = client.post(
             f"/api/v1/projects/{test_project.id}/risks",
             json=risk_data,
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["code"] == 200
@@ -58,13 +58,13 @@ class TestProjectRiskCRUD:
     ):
         """测试2：风险评分自动计算"""
         test_cases = [
-            (1, 1, 1, "LOW"),      # 1*1=1
-            (2, 2, 4, "LOW"),      # 2*2=4
-            (3, 2, 6, "MEDIUM"),   # 3*2=6
-            (3, 4, 12, "HIGH"),    # 3*4=12
-            (5, 5, 25, "CRITICAL"), # 5*5=25
+            (1, 1, 1, "LOW"),  # 1*1=1
+            (2, 2, 4, "LOW"),  # 2*2=4
+            (3, 2, 6, "MEDIUM"),  # 3*2=6
+            (3, 4, 12, "HIGH"),  # 3*4=12
+            (5, 5, 25, "CRITICAL"),  # 5*5=25
         ]
-        
+
         for probability, impact, expected_score, expected_level in test_cases:
             risk_data = {
                 "risk_name": f"测试风险 P{probability}*I{impact}",
@@ -73,13 +73,13 @@ class TestProjectRiskCRUD:
                 "probability": probability,
                 "impact": impact,
             }
-            
+
             response = client.post(
                 f"/api/v1/projects/{test_project.id}/risks",
                 json=risk_data,
                 headers=admin_auth_headers,
             )
-            
+
             assert response.status_code == 200
             data = response.json()["data"]
             assert data["risk_score"] == expected_score
@@ -98,13 +98,13 @@ class TestProjectRiskCRUD:
             "probability": 3,
             "impact": 3,
         }
-        
+
         response = client.post(
             f"/api/v1/projects/{test_project.id}/risks",
             json=risk_data,
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 422  # Validation error
 
     def test_create_risk_invalid_probability(
@@ -120,13 +120,13 @@ class TestProjectRiskCRUD:
             "probability": 6,  # 超出范围
             "impact": 3,
         }
-        
+
         response = client.post(
             f"/api/v1/projects/{test_project.id}/risks",
             json=risk_data,
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 422
 
     def test_get_risks_list(
@@ -153,12 +153,12 @@ class TestProjectRiskCRUD:
             risk.calculate_risk_score()
             db.add(risk)
         db.commit()
-        
+
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risks",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["total"] >= 3
@@ -183,7 +183,7 @@ class TestProjectRiskCRUD:
             status=RiskStatusEnum.IDENTIFIED,
         )
         risk1.calculate_risk_score()
-        
+
         risk2 = ProjectRisk(
             risk_code="RISK-TEST-COST-001",
             project_id=test_project.id,
@@ -194,16 +194,16 @@ class TestProjectRiskCRUD:
             status=RiskStatusEnum.MONITORING,
         )
         risk2.calculate_risk_score()
-        
+
         db.add_all([risk1, risk2])
         db.commit()
-        
+
         # 筛选技术风险
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risks?risk_type=TECHNICAL",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()["data"]
         assert all(item["risk_type"] == "TECHNICAL" for item in data["items"])
@@ -229,12 +229,12 @@ class TestProjectRiskCRUD:
         db.add(risk)
         db.commit()
         db.refresh(risk)
-        
+
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["id"] == risk.id
@@ -262,20 +262,20 @@ class TestProjectRiskCRUD:
         db.add(risk)
         db.commit()
         db.refresh(risk)
-        
+
         update_data = {
             "risk_name": "已更新风险",
             "probability": 4,
             "impact": 5,
             "status": "MONITORING",
         }
-        
+
         response = client.put(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
             json=update_data,
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["risk_name"] == "已更新风险"
@@ -304,15 +304,15 @@ class TestProjectRiskCRUD:
         db.add(risk)
         db.commit()
         db.refresh(risk)
-        
+
         update_data = {"status": "CLOSED"}
-        
+
         response = client.put(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
             json=update_data,
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["status"] == "CLOSED"
@@ -339,14 +339,14 @@ class TestProjectRiskCRUD:
         db.add(risk)
         db.commit()
         db.refresh(risk)
-        
+
         response = client.delete(
             f"/api/v1/projects/{test_project.id}/risks/{risk.id}",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
-        
+
         # 验证已删除
         deleted_risk = db.query(ProjectRisk).filter(ProjectRisk.id == risk.id).first()
         assert deleted_risk is None
@@ -365,10 +365,14 @@ class TestProjectRiskAnalysis:
         """测试11：获取风险矩阵"""
         # 创建不同概率和影响的风险
         risks_data = [
-            (1, 1), (1, 5), (5, 1), (5, 5),  # 四个角
-            (3, 3), (3, 3),  # 中间两个相同的
+            (1, 1),
+            (1, 5),
+            (5, 1),
+            (5, 5),  # 四个角
+            (3, 3),
+            (3, 3),  # 中间两个相同的
         ]
-        
+
         for prob, imp in risks_data:
             risk = ProjectRisk(
                 risk_code=f"RISK-MATRIX-P{prob}I{imp}",
@@ -382,18 +386,18 @@ class TestProjectRiskAnalysis:
             risk.calculate_risk_score()
             db.add(risk)
         db.commit()
-        
+
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risk-matrix",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()["data"]
         assert "matrix" in data
         assert "summary" in data
         assert len(data["matrix"]) == 25  # 5x5矩阵
-        
+
         # 验证特定单元格
         cell_3_3 = [m for m in data["matrix"] if m["probability"] == 3 and m["impact"] == 3][0]
         assert cell_3_3["count"] == 2  # 有两个风险
@@ -408,13 +412,13 @@ class TestProjectRiskAnalysis:
         """测试12：获取风险汇总统计"""
         # 创建不同类型和等级的风险
         risks = [
-            ("TECHNICAL", 5, 5, False),   # CRITICAL
-            ("TECHNICAL", 4, 3, False),   # HIGH
-            ("COST", 3, 3, False),        # MEDIUM
-            ("SCHEDULE", 2, 2, False),    # LOW
-            ("QUALITY", 4, 4, True),      # HIGH, occurred
+            ("TECHNICAL", 5, 5, False),  # CRITICAL
+            ("TECHNICAL", 4, 3, False),  # HIGH
+            ("COST", 3, 3, False),  # MEDIUM
+            ("SCHEDULE", 2, 2, False),  # LOW
+            ("QUALITY", 4, 4, True),  # HIGH, occurred
         ]
-        
+
         for risk_type, prob, imp, occurred in risks:
             risk = ProjectRisk(
                 risk_code=f"RISK-SUM-{risk_type}-{prob}{imp}",
@@ -429,15 +433,15 @@ class TestProjectRiskAnalysis:
             risk.calculate_risk_score()
             db.add(risk)
         db.commit()
-        
+
         response = client.get(
             f"/api/v1/projects/{test_project.id}/risk-summary",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()["data"]
-        
+
         assert data["total_risks"] >= 5
         assert data["by_type"]["TECHNICAL"] >= 2
         assert data["by_type"]["COST"] >= 1
@@ -464,14 +468,14 @@ class TestProjectRiskPermissions:
             "probability": 3,
             "impact": 3,
         }
-        
+
         # 假设user_headers没有risk:create权限
         response = client.post(
             f"/api/v1/projects/{test_project.id}/risks",
             json=risk_data,
             headers=user_headers,
         )
-        
+
         # 应该返回403或401
         assert response.status_code in [401, 403]
 
@@ -486,7 +490,7 @@ class TestProjectRiskPermissions:
             f"/api/v1/projects/{test_project.id}/risks",
             headers=user_headers,
         )
-        
+
         assert response.status_code in [401, 403]
 
 
@@ -501,7 +505,7 @@ class TestProjectRiskValidation:
     ):
         """测试15：支持4种风险类型"""
         risk_types = ["TECHNICAL", "COST", "SCHEDULE", "QUALITY"]
-        
+
         for risk_type in risk_types:
             risk_data = {
                 "risk_name": f"{risk_type}风险测试",
@@ -509,13 +513,13 @@ class TestProjectRiskValidation:
                 "probability": 3,
                 "impact": 3,
             }
-            
+
             response = client.post(
                 f"/api/v1/projects/{test_project.id}/risks",
                 json=risk_data,
                 headers=admin_auth_headers,
             )
-            
+
             assert response.status_code == 200
             assert response.json()["data"]["risk_type"] == risk_type
 
@@ -529,7 +533,7 @@ class TestProjectRiskValidation:
             "/api/v1/projects/99999/risks",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 404
 
     def test_risk_not_exist(
@@ -543,5 +547,5 @@ class TestProjectRiskValidation:
             f"/api/v1/projects/{test_project.id}/risks/99999",
             headers=admin_auth_headers,
         )
-        
+
         assert response.status_code == 404

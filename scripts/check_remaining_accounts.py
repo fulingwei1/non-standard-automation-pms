@@ -51,9 +51,7 @@ def main():
                 # 检查其他可能的依赖
                 try:
                     issues_created = db.execute(
-                        text(
-                            "SELECT COUNT(*) FROM issues WHERE reporter_id = :user_id"
-                        ),
+                        text("SELECT COUNT(*) FROM issues WHERE reporter_id = :user_id"),
                         {"user_id": user_id},
                     ).scalar()
                     if issues_created > 0:
@@ -63,9 +61,7 @@ def main():
 
                 try:
                     issues_assigned = db.execute(
-                        text(
-                            "SELECT COUNT(*) FROM issues WHERE assignee_id = :user_id"
-                        ),
+                        text("SELECT COUNT(*) FROM issues WHERE assignee_id = :user_id"),
                         {"user_id": user_id},
                     ).scalar()
                     if issues_assigned > 0:

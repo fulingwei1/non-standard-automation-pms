@@ -8,15 +8,15 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from app.services.business_support_utils import BusinessSupportUtilsService
 from app.models.business_support import (
     CustomerSupplierRegistration,
-    InvoiceRequest,
-    SalesOrder,
     DeliveryOrder,
+    InvoiceRequest,
     Reconciliation,
+    SalesOrder,
 )
 from app.models.sales import Invoice
+from app.services.business_support_utils import BusinessSupportUtilsService
 
 
 class TestBusinessSupportUtilsService(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
 
-        with patch('app.services.business_support_utils.service.datetime') as mock_datetime:
+        with patch("app.services.business_support_utils.service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 1, 1, 10, 0, 0)
             mock_datetime.strftime = datetime.strftime
             result = self.service.generate_order_no()
@@ -59,7 +59,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_query.order_by.return_value.first.return_value = mock_order
         self.mock_db.query.return_value = mock_query
 
-        with patch('app.services.business_support_utils.service.datetime') as mock_datetime:
+        with patch("app.services.business_support_utils.service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 1, 1, 10, 0, 0)
             mock_datetime.strftime = datetime.strftime
             result = self.service.generate_order_no()
@@ -73,7 +73,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
 
-        with patch('app.services.business_support_utils.service.datetime') as mock_datetime:
+        with patch("app.services.business_support_utils.service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 2, 15, 10, 0, 0)
             mock_datetime.strftime = datetime.strftime
             result = self.service.generate_delivery_no()
@@ -86,7 +86,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
 
-        with patch('app.services.business_support_utils.service.datetime') as mock_datetime:
+        with patch("app.services.business_support_utils.service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 3, 20, 10, 0, 0)
             mock_datetime.strftime = datetime.strftime
             result = self.service.generate_invoice_request_no()
@@ -99,7 +99,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
 
-        with patch('app.services.business_support_utils.service.datetime') as mock_datetime:
+        with patch("app.services.business_support_utils.service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 4, 10, 10, 0, 0)
             mock_datetime.strftime = datetime.strftime
             result = self.service.generate_registration_no()
@@ -112,7 +112,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
 
-        with patch('app.services.business_support_utils.service.datetime') as mock_datetime:
+        with patch("app.services.business_support_utils.service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 5, 25, 10, 0, 0)
             mock_datetime.strftime = datetime.strftime
             result = self.service.generate_invoice_code()
@@ -125,7 +125,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_query.order_by.return_value.first.return_value = None
         self.mock_db.query.return_value = mock_query
 
-        with patch('app.services.business_support_utils.service.datetime') as mock_datetime:
+        with patch("app.services.business_support_utils.service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 6, 30, 10, 0, 0)
             mock_datetime.strftime = datetime.strftime
             result = self.service.generate_reconciliation_no()
@@ -178,7 +178,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
 
     # ==================== 通知发送测试 ====================
 
-    @patch('app.services.business_support_utils.service.NotificationDispatcher')
+    @patch("app.services.business_support_utils.service.NotificationDispatcher")
     def test_send_department_notification_success(self, mock_dispatcher_class):
         """测试发送部门通知 - 成功"""
         mock_dispatcher = MagicMock()
@@ -191,7 +191,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
             content="这是测试内容",
             source_type="ORDER",
             source_id=100,
-            priority="HIGH"
+            priority="HIGH",
         )
 
         # 验证调用
@@ -199,7 +199,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
         mock_dispatcher.create_system_notification.assert_called_once()
         self.mock_db.commit.assert_called_once()
 
-    @patch('app.services.business_support_utils.service.NotificationDispatcher')
+    @patch("app.services.business_support_utils.service.NotificationDispatcher")
     def test_send_department_notification_failure(self, mock_dispatcher_class):
         """测试发送部门通知 - 失败处理"""
         mock_dispatcher = MagicMock()
@@ -213,7 +213,7 @@ class TestBusinessSupportUtilsService(unittest.TestCase):
             title="测试通知",
             content="这是测试内容",
             source_type="ORDER",
-            source_id=100
+            source_id=100,
         )
 
         # 验证没有 commit

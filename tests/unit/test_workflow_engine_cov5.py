@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第五批：approval_engine/workflow_engine.py 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.workflow_engine import WorkflowEngine
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False

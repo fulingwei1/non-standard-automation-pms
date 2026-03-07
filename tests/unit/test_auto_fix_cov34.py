@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """自动修复模块单元测试 - 第三十四批"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.data_integrity.auto_fix")
 
@@ -90,7 +91,6 @@ class TestAutoFixDataIssues:
         mixin = make_mixin(report=report)
         # 'remind_work_log' 的 can_auto_fix=False，不应被执行
         result = mixin.auto_fix_data_issues(
-            engineer_id=1, period_id=1,
-            fix_types=["remind_work_log"]
+            engineer_id=1, period_id=1, fix_types=["remind_work_log"]
         )
         assert result["total_applied"] == 0

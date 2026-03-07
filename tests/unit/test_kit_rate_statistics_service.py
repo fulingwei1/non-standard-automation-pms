@@ -3,9 +3,10 @@
 Tests for kit_rate_statistics_service
 """
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, Mock
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.assembly_kit import BomItemAssemblyAttrs
@@ -33,11 +34,11 @@ class TestKitRateStatistics:
         result = calculate_kit_rate(mock_bom_item)
 
         assert result is not None
-        assert result['unit_price'] == Decimal("10.00")
-        assert result['unit_cost'] == Decimal("1000.00")
-        assert result['material_cost'] == Decimal("5000.00")
-        assert result['other_cost'] == Decimal("1000.00")
-        assert result['total_cost'] == Decimal("7000.00")
+        assert result["unit_price"] == Decimal("10.00")
+        assert result["unit_cost"] == Decimal("1000.00")
+        assert result["material_cost"] == Decimal("5000.00")
+        assert result["other_cost"] == Decimal("1000.00")
+        assert result["total_cost"] == Decimal("7000.00")
 
     def test_calculate_kit_rate_with_bom_cost(self):
         """Test calculating kit rate with BOM cost."""
@@ -57,12 +58,12 @@ class TestKitRateStatistics:
         result = calculate_kit_rate(mock_bom_item)
 
         assert result is not None
-        assert result['unit_price'] == Decimal("10.00")
-        assert result['bom_cost'] == Decimal("50000.00")
-        assert result['total_cost'] == Decimal("6000.00")
-        assert result['material_cost'] == Decimal("5000.00")
-        assert result['other_cost'] == Decimal("1000.00")
-        assert result['total_cost'] == Decimal("6000.00")
+        assert result["unit_price"] == Decimal("10.00")
+        assert result["bom_cost"] == Decimal("50000.00")
+        assert result["total_cost"] == Decimal("6000.00")
+        assert result["material_cost"] == Decimal("5000.00")
+        assert result["other_cost"] == Decimal("1000.00")
+        assert result["total_cost"] == Decimal("6000.00")
 
     def test_calculate_kit_rate_without_material_cost(self):
         """Test when material cost is None."""
@@ -81,8 +82,8 @@ class TestKitRateStatistics:
         result = calculate_kit_rate(mock_bom_item)
 
         assert result is not None
-        assert result['unit_price'] == Decimal("10.00")
-        assert result['bom_cost'] is None
-        assert result['material_cost'] is None
-        assert result['other_cost'] == Decimal("1000.00")
-        assert result['total_cost'] == Decimal("2000.00")
+        assert result["unit_price"] == Decimal("10.00")
+        assert result["bom_cost"] is None
+        assert result["material_cost"] is None
+        assert result["other_cost"] == Decimal("1000.00")
+        assert result["total_cost"] == Decimal("2000.00")

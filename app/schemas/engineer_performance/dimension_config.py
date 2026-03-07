@@ -15,11 +15,12 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ==================== 五维配置 Schemas ====================
+
 
 class DimensionConfigBase(BaseModel):
     """五维权重配置基础"""
+
     job_type: str = Field(..., description="岗位类型")
     job_level: Optional[str] = Field(None, description="职级")
     department_id: Optional[int] = Field(None, description="部门ID（为空表示全局配置）")
@@ -35,11 +36,13 @@ class DimensionConfigBase(BaseModel):
 
 class DimensionConfigCreate(DimensionConfigBase):
     """创建五维配置"""
+
     pass
 
 
 class DimensionConfigUpdate(BaseModel):
     """更新五维配置"""
+
     technical_weight: Optional[int] = Field(None, ge=0, le=100)
     execution_weight: Optional[int] = Field(None, ge=0, le=100)
     cost_quality_weight: Optional[int] = Field(None, ge=0, le=100)
@@ -51,6 +54,7 @@ class DimensionConfigUpdate(BaseModel):
 
 class DimensionConfigResponse(DimensionConfigBase):
     """五维配置响应"""
+
     id: int
     is_global: bool = Field(..., description="是否全局配置")
     expired_date: Optional[date] = None
@@ -60,5 +64,3 @@ class DimensionConfigResponse(DimensionConfigBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
-

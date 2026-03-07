@@ -6,9 +6,9 @@
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
-
+from typing import Any
 from typing import Any as _Any
+from typing import Dict, List, Optional
 
 try:
     from jinja2 import Environment
@@ -52,6 +52,7 @@ def register_filters(env: Environment) -> None:
 
 
 # === 列表操作过滤器 ===
+
 
 def filter_sum_by(items: List[Dict], field: str) -> float:
     """
@@ -138,6 +139,7 @@ def filter_pluck(items: List[Dict], field: str) -> List[Any]:
 
 # === 数值格式化过滤器 ===
 
+
 def filter_currency(value: Optional[float], symbol: str = "¥", decimals: int = 2) -> str:
     """
     货币格式化
@@ -172,6 +174,7 @@ def filter_round_num(value: Optional[float], decimals: int = 2) -> float:
 
 
 # === 日期过滤器 ===
+
 
 def filter_date_format(value: Any, format_str: str = "%Y-%m-%d") -> str:
     """
@@ -233,6 +236,7 @@ def filter_days_until(value: Any) -> int:
 
 # === 字符串过滤器 ===
 
+
 def filter_truncate_text(value: Optional[str], length: int = 50, suffix: str = "...") -> str:
     """
     截断文本
@@ -269,6 +273,7 @@ def filter_status_label(value: Optional[str]) -> str:
 
 
 # === 条件过滤器 ===
+
 
 def filter_default_if_none(value: Any, default: Any = "") -> Any:
     """

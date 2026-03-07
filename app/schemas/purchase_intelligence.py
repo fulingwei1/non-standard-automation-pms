@@ -9,11 +9,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-
 # ==================== 采购建议 ====================
+
 
 class PurchaseSuggestionBase(BaseModel):
     """采购建议基础模型"""
+
     material_id: int
     suggested_qty: Decimal = Field(..., gt=0, description="建议数量")
     source_type: str = Field(..., description="来源类型：SHORTAGE/SAFETY_STOCK/FORECAST/MANUAL")
@@ -26,11 +27,13 @@ class PurchaseSuggestionBase(BaseModel):
 
 class PurchaseSuggestionCreate(PurchaseSuggestionBase):
     """创建采购建议"""
+
     pass
 
 
 class PurchaseSuggestionUpdate(BaseModel):
     """更新采购建议"""
+
     suggested_qty: Optional[Decimal] = None
     required_date: Optional[date] = None
     urgency_level: Optional[str] = None
@@ -41,6 +44,7 @@ class PurchaseSuggestionUpdate(BaseModel):
 
 class PurchaseSuggestionApprove(BaseModel):
     """审批采购建议"""
+
     approved: bool = Field(..., description="是否批准")
     review_note: Optional[str] = None
     suggested_supplier_id: Optional[int] = None
@@ -48,6 +52,7 @@ class PurchaseSuggestionApprove(BaseModel):
 
 class PurchaseSuggestionResponse(PurchaseSuggestionBase):
     """采购建议响应"""
+
     id: int
     suggestion_no: str
     material_code: str
@@ -80,8 +85,10 @@ class PurchaseSuggestionResponse(PurchaseSuggestionBase):
 
 # ==================== 供应商报价 ====================
 
+
 class SupplierQuotationBase(BaseModel):
     """供应商报价基础模型"""
+
     supplier_id: int
     material_id: int
     unit_price: Decimal = Field(..., gt=0, description="单价")
@@ -95,20 +102,22 @@ class SupplierQuotationBase(BaseModel):
     tax_rate: Decimal = Field(default=13, ge=0, le=100)
     remark: Optional[str] = None
 
-    @validator('valid_to')
+    @validator("valid_to")
     def validate_dates(cls, v, values):
-        if 'valid_from' in values and v < values['valid_from']:
-            raise ValueError('有效期止日期必须大于等于有效期起日期')
+        if "valid_from" in values and v < values["valid_from"]:
+            raise ValueError("有效期止日期必须大于等于有效期起日期")
         return v
 
 
 class SupplierQuotationCreate(SupplierQuotationBase):
     """创建供应商报价"""
+
     pass
 
 
 class SupplierQuotationUpdate(BaseModel):
     """更新供应商报价"""
+
     unit_price: Optional[Decimal] = None
     min_order_qty: Optional[Decimal] = None
     lead_time_days: Optional[int] = None
@@ -123,6 +132,7 @@ class SupplierQuotationUpdate(BaseModel):
 
 class SupplierQuotationResponse(SupplierQuotationBase):
     """供应商报价响应"""
+
     id: int
     quotation_no: str
     supplier_code: Optional[str] = None
@@ -144,12 +154,14 @@ class SupplierQuotationResponse(SupplierQuotationBase):
 
 class QuotationCompareRequest(BaseModel):
     """报价比较请求"""
+
     material_id: int
     supplier_ids: Optional[List[int]] = None
 
 
 class QuotationCompareItem(BaseModel):
     """报价比较项"""
+
     quotation_id: int
     quotation_no: str
     supplier_id: int
@@ -170,6 +182,7 @@ class QuotationCompareItem(BaseModel):
 
 class QuotationCompareResponse(BaseModel):
     """报价比较响应"""
+
     material_id: int
     material_code: str
     material_name: str
@@ -181,8 +194,10 @@ class QuotationCompareResponse(BaseModel):
 
 # ==================== 供应商绩效 ====================
 
+
 class SupplierPerformanceCalculate(BaseModel):
     """触发供应商绩效评估"""
+
     supplier_id: int
     evaluation_period: str = Field(..., description="评估期间 YYYY-MM")
     weight_config: Optional[Dict[str, Decimal]] = Field(
@@ -192,12 +207,13 @@ class SupplierPerformanceCalculate(BaseModel):
             "price": Decimal("20"),
             "response": Decimal("20"),
         },
-        description="评分权重配置（总和应为100）"
+        description="评分权重配置（总和应为100）",
     )
 
 
 class SupplierPerformanceResponse(BaseModel):
     """供应商绩效响应"""
+
     id: int
     supplier_id: int
     supplier_code: str
@@ -205,42 +221,42 @@ class SupplierPerformanceResponse(BaseModel):
     evaluation_period: str
     period_start: date
     period_end: date
-    
+
     # 统计数据
     total_orders: int
     total_amount: Decimal
-    
+
     # 各维度评分
     on_time_delivery_rate: Decimal
     on_time_orders: int
     late_orders: int
     avg_delay_days: Decimal
-    
+
     quality_pass_rate: Decimal
     total_received_qty: Decimal
     qualified_qty: Decimal
     rejected_qty: Decimal
-    
+
     price_competitiveness: Decimal
     avg_price_vs_market: Decimal
-    
+
     response_speed_score: Decimal
     avg_response_hours: Decimal
-    
+
     service_score: Optional[Decimal]
-    
+
     # 综合评分
     overall_score: Decimal
     rating: Optional[str]
-    
+
     weight_config: Optional[Dict[str, Any]]
     detail_data: Optional[Dict[str, Any]]
     status: str
-    
+
     reviewed_by: Optional[int]
     reviewed_at: Optional[datetime]
     review_note: Optional[str]
-    
+
     created_at: datetime
     updated_at: datetime
 
@@ -250,6 +266,7 @@ class SupplierPerformanceResponse(BaseModel):
 
 class SupplierRankingItem(BaseModel):
     """供应商排名项"""
+
     supplier_id: int
     supplier_code: str
     supplier_name: str
@@ -267,6 +284,7 @@ class SupplierRankingItem(BaseModel):
 
 class SupplierRankingResponse(BaseModel):
     """供应商排名响应"""
+
     evaluation_period: str
     total_suppliers: int
     rankings: List[SupplierRankingItem]
@@ -274,8 +292,10 @@ class SupplierRankingResponse(BaseModel):
 
 # ==================== 采购订单跟踪 ====================
 
+
 class PurchaseOrderTrackingCreate(BaseModel):
     """创建订单跟踪记录"""
+
     order_id: int
     event_type: str = Field(..., description="事件类型")
     event_description: Optional[str] = None
@@ -287,6 +307,7 @@ class PurchaseOrderTrackingCreate(BaseModel):
 
 class PurchaseOrderTrackingResponse(BaseModel):
     """订单跟踪响应"""
+
     id: int
     order_id: int
     order_no: str
@@ -310,6 +331,7 @@ class PurchaseOrderTrackingResponse(BaseModel):
 
 class PurchaseOrderReceiveRequest(BaseModel):
     """收货确认请求"""
+
     receipt_date: date = Field(default_factory=date.today)
     delivery_note_no: Optional[str] = None
     logistics_company: Optional[str] = None
@@ -320,8 +342,10 @@ class PurchaseOrderReceiveRequest(BaseModel):
 
 # ==================== 建议转订单 ====================
 
+
 class CreateOrderFromSuggestionRequest(BaseModel):
     """从建议创建订单请求"""
+
     supplier_id: Optional[int] = None
     required_date: Optional[date] = None
     payment_terms: Optional[str] = None
@@ -331,14 +355,17 @@ class CreateOrderFromSuggestionRequest(BaseModel):
 
 # ==================== 通用响应 ====================
 
+
 class MessageResponse(BaseModel):
     """通用消息响应"""
+
     message: str
     data: Optional[Any] = None
 
 
 class PaginatedResponse(BaseModel):
     """分页响应"""
+
     total: int
     page: int
     page_size: int

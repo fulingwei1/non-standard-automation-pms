@@ -10,9 +10,9 @@ PPT生成器服务单元测试
 - PresentationConfig: 演示文稿配置
 """
 
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-import tempfile
 
 import pytest
 
@@ -24,6 +24,7 @@ class TestPresentationGenerator:
     def generator(self):
         """创建生成器实例"""
         from app.services.ppt_generator.generator import PresentationGenerator
+
         return PresentationGenerator()
 
     def test_generator_initialization(self, generator):
@@ -43,11 +44,11 @@ class TestPresentationGenerator:
     def test_create_cover_slide(self, generator):
         """测试创建封面幻灯片"""
         # 验证方法存在
-        assert hasattr(generator, 'create_cover_slide')
+        assert hasattr(generator, "create_cover_slide")
 
     def test_create_toc_slide(self, generator):
         """测试创建目录幻灯片"""
-        assert hasattr(generator, 'create_toc_slide')
+        assert hasattr(generator, "create_toc_slide")
 
 
 class TestBaseSlideBuilder:
@@ -56,6 +57,7 @@ class TestBaseSlideBuilder:
     def test_import_class(self):
         """测试导入类"""
         from app.services.ppt_generator.builders.base import BaseSlideBuilder
+
         assert BaseSlideBuilder is not None
 
 
@@ -65,6 +67,7 @@ class TestContentSlideBuilder:
     def test_import_class(self):
         """测试导入类"""
         from app.services.ppt_generator.builders.content import ContentSlideBuilder
+
         assert ContentSlideBuilder is not None
 
 
@@ -74,6 +77,7 @@ class TestTableSlideBuilder:
     def test_import_class(self):
         """测试导入类"""
         from app.services.ppt_generator.builders.table import TableSlideBuilder
+
         assert TableSlideBuilder is not None
 
 
@@ -83,6 +87,7 @@ class TestPresentationConfig:
     def test_import_config(self):
         """测试导入配置"""
         from app.services.ppt_generator.config import PresentationConfig
+
         assert PresentationConfig is not None
 
     def test_default_colors(self):
@@ -92,7 +97,7 @@ class TestPresentationConfig:
         config = PresentationConfig()
 
         # 验证颜色配置
-        assert hasattr(config, 'TECH_BLUE') or hasattr(config, 'colors')
+        assert hasattr(config, "TECH_BLUE") or hasattr(config, "colors")
 
     def test_default_fonts(self):
         """测试默认字体配置"""
@@ -101,7 +106,7 @@ class TestPresentationConfig:
         config = PresentationConfig()
 
         # 验证字体配置
-        assert hasattr(config, 'title_font') or hasattr(config, 'fonts')
+        assert hasattr(config, "title_font") or hasattr(config, "fonts")
 
 
 class TestPPTGeneratorModule:
@@ -110,6 +115,7 @@ class TestPPTGeneratorModule:
     def test_import_module(self):
         """测试导入模块"""
         from app.services.ppt_generator import PresentationGenerator
+
         assert PresentationGenerator is not None
 
     def test_generator_has_create_methods(self):
@@ -119,4 +125,4 @@ class TestPPTGeneratorModule:
         generator = PresentationGenerator()
 
         # 验证常用方法存在
-        assert hasattr(generator, 'generate')
+        assert hasattr(generator, "generate")

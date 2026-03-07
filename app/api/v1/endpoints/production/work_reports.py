@@ -12,8 +12,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.production import Worker, WorkOrder, WorkReport, Workstation
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -23,10 +24,9 @@ from app.schemas.production import (
     WorkReportResponse,
     WorkReportStartRequest,
 )
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_report_no
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -60,6 +60,7 @@ def _get_work_report_response(db: Session, report: WorkReport) -> WorkReportResp
 
 
 # ==================== 报工系统 ====================
+
 
 @router.post("/work-reports/start", response_model=WorkReportResponse)
 def start_work_report(
@@ -102,7 +103,9 @@ def start_work_report(
 
     # 更新工位状态
     if work_order.workstation_id:
-        workstation = db.query(Workstation).filter(Workstation.id == work_order.workstation_id).first()
+        workstation = (
+            db.query(Workstation).filter(Workstation.id == work_order.workstation_id).first()
+        )
         if workstation:
             workstation.status = "WORKING"
             workstation.current_work_order_id = work_order.id
@@ -223,7 +226,9 @@ def complete_work_report(
 
         # 更新工位状态
         if work_order.workstation_id:
-            workstation = db.query(Workstation).filter(Workstation.id == work_order.workstation_id).first()
+            workstation = (
+                db.query(Workstation).filter(Workstation.id == work_order.workstation_id).first()
+            )
             if workstation:
                 workstation.status = "IDLE"
                 workstation.current_work_order_id = None
@@ -279,7 +284,9 @@ def read_work_reports(
         query = query.filter(WorkReport.status == status)
 
     total = query.count()
-    reports = apply_pagination(query.order_by(desc(WorkReport.report_time)), pagination.offset, pagination.limit).all()
+    reports = apply_pagination(
+        query.order_by(desc(WorkReport.report_time)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_get_work_report_response(db, report) for report in reports]
 
@@ -318,10 +325,7 @@ def approve_work_report(
     db.add(report)
     db.commit()
 
-    return ResponseModel(
-        code=200,
-        message="审批成功" if approved else "已驳回"
-    )
+    return ResponseModel(code=200, message="审批成功" if approved else "已驳回")
 
 
 @router.get("/work-reports/my", response_model=PaginatedResponse)
@@ -341,32 +345,36 @@ def get_my_work_reports(
     query = db.query(WorkReport).filter(WorkReport.worker_id == worker.id)
 
     total = query.count()
-    reports = apply_pagination(query.order_by(desc(WorkReport.report_time)), pagination.offset, pagination.limit).all()
+    reports = apply_pagination(
+        query.order_by(desc(WorkReport.report_time)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for report in reports:
         work_order = db.query(WorkOrder).filter(WorkOrder.id == report.work_order_id).first()
 
-        items.append(WorkReportResponse(
-            id=report.id,
-            report_no=report.report_no,
-            work_order_id=report.work_order_id,
-            work_order_no=work_order.work_order_no if work_order else None,
-            worker_id=report.worker_id,
-            worker_name=worker.worker_name,
-            report_type=report.report_type,
-            report_time=report.report_time,
-            progress_percent=report.progress_percent,
-            work_hours=float(report.work_hours) if report.work_hours else None,
-            completed_qty=report.completed_qty,
-            qualified_qty=report.qualified_qty,
-            defect_qty=report.defect_qty,
-            status=report.status,
-            report_note=report.report_note,
-            approved_by=report.approved_by,
-            approved_at=report.approved_at,
-            created_at=report.created_at,
-            updated_at=report.updated_at,
-        ))
+        items.append(
+            WorkReportResponse(
+                id=report.id,
+                report_no=report.report_no,
+                work_order_id=report.work_order_id,
+                work_order_no=work_order.work_order_no if work_order else None,
+                worker_id=report.worker_id,
+                worker_name=worker.worker_name,
+                report_type=report.report_type,
+                report_time=report.report_time,
+                progress_percent=report.progress_percent,
+                work_hours=float(report.work_hours) if report.work_hours else None,
+                completed_qty=report.completed_qty,
+                qualified_qty=report.qualified_qty,
+                defect_qty=report.defect_qty,
+                status=report.status,
+                report_note=report.report_note,
+                approved_by=report.approved_by,
+                approved_at=report.approved_at,
+                created_at=report.created_at,
+                updated_at=report.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)

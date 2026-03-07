@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """第十批：unified_notification_service NotificationService 单元测试"""
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 
 try:
-    from app.services.unified_notification_service import NotificationService
     from app.services.channel_handlers.base import (
         NotificationChannel,
         NotificationPriority,
         NotificationRequest,
         NotificationResult,
     )
+    from app.services.unified_notification_service import NotificationService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False
@@ -25,11 +27,13 @@ def db():
 
 @pytest.fixture
 def service(db):
-    with patch("app.services.unified_notification_service.SystemChannelHandler"), \
-         patch("app.services.unified_notification_service.EmailChannelHandler"), \
-         patch("app.services.unified_notification_service.WeChatChannelHandler"), \
-         patch("app.services.unified_notification_service.SMSChannelHandler"), \
-         patch("app.services.unified_notification_service.WebhookChannelHandler"):
+    with (
+        patch("app.services.unified_notification_service.SystemChannelHandler"),
+        patch("app.services.unified_notification_service.EmailChannelHandler"),
+        patch("app.services.unified_notification_service.WeChatChannelHandler"),
+        patch("app.services.unified_notification_service.SMSChannelHandler"),
+        patch("app.services.unified_notification_service.WebhookChannelHandler"),
+    ):
         svc = NotificationService(db)
     return svc
 
@@ -53,11 +57,13 @@ def _make_request(**kwargs):
 
 def test_service_init(db):
     """服务初始化"""
-    with patch("app.services.unified_notification_service.SystemChannelHandler"), \
-         patch("app.services.unified_notification_service.EmailChannelHandler"), \
-         patch("app.services.unified_notification_service.WeChatChannelHandler"), \
-         patch("app.services.unified_notification_service.SMSChannelHandler"), \
-         patch("app.services.unified_notification_service.WebhookChannelHandler"):
+    with (
+        patch("app.services.unified_notification_service.SystemChannelHandler"),
+        patch("app.services.unified_notification_service.EmailChannelHandler"),
+        patch("app.services.unified_notification_service.WeChatChannelHandler"),
+        patch("app.services.unified_notification_service.SMSChannelHandler"),
+        patch("app.services.unified_notification_service.WebhookChannelHandler"),
+    ):
         svc = NotificationService(db)
         assert svc.db is db
         assert hasattr(svc, "_handlers")
@@ -106,16 +112,12 @@ def test_send_notification(service):
 def test_send_task_assigned(service):
     """发送任务分配通知"""
     with patch.object(service, "send_task_assigned", return_value={"success": True}):
-        result = service.send_task_assigned(
-            user_id=1, task_name="新任务", assignor="张三"
-        )
+        result = service.send_task_assigned(user_id=1, task_name="新任务", assignor="张三")
         assert result["success"] is True
 
 
 def test_send_approval_pending(service):
     """发送审批待处理通知"""
     with patch.object(service, "send_approval_pending", return_value={"success": True}):
-        result = service.send_approval_pending(
-            approver_id=2, title="审批请求", applicant="李四"
-        )
+        result = service.send_approval_pending(approver_id=2, title="审批请求", applicant="李四")
         assert result["success"] is True

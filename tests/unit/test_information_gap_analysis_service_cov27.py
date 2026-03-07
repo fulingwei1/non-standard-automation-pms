@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - information_gap_analysis_service 单元测试"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.information_gap_analysis_service")
 
@@ -113,7 +114,7 @@ class TestAnalyzeLeadMissing:
             contact_phone=None,
             demand_summary=None,
             source=None,
-            industry=None
+            industry=None,
         )
         missing, score = self.svc._analyze_lead_missing(lead)
         assert score >= 0
@@ -265,7 +266,7 @@ class TestAnalyzeBatchMissing:
         leads = [
             make_lead(),
             make_lead(customer_name=None),
-            make_lead(customer_name=None, contact_phone=None, demand_summary=None)
+            make_lead(customer_name=None, contact_phone=None, demand_summary=None),
         ]
         result = self.svc._analyze_batch_missing("LEAD", leads)
         assert result["entity_type"] == "LEAD"
@@ -321,9 +322,6 @@ class TestAnalyzeImpact:
         quotes = []
         self.db.query.return_value.all.side_effect = [leads, quotes]
 
-        result = self.svc.analyze_impact(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 6, 30)
-        )
+        result = self.svc.analyze_impact(start_date=date(2024, 1, 1), end_date=date(2024, 6, 30))
         assert result["analysis_period"]["start_date"] == "2024-01-01"
         assert result["analysis_period"]["end_date"] == "2024-06-30"

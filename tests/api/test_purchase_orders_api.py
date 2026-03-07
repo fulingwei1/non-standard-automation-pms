@@ -5,9 +5,10 @@
 测试采购订单的创建、查询、更新、跟踪等功能
 """
 
+from datetime import datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/orders/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Purchase orders API not implemented")
@@ -53,13 +51,11 @@ class TestPurchaseOrdersAPI:
             "payment_terms": "货到付款",
             "delivery_address": "北京市海淀区",
             "contact_person": "张先生",
-            "contact_phone": "13800138000"
+            "contact_phone": "13800138000",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/orders/",
-            headers=headers,
-            json=order_data
+            f"{settings.API_V1_PREFIX}/purchase/orders/", headers=headers, json=order_data
         )
 
         if response.status_code == 404:
@@ -74,10 +70,7 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/orders/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No order data or API not implemented")
@@ -93,13 +86,11 @@ class TestPurchaseOrdersAPI:
 
         update_data = {
             "expected_delivery_date": (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d"),
-            "remarks": "延期交付"
+            "remarks": "延期交付",
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/orders/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/purchase/orders/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -114,10 +105,7 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/purchase/orders/999",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/purchase/orders/999", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Purchase order API not implemented")
@@ -132,8 +120,7 @@ class TestPurchaseOrdersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/orders/1/confirm",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/orders/1/confirm", headers=headers
         )
 
         if response.status_code == 404:
@@ -148,14 +135,10 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        cancel_data = {
-            "reason": "供应商无法交付"
-        }
+        cancel_data = {"reason": "供应商无法交付"}
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/orders/1/cancel",
-            headers=headers,
-            json=cancel_data
+            f"{settings.API_V1_PREFIX}/purchase/orders/1/cancel", headers=headers, json=cancel_data
         )
 
         if response.status_code == 404:
@@ -171,8 +154,7 @@ class TestPurchaseOrdersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/1/tracking",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/orders/1/tracking", headers=headers
         )
 
         if response.status_code == 404:
@@ -188,8 +170,7 @@ class TestPurchaseOrdersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/?status=confirmed",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/orders/?status=confirmed", headers=headers
         )
 
         if response.status_code == 404:
@@ -205,8 +186,7 @@ class TestPurchaseOrdersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/?supplier_id=1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/orders/?supplier_id=1", headers=headers
         )
 
         if response.status_code == 404:
@@ -221,10 +201,7 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/overdue",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/orders/overdue", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Overdue orders API not implemented")
@@ -239,8 +216,7 @@ class TestPurchaseOrdersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/orders/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -255,10 +231,7 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/1/export",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/orders/1/export", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Order export API not implemented")
@@ -267,9 +240,7 @@ class TestPurchaseOrdersAPI:
 
     def test_order_unauthorized(self, client: TestClient):
         """测试未授权访问采购订单"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/orders/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/orders/")
 
         assert response.status_code in [401, 403], response.text
 
@@ -280,14 +251,10 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        invalid_data = {
-            "total_amount": -1000.0  # 负数金额
-        }
+        invalid_data = {"total_amount": -1000.0}  # 负数金额
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/orders/",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/purchase/orders/", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:

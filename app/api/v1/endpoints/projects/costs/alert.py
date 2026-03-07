@@ -44,14 +44,10 @@ def check_project_budget_alert(
                     "alert_no": alert.alert_no,
                     "alert_level": alert.alert_level,
                     "alert_title": alert.alert_title,
-                    "alert_content": alert.alert_content
-                }
+                    "alert_content": alert.alert_content,
+                },
             )
         else:
-            return ResponseModel(
-                code=200,
-                message="预算执行情况正常，无需预警",
-                data=None
-            )
+            return ResponseModel(code=200, message="预算执行情况正常，无需预警", data=None)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"检查预算预警失败：{str(e)}")

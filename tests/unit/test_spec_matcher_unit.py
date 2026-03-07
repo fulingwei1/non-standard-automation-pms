@@ -11,9 +11,10 @@ Tests coverage for:
 """
 
 from decimal import Decimal
+
 from app.utils.spec_matcher import (
-    SpecMatchResult,
     SpecMatcher,
+    SpecMatchResult,
 )
 
 
@@ -34,9 +35,7 @@ class TestSpecMatchResult:
 
     def test_init_with_minimal_fields(self):
         """Test initialization with minimal fields."""
-        result = SpecMatchResult(
-            match_status="MISMATCHED", match_score=None, differences=None
-        )
+        result = SpecMatchResult(match_status="MISMATCHED", match_score=None, differences=None)
 
         assert result.match_status == "MISMATCHED"
         assert result.match_score is None
@@ -273,9 +272,7 @@ class TestMatchSpecification:
             actual_model="XYZ",
         )
 
-        assert "specification" in result.differences or result.match_score < Decimal(
-            "80"
-        )
+        assert "specification" in result.differences or result.match_score < Decimal("80")
 
     def test_strict_requirement_mismatch(self):
         """Test strict requirement with partial match."""

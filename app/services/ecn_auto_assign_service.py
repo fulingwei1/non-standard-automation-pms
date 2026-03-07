@@ -13,36 +13,20 @@ from app.models.ecn import Ecn, EcnApproval, EcnEvaluation, EcnTask
 from app.models.user import Role, User, UserRole
 
 
-def find_users_by_department(
-    db: Session,
-    department_name: str
-) -> List[User]:
+def find_users_by_department(db: Session, department_name: str) -> List[User]:
     """
     根据部门名称查找用户
     """
-    users = db.query(User).filter(
-        and_(
-            User.department == department_name,
-            User.is_active
-        )
-    ).all()
+    users = db.query(User).filter(and_(User.department == department_name, User.is_active)).all()
     return users
 
 
-def find_users_by_role(
-    db: Session,
-    role_name: str
-) -> List[User]:
+def find_users_by_role(db: Session, role_name: str) -> List[User]:
     """
     根据角色名称查找用户
     """
     # 先查找角色
-    role = db.query(Role).filter(
-        and_(
-            Role.role_name == role_name,
-            Role.is_active
-        )
-    ).first()
+    role = db.query(Role).filter(and_(Role.role_name == role_name, Role.is_active)).first()
 
     if not role:
         return []
@@ -54,21 +38,12 @@ def find_users_by_role(
     if not user_ids:
         return []
 
-    users = db.query(User).filter(
-        and_(
-            User.id.in_(user_ids),
-            User.is_active
-        )
-    ).all()
+    users = db.query(User).filter(and_(User.id.in_(user_ids), User.is_active)).all()
 
     return users
 
 
-def auto_assign_evaluation(
-    db: Session,
-    ecn: Ecn,
-    evaluation: EcnEvaluation
-) -> Optional[int]:
+def auto_assign_evaluation(db: Session, ecn: Ecn, evaluation: EcnEvaluation) -> Optional[int]:
     """
     自动分配评估任务
     优先分配给项目相关的部门负责人，如果没有负责人，分配给部门经理
@@ -82,19 +57,19 @@ def auto_assign_evaluation(
         from app.models.project import ProjectMember
 
         # 查找项目成员中属于该部门的用户
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id
-        ).all()
+        project_members = (
+            db.query(ProjectMember).filter(ProjectMember.project_id == ecn.project_id).all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
         if project_user_ids:
             # 查找项目成员中属于该部门的用户
-            project_dept_users = db.query(User).filter(
-                User.id.in_(project_user_ids),
-                User.department == dept_name,
-                User.is_active
-            ).all()
+            project_dept_users = (
+                db.query(User)
+                .filter(User.id.in_(project_user_ids), User.department == dept_name, User.is_active)
+                .all()
+            )
 
             if project_dept_users:
                 # 优先选择项目成员中的部门负责人
@@ -127,11 +102,7 @@ def auto_assign_evaluation(
     return None
 
 
-def auto_assign_approval(
-    db: Session,
-    ecn: Ecn,
-    approval: EcnApproval
-) -> Optional[int]:
+def auto_assign_approval(db: Session, ecn: Ecn, approval: EcnApproval) -> Optional[int]:
     """
     自动分配审批任务
     优先分配给项目相关的角色负责人，如果没有负责人，分配给角色经理
@@ -156,10 +127,11 @@ def auto_assign_approval(
             return None
 
         # 查找项目成员
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id,
-            ProjectMember.is_active
-        ).all()
+        project_members = (
+            db.query(ProjectMember)
+            .filter(ProjectMember.project_id == ecn.project_id, ProjectMember.is_active)
+            .all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
@@ -167,10 +139,7 @@ def auto_assign_approval(
             # 查找项目成员中拥有该角色的用户
             project_role_users = []
             for user_id in project_user_ids:
-                user = db.query(User).filter(
-                    User.id == user_id,
-                    User.is_active
-                ).first()
+                user = db.query(User).filter(User.id == user_id, User.is_active).first()
                 if user:
                     # 检查用户是否拥有该角色
                     user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
@@ -203,11 +172,7 @@ def auto_assign_approval(
     return None
 
 
-def auto_assign_task(
-    db: Session,
-    ecn: Ecn,
-    task: EcnTask
-) -> Optional[int]:
+def auto_assign_task(db: Session, ecn: Ecn, task: EcnTask) -> Optional[int]:
     """
     自动分配执行任务
     优先分配给项目相关的部门负责人，如果没有负责人，分配给部门经理
@@ -221,19 +186,19 @@ def auto_assign_task(
         from app.models.project import ProjectMember
 
         # 查找项目成员中属于该部门的用户
-        project_members = db.query(ProjectMember).filter(
-            ProjectMember.project_id == ecn.project_id
-        ).all()
+        project_members = (
+            db.query(ProjectMember).filter(ProjectMember.project_id == ecn.project_id).all()
+        )
 
         project_user_ids = [pm.user_id for pm in project_members]
 
         if project_user_ids:
             # 查找项目成员中属于该部门的用户
-            project_dept_users = db.query(User).filter(
-                User.id.in_(project_user_ids),
-                User.department == dept_name,
-                User.is_active
-            ).all()
+            project_dept_users = (
+                db.query(User)
+                .filter(User.id.in_(project_user_ids), User.department == dept_name, User.is_active)
+                .all()
+            )
 
             if project_dept_users:
                 # 优先选择项目成员中的部门负责人
@@ -266,10 +231,7 @@ def auto_assign_task(
     return None
 
 
-def auto_assign_pending_evaluations(
-    db: Session,
-    ecn_id: int
-) -> int:
+def auto_assign_pending_evaluations(db: Session, ecn_id: int) -> int:
     """
     自动分配所有待分配的评估任务
     返回分配成功的数量
@@ -278,13 +240,17 @@ def auto_assign_pending_evaluations(
     if not ecn:
         return 0
 
-    pending_evals = db.query(EcnEvaluation).filter(
-        and_(
-            EcnEvaluation.ecn_id == ecn_id,
-            EcnEvaluation.status == "PENDING",
-            EcnEvaluation.evaluator_id.is_(None)
+    pending_evals = (
+        db.query(EcnEvaluation)
+        .filter(
+            and_(
+                EcnEvaluation.ecn_id == ecn_id,
+                EcnEvaluation.status == "PENDING",
+                EcnEvaluation.evaluator_id.is_(None),
+            )
         )
-    ).all()
+        .all()
+    )
 
     assigned_count = 0
     for eval in pending_evals:
@@ -301,10 +267,7 @@ def auto_assign_pending_evaluations(
     return assigned_count
 
 
-def auto_assign_pending_approvals(
-    db: Session,
-    ecn_id: int
-) -> int:
+def auto_assign_pending_approvals(db: Session, ecn_id: int) -> int:
     """
     自动分配所有待分配的审批任务
     返回分配成功的数量
@@ -313,13 +276,17 @@ def auto_assign_pending_approvals(
     if not ecn:
         return 0
 
-    pending_approvals = db.query(EcnApproval).filter(
-        and_(
-            EcnApproval.ecn_id == ecn_id,
-            EcnApproval.status == "PENDING",
-            EcnApproval.approver_id.is_(None)
+    pending_approvals = (
+        db.query(EcnApproval)
+        .filter(
+            and_(
+                EcnApproval.ecn_id == ecn_id,
+                EcnApproval.status == "PENDING",
+                EcnApproval.approver_id.is_(None),
+            )
         )
-    ).all()
+        .all()
+    )
 
     assigned_count = 0
     for approval in pending_approvals:
@@ -335,10 +302,7 @@ def auto_assign_pending_approvals(
     return assigned_count
 
 
-def auto_assign_pending_tasks(
-    db: Session,
-    ecn_id: int
-) -> int:
+def auto_assign_pending_tasks(db: Session, ecn_id: int) -> int:
     """
     自动分配所有待分配的执行任务
     返回分配成功的数量
@@ -347,13 +311,15 @@ def auto_assign_pending_tasks(
     if not ecn:
         return 0
 
-    pending_tasks = db.query(EcnTask).filter(
-        and_(
-            EcnTask.ecn_id == ecn_id,
-            EcnTask.status == "PENDING",
-            EcnTask.assignee_id.is_(None)
+    pending_tasks = (
+        db.query(EcnTask)
+        .filter(
+            and_(
+                EcnTask.ecn_id == ecn_id, EcnTask.status == "PENDING", EcnTask.assignee_id.is_(None)
+            )
         )
-    ).all()
+        .all()
+    )
 
     assigned_count = 0
     for task in pending_tasks:
@@ -367,4 +333,3 @@ def auto_assign_pending_tasks(
         db.commit()
 
     return assigned_count
-

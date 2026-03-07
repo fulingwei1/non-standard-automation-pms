@@ -1,27 +1,35 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - 工时汇总辅助服务单元测试"""
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 
-pytest.importorskip("app.services.timesheet_aggregation_helpers",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.timesheet_aggregation_helpers", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.timesheet_aggregation_helpers import (
-    calculate_month_range,
-    query_timesheets,
-    calculate_hours_summary,
-    build_project_breakdown,
     build_daily_breakdown,
+    build_project_breakdown,
     build_task_breakdown,
+    calculate_hours_summary,
+    calculate_month_range,
     get_or_create_summary,
+    query_timesheets,
 )
 
 
-def _make_timesheet(hours=8.0, overtime_type="NORMAL", project_id=1,
-                    project_code="P001", project_name="项目1",
-                    task_id=None, task_name=None, work_date=None):
+def _make_timesheet(
+    hours=8.0,
+    overtime_type="NORMAL",
+    project_id=1,
+    project_code="P001",
+    project_name="项目1",
+    task_id=None,
+    task_name=None,
+    work_date=None,
+):
     ts = MagicMock()
     ts.hours = hours
     ts.overtime_type = overtime_type
@@ -36,8 +44,10 @@ def _make_timesheet(hours=8.0, overtime_type="NORMAL", project_id=1,
 
 class TestCalculateMonthRange:
     def test_returns_tuple_of_dates(self):
-        with patch("app.services.timesheet_aggregation_helpers.get_month_range_by_ym",
-                   return_value=(date(2024, 1, 1), date(2024, 1, 31))):
+        with patch(
+            "app.services.timesheet_aggregation_helpers.get_month_range_by_ym",
+            return_value=(date(2024, 1, 1), date(2024, 1, 31)),
+        ):
             start, end = calculate_month_range(2024, 1)
         assert start == date(2024, 1, 1)
         assert end == date(2024, 1, 31)
@@ -49,16 +59,16 @@ class TestQueryTimesheets:
         ts = _make_timesheet()
         db.query.return_value.filter.return_value.all.return_value = [ts]
 
-        result = query_timesheets(db, date(2024, 1, 1), date(2024, 1, 31),
-                                  None, None, None)
+        result = query_timesheets(db, date(2024, 1, 1), date(2024, 1, 31), None, None, None)
         assert len(result) >= 0  # call doesn't raise
 
     def test_applies_user_filter(self):
         db = MagicMock()
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
-        result = query_timesheets(db, date(2024, 1, 1), date(2024, 1, 31),
-                                  user_id=5, department_id=None, project_id=None)
+        result = query_timesheets(
+            db, date(2024, 1, 1), date(2024, 1, 31), user_id=5, department_id=None, project_id=None
+        )
         assert isinstance(result, list)
 
 
@@ -93,8 +103,7 @@ class TestBuildProjectBreakdown:
 
 class TestBuildDailyBreakdown:
     def test_groups_by_date(self):
-        ts = _make_timesheet(hours=8.0, overtime_type="NORMAL",
-                             work_date=date(2024, 1, 15))
+        ts = _make_timesheet(hours=8.0, overtime_type="NORMAL", work_date=date(2024, 1, 15))
         result = build_daily_breakdown([ts])
         assert "2024-01-15" in result
         assert result["2024-01-15"]["hours"] == pytest.approx(8.0)
@@ -120,14 +129,26 @@ class TestGetOrCreateSummary:
         # chain = query().filter().filter().first() -> None
         db.query.return_value.filter.return_value.filter.return_value.first.return_value = None
 
-        hours = {"total_hours": 80.0, "normal_hours": 80.0, "overtime_hours": 0.0,
-                 "weekend_hours": 0.0, "holiday_hours": 0.0}
+        hours = {
+            "total_hours": 80.0,
+            "normal_hours": 80.0,
+            "overtime_hours": 0.0,
+            "weekend_hours": 0.0,
+            "holiday_hours": 0.0,
+        }
 
         result = get_or_create_summary(
-            db, "USER", 2024, 1, user_id=1,
-            project_id=None, department_id=None,
-            hours_summary=hours, project_breakdown={},
-            daily_breakdown={}, task_breakdown={},
-            entries_count=10
+            db,
+            "USER",
+            2024,
+            1,
+            user_id=1,
+            project_id=None,
+            department_id=None,
+            hours_summary=hours,
+            project_breakdown={},
+            daily_breakdown={},
+            task_breakdown={},
+            entries_count=10,
         )
         db.add.assert_called_once()

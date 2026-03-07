@@ -4,13 +4,14 @@ Unit tests for app/services/dashboard_adapters/shortage.py
 批次: cov50
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
-    from app.services.dashboard_adapters.shortage import ShortageDashboardAdapter
     from app.schemas.dashboard import DetailedDashboardResponse
+    from app.services.dashboard_adapters.shortage import ShortageDashboardAdapter
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -22,11 +23,11 @@ def _make_adapter(db=None, user=None):
 
 
 def _mock_stat_card(**kw):
-    return MagicMock(key=kw.get('key'), value=kw.get('value'), label=kw.get('label'))
+    return MagicMock(key=kw.get("key"), value=kw.get("value"), label=kw.get("label"))
 
 
 def _mock_widget(**kw):
-    return MagicMock(widget_id=kw.get('widget_id'), data=kw.get('data'))
+    return MagicMock(widget_id=kw.get("widget_id"), data=kw.get("data"))
 
 
 def test_module_properties():
@@ -43,7 +44,9 @@ def test_get_stats_all_zero():
     db.query.return_value.count.return_value = 0
     db.query.return_value.filter.return_value.count.return_value = 0
 
-    with patch("app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card):
+    with patch(
+        "app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card
+    ):
         adapter = _make_adapter(db=db)
         cards = adapter.get_stats()
 
@@ -58,7 +61,9 @@ def test_get_stats_with_counts():
     db.query.return_value.count.return_value = 10
     db.query.return_value.filter.return_value.count.return_value = 3
 
-    with patch("app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card):
+    with patch(
+        "app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card
+    ):
         adapter = _make_adapter(db=db)
         cards = adapter.get_stats()
 
@@ -74,7 +79,9 @@ def test_get_stats_returns_six_cards():
     db.query.return_value.count.return_value = 0
     db.query.return_value.filter.return_value.count.return_value = 0
 
-    with patch("app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card):
+    with patch(
+        "app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card
+    ):
         adapter = _make_adapter(db=db)
         cards = adapter.get_stats()
 
@@ -88,8 +95,10 @@ def test_get_widgets_empty_reports():
     db.query.return_value.count.return_value = 0
     db.query.return_value.filter.return_value.count.return_value = 0
 
-    with patch("app.services.dashboard_adapters.shortage.DashboardWidget", side_effect=_mock_widget), \
-         patch("app.services.dashboard_adapters.shortage.DashboardListItem"):
+    with (
+        patch("app.services.dashboard_adapters.shortage.DashboardWidget", side_effect=_mock_widget),
+        patch("app.services.dashboard_adapters.shortage.DashboardListItem"),
+    ):
         adapter = _make_adapter(db=db)
         widgets = adapter.get_widgets()
 
@@ -104,10 +113,14 @@ def test_get_widgets_with_report():
     db = MagicMock()
 
     report = MagicMock(
-        id=1, project_id=5, material_name="螺栓",
-        status="REPORTED", urgent_level="URGENT",
-        report_time=MagicMock(), report_no="SR001",
-        shortage_qty=Decimal('10')
+        id=1,
+        project_id=5,
+        material_name="螺栓",
+        status="REPORTED",
+        urgent_level="URGENT",
+        report_time=MagicMock(),
+        report_no="SR001",
+        shortage_qty=Decimal("10"),
     )
     project = MagicMock(project_name="TestProject")
 
@@ -116,8 +129,10 @@ def test_get_widgets_with_report():
     db.query.return_value.count.return_value = 5
     db.query.return_value.filter.return_value.count.return_value = 2
 
-    with patch("app.services.dashboard_adapters.shortage.DashboardWidget", side_effect=_mock_widget), \
-         patch("app.services.dashboard_adapters.shortage.DashboardListItem") as mock_list_item:
+    with (
+        patch("app.services.dashboard_adapters.shortage.DashboardWidget", side_effect=_mock_widget),
+        patch("app.services.dashboard_adapters.shortage.DashboardListItem") as mock_list_item,
+    ):
         mock_list_item.return_value = MagicMock()
         adapter = _make_adapter(db=db)
         widgets = adapter.get_widgets()
@@ -134,10 +149,18 @@ def test_get_detailed_data_structure():
 
     def capture_response(**kw):
         captured.update(kw)
-        return MagicMock(module=kw.get('module'), details=kw.get('details', {}))
+        return MagicMock(module=kw.get("module"), details=kw.get("details", {}))
 
-    with patch("app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card), \
-         patch("app.services.dashboard_adapters.shortage.DetailedDashboardResponse", side_effect=capture_response):
+    with (
+        patch(
+            "app.services.dashboard_adapters.shortage.DashboardStatCard",
+            side_effect=_mock_stat_card,
+        ),
+        patch(
+            "app.services.dashboard_adapters.shortage.DetailedDashboardResponse",
+            side_effect=capture_response,
+        ),
+    ):
         adapter = _make_adapter(db=db)
         adapter.get_detailed_data()
 
@@ -156,10 +179,18 @@ def test_get_detailed_data_by_status_keys():
 
     def capture_response(**kw):
         captured.update(kw)
-        return MagicMock(module=kw.get('module'), details=kw.get('details', {}))
+        return MagicMock(module=kw.get("module"), details=kw.get("details", {}))
 
-    with patch("app.services.dashboard_adapters.shortage.DashboardStatCard", side_effect=_mock_stat_card), \
-         patch("app.services.dashboard_adapters.shortage.DetailedDashboardResponse", side_effect=capture_response):
+    with (
+        patch(
+            "app.services.dashboard_adapters.shortage.DashboardStatCard",
+            side_effect=_mock_stat_card,
+        ),
+        patch(
+            "app.services.dashboard_adapters.shortage.DetailedDashboardResponse",
+            side_effect=capture_response,
+        ),
+    ):
         adapter = _make_adapter(db=db)
         adapter.get_detailed_data()
 

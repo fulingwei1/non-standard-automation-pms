@@ -5,8 +5,9 @@
 测试使用统一报表框架生成的工时报表
 """
 
-import pytest
 from datetime import date
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """完整生命周期模板单元测试"""
 import pytest
+
 from app.services.preset_stage_templates.templates.full_lifecycle import FULL_LIFECYCLE_TEMPLATE
 
 

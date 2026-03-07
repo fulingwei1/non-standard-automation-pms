@@ -13,18 +13,19 @@ Coverage target: app/services/assembly_attr_recommender.py
 7. AssemblyAttrRecommendation — 属性初始化
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from app.services.assembly_attr_recommender import (
-    AssemblyAttrRecommender,
-    AssemblyAttrRecommendation,
-)
+import pytest
 
+from app.services.assembly_attr_recommender import (
+    AssemblyAttrRecommendation,
+    AssemblyAttrRecommender,
+)
 
 # ─────────────────────────────────────────────────
 # AssemblyAttrRecommendation 数据类
 # ─────────────────────────────────────────────────
+
 
 class TestAssemblyAttrRecommendation:
 
@@ -57,10 +58,13 @@ class TestAssemblyAttrRecommendation:
 # _match_from_keywords — 每个阶段
 # ─────────────────────────────────────────────────
 
+
 class TestMatchFromKeywords:
 
     def _make_material(self, name):
-        m = MagicMock(); m.material_name = name; return m
+        m = MagicMock()
+        m.material_name = name
+        return m
 
     def test_frame_keyword_铝型材(self):
         result = AssemblyAttrRecommender._match_from_keywords(self._make_material("铝型材 2080"))
@@ -87,11 +91,15 @@ class TestMatchFromKeywords:
         assert result.is_blocking is True
 
     def test_electric_keyword_PLC(self):
-        result = AssemblyAttrRecommender._match_from_keywords(self._make_material("西门子PLC S7-1200"))
+        result = AssemblyAttrRecommender._match_from_keywords(
+            self._make_material("西门子PLC S7-1200")
+        )
         assert result.stage_code == "ELECTRIC"
 
     def test_wiring_keyword_线缆(self):
-        result = AssemblyAttrRecommender._match_from_keywords(self._make_material("屏蔽线缆 2x0.5mm"))
+        result = AssemblyAttrRecommender._match_from_keywords(
+            self._make_material("屏蔽线缆 2x0.5mm")
+        )
         assert result.stage_code == "WIRING"
         assert result.is_blocking is False
         assert result.can_postpone is True
@@ -132,18 +140,21 @@ class TestMatchFromKeywords:
 # _match_from_category
 # ─────────────────────────────────────────────────
 
+
 class TestMatchFromCategory:
 
     def test_no_category_id_returns_none(self):
         db = MagicMock()
-        material = MagicMock(); material.category_id = None
+        material = MagicMock()
+        material.category_id = None
         result = AssemblyAttrRecommender._match_from_category(db, material)
         assert result is None
 
     def test_no_mapping_found_returns_none(self):
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
-        material = MagicMock(); material.category_id = 1
+        material = MagicMock()
+        material.category_id = 1
         result = AssemblyAttrRecommender._match_from_category(db, material)
         assert result is None
 
@@ -158,7 +169,8 @@ class TestMatchFromCategory:
 
         material = MagicMock()
         material.category_id = 2
-        material.category = MagicMock(); material.category.name = "电气元件"
+        material.category = MagicMock()
+        material.category.name = "电气元件"
 
         result = AssemblyAttrRecommender._match_from_category(db, material)
         assert result is not None
@@ -187,34 +199,41 @@ class TestMatchFromCategory:
 # _infer_from_supplier
 # ─────────────────────────────────────────────────
 
+
 class TestInferFromSupplier:
 
     def test_no_default_supplier_returns_none(self):
         db = MagicMock()
-        material = MagicMock(); material.default_supplier_id = None
+        material = MagicMock()
+        material.default_supplier_id = None
         result = AssemblyAttrRecommender._infer_from_supplier(db, material)
         assert result is None
 
     def test_supplier_not_found_returns_none(self):
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
-        material = MagicMock(); material.default_supplier_id = 1
+        material = MagicMock()
+        material.default_supplier_id = 1
         result = AssemblyAttrRecommender._infer_from_supplier(db, material)
         assert result is None
 
     def test_supplier_type_not_in_mapping_returns_none(self):
         db = MagicMock()
-        supplier = MagicMock(); supplier.supplier_type = "UNKNOWN_TYPE"
+        supplier = MagicMock()
+        supplier.supplier_type = "UNKNOWN_TYPE"
         db.query.return_value.filter.return_value.first.return_value = supplier
-        material = MagicMock(); material.default_supplier_id = 1
+        material = MagicMock()
+        material.default_supplier_id = 1
         result = AssemblyAttrRecommender._infer_from_supplier(db, material)
         assert result is None
 
     def test_machining_supplier_maps_to_mech(self):
         db = MagicMock()
-        supplier = MagicMock(); supplier.supplier_type = "MACHINING"
+        supplier = MagicMock()
+        supplier.supplier_type = "MACHINING"
         db.query.return_value.filter.return_value.first.return_value = supplier
-        material = MagicMock(); material.default_supplier_id = 1
+        material = MagicMock()
+        material.default_supplier_id = 1
 
         result = AssemblyAttrRecommender._infer_from_supplier(db, material)
         assert result.stage_code == "MECH"
@@ -224,9 +243,11 @@ class TestInferFromSupplier:
 
     def test_sheet_metal_supplier_maps_to_frame(self):
         db = MagicMock()
-        supplier = MagicMock(); supplier.supplier_type = "SHEET_METAL"
+        supplier = MagicMock()
+        supplier.supplier_type = "SHEET_METAL"
         db.query.return_value.filter.return_value.first.return_value = supplier
-        material = MagicMock(); material.default_supplier_id = 1
+        material = MagicMock()
+        material.default_supplier_id = 1
 
         result = AssemblyAttrRecommender._infer_from_supplier(db, material)
         assert result.stage_code == "FRAME"
@@ -234,9 +255,11 @@ class TestInferFromSupplier:
 
     def test_standard_supplier_not_blocking(self):
         db = MagicMock()
-        supplier = MagicMock(); supplier.supplier_type = "STANDARD"
+        supplier = MagicMock()
+        supplier.supplier_type = "STANDARD"
         db.query.return_value.filter.return_value.first.return_value = supplier
-        material = MagicMock(); material.default_supplier_id = 1
+        material = MagicMock()
+        material.default_supplier_id = 1
 
         result = AssemblyAttrRecommender._infer_from_supplier(db, material)
         assert result.is_blocking is False
@@ -247,49 +270,68 @@ class TestInferFromSupplier:
 # recommend — 优先级与默认值
 # ─────────────────────────────────────────────────
 
+
 class TestRecommend:
 
     def setup_method(self):
         self.db = MagicMock()
 
     def test_all_none_returns_default(self):
-        with patch.object(AssemblyAttrRecommender, '_match_from_history', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_match_from_category', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_match_from_keywords', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_infer_from_supplier', return_value=None):
+        with (
+            patch.object(AssemblyAttrRecommender, "_match_from_history", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_match_from_category", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_match_from_keywords", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_infer_from_supplier", return_value=None),
+        ):
             result = AssemblyAttrRecommender.recommend(self.db, MagicMock(), MagicMock(), 1)
         assert result.source == "DEFAULT"
         assert result.stage_code == "MECH"
 
     def test_history_95_beats_category_90(self):
-        history = AssemblyAttrRecommendation("FRAME", True, False, confidence=95.0, source="HISTORY", reason="")
-        category = AssemblyAttrRecommendation("ELECTRIC", True, False, confidence=90.0, source="CATEGORY", reason="")
+        history = AssemblyAttrRecommendation(
+            "FRAME", True, False, confidence=95.0, source="HISTORY", reason=""
+        )
+        category = AssemblyAttrRecommendation(
+            "ELECTRIC", True, False, confidence=90.0, source="CATEGORY", reason=""
+        )
 
-        with patch.object(AssemblyAttrRecommender, '_match_from_history', return_value=history), \
-             patch.object(AssemblyAttrRecommender, '_match_from_category', return_value=category), \
-             patch.object(AssemblyAttrRecommender, '_match_from_keywords', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_infer_from_supplier', return_value=None):
+        with (
+            patch.object(AssemblyAttrRecommender, "_match_from_history", return_value=history),
+            patch.object(AssemblyAttrRecommender, "_match_from_category", return_value=category),
+            patch.object(AssemblyAttrRecommender, "_match_from_keywords", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_infer_from_supplier", return_value=None),
+        ):
             result = AssemblyAttrRecommender.recommend(self.db, MagicMock(), MagicMock(), 1)
         assert result.source == "HISTORY"
 
     def test_keyword_70_beats_supplier_60(self):
-        keyword = AssemblyAttrRecommendation("MECH", True, False, confidence=70.0, source="KEYWORD", reason="")
-        supplier = AssemblyAttrRecommendation("FRAME", True, False, confidence=60.0, source="SUPPLIER", reason="")
+        keyword = AssemblyAttrRecommendation(
+            "MECH", True, False, confidence=70.0, source="KEYWORD", reason=""
+        )
+        supplier = AssemblyAttrRecommendation(
+            "FRAME", True, False, confidence=60.0, source="SUPPLIER", reason=""
+        )
 
-        with patch.object(AssemblyAttrRecommender, '_match_from_history', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_match_from_category', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_match_from_keywords', return_value=keyword), \
-             patch.object(AssemblyAttrRecommender, '_infer_from_supplier', return_value=supplier):
+        with (
+            patch.object(AssemblyAttrRecommender, "_match_from_history", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_match_from_category", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_match_from_keywords", return_value=keyword),
+            patch.object(AssemblyAttrRecommender, "_infer_from_supplier", return_value=supplier),
+        ):
             result = AssemblyAttrRecommender.recommend(self.db, MagicMock(), MagicMock(), 1)
         assert result.source == "KEYWORD"
 
     def test_single_recommendation_returned_directly(self):
-        only_rec = AssemblyAttrRecommendation("WIRING", False, True, confidence=70.0, source="KEYWORD", reason="")
+        only_rec = AssemblyAttrRecommendation(
+            "WIRING", False, True, confidence=70.0, source="KEYWORD", reason=""
+        )
 
-        with patch.object(AssemblyAttrRecommender, '_match_from_history', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_match_from_category', return_value=None), \
-             patch.object(AssemblyAttrRecommender, '_match_from_keywords', return_value=only_rec), \
-             patch.object(AssemblyAttrRecommender, '_infer_from_supplier', return_value=None):
+        with (
+            patch.object(AssemblyAttrRecommender, "_match_from_history", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_match_from_category", return_value=None),
+            patch.object(AssemblyAttrRecommender, "_match_from_keywords", return_value=only_rec),
+            patch.object(AssemblyAttrRecommender, "_infer_from_supplier", return_value=None),
+        ):
             result = AssemblyAttrRecommender.recommend(self.db, MagicMock(), MagicMock(), 1)
         assert result.stage_code == "WIRING"
 
@@ -298,13 +340,16 @@ class TestRecommend:
 # batch_recommend
 # ─────────────────────────────────────────────────
 
+
 class TestBatchRecommend:
 
     def test_batch_skips_items_without_material(self):
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None  # no material
 
-        bom_item = MagicMock(); bom_item.id = 1; bom_item.material_id = 99
+        bom_item = MagicMock()
+        bom_item.id = 1
+        bom_item.material_id = 99
         result = AssemblyAttrRecommender.batch_recommend(db, bom_id=1, bom_items=[bom_item])
         assert result == {}
 
@@ -313,10 +358,14 @@ class TestBatchRecommend:
         material = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = material
 
-        bom_item = MagicMock(); bom_item.id = 5; bom_item.material_id = 1
+        bom_item = MagicMock()
+        bom_item.id = 5
+        bom_item.material_id = 1
 
-        rec = AssemblyAttrRecommendation("MECH", True, False, confidence=70.0, source="KEYWORD", reason="")
-        with patch.object(AssemblyAttrRecommender, 'recommend', return_value=rec):
+        rec = AssemblyAttrRecommendation(
+            "MECH", True, False, confidence=70.0, source="KEYWORD", reason=""
+        )
+        with patch.object(AssemblyAttrRecommender, "recommend", return_value=rec):
             result = AssemblyAttrRecommender.batch_recommend(db, bom_id=1, bom_items=[bom_item])
 
         assert 5 in result

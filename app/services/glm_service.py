@@ -26,39 +26,35 @@ async def call_glm_api(
     prompt: str,
     temperature: float = 0.7,
     max_tokens: int = 2000,
-    system_prompt: Optional[str] = None
+    system_prompt: Optional[str] = None,
 ) -> str:
     """
     调用GLM API
-    
+
     Args:
         prompt: 用户提示
         temperature: 温度参数
         max_tokens: 最大token数
         system_prompt: 系统提示（可选）
-        
+
     Returns:
         AI响应内容
     """
     service = get_glm_service()
-    
+
     if not service.is_available():
         logger.warning("GLM服务不可用，返回模拟响应")
         return _generate_mock_response(prompt)
-    
+
     messages = []
-    
+
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
-    
+
     messages.append({"role": "user", "content": prompt})
-    
-    response = service.chat(
-        messages=messages,
-        temperature=temperature,
-        max_tokens=max_tokens
-    )
-    
+
+    response = service.chat(messages=messages, temperature=temperature, max_tokens=max_tokens)
+
     if response:
         return response
     else:

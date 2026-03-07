@@ -4,17 +4,16 @@ K2组集成测试 - 销售线索到合同全流程
 流程：线索创建 → 线索评估 → 商机创建 → 报价 → 报价审批 → 合同签订
 """
 
-import pytest
+import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-import uuid
+import pytest
 
 _CT_FLOW_001 = f"CT-FLOW-001-{uuid.uuid4().hex[:8]}"
 _LD_FLOW_001 = f"LD-FLOW-001-{uuid.uuid4().hex[:8]}"
 _OPP_FLOW_001 = f"OPP-FLOW-001-{uuid.uuid4().hex[:8]}"
 _QT_FLOW_001 = f"QT-FLOW-001-{uuid.uuid4().hex[:8]}"
-
 
 
 # ============================================================
@@ -25,18 +24,21 @@ def db():
     """为本模块提供独立的 SQLite 内存数据库"""
     import sys
     from unittest.mock import MagicMock
+
     if "redis" not in sys.modules:
         sys.modules["redis"] = MagicMock()
         sys.modules["redis.exceptions"] = MagicMock()
 
     import os
+
     os.environ.setdefault("SQLITE_DB_PATH", ":memory:")
     os.environ.setdefault("REDIS_URL", "")
     os.environ.setdefault("ENABLE_SCHEDULER", "false")
 
-    import app.models  # noqa: F401 - 注册所有 ORM 元数据
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
+
+    import app.models  # noqa: F401 - 注册所有 ORM 元数据
     from app.models.base import Base
 
     engine = create_engine(
@@ -56,9 +58,9 @@ def db():
 @pytest.fixture(scope="module")
 def sales_user(db):
     """创建销售负责人用户"""
-    from app.models.user import User
-    from app.models.organization import Employee
     from app.core.security import get_password_hash
+    from app.models.organization import Employee
+    from app.models.user import User
 
     emp = Employee(
         employee_code=f"EMP-SALES-001-{uuid.uuid4().hex[:8]}",
@@ -176,9 +178,7 @@ class TestSalesFlowIntegration:
         """商机阶段推进至 PROPOSAL（提案阶段）"""
         from app.models.sales.leads import Opportunity
 
-        opp = db.query(Opportunity).filter(
-            Opportunity.opp_code == _OPP_FLOW_001
-        ).first()
+        opp = db.query(Opportunity).filter(Opportunity.opp_code == _OPP_FLOW_001).first()
         assert opp is not None
 
         opp.stage = "PROPOSAL"
@@ -193,11 +193,9 @@ class TestSalesFlowIntegration:
     def test_quote_created_with_items(self, db, sales_user, sales_customer):
         """为商机创建报价，并添加报价明细"""
         from app.models.sales.leads import Opportunity
-        from app.models.sales.quotes import Quote, QuoteVersion, QuoteItem
+        from app.models.sales.quotes import Quote, QuoteItem, QuoteVersion
 
-        opp = db.query(Opportunity).filter(
-            Opportunity.opp_code == _OPP_FLOW_001
-        ).first()
+        opp = db.query(Opportunity).filter(Opportunity.opp_code == _OPP_FLOW_001).first()
 
         # 创建报价主表
         quote = Quote(
@@ -277,9 +275,7 @@ class TestSalesFlowIntegration:
 
         assert quote.id is not None
         assert quote.status == "DRAFT"
-        db_items = db.query(QuoteItem).filter(
-            QuoteItem.quote_version_id == version.id
-        ).all()
+        db_items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
         assert len(db_items) == 4
         total = sum(float(i.unit_price) for i in db_items)
         assert abs(total - 750000.0) < 0.01
@@ -310,9 +306,7 @@ class TestSalesFlowIntegration:
         db.refresh(quote)
 
         assert quote.status == "PENDING_APPROVAL"
-        approvals = db.query(QuoteApproval).filter(
-            QuoteApproval.quote_id == quote.id
-        ).all()
+        approvals = db.query(QuoteApproval).filter(QuoteApproval.quote_id == quote.id).all()
         assert len(approvals) == 1
         assert approvals[0].status == "PENDING"
 
@@ -322,9 +316,7 @@ class TestSalesFlowIntegration:
         from app.models.sales import Quote, QuoteApproval
 
         quote = db.query(Quote).filter(Quote.quote_code == _QT_FLOW_001).first()
-        approval = db.query(QuoteApproval).filter(
-            QuoteApproval.quote_id == quote.id
-        ).first()
+        approval = db.query(QuoteApproval).filter(QuoteApproval.quote_id == quote.id).first()
 
         # 审批通过
         approval.status = "APPROVED"
@@ -348,9 +340,7 @@ class TestSalesFlowIntegration:
         from app.models.sales.contracts import Contract
 
         quote = db.query(Quote).filter(Quote.quote_code == _QT_FLOW_001).first()
-        version = db.query(QuoteVersion).filter(
-            QuoteVersion.id == quote.current_version_id
-        ).first()
+        version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
 
         contract = Contract(
             contract_code=_CT_FLOW_001,
@@ -381,14 +371,12 @@ class TestSalesFlowIntegration:
     # ─── 8. 合同签署 → 全流程闭环验证 ──────────────────────
     def test_contract_signed_closes_flow(self, db, sales_user, sales_customer):
         """合同签署后全流程闭环：线索→商机→报价→合同均已正确关联"""
+        from app.models.sales.contracts import Contract, ContractApproval
         from app.models.sales.leads import Lead, Opportunity
         from app.models.sales.quotes import Quote
-        from app.models.sales.contracts import Contract, ContractApproval
 
         # 合同通过审批并签署
-        contract = db.query(Contract).filter(
-            Contract.contract_code == _CT_FLOW_001
-        ).first()
+        contract = db.query(Contract).filter(Contract.contract_code == _CT_FLOW_001).first()
         contract.status = "signed"
         db.flush()
 
@@ -410,9 +398,7 @@ class TestSalesFlowIntegration:
         lead = db.query(Lead).filter(Lead.lead_code == _LD_FLOW_001).first()
         opp = db.query(Opportunity).filter(Opportunity.opp_code == _OPP_FLOW_001).first()
         quote = db.query(Quote).filter(Quote.quote_code == _QT_FLOW_001).first()
-        contract = db.query(Contract).filter(
-            Contract.contract_code == _CT_FLOW_001
-        ).first()
+        contract = db.query(Contract).filter(Contract.contract_code == _CT_FLOW_001).first()
 
         # 验证链路完整
         assert lead.status == "QUALIFIED"
@@ -427,8 +413,8 @@ class TestSalesFlowIntegration:
         assert float(contract.total_amount) == float(opp.est_amount)
 
         # 验证审批记录
-        approvals = db.query(ContractApproval).filter(
-            ContractApproval.contract_id == contract.id
-        ).all()
+        approvals = (
+            db.query(ContractApproval).filter(ContractApproval.contract_id == contract.id).all()
+        )
         assert len(approvals) == 1
         assert approvals[0].approval_status == "APPROVED"

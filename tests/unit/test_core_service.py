@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/project/core_service.py"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.project.core_service import ProjectCoreService
 

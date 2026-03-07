@@ -6,7 +6,7 @@
 """
 
 from functools import wraps
-from typing import Any, Callable, Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, List, Optional
 
 if TYPE_CHECKING:
     pass
@@ -16,11 +16,11 @@ def transition(
     from_state,
     to_state,
     validator: Optional[Callable] = None,
-    required_permission: Optional[str] = None,       # 新增：所需权限
-    required_role: Optional[str] = None,             # 新增：所需角色
-    action_type: Optional[str] = None,               # 新增：操作类型
-    notify_users: Optional[List[str]] = None,        # 新增：通知用户类型
-    notification_template: Optional[str] = None,     # 新增：通知模板
+    required_permission: Optional[str] = None,  # 新增：所需权限
+    required_role: Optional[str] = None,  # 新增：所需角色
+    action_type: Optional[str] = None,  # 新增：操作类型
+    notify_users: Optional[List[str]] = None,  # 新增：通知用户类型
+    notification_template: Optional[str] = None,  # 新增：通知模板
     on_success: Optional[Callable] = None,
     on_failure: Optional[Callable] = None,
 ):

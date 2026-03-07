@@ -12,13 +12,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.pmo import PmoProjectRisk
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
@@ -74,24 +74,29 @@ def get_project_risks(
         query = query.filter(PmoProjectRisk.risk_category == risk_category)
 
     total = query.count()
-    risks = apply_pagination(query.order_by(desc(PmoProjectRisk.created_at)), pagination.offset, pagination.limit).all()
+    risks = apply_pagination(
+        query.order_by(desc(PmoProjectRisk.created_at)), pagination.offset, pagination.limit
+    ).all()
 
-    risks_data = [{
-        "id": r.id,
-        "risk_no": r.risk_no,
-        "risk_category": r.risk_category,
-        "risk_name": r.risk_name,
-        "description": r.description,
-        "probability": r.probability,
-        "impact": r.impact,
-        "risk_level": r.risk_level,
-        "response_strategy": r.response_strategy,
-        "owner_name": r.owner_name,
-        "status": r.status,
-        "is_triggered": r.is_triggered,
-        "follow_up_date": r.follow_up_date.isoformat() if r.follow_up_date else None,
-        "created_at": r.created_at.isoformat() if r.created_at else None,
-    } for r in risks]
+    risks_data = [
+        {
+            "id": r.id,
+            "risk_no": r.risk_no,
+            "risk_category": r.risk_category,
+            "risk_name": r.risk_name,
+            "description": r.description,
+            "probability": r.probability,
+            "impact": r.impact,
+            "risk_level": r.risk_level,
+            "response_strategy": r.response_strategy,
+            "owner_name": r.owner_name,
+            "status": r.status,
+            "is_triggered": r.is_triggered,
+            "follow_up_date": r.follow_up_date.isoformat() if r.follow_up_date else None,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in risks
+    ]
 
     # 统计
     level_counts = {}
@@ -102,11 +107,7 @@ def get_project_risks(
     return ResponseModel(
         code=200,
         message="获取风险列表成功",
-        data={
-            "total": total,
-            "level_counts": level_counts,
-            "items": risks_data
-        }
+        data={"total": total, "level_counts": level_counts, "items": risks_data},
     )
 
 
@@ -155,7 +156,7 @@ def get_risk_detail(
             "closed_date": risk.closed_date.isoformat() if risk.closed_date else None,
             "closed_reason": risk.closed_reason,
             "created_at": risk.created_at.isoformat() if risk.created_at else None,
-        }
+        },
     )
 
 
@@ -203,7 +204,11 @@ def create_project_risk(
         owner_id=risk_data.get("owner_id"),
         owner_name=risk_data.get("owner_name"),
         trigger_condition=risk_data.get("trigger_condition"),
-        follow_up_date=date.fromisoformat(risk_data["follow_up_date"]) if risk_data.get("follow_up_date") else None,
+        follow_up_date=(
+            date.fromisoformat(risk_data["follow_up_date"])
+            if risk_data.get("follow_up_date")
+            else None
+        ),
         status="IDENTIFIED",
     )
     save_obj(db, risk)
@@ -211,7 +216,7 @@ def create_project_risk(
     return ResponseModel(
         code=200,
         message="风险创建成功",
-        data={"id": risk.id, "risk_no": risk_no, "risk_level": risk_level}
+        data={"id": risk.id, "risk_no": risk_no, "risk_level": risk_level},
     )
 
 
@@ -237,9 +242,16 @@ def update_project_risk(
     risk = get_or_404(db, PmoProjectRisk, risk_id, detail="风险不存在")
 
     updatable = [
-        "risk_category", "risk_name", "description", "response_strategy",
-        "response_plan", "owner_id", "owner_name", "trigger_condition",
-        "last_update", "status"
+        "risk_category",
+        "risk_name",
+        "description",
+        "response_strategy",
+        "response_plan",
+        "owner_id",
+        "owner_name",
+        "trigger_condition",
+        "last_update",
+        "status",
     ]
     for field in updatable:
         if field in risk_data:
@@ -254,11 +266,15 @@ def update_project_risk(
         risk.risk_level = RISK_LEVEL_MATRIX.get((probability, impact), "MEDIUM")
 
     if "follow_up_date" in risk_data:
-        risk.follow_up_date = date.fromisoformat(risk_data["follow_up_date"]) if risk_data["follow_up_date"] else None
+        risk.follow_up_date = (
+            date.fromisoformat(risk_data["follow_up_date"]) if risk_data["follow_up_date"] else None
+        )
 
     db.commit()
 
-    return ResponseModel(code=200, message="风险更新成功", data={"id": risk.id, "risk_level": risk.risk_level})
+    return ResponseModel(
+        code=200, message="风险更新成功", data={"id": risk.id, "risk_level": risk.risk_level}
+    )
 
 
 @router.post("/risks/{risk_id}/trigger", response_model=ResponseModel)

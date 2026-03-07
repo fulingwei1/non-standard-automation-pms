@@ -10,8 +10,10 @@ from pydantic import BaseModel, Field
 
 # ==================== 管理节律配置 ====================
 
+
 class RhythmConfigCreate(BaseModel):
     """创建节律配置"""
+
     rhythm_level: str = Field(..., description="节律层级:STRATEGIC/OPERATIONAL/OPERATION/TASK")
     cycle_type: str = Field(..., description="周期类型:QUARTERLY/MONTHLY/WEEKLY/DAILY")
     config_name: str = Field(..., description="配置名称")
@@ -24,6 +26,7 @@ class RhythmConfigCreate(BaseModel):
 
 class RhythmConfigUpdate(BaseModel):
     """更新节律配置"""
+
     config_name: Optional[str] = None
     description: Optional[str] = None
     meeting_template: Optional[Dict[str, Any]] = None
@@ -34,6 +37,7 @@ class RhythmConfigUpdate(BaseModel):
 
 class RhythmConfigResponse(BaseModel):
     """节律配置响应"""
+
     id: int
     rhythm_level: str
     cycle_type: str
@@ -53,8 +57,10 @@ class RhythmConfigResponse(BaseModel):
 
 # ==================== 战略会议 ====================
 
+
 class StrategicMeetingCreate(BaseModel):
     """创建战略会议"""
+
     project_id: Optional[int] = Field(None, description="项目ID（可为空表示跨项目会议）")
     rhythm_config_id: Optional[int] = Field(None, description="节律配置ID")
     rhythm_level: str = Field(..., description="会议层级:STRATEGIC/OPERATIONAL/OPERATION/TASK")
@@ -70,13 +76,16 @@ class StrategicMeetingCreate(BaseModel):
     attendees: Optional[List[Dict[str, Any]]] = Field(None, description="参会人员")
     agenda: Optional[str] = Field(None, description="会议议程")
     strategic_context: Optional[Dict[str, Any]] = Field(None, description="战略背景(JSON)")
-    strategic_structure: Optional[Dict[str, Any]] = Field(None, description="五层战略结构(JSON):愿景/机会/定位/目标/路径")
+    strategic_structure: Optional[Dict[str, Any]] = Field(
+        None, description="五层战略结构(JSON):愿景/机会/定位/目标/路径"
+    )
     key_decisions: Optional[List[Dict[str, Any]]] = Field(None, description="关键决策(JSON)")
     resource_allocation: Optional[Dict[str, Any]] = Field(None, description="资源分配(JSON)")
 
 
 class StrategicMeetingUpdate(BaseModel):
     """更新战略会议"""
+
     meeting_name: Optional[str] = None
     meeting_type: Optional[str] = None
     meeting_date: Optional[date] = None
@@ -96,6 +105,7 @@ class StrategicMeetingUpdate(BaseModel):
 
 class StrategicMeetingMinutesRequest(BaseModel):
     """会议纪要请求"""
+
     minutes: str = Field(..., description="会议纪要")
     decisions: Optional[str] = Field(None, description="会议决议")
     strategic_structure: Optional[Dict[str, Any]] = Field(None, description="五层战略结构(JSON)")
@@ -105,6 +115,7 @@ class StrategicMeetingMinutesRequest(BaseModel):
 
 class StrategicStructureTemplate(BaseModel):
     """五层战略结构模板"""
+
     vision: Optional[Dict[str, Any]] = Field(None, description="使命/愿景层")
     opportunity: Optional[Dict[str, Any]] = Field(None, description="战略机会层")
     positioning: Optional[Dict[str, Any]] = Field(None, description="战略定位层")
@@ -114,6 +125,7 @@ class StrategicStructureTemplate(BaseModel):
 
 class StrategicMeetingResponse(BaseModel):
     """战略会议响应"""
+
     id: int
     project_id: Optional[int]
     rhythm_config_id: Optional[int]
@@ -150,8 +162,10 @@ class StrategicMeetingResponse(BaseModel):
 
 # ==================== 会议行动项 ====================
 
+
 class ActionItemCreate(BaseModel):
     """创建行动项"""
+
     meeting_id: int = Field(..., description="会议ID")
     action_description: str = Field(..., description="行动描述")
     owner_id: int = Field(..., description="责任人ID")
@@ -162,6 +176,7 @@ class ActionItemCreate(BaseModel):
 
 class ActionItemUpdate(BaseModel):
     """更新行动项"""
+
     action_description: Optional[str] = None
     owner_id: Optional[int] = None
     owner_name: Optional[str] = None
@@ -173,6 +188,7 @@ class ActionItemUpdate(BaseModel):
 
 class ActionItemResponse(BaseModel):
     """行动项响应"""
+
     id: int
     meeting_id: int
     action_description: str
@@ -193,8 +209,10 @@ class ActionItemResponse(BaseModel):
 
 # ==================== 节律仪表盘 ====================
 
+
 class RhythmDashboardResponse(BaseModel):
     """节律仪表盘响应"""
+
     rhythm_level: str
     cycle_type: str
     current_cycle: Optional[str]
@@ -216,6 +234,7 @@ class RhythmDashboardResponse(BaseModel):
 
 class RhythmDashboardSummary(BaseModel):
     """节律仪表盘汇总"""
+
     strategic: Optional[RhythmDashboardResponse]
     operational: Optional[RhythmDashboardResponse]
     operation: Optional[RhythmDashboardResponse]
@@ -224,8 +243,10 @@ class RhythmDashboardSummary(BaseModel):
 
 # ==================== 会议地图 ====================
 
+
 class MeetingMapItem(BaseModel):
     """会议地图项"""
+
     id: int
     rhythm_level: str
     cycle_type: str
@@ -240,6 +261,7 @@ class MeetingMapItem(BaseModel):
 
 class MeetingMapResponse(BaseModel):
     """会议地图响应"""
+
     items: List[MeetingMapItem]
     by_level: Dict[str, List[MeetingMapItem]]
     by_cycle: Dict[str, List[MeetingMapItem]]
@@ -247,12 +269,14 @@ class MeetingMapResponse(BaseModel):
 
 class MeetingCalendarResponse(BaseModel):
     """会议日历响应"""
+
     date: date
     meetings: List[MeetingMapItem]
 
 
 class MeetingStatisticsResponse(BaseModel):
     """会议统计响应"""
+
     total_meetings: int
     completed_meetings: int
     scheduled_meetings: int
@@ -267,8 +291,10 @@ class MeetingStatisticsResponse(BaseModel):
 
 # ==================== 会议报告 ====================
 
+
 class MeetingReportGenerateRequest(BaseModel):
     """生成会议报告请求"""
+
     report_type: str = Field(..., description="报告类型:ANNUAL/MONTHLY")
     period_year: int = Field(..., description="报告年份")
     period_month: Optional[int] = Field(None, description="报告月份（月度报告必填）")
@@ -278,6 +304,7 @@ class MeetingReportGenerateRequest(BaseModel):
 
 class MeetingReportResponse(BaseModel):
     """会议报告响应"""
+
     id: int
     report_no: str
     report_type: str
@@ -304,6 +331,7 @@ class MeetingReportResponse(BaseModel):
 
 class MeetingReportSummary(BaseModel):
     """会议报告摘要"""
+
     total_meetings: int
     completed_meetings: int
     total_action_items: int
@@ -315,8 +343,10 @@ class MeetingReportSummary(BaseModel):
 
 # ==================== 报告配置 ====================
 
+
 class MetricConfigItem(BaseModel):
     """指标配置项"""
+
     category: str = Field(..., description="指标分类")
     metric_code: str = Field(..., description="指标编码")
     metric_name: str = Field(..., description="指标名称")
@@ -332,14 +362,18 @@ class MetricConfigItem(BaseModel):
 
 class ComparisonConfig(BaseModel):
     """对比配置"""
+
     enable_mom: bool = Field(True, description="启用环比")
     enable_yoy: bool = Field(True, description="启用同比")
-    comparison_periods: List[str] = Field(default=["previous_month", "same_month_last_year"], description="对比周期")
+    comparison_periods: List[str] = Field(
+        default=["previous_month", "same_month_last_year"], description="对比周期"
+    )
     highlight_threshold: Optional[Dict[str, Any]] = Field(None, description="高亮阈值")
 
 
 class DisplaySection(BaseModel):
     """显示章节"""
+
     name: str = Field(..., description="章节名称")
     enabled: bool = Field(True, description="是否启用")
     order: int = Field(1, description="显示顺序")
@@ -347,16 +381,20 @@ class DisplaySection(BaseModel):
 
 class DisplayConfig(BaseModel):
     """显示配置"""
+
     sections: List[DisplaySection] = Field(default_factory=list, description="章节列表")
     chart_types: Optional[Dict[str, bool]] = Field(None, description="图表类型配置")
 
 
 class MeetingReportConfigCreate(BaseModel):
     """创建报告配置"""
+
     config_name: str = Field(..., description="配置名称")
     report_type: str = Field(..., description="报告类型:ANNUAL/MONTHLY")
     description: Optional[str] = Field(None, description="配置描述")
-    enabled_metrics: List[MetricConfigItem] = Field(default_factory=list, description="启用的指标列表")
+    enabled_metrics: List[MetricConfigItem] = Field(
+        default_factory=list, description="启用的指标列表"
+    )
     comparison_config: Optional[ComparisonConfig] = Field(None, description="对比配置")
     display_config: Optional[DisplayConfig] = Field(None, description="显示配置")
     is_default: bool = Field(False, description="是否默认配置")
@@ -364,6 +402,7 @@ class MeetingReportConfigCreate(BaseModel):
 
 class MeetingReportConfigUpdate(BaseModel):
     """更新报告配置"""
+
     config_name: Optional[str] = None
     description: Optional[str] = None
     enabled_metrics: Optional[List[MetricConfigItem]] = None
@@ -375,6 +414,7 @@ class MeetingReportConfigUpdate(BaseModel):
 
 class MeetingReportConfigResponse(BaseModel):
     """报告配置响应"""
+
     id: int
     config_name: str
     report_type: str
@@ -394,6 +434,7 @@ class MeetingReportConfigResponse(BaseModel):
 
 class ReportMetricDefinitionCreate(BaseModel):
     """创建指标定义"""
+
     metric_code: str = Field(..., description="指标编码")
     metric_name: str = Field(..., description="指标名称")
     category: str = Field(..., description="指标分类")
@@ -412,6 +453,7 @@ class ReportMetricDefinitionCreate(BaseModel):
 
 class ReportMetricDefinitionUpdate(BaseModel):
     """更新指标定义"""
+
     metric_name: Optional[str] = None
     category: Optional[str] = None
     description: Optional[str] = None
@@ -430,6 +472,7 @@ class ReportMetricDefinitionUpdate(BaseModel):
 
 class ReportMetricDefinitionResponse(BaseModel):
     """指标定义响应"""
+
     id: int
     metric_code: str
     metric_name: str
@@ -457,6 +500,7 @@ class ReportMetricDefinitionResponse(BaseModel):
 
 class AvailableMetricsResponse(BaseModel):
     """可用指标列表响应"""
+
     metrics: List[ReportMetricDefinitionResponse]
     categories: List[str]
     total_count: int

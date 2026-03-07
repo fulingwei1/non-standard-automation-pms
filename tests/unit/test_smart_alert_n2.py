@@ -5,10 +5,11 @@ SmartAlertEngine N2 深度覆盖测试
       generate_solutions, _generate_partial_delivery_plan,
       _generate_reschedule_plan, _score_cost ratios
 """
-import pytest
-from decimal import Decimal
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.shortage.smart_alert_engine import SmartAlertEngine
 
@@ -19,8 +20,15 @@ def engine():
     return SmartAlertEngine(db)
 
 
-def make_alert(alert_id=1, shortage_qty=None, available_qty=None, required_date=None,
-               estimated_delay_days=5, estimated_cost_impact=None, alert_level="WARNING"):
+def make_alert(
+    alert_id=1,
+    shortage_qty=None,
+    available_qty=None,
+    required_date=None,
+    estimated_delay_days=5,
+    estimated_cost_impact=None,
+    alert_level="WARNING",
+):
     a = MagicMock()
     a.id = alert_id
     a.alert_no = "ALT-001"
@@ -36,6 +44,7 @@ def make_alert(alert_id=1, shortage_qty=None, available_qty=None, required_date=
 
 # ======================= _calculate_risk_score =======================
 
+
 class TestCalculateRiskScore:
     """所有权重分支的完整覆盖"""
 
@@ -44,7 +53,7 @@ class TestCalculateRiskScore:
             delay_days=35,
             cost_impact=Decimal("200000"),
             project_count=6,
-            shortage_qty=Decimal("2000")
+            shortage_qty=Decimal("2000"),
         )
         assert score == Decimal("100")
 
@@ -141,17 +150,21 @@ class TestCalculateRiskScore:
 
 # ======================= _score_feasibility =======================
 
+
 class TestScoreFeasibility:
     """所有 solution_type 评分"""
 
-    @pytest.mark.parametrize("solution_type,expected", [
-        ("URGENT_PURCHASE", 80),
-        ("SUBSTITUTE", 60),
-        ("TRANSFER", 70),
-        ("PARTIAL_DELIVERY", 85),
-        ("RESCHEDULE", 90),
-        ("UNKNOWN_TYPE", 50),
-    ])
+    @pytest.mark.parametrize(
+        "solution_type,expected",
+        [
+            ("URGENT_PURCHASE", 80),
+            ("SUBSTITUTE", 60),
+            ("TRANSFER", 70),
+            ("PARTIAL_DELIVERY", 85),
+            ("RESCHEDULE", 90),
+            ("UNKNOWN_TYPE", 50),
+        ],
+    )
     def test_feasibility_scores(self, engine, solution_type, expected):
         sol = MagicMock()
         sol.solution_type = solution_type
@@ -160,6 +173,7 @@ class TestScoreFeasibility:
 
 
 # ======================= _score_cost =======================
+
 
 class TestScoreCost:
     """成本评分所有比率分支"""
@@ -216,14 +230,18 @@ class TestScoreCost:
 
 # ======================= _score_time =======================
 
+
 class TestScoreTime:
-    @pytest.mark.parametrize("lead_time,expected", [
-        (0, 100),
-        (2, 90),
-        (5, 70),
-        (10, 50),
-        (20, 30),
-    ])
+    @pytest.mark.parametrize(
+        "lead_time,expected",
+        [
+            (0, 100),
+            (2, 90),
+            (5, 70),
+            (10, 50),
+            (20, 30),
+        ],
+    )
     def test_all_lead_times(self, engine, lead_time, expected):
         sol = MagicMock()
         sol.estimated_lead_time = lead_time
@@ -241,15 +259,19 @@ class TestScoreTime:
 
 # ======================= _score_risk =======================
 
+
 class TestScoreRisk:
-    @pytest.mark.parametrize("risk_count,expected", [
-        (0, 100),
-        (1, 80),
-        (2, 80),
-        (3, 60),
-        (4, 60),
-        (5, 40),
-    ])
+    @pytest.mark.parametrize(
+        "risk_count,expected",
+        [
+            (0, 100),
+            (1, 80),
+            (2, 80),
+            (3, 60),
+            (4, 60),
+            (5, 40),
+        ],
+    )
     def test_all_risk_counts(self, engine, risk_count, expected):
         sol = MagicMock()
         sol.risks = ["risk"] * risk_count
@@ -264,6 +286,7 @@ class TestScoreRisk:
 
 
 # ======================= _generate_partial_delivery_plan =======================
+
 
 class TestGeneratePartialDeliveryPlan:
     def test_returns_plan_when_available_qty_positive(self, engine):
@@ -281,6 +304,7 @@ class TestGeneratePartialDeliveryPlan:
 
 # ======================= _generate_reschedule_plan =======================
 
+
 class TestGenerateReschedulePlan:
     def test_returns_reschedule_plan(self, engine):
         alert = make_alert(estimated_delay_days=7)
@@ -291,6 +315,7 @@ class TestGenerateReschedulePlan:
 
 
 # ======================= generate_solutions =======================
+
 
 class TestGenerateSolutions:
     def test_returns_sorted_by_score(self, engine):
@@ -347,6 +372,7 @@ class TestGenerateSolutions:
 
 
 # ======================= _generate_alert_no =======================
+
 
 class TestGenerateAlertNo:
     def test_generates_formatted_alert_no(self, engine):

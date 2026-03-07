@@ -22,9 +22,7 @@ def generate_readiness_no() -> str:
 
 
 def calculate_available_qty(
-    db: Session,
-    material_id: int,
-    check_date: date
+    db: Session, material_id: int, check_date: date
 ) -> Tuple[Decimal, Decimal, Decimal, Decimal]:
     """计算物料可用数量
 
@@ -48,13 +46,16 @@ def calculate_available_qty(
     # 在途数量(已采购未到货，预计在check_date前到货)
     in_transit_qty = Decimal(0)
     try:
-        in_transit = db.query(func.sum(PurchaseOrderItem.quantity)).join(
-            PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
-        ).filter(
-            PurchaseOrderItem.material_id == material_id,
-            PurchaseOrder.status.in_(['approved', 'partial_received']),
-            PurchaseOrder.expected_date <= check_date
-        ).scalar()
+        in_transit = (
+            db.query(func.sum(PurchaseOrderItem.quantity))
+            .join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id)
+            .filter(
+                PurchaseOrderItem.material_id == material_id,
+                PurchaseOrder.status.in_(["approved", "partial_received"]),
+                PurchaseOrder.expected_date <= check_date,
+            )
+            .scalar()
+        )
         in_transit_qty = Decimal(in_transit or 0)
     except Exception:
         logger.debug("查询在途数量失败，已忽略", exc_info=True)
@@ -64,9 +65,7 @@ def calculate_available_qty(
 
 
 def calculate_estimated_ready_date(
-    db: Session,
-    blocking_items: List[Dict],
-    check_date: date
+    db: Session, blocking_items: List[Dict], check_date: date
 ) -> Optional[date]:
     """
     计算预计完全齐套日期
@@ -96,19 +95,20 @@ def calculate_estimated_ready_date(
             continue
 
         try:
-            po_items = db.query(PurchaseOrderItem).join(
-                PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id
-            ).filter(
-                PurchaseOrderItem.material_id == material_id,
-                PurchaseOrder.status.in_(['approved', 'partial_received']),
-                or_(
-                    PurchaseOrder.promised_date.isnot(None),
-                    PurchaseOrder.required_date.isnot(None)
+            po_items = (
+                db.query(PurchaseOrderItem)
+                .join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id)
+                .filter(
+                    PurchaseOrderItem.material_id == material_id,
+                    PurchaseOrder.status.in_(["approved", "partial_received"]),
+                    or_(
+                        PurchaseOrder.promised_date.isnot(None),
+                        PurchaseOrder.required_date.isnot(None),
+                    ),
                 )
-            ).order_by(
-                PurchaseOrder.promised_date.desc(),
-                PurchaseOrder.required_date.desc()
-            ).all()
+                .order_by(PurchaseOrder.promised_date.desc(), PurchaseOrder.required_date.desc())
+                .all()
+            )
         except Exception:
             logger.debug("查询采购订单失败，已忽略", exc_info=True)
             po_items = []
@@ -126,15 +126,15 @@ def calculate_estimated_ready_date(
 
 
 def determine_alert_level(
-    db: Session,
-    is_blocking: bool,
-    shortage_rate: Decimal,
-    days_to_required: int
+    db: Session, is_blocking: bool, shortage_rate: Decimal, days_to_required: int
 ) -> str:
     """确定预警级别"""
-    rules = db.query(ShortageAlertRule).filter(
-        ShortageAlertRule.is_active
-    ).order_by(ShortageAlertRule.days_before_required).all()
+    rules = (
+        db.query(ShortageAlertRule)
+        .filter(ShortageAlertRule.is_active)
+        .order_by(ShortageAlertRule.days_before_required)
+        .all()
+    )
 
     for rule in rules:
         if rule.only_blocking and not is_blocking:

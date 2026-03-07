@@ -14,12 +14,7 @@ def calculate_workdays(start_date: date, end_date: date) -> int:
     return max(1, workdays)
 
 
-def calculate_overlap_days(
-    start1: date,
-    end1: date,
-    start2: date,
-    end2: date
-) -> int:
+def calculate_overlap_days(start1: date, end1: date, start2: date, end2: date) -> int:
     """计算两个日期区间的重叠天数"""
     overlap_start = max(start1, start2)
     overlap_end = min(end1, end2)

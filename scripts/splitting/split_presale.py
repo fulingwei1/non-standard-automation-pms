@@ -5,27 +5,59 @@
 import re
 from pathlib import Path
 
+
 def read_file_lines(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.readlines()
 
+
 def main():
-    source_file = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/presale.py')
-    output_dir = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/presale')
+    source_file = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/presale.py")
+    output_dir = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/presale")
 
     print("📖 读取 presale.py (1798行)...")
     lines = read_file_lines(source_file)
 
     # 提取导入（行1-86，到第一个section之前）
-    imports = ''.join(lines[0:86])
+    imports = "".join(lines[0:86])
 
     # 根据章节注释定义模块
     modules = [
-        {'name': 'tickets.py', 'start': 88, 'end': 519, 'prefix': '/presale/tickets', 'routes': '支持工单管理'},
-        {'name': 'proposals.py', 'start': 520, 'end': 892, 'prefix': '/presale/proposals', 'routes': '技术方案管理'},
-        {'name': 'templates.py', 'start': 893, 'end': 1190, 'prefix': '/presale/templates', 'routes': '方案模板库'},
-        {'name': 'bids.py', 'start': 1191, 'end': 1517, 'prefix': '/presale/bids', 'routes': '投标管理'},
-        {'name': 'statistics.py', 'start': 1518, 'end': 1798, 'prefix': '/presale/statistics', 'routes': '售前统计'},
+        {
+            "name": "tickets.py",
+            "start": 88,
+            "end": 519,
+            "prefix": "/presale/tickets",
+            "routes": "支持工单管理",
+        },
+        {
+            "name": "proposals.py",
+            "start": 520,
+            "end": 892,
+            "prefix": "/presale/proposals",
+            "routes": "技术方案管理",
+        },
+        {
+            "name": "templates.py",
+            "start": 893,
+            "end": 1190,
+            "prefix": "/presale/templates",
+            "routes": "方案模板库",
+        },
+        {
+            "name": "bids.py",
+            "start": 1191,
+            "end": 1517,
+            "prefix": "/presale/bids",
+            "routes": "投标管理",
+        },
+        {
+            "name": "statistics.py",
+            "start": 1518,
+            "end": 1798,
+            "prefix": "/presale/statistics",
+            "routes": "售前统计",
+        },
     ]
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -33,11 +65,11 @@ def main():
     for module in modules:
         print(f"📝 生成 {module['name']}...")
 
-        start = module['start'] - 1
-        end = min(module['end'], len(lines))
+        start = module["start"] - 1
+        end = min(module["end"], len(lines))
 
-        module_code = ''.join(lines[start:end])
-        routes = len(re.findall(r'@router\.', module_code))
+        module_code = "".join(lines[start:end])
+        routes = len(re.findall(r"@router\.", module_code))
 
         if routes == 0:
             print(f"  ⚠️ 跳过: 没有找到路由")
@@ -63,8 +95,8 @@ router = APIRouter(
 {module_code}
 '''
 
-        output_path = output_dir / module['name']
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_path = output_dir / module["name"]
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(module_content)
 
         print(f"  ✅ {module['name']}: {routes} 个路由")
@@ -94,11 +126,12 @@ router.include_router(statistics_router)
 __all__ = ['router']
 '''
 
-    with open(output_dir / '__init__.py', 'w', encoding='utf-8') as f:
+    with open(output_dir / "__init__.py", "w", encoding="utf-8") as f:
         f.write(init_content)
 
     print("\n✅ presale.py 拆分完成！")
     print(f"总计: {len(modules)} 个模块")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

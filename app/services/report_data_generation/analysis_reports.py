@@ -23,7 +23,7 @@ class AnalysisReportMixin:
         db: Session,
         department_id: Optional[int] = None,
         start_date: date = None,
-        end_date: date = None
+        end_date: date = None,
     ) -> Dict[str, Any]:
         """
         生成负荷分析报告
@@ -47,10 +47,9 @@ class AnalysisReportMixin:
             dept = db.query(Department).filter(Department.id == department_id).first()
             if dept:
                 # User 模型只有 department 字符串字段，通过部门名称匹配
-                users = db.query(User).filter(
-                    User.department == dept.dept_name,
-                    User.is_active
-                ).all()
+                users = (
+                    db.query(User).filter(User.department == dept.dept_name, User.is_active).all()
+                )
                 scope_name = dept.dept_name
             else:
                 users = []
@@ -62,21 +61,20 @@ class AnalysisReportMixin:
         user_ids = [u.id for u in users]
 
         # 工时统计
-        timesheets = db.query(Timesheet).filter(
-            Timesheet.user_id.in_(user_ids),
-            Timesheet.work_date.between(start_date, end_date)
-        ).all()
+        timesheets = (
+            db.query(Timesheet)
+            .filter(
+                Timesheet.user_id.in_(user_ids), Timesheet.work_date.between(start_date, end_date)
+            )
+            .all()
+        )
 
         # 按人员统计
         workload_by_user = {}
         for ts in timesheets:
             user_id = ts.user_id
             if user_id not in workload_by_user:
-                workload_by_user[user_id] = {
-                    "hours": 0,
-                    "days": 0,
-                    "projects": set()
-                }
+                workload_by_user[user_id] = {"hours": 0, "days": 0, "projects": set()}
             workload_by_user[user_id]["hours"] += float(ts.hours or 0)
             if ts.project_id:
                 workload_by_user[user_id]["projects"].add(ts.project_id)
@@ -102,22 +100,24 @@ class AnalysisReportMixin:
             else:
                 load_level = "LOW"
 
-            workload_list.append({
-                "user_id": user_id,
-                "user_name": user.real_name or user.username,
-                "department": user.department if hasattr(user, 'department') else "",
-                "total_hours": round(hours, 2),
-                "working_days": round(days, 1),
-                "project_count": project_count,
-                "load_level": load_level
-            })
+            workload_list.append(
+                {
+                    "user_id": user_id,
+                    "user_name": user.real_name or user.username,
+                    "department": user.department if hasattr(user, "department") else "",
+                    "total_hours": round(hours, 2),
+                    "working_days": round(days, 1),
+                    "project_count": project_count,
+                    "load_level": load_level,
+                }
+            )
 
         # 按负荷分组
         load_summary = {
             "OVERLOAD": sum(1 for w in workload_list if w["load_level"] == "OVERLOAD"),
             "HIGH": sum(1 for w in workload_list if w["load_level"] == "HIGH"),
             "MEDIUM": sum(1 for w in workload_list if w["load_level"] == "MEDIUM"),
-            "LOW": sum(1 for w in workload_list if w["load_level"] == "LOW")
+            "LOW": sum(1 for w in workload_list if w["load_level"] == "LOW"),
         }
 
         return {
@@ -126,10 +126,12 @@ class AnalysisReportMixin:
                 "period_start": start_date.isoformat(),
                 "period_end": end_date.isoformat(),
                 "total_users": len(users),
-                "active_users": len(workload_list)
+                "active_users": len(workload_list),
             },
             "load_distribution": load_summary,
-            "workload_details": sorted(workload_list, key=lambda x: x["working_days"], reverse=True)
+            "workload_details": sorted(
+                workload_list, key=lambda x: x["working_days"], reverse=True
+            ),
         }
 
     @staticmethod
@@ -137,7 +139,7 @@ class AnalysisReportMixin:
         db: Session,
         project_id: Optional[int] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
     ) -> Dict[str, Any]:
         """
         生成成本分析报告
@@ -152,7 +154,7 @@ class AnalysisReportMixin:
             报表数据
         """
         if not start_date:
-            start_date = month_start(date.today()) # 本月初
+            start_date = month_start(date.today())  # 本月初
         if not end_date:
             end_date = date.today()
 
@@ -160,24 +162,29 @@ class AnalysisReportMixin:
         if project_id:
             projects = db.query(Project).filter(Project.id == project_id).all()
         else:
-            projects = db.query(Project).filter(
-                Project.is_active,
-                Project.status.in_(["IN_PROGRESS", "ON_HOLD"])
-            ).all()
+            projects = (
+                db.query(Project)
+                .filter(Project.is_active, Project.status.in_(["IN_PROGRESS", "ON_HOLD"]))
+                .all()
+            )
 
         project_summaries = []
         total_budget = 0
         total_actual = 0
 
         for project in projects:
-            budget = float(project.budget_amount or 0) if hasattr(project, 'budget_amount') else 0
+            budget = float(project.budget_amount or 0) if hasattr(project, "budget_amount") else 0
             total_budget += budget
 
             # 获取项目工时成本
-            timesheets = db.query(Timesheet).filter(
-                Timesheet.project_id == project.id,
-                Timesheet.work_date.between(start_date, end_date)
-            ).all()
+            timesheets = (
+                db.query(Timesheet)
+                .filter(
+                    Timesheet.project_id == project.id,
+                    Timesheet.work_date.between(start_date, end_date),
+                )
+                .all()
+            )
             labor_hours = sum(float(t.hours or 0) for t in timesheets)
 
             # 估算人工成本（假设平均时薪100元）
@@ -187,14 +194,16 @@ class AnalysisReportMixin:
             variance = budget - estimated_labor_cost
             variance_percent = (variance / budget * 100) if budget > 0 else 0
 
-            project_summaries.append({
-                "project_id": project.id,
-                "project_name": project.project_name,
-                "budget": round(budget, 2),
-                "actual_cost": round(estimated_labor_cost, 2),
-                "variance": round(variance, 2),
-                "variance_percent": round(variance_percent, 2)
-            })
+            project_summaries.append(
+                {
+                    "project_id": project.id,
+                    "project_name": project.project_name,
+                    "budget": round(budget, 2),
+                    "actual_cost": round(estimated_labor_cost, 2),
+                    "variance": round(variance, 2),
+                    "variance_percent": round(variance_percent, 2),
+                }
+            )
 
         return {
             "summary": {
@@ -203,8 +212,8 @@ class AnalysisReportMixin:
                 "project_count": len(projects),
                 "total_budget": round(total_budget, 2),
                 "total_actual": round(total_actual, 2),
-                "total_variance": round(total_budget - total_actual, 2)
+                "total_variance": round(total_budget - total_actual, 2),
             },
             "project_breakdown": project_summaries,
-            "cost_by_project": project_summaries
+            "cost_by_project": project_summaries,
         }

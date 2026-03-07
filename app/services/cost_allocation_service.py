@@ -12,9 +12,7 @@ from app.models.rd_project import RdCost, RdCostAllocationRule, RdProject
 
 
 def query_allocatable_costs(
-    db: Session,
-    rule: RdCostAllocationRule,
-    cost_ids: Optional[List[int]]
+    db: Session, rule: RdCostAllocationRule, cost_ids: Optional[List[int]]
 ) -> List[RdCost]:
     """
     查询需要分摊的费用
@@ -22,10 +20,7 @@ def query_allocatable_costs(
     Returns:
         List[RdCost]: 费用列表
     """
-    query = db.query(RdCost).filter(
-        RdCost.status == 'APPROVED',
-        RdCost.is_allocated == False
-    )
+    query = db.query(RdCost).filter(RdCost.status == "APPROVED", RdCost.is_allocated == False)
 
     if cost_ids:
         query = query.filter(RdCost.id.in_(cost_ids))
@@ -36,10 +31,7 @@ def query_allocatable_costs(
     return query.all()
 
 
-def get_target_project_ids(
-    db: Session,
-    rule: RdCostAllocationRule
-) -> List[int]:
+def get_target_project_ids(db: Session, rule: RdCostAllocationRule) -> List[int]:
     """
     获取目标项目ID列表
 
@@ -49,17 +41,16 @@ def get_target_project_ids(
     target_project_ids = rule.project_ids if rule.project_ids else []
 
     if not target_project_ids:
-        projects = db.query(RdProject).filter(
-            RdProject.status.in_(['APPROVED', 'IN_PROGRESS'])
-        ).all()
+        projects = (
+            db.query(RdProject).filter(RdProject.status.in_(["APPROVED", "IN_PROGRESS"])).all()
+        )
         target_project_ids = [p.id for p in projects]
 
     return target_project_ids
 
 
 def calculate_allocation_rates_by_hours(
-    db: Session,
-    target_project_ids: List[int]
+    db: Session, target_project_ids: List[int]
 ) -> Dict[int, float]:
     """
     按工时分摊计算分摊比例
@@ -91,8 +82,7 @@ def calculate_allocation_rates_by_hours(
 
 
 def calculate_allocation_rates_by_headcount(
-    db: Session,
-    target_project_ids: List[int]
+    db: Session, target_project_ids: List[int]
 ) -> Dict[int, float]:
     """
     按人数分摊计算分摊比例
@@ -124,9 +114,7 @@ def calculate_allocation_rates_by_headcount(
 
 
 def calculate_allocation_rates(
-    db: Session,
-    rule: RdCostAllocationRule,
-    target_project_ids: List[int]
+    db: Session, rule: RdCostAllocationRule, target_project_ids: List[int]
 ) -> Dict[int, float]:
     """
     根据分摊依据计算分摊比例
@@ -134,13 +122,13 @@ def calculate_allocation_rates(
     Returns:
         Dict[int, float]: 项目ID到分摊比例的映射
     """
-    if rule.allocation_basis == 'HOURS':
+    if rule.allocation_basis == "HOURS":
         return calculate_allocation_rates_by_hours(db, target_project_ids)
-    elif rule.allocation_basis == 'REVENUE':
+    elif rule.allocation_basis == "REVENUE":
         # 按收入分摊：暂时使用平均分摊
         rate = 100.0 / len(target_project_ids)
         return {project_id: rate for project_id in target_project_ids}
-    elif rule.allocation_basis == 'HEADCOUNT':
+    elif rule.allocation_basis == "HEADCOUNT":
         return calculate_allocation_rates_by_headcount(db, target_project_ids)
     else:
         # 默认平均分摊
@@ -149,12 +137,7 @@ def calculate_allocation_rates(
 
 
 def create_allocated_cost(
-    db: Session,
-    cost: RdCost,
-    project_id: int,
-    rate: float,
-    rule_id: int,
-    generate_cost_no
+    db: Session, cost: RdCost, project_id: int, rate: float, rule_id: int, generate_cost_no
 ) -> RdCost:
     """
     创建分摊后的费用记录
@@ -171,14 +154,18 @@ def create_allocated_cost(
         cost_date=cost.cost_date,
         cost_amount=allocated_amount,
         cost_description=f"{cost.cost_description or ''}（分摊自费用{cost.cost_no}）",
-        source_type='ALLOCATED',
+        source_type="ALLOCATED",
         source_id=cost.id,
         is_allocated=True,
         allocation_rule_id=rule_id,
         allocation_rate=Decimal(str(rate)),
-        deductible_amount=allocated_amount * (cost.deductible_amount / cost.cost_amount) if cost.deductible_amount and cost.cost_amount > 0 else None,
-        status='APPROVED',
-        remark=f"由规则{rule_id}自动分摊"
+        deductible_amount=(
+            allocated_amount * (cost.deductible_amount / cost.cost_amount)
+            if cost.deductible_amount and cost.cost_amount > 0
+            else None
+        ),
+        status="APPROVED",
+        remark=f"由规则{rule_id}自动分摊",
     )
 
     db.add(allocated_cost)

@@ -8,13 +8,14 @@ File Size: 135 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from app.services.timesheet_aggregation_service import TimesheetAggregationService
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+from sqlalchemy.orm import Session
+
+from app.services.timesheet_aggregation_service import TimesheetAggregationService
 
 
 @pytest.fixture
@@ -30,9 +31,8 @@ class TestTimesheetAggregationService:
         """测试服务初始化"""
         service = TimesheetAggregationService(db_session)
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_aggregate_monthly_timesheet(self, timesheet_aggregation_service):
         """测试 aggregate_monthly_timesheet 方法"""
@@ -42,7 +42,6 @@ class TestTimesheetAggregationService:
         # 3. 验证结果
         pass
 
-
     def test_generate_hr_report(self, timesheet_aggregation_service):
         """测试 generate_hr_report 方法"""
         # TODO: 实现测试逻辑
@@ -50,7 +49,6 @@ class TestTimesheetAggregationService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     def test_generate_finance_report(self, timesheet_aggregation_service):
         """测试 generate_finance_report 方法"""
@@ -60,7 +58,6 @@ class TestTimesheetAggregationService:
         # 3. 验证结果
         pass
 
-
     def test_generate_rd_report(self, timesheet_aggregation_service):
         """测试 generate_rd_report 方法"""
         # TODO: 实现测试逻辑
@@ -69,7 +66,6 @@ class TestTimesheetAggregationService:
         # 3. 验证结果
         pass
 
-
     def test_generate_project_report(self, timesheet_aggregation_service):
         """测试 generate_project_report 方法"""
         # TODO: 实现测试逻辑
@@ -77,7 +73,6 @@ class TestTimesheetAggregationService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

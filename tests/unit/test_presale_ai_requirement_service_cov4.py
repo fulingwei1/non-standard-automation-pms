@@ -1,12 +1,15 @@
 """
 第四批覆盖测试 - presale_ai_requirement_service
 """
-import pytest
+
 import json
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 try:
     from app.services.presale_ai_requirement_service import AIRequirementAnalyzer
+
     HAS_SERVICE = True
 except Exception:
     HAS_SERVICE = False
@@ -54,7 +57,12 @@ class TestAIRequirementAnalyzer:
     def test_fallback_rule_based_analysis(self):
         result = self.analyzer._fallback_rule_based_analysis("需要一台自动化焊接机器人")
         assert isinstance(result, dict)
-        assert "error" in result or "structured_requirement" in result or "fallback" in result or len(result) >= 0
+        assert (
+            "error" in result
+            or "structured_requirement" in result
+            or "fallback" in result
+            or len(result) >= 0
+        )
 
     def test_calculate_confidence_score(self):
         parsed = {"structured_requirement": {"name": "test"}, "equipment_list": [{"id": 1}]}

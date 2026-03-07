@@ -210,8 +210,7 @@ class TestLeadManagement:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -249,9 +248,7 @@ class TestLeadManagement:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads/{lead['id']}", json=update_data, headers=headers
         )
 
         assert response.status_code == 200
@@ -260,7 +257,9 @@ class TestLeadManagement:
         assert data["contact_name"] == "李四"
 
     @pytest.mark.skip(reason="测试与实际API不匹配")
-    def test_convert_lead_to_opportunity(self, client: TestClient, admin_token: str, lead_id: int = None):
+    def test_convert_lead_to_opportunity(
+        self, client: TestClient, admin_token: str, lead_id: int = None
+    ):
         """测试线索转商机"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -306,8 +305,7 @@ class TestOpportunityManagement:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/opportunities?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/opportunities?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -316,7 +314,9 @@ class TestOpportunityManagement:
         assert "total" in data
 
     @pytest.mark.skip(reason="测试与实际API不匹配")
-    def test_update_opportunity(self, client: TestClient, admin_token: str, opportunity_id: int = None):
+    def test_update_opportunity(
+        self, client: TestClient, admin_token: str, opportunity_id: int = None
+    ):
         """测试更新商机"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -331,7 +331,7 @@ class TestOpportunityManagement:
         response = client.put(
             f"{settings.API_V1_PREFIX}/sales/opportunities/{opportunity['id']}",
             json=update_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -340,7 +340,9 @@ class TestOpportunityManagement:
         assert data["probability"] == 50
 
     @pytest.mark.skip(reason="测试与实际API不匹配")
-    def test_submit_gate_validation(self, client: TestClient, admin_token: str, opportunity_id: int = None):
+    def test_submit_gate_validation(
+        self, client: TestClient, admin_token: str, opportunity_id: int = None
+    ):
         """测试提交阶段门控验证"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -385,7 +387,7 @@ class TestQuoteManagement:
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/quotes/{quote_id}/versions",
             json=version_data,
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 201
@@ -408,7 +410,7 @@ class TestQuoteManagement:
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/quotes/{quote_id}/approve",
             json=approve_data,
-            headers=headers
+            headers=headers,
         )
 
         # 根据权限和审批流程，可能成功或失败
@@ -444,7 +446,7 @@ class TestContractManagement:
             response = client.post(
                 f"{settings.API_V1_PREFIX}/sales/contracts/{contract_id}/sign",
                 json=sign_data,
-                headers=headers
+                headers=headers,
             )
 
             # 如果500是数据库约束错误，跳过测试
@@ -467,7 +469,9 @@ class TestContractManagement:
             if "UNIQUE constraint" in str(e) or "PendingRollbackError" in str(e):
                 pytest.skip("Database constraint error: project code conflict")
 
-    def test_generate_project_from_contract(self, client: TestClient, admin_token: str, contract_id: int = None):
+    def test_generate_project_from_contract(
+        self, client: TestClient, admin_token: str, contract_id: int = None
+    ):
         """测试从合同生成项目"""
         if not admin_token:
             pytest.skip("Admin token not available")
@@ -533,7 +537,7 @@ class TestInvoiceManagement:
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/invoices/{invoice_id}/issue",
             json=issue_data,
-            headers=headers
+            headers=headers,
         )
 
         # 根据权限和状态，可能成功或失败
@@ -596,8 +600,7 @@ class TestPermissionControl:
         headers = _auth_headers(sales_user_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads?page=1&page_size=10", headers=headers
         )
 
         assert response.status_code == 200
@@ -616,9 +619,7 @@ class TestPermissionControl:
         update_data = {"status": "CONTACTED"}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/leads/1",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/leads/1", json=update_data, headers=headers
         )
 
         # 应该返回403 Forbidden

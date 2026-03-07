@@ -13,15 +13,15 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from app.schemas.stage_template.progress import StageProgress
 from app.schemas.stage_template.definitions import StageDefinitionResponse
-
-
+from app.schemas.stage_template.progress import StageProgress
 
 # ==================== 流水线视图 Schemas ====================
 
+
 class ProjectStageOverview(BaseModel):
     """项目阶段概览（流水线视图用）"""
+
     project_id: int
     project_code: str
     project_name: str
@@ -38,6 +38,7 @@ class ProjectStageOverview(BaseModel):
 
 class PipelineStatistics(BaseModel):
     """流水线统计数据"""
+
     total_projects: int = Field(default=0, description="总项目数")
     in_progress_count: int = Field(default=0, description="进行中项目数")
     completed_count: int = Field(default=0, description="已完成项目数")
@@ -49,9 +50,9 @@ class PipelineStatistics(BaseModel):
     by_current_stage: Dict[str, int] = Field(default={}, description="按当前阶段统计")
 
 
-
 class TemplateGroup(BaseModel):
     """模板分组（用于按模板分组显示项目）"""
+
     template_id: int
     template_code: str
     template_name: str
@@ -62,6 +63,7 @@ class TemplateGroup(BaseModel):
 
 class PipelineViewResponse(BaseModel):
     """流水线视图响应"""
+
     statistics: PipelineStatistics
     projects: List[ProjectStageOverview]
     stage_definitions: List[StageDefinitionResponse] = Field(
@@ -77,8 +79,10 @@ class PipelineViewResponse(BaseModel):
 
 # ==================== 时间轴视图 Schemas ====================
 
+
 class TimelineNode(BaseModel):
     """时间轴节点"""
+
     id: int
     node_code: str
     node_name: str
@@ -93,6 +97,7 @@ class TimelineNode(BaseModel):
 
 class TimelineStage(BaseModel):
     """时间轴阶段"""
+
     id: int
     stage_code: str
     stage_name: str
@@ -110,6 +115,7 @@ class TimelineStage(BaseModel):
 
 class TimelineViewResponse(BaseModel):
     """时间轴视图响应"""
+
     project_id: int
     project_code: str
     project_name: str
@@ -122,8 +128,10 @@ class TimelineViewResponse(BaseModel):
 
 # ==================== 分解树视图 Schemas ====================
 
+
 class TreeTask(BaseModel):
     """分解树任务节点"""
+
     id: int
     task_code: str
     task_name: str
@@ -137,6 +145,7 @@ class TreeTask(BaseModel):
 
 class TreeNode(BaseModel):
     """分解树节点"""
+
     id: int
     node_code: str
     node_name: str
@@ -151,6 +160,7 @@ class TreeNode(BaseModel):
 
 class TreeStage(BaseModel):
     """分解树阶段"""
+
     id: int
     stage_code: str
     stage_name: str
@@ -165,6 +175,7 @@ class TreeStage(BaseModel):
 
 class TreeViewResponse(BaseModel):
     """分解树视图响应"""
+
     project_id: int
     project_code: str
     project_name: str
@@ -176,5 +187,3 @@ class TreeViewResponse(BaseModel):
     total_tasks: int = 0
     completed_tasks: int = 0
     stages: List[TreeStage] = Field(default=[], description="阶段列表")
-
-

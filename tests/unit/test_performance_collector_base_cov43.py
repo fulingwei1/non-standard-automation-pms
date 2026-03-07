@@ -7,6 +7,7 @@ import pytest
 pytest.importorskip("app.services.performance_collector.base")
 
 from unittest.mock import MagicMock
+
 from app.services.performance_collector.base import PerformanceDataCollectorBase
 
 
@@ -44,6 +45,7 @@ def test_collaboration_keywords_not_empty():
 # ── 6. PROBLEM_SOLVING_PATTERNS 是正则模式列表 ──────────────────────────────
 def test_problem_solving_patterns():
     import re
+
     for pattern in PerformanceDataCollectorBase.PROBLEM_SOLVING_PATTERNS:
         # Should be valid regex
         assert re.compile(pattern) is not None
@@ -52,6 +54,7 @@ def test_problem_solving_patterns():
 # ── 7. KNOWLEDGE_SHARING_PATTERNS 是正则模式列表 ────────────────────────────
 def test_knowledge_sharing_patterns():
     import re
+
     for pattern in PerformanceDataCollectorBase.KNOWLEDGE_SHARING_PATTERNS:
         assert re.compile(pattern) is not None
 
@@ -59,5 +62,6 @@ def test_knowledge_sharing_patterns():
 # ── 8. TECH_BREAKTHROUGH_PATTERNS 是正则模式列表 ────────────────────────────
 def test_tech_breakthrough_patterns():
     import re
+
     for pattern in PerformanceDataCollectorBase.TECH_BREAKTHROUGH_PATTERNS:
         assert re.compile(pattern) is not None

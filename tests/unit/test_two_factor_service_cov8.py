@@ -2,11 +2,13 @@
 """
 第八批覆盖率测试 - 双因素认证(2FA)服务
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.two_factor_service import TwoFactorService, _get_encryption_key
+
     HAS_2FA = True
 except Exception:
     HAS_2FA = False
@@ -60,7 +62,7 @@ class TestVerifyTOTP:
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         # 无效用户返回 False
-        if hasattr(svc, 'verify_totp'):
+        if hasattr(svc, "verify_totp"):
             result = svc.verify_totp(db, user_id=999, token="000000")
             assert result is False
         else:
@@ -80,7 +82,7 @@ class TestBackupCodes:
     def test_generate_backup_codes(self):
         """生成备用恢复码"""
         svc = TwoFactorService()
-        if hasattr(svc, 'generate_backup_codes'):
+        if hasattr(svc, "generate_backup_codes"):
             codes = svc.generate_backup_codes()
             assert isinstance(codes, list)
             assert len(codes) > 0

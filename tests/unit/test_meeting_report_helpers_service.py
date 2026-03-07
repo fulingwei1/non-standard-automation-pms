@@ -109,10 +109,10 @@ class TestCalculateChange:
 
         result = calculate_change(15, 10)
 
-        assert result['current'] == 15
-        assert result['previous'] == 10
-        assert result['change'] == 5
-        assert result['change_abs'] == 5
+        assert result["current"] == 15
+        assert result["previous"] == 10
+        assert result["change"] == 5
+        assert result["change_abs"] == 5
 
     def test_decrease(self):
         """测试减少"""
@@ -120,8 +120,8 @@ class TestCalculateChange:
 
         result = calculate_change(8, 10)
 
-        assert result['change'] == -2
-        assert result['change_abs'] == 2
+        assert result["change"] == -2
+        assert result["change_abs"] == 2
 
     def test_zero_previous(self):
         """测试上期为零"""
@@ -129,7 +129,7 @@ class TestCalculateChange:
 
         result = calculate_change(10, 0)
 
-        assert result['change'] == 10
+        assert result["change"] == 10
 
 
 class TestCollectKeyDecisions:
@@ -203,27 +203,27 @@ class TestBuildReportSummary:
         """测试构建摘要"""
         from app.services.meeting_report_helpers import build_report_summary
 
-        meeting_stats = {'total': 10, 'completed': 8}
-        action_item_stats = {'total': 20, 'completed': 15, 'overdue': 2}
+        meeting_stats = {"total": 10, "completed": 8}
+        action_item_stats = {"total": 20, "completed": 15, "overdue": 2}
         completion_rate = 75.0
 
         result = build_report_summary(meeting_stats, action_item_stats, completion_rate)
 
-        assert result['total_meetings'] == 10
-        assert result['completed_meetings'] == 8
-        assert result['completion_rate'] == "80.0%"
-        assert result['total_action_items'] == 20
+        assert result["total_meetings"] == 10
+        assert result["completed_meetings"] == 8
+        assert result["completion_rate"] == "80.0%"
+        assert result["total_action_items"] == 20
 
     def test_zero_meetings(self):
         """测试无会议"""
         from app.services.meeting_report_helpers import build_report_summary
 
-        meeting_stats = {'total': 0, 'completed': 0}
-        action_item_stats = {'total': 0, 'completed': 0, 'overdue': 0}
+        meeting_stats = {"total": 0, "completed": 0}
+        action_item_stats = {"total": 0, "completed": 0, "overdue": 0}
 
         result = build_report_summary(meeting_stats, action_item_stats, 0.0)
 
-        assert result['completion_rate'] == "0%"
+        assert result["completion_rate"] == "0%"
 
 
 class TestQueryMeetings:
@@ -233,11 +233,7 @@ class TestQueryMeetings:
         """测试无会议"""
         from app.services.meeting_report_helpers import query_meetings
 
-        result = query_meetings(
-        db_session,
-        date(2025, 1, 1),
-        date(2025, 1, 31)
-        )
+        result = query_meetings(db_session, date(2025, 1, 1), date(2025, 1, 31))
 
         assert result == []
 
@@ -264,27 +260,23 @@ class TestBuildComparisonData:
         from app.services.meeting_report_helpers import build_comparison_data
 
         current_stats = {
-        'total': 10,
-        'completed': 8,
-        'action_items_total': 20,
-        'action_items_completed': 15
+            "total": 10,
+            "completed": 8,
+            "action_items_total": 20,
+            "action_items_completed": 15,
         }
         prev_stats = {
-        'total': 8,
-        'completed': 6,
-        'action_items_total': 15,
-        'action_items_completed': 10
+            "total": 8,
+            "completed": 6,
+            "action_items_total": 15,
+            "action_items_completed": 10,
         }
 
-        result = build_comparison_data(
-        2025, 2, 2025, 1,
-        current_stats, prev_stats,
-        80.0, 75.0
-        )
+        result = build_comparison_data(2025, 2, 2025, 1, current_stats, prev_stats, 80.0, 75.0)
 
-        assert result['previous_period'] == "2025-01"
-        assert result['current_period'] == "2025-02"
-        assert 'meetings_comparison' in result
+        assert result["previous_period"] == "2025-01"
+        assert result["current_period"] == "2025-02"
+        assert "meetings_comparison" in result
 
 
 class TestCollectStrategicStructures:
@@ -311,7 +303,7 @@ class TestCollectStrategicStructures:
         result = collect_strategic_structures([m])
 
         assert len(result) == 1
-        assert result[0]['meeting_id'] == 1
+        assert result[0]["meeting_id"] == 1
 
 
 # pytest fixtures
@@ -321,6 +313,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

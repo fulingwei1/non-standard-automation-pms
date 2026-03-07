@@ -14,7 +14,7 @@ except Exception:
     SessionLocal = None
 
 __all__ = [
-    'TenantQuery',
-    'create_tenant_aware_session',
-    'SessionLocal',
+    "TenantQuery",
+    "create_tenant_aware_session",
+    "SessionLocal",
 ]

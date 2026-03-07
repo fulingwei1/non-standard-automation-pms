@@ -29,20 +29,16 @@ class WeChatTokenCache:
 
         cached = cls._cache[key]
         # 检查是否过期（提前5分钟刷新）
-        if cached['expires_at'] < datetime.now() + timedelta(minutes=5):
+        if cached["expires_at"] < datetime.now() + timedelta(minutes=5):
             return None
 
-        return cached['token']
+        return cached["token"]
 
     @classmethod
     def set(cls, key: str, token: str, expires_in: int):
         """设置token缓存"""
         expires_at = datetime.now() + timedelta(seconds=expires_in - 300)  # 提前5分钟过期
-        cls._cache[key] = {
-            'token': token,
-            'expires_at': expires_at,
-            'created_at': datetime.now()
-        }
+        cls._cache[key] = {"token": token, "expires_at": expires_at, "created_at": datetime.now()}
 
     @classmethod
     def clear(cls, key: Optional[str] = None):
@@ -59,7 +55,12 @@ class WeChatClient:
     BASE_URL = "https://qyapi.weixin.qq.com"
     TOKEN_CACHE_KEY = "wechat_access_token"  # nosec B105
 
-    def __init__(self, corp_id: Optional[str] = None, agent_id: Optional[str] = None, secret: Optional[str] = None):
+    def __init__(
+        self,
+        corp_id: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        secret: Optional[str] = None,
+    ):
         """
         初始化企业微信客户端
 
@@ -73,7 +74,9 @@ class WeChatClient:
         self.secret = secret or settings.WECHAT_SECRET
 
         if not all([self.corp_id, self.agent_id, self.secret]):
-            raise ValueError("企业微信配置不完整，请设置 WECHAT_CORP_ID, WECHAT_AGENT_ID, WECHAT_SECRET")
+            raise ValueError(
+                "企业微信配置不完整，请设置 WECHAT_CORP_ID, WECHAT_AGENT_ID, WECHAT_SECRET"
+            )
 
     def get_access_token(self, force_refresh: bool = False) -> str:
         """
@@ -96,10 +99,7 @@ class WeChatClient:
 
         # 从API获取新token
         url = f"{self.BASE_URL}/cgi-bin/gettoken"
-        params = {
-            "corpid": self.corp_id,
-            "corpsecret": self.secret
-        }
+        params = {"corpid": self.corp_id, "corpsecret": self.secret}
 
         try:
             response = requests.get(url, params=params, timeout=10)
@@ -122,12 +122,7 @@ class WeChatClient:
         except Exception as e:
             raise Exception(f"获取access_token失败: {str(e)}")
 
-    def send_message(
-        self,
-        user_ids: list,
-        message: Dict[str, Any],
-        retry_times: int = 3
-    ) -> bool:
+    def send_message(self, user_ids: list, message: Dict[str, Any], retry_times: int = 3) -> bool:
         """
         发送企业微信消息
 
@@ -184,9 +179,13 @@ class WeChatClient:
                         params["access_token"] = access_token
                         continue
                     else:
-                        raise Exception(f"access_token刷新后仍无效: {data.get('errmsg', '未知错误')}")
+                        raise Exception(
+                            f"access_token刷新后仍无效: {data.get('errmsg', '未知错误')}"
+                        )
                 else:
-                    raise Exception(f"发送消息失败: {data.get('errmsg', '未知错误')} (errcode: {errcode})")
+                    raise Exception(
+                        f"发送消息失败: {data.get('errmsg', '未知错误')} (errcode: {errcode})"
+                    )
 
             except requests.RequestException as e:
                 if attempt < retry_times - 1:
@@ -208,19 +207,10 @@ class WeChatClient:
         Returns:
             是否发送成功
         """
-        message = {
-            "msgtype": "text",
-            "text": {
-                "content": content
-            }
-        }
+        message = {"msgtype": "text", "text": {"content": content}}
         return self.send_message(user_ids, message)
 
-    def send_template_card(
-        self,
-        user_ids: list,
-        template_card: Dict[str, Any]
-    ) -> bool:
+    def send_template_card(self, user_ids: list, template_card: Dict[str, Any]) -> bool:
         """
         发送卡片消息（便捷方法）
 
@@ -231,8 +221,5 @@ class WeChatClient:
         Returns:
             是否发送成功
         """
-        message = {
-            "msgtype": "template_card",
-            "template_card": template_card
-        }
+        message = {"msgtype": "template_card", "template_card": template_card}
         return self.send_message(user_ids, message)

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """售前AI知识库服务单元测试 (PresaleAIKnowledgeService)"""
-import pytest
-import numpy as np
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
 
 
 def _make_db():
@@ -36,6 +37,7 @@ def _make_case(**kw):
 class TestPresaleAIKnowledgeServiceInit:
     def test_init_sets_db(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         svc = PresaleAIKnowledgeService(db)
         assert svc.db is db
@@ -44,6 +46,7 @@ class TestPresaleAIKnowledgeServiceInit:
 class TestGetCase:
     def test_get_existing_case(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         case = _make_case(id=1)
         db.query.return_value.filter.return_value.first.return_value = case
@@ -53,6 +56,7 @@ class TestGetCase:
 
     def test_get_nonexistent_case_returns_none(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
         svc = PresaleAIKnowledgeService(db)
@@ -63,17 +67,19 @@ class TestGetCase:
 class TestDeleteCase:
     def test_delete_existing_case_returns_true(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         case = _make_case(id=1)
         svc = PresaleAIKnowledgeService(db)
         svc.get_case = MagicMock(return_value=case)
-        with patch('app.services.presale_ai_knowledge_service.delete_obj') as mock_delete:
+        with patch("app.services.presale_ai_knowledge_service.delete_obj") as mock_delete:
             result = svc.delete_case(1)
         assert result is True
         mock_delete.assert_called_once_with(db, case)
 
     def test_delete_nonexistent_case_returns_false(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         svc = PresaleAIKnowledgeService(db)
         svc.get_case = MagicMock(return_value=None)
@@ -84,6 +90,7 @@ class TestDeleteCase:
 class TestSearchKnowledgeBase:
     def test_search_with_keyword(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         case1 = _make_case(id=1)
         case2 = _make_case(id=2)
@@ -92,7 +99,10 @@ class TestSearchKnowledgeBase:
         db.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 2
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [case1, case2]
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [
+            case1,
+            case2,
+        ]
 
         svc = PresaleAIKnowledgeService(db)
         cases, total = svc.search_knowledge_base(keyword="ADAS")
@@ -101,12 +111,15 @@ class TestSearchKnowledgeBase:
 
     def test_search_returns_empty_when_no_match(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         mock_query = MagicMock()
         db.query.return_value = mock_query
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 0
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         svc = PresaleAIKnowledgeService(db)
         cases, total = svc.search_knowledge_base(keyword="不存在的关键词")
@@ -117,6 +130,7 @@ class TestSearchKnowledgeBase:
 class TestGetAllTags:
     def test_get_all_tags_from_cases(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         case1 = MagicMock(tags=["汽车", "ICT", "ADAS"])
         case2 = MagicMock(tags=["ICT", "测试"])
@@ -131,6 +145,7 @@ class TestGetAllTags:
 
     def test_get_all_tags_empty(self):
         from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         db.query.return_value.all.return_value = []
 
@@ -142,8 +157,9 @@ class TestGetAllTags:
 
 class TestSemanticSearch:
     def test_no_cases_returns_empty(self):
-        from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
         from app.schemas.presale_ai_knowledge import SemanticSearchRequest
+        from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         db.query.return_value.filter.return_value.all.return_value = []
 
@@ -154,8 +170,9 @@ class TestSemanticSearch:
         assert total == 0
 
     def test_keyword_similarity_fallback(self):
-        from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
         from app.schemas.presale_ai_knowledge import SemanticSearchRequest
+        from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+
         db = _make_db()
         case = _make_case(embedding=None)  # no embedding → keyword fallback
         db.query.return_value.filter.return_value.all.return_value = [case]

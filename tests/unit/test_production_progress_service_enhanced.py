@@ -135,13 +135,13 @@ class TestProductionProgressService(unittest.TestCase):
         """测试偏差百分比计算"""
         result = self.service.calculate_deviation_percentage(10, 50)
 
-        self.assertEqual(result, Decimal('20'))
+        self.assertEqual(result, Decimal("20"))
 
     def test_calculate_deviation_percentage_zero_plan(self):
         """测试计划进度为0的情况"""
         result = self.service.calculate_deviation_percentage(10, 0)
 
-        self.assertEqual(result, Decimal('0'))
+        self.assertEqual(result, Decimal("0"))
 
     # ==================== 核心算法2: 瓶颈工位识别算法测试 ====================
 
@@ -150,15 +150,15 @@ class TestProductionProgressService(unittest.TestCase):
         # Mock工位状态和工位
         ws_status = Mock()
         ws_status.workstation_id = 1
-        ws_status.capacity_utilization = Decimal('95')
-        ws_status.work_hours_today = Decimal('7.6')
-        ws_status.idle_hours_today = Decimal('0.4')
+        ws_status.capacity_utilization = Decimal("95")
+        ws_status.work_hours_today = Decimal("7.6")
+        ws_status.idle_hours_today = Decimal("0.4")
         ws_status.alert_count = 2
 
         workstation = Mock()
         workstation.id = 1
-        workstation.workstation_code = 'WS001'
-        workstation.workstation_name = '焊接工位1'
+        workstation.workstation_code = "WS001"
+        workstation.workstation_name = "焊接工位1"
 
         # Mock查询结果
         query_mock = self.db.query.return_value
@@ -172,10 +172,10 @@ class TestProductionProgressService(unittest.TestCase):
         bottlenecks = self.service.identify_bottlenecks()
 
         self.assertEqual(len(bottlenecks), 1)
-        self.assertEqual(bottlenecks[0]['workstation_id'], 1)
-        self.assertEqual(bottlenecks[0]['bottleneck_level'], 2)
-        self.assertEqual(bottlenecks[0]['current_work_order_count'], 2)
-        self.assertEqual(bottlenecks[0]['pending_work_order_count'], 3)
+        self.assertEqual(bottlenecks[0]["workstation_id"], 1)
+        self.assertEqual(bottlenecks[0]["bottleneck_level"], 2)
+        self.assertEqual(bottlenecks[0]["current_work_order_count"], 2)
+        self.assertEqual(bottlenecks[0]["pending_work_order_count"], 3)
 
     def test_identify_bottlenecks_with_workshop_filter(self):
         """测试按车间筛选瓶颈"""
@@ -193,12 +193,12 @@ class TestProductionProgressService(unittest.TestCase):
         """测试最小瓶颈等级过滤"""
         ws_status = Mock()
         ws_status.workstation_id = 1
-        ws_status.capacity_utilization = Decimal('92')
+        ws_status.capacity_utilization = Decimal("92")
 
         workstation = Mock()
         workstation.id = 1
-        workstation.workstation_code = 'WS001'
-        workstation.workstation_name = '工位1'
+        workstation.workstation_code = "WS001"
+        workstation.workstation_name = "工位1"
 
         query_mock = self.db.query.return_value
         query_mock.join.return_value = query_mock
@@ -217,21 +217,21 @@ class TestProductionProgressService(unittest.TestCase):
         # 创建多个瓶颈
         ws1_status = Mock()
         ws1_status.workstation_id = 1
-        ws1_status.capacity_utilization = Decimal('99')
+        ws1_status.capacity_utilization = Decimal("99")
 
         ws2_status = Mock()
         ws2_status.workstation_id = 2
-        ws2_status.capacity_utilization = Decimal('96')
+        ws2_status.capacity_utilization = Decimal("96")
 
         ws1 = Mock()
         ws1.id = 1
-        ws1.workstation_code = 'WS001'
-        ws1.workstation_name = '工位1'
+        ws1.workstation_code = "WS001"
+        ws1.workstation_name = "工位1"
 
         ws2 = Mock()
         ws2.id = 2
-        ws2.workstation_code = 'WS002'
-        ws2.workstation_name = '工位2'
+        ws2.workstation_code = "WS002"
+        ws2.workstation_name = "工位2"
 
         query_mock = self.db.query.return_value
         query_mock.join.return_value = query_mock
@@ -246,26 +246,26 @@ class TestProductionProgressService(unittest.TestCase):
 
         # ws1应该排在前面
         self.assertEqual(len(bottlenecks), 2)
-        self.assertEqual(bottlenecks[0]['workstation_id'], 1)
-        self.assertEqual(bottlenecks[0]['bottleneck_level'], 3)
+        self.assertEqual(bottlenecks[0]["workstation_id"], 1)
+        self.assertEqual(bottlenecks[0]["bottleneck_level"], 3)
 
     def test_calculate_bottleneck_level_critical(self):
         """测试严重瓶颈等级（3级）"""
         ws_status = Mock()
-        ws_status.capacity_utilization = Decimal('99')
+        ws_status.capacity_utilization = Decimal("99")
 
         self.db.query.return_value.filter.return_value.scalar.return_value = 5
 
         level, reason = self.service._calculate_bottleneck_level(ws_status, 1)
 
         self.assertEqual(level, 3)
-        self.assertIn('99.0%', reason)
-        self.assertIn('5个', reason)
+        self.assertIn("99.0%", reason)
+        self.assertIn("5个", reason)
 
     def test_calculate_bottleneck_level_warning(self):
         """测试中度瓶颈等级（2级）"""
         ws_status = Mock()
-        ws_status.capacity_utilization = Decimal('96')
+        ws_status.capacity_utilization = Decimal("96")
 
         self.db.query.return_value.filter.return_value.scalar.return_value = 2
 
@@ -276,7 +276,7 @@ class TestProductionProgressService(unittest.TestCase):
     def test_calculate_bottleneck_level_info(self):
         """测试轻度瓶颈等级（1级）"""
         ws_status = Mock()
-        ws_status.capacity_utilization = Decimal('92')
+        ws_status.capacity_utilization = Decimal("92")
 
         self.db.query.return_value.filter.return_value.scalar.return_value = 0
 
@@ -287,14 +287,14 @@ class TestProductionProgressService(unittest.TestCase):
     def test_calculate_bottleneck_level_normal(self):
         """测试非瓶颈（0级）"""
         ws_status = Mock()
-        ws_status.capacity_utilization = Decimal('85')
+        ws_status.capacity_utilization = Decimal("85")
 
         self.db.query.return_value.filter.return_value.scalar.return_value = 0
 
         level, reason = self.service._calculate_bottleneck_level(ws_status, 1)
 
         self.assertEqual(level, 0)
-        self.assertEqual(reason, '正常')
+        self.assertEqual(reason, "正常")
 
     # ==================== 核心算法3: 进度预警规则引擎测试 ====================
 
@@ -302,7 +302,7 @@ class TestProductionProgressService(unittest.TestCase):
         """测试严重延期预警（偏差<-20%）"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
+        work_order.work_order_no = "WO001"
         work_order.progress = 30
         work_order.workstation_id = 1
         work_order.completed_qty = 100
@@ -317,15 +317,15 @@ class TestProductionProgressService(unittest.TestCase):
         alerts = self.service.evaluate_alert_rules(1, 1)
 
         # 应该有严重延期预警（进度30% vs 计划50%）
-        delay_alerts = [a for a in alerts if a.alert_type == 'DELAY']
+        delay_alerts = [a for a in alerts if a.alert_type == "DELAY"]
         self.assertTrue(len(delay_alerts) > 0)
-        self.assertEqual(delay_alerts[0].alert_level, 'CRITICAL')
+        self.assertEqual(delay_alerts[0].alert_level, "CRITICAL")
 
     def test_evaluate_alert_rules_delay_warning(self):
         """测试延期预警（-20% < 偏差 < -10%）"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
+        work_order.work_order_no = "WO001"
         work_order.progress = 38
         work_order.workstation_id = 1
         work_order.completed_qty = 100
@@ -339,15 +339,15 @@ class TestProductionProgressService(unittest.TestCase):
 
         alerts = self.service.evaluate_alert_rules(1, 1)
 
-        delay_alerts = [a for a in alerts if a.alert_type == 'DELAY']
+        delay_alerts = [a for a in alerts if a.alert_type == "DELAY"]
         self.assertTrue(len(delay_alerts) > 0)
-        self.assertEqual(delay_alerts[0].alert_level, 'WARNING')
+        self.assertEqual(delay_alerts[0].alert_level, "WARNING")
 
     def test_evaluate_alert_rules_bottleneck(self):
         """测试瓶颈预警"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
+        work_order.work_order_no = "WO001"
         work_order.progress = 50
         work_order.workstation_id = 1
         work_order.completed_qty = 100
@@ -360,26 +360,26 @@ class TestProductionProgressService(unittest.TestCase):
         ws_status = Mock()
         ws_status.is_bottleneck = True
         ws_status.bottleneck_level = 3
-        ws_status.capacity_utilization = Decimal('99')
+        ws_status.capacity_utilization = Decimal("99")
 
         # Mock查询返回值列表
         self.db.query.return_value.filter.return_value.first.side_effect = [
             work_order,  # 第1次：获取工单
             work_order,  # 第2次：calculate_progress_deviation中获取工单
-            ws_status    # 第3次：获取工位状态
+            ws_status,  # 第3次：获取工位状态
         ]
 
         alerts = self.service.evaluate_alert_rules(1, 1)
 
-        bottleneck_alerts = [a for a in alerts if a.alert_type == 'BOTTLENECK']
+        bottleneck_alerts = [a for a in alerts if a.alert_type == "BOTTLENECK"]
         self.assertTrue(len(bottleneck_alerts) > 0)
-        self.assertEqual(bottleneck_alerts[0].alert_level, 'CRITICAL')
+        self.assertEqual(bottleneck_alerts[0].alert_level, "CRITICAL")
 
     def test_evaluate_alert_rules_quality_critical(self):
         """测试质量预警（合格率<90%为严重）"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
+        work_order.work_order_no = "WO001"
         work_order.progress = 50
         work_order.workstation_id = 1
         work_order.completed_qty = 100
@@ -393,15 +393,15 @@ class TestProductionProgressService(unittest.TestCase):
 
         alerts = self.service.evaluate_alert_rules(1, 1)
 
-        quality_alerts = [a for a in alerts if a.alert_type == 'QUALITY']
+        quality_alerts = [a for a in alerts if a.alert_type == "QUALITY"]
         self.assertTrue(len(quality_alerts) > 0)
-        self.assertEqual(quality_alerts[0].alert_level, 'CRITICAL')
+        self.assertEqual(quality_alerts[0].alert_level, "CRITICAL")
 
     def test_evaluate_alert_rules_quality_warning(self):
         """测试质量预警（90%<=合格率<95%为警告）"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
+        work_order.work_order_no = "WO001"
         work_order.progress = 50
         work_order.workstation_id = 1
         work_order.completed_qty = 100
@@ -415,21 +415,21 @@ class TestProductionProgressService(unittest.TestCase):
 
         alerts = self.service.evaluate_alert_rules(1, 1)
 
-        quality_alerts = [a for a in alerts if a.alert_type == 'QUALITY']
+        quality_alerts = [a for a in alerts if a.alert_type == "QUALITY"]
         self.assertTrue(len(quality_alerts) > 0)
-        self.assertEqual(quality_alerts[0].alert_level, 'WARNING')
+        self.assertEqual(quality_alerts[0].alert_level, "WARNING")
 
     def test_evaluate_alert_rules_efficiency(self):
         """测试效率预警（效率<80%）"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
+        work_order.work_order_no = "WO001"
         work_order.progress = 50
         work_order.workstation_id = 1
         work_order.completed_qty = 100
         work_order.qualified_qty = 98
-        work_order.standard_hours = Decimal('8')
-        work_order.actual_hours = Decimal('12')  # 效率66.7%
+        work_order.standard_hours = Decimal("8")
+        work_order.actual_hours = Decimal("12")  # 效率66.7%
         work_order.plan_start_date = self.today - timedelta(days=5)
         work_order.plan_end_date = self.today + timedelta(days=5)
 
@@ -437,9 +437,9 @@ class TestProductionProgressService(unittest.TestCase):
 
         alerts = self.service.evaluate_alert_rules(1, 1)
 
-        efficiency_alerts = [a for a in alerts if a.alert_type == 'EFFICIENCY']
+        efficiency_alerts = [a for a in alerts if a.alert_type == "EFFICIENCY"]
         self.assertTrue(len(efficiency_alerts) > 0)
-        self.assertEqual(efficiency_alerts[0].alert_level, 'WARNING')
+        self.assertEqual(efficiency_alerts[0].alert_level, "WARNING")
 
     def test_evaluate_alert_rules_work_order_not_found(self):
         """测试工单不存在"""
@@ -453,13 +453,13 @@ class TestProductionProgressService(unittest.TestCase):
         """测试无预警情况"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
+        work_order.work_order_no = "WO001"
         work_order.progress = 50
         work_order.workstation_id = 1
         work_order.completed_qty = 100
         work_order.qualified_qty = 100  # 100%合格率
-        work_order.standard_hours = Decimal('8')
-        work_order.actual_hours = Decimal('7')  # 效率114%
+        work_order.standard_hours = Decimal("8")
+        work_order.actual_hours = Decimal("7")  # 效率114%
         work_order.plan_start_date = self.today - timedelta(days=5)
         work_order.plan_end_date = self.today + timedelta(days=5)
 
@@ -475,12 +475,12 @@ class TestProductionProgressService(unittest.TestCase):
         """测试创建第一条进度日志"""
         work_order = Mock()
         work_order.id = 1
-        work_order.status = 'PENDING'
+        work_order.status = "PENDING"
         work_order.progress = 0
         work_order.completed_qty = 0
         work_order.qualified_qty = 0
         work_order.defect_qty = 0
-        work_order.actual_hours = Decimal('0')
+        work_order.actual_hours = Decimal("0")
         work_order.workstation_id = 1
         work_order.plan_start_date = self.today - timedelta(days=5)
         work_order.plan_end_date = self.today + timedelta(days=5)
@@ -492,9 +492,9 @@ class TestProductionProgressService(unittest.TestCase):
             completed_qty=20,
             qualified_qty=20,
             defect_qty=0,
-            work_hours=Decimal('2'),
-            status='IN_PROGRESS',
-            note='开始生产'
+            work_hours=Decimal("2"),
+            status="IN_PROGRESS",
+            note="开始生产",
         )
 
         # Mock查询
@@ -512,20 +512,20 @@ class TestProductionProgressService(unittest.TestCase):
         """测试创建有历史记录的进度日志"""
         work_order = Mock()
         work_order.id = 1
-        work_order.status = 'IN_PROGRESS'
+        work_order.status = "IN_PROGRESS"
         work_order.progress = 20
         work_order.completed_qty = 20
         work_order.qualified_qty = 20
         work_order.defect_qty = 0
-        work_order.actual_hours = Decimal('2')
+        work_order.actual_hours = Decimal("2")
         work_order.workstation_id = 1
         work_order.plan_start_date = self.today - timedelta(days=5)
         work_order.plan_end_date = self.today + timedelta(days=5)
 
         last_log = Mock()
         last_log.current_progress = 20
-        last_log.status = 'IN_PROGRESS'
-        last_log.cumulative_hours = Decimal('2')
+        last_log.status = "IN_PROGRESS"
+        last_log.cumulative_hours = Decimal("2")
 
         log_data = ProductionProgressLogCreate(
             work_order_id=1,
@@ -534,9 +534,9 @@ class TestProductionProgressService(unittest.TestCase):
             completed_qty=50,
             qualified_qty=50,
             defect_qty=0,
-            work_hours=Decimal('3'),
-            status='IN_PROGRESS',
-            note='进度更新'
+            work_hours=Decimal("3"),
+            status="IN_PROGRESS",
+            note="进度更新",
         )
 
         # Mock查询
@@ -559,7 +559,7 @@ class TestProductionProgressService(unittest.TestCase):
             completed_qty=20,
             qualified_qty=20,
             defect_qty=0,
-            status='IN_PROGRESS'
+            status="IN_PROGRESS",
         )
 
         self.db.query.return_value.filter.return_value.first.return_value = None
@@ -567,12 +567,12 @@ class TestProductionProgressService(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             self.service.create_progress_log(log_data, 1)
 
-        self.assertEqual(str(context.exception), '工单不存在')
+        self.assertEqual(str(context.exception), "工单不存在")
 
     def test_update_workstation_status_new(self):
         """测试创建新工位状态"""
         self.db.query.return_value.filter.return_value.first.return_value = None
-        self.db.query.return_value.filter.return_value.scalar.return_value = Decimal('7.5')
+        self.db.query.return_value.filter.return_value.scalar.return_value = Decimal("7.5")
 
         self.service._update_workstation_status(1, 1)
 
@@ -582,15 +582,15 @@ class TestProductionProgressService(unittest.TestCase):
         """测试更新现有工位状态"""
         ws_status = Mock()
         ws_status.workstation_id = 1
-        ws_status.planned_hours_today = Decimal('8')
-        ws_status.work_hours_today = Decimal('0')
+        ws_status.planned_hours_today = Decimal("8")
+        ws_status.work_hours_today = Decimal("0")
 
         self.db.query.return_value.filter.return_value.first.return_value = ws_status
-        self.db.query.return_value.filter.return_value.scalar.return_value = Decimal('7.5')
+        self.db.query.return_value.filter.return_value.scalar.return_value = Decimal("7.5")
 
         self.service._update_workstation_status(1, 1)
 
-        self.assertEqual(ws_status.current_state, 'BUSY')
+        self.assertEqual(ws_status.current_state, "BUSY")
         self.assertEqual(ws_status.current_work_order_id, 1)
 
     def test_get_realtime_overview(self):
@@ -603,25 +603,25 @@ class TestProductionProgressService(unittest.TestCase):
         query_mock.distinct.return_value.count.return_value = 10
 
         query_mock.scalar.side_effect = [
-            Decimal('65'),  # 平均进度
-            Decimal('85'),  # 平均产能利用率
-            Decimal('92'),  # 平均效率
+            Decimal("65"),  # 平均进度
+            Decimal("85"),  # 平均产能利用率
+            Decimal("92"),  # 平均效率
         ]
 
         overview = self.service.get_realtime_overview()
 
         self.assertEqual(overview.total_work_orders, 100)
         self.assertEqual(overview.in_progress, 30)
-        self.assertEqual(overview.overall_progress, Decimal('65'))
+        self.assertEqual(overview.overall_progress, Decimal("65"))
 
     def test_get_work_order_timeline(self):
         """测试获取工单时间线"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
-        work_order.task_name = '测试任务'
+        work_order.work_order_no = "WO001"
+        work_order.task_name = "测试任务"
         work_order.progress = 50
-        work_order.status = 'IN_PROGRESS'
+        work_order.status = "IN_PROGRESS"
         work_order.plan_start_date = self.today
         work_order.plan_end_date = self.today + timedelta(days=10)
         work_order.actual_start_time = datetime.now()
@@ -666,8 +666,8 @@ class TestProductionProgressService(unittest.TestCase):
         """测试获取进度偏差列表"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
-        work_order.task_name = '测试任务'
+        work_order.work_order_no = "WO001"
+        work_order.task_name = "测试任务"
         work_order.progress = 30
         work_order.plan_start_date = self.today - timedelta(days=5)
         work_order.plan_end_date = self.today + timedelta(days=5)
@@ -686,8 +686,8 @@ class TestProductionProgressService(unittest.TestCase):
         """测试最小偏差过滤"""
         work_order = Mock()
         work_order.id = 1
-        work_order.work_order_no = 'WO001'
-        work_order.task_name = '测试任务'
+        work_order.work_order_no = "WO001"
+        work_order.task_name = "测试任务"
         work_order.progress = 45  # 偏差仅-5%
         work_order.plan_start_date = self.today - timedelta(days=5)
         work_order.plan_end_date = self.today + timedelta(days=5)
@@ -709,13 +709,13 @@ class TestProductionProgressService(unittest.TestCase):
 
         self.db.query.return_value.filter.return_value.first.return_value = alert
 
-        result = self.service.dismiss_alert(1, 1, '已处理')
+        result = self.service.dismiss_alert(1, 1, "已处理")
 
         self.assertTrue(result)
-        self.assertEqual(alert.status, 'DISMISSED')
+        self.assertEqual(alert.status, "DISMISSED")
         self.assertIsNotNone(alert.dismissed_at)
         self.assertEqual(alert.dismissed_by, 1)
-        self.assertEqual(alert.resolution_note, '已处理')
+        self.assertEqual(alert.resolution_note, "已处理")
         self.db.commit.assert_called()
 
     def test_dismiss_alert_not_found(self):
@@ -737,9 +737,9 @@ class TestProductionProgressService(unittest.TestCase):
         result = self.service.get_alerts(
             work_order_id=1,
             workstation_id=1,
-            alert_type='DELAY',
-            alert_level='CRITICAL',
-            status='ACTIVE'
+            alert_type="DELAY",
+            alert_level="CRITICAL",
+            status="ACTIVE",
         )
 
         self.assertEqual(len(result), 2)
@@ -757,5 +757,5 @@ class TestProductionProgressService(unittest.TestCase):
         self.assertTrue(len(filter_calls) > 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -5,9 +5,10 @@
 测试收货记录的创建、查询、更新、质检等功能
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestPurchaseReceiptsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/receipts/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Receipts API not implemented")
@@ -49,13 +47,11 @@ class TestPurchaseReceiptsAPI:
             "receipt_date": datetime.now().strftime("%Y-%m-%d"),
             "received_by": 1,
             "warehouse_location": "仓库A-01",
-            "remarks": "首批到货"
+            "remarks": "首批到货",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/",
-            headers=headers,
-            json=receipt_data
+            f"{settings.API_V1_PREFIX}/purchase/receipts/", headers=headers, json=receipt_data
         )
 
         if response.status_code == 404:
@@ -70,10 +66,7 @@ class TestPurchaseReceiptsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/receipts/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No receipt data or API not implemented")
@@ -87,15 +80,10 @@ class TestPurchaseReceiptsAPI:
 
         headers = _auth_headers(admin_token)
 
-        update_data = {
-            "warehouse_location": "仓库B-02",
-            "remarks": "更新存储位置"
-        }
+        update_data = {"warehouse_location": "仓库B-02", "remarks": "更新存储位置"}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/purchase/receipts/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -110,10 +98,7 @@ class TestPurchaseReceiptsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.delete(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/999",
-            headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_PREFIX}/purchase/receipts/999", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Receipt API not implemented")
@@ -133,13 +118,11 @@ class TestPurchaseReceiptsAPI:
             "received_quantity": 95,
             "qualified_quantity": 93,
             "rejected_quantity": 2,
-            "quality_status": "qualified"
+            "quality_status": "qualified",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/1/items",
-            headers=headers,
-            json=item_data
+            f"{settings.API_V1_PREFIX}/purchase/receipts/1/items", headers=headers, json=item_data
         )
 
         if response.status_code == 404:
@@ -160,13 +143,13 @@ class TestPurchaseReceiptsAPI:
             "inspection_result": "qualified",
             "qualified_quantity": 93,
             "rejected_quantity": 2,
-            "remarks": "少量瑕疵品"
+            "remarks": "少量瑕疵品",
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/purchase/receipts/1/inspect",
             headers=headers,
-            json=inspection_data
+            json=inspection_data,
         )
 
         if response.status_code == 404:
@@ -182,8 +165,7 @@ class TestPurchaseReceiptsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/1/confirm",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/receipts/1/confirm", headers=headers
         )
 
         if response.status_code == 404:
@@ -198,14 +180,12 @@ class TestPurchaseReceiptsAPI:
 
         headers = _auth_headers(admin_token)
 
-        reject_data = {
-            "reason": "质量不合格"
-        }
+        reject_data = {"reason": "质量不合格"}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/purchase/receipts/1/reject",
             headers=headers,
-            json=reject_data
+            json=reject_data,
         )
 
         if response.status_code == 404:
@@ -221,8 +201,7 @@ class TestPurchaseReceiptsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/?order_id=1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/receipts/?order_id=1", headers=headers
         )
 
         if response.status_code == 404:
@@ -238,8 +217,7 @@ class TestPurchaseReceiptsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/?status=confirmed",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/receipts/?status=confirmed", headers=headers
         )
 
         if response.status_code == 404:
@@ -255,8 +233,7 @@ class TestPurchaseReceiptsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/receipts/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -271,10 +248,7 @@ class TestPurchaseReceiptsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/export",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/receipts/export", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Receipt export API not implemented")
@@ -283,9 +257,7 @@ class TestPurchaseReceiptsAPI:
 
     def test_receipt_unauthorized(self, client: TestClient):
         """测试未授权访问收货记录"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/receipts/")
 
         assert response.status_code in [401, 403], response.text
 
@@ -299,13 +271,11 @@ class TestPurchaseReceiptsAPI:
         partial_data = {
             "receipt_type": "partial",
             "received_quantity": 50,
-            "remarks": "首批50个到货"
+            "remarks": "首批50个到货",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/receipts/",
-            headers=headers,
-            json=partial_data
+            f"{settings.API_V1_PREFIX}/purchase/receipts/", headers=headers, json=partial_data
         )
 
         if response.status_code == 404:

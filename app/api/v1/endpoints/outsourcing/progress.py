@@ -47,7 +47,12 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 
 # ==================== 外协进度 ====================
 
-@router.get("/outsourcing-orders/{order_id}/progress-logs", response_model=List[OutsourcingProgressResponse], status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/outsourcing-orders/{order_id}/progress-logs",
+    response_model=List[OutsourcingProgressResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_outsourcing_progress_logs(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -60,28 +65,39 @@ def read_outsourcing_progress_logs(
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
 
-    progress_records = db.query(OutsourcingProgress).filter(OutsourcingProgress.order_id == order_id).order_by(desc(OutsourcingProgress.report_date)).all()
+    progress_records = (
+        db.query(OutsourcingProgress)
+        .filter(OutsourcingProgress.order_id == order_id)
+        .order_by(desc(OutsourcingProgress.report_date))
+        .all()
+    )
 
     items = []
     for progress in progress_records:
-        items.append(OutsourcingProgressResponse(
-            id=progress.id,
-            order_id=progress.order_id,
-            report_date=progress.report_date,
-            progress_pct=progress.progress_pct or 0,
-            completed_quantity=progress.completed_quantity or Decimal("0"),
-            current_process=progress.current_process,
-            estimated_complete=progress.estimated_complete,
-            issues=progress.issues,
-            risk_level=progress.risk_level,
-            created_at=progress.created_at,
-            updated_at=progress.updated_at
-        ))
+        items.append(
+            OutsourcingProgressResponse(
+                id=progress.id,
+                order_id=progress.order_id,
+                report_date=progress.report_date,
+                progress_pct=progress.progress_pct or 0,
+                completed_quantity=progress.completed_quantity or Decimal("0"),
+                current_process=progress.current_process,
+                estimated_complete=progress.estimated_complete,
+                issues=progress.issues,
+                risk_level=progress.risk_level,
+                created_at=progress.created_at,
+                updated_at=progress.updated_at,
+            )
+        )
 
     return items
 
 
-@router.put("/outsourcing-orders/{order_id}/progress", response_model=OutsourcingProgressResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/outsourcing-orders/{order_id}/progress",
+    response_model=OutsourcingProgressResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_outsourcing_progress(
     *,
     db: Session = Depends(deps.get_db),
@@ -111,7 +127,7 @@ def update_outsourcing_progress(
         issues=progress_in.issues,
         risk_level=progress_in.risk_level,
         attachments=progress_in.attachments,
-        reported_by=current_user.id
+        reported_by=current_user.id,
     )
 
     db.add(progress)
@@ -129,7 +145,5 @@ def update_outsourcing_progress(
         issues=progress.issues,
         risk_level=progress.risk_level,
         created_at=progress.created_at,
-        updated_at=progress.updated_at
+        updated_at=progress.updated_at,
     )
-
-

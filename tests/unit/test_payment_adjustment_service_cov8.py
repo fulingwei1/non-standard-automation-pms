@@ -2,12 +2,14 @@
 """
 第八批覆盖率测试 - 收款计划调整服务
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.payment_adjustment_service import PaymentAdjustmentService
+
     HAS_PAS = True
 except Exception:
     HAS_PAS = False
@@ -89,7 +91,7 @@ class TestRecordAdjustmentHistory:
     def test_record_called_internally(self):
         """调整历史记录方法存在"""
         svc, db = make_service()
-        if hasattr(svc, '_record_adjustment_history'):
+        if hasattr(svc, "_record_adjustment_history"):
             # 调用不报错即可
             try:
                 svc._record_adjustment_history(1, date(2026, 2, 1), date(2026, 3, 1), "测试原因")
@@ -103,7 +105,7 @@ class TestGetAdjustmentHistory:
     def test_get_history_returns_list(self):
         """获取调整历史返回列表"""
         svc, db = make_service()
-        if hasattr(svc, 'get_adjustment_history'):
+        if hasattr(svc, "get_adjustment_history"):
             db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
             result = svc.get_adjustment_history(plan_id=1)
             assert isinstance(result, list)

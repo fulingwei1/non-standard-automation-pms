@@ -19,7 +19,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Tuple
 
-
 IGNORABLE_ERROR_SNIPPETS = (
     "already exists",
     "duplicate column name",
@@ -142,9 +141,9 @@ def seed_default_accounts() -> None:
 
     with get_db_session() as db:
         for item in accounts:
-            employee = db.query(Employee).filter(
-                Employee.employee_code == item["employee_code"]
-            ).first()
+            employee = (
+                db.query(Employee).filter(Employee.employee_code == item["employee_code"]).first()
+            )
             if not employee:
                 employee = Employee(
                     employee_code=item["employee_code"],
@@ -200,10 +199,14 @@ def seed_default_accounts() -> None:
                 user.is_active = True
                 user.is_superuser = item["is_superuser"]
 
-            user_role = db.query(UserRole).filter(
-                UserRole.user_id == user.id,
-                UserRole.role_id == role.id,
-            ).first()
+            user_role = (
+                db.query(UserRole)
+                .filter(
+                    UserRole.user_id == user.id,
+                    UserRole.role_id == role.id,
+                )
+                .first()
+            )
             if not user_role:
                 db.add(UserRole(user_id=user.id, role_id=role.id))
 
@@ -217,9 +220,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    import app.models  # noqa: F401  注册全部模型
     from app.core.config import settings
     from app.models.base import Base, get_engine, reset_engine
-    import app.models  # noqa: F401  注册全部模型
 
     project_root = Path(__file__).resolve().parents[1]
     db_path = Path(settings.SQLITE_DB_PATH)
@@ -228,9 +231,7 @@ def main() -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     if db_path.exists():
-        backup_path = db_path.with_suffix(
-            f".backup.{datetime.now().strftime('%Y%m%d%H%M%S')}.db"
-        )
+        backup_path = db_path.with_suffix(f".backup.{datetime.now().strftime('%Y%m%d%H%M%S')}.db")
         shutil.copy2(db_path, backup_path)
         db_path.unlink()
         print(f"已备份并删除旧数据库: {backup_path}")

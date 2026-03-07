@@ -3,9 +3,10 @@
 Schemas 测试的 Fixtures
 """
 
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+
+import pytest
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def sample_project_data():
         "pm_id": 1,
         "contract_amount": 100000.00,
         "planned_start_date": date.today(),
-        "planned_end_date": date.today() + timedelta(days=90)
+        "planned_end_date": date.today() + timedelta(days=90),
     }
 
 
@@ -29,7 +30,7 @@ def sample_user_data():
         "username": "testuser",
         "email": "test@example.com",
         "password": "SecurePassword123!",
-        "real_name": "测试用户"
+        "real_name": "测试用户",
     }
 
 
@@ -41,5 +42,5 @@ def sample_customer_data():
         "customer_code": "CUST001",
         "customer_type": "企业",
         "contact_person": "张三",
-        "contact_phone": "13800138000"
+        "contact_phone": "13800138000",
     }

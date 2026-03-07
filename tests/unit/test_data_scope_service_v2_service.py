@@ -17,6 +17,7 @@ class TestDataScopeServiceV2Init:
     def test_class_exists(self):
         """测试类存在"""
         from app.services.data_scope_service_v2 import DataScopeServiceV2
+
         assert DataScopeServiceV2 is not None
 
 
@@ -45,27 +46,21 @@ class TestGetAccessibleOrgUnits:
         """测试ALL权限范围"""
         from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-        result = DataScopeServiceV2.get_accessible_org_units(
-        db_session, 1, "ALL"
-        )
+        result = DataScopeServiceV2.get_accessible_org_units(db_session, 1, "ALL")
         assert isinstance(result, list)
 
     def test_team_scope(self, db_session):
         """测试TEAM权限范围"""
         from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-        result = DataScopeServiceV2.get_accessible_org_units(
-        db_session, 1, "TEAM"
-        )
+        result = DataScopeServiceV2.get_accessible_org_units(db_session, 1, "TEAM")
         assert isinstance(result, list)
 
     def test_department_scope(self, db_session):
         """测试DEPARTMENT权限范围"""
         from app.services.data_scope_service_v2 import DataScopeServiceV2
 
-        result = DataScopeServiceV2.get_accessible_org_units(
-        db_session, 1, "DEPARTMENT"
-        )
+        result = DataScopeServiceV2.get_accessible_org_units(db_session, 1, "DEPARTMENT")
         assert isinstance(result, list)
 
 
@@ -80,9 +75,7 @@ class TestFindAncestorByType:
         org_unit.unit_type = "TEAM"
         org_unit.parent_id = None
 
-        result = DataScopeServiceV2._find_ancestor_by_type(
-        db_session, org_unit, "DEPARTMENT"
-        )
+        result = DataScopeServiceV2._find_ancestor_by_type(db_session, org_unit, "DEPARTMENT")
         assert result is None  # 没有父级
 
     def test_same_type(self, db_session):
@@ -93,9 +86,7 @@ class TestFindAncestorByType:
         org_unit.unit_type = "DEPARTMENT"
         org_unit.parent_id = None
 
-        result = DataScopeServiceV2._find_ancestor_by_type(
-        db_session, org_unit, "DEPARTMENT"
-        )
+        result = DataScopeServiceV2._find_ancestor_by_type(db_session, org_unit, "DEPARTMENT")
         assert result == org_unit
 
 
@@ -122,9 +113,7 @@ class TestApplyDataScope:
 
         query = MagicMock()
 
-        result = DataScopeServiceV2.apply_data_scope(
-        query, db_session, user, "project"
-        )
+        result = DataScopeServiceV2.apply_data_scope(query, db_session, user, "project")
         assert result == query  # 不修改查询
 
 
@@ -140,9 +129,7 @@ class TestCanAccessData:
 
         data = MagicMock()
 
-        result = DataScopeServiceV2.can_access_data(
-        db_session, user, "project", data
-        )
+        result = DataScopeServiceV2.can_access_data(db_session, user, "project", data)
         assert result is True
 
 
@@ -153,6 +140,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

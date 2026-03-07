@@ -12,13 +12,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.project import Project
 from app.models.project_review import ProjectReview
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
@@ -56,27 +56,30 @@ def get_project_reviews(
         query = query.filter(ProjectReview.status == status)
 
     total = query.count()
-    reviews = apply_pagination(query.order_by(desc(ProjectReview.review_date)), pagination.offset, pagination.limit).all()
+    reviews = apply_pagination(
+        query.order_by(desc(ProjectReview.review_date)), pagination.offset, pagination.limit
+    ).all()
 
-    reviews_data = [{
-        "id": r.id,
-        "review_no": r.review_no,
-        "review_date": r.review_date.isoformat() if r.review_date else None,
-        "review_type": r.review_type,
-        "reviewer_name": r.reviewer_name,
-        "participant_names": r.participant_names,
-        "schedule_variance": r.schedule_variance,
-        "cost_variance": float(r.cost_variance) if r.cost_variance else None,
-        "customer_satisfaction": r.customer_satisfaction,
-        "status": r.status,
-        "lessons_count": len(r.lessons) if r.lessons else 0,
-        "created_at": r.created_at.isoformat() if r.created_at else None,
-    } for r in reviews]
+    reviews_data = [
+        {
+            "id": r.id,
+            "review_no": r.review_no,
+            "review_date": r.review_date.isoformat() if r.review_date else None,
+            "review_type": r.review_type,
+            "reviewer_name": r.reviewer_name,
+            "participant_names": r.participant_names,
+            "schedule_variance": r.schedule_variance,
+            "cost_variance": float(r.cost_variance) if r.cost_variance else None,
+            "customer_satisfaction": r.customer_satisfaction,
+            "status": r.status,
+            "lessons_count": len(r.lessons) if r.lessons else 0,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in reviews
+    ]
 
     return ResponseModel(
-        code=200,
-        message="获取复盘列表成功",
-        data={"total": total, "items": reviews_data}
+        code=200, message="获取复盘列表成功", data={"total": total, "items": reviews_data}
     )
 
 
@@ -97,30 +100,46 @@ def get_review_detail(
     Returns:
         ResponseModel: 复盘详情
     """
-    review = db.query(ProjectReview).options(
-        joinedload(ProjectReview.lessons),
-        joinedload(ProjectReview.best_practices_list)
-    ).filter(ProjectReview.id == review_id).first()
+    review = (
+        db.query(ProjectReview)
+        .options(joinedload(ProjectReview.lessons), joinedload(ProjectReview.best_practices_list))
+        .filter(ProjectReview.id == review_id)
+        .first()
+    )
 
     if not review:
         raise HTTPException(status_code=404, detail="复盘报告不存在")
 
-    lessons_data = [{
-        "id": l.id,
-        "lesson_type": l.lesson_type,
-        "title": l.title,
-        "category": l.category,
-        "priority": l.priority,
-        "status": l.status,
-    } for l in review.lessons] if review.lessons else []
+    lessons_data = (
+        [
+            {
+                "id": l.id,
+                "lesson_type": l.lesson_type,
+                "title": l.title,
+                "category": l.category,
+                "priority": l.priority,
+                "status": l.status,
+            }
+            for l in review.lessons
+        ]
+        if review.lessons
+        else []
+    )
 
-    practices_data = [{
-        "id": p.id,
-        "title": p.title,
-        "category": p.category,
-        "is_reusable": p.is_reusable,
-        "validation_status": p.validation_status,
-    } for p in review.best_practices_list] if review.best_practices_list else []
+    practices_data = (
+        [
+            {
+                "id": p.id,
+                "title": p.title,
+                "category": p.category,
+                "is_reusable": p.is_reusable,
+                "validation_status": p.validation_status,
+            }
+            for p in review.best_practices_list
+        ]
+        if review.best_practices_list
+        else []
+    )
 
     return ResponseModel(
         code=200,
@@ -151,7 +170,7 @@ def get_review_detail(
             "status": review.status,
             "lessons": lessons_data,
             "best_practices_list": practices_data,
-        }
+        },
     )
 
 
@@ -184,7 +203,11 @@ def create_project_review(
         review_no=review_no,
         project_id=project_id,
         project_code=project.project_code,
-        review_date=date.fromisoformat(review_data["review_date"]) if review_data.get("review_date") else date.today(),
+        review_date=(
+            date.fromisoformat(review_data["review_date"])
+            if review_data.get("review_date")
+            else date.today()
+        ),
         review_type=review_data.get("review_type", "POST_MORTEM"),
         plan_duration=review_data.get("plan_duration"),
         actual_duration=review_data.get("actual_duration"),
@@ -209,9 +232,7 @@ def create_project_review(
     save_obj(db, review)
 
     return ResponseModel(
-        code=200,
-        message="复盘报告创建成功",
-        data={"id": review.id, "review_no": review_no}
+        code=200, message="复盘报告创建成功", data={"id": review.id, "review_no": review_no}
     )
 
 
@@ -240,17 +261,32 @@ def update_project_review(
         raise HTTPException(status_code=400, detail="已归档的复盘报告不能修改")
 
     updatable = [
-        "review_type", "plan_duration", "actual_duration", "schedule_variance",
-        "budget_amount", "actual_cost", "cost_variance", "quality_issues",
-        "change_count", "customer_satisfaction", "success_factors", "problems",
-        "improvements", "best_practices", "conclusion", "participant_names", "status"
+        "review_type",
+        "plan_duration",
+        "actual_duration",
+        "schedule_variance",
+        "budget_amount",
+        "actual_cost",
+        "cost_variance",
+        "quality_issues",
+        "change_count",
+        "customer_satisfaction",
+        "success_factors",
+        "problems",
+        "improvements",
+        "best_practices",
+        "conclusion",
+        "participant_names",
+        "status",
     ]
     for field in updatable:
         if field in review_data:
             setattr(review, field, review_data[field])
 
     if "review_date" in review_data:
-        review.review_date = date.fromisoformat(review_data["review_date"]) if review_data["review_date"] else None
+        review.review_date = (
+            date.fromisoformat(review_data["review_date"]) if review_data["review_date"] else None
+        )
 
     db.commit()
 

@@ -6,7 +6,7 @@
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from sqlalchemy.orm import Session
 
@@ -18,11 +18,11 @@ from app.models.user import User
 def get_test_accounts():
     """获取测试账户列表"""
     test_patterns = [
-        'admin',           # 系统管理员
-        'pwd_test_user',   # 密码测试用户
-        'engineer_test',   # 工程师一号
-        'pm_test',         # 项目经理
-        'pwd_test_'        # 批量密码测试用户前缀
+        "admin",  # 系统管理员
+        "pwd_test_user",  # 密码测试用户
+        "engineer_test",  # 工程师一号
+        "pm_test",  # 项目经理
+        "pwd_test_",  # 批量密码测试用户前缀
     ]
 
     test_accounts = []
@@ -39,15 +39,15 @@ def get_test_accounts():
 
     return test_accounts
 
+
 def get_project_manager():
     """获取项目经理谭章斌"""
     db = next(get_db())
     try:
-        return db.query(User).filter(
-            User.username == 'tanzhangbin'
-        ).first()
+        return db.query(User).filter(User.username == "tanzhangbin").first()
     finally:
         db.close()
+
 
 def cleanup_user_related_data(db: Session, user_id: int):
     """清理用户相关的数据"""
@@ -85,6 +85,7 @@ def cleanup_user_related_data(db: Session, user_id: int):
         print(f"  ⚠️ 清理用户ID {user_id} 数据时出错: {e}")
         db.rollback()
 
+
 def safe_delete_test_accounts():
     """安全删除测试账户"""
     print("🧹 安全清理测试账户（处理外键约束）")
@@ -100,7 +101,9 @@ def safe_delete_test_accounts():
     print(f"👥 查找项目经理用户（谭章斌）: {pm_count} 个")
 
     if project_manager:
-        print(f"  - {project_manager.username} ({project_manager.real_name}) - {project_manager.department}")
+        print(
+            f"  - {project_manager.username} ({project_manager.real_name}) - {project_manager.department}"
+        )
 
     # 获取当前用户总数
     db = next(get_db())
@@ -139,7 +142,7 @@ def safe_delete_test_accounts():
 
         # 确认项目经理保护
         if project_manager:
-            pm_check = db.query(User).filter(User.username == 'tanzhangbin').first()
+            pm_check = db.query(User).filter(User.username == "tanzhangbin").first()
             if pm_check:
                 print(f"\n👑 项目经理保护状态:")
                 print(f"  ✅ 账户保留: {pm_check.username} ({pm_check.real_name})")
@@ -150,6 +153,7 @@ def safe_delete_test_accounts():
     finally:
         db.close()
 
+
 def ensure_project_manager_role():
     """确保谭章斌有项目经理角色"""
     print("\n🛡️ 确保项目经理角色")
@@ -158,10 +162,10 @@ def ensure_project_manager_role():
     db = next(get_db())
     try:
         # 获取项目经理角色
-        pm_role = db.query(Role).filter(Role.name == '项目经理').first()
+        pm_role = db.query(Role).filter(Role.name == "项目经理").first()
 
         # 获取谭章斌用户
-        tanzhangbin = db.query(User).filter(User.username == 'tanzhangbin').first()
+        tanzhangbin = db.query(User).filter(User.username == "tanzhangbin").first()
 
         if tanzhangbin and pm_role:
             if tanzhangbin.role_id != pm_role.id:
@@ -179,6 +183,7 @@ def ensure_project_manager_role():
     finally:
         db.close()
 
+
 def main():
     """主函数"""
     try:
@@ -195,6 +200,7 @@ def main():
         return 1
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

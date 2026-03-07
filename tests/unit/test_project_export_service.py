@@ -6,11 +6,12 @@ I2组 - 项目导出服务 单元测试
 from datetime import date
 from decimal import Decimal
 from io import BytesIO
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
 import pytest
 
-
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _make_project():
     p = MagicMock()
@@ -40,8 +41,10 @@ def _make_mock_db(tasks=None, costs=None):
 
     def query_side_effect(model):
         from app.models.progress import Task
+
         try:
             from app.models.project import ProjectCost
+
             if model is ProjectCost:
                 q = MagicMock()
                 q.filter.return_value.order_by.return_value.all.return_value = costs
@@ -58,9 +61,11 @@ def _make_mock_db(tasks=None, costs=None):
 
 # ─── get_excel_styles ─────────────────────────────────────────────────────────
 
+
 class TestGetExcelStyles:
     def test_returns_dict_when_available(self):
-        from app.services.project_export_service import get_excel_styles, OPENPYXL_AVAILABLE
+        from app.services.project_export_service import OPENPYXL_AVAILABLE, get_excel_styles
+
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl 未安装")
 
@@ -73,15 +78,18 @@ class TestGetExcelStyles:
     def test_returns_empty_when_unavailable(self):
         with patch("app.services.project_export_service.OPENPYXL_AVAILABLE", False):
             from app.services.project_export_service import get_excel_styles
+
             result = get_excel_styles()
         assert result == {}
 
 
 # ─── build_project_info_data ─────────────────────────────────────────────────
 
+
 class TestBuildProjectInfoData:
     def test_returns_list_of_tuples(self):
         from app.services.project_export_service import build_project_info_data
+
         project = _make_project()
         result = build_project_info_data(project)
 
@@ -90,6 +98,7 @@ class TestBuildProjectInfoData:
 
     def test_contains_required_fields(self):
         from app.services.project_export_service import build_project_info_data
+
         project = _make_project()
         result = build_project_info_data(project)
 
@@ -101,6 +110,7 @@ class TestBuildProjectInfoData:
 
     def test_handles_none_amounts(self):
         from app.services.project_export_service import build_project_info_data
+
         project = _make_project()
         project.contract_amount = None
         project.progress_pct = None
@@ -115,6 +125,7 @@ class TestBuildProjectInfoData:
 
     def test_date_formatting(self):
         from app.services.project_export_service import build_project_info_data
+
         project = _make_project()
         result = build_project_info_data(project)
 
@@ -124,6 +135,7 @@ class TestBuildProjectInfoData:
 
     def test_amount_formatting(self):
         from app.services.project_export_service import build_project_info_data
+
         project = _make_project()
         result = build_project_info_data(project)
         data = dict(result)
@@ -132,16 +144,19 @@ class TestBuildProjectInfoData:
 
 # ─── add_project_info_sheet ───────────────────────────────────────────────────
 
+
 class TestAddProjectInfoSheet:
     def test_noop_when_unavailable(self):
         with patch("app.services.project_export_service.OPENPYXL_AVAILABLE", False):
             from app.services.project_export_service import add_project_info_sheet
+
             ws = MagicMock()
             add_project_info_sheet(ws, _make_project(), {})
         ws.merge_cells.assert_not_called()
 
     def test_writes_cells(self):
-        from app.services.project_export_service import add_project_info_sheet, OPENPYXL_AVAILABLE
+        from app.services.project_export_service import OPENPYXL_AVAILABLE, add_project_info_sheet
+
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl 未安装")
 
@@ -157,21 +172,24 @@ class TestAddProjectInfoSheet:
         }
         add_project_info_sheet(ws, _make_project(), styles)
 
-        ws.merge_cells.assert_called_once_with('A1:B1')
+        ws.merge_cells.assert_called_once_with("A1:B1")
 
 
 # ─── add_tasks_sheet ──────────────────────────────────────────────────────────
+
 
 class TestAddTasksSheet:
     def test_noop_when_unavailable(self):
         with patch("app.services.project_export_service.OPENPYXL_AVAILABLE", False):
             from app.services.project_export_service import add_tasks_sheet
+
             wb = MagicMock()
             add_tasks_sheet(wb, MagicMock(), 1, {})
         wb.create_sheet.assert_not_called()
 
     def test_creates_sheet_with_tasks(self):
-        from app.services.project_export_service import add_tasks_sheet, OPENPYXL_AVAILABLE
+        from app.services.project_export_service import OPENPYXL_AVAILABLE, add_tasks_sheet
+
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl 未安装")
 
@@ -191,7 +209,9 @@ class TestAddTasksSheet:
         mock_task.created_at.strftime.return_value = "2024-01-01 00:00:00"
 
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_task]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_task
+        ]
 
         wb = MagicMock()
         ws = MagicMock()
@@ -208,7 +228,8 @@ class TestAddTasksSheet:
         wb.create_sheet.assert_called_once_with("任务列表")
 
     def test_empty_tasks(self):
-        from app.services.project_export_service import add_tasks_sheet, OPENPYXL_AVAILABLE
+        from app.services.project_export_service import OPENPYXL_AVAILABLE, add_tasks_sheet
+
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl 未安装")
 
@@ -228,16 +249,19 @@ class TestAddTasksSheet:
 
 # ─── add_costs_sheet ──────────────────────────────────────────────────────────
 
+
 class TestAddCostsSheet:
     def test_noop_when_unavailable(self):
         with patch("app.services.project_export_service.OPENPYXL_AVAILABLE", False):
             from app.services.project_export_service import add_costs_sheet
+
             wb = MagicMock()
             add_costs_sheet(wb, MagicMock(), 1, {})
         wb.create_sheet.assert_not_called()
 
     def test_creates_costs_sheet(self):
-        from app.services.project_export_service import add_costs_sheet, OPENPYXL_AVAILABLE
+        from app.services.project_export_service import OPENPYXL_AVAILABLE, add_costs_sheet
+
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl 未安装")
 
@@ -252,7 +276,9 @@ class TestAddCostsSheet:
         mock_cost.created_at.strftime.return_value = "2024-01-10 00:00:00"
 
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_cost]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_cost
+        ]
 
         wb = MagicMock()
         ws = MagicMock()
@@ -267,38 +293,52 @@ class TestAddCostsSheet:
 
 # ─── create_project_detail_excel ─────────────────────────────────────────────
 
+
 class TestCreateProjectDetailExcel:
     def test_raises_when_unavailable(self):
         with patch("app.services.project_export_service.OPENPYXL_AVAILABLE", False):
             from app.services.project_export_service import create_project_detail_excel
+
             with pytest.raises(ImportError):
                 create_project_detail_excel(MagicMock(), _make_project(), True, True)
 
     def test_returns_bytes_io(self):
-        from app.services.project_export_service import create_project_detail_excel, OPENPYXL_AVAILABLE
+        from app.services.project_export_service import (
+            OPENPYXL_AVAILABLE,
+            create_project_detail_excel,
+        )
+
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl 未安装")
 
         db = MagicMock()
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
 
-        with patch("app.services.project_export_service.add_tasks_sheet"), \
-             patch("app.services.project_export_service.add_costs_sheet"), \
-             patch("app.services.project_export_service.add_project_info_sheet"):
+        with (
+            patch("app.services.project_export_service.add_tasks_sheet"),
+            patch("app.services.project_export_service.add_costs_sheet"),
+            patch("app.services.project_export_service.add_project_info_sheet"),
+        ):
             result = create_project_detail_excel(db, _make_project(), True, True)
 
         assert isinstance(result, BytesIO)
 
     def test_no_tasks_no_costs(self):
-        from app.services.project_export_service import create_project_detail_excel, OPENPYXL_AVAILABLE
+        from app.services.project_export_service import (
+            OPENPYXL_AVAILABLE,
+            create_project_detail_excel,
+        )
+
         if not OPENPYXL_AVAILABLE:
             pytest.skip("openpyxl 未安装")
 
         db = MagicMock()
 
-        with patch("app.services.project_export_service.add_tasks_sheet") as mock_tasks, \
-             patch("app.services.project_export_service.add_costs_sheet") as mock_costs, \
-             patch("app.services.project_export_service.add_project_info_sheet"):
+        with (
+            patch("app.services.project_export_service.add_tasks_sheet") as mock_tasks,
+            patch("app.services.project_export_service.add_costs_sheet") as mock_costs,
+            patch("app.services.project_export_service.add_project_info_sheet"),
+        ):
             result = create_project_detail_excel(db, _make_project(), False, False)
             mock_tasks.assert_not_called()
             mock_costs.assert_not_called()

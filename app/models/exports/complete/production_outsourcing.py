@@ -3,6 +3,18 @@
 完整模型导出 - 生产和外协相关
 """
 
+# 外协管理
+from ...outsourcing import (
+    OutsourcingDelivery,
+    OutsourcingDeliveryItem,
+    OutsourcingEvaluation,
+    OutsourcingInspection,
+    OutsourcingOrder,
+    OutsourcingOrderItem,
+    OutsourcingPayment,
+    OutsourcingProgress,
+)
+
 # 生产管理
 from ...production import (
     Equipment,
@@ -19,18 +31,6 @@ from ...production import (
     WorkReport,
     Workshop,
     Workstation,
-)
-
-# 外协管理
-from ...outsourcing import (
-    OutsourcingDelivery,
-    OutsourcingDeliveryItem,
-    OutsourcingEvaluation,
-    OutsourcingInspection,
-    OutsourcingOrder,
-    OutsourcingOrderItem,
-    OutsourcingPayment,
-    OutsourcingProgress,
 )
 
 __all__ = [

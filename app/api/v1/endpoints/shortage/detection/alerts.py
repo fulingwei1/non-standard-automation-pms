@@ -25,11 +25,11 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.material import MaterialShortage
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,7 @@ router = APIRouter()
 # ============================================================
 # 辅助函数
 # ============================================================
+
 
 def _build_alert_response(alert: MaterialShortage) -> Dict[str, Any]:
     """构建预警响应对象"""
@@ -88,7 +89,9 @@ def _build_alert_detail_response(alert: MaterialShortage) -> Dict[str, Any]:
     }
 
 
-def _parse_follow_ups(remark: Optional[str], created_at: Optional[datetime], handler_id: Optional[int]) -> List[Dict]:
+def _parse_follow_ups(
+    remark: Optional[str], created_at: Optional[datetime], handler_id: Optional[int]
+) -> List[Dict]:
     """从备注字段解析跟进记录"""
     follow_ups = []
     if not remark:
@@ -101,12 +104,14 @@ def _parse_follow_ups(remark: Optional[str], created_at: Optional[datetime], han
     except (json.JSONDecodeError, TypeError):
         # 如果不是JSON，返回原备注作为单条记录
         if remark.strip():
-            follow_ups.append({
-                "type": "NOTE",
-                "note": remark,
-                "created_at": created_at.isoformat() if created_at else None,
-                "created_by": handler_id,
-            })
+            follow_ups.append(
+                {
+                    "type": "NOTE",
+                    "note": remark,
+                    "created_at": created_at.isoformat() if created_at else None,
+                    "created_by": handler_id,
+                }
+            )
     return follow_ups
 
 
@@ -115,7 +120,7 @@ def _handle_shortage_integration(
     alert: MaterialShortage,
     action: str,
     old_level: Optional[str] = None,
-    new_level: Optional[str] = None
+    new_level: Optional[str] = None,
 ) -> None:
     """处理缺料联动（任务阻塞/解除）"""
     try:
@@ -123,18 +128,22 @@ def _handle_shortage_integration(
         from app.services.progress_integration_service import ProgressIntegrationService
 
         # 查找对应的 AlertRecord 记录
-        shortage_alert = db.query(AlertRecord).filter(
-            AlertRecord.target_type == 'SHORTAGE',
-            AlertRecord.project_id == alert.project_id,
-            AlertRecord.target_no == alert.material_code,
-            AlertRecord.status.in_(['PENDING', 'PROCESSING', 'pending', 'handling'])
-        ).first()
+        shortage_alert = (
+            db.query(AlertRecord)
+            .filter(
+                AlertRecord.target_type == "SHORTAGE",
+                AlertRecord.project_id == alert.project_id,
+                AlertRecord.target_no == alert.material_code,
+                AlertRecord.status.in_(["PENDING", "PROCESSING", "pending", "handling"]),
+            )
+            .first()
+        )
 
         if not shortage_alert:
             return
 
         integration_service = ProgressIntegrationService(db)
-        critical_levels = ['CRITICAL', 'HIGH', 'level3', 'level4', 'L3', 'L4']
+        critical_levels = ["CRITICAL", "HIGH", "level3", "level4", "L3", "L4"]
 
         if action == "level_upgrade":
             # 预警级别提升，触发任务阻塞
@@ -156,6 +165,7 @@ def _handle_shortage_integration(
 # ============================================================
 # 预警列表和详情
 # ============================================================
+
 
 @router.get("/alerts", response_model=PaginatedResponse)
 def list_alerts(
@@ -185,7 +195,9 @@ def list_alerts(
         query = query.filter(MaterialShortage.handler_id == handler_id)
 
     total = query.count()
-    alerts = apply_pagination(query.order_by(desc(MaterialShortage.created_at)), pagination.offset, pagination.limit).all()
+    alerts = apply_pagination(
+        query.order_by(desc(MaterialShortage.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_build_alert_response(alert) for alert in alerts]
 
@@ -194,7 +206,7 @@ def list_alerts(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -215,6 +227,7 @@ def get_alert(
 # ============================================================
 # 预警处理
 # ============================================================
+
 
 @router.put("/alerts/{alert_id}/acknowledge", response_model=ResponseModel)
 def acknowledge_alert(
@@ -320,12 +333,15 @@ def resolve_alert(
 # 跟进管理
 # ============================================================
 
+
 @router.post("/alerts/{alert_id}/follow-ups", response_model=ResponseModel)
 def add_follow_up(
     alert_id: int,
     db: Session = Depends(deps.get_db),
     follow_up_note: str = Body(..., description="跟进内容"),
-    follow_up_type: Optional[str] = Body("COMMENT", description="跟进类型：COMMENT/CALL/EMAIL/VISIT"),
+    follow_up_type: Optional[str] = Body(
+        "COMMENT", description="跟进类型：COMMENT/CALL/EMAIL/VISIT"
+    ),
     next_follow_up_date: Optional[date] = Body(None, description="下次跟进日期"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -338,14 +354,16 @@ def add_follow_up(
     follow_ups = _parse_follow_ups(alert.remark, alert.created_at, alert.handler_id)
 
     # 添加新的跟进记录
-    follow_ups.append({
-        "type": follow_up_type or "COMMENT",
-        "note": follow_up_note,
-        "created_at": datetime.now().isoformat(),
-        "created_by": current_user.id,
-        "created_by_name": current_user.real_name or current_user.username,
-        "next_follow_up_date": next_follow_up_date.isoformat() if next_follow_up_date else None,
-    })
+    follow_ups.append(
+        {
+            "type": follow_up_type or "COMMENT",
+            "note": follow_up_note,
+            "created_at": datetime.now().isoformat(),
+            "created_by": current_user.id,
+            "created_by_name": current_user.real_name or current_user.username,
+            "next_follow_up_date": next_follow_up_date.isoformat() if next_follow_up_date else None,
+        }
+    )
 
     # 更新备注字段
     alert.remark = json.dumps(follow_ups, ensure_ascii=False)
@@ -360,7 +378,7 @@ def add_follow_up(
             "alert_id": alert_id,
             "follow_up_count": len(follow_ups),
             "latest_follow_up": follow_ups[-1] if follow_ups else None,
-        }
+        },
     )
 
 
@@ -384,5 +402,5 @@ def list_follow_ups(
             "alert_id": alert_id,
             "follow_ups": follow_ups,
             "total_count": len(follow_ups),
-        }
+        },
     )

@@ -4,6 +4,7 @@
 """
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     Date,
@@ -14,7 +15,6 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    JSON,
 )
 from sqlalchemy.orm import relationship
 
@@ -36,9 +36,7 @@ class CostForecast(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
     # 项目关联
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     project_code = Column(String(50), comment="项目编号（冗余）")
     project_name = Column(String(200), comment="项目名称（冗余）")
 
@@ -55,9 +53,7 @@ class CostForecast(Base, TimestampMixin):
     forecast_month = Column(String(7), comment="预测月份(YYYY-MM)")
 
     # 预测结果
-    forecasted_completion_cost = Column(
-        Numeric(14, 2), nullable=False, comment="预测完工成本"
-    )
+    forecasted_completion_cost = Column(Numeric(14, 2), nullable=False, comment="预测完工成本")
     forecasted_completion_date = Column(Date, comment="预测完工日期")
 
     # 当前状态（预测时的数据）
@@ -121,9 +117,7 @@ class CostAlert(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
 
     # 项目关联
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     project_code = Column(String(50), comment="项目编号（冗余）")
     project_name = Column(String(200), comment="项目名称（冗余）")
 

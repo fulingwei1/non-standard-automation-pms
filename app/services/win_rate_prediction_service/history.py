@@ -16,9 +16,7 @@ if TYPE_CHECKING:
 
 
 def get_salesperson_historical_win_rate(
-    service: "WinRatePredictionService",
-    salesperson_id: int,
-    lookback_months: int = 24
+    service: "WinRatePredictionService", salesperson_id: int, lookback_months: int = 24
 ) -> Tuple[float, int]:
     """获取销售人员历史中标率
 
@@ -32,17 +30,18 @@ def get_salesperson_historical_win_rate(
     """
     cutoff_date = date.today() - timedelta(days=30 * lookback_months)
 
-    stats = service.db.query(
-        func.count(Project.id).label('total'),
-        func.sum(case(
-            (Project.outcome == LeadOutcomeEnum.WON.value, 1),
-            else_=0
-        )).label('won')
-    ).filter(
-        Project.salesperson_id == salesperson_id,
-        Project.created_at >= cutoff_date,
-        Project.outcome.in_([LeadOutcomeEnum.WON.value, LeadOutcomeEnum.LOST.value])
-    ).first()
+    stats = (
+        service.db.query(
+            func.count(Project.id).label("total"),
+            func.sum(case((Project.outcome == LeadOutcomeEnum.WON.value, 1), else_=0)).label("won"),
+        )
+        .filter(
+            Project.salesperson_id == salesperson_id,
+            Project.created_at >= cutoff_date,
+            Project.outcome.in_([LeadOutcomeEnum.WON.value, LeadOutcomeEnum.LOST.value]),
+        )
+        .first()
+    )
 
     total = stats.total or 0
     won = stats.won or 0
@@ -56,7 +55,7 @@ def get_salesperson_historical_win_rate(
 def get_customer_cooperation_history(
     service: "WinRatePredictionService",
     customer_id: Optional[int] = None,
-    customer_name: Optional[str] = None
+    customer_name: Optional[str] = None,
 ) -> Tuple[int, int]:
     """获取客户历史合作情况
 
@@ -69,9 +68,9 @@ def get_customer_cooperation_history(
         query = query.filter(Project.customer_id == customer_id)
     elif customer_name:
         # 通过客户名称查找
-        customer = service.db.query(Customer).filter(
-            Customer.customer_name == customer_name
-        ).first()
+        customer = (
+            service.db.query(Customer).filter(Customer.customer_name == customer_name).first()
+        )
         if customer:
             query = query.filter(Project.customer_id == customer.id)
         else:
@@ -88,7 +87,7 @@ def get_customer_cooperation_history(
 def get_similar_leads_statistics(
     service: "WinRatePredictionService",
     dimension_scores: DimensionScore,
-    score_tolerance: float = 10
+    score_tolerance: float = 10,
 ) -> Tuple[int, float]:
     """获取相似线索统计
 
@@ -102,13 +101,16 @@ def get_similar_leads_statistics(
     """
     total_score = dimension_scores.total_score
 
-    similar_leads = service.db.query(Project).filter(
-        Project.evaluation_score.between(
-            total_score - score_tolerance,
-            total_score + score_tolerance
-        ),
-        Project.outcome.in_([LeadOutcomeEnum.WON.value, LeadOutcomeEnum.LOST.value])
-    ).all()
+    similar_leads = (
+        service.db.query(Project)
+        .filter(
+            Project.evaluation_score.between(
+                total_score - score_tolerance, total_score + score_tolerance
+            ),
+            Project.outcome.in_([LeadOutcomeEnum.WON.value, LeadOutcomeEnum.LOST.value]),
+        )
+        .all()
+    )
 
     if not similar_leads:
         return 0, 0

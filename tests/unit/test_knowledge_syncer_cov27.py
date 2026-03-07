@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - knowledge_syncer 单元测试"""
 
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.project_review_ai.knowledge_syncer")
 
@@ -159,7 +160,7 @@ class TestCalculateQualityScore:
             success_factors="良好团队协作且沟通顺畅高效",
             problems="仅有少量问题需要解决",
             best_practices="最佳实践用于指导团队成员",
-            conclusion="总体项目完成优秀达标"
+            conclusion="总体项目完成优秀达标",
         )
         score = self.syncer._calculate_quality_score(review)
         assert score > 0.8
@@ -244,6 +245,7 @@ class TestParseSummaryResponse:
 
     def test_parse_valid_json(self):
         import json
+
         data = {"summary": "项目摘要", "technical_highlights": "亮点"}
         response = {"content": json.dumps(data)}
         result = self.syncer._parse_summary_response(response)
@@ -251,6 +253,7 @@ class TestParseSummaryResponse:
 
     def test_parse_json_in_code_block(self):
         import json
+
         data = {"summary": "代码块摘要"}
         content = f"```json\n{json.dumps(data)}\n```"
         response = {"content": content}

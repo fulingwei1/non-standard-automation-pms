@@ -6,9 +6,9 @@ Contract Schema 测试
 import pytest
 from pydantic import ValidationError
 
-
 try:
     from app.schemas.sales import ContractCreate, ContractUpdate
+
     SCHEMA_AVAILABLE = True
 except ImportError:
     SCHEMA_AVAILABLE = False

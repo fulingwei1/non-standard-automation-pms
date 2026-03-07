@@ -26,14 +26,18 @@ from app.services.ecn_notification import (
     notify_evaluation_assigned,
     notify_evaluation_completed,
 )
+from app.utils.db_helpers import get_or_404
 
 from .utils import get_user_display_name
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
 
-@router.get("/ecns/{ecn_id}/evaluations", response_model=List[EcnEvaluationResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}/evaluations",
+    response_model=List[EcnEvaluationResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_ecn_evaluations(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -44,36 +48,47 @@ def read_ecn_evaluations(
     """
     get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
-    evaluations = db.query(EcnEvaluation).filter(EcnEvaluation.ecn_id == ecn_id).order_by(EcnEvaluation.created_at).all()
+    evaluations = (
+        db.query(EcnEvaluation)
+        .filter(EcnEvaluation.ecn_id == ecn_id)
+        .order_by(EcnEvaluation.created_at)
+        .all()
+    )
 
     items = []
     for eval in evaluations:
         evaluator_name = get_user_display_name(db, eval.evaluator_id)
 
-        items.append(EcnEvaluationResponse(
-            id=eval.id,
-            ecn_id=eval.ecn_id,
-            eval_dept=eval.eval_dept,
-            evaluator_id=eval.evaluator_id,
-            evaluator_name=evaluator_name,
-            impact_analysis=eval.impact_analysis,
-            cost_estimate=eval.cost_estimate or Decimal("0"),
-            schedule_estimate=eval.schedule_estimate or 0,
-            resource_requirement=eval.resource_requirement,
-            risk_assessment=eval.risk_assessment,
-            eval_result=eval.eval_result,
-            eval_opinion=eval.eval_opinion,
-            conditions=eval.conditions,
-            evaluated_at=eval.evaluated_at,
-            status=eval.status,
-            created_at=eval.created_at,
-            updated_at=eval.updated_at
-        ))
+        items.append(
+            EcnEvaluationResponse(
+                id=eval.id,
+                ecn_id=eval.ecn_id,
+                eval_dept=eval.eval_dept,
+                evaluator_id=eval.evaluator_id,
+                evaluator_name=evaluator_name,
+                impact_analysis=eval.impact_analysis,
+                cost_estimate=eval.cost_estimate or Decimal("0"),
+                schedule_estimate=eval.schedule_estimate or 0,
+                resource_requirement=eval.resource_requirement,
+                risk_assessment=eval.risk_assessment,
+                eval_result=eval.eval_result,
+                eval_opinion=eval.eval_opinion,
+                conditions=eval.conditions,
+                evaluated_at=eval.evaluated_at,
+                status=eval.status,
+                created_at=eval.created_at,
+                updated_at=eval.updated_at,
+            )
+        )
 
     return items
 
 
-@router.post("/ecns/{ecn_id}/evaluations", response_model=EcnEvaluationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/ecns/{ecn_id}/evaluations",
+    response_model=EcnEvaluationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_ecn_evaluation(
     *,
     db: Session = Depends(deps.get_db),
@@ -90,10 +105,11 @@ def create_ecn_evaluation(
         raise HTTPException(status_code=400, detail="ECN当前不在评估阶段")
 
     # 检查是否已有该部门的评估
-    existing = db.query(EcnEvaluation).filter(
-        EcnEvaluation.ecn_id == ecn_id,
-        EcnEvaluation.eval_dept == eval_in.eval_dept
-    ).first()
+    existing = (
+        db.query(EcnEvaluation)
+        .filter(EcnEvaluation.ecn_id == ecn_id, EcnEvaluation.eval_dept == eval_in.eval_dept)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="该部门已存在评估记录")
 
@@ -109,7 +125,7 @@ def create_ecn_evaluation(
         eval_result=eval_in.eval_result,
         eval_opinion=eval_in.eval_opinion,
         conditions=eval_in.conditions,
-        status="DRAFT"
+        status="DRAFT",
     )
 
     db.add(evaluation)
@@ -127,7 +143,11 @@ def create_ecn_evaluation(
     return _build_evaluation_response(db, evaluation)
 
 
-@router.get("/ecn-evaluations/{eval_id}", response_model=EcnEvaluationResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecn-evaluations/{eval_id}",
+    response_model=EcnEvaluationResponse,
+    status_code=status.HTTP_200_OK,
+)
 def read_ecn_evaluation(
     eval_id: int,
     db: Session = Depends(deps.get_db),
@@ -141,7 +161,11 @@ def read_ecn_evaluation(
     return _build_evaluation_response(db, eval)
 
 
-@router.put("/ecn-evaluations/{eval_id}/submit", response_model=EcnEvaluationResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/ecn-evaluations/{eval_id}/submit",
+    response_model=EcnEvaluationResponse,
+    status_code=status.HTTP_200_OK,
+)
 def submit_ecn_evaluation(
     *,
     db: Session = Depends(deps.get_db),
@@ -166,13 +190,16 @@ def submit_ecn_evaluation(
     ecn = db.query(Ecn).filter(Ecn.id == eval.ecn_id).first()
     if ecn:
         # 计算所有已提交评估的成本和工期影响
-        submitted_evals = db.query(EcnEvaluation).filter(
-            EcnEvaluation.ecn_id == ecn.id,
-            EcnEvaluation.status == "SUBMITTED"
-        ).all()
+        submitted_evals = (
+            db.query(EcnEvaluation)
+            .filter(EcnEvaluation.ecn_id == ecn.id, EcnEvaluation.status == "SUBMITTED")
+            .all()
+        )
 
         total_cost = sum(float(e.cost_estimate or 0) for e in submitted_evals)
-        max_schedule = max((e.schedule_estimate or 0) for e in submitted_evals) if submitted_evals else 0
+        max_schedule = (
+            max((e.schedule_estimate or 0) for e in submitted_evals) if submitted_evals else 0
+        )
 
         ecn.cost_impact = Decimal(str(total_cost))
         ecn.schedule_impact_days = max_schedule
@@ -196,10 +223,13 @@ def submit_ecn_evaluation(
                     schedule_impact = ecn.schedule_impact_days or 0
 
                     # 查找匹配的审批规则
-                    approval_rules = db.query(EcnApprovalMatrix).filter(
-                        EcnApprovalMatrix.ecn_type == ecn.ecn_type,
-                        EcnApprovalMatrix.is_active
-                    ).all()
+                    approval_rules = (
+                        db.query(EcnApprovalMatrix)
+                        .filter(
+                            EcnApprovalMatrix.ecn_type == ecn.ecn_type, EcnApprovalMatrix.is_active
+                        )
+                        .all()
+                    )
 
                     for rule in approval_rules:
                         if rule.condition_type == "COST":
@@ -211,7 +241,7 @@ def submit_ecn_evaluation(
                                         approval_level=rule.approval_level,
                                         approval_role=rule.approval_role,
                                         status="PENDING",
-                                        due_date=datetime.now() + timedelta(days=3)  # 默认3天期限
+                                        due_date=datetime.now() + timedelta(days=3),  # 默认3天期限
                                     )
                                     db.add(approval)
 
@@ -231,7 +261,7 @@ def submit_ecn_evaluation(
                                         approval_level=rule.approval_level,
                                         approval_role=rule.approval_role,
                                         status="PENDING",
-                                        due_date=datetime.now() + timedelta(days=3)
+                                        due_date=datetime.now() + timedelta(days=3),
                                     )
                                     db.add(approval)
 
@@ -252,7 +282,7 @@ def submit_ecn_evaluation(
                             approval_level=1,
                             approval_role="项目经理",
                             status="PENDING",
-                            due_date=datetime.now() + timedelta(days=3)
+                            due_date=datetime.now() + timedelta(days=3),
                         )
                         db.add(approval)
 
@@ -279,7 +309,9 @@ def submit_ecn_evaluation(
     return _build_evaluation_response(db, eval)
 
 
-@router.get("/ecns/{ecn_id}/evaluation-summary", response_model=dict, status_code=status.HTTP_200_OK)
+@router.get(
+    "/ecns/{ecn_id}/evaluation-summary", response_model=dict, status_code=status.HTTP_200_OK
+)
 def get_ecn_evaluation_summary(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -316,10 +348,10 @@ def get_ecn_evaluation_summary(
                 "eval_result": e.eval_result,
                 "cost_estimate": float(e.cost_estimate or 0),
                 "schedule_estimate": e.schedule_estimate or 0,
-                "status": e.status
+                "status": e.status,
             }
             for e in evaluations
-        ]
+        ],
     }
 
 
@@ -343,5 +375,5 @@ def _build_evaluation_response(db: Session, eval: EcnEvaluation) -> EcnEvaluatio
         conditions=eval.conditions,
         submitted_at=eval.submitted_at,
         created_at=eval.created_at,
-        updated_at=eval.updated_at
+        updated_at=eval.updated_at,
     )

@@ -4,11 +4,12 @@ Unit tests for app/utils/wechat_client.py
 Covers: WeChatTokenCache and WeChatClient (additional scenarios)
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
-from app.utils.wechat_client import WeChatTokenCache, WeChatClient
+import pytest
+
+from app.utils.wechat_client import WeChatClient, WeChatTokenCache
 
 
 class TestWeChatTokenCacheEdgeCases:
@@ -31,7 +32,7 @@ class TestWeChatTokenCacheEdgeCases:
         WeChatTokenCache._cache["soon_key"] = {
             "token": "expiring_token",
             "expires_at": expires_at,
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
         result = WeChatTokenCache.get("soon_key")
         assert result is None
@@ -42,7 +43,7 @@ class TestWeChatTokenCacheEdgeCases:
         WeChatTokenCache._cache["good_key"] = {
             "token": "valid_token",
             "expires_at": expires_at,
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
         result = WeChatTokenCache.get("good_key")
         assert result == "valid_token"
@@ -74,11 +75,7 @@ class TestWeChatClientInit:
 
     def test_init_with_explicit_params(self):
         """WeChatClient can be initialized with explicit params."""
-        client = WeChatClient(
-            corp_id="test_corp",
-            agent_id="1000001",
-            secret="test_secret"
-        )
+        client = WeChatClient(corp_id="test_corp", agent_id="1000001", secret="test_secret")
         assert client.corp_id == "test_corp"
         assert client.agent_id == "1000001"
         assert client.secret == "test_secret"
@@ -121,13 +118,14 @@ class TestWeChatClientGetAccessToken:
     def test_fetches_new_token_on_cache_miss(self):
         """Fetches token from API when cache is empty."""
         import requests as real_requests
+
         client = WeChatClient(corp_id="c", agent_id="a", secret="s")
 
         mock_response = MagicMock()
         mock_response.json.return_value = {
             "errcode": 0,
             "access_token": "new_token_123",
-            "expires_in": 7200
+            "expires_in": 7200,
         }
         mock_response.raise_for_status = MagicMock()
 
@@ -141,13 +139,11 @@ class TestWeChatClientGetAccessToken:
     def test_raises_on_api_error(self):
         """Raises Exception when API returns non-zero errcode."""
         import requests as real_requests
+
         client = WeChatClient(corp_id="c", agent_id="a", secret="s")
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "errcode": 40013,
-            "errmsg": "invalid corp_id"
-        }
+        mock_response.json.return_value = {"errcode": 40013, "errmsg": "invalid corp_id"}
         mock_response.raise_for_status = MagicMock()
 
         with patch("app.utils.wechat_client.requests") as mock_req:
@@ -160,6 +156,7 @@ class TestWeChatClientGetAccessToken:
     def test_force_refresh_bypasses_cache(self):
         """force_refresh=True ignores cached token."""
         import requests as real_requests
+
         WeChatTokenCache.set(WeChatClient.TOKEN_CACHE_KEY, "old_token", 7200)
         client = WeChatClient(corp_id="c", agent_id="a", secret="s")
 
@@ -167,7 +164,7 @@ class TestWeChatClientGetAccessToken:
         mock_response.json.return_value = {
             "errcode": 0,
             "access_token": "refreshed_token",
-            "expires_in": 7200
+            "expires_in": 7200,
         }
         mock_response.raise_for_status = MagicMock()
 
@@ -198,14 +195,17 @@ class TestWeChatClientSendMessage:
     def test_send_text_message_success(self):
         """send_text_message builds correct payload and returns True."""
         import requests as real_requests
+
         client = self._make_client()
 
         mock_response = MagicMock()
         mock_response.json.return_value = {"errcode": 0}
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = mock_response
             mock_req.RequestException = real_requests.RequestException
             result = client.send_text_message(["user1", "user2"], "Hello!")
@@ -219,6 +219,7 @@ class TestWeChatClientSendMessage:
     def test_send_template_card_success(self):
         """send_template_card builds template_card payload and returns True."""
         import requests as real_requests
+
         client = self._make_client()
 
         mock_response = MagicMock()
@@ -227,8 +228,10 @@ class TestWeChatClientSendMessage:
 
         card_data = {"card_type": "text_notice", "main_title": {"title": "Test"}}
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = mock_response
             mock_req.RequestException = real_requests.RequestException
             result = client.send_template_card(["user1"], card_data)
@@ -255,13 +258,15 @@ class TestWeChatClientSendMessage:
             get_token_calls.append(force_refresh)
             return "refreshed_tok" if force_refresh else "old_tok"
 
-        with patch.object(client, "get_access_token", side_effect=side_effect_token), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", side_effect=side_effect_token),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.side_effect = [resp_expired, resp_success]
             result = client.send_message(
                 user_ids=["user1"],
                 message={"msgtype": "text", "text": {"content": "Hi"}},
-                retry_times=3
+                retry_times=3,
             )
 
         assert result is True
@@ -271,14 +276,20 @@ class TestWeChatClientSendMessage:
     def test_send_message_raises_on_non_zero_errcode(self):
         """Raises Exception on non-retryable errcode."""
         import requests as real_requests
+
         client = self._make_client()
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {"errcode": 60020, "errmsg": "not allow to access from your ip"}
+        mock_response.json.return_value = {
+            "errcode": 60020,
+            "errmsg": "not allow to access from your ip",
+        }
         mock_response.raise_for_status = MagicMock()
 
-        with patch.object(client, "get_access_token", return_value="tok"), \
-             patch("app.utils.wechat_client.requests") as mock_req:
+        with (
+            patch.object(client, "get_access_token", return_value="tok"),
+            patch("app.utils.wechat_client.requests") as mock_req,
+        ):
             mock_req.post.return_value = mock_response
             mock_req.RequestException = real_requests.RequestException
             with pytest.raises(Exception, match="发送消息失败"):

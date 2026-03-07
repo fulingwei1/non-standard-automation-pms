@@ -3,12 +3,14 @@
 第四十批覆盖测试 - 项目资源聚合服务
 """
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.project.resource_service import ProjectResourceService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -39,17 +41,13 @@ class TestNormalizeRange:
             assert end == date(2024, 1, 31)
 
     def test_start_before_end_ok(self):
-        start, end = ProjectResourceService._normalize_range(
-            date(2024, 1, 1), date(2024, 1, 31)
-        )
+        start, end = ProjectResourceService._normalize_range(date(2024, 1, 1), date(2024, 1, 31))
         assert start == date(2024, 1, 1)
         assert end == date(2024, 1, 31)
 
     def test_start_after_end_raises(self):
         with pytest.raises(ValueError, match="before"):
-            ProjectResourceService._normalize_range(
-                date(2024, 2, 1), date(2024, 1, 1)
-            )
+            ProjectResourceService._normalize_range(date(2024, 2, 1), date(2024, 1, 1))
 
 
 class TestGetUserWorkload:
@@ -70,19 +68,25 @@ class TestGetUserWorkload:
         with (
             patch("app.services.project.resource_service.get_user_tasks", return_value=[]),
             patch("app.services.project.resource_service.get_user_allocations", return_value=[]),
-            patch("app.services.project.resource_service.calculate_total_assigned_hours", return_value=40),
-            patch("app.services.project.resource_service.calculate_total_actual_hours", return_value=35),
+            patch(
+                "app.services.project.resource_service.calculate_total_assigned_hours",
+                return_value=40,
+            ),
+            patch(
+                "app.services.project.resource_service.calculate_total_actual_hours",
+                return_value=35,
+            ),
             patch("app.services.project.resource_service.calculate_workdays", return_value=5),
             patch("app.services.project.resource_service.build_project_workload", return_value=[]),
             patch("app.services.project.resource_service.build_daily_load", return_value=[]),
             patch("app.services.project.resource_service.build_task_list", return_value=[]),
-            patch("app.services.project.resource_service.get_month_range",
-                  return_value=(date(2024, 1, 1), date(2024, 1, 31))),
+            patch(
+                "app.services.project.resource_service.get_month_range",
+                return_value=(date(2024, 1, 1), date(2024, 1, 31)),
+            ),
         ):
             resp = service.get_user_workload(
-                user_id=1,
-                start_date=date(2024, 1, 1),
-                end_date=date(2024, 1, 31)
+                user_id=1, start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
             )
         assert resp.user_id == 1
         assert resp.user_name == "张三"
@@ -104,9 +108,7 @@ class TestGetDepartmentWorkloadSummary:
 
         with patch.object(service, "_get_department_members", return_value=[]):
             result = service.get_department_workload_summary(
-                dept_id=1,
-                start_date=date(2024, 1, 1),
-                end_date=date(2024, 1, 31)
+                dept_id=1, start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
             )
         assert result["summary"]["total_members"] == 0
         assert result["members"] == []
@@ -118,11 +120,12 @@ class TestGetWorkloadOverview:
         mock_db.query.return_value.filter.return_value.all.return_value = []
         mock_db.query.return_value.all.return_value = []
 
-        with patch("app.services.project.resource_service.get_month_range",
-                   return_value=(date(2024, 1, 1), date(2024, 1, 31))):
+        with patch(
+            "app.services.project.resource_service.get_month_range",
+            return_value=(date(2024, 1, 1), date(2024, 1, 31)),
+        ):
             result = service.get_workload_overview(
-                start_date=date(2024, 1, 1),
-                end_date=date(2024, 1, 31)
+                start_date=date(2024, 1, 1), end_date=date(2024, 1, 31)
             )
         assert "total_plans" in result
         assert "status_breakdown" in result

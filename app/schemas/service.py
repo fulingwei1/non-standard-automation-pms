@@ -14,8 +14,10 @@ from app.schemas.common import PaginatedResponse  # noqa: F401 - re-exported
 
 # ==================== 服务工单 ====================
 
+
 class ServiceTicketCreate(BaseModel):
     """创建服务工单"""
+
     project_id: int = Field(..., description="项目ID（主项目）")
     project_ids: Optional[List[int]] = Field(None, description="关联项目ID列表（支持多项目）")
     customer_id: int = Field(..., description="客户ID")
@@ -30,6 +32,7 @@ class ServiceTicketCreate(BaseModel):
 
 class ServiceTicketUpdate(BaseModel):
     """更新服务工单"""
+
     problem_desc: Optional[str] = Field(None, description="问题描述")
     urgency: Optional[str] = Field(None, description="紧急程度")
     status: Optional[str] = Field(None, description="状态")
@@ -37,12 +40,14 @@ class ServiceTicketUpdate(BaseModel):
 
 class ServiceTicketAssign(BaseModel):
     """分配服务工单"""
+
     assignee_id: int = Field(..., description="处理人ID")
     cc_user_ids: Optional[List[int]] = Field(None, description="抄送人员ID列表")
 
 
 class ServiceTicketClose(BaseModel):
     """关闭服务工单"""
+
     solution: str = Field(..., description="解决方案")
     root_cause: Optional[str] = Field(None, description="根本原因")
     preventive_action: Optional[str] = Field(None, description="预防措施")
@@ -52,6 +57,7 @@ class ServiceTicketClose(BaseModel):
 
 class ServiceTicketResponse(BaseModel):
     """服务工单响应"""
+
     id: int
     ticket_no: str
     project_id: int
@@ -84,8 +90,10 @@ class ServiceTicketResponse(BaseModel):
 
 # ==================== 现场服务记录 ====================
 
+
 class ServiceRecordCreate(BaseModel):
     """创建服务记录"""
+
     service_type: str = Field(..., description="服务类型")
     project_id: int = Field(..., description="项目ID")
     machine_no: Optional[str] = Field(None, description="机台号")
@@ -111,6 +119,7 @@ class ServiceRecordCreate(BaseModel):
 
 class ServiceRecordUpdate(BaseModel):
     """更新服务记录"""
+
     service_content: Optional[str] = None
     service_result: Optional[str] = None
     issues_found: Optional[str] = None
@@ -124,6 +133,7 @@ class ServiceRecordUpdate(BaseModel):
 
 class ServiceRecordResponse(BaseModel):
     """服务记录响应"""
+
     id: int
     record_no: str
     service_type: str
@@ -159,8 +169,10 @@ class ServiceRecordResponse(BaseModel):
 
 # ==================== 客户沟通 ====================
 
+
 class CustomerCommunicationCreate(BaseModel):
     """创建客户沟通记录"""
+
     communication_type: str = Field(..., description="沟通方式")
     customer_name: str = Field(..., description="客户名称")
     customer_contact: Optional[str] = Field(None, description="客户联系人")
@@ -184,6 +196,7 @@ class CustomerCommunicationCreate(BaseModel):
 
 class CustomerCommunicationUpdate(BaseModel):
     """更新客户沟通记录"""
+
     content: Optional[str] = None
     follow_up_task: Optional[str] = None
     follow_up_status: Optional[str] = None
@@ -192,6 +205,7 @@ class CustomerCommunicationUpdate(BaseModel):
 
 class CustomerCommunicationResponse(BaseModel):
     """客户沟通记录响应"""
+
     id: int
     communication_no: str
     communication_type: str
@@ -225,8 +239,10 @@ class CustomerCommunicationResponse(BaseModel):
 
 # ==================== 满意度调查 ====================
 
+
 class CustomerSatisfactionCreate(BaseModel):
     """创建满意度调查"""
+
     survey_type: str = Field(..., description="调查类型")
     customer_name: str = Field(..., description="客户名称")
     customer_contact: Optional[str] = Field(None, description="客户联系人")
@@ -242,6 +258,7 @@ class CustomerSatisfactionCreate(BaseModel):
 
 class CustomerSatisfactionUpdate(BaseModel):
     """更新满意度调查"""
+
     status: Optional[str] = None
     response_date: Optional[date] = None
     overall_score: Optional[Decimal] = None
@@ -252,6 +269,7 @@ class CustomerSatisfactionUpdate(BaseModel):
 
 class CustomerSatisfactionResponse(BaseModel):
     """满意度调查响应"""
+
     id: int
     survey_no: str
     survey_type: str
@@ -282,8 +300,10 @@ class CustomerSatisfactionResponse(BaseModel):
 
 # ==================== 满意度调查模板 ====================
 
+
 class SatisfactionSurveyTemplateCreate(BaseModel):
     """创建满意度调查模板"""
+
     template_name: str = Field(..., description="模板名称")
     template_code: str = Field(..., description="模板编码")
     survey_type: str = Field(..., description="调查类型")
@@ -294,6 +314,7 @@ class SatisfactionSurveyTemplateCreate(BaseModel):
 
 class SatisfactionSurveyTemplateUpdate(BaseModel):
     """更新满意度调查模板"""
+
     template_name: Optional[str] = None
     survey_type: Optional[str] = None
     questions: Optional[List[Dict[str, Any]]] = None
@@ -304,8 +325,10 @@ class SatisfactionSurveyTemplateUpdate(BaseModel):
 
 # ==================== 仪表板统计 ====================
 
+
 class ServiceDashboardStatistics(BaseModel):
     """客服部门仪表板统计"""
+
     active_cases: int = Field(0, description="活跃案例数")
     resolved_today: int = Field(0, description="今日解决案例数")
     pending_cases: int = Field(0, description="待处理案例数")
@@ -320,14 +343,18 @@ class ServiceDashboardStatistics(BaseModel):
     pending_tickets: Optional[int] = Field(None, description="待处理工单(兼容)")
     in_progress_tickets: Optional[int] = Field(None, description="进行中工单(兼容)")
     today_completed_tickets: Optional[int] = Field(None, description="今日完成工单(兼容)")
-    average_response_time_minutes: Optional[float] = Field(None, description="平均响应时间分钟(兼容)")
+    average_response_time_minutes: Optional[float] = Field(
+        None, description="平均响应时间分钟(兼容)"
+    )
     customer_satisfaction_rate: Optional[float] = Field(None, description="满意度率(兼容)")
 
 
 # ==================== 知识库 ====================
 
+
 class KnowledgeBaseCreate(BaseModel):
     """创建知识库文章"""
+
     title: str = Field(..., description="文章标题")
     category: str = Field(..., description="分类")
     content: Optional[str] = Field(None, description="文章内容")
@@ -340,6 +367,7 @@ class KnowledgeBaseCreate(BaseModel):
 
 class KnowledgeBaseUpdate(BaseModel):
     """更新知识库文章"""
+
     title: Optional[str] = None
     category: Optional[str] = None
     content: Optional[str] = None
@@ -352,6 +380,7 @@ class KnowledgeBaseUpdate(BaseModel):
 
 class KnowledgeBaseResponse(BaseModel):
     """知识库文章响应"""
+
     id: int
     article_no: str
     title: str
@@ -379,6 +408,3 @@ class KnowledgeBaseResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-

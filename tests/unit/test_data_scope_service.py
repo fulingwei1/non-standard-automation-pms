@@ -18,14 +18,15 @@ class TestDataScopeServiceImport:
         """测试导入数据权限服务模块"""
         try:
             from app.services.data_scope_service import (
-                DataScopeConfig,
                 DATA_SCOPE_CONFIGS,
+                DataScopeConfig,
                 DataScopeService,
-                UserScopeService,
-                ProjectFilterService,
-                IssueFilterService,
                 GenericFilterService,
+                IssueFilterService,
+                ProjectFilterService,
+                UserScopeService,
             )
+
             # 验证导入成功
             assert DataScopeConfig is not None
             assert DataScopeService is not None
@@ -40,6 +41,7 @@ class TestDataScopeServiceImport:
         """测试DATA_SCOPE_CONFIGS是字典类型"""
         try:
             from app.services.data_scope_service import DATA_SCOPE_CONFIGS
+
             assert isinstance(DATA_SCOPE_CONFIGS, dict)
         except ImportError as e:
             pytest.skip(f"模块导入失败: {e}")
@@ -52,6 +54,7 @@ class TestDataScopeService:
         """测试DataScopeService实例化"""
         try:
             from app.services.data_scope_service import DataScopeService
+
             service = DataScopeService()
             assert service is not None
         except ImportError as e:
@@ -67,6 +70,7 @@ class TestUserScopeService:
         """测试UserScopeService实例化"""
         try:
             from app.services.data_scope_service import UserScopeService
+
             service = UserScopeService()
             assert service is not None
         except ImportError as e:
@@ -82,6 +86,7 @@ class TestProjectFilterService:
         """测试ProjectFilterService实例化"""
         try:
             from app.services.data_scope_service import ProjectFilterService
+
             service = ProjectFilterService()
             assert service is not None
         except ImportError as e:
@@ -97,6 +102,7 @@ class TestIssueFilterService:
         """测试IssueFilterService实例化"""
         try:
             from app.services.data_scope_service import IssueFilterService
+
             service = IssueFilterService()
             assert service is not None
         except ImportError as e:
@@ -112,6 +118,7 @@ class TestGenericFilterService:
         """测试GenericFilterService实例化"""
         try:
             from app.services.data_scope_service import GenericFilterService
+
             service = GenericFilterService()
             assert service is not None
         except ImportError as e:

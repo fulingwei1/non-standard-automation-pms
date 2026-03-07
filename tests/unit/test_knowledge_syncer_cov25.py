@@ -2,9 +2,10 @@
 """第二十五批 - project_review_ai/knowledge_syncer 单元测试"""
 
 import json
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.project_review_ai.knowledge_syncer")
 
@@ -49,6 +50,7 @@ def _make_review(review_id=1):
 
 
 # ── _extract_tags ─────────────────────────────────────────────────────────────
+
 
 class TestExtractTags:
     def test_adds_industry_tag(self, syncer):
@@ -119,6 +121,7 @@ class TestExtractTags:
 
 # ── _calculate_quality_score ──────────────────────────────────────────────────
 
+
 class TestCalculateQualityScore:
     def test_base_score_at_least_half(self, syncer):
         review = MagicMock()
@@ -182,6 +185,7 @@ class TestCalculateQualityScore:
 
 # ── _extract_technical_highlights ────────────────────────────────────────────
 
+
 class TestExtractTechnicalHighlights:
     def test_returns_empty_when_no_best_practices(self, syncer):
         review = MagicMock()
@@ -212,15 +216,18 @@ class TestExtractTechnicalHighlights:
 
 # ── _parse_summary_response ───────────────────────────────────────────────────
 
+
 class TestParseSummaryResponse:
     def test_parses_valid_json(self, syncer):
         ai_response = {
-            "content": json.dumps({
-                "summary": "项目摘要",
-                "technical_highlights": "技术亮点",
-                "key_success_factors": "关键因素",
-                "applicable_scenarios": "适用场景",
-            })
+            "content": json.dumps(
+                {
+                    "summary": "项目摘要",
+                    "technical_highlights": "技术亮点",
+                    "key_success_factors": "关键因素",
+                    "applicable_scenarios": "适用场景",
+                }
+            )
         }
         result = syncer._parse_summary_response(ai_response)
         assert result["summary"] == "项目摘要"
@@ -245,6 +252,7 @@ class TestParseSummaryResponse:
 
 # ── sync_to_knowledge_base ────────────────────────────────────────────────────
 
+
 class TestSyncToKnowledgeBase:
     def test_raises_when_review_not_found(self, syncer, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -254,8 +262,8 @@ class TestSyncToKnowledgeBase:
     def test_returns_success_dict_when_review_found(self, syncer, db):
         review = _make_review(1)
         db.query.return_value.filter.return_value.first.side_effect = [
-            review,       # ProjectReview query
-            None,         # PresaleKnowledgeCase query (no existing)
+            review,  # ProjectReview query
+            None,  # PresaleKnowledgeCase query (no existing)
         ]
 
         syncer.ai_client.generate_solution.return_value = {
@@ -267,7 +275,9 @@ class TestSyncToKnowledgeBase:
         db.add = MagicMock()
 
         # Mock PresaleKnowledgeCase constructor
-        with patch("app.services.project_review_ai.knowledge_syncer.PresaleKnowledgeCase") as MockCase:
+        with patch(
+            "app.services.project_review_ai.knowledge_syncer.PresaleKnowledgeCase"
+        ) as MockCase:
             mock_case = MagicMock()
             mock_case.id = 10
             mock_case.case_name = "P0001 - 测试项目"

@@ -4,8 +4,9 @@ import pytest
 
 pytest.importorskip("app.services.milestone_service")
 
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
+
 from app.services.milestone_service import MilestoneService
 
 
@@ -14,6 +15,7 @@ def make_svc():
     svc = MilestoneService.__new__(MilestoneService)
     svc.db = db
     from app.models.project import ProjectMilestone
+
     svc.model = ProjectMilestone
     return svc, db
 

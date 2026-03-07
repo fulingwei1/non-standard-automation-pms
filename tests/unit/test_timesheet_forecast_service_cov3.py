@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """第三批覆盖率测试 - timesheet_forecast_service"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.timesheet_forecast_service")
 
@@ -139,6 +140,7 @@ class TestTimesheetForecastCompletion:
 class TestGapAnalysis:
     def test_gap_analysis_basic(self):
         from datetime import date as dt
+
         db = make_db()
         mock_query = MagicMock()
         mock_query.filter.return_value = mock_query

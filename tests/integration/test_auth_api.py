@@ -15,16 +15,16 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.main import app
-from app.models.user import User
 from app.core.auth import (
-    verify_password,
-    get_password_hash,
     create_access_token,
-    revoke_token,
+    get_password_hash,
     is_token_revoked,
+    revoke_token,
+    verify_password,
 )
 from app.core.config import settings
+from app.main import app
+from app.models.user import User
 
 
 @pytest.mark.integration

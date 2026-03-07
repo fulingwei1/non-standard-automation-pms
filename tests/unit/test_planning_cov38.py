@@ -5,8 +5,7 @@ Unit tests for standard/planning.py (第三十八批)
 import pytest
 
 pytest.importorskip(
-    "app.services.preset_stage_templates.templates.standard.planning",
-    reason="导入失败，跳过"
+    "app.services.preset_stage_templates.templates.standard.planning", reason="导入失败，跳过"
 )
 
 try:

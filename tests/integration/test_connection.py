@@ -5,8 +5,9 @@
 验证测试环境是否正确配置
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.mark.unit
@@ -28,9 +29,9 @@ class TestDatabaseConnection:
     def test_app_models_importable(self):
         """测试应用模型可导入"""
         try:
-            from app.models.user import User
-            from app.models.project import Project
             from app.models.base import Base
+            from app.models.project import Project
+            from app.models.user import User
 
             print("✓ All models imported successfully")
         except ImportError as e:

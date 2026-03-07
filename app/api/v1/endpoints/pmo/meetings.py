@@ -16,13 +16,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.pmo import (
     PmoMeeting,
 )
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import get_pagination_query, PaginationParams
 from app.schemas.pmo import (
     MeetingCreate,
     MeetingMinutesRequest,
@@ -33,9 +33,10 @@ from app.schemas.pmo import (
 # Included without extra prefix; decorators already include `/pmo/...` paths.
 router = APIRouter(tags=["pmo-meetings"])
 
+from app.common.query_filters import apply_pagination
+
 # 使用统一的编码生成工具
 from app.utils.domain_codes import pmo as pmo_codes
-from app.common.query_filters import apply_pagination
 
 generate_initiation_no = pmo_codes.generate_initiation_no
 generate_risk_no = pmo_codes.generate_risk_no
@@ -43,6 +44,7 @@ generate_risk_no = pmo_codes.generate_risk_no
 # 共 6 个路由
 
 # ==================== 会议管理 ====================
+
 
 @router.get("/pmo/meetings", response_model=PaginatedResponse)
 def read_meetings(
@@ -70,35 +72,42 @@ def read_meetings(
 
     # 应用关键词过滤（会议名称）
     from app.common.query_filters import apply_keyword_filter
+
     query = apply_keyword_filter(query, PmoMeeting, keyword, ["meeting_name"])
 
     total = query.count()
-    meetings = apply_pagination(query.order_by(desc(PmoMeeting.meeting_date), desc(PmoMeeting.created_at)), pagination.offset, pagination.limit).all()
+    meetings = apply_pagination(
+        query.order_by(desc(PmoMeeting.meeting_date), desc(PmoMeeting.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for meeting in meetings:
-        items.append(MeetingResponse(
-            id=meeting.id,
-            project_id=meeting.project_id,
-            meeting_type=meeting.meeting_type,
-            meeting_name=meeting.meeting_name,
-            meeting_date=meeting.meeting_date,
-            start_time=meeting.start_time,
-            end_time=meeting.end_time,
-            location=meeting.location,
-            organizer_id=meeting.organizer_id,
-            organizer_name=meeting.organizer_name,
-            attendees=meeting.attendees if meeting.attendees else [],
-            agenda=meeting.agenda,
-            minutes=meeting.minutes,
-            decisions=meeting.decisions,
-            action_items=meeting.action_items if meeting.action_items else [],
-            attachments=meeting.attachments if meeting.attachments else [],
-            status=meeting.status,
-            created_by=meeting.created_by,
-            created_at=meeting.created_at,
-            updated_at=meeting.updated_at,
-        ))
+        items.append(
+            MeetingResponse(
+                id=meeting.id,
+                project_id=meeting.project_id,
+                meeting_type=meeting.meeting_type,
+                meeting_name=meeting.meeting_name,
+                meeting_date=meeting.meeting_date,
+                start_time=meeting.start_time,
+                end_time=meeting.end_time,
+                location=meeting.location,
+                organizer_id=meeting.organizer_id,
+                organizer_name=meeting.organizer_name,
+                attendees=meeting.attendees if meeting.attendees else [],
+                agenda=meeting.agenda,
+                minutes=meeting.minutes,
+                decisions=meeting.decisions,
+                action_items=meeting.action_items if meeting.action_items else [],
+                attachments=meeting.attachments if meeting.attachments else [],
+                status=meeting.status,
+                created_by=meeting.created_by,
+                created_at=meeting.created_at,
+                updated_at=meeting.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
@@ -133,8 +142,8 @@ def create_meeting(
         organizer_name=organizer_name,
         attendees=meeting_in.attendees or [],
         agenda=meeting_in.agenda,
-        status='SCHEDULED',
-        created_by=current_user.id
+        status="SCHEDULED",
+        created_by=current_user.id,
     )
 
     db.add(meeting)
@@ -221,10 +230,10 @@ def update_meeting(
     update_data = meeting_in.model_dump(exclude_unset=True)
 
     # 如果更新了组织者，更新组织者名称
-    if 'organizer_id' in update_data and update_data['organizer_id']:
-        organizer = db.query(User).filter(User.id == update_data['organizer_id']).first()
+    if "organizer_id" in update_data and update_data["organizer_id"]:
+        organizer = db.query(User).filter(User.id == update_data["organizer_id"]).first()
         if organizer:
-            update_data['organizer_name'] = organizer.real_name or organizer.username
+            update_data["organizer_name"] = organizer.real_name or organizer.username
 
     for field, value in update_data.items():
         setattr(meeting, field, value)
@@ -254,7 +263,7 @@ def update_meeting_minutes(
     meeting.minutes = minutes_request.minutes
     meeting.decisions = minutes_request.decisions
     meeting.action_items = minutes_request.action_items or []
-    meeting.status = 'COMPLETED'
+    meeting.status = "COMPLETED"
 
     db.add(meeting)
     db.commit()

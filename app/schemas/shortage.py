@@ -13,8 +13,10 @@ from .common import PaginatedResponse, TimestampSchema
 
 # ==================== 缺料上报 ====================
 
+
 class ShortageReportCreate(BaseModel):
     """创建缺料上报"""
+
     project_id: int = Field(description="项目ID")
     machine_id: Optional[int] = None
     work_order_id: Optional[int] = None
@@ -28,6 +30,7 @@ class ShortageReportCreate(BaseModel):
 
 class ShortageReportResponse(TimestampSchema):
     """缺料上报响应"""
+
     id: int
     report_no: str
     project_id: int
@@ -56,13 +59,16 @@ class ShortageReportResponse(TimestampSchema):
 
 class ShortageReportListResponse(PaginatedResponse):
     """缺料上报列表响应"""
+
     items: List[ShortageReportResponse]
 
 
 # ==================== 到货跟踪 ====================
 
+
 class MaterialArrivalCreate(BaseModel):
     """创建到货跟踪"""
+
     shortage_report_id: Optional[int] = None
     purchase_order_id: Optional[int] = None
     purchase_order_item_id: Optional[int] = None
@@ -76,6 +82,7 @@ class MaterialArrivalCreate(BaseModel):
 
 class ArrivalFollowUpCreate(BaseModel):
     """创建跟催记录"""
+
     follow_up_type: str = Field(default="CALL", description="跟催方式：CALL/EMAIL/VISIT/OTHER")
     follow_up_note: str = Field(description="跟催内容")
     supplier_response: Optional[str] = None
@@ -84,6 +91,7 @@ class ArrivalFollowUpCreate(BaseModel):
 
 class ArrivalFollowUpResponse(TimestampSchema):
     """到货跟催记录响应"""
+
     id: int
     arrival_id: int
     follow_up_type: str
@@ -97,6 +105,7 @@ class ArrivalFollowUpResponse(TimestampSchema):
 
 class MaterialArrivalResponse(TimestampSchema):
     """到货跟踪响应"""
+
     id: int
     arrival_no: str
     shortage_report_id: Optional[int] = None
@@ -121,13 +130,16 @@ class MaterialArrivalResponse(TimestampSchema):
 
 class MaterialArrivalListResponse(PaginatedResponse):
     """到货跟踪列表响应"""
+
     items: List[MaterialArrivalResponse]
 
 
 # ==================== 物料替代 ====================
 
+
 class MaterialSubstitutionCreate(BaseModel):
     """创建物料替代申请"""
+
     shortage_report_id: Optional[int] = None
     project_id: int = Field(description="项目ID")
     bom_item_id: Optional[int] = None
@@ -143,6 +155,7 @@ class MaterialSubstitutionCreate(BaseModel):
 
 class MaterialSubstitutionResponse(TimestampSchema):
     """物料替代响应"""
+
     id: int
     substitution_no: str
     project_id: int
@@ -171,13 +184,16 @@ class MaterialSubstitutionResponse(TimestampSchema):
 
 class MaterialSubstitutionListResponse(PaginatedResponse):
     """物料替代列表响应"""
+
     items: List[MaterialSubstitutionResponse]
 
 
 # ==================== 物料调拨 ====================
 
+
 class MaterialTransferCreate(BaseModel):
     """创建物料调拨申请"""
+
     shortage_report_id: Optional[int] = None
     from_project_id: Optional[int] = None
     from_location: Optional[str] = None
@@ -192,6 +208,7 @@ class MaterialTransferCreate(BaseModel):
 
 class MaterialTransferResponse(TimestampSchema):
     """物料调拨响应"""
+
     id: int
     transfer_no: str
     from_project_id: Optional[int] = None
@@ -218,5 +235,5 @@ class MaterialTransferResponse(TimestampSchema):
 
 class MaterialTransferListResponse(PaginatedResponse):
     """物料调拨列表响应"""
-    items: List[MaterialTransferResponse]
 
+    items: List[MaterialTransferResponse]

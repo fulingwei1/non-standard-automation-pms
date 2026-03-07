@@ -5,22 +5,24 @@ Tests cover: code_config, number_generator, permission_helpers, pinyin_utils,
 redis_client, scheduler, scheduler_metrics, spec_extractor, spec_match_service, spec_matcher
 """
 
-import pytest
 from decimal import Decimal
 from unittest.mock import Mock, patch
+
+import pytest
+
+from app.utils.code_config import (
+    CODE_PREFIX,
+    MATERIAL_CATEGORY_CODES,
+    SEQ_LENGTH,
+    VALID_MATERIAL_CATEGORY_CODES,
+    get_material_category_code,
+    validate_material_category_code,
+)
 
 # ============================================================================
 # Tests for code_config.py
 # ============================================================================
 
-from app.utils.code_config import (
-    CODE_PREFIX,
-    SEQ_LENGTH,
-    MATERIAL_CATEGORY_CODES,
-    VALID_MATERIAL_CATEGORY_CODES,
-    get_material_category_code,
-    validate_material_category_code,
-)
 
 
 class TestCodeConfig:
@@ -98,13 +100,13 @@ class TestCodeConfig:
 # ============================================================================
 
 from app.utils.number_generator import (
-    generate_sequential_no,
-    generate_monthly_no,
-    generate_employee_code,
-    generate_customer_code,
-    generate_material_code,
-    generate_machine_code,
     generate_calculation_code,
+    generate_customer_code,
+    generate_employee_code,
+    generate_machine_code,
+    generate_material_code,
+    generate_monthly_no,
+    generate_sequential_no,
 )
 
 
@@ -124,13 +126,13 @@ class TestNumberGenerator:
         mock_query.first.return_value = None
 
         result = generate_sequential_no(
-        mock_db,
-        Mock(),
-        "ecn_no",
-        "ECN",
-        date_format="%y%m%d",
-        separator="-",
-        seq_length=3,
+            mock_db,
+            Mock(),
+            "ecn_no",
+            "ECN",
+            date_format="%y%m%d",
+            separator="-",
+            seq_length=3,
         )
 
         assert "ECN-250115-001" in result
@@ -146,7 +148,7 @@ class TestNumberGenerator:
         mock_query.first.return_value = None
 
         result = generate_sequential_no(
-        mock_db, Mock(), "code", "PRJ", use_date=False, separator="-", seq_length=3
+            mock_db, Mock(), "code", "PRJ", use_date=False, separator="-", seq_length=3
         )
 
         assert result == "PRJ-001"
@@ -167,13 +169,13 @@ class TestNumberGenerator:
         mock_query.first.return_value = mock_max_record
 
         result = generate_sequential_no(
-        mock_db,
-        Mock(),
-        "ecn_no",
-        "ECN",
-        date_format="%y%m%d",
-        separator="-",
-        seq_length=3,
+            mock_db,
+            Mock(),
+            "ecn_no",
+            "ECN",
+            date_format="%y%m%d",
+            separator="-",
+            seq_length=3,
         )
 
         assert "ECN-250115-006" in result
@@ -275,14 +277,13 @@ class TestNumberGenerator:
             result = generate_calculation_code(mock_db)
             assert result == "BC-250716-001"
 
-
             # ============================================================================
             # Tests for permission_helpers.py
             # ============================================================================
 
             from app.utils.permission_helpers import (
-            check_project_access_or_raise,
-            filter_projects_by_scope,
+                check_project_access_or_raise,
+                filter_projects_by_scope,
             )
 
 
@@ -358,17 +359,16 @@ class TestPermissionHelpers:
             mock_service.filter_projects_by_scope.assert_called_once()
             assert result == mock_query
 
-
             # ============================================================================
             # Tests for pinyin_utils.py
             # ============================================================================
 
             from app.utils.pinyin_utils import (
-            name_to_pinyin,
-            name_to_pinyin_initials,
-            generate_unique_username,
-            generate_initial_password,
-            batch_generate_pinyin_for_employees,
+                batch_generate_pinyin_for_employees,
+                generate_initial_password,
+                generate_unique_username,
+                name_to_pinyin,
+                name_to_pinyin_initials,
             )
 
 
@@ -493,14 +493,13 @@ class TestPinyinUtils:
             assert result == 0
             mock_db.commit.assert_not_called()
 
-
             # ============================================================================
             # Tests for redis_client.py
             # ============================================================================
 
             from app.utils.redis_client import (
-            get_redis_client,
-            close_redis_client,
+                close_redis_client,
+                get_redis_client,
             )
 
 
@@ -589,9 +588,9 @@ class TestRedisClient:
 # ============================================================================
 
 from app.utils.scheduler import (
+    _load_task_config_from_db,
     _resolve_callable,
     _wrap_job_callable,
-    _load_task_config_from_db,
     init_scheduler,
     shutdown_scheduler,
 )
@@ -614,10 +613,10 @@ class TestScheduler:
         mock_time.side_effect = [0.0, 0.5]
 
         task = {
-        "id": "test_job",
-        "name": "Test Job",
-        "owner": "admin",
-        "category": "test",
+            "id": "test_job",
+            "name": "Test Job",
+            "owner": "admin",
+            "category": "test",
         }
 
         test_func = Mock(return_value="success")
@@ -634,10 +633,10 @@ class TestScheduler:
         mock_time.side_effect = [0.0, 0.5]
 
         task = {
-        "id": "test_job",
-        "name": "Test Job",
-        "owner": "admin",
-        "category": "test",
+            "id": "test_job",
+            "name": "Test Job",
+            "owner": "admin",
+            "category": "test",
         }
 
         test_func = Mock(side_effect=Exception("Test error"))
@@ -707,14 +706,14 @@ class TestScheduler:
     @patch(
         "app.utils.scheduler.SCHEDULER_TASKS",
         [
-        {
-        "id": "test_job",
-        "name": "Test Job",
-        "enabled": False,
-        "cron": {},
-        "module": "os.path",
-        "callable": "join",
-        }
+            {
+                "id": "test_job",
+                "name": "Test Job",
+                "enabled": False,
+                "cron": {},
+                "module": "os.path",
+                "callable": "join",
+            }
         ],
     )
     def test_init_scheduler_task_disabled(self, mock_scheduler):
@@ -728,14 +727,14 @@ class TestScheduler:
     @patch(
         "app.utils.scheduler.SCHEDULER_TASKS",
         [
-        {
-        "id": "test_job",
-        "name": "Test Job",
-        "enabled": True,
-        "cron": {"hour": 2},
-        "module": "os.path",
-        "callable": "join",
-        }
+            {
+                "id": "test_job",
+                "name": "Test Job",
+                "enabled": True,
+                "cron": {"hour": 2},
+                "module": "os.path",
+                "callable": "join",
+            }
         ],
     )
     def test_init_scheduler_task_enabled(self, mock_scheduler):
@@ -760,13 +759,13 @@ class TestScheduler:
 # ============================================================================
 
 from app.utils.scheduler_metrics import (
-    SchedulerMetrics,
     METRICS,
-    record_job_success,
-    record_job_failure,
-    record_notification_success,
-    record_notification_failure,
+    SchedulerMetrics,
     get_metrics_snapshot,
+    record_job_failure,
+    record_job_success,
+    record_notification_failure,
+    record_notification_success,
 )
 
 
@@ -989,9 +988,7 @@ class TestSpecExtractor:
         mock_document.file_path = "/path/to/file.xlsx"
 
         with patch("app.utils.spec_extractor.ProjectDocument"):
-            result = extractor.extract_from_document(
-            mock_db, 1, 1, 1, auto_extract=False
-            )
+            result = extractor.extract_from_document(mock_db, 1, 1, 1, auto_extract=False)
 
             assert result == []
 
@@ -1006,20 +1003,17 @@ class TestSpecExtractor:
             mock_req = Mock()
             MockReq.return_value = mock_req
 
-            result = extractor.create_requirement(
-            mock_db, 1, 1, "test_material", "test_spec", 1
-            )
+            result = extractor.create_requirement(mock_db, 1, 1, "test_material", "test_spec", 1)
 
             assert result is not None
             mock_db.add.assert_called_once_with(mock_req)
-
 
             # ============================================================================
             # Tests for spec_match_service.py
             # ============================================================================
 
             from app.utils.spec_match_service import (
-            SpecMatchService,
+                SpecMatchService,
             )
 
 
@@ -1076,9 +1070,7 @@ class TestSpecMatchService:
                 mock_record.id = 1
                 MockRecord.return_value = mock_record
 
-                result = service.check_po_item_spec_match(
-                mock_db, 1, 1, "MAT001", "spec123"
-                )
+                result = service.check_po_item_spec_match(mock_db, 1, 1, "MAT001", "spec123")
 
                 assert result is not None
 
@@ -1128,9 +1120,7 @@ class TestSpecMatchService:
                 MockRecord.return_value = mock_record
 
                 with patch.object(service, "_create_alert"):
-                    result = service.check_bom_item_spec_match(
-                    mock_db, 1, 1, "MAT001", "spec456"
-                    )
+                    result = service.check_bom_item_spec_match(mock_db, 1, 1, "MAT001", "spec456")
 
                     assert result is not None
 
@@ -1165,8 +1155,8 @@ class TestSpecMatchService:
 # ============================================================================
 
 from app.utils.spec_matcher import (
-    SpecMatchResult,
     SpecMatcher,
+    SpecMatchResult,
 )
 
 
@@ -1175,9 +1165,7 @@ class TestSpecMatcher:
 
     def test_spec_match_result_initialization(self):
         """Test SpecMatchResult initialization"""
-        result = SpecMatchResult(
-        match_status="MATCHED", match_score=Decimal("90"), differences={}
-        )
+        result = SpecMatchResult(match_status="MATCHED", match_score=Decimal("90"), differences={})
 
         assert result.match_status == "MATCHED"
         assert result.match_score == Decimal("90")
@@ -1302,7 +1290,7 @@ class TestSpecMatcher:
         matcher = SpecMatcher()
 
         score = matcher._calculate_param_score(
-        {"voltage": "220", "current": "5"}, {"voltage": "220", "current": "5"}
+            {"voltage": "220", "current": "5"}, {"voltage": "220", "current": "5"}
         )
 
         assert score == 100.0
@@ -1312,7 +1300,7 @@ class TestSpecMatcher:
         matcher = SpecMatcher()
 
         score = matcher._calculate_param_score(
-        {"voltage": "220", "current": "5"}, {"voltage": "220"}
+            {"voltage": "220", "current": "5"}, {"voltage": "220"}
         )
 
         assert score == 50.0
@@ -1346,9 +1334,7 @@ class TestSpecMatcher:
         mock_req.key_parameters = {}
         mock_req.requirement_level = "REQUIRED"
 
-        result = matcher.match_specification(
-        mock_req, "completely different spec", None, None
-        )
+        result = matcher.match_specification(mock_req, "completely different spec", None, None)
 
         assert result.match_score < Decimal("50.0")
         assert result.match_status == "UNKNOWN"

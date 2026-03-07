@@ -14,7 +14,13 @@ SHORTAGE_TASKS = [
         "category": "Shortage",
         "description": "每天 7 点生成缺料预警并更新 AlertRecord。",
         "enabled": True,
-        "dependencies_tables": ["bom_items", "materials", "purchase_orders", "goods_receipts", "alert_records"],
+        "dependencies_tables": [
+            "bom_items",
+            "materials",
+            "purchase_orders",
+            "goods_receipts",
+            "alert_records",
+        ],
         "risk_level": "CRITICAL",
         "sla": {
             "max_execution_time_seconds": 1200,
@@ -31,7 +37,12 @@ SHORTAGE_TASKS = [
         "category": "Shortage",
         "description": "每天 7:30 检查紧急级别的缺料预警，自动创建采购申请。",
         "enabled": True,
-        "dependencies_tables": ["mat_shortage_alert", "materials", "material_suppliers", "purchase_requests"],
+        "dependencies_tables": [
+            "mat_shortage_alert",
+            "materials",
+            "material_suppliers",
+            "purchase_requests",
+        ],
         "risk_level": "HIGH",
         "sla": {
             "max_execution_time_seconds": 600,

@@ -1,35 +1,38 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/issue.py"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.issue import (
+    EngineerIssueStatistics,
+    IssueAssignRequest,
     IssueBase,
     IssueCreate,
-    IssueUpdate,
-    IssueResponse,
+    IssueFilterParams,
     IssueFollowUpBase,
     IssueFollowUpCreate,
-    IssueAssignRequest,
+    IssueFromTemplateRequest,
     IssueResolveRequest,
-    IssueVerifyRequest,
-    IssueStatusChangeRequest,
-    IssueFilterParams,
+    IssueResponse,
     IssueStatistics,
-    EngineerIssueStatistics,
+    IssueStatusChangeRequest,
     IssueTemplateBase,
     IssueTemplateCreate,
-    IssueFromTemplateRequest,
+    IssueUpdate,
+    IssueVerifyRequest,
 )
 
 
 class TestIssueBase:
     def test_valid(self):
         i = IssueBase(
-            category="DESIGN", issue_type="DEFECT",
-            severity="MAJOR", title="设计缺陷",
+            category="DESIGN",
+            issue_type="DEFECT",
+            severity="MAJOR",
+            title="设计缺陷",
             description="xxx零件尺寸偏差",
         )
         assert i.priority == "MEDIUM"
@@ -44,14 +47,20 @@ class TestIssueBase:
     def test_long_title(self):
         with pytest.raises(ValidationError):
             IssueBase(
-                category="C", issue_type="T", severity="S",
-                title="x" * 201, description="d",
+                category="C",
+                issue_type="T",
+                severity="S",
+                title="x" * 201,
+                description="d",
             )
 
     def test_with_responsibility(self):
         i = IssueBase(
-            category="C", issue_type="T", severity="S",
-            title="T", description="D",
+            category="C",
+            issue_type="T",
+            severity="S",
+            title="T",
+            description="D",
             root_cause="DESIGN_ERROR",
             responsible_engineer_id=1,
             estimated_inventory_loss=Decimal("5000"),
@@ -63,8 +72,11 @@ class TestIssueBase:
 class TestIssueCreate:
     def test_inherits(self):
         i = IssueCreate(
-            category="C", issue_type="T", severity="S",
-            title="T", description="D",
+            category="C",
+            issue_type="T",
+            severity="S",
+            title="T",
+            description="D",
         )
         assert i.priority == "MEDIUM"
 
@@ -83,11 +95,18 @@ class TestIssueResponse:
     def test_valid(self):
         now = datetime.now()
         i = IssueResponse(
-            id=1, issue_no="ISS001",
-            category="C", issue_type="T", severity="S",
-            title="T", description="D",
-            reporter_id=1, report_date=now,
-            status="OPEN", created_at=now, updated_at=now,
+            id=1,
+            issue_no="ISS001",
+            category="C",
+            issue_type="T",
+            severity="S",
+            title="T",
+            description="D",
+            reporter_id=1,
+            report_date=now,
+            status="OPEN",
+            created_at=now,
+            updated_at=now,
         )
         assert i.follow_up_count == 0
         assert i.resolved_at is None
@@ -106,8 +125,11 @@ class TestIssueFollowUpBase:
 class TestIssueFollowUpCreate:
     def test_valid(self):
         f = IssueFollowUpCreate(
-            follow_up_type="STATUS_CHANGE", content="状态变更",
-            issue_id=1, old_status="OPEN", new_status="PROCESSING",
+            follow_up_type="STATUS_CHANGE",
+            content="状态变更",
+            issue_id=1,
+            old_status="OPEN",
+            new_status="PROCESSING",
         )
         assert f.issue_id == 1
 
@@ -150,8 +172,10 @@ class TestIssueFilterParams:
 
     def test_with_filters(self):
         f = IssueFilterParams(
-            category="DESIGN", severity="CRITICAL",
-            is_blocking=True, keyword="螺丝",
+            category="DESIGN",
+            severity="CRITICAL",
+            is_blocking=True,
+            keyword="螺丝",
         )
         assert f.is_blocking is True
 
@@ -205,6 +229,8 @@ class TestIssueFromTemplateRequest:
 
     def test_with_overrides(self):
         r = IssueFromTemplateRequest(
-            project_id=1, severity="CRITICAL", title="自定义标题",
+            project_id=1,
+            severity="CRITICAL",
+            title="自定义标题",
         )
         assert r.severity == "CRITICAL"

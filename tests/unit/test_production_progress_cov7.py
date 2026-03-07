@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - production_progress_service"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.production_progress_service import ProductionProgressService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

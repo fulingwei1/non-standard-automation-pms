@@ -5,11 +5,20 @@
 用于测试不依赖复杂关系的模块
 """
 
-import sys
 import os
+import sys
 
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from tests.unit.test_code_config import (
+    TestCodePrefix,
+    TestGetMaterialCategoryCode,
+    TestMaterialCategoryCodes,
+    TestSeqLength,
+    TestValidateMaterialCategoryCode,
+    TestValidMaterialCategoryCodes,
+)
 
 # 导入测试模块
 from tests.unit.test_holiday_utils import (
@@ -19,13 +28,13 @@ from tests.unit.test_holiday_utils import (
     TestIsHoliday,
     TestIsWorkdayAdjustment,
 )
-from tests.unit.test_code_config import (
-    TestCodePrefix,
-    TestGetMaterialCategoryCode,
-    TestMaterialCategoryCodes,
-    TestSeqLength,
-    TestValidMaterialCategoryCodes,
-    TestValidateMaterialCategoryCode,
+from tests.unit.test_logger import (
+    TestGetLogger,
+    TestGetLogLevel,
+    TestLogConstants,
+    TestLogErrorWithContext,
+    TestLogInfoWithContext,
+    TestLogWarningWithContext,
 )
 from tests.unit.test_pinyin_utils import (
     TestBatchGeneratePinyinForEmployees,
@@ -33,18 +42,10 @@ from tests.unit.test_pinyin_utils import (
     TestNameToPinyin,
     TestNameToPinyinInitials,
 )
-from tests.unit.test_logger import (
-    TestGetLogLevel,
-    TestGetLogger,
-    TestLogErrorWithContext,
-    TestLogWarningWithContext,
-    TestLogInfoWithContext,
-    TestLogConstants,
-)
 from tests.unit.test_rate_limit import (
+    TestLimiterConfiguration,
     TestRateLimitImport,
     TestRateLimitModuleStructure,
-    TestLimiterConfiguration,
 )
 
 
@@ -56,9 +57,7 @@ def run_test_class(test_class):
     errors = 0
 
     # 获取所有以 test_ 开头的方法
-    test_methods = [
-        method for method in dir(test_instance) if method.startswith("test_")
-    ]
+    test_methods = [method for method in dir(test_instance) if method.startswith("test_")]
 
     for method_name in test_methods:
         try:

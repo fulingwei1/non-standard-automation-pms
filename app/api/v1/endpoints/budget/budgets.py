@@ -11,8 +11,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.budget import ProjectBudget, ProjectBudgetItem
 from app.models.project import Project
 from app.models.user import User
@@ -24,10 +25,9 @@ from app.schemas.budget import (
     ProjectBudgetUpdate,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_budget_no, generate_budget_version
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -54,7 +54,9 @@ def list_budgets(
         query = query.filter(ProjectBudget.budget_type == budget_type)
 
     total = query.count()
-    budgets = apply_pagination(query.order_by(desc(ProjectBudget.created_at)), pagination.offset, pagination.limit).all()
+    budgets = apply_pagination(
+        query.order_by(desc(ProjectBudget.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     # 构建响应数据
     items = []
@@ -65,8 +67,12 @@ def list_budgets(
             "project_name": budget.project.project_name if budget.project else None,
             "submitter_name": budget.submitter.real_name if budget.submitter else None,
             "approver_name": budget.approver.real_name if budget.approver else None,
-            "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-                     for item in budget.items]
+            "items": [
+                ProjectBudgetItemResponse(
+                    **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+                )
+                for item in budget.items
+            ],
         }
         items.append(ProjectBudgetResponse(**budget_dict))
 
@@ -100,8 +106,12 @@ def get_project_budgets(
             "project_name": project.project_name,
             "submitter_name": budget.submitter.real_name if budget.submitter else None,
             "approver_name": budget.approver.real_name if budget.approver else None,
-            "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-                     for item in budget.items]
+            "items": [
+                ProjectBudgetItemResponse(
+                    **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+                )
+                for item in budget.items
+            ],
         }
         items.append(ProjectBudgetResponse(**budget_dict))
 
@@ -127,10 +137,10 @@ def create_budget(
     version = generate_budget_version(db, budget_in.project_id)
 
     # 创建预算
-    budget_data = budget_in.model_dump(exclude={'items'})
-    budget_data['budget_no'] = budget_no
-    budget_data['version'] = version
-    budget_data['created_by'] = current_user.id
+    budget_data = budget_in.model_dump(exclude={"items"})
+    budget_data["budget_no"] = budget_no
+    budget_data["version"] = version
+    budget_data["created_by"] = current_user.id
 
     budget = ProjectBudget(**budget_data)
     db.add(budget)
@@ -155,8 +165,12 @@ def create_budget(
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": project.project_code,
         "project_name": project.project_name,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-                 for item in budget.items]
+        "items": [
+            ProjectBudgetItemResponse(
+                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+            )
+            for item in budget.items
+        ],
     }
 
     return ProjectBudgetResponse(**budget_dict)
@@ -180,8 +194,12 @@ def get_budget(
         "project_name": budget.project.project_name if budget.project else None,
         "submitter_name": budget.submitter.real_name if budget.submitter else None,
         "approver_name": budget.approver.real_name if budget.approver else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-                 for item in budget.items]
+        "items": [
+            ProjectBudgetItemResponse(
+                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+            )
+            for item in budget.items
+        ],
     }
 
     return ProjectBudgetResponse(**budget_dict)
@@ -216,8 +234,12 @@ def update_budget(
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": budget.project.project_code if budget.project else None,
         "project_name": budget.project.project_name if budget.project else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-                 for item in budget.items]
+        "items": [
+            ProjectBudgetItemResponse(
+                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+            )
+            for item in budget.items
+        ],
     }
 
     return ProjectBudgetResponse(**budget_dict)
@@ -250,8 +272,12 @@ def submit_budget(
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": budget.project.project_code if budget.project else None,
         "project_name": budget.project.project_name if budget.project else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-                 for item in budget.items]
+        "items": [
+            ProjectBudgetItemResponse(
+                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+            )
+            for item in budget.items
+        ],
     }
 
     return ProjectBudgetResponse(**budget_dict)
@@ -289,7 +315,7 @@ def approve_budget(
         db.query(ProjectBudget).filter(
             ProjectBudget.project_id == budget.project_id,
             ProjectBudget.id != budget_id,
-            ProjectBudget.is_active
+            ProjectBudget.is_active,
         ).update({"is_active": False})
 
         budget.is_active = True
@@ -309,8 +335,12 @@ def approve_budget(
         **{c.name: getattr(budget, c.name) for c in budget.__table__.columns},
         "project_code": budget.project.project_code if budget.project else None,
         "project_name": budget.project.project_name if budget.project else None,
-        "items": [ProjectBudgetItemResponse(**{c.name: getattr(item, c.name) for c in item.__table__.columns})
-                 for item in budget.items]
+        "items": [
+            ProjectBudgetItemResponse(
+                **{c.name: getattr(item, c.name) for c in item.__table__.columns}
+            )
+            for item in budget.items
+        ],
     }
 
     return ProjectBudgetResponse(**budget_dict)

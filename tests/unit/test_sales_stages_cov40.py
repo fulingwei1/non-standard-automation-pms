@@ -7,6 +7,7 @@ import pytest
 
 try:
     from app.services.preset_stage_templates.templates.sales_stages import SALES_STAGES
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

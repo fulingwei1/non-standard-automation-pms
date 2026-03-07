@@ -9,18 +9,19 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
 from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock, patch
 
 from app.services.approval_engine.adapters.base import ApprovalAdapter
 
-
 # ==================== 测试用具体实现类 ====================
+
 
 class ConcreteAdapter(ApprovalAdapter):
     """
     具体实现类，用于测试抽象基类的功能
     """
+
     entity_type = "test_entity"
 
     def __init__(self, db):
@@ -67,6 +68,7 @@ class ConcreteAdapter(ApprovalAdapter):
 
 
 # ==================== 单元测试类 ====================
+
 
 class TestApprovalAdapterBase(unittest.TestCase):
     """测试审批适配器基类"""
@@ -213,11 +215,11 @@ class TestApprovalAdapterBase(unittest.TestCase):
 
         # 配置db.query根据参数返回不同的mock
         def query_side_effect(model):
-            if 'Department' in str(model):
+            if "Department" in str(model):
                 return mock_dept_query
-            elif 'Employee' in str(model):
+            elif "Employee" in str(model):
                 return mock_employee_query
-            elif 'User' in str(model):
+            elif "User" in str(model):
                 return mock_user_query
             return MagicMock()
 
@@ -225,7 +227,7 @@ class TestApprovalAdapterBase(unittest.TestCase):
 
         # 执行测试
         result = self.adapter.get_department_manager_user_id("研发部")
-        
+
         # 验证结果
         self.assertEqual(result, 50)
 
@@ -264,9 +266,9 @@ class TestApprovalAdapterBase(unittest.TestCase):
         mock_employee_query.filter.return_value.first.return_value = None
 
         def query_side_effect(model):
-            if 'Department' in str(model):
+            if "Department" in str(model):
                 return mock_dept_query
-            elif 'Employee' in str(model):
+            elif "Employee" in str(model):
                 return mock_employee_query
             return MagicMock()
 
@@ -295,11 +297,11 @@ class TestApprovalAdapterBase(unittest.TestCase):
         mock_user_query.filter.return_value.first.return_value = None
 
         def query_side_effect(model):
-            if 'Department' in str(model):
+            if "Department" in str(model):
                 return mock_dept_query
-            elif 'Employee' in str(model):
+            elif "Employee" in str(model):
                 return mock_employee_query
-            elif 'User' in str(model):
+            elif "User" in str(model):
                 return mock_user_query
             return MagicMock()
 
@@ -355,11 +357,11 @@ class TestApprovalAdapterBase(unittest.TestCase):
         mock_user_query.filter.return_value.all.return_value = [mock_user1, mock_user2]
 
         def query_side_effect(model):
-            if 'Department' in str(model):
+            if "Department" in str(model):
                 return mock_dept_query
-            elif 'Employee' in str(model):
+            elif "Employee" in str(model):
                 return mock_employee_query
-            elif 'User' in str(model):
+            elif "User" in str(model):
                 return mock_user_query
             return MagicMock()
 
@@ -367,7 +369,7 @@ class TestApprovalAdapterBase(unittest.TestCase):
 
         # 执行测试
         result = self.adapter.get_department_manager_user_ids_by_codes(["PROD", "QA"])
-        
+
         # 验证结果（应该去重）
         self.assertEqual(set(result), {50, 51})
 
@@ -426,18 +428,18 @@ class TestApprovalAdapterBase(unittest.TestCase):
         mock_user_query.filter.return_value.all.return_value = [mock_user]
 
         def query_side_effect(model):
-            if 'Department' in str(model):
+            if "Department" in str(model):
                 return mock_dept_query
-            elif 'Employee' in str(model):
+            elif "Employee" in str(model):
                 return mock_employee_query
-            elif 'User' in str(model):
+            elif "User" in str(model):
                 return mock_user_query
             return MagicMock()
 
         self.mock_db.query.side_effect = query_side_effect
 
         result = self.adapter.get_department_manager_user_ids_by_codes(["PROD", "QA"])
-        
+
         # 应该只有一个用户ID
         self.assertEqual(result, [50])
 
@@ -476,9 +478,9 @@ class TestApprovalAdapterBase(unittest.TestCase):
         mock_contract_query.filter.return_value.first.return_value = mock_contract
 
         def query_side_effect(model):
-            if 'Project' in str(model):
+            if "Project" in str(model):
                 return mock_project_query
-            elif 'Contract' in str(model):
+            elif "Contract" in str(model):
                 return mock_contract_query
             return MagicMock()
 
@@ -525,9 +527,9 @@ class TestApprovalAdapterBase(unittest.TestCase):
         mock_contract_query.filter.return_value.first.return_value = None
 
         def query_side_effect(model):
-            if 'Project' in str(model):
+            if "Project" in str(model):
                 return mock_project_query
-            elif 'Contract' in str(model):
+            elif "Contract" in str(model):
                 return mock_contract_query
             return MagicMock()
 
@@ -554,9 +556,9 @@ class TestApprovalAdapterBase(unittest.TestCase):
         mock_contract_query.filter.return_value.first.return_value = mock_contract
 
         def query_side_effect(model):
-            if 'Project' in str(model):
+            if "Project" in str(model):
                 return mock_project_query
-            elif 'Contract' in str(model):
+            elif "Contract" in str(model):
                 return mock_contract_query
             return MagicMock()
 
@@ -568,17 +570,18 @@ class TestApprovalAdapterBase(unittest.TestCase):
 
 # ==================== 抽象类测试 ====================
 
+
 class TestAbstractMethods(unittest.TestCase):
     """测试抽象方法必须实现"""
 
     def test_cannot_instantiate_abstract_class(self):
         """测试不能直接实例化抽象类"""
         mock_db = MagicMock()
-        
+
         # 尝试实例化抽象类应该抛出TypeError
         with self.assertRaises(TypeError) as context:
             adapter = ApprovalAdapter(mock_db)
-        
+
         # 验证错误消息提到抽象方法
         self.assertIn("abstract", str(context.exception).lower())
 
@@ -614,11 +617,11 @@ class TestEdgeCases(unittest.TestCase):
     def test_multiple_callbacks(self):
         """测试多次调用回调方法"""
         mock_instance = MagicMock()
-        
+
         self.adapter.on_submit(1, mock_instance)
         self.adapter.on_submit(2, mock_instance)
         self.adapter.on_submit(3, mock_instance)
-        
+
         self.assertEqual(len(self.adapter.callbacks["on_submit"]), 3)
         self.assertEqual(self.adapter.callbacks["on_submit"][0][0], 1)
         self.assertEqual(self.adapter.callbacks["on_submit"][1][0], 2)

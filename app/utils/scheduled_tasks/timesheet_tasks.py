@@ -23,15 +23,13 @@ def daily_timesheet_reminder_task():
             count = notify_timesheet_missing(db)
             logger.info(f"[{datetime.now()}] 每日工时填报提醒完成: 发送 {count} 条提醒")
 
-            return {
-                'reminder_count': count,
-                'timestamp': datetime.now().isoformat()
-            }
+            return {"reminder_count": count, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"[{datetime.now()}] 每日工时填报提醒失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def weekly_timesheet_reminder_task():
@@ -46,15 +44,13 @@ def weekly_timesheet_reminder_task():
             count = notify_weekly_timesheet_missing(db)
             logger.info(f"[{datetime.now()}] 每周工时填报提醒完成: 发送 {count} 条提醒")
 
-            return {
-                'reminder_count': count,
-                'timestamp': datetime.now().isoformat()
-            }
+            return {"reminder_count": count, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"[{datetime.now()}] 每周工时填报提醒失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def timesheet_anomaly_alert_task():
@@ -62,18 +58,17 @@ def timesheet_anomaly_alert_task():
     异常工时预警任务
     每天下午14:00执行，检测并提醒异常工时记录
     """
+    from app.models.timesheet_reminder import ReminderTypeEnum
     from app.services.timesheet_reminder.anomaly_detector import TimesheetAnomalyDetector
     from app.services.timesheet_reminder.notification_sender import NotificationSender
     from app.services.timesheet_reminder.reminder_manager import TimesheetReminderManager
-    from app.models.timesheet_reminder import ReminderTypeEnum
 
     try:
         with get_db_session() as db:
             # 使用新的异常检测器
             detector = TimesheetAnomalyDetector(db)
             anomalies = detector.detect_all_anomalies(
-                start_date=date.today() - timedelta(days=1),
-                end_date=date.today()
+                start_date=date.today() - timedelta(days=1), end_date=date.today()
             )
 
             # 为每个异常创建提醒
@@ -89,29 +84,32 @@ def timesheet_anomaly_alert_task():
                     user_name=anomaly.user_name,
                     title=f"异常工时预警：{anomaly.anomaly_type.value}",
                     content=anomaly.description,
-                    source_type='anomaly',
+                    source_type="anomaly",
                     source_id=anomaly.id,
                     extra_data=anomaly.anomaly_data,
-                    priority='HIGH',
+                    priority="HIGH",
                 )
 
                 # 发送通知
                 sender.send_reminder_notification(reminder)
-                manager.mark_reminder_sent(reminder.id, ['SYSTEM'])
+                manager.mark_reminder_sent(reminder.id, ["SYSTEM"])
                 reminder_count += 1
 
-            logger.info(f"[{datetime.now()}] 异常工时预警完成: 检测到 {len(anomalies)} 条异常，发送 {reminder_count} 条提醒")
+            logger.info(
+                f"[{datetime.now()}] 异常工时预警完成: 检测到 {len(anomalies)} 条异常，发送 {reminder_count} 条提醒"
+            )
 
             return {
-                'anomaly_count': len(anomalies),
-                'reminder_count': reminder_count,
-                'timestamp': datetime.now().isoformat()
+                "anomaly_count": len(anomalies),
+                "reminder_count": reminder_count,
+                "timestamp": datetime.now().isoformat(),
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 异常工时预警失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def timesheet_approval_timeout_reminder_task():
@@ -126,15 +124,13 @@ def timesheet_approval_timeout_reminder_task():
             count = notify_approval_timeout(db, timeout_hours=24)
             logger.info(f"[{datetime.now()}] 工时审批超时提醒完成: 发送 {count} 条提醒")
 
-            return {
-                'reminder_count': count,
-                'timestamp': datetime.now().isoformat()
-            }
+            return {"reminder_count": count, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"[{datetime.now()}] 工时审批超时提醒失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def timesheet_sync_failure_alert_task():
@@ -149,15 +145,13 @@ def timesheet_sync_failure_alert_task():
             count = notify_sync_failure(db)
             logger.info(f"[{datetime.now()}] 工时数据同步失败提醒完成: 发送 {count} 条提醒")
 
-            return {
-                'alert_count': count,
-                'timestamp': datetime.now().isoformat()
-            }
+            return {"alert_count": count, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"[{datetime.now()}] 工时数据同步失败提醒失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def daily_timesheet_aggregation_task():
@@ -186,8 +180,9 @@ def daily_timesheet_aggregation_task():
         except Exception as e:
             logger.error(f"[{datetime.now()}] 每日工时汇总失败: {str(e)}")
             import traceback
+
             traceback.print_exc()
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 def weekly_timesheet_aggregation_task():
@@ -215,14 +210,15 @@ def weekly_timesheet_aggregation_task():
             else:
                 # 跨月情况，分别汇总两个月
                 logger.info(f"[{datetime.now()}] 每周工时汇总：跨月情况，分别汇总")
-                result = {'message': '跨月汇总完成'}
+                result = {"message": "跨月汇总完成"}
 
             return result
         except Exception as e:
             logger.error(f"[{datetime.now()}] 每周工时汇总失败: {str(e)}")
             import traceback
+
             traceback.print_exc()
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 def monthly_timesheet_aggregation_task():
@@ -256,8 +252,9 @@ def monthly_timesheet_aggregation_task():
         except Exception as e:
             logger.error(f"[{datetime.now()}] 月度工时汇总失败: {str(e)}")
             import traceback
+
             traceback.print_exc()
-            return {'error': str(e)}
+            return {"error": str(e)}
 
 
 def calculate_monthly_labor_cost_task():
@@ -290,5 +287,6 @@ def calculate_monthly_labor_cost_task():
     except Exception as e:
         logger.error(f"[{datetime.now()}] 月度人工成本计算失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}

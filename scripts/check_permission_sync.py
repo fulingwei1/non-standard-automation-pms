@@ -10,6 +10,7 @@ from pathlib import Path
 # 项目根目录
 ROOT_DIR = Path(__file__).parent.parent
 
+
 def extract_frontend_roles():
     """从前端 roleConfig.js 中提取财务权限角色"""
     frontend_file = ROOT_DIR / "frontend/src/lib/roleConfig.js"
@@ -17,10 +18,10 @@ def extract_frontend_roles():
     if not frontend_file.exists():
         return []
 
-    content = frontend_file.read_text(encoding='utf-8')
+    content = frontend_file.read_text(encoding="utf-8")
 
     # 查找 hasFinanceAccess 函数
-    pattern = r'hasFinanceAccess\([^)]*\)\s*\{[^}]*allowedRoles\s*=\s*\[(.*?)\];'
+    pattern = r"hasFinanceAccess\([^)]*\)\s*\{[^}]*allowedRoles\s*=\s*\[(.*?)\];"
     match = re.search(pattern, content, re.DOTALL)
 
     if not match:
@@ -29,15 +30,16 @@ def extract_frontend_roles():
     roles_str = match.group(1)
     # 提取所有角色（去除引号和注释）
     roles = []
-    for line in roles_str.split('\n'):
+    for line in roles_str.split("\n"):
         line = line.strip()
-        if not line or line.startswith('//'):
+        if not line or line.startswith("//"):
             continue
         # 提取引号中的内容
         role_matches = re.findall(r"['\"]([^'\"]+)['\"]", line)
         roles.extend(role_matches)
 
     return sorted(set(roles))
+
 
 def extract_backend_roles():
     """从后端 security.py 中提取财务权限角色"""
@@ -46,10 +48,10 @@ def extract_backend_roles():
     if not backend_file.exists():
         return []
 
-    content = backend_file.read_text(encoding='utf-8')
+    content = backend_file.read_text(encoding="utf-8")
 
     # 查找 has_finance_access 函数
-    pattern = r'finance_roles\s*=\s*\[(.*?)\]'
+    pattern = r"finance_roles\s*=\s*\[(.*?)\]"
     match = re.search(pattern, content, re.DOTALL)
 
     if not match:
@@ -58,15 +60,16 @@ def extract_backend_roles():
     roles_str = match.group(1)
     # 提取所有角色（去除引号和注释）
     roles = []
-    for line in roles_str.split('\n'):
+    for line in roles_str.split("\n"):
         line = line.strip()
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
         # 提取引号中的内容
         role_matches = re.findall(r"['\"]([^'\"]+)['\"]", line)
         roles.extend(role_matches)
 
     return sorted(set(roles))
+
 
 def check_sync():
     """检查前后端权限配置是否同步"""
@@ -122,6 +125,7 @@ def check_sync():
     print("=" * 60)
 
     return len(only_frontend) == 0 and len(only_backend) == 0
+
 
 if __name__ == "__main__":
     is_synced = check_sync()

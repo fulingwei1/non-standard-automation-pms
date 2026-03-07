@@ -5,81 +5,79 @@
 import re
 from pathlib import Path
 
+
 def read_file_lines(file_path):
     """读取文件所有行"""
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.readlines()
+
 
 def extract_imports(lines):
     """提取导入语句"""
     imports = []
     for i, line in enumerate(lines):
-        if line.strip().startswith('from ') or line.strip().startswith('import '):
+        if line.strip().startswith("from ") or line.strip().startswith("import "):
             imports.append((i, line))
         elif imports and i > imports[-1][0] + 5:
             break
     return [line for _, line in imports]
 
+
 def main():
-    source_file = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service.py')
-    output_dir = Path('/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service')
+    source_file = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service.py")
+    output_dir = Path("/Users/flw/non-standard-automation-pm/app/api/v1/endpoints/service")
 
     print("📖 读取 service.py...")
     lines = read_file_lines(source_file)
 
     # 提取导入
     imports = extract_imports(lines)
-    imports_str = '\n'.join(imports)
+    imports_str = "\n".join(imports)
 
     # 定义各个模块的范围（基于章节注释）
     modules = {
-        'statistics.py': {
-            'start': 123,
-            'end': 218,
-            'prefix': '/service/statistics',
-            'name': '客服统计'
+        "statistics.py": {
+            "start": 123,
+            "end": 218,
+            "prefix": "/service/statistics",
+            "name": "客服统计",
         },
-        'tickets.py': {
-            'start': 219,
-            'end': 710,
-            'prefix': '/service/tickets',
-            'name': '服务工单'
+        "tickets.py": {"start": 219, "end": 710, "prefix": "/service/tickets", "name": "服务工单"},
+        "records.py": {
+            "start": 711,
+            "end": 998,
+            "prefix": "/service/records",
+            "name": "现场服务记录",
         },
-        'records.py': {
-            'start': 711,
-            'end': 998,
-            'prefix': '/service/records',
-            'name': '现场服务记录'
+        "communications.py": {
+            "start": 999,
+            "end": 1189,
+            "prefix": "/service/communications",
+            "name": "客户沟通",
         },
-        'communications.py': {
-            'start': 999,
-            'end': 1189,
-            'prefix': '/service/communications',
-            'name': '客户沟通'
+        "surveys.py": {
+            "start": 1190,
+            "end": 1398,
+            "prefix": "/service/surveys",
+            "name": "满意度调查",
         },
-        'surveys.py': {
-            'start': 1190,
-            'end': 1398,
-            'prefix': '/service/surveys',
-            'name': '满意度调查'
+        "survey_templates.py": {
+            "start": 1399,
+            "end": 1464,
+            "prefix": "/service/survey-templates",
+            "name": "满意度调查模板",
         },
-        'survey_templates.py': {
-            'start': 1399,
-            'end': 1464,
-            'prefix': '/service/survey-templates',
-            'name': '满意度调查模板'
+        "knowledge.py": {
+            "start": 1465,
+            "end": 1937,
+            "prefix": "/service/knowledge",
+            "name": "知识库",
         },
-        'knowledge.py': {
-            'start': 1465,
-            'end': 1937,
-            'prefix': '/service/knowledge',
-            'name': '知识库'
-        },
-        'knowledge_features.py': {
-            'start': 1938,
-            'end': 2208,
-            'prefix': '/service/knowledge-features',
-            'name': '知识库特定功能'
+        "knowledge_features.py": {
+            "start": 1938,
+            "end": 2208,
+            "prefix": "/service/knowledge-features",
+            "name": "知识库特定功能",
         },
     }
 
@@ -90,8 +88,8 @@ def main():
     for module_name, config in modules.items():
         print(f"📝 生成 {module_name}...")
 
-        start = config['start'] - 1  # 转换为0索引
-        end = config['end']
+        start = config["start"] - 1  # 转换为0索引
+        end = config["end"]
 
         # 提取模块代码
         if start >= len(lines):
@@ -101,10 +99,10 @@ def main():
         if end > len(lines):
             end = len(lines)
 
-        module_code = ''.join(lines[start:end])
+        module_code = "".join(lines[start:end])
 
         # 统计路由数量
-        routes = len(re.findall(r'@router\.', module_code))
+        routes = len(re.findall(r"@router\.", module_code))
 
         # 生成模块文件内容
         module_content = f'''# -*- coding: utf-8 -*-
@@ -130,7 +128,7 @@ router = APIRouter(
 
         # 写入文件
         output_path = output_dir / module_name
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(module_content)
 
         print(f"  ✅ {module_name}: {routes} 个路由")
@@ -166,11 +164,12 @@ router.include_router(knowledge_features_router)
 __all__ = ['router']
 '''
 
-    with open(output_dir / '__init__.py', 'w', encoding='utf-8') as f:
+    with open(output_dir / "__init__.py", "w", encoding="utf-8") as f:
         f.write(init_content)
 
     print("\n✅ service.py 拆分完成！")
     print(f"总计: {len(modules)} 个模块")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

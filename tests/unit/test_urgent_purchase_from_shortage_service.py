@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for urgent_purchase_from_shortage_service"""
 import json
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 from app.services.urgent_purchase_from_shortage_service import (
-    get_material_supplier,
-    get_material_price,
     create_urgent_purchase_request_from_alert,
+    get_material_price,
+    get_material_supplier,
 )
 
 
@@ -24,12 +25,17 @@ class TestGetMaterialSupplier:
     def test_default_supplier_fallback(self):
         # First query (preferred) returns None
         query_mock = MagicMock()
-        query_mock.filter.return_value.first.side_effect = [None, MagicMock(default_supplier_id=20), None]
+        query_mock.filter.return_value.first.side_effect = [
+            None,
+            MagicMock(default_supplier_id=20),
+            None,
+        ]
         self.db.query.return_value = query_mock
         # We need more precise mocking
         self.db.reset_mock()
 
         call_count = [0]
+
         def side_effect_first(*args, **kwargs):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -38,6 +44,7 @@ class TestGetMaterialSupplier:
                 return MagicMock(default_supplier_id=20)  # material with default
             else:
                 return None
+
         self.db.query.return_value.filter.return_value.first.side_effect = side_effect_first
         result = get_material_supplier(self.db, 1)
         assert result == 20
@@ -78,12 +85,14 @@ class TestCreateUrgentPurchaseRequestFromAlert:
         self.db = MagicMock()
         self.alert = MagicMock()
         self.alert.alert_no = "ALT-001"
-        self.alert.alert_data = json.dumps({
-            "shortage_qty": 10,
-            "required_date": "2025-01-01",
-            "material_code": "MAT-001",
-            "material_name": "测试物料",
-        })
+        self.alert.alert_data = json.dumps(
+            {
+                "shortage_qty": 10,
+                "required_date": "2025-01-01",
+                "material_code": "MAT-001",
+                "material_name": "测试物料",
+            }
+        )
         self.alert.target_id = 1
         self.alert.target_no = "MAT-001"
         self.alert.target_name = "测试物料"
@@ -92,7 +101,10 @@ class TestCreateUrgentPurchaseRequestFromAlert:
         self.alert.id = 100
         self.gen_func = MagicMock(return_value="PR-001")
 
-    @patch("app.services.urgent_purchase_from_shortage_service.get_material_supplier", return_value=None)
+    @patch(
+        "app.services.urgent_purchase_from_shortage_service.get_material_supplier",
+        return_value=None,
+    )
     def test_no_supplier_sets_pending(self, mock_supplier):
         material = MagicMock(unit="个")
         self.db.query.return_value.filter.return_value.first.return_value = material
@@ -105,8 +117,13 @@ class TestCreateUrgentPurchaseRequestFromAlert:
         result = create_urgent_purchase_request_from_alert(self.db, self.alert, 1, self.gen_func)
         assert result is None
 
-    @patch("app.services.urgent_purchase_from_shortage_service.get_material_price", return_value=Decimal("10"))
-    @patch("app.services.urgent_purchase_from_shortage_service.get_material_supplier", return_value=5)
+    @patch(
+        "app.services.urgent_purchase_from_shortage_service.get_material_price",
+        return_value=Decimal("10"),
+    )
+    @patch(
+        "app.services.urgent_purchase_from_shortage_service.get_material_supplier", return_value=5
+    )
     def test_successful_creation(self, mock_supplier, mock_price):
         material = MagicMock(unit="个")
         self.db.query.return_value.filter.return_value.first.return_value = material

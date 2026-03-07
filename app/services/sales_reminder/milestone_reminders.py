@@ -21,27 +21,35 @@ def notify_milestone_upcoming(db: Session, days_before: int = 7) -> int:
     target_date = today + timedelta(days=days_before)
 
     # 查找即将到期的里程碑
-    milestones = db.query(ProjectMilestone).filter(
-        and_(
-            ProjectMilestone.status == "PENDING",
-            ProjectMilestone.planned_date <= target_date,
-            ProjectMilestone.planned_date >= today
+    milestones = (
+        db.query(ProjectMilestone)
+        .filter(
+            and_(
+                ProjectMilestone.status == "PENDING",
+                ProjectMilestone.planned_date <= target_date,
+                ProjectMilestone.planned_date >= today,
+            )
         )
-    ).all()
+        .all()
+    )
 
     count = 0
     for milestone in milestones:
         if milestone.owner_id:
             # 检查是否已发送过提醒
-            existing = db.query(Notification).filter(
-                and_(
-                    Notification.user_id == milestone.owner_id,
-                    Notification.source_type == "milestone",
-                    Notification.source_id == milestone.id,
-                    Notification.notification_type == "MILESTONE_UPCOMING",
-                    Notification.created_at >= datetime.combine(today, datetime.min.time())
+            existing = (
+                db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.user_id == milestone.owner_id,
+                        Notification.source_type == "milestone",
+                        Notification.source_id == milestone.id,
+                        Notification.notification_type == "MILESTONE_UPCOMING",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not existing:
                 create_notification(
@@ -57,8 +65,8 @@ def notify_milestone_upcoming(db: Session, days_before: int = 7) -> int:
                     extra_data={
                         "milestone_code": milestone.milestone_code,
                         "planned_date": milestone.planned_date.isoformat(),
-                        "days_left": (milestone.planned_date - today).days
-                    }
+                        "days_left": (milestone.planned_date - today).days,
+                    },
                 )
                 count += 1
 
@@ -72,26 +80,29 @@ def notify_milestone_overdue(db: Session) -> int:
     today = date.today()
 
     # 查找已逾期的里程碑
-    milestones = db.query(ProjectMilestone).filter(
-        and_(
-            ProjectMilestone.status == "PENDING",
-            ProjectMilestone.planned_date < today
-        )
-    ).all()
+    milestones = (
+        db.query(ProjectMilestone)
+        .filter(and_(ProjectMilestone.status == "PENDING", ProjectMilestone.planned_date < today))
+        .all()
+    )
 
     count = 0
     for milestone in milestones:
         if milestone.owner_id:
             # 检查今天是否已发送过提醒
-            existing = db.query(Notification).filter(
-                and_(
-                    Notification.user_id == milestone.owner_id,
-                    Notification.source_type == "milestone",
-                    Notification.source_id == milestone.id,
-                    Notification.notification_type == "MILESTONE_OVERDUE",
-                    Notification.created_at >= datetime.combine(today, datetime.min.time())
+            existing = (
+                db.query(Notification)
+                .filter(
+                    and_(
+                        Notification.user_id == milestone.owner_id,
+                        Notification.source_type == "milestone",
+                        Notification.source_id == milestone.id,
+                        Notification.notification_type == "MILESTONE_OVERDUE",
+                        Notification.created_at >= datetime.combine(today, datetime.min.time()),
+                    )
                 )
-            ).first()
+                .first()
+            )
 
             if not existing:
                 overdue_days = (today - milestone.planned_date).days
@@ -108,8 +119,8 @@ def notify_milestone_overdue(db: Session) -> int:
                     extra_data={
                         "milestone_code": milestone.milestone_code,
                         "planned_date": milestone.planned_date.isoformat(),
-                        "overdue_days": overdue_days
-                    }
+                        "overdue_days": overdue_days,
+                    },
                 )
                 count += 1
 

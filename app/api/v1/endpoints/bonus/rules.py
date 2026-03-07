@@ -40,20 +40,20 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(
-    prefix="/bonus/rules",
-    tags=["rules"]
-)
+router = APIRouter(prefix="/bonus/rules", tags=["rules"])
 
 # 共 7 个路由
 
 # ==================== 奖金规则管理 ====================
 
-@router.post("/rules", response_model=ResponseModel[BonusRuleResponse], status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/rules", response_model=ResponseModel[BonusRuleResponse], status_code=status.HTTP_201_CREATED
+)
 def create_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -67,8 +67,7 @@ def create_bonus_rule(
     existing = db.query(BonusRule).filter(BonusRule.rule_code == rule_in.rule_code).first()
     if existing:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"规则编码 {rule_in.rule_code} 已存在"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"规则编码 {rule_in.rule_code} 已存在"
         )
 
     rule = BonusRule(**rule_in.model_dump())
@@ -99,20 +98,27 @@ def get_bonus_rules(
         query = query.filter(BonusRule.is_active == is_active)
 
     total = query.count()
-    rules = query.order_by(desc(BonusRule.priority), desc(BonusRule.created_at)).offset(
-        pagination.offset
-    ).limit(pagination.limit).all()
+    rules = (
+        query.order_by(desc(BonusRule.priority), desc(BonusRule.created_at))
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+        .all()
+    )
 
     return BonusRuleListResponse(
         items=rules,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.get("/rules/{rule_id}", response_model=ResponseModel[BonusRuleResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/rules/{rule_id}",
+    response_model=ResponseModel[BonusRuleResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -127,7 +133,11 @@ def get_bonus_rule(
     return ResponseModel(code=200, data=rule)
 
 
-@router.put("/rules/{rule_id}", response_model=ResponseModel[BonusRuleResponse], status_code=status.HTTP_200_OK)
+@router.put(
+    "/rules/{rule_id}",
+    response_model=ResponseModel[BonusRuleResponse],
+    status_code=status.HTTP_200_OK,
+)
 def update_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -167,7 +177,7 @@ def delete_bonus_rule(
     if calc_count > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"该规则已有 {calc_count} 条计算记录，无法删除"
+            detail=f"该规则已有 {calc_count} 条计算记录，无法删除",
         )
 
     db.delete(rule)
@@ -176,7 +186,9 @@ def delete_bonus_rule(
     return ResponseModel(code=200, message="删除成功")
 
 
-@router.post("/rules/{rule_id}/activate", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/rules/{rule_id}/activate", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def activate_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),
@@ -194,7 +206,9 @@ def activate_bonus_rule(
     return ResponseModel(code=200, message="启用成功")
 
 
-@router.post("/rules/{rule_id}/deactivate", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/rules/{rule_id}/deactivate", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def deactivate_bonus_rule(
     *,
     db: Session = Depends(deps.get_db),

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import MagicMock, patch
 import json
+from unittest.mock import MagicMock, patch
 
-from app.services.invoice_auto_service.notifications import send_invoice_notifications, log_auto_invoice
+from app.services.invoice_auto_service.notifications import (
+    log_auto_invoice,
+    send_invoice_notifications,
+)
 
 
 class TestSendInvoiceNotifications:
@@ -22,7 +25,9 @@ class TestSendInvoiceNotifications:
 
         items = [{"invoice_code": "INV001", "amount": 1000}]
 
-        with patch("app.services.invoice_auto_service.notifications.NotificationDispatcher") as mock_nd:
+        with patch(
+            "app.services.invoice_auto_service.notifications.NotificationDispatcher"
+        ) as mock_nd:
             nd = MagicMock()
             mock_nd.return_value = nd
             nd.send_notification_request.return_value = {"success": True}
@@ -65,6 +70,8 @@ class TestLogAutoInvoice:
     def test_log_exception_caught(self):
         service = MagicMock()
         order = MagicMock()
-        type(order).conditions = property(lambda self: None, lambda self, v: (_ for _ in ()).throw(Exception("fail")))
+        type(order).conditions = property(
+            lambda self: None, lambda self, v: (_ for _ in ()).throw(Exception("fail"))
+        )
         # Should not raise
         log_auto_invoice(service, order, [], True)

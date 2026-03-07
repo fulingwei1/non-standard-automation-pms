@@ -32,9 +32,7 @@ class ContentSlideBuilder(BaseSlideBuilder):
         self._add_slide_title(slide, title)
 
         # 内容区域
-        content_box = slide.shapes.add_textbox(
-            Inches(0.5), Inches(1.3), Inches(9), Inches(5.5)
-        )
+        content_box = slide.shapes.add_textbox(Inches(0.5), Inches(1.3), Inches(9), Inches(5.5))
         tf = content_box.text_frame
         tf.word_wrap = True
 
@@ -90,15 +88,11 @@ class ContentSlideBuilder(BaseSlideBuilder):
         self._add_slide_title(slide, title)
 
         # 左栏
-        left_box = slide.shapes.add_textbox(
-            Inches(0.5), Inches(1.3), Inches(4.3), Inches(5.5)
-        )
+        left_box = slide.shapes.add_textbox(Inches(0.5), Inches(1.3), Inches(4.3), Inches(5.5))
         self._fill_textbox(left_box, left_content)
 
         # 右栏
-        right_box = slide.shapes.add_textbox(
-            Inches(5.2), Inches(1.3), Inches(4.3), Inches(5.5)
-        )
+        right_box = slide.shapes.add_textbox(Inches(5.2), Inches(1.3), Inches(4.3), Inches(5.5))
         self._fill_textbox(right_box, right_content)
 
         # 页码

@@ -5,16 +5,16 @@ BatchOperationResult: 纯逻辑
 BatchOperationExecutor: mock db
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 
-from app.utils.batch_operations import BatchOperationResult, BatchOperationExecutor
-
+from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
 
 # =============================================================================
 # BatchOperationResult - 纯逻辑
 # =============================================================================
+
 
 class TestBatchOperationResult:
 
@@ -83,8 +83,10 @@ class TestBatchOperationResult:
 # BatchOperationExecutor - mock db
 # =============================================================================
 
+
 class SimpleModel:
     """简单模型用于测试"""
+
     __tablename__ = "tasks"
 
     def __init__(self, id_, status="PENDING", is_active=True):
@@ -132,6 +134,7 @@ class TestBatchOperationExecutor:
         executor, pre_filter, db = make_executor_with_entities(entities)
 
         results_seen = []
+
         def op(entity):
             results_seen.append(entity.id)
 
@@ -196,6 +199,7 @@ class TestBatchOperationExecutor:
         executor, pre_filter, db = make_executor_with_entities(entities)
 
         log_calls = []
+
         def log_fn(entity, op_type):
             log_calls.append((entity.id, op_type))
 
@@ -251,6 +255,7 @@ class TestBatchOperationExecutor:
 # =============================================================================
 # BatchOperationExecutor 便利方法
 # =============================================================================
+
 
 def make_executor_with_scope_filter(entities, db=None):
     """创建 executor，通过 scope_filter_func 注入实体（支持 batch_update/delete/status_update）"""

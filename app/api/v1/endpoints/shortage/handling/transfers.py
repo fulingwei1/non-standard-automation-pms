@@ -42,6 +42,7 @@ router = APIRouter()
 # 工具函数
 # ============================================================
 
+
 def _generate_transfer_no(db: Session) -> str:
     """生成调拨单号：TRF-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
@@ -49,19 +50,27 @@ def _generate_transfer_no(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=MaterialTransfer,
-        no_field='transfer_no',
-        prefix='TRF',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="transfer_no",
+        prefix="TRF",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
 
 def _build_transfer_response(transfer: MaterialTransfer, db: Session) -> MaterialTransferResponse:
     """构建调拨响应对象"""
-    from_project = db.query(Project).filter(Project.id == transfer.from_project_id).first() if transfer.from_project_id else None
+    from_project = (
+        db.query(Project).filter(Project.id == transfer.from_project_id).first()
+        if transfer.from_project_id
+        else None
+    )
     to_project = db.query(Project).filter(Project.id == transfer.to_project_id).first()
-    approver = db.query(User).filter(User.id == transfer.approver_id).first() if transfer.approver_id else None
+    approver = (
+        db.query(User).filter(User.id == transfer.approver_id).first()
+        if transfer.approver_id
+        else None
+    )
 
     return MaterialTransferResponse(
         id=transfer.id,
@@ -95,6 +104,7 @@ def _build_transfer_response(transfer: MaterialTransfer, db: Session) -> Materia
 # CRUD 操作
 # ============================================================
 
+
 @router.get("", response_model=PaginatedResponse)
 def list_transfers(
     db: Session = Depends(deps.get_db),
@@ -119,7 +129,9 @@ def list_transfers(
         query = query.filter(MaterialTransfer.to_project_id == to_project_id)
 
     total = query.count()
-    transfers = apply_pagination(query.order_by(desc(MaterialTransfer.created_at)), pagination.offset, pagination.limit).all()
+    transfers = apply_pagination(
+        query.order_by(desc(MaterialTransfer.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_build_transfer_response(transfer, db) for transfer in transfers]
 
@@ -128,7 +140,7 @@ def list_transfers(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -156,6 +168,7 @@ def create_transfer(
     if transfer_in.from_project_id:
         try:
             from app.services.material_transfer_service import material_transfer_service
+
             stock_info = material_transfer_service.get_project_material_stock(
                 db, transfer_in.from_project_id, transfer_in.material_id
             )
@@ -168,7 +181,7 @@ def create_transfer(
     if available_qty > 0 and transfer_in.transfer_qty > available_qty:
         raise HTTPException(
             status_code=400,
-            detail=f"可调拨数量不足，当前可用：{available_qty}（来源：{stock_source}）"
+            detail=f"可调拨数量不足，当前可用：{available_qty}（来源：{stock_source}）",
         )
 
     transfer = MaterialTransfer(
@@ -185,9 +198,9 @@ def create_transfer(
         available_qty=available_qty,
         transfer_reason=transfer_in.transfer_reason,
         urgent_level=transfer_in.urgent_level,
-        status='DRAFT',
+        status="DRAFT",
         created_by=current_user.id,
-        remark=transfer_in.remark
+        remark=transfer_in.remark,
     )
 
     save_obj(db, transfer)
@@ -212,6 +225,7 @@ def get_transfer(
 # 审批与执行
 # ============================================================
 
+
 @router.put("/{transfer_id}/approve", response_model=MaterialTransferResponse)
 def approve_transfer(
     *,
@@ -224,7 +238,7 @@ def approve_transfer(
     """调拨审批"""
     transfer = get_or_404(db, MaterialTransfer, transfer_id, "调拨申请不存在")
 
-    if transfer.status not in ['DRAFT', 'PENDING']:
+    if transfer.status not in ["DRAFT", "PENDING"]:
         raise HTTPException(status_code=400, detail="只有草稿或待审批状态的申请才能审批")
 
     transfer.approver_id = current_user.id
@@ -232,9 +246,9 @@ def approve_transfer(
     transfer.approval_note = approval_note
 
     if approved:
-        transfer.status = 'APPROVED'
+        transfer.status = "APPROVED"
     else:
-        transfer.status = 'REJECTED'
+        transfer.status = "REJECTED"
 
     save_obj(db, transfer)
 
@@ -253,10 +267,10 @@ def execute_transfer(
     """执行调拨"""
     transfer = get_or_404(db, MaterialTransfer, transfer_id, "调拨申请不存在")
 
-    if transfer.status != 'APPROVED':
+    if transfer.status != "APPROVED":
         raise HTTPException(status_code=400, detail="只有已批准的申请才能执行")
 
-    transfer.status = 'EXECUTED'
+    transfer.status = "EXECUTED"
     transfer.executed_at = datetime.now()
     transfer.executed_by = current_user.id
     transfer.actual_qty = actual_qty

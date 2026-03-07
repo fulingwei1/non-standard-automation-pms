@@ -15,24 +15,25 @@ TimesheetReminderManager 单元测试
 - _generate_reminder_no (编号生成)
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.models.timesheet_reminder import (
     AnomalyTypeEnum,
     ReminderStatusEnum,
     ReminderTypeEnum,
+    TimesheetAnomalyRecord,
     TimesheetReminderConfig,
     TimesheetReminderRecord,
-    TimesheetAnomalyRecord,
 )
 from app.services.timesheet_reminder.reminder_manager import TimesheetReminderManager
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def db():
@@ -47,6 +48,7 @@ def manager(db):
 # ---------------------------------------------------------------------------
 # Tests: create_reminder_config
 # ---------------------------------------------------------------------------
+
 
 class TestCreateReminderConfig:
     def test_basic_creation(self, manager, db):
@@ -90,6 +92,7 @@ class TestCreateReminderConfig:
 # Tests: update_reminder_config
 # ---------------------------------------------------------------------------
 
+
 class TestUpdateReminderConfig:
     def test_not_found_returns_none(self, manager, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -111,6 +114,7 @@ class TestUpdateReminderConfig:
 # Tests: check_user_applicable
 # ---------------------------------------------------------------------------
 
+
 class TestCheckUserApplicable:
     def test_no_restrictions_applies_to_all(self, manager):
         config = MagicMock()
@@ -131,7 +135,10 @@ class TestCheckUserApplicable:
         config.apply_to_users = [10, 20]
         config.apply_to_departments = [5]
         config.apply_to_roles = [3]
-        assert manager.check_user_applicable(config, user_id=99, department_id=99, role_ids=[99]) is False
+        assert (
+            manager.check_user_applicable(config, user_id=99, department_id=99, role_ids=[99])
+            is False
+        )
 
     def test_user_in_department(self, manager):
         config = MagicMock()
@@ -151,6 +158,7 @@ class TestCheckUserApplicable:
 # ---------------------------------------------------------------------------
 # Tests: create_reminder_record
 # ---------------------------------------------------------------------------
+
 
 class TestCreateReminderRecord:
     def test_record_created_with_correct_fields(self, manager, db):
@@ -188,6 +196,7 @@ class TestCreateReminderRecord:
 # Tests: mark_reminder_sent
 # ---------------------------------------------------------------------------
 
+
 class TestMarkReminderSent:
     def test_not_found_returns_none(self, manager, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -208,6 +217,7 @@ class TestMarkReminderSent:
 # Tests: mark_reminder_read
 # ---------------------------------------------------------------------------
 
+
 class TestMarkReminderRead:
     def test_not_found_returns_none(self, manager, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -225,6 +235,7 @@ class TestMarkReminderRead:
 # ---------------------------------------------------------------------------
 # Tests: dismiss_reminder
 # ---------------------------------------------------------------------------
+
 
 class TestDismissReminder:
     def test_not_found_returns_none(self, manager, db):
@@ -246,6 +257,7 @@ class TestDismissReminder:
 # Tests: mark_reminder_resolved
 # ---------------------------------------------------------------------------
 
+
 class TestMarkReminderResolved:
     def test_not_found_returns_none(self, manager, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -265,26 +277,40 @@ class TestMarkReminderResolved:
 # Tests: check_reminder_limit
 # ---------------------------------------------------------------------------
 
+
 class TestCheckReminderLimit:
     def test_within_limit_returns_true(self, manager, db):
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 0
-        result = manager.check_reminder_limit(user_id=1, reminder_type=ReminderTypeEnum.MISSING_TIMESHEET, max_per_day=3)
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            0
+        )
+        result = manager.check_reminder_limit(
+            user_id=1, reminder_type=ReminderTypeEnum.MISSING_TIMESHEET, max_per_day=3
+        )
         assert result is True
 
     def test_at_limit_returns_false(self, manager, db):
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 3
-        result = manager.check_reminder_limit(user_id=1, reminder_type=ReminderTypeEnum.MISSING_TIMESHEET, max_per_day=3)
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            3
+        )
+        result = manager.check_reminder_limit(
+            user_id=1, reminder_type=ReminderTypeEnum.MISSING_TIMESHEET, max_per_day=3
+        )
         assert result is False
 
     def test_exceeded_limit_returns_false(self, manager, db):
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = 5
-        result = manager.check_reminder_limit(user_id=1, reminder_type=ReminderTypeEnum.APPROVAL_TIMEOUT, max_per_day=2)
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.count.return_value = (
+            5
+        )
+        result = manager.check_reminder_limit(
+            user_id=1, reminder_type=ReminderTypeEnum.APPROVAL_TIMEOUT, max_per_day=2
+        )
         assert result is False
 
 
 # ---------------------------------------------------------------------------
 # Tests: create_anomaly_record
 # ---------------------------------------------------------------------------
+
 
 class TestCreateAnomalyRecord:
     def test_anomaly_created(self, manager, db):
@@ -306,6 +332,7 @@ class TestCreateAnomalyRecord:
 # Tests: resolve_anomaly
 # ---------------------------------------------------------------------------
 
+
 class TestResolveAnomaly:
     def test_not_found_returns_none(self, manager, db):
         db.query.return_value.filter.return_value.first.return_value = None
@@ -326,15 +353,20 @@ class TestResolveAnomaly:
 # Tests: get_pending_reminders
 # ---------------------------------------------------------------------------
 
+
 class TestGetPendingReminders:
     def test_returns_list(self, manager, db):
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = manager.get_pending_reminders()
         assert result == []
 
     def test_filter_by_user_id(self, manager, db):
         r = MagicMock(spec=TimesheetReminderRecord)
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [r]
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            r
+        ]
         result = manager.get_pending_reminders(user_id=1)
         assert len(result) == 1
 
@@ -342,6 +374,7 @@ class TestGetPendingReminders:
 # ---------------------------------------------------------------------------
 # Tests: _generate_reminder_no
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateReminderNo:
     def test_prefix_missing_timesheet(self, manager, db):

@@ -7,9 +7,12 @@ import pytest
 pytest.importorskip("pptx", reason="python-pptx not available")
 
 try:
-    from unittest.mock import MagicMock, patch, PropertyMock
+    from unittest.mock import MagicMock, PropertyMock, patch
+
     from pptx.util import Inches, Pt
+
     from app.services.ppt_generator.content_builder import ContentSlideBuilder
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False

@@ -9,13 +9,14 @@ Coverage target: app/services/milestone_service.py
 3. complete_milestone — 已有 actual_date 时使用原日期
 """
 
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.models.project import ProjectMilestone
-from app.services.milestone_service import MilestoneService
 from app.schemas.project import MilestoneUpdate
+from app.services.milestone_service import MilestoneService
 
 
 class TestMilestoneServiceInit:
@@ -96,8 +97,10 @@ class TestCompleteMilestone:
         milestone = self._setup_milestone()
         explicit_date = date(2026, 3, 1)
 
-        with patch.object(self.svc, 'get', return_value=milestone), \
-             patch.object(self.svc, 'update') as mock_update:
+        with (
+            patch.object(self.svc, "get", return_value=milestone),
+            patch.object(self.svc, "update") as mock_update,
+        ):
             self.svc.complete_milestone(1, actual_date=explicit_date)
 
         mock_update.assert_called_once()
@@ -109,8 +112,10 @@ class TestCompleteMilestone:
     def test_complete_with_no_date_uses_today(self):
         milestone = self._setup_milestone(actual_date=None)
 
-        with patch.object(self.svc, 'get', return_value=milestone), \
-             patch.object(self.svc, 'update') as mock_update:
+        with (
+            patch.object(self.svc, "get", return_value=milestone),
+            patch.object(self.svc, "update") as mock_update,
+        ):
             self.svc.complete_milestone(1, actual_date=None)
 
         call_args = mock_update.call_args
@@ -122,8 +127,10 @@ class TestCompleteMilestone:
         existing = date(2026, 2, 10)
         milestone = self._setup_milestone(actual_date=existing)
 
-        with patch.object(self.svc, 'get', return_value=milestone), \
-             patch.object(self.svc, 'update') as mock_update:
+        with (
+            patch.object(self.svc, "get", return_value=milestone),
+            patch.object(self.svc, "update") as mock_update,
+        ):
             self.svc.complete_milestone(1)
 
         call_args = mock_update.call_args
@@ -134,9 +141,13 @@ class TestCompleteMilestone:
     def test_complete_returns_milestone_model(self):
         milestone = self._setup_milestone()
 
-        with patch.object(self.svc, 'get', return_value=milestone), \
-             patch.object(self.svc, 'update'), \
-             patch.object(self.db.query.return_value.filter.return_value, 'first', return_value=milestone):
+        with (
+            patch.object(self.svc, "get", return_value=milestone),
+            patch.object(self.svc, "update"),
+            patch.object(
+                self.db.query.return_value.filter.return_value, "first", return_value=milestone
+            ),
+        ):
             result = self.svc.complete_milestone(1)
 
         assert result is not None
@@ -144,8 +155,10 @@ class TestCompleteMilestone:
     def test_complete_calls_update_with_completed_status(self):
         milestone = self._setup_milestone()
 
-        with patch.object(self.svc, 'get', return_value=milestone), \
-             patch.object(self.svc, 'update') as mock_update:
+        with (
+            patch.object(self.svc, "get", return_value=milestone),
+            patch.object(self.svc, "update") as mock_update,
+        ):
             self.svc.complete_milestone(1)
 
         mock_update.assert_called_once()
@@ -156,8 +169,10 @@ class TestCompleteMilestone:
     def test_complete_calls_get_to_retrieve_milestone(self):
         milestone = self._setup_milestone()
 
-        with patch.object(self.svc, 'get', return_value=milestone) as mock_get, \
-             patch.object(self.svc, 'update'):
+        with (
+            patch.object(self.svc, "get", return_value=milestone) as mock_get,
+            patch.object(self.svc, "update"),
+        ):
             self.svc.complete_milestone(7)
 
         mock_get.assert_called_once_with(7)
@@ -169,8 +184,10 @@ class TestCompleteMilestone:
         q = self.db.query.return_value
         q.filter.return_value.first.return_value = fresh_milestone
 
-        with patch.object(self.svc, 'get', return_value=milestone), \
-             patch.object(self.svc, 'update'):
+        with (
+            patch.object(self.svc, "get", return_value=milestone),
+            patch.object(self.svc, "update"),
+        ):
             result = self.svc.complete_milestone(1)
 
         self.db.query.assert_called_with(ProjectMilestone)
@@ -181,8 +198,10 @@ class TestCompleteMilestone:
         q = self.db.query.return_value
         q.filter.return_value.first.return_value = milestone
 
-        with patch.object(self.svc, 'get', return_value=milestone), \
-             patch.object(self.svc, 'update') as mock_update:
+        with (
+            patch.object(self.svc, "get", return_value=milestone),
+            patch.object(self.svc, "update") as mock_update,
+        ):
             self.svc.complete_milestone(1)
 
         update_data = mock_update.call_args[0][1]

@@ -2,18 +2,19 @@
 """
 I1组: PresaleAIIntegrationService 单元测试
 """
-import pytest
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
-from app.services.presale_ai_integration import PresaleAIIntegrationService
-from app.schemas.presale_ai import AIFeedbackCreate, AIConfigUpdate
+import pytest
+
 from app.models.presale_ai import WorkflowStatusEnum, WorkflowStepEnum
-
+from app.schemas.presale_ai import AIConfigUpdate, AIFeedbackCreate
+from app.services.presale_ai_integration import PresaleAIIntegrationService
 
 # ============================================================
 # Helper factory
 # ============================================================
+
 
 def _make_service():
     db = MagicMock()
@@ -63,13 +64,16 @@ def _make_workflow_log(**kwargs):
 # TestRecordUsage
 # ============================================================
 
+
 class TestRecordUsage:
     def test_record_usage_new_record(self):
         """新建使用记录"""
         svc, db = _make_service()
         db.query.return_value.filter.return_value.first.return_value = None
 
-        result = svc.record_usage(user_id=1, ai_function="requirement_analysis", success=True, response_time=300)
+        result = svc.record_usage(
+            user_id=1, ai_function="requirement_analysis", success=True, response_time=300
+        )
 
         db.add.assert_called_once()
         db.commit.assert_called()
@@ -81,7 +85,9 @@ class TestRecordUsage:
         existing = _make_stat(usage_count=3, success_count=3, avg_response_time=200)
         db.query.return_value.filter.return_value.first.return_value = existing
 
-        result = svc.record_usage(user_id=1, ai_function="requirement_analysis", success=True, response_time=400)
+        result = svc.record_usage(
+            user_id=1, ai_function="requirement_analysis", success=True, response_time=400
+        )
 
         assert existing.usage_count == 4
         assert existing.success_count == 4
@@ -114,6 +120,7 @@ class TestRecordUsage:
 # TestGetUsageStats
 # ============================================================
 
+
 class TestGetUsageStats:
     def test_get_stats_no_filters(self):
         """无过滤获取所有统计"""
@@ -145,6 +152,7 @@ class TestGetUsageStats:
 # TestGetDashboardStats
 # ============================================================
 
+
 class TestGetDashboardStats:
     def test_get_dashboard_stats_empty(self):
         """空数据时返回默认值"""
@@ -155,8 +163,12 @@ class TestGetDashboardStats:
         total_mock.total_success = None
         total_mock.avg_time = None
         db.query.return_value.filter.return_value.first.return_value = total_mock
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.scalar.return_value = 0
 
         result = svc.get_dashboard_stats(days=30)
@@ -182,8 +194,12 @@ class TestGetDashboardStats:
         trend_row.count = 10
 
         db.query.return_value.filter.return_value.first.return_value = total_mock
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [func_row]
-        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = [trend_row]
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            func_row
+        ]
+        db.query.return_value.filter.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+            trend_row
+        ]
         db.query.return_value.filter.return_value.scalar.return_value = 5
 
         result = svc.get_dashboard_stats(days=30)
@@ -194,6 +210,7 @@ class TestGetDashboardStats:
 # ============================================================
 # TestCreateFeedback
 # ============================================================
+
 
 class TestCreateFeedback:
     def test_create_feedback_success(self):
@@ -209,7 +226,9 @@ class TestCreateFeedback:
     def test_get_feedbacks_no_filters(self):
         svc, db = _make_service()
         filter_chain = MagicMock()
-        filter_chain.order_by.return_value.limit.return_value.offset.return_value.all.return_value = []
+        filter_chain.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            []
+        )
         db.query.return_value = filter_chain
 
         result = svc.get_feedbacks()
@@ -219,6 +238,7 @@ class TestCreateFeedback:
 # ============================================================
 # TestAIConfig
 # ============================================================
+
 
 class TestAIConfig:
     def test_get_or_create_config_existing(self):
@@ -264,6 +284,7 @@ class TestAIConfig:
 # ============================================================
 # TestWorkflow
 # ============================================================
+
 
 class TestWorkflow:
     def test_start_workflow_creates_logs(self):
@@ -344,6 +365,7 @@ class TestWorkflow:
 # TestAuditLog
 # ============================================================
 
+
 class TestAuditLog:
     def test_create_audit_log(self):
         svc, db = _make_service()
@@ -363,7 +385,9 @@ class TestAuditLog:
         svc, db = _make_service()
         filter_chain = MagicMock()
         filter_chain.filter.return_value = filter_chain
-        filter_chain.order_by.return_value.limit.return_value.offset.return_value.all.return_value = []
+        filter_chain.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            []
+        )
         db.query.return_value = filter_chain
 
         result = svc.get_audit_logs(
@@ -378,6 +402,7 @@ class TestAuditLog:
 # ============================================================
 # TestHealthCheck
 # ============================================================
+
 
 class TestHealthCheck:
     def test_health_check_healthy(self):

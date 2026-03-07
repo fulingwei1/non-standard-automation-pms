@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """第十三批 - 预警响应时效分析服务 单元测试"""
-import pytest
-from unittest.mock import MagicMock
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.alert_response_service import (
-        calculate_response_times,
         calculate_resolve_times,
         calculate_response_distribution,
+        calculate_response_times,
     )
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -33,8 +35,8 @@ class TestCalculateResponseTimes:
         alert = make_alert(0, 30)
         result = calculate_response_times([alert])
         assert len(result) == 1
-        assert abs(result[0]['minutes'] - 30) < 0.01
-        assert abs(result[0]['hours'] - 0.5) < 0.01
+        assert abs(result[0]["minutes"] - 30) < 0.01
+        assert abs(result[0]["hours"] - 0.5) < 0.01
 
     def test_missing_triggered_at_skipped(self):
         """缺少triggered_at的预警被跳过"""
@@ -65,33 +67,33 @@ class TestCalculateResolveTimes:
         alert = make_alert(0, 30, 150)
         result = calculate_resolve_times([alert])
         assert len(result) == 1
-        assert abs(result[0]['minutes'] - 120) < 0.01
+        assert abs(result[0]["minutes"] - 120) < 0.01
 
 
 class TestCalculateResponseDistribution:
     def test_distribution_under_1h(self):
         """小于1小时分布"""
-        rt = [{'hours': 0.5, 'minutes': 30, 'alert': MagicMock()}]
+        rt = [{"hours": 0.5, "minutes": 30, "alert": MagicMock()}]
         dist = calculate_response_distribution(rt)
-        assert dist['<1小时'] == 1
+        assert dist["<1小时"] == 1
 
     def test_distribution_1_4h(self):
         """1-4小时分布"""
-        rt = [{'hours': 2, 'minutes': 120, 'alert': MagicMock()}]
+        rt = [{"hours": 2, "minutes": 120, "alert": MagicMock()}]
         dist = calculate_response_distribution(rt)
-        assert dist['1-4小时'] == 1
+        assert dist["1-4小时"] == 1
 
     def test_distribution_4_8h(self):
         """4-8小时分布"""
-        rt = [{'hours': 6, 'minutes': 360, 'alert': MagicMock()}]
+        rt = [{"hours": 6, "minutes": 360, "alert": MagicMock()}]
         dist = calculate_response_distribution(rt)
-        assert dist['4-8小时'] == 1
+        assert dist["4-8小时"] == 1
 
     def test_distribution_over_8h(self):
         """超过8小时分布"""
-        rt = [{'hours': 12, 'minutes': 720, 'alert': MagicMock()}]
+        rt = [{"hours": 12, "minutes": 720, "alert": MagicMock()}]
         dist = calculate_response_distribution(rt)
-        assert dist['>8小时'] == 1
+        assert dist[">8小时"] == 1
 
     def test_empty_distribution(self):
         """空列表分布"""

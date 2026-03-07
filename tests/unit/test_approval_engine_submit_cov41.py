@@ -15,11 +15,14 @@ def mock_db():
 @pytest.fixture
 def submit_mixin(mock_db):
     """Create an ApprovalSubmitMixin with all needed attributes mocked."""
-    with patch("app.services.approval_engine.engine.core.ApprovalRouterService"), \
-         patch("app.services.approval_engine.engine.core.ApprovalNodeExecutor"), \
-         patch("app.services.approval_engine.engine.core.ApprovalNotifyService"), \
-         patch("app.services.approval_engine.engine.core.ApprovalDelegateService"):
+    with (
+        patch("app.services.approval_engine.engine.core.ApprovalRouterService"),
+        patch("app.services.approval_engine.engine.core.ApprovalNodeExecutor"),
+        patch("app.services.approval_engine.engine.core.ApprovalNotifyService"),
+        patch("app.services.approval_engine.engine.core.ApprovalDelegateService"),
+    ):
         from app.services.approval_engine.engine.submit import ApprovalSubmitMixin
+
         mixin = ApprovalSubmitMixin.__new__(ApprovalSubmitMixin)
         mixin.db = mock_db
         mixin.router = MagicMock()
@@ -35,11 +38,7 @@ def test_submit_raises_if_template_not_found(submit_mixin, mock_db):
     mock_db.query.return_value.filter.return_value.first.return_value = None
     with pytest.raises(ValueError, match="审批模板不存在"):
         submit_mixin.submit(
-            template_code="NONEXIST",
-            entity_type="TEST",
-            entity_id=1,
-            form_data={},
-            initiator_id=1
+            template_code="NONEXIST", entity_type="TEST", entity_id=1, form_data={}, initiator_id=1
         )
 
 
@@ -49,6 +48,7 @@ def test_submit_raises_if_initiator_not_found(submit_mixin, mock_db):
     template.is_active = True
 
     call_count = [0]
+
     def side_effect(*args, **kwargs):
         call_count[0] += 1
         q = MagicMock()
@@ -68,7 +68,7 @@ def test_submit_raises_if_initiator_not_found(submit_mixin, mock_db):
                 entity_type="UNSUPPORTED",
                 entity_id=1,
                 form_data={},
-                initiator_id=999
+                initiator_id=999,
             )
 
 
@@ -76,16 +76,13 @@ def test_save_draft_raises_if_template_not_found(submit_mixin, mock_db):
     mock_db.query.return_value.filter.return_value.first.return_value = None
     with pytest.raises(ValueError, match="审批模板不存在"):
         submit_mixin.save_draft(
-            template_code="NONEXIST",
-            entity_type="TEST",
-            entity_id=1,
-            form_data={},
-            initiator_id=1
+            template_code="NONEXIST", entity_type="TEST", entity_id=1, form_data={}, initiator_id=1
         )
 
 
 def test_submit_mixin_instantiation():
     from app.services.approval_engine.engine.submit import ApprovalSubmitMixin
+
     mixin = ApprovalSubmitMixin(db=None)
     assert mixin is not None
 
@@ -97,6 +94,7 @@ def test_save_draft_success(submit_mixin, mock_db):
     initiator.real_name = "Test User"
 
     call_count = [0]
+
     def side_effect(*args, **kwargs):
         call_count[0] += 1
         q = MagicMock()
@@ -111,11 +109,7 @@ def test_save_draft_success(submit_mixin, mock_db):
     with patch("app.services.approval_engine.engine.submit.ApprovalInstance") as MockInst:
         MockInst.return_value = MagicMock()
         result = submit_mixin.save_draft(
-            template_code="TMPL",
-            entity_type="TEST",
-            entity_id=1,
-            form_data={},
-            initiator_id=1
+            template_code="TMPL", entity_type="TEST", entity_id=1, form_data={}, initiator_id=1
         )
         mock_db.add.assert_called()
         mock_db.commit.assert_called()

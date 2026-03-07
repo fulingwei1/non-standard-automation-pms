@@ -3,8 +3,6 @@
 客户360度视图汇总服务
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List
@@ -97,7 +95,9 @@ class Customer360Service:
             .all()
         )
 
-        summary = self._build_summary(customer, projects, opportunities, quotes, contracts, payment_plans, communications)
+        summary = self._build_summary(
+            customer, projects, opportunities, quotes, contracts, payment_plans, communications
+        )
 
         return {
             "basic_info": customer,
@@ -124,7 +124,9 @@ class Customer360Service:
         total_contract_amount = sum(_decimal(c.contract_amount) for c in contracts)
         open_receivables = Decimal("0")
         for plan in payment_plans:
-            if plan.status in ("PENDING", "INVOICED") or _decimal(plan.actual_amount) < _decimal(plan.planned_amount or 0):
+            if plan.status in ("PENDING", "INVOICED") or _decimal(plan.actual_amount) < _decimal(
+                plan.planned_amount or 0
+            ):
                 base = _decimal(plan.planned_amount) - _decimal(plan.actual_amount or 0)
                 open_receivables += base if base > 0 else Decimal("0")
 
@@ -146,15 +148,19 @@ class Customer360Service:
                 margins.append(_decimal(version.gross_margin))
         avg_margin = sum(margins) / len(margins) if margins else None
 
-        active_projects = sum(1 for p in projects if (p.status or "").upper() not in ("CLOSED", "CANCELLED"))
+        active_projects = sum(
+            1 for p in projects if (p.status or "").upper() not in ("CLOSED", "CANCELLED")
+        )
 
         last_activity_candidates: List[datetime] = []
-        for entity in (projects + opportunities + quotes + contracts):
+        for entity in projects + opportunities + quotes + contracts:
             if getattr(entity, "updated_at", None):
                 last_activity_candidates.append(entity.updated_at)
         for comm in communications:
             if comm.communication_date:
-                last_activity_candidates.append(datetime.combine(comm.communication_date, datetime.min.time()))
+                last_activity_candidates.append(
+                    datetime.combine(comm.communication_date, datetime.min.time())
+                )
 
         last_activity = max(last_activity_candidates) if last_activity_candidates else None
 

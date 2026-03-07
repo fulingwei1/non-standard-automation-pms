@@ -32,9 +32,7 @@ def export_project_list(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportProjectListRequest,
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出项目列表（Excel）
@@ -42,7 +40,9 @@ def export_project_list(
     query = db.query(Project).filter(Project.is_active)
 
     filters = export_in.filters or {}
-    query = apply_keyword_filter(query, Project, filters.get("keyword"), ["project_name", "project_code", "contract_no"])
+    query = apply_keyword_filter(
+        query, Project, filters.get("keyword"), ["project_name", "project_code", "contract_no"]
+    )
     if filters.get("customer_id"):
         query = query.filter(Project.customer_id == filters["customer_id"])
     if filters.get("stage"):
@@ -94,28 +94,34 @@ def export_project_list(
                 "阶段名称": stage_names.get(project.stage, project.stage or ""),
                 "状态": project.status or "",
                 "健康度": project.health or "",
-                "健康度名称": health_names.get(project.health, project.health or "")
-                if project.health
-                else "",
+                "健康度名称": (
+                    health_names.get(project.health, project.health or "") if project.health else ""
+                ),
                 "进度(%)": float(project.progress_pct or 0),
-                "计划开始日期": project.planned_start_date.strftime("%Y-%m-%d")
-                if project.planned_start_date
-                else "",
-                "计划结束日期": project.planned_end_date.strftime("%Y-%m-%d")
-                if project.planned_end_date
-                else "",
-                "实际开始日期": project.actual_start_date.strftime("%Y-%m-%d")
-                if project.actual_start_date
-                else "",
-                "实际结束日期": project.actual_end_date.strftime("%Y-%m-%d")
-                if project.actual_end_date
-                else "",
-                "创建时间": project.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                if project.created_at
-                else "",
-                "更新时间": project.updated_at.strftime("%Y-%m-%d %H:%M:%S")
-                if project.updated_at
-                else "",
+                "计划开始日期": (
+                    project.planned_start_date.strftime("%Y-%m-%d")
+                    if project.planned_start_date
+                    else ""
+                ),
+                "计划结束日期": (
+                    project.planned_end_date.strftime("%Y-%m-%d")
+                    if project.planned_end_date
+                    else ""
+                ),
+                "实际开始日期": (
+                    project.actual_start_date.strftime("%Y-%m-%d")
+                    if project.actual_start_date
+                    else ""
+                ),
+                "实际结束日期": (
+                    project.actual_end_date.strftime("%Y-%m-%d") if project.actual_end_date else ""
+                ),
+                "创建时间": (
+                    project.created_at.strftime("%Y-%m-%d %H:%M:%S") if project.created_at else ""
+                ),
+                "更新时间": (
+                    project.updated_at.strftime("%Y-%m-%d %H:%M:%S") if project.updated_at else ""
+                ),
             }
         )
 
@@ -178,16 +184,12 @@ def export_project_list(
     )
 
 
-@router.post(
-    "/export/project_detail", response_model=Any, status_code=status.HTTP_200_OK
-)
+@router.post("/export/project_detail", response_model=Any, status_code=status.HTTP_200_OK)
 def export_project_detail(
     *,
     db: Session = Depends(deps.get_db),
     export_in: ExportProjectDetailRequest,
-    current_user: User = Depends(
-        security.require_permission("data_import_export:manage")
-    ),
+    current_user: User = Depends(security.require_permission("data_import_export:manage")),
 ) -> Any:
     """
     导出项目详情（含任务/成本）

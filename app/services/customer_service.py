@@ -5,20 +5,19 @@
 """
 
 from typing import Any, Dict, Optional
+
 from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService
 from app.models.project.customer import Customer
 from app.schemas.project.customer import (
     CustomerCreate,
-    CustomerUpdate,
     CustomerResponse,
+    CustomerUpdate,
 )
 
 
-class CustomerService(
-    BaseService[Customer, CustomerCreate, CustomerUpdate, CustomerResponse]
-):
+class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, CustomerResponse]):
     """
     客户服务类
     """
@@ -75,12 +74,11 @@ class CustomerService(
 
     def _before_delete(self, object_id: int) -> None:
         """删除前检查是否有关联项目"""
-        from app.models.project.core import Project
         from fastapi import HTTPException
 
-        project_count = (
-            self.db.query(Project).filter(Project.customer_id == object_id).count()
-        )
+        from app.models.project.core import Project
+
+        project_count = self.db.query(Project).filter(Project.customer_id == object_id).count()
         if project_count > 0:
             raise HTTPException(
                 status_code=400, detail=f"该客户下还有 {project_count} 个项目，无法删除"
@@ -93,8 +91,9 @@ class CustomerService(
         """更新后尝试同步数据到项目和合同"""
         if getattr(self, "_auto_sync", True):
             try:
-                from app.services.data_sync_service import DataSyncService
                 import logging
+
+                from app.services.data_sync_service import DataSyncService
 
                 logger = logging.getLogger(__name__)
 

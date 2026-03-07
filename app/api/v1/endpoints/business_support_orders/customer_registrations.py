@@ -36,7 +36,11 @@ router = APIRouter()
 # ==================== 客户供应商入驻 ====================
 
 
-@router.get("/customer-registrations", response_model=ResponseModel[PaginatedResponse[CustomerSupplierRegistrationResponse]], summary="获取客户供应商入驻列表")
+@router.get(
+    "/customer-registrations",
+    response_model=ResponseModel[PaginatedResponse[CustomerSupplierRegistrationResponse]],
+    summary="获取客户供应商入驻列表",
+)
 async def get_customer_registrations(
     pagination: PaginationParams = Depends(get_pagination_query),
     customer_id: Optional[int] = Query(None, description="客户ID"),
@@ -44,7 +48,7 @@ async def get_customer_registrations(
     platform_name: Optional[str] = Query(None, description="平台名称筛选"),
     keyword: Optional[str] = Query(None, description="搜索入驻编号/客户"),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """分页获取客户供应商入驻记录"""
     try:
@@ -52,12 +56,16 @@ async def get_customer_registrations(
         if customer_id:
             query = query.filter(CustomerSupplierRegistration.customer_id == customer_id)
         if registration_status:
-            query = query.filter(CustomerSupplierRegistration.registration_status == registration_status)
+            query = query.filter(
+                CustomerSupplierRegistration.registration_status == registration_status
+            )
         if platform_name:
             query = query.filter(CustomerSupplierRegistration.platform_name == platform_name)
 
         # 应用关键词过滤（入驻编号/客户名称）
-        query = apply_keyword_filter(query, CustomerSupplierRegistration, keyword, ["registration_no", "customer_name"])
+        query = apply_keyword_filter(
+            query, CustomerSupplierRegistration, keyword, ["registration_no", "customer_name"]
+        )
 
         total = query.count()
         items = (
@@ -77,8 +85,8 @@ async def get_customer_registrations(
                 total=total,
                 page=pagination.page,
                 page_size=pagination.page_size,
-                pages=pagination.pages_for_total(total)
-            )
+                pages=pagination.pages_for_total(total),
+            ),
         )
     except HTTPException:
         raise
@@ -86,11 +94,15 @@ async def get_customer_registrations(
         raise HTTPException(status_code=500, detail=f"获取客户供应商入驻列表失败: {str(exc)}")
 
 
-@router.post("/customer-registrations", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="创建客户供应商入驻申请")
+@router.post(
+    "/customer-registrations",
+    response_model=ResponseModel[CustomerSupplierRegistrationResponse],
+    summary="创建客户供应商入驻申请",
+)
 async def create_customer_registration(
     registration_in: CustomerSupplierRegistrationCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """创建客户供应商入驻申请"""
     try:
@@ -111,7 +123,7 @@ async def create_customer_registration(
             contact_email=registration_in.contact_email,
             required_docs=_serialize_attachments(registration_in.required_docs),
             remark=registration_in.remark,
-            external_sync_status="pending"
+            external_sync_status="pending",
         )
         db.add(registration)
         db.commit()
@@ -120,7 +132,7 @@ async def create_customer_registration(
         return ResponseModel(
             code=200,
             message="创建客户供应商入驻申请成功",
-            data=_to_registration_response(registration)
+            data=_to_registration_response(registration),
         )
     except HTTPException:
         raise
@@ -129,37 +141,47 @@ async def create_customer_registration(
         raise HTTPException(status_code=500, detail=f"创建客户供应商入驻申请失败: {str(exc)}")
 
 
-@router.get("/customer-registrations/{registration_id}", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="获取入驻详情")
+@router.get(
+    "/customer-registrations/{registration_id}",
+    response_model=ResponseModel[CustomerSupplierRegistrationResponse],
+    summary="获取入驻详情",
+)
 async def get_customer_registration(
     registration_id: int,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """获取客户供应商入驻详情"""
-    record = db.query(CustomerSupplierRegistration).filter(
-        CustomerSupplierRegistration.id == registration_id
-    ).first()
+    record = (
+        db.query(CustomerSupplierRegistration)
+        .filter(CustomerSupplierRegistration.id == registration_id)
+        .first()
+    )
     if not record:
         raise HTTPException(status_code=404, detail="入驻记录不存在")
     return ResponseModel(
-        code=200,
-        message="获取客户供应商入驻详情成功",
-        data=_to_registration_response(record)
+        code=200, message="获取客户供应商入驻详情成功", data=_to_registration_response(record)
     )
 
 
-@router.put("/customer-registrations/{registration_id}", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="更新入驻记录")
+@router.put(
+    "/customer-registrations/{registration_id}",
+    response_model=ResponseModel[CustomerSupplierRegistrationResponse],
+    summary="更新入驻记录",
+)
 async def update_customer_registration(
     registration_id: int,
     registration_in: CustomerSupplierRegistrationUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """更新客户供应商入驻记录"""
     try:
-        record = db.query(CustomerSupplierRegistration).filter(
-            CustomerSupplierRegistration.id == registration_id
-        ).first()
+        record = (
+            db.query(CustomerSupplierRegistration)
+            .filter(CustomerSupplierRegistration.id == registration_id)
+            .first()
+        )
         if not record:
             raise HTTPException(status_code=404, detail="入驻记录不存在")
 
@@ -174,9 +196,7 @@ async def update_customer_registration(
         db.refresh(record)
 
         return ResponseModel(
-            code=200,
-            message="更新入驻记录成功",
-            data=_to_registration_response(record)
+            code=200, message="更新入驻记录成功", data=_to_registration_response(record)
         )
     except HTTPException:
         raise
@@ -185,18 +205,24 @@ async def update_customer_registration(
         raise HTTPException(status_code=500, detail=f"更新入驻记录失败: {str(exc)}")
 
 
-@router.post("/customer-registrations/{registration_id}/approve", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="审批客户入驻申请")
+@router.post(
+    "/customer-registrations/{registration_id}/approve",
+    response_model=ResponseModel[CustomerSupplierRegistrationResponse],
+    summary="审批客户入驻申请",
+)
 async def approve_customer_registration(
     registration_id: int,
     review_in: SupplierRegistrationReviewRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """审批通过客户供应商入驻申请"""
     try:
-        record = db.query(CustomerSupplierRegistration).filter(
-            CustomerSupplierRegistration.id == registration_id
-        ).first()
+        record = (
+            db.query(CustomerSupplierRegistration)
+            .filter(CustomerSupplierRegistration.id == registration_id)
+            .first()
+        )
         if not record:
             raise HTTPException(status_code=404, detail="入驻记录不存在")
         if record.registration_status == "APPROVED":
@@ -213,9 +239,7 @@ async def approve_customer_registration(
         db.refresh(record)
 
         return ResponseModel(
-            code=200,
-            message="审批客户供应商入驻成功",
-            data=_to_registration_response(record)
+            code=200, message="审批客户供应商入驻成功", data=_to_registration_response(record)
         )
     except HTTPException:
         raise
@@ -224,18 +248,24 @@ async def approve_customer_registration(
         raise HTTPException(status_code=500, detail=f"审批客户供应商入驻失败: {str(exc)}")
 
 
-@router.post("/customer-registrations/{registration_id}/reject", response_model=ResponseModel[CustomerSupplierRegistrationResponse], summary="驳回客户入驻申请")
+@router.post(
+    "/customer-registrations/{registration_id}/reject",
+    response_model=ResponseModel[CustomerSupplierRegistrationResponse],
+    summary="驳回客户入驻申请",
+)
 async def reject_customer_registration(
     registration_id: int,
     review_in: SupplierRegistrationReviewRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """驳回客户供应商入驻申请"""
     try:
-        record = db.query(CustomerSupplierRegistration).filter(
-            CustomerSupplierRegistration.id == registration_id
-        ).first()
+        record = (
+            db.query(CustomerSupplierRegistration)
+            .filter(CustomerSupplierRegistration.id == registration_id)
+            .first()
+        )
         if not record:
             raise HTTPException(status_code=404, detail="入驻记录不存在")
         if record.registration_status == "APPROVED":
@@ -251,9 +281,7 @@ async def reject_customer_registration(
         db.refresh(record)
 
         return ResponseModel(
-            code=200,
-            message="驳回客户供应商入驻成功",
-            data=_to_registration_response(record)
+            code=200, message="驳回客户供应商入驻成功", data=_to_registration_response(record)
         )
     except HTTPException:
         raise

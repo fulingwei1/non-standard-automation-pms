@@ -11,13 +11,13 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.production import WorkOrder
 from app.models.project import Project
 from app.models.shortage import KitCheck
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.query_filters import apply_pagination
 
 router = APIRouter()
 
@@ -52,43 +52,61 @@ def get_kit_check_history(
     total = query.count()
 
     # 分页
-    checks = apply_pagination(query.order_by(desc(KitCheck.check_time)), pagination.offset, pagination.limit).all()
+    checks = apply_pagination(
+        query.order_by(desc(KitCheck.check_time)), pagination.offset, pagination.limit
+    ).all()
 
     # 构建返回数据
     history = []
     for check in checks:
         # 获取关联信息
-        work_order = db.query(WorkOrder).filter(WorkOrder.id == check.work_order_id).first() if check.work_order_id else None
-        project = db.query(Project).filter(Project.id == check.project_id).first() if check.project_id else None
-        checker = db.query(User).filter(User.id == check.checked_by).first() if check.checked_by else None
-        confirmer = db.query(User).filter(User.id == check.confirmed_by).first() if check.confirmed_by else None
+        work_order = (
+            db.query(WorkOrder).filter(WorkOrder.id == check.work_order_id).first()
+            if check.work_order_id
+            else None
+        )
+        project = (
+            db.query(Project).filter(Project.id == check.project_id).first()
+            if check.project_id
+            else None
+        )
+        checker = (
+            db.query(User).filter(User.id == check.checked_by).first() if check.checked_by else None
+        )
+        confirmer = (
+            db.query(User).filter(User.id == check.confirmed_by).first()
+            if check.confirmed_by
+            else None
+        )
 
-        history.append({
-            "id": check.id,
-            "check_no": check.check_no,
-            "check_type": check.check_type,
-            "work_order_id": check.work_order_id,
-            "work_order_no": work_order.work_order_no if work_order else None,
-            "project_id": check.project_id,
-            "project_name": project.project_name if project else None,
-            "total_items": check.total_items,
-            "fulfilled_items": check.fulfilled_items,
-            "shortage_items": check.shortage_items,
-            "in_transit_items": check.in_transit_items,
-            "kit_rate": float(check.kit_rate) if check.kit_rate else 0.0,
-            "kit_status": check.kit_status,
-            "check_time": check.check_time.isoformat() if check.check_time else None,
-            "check_method": check.check_method,
-            "checked_by": check.checked_by,
-            "checker_name": checker.real_name or checker.username if checker else None,
-            "can_start": check.can_start,
-            "start_confirmed": check.start_confirmed,
-            "confirm_time": check.confirm_time.isoformat() if check.confirm_time else None,
-            "confirmed_by": check.confirmed_by,
-            "confirmer_name": confirmer.real_name or confirmer.username if confirmer else None,
-            "confirm_remark": check.confirm_remark,
-            "shortage_summary": check.shortage_summary,
-        })
+        history.append(
+            {
+                "id": check.id,
+                "check_no": check.check_no,
+                "check_type": check.check_type,
+                "work_order_id": check.work_order_id,
+                "work_order_no": work_order.work_order_no if work_order else None,
+                "project_id": check.project_id,
+                "project_name": project.project_name if project else None,
+                "total_items": check.total_items,
+                "fulfilled_items": check.fulfilled_items,
+                "shortage_items": check.shortage_items,
+                "in_transit_items": check.in_transit_items,
+                "kit_rate": float(check.kit_rate) if check.kit_rate else 0.0,
+                "kit_status": check.kit_status,
+                "check_time": check.check_time.isoformat() if check.check_time else None,
+                "check_method": check.check_method,
+                "checked_by": check.checked_by,
+                "checker_name": checker.real_name or checker.username if checker else None,
+                "can_start": check.can_start,
+                "start_confirmed": check.start_confirmed,
+                "confirm_time": check.confirm_time.isoformat() if check.confirm_time else None,
+                "confirmed_by": check.confirmed_by,
+                "confirmer_name": confirmer.real_name or confirmer.username if confirmer else None,
+                "confirm_remark": check.confirm_remark,
+                "shortage_summary": check.shortage_summary,
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -100,6 +118,6 @@ def get_kit_check_history(
                 "page_size": pagination.page_size,
                 "total": total,
                 "pages": pagination.pages_for_total(total),
-            }
-        }
+            },
+        },
     )

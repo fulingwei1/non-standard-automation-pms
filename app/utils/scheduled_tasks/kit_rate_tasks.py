@@ -11,15 +11,17 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.assembly_kit import KitRateSnapshot
 from app.dependencies import get_db_session
+from app.models.assembly_kit import KitRateSnapshot
 from app.models.material import BomHeader
 from app.models.project import Machine, Project
 
 logger = logging.getLogger(__name__)
 
 
-def _calculate_kit_rate_for_bom_items(db: Session, bom_items: list, calculate_by: str = "quantity") -> dict:
+def _calculate_kit_rate_for_bom_items(
+    db: Session, bom_items: list, calculate_by: str = "quantity"
+) -> dict:
     """
     计算 BOM 物料的齐套率
 
@@ -67,6 +69,7 @@ def _calculate_kit_rate_for_bom_items(db: Session, bom_items: list, calculate_by
         transit_qty = 0
         if item.material_id:
             from app.models.purchase import PurchaseOrderItem
+
             po_items = (
                 db.query(PurchaseOrderItem)
                 .filter(PurchaseOrderItem.material_id == item.material_id)

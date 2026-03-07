@@ -31,6 +31,7 @@ def _make_project(project_id=1, name="测试项目", progress=60.0, health="H1",
 # generate_project_weekly_report
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateProjectWeeklyReport:
     def test_returns_error_when_project_not_found(self, mock_db):
         chain = MagicMock()
@@ -41,7 +42,8 @@ class TestGenerateProjectWeeklyReport:
         chain.between.return_value = chain
 
         result = ProjectReportMixin.generate_project_weekly_report(
-            mock_db, project_id=999,
+            mock_db,
+            project_id=999,
             start_date=date(2026, 2, 10),
             end_date=date(2026, 2, 16),
         )
@@ -63,14 +65,14 @@ class TestGenerateProjectWeeklyReport:
         mock_db.query.side_effect = query_side_effect
 
         result = ProjectReportMixin.generate_project_weekly_report(
-            mock_db, project_id=1,
+            mock_db,
+            project_id=1,
             start_date=date(2026, 2, 10),
             end_date=date(2026, 2, 16),
         )
 
         assert "error" not in result
-        assert result.get("project_name") == project.project_name or \
-               "project_name" in str(result)
+        assert result.get("project_name") == project.project_name or "project_name" in str(result)
 
     def test_period_dates_in_summary(self, mock_db):
         project = _make_project()
@@ -88,7 +90,8 @@ class TestGenerateProjectWeeklyReport:
         mock_db.query.side_effect = query_side_effect
 
         result = ProjectReportMixin.generate_project_weekly_report(
-            mock_db, project_id=1,
+            mock_db,
+            project_id=1,
             start_date=date(2026, 2, 10),
             end_date=date(2026, 2, 16),
         )
@@ -100,6 +103,7 @@ class TestGenerateProjectWeeklyReport:
 # ---------------------------------------------------------------------------
 # generate_project_monthly_report (if exists)
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateProjectMonthlyReport:
     def test_error_when_project_missing(self, mock_db):
@@ -113,8 +117,10 @@ class TestGenerateProjectMonthlyReport:
         # 月报方法可能不存在，兼容处理
         if hasattr(ProjectReportMixin, "generate_project_monthly_report"):
             result = ProjectReportMixin.generate_project_monthly_report(
-                mock_db, project_id=999,
-                year=2026, month=2,
+                mock_db,
+                project_id=999,
+                year=2026,
+                month=2,
             )
             assert "error" in result
         else:

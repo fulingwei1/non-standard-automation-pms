@@ -34,16 +34,16 @@ router = APIRouter()
 # 使用统一的编码生成工具和日志工具
 from .batch_helpers import log_task_operation
 
-router = APIRouter(
-    prefix="",
-    tags=["complete"]
-)
+router = APIRouter(prefix="", tags=["complete"])
 
 # 共 1 个路由
 
 # ==================== 完成任务 ====================
 
-@router.put("/tasks/{task_id}/complete", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK)
+
+@router.put(
+    "/tasks/{task_id}/complete", response_model=TaskUnifiedResponse, status_code=status.HTTP_200_OK
+)
 def complete_task(
     *,
     db: Session = Depends(deps.get_db),
@@ -72,12 +72,14 @@ def complete_task(
     db.refresh(task)
 
     log_task_operation(
-        db, task.id, "COMPLETE", f"完成任务：{task.title}",
-        current_user.id, current_user.real_name or current_user.username,
+        db,
+        task.id,
+        "COMPLETE",
+        f"完成任务：{task.title}",
+        current_user.id,
+        current_user.real_name or current_user.username,
         old_value={"status": old_status},
-        new_value={"status": "COMPLETED"}
+        new_value={"status": "COMPLETED"},
     )
 
     return get_task_detail(task_id, db, current_user)
-
-

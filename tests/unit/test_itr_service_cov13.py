@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十三批 - ITR流程服务 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.itr_service import get_ticket_timeline
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -50,10 +52,10 @@ class TestGetTicketTimeline:
         db.query.side_effect = None
         db.query.return_value.filter.return_value.first.return_value = mock_ticket
 
-        with patch('app.services.itr_service.apply_keyword_filter') as mock_filter:
+        with patch("app.services.itr_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value = MagicMock()
             # SLA内部查询
-            with patch('sqlalchemy.orm.Session') as _:
+            with patch("sqlalchemy.orm.Session") as _:
                 try:
                     result = get_ticket_timeline(db, 1)
                     assert result is not None
@@ -83,7 +85,7 @@ class TestGetTicketTimeline:
         db.query.return_value.filter.return_value.first.return_value = mock_ticket
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = []
 
-        with patch('app.services.itr_service.apply_keyword_filter') as mock_filter:
+        with patch("app.services.itr_service.apply_keyword_filter") as mock_filter:
             mock_filter.return_value = MagicMock()
             try:
                 result = get_ticket_timeline(db, 1)

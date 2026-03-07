@@ -4,8 +4,9 @@
 """
 
 
-from sqlalchemy.orm import Session
 from unittest.mock import MagicMock
+
+from sqlalchemy.orm import Session
 
 from app.services.ticket_assignment_service import (
     get_project_members_for_ticket,
@@ -19,8 +20,8 @@ class TestGetProjectMembersForTicket:
     def test_empty_project_ids_returns_empty_list(self, db_session: Session):
         """空项目ID列表返回空列表"""
         result = get_project_members_for_ticket(
-        db=db_session,
-        project_ids=[],
+            db=db_session,
+            project_ids=[],
         )
 
         assert result == []
@@ -28,8 +29,8 @@ class TestGetProjectMembersForTicket:
     def test_no_matching_members_returns_empty_list(self, db_session: Session):
         """没有匹配成员返回空列表"""
         result = get_project_members_for_ticket(
-        db=db_session,
-        project_ids=[99999],
+            db=db_session,
+            project_ids=[99999],
         )
 
         assert result == []
@@ -91,8 +92,8 @@ class TestGetProjectMembersForTicket:
         mock_query.all.return_value = [mock_member1, mock_member2]
 
         result = get_project_members_for_ticket(
-        db=mock_session,
-        project_ids=[1, 2],
+            db=mock_session,
+            project_ids=[1, 2],
         )
 
         assert len(result) == 2
@@ -107,12 +108,14 @@ class TestGetProjectMembersForTicket:
         """按角色过滤成员"""
         # 使用 mock session
         mock_session = MagicMock(spec=Session)
-        mock_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         result = get_project_members_for_ticket(
-        db=mock_session,
-        project_ids=[1],
-        include_roles=["PM", "ME"],
+            db=mock_session,
+            project_ids=[1],
+            include_roles=["PM", "ME"],
         )
 
         assert isinstance(result, list)
@@ -121,12 +124,14 @@ class TestGetProjectMembersForTicket:
         """排除特定用户"""
         # 使用 mock session
         mock_session = MagicMock(spec=Session)
-        mock_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         result = get_project_members_for_ticket(
-        db=mock_session,
-        project_ids=[1],
-        exclude_user_id=999,
+            db=mock_session,
+            project_ids=[1],
+            exclude_user_id=999,
         )
 
         assert isinstance(result, list)
@@ -135,11 +140,13 @@ class TestGetProjectMembersForTicket:
         """按用户ID去重"""
         # 使用 mock session
         mock_session = MagicMock(spec=Session)
-        mock_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
 
         result = get_project_members_for_ticket(
-        db=mock_session,
-        project_ids=[1, 2],
+            db=mock_session,
+            project_ids=[1, 2],
         )
 
         assert isinstance(result, list)
@@ -154,8 +161,8 @@ class TestGetTicketRelatedProjects:
         mock_session.query.return_value.filter.return_value.first.return_value = None
 
         result = get_ticket_related_projects(
-        db=mock_session,
-        ticket_id=99999,
+            db=mock_session,
+            ticket_id=99999,
         )
 
         assert result["primary_project"] is None
@@ -181,8 +188,8 @@ class TestGetTicketRelatedProjects:
         mock_query.all.return_value = []
 
         result = get_ticket_related_projects(
-        db=mock_session,
-        ticket_id=1,
+            db=mock_session,
+            ticket_id=1,
         )
 
         assert result["primary_project"]["id"] == 1
@@ -219,8 +226,8 @@ class TestGetTicketRelatedProjects:
         mock_query.all.return_value = [mock_tp1]
 
         result = get_ticket_related_projects(
-        db=mock_session,
-        ticket_id=1,
+            db=mock_session,
+            ticket_id=1,
         )
 
         assert result["primary_project"]["id"] == 1
@@ -251,8 +258,8 @@ class TestGetTicketRelatedProjects:
         mock_query.all.return_value = [mock_tp]
 
         result = get_ticket_related_projects(
-        db=mock_session,
-        ticket_id=1,
+            db=mock_session,
+            ticket_id=1,
         )
 
         # 主项目相同的项目应该被排除

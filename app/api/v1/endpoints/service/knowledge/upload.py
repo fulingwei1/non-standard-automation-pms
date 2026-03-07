@@ -48,7 +48,7 @@ async def upload_knowledge_document(
     if file_ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"不支持的文件类型: {file_ext}。支持的类型: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+            detail=f"不支持的文件类型: {file_ext}。支持的类型: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
         )
 
     # 读取文件内容并验证大小
@@ -58,7 +58,7 @@ async def upload_knowledge_document(
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
-            detail=f"文件大小超过限制。最大允许: 200MB，当前文件: {file_size / (1024*1024):.2f}MB"
+            detail=f"文件大小超过限制。最大允许: 200MB，当前文件: {file_size / (1024*1024):.2f}MB",
         )
 
     # 检查用户上传配额
@@ -68,7 +68,7 @@ async def upload_knowledge_document(
         raise HTTPException(
             status_code=400,
             detail=f"上传配额不足。您的配额: 5GB，已使用: {current_used / (1024*1024*1024):.2f}GB，"
-                   f"剩余: {remaining / (1024*1024*1024):.2f}GB，当前文件: {file_size / (1024*1024):.2f}MB"
+            f"剩余: {remaining / (1024*1024*1024):.2f}GB，当前文件: {file_size / (1024*1024):.2f}MB",
         )
 
     # 创建上传目录（按日期分组）

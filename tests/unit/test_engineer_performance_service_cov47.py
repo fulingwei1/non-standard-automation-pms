@@ -9,15 +9,21 @@ pytest.importorskip("app.services.engineer_performance.engineer_performance_serv
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.engineer_performance.engineer_performance_service import EngineerPerformanceService
+from app.services.engineer_performance.engineer_performance_service import (
+    EngineerPerformanceService,
+)
 
 
 def _make_svc():
     db = MagicMock()
     with (
         patch("app.services.engineer_performance.engineer_performance_service.ProfileService"),
-        patch("app.services.engineer_performance.engineer_performance_service.DimensionConfigService"),
-        patch("app.services.engineer_performance.engineer_performance_service.PerformanceCalculator"),
+        patch(
+            "app.services.engineer_performance.engineer_performance_service.DimensionConfigService"
+        ),
+        patch(
+            "app.services.engineer_performance.engineer_performance_service.PerformanceCalculator"
+        ),
         patch("app.services.engineer_performance.engineer_performance_service.RankingService"),
     ):
         svc = EngineerPerformanceService(db_session)

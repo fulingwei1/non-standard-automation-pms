@@ -4,7 +4,6 @@
 """
 
 from datetime import datetime
-
 from unittest.mock import MagicMock, patch
 
 from app.services.notification_queue import (
@@ -24,9 +23,9 @@ class TestEnqueueNotification:
         mock_get_redis.return_value = mock_redis
 
         payload = {
-        "notification_id": 123,
-        "alert_id": 456,
-        "notify_channel": "EMAIL",
+            "notification_id": 123,
+            "alert_id": 456,
+            "notify_channel": "EMAIL",
         }
 
         result = enqueue_notification(payload)

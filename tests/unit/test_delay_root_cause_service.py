@@ -8,15 +8,16 @@ File Size: 106 lines
 Batch: 2
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
 
-from app.services.delay_root_cause_service import DelayRootCauseService
-from app.models.project import Project
 from app.models.progress import Task
+from app.models.project import Project
+from app.services.delay_root_cause_service import DelayRootCauseService
 
 
 @pytest.fixture
@@ -32,7 +33,7 @@ def test_project(db_session: Session):
         project_code="PJ001",
         project_name="测试项目",
         planned_end_date=date.today() + timedelta(days=30),
-        actual_end_date=None
+        actual_end_date=None,
     )
     db_session.add(project)
     db_session.commit()
@@ -51,7 +52,7 @@ def test_delayed_task(db_session: Session, test_project):
         actual_start_date=date.today() - timedelta(days=8),
         actual_end_date=None,
         is_delayed=True,
-        delay_reason="MATERIAL_SHORTAGE"
+        delay_reason="MATERIAL_SHORTAGE",
     )
     db_session.add(task)
     db_session.commit()
@@ -71,87 +72,80 @@ class TestDelayRootCauseService:
     def test_analyze_root_cause_no_tasks(self, delay_root_cause_service):
         """测试延期根因分析 - 无延期任务"""
         result = delay_root_cause_service.analyze_root_cause()
-        
+
         assert result is not None
-        assert 'analysis_period' in result
-        assert 'total_delayed_tasks' in result
-        assert 'root_causes' in result
-        assert result['total_delayed_tasks'] == 0
-        assert len(result['root_causes']) == 0
+        assert "analysis_period" in result
+        assert "total_delayed_tasks" in result
+        assert "root_causes" in result
+        assert result["total_delayed_tasks"] == 0
+        assert len(result["root_causes"]) == 0
 
     def test_analyze_root_cause_with_date_range(self, delay_root_cause_service):
         """测试延期根因分析 - 带日期范围"""
         start_date = date.today() - timedelta(days=90)
         end_date = date.today()
-        
-        result = delay_root_cause_service.analyze_root_cause(
-        start_date=start_date,
-        end_date=end_date
-        )
-        
-        assert result is not None
-        assert result['analysis_period']['start_date'] == start_date.isoformat()
-        assert result['analysis_period']['end_date'] == end_date.isoformat()
 
-    def test_analyze_root_cause_with_project_id(self, delay_root_cause_service, test_project, test_delayed_task):
-        """测试延期根因分析 - 指定项目"""
         result = delay_root_cause_service.analyze_root_cause(
-        project_id=test_project.id
+            start_date=start_date, end_date=end_date
         )
-        
+
         assert result is not None
-        assert 'root_causes' in result
-        assert isinstance(result['root_causes'], list)
-        assert 'summary' in result
+        assert result["analysis_period"]["start_date"] == start_date.isoformat()
+        assert result["analysis_period"]["end_date"] == end_date.isoformat()
+
+    def test_analyze_root_cause_with_project_id(
+        self, delay_root_cause_service, test_project, test_delayed_task
+    ):
+        """测试延期根因分析 - 指定项目"""
+        result = delay_root_cause_service.analyze_root_cause(project_id=test_project.id)
+
+        assert result is not None
+        assert "root_causes" in result
+        assert isinstance(result["root_causes"], list)
+        assert "summary" in result
 
     def test_analyze_root_cause_with_reasons(self, delay_root_cause_service, test_delayed_task):
         """测试延期根因分析 - 有延期原因"""
         result = delay_root_cause_service.analyze_root_cause()
-        
+
         assert result is not None
-        if result['total_delayed_tasks'] > 0:
-            assert len(result['root_causes']) > 0
-            assert result['root_causes'][0]['reason'] == "MATERIAL_SHORTAGE"
+        if result["total_delayed_tasks"] > 0:
+            assert len(result["root_causes"]) > 0
+            assert result["root_causes"][0]["reason"] == "MATERIAL_SHORTAGE"
 
     def test_analyze_impact_no_tasks(self, delay_root_cause_service):
         """测试延期影响分析 - 无延期任务"""
         result = delay_root_cause_service.analyze_impact()
-        
+
         assert result is not None
-        assert 'impact_analysis' in result
-        assert 'total_impact' in result
+        assert "impact_analysis" in result
+        assert "total_impact" in result
 
     def test_analyze_impact_with_date_range(self, delay_root_cause_service):
         """测试延期影响分析 - 带日期范围"""
         start_date = date.today() - timedelta(days=90)
         end_date = date.today()
-        
-        result = delay_root_cause_service.analyze_impact(
-        start_date=start_date,
-        end_date=end_date
-        )
-        
+
+        result = delay_root_cause_service.analyze_impact(start_date=start_date, end_date=end_date)
+
         assert result is not None
-        assert 'analysis_period' in result
+        assert "analysis_period" in result
 
     def test_analyze_trends_no_data(self, delay_root_cause_service):
         """测试延期趋势分析 - 无数据"""
         result = delay_root_cause_service.analyze_trends()
-        
+
         assert result is not None
-        assert 'trends' in result
-        assert isinstance(result['trends'], list)
+        assert "trends" in result
+        assert isinstance(result["trends"], list)
 
     def test_analyze_trends_with_date_range(self, delay_root_cause_service):
         """测试延期趋势分析 - 带日期范围"""
         start_date = date.today() - timedelta(days=180)
         end_date = date.today()
-        
-        result = delay_root_cause_service.analyze_trends(
-        start_date=start_date,
-        end_date=end_date
-        )
-        
+
+        result = delay_root_cause_service.analyze_trends(start_date=start_date, end_date=end_date)
+
         assert result is not None
-        assert 'analysis_period' in result
-        assert 'trends' in result
+        assert "analysis_period" in result
+        assert "trends" in result

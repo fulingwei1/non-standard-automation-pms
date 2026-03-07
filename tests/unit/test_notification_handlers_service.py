@@ -9,7 +9,7 @@
 - SMSNotificationHandler: 短信通知
 """
 
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -21,6 +21,7 @@ class TestSystemNotificationHandler:
     def handler(self, db_session):
         """创建系统通知处理器"""
         from app.services.notification_handlers.system_handler import SystemNotificationHandler
+
         return SystemNotificationHandler(db_session)
 
     @pytest.fixture
@@ -71,7 +72,7 @@ class TestSystemNotificationHandler:
     def test_send_creates_notification(self, handler, mock_notification, mock_alert, db_session):
         """测试发送通知创建记录"""
         # Mock the query to return no existing notification
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_filter = MagicMock()
             mock_filter.filter.return_value = mock_filter
             mock_filter.first.return_value = None
@@ -91,7 +92,7 @@ class TestSystemNotificationHandler:
         # Mock 存在的通知
         existing_notification = MagicMock(spec=Notification)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_filter = MagicMock()
             mock_filter.filter.return_value = mock_filter
             mock_filter.first.return_value = existing_notification
@@ -126,6 +127,7 @@ class TestEmailNotificationHandler:
     def handler(self, db_session):
         """创建邮件通知处理器"""
         from app.services.notification_handlers.email_handler import EmailNotificationHandler
+
         return EmailNotificationHandler(db_session)
 
     @pytest.fixture
@@ -172,6 +174,7 @@ class TestWeChatNotificationHandler:
     def handler(self, db_session):
         """创建企业微信通知处理器"""
         from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
+
         return WeChatNotificationHandler(db_session)
 
     def test_handler_initialization(self, handler, db_session):
@@ -186,6 +189,7 @@ class TestSMSNotificationHandler:
     def handler(self, db_session):
         """创建短信通知处理器"""
         from app.services.notification_handlers.sms_handler import SMSNotificationHandler
+
         return SMSNotificationHandler(db_session)
 
     def test_handler_initialization(self, handler, db_session):
@@ -199,10 +203,10 @@ class TestNotificationHandlersModule:
     def test_import_all_handlers(self):
         """测试导入所有处理器"""
         from app.services.notification_handlers import (
-            SystemNotificationHandler,
             EmailNotificationHandler,
-            WeChatNotificationHandler,
             SMSNotificationHandler,
+            SystemNotificationHandler,
+            WeChatNotificationHandler,
         )
 
         assert SystemNotificationHandler is not None
@@ -213,13 +217,13 @@ class TestNotificationHandlersModule:
     def test_handlers_have_send_method(self):
         """测试处理器都有 send 方法"""
         from app.services.notification_handlers import (
-            SystemNotificationHandler,
             EmailNotificationHandler,
-            WeChatNotificationHandler,
             SMSNotificationHandler,
+            SystemNotificationHandler,
+            WeChatNotificationHandler,
         )
 
-        assert hasattr(SystemNotificationHandler, 'send')
-        assert hasattr(EmailNotificationHandler, 'send')
-        assert hasattr(WeChatNotificationHandler, 'send')
-        assert hasattr(SMSNotificationHandler, 'send')
+        assert hasattr(SystemNotificationHandler, "send")
+        assert hasattr(EmailNotificationHandler, "send")
+        assert hasattr(WeChatNotificationHandler, "send")
+        assert hasattr(SMSNotificationHandler, "send")

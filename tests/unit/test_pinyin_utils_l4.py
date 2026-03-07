@@ -4,22 +4,23 @@ Unit tests for app/utils/pinyin_utils.py — L4组补充
 重点：别名函数 to_pinyin / get_initials 及 generate_unique_username
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.utils.pinyin_utils import (
-    to_pinyin,
+    generate_initial_password,
+    generate_unique_username,
     get_initials,
     name_to_pinyin,
     name_to_pinyin_initials,
-    generate_unique_username,
-    generate_initial_password,
+    to_pinyin,
 )
-
 
 # ---------------------------------------------------------------------------
 # Alias functions
 # ---------------------------------------------------------------------------
+
 
 class TestToPinyinAlias:
     """Tests for to_pinyin (alias of name_to_pinyin)."""
@@ -61,6 +62,7 @@ class TestToPinyinAlias:
 # get_initials
 # ---------------------------------------------------------------------------
 
+
 class TestGetInitialsAlias:
     """Tests for get_initials (alias of name_to_pinyin_initials)."""
 
@@ -95,6 +97,7 @@ class TestGetInitialsAlias:
 # generate_unique_username
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateUniqueUsername:
     """Tests for generate_unique_username."""
 
@@ -113,6 +116,7 @@ class TestGenerateUniqueUsername:
                 fq = MagicMock()
                 # We can't easily inspect the filter arg; use call count trick
                 return fq
+
             q.filter.side_effect = filter_side_effect
             return q
 
@@ -166,6 +170,7 @@ class TestGenerateUniqueUsername:
 # generate_initial_password
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateInitialPasswordL4:
     """Additional tests for generate_initial_password."""
 
@@ -176,11 +181,7 @@ class TestGenerateInitialPasswordL4:
 
     def test_accepts_deprecated_params(self):
         """Deprecated params accepted without errors."""
-        result = generate_initial_password(
-            username="user1",
-            id_card="123456",
-            employee_code="E001"
-        )
+        result = generate_initial_password(username="user1", id_card="123456", employee_code="E001")
         assert isinstance(result, str)
 
     def test_passwords_are_not_empty(self):

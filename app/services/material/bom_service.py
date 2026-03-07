@@ -4,18 +4,18 @@ BOM服务 - 实施BOM审核通过后自动创建采购订单功能
 创建日期：2026-01-25
 """
 
-from typing import Dict, Any
 from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models.material import Material, BomHeader, BomItem
+from app.models.material import BomHeader, BomItem, Material
+from app.models.project import Project
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.vendor import Vendor
-from app.models.project import Project
-
-from sqlalchemy.orm import selectinload
-from datetime import datetime
 
 
 class BOMService:
@@ -49,9 +49,7 @@ class BOMService:
 
         # 1. 查询BOM
         result = await db.execute(
-            select(BomHeader, Project)
-            .options(selectinload(Project))
-            .where(BomHeader.id == bom_id)
+            select(BomHeader, Project).options(selectinload(Project)).where(BomHeader.id == bom_id)
         )
         bom_data = result.first()
 
@@ -85,9 +83,7 @@ class BOMService:
         supplier_groups = defaultdict(list)
         for item in items:
             # 获取物料供应商（优先使用primary_supplier_id）
-            supplier_id = (
-                item.material.primary_supplier_id or item.material.default_supplier_id
-            )
+            supplier_id = item.material.primary_supplier_id or item.material.default_supplier_id
 
             if supplier_id:
                 supplier_groups[supplier_id].append(item)
@@ -100,9 +96,7 @@ class BOMService:
                 continue
 
             # 查询供应商信息
-            vendor_result = await db.execute(
-                select(Vendor).where(Vendor.id == supplier_id)
-            )
+            vendor_result = await db.execute(select(Vendor).where(Vendor.id == supplier_id))
             vendor = vendor_result.scalar_one_or_none()
 
             if not vendor:
@@ -163,7 +157,6 @@ class BOMService:
             "purchase_orders_count": len(created_orders),
             "purchase_order_ids": created_orders,
         }
-
 
 
 # PurchaseOrderItem is imported from app.models.purchase

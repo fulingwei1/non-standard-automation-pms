@@ -3,9 +3,10 @@
 成本预测服务单元测试
 覆盖传统EAC预测、风险分析、数据质量评分等核心方法
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.cost_prediction_service import CostPredictionService
 

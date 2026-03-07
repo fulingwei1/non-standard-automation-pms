@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - performance_integration_service 单元测试"""
 
-import pytest
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.performance_integration_service")
 
@@ -53,14 +54,17 @@ class TestCalculateIntegratedScore:
 
     def test_calculates_with_qualification_data(self):
         # Production code mixes Decimal and float; mock both as float to avoid TypeError
-        with patch.object(
-            PerformanceIntegrationService,
-            "_get_base_performance_score",
-            return_value=80.0,
-        ), patch.object(
-            PerformanceIntegrationService,
-            "_get_qualification_score",
-            return_value={"score": 70.0, "level_code": "P3", "level_name": "中级"},
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=80.0,
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value={"score": 70.0, "level_code": "P3", "level_name": "中级"},
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
                 self.db, user_id=1, period="2024-01"
@@ -71,14 +75,17 @@ class TestCalculateIntegratedScore:
         assert abs(result["integrated_score"] - 77.0) < 0.01
 
     def test_calculates_without_qualification_data(self):
-        with patch.object(
-            PerformanceIntegrationService,
-            "_get_base_performance_score",
-            return_value=85.0,
-        ), patch.object(
-            PerformanceIntegrationService,
-            "_get_qualification_score",
-            return_value=None,
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=85.0,
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value=None,
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
                 self.db, user_id=1, period="2024-01"
@@ -89,14 +96,17 @@ class TestCalculateIntegratedScore:
         assert result["qualification_score"] == 0.0
 
     def test_result_contains_required_keys(self):
-        with patch.object(
-            PerformanceIntegrationService,
-            "_get_base_performance_score",
-            return_value=90.0,
-        ), patch.object(
-            PerformanceIntegrationService,
-            "_get_qualification_score",
-            return_value={"score": 80.0, "level_code": "P4"},
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=90.0,
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value={"score": 80.0, "level_code": "P4"},
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
                 self.db, user_id=1, period="2024-01"
@@ -114,14 +124,17 @@ class TestCalculateIntegratedScore:
             assert key in result
 
     def test_qualification_level_populated(self):
-        with patch.object(
-            PerformanceIntegrationService,
-            "_get_base_performance_score",
-            return_value=75.0,
-        ), patch.object(
-            PerformanceIntegrationService,
-            "_get_qualification_score",
-            return_value={"score": 65.0, "level_code": "P2"},
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=75.0,
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value={"score": 65.0, "level_code": "P2"},
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
                 self.db, user_id=1, period="2024-01"
@@ -129,14 +142,17 @@ class TestCalculateIntegratedScore:
         assert result["qualification_level"] == "P2"
 
     def test_qualification_level_none_when_no_qualification(self):
-        with patch.object(
-            PerformanceIntegrationService,
-            "_get_base_performance_score",
-            return_value=75.0,
-        ), patch.object(
-            PerformanceIntegrationService,
-            "_get_qualification_score",
-            return_value=None,
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=75.0,
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value=None,
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
                 self.db, user_id=1, period="2024-01"
@@ -144,14 +160,17 @@ class TestCalculateIntegratedScore:
         assert result["qualification_level"] is None
 
     def test_details_contain_calculation(self):
-        with patch.object(
-            PerformanceIntegrationService,
-            "_get_base_performance_score",
-            return_value=80.0,
-        ), patch.object(
-            PerformanceIntegrationService,
-            "_get_qualification_score",
-            return_value={"score": 70.0, "level_code": "P3"},
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=80.0,
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value={"score": 70.0, "level_code": "P3"},
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
                 self.db, user_id=1, period="2024-01"
@@ -187,17 +206,13 @@ class TestGetQualificationScore:
 
     def test_returns_none_when_no_user(self):
         self.db.query.return_value.filter.return_value.first.return_value = None
-        result = PerformanceIntegrationService._get_qualification_score(
-            self.db, user_id=999
-        )
+        result = PerformanceIntegrationService._get_qualification_score(self.db, user_id=999)
         assert result is None
 
     def test_returns_none_when_user_has_no_employee_id(self):
         user = MagicMock(employee_id=None)
         self.db.query.return_value.filter.return_value.first.return_value = user
-        result = PerformanceIntegrationService._get_qualification_score(
-            self.db, user_id=1
-        )
+        result = PerformanceIntegrationService._get_qualification_score(self.db, user_id=1)
         assert result is None
 
 
@@ -236,7 +251,9 @@ class TestGetIntegratedPerformanceForPeriod:
         assert result is None
 
     def test_returns_none_when_no_finalized_period(self):
-        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         result = PerformanceIntegrationService.get_integrated_performance_for_period(
             self.db, user_id=1, period_id=None
         )
@@ -244,6 +261,7 @@ class TestGetIntegratedPerformanceForPeriod:
 
     def test_calls_calculate_with_period_str(self):
         from datetime import date
+
         period = MagicMock()
         period.start_date = date(2024, 1, 1)
         self.db.query.return_value.filter.return_value.first.return_value = period

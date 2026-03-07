@@ -3,9 +3,10 @@
 第四十五批覆盖：report_framework/generators/analysis.py
 """
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.report_framework.generators.analysis")
 
@@ -40,12 +41,15 @@ class TestAnalysisReportGeneratorWorkload:
         assert "charts" in result
 
     def test_calculate_workload_load_levels(self, mock_db):
-        users = [MagicMock(id=i, real_name=f"User{i}", username=f"user{i}", department="D") for i in range(4)]
+        users = [
+            MagicMock(id=i, real_name=f"User{i}", username=f"user{i}", department="D")
+            for i in range(4)
+        ]
         timesheets = [
             MagicMock(user_id=0, hours=200, project_id=1),  # OVERLOAD >22 days
             MagicMock(user_id=1, hours=150, project_id=2),  # HIGH
             MagicMock(user_id=2, hours=100, project_id=3),  # MEDIUM
-            MagicMock(user_id=3, hours=50, project_id=4),   # LOW
+            MagicMock(user_id=3, hours=50, project_id=4),  # LOW
         ]
 
         workload_list, load_summary = AnalysisReportGenerator._calculate_workload(

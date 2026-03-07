@@ -16,7 +16,7 @@
 import unittest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 from app.services.outsourcing_workflow.outsourcing_workflow_service import (
     OutsourcingWorkflowService,
@@ -56,9 +56,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         order.project.project_name = "测试项目"
         return order
 
-    def _create_mock_instance(
-        self, instance_id=1, entity_id=1, status="PENDING", initiator_id=1
-    ):
+    def _create_mock_instance(self, instance_id=1, entity_id=1, status="PENDING", initiator_id=1):
         """创建模拟审批实例对象"""
         instance = Mock()
         instance.id = instance_id
@@ -136,9 +134,7 @@ class TestSubmitOrdersForApproval(TestOutsourcingWorkflowService):
         self.db.query.return_value.filter.return_value.first.return_value = order
         self.service.engine.submit = Mock(return_value=instance)
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=100
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=100)
 
         self.assertEqual(len(result["success"]), 1)
         self.assertEqual(len(result["errors"]), 0)
@@ -147,9 +143,7 @@ class TestSubmitOrdersForApproval(TestOutsourcingWorkflowService):
         """测试提交不存在的订单"""
         self.db.query.return_value.filter.return_value.first.return_value = None
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[999], initiator_id=100
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[999], initiator_id=100)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -161,9 +155,7 @@ class TestSubmitOrdersForApproval(TestOutsourcingWorkflowService):
         order = self._create_mock_order(order_id=1, status="APPROVED")
         self.db.query.return_value.filter.return_value.first.return_value = order
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=100
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=100)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -182,9 +174,7 @@ class TestSubmitOrdersForApproval(TestOutsourcingWorkflowService):
         ]
         self.service.engine.submit = Mock(return_value=instance1)
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1, 2], initiator_id=100
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1, 2], initiator_id=100)
 
         self.assertEqual(len(result["success"]), 1)
         self.assertEqual(len(result["errors"]), 1)
@@ -197,9 +187,7 @@ class TestSubmitOrdersForApproval(TestOutsourcingWorkflowService):
         self.db.query.return_value.filter.return_value.first.return_value = order
         self.service.engine.submit = Mock(side_effect=Exception("引擎错误"))
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=100
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=100)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -214,9 +202,7 @@ class TestSubmitOrdersForApproval(TestOutsourcingWorkflowService):
         self.db.query.return_value.filter.return_value.first.return_value = order
         self.service.engine.submit = Mock(return_value=instance)
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1], initiator_id=100
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=100)
 
         self.assertEqual(len(result["success"]), 1)
         # 验证form_data中amount_with_tax为0
@@ -343,9 +329,7 @@ class TestPerformApprovalAction(TestOutsourcingWorkflowService):
         self.service.engine.approve = Mock(return_value=instance)
         self.service._trigger_cost_collection = Mock()
 
-        result = self.service.perform_approval_action(
-            task_id=1, approver_id=10, action="approve"
-        )
+        result = self.service.perform_approval_action(task_id=1, approver_id=10, action="approve")
 
         self.assertEqual(result["instance_status"], "PENDING")
         self.service._trigger_cost_collection.assert_not_called()
@@ -368,9 +352,7 @@ class TestPerformApprovalAction(TestOutsourcingWorkflowService):
     def test_perform_action_invalid_action(self):
         """测试无效的审批操作"""
         with self.assertRaises(ValueError) as context:
-            self.service.perform_approval_action(
-                task_id=1, approver_id=10, action="invalid_action"
-            )
+            self.service.perform_approval_action(task_id=1, approver_id=10, action="invalid_action")
         self.assertIn("不支持的操作类型", str(context.exception))
 
     def test_approve_without_comment(self):
@@ -378,9 +360,7 @@ class TestPerformApprovalAction(TestOutsourcingWorkflowService):
         instance = self._create_mock_instance()
         self.service.engine.approve = Mock(return_value=instance)
 
-        result = self.service.perform_approval_action(
-            task_id=1, approver_id=10, action="approve"
-        )
+        result = self.service.perform_approval_action(task_id=1, approver_id=10, action="approve")
 
         call_args = self.service.engine.approve.call_args
         self.assertIsNone(call_args[1]["comment"])
@@ -420,9 +400,7 @@ class TestPerformBatchApproval(TestOutsourcingWorkflowService):
     def test_batch_approval_mixed_results(self):
         """测试批量审批混合结果"""
         instance = self._create_mock_instance()
-        self.service.engine.approve = Mock(
-            side_effect=[instance, Exception("审批失败"), instance]
-        )
+        self.service.engine.approve = Mock(side_effect=[instance, Exception("审批失败"), instance])
 
         result = self.service.perform_batch_approval(
             task_ids=[1, 2, 3], approver_id=10, action="approve"
@@ -443,9 +421,7 @@ class TestPerformBatchApproval(TestOutsourcingWorkflowService):
 
     def test_batch_approval_empty_list(self):
         """测试批量审批空列表"""
-        result = self.service.perform_batch_approval(
-            task_ids=[], approver_id=10, action="approve"
-        )
+        result = self.service.perform_batch_approval(task_ids=[], approver_id=10, action="approve")
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 0)
@@ -533,14 +509,10 @@ class TestWithdrawApproval(TestOutsourcingWorkflowService):
 
         self.service.engine.withdraw = Mock()
 
-        result = self.service.withdraw_approval(
-            order_id=1, user_id=100, reason="材料有误"
-        )
+        result = self.service.withdraw_approval(order_id=1, user_id=100, reason="材料有误")
 
         self.assertEqual(result["status"], "withdrawn")
-        self.service.engine.withdraw.assert_called_once_with(
-            instance_id=1, user_id=100
-        )
+        self.service.engine.withdraw.assert_called_once_with(instance_id=1, user_id=100)
 
     def test_withdraw_approval_order_not_found(self):
         """测试撤回不存在的订单"""
@@ -611,7 +583,7 @@ class TestGetApprovalHistory(TestOutsourcingWorkflowService):
         query_mock = self.db.query.return_value
         join_mock = query_mock.join.return_value
         filter_mock = join_mock.filter.return_value
-        
+
         # 当有status_filter时，会再次调用filter
         filter_mock2 = filter_mock.filter.return_value
 
@@ -621,9 +593,7 @@ class TestGetApprovalHistory(TestOutsourcingWorkflowService):
             []
         )
 
-        result = self.service.get_approval_history(
-            user_id=10, status_filter="APPROVED"
-        )
+        result = self.service.get_approval_history(user_id=10, status_filter="APPROVED")
 
         # 验证过滤条件被调用
         self.assertEqual(result["total"], 0)
@@ -648,9 +618,7 @@ class TestGetApprovalHistory(TestOutsourcingWorkflowService):
         tasks = []
         for i in range(5):
             instance = self._create_mock_instance(instance_id=i)
-            task = self._create_mock_task(
-                task_id=i, instance=instance, status="APPROVED"
-            )
+            task = self._create_mock_task(task_id=i, instance=instance, status="APPROVED")
             tasks.append(task)
 
         query_mock = self.db.query.return_value
@@ -681,7 +649,7 @@ class TestTriggerCostCollection(TestOutsourcingWorkflowService):
 
         # Mock引擎的approve方法
         self.service.engine.approve = Mock(return_value=instance)
-        
+
         # Mock成本归集方法
         self.service._trigger_cost_collection = Mock()
 
@@ -696,13 +664,11 @@ class TestTriggerCostCollection(TestOutsourcingWorkflowService):
     def test_approve_pending_not_trigger_cost_collection(self):
         """测试审批未完成不触发成本归集"""
         instance = self._create_mock_instance(status="PENDING")
-        
+
         self.service.engine.approve = Mock(return_value=instance)
         self.service._trigger_cost_collection = Mock()
 
-        self.service.perform_approval_action(
-            task_id=1, approver_id=10, action="approve"
-        )
+        self.service.perform_approval_action(task_id=1, approver_id=10, action="approve")
 
         # 验证成本归集未被触发
         self.service._trigger_cost_collection.assert_not_called()
@@ -711,14 +677,12 @@ class TestTriggerCostCollection(TestOutsourcingWorkflowService):
         """测试批量审批触发多次成本归集"""
         instance = self._create_mock_instance(status="APPROVED")
         instance.entity_id = 1
-        
+
         self.service.engine.approve = Mock(return_value=instance)
         self.service._trigger_cost_collection = Mock()
 
         # 批量审批3个任务
-        self.service.perform_batch_approval(
-            task_ids=[1, 2, 3], approver_id=10, action="approve"
-        )
+        self.service.perform_batch_approval(task_ids=[1, 2, 3], approver_id=10, action="approve")
 
         # 验证成本归集被触发3次
         self.assertEqual(self.service._trigger_cost_collection.call_count, 3)

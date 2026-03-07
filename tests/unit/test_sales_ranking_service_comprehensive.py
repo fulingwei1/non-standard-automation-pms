@@ -84,10 +84,34 @@ class TestSaveConfig:
         mock_db = MagicMock()
 
         metrics = [
-            {"key": "contract_amount", "label": "合同金额", "weight": 0.4, "data_source": "contract_amount", "is_primary": True},
-            {"key": "acceptance_amount", "label": "验收金额", "weight": 0.2, "data_source": "acceptance_amount", "is_primary": True},
-            {"key": "collection_amount", "label": "回款金额", "weight": 0.2, "data_source": "collection_amount", "is_primary": True},
-            {"key": "opportunity_count", "label": "商机数量", "weight": 0.2, "data_source": "opportunity_count", "is_primary": False},
+            {
+                "key": "contract_amount",
+                "label": "合同金额",
+                "weight": 0.4,
+                "data_source": "contract_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "acceptance_amount",
+                "label": "验收金额",
+                "weight": 0.2,
+                "data_source": "acceptance_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "collection_amount",
+                "label": "回款金额",
+                "weight": 0.2,
+                "data_source": "collection_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "opportunity_count",
+                "label": "商机数量",
+                "weight": 0.2,
+                "data_source": "opportunity_count",
+                "is_primary": False,
+            },
         ]
 
         with patch("app.services.sales_ranking_service.SalesTeamService"):
@@ -123,7 +147,11 @@ class TestValidateMetrics:
 
         metrics = [
             {"key": "contract_amount", "weight": 0.5, "data_source": "contract_amount"},
-            {"key": "contract_amount", "weight": 0.5, "data_source": "contract_amount"},  # Duplicate
+            {
+                "key": "contract_amount",
+                "weight": 0.5,
+                "data_source": "contract_amount",
+            },  # Duplicate
         ]
 
         with patch("app.services.sales_ranking_service.SalesTeamService"):
@@ -177,7 +205,12 @@ class TestValidateMetrics:
         mock_db = MagicMock()
 
         metrics = [
-            {"key": "contract_amount", "weight": 0.5, "data_source": "contract_amount", "is_primary": True},
+            {
+                "key": "contract_amount",
+                "weight": 0.5,
+                "data_source": "contract_amount",
+                "is_primary": True,
+            },
         ]
 
         with patch("app.services.sales_ranking_service.SalesTeamService"):
@@ -196,10 +229,30 @@ class TestValidateMetrics:
 
         # Primary weights sum to 0.6, not 0.8
         metrics = [
-            {"key": "contract_amount", "weight": 0.2, "data_source": "contract_amount", "is_primary": True},
-            {"key": "acceptance_amount", "weight": 0.2, "data_source": "acceptance_amount", "is_primary": True},
-            {"key": "collection_amount", "weight": 0.2, "data_source": "collection_amount", "is_primary": True},
-            {"key": "opportunity_count", "weight": 0.4, "data_source": "opportunity_count", "is_primary": False},
+            {
+                "key": "contract_amount",
+                "weight": 0.2,
+                "data_source": "contract_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "acceptance_amount",
+                "weight": 0.2,
+                "data_source": "acceptance_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "collection_amount",
+                "weight": 0.2,
+                "data_source": "collection_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "opportunity_count",
+                "weight": 0.4,
+                "data_source": "opportunity_count",
+                "is_primary": False,
+            },
         ]
 
         with patch("app.services.sales_ranking_service.SalesTeamService"):
@@ -217,10 +270,30 @@ class TestValidateMetrics:
         mock_db = MagicMock()
 
         metrics = [
-            {"key": "contract_amount", "weight": 0.4, "data_source": "contract_amount", "is_primary": True},
-            {"key": "acceptance_amount", "weight": 0.2, "data_source": "acceptance_amount", "is_primary": True},
-            {"key": "collection_amount", "weight": 0.2, "data_source": "collection_amount", "is_primary": True},
-            {"key": "opportunity_count", "weight": 0.2, "data_source": "opportunity_count", "is_primary": False},
+            {
+                "key": "contract_amount",
+                "weight": 0.4,
+                "data_source": "contract_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "acceptance_amount",
+                "weight": 0.2,
+                "data_source": "acceptance_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "collection_amount",
+                "weight": 0.2,
+                "data_source": "collection_amount",
+                "is_primary": True,
+            },
+            {
+                "key": "opportunity_count",
+                "weight": 0.2,
+                "data_source": "opportunity_count",
+                "is_primary": False,
+            },
         ]
 
         with patch("app.services.sales_ranking_service.SalesTeamService"):
@@ -261,8 +334,18 @@ class TestCalculateRankings:
 
         mock_config = MagicMock()
         mock_config.metrics = [
-            {"key": "contract_amount", "label": "合同金额", "weight": 0.8, "data_source": "contract_amount"},
-            {"key": "opportunity_count", "label": "商机数量", "weight": 0.2, "data_source": "opportunity_count"},
+            {
+                "key": "contract_amount",
+                "label": "合同金额",
+                "weight": 0.8,
+                "data_source": "contract_amount",
+            },
+            {
+                "key": "opportunity_count",
+                "label": "商机数量",
+                "weight": 0.2,
+                "data_source": "opportunity_count",
+            },
         ]
 
         mock_user1 = MagicMock()
@@ -292,10 +375,22 @@ class TestCalculateRankings:
             service = SalesRankingService(mock_db)
 
             with patch.object(service, "_get_acceptance_amount_map", return_value={}):
-                with patch.object(service, "_get_contract_and_collection_data", return_value={
-                    1: {"contract_amount": 100000, "contract_count": 5, "collection_amount": 50000},
-                    2: {"contract_amount": 200000, "contract_count": 8, "collection_amount": 100000},
-                }):
+                with patch.object(
+                    service,
+                    "_get_contract_and_collection_data",
+                    return_value={
+                        1: {
+                            "contract_amount": 100000,
+                            "contract_count": 5,
+                            "collection_amount": 50000,
+                        },
+                        2: {
+                            "contract_amount": 200000,
+                            "contract_count": 8,
+                            "collection_amount": 100000,
+                        },
+                    },
+                ):
                     result = service.calculate_rankings(
                         users=[mock_user1, mock_user2],
                         start_datetime=datetime(2026, 1, 1),
@@ -315,7 +410,12 @@ class TestCalculateRankings:
 
         mock_config = MagicMock()
         mock_config.metrics = [
-            {"key": "contract_amount", "label": "合同金额", "weight": 1.0, "data_source": "contract_amount"},
+            {
+                "key": "contract_amount",
+                "label": "合同金额",
+                "weight": 1.0,
+                "data_source": "contract_amount",
+            },
         ]
 
         mock_user = MagicMock()
@@ -336,9 +436,17 @@ class TestCalculateRankings:
             service = SalesRankingService(mock_db)
 
             with patch.object(service, "_get_acceptance_amount_map", return_value={}):
-                with patch.object(service, "_get_contract_and_collection_data", return_value={
-                    1: {"contract_amount": 100000, "contract_count": 5, "collection_amount": 50000},
-                }):
+                with patch.object(
+                    service,
+                    "_get_contract_and_collection_data",
+                    return_value={
+                        1: {
+                            "contract_amount": 100000,
+                            "contract_count": 5,
+                            "collection_amount": 50000,
+                        },
+                    },
+                ):
                     result = service.calculate_rankings(
                         users=[mock_user],
                         start_datetime=datetime(2026, 1, 1),
@@ -384,7 +492,9 @@ class TestGetContractAndCollectionData:
         ]
 
         # Invoice query returns empty
-        mock_db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        mock_db.query.return_value.join.return_value.filter.return_value.filter.return_value.filter.return_value.filter.return_value.group_by.return_value.all.return_value = (
+            []
+        )
 
         with patch("app.services.sales_ranking_service.SalesTeamService"):
             service = SalesRankingService(mock_db)

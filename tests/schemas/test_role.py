@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/role.py"""
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.role import (
     RoleBase,
     RoleCreate,
-    RoleUpdate,
     RoleResponse,
+    RoleUpdate,
 )
 
 
@@ -75,8 +76,11 @@ class TestRoleUpdate:
 class TestRoleResponse:
     def test_valid(self):
         r = RoleResponse(
-            id=1, role_code="ADMIN", role_name="Admin",
-            data_scope="ALL", created_at=datetime.now(),
+            id=1,
+            role_code="ADMIN",
+            role_name="Admin",
+            data_scope="ALL",
+            created_at=datetime.now(),
         )
         assert r.is_system is False
         assert r.is_active is True
@@ -85,10 +89,16 @@ class TestRoleResponse:
 
     def test_full(self):
         r = RoleResponse(
-            id=1, role_code="A", role_name="B", data_scope="OWN",
-            created_at=datetime.now(), tenant_id=1,
-            parent_id=2, parent_name="Parent",
-            permissions=["p1"], permission_count=1,
+            id=1,
+            role_code="A",
+            role_name="B",
+            data_scope="OWN",
+            created_at=datetime.now(),
+            tenant_id=1,
+            parent_id=2,
+            parent_name="Parent",
+            permissions=["p1"],
+            permission_count=1,
             inherited_permission_count=3,
         )
         assert r.inherited_permission_count == 3

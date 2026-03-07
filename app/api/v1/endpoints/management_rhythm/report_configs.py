@@ -16,6 +16,7 @@ from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.management_rhythm import (
     MeetingReportConfig,
@@ -27,23 +28,20 @@ from app.schemas.management_rhythm import (
     MeetingReportConfigResponse,
     MeetingReportConfigUpdate,
 )
-from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.common.query_filters import apply_pagination
 
-router = APIRouter(
-    prefix="/report-configs",
-    tags=["report_configs"]
-)
+router = APIRouter(prefix="/report-configs", tags=["report_configs"])
 
 # 共 5 个路由
 
 # ==================== 报告配置管理 ====================
+
 
 @router.get("/meeting-reports/configs", response_model=PaginatedResponse)
 def read_report_configs(
@@ -66,35 +64,45 @@ def read_report_configs(
         query = query.filter(MeetingReportConfig.is_default == is_default)
 
     total = query.count()
-    configs = apply_pagination(query.order_by(desc(MeetingReportConfig.is_default), desc(MeetingReportConfig.created_at)), pagination.offset, pagination.limit).all()
+    configs = apply_pagination(
+        query.order_by(desc(MeetingReportConfig.is_default), desc(MeetingReportConfig.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for config in configs:
-        items.append(MeetingReportConfigResponse(
-            id=config.id,
-            config_name=config.config_name,
-            report_type=config.report_type,
-            description=config.description,
-            enabled_metrics=config.enabled_metrics,
-            comparison_config=config.comparison_config,
-            display_config=config.display_config,
-            is_default=config.is_default,
-            is_active=config.is_active,
-            created_by=config.created_by,
-            created_at=config.created_at,
-            updated_at=config.updated_at,
-        ))
+        items.append(
+            MeetingReportConfigResponse(
+                id=config.id,
+                config_name=config.config_name,
+                report_type=config.report_type,
+                description=config.description,
+                enabled_metrics=config.enabled_metrics,
+                comparison_config=config.comparison_config,
+                display_config=config.display_config,
+                is_default=config.is_default,
+                is_active=config.is_active,
+                created_by=config.created_by,
+                created_at=config.created_at,
+                updated_at=config.updated_at,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.post("/meeting-reports/configs", response_model=MeetingReportConfigResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/meeting-reports/configs",
+    response_model=MeetingReportConfigResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_report_config(
     config_data: MeetingReportConfigCreate,
     db: Session = Depends(deps.get_db),
@@ -108,7 +116,7 @@ def create_report_config(
         db.query(MeetingReportConfig).filter(
             and_(
                 MeetingReportConfig.report_type == config_data.report_type,
-                MeetingReportConfig.is_default
+                MeetingReportConfig.is_default,
             )
         ).update({"is_default": False})
 
@@ -116,8 +124,14 @@ def create_report_config(
         config_name=config_data.config_name,
         report_type=config_data.report_type,
         description=config_data.description,
-        enabled_metrics=[item.dict() for item in config_data.enabled_metrics] if config_data.enabled_metrics else [],
-        comparison_config=config_data.comparison_config.dict() if config_data.comparison_config else None,
+        enabled_metrics=(
+            [item.dict() for item in config_data.enabled_metrics]
+            if config_data.enabled_metrics
+            else []
+        ),
+        comparison_config=(
+            config_data.comparison_config.dict() if config_data.comparison_config else None
+        ),
         display_config=config_data.display_config.dict() if config_data.display_config else None,
         is_default=config_data.is_default,
         is_active=True,
@@ -193,7 +207,7 @@ def update_report_config(
             and_(
                 MeetingReportConfig.report_type == config.report_type,
                 MeetingReportConfig.is_default,
-                MeetingReportConfig.id != config_id
+                MeetingReportConfig.id != config_id,
             )
         ).update({"is_default": False})
 
@@ -229,7 +243,9 @@ def update_report_config(
     )
 
 
-@router.get("/meeting-reports/configs/default/{report_type}", response_model=MeetingReportConfigResponse)
+@router.get(
+    "/meeting-reports/configs/default/{report_type}", response_model=MeetingReportConfigResponse
+)
 def get_default_report_config(
     report_type: str,
     db: Session = Depends(deps.get_db),
@@ -238,13 +254,17 @@ def get_default_report_config(
     """
     获取默认报告配置
     """
-    config = db.query(MeetingReportConfig).filter(
-        and_(
-            MeetingReportConfig.report_type == report_type,
-            MeetingReportConfig.is_default,
-            MeetingReportConfig.is_active
+    config = (
+        db.query(MeetingReportConfig)
+        .filter(
+            and_(
+                MeetingReportConfig.report_type == report_type,
+                MeetingReportConfig.is_default,
+                MeetingReportConfig.is_active,
+            )
         )
-    ).first()
+        .first()
+    )
 
     if not config:
         raise HTTPException(status_code=404, detail="未找到默认配置")
@@ -263,6 +283,3 @@ def get_default_report_config(
         created_at=config.created_at,
         updated_at=config.updated_at,
     )
-
-
-

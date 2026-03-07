@@ -48,20 +48,16 @@ def download_report(
 
     # 设置 MIME 类型
     media_type_map = {
-        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        '.pdf': 'application/pdf',
-        '.csv': 'text/csv',
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".pdf": "application/pdf",
+        ".csv": "text/csv",
     }
-    media_type = media_type_map.get(ext, 'application/octet-stream')
+    media_type = media_type_map.get(ext, "application/octet-stream")
 
     # 生成下载文件名
     filename = f"{generation.report_title or 'report'}_{generation.id}{ext}"
 
-    return FileResponse(
-        path=file_path,
-        media_type=media_type,
-        filename=filename
-    )
+    return FileResponse(path=file_path, media_type=media_type, filename=filename)
 
 
 @router.get("/download-file")
@@ -94,17 +90,13 @@ def download_file(
 
     # 设置 MIME 类型
     media_type_map = {
-        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        '.pdf': 'application/pdf',
-        '.csv': 'text/csv',
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".pdf": "application/pdf",
+        ".csv": "text/csv",
     }
-    media_type = media_type_map.get(ext, 'application/octet-stream')
+    media_type = media_type_map.get(ext, "application/octet-stream")
 
     # 生成下载文件名
     filename = os.path.basename(file_path)
 
-    return FileResponse(
-        path=file_path,
-        media_type=media_type,
-        filename=filename
-    )
+    return FileResponse(path=file_path, media_type=media_type, filename=filename)

@@ -11,6 +11,7 @@ class TestBusinessCacheService:
         mock_get_cache.return_value = mock_cache
 
         from app.services.cache.business_cache import BusinessCacheService
+
         service = BusinessCacheService()
         result = service.get_project_list(skip=0, limit=10)
         assert result is None
@@ -22,6 +23,7 @@ class TestBusinessCacheService:
         mock_get_cache.return_value = mock_cache
 
         from app.services.cache.business_cache import BusinessCacheService
+
         service = BusinessCacheService()
         result = service.get_project_list(skip=0, limit=10)
         assert result == [{"id": 1}]
@@ -32,6 +34,7 @@ class TestBusinessCacheService:
         mock_get_cache.return_value = mock_cache
 
         from app.services.cache.business_cache import BusinessCacheService
+
         service = BusinessCacheService()
         service.set_project_list([MagicMock()], skip=0, limit=10)
         mock_cache.set.assert_called_once()
@@ -43,6 +46,7 @@ class TestBusinessCacheService:
         mock_get_cache.return_value = mock_cache
 
         from app.services.cache.business_cache import BusinessCacheService
+
         service = BusinessCacheService()
         result = service.get_project_dashboard(1)
         assert result == {"stats": 42}
@@ -54,6 +58,7 @@ class TestBusinessCacheService:
         mock_get_cache.return_value = mock_cache
 
         from app.services.cache.business_cache import BusinessCacheService
+
         service = BusinessCacheService()
         result = service.get_user_permissions(1)
         assert result == ["read", "write"]

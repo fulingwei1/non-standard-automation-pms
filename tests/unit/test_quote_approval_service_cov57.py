@@ -45,9 +45,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock.current_version = version_mock
 
         # 模拟数据库查询
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         # 模拟审批引擎
         instance_mock = MagicMock()
@@ -74,9 +72,7 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock.id = 1
         quote_mock.status = "APPROVED"
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         # 执行测试
         result = self.service.submit_quotes_for_approval(
@@ -135,12 +131,8 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock.current_version = version_mock
 
         # 模拟审批引擎和数据库查询
-        self.service.approval_engine.get_pending_tasks = MagicMock(
-            return_value=[task_mock]
-        )
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.service.approval_engine.get_pending_tasks = MagicMock(return_value=[task_mock])
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         # 执行测试
         result = self.service.get_pending_tasks(user_id=1, offset=0, limit=20)
@@ -333,17 +325,11 @@ class TestQuoteApprovalService(unittest.TestCase):
             task_mock
         ]
 
-        self.db_mock.query.return_value.join.return_value.filter.return_value = (
-            query_mock
-        )
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            quote_mock
-        )
+        self.db_mock.query.return_value.join.return_value.filter.return_value = query_mock
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
 
         # 执行测试
-        result = self.service.get_approval_history(
-            user_id=1, offset=0, limit=20
-        )
+        result = self.service.get_approval_history(user_id=1, offset=0, limit=20)
 
         # 验证结果
         self.assertEqual(result["total"], 1)

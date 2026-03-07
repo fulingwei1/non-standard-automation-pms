@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - vendor_service.py 单元测试（VendorService）"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.vendor_service")
 
 from app.services.vendor_service import VendorService
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -42,6 +43,7 @@ def _make_vendor(**kwargs):
 
 # ─── 测试：初始化 ────────────────────────────────────────────────
 
+
 class TestVendorServiceInit:
     """测试 VendorService 初始化"""
 
@@ -53,6 +55,7 @@ class TestVendorServiceInit:
 
 
 # ─── 测试：_to_response ────────────────────────────────────────────────────────
+
 
 class TestVendorServiceToResponse:
     """测试 _to_response 方法"""
@@ -101,6 +104,7 @@ class TestVendorServiceToResponse:
 
 
 # ─── 测试：list_suppliers ────────────────────────────────────────────────────
+
 
 class TestListSuppliers:
     """测试 list_suppliers 方法"""

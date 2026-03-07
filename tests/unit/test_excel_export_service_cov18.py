@@ -10,6 +10,7 @@ import pytest
 
 try:
     from app.services.excel_export_service import ExcelExportService, create_excel_response
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -19,10 +20,13 @@ pytestmark = pytest.mark.skipif(not IMPORT_OK, reason="导入失败，跳过")
 
 @pytest.fixture
 def service():
-    with patch.dict("sys.modules", {
-        "openpyxl": MagicMock(),
-        "pandas": MagicMock(),
-    }):
+    with patch.dict(
+        "sys.modules",
+        {
+            "openpyxl": MagicMock(),
+            "pandas": MagicMock(),
+        },
+    ):
         with patch("app.services.excel_export_service.EXCEL_AVAILABLE", True):
             svc = ExcelExportService.__new__(ExcelExportService)
             return svc

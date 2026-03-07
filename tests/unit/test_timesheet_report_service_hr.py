@@ -4,8 +4,6 @@ Tests coverage for:
 - app.services.timesheet_report_service.TimesheetReportService
 """
 
-from __future__ import annotations
-
 import pytest
 
 # 跳过如果模块不存在
@@ -60,9 +58,7 @@ class TestGenerateHRReport:
 
     def test_generate_hr_report_with_empty_data(self, service: TimesheetReportService):
         """Test HR report generation with empty timesheet data"""
-        with patch.object(
-            service.aggregation_service, "generate_hr_report"
-        ) as mock_agg:
+        with patch.object(service.aggregation_service, "generate_hr_report") as mock_agg:
             mock_agg.return_value = []
 
             result = service.generate_hr_report_excel(2026, 1)
@@ -71,13 +67,9 @@ class TestGenerateHRReport:
             # Verify it's a BytesIO object containing Excel data
             assert hasattr(result, "read")
 
-    def test_generate_hr_report_with_department_filter(
-        self, service: TimesheetReportService
-    ):
+    def test_generate_hr_report_with_department_filter(self, service: TimesheetReportService):
         """Test HR report generation with department filter"""
-        with patch.object(
-            service.aggregation_service, "generate_hr_report"
-        ) as mock_agg:
+        with patch.object(service.aggregation_service, "generate_hr_report") as mock_agg:
             mock_agg.return_value = [
                 {
                     "user_id": 1,
@@ -94,15 +86,11 @@ class TestGenerateHRReport:
             assert result is not None
             mock_agg.assert_called_once_with(2026, 1, 10)
 
-    def test_generate_hr_report_handles_missing_department(
-        self, service: TimesheetReportService
-    ):
+    def test_generate_hr_report_handles_missing_department(self, service: TimesheetReportService):
         """Test HR report handles user without department"""
         with (
             patch.object(service.aggregation_service, "generate_hr_report") as mock_agg,
-            patch(
-                "app.services.timesheet_report_service.HourlyRateService"
-            ) as mock_rate,
+            patch("app.services.timesheet_report_service.HourlyRateService") as mock_rate,
         ):
             mock_agg.return_value = [
                 {
@@ -121,9 +109,7 @@ class TestGenerateHRReport:
             mock_rate.get_user_hourly_rate.return_value = Decimal("50.0")
 
             with patch.object(service.db, "query") as mock_query:
-                mock_query.return_value.filter.return_value.first.return_value = (
-                    mock_user
-                )
+                mock_query.return_value.filter.return_value.first.return_value = mock_user
 
                 result = service.generate_hr_report_excel(2026, 1)
 
@@ -135,9 +121,7 @@ class TestGenerateHRReport:
         """Test HR report calculates overtime pay correctly"""
         with (
             patch.object(service.aggregation_service, "generate_hr_report") as mock_agg,
-            patch(
-                "app.services.timesheet_report_service.HourlyRateService"
-            ) as mock_rate,
+            patch("app.services.timesheet_report_service.HourlyRateService") as mock_rate,
         ):
             mock_agg.return_value = [
                 {
@@ -159,15 +143,11 @@ class TestGenerateHRReport:
             # Verify the calculation logic was called
             mock_rate.get_user_hourly_rate.assert_called_once()
 
-    def test_generate_hr_report_with_department_name(
-        self, service: TimesheetReportService
-    ):
+    def test_generate_hr_report_with_department_name(self, service: TimesheetReportService):
         """Test HR report includes department name"""
         with (
             patch.object(service.aggregation_service, "generate_hr_report") as mock_agg,
-            patch(
-                "app.services.timesheet_report_service.HourlyRateService"
-            ) as mock_rate,
+            patch("app.services.timesheet_report_service.HourlyRateService") as mock_rate,
         ):
             mock_agg.return_value = [
                 {
@@ -218,9 +198,7 @@ class TestGenerateFinanceReport:
 
     def test_generate_finance_report_basic(self, service: TimesheetReportService):
         """Test finance report generation"""
-        with patch.object(
-            service.aggregation_service, "generate_finance_report"
-        ) as mock_agg:
+        with patch.object(service.aggregation_service, "generate_finance_report") as mock_agg:
             mock_agg.return_value = [
                 {"project_name": "Project A", "cost": Decimal("50000.00")},
                 {"project_name": "Project B", "cost": Decimal("75000.00")},
@@ -230,13 +208,9 @@ class TestGenerateFinanceReport:
 
             assert result is not None
 
-    def test_generate_finance_report_with_empty_data(
-        self, service: TimesheetReportService
-    ):
+    def test_generate_finance_report_with_empty_data(self, service: TimesheetReportService):
         """Test finance report with empty data"""
-        with patch.object(
-            service.aggregation_service, "generate_finance_report"
-        ) as mock_agg:
+        with patch.object(service.aggregation_service, "generate_finance_report") as mock_agg:
             mock_agg.return_value = []
 
             result = service.generate_finance_report_excel(2026, 1)
@@ -257,9 +231,7 @@ class TestGenerateRDReport:
 
     def test_generate_rd_report_basic(self, service: TimesheetReportService):
         """Test R&D report generation"""
-        with patch.object(
-            service.aggregation_service, "generate_rd_report"
-        ) as mock_agg:
+        with patch.object(service.aggregation_service, "generate_rd_report") as mock_agg:
             mock_agg.return_value = [
                 {"project_name": "R&D Project 1", "total_hours": 200.5},
                 {"project_name": "R&D Project 2", "total_hours": 150.0},
@@ -271,9 +243,7 @@ class TestGenerateRDReport:
 
     def test_generate_rd_report_with_empty_data(self, service: TimesheetReportService):
         """Test R&D report with empty data"""
-        with patch.object(
-            service.aggregation_service, "generate_rd_report"
-        ) as mock_agg:
+        with patch.object(service.aggregation_service, "generate_rd_report") as mock_agg:
             mock_agg.return_value = []
 
             result = service.generate_rd_report_excel(2026, 1)

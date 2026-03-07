@@ -5,9 +5,10 @@
 测试付款计划、付款记录、付款统计等功能
 """
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from app.core.config import settings
 
@@ -26,10 +27,7 @@ class TestSalesPaymentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/plans",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/payments/plans", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Payment plans API not implemented")
@@ -49,14 +47,12 @@ class TestSalesPaymentsAPI:
             "payment_stages": [
                 {"stage": "签约", "percentage": 30, "amount": 150000.0},
                 {"stage": "交付", "percentage": 50, "amount": 250000.0},
-                {"stage": "验收", "percentage": 20, "amount": 100000.0}
-            ]
+                {"stage": "验收", "percentage": 20, "amount": 100000.0},
+            ],
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/payments/plans",
-            headers=headers,
-            json=plan_data
+            f"{settings.API_V1_PREFIX}/sales/payments/plans", headers=headers, json=plan_data
         )
 
         if response.status_code == 404:
@@ -71,10 +67,7 @@ class TestSalesPaymentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/records",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/payments/records", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Payment records API not implemented")
@@ -94,13 +87,11 @@ class TestSalesPaymentsAPI:
             "amount": 150000.0,
             "payment_method": "bank_transfer",
             "transaction_no": "TRX20240101001",
-            "remarks": "首期款"
+            "remarks": "首期款",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/payments/records",
-            headers=headers,
-            json=record_data
+            f"{settings.API_V1_PREFIX}/sales/payments/records", headers=headers, json=record_data
         )
 
         if response.status_code == 404:
@@ -115,15 +106,10 @@ class TestSalesPaymentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        update_data = {
-            "transaction_no": "TRX20240101001-UPDATED",
-            "remarks": "更新备注"
-        }
+        update_data = {"transaction_no": "TRX20240101001-UPDATED", "remarks": "更新备注"}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/sales/payments/records/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/sales/payments/records/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -139,8 +125,7 @@ class TestSalesPaymentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/sales/payments/records/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/payments/records/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -156,8 +141,7 @@ class TestSalesPaymentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/payments/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -173,8 +157,7 @@ class TestSalesPaymentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/records?contract_id=1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/payments/records?contract_id=1", headers=headers
         )
 
         if response.status_code == 404:
@@ -189,10 +172,7 @@ class TestSalesPaymentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/overdue",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/payments/overdue", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Overdue payments API not implemented")
@@ -206,10 +186,7 @@ class TestSalesPaymentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/reminders",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/payments/reminders", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Payment reminders API not implemented")
@@ -223,10 +200,7 @@ class TestSalesPaymentsAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/export",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/payments/export", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Payment export API not implemented")
@@ -244,13 +218,13 @@ class TestSalesPaymentsAPI:
             "record_id": 1,
             "verified": True,
             "verified_by": 1,
-            "verification_date": datetime.now().strftime("%Y-%m-%d")
+            "verification_date": datetime.now().strftime("%Y-%m-%d"),
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/sales/payments/verify",
             headers=headers,
-            json=verification_data
+            json=verification_data,
         )
 
         if response.status_code == 404:
@@ -266,8 +240,7 @@ class TestSalesPaymentsAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/reconciliation?contract_id=1",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/sales/payments/reconciliation?contract_id=1", headers=headers
         )
 
         if response.status_code == 404:
@@ -277,9 +250,7 @@ class TestSalesPaymentsAPI:
 
     def test_payment_unauthorized(self, client: TestClient):
         """测试未授权访问付款"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/sales/payments/records"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/payments/records")
 
         assert response.status_code in [401, 403], response.text
 
@@ -292,13 +263,11 @@ class TestSalesPaymentsAPI:
 
         invalid_data = {
             "amount": -1000.0,  # 负数金额
-            "payment_date": datetime.now().strftime("%Y-%m-%d")
+            "payment_date": datetime.now().strftime("%Y-%m-%d"),
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/sales/payments/records",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/sales/payments/records", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:

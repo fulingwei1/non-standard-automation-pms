@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import MagicMock
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.lead_priority_scoring.opportunity_scoring import OpportunityScoringMixin
 
 

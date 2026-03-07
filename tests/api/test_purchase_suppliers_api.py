@@ -25,10 +25,7 @@ class TestPurchaseSuppliersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/suppliers/", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Suppliers API not implemented")
@@ -52,13 +49,11 @@ class TestPurchaseSuppliersAPI:
             "address": "深圳市南山区",
             "business_scope": "电子元器件、设备",
             "credit_rating": "A",
-            "payment_terms": "月结30天"
+            "payment_terms": "月结30天",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/",
-            headers=headers,
-            json=supplier_data
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/", headers=headers, json=supplier_data
         )
 
         if response.status_code == 404:
@@ -73,10 +68,7 @@ class TestPurchaseSuppliersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/suppliers/1", headers=headers)
 
         if response.status_code in [404, 422]:
             pytest.skip("No supplier data or API not implemented")
@@ -90,15 +82,10 @@ class TestPurchaseSuppliersAPI:
 
         headers = _auth_headers(admin_token)
 
-        update_data = {
-            "credit_rating": "S",
-            "payment_terms": "月结45天"
-        }
+        update_data = {"credit_rating": "S", "payment_terms": "月结45天"}
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/1",
-            headers=headers,
-            json=update_data
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/1", headers=headers, json=update_data
         )
 
         if response.status_code in [404, 422]:
@@ -114,8 +101,7 @@ class TestPurchaseSuppliersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.delete(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/999",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/999", headers=headers
         )
 
         if response.status_code == 404:
@@ -131,8 +117,7 @@ class TestPurchaseSuppliersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/?search=测试",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/?search=测试", headers=headers
         )
 
         if response.status_code == 404:
@@ -148,8 +133,7 @@ class TestPurchaseSuppliersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/?type=manufacturer",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/?type=manufacturer", headers=headers
         )
 
         if response.status_code == 404:
@@ -165,8 +149,7 @@ class TestPurchaseSuppliersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/?rating=A",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/?rating=A", headers=headers
         )
 
         if response.status_code == 404:
@@ -188,13 +171,13 @@ class TestPurchaseSuppliersAPI:
             "service_score": 88,
             "price_score": 80,
             "overall_score": 86,
-            "comments": "整体表现良好"
+            "comments": "整体表现良好",
         }
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/purchase/suppliers/1/evaluate",
             headers=headers,
-            json=evaluation_data
+            json=evaluation_data,
         )
 
         if response.status_code == 404:
@@ -210,8 +193,7 @@ class TestPurchaseSuppliersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/1/performance",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/1/performance", headers=headers
         )
 
         if response.status_code == 404:
@@ -227,8 +209,7 @@ class TestPurchaseSuppliersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/1/orders",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/1/orders", headers=headers
         )
 
         if response.status_code == 404:
@@ -244,8 +225,7 @@ class TestPurchaseSuppliersAPI:
         headers = _auth_headers(admin_token)
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/statistics",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/statistics", headers=headers
         )
 
         if response.status_code == 404:
@@ -260,14 +240,12 @@ class TestPurchaseSuppliersAPI:
 
         headers = _auth_headers(admin_token)
 
-        comparison_data = {
-            "supplier_ids": [1, 2, 3]
-        }
+        comparison_data = {"supplier_ids": [1, 2, 3]}
 
         response = client.post(
             f"{settings.API_V1_PREFIX}/purchase/suppliers/compare",
             headers=headers,
-            json=comparison_data
+            json=comparison_data,
         )
 
         if response.status_code == 404:
@@ -277,9 +255,7 @@ class TestPurchaseSuppliersAPI:
 
     def test_supplier_unauthorized(self, client: TestClient):
         """测试未授权访问供应商"""
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/"
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/purchase/suppliers/")
 
         assert response.status_code in [401, 403], response.text
 
@@ -290,14 +266,10 @@ class TestPurchaseSuppliersAPI:
 
         headers = _auth_headers(admin_token)
 
-        invalid_data = {
-            "contact_email": "invalid-email"  # 无效的邮箱格式
-        }
+        invalid_data = {"contact_email": "invalid-email"}  # 无效的邮箱格式
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/suppliers/",
-            headers=headers,
-            json=invalid_data
+            f"{settings.API_V1_PREFIX}/purchase/suppliers/", headers=headers, json=invalid_data
         )
 
         if response.status_code == 404:

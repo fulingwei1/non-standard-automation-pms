@@ -14,24 +14,23 @@ K1组集成测试 - 审批流程集成测试
   6. 通知发送
 """
 
-import pytest
-from datetime import datetime, date
+import uuid
+from datetime import date, datetime
 
-from sqlalchemy import create_engine, Table, Column, Integer
+import pytest
+from sqlalchemy import Column, Integer, Table, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.models.base import Base
 
-import uuid
-
 _TMPL_001 = f"TMPL-001-{uuid.uuid4().hex[:8]}"
-
 
 
 # ---------------------------------------------------------------------------
 # Fixture
 # ---------------------------------------------------------------------------
+
 
 def _create_test_engine():
     """创建测试专用 SQLite 内存引擎，兼容模型中已知的 FK 与索引问题。"""
@@ -75,8 +74,10 @@ def db():
 # 辅助函数
 # ---------------------------------------------------------------------------
 
+
 def _make_user(db, username="approver01", real_name="审批人"):
     from app.models.user import User
+
     user = User(
         username=username,
         password_hash="hashed_pw",
@@ -91,6 +92,7 @@ def _make_user(db, username="approver01", real_name="审批人"):
 
 def _make_template(db, user_id, code=_TMPL_001, name="项目立项审批"):
     from app.models.approval import ApprovalTemplate
+
     tmpl = ApprovalTemplate(
         template_code=code,
         template_name=name,
@@ -109,6 +111,7 @@ def _make_template(db, user_id, code=_TMPL_001, name="项目立项审批"):
 
 def _make_flow(db, template_id, user_id, name="默认流程"):
     from app.models.approval import ApprovalFlowDefinition
+
     flow = ApprovalFlowDefinition(
         template_id=template_id,
         flow_name=name,
@@ -125,6 +128,7 @@ def _make_flow(db, template_id, user_id, name="默认流程"):
 
 def _make_node(db, flow_id, order=1, name="部门负责人审批"):
     from app.models.approval import ApprovalNodeDefinition
+
     node = ApprovalNodeDefinition(
         flow_id=flow_id,
         node_name=name,
@@ -138,9 +142,18 @@ def _make_node(db, flow_id, order=1, name="部门负责人审批"):
     return node
 
 
-def _make_instance(db, template_id, flow_id, node_id, initiator_id,
-                   instance_no="AP202601200001", entity_type="PROJECT", entity_id=1):
+def _make_instance(
+    db,
+    template_id,
+    flow_id,
+    node_id,
+    initiator_id,
+    instance_no="AP202601200001",
+    entity_type="PROJECT",
+    entity_id=1,
+):
     from app.models.approval import ApprovalInstance
+
     inst = ApprovalInstance(
         instance_no=instance_no,
         template_id=template_id,
@@ -166,6 +179,7 @@ def _make_instance(db, template_id, flow_id, node_id, initiator_id,
 # 测试类
 # ===========================================================================
 
+
 class TestApprovalTemplateSetup:
     """TC-AP-1x: 审批模板与流程定义测试"""
 
@@ -176,6 +190,7 @@ class TestApprovalTemplateSetup:
         db.commit()
 
         from app.models.approval import ApprovalTemplate
+
         saved = db.query(ApprovalTemplate).filter_by(template_code=_TMPL_001).one()
         assert saved.template_name == "项目立项审批"
         assert saved.category == "PROJECT"
@@ -192,9 +207,13 @@ class TestApprovalTemplateSetup:
         db.commit()
 
         from app.models.approval import ApprovalNodeDefinition
-        nodes = db.query(ApprovalNodeDefinition).filter_by(
-            flow_id=flow.id
-        ).order_by(ApprovalNodeDefinition.node_order).all()
+
+        nodes = (
+            db.query(ApprovalNodeDefinition)
+            .filter_by(flow_id=flow.id)
+            .order_by(ApprovalNodeDefinition.node_order)
+            .all()
+        )
 
         assert len(nodes) == 2
         assert nodes[0].node_name == "部门负责人"
@@ -213,16 +232,20 @@ class TestApprovalSubmission:
         flow = _make_flow(db, tmpl.id, initiator.id)
         node = _make_node(db, flow.id)
         instance = _make_instance(
-            db, tmpl.id, flow.id, node.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node.id,
+            initiator.id,
             instance_no="AP202601200002",
-            entity_type="PROJECT", entity_id=100,
+            entity_type="PROJECT",
+            entity_id=100,
         )
         db.commit()
 
         from app.models.approval import ApprovalInstance
-        saved = db.query(ApprovalInstance).filter_by(
-            instance_no="AP202601200002"
-        ).one()
+
+        saved = db.query(ApprovalInstance).filter_by(instance_no="AP202601200002").one()
         assert saved.status == "PENDING"
         assert saved.initiator_id == initiator.id
         assert saved.entity_type == "PROJECT"
@@ -235,11 +258,16 @@ class TestApprovalSubmission:
         flow = _make_flow(db, tmpl.id, initiator.id)
         node = _make_node(db, flow.id)
         instance = _make_instance(
-            db, tmpl.id, flow.id, node.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node.id,
+            initiator.id,
             instance_no="AP202601200003",
         )
 
         from app.models.approval import ApprovalActionLog
+
         submit_log = ApprovalActionLog(
             instance_id=instance.id,
             operator_id=initiator.id,
@@ -251,9 +279,9 @@ class TestApprovalSubmission:
         db.add(submit_log)
         db.commit()
 
-        saved_log = db.query(ApprovalActionLog).filter_by(
-            instance_id=instance.id, action="SUBMIT"
-        ).one()
+        saved_log = (
+            db.query(ApprovalActionLog).filter_by(instance_id=instance.id, action="SUBMIT").one()
+        )
         assert saved_log.operator_id == initiator.id
         assert saved_log.action == "SUBMIT"
 
@@ -269,11 +297,16 @@ class TestApprovalTaskAssignment:
         flow = _make_flow(db, tmpl.id, initiator.id)
         node = _make_node(db, flow.id)
         instance = _make_instance(
-            db, tmpl.id, flow.id, node.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node.id,
+            initiator.id,
             instance_no="AP202601200004",
         )
 
         from app.models.approval import ApprovalTask
+
         task = ApprovalTask(
             instance_id=instance.id,
             node_id=node.id,
@@ -289,6 +322,7 @@ class TestApprovalTaskAssignment:
         db.commit()
 
         from app.models.approval import ApprovalTask as AT
+
         saved = db.query(AT).filter_by(instance_id=instance.id).one()
         assert saved.assignee_id == approver.id
         assert saved.status == "PENDING"
@@ -306,11 +340,16 @@ class TestApprovalApprove:
         flow = _make_flow(db, tmpl.id, initiator.id)
         node = _make_node(db, flow.id)
         instance = _make_instance(
-            db, tmpl.id, flow.id, node.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node.id,
+            initiator.id,
             instance_no="AP202601200005",
         )
 
-        from app.models.approval import ApprovalTask, ApprovalActionLog
+        from app.models.approval import ApprovalActionLog, ApprovalTask
+
         task = ApprovalTask(
             instance_id=instance.id,
             node_id=node.id,
@@ -349,13 +388,13 @@ class TestApprovalApprove:
         db.commit()
 
         from app.models.approval import ApprovalInstance
+
         saved_inst = db.query(ApprovalInstance).get(instance.id)
         assert saved_inst.status == "APPROVED"
 
         from app.models.approval import ApprovalActionLog as AAL
-        approve_log = db.query(AAL).filter_by(
-            instance_id=instance.id, action="APPROVE"
-        ).first()
+
+        approve_log = db.query(AAL).filter_by(instance_id=instance.id, action="APPROVE").first()
         assert approve_log is not None
         assert approve_log.operator_id == approver.id
 
@@ -367,11 +406,16 @@ class TestApprovalApprove:
         flow = _make_flow(db, tmpl.id, initiator.id)
         node = _make_node(db, flow.id)
         instance = _make_instance(
-            db, tmpl.id, flow.id, node.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node.id,
+            initiator.id,
             instance_no="AP202601200006",
         )
 
-        from app.models.approval import ApprovalTask, ApprovalActionLog
+        from app.models.approval import ApprovalActionLog, ApprovalTask
+
         task = ApprovalTask(
             instance_id=instance.id,
             node_id=node.id,
@@ -408,6 +452,7 @@ class TestApprovalApprove:
         db.commit()
 
         from app.models.approval import ApprovalInstance
+
         saved = db.query(ApprovalInstance).get(instance.id)
         assert saved.status == "REJECTED"
 
@@ -423,13 +468,18 @@ class TestApprovalNotification:
         flow = _make_flow(db, tmpl.id, initiator.id)
         node = _make_node(db, flow.id)
         instance = _make_instance(
-            db, tmpl.id, flow.id, node.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node.id,
+            initiator.id,
             instance_no="AP202601200007",
         )
         instance.status = "APPROVED"
         db.flush()
 
         from app.models.notification import Notification
+
         notif = Notification(
             user_id=initiator.id,
             notification_type="APPROVAL_RESULT",
@@ -444,10 +494,15 @@ class TestApprovalNotification:
         db.commit()
 
         from app.models.notification import Notification as N
-        saved = db.query(N).filter_by(
-            user_id=initiator.id,
-            notification_type="APPROVAL_RESULT",
-        ).first()
+
+        saved = (
+            db.query(N)
+            .filter_by(
+                user_id=initiator.id,
+                notification_type="APPROVAL_RESULT",
+            )
+            .first()
+        )
         assert saved is not None
         assert saved.source_id == instance.id
         assert saved.is_read is False
@@ -460,11 +515,16 @@ class TestApprovalNotification:
         flow = _make_flow(db, tmpl.id, initiator.id)
         node = _make_node(db, flow.id)
         instance = _make_instance(
-            db, tmpl.id, flow.id, node.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node.id,
+            initiator.id,
             instance_no="AP202601200008",
         )
 
         from app.models.notification import Notification
+
         notif = Notification(
             user_id=approver.id,
             notification_type="APPROVAL_PENDING",
@@ -479,10 +539,15 @@ class TestApprovalNotification:
         db.commit()
 
         from app.models.notification import Notification as N
-        saved = db.query(N).filter_by(
-            user_id=approver.id,
-            notification_type="APPROVAL_PENDING",
-        ).first()
+
+        saved = (
+            db.query(N)
+            .filter_by(
+                user_id=approver.id,
+                notification_type="APPROVAL_PENDING",
+            )
+            .first()
+        )
         assert saved is not None
         assert saved.source_id == instance.id
 
@@ -502,12 +567,17 @@ class TestApprovalMultiStep:
         node2 = _make_node(db, flow.id, 2, "总经理")
 
         instance = _make_instance(
-            db, tmpl.id, flow.id, node1.id, initiator.id,
+            db,
+            tmpl.id,
+            flow.id,
+            node1.id,
+            initiator.id,
             instance_no="AP202601200009",
         )
         instance.current_node_order = 1
 
-        from app.models.approval import ApprovalTask, ApprovalActionLog
+        from app.models.approval import ApprovalActionLog, ApprovalTask
+
         # 第一级任务
         task1 = ApprovalTask(
             instance_id=instance.id,
@@ -558,7 +628,9 @@ class TestApprovalMultiStep:
         instance.status = "APPROVED"
         db.commit()
 
-        from app.models.approval import ApprovalInstance, ApprovalTask as AT
+        from app.models.approval import ApprovalInstance
+        from app.models.approval import ApprovalTask as AT
+
         saved_inst = db.query(ApprovalInstance).get(instance.id)
         assert saved_inst.status == "APPROVED"
         assert saved_inst.current_node_order == 2

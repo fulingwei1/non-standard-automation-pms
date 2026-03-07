@@ -16,6 +16,7 @@ from .roles import get_manageable_employees, get_user_manager_roles
 
 __all__ = ["PerformanceService"]
 
+
 # 将方法添加到类中，保持向后兼容
 def _patch_methods():
     """将模块函数作为静态方法添加到类中"""
@@ -26,5 +27,6 @@ def _patch_methods():
     PerformanceService.calculate_quarterly_score = staticmethod(calculate_quarterly_score)
     PerformanceService.get_score_level = staticmethod(get_score_level)
     PerformanceService.get_historical_performance = staticmethod(get_historical_performance)
+
 
 _patch_methods()

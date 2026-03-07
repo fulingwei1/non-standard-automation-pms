@@ -54,11 +54,18 @@ class TestCheckAndCreateInvoiceRequest:
         assert "未找到" in result["message"]
 
     @patch("app.services.invoice_auto_service.main.check_deliverables_complete", return_value=True)
-    @patch("app.services.invoice_auto_service.main.check_acceptance_issues_resolved", return_value=True)
-    @patch("app.services.invoice_auto_service.main.create_invoice_request", return_value={"success": True})
+    @patch(
+        "app.services.invoice_auto_service.main.check_acceptance_issues_resolved", return_value=True
+    )
+    @patch(
+        "app.services.invoice_auto_service.main.create_invoice_request",
+        return_value={"success": True},
+    )
     @patch("app.services.invoice_auto_service.main.send_invoice_notifications")
     @patch("app.services.invoice_auto_service.main.log_auto_invoice")
-    def test_creates_invoice_request(self, mock_log, mock_notify, mock_create, mock_issues, mock_deliv):
+    def test_creates_invoice_request(
+        self, mock_log, mock_notify, mock_create, mock_issues, mock_deliv
+    ):
         service = _make_service()
         order = _make_order()
         milestone = MagicMock()
@@ -70,7 +77,7 @@ class TestCheckAndCreateInvoiceRequest:
         service.db.query.return_value.filter.return_value.first.return_value = order
         service.db.query.return_value.filter.return_value.all.side_effect = [
             [milestone],  # milestones
-            [plan],       # payment_plans
+            [plan],  # payment_plans
         ]
 
         result = check_and_create_invoice_request(service, 1)

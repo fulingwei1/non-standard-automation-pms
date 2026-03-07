@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 
 from app.models.approval import ApprovalTask
 
+
 class ReminderNotificationsMixin:
     """提醒通知 Mixin"""
 

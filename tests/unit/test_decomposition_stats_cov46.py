@@ -2,10 +2,10 @@
 """第四十六批 - 分解统计单元测试"""
 import pytest
 
-pytest.importorskip("app.services.strategy.decomposition.stats",
-                    reason="依赖不满足，跳过")
+pytest.importorskip("app.services.strategy.decomposition.stats", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock
+
 from app.services.strategy.decomposition.stats import get_decomposition_stats
 
 
@@ -74,6 +74,7 @@ class TestGetDecompositionStats:
     def test_uses_current_year_when_year_not_specified(self):
         db = _make_db_with_counts()
         from datetime import date
+
         result = get_decomposition_stats(db, strategy_id=1)
         assert result["year"] == date.today().year
 

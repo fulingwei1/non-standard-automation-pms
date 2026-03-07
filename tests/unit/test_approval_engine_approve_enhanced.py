@@ -7,7 +7,7 @@ approval_engine/approve.py 增强单元测试
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -40,7 +40,7 @@ class TestApprove:
             task_type="APPROVAL",
             task_order=1,
         )
-        
+
         # 创建关联的实例
         instance = ApprovalInstance(
             id=1,
@@ -51,7 +51,7 @@ class TestApprove:
             initiator_id=99,
         )
         task.instance = instance
-        
+
         # 创建关联的节点
         node = ApprovalNodeDefinition(
             id=node_id,
@@ -60,17 +60,14 @@ class TestApprove:
             node_order=1,
         )
         task.node = node
-        
+
         return task
 
     def _create_mock_user(self, user_id=100, username="testuser", real_name="测试用户"):
         """创建模拟用户对象"""
         user = User(
-            id=user_id,
-            username=username,
-            real_name=real_name,
-        password_hash="test_hash_123"
-    )
+            id=user_id, username=username, real_name=real_name, password_hash="test_hash_123"
+        )
         return user
 
     def test_approve_success_with_next_node(self):
@@ -247,21 +244,21 @@ class TestReject:
             assignee_id=100,
             status="PENDING",
         )
-        
+
         instance = ApprovalInstance(
             id=1,
             instance_no="AP2602210001",
             status="IN_PROGRESS",
         )
         task.instance = instance
-        
+
         node = ApprovalNodeDefinition(
             id=10,
             flow_id=1,
             node_name="审批节点",
         )
         task.node = node
-        
+
         return task
 
     def test_reject_to_start_success(self):
@@ -490,14 +487,14 @@ class TestReturnTo:
             assignee_id=100,
             status="PENDING",
         )
-        
+
         instance = ApprovalInstance(
             id=1,
             instance_no="AP2602210001",
             status="IN_PROGRESS",
         )
         task.instance = instance
-        
+
         return task
 
     def test_return_to_success(self):
@@ -621,14 +618,14 @@ class TestTransfer:
             task_order=1,
             due_at=datetime.now() + timedelta(days=3),
         )
-        
+
         instance = ApprovalInstance(
             id=1,
             instance_no="AP2602210001",
             status="IN_PROGRESS",
         )
         task.instance = instance
-        
+
         node = ApprovalNodeDefinition(
             id=10,
             flow_id=1,
@@ -636,7 +633,7 @@ class TestTransfer:
             can_transfer=can_transfer,
         )
         task.node = node
-        
+
         return task
 
     def test_transfer_success(self):
@@ -653,8 +650,12 @@ class TestTransfer:
         to_user.username = "lisi"
 
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=from_user)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=to_user)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=from_user)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=to_user)))
+            ),
         ]
         self.mock_db.query.side_effect = mock_queries
 
@@ -664,8 +665,10 @@ class TestTransfer:
 
         # 捕获新创建的任务
         added_tasks = []
+
         def mock_add(obj):
             added_tasks.append(obj)
+
         self.mock_db.add.side_effect = mock_add
 
         result = self.service.transfer(
@@ -743,8 +746,12 @@ class TestTransfer:
         to_user.username = "sunqi"
 
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=from_user)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=to_user)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=from_user)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=to_user)))
+            ),
         ]
         self.mock_db.query.side_effect = mock_queries
 
@@ -779,8 +786,12 @@ class TestTransfer:
         to_user.username = "user2"
 
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=from_user)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=to_user)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=from_user)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=to_user)))
+            ),
         ]
         self.mock_db.query.side_effect = mock_queries
 
@@ -821,14 +832,14 @@ class TestAddApprover:
             task_order=1,
             due_at=datetime.now() + timedelta(days=3),
         )
-        
+
         instance = ApprovalInstance(
             id=1,
             instance_no="AP2602210001",
             status="IN_PROGRESS",
         )
         task.instance = instance
-        
+
         node = ApprovalNodeDefinition(
             id=10,
             flow_id=1,
@@ -836,7 +847,7 @@ class TestAddApprover:
             can_add_approver=can_add_approver,
         )
         task.node = node
-        
+
         return task
 
     def test_add_approver_after_success(self):
@@ -857,9 +868,15 @@ class TestAddApprover:
         approver2.username = "wangwu"
 
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver1)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver2)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver1)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver2)))
+            ),
         ]
         self.mock_db.query.side_effect = mock_queries
 
@@ -906,8 +923,12 @@ class TestAddApprover:
         approver.username = "sunqi"
 
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver)))
+            ),
         ]
         self.mock_db.query.side_effect = mock_queries
 
@@ -927,7 +948,7 @@ class TestAddApprover:
         )
 
         assert len(added_tasks) == 1
-        
+
         # 前加签的任务应为PENDING
         new_task = added_tasks[0]
         assert new_task.status == "PENDING"
@@ -966,8 +987,12 @@ class TestAddApprover:
 
         # 第二个用户不存在
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver1)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver1)))
+            ),
             MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=None)))),
         ]
         self.mock_db.query.side_effect = mock_queries
@@ -1002,8 +1027,12 @@ class TestAddApprover:
         approver.username = "feng11"
 
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver)))
+            ),
         ]
         self.mock_db.query.side_effect = mock_queries
 
@@ -1045,9 +1074,15 @@ class TestAddApprover:
         approver2.username = "wei14"
 
         mock_queries = [
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver1)))),
-            MagicMock(filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver2)))),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=operator)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver1)))
+            ),
+            MagicMock(
+                filter=MagicMock(return_value=MagicMock(first=MagicMock(return_value=approver2)))
+            ),
         ]
         self.mock_db.query.side_effect = mock_queries
 

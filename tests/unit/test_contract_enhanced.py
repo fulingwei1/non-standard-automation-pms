@@ -12,9 +12,8 @@
 import unittest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
-from app.services.sales.contract_enhanced import ContractEnhancedService
 from app.models.sales.contracts import (
     Contract,
     ContractApproval,
@@ -22,12 +21,13 @@ from app.models.sales.contracts import (
     ContractTerm,
 )
 from app.schemas.sales.contract_enhanced import (
-    ContractCreate,
-    ContractUpdate,
-    ContractTermCreate,
     ContractAttachmentCreate,
+    ContractCreate,
     ContractStats,
+    ContractTermCreate,
+    ContractUpdate,
 )
+from app.services.sales.contract_enhanced import ContractEnhancedService
 
 
 class TestContractCRUD(unittest.TestCase):
@@ -52,7 +52,7 @@ class TestContractCRUD(unittest.TestCase):
             received_amount=Decimal("0.00"),
             start_date=datetime(2026, 1, 1).date(),
             end_date=datetime(2026, 12, 31).date(),
-            terms=[]
+            terms=[],
         )
 
         # Mock数据库操作
@@ -89,8 +89,8 @@ class TestContractCRUD(unittest.TestCase):
             end_date=datetime(2026, 12, 31).date(),
             terms=[
                 ContractTermCreate(term_type="payment", term_content="付款条款"),
-                ContractTermCreate(term_type="delivery", term_content="交付条款")
-            ]
+                ContractTermCreate(term_type="delivery", term_content="交付条款"),
+            ],
         )
 
         # Mock
@@ -100,7 +100,7 @@ class TestContractCRUD(unittest.TestCase):
         self.db.refresh = MagicMock()
 
         # Mock _generate_contract_code
-        with patch.object(self.service, '_generate_contract_code', return_value='HT-20260221-001'):
+        with patch.object(self.service, "_generate_contract_code", return_value="HT-20260221-001"):
             result = self.service.create_contract(self.db, contract_data, user_id=1)
 
         # 验证：应该添加1个合同 + 2个条款
@@ -120,7 +120,7 @@ class TestContractCRUD(unittest.TestCase):
         mock_query.filter.return_value.order_by.return_value.first.return_value = None
         self.db.query.return_value = mock_query
 
-        with patch('app.services.sales.contract_enhanced.datetime') as mock_dt:
+        with patch("app.services.sales.contract_enhanced.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 21, 10, 0, 0)
             mock_dt.strftime = datetime.strftime
             code = self.service._generate_contract_code(self.db)
@@ -132,12 +132,12 @@ class TestContractCRUD(unittest.TestCase):
         # Mock查询：找到最后一个合同
         last_contract = Mock()
         last_contract.contract_code = "HT-20260221-005"
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = last_contract
         self.db.query.return_value = mock_query
 
-        with patch('app.services.sales.contract_enhanced.datetime') as mock_dt:
+        with patch("app.services.sales.contract_enhanced.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 21, 10, 0, 0)
             mock_dt.strftime = datetime.strftime
             code = self.service._generate_contract_code(self.db)
@@ -175,10 +175,12 @@ class TestContractCRUD(unittest.TestCase):
     def test_get_contracts_no_filter(self):
         """测试获取合同列表（无筛选）"""
         mock_contracts = [Mock(spec=Contract) for _ in range(3)]
-        
+
         mock_query = MagicMock()
         mock_query.count.return_value = 3
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_contracts
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_contracts
+        )
         self.db.query.return_value = mock_query
 
         contracts, total = self.service.get_contracts(self.db)
@@ -189,11 +191,13 @@ class TestContractCRUD(unittest.TestCase):
     def test_get_contracts_with_status_filter(self):
         """测试按状态筛选合同"""
         mock_contracts = [Mock(spec=Contract)]
-        
+
         mock_query = MagicMock()
         mock_filter = MagicMock()
         mock_filter.count.return_value = 1
-        mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_contracts
+        mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_contracts
+        )
         mock_query.filter.return_value = mock_filter
         self.db.query.return_value = mock_query
 
@@ -205,11 +209,13 @@ class TestContractCRUD(unittest.TestCase):
     def test_get_contracts_with_keyword_search(self):
         """测试关键词搜索"""
         mock_contracts = [Mock(spec=Contract)]
-        
+
         mock_query = MagicMock()
         mock_filter = MagicMock()
         mock_filter.count.return_value = 1
-        mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_contracts
+        mock_filter.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_contracts
+        )
         mock_query.filter.return_value = mock_filter
         self.db.query.return_value = mock_query
 
@@ -220,10 +226,12 @@ class TestContractCRUD(unittest.TestCase):
     def test_get_contracts_with_pagination(self):
         """测试分页"""
         mock_contracts = [Mock(spec=Contract) for _ in range(10)]
-        
+
         mock_query = MagicMock()
         mock_query.count.return_value = 50
-        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mock_contracts
+        mock_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            mock_contracts
+        )
         self.db.query.return_value = mock_query
 
         contracts, total = self.service.get_contracts(self.db, skip=20, limit=10)
@@ -285,10 +293,10 @@ class TestContractCRUD(unittest.TestCase):
         self.db.query.return_value = mock_query
 
         update_data = ContractUpdate(contract_name="更新")
-        
+
         with self.assertRaises(ValueError) as ctx:
             self.service.update_contract(self.db, contract_id=1, contract_data=update_data)
-        
+
         self.assertIn("只能更新草稿状态的合同", str(ctx.exception))
 
     def test_update_contract_not_found(self):
@@ -313,7 +321,7 @@ class TestContractCRUD(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = mock_contract
         self.db.query.return_value = mock_query
 
-        with patch('app.services.sales.contract_enhanced.delete_obj') as mock_delete:
+        with patch("app.services.sales.contract_enhanced.delete_obj") as mock_delete:
             result = self.service.delete_contract(self.db, contract_id=1)
             mock_delete.assert_called_once_with(self.db, mock_contract)
 
@@ -330,7 +338,7 @@ class TestContractCRUD(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.delete_contract(self.db, contract_id=1)
-        
+
         self.assertIn("只能删除草稿状态的合同", str(ctx.exception))
 
     def test_delete_contract_not_found(self):
@@ -382,7 +390,7 @@ class TestContractApproval(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.submit_for_approval(self.db, contract_id=999, user_id=1)
-        
+
         self.assertIn("合同不存在", str(ctx.exception))
 
     def test_submit_for_approval_not_draft(self):
@@ -396,7 +404,7 @@ class TestContractApproval(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.submit_for_approval(self.db, contract_id=1, user_id=1)
-        
+
         self.assertIn("只能提交草稿状态的合同", str(ctx.exception))
 
     # ========== _create_approval_flow 测试 ==========
@@ -406,7 +414,9 @@ class TestContractApproval(unittest.TestCase):
         self.db.add = MagicMock()
         self.db.flush = MagicMock()
 
-        approvals = self.service._create_approval_flow(self.db, contract_id=1, amount=Decimal("50000"))
+        approvals = self.service._create_approval_flow(
+            self.db, contract_id=1, amount=Decimal("50000")
+        )
 
         self.assertEqual(len(approvals), 1)
         self.assertEqual(approvals[0].approval_role, "sales_manager")
@@ -417,7 +427,9 @@ class TestContractApproval(unittest.TestCase):
         self.db.add = MagicMock()
         self.db.flush = MagicMock()
 
-        approvals = self.service._create_approval_flow(self.db, contract_id=1, amount=Decimal("300000"))
+        approvals = self.service._create_approval_flow(
+            self.db, contract_id=1, amount=Decimal("300000")
+        )
 
         self.assertEqual(len(approvals), 1)
         self.assertEqual(approvals[0].approval_role, "sales_director")
@@ -427,7 +439,9 @@ class TestContractApproval(unittest.TestCase):
         self.db.add = MagicMock()
         self.db.flush = MagicMock()
 
-        approvals = self.service._create_approval_flow(self.db, contract_id=1, amount=Decimal("800000"))
+        approvals = self.service._create_approval_flow(
+            self.db, contract_id=1, amount=Decimal("800000")
+        )
 
         self.assertEqual(len(approvals), 3)
         self.assertEqual(approvals[0].approval_role, "sales_director")
@@ -455,7 +469,7 @@ class TestContractApproval(unittest.TestCase):
         # Mock query链
         def query_side_effect(model):
             query_call_count[0] += 1
-            
+
             # 第一次：查询审批记录
             if query_call_count[0] == 1:
                 mock_query = MagicMock()
@@ -479,7 +493,7 @@ class TestContractApproval(unittest.TestCase):
         self.db.commit = MagicMock()
         self.db.refresh = MagicMock()
 
-        with patch('app.services.sales.contract_enhanced.datetime') as mock_dt:
+        with patch("app.services.sales.contract_enhanced.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 21, 10, 0, 0)
             result = self.service.approve_contract(
                 self.db, contract_id=1, approval_id=1, user_id=1, opinion="同意"
@@ -498,7 +512,7 @@ class TestContractApproval(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.approve_contract(self.db, contract_id=1, approval_id=999, user_id=1)
-        
+
         self.assertIn("审批记录不存在", str(ctx.exception))
 
     def test_approve_contract_already_processed(self):
@@ -512,7 +526,7 @@ class TestContractApproval(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.approve_contract(self.db, contract_id=1, approval_id=1, user_id=1)
-        
+
         self.assertIn("该审批已处理", str(ctx.exception))
 
     def test_approve_contract_still_pending(self):
@@ -544,11 +558,9 @@ class TestContractApproval(unittest.TestCase):
         self.db.commit = MagicMock()
         self.db.refresh = MagicMock()
 
-        with patch('app.services.sales.contract_enhanced.datetime') as mock_dt:
+        with patch("app.services.sales.contract_enhanced.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 21, 10, 0, 0)
-            result = self.service.approve_contract(
-                self.db, contract_id=1, approval_id=1, user_id=1
-            )
+            result = self.service.approve_contract(self.db, contract_id=1, approval_id=1, user_id=1)
 
         # 合同状态应该保持approving
         self.assertEqual(mock_contract.status, "approving")
@@ -579,7 +591,7 @@ class TestContractApproval(unittest.TestCase):
         self.db.commit = MagicMock()
         self.db.refresh = MagicMock()
 
-        with patch('app.services.sales.contract_enhanced.datetime') as mock_dt:
+        with patch("app.services.sales.contract_enhanced.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 21, 10, 0, 0)
             result = self.service.reject_contract(
                 self.db, contract_id=1, approval_id=1, user_id=1, opinion="不同意"
@@ -615,7 +627,7 @@ class TestContractTerms(unittest.TestCase):
         """测试添加条款成功"""
         term_data = ContractTermCreate(term_type="payment", term_content="付款条款")
 
-        with patch('app.services.sales.contract_enhanced.save_obj') as mock_save:
+        with patch("app.services.sales.contract_enhanced.save_obj") as mock_save:
             result = self.service.add_term(self.db, contract_id=1, term_data=term_data)
             mock_save.assert_called_once()
 
@@ -667,7 +679,7 @@ class TestContractTerms(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = mock_term
         self.db.query.return_value = mock_query
 
-        with patch('app.services.sales.contract_enhanced.delete_obj') as mock_delete:
+        with patch("app.services.sales.contract_enhanced.delete_obj") as mock_delete:
             result = self.service.delete_term(self.db, term_id=1)
             mock_delete.assert_called_once_with(self.db, mock_term)
 
@@ -694,12 +706,10 @@ class TestContractAttachments(unittest.TestCase):
     def test_add_attachment_success(self):
         """测试添加附件成功"""
         attachment_data = ContractAttachmentCreate(
-            file_name="合同扫描件.pdf",
-            file_path="/uploads/contract.pdf",
-            file_size=102400
+            file_name="合同扫描件.pdf", file_path="/uploads/contract.pdf", file_size=102400
         )
 
-        with patch('app.services.sales.contract_enhanced.save_obj') as mock_save:
+        with patch("app.services.sales.contract_enhanced.save_obj") as mock_save:
             result = self.service.add_attachment(
                 self.db, contract_id=1, attachment_data=attachment_data, user_id=1
             )
@@ -725,7 +735,7 @@ class TestContractAttachments(unittest.TestCase):
         mock_query.filter.return_value.first.return_value = mock_attachment
         self.db.query.return_value = mock_query
 
-        with patch('app.services.sales.contract_enhanced.delete_obj') as mock_delete:
+        with patch("app.services.sales.contract_enhanced.delete_obj") as mock_delete:
             result = self.service.delete_attachment(self.db, attachment_id=1)
             mock_delete.assert_called_once_with(self.db, mock_attachment)
 
@@ -780,7 +790,7 @@ class TestContractStatusFlow(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.mark_as_signed(self.db, contract_id=1)
-        
+
         self.assertIn("只能标记已审批的合同为已签署", str(ctx.exception))
 
     def test_mark_as_signed_not_found(self):
@@ -791,7 +801,7 @@ class TestContractStatusFlow(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.mark_as_signed(self.db, contract_id=999)
-        
+
         self.assertIn("合同不存在", str(ctx.exception))
 
     # ========== mark_as_executing 测试 ==========
@@ -824,7 +834,7 @@ class TestContractStatusFlow(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.mark_as_executing(self.db, contract_id=1)
-        
+
         self.assertIn("只能标记已签署的合同为执行中", str(ctx.exception))
 
     # ========== mark_as_completed 测试 ==========
@@ -857,7 +867,7 @@ class TestContractStatusFlow(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.mark_as_completed(self.db, contract_id=1)
-        
+
         self.assertIn("只能标记执行中的合同为已完成", str(ctx.exception))
 
     # ========== void_contract 测试 ==========
@@ -890,7 +900,7 @@ class TestContractStatusFlow(unittest.TestCase):
 
         with self.assertRaises(ValueError) as ctx:
             self.service.void_contract(self.db, contract_id=1)
-        
+
         self.assertIn("已完成的合同不能作废", str(ctx.exception))
 
 
@@ -903,10 +913,11 @@ class TestContractStats(unittest.TestCase):
 
     def test_get_contract_stats(self):
         """测试获取合同统计"""
+
         # Mock各种查询的返回值
         def query_side_effect(model_or_func):
             mock_query = MagicMock()
-            
+
             # 总数查询
             if str(model_or_func).startswith("count"):
                 mock_filter = MagicMock()
@@ -914,12 +925,12 @@ class TestContractStats(unittest.TestCase):
                 mock_query.filter.return_value.scalar.return_value = 2  # 每个状态2个
                 mock_query.scalar.return_value = 10  # total_count
                 return mock_query
-            
+
             # 金额查询
             if "sum" in str(model_or_func):
                 mock_query.scalar.return_value = Decimal("1000000")
                 return mock_query
-            
+
             return mock_query
 
         self.db.query.side_effect = query_side_effect
@@ -931,6 +942,7 @@ class TestContractStats(unittest.TestCase):
 
     def test_get_contract_stats_empty_db(self):
         """测试空数据库的统计"""
+
         def query_side_effect(model_or_func):
             mock_query = MagicMock()
             mock_query.scalar.return_value = None

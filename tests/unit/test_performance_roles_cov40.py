@@ -3,15 +3,17 @@
 第四十批覆盖测试 - 绩效管理服务角色函数
 """
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.performance_service.roles import (
-        get_user_manager_roles,
         get_manageable_employees,
+        get_user_manager_roles,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -60,6 +62,7 @@ class TestGetUserManagerRoles:
         def side_effect(model):
             from app.models.organization import Department
             from app.models.project import Project
+
             if model is Department:
                 return dept_query
             return project_query
@@ -78,6 +81,7 @@ class TestGetUserManagerRoles:
         proj2.id = 102
 
         from app.models.project import Project
+
         project_query = MagicMock()
         project_query.filter.return_value.all.return_value = [proj1, proj2]
 
@@ -94,7 +98,12 @@ class TestGetUserManagerRoles:
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         result = get_user_manager_roles(mock_db, user)
-        for key in ("is_dept_manager", "is_project_manager", "managed_dept_id", "managed_project_ids"):
+        for key in (
+            "is_dept_manager",
+            "is_project_manager",
+            "managed_dept_id",
+            "managed_project_ids",
+        ):
             assert key in result
 
 
@@ -105,9 +114,15 @@ class TestGetManageableEmployees:
         mock_db.query.return_value.filter.return_value.all.return_value = []
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch("app.services.performance_service.roles.get_user_manager_roles",
-                   return_value={"is_dept_manager": False, "is_project_manager": False,
-                                 "managed_dept_id": None, "managed_project_ids": []}):
+        with patch(
+            "app.services.performance_service.roles.get_user_manager_roles",
+            return_value={
+                "is_dept_manager": False,
+                "is_project_manager": False,
+                "managed_dept_id": None,
+                "managed_project_ids": [],
+            },
+        ):
             result = get_manageable_employees(mock_db, user)
         assert isinstance(result, list)
 
@@ -115,9 +130,15 @@ class TestGetManageableEmployees:
         user = _make_user(employee_id=None)
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.services.performance_service.roles.get_user_manager_roles",
-                   return_value={"is_dept_manager": False, "is_project_manager": True,
-                                 "managed_dept_id": None, "managed_project_ids": [1]}):
+        with patch(
+            "app.services.performance_service.roles.get_user_manager_roles",
+            return_value={
+                "is_dept_manager": False,
+                "is_project_manager": True,
+                "managed_dept_id": None,
+                "managed_project_ids": [1],
+            },
+        ):
             mock_db.query.return_value.filter.return_value.all.return_value = []
             result = get_manageable_employees(mock_db, user, period="2024-01")
         assert isinstance(result, list)

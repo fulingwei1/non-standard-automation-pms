@@ -2,15 +2,17 @@
 """
 resource_plan_service.py 单元测试（第二批）
 """
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 # ─── 1. calculate_fill_rate ──────────────────────────────────────────────────
 def test_fill_rate_empty():
     from app.services.resource_plan_service import ResourcePlanService
+
     assert ResourcePlanService.calculate_fill_rate([]) == 100.0
 
 
@@ -58,8 +60,7 @@ def test_date_overlap_exists():
     from app.services.resource_plan_service import ResourcePlanService
 
     overlap = ResourcePlanService.calculate_date_overlap(
-        date(2024, 1, 1), date(2024, 1, 31),
-        date(2024, 1, 15), date(2024, 2, 15)
+        date(2024, 1, 1), date(2024, 1, 31), date(2024, 1, 15), date(2024, 2, 15)
     )
     assert overlap == (date(2024, 1, 15), date(2024, 1, 31))
 
@@ -68,8 +69,7 @@ def test_date_overlap_no_overlap():
     from app.services.resource_plan_service import ResourcePlanService
 
     overlap = ResourcePlanService.calculate_date_overlap(
-        date(2024, 1, 1), date(2024, 1, 31),
-        date(2024, 2, 1), date(2024, 2, 28)
+        date(2024, 1, 1), date(2024, 1, 31), date(2024, 2, 1), date(2024, 2, 28)
     )
     assert overlap is None
 
@@ -77,7 +77,9 @@ def test_date_overlap_no_overlap():
 def test_date_overlap_missing_dates():
     from app.services.resource_plan_service import ResourcePlanService
 
-    overlap = ResourcePlanService.calculate_date_overlap(None, date(2024, 1, 31), date(2024, 1, 1), None)
+    overlap = ResourcePlanService.calculate_date_overlap(
+        None, date(2024, 1, 31), date(2024, 1, 1), None
+    )
     assert overlap is None
 
 
@@ -86,8 +88,7 @@ def test_date_overlap_adjacent():
 
     # 紧邻（同一天结束/开始）
     overlap = ResourcePlanService.calculate_date_overlap(
-        date(2024, 1, 1), date(2024, 1, 15),
-        date(2024, 1, 15), date(2024, 1, 31)
+        date(2024, 1, 1), date(2024, 1, 15), date(2024, 1, 15), date(2024, 1, 31)
     )
     assert overlap == (date(2024, 1, 15), date(2024, 1, 15))
 
@@ -95,16 +96,19 @@ def test_date_overlap_adjacent():
 # ─── 3. calculate_conflict_severity ─────────────────────────────────────────
 def test_conflict_severity_high():
     from app.services.resource_plan_service import ResourcePlanService
+
     assert ResourcePlanService.calculate_conflict_severity(Decimal("150")) == "HIGH"
 
 
 def test_conflict_severity_medium():
     from app.services.resource_plan_service import ResourcePlanService
+
     assert ResourcePlanService.calculate_conflict_severity(Decimal("125")) == "MEDIUM"
 
 
 def test_conflict_severity_low():
     from app.services.resource_plan_service import ResourcePlanService
+
     assert ResourcePlanService.calculate_conflict_severity(Decimal("110")) == "LOW"
 
 

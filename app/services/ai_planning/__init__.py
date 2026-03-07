@@ -3,16 +3,16 @@
 AI项目规划助手服务模块
 """
 
+from .glm_service import GLMService
 from .plan_generator import AIProjectPlanGenerator
-from .wbs_decomposer import AIWbsDecomposer
 from .resource_optimizer import AIResourceOptimizer
 from .schedule_optimizer import AIScheduleOptimizer
-from .glm_service import GLMService
+from .wbs_decomposer import AIWbsDecomposer
 
 __all__ = [
-    'AIProjectPlanGenerator',
-    'AIWbsDecomposer',
-    'AIResourceOptimizer',
-    'AIScheduleOptimizer',
-    'GLMService',
+    "AIProjectPlanGenerator",
+    "AIWbsDecomposer",
+    "AIResourceOptimizer",
+    "AIScheduleOptimizer",
+    "GLMService",
 ]

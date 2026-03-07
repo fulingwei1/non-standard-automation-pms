@@ -18,8 +18,8 @@ from app.api import deps
 from app.core import security
 from app.models.sales import Contract, ContractDeliverable, Opportunity
 from app.models.user import User
-
 from app.utils.db_helpers import get_or_404
+
 router = APIRouter()
 
 
@@ -43,7 +43,13 @@ def export_contracts(
 
     query = db.query(Contract)
     if keyword:
-        query = query.filter(or_(Contract.contract_code.contains(keyword), Contract.contract_name.contains(keyword), Contract.opportunity.has(Opportunity.opp_name.contains(keyword))))
+        query = query.filter(
+            or_(
+                Contract.contract_code.contains(keyword),
+                Contract.contract_name.contains(keyword),
+                Contract.opportunity.has(Opportunity.opp_name.contains(keyword)),
+            )
+        )
     if status:
         query = query.filter(Contract.status == status)
     if customer_id:
@@ -57,29 +63,54 @@ def export_contracts(
         {"key": "contract_code", "label": "合同编码", "width": 15},
         {"key": "contract_name", "label": "合同名称", "width": 30},
         {"key": "customer_name", "label": "客户名称", "width": 25},
-        {"key": "contract_amount", "label": "合同金额", "width": 15, "format": export_service.format_currency},
-        {"key": "signed_date", "label": "签订日期", "width": 12, "format": export_service.format_date},
-        {"key": "delivery_deadline", "label": "交期", "width": 12, "format": export_service.format_date},
+        {
+            "key": "contract_amount",
+            "label": "合同金额",
+            "width": 15,
+            "format": export_service.format_currency,
+        },
+        {
+            "key": "signed_date",
+            "label": "签订日期",
+            "width": 12,
+            "format": export_service.format_date,
+        },
+        {
+            "key": "delivery_deadline",
+            "label": "交期",
+            "width": 12,
+            "format": export_service.format_date,
+        },
         {"key": "status", "label": "状态", "width": 12},
         {"key": "project_code", "label": "项目编码", "width": 15},
         {"key": "owner_name", "label": "负责人", "width": 12},
-        {"key": "created_at", "label": "创建时间", "width": 18, "format": export_service.format_date},
+        {
+            "key": "created_at",
+            "label": "创建时间",
+            "width": 18,
+            "format": export_service.format_date,
+        },
     ]
 
-    data = [{
-        "contract_code": contract.contract_code,
-        "contract_name": contract.contract_name or '',
-        "customer_name": contract.customer.customer_name if contract.customer else '',
-        "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
-        "signed_date": contract.signing_date,
-        "delivery_deadline": contract.delivery_deadline,
-        "status": contract.status,
-        "project_code": contract.project.project_code if contract.project else '',
-        "owner_name": contract.sales_owner.real_name if contract.sales_owner else '',
-        "created_at": contract.created_at,
-    } for contract in contracts]
+    data = [
+        {
+            "contract_code": contract.contract_code,
+            "contract_name": contract.contract_name or "",
+            "customer_name": contract.customer.customer_name if contract.customer else "",
+            "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
+            "signed_date": contract.signing_date,
+            "delivery_deadline": contract.delivery_deadline,
+            "status": contract.status,
+            "project_code": contract.project.project_code if contract.project else "",
+            "owner_name": contract.sales_owner.real_name if contract.sales_owner else "",
+            "created_at": contract.created_at,
+        }
+        for contract in contracts
+    ]
 
-    excel_data = export_service.export_to_excel(data=data, columns=columns, sheet_name="合同列表", title="合同列表")
+    excel_data = export_service.export_to_excel(
+        data=data, columns=columns, sheet_name="合同列表", title="合同列表"
+    )
     filename = f"合同列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return create_excel_response(excel_data, filename)
 
@@ -98,25 +129,30 @@ def export_contract_pdf(
 
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
-    deliverables = db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    deliverables = (
+        db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
+    )
 
     # 准备数据
     contract_data = {
         "contract_code": contract.contract_code,
-        "contract_name": contract.contract_name or '',
-        "customer_name": contract.customer.customer_name if contract.customer else '',
+        "contract_name": contract.contract_name or "",
+        "customer_name": contract.customer.customer_name if contract.customer else "",
         "contract_amount": float(contract.contract_amount) if contract.contract_amount else 0,
         "signed_date": contract.signing_date,
         "delivery_deadline": contract.delivery_deadline,
         "status": contract.status,
     }
 
-    deliverable_list = [{
-        "deliverable_name": d.deliverable_name or '',
-        "quantity": float(d.quantity) if d.quantity else 0,
-        "unit": d.unit or '',
-        "remark": d.remark or '',
-    } for d in deliverables]
+    deliverable_list = [
+        {
+            "deliverable_name": d.deliverable_name or "",
+            "quantity": float(d.quantity) if d.quantity else 0,
+            "unit": d.unit or "",
+            "remark": d.remark or "",
+        }
+        for d in deliverables
+    ]
 
     pdf_service = PDFExportService()
     pdf_data = pdf_service.export_contract_to_pdf(contract_data, deliverable_list)

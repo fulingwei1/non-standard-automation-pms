@@ -2,15 +2,21 @@
 """
 第三十二批覆盖率测试 - 机台管理服务 (扩展)
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.machine_service import (
-        MachineService, ProjectAggregationService,
-        VALID_STAGES, VALID_HEALTH, STAGE_PRIORITY, HEALTH_PRIORITY,
+        HEALTH_PRIORITY,
+        STAGE_PRIORITY,
+        VALID_HEALTH,
+        VALID_STAGES,
+        MachineService,
+        ProjectAggregationService,
     )
+
     HAS_MS = True
 except Exception:
     HAS_MS = False

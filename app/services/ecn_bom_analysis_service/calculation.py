@@ -16,7 +16,7 @@ def calculate_cost_impact(
     service: "EcnBomAnalysisService",
     affected_materials: List[EcnAffectedMaterial],
     bom_items: List[BomItem],
-    affected_item_ids: Set[int]
+    affected_item_ids: Set[int],
 ) -> Decimal:
     """计算成本影响"""
     total_impact = Decimal(0)
@@ -32,14 +32,17 @@ def calculate_cost_impact(
         if bom_item and bom_item.amount:
             # 如果物料被删除，成本影响为负
             affected_mat = next(
-                (am for am in affected_materials
-                 if am.material_code == bom_item.material_code or
-                    am.material_id == bom_item.material_id),
-                None
+                (
+                    am
+                    for am in affected_materials
+                    if am.material_code == bom_item.material_code
+                    or am.material_id == bom_item.material_id
+                ),
+                None,
             )
-            if affected_mat and affected_mat.change_type == 'DELETE':
+            if affected_mat and affected_mat.change_type == "DELETE":
                 total_impact -= Decimal(bom_item.amount)
-            elif affected_mat and affected_mat.change_type == 'ADD':
+            elif affected_mat and affected_mat.change_type == "ADD":
                 # 新增物料的成本需要从新规格中获取
                 if affected_mat.cost_impact:
                     total_impact += Decimal(affected_mat.cost_impact)
@@ -51,7 +54,7 @@ def calculate_schedule_impact(
     service: "EcnBomAnalysisService",
     affected_materials: List[EcnAffectedMaterial],
     bom_items: List[BomItem],
-    affected_item_ids: Set[int]
+    affected_item_ids: Set[int],
 ) -> int:
     """计算交期影响（天数）"""
     max_impact_days = 0
@@ -62,25 +65,26 @@ def calculate_schedule_impact(
             continue
 
         # 获取物料信息
-        material = service.db.query(Material).filter(
-            Material.id == bom_item.material_id
-        ).first()
+        material = service.db.query(Material).filter(Material.id == bom_item.material_id).first()
 
         if material and material.lead_time_days:
             # 如果物料变更，可能需要重新采购，影响交期
             affected_mat = next(
-                (am for am in affected_materials
-                 if am.material_code == bom_item.material_code or
-                    am.material_id == bom_item.material_id),
-                None
+                (
+                    am
+                    for am in affected_materials
+                    if am.material_code == bom_item.material_code
+                    or am.material_id == bom_item.material_id
+                ),
+                None,
             )
 
             if affected_mat:
                 # 变更类型影响交期
-                if affected_mat.change_type in ['UPDATE', 'REPLACE']:
+                if affected_mat.change_type in ["UPDATE", "REPLACE"]:
                     # 更新或替换可能需要重新采购
                     max_impact_days = max(max_impact_days, material.lead_time_days)
-                elif affected_mat.change_type == 'ADD':
+                elif affected_mat.change_type == "ADD":
                     # 新增物料需要采购周期
                     max_impact_days = max(max_impact_days, material.lead_time_days)
 

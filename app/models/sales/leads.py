@@ -45,11 +45,15 @@ class Lead(Base, TimestampMixin):
 
     # 优势产品相关字段
     selected_advantage_products = Column(Text, comment="选择的优势产品ID列表(JSON Array)")
-    product_match_type = Column(String(20), default="UNKNOWN", comment="产品匹配类型: ADVANTAGE/NEW/UNKNOWN")
+    product_match_type = Column(
+        String(20), default="UNKNOWN", comment="产品匹配类型: ADVANTAGE/NEW/UNKNOWN"
+    )
     is_advantage_product = Column(Boolean, default=False, comment="是否优势产品")
 
     # 技术评估扩展字段
-    requirement_detail_id = Column(Integer, ForeignKey("lead_requirement_details.id"), comment="需求详情ID")
+    requirement_detail_id = Column(
+        Integer, ForeignKey("lead_requirement_details.id"), comment="需求详情ID"
+    )
     assessment_id = Column(Integer, ForeignKey("technical_assessments.id"), comment="技术评估ID")
     completeness = Column(Integer, default=0, comment="完整度(0-100)")
     assignee_id = Column(Integer, ForeignKey("users.id"), comment="被指派的售前工程师ID")
@@ -62,15 +66,17 @@ class Lead(Base, TimestampMixin):
     owner = relationship("User", foreign_keys=[owner_id])
     opportunities = relationship("Opportunity", back_populates="lead")
     follow_ups = relationship("LeadFollowUp", back_populates="lead", cascade="all, delete-orphan")
-    requirement_detail = relationship("LeadRequirementDetail", foreign_keys=[requirement_detail_id], uselist=False)
+    requirement_detail = relationship(
+        "LeadRequirementDetail", foreign_keys=[requirement_detail_id], uselist=False
+    )
     assessment = relationship("TechnicalAssessment", foreign_keys=[assessment_id], uselist=False)
     assignee = relationship("User", foreign_keys=[assignee_id])
 
     __table_args__ = (
-        Index('idx_lead_assessment', 'assessment_id'),
-        Index('idx_lead_assignee', 'assignee_id'),
-        Index('idx_leads_advantage_product', 'is_advantage_product'),
-        Index('idx_leads_product_match_type', 'product_match_type'),
+        Index("idx_lead_assessment", "assessment_id"),
+        Index("idx_lead_assignee", "assignee_id"),
+        Index("idx_leads_advantage_product", "is_advantage_product"),
+        Index("idx_leads_product_match_type", "product_match_type"),
     )
 
     def __repr__(self):
@@ -84,7 +90,9 @@ class LeadFollowUp(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, comment="线索ID")
-    follow_up_type = Column(String(20), nullable=False, comment="跟进类型：CALL/EMAIL/VISIT/MEETING/OTHER")
+    follow_up_type = Column(
+        String(20), nullable=False, comment="跟进类型：CALL/EMAIL/VISIT/MEETING/OTHER"
+    )
     content = Column(Text, nullable=False, comment="跟进内容")
     next_action = Column(Text, comment="下一步行动")
     next_action_at = Column(DateTime, comment="下次行动时间")
@@ -96,8 +104,8 @@ class LeadFollowUp(Base, TimestampMixin):
     creator = relationship("User", foreign_keys=[created_by])
 
     __table_args__ = (
-        Index('idx_lead_follow_up_lead', 'lead_id'),
-        Index('idx_lead_follow_up_created', 'created_at'),
+        Index("idx_lead_follow_up_lead", "lead_id"),
+        Index("idx_lead_follow_up_created", "created_at"),
     )
 
     def __repr__(self):
@@ -145,14 +153,14 @@ class Opportunity(Base, TimestampMixin):
     customer = relationship("Customer", foreign_keys=[customer_id])
     owner = relationship("User", foreign_keys=[owner_id])
     updater = relationship("User", foreign_keys=[updated_by])
-    requirements = relationship("OpportunityRequirement", back_populates="opportunity", cascade="all, delete-orphan")
+    requirements = relationship(
+        "OpportunityRequirement", back_populates="opportunity", cascade="all, delete-orphan"
+    )
     quotes = relationship("Quote", back_populates="opportunity")
     contracts = relationship("Contract", back_populates="opportunity")
     assessment = relationship("TechnicalAssessment", foreign_keys=[assessment_id], uselist=False)
 
-    __table_args__ = (
-        Index('idx_opportunity_assessment', 'assessment_id'),
-    )
+    __table_args__ = (Index("idx_opportunity_assessment", "assessment_id"),)
 
     def __repr__(self):
         return f"<Opportunity {self.opp_code}>"
@@ -164,7 +172,9 @@ class OpportunityRequirement(Base, TimestampMixin):
     __tablename__ = "opportunity_requirements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    opportunity_id = Column(Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID")
+    opportunity_id = Column(
+        Integer, ForeignKey("opportunities.id"), nullable=False, comment="商机ID"
+    )
     product_object = Column(String(100), comment="产品对象")
     ct_seconds = Column(Integer, comment="节拍(秒)")
     interface_desc = Column(Text, comment="接口/通信协议")

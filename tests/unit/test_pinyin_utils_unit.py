@@ -9,9 +9,9 @@ Tests coverage for:
 """
 
 from app.utils.pinyin_utils import (
+    generate_initial_password,
     name_to_pinyin,
     name_to_pinyin_initials,
-    generate_initial_password,
 )
 
 

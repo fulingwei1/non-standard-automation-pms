@@ -14,6 +14,7 @@ from ..common import TimestampSchema
 
 class AnnualKeyWorkCreate(BaseModel):
     """创建年度重点工作"""
+
     csf_id: int = Field(description="关联 CSF")
     code: str = Field(max_length=50, description="工作编码")
     name: str = Field(max_length=200, description="工作名称")
@@ -33,6 +34,7 @@ class AnnualKeyWorkCreate(BaseModel):
 
 class AnnualKeyWorkUpdate(BaseModel):
     """更新年度重点工作"""
+
     name: Optional[str] = Field(default=None, max_length=200)
     description: Optional[str] = None
     voc_source: Optional[str] = None
@@ -56,6 +58,7 @@ class AnnualKeyWorkUpdate(BaseModel):
 
 class AnnualKeyWorkResponse(TimestampSchema):
     """年度重点工作响应"""
+
     id: int
     csf_id: int
     code: str
@@ -91,11 +94,13 @@ class AnnualKeyWorkResponse(TimestampSchema):
 
 class AnnualKeyWorkDetailResponse(AnnualKeyWorkResponse):
     """年度重点工作详情（含关联项目）"""
+
     linked_projects: List["ProjectLinkItem"] = []
 
 
 class ProjectLinkItem(BaseModel):
     """关联项目项"""
+
     id: int
     project_id: int
     project_code: str
@@ -111,6 +116,7 @@ class ProjectLinkItem(BaseModel):
 
 class AnnualKeyWorkProgressUpdate(BaseModel):
     """更新工作进度"""
+
     progress_percent: int = Field(ge=0, le=100, description="完成进度（%）")
     status: Optional[str] = Field(default=None, description="状态")
     remark: Optional[str] = Field(default=None, description="备注")
@@ -118,6 +124,7 @@ class AnnualKeyWorkProgressUpdate(BaseModel):
 
 class LinkProjectRequest(BaseModel):
     """关联项目请求"""
+
     project_id: int = Field(description="项目ID")
     link_type: str = Field(default="SUPPORT", description="关联类型：MAIN/SUPPORT/RELATED")
     contribution_weight: Decimal = Field(default=100, description="贡献权重（%）")
@@ -126,6 +133,7 @@ class LinkProjectRequest(BaseModel):
 
 class UnlinkProjectRequest(BaseModel):
     """取消关联项目请求"""
+
     project_id: int = Field(description="项目ID")
 
 

@@ -39,8 +39,7 @@ def match_material_cost(
     """
     # 查询启用的标准件成本清单
     query = db.query(PurchaseMaterialCost).filter(
-        PurchaseMaterialCost.is_active,
-        PurchaseMaterialCost.is_standard_part
+        PurchaseMaterialCost.is_active, PurchaseMaterialCost.is_standard_part
     )
 
     # 匹配逻辑：优先精确匹配，其次模糊匹配
@@ -49,9 +48,13 @@ def match_material_cost(
     match_score = 0
 
     # 1. 精确匹配物料名称
-    exact_match = query.filter(
-        PurchaseMaterialCost.material_name == match_request.item_name
-    ).order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)).first()
+    exact_match = (
+        query.filter(PurchaseMaterialCost.material_name == match_request.item_name)
+        .order_by(
+            desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)
+        )
+        .first()
+    )
 
     if exact_match:
         matched_cost = exact_match
@@ -66,7 +69,9 @@ def match_material_cost(
                 "material_name",
                 use_ilike=False,
             )
-            .order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date))
+            .order_by(
+                desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.purchase_date)
+            )
             .limit(5)
             .all()
         )
@@ -89,7 +94,10 @@ def match_material_cost(
                                 ["material_name", "match_keywords"],
                                 use_ilike=False,
                             )
-                            .order_by(desc(PurchaseMaterialCost.match_priority), desc(PurchaseMaterialCost.usage_count))
+                            .order_by(
+                                desc(PurchaseMaterialCost.match_priority),
+                                desc(PurchaseMaterialCost.usage_count),
+                            )
                             .limit(5)
                             .all()
                         )
@@ -111,7 +119,7 @@ def match_material_cost(
     if matched_cost:
         matched_cost_dict = {
             **{c.name: getattr(matched_cost, c.name) for c in matched_cost.__table__.columns},
-            "submitter_name": matched_cost.submitter.real_name if matched_cost.submitter else None
+            "submitter_name": matched_cost.submitter.real_name if matched_cost.submitter else None,
         }
         matched_cost_dict = PurchaseMaterialCostResponse(**matched_cost_dict)
 
@@ -119,7 +127,7 @@ def match_material_cost(
     for sug in suggestions:
         sug_dict = {
             **{c.name: getattr(sug, c.name) for c in sug.__table__.columns},
-            "submitter_name": sug.submitter.real_name if sug.submitter else None
+            "submitter_name": sug.submitter.real_name if sug.submitter else None,
         }
         suggestions_list.append(PurchaseMaterialCostResponse(**sug_dict))
 
@@ -127,5 +135,5 @@ def match_material_cost(
         matched=matched_cost is not None,
         match_score=match_score if matched_cost else None,
         matched_cost=matched_cost_dict,
-        suggestions=suggestions_list
+        suggestions=suggestions_list,
     )

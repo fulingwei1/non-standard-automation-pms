@@ -8,9 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.acceptance import (
     AcceptanceOrder,
     AcceptanceTemplate,
@@ -28,7 +28,9 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/acceptance-templates", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-templates", response_model=PaginatedResponse, status_code=status.HTTP_200_OK
+)
 def read_acceptance_templates(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -43,7 +45,9 @@ def read_acceptance_templates(
     """
     query = db.query(AcceptanceTemplate)
 
-    query = apply_keyword_filter(query, AcceptanceTemplate, keyword, ["template_code", "template_name"])
+    query = apply_keyword_filter(
+        query, AcceptanceTemplate, keyword, ["template_code", "template_name"]
+    )
 
     if acceptance_type:
         query = query.filter(AcceptanceTemplate.acceptance_type == acceptance_type)
@@ -55,27 +59,33 @@ def read_acceptance_templates(
         query = query.filter(AcceptanceTemplate.is_active == is_active)
 
     total = query.count()
-    templates = apply_pagination(query.order_by(AcceptanceTemplate.created_at), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(AcceptanceTemplate.created_at), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for template in templates:
-        items.append(AcceptanceTemplateResponse(
-            id=template.id,
-            template_code=template.template_code,
-            template_name=template.template_name,
-            acceptance_type=template.acceptance_type,
-            equipment_type=template.equipment_type,
-            version=template.version,
-            is_system=template.is_system,
-            is_active=template.is_active,
-            created_at=template.created_at,
-            updated_at=template.updated_at
-        ))
+        items.append(
+            AcceptanceTemplateResponse(
+                id=template.id,
+                template_code=template.template_code,
+                template_name=template.template_name,
+                acceptance_type=template.acceptance_type,
+                equipment_type=template.equipment_type,
+                version=template.version,
+                is_system=template.is_system,
+                is_active=template.is_active,
+                created_at=template.created_at,
+                updated_at=template.updated_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
 
-@router.get("/acceptance-templates/{template_id}", response_model=dict, status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-templates/{template_id}", response_model=dict, status_code=status.HTTP_200_OK
+)
 def read_acceptance_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
@@ -88,37 +98,51 @@ def read_acceptance_template(
 
     # 获取分类
     categories_data = []
-    categories = db.query(TemplateCategory).filter(TemplateCategory.template_id == template_id).order_by(TemplateCategory.sort_order).all()
+    categories = (
+        db.query(TemplateCategory)
+        .filter(TemplateCategory.template_id == template_id)
+        .order_by(TemplateCategory.sort_order)
+        .all()
+    )
     for category in categories:
         # 获取检查项
         items_data = []
-        items = db.query(TemplateCheckItem).filter(TemplateCheckItem.category_id == category.id).order_by(TemplateCheckItem.sort_order).all()
+        items = (
+            db.query(TemplateCheckItem)
+            .filter(TemplateCheckItem.category_id == category.id)
+            .order_by(TemplateCheckItem.sort_order)
+            .all()
+        )
         for item in items:
-            items_data.append({
-                "id": item.id,
-                "item_code": item.item_code,
-                "item_name": item.item_name,
-                "check_method": item.check_method,
-                "acceptance_criteria": item.acceptance_criteria,
-                "standard_value": item.standard_value,
-                "tolerance_min": item.tolerance_min,
-                "tolerance_max": item.tolerance_max,
-                "unit": item.unit,
-                "is_required": item.is_required,
-                "is_key_item": item.is_key_item,
-                "sort_order": item.sort_order
-            })
+            items_data.append(
+                {
+                    "id": item.id,
+                    "item_code": item.item_code,
+                    "item_name": item.item_name,
+                    "check_method": item.check_method,
+                    "acceptance_criteria": item.acceptance_criteria,
+                    "standard_value": item.standard_value,
+                    "tolerance_min": item.tolerance_min,
+                    "tolerance_max": item.tolerance_max,
+                    "unit": item.unit,
+                    "is_required": item.is_required,
+                    "is_key_item": item.is_key_item,
+                    "sort_order": item.sort_order,
+                }
+            )
 
-        categories_data.append({
-            "id": category.id,
-            "category_code": category.category_code,
-            "category_name": category.category_name,
-            "weight": float(category.weight) if category.weight else 0,
-            "sort_order": category.sort_order,
-            "is_required": category.is_required,
-            "description": category.description,
-            "check_items": items_data
-        })
+        categories_data.append(
+            {
+                "id": category.id,
+                "category_code": category.category_code,
+                "category_name": category.category_name,
+                "weight": float(category.weight) if category.weight else 0,
+                "sort_order": category.sort_order,
+                "is_required": category.is_required,
+                "description": category.description,
+                "check_items": items_data,
+            }
+        )
 
     return {
         "id": template.id,
@@ -132,11 +156,15 @@ def read_acceptance_template(
         "is_active": template.is_active,
         "categories": categories_data,
         "created_at": template.created_at,
-        "updated_at": template.updated_at
+        "updated_at": template.updated_at,
     }
 
 
-@router.post("/acceptance-templates", response_model=AcceptanceTemplateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/acceptance-templates",
+    response_model=AcceptanceTemplateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_acceptance_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -147,7 +175,11 @@ def create_acceptance_template(
     创建验收模板
     """
     # 检查编码是否已存在
-    existing = db.query(AcceptanceTemplate).filter(AcceptanceTemplate.template_code == template_in.template_code).first()
+    existing = (
+        db.query(AcceptanceTemplate)
+        .filter(AcceptanceTemplate.template_code == template_in.template_code)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="模板编码已存在")
 
@@ -160,7 +192,7 @@ def create_acceptance_template(
         description=template_in.description,
         is_system=False,
         is_active=True,
-        created_by=current_user.id
+        created_by=current_user.id,
     )
 
     db.add(template)
@@ -175,7 +207,7 @@ def create_acceptance_template(
             weight=cat_in.weight,
             sort_order=cat_in.sort_order,
             is_required=cat_in.is_required,
-            description=cat_in.description
+            description=cat_in.description,
         )
         db.add(category)
         db.flush()  # 获取category.id
@@ -194,7 +226,7 @@ def create_acceptance_template(
                 unit=item_in.unit,
                 is_required=item_in.is_required,
                 is_key_item=item_in.is_key_item,
-                sort_order=item_in.sort_order
+                sort_order=item_in.sort_order,
             )
             db.add(item)
 
@@ -211,11 +243,15 @@ def create_acceptance_template(
         is_system=template.is_system,
         is_active=template.is_active,
         created_at=template.created_at,
-        updated_at=template.updated_at
+        updated_at=template.updated_at,
     )
 
 
-@router.put("/acceptance-templates/{template_id}", response_model=AcceptanceTemplateResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/acceptance-templates/{template_id}",
+    response_model=AcceptanceTemplateResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_acceptance_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -234,10 +270,14 @@ def update_acceptance_template(
 
     # 检查编码是否已被其他模板使用
     if template_in.template_code != template.template_code:
-        existing = db.query(AcceptanceTemplate).filter(
-            AcceptanceTemplate.template_code == template_in.template_code,
-            AcceptanceTemplate.id != template_id
-        ).first()
+        existing = (
+            db.query(AcceptanceTemplate)
+            .filter(
+                AcceptanceTemplate.template_code == template_in.template_code,
+                AcceptanceTemplate.id != template_id,
+            )
+            .first()
+        )
         if existing:
             raise HTTPException(status_code=400, detail="模板编码已被使用")
 
@@ -262,11 +302,15 @@ def update_acceptance_template(
         is_system=template.is_system,
         is_active=template.is_active,
         created_at=template.created_at,
-        updated_at=template.updated_at
+        updated_at=template.updated_at,
     )
 
 
-@router.delete("/acceptance-templates/{template_id}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.delete(
+    "/acceptance-templates/{template_id}",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def delete_acceptance_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -283,15 +327,19 @@ def delete_acceptance_template(
         raise HTTPException(status_code=400, detail="系统预置模板不能删除")
 
     # 检查是否被使用
-    used_count = db.query(AcceptanceOrder).filter(AcceptanceOrder.template_id == template_id).count()
+    used_count = (
+        db.query(AcceptanceOrder).filter(AcceptanceOrder.template_id == template_id).count()
+    )
     if used_count > 0:
         raise HTTPException(
             status_code=400,
-            detail=f"模板已被 {used_count} 个验收单使用，无法删除。建议禁用模板而不是删除"
+            detail=f"模板已被 {used_count} 个验收单使用，无法删除。建议禁用模板而不是删除",
         )
 
     # 软删除：删除分类和检查项
-    categories = db.query(TemplateCategory).filter(TemplateCategory.template_id == template_id).all()
+    categories = (
+        db.query(TemplateCategory).filter(TemplateCategory.template_id == template_id).all()
+    )
     for category in categories:
         # 删除检查项
         db.query(TemplateCheckItem).filter(TemplateCheckItem.category_id == category.id).delete()

@@ -13,8 +13,14 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.project import Machine, Project, ProjectMilestone, ProjectTemplate, ProjectTemplateVersion
 from app.models.progress import WbsTemplate, WbsTemplateTask
+from app.models.project import (
+    Machine,
+    Project,
+    ProjectMilestone,
+    ProjectTemplate,
+    ProjectTemplateVersion,
+)
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404, save_obj
@@ -22,7 +28,11 @@ from app.utils.db_helpers import get_or_404, save_obj
 router = APIRouter()
 
 
-@router.post("/templates/{template_id}/create-project", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/templates/{template_id}/create-project",
+    response_model=ResponseModel,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_project_from_template(
     *,
     db: Session = Depends(deps.get_db),
@@ -63,17 +73,25 @@ def create_project_from_template(
     config = {}
     if template.template_config:
         try:
-            config = json.loads(template.template_config) if isinstance(template.template_config, str) else template.template_config
+            config = (
+                json.loads(template.template_config)
+                if isinstance(template.template_config, str)
+                else template.template_config
+            )
         except (json.JSONDecodeError, TypeError):
             pass
 
     # 也检查版本配置
     version_config = {}
     if version_id:
-        version = db.query(ProjectTemplateVersion).filter(
-            ProjectTemplateVersion.id == version_id,
-            ProjectTemplateVersion.template_id == template_id
-        ).first()
+        version = (
+            db.query(ProjectTemplateVersion)
+            .filter(
+                ProjectTemplateVersion.id == version_id,
+                ProjectTemplateVersion.template_id == template_id,
+            )
+            .first()
+        )
         if version and version.config:
             version_config = version.config if isinstance(version.config, dict) else {}
 
@@ -107,6 +125,7 @@ def create_project_from_template(
     if customer_id and not customer_name:
         try:
             from app.models.project import Customer
+
             customer = db.query(Customer).get(customer_id)
             if customer:
                 project.customer_name = customer.customer_name
@@ -154,36 +173,53 @@ def create_project_from_template(
     if create_wbs:
         wbs_code = config.get("wbs_template_code")
         if wbs_code:
-            wbs_template = db.query(WbsTemplate).filter(WbsTemplate.template_code == wbs_code).first()
+            wbs_template = (
+                db.query(WbsTemplate).filter(WbsTemplate.template_code == wbs_code).first()
+            )
             if wbs_template:
-                tasks = db.query(WbsTemplateTask).filter(
-                    WbsTemplateTask.template_id == wbs_template.id
-                ).order_by(WbsTemplateTask.id).all()
+                tasks = (
+                    db.query(WbsTemplateTask)
+                    .filter(WbsTemplateTask.template_id == wbs_template.id)
+                    .order_by(WbsTemplateTask.id)
+                    .all()
+                )
 
                 cumulative_days = 0
                 for task in tasks:
                     try:
                         from datetime import datetime as _dt
+
                         now_str = _dt.now().strftime("%Y-%m-%d %H:%M:%S")
-                        db.execute(text("""
+                        db.execute(
+                            text(
+                                """
                             INSERT INTO tasks 
                             (project_id, task_name, stage, weight,
                              plan_start, plan_end, status, progress_percent, created_at, updated_at)
                             VALUES (:pid, :name, :stage, :weight,
                                     :start, :end, 'pending', 0, :now, :now)
-                        """), {
-                            "pid": project.id,
-                            "name": task.task_name,
-                            "stage": task.stage,
-                            "weight": float(task.weight) if task.weight else 1.0,
-                            "start": (start_date + timedelta(days=cumulative_days)).isoformat(),
-                            "end": (start_date + timedelta(days=cumulative_days + (task.plan_days or 0))).isoformat(),
-                            "now": now_str,
-                        })
+                        """
+                            ),
+                            {
+                                "pid": project.id,
+                                "name": task.task_name,
+                                "stage": task.stage,
+                                "weight": float(task.weight) if task.weight else 1.0,
+                                "start": (start_date + timedelta(days=cumulative_days)).isoformat(),
+                                "end": (
+                                    start_date
+                                    + timedelta(days=cumulative_days + (task.plan_days or 0))
+                                ).isoformat(),
+                                "now": now_str,
+                            },
+                        )
                         tasks_created += 1
                     except Exception as e:
                         import logging
-                        logging.getLogger(__name__).error(f"Failed to create task '{task.task_name}': {e}")
+
+                        logging.getLogger(__name__).error(
+                            f"Failed to create task '{task.task_name}': {e}"
+                        )
                         break
                     cumulative_days += task.plan_days or 0
 
@@ -206,6 +242,7 @@ def create_project_from_template(
     # 初始化标准阶段 (separate transaction)
     try:
         from app.utils.project_utils import init_project_stages
+
         init_project_stages(db, project.id)
         db.commit()
     except Exception:
@@ -213,7 +250,12 @@ def create_project_from_template(
 
     # 更新模板使用次数
     try:
-        db.execute(text("UPDATE project_templates SET usage_count = COALESCE(usage_count, 0) + 1 WHERE id = :tid"), {"tid": template_id})
+        db.execute(
+            text(
+                "UPDATE project_templates SET usage_count = COALESCE(usage_count, 0) + 1 WHERE id = :tid"
+            ),
+            {"tid": template_id},
+        )
         db.commit()
     except Exception:
         db.rollback()
@@ -229,5 +271,5 @@ def create_project_from_template(
             "template_name": template.template_name,
             "milestones_created": milestones_created,
             "tasks_created": tasks_created,
-        }
+        },
     )

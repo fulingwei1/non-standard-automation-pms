@@ -5,8 +5,8 @@
 
 from fastapi import APIRouter
 
-from .matrix import router as matrix_router
 from .crud import router as crud_router
+from .matrix import router as matrix_router
 
 router = APIRouter()
 router.include_router(matrix_router, tags=["权限管理"])

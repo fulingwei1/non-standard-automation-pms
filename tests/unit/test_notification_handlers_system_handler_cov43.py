@@ -7,6 +7,7 @@ import pytest
 pytest.importorskip("app.services.notification_handlers.system_handler")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.notification_handlers.system_handler import SystemNotificationHandler
 
 
@@ -47,7 +48,9 @@ def test_send_duplicate_notification_returns_early():
     notification, alert, user, _ = make_objects()
     h.db.query.return_value.filter.return_value.first.return_value = MagicMock()
 
-    with patch("app.services.notification_handlers.system_handler.send_alert_via_unified") as mock_send:
+    with patch(
+        "app.services.notification_handlers.system_handler.send_alert_via_unified"
+    ) as mock_send:
         h.send(notification, alert, user=user)
         mock_send.assert_not_called()
 
@@ -58,7 +61,9 @@ def test_send_calls_unified_adapter():
     notification, alert, user, _ = make_objects()
     h.db.query.return_value.filter.return_value.first.return_value = None
 
-    with patch("app.services.notification_handlers.system_handler.send_alert_via_unified") as mock_send:
+    with patch(
+        "app.services.notification_handlers.system_handler.send_alert_via_unified"
+    ) as mock_send:
         h.send(notification, alert, user=user)
         mock_send.assert_called_once()
 
@@ -72,7 +77,9 @@ def test_send_user_none():
     alert.id = 2
     h.db.query.return_value.filter.return_value.first.return_value = None
 
-    with patch("app.services.notification_handlers.system_handler.send_alert_via_unified") as mock_send:
+    with patch(
+        "app.services.notification_handlers.system_handler.send_alert_via_unified"
+    ) as mock_send:
         h.send(notification, alert, user=None)
         mock_send.assert_called_once()
 

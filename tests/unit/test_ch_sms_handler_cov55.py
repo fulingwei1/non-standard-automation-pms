@@ -2,12 +2,13 @@
 """
 Tests for app/services/channel_handlers/sms_handler.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
+    from app.services.channel_handlers.base import NotificationChannel, NotificationRequest
     from app.services.channel_handlers.sms_handler import SMSChannelHandler
-    from app.services.channel_handlers.base import NotificationRequest, NotificationChannel
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 

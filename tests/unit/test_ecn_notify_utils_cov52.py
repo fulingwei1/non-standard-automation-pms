@@ -2,15 +2,16 @@
 """
 Unit tests for app/services/ecn_notification/utils.py (cov52)
 """
-import pytest
 from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.ecn_notification.utils import (
+        check_all_evaluations_completed,
+        find_department_manager,
         find_users_by_department,
         find_users_by_role,
-        find_department_manager,
-        check_all_evaluations_completed,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -21,6 +22,7 @@ def _make_db():
 
 
 # ──────────────────────── find_users_by_department ────────────────────────
+
 
 def test_find_users_by_department_empty_name():
     """部门名称为空时返回空列表"""
@@ -56,6 +58,7 @@ def test_find_users_by_department_fallback_to_user_table(mock_dept_cls):
 
 
 # ──────────────────────── find_users_by_role ────────────────────────
+
 
 def test_find_users_by_role_empty_code():
     """角色代码为空时返回空列表"""
@@ -104,6 +107,7 @@ def test_find_users_by_role_no_match():
 
 # ──────────────────────── find_department_manager ────────────────────────
 
+
 def test_find_department_manager_with_id():
     """指定 department_id 时返回经理"""
     db = _make_db()
@@ -123,6 +127,7 @@ def test_find_department_manager_no_id():
 
 
 # ──────────────────────── check_all_evaluations_completed ────────────────────────
+
 
 def test_check_all_evaluations_completed_no_evaluations():
     """无评估记录时返回 False"""

@@ -11,13 +11,13 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.organization import (
     Employee,
     EmployeeContract,
 )
 from app.models.user import User
-from app.common.query_filters import apply_pagination
 from app.schemas.organization import (
     EmployeeContractCreate,
     EmployeeContractResponse,
@@ -48,11 +48,13 @@ def get_contracts(
         query = query.filter(
             EmployeeContract.status == "active",
             EmployeeContract.end_date <= expiry_date,
-            EmployeeContract.end_date >= date.today()
+            EmployeeContract.end_date >= date.today(),
         )
 
     total = query.count()
-    contracts = apply_pagination(query.order_by(EmployeeContract.end_date.asc()), pagination.offset, pagination.limit).all()
+    contracts = apply_pagination(
+        query.order_by(EmployeeContract.end_date.asc()), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for c in contracts:
@@ -60,32 +62,34 @@ def get_contracts(
         if c.end_date:
             days_until_expiry = (c.end_date - date.today()).days
 
-        items.append({
-            "id": c.id,
-            "employee_id": c.employee_id,
-            "employee_name": c.employee.name if c.employee else None,
-            "employee_code": c.employee.employee_code if c.employee else None,
-            "contract_no": c.contract_no,
-            "contract_type": c.contract_type,
-            "start_date": str(c.start_date) if c.start_date else None,
-            "end_date": str(c.end_date) if c.end_date else None,
-            "duration_months": c.duration_months,
-            "position": c.position,
-            "department": c.department,
-            "status": c.status,
-            "sign_date": str(c.sign_date) if c.sign_date else None,
-            "is_renewed": c.is_renewed,
-            "renewal_count": c.renewal_count,
-            "days_until_expiry": days_until_expiry,
-            "reminder_sent": c.reminder_sent,
-        })
+        items.append(
+            {
+                "id": c.id,
+                "employee_id": c.employee_id,
+                "employee_name": c.employee.name if c.employee else None,
+                "employee_code": c.employee.employee_code if c.employee else None,
+                "contract_no": c.contract_no,
+                "contract_type": c.contract_type,
+                "start_date": str(c.start_date) if c.start_date else None,
+                "end_date": str(c.end_date) if c.end_date else None,
+                "duration_months": c.duration_months,
+                "position": c.position,
+                "department": c.department,
+                "status": c.status,
+                "sign_date": str(c.sign_date) if c.sign_date else None,
+                "is_renewed": c.is_renewed,
+                "renewal_count": c.renewal_count,
+                "days_until_expiry": days_until_expiry,
+                "reminder_sent": c.reminder_sent,
+            }
+        )
 
     return {
         "items": items,
         "total": total,
         "page": pagination.page,
         "page_size": pagination.page_size,
-        "pages": pagination.pages_for_total(total)
+        "pages": pagination.pages_for_total(total),
     }
 
 
@@ -103,9 +107,11 @@ def create_contract(
 
     # 生成合同编号
     if not contract_in.contract_no:
-        count = db.query(EmployeeContract).filter(
-            EmployeeContract.employee_id == contract_in.employee_id
-        ).count()
+        count = (
+            db.query(EmployeeContract)
+            .filter(EmployeeContract.employee_id == contract_in.employee_id)
+            .count()
+        )
         contract_in.contract_no = f"HT-{employee.employee_code}-{count + 1:02d}"
 
     contract = EmployeeContract(**contract_in.model_dump())
@@ -157,7 +163,9 @@ def renew_contract(
     new_contract = EmployeeContract(
         employee_id=old_contract.employee_id,
         contract_type=old_contract.contract_type,
-        start_date=old_contract.end_date + timedelta(days=1) if old_contract.end_date else date.today(),
+        start_date=(
+            old_contract.end_date + timedelta(days=1) if old_contract.end_date else date.today()
+        ),
         end_date=new_end_date,
         duration_months=duration_months,
         position=old_contract.position,
@@ -187,7 +195,7 @@ def renew_contract(
         "success": True,
         "message": "合同续签成功",
         "new_contract_id": new_contract.id,
-        "new_contract_no": new_contract.contract_no
+        "new_contract_no": new_contract.contract_no,
     }
 
 
@@ -200,12 +208,18 @@ def get_expiring_contracts(
     """获取即将到期的合同（用于提醒）"""
     expiry_date = date.today() + timedelta(days=days)
 
-    contracts = db.query(EmployeeContract).join(Employee).filter(
-        EmployeeContract.status == "active",
-        EmployeeContract.end_date <= expiry_date,
-        EmployeeContract.end_date >= date.today(),
-        Employee.is_active
-    ).order_by(EmployeeContract.end_date.asc()).all()
+    contracts = (
+        db.query(EmployeeContract)
+        .join(Employee)
+        .filter(
+            EmployeeContract.status == "active",
+            EmployeeContract.end_date <= expiry_date,
+            EmployeeContract.end_date >= date.today(),
+            Employee.is_active,
+        )
+        .order_by(EmployeeContract.end_date.asc())
+        .all()
+    )
 
     # 分组：两个月内、一个月内、两周内
     two_months = []
@@ -244,5 +258,5 @@ def get_expiring_contracts(
             "two_weeks_count": len(two_weeks),
             "one_month_count": len(one_month),
             "two_months_count": len(two_months),
-        }
+        },
     }

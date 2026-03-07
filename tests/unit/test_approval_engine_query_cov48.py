@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """单元测试 - ApprovalQueryMixin (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.engine.query import ApprovalQueryMixin
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False
@@ -35,11 +37,14 @@ def _make_query():
 
 def test_get_pending_tasks_returns_paginated_dict():
     obj = _make_query()
-    with patch(_PAG_PATH, return_value=_make_pagination_mock()), \
-         patch(_APPLY_PATH, side_effect=lambda q, o, l: q):
+    with (
+        patch(_PAG_PATH, return_value=_make_pagination_mock()),
+        patch(_APPLY_PATH, side_effect=lambda q, o, l: q),
+    ):
         obj.db.query.return_value.filter.return_value.order_by.return_value.count.return_value = 2
         obj.db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
-            MagicMock(), MagicMock()
+            MagicMock(),
+            MagicMock(),
         ]
         result = obj.get_pending_tasks(user_id=1)
     assert result["total"] == 2
@@ -49,8 +54,10 @@ def test_get_pending_tasks_returns_paginated_dict():
 
 def test_get_initiated_instances_no_status_filter():
     obj = _make_query()
-    with patch(_PAG_PATH, return_value=_make_pagination_mock()), \
-         patch(_APPLY_PATH, side_effect=lambda q, o, l: q):
+    with (
+        patch(_PAG_PATH, return_value=_make_pagination_mock()),
+        patch(_APPLY_PATH, side_effect=lambda q, o, l: q),
+    ):
         q = obj.db.query.return_value.filter.return_value
         q.order_by.return_value.count.return_value = 0
         q.order_by.return_value.all.return_value = []
@@ -61,8 +68,10 @@ def test_get_initiated_instances_no_status_filter():
 
 def test_get_initiated_instances_with_status_filter():
     obj = _make_query()
-    with patch(_PAG_PATH, return_value=_make_pagination_mock()), \
-         patch(_APPLY_PATH, side_effect=lambda q, o, l: q):
+    with (
+        patch(_PAG_PATH, return_value=_make_pagination_mock()),
+        patch(_APPLY_PATH, side_effect=lambda q, o, l: q),
+    ):
         q = obj.db.query.return_value.filter.return_value
         q.filter.return_value.order_by.return_value.count.return_value = 1
         q.filter.return_value.order_by.return_value.all.return_value = [MagicMock()]
@@ -72,8 +81,10 @@ def test_get_initiated_instances_with_status_filter():
 
 def test_get_cc_records_with_is_read_filter():
     obj = _make_query()
-    with patch(_PAG_PATH, return_value=_make_pagination_mock()), \
-         patch(_APPLY_PATH, side_effect=lambda q, o, l: q):
+    with (
+        patch(_PAG_PATH, return_value=_make_pagination_mock()),
+        patch(_APPLY_PATH, side_effect=lambda q, o, l: q),
+    ):
         q = obj.db.query.return_value.filter.return_value
         q.filter.return_value.order_by.return_value.count.return_value = 0
         q.filter.return_value.order_by.return_value.all.return_value = []

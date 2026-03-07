@@ -5,20 +5,21 @@ app/utils/ 低覆盖率模块测试
 - permission_helpers.py (43%)
 - domain_codes.py (60%)
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from app.utils.code_config import (
+    CODE_PREFIX,
+    MATERIAL_CATEGORY_CODES,
+    SEQ_LENGTH,
+    VALID_MATERIAL_CATEGORY_CODES,
+    get_material_category_code,
+    validate_material_category_code,
+)
 
 # ─── code_config.py ──────────────────────────────────────────────────────────
 
-from app.utils.code_config import (
-    get_material_category_code,
-    validate_material_category_code,
-    CODE_PREFIX,
-    SEQ_LENGTH,
-    MATERIAL_CATEGORY_CODES,
-    VALID_MATERIAL_CATEGORY_CODES,
-)
 
 
 class TestGetMaterialCategoryCode:
@@ -132,18 +133,22 @@ class TestDomainCodes:
 
     def test_outsourcing_codes_class_exists(self):
         from app.utils.domain_codes import OutsourcingCodes
+
         assert isinstance(OutsourcingCodes, type)
 
     def test_presale_codes_class_exists(self):
         from app.utils.domain_codes import PresaleCodes
+
         assert isinstance(PresaleCodes, type)
 
     def test_pmo_codes_class_exists(self):
         from app.utils.domain_codes import PmoCodes
+
         assert isinstance(PmoCodes, type)
 
     def test_classes_have_static_methods(self):
         from app.utils.domain_codes import OutsourcingCodes
+
         # 应该有生成编号的静态方法
         methods = [m for m in dir(OutsourcingCodes) if not m.startswith("_")]
         assert len(methods) > 0

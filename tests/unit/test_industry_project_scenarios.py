@@ -13,20 +13,21 @@
 测试数据来自 tests/fixtures/industry_data.py
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from tests.fixtures.industry_data import (
-    SAMPLE_PROJECTS,
     CUSTOMERS,
-    SAMPLE_MATERIALS,
-    SAMPLE_TIMESHEETS,
-    SAMPLE_COSTS,
     KPI_BENCHMARKS,
     PROJECT_TYPES,
-    make_mock_project,
+    SAMPLE_COSTS,
+    SAMPLE_MATERIALS,
+    SAMPLE_PROJECTS,
+    SAMPLE_TIMESHEETS,
     make_mock_db_with_projects,
+    make_mock_project,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -62,7 +63,9 @@ def check_outsourcing_cost_overrun(budgeted: float, actual: float, threshold: fl
     }
 
 
-def check_eol_takt_time(actual_seconds: float, target_seconds: float, tolerance: float = 0.10) -> dict:
+def check_eol_takt_time(
+    actual_seconds: float, target_seconds: float, tolerance: float = 0.10
+) -> dict:
     """
     EOL节拍不达标检查
     :param actual_seconds:  实测节拍（秒/件）
@@ -156,7 +159,9 @@ def predict_delay_probability(
         "spi": round(spi, 3),
         "base_probability": base_prob,
         "risk_bonus": risk_bonus,
-        "risk_level": "HIGH" if probability >= 0.60 else ("MEDIUM" if probability >= 0.30 else "LOW"),
+        "risk_level": (
+            "HIGH" if probability >= 0.60 else ("MEDIUM" if probability >= 0.30 else "LOW")
+        ),
     }
 
 
@@ -184,12 +189,14 @@ def calculate_kit_rate(
         if received >= required:
             complete_count += 1
         else:
-            shortage_items.append({
-                "material_code": code,
-                "required": required,
-                "received": received,
-                "shortage": required - received,
-            })
+            shortage_items.append(
+                {
+                    "material_code": code,
+                    "required": required,
+                    "received": received,
+                    "shortage": required - received,
+                }
+            )
 
     total = len(project_bom_items)
     kit_rate = complete_count / total
@@ -205,6 +212,7 @@ def calculate_kit_rate(
 # ─────────────────────────────────────────────────────────────────────────────
 # 测试类 1：ICT 夹具外协成本超支预警
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestICTFixtureCostOverrun:
     """ICT 项目夹具外协加工成本超支预警测试"""
@@ -230,11 +238,11 @@ class TestICTFixtureCostOverrun:
         # SAMPLE_COSTS中：外协预算25000，实际28000，超12%
         cost = SAMPLE_COSTS[2]  # 外协加工成本记录
         assert cost["category"] == "外协加工"
-        result = check_outsourcing_cost_overrun(
-            budgeted=cost["budgeted"], actual=cost["actual"]
-        )
+        result = check_outsourcing_cost_overrun(budgeted=cost["budgeted"], actual=cost["actual"])
         assert result["overrun"] is True
-        assert abs(result["ratio"] - 0.12) < 0.001, f"Expected ~12% overrun, got {result['ratio']:.1%}"
+        assert (
+            abs(result["ratio"] - 0.12) < 0.001
+        ), f"Expected ~12% overrun, got {result['ratio']:.1%}"
         assert result["level"] == "WARNING"
         assert result["amount"] == 3000.0  # 超出3000元
 
@@ -260,6 +268,7 @@ class TestICTFixtureCostOverrun:
 # ─────────────────────────────────────────────────────────────────────────────
 # 测试类 2：EOL 节拍不达标预警
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestEOLTaktTimeAlert:
     """EOL 终线测试节拍不达标预警测试"""
@@ -316,33 +325,28 @@ class TestEOLTaktTimeAlert:
 # 测试类 3：视觉检测误判率
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestVisionInspectionFalsePositiveRate:
     """视觉检测系统误判率超标处理测试"""
 
     def test_vision_false_positive_within_limit(self):
         """误判率0.15%（<0.2%上限）：合规"""
         # 蓝思科技摄像头模组：检测10000件，误判15件
-        result = check_vision_false_positive_rate(
-            total_inspected=10000, false_positives=15
-        )
+        result = check_vision_false_positive_rate(total_inspected=10000, false_positives=15)
         assert result["compliant"] is True
         assert result["rate"] == pytest.approx(0.0015)
         assert result["exceeded_by"] == pytest.approx(0.0)
 
     def test_vision_false_positive_exactly_at_limit(self):
         """误判率恰好等于0.2%上限：合规（边界）"""
-        result = check_vision_false_positive_rate(
-            total_inspected=10000, false_positives=20
-        )
+        result = check_vision_false_positive_rate(total_inspected=10000, false_positives=20)
         assert result["compliant"] is True
         assert result["rate"] == pytest.approx(0.002)
 
     def test_vision_false_positive_exceeds_limit(self):
         """误判率0.25%超上限：不合规，需停机调整"""
         # 实际场景：调试初期光源未调好，误判率偏高
-        result = check_vision_false_positive_rate(
-            total_inspected=10000, false_positives=25
-        )
+        result = check_vision_false_positive_rate(total_inspected=10000, false_positives=25)
         assert result["compliant"] is False
         assert result["exceeded_by"] == pytest.approx(0.0005)  # 超出0.05%
 
@@ -370,6 +374,7 @@ class TestVisionInspectionFalsePositiveRate:
 # ─────────────────────────────────────────────────────────────────────────────
 # 测试类 4：FCT 多版本兼容测试矩阵
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestFCTVersionCompatibilityMatrix:
     """FCT 功能测试台多版本兼容性验证"""
@@ -405,7 +410,7 @@ class TestFCTVersionCompatibilityMatrix:
     def test_fct_byd_adas_version_matrix(self):
         """比亚迪ADAS域控制器ICT兼容8个版本：覆盖率100%"""
         # 来自 SAMPLE_PROJECTS[0]："兼容8个测试点版本"
-        supported_versions = [f"HW_V{i}.0" for i in range(1, 9)]   # HW_V1.0 ~ HW_V8.0
+        supported_versions = [f"HW_V{i}.0" for i in range(1, 9)]  # HW_V1.0 ~ HW_V8.0
         required_versions = [f"HW_V{i}.0" for i in range(1, 9)]
         result = validate_fct_version_matrix(supported_versions, required_versions)
         assert result["compatible"] is True
@@ -423,6 +428,7 @@ class TestFCTVersionCompatibilityMatrix:
 # ─────────────────────────────────────────────────────────────────────────────
 # 测试类 5：项目延期概率预测
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestProjectDelayProbabilityPrediction:
     """基于历史数据的项目延期概率预测"""
@@ -490,6 +496,7 @@ class TestProjectDelayProbabilityPrediction:
 # 测试类 6：套件率（Kit Rate）计算
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestKitRateCalculation:
     """套件率精确度测试"""
 
@@ -532,14 +539,14 @@ class TestKitRateCalculation:
         """ICT项目真实BOM物料套件率验证（使用 SAMPLE_MATERIALS 数据）"""
         # 比亚迪ADAS ICT系统典型BOM
         bom = [
-            {"material_code": "MAT-NI-001", "required_qty": 1},   # NI PXI机箱
-            {"material_code": "MAT-NI-002", "required_qty": 6},   # 数字IO板卡
+            {"material_code": "MAT-NI-001", "required_qty": 1},  # NI PXI机箱
+            {"material_code": "MAT-NI-002", "required_qty": 6},  # 数字IO板卡
             {"material_code": "MAT-KK-001", "required_qty": 20},  # 气缸
-            {"material_code": "MAT-KK-005", "required_qty": 2},   # 伺服驱动器
+            {"material_code": "MAT-KK-005", "required_qty": 2},  # 伺服驱动器
         ]
         received = [
-            {"material_code": "MAT-NI-001", "received_qty": 1},   # 到货
-            {"material_code": "MAT-NI-002", "received_qty": 6},   # 到货
+            {"material_code": "MAT-NI-001", "received_qty": 1},  # 到货
+            {"material_code": "MAT-NI-002", "received_qty": 6},  # 到货
             {"material_code": "MAT-KK-001", "received_qty": 20},  # 到货
             # MAT-KK-005 交货期长，未到
         ]

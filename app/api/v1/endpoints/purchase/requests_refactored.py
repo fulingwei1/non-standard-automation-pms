@@ -14,16 +14,16 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core.schemas import paginated_response, success_response
 from app.models.purchase import (
     PurchaseRequest,
     PurchaseRequestItem,
 )
 from app.models.user import User
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
 from .utils import (
     decimal_value,
     generate_request_no,
@@ -39,7 +39,9 @@ router = APIRouter()
 def list_purchase_requests(
     db: Session = Depends(get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
-    status: Optional[str] = Query(None, description="按状态筛选: DRAFT, SUBMITTED, APPROVED, REJECTED"),
+    status: Optional[str] = Query(
+        None, description="按状态筛选: DRAFT, SUBMITTED, APPROVED, REJECTED"
+    ),
     current_user: User = Depends(get_current_active_user),
 ):
     """获取采购申请列表"""
@@ -47,10 +49,12 @@ def list_purchase_requests(
     if status:
         query = query.filter(PurchaseRequest.status == status)
     total = query.count()
-    requests = apply_pagination(query.order_by(desc(PurchaseRequest.created_at)), pagination.offset, pagination.limit).all()
-    
+    requests = apply_pagination(
+        query.order_by(desc(PurchaseRequest.created_at)), pagination.offset, pagination.limit
+    ).all()
+
     items = [serialize_purchase_request(r, include_items=False) for r in requests]
-    
+
     return paginated_response(
         items=items,
         total=total,
@@ -113,11 +117,10 @@ def create_purchase_request(
 
     request.total_amount = total_amount
     save_obj(db, request)
-    
+
     # 使用统一响应格式
     return success_response(
-        data=serialize_purchase_request(request, include_items=True),
-        message="采购申请创建成功"
+        data=serialize_purchase_request(request, include_items=True), message="采购申请创建成功"
     )
 
 
@@ -129,11 +132,10 @@ def get_purchase_request_detail(
 ):
     """获取采购申请详情"""
     request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
-    
+
     # 使用统一响应格式
     return success_response(
-        data=serialize_purchase_request(request, include_items=True),
-        message="获取采购申请详情成功"
+        data=serialize_purchase_request(request, include_items=True), message="获取采购申请详情成功"
     )
 
 
@@ -152,12 +154,9 @@ def submit_purchase_request(
     request.status = "SUBMITTED"
     request.submitted_at = datetime.now()
     db.commit()
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="采购申请提交成功"
-    )
+    return success_response(data=None, message="采购申请提交成功")
 
 
 @router.put("/requests/{request_id}/approve")
@@ -177,12 +176,9 @@ def approve_purchase_request(
     request.approval_note = approval_note
     request.status = "APPROVED" if approved else "REJECTED"
     db.commit()
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="采购申请审批完成"
-    )
+    return success_response(data=None, message="采购申请审批完成")
 
 
 @router.delete("/requests/{request_id}")
@@ -196,12 +192,9 @@ def delete_purchase_request(
     if request.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态可删除")
     delete_obj(db, request)
-    
+
     # 使用统一响应格式
-    return success_response(
-        data=None,
-        message="采购申请已删除"
-    )
+    return success_response(data=None, message="采购申请已删除")
 
 
 @router.post("/requests/{request_id}/generate-orders")
@@ -214,15 +207,13 @@ def generate_orders_from_request(
     """从采购申请生成订单"""
     try:
         from app.services.purchase.purchase_service import PurchaseService
+
         service = PurchaseService(db)
         success = service.generate_orders_from_request(request_id, supplier_id)
 
         if success:
             # 使用统一响应格式
-            return success_response(
-                data=None,
-                message="从采购申请生成订单成功"
-            )
+            return success_response(data=None, message="从采购申请生成订单成功")
         else:
             raise HTTPException(status_code=404, detail="采购申请不存在")
     except HTTPException:

@@ -1,4 +1,5 @@
 import uuid
+
 # -*- coding: utf-8 -*-
 """
 AI 功能集成测试
@@ -11,17 +12,17 @@ AI 功能集成测试
 共 8 个测试用例
 """
 import json
-import pytest
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
 from sqlalchemy.orm import Session
 
-from app.services.ai_client_service import AIClientService
 from app.models.ai_planning.plan_template import AIProjectPlanTemplate
 from app.models.ai_planning.wbs_suggestion import AIWbsSuggestion
 from app.models.shortage.smart_alert import ShortageAlert, ShortageHandlingPlan
+from app.services.ai_client_service import AIClientService
 
 # ---------------------------------------------------------------------------
 # 通用 mock 返回值
@@ -29,22 +30,22 @@ from app.models.shortage.smart_alert import ShortageAlert, ShortageHandlingPlan
 MOCK_AI_RESPONSE = {"content": "test response", "model": "glm-5"}
 MOCK_AI_RESPONSE_KIMI = {"content": "test response", "model": "kimi"}
 
-MOCK_SOLUTION_JSON = json.dumps({
-    "description": "非标自动化生产线方案",
-    "technical_parameters": {"生产节拍": "60秒/件", "自动化程度": "95%"},
-    "equipment_list": [
-        {"name": "自动上料机", "quantity": 1, "unit": "台"}
-    ],
-    "process_flow": "上料 → 加工 → 检测 → 下料",
-    "key_features": ["模块化设计", "智能故障诊断"]
-})
+MOCK_SOLUTION_JSON = json.dumps(
+    {
+        "description": "非标自动化生产线方案",
+        "technical_parameters": {"生产节拍": "60秒/件", "自动化程度": "95%"},
+        "equipment_list": [{"name": "自动上料机", "quantity": 1, "unit": "台"}],
+        "process_flow": "上料 → 加工 → 检测 → 下料",
+        "key_features": ["模块化设计", "智能故障诊断"],
+    }
+)
 
 
 @pytest.mark.integration
 class TestAIClientGLM5Call:
     """测试 GLM-5 AI 调用（mock HTTP 请求）"""
 
-    @patch('app.services.ai_client_service.AIClientService.generate_solution')
+    @patch("app.services.ai_client_service.AIClientService.generate_solution")
     def test_glm5_call_returns_mocked_response(self, mock_generate):
         """测试 GLM-5 AI 调用返回 mock 响应"""
         # 配置 mock
@@ -53,8 +54,7 @@ class TestAIClientGLM5Call:
         # 调用 AI 服务
         ai_service = AIClientService()
         result = ai_service.generate_solution(
-            prompt="请为非标自动化项目生成技术方案",
-            model="glm-5"
+            prompt="请为非标自动化项目生成技术方案", model="glm-5"
         )
 
         # 验证 mock 被调用
@@ -66,13 +66,13 @@ class TestAIClientGLM5Call:
         assert result["model"] == "glm-5"
         print(f"✅ GLM-5 mock 调用验证通过: model={result['model']}")
 
-    @patch('app.services.ai_client_service.AIClientService.generate_solution')
+    @patch("app.services.ai_client_service.AIClientService.generate_solution")
     def test_glm5_call_with_complex_prompt(self, mock_generate):
         """测试 GLM-5 处理复杂 prompt（含方案设计关键词，会触发思考模式）"""
         mock_generate.return_value = {
             "content": "test response",
             "model": "glm-5",
-            "reasoning": "深度思考过程：分析项目需求..."
+            "reasoning": "深度思考过程：分析项目需求...",
         }
 
         ai_service = AIClientService()
@@ -80,7 +80,7 @@ class TestAIClientGLM5Call:
             prompt="请设计一套复杂的非标自动化架构方案",
             model="glm-5",
             temperature=0.5,
-            max_tokens=4096
+            max_tokens=4096,
         )
 
         assert result["model"] == "glm-5"
@@ -90,7 +90,7 @@ class TestAIClientGLM5Call:
             prompt="请设计一套复杂的非标自动化架构方案",
             model="glm-5",
             temperature=0.5,
-            max_tokens=4096
+            max_tokens=4096,
         )
         print(f"✅ GLM-5 复杂 prompt 测试通过")
 
@@ -99,34 +99,26 @@ class TestAIClientGLM5Call:
 class TestAIClientKimiCall:
     """测试 Kimi AI 调用（mock HTTP 请求）"""
 
-    @patch('app.services.ai_client_service.AIClientService.generate_solution')
+    @patch("app.services.ai_client_service.AIClientService.generate_solution")
     def test_kimi_call_returns_mocked_response(self, mock_generate):
         """测试 Kimi AI 调用返回 mock 响应"""
         mock_generate.return_value = MOCK_AI_RESPONSE_KIMI
 
         ai_service = AIClientService()
-        result = ai_service.generate_solution(
-            prompt="请分析供应商交货风险",
-            model="kimi"
-        )
+        result = ai_service.generate_solution(prompt="请分析供应商交货风险", model="kimi")
 
         mock_generate.assert_called_once()
         assert result["content"] == "test response"
         assert result["model"] == "kimi"
         print(f"✅ Kimi mock 调用验证通过: model={result['model']}")
 
-    @patch('app.services.ai_client_service.AIClientService.generate_architecture')
+    @patch("app.services.ai_client_service.AIClientService.generate_architecture")
     def test_ai_architecture_generation_mocked(self, mock_arch):
         """测试 AI 架构图生成（Kimi/GLM-5 均可用）"""
-        mock_arch.return_value = {
-            "content": "test response",
-            "model": "glm-5"
-        }
+        mock_arch.return_value = {"content": "test response", "model": "glm-5"}
 
         ai_service = AIClientService()
-        result = ai_service.generate_architecture(
-            prompt="请生成自动化生产线架构图（Mermaid 格式）"
-        )
+        result = ai_service.generate_architecture(prompt="请生成自动化生产线架构图（Mermaid 格式）")
 
         mock_arch.assert_called_once()
         assert result["content"] == "test response"
@@ -138,7 +130,7 @@ class TestAIClientKimiCall:
 class TestAIGenerateSolutionFlow:
     """测试 AI 生成方案的完整流程"""
 
-    @patch('app.services.ai_client_service.AIClientService.generate_solution')
+    @patch("app.services.ai_client_service.AIClientService.generate_solution")
     def test_ai_generate_project_plan_template_flow(self, mock_generate, db_session):
         """
         测试 AI 生成项目计划模板的完整流程：
@@ -151,14 +143,13 @@ class TestAIGenerateSolutionFlow:
         mock_generate.return_value = {
             "content": "test response",
             "model": "glm-5",
-            "usage": {"total_tokens": 150}
+            "usage": {"total_tokens": 150},
         }
 
         # Step 1: 调用 AI 生成方案
         ai_service = AIClientService()
         ai_result = ai_service.generate_solution(
-            prompt="请为非标自动化项目生成项目计划模板",
-            model="glm-5"
+            prompt="请为非标自动化项目生成项目计划模板", model="glm-5"
         )
 
         assert ai_result["content"] == "test response"
@@ -186,15 +177,15 @@ class TestAIGenerateSolutionFlow:
         assert template.description == "test response"
 
         # 从数据库重新查询验证
-        saved = db.query(AIProjectPlanTemplate).filter(
-            AIProjectPlanTemplate.id == template.id
-        ).first()
+        saved = (
+            db.query(AIProjectPlanTemplate).filter(AIProjectPlanTemplate.id == template.id).first()
+        )
         assert saved is not None
         assert saved.template_code.startswith("TMPL_AI_")
 
         print(f"✅ AI 生成项目计划模板流程测试通过 (id={template.id})")
 
-    @patch('app.services.ai_client_service.AIClientService.generate_solution')
+    @patch("app.services.ai_client_service.AIClientService.generate_solution")
     def test_ai_generate_wbs_suggestion_flow(self, mock_generate, db_session):
         """
         测试 AI 生成 WBS 建议的完整流程：
@@ -203,16 +194,12 @@ class TestAIGenerateSolutionFlow:
         3. 存入数据库并验证
         """
         db = db_session
-        mock_generate.return_value = {
-            "content": "test response",
-            "model": "glm-5"
-        }
+        mock_generate.return_value = {"content": "test response", "model": "glm-5"}
 
         # Step 1: 调用 AI
         ai_service = AIClientService()
         ai_result = ai_service.generate_solution(
-            prompt="请为自动化生产线项目生成 WBS 工作分解结构",
-            model="glm-5"
+            prompt="请为自动化生产线项目生成 WBS 工作分解结构", model="glm-5"
         )
 
         # Step 2: 创建模板（WBS 建议关联模板）
@@ -250,9 +237,7 @@ class TestAIGenerateSolutionFlow:
         assert wbs.ai_model_version == "glm-5"
         assert wbs.task_description == "test response"
 
-        saved_wbs = db.query(AIWbsSuggestion).filter(
-            AIWbsSuggestion.id == wbs.id
-        ).first()
+        saved_wbs = db.query(AIWbsSuggestion).filter(AIWbsSuggestion.id == wbs.id).first()
         assert saved_wbs is not None
         assert saved_wbs.wbs_level == 1
 
@@ -263,7 +248,7 @@ class TestAIGenerateSolutionFlow:
 class TestAIResultStorageToDatabase:
     """测试 AI 结果存储到数据库的流程"""
 
-    @patch('app.services.ai_client_service.AIClientService.generate_solution')
+    @patch("app.services.ai_client_service.AIClientService.generate_solution")
     def test_ai_shortage_handling_plan_storage(self, mock_generate, db_session):
         """
         测试 AI 生成缺料处理方案并存入数据库：
@@ -273,10 +258,7 @@ class TestAIResultStorageToDatabase:
         4. 关联预警并验证
         """
         db = db_session
-        mock_generate.return_value = {
-            "content": "test response",
-            "model": "glm-5"
-        }
+        mock_generate.return_value = {"content": "test response", "model": "glm-5"}
 
         # Step 1: 创建缺料预警（作为前置数据）
         alert = ShortageAlert(
@@ -299,7 +281,7 @@ class TestAIResultStorageToDatabase:
         ai_service = AIClientService()
         ai_result = ai_service.generate_solution(
             prompt=f"物料 {alert.material_name} 缺料 {alert.shortage_qty}，请生成处理方案",
-            model="glm-5"
+            model="glm-5",
         )
 
         mock_generate.assert_called_once()
@@ -332,14 +314,14 @@ class TestAIResultStorageToDatabase:
         assert plan.is_recommended is True
 
         # 验证与预警的关联
-        saved_plan = db.query(ShortageHandlingPlan).filter(
-            ShortageHandlingPlan.id == plan.id
-        ).first()
+        saved_plan = (
+            db.query(ShortageHandlingPlan).filter(ShortageHandlingPlan.id == plan.id).first()
+        )
         assert saved_plan.alert_id == alert.id
 
         print(f"✅ AI 缺料处理方案存储测试通过 (plan_id={plan.id}, alert_id={alert.id})")
 
-    @patch('app.services.ai_client_service.AIClientService.generate_solution')
+    @patch("app.services.ai_client_service.AIClientService.generate_solution")
     def test_ai_multiple_results_batch_storage(self, mock_generate, db_session):
         """
         测试批量 AI 结果存储：
@@ -348,22 +330,18 @@ class TestAIResultStorageToDatabase:
         db = db_session
 
         # 设置 mock 每次返回相同结果
-        mock_generate.return_value = {
-            "content": "test response",
-            "model": "glm-5"
-        }
+        mock_generate.return_value = {"content": "test response", "model": "glm-5"}
 
         ai_service = AIClientService()
         templates_created = []
 
         # 批量生成 3 个模板（模拟不同项目类型）
         project_types = ["CUSTOM", "STANDARD", "UPGRADE"]
-        ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
         for i, ptype in enumerate(project_types):
             ai_result = ai_service.generate_solution(
-                prompt=f"为{ptype}类型项目生成计划模板",
-                model="glm-5"
+                prompt=f"为{ptype}类型项目生成计划模板", model="glm-5"
             )
 
             template = AIProjectPlanTemplate(
@@ -389,9 +367,11 @@ class TestAIResultStorageToDatabase:
             assert tmpl.ai_model_version == "glm-5"
 
         # 从 DB 查询验证数量
-        saved_count = db.query(AIProjectPlanTemplate).filter(
-            AIProjectPlanTemplate.template_code.like(f"BATCH_TMPL_{ts}_%")
-        ).count()
+        saved_count = (
+            db.query(AIProjectPlanTemplate)
+            .filter(AIProjectPlanTemplate.template_code.like(f"BATCH_TMPL_{ts}_%"))
+            .count()
+        )
         assert saved_count == 3
 
         print(f"✅ AI 批量结果存储测试通过 (已存储 {saved_count} 个模板)")

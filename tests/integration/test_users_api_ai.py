@@ -40,9 +40,7 @@ class TestUsersCRUDAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/users/", params=params, resource_type="users_list"
-        )
+        response = self.helper.get("/users/", params=params, resource_type="users_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -64,9 +62,7 @@ class TestUsersCRUDAPI:
             "is_active": True,
         }
 
-        response = self.helper.post(
-            "/users/", user_data, resource_type="user"
-        )
+        response = self.helper.post("/users/", user_data, resource_type="user")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -87,9 +83,7 @@ class TestUsersCRUDAPI:
         self.helper.print_info("测试获取用户详情...")
 
         user_id = 1
-        response = self.helper.get(
-            f"/users/{user_id}", resource_type=f"user_{user_id}"
-        )
+        response = self.helper.get(f"/users/{user_id}", resource_type=f"user_{user_id}")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:

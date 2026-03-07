@@ -21,15 +21,15 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.core.config import settings
 from app.models.project import ProjectDocument
 from app.models.rd_project import RdProject
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.project import ProjectDocumentCreate, ProjectDocumentResponse
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404, save_obj
 
 # 文档上传目录
@@ -43,6 +43,7 @@ router = APIRouter()
 # 共 4 个路由
 
 # ==================== 研发项目文档管理 ====================
+
 
 @router.get("/{project_id}/documents", response_model=ResponseModel)
 def get_rd_project_documents(
@@ -70,7 +71,9 @@ def get_rd_project_documents(
         query = query.filter(ProjectDocument.status == doc_status)
 
     total = query.count()
-    documents = apply_pagination(query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit).all()
+    documents = apply_pagination(
+        query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     return ResponseModel(
         code=200,
@@ -80,12 +83,14 @@ def get_rd_project_documents(
             total=total,
             page=pagination.page,
             page_size=pagination.page_size,
-            pages=pagination.pages_for_total(total)
-        )
+            pages=pagination.pages_for_total(total),
+        ),
     )
 
 
-@router.post("/{project_id}/documents", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/documents", response_model=ResponseModel, status_code=status.HTTP_201_CREATED
+)
 def create_rd_project_document(
     *,
     db: Session = Depends(deps.get_db),
@@ -107,13 +112,15 @@ def create_rd_project_document(
     save_obj(db, document)
 
     return ResponseModel(
-        code=201,
-        message="文档创建成功",
-        data=ProjectDocumentResponse.model_validate(document)
+        code=201, message="文档创建成功", data=ProjectDocumentResponse.model_validate(document)
     )
 
 
-@router.post("/{project_id}/documents/upload", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/documents/upload",
+    response_model=ResponseModel,
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_rd_project_document(
     *,
     db: Session = Depends(deps.get_db),
@@ -168,9 +175,7 @@ async def upload_rd_project_document(
     save_obj(db, document)
 
     return ResponseModel(
-        code=201,
-        message="文档上传成功",
-        data=ProjectDocumentResponse.model_validate(document)
+        code=201, message="文档上传成功", data=ProjectDocumentResponse.model_validate(document)
     )
 
 
@@ -187,10 +192,11 @@ def download_rd_project_document(
     """
     get_or_404(db, RdProject, project_id, "研发项目不存在")
 
-    document = db.query(ProjectDocument).filter(
-        ProjectDocument.id == doc_id,
-        ProjectDocument.rd_project_id == project_id
-    ).first()
+    document = (
+        db.query(ProjectDocument)
+        .filter(ProjectDocument.id == doc_id, ProjectDocument.rd_project_id == project_id)
+        .first()
+    )
 
     if not document:
         raise HTTPException(status_code=404, detail="文档不存在")
@@ -211,9 +217,5 @@ def download_rd_project_document(
         raise HTTPException(status_code=404, detail="文件不存在")
 
     return FileResponse(
-        path=str(resolved_path),
-        filename=document.file_name,
-        media_type='application/octet-stream'
+        path=str(resolved_path), filename=document.file_name, media_type="application/octet-stream"
     )
-
-

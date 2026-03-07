@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - data_source (KPI数据源) 单元测试"""
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.strategy.kpi_service.data_source")
 
@@ -12,8 +13,8 @@ from app.services.strategy.kpi_service.data_source import (
     get_kpi_data_sources,
 )
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_create_data(
     kpi_id=1,
@@ -73,6 +74,7 @@ def _make_db_source(
 
 # ─── create_kpi_data_source ──────────────────────────────────
 
+
 class TestCreateKpiDataSource:
 
     def test_creates_and_returns_data_source(self):
@@ -95,6 +97,7 @@ class TestCreateKpiDataSource:
         data = _make_create_data(filters=filters_dict)
 
         import json
+
         from app.models.strategy import KPIDataSource
 
         with patch("app.services.strategy.kpi_service.data_source.KPIDataSource") as mock_cls:
@@ -156,6 +159,7 @@ class TestCreateKpiDataSource:
 
 
 # ─── get_kpi_data_sources ────────────────────────────────────
+
 
 class TestGetKpiDataSources:
 

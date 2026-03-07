@@ -13,6 +13,7 @@
 
 from datetime import datetime
 from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from app.core.state_machine.base import StateMachine
@@ -25,7 +26,7 @@ class OpportunityStateMachine(StateMachine):
 
     def __init__(self, opportunity: Opportunity, db: Session):
         """初始化商机状态机"""
-        super().__init__(opportunity, db, state_field='stage')
+        super().__init__(opportunity, db, state_field="stage")
 
     @transition(
         from_state="DISCOVERY",
@@ -43,8 +44,8 @@ class OpportunityStateMachine(StateMachine):
             score: 评分（可选）
             score_remark: 评分说明（可选）
         """
-        if 'score' in kwargs:
-            self.model.score = kwargs['score']
+        if "score" in kwargs:
+            self.model.score = kwargs["score"]
             # 根据评分自动更新风险等级
             if self.model.score >= 80:
                 self.model.risk_level = "LOW"
@@ -68,8 +69,8 @@ class OpportunityStateMachine(StateMachine):
         Args:
             expected_close_date: 预计成交日期（可选）
         """
-        if 'expected_close_date' in kwargs:
-            self.model.expected_close_date = kwargs['expected_close_date']
+        if "expected_close_date" in kwargs:
+            self.model.expected_close_date = kwargs["expected_close_date"]
 
     @transition(
         from_state="PROPOSAL",
@@ -86,8 +87,8 @@ class OpportunityStateMachine(StateMachine):
         Args:
             probability: 成交概率（可选）
         """
-        if 'probability' in kwargs:
-            self.model.probability = kwargs['probability']
+        if "probability" in kwargs:
+            self.model.probability = kwargs["probability"]
 
     @transition(
         from_state="NEGOTIATION",
@@ -108,8 +109,8 @@ class OpportunityStateMachine(StateMachine):
         self.model.gate_status = "PASS"
         self.model.gate_passed_at = datetime.now()
 
-        if 'est_amount' in kwargs:
-            self.model.est_amount = kwargs['est_amount']
+        if "est_amount" in kwargs:
+            self.model.est_amount = kwargs["est_amount"]
 
         # 业务逻辑：赢单后自动创建项目或合同
         # 这里可以扩展业务逻辑
@@ -251,8 +252,8 @@ class OpportunityStateMachine(StateMachine):
 
     def _handle_hold(self, **kwargs):
         """处理暂停逻辑"""
-        if 'hold_reason' in kwargs:
-            self.model.hold_reason = kwargs['hold_reason']
+        if "hold_reason" in kwargs:
+            self.model.hold_reason = kwargs["hold_reason"]
         self.model.previous_stage = self.model.stage
         self.model.held_at = datetime.now()
 
@@ -262,8 +263,8 @@ class OpportunityStateMachine(StateMachine):
 
     def _handle_lose(self, **kwargs):
         """处理输单逻辑"""
-        if 'lose_reason' in kwargs:
-            self.model.lose_reason = kwargs['lose_reason']
+        if "lose_reason" in kwargs:
+            self.model.lose_reason = kwargs["lose_reason"]
         self.model.lost_at = datetime.now()
 
     def update_score(self, score: int, score_remark: Optional[str] = None):

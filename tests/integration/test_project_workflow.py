@@ -45,9 +45,7 @@ class TestProjectWorkflow:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         # 如果400，可能是项目编码冲突或验证问题
@@ -60,8 +58,7 @@ class TestProjectWorkflow:
 
         # 2. 检查阶段门（G1: S1→S2）
         gate_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S2",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/gate-check/S2", headers=headers
         )
         assert gate_response.status_code == 200
 
@@ -73,7 +70,7 @@ class TestProjectWorkflow:
         advance_response = client.post(
             f"{settings.API_V1_PREFIX}/projects/{project_id}/advance-stage",
             json=advance_data,
-            headers=headers
+            headers=headers,
         )
         # 如果Gate校验通过，应该成功；否则可能返回400/422/404
         # 404可能是端点尚未实现
@@ -86,23 +83,19 @@ class TestProjectWorkflow:
             "status": "ST02",  # 假设ST02是S2阶段的某个状态
         }
         update_response = client.put(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}", json=update_data, headers=headers
         )
         assert update_response.status_code == 200
 
         # 5. 触发健康度计算
         health_response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}/health/calculate", headers=headers
         )
         assert health_response.status_code == 200
 
         # 6. 获取项目详情（验证所有数据）
         detail_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers
         )
         assert detail_response.status_code == 200
         detail_data = detail_response.json()
@@ -127,9 +120,7 @@ class TestProjectWorkflow:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if create_response.status_code == 201:
@@ -144,7 +135,7 @@ class TestProjectWorkflow:
             machine_response = client.post(
                 f"{settings.API_V1_PREFIX}/projects/{project_id}/machines/",
                 json=machine_data,
-                headers=headers
+                headers=headers,
             )
 
             # 如果机台API存在，应该成功
@@ -154,8 +145,7 @@ class TestProjectWorkflow:
 
                     # 3. 查询项目下的机台
                     machines_response = client.get(
-                        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines",
-                        headers=headers
+                        f"{settings.API_V1_PREFIX}/projects/{project_id}/machines", headers=headers
                     )
                     # 应该返回机台列表或空列表
                     assert machines_response.status_code in [200, 404]
@@ -176,9 +166,7 @@ class TestProjectWorkflow:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if create_response.status_code == 201:
@@ -193,9 +181,7 @@ class TestProjectWorkflow:
             }
 
             milestone_response = client.post(
-                f"{settings.API_V1_PREFIX}/milestones/",
-                json=milestone_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/milestones/", json=milestone_data, headers=headers
             )
 
             # 如果里程碑API存在，应该成功
@@ -212,7 +198,7 @@ class TestProjectWorkflow:
                     update_response = client.put(
                         f"{settings.API_V1_PREFIX}/milestones/{milestone_id}",
                         json=update_data,
-                        headers=headers
+                        headers=headers,
                     )
                     # 应该成功更新
                     assert update_response.status_code in [200, 404]
@@ -233,9 +219,7 @@ class TestProjectWorkflow:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if create_response.status_code == 201:
@@ -249,9 +233,7 @@ class TestProjectWorkflow:
             }
 
             member_response = client.post(
-                f"{settings.API_V1_PREFIX}/project-members/",
-                json=member_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/project-members/", json=member_data, headers=headers
             )
 
             # 如果成员API存在，应该成功
@@ -261,8 +243,7 @@ class TestProjectWorkflow:
 
                     # 3. 查询项目成员列表
                     members_response = client.get(
-                        f"{settings.API_V1_PREFIX}/projects/{project_id}/members",
-                        headers=headers
+                        f"{settings.API_V1_PREFIX}/projects/{project_id}/members", headers=headers
                     )
                     # 应该返回成员列表
                     assert members_response.status_code in [200, 404]
@@ -284,9 +265,7 @@ class TestProjectWorkflow:
         }
 
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/projects/",
-            json=project_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
         )
 
         if create_response.status_code == 201:
@@ -298,16 +277,13 @@ class TestProjectWorkflow:
             }
 
             update_response = client.put(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}",
-                json=update_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}", json=update_data, headers=headers
             )
             assert update_response.status_code == 200
 
             # 3. 验证健康度是否自动更新为H3
             detail_response = client.get(
-                f"{settings.API_V1_PREFIX}/projects/{project_id}",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers
             )
             assert detail_response.status_code == 200
             detail_data = detail_response.json()
@@ -381,8 +357,7 @@ class TestProjectPerformance:
         start_time = datetime.now()
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=100",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/projects/?page=1&page_size=100", headers=headers
         )
 
         end_time = datetime.now()
@@ -410,9 +385,7 @@ class TestProjectPerformance:
             }
 
             response = client.post(
-                f"{settings.API_V1_PREFIX}/projects/",
-                json=project_data,
-                headers=headers
+                f"{settings.API_V1_PREFIX}/projects/", json=project_data, headers=headers
             )
 
             if response.status_code == 201:
@@ -424,7 +397,7 @@ class TestProjectPerformance:
             batch_response = client.post(
                 f"{settings.API_V1_PREFIX}/projects/health/batch-calculate",
                 json={"project_ids": project_ids},
-                headers=headers
+                headers=headers,
             )
 
             end_time = datetime.now()

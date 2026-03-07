@@ -14,10 +14,11 @@
 目标覆盖率: 70%+
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from app.services.approval_engine.adapters.outsourcing import OutsourcingOrderApprovalAdapter
 
@@ -73,6 +74,7 @@ def sample_instance():
 
 # ==================== 测试 get_entity ====================
 
+
 class TestGetEntity:
     """测试 get_entity 方法"""
 
@@ -104,6 +106,7 @@ class TestGetEntity:
 
 # ==================== 测试 get_entity_data ====================
 
+
 class TestGetEntityData:
     """测试 get_entity_data 方法"""
 
@@ -119,7 +122,7 @@ class TestGetEntityData:
         """测试基础订单信息"""
         # Mock 订单查询
         db_mock.query.return_value.filter.return_value.first.return_value = sample_order
-        
+
         # Mock 订单明细数量
         db_mock.query.return_value.filter.return_value.count.return_value = 3
 
@@ -141,11 +144,13 @@ class TestGetEntityData:
         # Mock 订单
         db_mock.query.return_value.filter.return_value.first.side_effect = [
             sample_order,  # 第一次调用：获取订单
-            MagicMock(project_code="PRJ-001", project_name="测试项目", status="IN_PROGRESS"),  # 第二次：项目
+            MagicMock(
+                project_code="PRJ-001", project_name="测试项目", status="IN_PROGRESS"
+            ),  # 第二次：项目
             None,  # 第三次：设备查询（无设备）
             None,  # 第四次：外协商查询（无外协商）
         ]
-        
+
         # Mock 明细数量
         db_mock.query.return_value.filter.return_value.count.return_value = 2
 
@@ -160,7 +165,7 @@ class TestGetEntityData:
         machine = MagicMock()
         machine.machine_code = "MC-001"
         machine.machine_name = "焊接机1号"
-        
+
         db_mock.query.return_value.filter.return_value.first.side_effect = [
             sample_order,  # 第一次：订单
             None,  # 第二次：项目查询（无项目）
@@ -179,7 +184,7 @@ class TestGetEntityData:
         vendor = MagicMock()
         vendor.vendor_name = "XX焊接厂"
         vendor.vendor_code = "VEN-001"
-        
+
         db_mock.query.return_value.filter.return_value.first.side_effect = [
             sample_order,
             None,  # 项目
@@ -244,6 +249,7 @@ class TestGetEntityData:
 
 
 # ==================== 测试状态回调方法 ====================
+
 
 class TestStatusCallbacks:
     """测试状态变更回调"""
@@ -319,6 +325,7 @@ class TestStatusCallbacks:
 
 # ==================== 测试 generate_title ====================
 
+
 class TestGenerateTitle:
     """测试生成审批标题"""
 
@@ -359,6 +366,7 @@ class TestGenerateTitle:
 
 # ==================== 测试 generate_summary ====================
 
+
 class TestGenerateSummary:
     """测试生成审批摘要"""
 
@@ -366,10 +374,10 @@ class TestGenerateSummary:
         """测试完整信息的摘要"""
         vendor = MagicMock()
         vendor.vendor_name = "XX焊接厂"
-        
+
         project = MagicMock()
         project.project_name = "测试项目"
-        
+
         machine = MagicMock()
         machine.machine_code = "MC-001"
 
@@ -403,7 +411,7 @@ class TestGenerateSummary:
     def test_generate_summary_without_vendor(self, adapter, db_mock, sample_order):
         """测试没有外协商的情况"""
         sample_order.vendor_id = None
-        
+
         db_mock.query.return_value.filter.return_value.first.return_value = sample_order
         db_mock.query.return_value.filter.return_value.count.return_value = 2
 
@@ -414,7 +422,7 @@ class TestGenerateSummary:
     def test_generate_summary_without_amount(self, adapter, db_mock, sample_order):
         """测试没有金额的情况"""
         sample_order.amount_with_tax = None
-        
+
         db_mock.query.return_value.filter.return_value.first.side_effect = [
             sample_order,  # 第一次：获取订单
             MagicMock(vendor_name="测试外协商"),  # 第二次：外协商
@@ -447,6 +455,7 @@ class TestGenerateSummary:
 
 
 # ==================== 测试 validate_submit ====================
+
 
 class TestValidateSubmit:
     """测试提交验证"""
@@ -577,6 +586,7 @@ class TestValidateSubmit:
 
 # ==================== 测试 get_cc_user_ids ====================
 
+
 class TestGetCcUserIds:
     """测试获取抄送人"""
 
@@ -592,9 +602,9 @@ class TestGetCcUserIds:
         """测试没有关联项目"""
         sample_order.project_id = None
         db_mock.query.return_value.filter.return_value.first.return_value = sample_order
-        
-        with patch.object(adapter, 'get_department_manager_user_ids_by_codes', return_value=[]):
-            with patch.object(adapter, 'get_department_manager_user_id', return_value=None):
+
+        with patch.object(adapter, "get_department_manager_user_ids_by_codes", return_value=[]):
+            with patch.object(adapter, "get_department_manager_user_id", return_value=None):
                 result = adapter.get_cc_user_ids(1)
 
         assert result == []
@@ -603,14 +613,14 @@ class TestGetCcUserIds:
         """测试项目经理抄送"""
         project = MagicMock()
         project.manager_id = 200
-        
+
         db_mock.query.return_value.filter.return_value.first.side_effect = [
             sample_order,
             project,
         ]
-        
-        with patch.object(adapter, 'get_department_manager_user_ids_by_codes', return_value=[]):
-            with patch.object(adapter, 'get_department_manager_user_id', return_value=None):
+
+        with patch.object(adapter, "get_department_manager_user_ids_by_codes", return_value=[]):
+            with patch.object(adapter, "get_department_manager_user_id", return_value=None):
                 result = adapter.get_cc_user_ids(1)
 
         assert 200 in result
@@ -618,8 +628,10 @@ class TestGetCcUserIds:
     def test_get_cc_user_ids_with_prod_dept_manager(self, adapter, db_mock, sample_order):
         """测试生产部门负责人抄送"""
         db_mock.query.return_value.filter.return_value.first.return_value = sample_order
-        
-        with patch.object(adapter, 'get_department_manager_user_ids_by_codes', return_value=[300, 301]):
+
+        with patch.object(
+            adapter, "get_department_manager_user_ids_by_codes", return_value=[300, 301]
+        ):
             result = adapter.get_cc_user_ids(1)
 
         assert 300 in result
@@ -628,9 +640,9 @@ class TestGetCcUserIds:
     def test_get_cc_user_ids_with_fallback_dept_name(self, adapter, db_mock, sample_order):
         """测试备用部门名称查找"""
         db_mock.query.return_value.filter.return_value.first.return_value = sample_order
-        
-        with patch.object(adapter, 'get_department_manager_user_ids_by_codes', return_value=[]):
-            with patch.object(adapter, 'get_department_manager_user_id', return_value=400):
+
+        with patch.object(adapter, "get_department_manager_user_ids_by_codes", return_value=[]):
+            with patch.object(adapter, "get_department_manager_user_id", return_value=400):
                 result = adapter.get_cc_user_ids(1)
 
         assert 400 in result
@@ -639,13 +651,15 @@ class TestGetCcUserIds:
         """测试去重"""
         project = MagicMock()
         project.manager_id = 500
-        
+
         db_mock.query.return_value.filter.return_value.first.side_effect = [
             sample_order,
             project,
         ]
-        
-        with patch.object(adapter, 'get_department_manager_user_ids_by_codes', return_value=[500, 501]):
+
+        with patch.object(
+            adapter, "get_department_manager_user_ids_by_codes", return_value=[500, 501]
+        ):
             result = adapter.get_cc_user_ids(1)
 
         # 500 应该只出现一次
@@ -655,31 +669,34 @@ class TestGetCcUserIds:
 
 # ==================== 测试辅助方法 ====================
 
+
 class TestHelperMethods:
     """测试辅助方法（从基类继承）"""
 
-    @patch('app.models.organization.Department')
-    @patch('app.models.organization.Employee')
-    @patch('app.models.user.User')
-    def test_get_department_manager_user_id_success(self, mock_user, mock_employee, mock_dept, adapter, db_mock):
+    @patch("app.models.organization.Department")
+    @patch("app.models.organization.Employee")
+    @patch("app.models.user.User")
+    def test_get_department_manager_user_id_success(
+        self, mock_user, mock_employee, mock_dept, adapter, db_mock
+    ):
         """测试成功获取部门负责人"""
         dept = MagicMock()
         dept.manager_id = 10
-        
+
         employee = MagicMock()
         employee.name = "张三"
         employee.employee_code = "EMP001"
-        
+
         user = MagicMock()
         user.id = 100
-        
+
         db_mock.query.return_value.filter.return_value.first.side_effect = [dept, employee, user]
 
         result = adapter.get_department_manager_user_id("生产部")
 
         assert result == 100
 
-    @patch('app.models.organization.Department')
+    @patch("app.models.organization.Department")
     def test_get_department_manager_user_id_dept_not_found(self, mock_dept, adapter, db_mock):
         """测试部门不存在"""
         db_mock.query.return_value.filter.return_value.first.return_value = None
@@ -688,41 +705,45 @@ class TestHelperMethods:
 
         assert result is None
 
-    @patch('app.models.organization.Department')
-    @patch('app.models.organization.Employee')
-    def test_get_department_manager_user_id_no_manager(self, mock_employee, mock_dept, adapter, db_mock):
+    @patch("app.models.organization.Department")
+    @patch("app.models.organization.Employee")
+    def test_get_department_manager_user_id_no_manager(
+        self, mock_employee, mock_dept, adapter, db_mock
+    ):
         """测试部门没有负责人"""
         dept = MagicMock()
         dept.manager_id = None
-        
+
         db_mock.query.return_value.filter.return_value.first.return_value = dept
 
         result = adapter.get_department_manager_user_id("生产部")
 
         assert result is None
 
-    @patch('app.models.organization.Department')
-    @patch('app.models.organization.Employee')
-    @patch('app.models.user.User')
-    def test_get_department_manager_user_ids_by_codes_success(self, mock_user, mock_employee, mock_dept, adapter, db_mock):
+    @patch("app.models.organization.Department")
+    @patch("app.models.organization.Employee")
+    @patch("app.models.user.User")
+    def test_get_department_manager_user_ids_by_codes_success(
+        self, mock_user, mock_employee, mock_dept, adapter, db_mock
+    ):
         """测试批量获取部门负责人"""
         dept1 = MagicMock()
         dept1.manager_id = 10
-        
+
         dept2 = MagicMock()
         dept2.manager_id = 20
-        
+
         emp1 = MagicMock()
         emp1.name = "张三"
         emp1.employee_code = "EMP001"
-        
+
         emp2 = MagicMock()
         emp2.name = "李四"
         emp2.employee_code = "EMP002"
-        
+
         user1 = MagicMock()
         user1.id = 100
-        
+
         user2 = MagicMock()
         user2.id = 200
 
@@ -732,12 +753,12 @@ class TestHelperMethods:
             [user1, user2],
         ]
 
-        result = adapter.get_department_manager_user_ids_by_codes(['PROD', 'QA'])
+        result = adapter.get_department_manager_user_ids_by_codes(["PROD", "QA"])
 
         assert 100 in result
         assert 200 in result
 
-    @patch('app.models.organization.Department')
+    @patch("app.models.organization.Department")
     def test_get_department_manager_user_ids_by_codes_empty_list(self, mock_dept, adapter, db_mock):
         """测试空部门列表"""
         db_mock.query.return_value.filter.return_value.all.return_value = []
@@ -748,6 +769,7 @@ class TestHelperMethods:
 
 
 # ==================== 属性测试 ====================
+
 
 class TestAdapterProperties:
     """测试适配器属性"""

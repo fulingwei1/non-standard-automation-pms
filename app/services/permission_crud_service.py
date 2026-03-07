@@ -5,6 +5,7 @@
 """
 
 from typing import Any, List, Optional
+
 from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService

@@ -16,11 +16,12 @@ from pydantic import BaseModel, Field
 
 from ..common import PaginatedResponse, TimestampSchema
 
-
 # ==================== 生产异常 ====================
+
 
 class ProductionExceptionCreate(BaseModel):
     """创建生产异常"""
+
     exception_type: str = Field(description="异常类型：MATERIAL/EQUIPMENT/QUALITY/OTHER")
     exception_level: str = Field(default="MINOR", description="异常级别：MINOR/MAJOR/CRITICAL")
     title: str = Field(max_length=200, description="异常标题")
@@ -36,12 +37,14 @@ class ProductionExceptionCreate(BaseModel):
 
 class ProductionExceptionHandle(BaseModel):
     """处理生产异常"""
+
     handle_plan: str = Field(description="处理方案")
     handle_result: Optional[str] = Field(default=None, description="处理结果")
 
 
 class ProductionExceptionResponse(TimestampSchema):
     """生产异常响应"""
+
     id: int
     exception_no: str
     exception_type: str
@@ -73,6 +76,5 @@ class ProductionExceptionResponse(TimestampSchema):
 
 class ProductionExceptionListResponse(PaginatedResponse):
     """生产异常列表响应"""
+
     items: List[ProductionExceptionResponse]
-
-

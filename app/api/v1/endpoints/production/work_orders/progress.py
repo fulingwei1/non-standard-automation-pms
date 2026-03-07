@@ -4,15 +4,13 @@
 """
 from typing import Any
 
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.models.production import WorkOrder
 from app.models.user import User
-from fastapi import APIRouter
-
 from app.schemas.production import WorkOrderProgressResponse
 from app.utils.db_helpers import get_or_404
 

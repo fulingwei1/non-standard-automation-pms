@@ -2,19 +2,32 @@
 售前AI系统集成 - 数据模型
 Team 10: 售前AI系统集成与前端UI
 """
+
+import enum
+
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, Text, JSON,
-    Date, TIMESTAMP, ForeignKey, Enum, Index
+    JSON,
+    TIMESTAMP,
+    Boolean,
+    Column,
+    Date,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
 
 from app.models.base import Base
 
 
 class AIFunctionEnum(str, enum.Enum):
     """AI功能枚举"""
+
     REQUIREMENT = "requirement"  # 需求理解AI
     SOLUTION = "solution"  # 方案生成AI
     COST = "cost"  # 成本估算AI
@@ -28,6 +41,7 @@ class AIFunctionEnum(str, enum.Enum):
 
 class WorkflowStepEnum(str, enum.Enum):
     """工作流步骤枚举"""
+
     REQUIREMENT = "requirement"
     SOLUTION = "solution"
     COST = "cost"
@@ -37,6 +51,7 @@ class WorkflowStepEnum(str, enum.Enum):
 
 class WorkflowStatusEnum(str, enum.Enum):
     """工作流状态枚举"""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -45,6 +60,7 @@ class WorkflowStatusEnum(str, enum.Enum):
 
 class PresaleAIUsageStats(Base):
     """AI功能使用统计表"""
+
     __tablename__ = "presale_ai_usage_stats"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -56,23 +72,26 @@ class PresaleAIUsageStats(Base):
     date = Column(Date, nullable=False, comment="统计日期")
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
     updated_at = Column(
-        TIMESTAMP,
-        server_default=func.current_timestamp(),
-        onupdate=func.current_timestamp()
+        TIMESTAMP, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
 
     # 关系
     user = relationship("User", backref="ai_usage_stats")
 
     __table_args__ = (
-        Index('idx_user_function_date', 'user_id', 'ai_function', 'date'),
-        Index('idx_date', 'date'),
-        {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'}
+        Index("idx_user_function_date", "user_id", "ai_function", "date"),
+        Index("idx_date", "date"),
+        {
+            "mysql_engine": "InnoDB",
+            "mysql_charset": "utf8mb4",
+            "mysql_collate": "utf8mb4_unicode_ci",
+        },
     )
 
 
 class PresaleAIFeedback(Base):
     """AI反馈表"""
+
     __tablename__ = "presale_ai_feedback"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -83,24 +102,27 @@ class PresaleAIFeedback(Base):
     feedback_text = Column(Text, nullable=True, comment="反馈内容")
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
     updated_at = Column(
-        TIMESTAMP,
-        server_default=func.current_timestamp(),
-        onupdate=func.current_timestamp()
+        TIMESTAMP, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
 
     # 关系
     user = relationship("User", backref="ai_feedbacks")
 
     __table_args__ = (
-        Index('idx_user_function', 'user_id', 'ai_function'),
-        Index('idx_rating', 'rating'),
-        Index('idx_ai_usage_created_at', 'created_at'),
-        {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'}
+        Index("idx_user_function", "user_id", "ai_function"),
+        Index("idx_rating", "rating"),
+        Index("idx_ai_usage_created_at", "created_at"),
+        {
+            "mysql_engine": "InnoDB",
+            "mysql_charset": "utf8mb4",
+            "mysql_collate": "utf8mb4_unicode_ci",
+        },
     )
 
 
 class PresaleAIConfig(Base):
     """AI配置表"""
+
     __tablename__ = "presale_ai_config"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -113,18 +135,21 @@ class PresaleAIConfig(Base):
     config_json = Column(JSON, nullable=True, comment="其他配置参数")
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
     updated_at = Column(
-        TIMESTAMP,
-        server_default=func.current_timestamp(),
-        onupdate=func.current_timestamp()
+        TIMESTAMP, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
 
     __table_args__ = (
-        {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'},
+        {
+            "mysql_engine": "InnoDB",
+            "mysql_charset": "utf8mb4",
+            "mysql_collate": "utf8mb4_unicode_ci",
+        },
     )
 
 
 class PresaleAIWorkflowLog(Base):
     """AI工作流日志表"""
+
     __tablename__ = "presale_ai_workflow_log"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -139,14 +164,19 @@ class PresaleAIWorkflowLog(Base):
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
 
     __table_args__ = (
-        Index('idx_ticket_step', 'presale_ticket_id', 'workflow_step'),
-        Index('idx_ai_workflow_status', 'status'),
-        {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'}
+        Index("idx_ticket_step", "presale_ticket_id", "workflow_step"),
+        Index("idx_ai_workflow_status", "status"),
+        {
+            "mysql_engine": "InnoDB",
+            "mysql_charset": "utf8mb4",
+            "mysql_collate": "utf8mb4_unicode_ci",
+        },
     )
 
 
 class PresaleAIAuditLog(Base):
     """AI审计日志表"""
+
     __tablename__ = "presale_ai_audit_log"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -164,7 +194,11 @@ class PresaleAIAuditLog(Base):
     user = relationship("User", backref="ai_audit_logs")
 
     __table_args__ = (
-        Index('idx_user_action', 'user_id', 'action'),
-        Index('idx_ai_feedback_created_at', 'created_at'),
-        {'mysql_engine': 'InnoDB', 'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'}
+        Index("idx_user_action", "user_id", "action"),
+        Index("idx_ai_feedback_created_at", "created_at"),
+        {
+            "mysql_engine": "InnoDB",
+            "mysql_charset": "utf8mb4",
+            "mysql_collate": "utf8mb4_unicode_ci",
+        },
     )

@@ -14,7 +14,6 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter, apply_like_filter
-from app.services.notification_dispatcher import NotificationDispatcher
 from app.models.business_support import (
     CustomerSupplierRegistration,
     DeliveryOrder,
@@ -30,6 +29,7 @@ from app.schemas.business_support import (
     CustomerSupplierRegistrationResponse,
     InvoiceRequestResponse,
 )
+from app.services.notification_dispatcher import NotificationDispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class BusinessSupportUtilsService:
         source_type: str,
         source_id: int,
         priority: str = "NORMAL",
-        extra_data: Optional[dict] = None
+        extra_data: Optional[dict] = None,
     ) -> None:
         """
         发送部门通知
@@ -98,7 +98,7 @@ class BusinessSupportUtilsService:
         source_type: str,
         source_id: int,
         priority: str = "NORMAL",
-        extra_data: Optional[dict] = None
+        extra_data: Optional[dict] = None,
     ) -> None:
         """
         发送项目相关部门通知（PMC、生产、采购等）
@@ -114,19 +114,20 @@ class BusinessSupportUtilsService:
             extra_data: 额外数据
         """
         # 获取项目成员
-        project_members = self.db.query(ProjectMember).filter(
-            ProjectMember.project_id == project_id,
-            ProjectMember.is_active
-        ).all()
+        project_members = (
+            self.db.query(ProjectMember)
+            .filter(ProjectMember.project_id == project_id, ProjectMember.is_active)
+            .all()
+        )
 
         # 根据角色分类发送通知
         # 获取相关部门的ID
         dept_mapping = {
-            'PMC': ['pmc', '生产管理中心'],
-            'PRODUCTION': ['production', 'production_dept', '生产部', '生产制造部'],
-            'PURCHASE': ['purchase', 'procurement', '采购部', '采购中心'],
-            'TECHNICAL': ['technical', 'rd', '技术部', '研发部'],
-            'QUALITY': ['quality', 'qa', '质量部', '品管部']
+            "PMC": ["pmc", "生产管理中心"],
+            "PRODUCTION": ["production", "production_dept", "生产部", "生产制造部"],
+            "PURCHASE": ["purchase", "procurement", "采购部", "采购中心"],
+            "TECHNICAL": ["technical", "rd", "技术部", "研发部"],
+            "QUALITY": ["quality", "qa", "质量部", "品管部"],
         }
 
         notified_users = set()
@@ -143,7 +144,7 @@ class BusinessSupportUtilsService:
                     source_type=source_type,
                     source_id=source_id,
                     priority=priority,
-                    extra_data=extra_data
+                    extra_data=extra_data,
                 )
                 notified_users.add(user.id)
 
@@ -154,10 +155,9 @@ class BusinessSupportUtilsService:
             dept = dept_query.first()
 
             if dept:
-                dept_users = self.db.query(User).filter(
-                    User.department_id == dept.id,
-                    User.is_active
-                ).all()
+                dept_users = (
+                    self.db.query(User).filter(User.department_id == dept.id, User.is_active).all()
+                )
 
                 for user in dept_users:
                     if user.id not in notified_users:
@@ -171,7 +171,7 @@ class BusinessSupportUtilsService:
                             source_type=source_type,
                             source_id=source_id,
                             priority=priority,
-                            extra_data=extra_data
+                            extra_data=extra_data,
                         )
                         notified_users.add(user.id)
 
@@ -312,7 +312,9 @@ class BusinessSupportUtilsService:
             "reconciliation_no",
             use_ilike=False,
         )
-        max_reconciliation = max_reconciliation_query.order_by(desc(Reconciliation.reconciliation_no)).first()
+        max_reconciliation = max_reconciliation_query.order_by(
+            desc(Reconciliation.reconciliation_no)
+        ).first()
 
         if max_reconciliation:
             try:
@@ -367,7 +369,9 @@ class BusinessSupportUtilsService:
 
     # ==================== 响应转换 ====================
 
-    def to_invoice_request_response(self, invoice_request: InvoiceRequest) -> InvoiceRequestResponse:
+    def to_invoice_request_response(
+        self, invoice_request: InvoiceRequest
+    ) -> InvoiceRequestResponse:
         """
         转换开票申请对象为响应对象
 
@@ -378,11 +382,21 @@ class BusinessSupportUtilsService:
             开票申请响应对象
         """
         contract_code = invoice_request.contract.contract_code if invoice_request.contract else None
-        project_name = invoice_request.project.project_name if invoice_request.project else invoice_request.project_name
-        customer_name = invoice_request.customer.customer_name if invoice_request.customer else invoice_request.customer_name
+        project_name = (
+            invoice_request.project.project_name
+            if invoice_request.project
+            else invoice_request.project_name
+        )
+        customer_name = (
+            invoice_request.customer.customer_name
+            if invoice_request.customer
+            else invoice_request.customer_name
+        )
         approved_by_name = None
         if invoice_request.approver:
-            approved_by_name = invoice_request.approver.real_name or invoice_request.approver.username
+            approved_by_name = (
+                invoice_request.approver.real_name or invoice_request.approver.username
+            )
         invoice_code = invoice_request.invoice.invoice_code if invoice_request.invoice else None
 
         return InvoiceRequestResponse(
@@ -422,7 +436,9 @@ class BusinessSupportUtilsService:
             updated_at=invoice_request.updated_at,
         )
 
-    def to_registration_response(self, record: CustomerSupplierRegistration) -> CustomerSupplierRegistrationResponse:
+    def to_registration_response(
+        self, record: CustomerSupplierRegistration
+    ) -> CustomerSupplierRegistrationResponse:
         """
         转换客户供应商入驻对象为响应对象
 

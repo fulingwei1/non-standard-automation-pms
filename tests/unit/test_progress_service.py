@@ -33,10 +33,10 @@ from app.services.progress_service import (
     update_task_progress,
 )
 
-
 # =============================================================================
 # progress_error_to_http
 # =============================================================================
+
 
 class TestProgressErrorToHttp:
     def test_task_not_found_gives_404(self):
@@ -69,6 +69,7 @@ class TestProgressErrorToHttp:
 # =============================================================================
 # apply_task_progress_update
 # =============================================================================
+
 
 class TestApplyTaskProgressUpdate:
     def _make_task(self, assignee_id=1, status="IN_PROGRESS", progress=0):
@@ -139,6 +140,7 @@ class TestApplyTaskProgressUpdate:
 # update_task_progress
 # =============================================================================
 
+
 class TestUpdateTaskProgress:
     def _make_db(self, task=None):
         db = MagicMock()
@@ -163,8 +165,10 @@ class TestUpdateTaskProgress:
 
         db = self._make_db(task=task)
 
-        with patch("app.services.progress_service.save_obj"), \
-             patch("app.services.progress_service.aggregate_task_progress") as mock_agg:
+        with (
+            patch("app.services.progress_service.save_obj"),
+            patch("app.services.progress_service.aggregate_task_progress") as mock_agg,
+        ):
             mock_agg.return_value = {"project_progress_updated": True}
             result_task, agg = update_task_progress(
                 db, task_id=10, progress=50, updater_id=1, run_aggregation=True
@@ -184,11 +188,16 @@ class TestUpdateTaskProgress:
 
         db = self._make_db(task=task)
 
-        with patch("app.services.progress_service.save_obj"), \
-             patch("app.services.progress_service.aggregate_task_progress", return_value={}), \
-             patch("app.services.progress_service.create_progress_log_entry") as mock_log:
+        with (
+            patch("app.services.progress_service.save_obj"),
+            patch("app.services.progress_service.aggregate_task_progress", return_value={}),
+            patch("app.services.progress_service.create_progress_log_entry") as mock_log,
+        ):
             update_task_progress(
-                db, task_id=10, progress=60, updater_id=1,
+                db,
+                task_id=10,
+                progress=60,
+                updater_id=1,
                 progress_note="完成设计评审",
                 create_progress_log=True,
                 run_aggregation=False,
@@ -206,12 +215,19 @@ class TestUpdateTaskProgress:
 
         db = self._make_db(task=task)
 
-        with patch("app.services.progress_service.save_obj"), \
-             patch("app.services.progress_service.aggregate_task_progress", return_value={}), \
-             patch("app.services.progress_service.create_progress_log_entry") as mock_log:
+        with (
+            patch("app.services.progress_service.save_obj"),
+            patch("app.services.progress_service.aggregate_task_progress", return_value={}),
+            patch("app.services.progress_service.create_progress_log_entry") as mock_log,
+        ):
             update_task_progress(
-                db, task_id=10, progress=60, updater_id=1,
-                progress_note=None, create_progress_log=True, run_aggregation=False,
+                db,
+                task_id=10,
+                progress=60,
+                updater_id=1,
+                progress_note=None,
+                create_progress_log=True,
+                run_aggregation=False,
             )
             mock_log.assert_not_called()
 
@@ -225,8 +241,10 @@ class TestUpdateTaskProgress:
 
         db = self._make_db(task=task)
 
-        with patch("app.services.progress_service.save_obj"), \
-             patch("app.services.progress_service.aggregate_task_progress") as mock_agg:
+        with (
+            patch("app.services.progress_service.save_obj"),
+            patch("app.services.progress_service.aggregate_task_progress") as mock_agg,
+        ):
             _, agg = update_task_progress(
                 db, task_id=10, progress=50, updater_id=1, run_aggregation=False
             )
@@ -237,6 +255,7 @@ class TestUpdateTaskProgress:
 # =============================================================================
 # aggregate_task_progress
 # =============================================================================
+
 
 class TestAggregateTaskProgress:
     def _make_db_with_task(self, task):
@@ -304,6 +323,7 @@ class TestAggregateTaskProgress:
 # _check_and_update_health
 # =============================================================================
 
+
 class TestCheckAndUpdateHealth:
     def test_no_action_when_project_not_found(self):
         db = MagicMock()
@@ -367,17 +387,19 @@ class TestCheckAndUpdateHealth:
 # create_progress_log_entry
 # =============================================================================
 
+
 class TestCreateProgressLogEntry:
     def test_creates_and_returns_log(self):
         db = MagicMock()
-        with patch("app.services.progress_service.save_obj") as mock_save, \
-             patch("app.services.progress_service.ProgressLog") as MockLog:
+        with (
+            patch("app.services.progress_service.save_obj") as mock_save,
+            patch("app.services.progress_service.ProgressLog") as MockLog,
+        ):
             mock_instance = MagicMock()
             MockLog.return_value = mock_instance
 
             result = create_progress_log_entry(
-                db, task_id=1, progress=50, actual_hours=4.0,
-                note="进展顺利", updater_id=10
+                db, task_id=1, progress=50, actual_hours=4.0, note="进展顺利", updater_id=10
             )
 
         assert result is mock_instance
@@ -387,18 +409,18 @@ class TestCreateProgressLogEntry:
         db = MagicMock()
         with patch("app.services.progress_service.save_obj", side_effect=Exception("DB error")):
             result = create_progress_log_entry(
-                db, task_id=1, progress=50, actual_hours=None,
-                note="test", updater_id=1
+                db, task_id=1, progress=50, actual_hours=None, note="test", updater_id=1
             )
         assert result is None
 
     def test_default_note_generated_when_none(self):
         db = MagicMock()
-        with patch("app.services.progress_service.save_obj"), \
-             patch("app.services.progress_service.ProgressLog") as MockLog:
+        with (
+            patch("app.services.progress_service.save_obj"),
+            patch("app.services.progress_service.ProgressLog") as MockLog,
+        ):
             create_progress_log_entry(
-                db, task_id=1, progress=75, actual_hours=None,
-                note=None, updater_id=1
+                db, task_id=1, progress=75, actual_hours=None, note=None, updater_id=1
             )
             call_kwargs = MockLog.call_args
             assert "75" in str(call_kwargs)
@@ -407,6 +429,7 @@ class TestCreateProgressLogEntry:
 # =============================================================================
 # get_project_progress_summary
 # =============================================================================
+
 
 class TestGetProjectProgressSummary:
     def test_returns_correct_structure(self):
@@ -443,6 +466,7 @@ class TestGetProjectProgressSummary:
 # ProgressAggregationService
 # =============================================================================
 
+
 class TestProgressAggregationService:
     def test_returns_correct_keys(self):
         db = MagicMock()
@@ -478,6 +502,7 @@ class TestProgressAggregationService:
 # ProgressAutoService
 # =============================================================================
 
+
 class TestProgressAutoService:
     def test_apply_forecast_blocks_overdue_tasks(self):
         db = MagicMock()
@@ -491,6 +516,7 @@ class TestProgressAutoService:
         db.query.return_value.filter.return_value.all.return_value = [task]
 
         from app.schemas.progress import TaskForecastItem
+
         forecast_item = MagicMock()
         forecast_item.task_id = 1
         forecast_item.delay_days = 10

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/adapters/project.py"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.report_framework.adapters.project import (
+        ProjectMonthlyAdapter,
         ProjectReportAdapter,
         ProjectWeeklyAdapter,
-        ProjectMonthlyAdapter,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
@@ -52,9 +53,16 @@ def test_generate_data_weekly():
 
 def test_generate_data_monthly():
     adapter, _ = _make_adapter("monthly")
-    mock_data = {"summary": {"report_type": "月报"}, "milestones": {}, "progress_trend": [], "cost": {}}
+    mock_data = {
+        "summary": {"report_type": "月报"},
+        "milestones": {},
+        "progress_trend": [],
+        "cost": {},
+    }
     with patch(f"{_GEN}.generate_monthly", return_value=mock_data):
-        result = adapter.generate_data({"project_id": 2, "start_date": "2025-01-01", "end_date": "2025-01-31"})
+        result = adapter.generate_data(
+            {"project_id": 2, "start_date": "2025-01-01", "end_date": "2025-01-31"}
+        )
     assert result["title"] == "项目月报"
     assert result["report_type"] == "PROJECT_MONTHLY"
 
@@ -63,11 +71,13 @@ def test_generate_data_with_string_dates():
     adapter, _ = _make_adapter("weekly")
     mock_data = {}
     with patch(f"{_GEN}.generate_weekly", return_value=mock_data):
-        result = adapter.generate_data({
-            "project_id": 3,
-            "start_date": "2025-02-01",
-            "end_date": "2025-02-07",
-        })
+        result = adapter.generate_data(
+            {
+                "project_id": 3,
+                "start_date": "2025-02-01",
+                "end_date": "2025-02-07",
+            }
+        )
     assert "title" in result
 
 

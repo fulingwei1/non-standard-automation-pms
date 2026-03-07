@@ -11,8 +11,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
+from app.core import security
 from app.models.report_center import (
     ReportGeneration,
     ReportTemplate,
@@ -24,17 +25,14 @@ from app.schemas.report_center import (
     ReportTemplateListResponse,
     ReportTemplateResponse,
 )
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(
-    prefix="/templates",
-    tags=["templates"]
-)
+router = APIRouter(prefix="/templates", tags=["templates"])
 
 # 共 2 个路由
 
 # ==================== 报表模板 ====================
+
 
 @router.get("", response_model=ReportTemplateListResponse, status_code=status.HTTP_200_OK)
 def get_report_templates(
@@ -53,29 +51,35 @@ def get_report_templates(
         query = query.filter(ReportTemplate.report_type == report_type)
 
     total = query.count()
-    templates = apply_pagination(query.order_by(desc(ReportTemplate.use_count), desc(ReportTemplate.created_at)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(desc(ReportTemplate.use_count), desc(ReportTemplate.created_at)),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for template in templates:
-        items.append(ReportTemplateResponse(
-            id=template.id,
-            template_code=template.template_code,
-            template_name=template.template_name,
-            report_type=template.report_type,
-            description=template.description,
-            is_system=template.is_system or False,
-            is_active=template.is_active or True,
-            use_count=template.use_count or 0,
-            created_at=template.created_at,
-            updated_at=template.updated_at
-        ))
+        items.append(
+            ReportTemplateResponse(
+                id=template.id,
+                template_code=template.template_code,
+                template_name=template.template_name,
+                report_type=template.report_type,
+                description=template.description,
+                is_system=template.is_system or False,
+                is_active=template.is_active or True,
+                use_count=template.use_count or 0,
+                created_at=template.created_at,
+                updated_at=template.updated_at,
+            )
+        )
 
     return ReportTemplateListResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -105,9 +109,9 @@ def apply_report_template(
 
     # 使用模板报表适配器生成报表
     from app.services.report_framework.adapters.template import TemplateReportAdapter
-    
+
     adapter = TemplateReportAdapter(db)
-    
+
     try:
         result = adapter.generate(
             params={
@@ -129,18 +133,20 @@ def apply_report_template(
 
     # 提取报表数据
     report_data = result.data if hasattr(result, "data") else result
-    
+
     generation = ReportGeneration(
         template_id=template.id,
         report_type=template.report_type,
         report_title=apply_in.report_name,
-        scope_type="PROJECT" if apply_in.project_id else ("DEPARTMENT" if apply_in.department_id else None),
+        scope_type=(
+            "PROJECT" if apply_in.project_id else ("DEPARTMENT" if apply_in.department_id else None)
+        ),
         scope_id=apply_in.project_id or apply_in.department_id,
         period_start=apply_in.start_date,
         period_end=apply_in.end_date,
         report_data=report_data,
         status="GENERATED",
-        generated_by=current_user.id
+        generated_by=current_user.id,
     )
 
     db.add(generation)
@@ -153,7 +159,5 @@ def apply_report_template(
         report_name=generation.report_title or f"{template.template_name}报表",
         report_type=generation.report_type,
         generated_at=generation.generated_at or datetime.now(),
-        data=generation.report_data or {}
+        data=generation.report_data or {},
     )
-
-

@@ -4,6 +4,7 @@ Tests for app/utils/project_utils.py
 Tests for the ProjectUtils class (pure calculation logic, no DB needed).
 """
 import pytest
+
 from app.utils.project_utils import ProjectUtils
 
 

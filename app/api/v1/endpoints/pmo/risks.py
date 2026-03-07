@@ -46,6 +46,7 @@ generate_risk_no = pmo_codes.generate_risk_no
 
 # ==================== 风险管理 ====================
 
+
 @router.get("/pmo/projects/{project_id}/risks", response_model=List[RiskResponse])
 def read_project_risks(
     *,
@@ -74,36 +75,42 @@ def read_project_risks(
 
     result = []
     for risk in risks:
-        result.append(RiskResponse(
-            id=risk.id,
-            project_id=risk.project_id,
-            risk_no=risk.risk_no,
-            risk_category=risk.risk_category,
-            risk_name=risk.risk_name,
-            description=risk.description,
-            probability=risk.probability,
-            impact=risk.impact,
-            risk_level=risk.risk_level,
-            response_strategy=risk.response_strategy,
-            response_plan=risk.response_plan,
-            owner_id=risk.owner_id,
-            owner_name=risk.owner_name,
-            status=risk.status,
-            follow_up_date=risk.follow_up_date,
-            last_update=risk.last_update,
-            trigger_condition=risk.trigger_condition,
-            is_triggered=risk.is_triggered,
-            triggered_date=risk.triggered_date,
-            closed_date=risk.closed_date,
-            closed_reason=risk.closed_reason,
-            created_at=risk.created_at,
-            updated_at=risk.updated_at,
-        ))
+        result.append(
+            RiskResponse(
+                id=risk.id,
+                project_id=risk.project_id,
+                risk_no=risk.risk_no,
+                risk_category=risk.risk_category,
+                risk_name=risk.risk_name,
+                description=risk.description,
+                probability=risk.probability,
+                impact=risk.impact,
+                risk_level=risk.risk_level,
+                response_strategy=risk.response_strategy,
+                response_plan=risk.response_plan,
+                owner_id=risk.owner_id,
+                owner_name=risk.owner_name,
+                status=risk.status,
+                follow_up_date=risk.follow_up_date,
+                last_update=risk.last_update,
+                trigger_condition=risk.trigger_condition,
+                is_triggered=risk.is_triggered,
+                triggered_date=risk.triggered_date,
+                closed_date=risk.closed_date,
+                closed_reason=risk.closed_reason,
+                created_at=risk.created_at,
+                updated_at=risk.updated_at,
+            )
+        )
 
     return result
 
 
-@router.post("/pmo/projects/{project_id}/risks", response_model=RiskResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/pmo/projects/{project_id}/risks",
+    response_model=RiskResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_risk(
     *,
     db: Session = Depends(deps.get_db),
@@ -138,8 +145,8 @@ def create_risk(
         owner_id=risk_in.owner_id,
         owner_name=owner_name,
         trigger_condition=risk_in.trigger_condition,
-        status='IDENTIFIED',
-        is_triggered=False
+        status="IDENTIFIED",
+        is_triggered=False,
     )
 
     db.add(risk)
@@ -197,7 +204,7 @@ def assess_risk(
     else:
         risk.risk_level = calculate_risk_level(assess_request.probability, assess_request.impact)
 
-    risk.status = 'ANALYZING'
+    risk.status = "ANALYZING"
 
     db.add(risk)
     db.commit()
@@ -253,7 +260,7 @@ def update_risk_response(
         owner = db.query(User).filter(User.id == response_request.owner_id).first()
         risk.owner_name = owner.real_name or owner.username if owner else None
 
-    risk.status = 'RESPONDING'
+    risk.status = "RESPONDING"
 
     db.add(risk)
     db.commit()
@@ -353,7 +360,7 @@ def close_risk(
     if not risk:
         raise HTTPException(status_code=404, detail="风险不存在")
 
-    risk.status = 'CLOSED'
+    risk.status = "CLOSED"
     risk.closed_date = date.today()
     risk.closed_reason = close_request.closed_reason
 
@@ -386,5 +393,3 @@ def close_risk(
         created_at=risk.created_at,
         updated_at=risk.updated_at,
     )
-
-

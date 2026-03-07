@@ -7,8 +7,8 @@ import logging
 from datetime import date, datetime, timedelta
 
 from app.common.query_filters import apply_like_filter
-from app.models.alert import AlertRecord, AlertRule
 from app.dependencies import get_db_session
+from app.models.alert import AlertRecord, AlertRule
 from app.models.enums import AlertLevelEnum, AlertRuleTypeEnum, AlertStatusEnum
 from app.models.issue import Issue
 from app.models.project import Project
@@ -28,12 +28,16 @@ def check_overdue_issues():
             today = date.today()
 
             # 查询逾期问题（状态为OPEN或PROCESSING，且due_date < today）
-            overdue_issues = db.query(Issue).filter(
-                Issue.status.in_(['OPEN', 'PROCESSING']),
-                Issue.due_date.isnot(None),
-                Issue.due_date < today,
-                Issue.status != 'DELETED'
-            ).all()
+            overdue_issues = (
+                db.query(Issue)
+                .filter(
+                    Issue.status.in_(["OPEN", "PROCESSING"]),
+                    Issue.due_date.isnot(None),
+                    Issue.due_date < today,
+                    Issue.status != "DELETED",
+                )
+                .all()
+            )
 
             notified_count = 0
 
@@ -44,13 +48,13 @@ def check_overdue_issues():
                         create_notification(
                             db=db,
                             user_id=issue.assignee_id,
-                            notification_type='ISSUE_OVERDUE',
-                            title=f'问题已逾期：{issue.title}',
-                            content=f'问题 {issue.issue_no} 已逾期，要求完成日期：{issue.due_date}',
-                            source_type='ISSUE',
+                            notification_type="ISSUE_OVERDUE",
+                            title=f"问题已逾期：{issue.title}",
+                            content=f"问题 {issue.issue_no} 已逾期，要求完成日期：{issue.due_date}",
+                            source_type="ISSUE",
                             source_id=issue.id,
-                            link_url=f'/issues/{issue.id}',
-                            priority='HIGH'
+                            link_url=f"/issues/{issue.id}",
+                            priority="HIGH",
                         )
                         notified_count += 1
                     except Exception as e:
@@ -64,13 +68,13 @@ def check_overdue_issues():
                             create_notification(
                                 db=db,
                                 user_id=project.pm_id,
-                                notification_type='ISSUE_OVERDUE',
-                                title=f'项目问题已逾期：{issue.title}',
-                                content=f'项目 {project.project_name} 的问题 {issue.issue_no} 已逾期',
-                                source_type='ISSUE',
+                                notification_type="ISSUE_OVERDUE",
+                                title=f"项目问题已逾期：{issue.title}",
+                                content=f"项目 {project.project_name} 的问题 {issue.issue_no} 已逾期",
+                                source_type="ISSUE",
                                 source_id=issue.id,
-                                link_url=f'/issues/{issue.id}',
-                                priority='HIGH'
+                                link_url=f"/issues/{issue.id}",
+                                priority="HIGH",
                             )
                         except Exception as e:
                             logger.error(f"发送逾期提醒给PM失败 (问题ID: {issue.id}): {str(e)}")
@@ -83,15 +87,16 @@ def check_overdue_issues():
             )
 
             return {
-                'overdue_count': len(overdue_issues),
-                'notified_count': notified_count,
-                'timestamp': datetime.now().isoformat()
+                "overdue_count": len(overdue_issues),
+                "notified_count": notified_count,
+                "timestamp": datetime.now().isoformat(),
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 问题逾期检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def check_blocking_issues():
@@ -104,11 +109,15 @@ def check_blocking_issues():
             from app.services.health_calculator import HealthCalculator
 
             # 查询所有阻塞问题（is_blocking=True 且状态为OPEN或PROCESSING）
-            blocking_issues = db.query(Issue).filter(
-                Issue.is_blocking,
-                Issue.status.in_(['OPEN', 'PROCESSING']),
-                Issue.status != 'DELETED'
-            ).all()
+            blocking_issues = (
+                db.query(Issue)
+                .filter(
+                    Issue.is_blocking,
+                    Issue.status.in_(["OPEN", "PROCESSING"]),
+                    Issue.status != "DELETED",
+                )
+                .all()
+            )
 
             affected_projects = set()
 
@@ -117,63 +126,68 @@ def check_blocking_issues():
                     affected_projects.add(issue.project_id)
 
                     # 创建或更新预警记录
-                    rule = db.query(AlertRule).filter(
-                        AlertRule.rule_code == 'BLOCKING_ISSUE',
-                        AlertRule.is_enabled
-                    ).first()
+                    rule = (
+                        db.query(AlertRule)
+                        .filter(AlertRule.rule_code == "BLOCKING_ISSUE", AlertRule.is_enabled)
+                        .first()
+                    )
 
                     if not rule:
                         # 创建默认规则（如果不存在）
                         rule = AlertRule(
-                            rule_code='BLOCKING_ISSUE',
-                            rule_name='阻塞问题预警',
+                            rule_code="BLOCKING_ISSUE",
+                            rule_name="阻塞问题预警",
                             rule_type=AlertRuleTypeEnum.QUALITY_ISSUE.value,
-                            target_type='ISSUE',
-                            condition_type='THRESHOLD',
-                            condition_operator='EQ',
-                            threshold_value='1',
+                            target_type="ISSUE",
+                            condition_type="THRESHOLD",
+                            condition_operator="EQ",
+                            threshold_value="1",
                             alert_level=AlertLevelEnum.WARNING.value,
                             is_enabled=True,
                             is_system=True,
-                            description='当问题被标记为阻塞时触发预警'
+                            description="当问题被标记为阻塞时触发预警",
                         )
                         db.add(rule)
                         db.flush()
 
                     # 检查是否已有预警记录
-                    existing_alert = db.query(AlertRecord).filter(
-                        AlertRecord.target_type == 'ISSUE',
-                        AlertRecord.target_id == issue.id,
-                        AlertRecord.status == 'PENDING'
-                    ).first()
+                    existing_alert = (
+                        db.query(AlertRecord)
+                        .filter(
+                            AlertRecord.target_type == "ISSUE",
+                            AlertRecord.target_id == issue.id,
+                            AlertRecord.status == "PENDING",
+                        )
+                        .first()
+                    )
 
                     if not existing_alert:
                         # 生成预警编号
-                        today = datetime.now().strftime('%Y%m%d')
+                        today = datetime.now().strftime("%Y%m%d")
                         count_query = db.query(AlertRecord)
                         count_query = apply_like_filter(
                             count_query,
                             AlertRecord,
-                            f'AL{today}%',
+                            f"AL{today}%",
                             "alert_no",
                             use_ilike=False,
                         )
                         count = count_query.count()
-                        alert_no = f'AL{today}{str(count + 1).zfill(4)}'
+                        alert_no = f"AL{today}{str(count + 1).zfill(4)}"
 
                         alert = AlertRecord(
                             alert_no=alert_no,
                             rule_id=rule.id,
-                            target_type='ISSUE',
+                            target_type="ISSUE",
                             target_id=issue.id,
                             target_no=issue.issue_no,
                             target_name=issue.title,
                             project_id=issue.project_id,
                             alert_level=AlertLevelEnum.WARNING.value,
-                            alert_title=f'阻塞问题：{issue.title}',
-                            alert_content=f'问题 {issue.issue_no} 标记为阻塞问题，可能影响项目进度',
+                            alert_title=f"阻塞问题：{issue.title}",
+                            alert_content=f"问题 {issue.issue_no} 标记为阻塞问题，可能影响项目进度",
                             status=AlertStatusEnum.PENDING.value,
-                            triggered_at=datetime.now()
+                            triggered_at=datetime.now(),
                         )
                         db.add(alert)
 
@@ -195,16 +209,17 @@ def check_blocking_issues():
             )
 
             return {
-                'blocking_count': len(blocking_issues),
-                'affected_projects': len(affected_projects),
-                'health_updated': updated_count,
-                'timestamp': datetime.now().isoformat()
+                "blocking_count": len(blocking_issues),
+                "affected_projects": len(affected_projects),
+                "health_updated": updated_count,
+                "timestamp": datetime.now().isoformat(),
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 阻塞问题检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def check_timeout_issues():
@@ -217,27 +232,31 @@ def check_timeout_issues():
             # 查询超过7天未处理的问题
             timeout_threshold = datetime.now() - timedelta(days=7)
 
-            timeout_issues = db.query(Issue).filter(
-                Issue.status.in_(['OPEN', 'PROCESSING']),
-                Issue.status != 'DELETED',
-                (
-                    (Issue.last_follow_up_at.is_(None)) |
-                    (Issue.last_follow_up_at < timeout_threshold)
+            timeout_issues = (
+                db.query(Issue)
+                .filter(
+                    Issue.status.in_(["OPEN", "PROCESSING"]),
+                    Issue.status != "DELETED",
+                    (
+                        (Issue.last_follow_up_at.is_(None))
+                        | (Issue.last_follow_up_at < timeout_threshold)
+                    ),
                 )
-            ).all()
+                .all()
+            )
 
             upgraded_count = 0
 
             for issue in timeout_issues:
                 # 自动升级优先级
-                if issue.priority == 'LOW':
-                    issue.priority = 'MEDIUM'
+                if issue.priority == "LOW":
+                    issue.priority = "MEDIUM"
                     upgraded_count += 1
-                elif issue.priority == 'MEDIUM':
-                    issue.priority = 'HIGH'
+                elif issue.priority == "MEDIUM":
+                    issue.priority = "HIGH"
                     upgraded_count += 1
-                elif issue.priority == 'HIGH':
-                    issue.priority = 'URGENT'
+                elif issue.priority == "HIGH":
+                    issue.priority = "URGENT"
                     upgraded_count += 1
 
                 db.add(issue)
@@ -250,15 +269,16 @@ def check_timeout_issues():
             )
 
             return {
-                'timeout_count': len(timeout_issues),
-                'upgraded_count': upgraded_count,
-                'timestamp': datetime.now().isoformat()
+                "timeout_count": len(timeout_issues),
+                "upgraded_count": upgraded_count,
+                "timestamp": datetime.now().isoformat(),
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 问题超时检查失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}
 
 
 def daily_issue_statistics_snapshot():
@@ -287,7 +307,7 @@ def daily_issue_statistics_snapshot():
             # 检查今天是否已生成快照
             if check_existing_snapshot(db, today):
                 logger.info(f"[{datetime.now()}] 今日快照已存在，跳过生成")
-                return {'message': 'Snapshot already exists for today'}
+                return {"message": "Snapshot already exists for today"}
 
             # 统计各类问题数量
             status_counts = count_issues_by_status(db)
@@ -306,9 +326,17 @@ def daily_issue_statistics_snapshot():
 
             # 创建快照记录
             create_snapshot_record(
-                db, today, status_counts, severity_counts, priority_counts,
-                type_counts, blocking_overdue, category_counts, today_counts,
-                avg_resolve_time, distributions
+                db,
+                today,
+                status_counts,
+                severity_counts,
+                priority_counts,
+                type_counts,
+                blocking_overdue,
+                category_counts,
+                today_counts,
+                avg_resolve_time,
+                distributions,
             )
 
             db.commit()
@@ -322,18 +350,19 @@ def daily_issue_statistics_snapshot():
             )
 
             return {
-                'snapshot_date': today.isoformat(),
-                'total_issues': status_counts['total'],
-                'open_issues': status_counts['open'],
-                'processing_issues': status_counts['processing'],
-                'resolved_issues': status_counts['resolved'],
-                'closed_issues': status_counts['closed'],
-                'blocking_issues': blocking_overdue['blocking'],
-                'overdue_issues': blocking_overdue['overdue'],
-                'timestamp': datetime.now().isoformat()
+                "snapshot_date": today.isoformat(),
+                "total_issues": status_counts["total"],
+                "open_issues": status_counts["open"],
+                "processing_issues": status_counts["processing"],
+                "resolved_issues": status_counts["resolved"],
+                "closed_issues": status_counts["closed"],
+                "blocking_issues": blocking_overdue["blocking"],
+                "overdue_issues": blocking_overdue["overdue"],
+                "timestamp": datetime.now().isoformat(),
             }
     except Exception as e:
         logger.error(f"[{datetime.now()}] 问题统计快照生成失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
-        return {'error': str(e)}
+        return {"error": str(e)}

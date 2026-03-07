@@ -9,19 +9,19 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch, call
 from datetime import datetime
+from unittest.mock import MagicMock, Mock, call, patch
 
 from fastapi import HTTPException
 
 from app.api.v1.endpoints.users.utils import (
-    get_role_names,
-    get_role_ids,
+    _invalidate_user_cache,
     build_user_response,
     ensure_employee_unbound,
+    get_role_ids,
+    get_role_names,
     prepare_employee_for_new_user,
     replace_user_roles,
-    _invalidate_user_cache,
 )
 from app.schemas.auth import UserCreate
 
@@ -222,9 +222,9 @@ class TestBuildUserResponse(unittest.TestCase):
         mock_user.created_at = datetime(2023, 1, 1, 0, 0, 0)
         mock_user.updated_at = datetime(2023, 1, 1, 0, 0, 0)
         mock_user.roles = []
-        
+
         # 模拟没有employee_id属性
-        delattr(mock_user, 'employee_id')
+        delattr(mock_user, "employee_id")
 
         response = build_user_response(mock_user)
 
@@ -298,12 +298,8 @@ class TestPrepareEmployeeForNewUser(unittest.TestCase):
         mock_filter.first.return_value = mock_employee
 
         # Mock ensure_employee_unbound
-        with patch('app.api.v1.endpoints.users.utils.ensure_employee_unbound'):
-            user_in = UserCreate(
-                username="test",
-                password="pass123",
-                employee_id=100
-            )
+        with patch("app.api.v1.endpoints.users.utils.ensure_employee_unbound"):
+            user_in = UserCreate(username="test", password="pass123", employee_id=100)
             result = prepare_employee_for_new_user(mock_db, user_in)
 
             self.assertEqual(result, mock_employee)
@@ -315,11 +311,7 @@ class TestPrepareEmployeeForNewUser(unittest.TestCase):
         mock_filter = mock_query.filter.return_value
         mock_filter.first.return_value = None
 
-        user_in = UserCreate(
-            username="test",
-            password="pass123",
-            employee_id=999
-        )
+        user_in = UserCreate(username="test", password="pass123", employee_id=999)
 
         with self.assertRaises(HTTPException) as context:
             prepare_employee_for_new_user(mock_db, user_in)
@@ -338,17 +330,13 @@ class TestPrepareEmployeeForNewUser(unittest.TestCase):
         mock_filter = mock_query.filter.return_value
         mock_filter.first.return_value = mock_employee
 
-        with patch('app.api.v1.endpoints.users.utils.ensure_employee_unbound'):
-            user_in = UserCreate(
-                username="test",
-                password="pass123",
-                employee_no="EMP001"
-            )
+        with patch("app.api.v1.endpoints.users.utils.ensure_employee_unbound"):
+            user_in = UserCreate(username="test", password="pass123", employee_no="EMP001")
             result = prepare_employee_for_new_user(mock_db, user_in)
 
             self.assertEqual(result, mock_employee)
 
-    @patch('app.api.v1.endpoints.users.utils.generate_employee_code')
+    @patch("app.api.v1.endpoints.users.utils.generate_employee_code")
     def test_prepare_employee_create_new(self, mock_generate_code):
         """测试创建新员工"""
         mock_generate_code.return_value = "EMP999"
@@ -364,7 +352,7 @@ class TestPrepareEmployeeForNewUser(unittest.TestCase):
             real_name="新用户",
             department="技术部",
             position="工程师",
-            phone="13800138000"
+            phone="13800138000",
         )
 
         result = prepare_employee_for_new_user(mock_db, user_in)
@@ -381,17 +369,14 @@ class TestPrepareEmployeeForNewUser(unittest.TestCase):
         self.assertEqual(created_employee.role, "工程师")
         self.assertEqual(created_employee.phone, "13800138000")
 
-    @patch('app.api.v1.endpoints.users.utils.generate_employee_code')
+    @patch("app.api.v1.endpoints.users.utils.generate_employee_code")
     def test_prepare_employee_create_with_employee_no(self, mock_generate_code):
         """测试用指定编号创建新员工"""
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
         user_in = UserCreate(
-            username="newuser",
-            password="pass123",
-            employee_no="CUSTOM001",
-            real_name="新用户"
+            username="newuser", password="pass123", employee_no="CUSTOM001", real_name="新用户"
         )
 
         result = prepare_employee_for_new_user(mock_db, user_in)
@@ -406,7 +391,7 @@ class TestPrepareEmployeeForNewUser(unittest.TestCase):
 class TestReplaceUserRoles(unittest.TestCase):
     """测试替换用户角色"""
 
-    @patch('app.api.v1.endpoints.users.utils._invalidate_user_cache')
+    @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_none(self, mock_invalidate):
         """测试role_ids为None时不做任何操作"""
         mock_db = MagicMock()
@@ -417,7 +402,7 @@ class TestReplaceUserRoles(unittest.TestCase):
         mock_db.query.assert_not_called()
         mock_invalidate.assert_not_called()
 
-    @patch('app.api.v1.endpoints.users.utils._invalidate_user_cache')
+    @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_empty_list(self, mock_invalidate):
         """测试清空用户角色"""
         # Mock旧角色
@@ -438,7 +423,7 @@ class TestReplaceUserRoles(unittest.TestCase):
         # 验证缓存失效
         mock_invalidate.assert_called_once_with(1, [1, 2], [])
 
-    @patch('app.api.v1.endpoints.users.utils._invalidate_user_cache')
+    @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_success(self, mock_invalidate):
         """测试成功替换角色"""
         # Mock旧角色
@@ -452,17 +437,17 @@ class TestReplaceUserRoles(unittest.TestCase):
         mock_role2.id = 3
 
         mock_db = MagicMock()
-        
+
         # 设置查询链
         def query_side_effect(model):
-            if model.__name__ == 'UserRole':
+            if model.__name__ == "UserRole":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.all.return_value = [mock_old_role]
                 mock_filter.delete.return_value = None
                 mock_query.filter.return_value = mock_filter
                 return mock_query
-            elif model.__name__ == 'Role':
+            elif model.__name__ == "Role":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.all.return_value = [mock_role1, mock_role2]
@@ -478,7 +463,7 @@ class TestReplaceUserRoles(unittest.TestCase):
         # 验证缓存失效
         mock_invalidate.assert_called_once_with(1, [1], [2, 3])
 
-    @patch('app.api.v1.endpoints.users.utils._invalidate_user_cache')
+    @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_duplicate_ids(self, mock_invalidate):
         """测试去重重复的角色ID"""
         mock_role1 = MagicMock()
@@ -487,16 +472,16 @@ class TestReplaceUserRoles(unittest.TestCase):
         mock_role2.id = 3
 
         mock_db = MagicMock()
-        
+
         def query_side_effect(model):
-            if model.__name__ == 'UserRole':
+            if model.__name__ == "UserRole":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.all.return_value = []
                 mock_filter.delete.return_value = None
                 mock_query.filter.return_value = mock_filter
                 return mock_query
-            elif model.__name__ == 'Role':
+            elif model.__name__ == "Role":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.all.return_value = [mock_role1, mock_role2]
@@ -511,23 +496,23 @@ class TestReplaceUserRoles(unittest.TestCase):
         # 应该只添加2次（去重后）
         self.assertEqual(mock_db.add.call_count, 2)
 
-    @patch('app.api.v1.endpoints.users.utils._invalidate_user_cache')
+    @patch("app.api.v1.endpoints.users.utils._invalidate_user_cache")
     def test_replace_user_roles_role_not_exist(self, mock_invalidate):
         """测试部分角色不存在"""
         mock_role = MagicMock()
         mock_role.id = 2
 
         mock_db = MagicMock()
-        
+
         def query_side_effect(model):
-            if model.__name__ == 'UserRole':
+            if model.__name__ == "UserRole":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
                 mock_filter.all.return_value = []
                 mock_filter.delete.return_value = None
                 mock_query.filter.return_value = mock_filter
                 return mock_query
-            elif model.__name__ == 'Role':
+            elif model.__name__ == "Role":
                 mock_query = MagicMock()
                 mock_filter = MagicMock()
                 # 只返回1个角色，但请求了2个
@@ -547,7 +532,7 @@ class TestReplaceUserRoles(unittest.TestCase):
 class TestInvalidateUserCache(unittest.TestCase):
     """测试缓存失效"""
 
-    @patch('app.services.permission_cache_service.get_permission_cache_service')
+    @patch("app.services.permission_cache_service.get_permission_cache_service")
     def test_invalidate_user_cache_success(self, mock_get_service):
         """测试成功使缓存失效"""
         mock_cache_service = MagicMock()
@@ -557,7 +542,7 @@ class TestInvalidateUserCache(unittest.TestCase):
 
         mock_cache_service.invalidate_user_role_change.assert_called_once_with(1, [1, 2], [3, 4])
 
-    @patch('app.services.permission_cache_service.get_permission_cache_service')
+    @patch("app.services.permission_cache_service.get_permission_cache_service")
     def test_invalidate_user_cache_exception(self, mock_get_service):
         """测试缓存失效异常不影响主流程"""
         mock_get_service.side_effect = Exception("Cache service error")

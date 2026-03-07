@@ -2,13 +2,15 @@
 """
 第三十二批覆盖率测试 - 线索评分计算 (扩展)
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.lead_priority_scoring.level_determination import LevelDeterminationMixin
     from app.services.lead_priority_scoring.constants import ScoringConstants
     from app.services.lead_priority_scoring.lead_scoring import LeadScoringMixin
+    from app.services.lead_priority_scoring.level_determination import LevelDeterminationMixin
+
     HAS_LEAD = True
 except Exception:
     HAS_LEAD = False
@@ -18,6 +20,7 @@ pytestmark = pytest.mark.skipif(not HAS_LEAD, reason="lead_scoring 导入失败"
 
 class ConcreteLeadScoring(LevelDeterminationMixin):
     """用于测试的具体实现类"""
+
     pass
 
 
@@ -96,6 +99,7 @@ class TestScoringConstants:
 class TestLeadScoringMixin:
     def test_calculate_lead_priority_not_found(self):
         """线索不存在时抛出ValueError"""
+
         class ConcreteMixin(LeadScoringMixin):
             def __init__(self):
                 self.db = MagicMock()
@@ -108,24 +112,55 @@ class TestLeadScoringMixin:
 
     def test_calculate_lead_priority_returns_dict(self):
         """评分返回包含必要字段的字典"""
+
         class ConcreteMixin(LeadScoringMixin):
             def __init__(self):
                 self.db = MagicMock()
-            def _calculate_customer_importance(self, lead): return 15
-            def _calculate_contract_amount_score(self, lead): return 20
-            def _calculate_win_rate_score(self, lead): return 15
-            def _calculate_requirement_maturity_score(self, lead): return 12
-            def _calculate_urgency_score(self, lead): return 7
-            def _calculate_relationship_score(self, lead): return 8
-            def _get_customer_level_description(self, lead): return "B级客户"
-            def _get_contract_amount_description(self, lead): return "50-100万"
-            def _get_win_rate_description(self, lead): return "60-80%"
-            def _get_requirement_maturity_description(self, lead): return "较明确"
-            def _get_urgency_description(self, lead): return "较紧急"
-            def _get_relationship_description(self, lead): return "良好"
-            def _determine_priority_level(self, total, urgency): return "P2"
-            def _determine_importance_level(self, total): return "MEDIUM"
-            def _determine_urgency_level(self, urgency): return "MEDIUM"
+
+            def _calculate_customer_importance(self, lead):
+                return 15
+
+            def _calculate_contract_amount_score(self, lead):
+                return 20
+
+            def _calculate_win_rate_score(self, lead):
+                return 15
+
+            def _calculate_requirement_maturity_score(self, lead):
+                return 12
+
+            def _calculate_urgency_score(self, lead):
+                return 7
+
+            def _calculate_relationship_score(self, lead):
+                return 8
+
+            def _get_customer_level_description(self, lead):
+                return "B级客户"
+
+            def _get_contract_amount_description(self, lead):
+                return "50-100万"
+
+            def _get_win_rate_description(self, lead):
+                return "60-80%"
+
+            def _get_requirement_maturity_description(self, lead):
+                return "较明确"
+
+            def _get_urgency_description(self, lead):
+                return "较紧急"
+
+            def _get_relationship_description(self, lead):
+                return "良好"
+
+            def _determine_priority_level(self, total, urgency):
+                return "P2"
+
+            def _determine_importance_level(self, total):
+                return "MEDIUM"
+
+            def _determine_urgency_level(self, urgency):
+                return "MEDIUM"
 
         scorer = ConcreteMixin()
         mock_lead = MagicMock()

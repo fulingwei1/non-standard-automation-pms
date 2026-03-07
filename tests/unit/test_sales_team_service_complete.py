@@ -110,9 +110,7 @@ class TestParsePeriodValue:
 class TestCalculateTargetPerformance:
     """测试目标完成率计算"""
 
-    def test_calculate_lead_count_target_empty(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_calculate_lead_count_target_empty(self, sales_team_service: SalesTeamService):
         """测试线索数量目标 - 空数据库"""
         target = Mock()
         target.target_type = "LEAD_COUNT"
@@ -126,9 +124,7 @@ class TestCalculateTargetPerformance:
         assert actual == Decimal("0")
         assert rate == 0.0
 
-    def test_calculate_opportunity_count_target_empty(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_calculate_opportunity_count_target_empty(self, sales_team_service: SalesTeamService):
         """测试商机数量目标 - 空数据库"""
         target = Mock()
         target.target_type = "OPPORTUNITY_COUNT"
@@ -142,9 +138,7 @@ class TestCalculateTargetPerformance:
         assert actual == Decimal("0")
         assert rate == 0.0
 
-    def test_calculate_contract_amount_target_empty(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_calculate_contract_amount_target_empty(self, sales_team_service: SalesTeamService):
         """测试合同金额目标 - 空数据库"""
         target = Mock()
         target.target_type = "CONTRACT_AMOUNT"
@@ -158,9 +152,7 @@ class TestCalculateTargetPerformance:
         assert actual == Decimal("0")
         assert rate == 0.0
 
-    def test_calculate_collection_amount_target_empty(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_calculate_collection_amount_target_empty(self, sales_team_service: SalesTeamService):
         """测试回款金额目标 - 空数据库"""
         target = Mock()
         target.target_type = "COLLECTION_AMOUNT"
@@ -174,9 +166,7 @@ class TestCalculateTargetPerformance:
         assert actual == Decimal("0")
         assert rate == 0.0
 
-    def test_calculate_zero_target_value(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_calculate_zero_target_value(self, sales_team_service: SalesTeamService):
         """测试目标值为零时的处理"""
         target = Mock()
         target.target_type = "LEAD_COUNT"
@@ -190,9 +180,7 @@ class TestCalculateTargetPerformance:
         assert actual == Decimal("0")
         assert rate == 0.0
 
-    def test_calculate_unknown_target_type(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_calculate_unknown_target_type(self, sales_team_service: SalesTeamService):
         """测试未知目标类型"""
         target = Mock()
         target.target_type = "UNKNOWN_TYPE"
@@ -212,25 +200,19 @@ class TestCalculateTargetPerformance:
 class TestBuildPersonalTargetMap:
     """测试个人目标映射构建"""
 
-    def test_build_personal_target_map_empty_user_ids(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_build_personal_target_map_empty_user_ids(self, sales_team_service: SalesTeamService):
         """测试空用户 ID 列表"""
         result = sales_team_service.build_personal_target_map([], "2024-01", "2024")
 
         assert result == {}
 
-    def test_build_personal_target_map_no_period_values(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_build_personal_target_map_no_period_values(self, sales_team_service: SalesTeamService):
         """测试没有周期值"""
         result = sales_team_service.build_personal_target_map([1, 2, 3], None, None)
 
         assert result == {}
 
-    def test_build_personal_target_map_no_targets(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_build_personal_target_map_no_targets(self, sales_team_service: SalesTeamService):
         """测试没有目标数据"""
         result = sales_team_service.build_personal_target_map([99999], "2024-01", None)
 
@@ -241,22 +223,18 @@ class TestBuildPersonalTargetMap:
 class TestGetFollowupStatisticsMap:
     """测试跟进统计映射"""
 
-    def test_get_followup_statistics_empty_user_ids(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_followup_statistics_empty_user_ids(self, sales_team_service: SalesTeamService):
         """测试空用户 ID 列表"""
         result = sales_team_service.get_followup_statistics_map([], None, None)
 
         assert result == {}
 
-    def test_get_followup_statistics_no_data(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_followup_statistics_no_data(self, sales_team_service: SalesTeamService):
         """测试无跟进数据"""
         result = sales_team_service.get_followup_statistics_map(
-        [99999],
-        datetime(2024, 1, 1),
-        datetime(2024, 12, 31),
+            [99999],
+            datetime(2024, 1, 1),
+            datetime(2024, 12, 31),
         )
 
         assert result == {}
@@ -266,22 +244,18 @@ class TestGetFollowupStatisticsMap:
 class TestGetLeadQualityStatsMap:
     """测试线索质量统计映射"""
 
-    def test_get_lead_quality_stats_empty_user_ids(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_lead_quality_stats_empty_user_ids(self, sales_team_service: SalesTeamService):
         """测试空用户 ID 列表"""
         result = sales_team_service.get_lead_quality_stats_map([], None, None)
 
         assert result == {}
 
-    def test_get_lead_quality_stats_no_data(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_lead_quality_stats_no_data(self, sales_team_service: SalesTeamService):
         """测试无线索数据"""
         result = sales_team_service.get_lead_quality_stats_map(
-        [99999],
-        datetime(2024, 1, 1),
-        datetime(2024, 12, 31),
+            [99999],
+            datetime(2024, 1, 1),
+            datetime(2024, 12, 31),
         )
 
         assert result == {}
@@ -291,22 +265,18 @@ class TestGetLeadQualityStatsMap:
 class TestGetOpportunityStatsMap:
     """测试商机统计映射"""
 
-    def test_get_opportunity_stats_empty_user_ids(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_opportunity_stats_empty_user_ids(self, sales_team_service: SalesTeamService):
         """测试空用户 ID 列表"""
         result = sales_team_service.get_opportunity_stats_map([], None, None)
 
         assert result == {}
 
-    def test_get_opportunity_stats_no_data(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_opportunity_stats_no_data(self, sales_team_service: SalesTeamService):
         """测试无商机数据"""
         result = sales_team_service.get_opportunity_stats_map(
-        [99999],
-        datetime(2024, 1, 1),
-        datetime(2024, 12, 31),
+            [99999],
+            datetime(2024, 1, 1),
+            datetime(2024, 12, 31),
         )
 
         assert result == {}
@@ -316,17 +286,13 @@ class TestGetOpportunityStatsMap:
 class TestGetRecentFollowupsMap:
     """测试最近跟进记录映射"""
 
-    def test_get_recent_followups_map_empty_user_ids(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_recent_followups_map_empty_user_ids(self, sales_team_service: SalesTeamService):
         """测试空用户 ID 列表"""
         result = sales_team_service.get_recent_followups_map([])
 
         assert result == {}
 
-    def test_get_recent_followups_map_with_date_range(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_recent_followups_map_with_date_range(self, sales_team_service: SalesTeamService):
         """测试带日期范围的最近跟进"""
         result = sales_team_service.get_recent_followups_map(
             [99999],
@@ -351,9 +317,7 @@ class TestGetCustomerDistributionMap:
 
         assert result == {}
 
-    def test_get_customer_distribution_map_no_data(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_customer_distribution_map_no_data(self, sales_team_service: SalesTeamService):
         """测试无客户数据"""
         result = sales_team_service.get_customer_distribution_map(
             [99999], date(2024, 1, 1), date(2024, 12, 31)
@@ -363,21 +327,19 @@ class TestGetCustomerDistributionMap:
 
 
 @pytest.mark.unit
-@pytest.mark.skip(reason="Method get_team_statistics does not exist in SalesTeamService - tests need redesign")
+@pytest.mark.skip(
+    reason="Method get_team_statistics does not exist in SalesTeamService - tests need redesign"
+)
 class TestGetTeamStatistics:
     """测试团队统计 - 方法不存在，跳过"""
 
-    def test_get_team_statistics_empty_user_ids(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_team_statistics_empty_user_ids(self, sales_team_service: SalesTeamService):
         """测试空用户 ID 列表"""
         result = sales_team_service.get_team_statistics([])
 
         assert result == {}
 
-    def test_get_team_statistics_no_data(
-        self, sales_team_service: SalesTeamService
-    ):
+    def test_get_team_statistics_no_data(self, sales_team_service: SalesTeamService):
         """测试无团队数据"""
         result = sales_team_service.get_team_statistics([99999])
 

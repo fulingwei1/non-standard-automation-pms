@@ -29,15 +29,13 @@ from app.schemas.strategy import (
     DepartmentObjectiveUpdate,
 )
 
-
-
 # ============================================
 # 部门目标管理
 # ============================================
 
+
 def create_department_objective(
-    db: Session,
-    data: DepartmentObjectiveCreate
+    db: Session, data: DepartmentObjectiveCreate
 ) -> DepartmentObjective:
     """
     创建部门目标
@@ -67,10 +65,7 @@ def create_department_objective(
     return obj
 
 
-def get_department_objective(
-    db: Session,
-    objective_id: int
-) -> Optional[DepartmentObjective]:
+def get_department_objective(db: Session, objective_id: int) -> Optional[DepartmentObjective]:
     """
     获取部门目标
 
@@ -81,10 +76,11 @@ def get_department_objective(
     Returns:
         Optional[DepartmentObjective]: 部门目标
     """
-    return db.query(DepartmentObjective).filter(
-        DepartmentObjective.id == objective_id,
-        DepartmentObjective.is_active
-    ).first()
+    return (
+        db.query(DepartmentObjective)
+        .filter(DepartmentObjective.id == objective_id, DepartmentObjective.is_active)
+        .first()
+    )
 
 
 def list_department_objectives(
@@ -93,7 +89,7 @@ def list_department_objectives(
     department_id: Optional[int] = None,
     year: Optional[int] = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
 ) -> tuple[List[DepartmentObjective], int]:
     """
     获取部门目标列表
@@ -119,18 +115,15 @@ def list_department_objectives(
         query = query.filter(DepartmentObjective.year == year)
 
     total = query.count()
-    items = apply_pagination(query.order_by(
-        DepartmentObjective.department_id,
-        DepartmentObjective.csf_id
-    ), skip, limit).all()
+    items = apply_pagination(
+        query.order_by(DepartmentObjective.department_id, DepartmentObjective.csf_id), skip, limit
+    ).all()
 
     return items, total
 
 
 def update_department_objective(
-    db: Session,
-    objective_id: int,
-    data: DepartmentObjectiveUpdate
+    db: Session, objective_id: int, data: DepartmentObjectiveUpdate
 ) -> Optional[DepartmentObjective]:
     """
     更新部门目标
@@ -182,8 +175,7 @@ def delete_department_objective(db: Session, objective_id: int) -> bool:
 
 
 def get_department_objective_detail(
-    db: Session,
-    objective_id: int
+    db: Session, objective_id: int
 ) -> Optional[DepartmentObjectiveDetailResponse]:
     """
     获取部门目标详情
@@ -203,6 +195,7 @@ def get_department_objective_detail(
     dept_name = None
     if obj.department_id:
         from app.models.organization import Department
+
         dept = db.query(Department).filter(Department.id == obj.department_id).first()
         if dept:
             dept_name = dept.name
@@ -211,6 +204,7 @@ def get_department_objective_detail(
     owner_name = None
     if obj.owner_user_id:
         from app.models.user import User
+
         user = db.query(User).filter(User.id == obj.owner_user_id).first()
         if user:
             owner_name = user.name
@@ -228,10 +222,11 @@ def get_department_objective_detail(
             kpi_name = kpi.name
 
     # 统计个人 KPI 数量
-    personal_kpi_count = db.query(PersonalKPI).filter(
-        PersonalKPI.dept_objective_id == objective_id,
-        PersonalKPI.is_active
-    ).count()
+    personal_kpi_count = (
+        db.query(PersonalKPI)
+        .filter(PersonalKPI.dept_objective_id == objective_id, PersonalKPI.is_active)
+        .count()
+    )
 
     return DepartmentObjectiveDetailResponse(
         id=obj.id,
@@ -256,5 +251,3 @@ def get_department_objective_detail(
         kpi_name=kpi_name,
         personal_kpi_count=personal_kpi_count,
     )
-
-

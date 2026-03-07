@@ -25,61 +25,52 @@ class ChangeResponseSuggestionService:
         change_request_id: int,
         impact_analysis_id: int,
         user_id: int,
-        max_suggestions: int = 3
+        max_suggestions: int = 3,
     ) -> List[ChangeResponseSuggestion]:
         """生成应对方案"""
         # 获取影响分析
-        analysis = self.db.query(ChangeImpactAnalysis).filter(
-            ChangeImpactAnalysis.id == impact_analysis_id
-        ).first()
-        
+        analysis = (
+            self.db.query(ChangeImpactAnalysis)
+            .filter(ChangeImpactAnalysis.id == impact_analysis_id)
+            .first()
+        )
+
         if not analysis:
             raise ValueError(f"影响分析 {impact_analysis_id} 不存在")
-        
+
         # 获取变更请求
-        change = self.db.query(ChangeRequest).filter(
-            ChangeRequest.id == change_request_id
-        ).first()
-        
+        change = self.db.query(ChangeRequest).filter(ChangeRequest.id == change_request_id).first()
+
         if not change:
             raise ValueError(f"变更请求 {change_request_id} 不存在")
-        
+
         suggestions = []
-        
+
         # 方案1：批准方案
         if analysis.overall_risk_level in ["LOW", "MEDIUM"]:
-            suggestion = self._create_approve_suggestion(
-                change, analysis, user_id
-            )
+            suggestion = self._create_approve_suggestion(change, analysis, user_id)
             suggestions.append(suggestion)
-        
+
         # 方案2：修改方案
-        suggestion = self._create_modify_suggestion(
-            change, analysis, user_id
-        )
+        suggestion = self._create_modify_suggestion(change, analysis, user_id)
         suggestions.append(suggestion)
-        
+
         # 方案3：缓解方案
         if analysis.overall_risk_level in ["HIGH", "CRITICAL"]:
-            suggestion = self._create_mitigate_suggestion(
-                change, analysis, user_id
-            )
+            suggestion = self._create_mitigate_suggestion(change, analysis, user_id)
             suggestions.append(suggestion)
-        
+
         # 保存到数据库
         for sug in suggestions:
             self.db.add(sug)
-        
+
         self.db.commit()
-        
+
         logger.info(f"生成了 {len(suggestions)} 个应对方案")
         return suggestions[:max_suggestions]
 
     def _create_approve_suggestion(
-        self,
-        change: ChangeRequest,
-        analysis: ChangeImpactAnalysis,
-        user_id: int
+        self, change: ChangeRequest, analysis: ChangeImpactAnalysis, user_id: int
     ) -> ChangeResponseSuggestion:
         """创建批准方案"""
         return ChangeResponseSuggestion(
@@ -94,7 +85,12 @@ class ChangeResponseSuggestionService:
             action_steps=[
                 {"step": 1, "description": "批准变更请求", "owner": "项目经理", "duration": 1},
                 {"step": 2, "description": "通知相关团队", "owner": "PMO", "duration": 1},
-                {"step": 3, "description": "执行变更", "owner": "项目团队", "duration": analysis.schedule_delay_days or 5},
+                {
+                    "step": 3,
+                    "description": "执行变更",
+                    "owner": "项目团队",
+                    "duration": analysis.schedule_delay_days or 5,
+                },
                 {"step": 4, "description": "验收变更结果", "owner": "QA", "duration": 2},
             ],
             estimated_cost=analysis.cost_impact_amount,
@@ -114,10 +110,7 @@ class ChangeResponseSuggestionService:
         )
 
     def _create_modify_suggestion(
-        self,
-        change: ChangeRequest,
-        analysis: ChangeImpactAnalysis,
-        user_id: int
+        self, change: ChangeRequest, analysis: ChangeImpactAnalysis, user_id: int
     ) -> ChangeResponseSuggestion:
         """创建修改方案"""
         return ChangeResponseSuggestion(
@@ -130,9 +123,24 @@ class ChangeResponseSuggestionService:
             summary="建议调整变更范围，分阶段实施",
             detailed_description="为降低风险和影响，建议将变更拆分为多个阶段，优先实施关键部分，次要部分延后。",
             action_steps=[
-                {"step": 1, "description": "与客户沟通调整方案", "owner": "项目经理", "duration": 2},
-                {"step": 2, "description": "制定分阶段实施计划", "owner": "技术负责人", "duration": 3},
-                {"step": 3, "description": "实施第一阶段变更", "owner": "项目团队", "duration": (analysis.schedule_delay_days or 10) // 2},
+                {
+                    "step": 1,
+                    "description": "与客户沟通调整方案",
+                    "owner": "项目经理",
+                    "duration": 2,
+                },
+                {
+                    "step": 2,
+                    "description": "制定分阶段实施计划",
+                    "owner": "技术负责人",
+                    "duration": 3,
+                },
+                {
+                    "step": 3,
+                    "description": "实施第一阶段变更",
+                    "owner": "项目团队",
+                    "duration": (analysis.schedule_delay_days or 10) // 2,
+                },
                 {"step": 4, "description": "评估后续阶段", "owner": "PMO", "duration": 1},
             ],
             estimated_cost=analysis.cost_impact_amount * Decimal("0.7"),
@@ -153,10 +161,7 @@ class ChangeResponseSuggestionService:
         )
 
     def _create_mitigate_suggestion(
-        self,
-        change: ChangeRequest,
-        analysis: ChangeImpactAnalysis,
-        user_id: int
+        self, change: ChangeRequest, analysis: ChangeImpactAnalysis, user_id: int
     ) -> ChangeResponseSuggestion:
         """创建缓解方案"""
         return ChangeResponseSuggestion(
@@ -169,10 +174,20 @@ class ChangeResponseSuggestionService:
             summary="高风险变更，需要制定详细的缓解措施",
             detailed_description="此变更风险较高，建议制定详细的风险缓解措施，增加资源投入，加强监控。",
             action_steps=[
-                {"step": 1, "description": "制定详细风险缓解计划", "owner": "风险经理", "duration": 3},
+                {
+                    "step": 1,
+                    "description": "制定详细风险缓解计划",
+                    "owner": "风险经理",
+                    "duration": 3,
+                },
                 {"step": 2, "description": "申请额外资源和预算", "owner": "PMO", "duration": 2},
                 {"step": 3, "description": "建立变更监控机制", "owner": "项目经理", "duration": 1},
-                {"step": 4, "description": "执行变更并严格监控", "owner": "项目团队", "duration": analysis.schedule_delay_days or 10},
+                {
+                    "step": 4,
+                    "description": "执行变更并严格监控",
+                    "owner": "项目团队",
+                    "duration": analysis.schedule_delay_days or 10,
+                },
                 {"step": 5, "description": "定期风险评估", "owner": "风险经理", "duration": 1},
             ],
             estimated_cost=analysis.cost_impact_amount * Decimal("1.3"),
@@ -183,8 +198,18 @@ class ChangeResponseSuggestionService:
                 {"type": "QA团队", "quantity": 1, "duration": 5},
             ],
             risks=[
-                {"risk": "资源不足", "probability": "MEDIUM", "impact": "HIGH", "mitigation": "提前申请资源"},
-                {"risk": "进度延期", "probability": "MEDIUM", "impact": "MEDIUM", "mitigation": "建立监控机制"},
+                {
+                    "risk": "资源不足",
+                    "probability": "MEDIUM",
+                    "impact": "HIGH",
+                    "mitigation": "提前申请资源",
+                },
+                {
+                    "risk": "进度延期",
+                    "probability": "MEDIUM",
+                    "impact": "MEDIUM",
+                    "mitigation": "建立监控机制",
+                },
             ],
             feasibility_score=Decimal("75"),
             technical_feasibility="MEDIUM",

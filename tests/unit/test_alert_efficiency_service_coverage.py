@@ -46,9 +46,11 @@ def mock_engine():
 
 # ─── calculate_basic_metrics ─────────────────────────────────────────────────
 
+
 class TestCalculateBasicMetrics:
     def test_empty_list_returns_zeros(self, mock_engine):
         from app.services.alert_efficiency_service import calculate_basic_metrics
+
         result = calculate_basic_metrics([], mock_engine)
         assert result["processing_rate"] == 0
         assert result["timely_processing_rate"] == 0
@@ -57,22 +59,33 @@ class TestCalculateBasicMetrics:
 
     def test_all_resolved(self, mock_engine):
         from app.services.alert_efficiency_service import calculate_basic_metrics
+
         now = datetime.now()
         alerts = [
-            make_alert(status="RESOLVED", triggered_at=now - timedelta(hours=2), acknowledged_at=now - timedelta(hours=1)),
-            make_alert(status="CLOSED", triggered_at=now - timedelta(hours=5), acknowledged_at=now - timedelta(hours=4)),
+            make_alert(
+                status="RESOLVED",
+                triggered_at=now - timedelta(hours=2),
+                acknowledged_at=now - timedelta(hours=1),
+            ),
+            make_alert(
+                status="CLOSED",
+                triggered_at=now - timedelta(hours=5),
+                acknowledged_at=now - timedelta(hours=4),
+            ),
         ]
         result = calculate_basic_metrics(alerts, mock_engine)
         assert result["processing_rate"] == 1.0
 
     def test_none_resolved(self, mock_engine):
         from app.services.alert_efficiency_service import calculate_basic_metrics
+
         alerts = [make_alert(status="PENDING"), make_alert(status="PROCESSING")]
         result = calculate_basic_metrics(alerts, mock_engine)
         assert result["processing_rate"] == 0.0
 
     def test_escalation_rate(self, mock_engine):
         from app.services.alert_efficiency_service import calculate_basic_metrics
+
         alerts = [
             make_alert(is_escalated=True),
             make_alert(is_escalated=True),
@@ -85,10 +98,17 @@ class TestCalculateBasicMetrics:
     def test_duplicate_rate(self, mock_engine):
         """同一规则+目标在24小时内重复触发，计入重复"""
         from app.services.alert_efficiency_service import calculate_basic_metrics
+
         now = datetime.now()
-        a1 = make_alert(triggered_at=now - timedelta(hours=2), rule_id=1, target_type="PROJECT", target_id=1)
-        a2 = make_alert(triggered_at=now - timedelta(hours=1), rule_id=1, target_type="PROJECT", target_id=1)
-        a3 = make_alert(triggered_at=now, rule_id=2, target_type="PROJECT", target_id=1)  # different rule
+        a1 = make_alert(
+            triggered_at=now - timedelta(hours=2), rule_id=1, target_type="PROJECT", target_id=1
+        )
+        a2 = make_alert(
+            triggered_at=now - timedelta(hours=1), rule_id=1, target_type="PROJECT", target_id=1
+        )
+        a3 = make_alert(
+            triggered_at=now, rule_id=2, target_type="PROJECT", target_id=1
+        )  # different rule
 
         result = calculate_basic_metrics([a1, a2, a3], mock_engine)
         # a2 is duplicate of a1 → duplicate_count=1, total=3 → 1/3
@@ -97,15 +117,22 @@ class TestCalculateBasicMetrics:
     def test_timely_processing_rate(self, mock_engine):
         """在响应时限内处理的比率"""
         from app.services.alert_efficiency_service import calculate_basic_metrics
+
         now = datetime.now()
         # level2: timeout=4h, resolved in 2h (timely)
-        a1 = make_alert(status="RESOLVED", alert_level="level2",
-                        triggered_at=now - timedelta(hours=3),
-                        acknowledged_at=now - timedelta(hours=1))  # 2h response
+        a1 = make_alert(
+            status="RESOLVED",
+            alert_level="level2",
+            triggered_at=now - timedelta(hours=3),
+            acknowledged_at=now - timedelta(hours=1),
+        )  # 2h response
         # level1: timeout=1h, resolved in 3h (not timely)
-        a2 = make_alert(status="RESOLVED", alert_level="level1",
-                        triggered_at=now - timedelta(hours=4),
-                        acknowledged_at=now - timedelta(hours=1))  # 3h response
+        a2 = make_alert(
+            status="RESOLVED",
+            alert_level="level1",
+            triggered_at=now - timedelta(hours=4),
+            acknowledged_at=now - timedelta(hours=1),
+        )  # 3h response
 
         result = calculate_basic_metrics([a1, a2], mock_engine)
         # Only a1 is timely, total=2 → timely_rate = 0.5
@@ -113,6 +140,7 @@ class TestCalculateBasicMetrics:
 
     def test_mixed_alert_statuses(self, mock_engine):
         from app.services.alert_efficiency_service import calculate_basic_metrics
+
         alerts = [
             make_alert(status="RESOLVED"),
             make_alert(status="CLOSED"),
@@ -125,9 +153,11 @@ class TestCalculateBasicMetrics:
 
 # ─── calculate_project_metrics ───────────────────────────────────────────────
 
+
 class TestCalculateProjectMetrics:
     def test_no_project_alerts_returns_empty(self, mock_engine):
         from app.services.alert_efficiency_service import calculate_project_metrics
+
         alerts = [make_alert(project_id=None)]
         mock_db = MagicMock()
         result = calculate_project_metrics(alerts, mock_db, mock_engine)
@@ -153,6 +183,7 @@ class TestCalculateProjectMetrics:
 
 
 # ─── calculate_type_metrics ──────────────────────────────────────────────────
+
 
 class TestCalculateTypeMetrics:
     def test_groups_by_rule_type(self, mock_engine):
@@ -189,14 +220,20 @@ class TestCalculateTypeMetrics:
 
 # ─── generate_rankings ────────────────────────────────────────────────────────
 
+
 class TestGenerateRankings:
     def test_filters_projects_with_few_alerts(self):
         """少于5个预警的项目不进入排行榜"""
         from app.services.alert_efficiency_service import generate_rankings
 
         project_metrics = {
-            "小项目": {"project_id": 1, "total": 3, "efficiency_score": 90,
-                       "processing_rate": 0.9, "timely_processing_rate": 0.8},
+            "小项目": {
+                "project_id": 1,
+                "total": 3,
+                "efficiency_score": 90,
+                "processing_rate": 0.9,
+                "timely_processing_rate": 0.8,
+            },
         }
         handler_metrics = {}
         result = generate_rankings(project_metrics, handler_metrics)
@@ -209,7 +246,8 @@ class TestGenerateRankings:
 
         project_metrics = {
             f"项目{i}": {
-                "project_id": i, "total": 10,
+                "project_id": i,
+                "total": 10,
                 "efficiency_score": 100 - i * 10,
                 "processing_rate": 1.0,
                 "timely_processing_rate": 0.9,

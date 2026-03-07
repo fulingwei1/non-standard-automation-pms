@@ -9,6 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 def test_imports():
     """测试模块导入"""
     print("=" * 60)
@@ -17,7 +18,11 @@ def test_imports():
 
     tests = [
         ("智能推荐服务", "app.services.assembly_attr_recommender", "AssemblyAttrRecommender"),
-        ("排产建议服务", "app.services.scheduling_suggestion_service", "SchedulingSuggestionService"),
+        (
+            "排产建议服务",
+            "app.services.scheduling_suggestion_service",
+            "SchedulingSuggestionService",
+        ),
         ("资源分配服务", "app.services.resource_allocation_service", "ResourceAllocationService"),
         ("齐套优化服务", "app.services.assembly_kit_optimizer", "AssemblyKitOptimizer"),
         ("企业微信客户端", "app.utils.wechat_client", "WeChatClient"),
@@ -61,7 +66,8 @@ def test_api_routes():
 
     try:
         from app.api.v1.endpoints import assembly_kit
-        routes = [r for r in assembly_kit.router.routes if hasattr(r, 'path')]
+
+        routes = [r for r in assembly_kit.router.routes if hasattr(r, "path")]
         print(f"✓ 找到 {len(routes)} 个API路由")
 
         # 显示关键路由（路由路径不包含前缀）
@@ -89,6 +95,7 @@ def test_api_routes():
     except Exception as e:
         print(f"✗ API路由测试失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -105,6 +112,7 @@ def test_schemas():
     except Exception as e:
         print(f"✗ Schema导入失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -117,6 +125,7 @@ def test_config():
 
     try:
         from app.core.config import settings
+
         print(f"✓ 配置加载成功")
         print(f"  - WECHAT_ENABLED: {settings.WECHAT_ENABLED}")
         print(f"  - WECHAT_CORP_ID: {'已配置' if settings.WECHAT_CORP_ID else '未配置'}")

@@ -43,23 +43,29 @@ def read_ecn_logs(
     for log in logs:
         created_by_name = get_user_display_name(db, log.created_by)
 
-        items.append({
-            "id": log.id,
-            "ecn_id": log.ecn_id,
-            "log_type": log.log_type,
-            "log_action": log.log_action,
-            "old_status": log.old_status,
-            "new_status": log.new_status,
-            "log_content": log.log_content,
-            "created_by": log.created_by,
-            "created_by_name": created_by_name,
-            "created_at": log.created_at
-        })
+        items.append(
+            {
+                "id": log.id,
+                "ecn_id": log.ecn_id,
+                "log_type": log.log_type,
+                "log_action": log.log_action,
+                "old_status": log.old_status,
+                "new_status": log.new_status,
+                "log_content": log.log_content,
+                "created_by": log.created_by,
+                "created_by_name": created_by_name,
+                "created_at": log.created_at,
+            }
+        )
 
     return items
 
 
-@router.get("/projects/{project_id}/ecns", response_model=List[EcnListResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/projects/{project_id}/ecns",
+    response_model=List[EcnListResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_project_ecns(
     project_id: int,
     db: Session = Depends(deps.get_db),
@@ -84,19 +90,21 @@ def read_project_ecns(
     for ecn in ecns:
         applicant_name = get_user_display_name(db, ecn.applicant_id)
 
-        items.append(EcnListResponse(
-            id=ecn.id,
-            ecn_no=ecn.ecn_no,
-            ecn_title=ecn.ecn_title,
-            ecn_type=ecn.ecn_type,
-            project_id=ecn.project_id,
-            project_name=project.project_name,
-            status=ecn.status,
-            priority=ecn.priority,
-            applicant_name=applicant_name,
-            applied_at=ecn.applied_at,
-            created_at=ecn.created_at
-        ))
+        items.append(
+            EcnListResponse(
+                id=ecn.id,
+                ecn_no=ecn.ecn_no,
+                ecn_title=ecn.ecn_title,
+                ecn_type=ecn.ecn_type,
+                project_id=ecn.project_id,
+                project_name=project.project_name,
+                status=ecn.status,
+                priority=ecn.priority,
+                applicant_name=applicant_name,
+                applied_at=ecn.applied_at,
+                created_at=ecn.created_at,
+            )
+        )
 
     return items
 
@@ -175,7 +183,7 @@ def get_ecn_statistics(
                         "project_id": ecn.project_id,
                         "project_name": project_name,
                         "count": 0,
-                        "total_cost_impact": 0.0
+                        "total_cost_impact": 0.0,
                     }
                 by_project[ecn.project_id]["count"] += 1
                 if ecn.cost_impact:

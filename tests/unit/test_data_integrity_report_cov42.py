@@ -5,6 +5,7 @@ import pytest
 pytest.importorskip("app.services.data_integrity.report")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.data_integrity.report import DataReportMixin
 
 
@@ -28,6 +29,7 @@ def make_service():
 def setup_period(db, period):
     """Make db.query(PerformancePeriod).filter().first() return period"""
     from app.models.performance import PerformancePeriod
+
     period_q = MagicMock()
     period_q.filter.return_value.first.return_value = period
 
@@ -42,6 +44,7 @@ def setup_period(db, period):
 
 # ------------------------------------------------------------------ tests ---
 
+
 def test_raises_when_period_not_found():
     svc, db = make_service()
     db.query.return_value.filter.return_value.first.return_value = None
@@ -55,6 +58,7 @@ def test_returns_empty_when_no_engineers():
     setup_period(db, period)
     # query for EngineerProfile
     from app.models.engineer_performance import EngineerProfile
+
     engineer_q = MagicMock()
     engineer_q.all.return_value = []
 
@@ -62,6 +66,7 @@ def test_returns_empty_when_no_engineers():
 
     def q_router(*args):
         from app.models.performance import PerformancePeriod
+
         if args and args[0] is PerformancePeriod:
             q = MagicMock()
             q.filter.return_value.first.return_value = period
@@ -83,8 +88,8 @@ def test_average_completeness_calculated():
     eng2 = MagicMock()
     eng2.user_id = 2
 
-    from app.models.performance import PerformancePeriod
     from app.models.engineer_performance import EngineerProfile
+    from app.models.performance import PerformancePeriod
 
     def q_router(*args):
         if args and args[0] is PerformancePeriod:

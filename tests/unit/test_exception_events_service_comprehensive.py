@@ -12,9 +12,9 @@ ExceptionEventsService 综合单元测试
 - resolve_event: 解决异常事件
 """
 
-from unittest.mock import MagicMock, patch
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -170,7 +170,7 @@ class TestListEvents:
 
         result = service.list_events(page=1, page_size=20)
 
-        assert 'items' in result or isinstance(result, list)
+        assert "items" in result or isinstance(result, list)
 
     def test_filters_by_project_id(self):
         """测试按项目ID过滤"""

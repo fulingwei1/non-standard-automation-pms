@@ -18,10 +18,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.base import Base
-from app.models.user import ApiPermission, Role, RoleApiPermission
 from app.models.tenant import Tenant
+from app.models.user import ApiPermission, Role, RoleApiPermission
 from app.utils.role_inheritance_utils import RoleInheritanceUtils
-
 
 # ========== 测试固件 ==========
 
@@ -112,12 +111,8 @@ class TestRoleInheritanceBasic:
         db_session.add(parent_role)
 
         # 父角色拥有权限1和2
-        db_session.add(
-            RoleApiPermission(role_id=1, permission_id=1)
-        )  # system:perm1
-        db_session.add(
-            RoleApiPermission(role_id=1, permission_id=2)
-        )  # system:perm2
+        db_session.add(RoleApiPermission(role_id=1, permission_id=1))  # system:perm1
+        db_session.add(RoleApiPermission(role_id=1, permission_id=2))  # system:perm2
 
         # 创建子角色
         child_role = Role(
@@ -131,9 +126,7 @@ class TestRoleInheritanceBasic:
         db_session.add(child_role)
 
         # 子角色拥有权限3
-        db_session.add(
-            RoleApiPermission(role_id=2, permission_id=3)
-        )  # system:perm3
+        db_session.add(RoleApiPermission(role_id=2, permission_id=3))  # system:perm3
 
         db_session.commit()
 
@@ -352,9 +345,7 @@ class TestRoleInheritanceAdvanced:
         db_session.commit()
 
         # 检测自引用
-        is_circular = RoleInheritanceUtils.detect_circular_inheritance(
-            db_session, 1, 1
-        )
+        is_circular = RoleInheritanceUtils.detect_circular_inheritance(db_session, 1, 1)
         assert is_circular is True
 
     def test_08_role_chain_calculation(self, db_session):
@@ -400,9 +391,7 @@ class TestRoleInheritanceAdvanced:
         assert RoleInheritanceUtils.calculate_role_level(db_session, 3) == 2  # Level 2
         assert RoleInheritanceUtils.calculate_role_level(db_session, 4) == 3  # Level 3
 
-    def test_10_multi_tenant_isolation(
-        self, db_session, test_tenant, test_permissions
-    ):
+    def test_10_multi_tenant_isolation(self, db_session, test_tenant, test_permissions):
         """测试10：多租户权限隔离"""
         # 创建另一个租户
         tenant2 = Tenant(id=2, tenant_name="租户2", tenant_code="tenant2", status="active")
@@ -439,9 +428,7 @@ class TestRoleInheritanceAdvanced:
         db_session.commit()
 
         # 获取租户1视角的权限（应该过滤掉租户2的权限）
-        perms = RoleInheritanceUtils.get_inherited_permissions(
-            db_session, 1, tenant_id=1
-        )
+        perms = RoleInheritanceUtils.get_inherited_permissions(db_session, 1, tenant_id=1)
         assert "system:perm1" in perms  # 系统权限可见
         assert "tenant:perm6" in perms  # 租户1权限可见
         assert "tenant2:perm1" not in perms  # 租户2权限不可见

@@ -30,10 +30,7 @@ class TestMaterialCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/materials/", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -48,7 +45,7 @@ class TestMaterialCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -64,9 +61,7 @@ class TestMaterialCRUD:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/",
-            params={"keyword": "测试"},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/materials/", params={"keyword": "测试"}, headers=headers
         )
 
         assert response.status_code == 200
@@ -88,9 +83,7 @@ class TestMaterialCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/materials/",
-            json=material_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/materials/", json=material_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -114,10 +107,7 @@ class TestMaterialCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取物料列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/materials/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get materials list")
@@ -135,10 +125,7 @@ class TestMaterialCRUD:
         if not material_id:
             pytest.skip("No material id found")
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/{material_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/materials/{material_id}", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -152,10 +139,7 @@ class TestMaterialCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/materials/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -167,10 +151,7 @@ class TestMaterialCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取物料列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/materials/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get materials list")
@@ -187,9 +168,7 @@ class TestMaterialCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/materials/{material_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/materials/{material_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -206,7 +185,7 @@ class TestMaterialCRUD:
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/search",
             params={"keyword": "测试"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 422:
@@ -226,10 +205,7 @@ class TestMaterialCategories:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/categories/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/materials/categories/", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -248,7 +224,7 @@ class TestSuppliers:
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/suppliers",
             params={"page": 1, "page_size": 20},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 422:
@@ -267,7 +243,7 @@ class TestSuppliers:
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/suppliers",
             params={"page": 1, "page_size": 20, "keyword": ""},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 422:
@@ -289,10 +265,7 @@ class TestMaterialRelations:
         headers = _auth_headers(admin_token)
 
         # 先获取物料列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/materials/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get materials list")
@@ -305,8 +278,7 @@ class TestMaterialRelations:
         material_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/{material_id}/suppliers",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/materials/{material_id}/suppliers", headers=headers
         )
 
         assert response.status_code == 200
@@ -321,10 +293,7 @@ class TestMaterialRelations:
         headers = _auth_headers(admin_token)
 
         # 先获取物料列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/materials/", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get materials list")
@@ -337,8 +306,7 @@ class TestMaterialRelations:
         material_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/materials/{material_id}/alternatives",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/materials/{material_id}/alternatives", headers=headers
         )
 
         assert response.status_code == 200
@@ -355,8 +323,7 @@ class TestWarehouseStatistics:
         headers = _auth_headers(admin_token)
         try:
             response = client.get(
-                f"{settings.API_V1_PREFIX}/materials/warehouse/statistics",
-                headers=headers
+                f"{settings.API_V1_PREFIX}/materials/warehouse/statistics", headers=headers
             )
 
             if response.status_code == 500:

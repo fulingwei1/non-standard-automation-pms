@@ -18,19 +18,11 @@ AlertNotificationService 和 NotificationPriority。
     from app.services.unified_notification_service import get_notification_service
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Dict, Optional, Sequence
 
 from sqlalchemy.orm import Session
 
-# ── Re-exports from unified service ──────────────────────────────────
-from app.services.unified_notification_service import (  # noqa: F401
-    NotificationService,
-    get_notification_service,
-    notification_service,
-)
 from app.services.channel_handlers.base import (  # noqa: F401
     NotificationChannel,
     NotificationPriority,
@@ -38,6 +30,13 @@ from app.services.channel_handlers.base import (  # noqa: F401
     NotificationResult,
 )
 from app.services.notification_dispatcher import NotificationDispatcher  # noqa: F401
+
+# ── Re-exports from unified service ──────────────────────────────────
+from app.services.unified_notification_service import (  # noqa: F401
+    NotificationService,
+    get_notification_service,
+    notification_service,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests for async BaseService (app.common.crud.service)"""
 
-import pytest
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
-from pydantic import BaseModel
+
+import pytest
 from fastapi import HTTPException
+from pydantic import BaseModel
 
 
 # ---------------------------------------------------------------------------
@@ -25,7 +27,7 @@ class FCreate(BaseModel):
 
 
 class FUpdate(BaseModel):
-    name: str | None = None
+    name: Optional[str] = None
 
 
 class FResponse(BaseModel):

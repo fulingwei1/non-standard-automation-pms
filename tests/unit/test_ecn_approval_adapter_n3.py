@@ -17,14 +17,14 @@ EcnApprovalAdapter 深度覆盖测试（N3组）
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_db():
@@ -34,6 +34,7 @@ def mock_db():
 @pytest.fixture
 def adapter(mock_db):
     from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
     return EcnApprovalAdapter(db=mock_db)
 
 
@@ -81,6 +82,7 @@ def _make_ecn(**kwargs):
 # get_entity
 # ---------------------------------------------------------------------------
 
+
 class TestGetEntity:
     def test_returns_ecn_when_found(self, adapter, mock_db):
         ecn = _make_ecn()
@@ -97,6 +99,7 @@ class TestGetEntity:
 # ---------------------------------------------------------------------------
 # get_entity_data
 # ---------------------------------------------------------------------------
+
 
 class TestGetEntityData:
     def test_returns_empty_dict_when_ecn_not_found(self, adapter, mock_db):
@@ -151,6 +154,7 @@ class TestGetEntityData:
 # Lifecycle callbacks
 # ---------------------------------------------------------------------------
 
+
 class TestLifecycleCallbacks:
     def test_on_submit_sets_status_evaluating(self, adapter, mock_db):
         ecn = _make_ecn()
@@ -196,6 +200,7 @@ class TestLifecycleCallbacks:
 # get_title / get_summary
 # ---------------------------------------------------------------------------
 
+
 class TestGetTitleAndSummary:
     def test_get_title_when_ecn_exists(self, adapter, mock_db):
         ecn = _make_ecn(ecn_no="ECN-001", ecn_title="变更设计")
@@ -228,6 +233,7 @@ class TestGetTitleAndSummary:
 # ---------------------------------------------------------------------------
 # submit_for_approval
 # ---------------------------------------------------------------------------
+
 
 class TestSubmitForApproval:
     def test_returns_existing_instance_when_already_submitted(self, adapter, mock_db):
@@ -290,6 +296,7 @@ class TestSubmitForApproval:
 # sync_from_approval_instance
 # ---------------------------------------------------------------------------
 
+
 class TestSyncFromApprovalInstance:
     def _make_instance(self, status, completed_at=None, final_comment=None, final_approver_id=None):
         inst = MagicMock()
@@ -345,6 +352,7 @@ class TestSyncFromApprovalInstance:
 # get_required_evaluators
 # ---------------------------------------------------------------------------
 
+
 class TestGetRequiredEvaluators:
     def test_returns_empty_when_ecn_not_found(self, adapter, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -393,6 +401,7 @@ class TestGetRequiredEvaluators:
 # check_evaluation_complete
 # ---------------------------------------------------------------------------
 
+
 class TestCheckEvaluationComplete:
     def test_returns_false_when_no_evaluations(self, adapter, mock_db):
         mock_db.query.return_value.filter.return_value.all.return_value = []
@@ -401,8 +410,20 @@ class TestCheckEvaluationComplete:
         assert summary == {}
 
     def test_returns_true_when_all_completed(self, adapter, mock_db):
-        e1 = MagicMock(status="COMPLETED", cost_estimate=Decimal("100"), schedule_estimate=2, eval_result="APPROVE", eval_dept="工程部")
-        e2 = MagicMock(status="COMPLETED", cost_estimate=Decimal("200"), schedule_estimate=1, eval_result="APPROVE", eval_dept="质量部")
+        e1 = MagicMock(
+            status="COMPLETED",
+            cost_estimate=Decimal("100"),
+            schedule_estimate=2,
+            eval_result="APPROVE",
+            eval_dept="工程部",
+        )
+        e2 = MagicMock(
+            status="COMPLETED",
+            cost_estimate=Decimal("200"),
+            schedule_estimate=1,
+            eval_result="APPROVE",
+            eval_dept="质量部",
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = [e1, e2]
         is_done, summary = adapter.check_evaluation_complete(1)
         assert is_done is True
@@ -411,8 +432,20 @@ class TestCheckEvaluationComplete:
         assert summary["all_approved"] is True
 
     def test_returns_false_when_pending_exist(self, adapter, mock_db):
-        e1 = MagicMock(status="COMPLETED", cost_estimate=Decimal("100"), schedule_estimate=2, eval_result="APPROVE", eval_dept="工程部")
-        e2 = MagicMock(status="PENDING", cost_estimate=None, schedule_estimate=None, eval_result=None, eval_dept="质量部")
+        e1 = MagicMock(
+            status="COMPLETED",
+            cost_estimate=Decimal("100"),
+            schedule_estimate=2,
+            eval_result="APPROVE",
+            eval_dept="工程部",
+        )
+        e2 = MagicMock(
+            status="PENDING",
+            cost_estimate=None,
+            schedule_estimate=None,
+            eval_result=None,
+            eval_dept="质量部",
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = [e1, e2]
         is_done, summary = adapter.check_evaluation_complete(1)
         assert is_done is False
@@ -420,7 +453,13 @@ class TestCheckEvaluationComplete:
         assert "质量部" in summary["pending_depts"]
 
     def test_all_approved_false_when_one_rejected(self, adapter, mock_db):
-        e1 = MagicMock(status="COMPLETED", cost_estimate=None, schedule_estimate=0, eval_result="REJECT", eval_dept="采购部")
+        e1 = MagicMock(
+            status="COMPLETED",
+            cost_estimate=None,
+            schedule_estimate=0,
+            eval_result="REJECT",
+            eval_dept="采购部",
+        )
         mock_db.query.return_value.filter.return_value.all.return_value = [e1]
         is_done, summary = adapter.check_evaluation_complete(1)
         assert is_done is True
@@ -431,16 +470,21 @@ class TestCheckEvaluationComplete:
 # create_evaluation_tasks
 # ---------------------------------------------------------------------------
 
+
 class TestCreateEvaluationTasks:
     def test_creates_tasks_for_each_evaluator(self, adapter, mock_db):
         ecn = _make_ecn(ecn_type="MATERIAL", cost_impact=Decimal("0"))
         mock_db.query.return_value.filter.return_value.first.return_value = ecn
 
         # Patch get_required_evaluators to return 2 depts
-        with patch.object(adapter, "get_required_evaluators", return_value=[
-            {"dept": "工程部", "required": True},
-            {"dept": "采购部", "required": True},
-        ]):
+        with patch.object(
+            adapter,
+            "get_required_evaluators",
+            return_value=[
+                {"dept": "工程部", "required": True},
+                {"dept": "采购部", "required": True},
+            ],
+        ):
             tasks = adapter.create_evaluation_tasks(1, MagicMock())
         assert len(tasks) == 2
         mock_db.flush.assert_called()
@@ -456,6 +500,7 @@ class TestCreateEvaluationTasks:
 # ---------------------------------------------------------------------------
 # _determine_approval_level
 # ---------------------------------------------------------------------------
+
 
 class TestDetermineApprovalLevel:
     def test_returns_node_order_when_found(self, adapter, mock_db):
@@ -474,6 +519,7 @@ class TestDetermineApprovalLevel:
 # ---------------------------------------------------------------------------
 # update_ecn_approval_from_action
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateEcnApprovalFromAction:
     def _make_task(self, node_id=1, instance_entity_id=1):

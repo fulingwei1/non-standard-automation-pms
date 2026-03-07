@@ -16,6 +16,7 @@ from app.common.query_filters import apply_like_filter
 # 标记 reportlab 是否可用
 try:
     import reportlab  # noqa: F401
+
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -40,6 +41,7 @@ def generate_report_no(db: Session, report_type: str) -> str:
 
     # 查询当天该类型的报告数量
     from app.models.acceptance import AcceptanceReport
+
     count_query = db.query(AcceptanceReport)
     count_query = apply_like_filter(
         count_query,
@@ -93,7 +95,7 @@ def build_report_content(
         lines.append(f"客户签字: {order.customer_signer}")
 
     if user:
-        signer_name = getattr(user, 'real_name', None) or getattr(user, 'username', '')
+        signer_name = getattr(user, "real_name", None) or getattr(user, "username", "")
         lines.append(f"生成人: {signer_name}")
 
     return "\n".join(lines)
@@ -113,12 +115,15 @@ def get_report_version(db: Session, order_id: int, report_type: str) -> int:
     """
     from app.models.acceptance import AcceptanceReport
 
-    latest = db.query(AcceptanceReport).filter(
-        AcceptanceReport.order_id == order_id,
-        AcceptanceReport.report_type == report_type,
-    ).order_by(
-        AcceptanceReport.version.desc()
-    ).first()
+    latest = (
+        db.query(AcceptanceReport)
+        .filter(
+            AcceptanceReport.order_id == order_id,
+            AcceptanceReport.report_type == report_type,
+        )
+        .order_by(AcceptanceReport.version.desc())
+        .first()
+    )
 
     if latest:
         return latest.version + 1

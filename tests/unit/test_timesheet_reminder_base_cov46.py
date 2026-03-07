@@ -2,10 +2,10 @@
 """第四十六批 - 工时提醒基础服务单元测试"""
 import pytest
 
-pytest.importorskip("app.services.timesheet_reminder.base",
-                    reason="依赖不满足，跳过")
+pytest.importorskip("app.services.timesheet_reminder.base", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.timesheet_reminder.base import create_timesheet_notification
 
 
@@ -16,14 +16,16 @@ class TestCreateTimesheetNotification:
         mock_dispatcher = MagicMock()
         mock_dispatcher.create_system_notification.return_value = mock_notification
 
-        with patch("app.services.timesheet_reminder.base.NotificationDispatcher",
-                   return_value=mock_dispatcher):
+        with patch(
+            "app.services.timesheet_reminder.base.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             result = create_timesheet_notification(
                 db=db,
                 user_id=1,
                 notification_type="FILL_REMINDER",
                 title="请填写工时",
-                content="您有未填写的工时"
+                content="您有未填写的工时",
             )
 
         mock_dispatcher.create_system_notification.assert_called_once()
@@ -34,8 +36,10 @@ class TestCreateTimesheetNotification:
         mock_dispatcher = MagicMock()
         mock_dispatcher.create_system_notification.return_value = MagicMock()
 
-        with patch("app.services.timesheet_reminder.base.NotificationDispatcher",
-                   return_value=mock_dispatcher):
+        with patch(
+            "app.services.timesheet_reminder.base.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             create_timesheet_notification(
                 db=db,
                 user_id=42,
@@ -46,7 +50,7 @@ class TestCreateTimesheetNotification:
                 source_id=100,
                 link_url="/timesheet/100",
                 priority="HIGH",
-                extra_data={"hours": 25}
+                extra_data={"hours": 25},
             )
 
         call_kwargs = mock_dispatcher.create_system_notification.call_args[1]
@@ -59,15 +63,17 @@ class TestCreateTimesheetNotification:
         mock_dispatcher = MagicMock()
         mock_dispatcher.create_system_notification.return_value = MagicMock()
 
-        with patch("app.services.timesheet_reminder.base.NotificationDispatcher",
-                   return_value=mock_dispatcher):
+        with patch(
+            "app.services.timesheet_reminder.base.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             create_timesheet_notification(
                 db=db,
                 user_id=1,
                 notification_type="TYPE",
                 title="标题",
                 content="内容",
-                link_url=None
+                link_url=None,
             )
 
         call_kwargs = mock_dispatcher.create_system_notification.call_args[1]
@@ -78,15 +84,17 @@ class TestCreateTimesheetNotification:
         mock_dispatcher = MagicMock()
         mock_dispatcher.create_system_notification.return_value = MagicMock()
 
-        with patch("app.services.timesheet_reminder.base.NotificationDispatcher",
-                   return_value=mock_dispatcher):
+        with patch(
+            "app.services.timesheet_reminder.base.NotificationDispatcher",
+            return_value=mock_dispatcher,
+        ):
             create_timesheet_notification(
                 db=db,
                 user_id=1,
                 notification_type="TYPE",
                 title="标题",
                 content="内容",
-                extra_data=None
+                extra_data=None,
             )
 
         call_kwargs = mock_dispatcher.create_system_notification.call_args[1]
@@ -97,7 +105,6 @@ class TestCreateTimesheetNotification:
         with patch("app.services.timesheet_reminder.base.NotificationDispatcher") as MockDispatcher:
             MockDispatcher.return_value.create_system_notification.return_value = MagicMock()
             create_timesheet_notification(
-                db=db, user_id=1, notification_type="T",
-                title="T", content="C"
+                db=db, user_id=1, notification_type="T", title="T", content="C"
             )
         MockDispatcher.assert_called_once_with(db)

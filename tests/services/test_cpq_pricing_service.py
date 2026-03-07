@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """CpqPricingService 单元测试 - 报价计算逻辑（含税/不含税、折扣率）"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 
 class TestCpqPricingService:
 
     def _make_service(self, rule_set=None, version=None):
         from app.services.cpq_pricing_service import CpqPricingService
+
         db = MagicMock()
         if rule_set is not None:
             db.query.return_value.filter.return_value.first.return_value = rule_set

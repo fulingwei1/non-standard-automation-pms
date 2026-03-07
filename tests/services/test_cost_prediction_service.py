@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """成本预测服务单元测试 (CostPredictionService / GLM5CostPredictor)"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def _make_db():
@@ -50,11 +51,13 @@ class TestCostPredictionServiceInit:
     def test_init_without_api_key(self):
         """无API密钥时ai_predictor应为None"""
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             # 删除GLM_API_KEY确保无法初始化ai_predictor
             import os
-            os.environ.pop('GLM_API_KEY', None)
+
+            os.environ.pop("GLM_API_KEY", None)
             svc = CostPredictionService(db)
         assert svc.db is db
         assert svc.ai_predictor is None
@@ -62,8 +65,9 @@ class TestCostPredictionServiceInit:
     def test_init_with_api_key(self):
         """有API密钥时ai_predictor应被初始化"""
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
-        with patch('app.services.cost_prediction_service.GLM5CostPredictor') as mock_glm:
+        with patch("app.services.cost_prediction_service.GLM5CostPredictor") as mock_glm:
             mock_glm.return_value = MagicMock()
             svc = CostPredictionService(db, glm_api_key="test-key")
         assert svc.ai_predictor is not None
@@ -72,9 +76,11 @@ class TestCostPredictionServiceInit:
 class TestTraditionalEACPrediction:
     def _make_svc(self):
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
         import os
-        os.environ.pop('GLM_API_KEY', None)
+
+        os.environ.pop("GLM_API_KEY", None)
         return CostPredictionService(db)
 
     def test_normal_cpi_eac(self):
@@ -108,9 +114,11 @@ class TestTraditionalEACPrediction:
 class TestTraditionalRiskAnalysis:
     def _make_svc(self):
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
         import os
-        os.environ.pop('GLM_API_KEY', None)
+
+        os.environ.pop("GLM_API_KEY", None)
         return CostPredictionService(db)
 
     def test_high_cpi_low_risk(self):
@@ -137,9 +145,11 @@ class TestTraditionalRiskAnalysis:
 class TestCalculateDataQuality:
     def _make_svc(self):
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
         import os
-        os.environ.pop('GLM_API_KEY', None)
+
+        os.environ.pop("GLM_API_KEY", None)
         return CostPredictionService(db)
 
     def test_no_history_deducts_30(self):
@@ -157,21 +167,27 @@ class TestCalculateDataQuality:
 class TestGetLatestPrediction:
     def test_returns_latest_prediction(self):
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
         mock_prediction = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_prediction
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_prediction
+        )
         import os
-        os.environ.pop('GLM_API_KEY', None)
+
+        os.environ.pop("GLM_API_KEY", None)
         svc = CostPredictionService(db)
         result = svc.get_latest_prediction(project_id=1)
         assert result is mock_prediction
 
     def test_returns_none_when_no_prediction(self):
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
         import os
-        os.environ.pop('GLM_API_KEY', None)
+
+        os.environ.pop("GLM_API_KEY", None)
         svc = CostPredictionService(db)
         result = svc.get_latest_prediction(project_id=999)
         assert result is None
@@ -180,10 +196,12 @@ class TestGetLatestPrediction:
 class TestCreatePredictionValidation:
     def test_project_not_found_raises(self):
         from app.services.cost_prediction_service import CostPredictionService
+
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
         import os
-        os.environ.pop('GLM_API_KEY', None)
+
+        os.environ.pop("GLM_API_KEY", None)
         svc = CostPredictionService(db)
         with pytest.raises(ValueError, match="项目不存在"):
             svc.create_prediction(project_id=999)

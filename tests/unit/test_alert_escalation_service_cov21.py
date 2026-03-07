@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """第二十一批：预警升级服务单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch, call
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.alert_escalation_service")
 
@@ -17,6 +18,7 @@ def mock_db():
 @pytest.fixture
 def service(mock_db):
     from app.services.alert_escalation_service import AlertEscalationService
+
     return AlertEscalationService(mock_db)
 
 

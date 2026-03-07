@@ -11,9 +11,7 @@ from .base_builder import BaseSlideBuilder
 class TableSlideBuilder(BaseSlideBuilder):
     """表格幻灯片构建器"""
 
-    def add_table_slide(
-        self, title: str, headers: list, rows: list, page_num: int = None
-    ):
+    def add_table_slide(self, title: str, headers: list, rows: list, page_num: int = None):
         """
         添加表格幻灯片
 

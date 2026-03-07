@@ -33,7 +33,7 @@ router = APIRouter()
 async def generate_schedule(
     request: ScheduleGenerateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     生成智能排程
@@ -64,7 +64,7 @@ async def generate_schedule(
 async def preview_schedule(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """排程预览"""
     try:
@@ -82,7 +82,7 @@ async def preview_schedule(
 async def confirm_schedule(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """确认排程"""
     try:
@@ -104,7 +104,7 @@ async def check_conflicts(
     schedule_id: int = Query(None, description="排程ID"),
     status: str = Query(None, description="冲突状态"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """资源冲突检测"""
     try:
@@ -120,7 +120,7 @@ async def check_conflicts(
 async def adjust_schedule(
     request: ScheduleAdjustRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """手动调整排程"""
     try:
@@ -138,7 +138,7 @@ async def adjust_schedule(
 async def urgent_insert(
     request: UrgentInsertRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """紧急插单"""
     try:
@@ -148,7 +148,7 @@ async def urgent_insert(
             insert_time=request.insert_time,
             max_delay_hours=request.max_delay_hours,
             auto_adjust=request.auto_adjust,
-            user_id=current_user.id
+            user_id=current_user.id,
         )
         return UrgentInsertResponse(**result)
     except ValueError as e:
@@ -163,11 +163,11 @@ async def urgent_insert(
 async def compare_schedules(
     plan_ids: str = Query(..., description="方案ID列表，逗号分隔"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """排程方案对比"""
     try:
-        plan_id_list = [int(pid.strip()) for pid in plan_ids.split(',')]
+        plan_id_list = [int(pid.strip()) for pid in plan_ids.split(",")]
         service = ProductionScheduleService(db)
         result = service.compare_schedule_plans(plan_id_list)
         return ScheduleComparisonResponse(**result)
@@ -182,7 +182,7 @@ async def compare_schedules(
 async def get_gantt_data(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取甘特图数据"""
     try:
@@ -200,7 +200,7 @@ async def get_gantt_data(
 async def reset_schedule(
     plan_id: int = Query(..., description="排程方案ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """重置排程"""
     try:
@@ -219,7 +219,7 @@ async def get_schedule_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """排程历史"""
     try:
@@ -228,6 +228,7 @@ async def get_schedule_history(
 
         # 序列化ORM对象
         from app.schemas.production_schedule import AdjustmentLogResponse
+
         return ScheduleHistoryResponse(
             schedules=[ScheduleResponse.model_validate(s) for s in result["schedules"]],
             adjustments=[AdjustmentLogResponse.model_validate(a) for a in result["adjustments"]],

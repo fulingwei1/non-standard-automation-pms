@@ -1,14 +1,18 @@
 """
 跟进提醒模型
 """
-from sqlalchemy import Column, Integer, Text, DateTime, Enum, TIMESTAMP, ForeignKey
-from sqlalchemy.sql import func
-from app.models.base import Base
+
 import enum
+
+from sqlalchemy import TIMESTAMP, Column, DateTime, Enum, ForeignKey, Integer, Text
+from sqlalchemy.sql import func
+
+from app.models.base import Base
 
 
 class ReminderPriority(str, enum.Enum):
     """提醒优先级"""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -16,6 +20,7 @@ class ReminderPriority(str, enum.Enum):
 
 class ReminderStatus(str, enum.Enum):
     """提醒状态"""
+
     PENDING = "pending"
     COMPLETED = "completed"
     DISMISSED = "dismissed"
@@ -23,10 +28,17 @@ class ReminderStatus(str, enum.Enum):
 
 class PresaleFollowUpReminder(Base):
     """跟进提醒表"""
+
     __tablename__ = "presale_follow_up_reminder"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    presale_ticket_id = Column(Integer, ForeignKey("presale_support_ticket.id"), nullable=False, index=True, comment="售前工单ID")
+    presale_ticket_id = Column(
+        Integer,
+        ForeignKey("presale_support_ticket.id"),
+        nullable=False,
+        index=True,
+        comment="售前工单ID",
+    )
     recommended_time = Column(DateTime, comment="推荐跟进时间")
     priority = Column(Enum(ReminderPriority), comment="优先级")
     follow_up_content = Column(Text, comment="跟进内容建议")

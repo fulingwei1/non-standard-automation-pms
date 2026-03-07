@@ -13,9 +13,9 @@
 from fastapi import APIRouter
 
 from .crud_refactored import router as crud_refactored_router
+from .import_users import router as import_router
 from .sync import router as sync_router
 from .time_allocation import router as time_router
-from .import_users import router as import_router
 
 router = APIRouter()
 

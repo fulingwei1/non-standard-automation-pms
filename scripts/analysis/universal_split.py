@@ -3,12 +3,14 @@
 通用拆分脚本 - 可用于任何大文件
 """
 import re
-from pathlib import Path
 import sys
+from pathlib import Path
+
 
 def read_file_lines(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.readlines()
+
 
 def extract_imports(lines):
     imports = []
@@ -16,12 +18,13 @@ def extract_imports(lines):
     for i, line in enumerate(lines):
         if line.strip().startswith('"""') or line.strip().startswith("'''"):
             docstring = not docstring
-        elif line.strip().startswith('from ') or line.strip().startswith('import '):
+        elif line.strip().startswith("from ") or line.strip().startswith("import "):
             if not docstring:
                 imports.append(line)
         elif imports and i > len(imports) + 20:
             break
-    return '\n'.join(imports)
+    return "\n".join(imports)
+
 
 def auto_split_file(file_path_str, output_dir_str, modules_config):
     """
@@ -51,15 +54,15 @@ def auto_split_file(file_path_str, output_dir_str, modules_config):
     for module in modules_config:
         print(f"📝 生成 {module['name']}...")
 
-        start = module['start'] - 1
-        end = min(module['end'], total_lines)
+        start = module["start"] - 1
+        end = min(module["end"], total_lines)
 
         if start >= total_lines:
             print(f"  ⚠️ 跳过: 起始行超出范围")
             continue
 
-        module_code = ''.join(lines[start:end])
-        routes = len(re.findall(r'@router\.', module_code))
+        module_code = "".join(lines[start:end])
+        routes = len(re.findall(r"@router\.", module_code))
 
         if routes == 0:
             print(f"  ⚠️ 跳过: 没有找到路由")
@@ -83,8 +86,8 @@ router = APIRouter(
 {module_code}
 '''
 
-        output_path = output_dir / module['name']
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_path = output_dir / module["name"]
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(module_content)
 
         print(f"  ✅ {module['name']}: {routes} 个路由 ({end-start}行)")
@@ -97,7 +100,8 @@ router = APIRouter(
 
     return successful_modules, total_routes
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("用法: python3 universal_split.py <source_file> <output_dir>")
         sys.exit(1)

@@ -87,9 +87,7 @@ class TestProjectLifecycleE2E:
         if create_response.status_code == 400:
             pytest.skip(f"Project creation failed: {create_response.json()}")
 
-        assert create_response.status_code in [200, 201], (
-            f"创建项目失败: {create_response.json()}"
-        )
+        assert create_response.status_code in [200, 201], f"创建项目失败: {create_response.json()}"
         project = create_response.json()
         project_id = project["id"]
         assert project["stage"] == "S1"
@@ -121,9 +119,7 @@ class TestProjectLifecycleE2E:
             assert advance_s2.status_code in [200, 400, 422]
 
         # 验证阶段变更
-        project_s2 = client.get(
-            f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers
-        )
+        project_s2 = client.get(f"{settings.API_V1_PREFIX}/projects/{project_id}", headers=headers)
         assert project_s2.status_code == 200
 
         # ========== Step 3: 推进到 S3 (采购备料) ==========
@@ -193,9 +189,7 @@ class TestProjectLifecycleE2E:
         assert final_project.status_code == 200
         final_data = final_project.json()
         assert final_data["stage"] == "S9", f"Expected S9, got {final_data['stage']}"
-        assert final_data["status"] == "ST28", (
-            f"Expected ST28, got {final_data['status']}"
-        )
+        assert final_data["status"] == "ST28", f"Expected ST28, got {final_data['status']}"
 
     def test_project_stage_with_health_calculation(
         self,
@@ -472,9 +466,7 @@ class TestEcnWorkflowE2E:
         )
 
         # ========== 验证 ==========
-        ecn_detail = client.get(
-            f"{settings.API_V1_PREFIX}/ecns/{ecn_id}", headers=headers
-        )
+        ecn_detail = client.get(f"{settings.API_V1_PREFIX}/ecns/{ecn_id}", headers=headers)
         if ecn_detail.status_code == 200:
             assert "id" in ecn_detail.json()
 
@@ -537,9 +529,7 @@ class TestAcceptanceWorkflowE2E:
         )
 
         if order_response.status_code not in [200, 201]:
-            pytest.skip(
-                f"Acceptance Order API not available: {order_response.status_code}"
-            )
+            pytest.skip(f"Acceptance Order API not available: {order_response.status_code}")
 
         order_id = order_response.json()["id"]
 

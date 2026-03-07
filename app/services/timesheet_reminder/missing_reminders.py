@@ -14,17 +14,15 @@ import logging
 from datetime import date, datetime, timedelta
 from typing import Optional
 
-from app.services.timesheet_reminder.base import create_timesheet_notification
-
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.notification import Notification
 from app.models.timesheet import Timesheet
 from app.models.user import User
+from app.services.timesheet_reminder.base import create_timesheet_notification
 
 logger = logging.getLogger(__name__)
-
 
 
 def notify_timesheet_missing(db: Session, target_date: Optional[date] = None) -> int:
@@ -77,9 +75,7 @@ def notify_timesheet_missing(db: Session, target_date: Optional[date] = None) ->
     # 查询用户：通过角色或部门
     user_ids_by_role = []
     if engineer_role_ids:
-        user_roles = (
-            db.query(UserRole).filter(UserRole.role_id.in_(engineer_role_ids)).all()
-        )
+        user_roles = db.query(UserRole).filter(UserRole.role_id.in_(engineer_role_ids)).all()
         user_ids_by_role = [ur.user_id for ur in user_roles]
 
     engineers = (
@@ -101,9 +97,7 @@ def notify_timesheet_missing(db: Session, target_date: Optional[date] = None) ->
         # 检查该日期是否已有工时记录
         existing = (
             db.query(Timesheet)
-            .filter(
-                Timesheet.user_id == engineer.id, Timesheet.work_date == target_date
-            )
+            .filter(Timesheet.user_id == engineer.id, Timesheet.work_date == target_date)
             .first()
         )
 
@@ -148,16 +142,12 @@ def notify_timesheet_missing(db: Session, target_date: Optional[date] = None) ->
         reminder_count += 1
 
     db.commit()
-    logger.info(
-        f"工时填报提醒完成: 发送 {reminder_count} 条提醒（目标日期: {target_date}）"
-    )
+    logger.info(f"工时填报提醒完成: 发送 {reminder_count} 条提醒（目标日期: {target_date}）")
 
     return reminder_count
 
 
-def notify_weekly_timesheet_missing(
-    db: Session, week_start: Optional[date] = None
-) -> int:
+def notify_weekly_timesheet_missing(db: Session, week_start: Optional[date] = None) -> int:
     """
     提醒未完成周工时填报的用户
 
@@ -211,9 +201,7 @@ def notify_weekly_timesheet_missing(
     # 查询用户：通过角色或部门
     user_ids_by_role = []
     if engineer_role_ids:
-        user_roles = (
-            db.query(UserRole).filter(UserRole.role_id.in_(engineer_role_ids)).all()
-        )
+        user_roles = db.query(UserRole).filter(UserRole.role_id.in_(engineer_role_ids)).all()
         user_ids_by_role = [ur.user_id for ur in user_roles]
 
     engineers = (
@@ -290,5 +278,3 @@ def notify_weekly_timesheet_missing(
     )
 
     return reminder_count
-
-

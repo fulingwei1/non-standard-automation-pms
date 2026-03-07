@@ -30,18 +30,20 @@ class TestExportToExcel:
         data = [{"name": "Alice", "score": 95.5}]
         columns = [
             {"key": "name", "label": "姓名", "width": 20},
-            {"key": "score", "label": "分数", "width": 15}
+            {"key": "score", "label": "分数", "width": 15},
         ]
         result = service.export_to_excel(data, columns=columns, title="Test")
         assert isinstance(result, io.BytesIO)
 
     def test_with_special_types(self, service):
-        data = [{
-            "date_val": date(2026, 1, 1),
-            "dt_val": datetime(2026, 1, 1, 12, 0),
-            "dec_val": Decimal("100.50"),
-            "none_val": None
-        }]
+        data = [
+            {
+                "date_val": date(2026, 1, 1),
+                "dt_val": datetime(2026, 1, 1, 12, 0),
+                "dec_val": Decimal("100.50"),
+                "none_val": None,
+            }
+        ]
         result = service.export_to_excel(data)
         assert isinstance(result, io.BytesIO)
 
@@ -59,16 +61,12 @@ class TestExportMultisheet:
 
     def test_with_data(self, service):
         sheets = [
-            {
-                "name": "Sheet1",
-                "data": [{"a": 1, "b": 2}],
-                "title": "Test Sheet"
-            },
+            {"name": "Sheet1", "data": [{"a": 1, "b": 2}], "title": "Test Sheet"},
             {
                 "name": "Sheet2",
                 "data": [{"c": 3}],
-                "columns": [{"key": "c", "label": "Col C", "width": 10}]
-            }
+                "columns": [{"key": "c", "label": "Col C", "width": 10}],
+            },
         ]
         result = service.export_multisheet(sheets)
         assert isinstance(result, io.BytesIO)

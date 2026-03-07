@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十四批 - template_report/generic_report 单元测试"""
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.template_report.generic_report")
 

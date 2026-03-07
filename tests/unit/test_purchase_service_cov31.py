@@ -40,6 +40,7 @@ def _make_query_chain(mock_db, return_value):
 # get_purchase_orders
 # ---------------------------------------------------------------------------
 
+
 class TestGetPurchaseOrders:
     def test_returns_list_no_filters(self, service, mock_db):
         order = MagicMock()
@@ -95,6 +96,7 @@ class TestGetPurchaseOrders:
 # get_purchase_order_by_id
 # ---------------------------------------------------------------------------
 
+
 class TestGetPurchaseOrderById:
     def test_returns_order_when_found(self, service, mock_db):
         order = MagicMock()
@@ -122,6 +124,7 @@ class TestGetPurchaseOrderById:
 # create_purchase_order
 # ---------------------------------------------------------------------------
 
+
 class TestCreatePurchaseOrder:
     def test_creates_order_and_adds_to_db(self, service, mock_db):
         order_data = {
@@ -132,9 +135,7 @@ class TestCreatePurchaseOrder:
             "items": [],
         }
 
-        with patch(
-            "app.services.purchase.purchase_service.PurchaseOrder"
-        ) as MockOrder:
+        with patch("app.services.purchase.purchase_service.PurchaseOrder") as MockOrder:
             mock_order = MagicMock()
             mock_order.id = 1
             MockOrder.return_value = mock_order
@@ -154,8 +155,10 @@ class TestCreatePurchaseOrder:
             ],
         }
 
-        with patch("app.services.purchase.purchase_service.PurchaseOrder") as MockOrder, \
-             patch("app.services.purchase.purchase_service.PurchaseOrderItem") as MockItem:
+        with (
+            patch("app.services.purchase.purchase_service.PurchaseOrder") as MockOrder,
+            patch("app.services.purchase.purchase_service.PurchaseOrderItem") as MockItem,
+        ):
             mock_order = MagicMock()
             mock_order.id = 1
             MockOrder.return_value = mock_order
@@ -171,6 +174,7 @@ class TestCreatePurchaseOrder:
 # ---------------------------------------------------------------------------
 # submit_purchase_order / approve_purchase_order
 # ---------------------------------------------------------------------------
+
 
 class TestSubmitAndApprove:
     def test_submit_returns_false_when_not_found(self, service, mock_db):

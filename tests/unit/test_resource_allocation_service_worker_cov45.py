@@ -3,16 +3,17 @@
 第四十五批覆盖：resource_allocation_service/worker.py
 """
 
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.resource_allocation_service.worker")
 
 from app.services.resource_allocation_service.worker import (
     check_worker_availability,
-    find_available_workers,
     check_worker_skill,
+    find_available_workers,
 )
 
 
@@ -37,7 +38,9 @@ def _make_worker(worker_id=1, is_active=True, status="ACTIVE"):
 class TestCheckWorkerAvailability:
     def test_worker_not_found(self, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        ok, reason, hours = check_worker_availability(mock_db, 999, date(2024, 1, 1), date(2024, 1, 7))
+        ok, reason, hours = check_worker_availability(
+            mock_db, 999, date(2024, 1, 1), date(2024, 1, 7)
+        )
         assert ok is False
         assert "不存在" in reason
         assert hours == 0.0
@@ -45,7 +48,9 @@ class TestCheckWorkerAvailability:
     def test_worker_inactive(self, mock_db):
         worker = _make_worker(is_active=False)
         mock_db.query.return_value.filter.return_value.first.return_value = worker
-        ok, reason, hours = check_worker_availability(mock_db, 1, date(2024, 1, 1), date(2024, 1, 7))
+        ok, reason, hours = check_worker_availability(
+            mock_db, 1, date(2024, 1, 1), date(2024, 1, 7)
+        )
         assert ok is False
         assert hours == 0.0
 
@@ -69,7 +74,9 @@ class TestCheckWorkerAvailability:
     def test_worker_bad_status(self, mock_db):
         worker = _make_worker(status="RESIGNED")
         mock_db.query.return_value.filter.return_value.first.return_value = worker
-        ok, reason, hours = check_worker_availability(mock_db, 1, date(2024, 1, 1), date(2024, 1, 7))
+        ok, reason, hours = check_worker_availability(
+            mock_db, 1, date(2024, 1, 1), date(2024, 1, 7)
+        )
         assert ok is False
 
 

@@ -17,7 +17,9 @@ from app.utils.db_helpers import get_or_404, save_obj
 router = APIRouter()
 
 
-@router.post("/{article_id}/like", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{article_id}/like", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK
+)
 def like_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),
@@ -33,7 +35,9 @@ def like_knowledge_base(
     return save_obj(db, article)
 
 
-@router.post("/{article_id}/helpful", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{article_id}/helpful", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK
+)
 def mark_knowledge_base_helpful(
     *,
     db: Session = Depends(deps.get_db),
@@ -49,7 +53,9 @@ def mark_knowledge_base_helpful(
     return save_obj(db, article)
 
 
-@router.post("/{article_id}/adopt", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{article_id}/adopt", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK
+)
 def adopt_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),

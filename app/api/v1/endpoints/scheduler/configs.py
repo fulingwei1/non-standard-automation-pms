@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.security import get_current_active_user
 from app.core.auth import check_permission
+from app.core.security import get_current_active_user
 from app.models.scheduler_config import SchedulerTaskConfig
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -83,36 +83,33 @@ def get_task_configs(
                     except (json.JSONDecodeError, TypeError):
                         sla_config = {}
 
-                items.append({
-                    "id": config.id,
-                    "task_id": config.task_id,
-                    "task_name": config.task_name,
-                    "module": config.module,
-                    "callable_name": config.callable_name,
-                    "owner": config.owner,
-                    "category": config.category,
-                    "description": config.description,
-                    "is_enabled": config.is_enabled,
-                    "cron_config": cron_config,
-                    "dependencies_tables": dependencies_tables,
-                    "risk_level": config.risk_level,
-                    "sla_config": sla_config,
-                    "updated_by": config.updated_by,
-                    "created_at": config.created_at.isoformat() if config.created_at else None,
-                    "updated_at": config.updated_at.isoformat() if config.updated_at else None,
-                })
+                items.append(
+                    {
+                        "id": config.id,
+                        "task_id": config.task_id,
+                        "task_name": config.task_name,
+                        "module": config.module,
+                        "callable_name": config.callable_name,
+                        "owner": config.owner,
+                        "category": config.category,
+                        "description": config.description,
+                        "is_enabled": config.is_enabled,
+                        "cron_config": cron_config,
+                        "dependencies_tables": dependencies_tables,
+                        "risk_level": config.risk_level,
+                        "sla_config": sla_config,
+                        "updated_by": config.updated_by,
+                        "created_at": config.created_at.isoformat() if config.created_at else None,
+                        "updated_at": config.updated_at.isoformat() if config.updated_at else None,
+                    }
+                )
             except Exception as config_error:
                 # 如果某个配置项处理失败，记录错误但继续处理其他项
                 logger.error(f"处理配置项 {config.task_id} 失败: {config_error}", exc_info=True)
                 continue
 
         return ResponseModel(
-            code=200,
-            message="success",
-            data={
-                "total": len(items),
-                "items": items
-            }
+            code=200, message="success", data={"total": len(items), "items": items}
         )
     except HTTPException:
         raise
@@ -131,9 +128,9 @@ def get_task_config(
     获取指定任务的配置
     """
     try:
-        config = db.query(SchedulerTaskConfig).filter(
-            SchedulerTaskConfig.task_id == task_id
-        ).first()
+        config = (
+            db.query(SchedulerTaskConfig).filter(SchedulerTaskConfig.task_id == task_id).first()
+        )
 
         if not config:
             raise HTTPException(status_code=404, detail=f"任务配置 {task_id} 不存在")
@@ -152,13 +149,15 @@ def get_task_config(
                 "description": config.description,
                 "is_enabled": config.is_enabled,
                 "cron_config": config.cron_config if config.cron_config else {},
-                "dependencies_tables": config.dependencies_tables if config.dependencies_tables else [],
+                "dependencies_tables": (
+                    config.dependencies_tables if config.dependencies_tables else []
+                ),
                 "risk_level": config.risk_level,
                 "sla_config": config.sla_config if config.sla_config else {},
                 "updated_by": config.updated_by,
                 "created_at": config.created_at.isoformat() if config.created_at else None,
                 "updated_at": config.updated_at.isoformat() if config.updated_at else None,
-            }
+            },
         )
     except HTTPException:
         raise
@@ -182,9 +181,9 @@ def update_task_config(
         raise HTTPException(status_code=403, detail="需要管理员权限才能更新任务配置")
 
     try:
-        config = db.query(SchedulerTaskConfig).filter(
-            SchedulerTaskConfig.task_id == task_id
-        ).first()
+        config = (
+            db.query(SchedulerTaskConfig).filter(SchedulerTaskConfig.task_id == task_id).first()
+        )
 
         if not config:
             raise HTTPException(status_code=404, detail=f"任务配置 {task_id} 不存在")
@@ -201,15 +200,12 @@ def update_task_config(
         # 动态更新调度器中的任务
         try:
             from app.utils.scheduler import scheduler
+
             job = scheduler.get_job(task_id)
             if job:
                 # 更新任务的Cron配置
                 if config_update.cron_config:
-                    scheduler.reschedule_job(
-                        task_id,
-                        trigger='cron',
-                        **config_update.cron_config
-                    )
+                    scheduler.reschedule_job(task_id, trigger="cron", **config_update.cron_config)
                 # 启用/禁用任务
                 if config_update.is_enabled is not None:
                     if config_update.is_enabled:
@@ -221,12 +217,7 @@ def update_task_config(
             logger.warning(f"更新调度器任务失败: {str(scheduler_err)}")
 
         return ResponseModel(
-            code=200,
-            message="success",
-            data={
-                "task_id": task_id,
-                "message": "配置已更新"
-            }
+            code=200, message="success", data={"task_id": task_id, "message": "配置已更新"}
         )
     except HTTPException:
         raise
@@ -257,9 +248,11 @@ def sync_task_configs(
         updated_count = 0
 
         for task in SCHEDULER_TASKS:
-            config = db.query(SchedulerTaskConfig).filter(
-                SchedulerTaskConfig.task_id == task["id"]
-            ).first()
+            config = (
+                db.query(SchedulerTaskConfig)
+                .filter(SchedulerTaskConfig.task_id == task["id"])
+                .first()
+            )
 
             # 准备配置数据
             cron_config = task.get("cron", {})
@@ -306,8 +299,8 @@ def sync_task_configs(
                 "synced_count": synced_count,
                 "created_count": created_count,
                 "updated_count": updated_count,
-                "message": f"成功同步 {synced_count} 个任务配置（新建 {created_count} 个，更新 {updated_count} 个）"
-            }
+                "message": f"成功同步 {synced_count} 个任务配置（新建 {created_count} 个，更新 {updated_count} 个）",
+            },
         )
     except Exception as e:
         db.rollback()

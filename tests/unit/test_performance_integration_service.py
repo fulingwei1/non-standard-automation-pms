@@ -29,17 +29,17 @@ class TestGetQualificationWeightConfig:
 
         config = PerformanceIntegrationService.get_qualification_weight_config()
 
-        assert 'base_weight' in config
-        assert 'qualification_weight' in config
-        assert config['base_weight'] == 0.70
-        assert config['qualification_weight'] == 0.30
+        assert "base_weight" in config
+        assert "qualification_weight" in config
+        assert config["base_weight"] == 0.70
+        assert config["qualification_weight"] == 0.30
 
     def test_weights_sum_to_one(self):
         """测试权重之和为1"""
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         config = PerformanceIntegrationService.get_qualification_weight_config()
-        total = config['base_weight'] + config['qualification_weight']
+        total = config["base_weight"] + config["qualification_weight"]
 
         assert total == 1.0
 
@@ -52,7 +52,7 @@ class TestCalculateIntegratedScore:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         result = PerformanceIntegrationService.calculate_integrated_score(
-            db_session, 99999, '2025-01'
+            db_session, 99999, "2025-01"
         )
 
         assert result is None
@@ -61,63 +61,76 @@ class TestCalculateIntegratedScore:
         """测试带任职资格数据"""
         from app.services.performance_integration_service import PerformanceIntegrationService
 
-        with patch.object(
-            PerformanceIntegrationService, '_get_base_performance_score',
-            return_value=Decimal('85.0')
-        ), patch.object(
-            PerformanceIntegrationService, '_get_qualification_score',
-            return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=Decimal("85.0"),
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value={"score": 90.0, "level_code": "P3", "level_name": "高级"},
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
-                db_session, 1, '2025-01'
+                db_session, 1, "2025-01"
             )
 
         assert result is not None
-        assert 'base_score' in result
-        assert 'qualification_score' in result
-        assert 'integrated_score' in result
-        assert result['base_score'] == 85.0
-        assert result['qualification_score'] == 90.0
+        assert "base_score" in result
+        assert "qualification_score" in result
+        assert "integrated_score" in result
+        assert result["base_score"] == 85.0
+        assert result["qualification_score"] == 90.0
 
     def test_without_qualification_data(self, db_session):
         """测试无任职资格数据"""
         from app.services.performance_integration_service import PerformanceIntegrationService
 
-        with patch.object(
-            PerformanceIntegrationService, '_get_base_performance_score',
-            return_value=Decimal('80.0')
-        ), patch.object(
-            PerformanceIntegrationService, '_get_qualification_score',
-            return_value=None
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=Decimal("80.0"),
+            ),
+            patch.object(
+                PerformanceIntegrationService, "_get_qualification_score", return_value=None
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
-                db_session, 1, '2025-01'
+                db_session, 1, "2025-01"
             )
 
         assert result is not None
-        assert result['qualification_score'] == 0.0
-        assert result['integrated_score'] == 80.0  # 只使用基础绩效
+        assert result["qualification_score"] == 0.0
+        assert result["integrated_score"] == 80.0  # 只使用基础绩效
 
     def test_integrated_score_calculation(self, db_session):
         """测试融合得分计算公式"""
         from app.services.performance_integration_service import PerformanceIntegrationService
 
-        base_score = Decimal('80.0')
+        base_score = Decimal("80.0")
         qual_score = 90.0
         expected = 80.0 * 0.70 + 90.0 * 0.30  # 56 + 27 = 83
 
-        with patch.object(
-            PerformanceIntegrationService, '_get_base_performance_score',
-            return_value=base_score
-        ), patch.object(
-            PerformanceIntegrationService, '_get_qualification_score',
-            return_value={'score': qual_score, 'level_code': 'P2'}
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=base_score,
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value={"score": qual_score, "level_code": "P2"},
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
-                db_session, 1, '2025-01'
+                db_session, 1, "2025-01"
             )
 
-        assert result['integrated_score'] == expected
+        assert result["integrated_score"] == expected
 
 
 class TestGetBasePerformanceScore:
@@ -128,7 +141,7 @@ class TestGetBasePerformanceScore:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         result = PerformanceIntegrationService._get_base_performance_score(
-            db_session, 99999, '2025-01'
+            db_session, 99999, "2025-01"
         )
 
         assert result is None
@@ -141,9 +154,7 @@ class TestGetQualificationScore:
         """测试用户不存在"""
         from app.services.performance_integration_service import PerformanceIntegrationService
 
-        result = PerformanceIntegrationService._get_qualification_score(
-        db_session, 99999
-        )
+        result = PerformanceIntegrationService._get_qualification_score(db_session, 99999)
 
         assert result is None
 
@@ -157,7 +168,7 @@ class TestUpdateQualificationInEvaluation:
 
         with pytest.raises(ValueError, match="评价记录.*不存在"):
             PerformanceIntegrationService.update_qualification_in_evaluation(
-            db_session, 99999, {'level_id': 1}
+                db_session, 99999, {"level_id": 1}
             )
 
 
@@ -169,10 +180,10 @@ class TestGetIntegratedPerformanceForPeriod:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         result = PerformanceIntegrationService.get_integrated_performance_for_period(
-        db_session, 1, period_id=99999
+            db_session, 1, period_id=99999
         )
 
-            # 周期不存在应返回None
+        # 周期不存在应返回None
         assert result is None
 
     def test_without_period_id(self, db_session):
@@ -180,10 +191,10 @@ class TestGetIntegratedPerformanceForPeriod:
         from app.services.performance_integration_service import PerformanceIntegrationService
 
         result = PerformanceIntegrationService.get_integrated_performance_for_period(
-        db_session, 1, period_id=None
+            db_session, 1, period_id=None
         )
 
-            # 无已完成周期应返回None
+        # 无已完成周期应返回None
         assert result is None
 
 
@@ -194,31 +205,36 @@ class TestResultStructure:
         """测试完整结果结构"""
         from app.services.performance_integration_service import PerformanceIntegrationService
 
-        with patch.object(
-            PerformanceIntegrationService, '_get_base_performance_score',
-            return_value=Decimal('85.0')
-        ), patch.object(
-            PerformanceIntegrationService, '_get_qualification_score',
-            return_value={'score': 90.0, 'level_code': 'P3', 'level_name': '高级'}
+        with (
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_base_performance_score",
+                return_value=Decimal("85.0"),
+            ),
+            patch.object(
+                PerformanceIntegrationService,
+                "_get_qualification_score",
+                return_value={"score": 90.0, "level_code": "P3", "level_name": "高级"},
+            ),
         ):
             result = PerformanceIntegrationService.calculate_integrated_score(
-                db_session, 1, '2025-01'
+                db_session, 1, "2025-01"
             )
 
             # 检查顶层字段
-            assert 'base_score' in result
-            assert 'qualification_score' in result
-            assert 'integrated_score' in result
-            assert 'base_weight' in result
-            assert 'qualification_weight' in result
-            assert 'qualification_level' in result
-            assert 'details' in result
+            assert "base_score" in result
+            assert "qualification_score" in result
+            assert "integrated_score" in result
+            assert "base_weight" in result
+            assert "qualification_weight" in result
+            assert "qualification_level" in result
+            assert "details" in result
 
             # 检查details字段
-            details = result['details']
-            assert 'base_performance' in details
-            assert 'qualification' in details
-            assert 'calculation' in details
+            details = result["details"]
+            assert "base_performance" in details
+            assert "qualification" in details
+            assert "calculation" in details
 
 
 # pytest fixtures
@@ -228,6 +244,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

@@ -8,7 +8,6 @@
 from datetime import date
 from typing import Any, Dict, Optional
 
-
 from app.models.user import User
 from app.services.report_framework.adapters.base import BaseReportAdapter
 from app.services.report_framework.generators import AnalysisReportGenerator

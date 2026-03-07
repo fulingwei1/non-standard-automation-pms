@@ -9,9 +9,10 @@
 - 批量审批权限检查
 """
 
-from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session, Query
+from typing import Any, Dict, List, Optional
+
 from fastapi import Depends, HTTPException, status
+from sqlalchemy.orm import Query, Session
 
 from app.core.auth import get_current_active_user, is_superuser
 from app.models.organization import Department
@@ -97,8 +98,7 @@ def get_user_manageable_dimensions(db: Session, user: User) -> Dict[str, Any]:
     dept_query = db.query(Department.id)
     if hasattr(user, "employee_id") and user.employee_id:
         dept_query = dept_query.filter(
-            (Department.manager_id == user.id)
-            | (Department.manager_id == user.employee_id)
+            (Department.manager_id == user.id) | (Department.manager_id == user.employee_id)
         )
     else:
         dept_query = dept_query.filter(Department.manager_id == user.id)
@@ -113,9 +113,7 @@ def get_user_manageable_dimensions(db: Session, user: User) -> Dict[str, Any]:
     return result
 
 
-def apply_timesheet_access_filter(
-    query: Query, db: Session, current_user: User
-) -> Query:
+def apply_timesheet_access_filter(query: Query, db: Session, current_user: User) -> Query:
     """
     统一工时数据访问权限过滤
     """

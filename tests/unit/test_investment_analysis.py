@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """资源投入分析模块单元测试"""
-import pytest
-from unittest.mock import MagicMock
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.resource_waste_analysis.investment import InvestmentAnalysisMixin
 
 
@@ -15,8 +17,8 @@ class TestInvestmentAnalysisMixin:
     def test_get_lead_resource_investment_empty(self):
         self.mixin.db.query.return_value.filter.return_value.all.return_value = []
         result = self.mixin.get_lead_resource_investment(1)
-        assert result['total_hours'] == 0.0
-        assert result['engineer_count'] == 0
+        assert result["total_hours"] == 0.0
+        assert result["engineer_count"] == 0
 
     def test_get_lead_resource_investment_with_logs(self):
         log1 = MagicMock()
@@ -40,5 +42,5 @@ class TestInvestmentAnalysisMixin:
         self.mixin.db.query.return_value.filter.return_value.first.return_value = user_mock
 
         result = self.mixin.get_lead_resource_investment(1)
-        assert result['total_hours'] == 12.0
-        assert result['engineer_count'] == 2
+        assert result["total_hours"] == 12.0
+        assert result["engineer_count"] == 2

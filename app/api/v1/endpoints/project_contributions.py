@@ -26,6 +26,7 @@ router = APIRouter()
 
 class ContributionRateRequest(BaseModel):
     """贡献度评分请求"""
+
     pm_rating: int = Body(..., ge=1, le=5, description="项目经理评分 1-5")
     period: str = Body(..., description="统计周期 YYYY-MM")
 
@@ -41,32 +42,51 @@ def get_project_contributions(
     获取项目贡献度列表
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     service = ProjectContributionService(db)
     contributions = service.get_project_contributions(project_id, period)
 
     return {
-        'contributions': [
+        "contributions": [
             {
-                'id': c.id,
-                'user_id': c.user_id,
-                'user_name': (
-                    (c.user.employee.name if hasattr(c.user, 'employee') and c.user.employee and hasattr(c.user.employee, 'name') else None) or
-                    (c.user.real_name if hasattr(c.user, 'real_name') and c.user.real_name else None) or
-                    (c.user.username if c.user and hasattr(c.user, 'username') and c.user.username else None) or
-                    f'User {c.user_id}'
-                ) if c.user else f'User {c.user_id}',
-                'period': c.period,
-                'task_count': c.task_count,
-                'task_hours': float(c.task_hours or 0),
-                'actual_hours': float(c.actual_hours or 0),
-                'deliverable_count': c.deliverable_count,
-                'issue_count': c.issue_count,
-                'issue_resolved': c.issue_resolved,
-                'contribution_score': float(c.contribution_score or 0),
-                'pm_rating': c.pm_rating,
-                'bonus_amount': float(c.bonus_amount or 0),
+                "id": c.id,
+                "user_id": c.user_id,
+                "user_name": (
+                    (
+                        (
+                            c.user.employee.name
+                            if hasattr(c.user, "employee")
+                            and c.user.employee
+                            and hasattr(c.user.employee, "name")
+                            else None
+                        )
+                        or (
+                            c.user.real_name
+                            if hasattr(c.user, "real_name") and c.user.real_name
+                            else None
+                        )
+                        or (
+                            c.user.username
+                            if c.user and hasattr(c.user, "username") and c.user.username
+                            else None
+                        )
+                        or f"User {c.user_id}"
+                    )
+                    if c.user
+                    else f"User {c.user_id}"
+                ),
+                "period": c.period,
+                "task_count": c.task_count,
+                "task_hours": float(c.task_hours or 0),
+                "actual_hours": float(c.actual_hours or 0),
+                "deliverable_count": c.deliverable_count,
+                "issue_count": c.issue_count,
+                "issue_resolved": c.issue_resolved,
+                "contribution_score": float(c.contribution_score or 0),
+                "pm_rating": c.pm_rating,
+                "bonus_amount": float(c.bonus_amount or 0),
             }
             for c in contributions
         ]
@@ -85,6 +105,7 @@ def rate_member_contribution(
     项目经理评分
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     # 验证当前用户是否为项目经理
@@ -96,11 +117,7 @@ def rate_member_contribution(
     service = ProjectContributionService(db)
     try:
         service.rate_member_contribution(
-            project_id,
-            user_id,
-            request.period,
-            request.pm_rating,
-            current_user.id
+            project_id, user_id, request.period, request.pm_rating, current_user.id
         )
         return ResponseModel(code=200, message="评分成功")
     except ValueError as e:
@@ -118,6 +135,7 @@ def get_contribution_report(
     生成项目贡献度报告
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     service = ProjectContributionService(db)
@@ -141,24 +159,22 @@ def get_user_project_contributions(
 
     service = ProjectContributionService(db)
     contributions = service.get_user_project_contributions(
-        user_id,
-        start_period=start_period,
-        end_period=end_period
+        user_id, start_period=start_period, end_period=end_period
     )
 
     return {
-        'contributions': [
+        "contributions": [
             {
-                'project_id': c.project_id,
-                'project_name': c.project.project_name if c.project else f'Project {c.project_id}',
-                'period': c.period,
-                'task_count': c.task_count,
-                'actual_hours': float(c.actual_hours or 0),
-                'deliverable_count': c.deliverable_count,
-                'issue_resolved': c.issue_resolved,
-                'contribution_score': float(c.contribution_score or 0),
-                'pm_rating': c.pm_rating,
-                'bonus_amount': float(c.bonus_amount or 0),
+                "project_id": c.project_id,
+                "project_name": c.project.project_name if c.project else f"Project {c.project_id}",
+                "period": c.period,
+                "task_count": c.task_count,
+                "actual_hours": float(c.actual_hours or 0),
+                "deliverable_count": c.deliverable_count,
+                "issue_resolved": c.issue_resolved,
+                "contribution_score": float(c.contribution_score or 0),
+                "pm_rating": c.pm_rating,
+                "bonus_amount": float(c.bonus_amount or 0),
             }
             for c in contributions
         ]
@@ -176,31 +192,27 @@ def calculate_contributions(
     计算项目所有成员的贡献度
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id)
 
     # 获取项目成员
     from app.models.project import ProjectMember
-    members = db.query(ProjectMember).filter(
-        ProjectMember.project_id == project_id,
-        ProjectMember.is_active
-    ).all()
+
+    members = (
+        db.query(ProjectMember)
+        .filter(ProjectMember.project_id == project_id, ProjectMember.is_active)
+        .all()
+    )
 
     service = ProjectContributionService(db)
     calculated_count = 0
 
     for member in members:
         try:
-            service.calculate_member_contribution(
-                project_id,
-                member.user_id,
-                period
-            )
+            service.calculate_member_contribution(project_id, member.user_id, period)
             calculated_count += 1
         except Exception as e:
             # 记录错误但继续处理其他成员
             logger.error(f"Error calculating contribution for user {member.user_id}: {e}")
 
-    return ResponseModel(
-        code=200,
-        message=f"已计算 {calculated_count} 位成员的贡献度"
-    )
+    return ResponseModel(code=200, message=f"已计算 {calculated_count} 位成员的贡献度")

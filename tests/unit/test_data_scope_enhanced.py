@@ -34,18 +34,14 @@ class TestEnumNormalization:
         """测试 DEPARTMENT 范围标准化"""
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
 
-        result = DataScopeServiceEnhanced.normalize_scope_type(
-            ScopeType.DEPARTMENT.value
-        )
+        result = DataScopeServiceEnhanced.normalize_scope_type(ScopeType.DEPARTMENT.value)
         assert result == DataScopeEnum.DEPT.value
 
     def test_normalize_business_unit_scope(self):
         """测试 BUSINESS_UNIT 范围标准化"""
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
 
-        result = DataScopeServiceEnhanced.normalize_scope_type(
-            ScopeType.BUSINESS_UNIT.value
-        )
+        result = DataScopeServiceEnhanced.normalize_scope_type(ScopeType.BUSINESS_UNIT.value)
         assert result == DataScopeEnum.DEPT.value
 
     def test_normalize_team_scope(self):
@@ -85,9 +81,7 @@ class TestGetUserOrgUnits:
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
 
         mock_db = MagicMock()
-        mock_db.query.return_value.join.return_value.filter.return_value.all.return_value = (
-            []
-        )
+        mock_db.query.return_value.join.return_value.filter.return_value.all.return_value = []
 
         result = DataScopeServiceEnhanced.get_user_org_units(mock_db, user_id=1)
 
@@ -173,9 +167,7 @@ class TestGetAccessibleOrgUnits:
 
         mock_db = MagicMock()
 
-        with patch.object(
-            DataScopeServiceEnhanced, "get_user_org_units", return_value=[]
-        ):
+        with patch.object(DataScopeServiceEnhanced, "get_user_org_units", return_value=[]):
             result = DataScopeServiceEnhanced.get_accessible_org_units(
                 mock_db, user_id=1, scope_type=ScopeType.DEPARTMENT.value
             )
@@ -192,9 +184,7 @@ class TestGetAccessibleOrgUnits:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_org
 
-        with patch.object(
-            DataScopeServiceEnhanced, "get_user_org_units", return_value=[10]
-        ):
+        with patch.object(DataScopeServiceEnhanced, "get_user_org_units", return_value=[10]):
             result = DataScopeServiceEnhanced.get_accessible_org_units(
                 mock_db, user_id=1, scope_type=ScopeType.TEAM.value
             )
@@ -214,9 +204,7 @@ class TestFindAncestorByType:
         mock_org.unit_type = "DEPARTMENT"
         mock_org.parent_id = None
 
-        result = DataScopeServiceEnhanced._find_ancestor_by_type(
-            mock_db, mock_org, "DEPARTMENT"
-        )
+        result = DataScopeServiceEnhanced._find_ancestor_by_type(mock_db, mock_org, "DEPARTMENT")
 
         assert result == mock_org
 
@@ -237,9 +225,7 @@ class TestFindAncestorByType:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_parent
 
-        result = DataScopeServiceEnhanced._find_ancestor_by_type(
-            mock_db, mock_child, "DEPARTMENT"
-        )
+        result = DataScopeServiceEnhanced._find_ancestor_by_type(mock_db, mock_child, "DEPARTMENT")
 
         assert result == mock_parent
 
@@ -253,9 +239,7 @@ class TestFindAncestorByType:
         mock_org.unit_type = "TEAM"
         mock_org.parent_id = None
 
-        result = DataScopeServiceEnhanced._find_ancestor_by_type(
-            mock_db, mock_org, "DEPARTMENT"
-        )
+        result = DataScopeServiceEnhanced._find_ancestor_by_type(mock_db, mock_org, "DEPARTMENT")
 
         assert result is None
 
@@ -272,9 +256,7 @@ class TestFindAncestorByType:
         # 模拟循环引用
         mock_db.query.return_value.filter.return_value.first.return_value = mock_org
 
-        result = DataScopeServiceEnhanced._find_ancestor_by_type(
-            mock_db, mock_org, "DEPARTMENT"
-        )
+        result = DataScopeServiceEnhanced._find_ancestor_by_type(mock_db, mock_org, "DEPARTMENT")
 
         # 应该在达到深度限制后返回 None
         assert result is None
@@ -596,9 +578,9 @@ class TestCanAccessData:
 def test_suite_summary():
     """
     测试套件总结
-    
+
     总计: 28+ 个测试用例
-    
+
     覆盖范围:
     1. 枚举映射: 7个测试
     2. 用户组织单元: 4个测试
@@ -607,7 +589,7 @@ def test_suite_summary():
     5. 优化的子树查询: 3个测试
     6. 应用数据权限过滤: 7个测试
     7. 检查数据访问权限: 7个测试
-    
+
     测试类型:
     - 正常场景测试
     - 边界条件测试
@@ -621,27 +603,31 @@ def test_suite_summary():
 # 补充测试 A组覆盖率提升 (2026-02-17)
 # =============================================================================
 
+
 class TestDataScopeServiceEnhancedMock:
     """使用 MagicMock 快速单元测试"""
 
     # ---- normalize_scope_type ----
 
     def test_normalize_all_scope(self):
-        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
-        from app.models.permission import ScopeType
         from app.models.enums import DataScopeEnum
+        from app.models.permission import ScopeType
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         result = DataScopeServiceEnhanced.normalize_scope_type(ScopeType.ALL.value)
         assert result == DataScopeEnum.ALL.value
 
     def test_normalize_own_scope(self):
-        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
-        from app.models.permission import ScopeType
         from app.models.enums import DataScopeEnum
+        from app.models.permission import ScopeType
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         result = DataScopeServiceEnhanced.normalize_scope_type(ScopeType.OWN.value)
         assert result == DataScopeEnum.OWN.value
 
     def test_normalize_unknown_scope_returns_itself(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         result = DataScopeServiceEnhanced.normalize_scope_type("CUSTOM_SCOPE")
         assert result == "CUSTOM_SCOPE"
 
@@ -649,6 +635,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_get_user_org_units_returns_list(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
         assignment = MagicMock()
         assignment.org_unit_id = 42
@@ -659,6 +646,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_get_user_org_units_empty_on_exception(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
         db.query.side_effect = Exception("DB Error")
 
@@ -669,6 +657,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_subtree_recursive_no_children(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
         db.query.return_value.filter.return_value.all.return_value = []
 
@@ -677,6 +666,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_subtree_recursive_with_children(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         child1 = MagicMock()
@@ -692,6 +682,7 @@ class TestDataScopeServiceEnhancedMock:
 
         # Patch to return children only for first call
         call_count = [0]
+
         def _query(*args, **kwargs):
             q = MagicMock()
             if call_count[0] == 0:
@@ -710,6 +701,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_find_ancestor_returns_match(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         org = MagicMock()
@@ -721,6 +713,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_find_ancestor_traverses_up(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         child = MagicMock()
@@ -738,6 +731,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_find_ancestor_returns_none_when_not_found(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         org = MagicMock()
@@ -751,6 +745,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_superuser_can_access_anything(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
         user = MagicMock()
         user.is_superuser = True
@@ -760,8 +755,9 @@ class TestDataScopeServiceEnhancedMock:
         assert result is True
 
     def test_own_scope_matches_created_by(self):
-        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
         from app.models.permission import ScopeType
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         user = MagicMock()
@@ -780,8 +776,9 @@ class TestDataScopeServiceEnhancedMock:
         assert result is True
 
     def test_own_scope_denies_different_user(self):
-        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
         from app.models.permission import ScopeType
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         user = MagicMock()
@@ -800,8 +797,9 @@ class TestDataScopeServiceEnhancedMock:
         assert result is False
 
     def test_all_scope_allows_all(self):
-        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
         from app.models.permission import ScopeType
+        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         user = MagicMock()
@@ -818,6 +816,7 @@ class TestDataScopeServiceEnhancedMock:
 
     def test_exception_in_permission_check_returns_false(self):
         from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+
         db = MagicMock()
 
         user = MagicMock()

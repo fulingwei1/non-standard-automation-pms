@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """候选人管理单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.services.staff_matching.candidate_management import CandidateManager
 
 
@@ -33,7 +35,7 @@ class TestCandidateManager:
         need.headcount = 2
         self.db.query.return_value.filter.return_value.first.side_effect = [log, need]
         CandidateManager.accept_candidate(self.db, 1, 10)
-        assert need.status == 'FILLED'
+        assert need.status == "FILLED"
 
     def test_reject_candidate_not_found(self):
         self.db.query.return_value.filter.return_value.first.return_value = None
@@ -48,7 +50,9 @@ class TestCandidateManager:
         assert log.reject_reason == "不合适"
 
     def test_get_matching_history(self):
-        self.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        self.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = CandidateManager.get_matching_history(self.db, project_id=1)
         assert result == []
 

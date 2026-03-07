@@ -141,7 +141,9 @@ def _system_message(idx: int) -> tuple[str, str, str, int, str, str]:
 
 
 def _task_message(idx: int, due_date: datetime) -> tuple[str, str, str, int, str, str]:
-    project_code, project_name, task_name, assignee, dept = TASK_ASSIGNMENT_CASES[idx % len(TASK_ASSIGNMENT_CASES)]
+    project_code, project_name, task_name, assignee, dept = TASK_ASSIGNMENT_CASES[
+        idx % len(TASK_ASSIGNMENT_CASES)
+    ]
     title = f"任务分配：{project_code} - {task_name}"
     content = (
         f"{project_name} 已分配新任务「{task_name}」给 {dept} {assignee}，"
@@ -156,8 +158,7 @@ def _alert_message(idx: int) -> tuple[str, str, str, int, str, str]:
     project_code, risk_name, detail = ALERT_CASES[idx % len(ALERT_CASES)]
     title = f"预警提醒：{project_code} {risk_name}"
     content = (
-        f"{project_code} 触发预警规则，{detail}。"
-        "系统建议 24 小时内完成风险处置并更新纠偏计划。"
+        f"{project_code} 触发预警规则，{detail}。" "系统建议 24 小时内完成风险处置并更新纠偏计划。"
     )
     source_id = 11000 + idx
     return title, content, "alert", source_id, "/alerts/detail"
@@ -270,12 +271,16 @@ def seed_notifications(conn: sqlite3.Connection, now: datetime) -> int:
 def print_summary(conn: sqlite3.Connection) -> None:
     total = conn.execute("SELECT COUNT(*) FROM notifications").fetchone()[0]
     read_count = conn.execute("SELECT COUNT(*) FROM notifications WHERE is_read = 1").fetchone()[0]
-    unread_count = conn.execute("SELECT COUNT(*) FROM notifications WHERE COALESCE(is_read, 0) = 0").fetchone()[0]
+    unread_count = conn.execute(
+        "SELECT COUNT(*) FROM notifications WHERE COALESCE(is_read, 0) = 0"
+    ).fetchone()[0]
     type_rows = conn.execute(
         "SELECT notification_type, COUNT(*) FROM notifications GROUP BY notification_type ORDER BY notification_type"
     ).fetchall()
     settings_count = conn.execute("SELECT COUNT(*) FROM notification_settings").fetchone()[0]
-    read_records = conn.execute("SELECT COUNT(*) FROM notifications WHERE read_at IS NOT NULL").fetchone()[0]
+    read_records = conn.execute(
+        "SELECT COUNT(*) FROM notifications WHERE read_at IS NOT NULL"
+    ).fetchone()[0]
 
     print("通知中心演示数据生成完成")
     print(f"- 通知总数: {total}")

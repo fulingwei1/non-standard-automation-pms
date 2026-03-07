@@ -6,6 +6,7 @@
 """
 
 from datetime import date
+
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_like_filter
@@ -14,6 +15,7 @@ from app.common.query_filters import apply_like_filter
 def generate_review_no(db: Session) -> str:
     """生成复盘编号：REVIEW-YYYYMMDD-XXX"""
     from app.models.project_review import ProjectReview
+
     today = date.today().strftime("%Y%m%d")
     # 查询当天已有的复盘报告数量
     count_query = db.query(ProjectReview)

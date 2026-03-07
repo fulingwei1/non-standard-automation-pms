@@ -47,7 +47,7 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
         # 通知发送失败不影响预警记录创建
         logger_instance.error(
             f"Error creating notification for alert {alert.alert_no}: {str(notif_err)}",
-            exc_info=True
+            exc_info=True,
         )
 
 
@@ -67,9 +67,7 @@ def enqueue_or_dispatch_notification(
 
     try:
         if request is None:
-            request = dispatcher.build_notification_request(
-                notification, alert, user
-            )
+            request = dispatcher.build_notification_request(notification, alert, user)
         request_payload = request.__dict__
     except Exception as exc:
         notification.status = "FAILED"
@@ -77,20 +75,23 @@ def enqueue_or_dispatch_notification(
         logger_instance.debug(f"Failed to build notification request: {exc}")
         return {"queued": False, "sent": False, "error": str(exc)}
 
-    enqueued = enqueue_notification({
-        "notification_id": notification.id,
-        "alert_id": notification.alert_id,
-        "notify_channel": notification.notify_channel,
-        "request": request_payload,
-    })
+    enqueued = enqueue_notification(
+        {
+            "notification_id": notification.id,
+            "alert_id": notification.alert_id,
+            "notify_channel": notification.notify_channel,
+            "request": request_payload,
+        }
+    )
 
     if enqueued:
-        notification.status = 'QUEUED'
+        notification.status = "QUEUED"
         notification.next_retry_at = None
         return {"queued": True, "sent": False}
 
     success = dispatcher.dispatch(notification, alert, user, request=request)
     return {"queued": False, "sent": success}
+
 
 def log_task_result(task_name: str, result: dict, logger_instance=None):
     """
@@ -104,7 +105,7 @@ def log_task_result(task_name: str, result: dict, logger_instance=None):
     if logger_instance is None:
         logger_instance = logger
 
-    if 'error' in result:
+    if "error" in result:
         logger_instance.error(f"[{datetime.now()}] {task_name} 执行失败: {result['error']}")
     else:
         logger_instance.info(f"[{datetime.now()}] {task_name} 执行完成: {result}")
@@ -130,7 +131,8 @@ def safe_task_execution(task_func, task_name: str, logger_instance=None):
         except Exception as e:
             logger_instance.error(f"[{datetime.now()}] {task_name} 执行异常: {str(e)}")
             import traceback
+
             traceback.print_exc()
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     return wrapper

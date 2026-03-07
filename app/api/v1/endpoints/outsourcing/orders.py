@@ -22,16 +22,16 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.outsourcing import (
     OutsourcingOrder,
     OutsourcingOrderItem,
 )
-from app.models.vendor import Vendor
 from app.models.project import Machine, Project
 from app.models.user import User
+from app.models.vendor import Vendor
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import get_pagination_query, PaginationParams
 from app.schemas.outsourcing import (
     OutsourcingOrderCreate,
     OutsourcingOrderItemResponse,
@@ -42,9 +42,10 @@ from app.schemas.outsourcing import (
 
 router = APIRouter()
 
+from app.common.query_filters import apply_pagination
+
 # 使用统一的编码生成工具
 from app.utils.domain_codes import outsourcing as outsourcing_codes
-from app.common.query_filters import apply_pagination
 
 generate_order_no = outsourcing_codes.generate_order_no
 generate_delivery_no = outsourcing_codes.generate_delivery_no
@@ -55,6 +56,7 @@ generate_inspection_no = outsourcing_codes.generate_inspection_no
 # 共 6 个路由
 
 # ==================== 外协订单 ====================
+
 
 @router.get("/outsourcing-orders", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_outsourcing_orders(
@@ -74,6 +76,7 @@ def read_outsourcing_orders(
 
     # 应用关键词过滤（订单号/标题）
     from app.common.query_filters import apply_keyword_filter
+
     query = apply_keyword_filter(query, OutsourcingOrder, keyword, ["order_no", "order_title"])
 
     if vendor_id:
@@ -89,34 +92,43 @@ def read_outsourcing_orders(
         query = query.filter(OutsourcingOrder.status == status)
 
     total = query.count()
-    orders = apply_pagination(query.order_by(desc(OutsourcingOrder.created_at)), pagination.offset, pagination.limit).all()
+    orders = apply_pagination(
+        query.order_by(desc(OutsourcingOrder.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for order in orders:
-        vendor = db.query(Vendor).filter(
-            Vendor.id == order.vendor_id,
-            Vendor.vendor_type == 'OUTSOURCING'
-        ).first()
+        vendor = (
+            db.query(Vendor)
+            .filter(Vendor.id == order.vendor_id, Vendor.vendor_type == "OUTSOURCING")
+            .first()
+        )
         project = db.query(Project).filter(Project.id == order.project_id).first()
 
-        items.append(OutsourcingOrderListResponse(
-            id=order.id,
-            order_no=order.order_no,
-            vendor_name=vendor.supplier_name if vendor else None,
-            project_name=project.project_name if project else None,
-            order_type=order.order_type,
-            order_title=order.order_title,
-            amount_with_tax=order.amount_with_tax or Decimal("0"),
-            required_date=order.required_date,
-            status=order.status,
-            payment_status=order.payment_status,
-            created_at=order.created_at
-        ))
+        items.append(
+            OutsourcingOrderListResponse(
+                id=order.id,
+                order_no=order.order_no,
+                vendor_name=vendor.supplier_name if vendor else None,
+                project_name=project.project_name if project else None,
+                order_type=order.order_type,
+                order_title=order.order_title,
+                amount_with_tax=order.amount_with_tax or Decimal("0"),
+                required_date=order.required_date,
+                status=order.status,
+                payment_status=order.payment_status,
+                created_at=order.created_at,
+            )
+        )
 
     return pagination.to_response(items, total)
 
 
-@router.get("/outsourcing-orders/{order_id}", response_model=OutsourcingOrderResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/outsourcing-orders/{order_id}",
+    response_model=OutsourcingOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def read_outsourcing_order(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -137,28 +149,35 @@ def read_outsourcing_order(
 
     # 获取订单明细
     items_data = []
-    order_items = db.query(OutsourcingOrderItem).filter(OutsourcingOrderItem.order_id == order_id).order_by(OutsourcingOrderItem.item_no).all()
+    order_items = (
+        db.query(OutsourcingOrderItem)
+        .filter(OutsourcingOrderItem.order_id == order_id)
+        .order_by(OutsourcingOrderItem.item_no)
+        .all()
+    )
     for item in order_items:
-        items_data.append(OutsourcingOrderItemResponse(
-            id=item.id,
-            item_no=item.item_no,
-            material_code=item.material_code,
-            material_name=item.material_name,
-            specification=item.specification,
-            drawing_no=item.drawing_no,
-            process_type=item.process_type,
-            unit=item.unit,
-            quantity=item.quantity,
-            unit_price=item.unit_price,
-            amount=item.amount,
-            material_provided=item.material_provided,
-            delivered_quantity=item.delivered_quantity or Decimal("0"),
-            qualified_quantity=item.qualified_quantity or Decimal("0"),
-            rejected_quantity=item.rejected_quantity or Decimal("0"),
-            status=item.status,
-            created_at=item.created_at,
-            updated_at=item.updated_at
-        ))
+        items_data.append(
+            OutsourcingOrderItemResponse(
+                id=item.id,
+                item_no=item.item_no,
+                material_code=item.material_code,
+                material_name=item.material_name,
+                specification=item.specification,
+                drawing_no=item.drawing_no,
+                process_type=item.process_type,
+                unit=item.unit,
+                quantity=item.quantity,
+                unit_price=item.unit_price,
+                amount=item.amount,
+                material_provided=item.material_provided,
+                delivered_quantity=item.delivered_quantity or Decimal("0"),
+                qualified_quantity=item.qualified_quantity or Decimal("0"),
+                rejected_quantity=item.rejected_quantity or Decimal("0"),
+                status=item.status,
+                created_at=item.created_at,
+                updated_at=item.updated_at,
+            )
+        )
 
     return OutsourcingOrderResponse(
         id=order.id,
@@ -183,11 +202,15 @@ def read_outsourcing_order(
         paid_amount=order.paid_amount or Decimal("0"),
         items=items_data,
         created_at=order.created_at,
-        updated_at=order.updated_at
+        updated_at=order.updated_at,
     )
 
 
-@router.post("/outsourcing-orders", response_model=OutsourcingOrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/outsourcing-orders",
+    response_model=OutsourcingOrderResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_outsourcing_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -198,10 +221,11 @@ def create_outsourcing_order(
     创建外协订单
     """
     # 验证外协商
-    vendor = db.query(Vendor).filter(
-        Vendor.id == order_in.vendor_id,
-        Vendor.vendor_type == 'OUTSOURCING'
-    ).first()
+    vendor = (
+        db.query(Vendor)
+        .filter(Vendor.id == order_in.vendor_id, Vendor.vendor_type == "OUTSOURCING")
+        .first()
+    )
     if not vendor:
         raise HTTPException(status_code=404, detail="外协商不存在")
 
@@ -246,7 +270,7 @@ def create_outsourcing_order(
         contract_no=order_in.contract_no,
         status="DRAFT",
         created_by=current_user.id,
-        remark=order_in.remark
+        remark=order_in.remark,
     )
 
     db.add(order)
@@ -272,7 +296,7 @@ def create_outsourcing_order(
             amount=item_amount,
             material_provided=item_in.material_provided,
             provided_quantity=item_in.provided_quantity or Decimal("0"),
-            remark=item_in.remark
+            remark=item_in.remark,
         )
         db.add(item)
 
@@ -282,7 +306,11 @@ def create_outsourcing_order(
     return read_outsourcing_order(order.id, db, current_user)
 
 
-@router.put("/outsourcing-orders/{order_id}", response_model=OutsourcingOrderResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/outsourcing-orders/{order_id}",
+    response_model=OutsourcingOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_outsourcing_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -311,7 +339,11 @@ def update_outsourcing_order(
     return read_outsourcing_order(order_id, db, current_user)
 
 
-@router.put("/outsourcing-orders/{order_id}/approve", response_model=OutsourcingOrderResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/outsourcing-orders/{order_id}/approve",
+    response_model=OutsourcingOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 def approve_outsourcing_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -343,6 +375,7 @@ def approve_outsourcing_order(
     if order.project_id:
         try:
             from app.services.cost_collection_service import CostCollectionService
+
             CostCollectionService.collect_from_outsourcing_order(
                 db, order_id, created_by=current_user.id
             )
@@ -356,7 +389,11 @@ def approve_outsourcing_order(
     return read_outsourcing_order(order_id, db, current_user)
 
 
-@router.get("/outsourcing-orders/{order_id}/items", response_model=List[OutsourcingOrderItemResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/outsourcing-orders/{order_id}/items",
+    response_model=List[OutsourcingOrderItemResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_outsourcing_order_items(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -369,31 +406,36 @@ def read_outsourcing_order_items(
     if not order:
         raise HTTPException(status_code=404, detail="外协订单不存在")
 
-    items = db.query(OutsourcingOrderItem).filter(OutsourcingOrderItem.order_id == order_id).order_by(OutsourcingOrderItem.item_no).all()
+    items = (
+        db.query(OutsourcingOrderItem)
+        .filter(OutsourcingOrderItem.order_id == order_id)
+        .order_by(OutsourcingOrderItem.item_no)
+        .all()
+    )
 
     items_data = []
     for item in items:
-        items_data.append(OutsourcingOrderItemResponse(
-            id=item.id,
-            item_no=item.item_no,
-            material_code=item.material_code,
-            material_name=item.material_name,
-            specification=item.specification,
-            drawing_no=item.drawing_no,
-            process_type=item.process_type,
-            unit=item.unit,
-            quantity=item.quantity,
-            unit_price=item.unit_price,
-            amount=item.amount,
-            material_provided=item.material_provided,
-            delivered_quantity=item.delivered_quantity or Decimal("0"),
-            qualified_quantity=item.qualified_quantity or Decimal("0"),
-            rejected_quantity=item.rejected_quantity or Decimal("0"),
-            status=item.status,
-            created_at=item.created_at,
-            updated_at=item.updated_at
-        ))
+        items_data.append(
+            OutsourcingOrderItemResponse(
+                id=item.id,
+                item_no=item.item_no,
+                material_code=item.material_code,
+                material_name=item.material_name,
+                specification=item.specification,
+                drawing_no=item.drawing_no,
+                process_type=item.process_type,
+                unit=item.unit,
+                quantity=item.quantity,
+                unit_price=item.unit_price,
+                amount=item.amount,
+                material_provided=item.material_provided,
+                delivered_quantity=item.delivered_quantity or Decimal("0"),
+                qualified_quantity=item.qualified_quantity or Decimal("0"),
+                rejected_quantity=item.rejected_quantity or Decimal("0"),
+                status=item.status,
+                created_at=item.created_at,
+                updated_at=item.updated_at,
+            )
+        )
 
     return items_data
-
-

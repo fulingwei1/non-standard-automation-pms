@@ -19,12 +19,7 @@ class ComparisonCalculationService:
         self.db = db
         self.metric_service = MetricCalculationService(db)
 
-    def calculate_mom_comparison(
-        self,
-        metric_code: str,
-        year: int,
-        month: int
-    ) -> Dict[str, Any]:
+    def calculate_mom_comparison(self, metric_code: str, year: int, month: int) -> Dict[str, Any]:
         """
         计算环比（Month-over-Month，与上月对比）
 
@@ -55,19 +50,23 @@ class ComparisonCalculationService:
 
         # 计算当前月指标值
         current_result = self.metric_service.calculate_metric(metric_code, period_start, period_end)
-        current_value = current_result.get('value', 0)
+        current_value = current_result.get("value", 0)
 
         # 计算上月指标值
-        prev_result = self.metric_service.calculate_metric(metric_code, prev_period_start, prev_period_end)
-        prev_value = prev_result.get('value', 0)
+        prev_result = self.metric_service.calculate_metric(
+            metric_code, prev_period_start, prev_period_end
+        )
+        prev_value = prev_result.get("value", 0)
 
         # 计算变化
         change = current_value - prev_value
-        change_rate = (change / prev_value * 100) if prev_value != 0 else (100 if current_value > 0 else 0)
+        change_rate = (
+            (change / prev_value * 100) if prev_value != 0 else (100 if current_value > 0 else 0)
+        )
 
         return {
             "metric_code": metric_code,
-            "metric_name": current_result.get('metric_name'),
+            "metric_name": current_result.get("metric_name"),
             "current_period": f"{year}-{month:02d}",
             "previous_period": f"{prev_year}-{prev_month:02d}",
             "current_value": current_value,
@@ -77,16 +76,11 @@ class ComparisonCalculationService:
             "change_rate_formatted": f"{change_rate:+.2f}%",
             "is_increase": change > 0,
             "is_decrease": change < 0,
-            "unit": current_result.get('unit', ''),
-            "format_type": current_result.get('format_type', 'NUMBER')
+            "unit": current_result.get("unit", ""),
+            "format_type": current_result.get("format_type", "NUMBER"),
         }
 
-    def calculate_yoy_comparison(
-        self,
-        metric_code: str,
-        year: int,
-        month: int
-    ) -> Dict[str, Any]:
+    def calculate_yoy_comparison(self, metric_code: str, year: int, month: int) -> Dict[str, Any]:
         """
         计算同比（Year-over-Year，与去年同期对比）
 
@@ -111,19 +105,23 @@ class ComparisonCalculationService:
 
         # 计算当前月指标值
         current_result = self.metric_service.calculate_metric(metric_code, period_start, period_end)
-        current_value = current_result.get('value', 0)
+        current_value = current_result.get("value", 0)
 
         # 计算去年同期指标值
-        prev_result = self.metric_service.calculate_metric(metric_code, prev_period_start, prev_period_end)
-        prev_value = prev_result.get('value', 0)
+        prev_result = self.metric_service.calculate_metric(
+            metric_code, prev_period_start, prev_period_end
+        )
+        prev_value = prev_result.get("value", 0)
 
         # 计算变化
         change = current_value - prev_value
-        change_rate = (change / prev_value * 100) if prev_value != 0 else (100 if current_value > 0 else 0)
+        change_rate = (
+            (change / prev_value * 100) if prev_value != 0 else (100 if current_value > 0 else 0)
+        )
 
         return {
             "metric_code": metric_code,
-            "metric_name": current_result.get('metric_name'),
+            "metric_name": current_result.get("metric_name"),
             "current_period": f"{year}-{month:02d}",
             "previous_period": f"{prev_year}-{month:02d}",
             "current_value": current_value,
@@ -133,15 +131,11 @@ class ComparisonCalculationService:
             "change_rate_formatted": f"{change_rate:+.2f}%",
             "is_increase": change > 0,
             "is_decrease": change < 0,
-            "unit": current_result.get('unit', ''),
-            "format_type": current_result.get('format_type', 'NUMBER')
+            "unit": current_result.get("unit", ""),
+            "format_type": current_result.get("format_type", "NUMBER"),
         }
 
-    def calculate_annual_yoy_comparison(
-        self,
-        metric_code: str,
-        year: int
-    ) -> Dict[str, Any]:
+    def calculate_annual_yoy_comparison(self, metric_code: str, year: int) -> Dict[str, Any]:
         """
         计算年度同比（与去年全年对比）
 
@@ -163,19 +157,23 @@ class ComparisonCalculationService:
 
         # 计算当前年指标值
         current_result = self.metric_service.calculate_metric(metric_code, period_start, period_end)
-        current_value = current_result.get('value', 0)
+        current_value = current_result.get("value", 0)
 
         # 计算去年指标值
-        prev_result = self.metric_service.calculate_metric(metric_code, prev_period_start, prev_period_end)
-        prev_value = prev_result.get('value', 0)
+        prev_result = self.metric_service.calculate_metric(
+            metric_code, prev_period_start, prev_period_end
+        )
+        prev_value = prev_result.get("value", 0)
 
         # 计算变化
         change = current_value - prev_value
-        change_rate = (change / prev_value * 100) if prev_value != 0 else (100 if current_value > 0 else 0)
+        change_rate = (
+            (change / prev_value * 100) if prev_value != 0 else (100 if current_value > 0 else 0)
+        )
 
         return {
             "metric_code": metric_code,
-            "metric_name": current_result.get('metric_name'),
+            "metric_name": current_result.get("metric_name"),
             "current_period": str(year),
             "previous_period": str(prev_year),
             "current_value": current_value,
@@ -185,8 +183,8 @@ class ComparisonCalculationService:
             "change_rate_formatted": f"{change_rate:+.2f}%",
             "is_increase": change > 0,
             "is_decrease": change < 0,
-            "unit": current_result.get('unit', ''),
-            "format_type": current_result.get('format_type', 'NUMBER')
+            "unit": current_result.get("unit", ""),
+            "format_type": current_result.get("format_type", "NUMBER"),
         }
 
     def calculate_comparisons_batch(
@@ -195,7 +193,7 @@ class ComparisonCalculationService:
         year: int,
         month: Optional[int] = None,
         enable_mom: bool = True,
-        enable_yoy: bool = True
+        enable_yoy: bool = True,
     ) -> Dict[str, Dict[str, Any]]:
         """
         批量计算对比数据
@@ -216,16 +214,19 @@ class ComparisonCalculationService:
             try:
                 # 获取指标定义，检查是否支持对比
                 from app.models.management_rhythm import ReportMetricDefinition
-                metric_def = self.db.query(ReportMetricDefinition).filter(
-                    ReportMetricDefinition.metric_code == metric_code
-                ).first()
+
+                metric_def = (
+                    self.db.query(ReportMetricDefinition)
+                    .filter(ReportMetricDefinition.metric_code == metric_code)
+                    .first()
+                )
 
                 if not metric_def:
                     continue
 
                 comparison_data = {
                     "metric_code": metric_code,
-                    "metric_name": metric_def.metric_name
+                    "metric_name": metric_def.metric_name,
                 }
 
                 if month:
@@ -255,9 +256,6 @@ class ComparisonCalculationService:
                 results[metric_code] = comparison_data
 
             except Exception as e:
-                results[metric_code] = {
-                    "metric_code": metric_code,
-                    "error": str(e)
-                }
+                results[metric_code] = {"metric_code": metric_code, "error": str(e)}
 
         return results

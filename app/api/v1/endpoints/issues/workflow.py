@@ -16,12 +16,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.core.state_machine.issue import IssueStateMachine
 from app.core.state_machine.exceptions import (
     InvalidStateTransitionError,
-    StateMachineValidationError,
     PermissionDeniedError,
+    StateMachineValidationError,
 )
+from app.core.state_machine.issue import IssueStateMachine
 from app.models.issue import Issue, IssueFollowUpRecord
 from app.models.user import User
 from app.schemas.issue import IssueResponse
@@ -33,12 +33,14 @@ logger = logging.getLogger(__name__)
 
 class AssignRequest(BaseModel):
     """分配请求"""
+
     assignee_id: int
     remark: Optional[str] = None
 
 
 class ResolveRequest(BaseModel):
     """解决请求"""
+
     solution: str
     root_cause: Optional[str] = None
     remark: Optional[str] = None
@@ -46,21 +48,21 @@ class ResolveRequest(BaseModel):
 
 class VerifyRequest(BaseModel):
     """验证请求"""
-    verified_result: str # PASSED, FAILED
+
+    verified_result: str  # PASSED, FAILED
     remark: Optional[str] = None
 
 
 class StatusChangeRequest(BaseModel):
     """状态变更请求"""
+
     new_status: str
     remark: Optional[str] = None
 
 
 def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
     """获取用户权限范围内的问题"""
-    query = db.query(Issue).options(
-        joinedload(Issue.service_ticket)
-    ).filter(Issue.id == issue_id)
+    query = db.query(Issue).options(joinedload(Issue.service_ticket)).filter(Issue.id == issue_id)
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
     return query.first()
 
@@ -68,6 +70,7 @@ def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optiona
 def _build_issue_response(issue: Issue) -> IssueResponse:
     """构建问题响应对象"""
     import json
+
     return IssueResponse(
         id=issue.id,
         issue_no=issue.issue_no,
@@ -104,11 +107,11 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
         is_blocking=issue.is_blocking,
         attachments=json.loads(issue.attachments) if issue.attachments else [],
         tags=json.loads(issue.tags) if issue.tags else [],
-        root_cause=getattr(issue, 'root_cause', None),
-        responsible_engineer_id=getattr(issue, 'responsible_engineer_id', None),
-        responsible_engineer_name=getattr(issue, 'responsible_engineer_name', None),
-        estimated_inventory_loss=getattr(issue, 'estimated_inventory_loss', None),
-        estimated_extra_hours=getattr(issue, 'estimated_extra_hours', None),
+        root_cause=getattr(issue, "root_cause", None),
+        responsible_engineer_id=getattr(issue, "responsible_engineer_id", None),
+        responsible_engineer_name=getattr(issue, "responsible_engineer_name", None),
+        estimated_inventory_loss=getattr(issue, "estimated_inventory_loss", None),
+        estimated_extra_hours=getattr(issue, "estimated_extra_hours", None),
         created_at=issue.created_at,
         updated_at=issue.updated_at,
         project_code=issue.project.project_code if issue.project else None,
@@ -140,7 +143,7 @@ def assign_issue(
     assignee_name = assignee.real_name or assignee.username
 
     # 使用状态机执行分配（仅当 OPEN 状态才走状态机转换到 IN_PROGRESS）
-    if issue.status == 'OPEN':
+    if issue.status == "OPEN":
         sm = IssueStateMachine(issue, db)
         try:
             sm.transition_to(
@@ -156,7 +159,7 @@ def assign_issue(
             raise HTTPException(status_code=403, detail=str(e))
     else:
         # 非 OPEN 状态下重新分配（仅更新分配人，不转换状态）
-        if issue.status in ['CLOSED', 'CANCELLED', 'DELETED']:
+        if issue.status in ["CLOSED", "CANCELLED", "DELETED"]:
             raise HTTPException(status_code=400, detail="该问题已关闭或取消，无法分配")
 
         old_assignee = issue.assignee_name
@@ -172,7 +175,7 @@ def assign_issue(
 
         follow_up = IssueFollowUpRecord(
             issue_id=issue_id,
-            follow_up_type='ASSIGN',
+            follow_up_type="ASSIGN",
             content=content,
             operator_id=current_user.id,
             operator_name=current_user.real_name or current_user.username,
@@ -253,7 +256,7 @@ def verify_issue(
     # 使用状态机执行验证
     sm = IssueStateMachine(issue, db)
     try:
-        if request.verified_result == 'PASSED':
+        if request.verified_result == "PASSED":
             # 验证通过 -> CLOSED
             target_state = "CLOSED"
             comment = "问题验证通过，已关闭"
@@ -327,4 +330,3 @@ def change_issue_status(
     db.refresh(issue)
 
     return _build_issue_response(issue)
-

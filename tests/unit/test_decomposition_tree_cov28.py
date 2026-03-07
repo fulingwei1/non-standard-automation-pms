@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - decomposition_tree 单元测试（分解树与追溯）"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.strategy.decomposition.decomposition_tree")
 
@@ -11,8 +12,8 @@ from app.services.strategy.decomposition.decomposition_tree import (
     trace_to_strategy,
 )
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_strategy(strategy_id=1, name="战略2024"):
     s = MagicMock()
@@ -51,8 +52,14 @@ def _make_dept_obj(obj_id=200, kpi_id=100, department_id=5):
     return o
 
 
-def _make_personal_kpi(pkpi_id=300, user_id=7, code="PKPI-01",
-                        name="个人KPI", dept_objective_id=200, source_kpi_id=None):
+def _make_personal_kpi(
+    pkpi_id=300,
+    user_id=7,
+    code="PKPI-01",
+    name="个人KPI",
+    dept_objective_id=200,
+    source_kpi_id=None,
+):
     p = MagicMock()
     p.id = pkpi_id
     p.user_id = user_id
@@ -65,6 +72,7 @@ def _make_personal_kpi(pkpi_id=300, user_id=7, code="PKPI-01",
 
 
 # ─── get_decomposition_tree ──────────────────────────────────
+
 
 class TestGetDecompositionTree:
 
@@ -143,6 +151,7 @@ class TestGetDecompositionTree:
 
 # ─── trace_to_strategy ───────────────────────────────────────
 
+
 class TestTraceToStrategy:
 
     @patch("app.services.strategy.decomposition.decomposition_tree.get_personal_kpi")
@@ -162,11 +171,11 @@ class TestTraceToStrategy:
         user.name = "李四"
         # chain: User / DeptObj / KPI / CSF / Strategy all query through first()
         db.query.return_value.filter.return_value.first.side_effect = [
-            user,   # User query
-            None,   # DepartmentObjective
-            None,   # KPI
-            None,   # CSF
-            None,   # Strategy
+            user,  # User query
+            None,  # DepartmentObjective
+            None,  # KPI
+            None,  # CSF
+            None,  # Strategy
         ]
 
         result = trace_to_strategy(db, personal_kpi_id=1)
@@ -229,10 +238,10 @@ class TestTraceToStrategy:
         db = MagicMock()
         db.query.return_value.filter.return_value.first.side_effect = [
             MagicMock(name="User"),  # user
-            None,   # dept_obj
-            None,   # kpi
-            None,   # csf
-            None,   # strategy
+            None,  # dept_obj
+            None,  # kpi
+            None,  # csf
+            None,  # strategy
         ]
 
         result = trace_to_strategy(db, personal_kpi_id=1)

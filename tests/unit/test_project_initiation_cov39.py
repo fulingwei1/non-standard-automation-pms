@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip(
     "app.services.preset_stage_templates.templates.execution.project_initiation",
-    reason="import failed, skip"
+    reason="import failed, skip",
 )
 
 
@@ -15,6 +15,7 @@ def stages():
     from app.services.preset_stage_templates.templates.execution.project_initiation import (
         PROJECT_INITIATION_STAGES,
     )
+
     return PROJECT_INITIATION_STAGES
 
 

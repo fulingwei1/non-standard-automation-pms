@@ -9,24 +9,24 @@
 """
 
 import unittest
-from unittest.mock import MagicMock, patch, call
-from datetime import datetime, timedelta, date
+from datetime import date, datetime, timedelta
 from typing import List
+from unittest.mock import MagicMock, call, patch
 
-from app.services.production_schedule_service import ProductionScheduleService
 from app.models.production import (
     Equipment,
-    ProductionSchedule,
     ProductionResourceConflict,
+    ProductionSchedule,
     ScheduleAdjustmentLog,
     Worker,
     WorkerSkill,
     WorkOrder,
 )
 from app.schemas.production_schedule import (
-    ScheduleGenerateRequest,
     ScheduleAdjustRequest,
+    ScheduleGenerateRequest,
 )
+from app.services.production_schedule_service import ProductionScheduleService
 
 
 class TestProductionScheduleServiceCore(unittest.TestCase):
@@ -35,27 +35,37 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def setUp(self):
         """初始化测试"""
         self.db = MagicMock()
-        
+
         # Mock db.add to auto-populate required fields
         def mock_add(obj):
-            if hasattr(obj, '__tablename__') and obj.__tablename__ == 'production_schedules':
+            if hasattr(obj, "__tablename__") and obj.__tablename__ == "production_schedules":
                 # Auto-populate ORM fields that would normally be set by the database
-                if not hasattr(obj, 'id') or obj.id is None:
+                if not hasattr(obj, "id") or obj.id is None:
                     obj.id = 1
-                if not hasattr(obj, 'created_at') or obj.created_at is None:
+                if not hasattr(obj, "created_at") or obj.created_at is None:
                     obj.created_at = datetime.now()
-                if not hasattr(obj, 'updated_at') or obj.updated_at is None:
+                if not hasattr(obj, "updated_at") or obj.updated_at is None:
                     obj.updated_at = datetime.now()
-                if not hasattr(obj, 'is_manually_adjusted') or obj.is_manually_adjusted is None:
+                if not hasattr(obj, "is_manually_adjusted") or obj.is_manually_adjusted is None:
                     obj.is_manually_adjusted = False
-        
+
         self.db.add.side_effect = mock_add
         self.service = ProductionScheduleService(self.db)
         self.user_id = 1
 
-    def _create_mock_work_order(self, id, work_order_no, priority="NORMAL", plan_end_date=None,
-                                standard_hours=8, workshop_id=1, process_id=1,
-                                machine_id=None, assigned_to=None, task_name="测试任务"):
+    def _create_mock_work_order(
+        self,
+        id,
+        work_order_no,
+        priority="NORMAL",
+        plan_end_date=None,
+        standard_hours=8,
+        workshop_id=1,
+        process_id=1,
+        machine_id=None,
+        assigned_to=None,
+        task_name="测试任务",
+    ):
         """创建模拟工单"""
         order = MagicMock(spec=WorkOrder)
         order.id = id
@@ -89,9 +99,18 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         worker.status = status
         return worker
 
-    def _create_mock_schedule(self, id, work_order_id, equipment_id=None, worker_id=None,
-                             scheduled_start_time=None, scheduled_end_time=None,
-                             duration_hours=8, status="PENDING", schedule_plan_id=1):
+    def _create_mock_schedule(
+        self,
+        id,
+        work_order_id,
+        equipment_id=None,
+        worker_id=None,
+        scheduled_start_time=None,
+        scheduled_end_time=None,
+        duration_hours=8,
+        status="PENDING",
+        schedule_plan_id=1,
+    ):
         """创建模拟排程"""
         schedule = MagicMock(spec=ProductionSchedule)
         schedule.id = id
@@ -99,7 +118,9 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         schedule.equipment_id = equipment_id
         schedule.worker_id = worker_id
         schedule.scheduled_start_time = scheduled_start_time or datetime.now()
-        schedule.scheduled_end_time = scheduled_end_time or (datetime.now() + timedelta(hours=duration_hours))
+        schedule.scheduled_end_time = scheduled_end_time or (
+            datetime.now() + timedelta(hours=duration_hours)
+        )
         schedule.duration_hours = duration_hours
         schedule.status = status
         schedule.schedule_plan_id = schedule_plan_id
@@ -210,13 +231,13 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         """测试获取工单列表"""
         order1 = self._create_mock_work_order(1, "WO001")
         order2 = self._create_mock_work_order(2, "WO002")
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = [order1, order2]
         self.db.query.return_value = mock_query
 
         result = self.service._fetch_work_orders([1, 2])
-        
+
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].id, 1)
         self.assertEqual(result[1].id, 2)
@@ -225,26 +246,26 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         """测试获取可用设备"""
         eq1 = self._create_mock_equipment(1, status="IDLE")
         eq2 = self._create_mock_equipment(2, status="RUNNING")
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = [eq1, eq2]
         self.db.query.return_value = mock_query
 
         result = self.service._get_available_equipment()
-        
+
         self.assertEqual(len(result), 2)
 
     def test_get_available_workers(self):
         """测试获取可用工人"""
         worker1 = self._create_mock_worker(1)
         worker2 = self._create_mock_worker(2)
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = [worker1, worker2]
         self.db.query.return_value = mock_query
 
         result = self.service._get_available_workers()
-        
+
         self.assertEqual(len(result), 2)
 
     # ==================== 资源选择测试 ====================
@@ -254,9 +275,9 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         eq1 = self._create_mock_equipment(1)
         eq2 = self._create_mock_equipment(2)
         equipment = [eq1, eq2]
-        
+
         order = self._create_mock_work_order(1, "WO001", machine_id=2)
-        
+
         result = self.service._select_best_equipment(order, equipment, {}, MagicMock())
         self.assertEqual(result.id, 2)
 
@@ -265,9 +286,9 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         eq1 = self._create_mock_equipment(1, workshop_id=1)
         eq2 = self._create_mock_equipment(2, workshop_id=2)
         equipment = [eq1, eq2]
-        
+
         order = self._create_mock_work_order(1, "WO001", workshop_id=2)
-        
+
         result = self.service._select_best_equipment(order, equipment, {}, MagicMock())
         self.assertEqual(result.id, 2)
 
@@ -276,15 +297,15 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         eq1 = self._create_mock_equipment(1)
         eq2 = self._create_mock_equipment(2)
         equipment = [eq1, eq2]
-        
+
         # eq1有2个排程，eq2有1个排程
         timeline = {
             1: [(datetime.now(), datetime.now()), (datetime.now(), datetime.now())],
             2: [(datetime.now(), datetime.now())],
         }
-        
+
         order = self._create_mock_work_order(1, "WO001")
-        
+
         result = self.service._select_best_equipment(order, equipment, timeline, MagicMock())
         self.assertEqual(result.id, 2)  # 选择更空闲的eq2
 
@@ -299,9 +320,9 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         worker1 = self._create_mock_worker(1)
         worker2 = self._create_mock_worker(2)
         workers = [worker1, worker2]
-        
+
         order = self._create_mock_work_order(1, "WO001", assigned_to=2)
-        
+
         result = self.service._select_best_worker(order, workers, {}, MagicMock())
         self.assertEqual(result.id, 2)
 
@@ -310,20 +331,20 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         worker1 = self._create_mock_worker(1, workshop_id=1)
         worker2 = self._create_mock_worker(2, workshop_id=1)
         workers = [worker1, worker2]
-        
+
         # Mock技能查询
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = [(1,)]  # worker1有该技能
         self.db.query.return_value = mock_query
-        
+
         order = self._create_mock_work_order(1, "WO001", process_id=1, workshop_id=1)
         request = ScheduleGenerateRequest(
             work_orders=[1],
             start_date=datetime.now(),
             end_date=datetime.now() + timedelta(days=7),
-            consider_worker_skills=True
+            consider_worker_skills=True,
         )
-        
+
         result = self.service._select_best_worker(order, workers, {}, request)
         self.assertEqual(result.id, 1)
 
@@ -332,14 +353,12 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         worker1 = self._create_mock_worker(1, workshop_id=1)
         worker2 = self._create_mock_worker(2, workshop_id=2)
         workers = [worker1, worker2]
-        
+
         order = self._create_mock_work_order(1, "WO001", workshop_id=2)
         request = ScheduleGenerateRequest(
-            work_orders=[1],
-            start_date=datetime.now(),
-            end_date=datetime.now() + timedelta(days=7)
+            work_orders=[1], start_date=datetime.now(), end_date=datetime.now() + timedelta(days=7)
         )
-        
+
         result = self.service._select_best_worker(order, workers, {}, request)
         self.assertEqual(result.id, 2)
 
@@ -355,11 +374,11 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         """测试查找最早时间槽-无冲突"""
         start_from = datetime(2024, 1, 1, 8, 0)
         duration_hours = 4.0
-        
+
         result = self.service._find_earliest_available_slot(
             [], [], start_from, duration_hours, MagicMock()
         )
-        
+
         self.assertEqual(result.hour, 8)
         self.assertEqual(result.minute, 0)
 
@@ -367,16 +386,14 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         """测试查找最早时间槽-有冲突"""
         start_from = datetime(2024, 1, 1, 8, 0)
         duration_hours = 4.0
-        
+
         # 有一个冲突时间段
-        equipment_slots = [
-            (datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 1, 12, 0))
-        ]
-        
+        equipment_slots = [(datetime(2024, 1, 1, 8, 0), datetime(2024, 1, 1, 12, 0))]
+
         result = self.service._find_earliest_available_slot(
             equipment_slots, [], start_from, duration_hours, MagicMock()
         )
-        
+
         # 应该安排在12:00之后
         self.assertGreaterEqual(result, datetime(2024, 1, 1, 12, 0))
 
@@ -385,72 +402,88 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def test_detect_conflicts_no_conflict(self):
         """测试冲突检测-无冲突"""
         schedule1 = self._create_mock_schedule(
-            1, 1,
+            1,
+            1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 12, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 12, 0),
         )
         schedule2 = self._create_mock_schedule(
-            2, 2,
+            2,
+            2,
             scheduled_start_time=datetime(2024, 1, 1, 13, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 17, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 17, 0),
         )
-        
+
         conflicts = self.service._detect_conflicts([schedule1, schedule2])
         self.assertEqual(len(conflicts), 0)
 
     def test_detect_conflicts_equipment_conflict(self):
         """测试冲突检测-设备冲突"""
         schedule1 = self._create_mock_schedule(
-            1, 1, equipment_id=1,
+            1,
+            1,
+            equipment_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 12, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 12, 0),
         )
         schedule2 = self._create_mock_schedule(
-            2, 2, equipment_id=1,
+            2,
+            2,
+            equipment_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 10, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 14, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 14, 0),
         )
-        
+
         conflicts = self.service._detect_conflicts([schedule1, schedule2])
-        
+
         self.assertEqual(len(conflicts), 1)
-        self.assertEqual(conflicts[0].conflict_type, 'EQUIPMENT')
-        self.assertEqual(conflicts[0].severity, 'HIGH')
+        self.assertEqual(conflicts[0].conflict_type, "EQUIPMENT")
+        self.assertEqual(conflicts[0].severity, "HIGH")
 
     def test_detect_conflicts_worker_conflict(self):
         """测试冲突检测-工人冲突"""
         schedule1 = self._create_mock_schedule(
-            1, 1, worker_id=1,
+            1,
+            1,
+            worker_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 12, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 12, 0),
         )
         schedule2 = self._create_mock_schedule(
-            2, 2, worker_id=1,
+            2,
+            2,
+            worker_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 10, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 14, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 14, 0),
         )
-        
+
         conflicts = self.service._detect_conflicts([schedule1, schedule2])
-        
+
         self.assertEqual(len(conflicts), 1)
-        self.assertEqual(conflicts[0].conflict_type, 'WORKER')
-        self.assertEqual(conflicts[0].severity, 'MEDIUM')
+        self.assertEqual(conflicts[0].conflict_type, "WORKER")
+        self.assertEqual(conflicts[0].severity, "MEDIUM")
 
     def test_detect_conflicts_multiple(self):
         """测试冲突检测-多个冲突"""
         schedule1 = self._create_mock_schedule(
-            1, 1, equipment_id=1, worker_id=1,
+            1,
+            1,
+            equipment_id=1,
+            worker_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 12, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 12, 0),
         )
         schedule2 = self._create_mock_schedule(
-            2, 2, equipment_id=1, worker_id=1,
+            2,
+            2,
+            equipment_id=1,
+            worker_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 10, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 14, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 14, 0),
         )
-        
+
         conflicts = self.service._detect_conflicts([schedule1, schedule2])
-        
+
         # 应该有2个冲突：设备+工人
         self.assertEqual(len(conflicts), 2)
 
@@ -459,43 +492,33 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def test_calculate_schedule_score_on_time(self):
         """测试排程评分-按时完成"""
         order = self._create_mock_work_order(
-            1, "WO001",
-            priority="HIGH",
-            plan_end_date=date(2024, 1, 10)
+            1, "WO001", priority="HIGH", plan_end_date=date(2024, 1, 10)
         )
-        schedule = self._create_mock_schedule(
-            1, 1,
-            scheduled_end_time=datetime(2024, 1, 9, 17, 0)
-        )
+        schedule = self._create_mock_schedule(1, 1, scheduled_end_time=datetime(2024, 1, 9, 17, 0))
         schedule.priority_score = 3.0
-        
+
         score = self.service._calculate_schedule_score(schedule, [order])
-        
+
         # 基础分30 + 按时完成20 = 50
         self.assertEqual(score, 50)
 
     def test_calculate_schedule_score_delayed(self):
         """测试排程评分-延期"""
         order = self._create_mock_work_order(
-            1, "WO001",
-            priority="HIGH",
-            plan_end_date=date(2024, 1, 5)
+            1, "WO001", priority="HIGH", plan_end_date=date(2024, 1, 5)
         )
-        schedule = self._create_mock_schedule(
-            1, 1,
-            scheduled_end_time=datetime(2024, 1, 10, 17, 0)
-        )
+        schedule = self._create_mock_schedule(1, 1, scheduled_end_time=datetime(2024, 1, 10, 17, 0))
         schedule.priority_score = 3.0
-        
+
         score = self.service._calculate_schedule_score(schedule, [order])
-        
+
         # 只有基础分30
         self.assertEqual(score, 30)
 
     def test_calculate_overall_metrics_empty(self):
         """测试整体指标计算-空排程"""
         metrics = self.service.calculate_overall_metrics([], [])
-        
+
         self.assertEqual(metrics.completion_rate, 0)
         self.assertEqual(metrics.equipment_utilization, 0)
         self.assertEqual(metrics.total_duration_hours, 0)
@@ -504,22 +527,28 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         """测试整体指标计算-正常情况"""
         order1 = self._create_mock_work_order(1, "WO001", plan_end_date=date(2024, 1, 10))
         order2 = self._create_mock_work_order(2, "WO002", plan_end_date=date(2024, 1, 15))
-        
+
         schedule1 = self._create_mock_schedule(
-            1, 1, equipment_id=1, worker_id=1,
+            1,
+            1,
+            equipment_id=1,
+            worker_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
             scheduled_end_time=datetime(2024, 1, 1, 16, 0),
-            duration_hours=8
+            duration_hours=8,
         )
         schedule2 = self._create_mock_schedule(
-            2, 2, equipment_id=2, worker_id=2,
+            2,
+            2,
+            equipment_id=2,
+            worker_id=2,
             scheduled_start_time=datetime(2024, 1, 2, 8, 0),
             scheduled_end_time=datetime(2024, 1, 2, 16, 0),
-            duration_hours=8
+            duration_hours=8,
         )
-        
+
         metrics = self.service.calculate_overall_metrics([schedule1, schedule2], [order1, order2])
-        
+
         self.assertEqual(metrics.completion_rate, 1.0)  # 都按时
         self.assertGreater(metrics.equipment_utilization, 0)
         self.assertEqual(metrics.total_duration_hours, 32.0)  # 1天8小时 + 跨天24小时
@@ -531,17 +560,17 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001", priority="HIGH")
         equipment = [self._create_mock_equipment(1)]
         workers = [self._create_mock_worker(1)]
-        
+
         request = ScheduleGenerateRequest(
             work_orders=[1],
             start_date=datetime(2024, 1, 1, 8, 0),
-            end_date=datetime(2024, 1, 10, 18, 0)
+            end_date=datetime(2024, 1, 10, 18, 0),
         )
-        
+
         schedules = self.service._greedy_scheduling(
             [order], equipment, workers, request, 1, self.user_id
         )
-        
+
         self.assertEqual(len(schedules), 1)
         self.assertEqual(schedules[0].work_order_id, 1)
         self.assertEqual(schedules[0].equipment_id, 1)
@@ -552,20 +581,20 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order1 = self._create_mock_work_order(1, "WO001", priority="LOW")
         order2 = self._create_mock_work_order(2, "WO002", priority="URGENT")
         order3 = self._create_mock_work_order(3, "WO003", priority="HIGH")
-        
+
         equipment = [self._create_mock_equipment(1)]
         workers = [self._create_mock_worker(1)]
-        
+
         request = ScheduleGenerateRequest(
             work_orders=[1, 2, 3],
             start_date=datetime(2024, 1, 1, 8, 0),
-            end_date=datetime(2024, 1, 10, 18, 0)
+            end_date=datetime(2024, 1, 10, 18, 0),
         )
-        
+
         schedules = self.service._greedy_scheduling(
             [order1, order2, order3], equipment, workers, request, 1, self.user_id
         )
-        
+
         # 应该按优先级排序：URGENT -> HIGH -> LOW
         self.assertEqual(schedules[0].work_order_id, 2)  # URGENT
         self.assertEqual(schedules[1].work_order_id, 3)  # HIGH
@@ -574,17 +603,15 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def test_greedy_scheduling_no_resources(self):
         """测试贪心算法-无资源"""
         order = self._create_mock_work_order(1, "WO001")
-        
+
         request = ScheduleGenerateRequest(
             work_orders=[1],
             start_date=datetime(2024, 1, 1, 8, 0),
-            end_date=datetime(2024, 1, 10, 18, 0)
+            end_date=datetime(2024, 1, 10, 18, 0),
         )
-        
-        schedules = self.service._greedy_scheduling(
-            [order], [], [], request, 1, self.user_id
-        )
-        
+
+        schedules = self.service._greedy_scheduling([order], [], [], request, 1, self.user_id)
+
         # 应该也能创建排程，只是没有资源
         self.assertEqual(len(schedules), 1)
         self.assertIsNone(schedules[0].equipment_id)
@@ -597,56 +624,60 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001", priority="HIGH")
         equipment = [self._create_mock_equipment(1)]
         workers = [self._create_mock_worker(1)]
-        
+
         request = ScheduleGenerateRequest(
             work_orders=[1],
             start_date=datetime(2024, 1, 1, 8, 0),
-            end_date=datetime(2024, 1, 10, 18, 0)
+            end_date=datetime(2024, 1, 10, 18, 0),
         )
-        
+
         schedules = self.service._heuristic_scheduling(
             [order], equipment, workers, request, 1, self.user_id
         )
-        
+
         self.assertEqual(len(schedules), 1)
 
     def test_optimize_schedules(self):
         """测试排程优化"""
         schedule1 = self._create_mock_schedule(
-            1, 1,
+            1,
+            1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 12, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 12, 0),
         )
         schedule1.priority_score = 5.0  # 高优先级但排在前面
-        
+
         schedule2 = self._create_mock_schedule(
-            2, 2,
+            2,
+            2,
             scheduled_start_time=datetime(2024, 1, 1, 13, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 17, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 17, 0),
         )
         schedule2.priority_score = 2.0  # 低优先级排在后面
-        
+
         optimized = self.service._optimize_schedules([schedule1, schedule2], MagicMock())
-        
+
         # 由于schedule1优先级高且已经在前面，不需要交换
         self.assertEqual(len(optimized), 2)
 
     def test_should_swap_schedules(self):
         """测试是否应该交换排程"""
         schedule1 = self._create_mock_schedule(
-            1, 1,
+            1,
+            1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 12, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 12, 0),
         )
         schedule1.priority_score = 2.0  # 低优先级在前
-        
+
         schedule2 = self._create_mock_schedule(
-            2, 2,
+            2,
+            2,
             scheduled_start_time=datetime(2024, 1, 1, 13, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 17, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 17, 0),
         )
         schedule2.priority_score = 5.0  # 高优先级在后
-        
+
         # 应该交换
         result = self.service._should_swap_schedules(schedule1, schedule2)
         self.assertTrue(result)
@@ -658,37 +689,37 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001", priority="HIGH")
         equipment = self._create_mock_equipment(1)
         worker = self._create_mock_worker(1)
-        
+
         # Mock数据库查询
         mock_query_work_orders = MagicMock()
         mock_query_work_orders.filter.return_value.all.return_value = [order]
-        
+
         mock_query_equipment = MagicMock()
         mock_query_equipment.filter.return_value.all.return_value = [equipment]
-        
+
         mock_query_workers = MagicMock()
         mock_query_workers.filter.return_value.all.return_value = [worker]
-        
+
         # Mock WorkerSkill查询
         mock_query_worker_skills = MagicMock()
         mock_query_worker_skills.filter.return_value.all.return_value = [(1,)]  # 返回元组列表
-        
+
         self.db.query.side_effect = [
             mock_query_work_orders,
             mock_query_equipment,
             mock_query_workers,
             mock_query_worker_skills,  # 添加WorkerSkill查询
         ]
-        
+
         request = ScheduleGenerateRequest(
             work_orders=[1],
             start_date=datetime(2024, 1, 1, 8, 0),
             end_date=datetime(2024, 1, 10, 18, 0),
-            algorithm="GREEDY"
+            algorithm="GREEDY",
         )
-        
+
         plan_id, schedules, conflicts = self.service.generate_schedule(request, self.user_id)
-        
+
         self.assertIsNotNone(plan_id)
         self.assertEqual(len(schedules), 1)
         self.db.add_all.assert_called()
@@ -700,16 +731,14 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = []
         self.db.query.return_value = mock_query
-        
+
         request = ScheduleGenerateRequest(
-            work_orders=[],
-            start_date=datetime.now(),
-            end_date=datetime.now() + timedelta(days=7)
+            work_orders=[], start_date=datetime.now(), end_date=datetime.now() + timedelta(days=7)
         )
-        
+
         with self.assertRaises(ValueError) as context:
             self.service.generate_schedule(request, self.user_id)
-        
+
         self.assertIn("未找到有效工单", str(context.exception))
 
     def test_generate_schedule_heuristic_algorithm(self):
@@ -717,37 +746,37 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001")
         equipment = self._create_mock_equipment(1)
         worker = self._create_mock_worker(1)
-        
+
         # Mock数据库查询
         mock_query_work_orders = MagicMock()
         mock_query_work_orders.filter.return_value.all.return_value = [order]
-        
+
         mock_query_equipment = MagicMock()
         mock_query_equipment.filter.return_value.all.return_value = [equipment]
-        
+
         mock_query_workers = MagicMock()
         mock_query_workers.filter.return_value.all.return_value = [worker]
-        
+
         # Mock WorkerSkill查询 - 启发式算法会调用_greedy_scheduling
         mock_query_worker_skills = MagicMock()
         mock_query_worker_skills.filter.return_value.all.return_value = [(1,)]
-        
+
         self.db.query.side_effect = [
             mock_query_work_orders,
             mock_query_equipment,
             mock_query_workers,
             mock_query_worker_skills,  # 添加WorkerSkill查询
         ]
-        
+
         request = ScheduleGenerateRequest(
             work_orders=[1],
             start_date=datetime(2024, 1, 1, 8, 0),
             end_date=datetime(2024, 1, 10, 18, 0),
-            algorithm="HEURISTIC"
+            algorithm="HEURISTIC",
         )
-        
+
         plan_id, schedules, conflicts = self.service.generate_schedule(request, self.user_id)
-        
+
         self.assertEqual(len(schedules), 1)
 
     def test_generate_and_evaluate_schedule(self):
@@ -755,21 +784,21 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001", plan_end_date=date(2024, 1, 10))
         equipment = self._create_mock_equipment(1)
         worker = self._create_mock_worker(1)
-        
+
         # Mock数据库查询
         mock_query_work_orders = MagicMock()
         mock_query_work_orders.filter.return_value.all.return_value = [order]
-        
+
         mock_query_equipment = MagicMock()
         mock_query_equipment.filter.return_value.all.return_value = [equipment]
-        
+
         mock_query_workers = MagicMock()
         mock_query_workers.filter.return_value.all.return_value = [worker]
-        
+
         # Mock WorkerSkill查询
         mock_query_worker_skills = MagicMock()
         mock_query_worker_skills.filter.return_value.all.return_value = [(1,)]
-        
+
         self.db.query.side_effect = [
             mock_query_work_orders,
             mock_query_equipment,
@@ -777,15 +806,15 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
             mock_query_worker_skills,  # 添加WorkerSkill查询
             mock_query_work_orders,  # 第二次获取工单用于评估
         ]
-        
+
         request = ScheduleGenerateRequest(
             work_orders=[1],
             start_date=datetime(2024, 1, 1, 8, 0),
-            end_date=datetime(2024, 1, 10, 18, 0)
+            end_date=datetime(2024, 1, 10, 18, 0),
         )
-        
+
         result = self.service.generate_and_evaluate_schedule(request, self.user_id)
-        
+
         self.assertIn("plan_id", result)
         self.assertIn("schedules", result)
         self.assertIn("metrics", result)
@@ -799,37 +828,37 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001", priority="URGENT")
         equipment = self._create_mock_equipment(1)
         worker = self._create_mock_worker(1)
-        
+
         # Mock查询
         mock_query_order = MagicMock()
         mock_query_order.filter.return_value.first.return_value = order
-        
+
         mock_query_equipment = MagicMock()
         mock_query_equipment.filter.return_value.all.return_value = [equipment]
-        
+
         mock_query_workers = MagicMock()
         mock_query_workers.filter.return_value.all.return_value = [worker]
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.all.return_value = []
-        
+
         self.db.query.side_effect = [
             mock_query_order,
             mock_query_equipment,
             mock_query_workers,
             mock_query_conflicts,
         ]
-        
+
         insert_time = datetime(2024, 1, 1, 10, 0)
-        
+
         new_schedule, adjusted, conflicts = self.service.urgent_insert(
             work_order_id=1,
             insert_time=insert_time,
             max_delay_hours=4,
             auto_adjust=False,
-            user_id=self.user_id
+            user_id=self.user_id,
         )
-        
+
         self.assertIsNotNone(new_schedule)
         self.assertEqual(new_schedule.work_order_id, 1)
         self.assertTrue(new_schedule.is_urgent)
@@ -840,33 +869,35 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001", priority="URGENT")
         equipment = self._create_mock_equipment(1)
         worker = self._create_mock_worker(1)
-        
+
         # 已有排程会冲突
         existing_schedule = self._create_mock_schedule(
-            2, 2, equipment_id=1,
+            2,
+            2,
+            equipment_id=1,
             scheduled_start_time=datetime(2024, 1, 1, 9, 0),
             scheduled_end_time=datetime(2024, 1, 1, 13, 0),
-            status="PENDING"
+            status="PENDING",
         )
         existing_schedule.duration_hours = 4.0
-        
+
         # Mock查询
         mock_query_order = MagicMock()
         mock_query_order.filter.return_value.first.return_value = order
-        
+
         mock_query_equipment = MagicMock()
         mock_query_equipment.filter.return_value.all.return_value = [equipment]
-        
+
         mock_query_workers = MagicMock()
         mock_query_workers.filter.return_value.all.return_value = [worker]
-        
+
         # Mock WorkerSkill查询
         mock_query_worker_skills = MagicMock()
         mock_query_worker_skills.filter.return_value.all.return_value = [(1,)]
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.all.return_value = [existing_schedule]
-        
+
         self.db.query.side_effect = [
             mock_query_order,
             mock_query_equipment,
@@ -874,17 +905,17 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
             mock_query_worker_skills,  # 添加WorkerSkill查询
             mock_query_conflicts,
         ]
-        
+
         insert_time = datetime(2024, 1, 1, 10, 0)
-        
+
         new_schedule, adjusted, conflicts = self.service.urgent_insert(
             work_order_id=1,
             insert_time=insert_time,
             max_delay_hours=10,
             auto_adjust=True,
-            user_id=self.user_id
+            user_id=self.user_id,
         )
-        
+
         self.assertIsNotNone(new_schedule)
         self.assertEqual(len(adjusted), 1)
         # 冲突的排程应该被延后
@@ -895,16 +926,16 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = None
         self.db.query.return_value = mock_query
-        
+
         with self.assertRaises(ValueError) as context:
             self.service.urgent_insert(
                 work_order_id=999,
                 insert_time=datetime.now(),
                 max_delay_hours=4,
                 auto_adjust=False,
-                user_id=self.user_id
+                user_id=self.user_id,
             )
-        
+
         self.assertIn("工单不存在", str(context.exception))
 
     def test_execute_urgent_insert_with_logging(self):
@@ -912,24 +943,24 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         order = self._create_mock_work_order(1, "WO001")
         equipment = self._create_mock_equipment(1)
         worker = self._create_mock_worker(1)
-        
+
         # Mock查询
         mock_query_order = MagicMock()
         mock_query_order.filter.return_value.first.return_value = order
-        
+
         mock_query_equipment = MagicMock()
         mock_query_equipment.filter.return_value.all.return_value = [equipment]
-        
+
         mock_query_workers = MagicMock()
         mock_query_workers.filter.return_value.all.return_value = [worker]
-        
+
         # Mock WorkerSkill查询
         mock_query_worker_skills = MagicMock()
         mock_query_worker_skills.filter.return_value.all.return_value = [(1,)]
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.all.return_value = []
-        
+
         self.db.query.side_effect = [
             mock_query_order,
             mock_query_equipment,
@@ -937,15 +968,15 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
             mock_query_worker_skills,  # 添加WorkerSkill查询
             mock_query_conflicts,
         ]
-        
+
         result = self.service.execute_urgent_insert_with_logging(
             work_order_id=1,
             insert_time=datetime(2024, 1, 1, 10, 0),
             max_delay_hours=4,
             auto_adjust=False,
-            user_id=self.user_id
+            user_id=self.user_id,
         )
-        
+
         self.assertTrue(result["success"])
         self.assertIn("schedule", result)
         self.db.add.assert_called()
@@ -957,25 +988,25 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         """测试排程预览"""
         schedule = self._create_mock_schedule(1, 1, schedule_plan_id=100)
         order = self._create_mock_work_order(1, "WO001", plan_end_date=date(2024, 1, 10))
-        
+
         # Mock查询
         mock_query_schedules = MagicMock()
         mock_query_schedules.filter.return_value.all.return_value = [schedule]
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.all.return_value = []
-        
+
         mock_query_orders = MagicMock()
         mock_query_orders.filter.return_value.all.return_value = [order]
-        
+
         self.db.query.side_effect = [
             mock_query_schedules,
             mock_query_conflicts,
             mock_query_orders,
         ]
-        
+
         result = self.service.get_schedule_preview(plan_id=100)
-        
+
         self.assertEqual(result["plan_id"], 100)
         self.assertIn("schedules", result)
         self.assertIn("statistics", result)
@@ -986,10 +1017,10 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = []
         self.db.query.return_value = mock_query
-        
+
         with self.assertRaises(ValueError) as context:
             self.service.get_schedule_preview(plan_id=999)
-        
+
         self.assertIn("排程方案不存在", str(context.exception))
 
     # ==================== 确认排程测试 ====================
@@ -997,21 +1028,21 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def test_confirm_schedule_success(self):
         """测试确认排程-成功"""
         schedule = self._create_mock_schedule(1, 1, status="PENDING", schedule_plan_id=100)
-        
+
         # Mock查询
         mock_query_schedules = MagicMock()
         mock_query_schedules.filter.return_value.all.return_value = [schedule]
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.count.return_value = 0
-        
+
         self.db.query.side_effect = [
             mock_query_schedules,
             mock_query_conflicts,
         ]
-        
+
         result = self.service.confirm_schedule(plan_id=100, user_id=self.user_id)
-        
+
         self.assertTrue(result["success"])
         self.assertEqual(result["confirmed_count"], 1)
         self.assertEqual(schedule.status, "CONFIRMED")
@@ -1022,31 +1053,31 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = []
         self.db.query.return_value = mock_query
-        
+
         with self.assertRaises(ValueError) as context:
             self.service.confirm_schedule(plan_id=100, user_id=self.user_id)
-        
+
         self.assertIn("没有待确认的排程", str(context.exception))
 
     def test_confirm_schedule_with_conflicts(self):
         """测试确认排程-存在冲突"""
         schedule = self._create_mock_schedule(1, 1, status="PENDING")
-        
+
         # Mock查询
         mock_query_schedules = MagicMock()
         mock_query_schedules.filter.return_value.all.return_value = [schedule]
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.count.return_value = 2  # 有冲突
-        
+
         self.db.query.side_effect = [
             mock_query_schedules,
             mock_query_conflicts,
         ]
-        
+
         with self.assertRaises(RuntimeError) as context:
             self.service.confirm_schedule(plan_id=100, user_id=self.user_id)
-        
+
         self.assertIn("高优先级冲突", str(context.exception))
 
     # ==================== 调整排程测试 ====================
@@ -1054,29 +1085,30 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def test_adjust_schedule_time(self):
         """测试调整排程-时间调整"""
         schedule = self._create_mock_schedule(
-            1, 1,
+            1,
+            1,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
-            scheduled_end_time=datetime(2024, 1, 1, 16, 0)
+            scheduled_end_time=datetime(2024, 1, 1, 16, 0),
         )
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = schedule
         self.db.query.return_value = mock_query
-        
+
         new_start = datetime(2024, 1, 2, 8, 0)
         new_end = datetime(2024, 1, 2, 16, 0)
-        
+
         request = ScheduleAdjustRequest(
             schedule_id=1,
             adjustment_type="TIME_CHANGE",
             new_start_time=new_start,
             new_end_time=new_end,
             reason="客户要求延期",
-            auto_resolve_conflicts=False
+            auto_resolve_conflicts=False,
         )
-        
+
         result = self.service.adjust_schedule(request, self.user_id)
-        
+
         self.assertTrue(result["success"])
         self.assertEqual(schedule.scheduled_start_time, new_start)
         self.assertEqual(schedule.scheduled_end_time, new_end)
@@ -1087,22 +1119,22 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def test_adjust_schedule_resource(self):
         """测试调整排程-资源调整"""
         schedule = self._create_mock_schedule(1, 1, equipment_id=1, worker_id=1)
-        
+
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = schedule
         self.db.query.return_value = mock_query
-        
+
         request = ScheduleAdjustRequest(
             schedule_id=1,
             adjustment_type="RESOURCE_CHANGE",
             new_equipment_id=2,
             new_worker_id=2,
             reason="资源调配",
-            auto_resolve_conflicts=False
+            auto_resolve_conflicts=False,
         )
-        
+
         result = self.service.adjust_schedule(request, self.user_id)
-        
+
         self.assertTrue(result["success"])
         self.assertEqual(schedule.equipment_id, 2)
         self.assertEqual(schedule.worker_id, 2)
@@ -1112,16 +1144,14 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.first.return_value = None
         self.db.query.return_value = mock_query
-        
+
         request = ScheduleAdjustRequest(
-            schedule_id=999,
-            adjustment_type="TIME_CHANGE",
-            reason="测试"
+            schedule_id=999, adjustment_type="TIME_CHANGE", reason="测试"
         )
-        
+
         with self.assertRaises(ValueError) as context:
             self.service.adjust_schedule(request, self.user_id)
-        
+
         self.assertIn("排程不存在", str(context.exception))
 
     # ==================== 冲突摘要测试 ====================
@@ -1133,24 +1163,24 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         conflict1.conflict_type = "EQUIPMENT"
         conflict1.severity = "HIGH"
         conflict1.status = "UNRESOLVED"
-        
+
         # Mock查询 - 需要返回实际的元组列表，而不是Mock对象
         mock_query_schedules = MagicMock()
         # 注意：这里的all()返回的应该是元组列表
         mock_all_result = [(1,)]  # 正确的格式
         mock_query_schedules.filter.return_value.all.return_value = mock_all_result
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.all.return_value = [conflict1]
-        
+
         # 明确指定side_effect
         self.db.query.side_effect = [
             mock_query_schedules,  # 第一次查询schedule_id
             mock_query_conflicts,  # 第二次查询conflicts
         ]
-        
+
         result = self.service.get_conflict_summary(plan_id=100)
-        
+
         self.assertTrue(result["has_conflicts"])
         self.assertEqual(result["total_conflicts"], 1)
         self.assertEqual(result["conflicts_by_type"]["EQUIPMENT"], 1)
@@ -1160,9 +1190,9 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = []
         self.db.query.return_value = mock_query
-        
+
         result = self.service.get_conflict_summary(schedule_id=1)
-        
+
         self.assertFalse(result["has_conflicts"])
         self.assertEqual(result["total_conflicts"], 0)
 
@@ -1173,33 +1203,33 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         # 方案1
         schedule1 = self._create_mock_schedule(1, 1, schedule_plan_id=100)
         order1 = self._create_mock_work_order(1, "WO001", plan_end_date=date(2024, 1, 10))
-        
+
         # 方案2
         schedule2 = self._create_mock_schedule(2, 2, schedule_plan_id=101)
         order2 = self._create_mock_work_order(2, "WO002", plan_end_date=date(2024, 1, 10))
-        
+
         # Mock查询
         mock_query_schedules_1 = MagicMock()
         mock_query_schedules_1.filter.return_value.all.return_value = [schedule1]
-        
+
         mock_query_orders_1 = MagicMock()
         mock_query_orders_1.filter.return_value.all.return_value = [order1]
-        
+
         mock_query_schedules_2 = MagicMock()
         mock_query_schedules_2.filter.return_value.all.return_value = [schedule2]
-        
+
         mock_query_orders_2 = MagicMock()
         mock_query_orders_2.filter.return_value.all.return_value = [order2]
-        
+
         self.db.query.side_effect = [
             mock_query_schedules_1,
             mock_query_orders_1,
             mock_query_schedules_2,
             mock_query_orders_2,
         ]
-        
+
         result = self.service.compare_schedule_plans([100, 101])
-        
+
         self.assertEqual(result["plans_compared"], 2)
         self.assertIn("best_plan_id", result)
         self.assertEqual(len(result["results"]), 2)
@@ -1211,14 +1241,14 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         """测试方案对比-方案太少"""
         with self.assertRaises(ValueError) as context:
             self.service.compare_schedule_plans([100])
-        
+
         self.assertIn("至少需要2个方案", str(context.exception))
 
     def test_compare_schedule_plans_too_many(self):
         """测试方案对比-方案太多"""
         with self.assertRaises(ValueError) as context:
             self.service.compare_schedule_plans([100, 101, 102, 103, 104, 105])
-        
+
         self.assertIn("最多支持5个方案", str(context.exception))
 
     # ==================== 甘特图测试 ====================
@@ -1226,29 +1256,33 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
     def test_generate_gantt_data(self):
         """测试生成甘特图数据"""
         schedule = self._create_mock_schedule(
-            1, 1, equipment_id=1, worker_id=1, schedule_plan_id=100,
+            1,
+            1,
+            equipment_id=1,
+            worker_id=1,
+            schedule_plan_id=100,
             scheduled_start_time=datetime(2024, 1, 1, 8, 0),
             scheduled_end_time=datetime(2024, 1, 1, 16, 0),
-            status="CONFIRMED"
+            status="CONFIRMED",
         )
         order = self._create_mock_work_order(1, "WO001", task_name="加工零件A")
         order.priority = "HIGH"
         order.progress = 50
-        
+
         # Mock查询
         mock_query_schedules = MagicMock()
         mock_query_schedules.filter.return_value.all.return_value = [schedule]
-        
+
         mock_query_orders = MagicMock()
         mock_query_orders.filter.return_value.all.return_value = [order]
-        
+
         self.db.query.side_effect = [
             mock_query_schedules,
             mock_query_orders,
         ]
-        
+
         result = self.service.generate_gantt_data(plan_id=100)
-        
+
         self.assertEqual(result["total_tasks"], 1)
         self.assertIn("tasks", result)
         self.assertIn("resources", result)
@@ -1260,10 +1294,10 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = []
         self.db.query.return_value = mock_query
-        
+
         with self.assertRaises(ValueError) as context:
             self.service.generate_gantt_data(plan_id=999)
-        
+
         self.assertIn("排程方案不存在", str(context.exception))
 
     # ==================== 重置排程测试 ====================
@@ -1273,25 +1307,25 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         # Mock查询
         mock_query_schedule_ids = MagicMock()
         mock_query_schedule_ids.filter.return_value.all.return_value = [(1,), (2,)]
-        
+
         mock_query_conflicts = MagicMock()
         mock_query_conflicts.filter.return_value.delete.return_value = 1
-        
+
         mock_query_logs = MagicMock()
         mock_query_logs.filter.return_value.delete.return_value = 2
-        
+
         mock_query_schedules = MagicMock()
         mock_query_schedules.filter.return_value.delete.return_value = 2
-        
+
         self.db.query.side_effect = [
             mock_query_schedule_ids,
             mock_query_conflicts,
             mock_query_logs,
             mock_query_schedules,
         ]
-        
+
         result = self.service.reset_schedule_plan(plan_id=100)
-        
+
         self.assertTrue(result["success"])
         self.assertEqual(result["deleted_count"], 2)
         self.db.commit.assert_called()
@@ -1303,39 +1337,39 @@ class TestProductionScheduleServiceCore(unittest.TestCase):
         log = MagicMock(spec=ScheduleAdjustmentLog)
         log.schedule_id = 1
         log.adjustment_type = "TIME_CHANGE"
-        
+
         schedule = self._create_mock_schedule(1, 1)
-        
+
         # Mock查询 - 需要模拟完整的查询链
         mock_query_logs = MagicMock()
-        
+
         # 创建filter后的query对象
         mock_filtered_query = MagicMock()
         mock_filtered_query.count.return_value = 1
-        
+
         # 创建order_by后的query对象
         mock_ordered_query = MagicMock()
         mock_filtered_query.order_by.return_value = mock_ordered_query
-        
+
         # 创建offset/limit后的query对象
         mock_paginated_query = MagicMock()
         mock_ordered_query.offset.return_value.limit.return_value = mock_paginated_query
         mock_paginated_query.all.return_value = [log]
-        
+
         # 设置filter返回
         mock_query_logs.filter.return_value = mock_filtered_query
-        
+
         # Mock schedules查询
         mock_query_schedules = MagicMock()
         mock_query_schedules.filter.return_value.all.return_value = [schedule]
-        
+
         self.db.query.side_effect = [
-            mock_query_logs,      # 第一次：ScheduleAdjustmentLog查询
-            mock_query_schedules, # 第二次：ProductionSchedule查询
+            mock_query_logs,  # 第一次：ScheduleAdjustmentLog查询
+            mock_query_schedules,  # 第二次：ProductionSchedule查询
         ]
-        
+
         result = self.service.get_schedule_history(schedule_id=1, page=1, page_size=20)
-        
+
         self.assertEqual(result["total_count"], 1)
         self.assertEqual(result["page"], 1)
         self.assertEqual(len(result["adjustments"]), 1)

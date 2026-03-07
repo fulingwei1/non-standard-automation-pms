@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 """第二十二批：business_support_dashboard_service 单元测试"""
 
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.business_support_dashboard_service import (
-        count_active_contracts,
-        calculate_pending_amount,
-        calculate_overdue_amount,
-        calculate_invoice_rate,
-        count_active_bidding,
         calculate_acceptance_rate,
-        get_urgent_tasks,
+        calculate_invoice_rate,
+        calculate_overdue_amount,
+        calculate_pending_amount,
+        count_active_bidding,
+        count_active_contracts,
         get_today_todos,
+        get_urgent_tasks,
     )
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -135,7 +137,9 @@ class TestCalculateAcceptanceRate:
 class TestGetUrgentTasks:
     def test_returns_list(self, db):
         """返回列表类型"""
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         result = get_urgent_tasks(db, 1, date.today())
         assert isinstance(result, list)
 
@@ -151,7 +155,9 @@ class TestGetUrgentTasks:
         mock_task.status = "PENDING"
         mock_task.is_urgent = True
 
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [mock_task]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            mock_task
+        ]
         result = get_urgent_tasks(db, 1, date.today())
         assert len(result) == 1
         assert result[0]["id"] == 1

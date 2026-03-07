@@ -4,12 +4,12 @@ ECN模型 - 核心表
 """
 
 from sqlalchemy import (
+    JSON,
     Column,
     DateTime,
     ForeignKey,
     Index,
     Integer,
-    JSON,
     Numeric,
     String,
     Text,
@@ -35,9 +35,7 @@ class Ecn(Base, TimestampMixin):
     source_id = Column(Integer, comment="来源ID")
 
     # 关联
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID")
     machine_id = Column(Integer, ForeignKey("machines.id"), comment="设备ID")
 
     # 变更内容
@@ -82,9 +80,7 @@ class Ecn(Base, TimestampMixin):
     solution = Column(Text, comment="解决方案")
     solution_template_id = Column(Integer, comment="使用的解决方案模板ID")
     similar_ecn_ids = Column(JSON, comment="相似ECN ID列表")
-    solution_source = Column(
-        String(20), comment="解决方案来源：MANUAL/AUTO_EXTRACT/KNOWLEDGE_BASE"
-    )
+    solution_source = Column(String(20), comment="解决方案来源：MANUAL/AUTO_EXTRACT/KNOWLEDGE_BASE")
 
     # 关闭
     closed_at = Column(DateTime, comment="关闭时间")
@@ -102,16 +98,10 @@ class Ecn(Base, TimestampMixin):
     evaluations = relationship("EcnEvaluation", back_populates="ecn", lazy="dynamic")
     approvals = relationship("EcnApproval", back_populates="ecn", lazy="dynamic")
     tasks = relationship("EcnTask", back_populates="ecn", lazy="dynamic")
-    affected_materials = relationship(
-        "EcnAffectedMaterial", back_populates="ecn", lazy="dynamic"
-    )
-    affected_orders = relationship(
-        "EcnAffectedOrder", back_populates="ecn", lazy="dynamic"
-    )
+    affected_materials = relationship("EcnAffectedMaterial", back_populates="ecn", lazy="dynamic")
+    affected_orders = relationship("EcnAffectedOrder", back_populates="ecn", lazy="dynamic")
     bom_impacts = relationship("EcnBomImpact", back_populates="ecn", lazy="dynamic")
-    responsibilities = relationship(
-        "EcnResponsibility", back_populates="ecn", lazy="dynamic"
-    )
+    responsibilities = relationship("EcnResponsibility", back_populates="ecn", lazy="dynamic")
     solution_template = relationship(
         "EcnSolutionTemplate",
         foreign_keys="EcnSolutionTemplate.source_ecn_id",

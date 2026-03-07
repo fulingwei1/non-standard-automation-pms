@@ -10,11 +10,12 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ==================== 安装调试派工单 ====================
+
 
 class InstallationDispatchOrderCreate(BaseModel):
     """创建安装调试派工单"""
+
     project_id: int = Field(..., description="项目ID")
     machine_id: Optional[int] = Field(None, description="机台ID")
     customer_id: int = Field(..., description="客户ID")
@@ -24,7 +25,7 @@ class InstallationDispatchOrderCreate(BaseModel):
     location: Optional[str] = Field(None, description="现场地点")
     scheduled_date: date = Field(..., description="计划日期")
     estimated_hours: Optional[Decimal] = Field(None, description="预计工时（小时）")
-    priority: str = Field(default='NORMAL', description="优先级")
+    priority: str = Field(default="NORMAL", description="优先级")
     customer_contact: Optional[str] = Field(None, description="客户联系人")
     customer_phone: Optional[str] = Field(None, description="客户电话")
     customer_address: Optional[str] = Field(None, description="客户地址")
@@ -33,6 +34,7 @@ class InstallationDispatchOrderCreate(BaseModel):
 
 class InstallationDispatchOrderUpdate(BaseModel):
     """更新安装调试派工单"""
+
     task_title: Optional[str] = Field(None, description="任务标题")
     task_description: Optional[str] = Field(None, description="任务描述")
     location: Optional[str] = Field(None, description="现场地点")
@@ -47,17 +49,20 @@ class InstallationDispatchOrderUpdate(BaseModel):
 
 class InstallationDispatchOrderAssign(BaseModel):
     """派工安装调试派工单"""
+
     assigned_to_id: int = Field(..., description="派工人员ID")
     remark: Optional[str] = Field(None, description="派工备注")
 
 
 class InstallationDispatchOrderStart(BaseModel):
     """开始安装调试任务"""
+
     start_time: Optional[datetime] = Field(None, description="开始时间（默认当前时间）")
 
 
 class InstallationDispatchOrderComplete(BaseModel):
     """完成安装调试任务"""
+
     end_time: Optional[datetime] = Field(None, description="结束时间（默认当前时间）")
     actual_hours: Optional[Decimal] = Field(None, description="实际工时（小时）")
     execution_notes: Optional[str] = Field(None, description="执行说明")
@@ -68,12 +73,14 @@ class InstallationDispatchOrderComplete(BaseModel):
 
 class InstallationDispatchOrderProgress(BaseModel):
     """更新安装调试任务进度"""
+
     progress: int = Field(..., ge=0, le=100, description="进度百分比（0-100）")
     execution_notes: Optional[str] = Field(None, description="执行说明")
 
 
 class InstallationDispatchOrderResponse(BaseModel):
     """安装调试派工单响应"""
+
     id: int
     order_no: str
     project_id: int
@@ -119,6 +126,7 @@ class InstallationDispatchOrderResponse(BaseModel):
 
 class InstallationDispatchOrderBatchAssign(BaseModel):
     """批量派工"""
+
     order_ids: List[int] = Field(..., description="派工单ID列表")
     assigned_to_id: int = Field(..., description="派工人员ID")
     remark: Optional[str] = Field(None, description="派工备注")
@@ -126,6 +134,7 @@ class InstallationDispatchOrderBatchAssign(BaseModel):
 
 class InstallationDispatchStatistics(BaseModel):
     """安装调试派工统计"""
+
     total: int = Field(..., description="总数")
     pending: int = Field(..., description="待派工")
     assigned: int = Field(..., description="已派工")

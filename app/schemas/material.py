@@ -13,8 +13,10 @@ from .common import BaseSchema, TimestampSchema
 
 # ==================== 物料分类 ====================
 
+
 class MaterialCategoryCreate(BaseModel):
     """创建物料分类"""
+
     category_code: str = Field(max_length=50)
     category_name: str = Field(max_length=100)
     parent_id: Optional[int] = None
@@ -24,6 +26,7 @@ class MaterialCategoryCreate(BaseModel):
 
 class MaterialCategoryResponse(TimestampSchema):
     """物料分类响应"""
+
     id: int
     category_code: str
     category_name: str
@@ -31,14 +34,18 @@ class MaterialCategoryResponse(TimestampSchema):
     level: int = 1
     full_path: Optional[str] = None
     is_active: bool = True
-    children: List['MaterialCategoryResponse'] = []
+    children: List["MaterialCategoryResponse"] = []
 
 
 # ==================== 物料 ====================
 
+
 class MaterialCreate(BaseModel):
     """创建物料"""
-    material_code: Optional[str] = Field(default=None, max_length=50, description="物料编码（不提供则根据类别自动生成）")
+
+    material_code: Optional[str] = Field(
+        default=None, max_length=50, description="物料编码（不提供则根据类别自动生成）"
+    )
     material_name: str = Field(max_length=200, description="物料名称")
     category_id: Optional[int] = None
     specification: Optional[str] = None
@@ -58,6 +65,7 @@ class MaterialCreate(BaseModel):
 
 class MaterialUpdate(BaseModel):
     """更新物料"""
+
     material_name: Optional[str] = None
     category_id: Optional[int] = None
     specification: Optional[str] = None
@@ -78,6 +86,7 @@ class MaterialUpdate(BaseModel):
 
 class MaterialResponse(TimestampSchema):
     """物料响应"""
+
     id: int
     material_code: str
     material_name: str
@@ -99,6 +108,7 @@ class MaterialResponse(TimestampSchema):
 
 class WarehouseStatistics(BaseModel):
     """仓储统计（给生产总监看）"""
+
     total_items: int = 0
     in_stock_items: int = 0
     low_stock_items: int = 0
@@ -111,6 +121,7 @@ class WarehouseStatistics(BaseModel):
 
 class MaterialSearchResponse(BaseModel):
     """物料查找响应"""
+
     material_id: int
     material_code: str
     material_name: str
@@ -127,8 +138,10 @@ class MaterialSearchResponse(BaseModel):
 
 # ==================== 供应商 ====================
 
+
 class SupplierCreate(BaseModel):
     """创建供应商"""
+
     supplier_code: str = Field(max_length=50, description="供应商编码")
     supplier_name: str = Field(max_length=200, description="供应商名称")
     supplier_short_name: Optional[str] = None
@@ -147,6 +160,7 @@ class SupplierCreate(BaseModel):
 
 class SupplierUpdate(BaseModel):
     """更新供应商"""
+
     supplier_name: Optional[str] = None
     supplier_short_name: Optional[str] = None
     supplier_type: Optional[str] = None
@@ -165,6 +179,7 @@ class SupplierUpdate(BaseModel):
 
 class SupplierResponse(TimestampSchema):
     """供应商响应"""
+
     id: int
     supplier_code: str
     supplier_name: str
@@ -186,8 +201,10 @@ class SupplierResponse(TimestampSchema):
 
 # ==================== BOM ====================
 
+
 class BomItemCreate(BaseModel):
     """BOM明细创建"""
+
     material_id: Optional[int] = None
     material_code: str = Field(max_length=50)
     material_name: str = Field(max_length=200)
@@ -205,6 +222,7 @@ class BomItemCreate(BaseModel):
 
 class BomCreate(BaseModel):
     """创建BOM"""
+
     bom_no: str = Field(max_length=50)
     bom_name: str = Field(max_length=200)
     project_id: int
@@ -216,6 +234,7 @@ class BomCreate(BaseModel):
 
 class BomUpdate(BaseModel):
     """更新BOM"""
+
     bom_name: Optional[str] = None
     version: Optional[str] = None
     status: Optional[str] = None
@@ -224,6 +243,7 @@ class BomUpdate(BaseModel):
 
 class BomItemResponse(BaseSchema):
     """BOM明细响应"""
+
     id: int
     item_no: int
     material_id: Optional[int] = None
@@ -243,6 +263,7 @@ class BomItemResponse(BaseSchema):
 
 class BomResponse(TimestampSchema):
     """BOM响应"""
+
     id: int
     bom_no: str
     bom_name: str

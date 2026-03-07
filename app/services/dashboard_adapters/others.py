@@ -25,15 +25,17 @@ class OthersDashboardAdapter:
     def get_quick_stats(self) -> dict:
         """获取快速统计数据"""
         try:
+            from app.models.alert import AlertRecord
             from app.models.project import Project
             from app.models.user import User
-            from app.models.alert import AlertRecord
 
             project_count = self.db.query(Project).count()
             user_count = self.db.query(User).count()
-            alert_count = self.db.query(AlertRecord).filter(
-                AlertRecord.status.in_(["OPEN", "PENDING", "ACKNOWLEDGED", "PROCESSING"])
-            ).count()
+            alert_count = (
+                self.db.query(AlertRecord)
+                .filter(AlertRecord.status.in_(["OPEN", "PENDING", "ACKNOWLEDGED", "PROCESSING"]))
+                .count()
+            )
         except Exception:
             project_count = 0
             user_count = 0
@@ -45,9 +47,7 @@ class OthersDashboardAdapter:
             "alert_count": alert_count,
         }
 
-    def get_recent_activities(
-        self, limit: int = 10, user_id: Optional[int] = None
-    ) -> list:
+    def get_recent_activities(self, limit: int = 10, user_id: Optional[int] = None) -> list:
         """获取最近活动"""
         try:
             from app.models.approval import ApprovalRecord
@@ -70,6 +70,7 @@ class OthersDashboardAdapter:
         }
         try:
             from sqlalchemy import text
+
             self.db.execute(text("SELECT 1"))
             result["database"] = "healthy"
         except Exception:
@@ -78,6 +79,7 @@ class OthersDashboardAdapter:
 
         try:
             from app.utils.redis_client import redis_client
+
             if redis_client:
                 result["cache"] = "healthy"
             else:
@@ -124,9 +126,7 @@ class OthersDashboardAdapter:
 
         return tasks
 
-    def get_notifications(
-        self, user_id: int, unread_only: bool = False
-    ) -> list:
+    def get_notifications(self, user_id: int, unread_only: bool = False) -> list:
         """获取用户通知"""
         try:
             from app.models.notification import Notification
@@ -183,10 +183,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
         )
 
         # 匹配统计
-        (
-            self.db.query(func.count(func.distinct(HrAIMatchingLog.request_id))).scalar()
-            or 0
-        )
+        (self.db.query(func.count(func.distinct(HrAIMatchingLog.request_id))).scalar() or 0)
         total_matched = self.db.query(func.count(HrAIMatchingLog.id)).scalar() or 0
         accepted = (
             self.db.query(func.count(HrAIMatchingLog.id))
@@ -318,7 +315,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
                 widget_id="recent_matches",
                 widget_type="list",
                 title="最近匹配记录",
-                data={'items': recent_matches},
+                data={"items": recent_matches},
                 order=1,
                 span=16,
             ),
@@ -352,7 +349,7 @@ class StaffMatchingDashboardAdapter(DashboardAdapter):
         return DetailedDashboardResponse(
             module_id=self.module_id,
             module_name=self.module_name,
-            data={'summary': summary, 'details': details},
+            data={"summary": summary, "details": details},
         )
 
 
@@ -395,7 +392,7 @@ class KitRateDashboardAdapter(DashboardAdapter):
             DashboardStatCard(
                 key="avg_kit_rate",
                 title="平均齐套率",
-                value=round(float(overall_stats.get('avg_kit_rate', 0)), 1),
+                value=round(float(overall_stats.get("avg_kit_rate", 0)), 1),
                 icon="rate",
                 color="green",
             ),
@@ -432,7 +429,7 @@ class KitRateDashboardAdapter(DashboardAdapter):
                 widget_id="project_list",
                 widget_type="table",
                 title="项目齐套情况",
-                data={'items': project_list[:10]},  # 只显示前10个
+                data={"items": project_list[:10]},  # 只显示前10个
                 order=1,
                 span=24,
             )
@@ -455,5 +452,5 @@ class KitRateDashboardAdapter(DashboardAdapter):
         return DetailedDashboardResponse(
             module_id=self.module_id,
             module_name=self.module_name,
-            data={'summary': summary, 'details': details},
+            data={"summary": summary, "details": details},
         )

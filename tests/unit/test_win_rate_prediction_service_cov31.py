@@ -44,6 +44,7 @@ def _make_prediction(pred_id=1, ticket_id=10, score=75.0):
 # predict_win_rate
 # ---------------------------------------------------------------------------
 
+
 class TestPredictWinRate:
     def test_creates_prediction_and_commits(self, service, mock_db):
         ai_result = {
@@ -57,11 +58,12 @@ class TestPredictWinRate:
         service.ai_service.predict_with_ai = AsyncMock(return_value=ai_result)
         service._get_historical_data = AsyncMock(return_value=[])
 
-        with patch(
-            "app.services.win_rate_prediction_service.service.PresaleAIWinRate"
-        ) as MockPred, patch(
-            "app.services.win_rate_prediction_service.service.PresaleWinRateHistory"
-        ) as MockHist:
+        with (
+            patch("app.services.win_rate_prediction_service.service.PresaleAIWinRate") as MockPred,
+            patch(
+                "app.services.win_rate_prediction_service.service.PresaleWinRateHistory"
+            ) as MockHist,
+        ):
             mock_pred = MagicMock()
             mock_pred.id = 1
             MockPred.return_value = mock_pred
@@ -99,6 +101,7 @@ class TestPredictWinRate:
 # get_prediction
 # ---------------------------------------------------------------------------
 
+
 class TestGetPrediction:
     def test_returns_prediction_when_found(self, service, mock_db):
         pred = _make_prediction()
@@ -126,6 +129,7 @@ class TestGetPrediction:
 # get_influencing_factors
 # ---------------------------------------------------------------------------
 
+
 class TestGetInfluencingFactors:
     def test_returns_empty_when_no_prediction(self, service, mock_db):
         mock_result = MagicMock()
@@ -139,9 +143,7 @@ class TestGetInfluencingFactors:
 
     def test_returns_top_5_factors_sorted(self, service, mock_db):
         pred = _make_prediction()
-        pred.influencing_factors = [
-            {"factor": f"F{i}", "score": i * 0.1} for i in range(10, 0, -1)
-        ]
+        pred.influencing_factors = [{"factor": f"F{i}", "score": i * 0.1} for i in range(10, 0, -1)]
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = pred
         mock_db.execute = AsyncMock(return_value=mock_result)
@@ -158,6 +160,7 @@ class TestGetInfluencingFactors:
 # ---------------------------------------------------------------------------
 # get_competitor_analysis
 # ---------------------------------------------------------------------------
+
 
 class TestGetCompetitorAnalysis:
     def test_returns_none_when_no_prediction(self, service, mock_db):

@@ -2,15 +2,16 @@
 """
 Unit tests for app/services/win_rate_prediction_service/history.py
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.win_rate_prediction_service.history import (
-        get_salesperson_historical_win_rate,
         get_customer_cooperation_history,
+        get_salesperson_historical_win_rate,
         get_similar_leads_statistics,
     )
 except ImportError as e:
@@ -20,6 +21,7 @@ except ImportError as e:
 # ---------------------------------------------------------------------------
 # get_salesperson_historical_win_rate
 # ---------------------------------------------------------------------------
+
 
 def test_salesperson_win_rate_no_data_returns_default():
     svc = MagicMock()
@@ -51,6 +53,7 @@ def test_salesperson_win_rate_zero_won():
 # ---------------------------------------------------------------------------
 # get_customer_cooperation_history
 # ---------------------------------------------------------------------------
+
 
 def test_customer_history_no_filter_returns_zeros():
     svc = MagicMock()
@@ -84,6 +87,7 @@ def test_customer_history_by_name_not_found():
 # get_similar_leads_statistics
 # ---------------------------------------------------------------------------
 
+
 def test_similar_leads_no_results():
     svc = MagicMock()
     dimension_scores = MagicMock(total_score=60)
@@ -99,6 +103,7 @@ def test_similar_leads_no_results():
 def test_similar_leads_with_results():
     svc = MagicMock()
     from app.models.enums import LeadOutcomeEnum
+
     dimension_scores = MagicMock(total_score=70)
     p1 = MagicMock(outcome=LeadOutcomeEnum.WON.value)
     p2 = MagicMock(outcome=LeadOutcomeEnum.LOST.value)

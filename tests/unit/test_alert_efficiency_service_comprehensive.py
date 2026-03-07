@@ -166,7 +166,7 @@ class TestCalculateBasicMetrics:
         result = calculate_basic_metrics(alerts, mock_engine)
 
         # 1个重复 / 3个总数
-        assert abs(result["duplicate_rate"] - 1/3) < 0.01
+        assert abs(result["duplicate_rate"] - 1 / 3) < 0.01
 
 
 class TestCalculateProjectMetrics:
@@ -414,8 +414,20 @@ class TestGenerateRankings:
         from app.services.alert_efficiency_service import generate_rankings
 
         project_metrics = {
-            "项目A": {"project_id": 1, "total": 10, "efficiency_score": 90, "processing_rate": 0.9, "timely_processing_rate": 0.85},
-            "项目B": {"project_id": 2, "total": 4, "efficiency_score": 95, "processing_rate": 0.95, "timely_processing_rate": 0.9},  # 少于5个
+            "项目A": {
+                "project_id": 1,
+                "total": 10,
+                "efficiency_score": 90,
+                "processing_rate": 0.9,
+                "timely_processing_rate": 0.85,
+            },
+            "项目B": {
+                "project_id": 2,
+                "total": 4,
+                "efficiency_score": 95,
+                "processing_rate": 0.95,
+                "timely_processing_rate": 0.9,
+            },  # 少于5个
         }
         handler_metrics = {}
 

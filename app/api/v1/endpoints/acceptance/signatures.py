@@ -23,7 +23,11 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get("/acceptance-orders/{order_id}/signatures", response_model=List[AcceptanceSignatureResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/acceptance-orders/{order_id}/signatures",
+    response_model=List[AcceptanceSignatureResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_acceptance_signatures(
     order_id: int,
     db: Session = Depends(deps.get_db),
@@ -34,27 +38,38 @@ def read_acceptance_signatures(
     """
     get_or_404(db, AcceptanceOrder, order_id, "验收单不存在")
 
-    signatures = db.query(AcceptanceSignature).filter(AcceptanceSignature.order_id == order_id).order_by(AcceptanceSignature.signed_at).all()
+    signatures = (
+        db.query(AcceptanceSignature)
+        .filter(AcceptanceSignature.order_id == order_id)
+        .order_by(AcceptanceSignature.signed_at)
+        .all()
+    )
 
     items = []
     for sig in signatures:
-        items.append(AcceptanceSignatureResponse(
-            id=sig.id,
-            order_id=sig.order_id,
-            signer_type=sig.signer_type,
-            signer_role=sig.signer_role,
-            signer_name=sig.signer_name,
-            signer_company=sig.signer_company,
-            signed_at=sig.signed_at,
-            ip_address=sig.ip_address,
-            created_at=sig.created_at,
-            updated_at=sig.updated_at
-        ))
+        items.append(
+            AcceptanceSignatureResponse(
+                id=sig.id,
+                order_id=sig.order_id,
+                signer_type=sig.signer_type,
+                signer_role=sig.signer_role,
+                signer_name=sig.signer_name,
+                signer_company=sig.signer_company,
+                signed_at=sig.signed_at,
+                ip_address=sig.ip_address,
+                created_at=sig.created_at,
+                updated_at=sig.updated_at,
+            )
+        )
 
     return items
 
 
-@router.post("/acceptance-orders/{order_id}/signatures", response_model=AcceptanceSignatureResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/acceptance-orders/{order_id}/signatures",
+    response_model=AcceptanceSignatureResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def add_acceptance_signature(
     *,
     db: Session = Depends(deps.get_db),
@@ -84,7 +99,7 @@ def add_acceptance_signature(
         signer_company=signature_in.signer_company,
         signature_data=signature_in.signature_data,
         signed_at=datetime.now(),
-        ip_address=request.client.host if request and request.client else None
+        ip_address=request.client.host if request and request.client else None,
     )
 
     # 如果是QA签字，更新验收单
@@ -114,5 +129,5 @@ def add_acceptance_signature(
         signed_at=signature.signed_at,
         ip_address=signature.ip_address,
         created_at=signature.created_at,
-        updated_at=signature.updated_at
+        updated_at=signature.updated_at,
     )

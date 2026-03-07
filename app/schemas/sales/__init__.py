@@ -3,40 +3,10 @@
 销售管理 Schema 模块
 """
 
-from .customers import (
-    CustomerCreate,
-    CustomerUpdate,
-    CustomerResponse,
-    CustomerListResponse,
-    CustomerStatsResponse,
-)
-from .contacts import (
-    ContactCreate,
-    ContactUpdate,
-    ContactResponse,
-    ContactListResponse,
-    SetPrimaryRequest,
-)
-from .customer_tags import (
-    CustomerTagCreate,
-    CustomerTagBatchCreate,
-    CustomerTagResponse,
-    PredefinedTagsResponse,
-)
 from .ai_clarifications import (
     AIClarificationCreate,
     AIClarificationResponse,
     AIClarificationUpdate,
-)
-from .requirement_details import (
-    LeadRequirementDetailCreate,
-    LeadRequirementDetailResponse,
-    LeadRequirementDetailUpdate,
-)
-from .requirement_freezes import (
-    RequirementFreezeCreate,
-    RequirementFreezeResponse,
-    RequirementFreezeUpdate,
 )
 from .assessments import (
     FailureCaseCreate,
@@ -48,6 +18,26 @@ from .assessments import (
     TechnicalAssessmentApplyRequest,
     TechnicalAssessmentEvaluateRequest,
     TechnicalAssessmentResponse,
+)
+from .contacts import (
+    ContactCreate,
+    ContactListResponse,
+    ContactResponse,
+    ContactUpdate,
+    SetPrimaryRequest,
+)
+from .contract_templates import (
+    ContractTemplateApplyRequest,
+    ContractTemplateApplyResponse,
+    ContractTemplateCreate,
+    ContractTemplateHistoryResponse,
+    ContractTemplateResponse,
+    ContractTemplateUpdate,
+    ContractTemplateVersionCreate,
+    ContractTemplateVersionDiffResponse,
+    ContractTemplateVersionResponse,
+    VersionDiffItem,
+    VersionHistoryItem,
 )
 from .contracts import (
     ApprovalActionRequest,
@@ -78,6 +68,19 @@ from .cost_templates import (
     QuoteCostTemplateResponse,
     QuoteCostTemplateUpdate,
 )
+from .customer_tags import (
+    CustomerTagBatchCreate,
+    CustomerTagCreate,
+    CustomerTagResponse,
+    PredefinedTagsResponse,
+)
+from .customers import (
+    CustomerCreate,
+    CustomerListResponse,
+    CustomerResponse,
+    CustomerStatsResponse,
+    CustomerUpdate,
+)
 from .invoices import (
     InvoiceApprovalCreate,
     InvoiceApprovalResponse,
@@ -95,24 +98,45 @@ from .leads import (
     LeadResponse,
     LeadUpdate,
 )
-from .workflow import (
-    ApprovalWorkflowCreate,
-    ApprovalWorkflowResponse,
-    ApprovalWorkflowStepResponse,
-    ApprovalWorkflowUpdate,
-    RankingMetric,
-    SalesRankingConfigResponse,
-    SalesRankingConfigUpdateRequest,
-    SalesTargetCreate,
-    SalesTargetResponse,
-    SalesTargetUpdate,
-)
 from .opportunities import (
     OpportunityCreate,
     OpportunityRequirementCreate,
     OpportunityRequirementResponse,
     OpportunityResponse,
     OpportunityUpdate,
+)
+from .presale_ai_cost import (
+    CostBreakdown,
+    CostComparisonInput,
+    CostComparisonItem,
+    CostComparisonResponse,
+    CostEstimationInput,
+    CostEstimationResponse,
+    CostOptimizationInput,
+    CostOptimizationResponse,
+    HistoricalAccuracyResponse,
+    OptimizationSuggestion,
+    PricingInput,
+    PricingRecommendation,
+    PricingResponse,
+    UpdateActualCostInput,
+    UpdateActualCostResponse,
+)
+from .quote_templates import (
+    CpqPricePreviewRequest,
+    CpqPricePreviewResponse,
+    CpqRuleSetCreate,
+    CpqRuleSetResponse,
+    CpqRuleSetUpdate,
+    QuoteTemplateApplyRequest,
+    QuoteTemplateApplyResponse,
+    QuoteTemplateCreate,
+    QuoteTemplateResponse,
+    QuoteTemplateUpdate,
+    QuoteTemplateVersionCreate,
+    QuoteTemplateVersionResponse,
+    TemplateApprovalHistoryRecord,
+    TemplateVersionDiff,
 )
 from .quotes import (
     GateSubmitRequest,
@@ -127,67 +151,43 @@ from .quotes import (
     QuoteVersionCreate,
     QuoteVersionResponse,
 )
+from .requirement_details import (
+    LeadRequirementDetailCreate,
+    LeadRequirementDetailResponse,
+    LeadRequirementDetailUpdate,
+)
+from .requirement_freezes import (
+    RequirementFreezeCreate,
+    RequirementFreezeResponse,
+    RequirementFreezeUpdate,
+)
 from .team import (
     SalesTeamCreate,
-    SalesTeamUpdate,
-    SalesTeamResponse,
     SalesTeamListResponse,
     SalesTeamMemberInfo,
+    SalesTeamResponse,
+    SalesTeamUpdate,
     TeamMemberAddRequest,
-    TeamMemberUpdateRequest,
     TeamMemberBatchAddRequest,
+    TeamMemberUpdateRequest,
     TeamPerformanceSnapshotResponse,
     TeamPKCreateRequest,
-    TeamPKUpdateRequest,
     TeamPKResponse,
+    TeamPKUpdateRequest,
     TeamRankingItem,
     TeamRankingResponse,
 )
-from .contract_templates import (
-    ContractTemplateCreate,
-    ContractTemplateUpdate,
-    ContractTemplateResponse,
-    ContractTemplateVersionCreate,
-    ContractTemplateVersionResponse,
-    ContractTemplateApplyRequest,
-    ContractTemplateApplyResponse,
-    ContractTemplateVersionDiffResponse,
-    ContractTemplateHistoryResponse,
-    VersionDiffItem,
-    VersionHistoryItem,
-)
-from .quote_templates import (
-    CpqRuleSetCreate,
-    CpqRuleSetUpdate,
-    CpqRuleSetResponse,
-    CpqPricePreviewRequest,
-    CpqPricePreviewResponse,
-    QuoteTemplateCreate,
-    QuoteTemplateUpdate,
-    QuoteTemplateResponse,
-    QuoteTemplateVersionCreate,
-    QuoteTemplateVersionResponse,
-    QuoteTemplateApplyRequest,
-    QuoteTemplateApplyResponse,
-    TemplateVersionDiff,
-    TemplateApprovalHistoryRecord,
-)
-from .presale_ai_cost import (
-    CostEstimationInput,
-    CostEstimationResponse,
-    CostOptimizationInput,
-    CostOptimizationResponse,
-    PricingInput,
-    PricingResponse,
-    CostComparisonInput,
-    CostComparisonResponse,
-    CostComparisonItem,
-    HistoricalAccuracyResponse,
-    UpdateActualCostInput,
-    UpdateActualCostResponse,
-    CostBreakdown,
-    PricingRecommendation,
-    OptimizationSuggestion,
+from .workflow import (
+    ApprovalWorkflowCreate,
+    ApprovalWorkflowResponse,
+    ApprovalWorkflowStepResponse,
+    ApprovalWorkflowUpdate,
+    RankingMetric,
+    SalesRankingConfigResponse,
+    SalesRankingConfigUpdateRequest,
+    SalesTargetCreate,
+    SalesTargetResponse,
+    SalesTargetUpdate,
 )
 
 __all__ = [

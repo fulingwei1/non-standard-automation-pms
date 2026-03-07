@@ -18,9 +18,9 @@ from app.models.user import User
 from app.schemas import engineer as schemas
 from app.services.progress_aggregation_service import aggregate_task_progress
 from app.services.task_progress_service import (
- progress_error_to_http,
- update_task_progress as update_task_progress_service,
+    progress_error_to_http,
 )
+from app.services.task_progress_service import update_task_progress as update_task_progress_service
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def update_task_progress(
     task_id: int,
     progress_data: schemas.ProgressUpdateRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("engineer:read"))
+    current_user: User = Depends(security.require_permission("engineer:read")),
 ):
     """
     更新任务进度（自动触发项目/阶段进度聚合）
@@ -70,7 +70,7 @@ def complete_task(
     task_id: int,
     complete_data: schemas.TaskCompleteRequest,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("engineer:read"))
+    current_user: User = Depends(security.require_permission("engineer:read")),
 ):
     """
     完成任务（含证明材料验证）
@@ -83,18 +83,16 @@ def complete_task(
         raise HTTPException(status_code=403, detail="只能完成自己的任务")
 
     from app.models.task_center import TaskCompletionProof
-    proof_count = db.query(TaskCompletionProof).filter(
-        TaskCompletionProof.task_id == task_id
-    ).count()
+
+    proof_count = (
+        db.query(TaskCompletionProof).filter(TaskCompletionProof.task_id == task_id).count()
+    )
 
     if not complete_data.skip_proof_validation and proof_count == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="需要上传至少一个完成证明"
-        )
+        raise HTTPException(status_code=400, detail="需要上传至少一个完成证明")
 
     # 更新任务
-    task.status = 'COMPLETED'
+    task.status = "COMPLETED"
     task.progress = 100
     task.actual_end_date = date.today()
     task.completion_note = complete_data.completion_note
@@ -108,8 +106,9 @@ def complete_task(
     aggregation_result = aggregate_task_progress(db, task.id)
 
     # 发送通知
+    from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
     from app.services.notification_dispatcher import NotificationDispatcher
-    from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
+
     try:
         # 通知项目经理任务已完成
         project = db.query(Project).filter(Project.id == task.project_id).first()
@@ -139,5 +138,5 @@ def complete_task(
         completion_note=task.completion_note,
         proof_count=proof_count,
         completed_at=completed_at,
-        project_progress_updated=aggregation_result['project_progress_updated']
+        project_progress_updated=aggregation_result["project_progress_updated"],
     )

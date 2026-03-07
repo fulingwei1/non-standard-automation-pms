@@ -16,7 +16,9 @@ from ..common import TimestampSchema
 class CustomerCreate(BaseModel):
     """创建客户"""
 
-    customer_code: Optional[str] = Field(default=None, max_length=50, description="客户编码（不提供则自动生成）")
+    customer_code: Optional[str] = Field(
+        default=None, max_length=50, description="客户编码（不提供则自动生成）"
+    )
     customer_name: str = Field(max_length=200, description="客户名称")
     short_name: Optional[str] = Field(default=None, max_length=50)
     customer_type: Optional[str] = None

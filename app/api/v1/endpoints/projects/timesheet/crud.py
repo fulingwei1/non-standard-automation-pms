@@ -9,12 +9,13 @@
 from datetime import date
 from decimal import Decimal
 from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.api import deps
+from app.api.v1.core.project_crud_base import create_project_crud_router
 from app.common.pagination import get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
@@ -23,12 +24,12 @@ from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.timesheet import (
     TimesheetCreate,
-    TimesheetUpdate,
-    TimesheetResponse,
     TimesheetListResponse,
+    TimesheetResponse,
+    TimesheetUpdate,
 )
-from app.utils.permission_helpers import check_project_access_or_raise
 from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
 
 def filter_by_user(query, user_id: int):
@@ -81,7 +82,7 @@ router = APIRouter()
 # 从 base_router 中只保留 POST/PUT/DELETE 端点，
 # GET / 和 GET /{item_id} 由下方自定义实现提供（避免路由重复注册）
 for _route in base_router.routes:
-    if hasattr(_route, 'methods') and 'GET' in _route.methods:
+    if hasattr(_route, "methods") and "GET" in _route.methods:
         continue  # 跳过 GET 路由，由自定义端点覆盖
     router.routes.append(_route)
 
@@ -89,13 +90,14 @@ for _route in base_router.routes:
 def enrich_timesheet_response(ts: Timesheet, db: Session, project: Project) -> TimesheetResponse:
     """填充工时记录的user_name、project_name、task_name"""
     user = db.query(User).filter(User.id == ts.user_id).first()
-    
+
     task_name = None
     if ts.task_id:
         from app.models.progress import Task
+
         task = db.query(Task).filter(Task.id == ts.task_id).first()
         task_name = task.task_name if task else None
-    
+
     return TimesheetResponse(
         id=ts.id,
         user_id=ts.user_id,
@@ -173,16 +175,20 @@ def get_project_timesheet(
 ) -> Any:
     """获取工时记录详情（覆盖基类端点，填充用户信息和任务名称）"""
     check_project_access_or_raise(db, current_user, project_id)
-    
+
     # 验证项目存在
     project = get_or_404(db, Project, project_id, detail="项目不存在")
-    
-    timesheet = db.query(Timesheet).filter(
-        Timesheet.id == timesheet_id,
-        Timesheet.project_id == project_id,
-    ).first()
-    
+
+    timesheet = (
+        db.query(Timesheet)
+        .filter(
+            Timesheet.id == timesheet_id,
+            Timesheet.project_id == project_id,
+        )
+        .first()
+    )
+
     if not timesheet:
         raise HTTPException(status_code=404, detail="工时记录不存在")
-    
+
     return enrich_timesheet_response(timesheet, db, project)

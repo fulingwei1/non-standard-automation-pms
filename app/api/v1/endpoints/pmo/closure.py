@@ -46,7 +46,12 @@ generate_risk_no = pmo_codes.generate_risk_no
 
 # ==================== 项目结项 ====================
 
-@router.post("/pmo/projects/{project_id}/closure", response_model=ClosureResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/pmo/projects/{project_id}/closure",
+    response_model=ClosureResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_closure(
     *,
     db: Session = Depends(deps.get_db),
@@ -62,7 +67,9 @@ def create_closure(
         raise HTTPException(status_code=404, detail="项目不存在")
 
     # 检查是否已有结项记录
-    existing = db.query(PmoProjectClosure).filter(PmoProjectClosure.project_id == project_id).first()
+    existing = (
+        db.query(PmoProjectClosure).filter(PmoProjectClosure.project_id == project_id).first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="该项目已有结项记录")
 
@@ -72,13 +79,19 @@ def create_closure(
         cost_variance = float(project.actual_cost - project.budget_amount)
 
     # 计算工时偏差（从资源分配表统计）
-    planned_hours = db.query(func.sum(PmoResourceAllocation.planned_hours)).filter(
-        PmoResourceAllocation.project_id == project_id
-    ).scalar() or 0
+    planned_hours = (
+        db.query(func.sum(PmoResourceAllocation.planned_hours))
+        .filter(PmoResourceAllocation.project_id == project_id)
+        .scalar()
+        or 0
+    )
 
-    actual_hours = db.query(func.sum(PmoResourceAllocation.actual_hours)).filter(
-        PmoResourceAllocation.project_id == project_id
-    ).scalar() or 0
+    actual_hours = (
+        db.query(func.sum(PmoResourceAllocation.actual_hours))
+        .filter(PmoResourceAllocation.project_id == project_id)
+        .scalar()
+        or 0
+    )
 
     hours_variance = actual_hours - planned_hours
 
@@ -114,7 +127,7 @@ def create_closure(
         schedule_variance=schedule_variance,
         quality_score=closure_in.quality_score,
         customer_satisfaction=closure_in.customer_satisfaction,
-        status='DRAFT'
+        status="DRAFT",
     )
 
     db.add(closure)
@@ -212,7 +225,7 @@ def review_closure(
     if not closure:
         raise HTTPException(status_code=404, detail="结项记录不存在")
 
-    closure.status = 'REVIEWED'
+    closure.status = "REVIEWED"
     closure.review_result = review_request.review_result
     closure.review_notes = review_request.review_notes
     closure.reviewed_at = datetime.now()
@@ -322,7 +335,7 @@ def archive_closure(
         raise HTTPException(status_code=404, detail="结项记录不存在")
 
     # 更新归档状态
-    closure.status = 'ARCHIVED'
+    closure.status = "ARCHIVED"
     # 如果有归档路径，可以存储到数据库（需要扩展模型字段）或记录到日志
 
     db.add(closure)
@@ -335,8 +348,6 @@ def archive_closure(
             "closure_id": closure_id,
             "project_id": closure.project_id,
             "archive_paths": archive_paths or [],
-            "archived_at": datetime.now().isoformat()
-        }
+            "archived_at": datetime.now().isoformat(),
+        },
     )
-
-

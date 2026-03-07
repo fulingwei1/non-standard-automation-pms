@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """第二十七批 - project_import_service 单元测试"""
 
-import pytest
-import pandas as pd
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
+import pytest
 
 pytest.importorskip("app.services.project_import_service")
 
 from app.services.project_import_service import (
+    get_column_value,
     validate_excel_file,
     validate_project_columns,
-    get_column_value,
 )
 
 
@@ -26,28 +27,33 @@ class TestValidateExcelFile:
     def test_csv_raises(self):
         """csv文件应抛出HTTPException"""
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException) as exc:
             validate_excel_file("data.csv")
         assert exc.value.status_code == 400
 
     def test_pdf_raises(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("document.pdf")
 
     def test_txt_raises(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("data.txt")
 
     def test_no_extension_raises(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("noextension")
 
     def test_uppercase_xlsx_raises(self):
         """大写扩展名应不通过（区分大小写）"""
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("data.XLSX")
 
@@ -63,6 +69,7 @@ class TestValidateProjectColumns:
 
     def test_raises_when_missing_code_column(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"项目名称*": ["测试"]})
         with pytest.raises(HTTPException) as exc:
             validate_project_columns(df)
@@ -70,6 +77,7 @@ class TestValidateProjectColumns:
 
     def test_raises_when_missing_name_column(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"项目编码*": ["001"]})
         with pytest.raises(HTTPException) as exc:
             validate_project_columns(df)
@@ -77,12 +85,14 @@ class TestValidateProjectColumns:
 
     def test_raises_when_empty_dataframe(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame()
         with pytest.raises(HTTPException):
             validate_project_columns(df)
 
     def test_error_message_mentions_missing_columns(self):
         from fastapi import HTTPException
+
         df = pd.DataFrame({"其他列": ["value"]})
         with pytest.raises(HTTPException) as exc:
             validate_project_columns(df)
@@ -107,6 +117,7 @@ class TestGetColumnValue:
 
     def test_returns_none_for_nan(self):
         import numpy as np
+
         row = pd.Series({"项目编码*": np.nan, "项目名称*": "测试"})
         val = get_column_value(row, "项目编码*")
         assert val is None
@@ -126,6 +137,7 @@ class TestGetColumnValue:
 class TestParseExcelData:
     def test_raises_for_empty_content(self):
         from fastapi import HTTPException
+
         from app.services.project_import_service import parse_excel_data
 
         with patch("app.services.project_import_service.ImportExportEngine") as MockEngine:
@@ -136,6 +148,7 @@ class TestParseExcelData:
 
     def test_raises_on_parse_exception(self):
         from fastapi import HTTPException
+
         from app.services.project_import_service import parse_excel_data
 
         with patch("app.services.project_import_service.ImportExportEngine") as MockEngine:

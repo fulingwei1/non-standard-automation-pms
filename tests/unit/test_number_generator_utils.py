@@ -5,9 +5,10 @@
 目标覆盖率: 8% -> 60%+
 """
 
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # 延迟导入以避免SQLAlchemy关系配置问题
 
@@ -26,20 +27,19 @@ class TestGenerateSequentialNo:
     def test_first_record_with_separator(self):
         """测试第一个记录（带分隔符）"""
         from app.utils.number_generator import generate_sequential_no
-        
+
         db = MagicMock()
+
         # 创建模拟模型类，需要支持 getattr
         class MockModel:
             pass
-        
+
             # 模拟没有现有记录
             mock_query = MagicMock()
             mock_query.filter.return_value.order_by.return_value.first.return_value = None
             db.query.return_value = mock_query
 
-            result = generate_sequential_no(
-            db, MockModel, "no_field", "TEST", separator="-"
-            )
+            result = generate_sequential_no(db, MockModel, "no_field", "TEST", separator="-")
 
             assert result.startswith("TEST-")
             assert "-" in result
@@ -48,17 +48,18 @@ class TestGenerateSequentialNo:
     def test_first_record_without_separator(self):
         """测试第一个记录（不带分隔符）"""
         from app.utils.number_generator import generate_sequential_no
-        
+
         db = MagicMock()
+
         class MockModel:
             pass
-        
+
             mock_query = MagicMock()
             mock_query.filter.return_value.order_by.return_value.first.return_value = None
             db.query.return_value = mock_query
 
             result = generate_sequential_no(
-            db, MockModel, "no_field", "TEST", separator="", use_date=True
+                db, MockModel, "no_field", "TEST", separator="", use_date=True
             )
 
             assert result.startswith("TEST")
@@ -68,37 +69,37 @@ class TestGenerateSequentialNo:
     def test_increment_sequence(self, mock_model):
         """测试序号递增"""
         from app.utils.number_generator import generate_sequential_no
-        
+
         db = MagicMock()
+
         class MockModel:
             pass
-        
+
             # 模拟已有记录
             mock_model.no_field = "TEST-250115-005"
             mock_query = MagicMock()
             mock_query.filter.return_value.order_by.return_value.first.return_value = mock_model
             db.query.return_value = mock_query
 
-            result = generate_sequential_no(
-            db, MockModel, "no_field", "TEST", separator="-"
-            )
+            result = generate_sequential_no(db, MockModel, "no_field", "TEST", separator="-")
 
             assert result.endswith("-006")
 
     def test_without_date(self):
         """测试不使用日期"""
         from app.utils.number_generator import generate_sequential_no
-        
+
         db = MagicMock()
+
         class MockModel:
             pass
-        
+
             mock_query = MagicMock()
             mock_query.filter.return_value.order_by.return_value.first.return_value = None
             db.query.return_value = mock_query
 
             result = generate_sequential_no(
-            db, MockModel, "no_field", "TEST", use_date=False, separator="-"
+                db, MockModel, "no_field", "TEST", use_date=False, separator="-"
             )
 
             assert result.startswith("TEST-")
@@ -109,22 +110,23 @@ class TestGenerateSequentialNo:
     def test_custom_date_format(self):
         """测试自定义日期格式"""
         from app.utils.number_generator import generate_sequential_no
-        
+
         db = MagicMock()
+
         class MockModel:
             pass
-        
+
             mock_query = MagicMock()
             mock_query.filter.return_value.order_by.return_value.first.return_value = None
             db.query.return_value = mock_query
 
             result = generate_sequential_no(
-            db,
-            MockModel,
-            "no_field",
-            "TEST",
-            date_format="%Y%m%d",
-            separator="-",
+                db,
+                MockModel,
+                "no_field",
+                "TEST",
+                date_format="%Y%m%d",
+                separator="-",
             )
 
             # 应该包含完整日期格式
@@ -133,17 +135,18 @@ class TestGenerateSequentialNo:
     def test_custom_seq_length(self):
         """测试自定义序号长度"""
         from app.utils.number_generator import generate_sequential_no
-        
+
         db = MagicMock()
+
         class MockModel:
             pass
-        
+
             mock_query = MagicMock()
             mock_query.filter.return_value.order_by.return_value.first.return_value = None
             db.query.return_value = mock_query
 
             result = generate_sequential_no(
-            db, MockModel, "no_field", "TEST", seq_length=5, separator="-"
+                db, MockModel, "no_field", "TEST", seq_length=5, separator="-"
             )
 
             # 序号应该是5位
@@ -158,11 +161,12 @@ class TestGenerateMonthlyNo:
     def test_first_record_monthly(self):
         """测试月度编号第一个记录"""
         from app.utils.number_generator import generate_monthly_no
-        
+
         db = MagicMock()
+
         class MockModel:
             pass
-        
+
             mock_query = MagicMock()
             mock_query.filter.return_value.order_by.return_value.first.return_value = None
             db.query.return_value = mock_query
@@ -178,11 +182,12 @@ class TestGenerateMonthlyNo:
     def test_increment_monthly(self):
         """测试月度编号递增"""
         from app.utils.number_generator import generate_monthly_no
-        
+
         db = MagicMock()
+
         class MockModel:
             pass
-        
+
             mock_model = MagicMock()
             mock_model.no_field = "L2507-010"
             mock_query = MagicMock()
@@ -201,7 +206,7 @@ class TestGenerateEmployeeCode:
     def test_first_employee_code(self, mock_employee):
         """测试第一个员工编号"""
         from app.utils.number_generator import generate_employee_code
-        
+
         db = MagicMock()
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
 
@@ -214,11 +219,13 @@ class TestGenerateEmployeeCode:
     def test_increment_employee_code(self, mock_employee):
         """测试员工编号递增"""
         from app.utils.number_generator import generate_employee_code
-        
+
         db = MagicMock()
         mock_emp = MagicMock()
         mock_emp.employee_code = "EMP-00005"
-        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_emp
+        db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            mock_emp
+        )
 
         result = generate_employee_code(db)
 
@@ -232,12 +239,12 @@ class TestGenerateCustomerCode:
     def test_first_customer_code(self, mock_customer_class):
         """测试第一个客户编号"""
         from app.utils.number_generator import generate_customer_code
-        
+
         db = MagicMock()
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = None
         db.query.return_value = mock_query
-        
+
         result = generate_customer_code(db)
         assert result.startswith("CUST-")
         assert result.endswith("00001")
@@ -246,14 +253,14 @@ class TestGenerateCustomerCode:
     def test_increment_customer_code(self, mock_customer_class):
         """测试客户编号递增"""
         from app.utils.number_generator import generate_customer_code
-        
+
         db = MagicMock()
         mock_cust = MagicMock()
         mock_cust.customer_code = "CUST-00010"
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = mock_cust
         db.query.return_value = mock_query
-        
+
         result = generate_customer_code(db)
         assert result == "CUST-00011"
 
@@ -266,13 +273,13 @@ class TestGenerateMaterialCode:
     def test_material_code_with_category(self, mock_get_code, mock_material_class):
         """测试带分类的物料编号"""
         from app.utils.number_generator import generate_material_code
-        
+
         db = MagicMock()
         mock_get_code.return_value = "ELEC"
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = None
         db.query.return_value = mock_query
-        
+
         result = generate_material_code(db, "ELECTRICAL")
         assert result.startswith("MAT-")
         assert "ELEC" in result
@@ -283,13 +290,13 @@ class TestGenerateMaterialCode:
     def test_material_code_invalid_category(self, mock_get_code, mock_material_class):
         """测试无效分类使用默认值"""
         from app.utils.number_generator import generate_material_code
-        
+
         db = MagicMock()
         mock_get_code.return_value = None
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = None
         db.query.return_value = mock_query
-        
+
         # 无效分类应该使用默认值"OT"
         result = generate_material_code(db, "INVALID_CATEGORY")
         assert result.startswith("MAT-")
@@ -303,12 +310,12 @@ class TestGenerateMachineCode:
     def test_first_machine_code(self, mock_machine_class):
         """测试第一个机台编号"""
         from app.utils.number_generator import generate_machine_code
-        
+
         db = MagicMock()
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = None
         db.query.return_value = mock_query
-        
+
         result = generate_machine_code(db, project_code="PJ250708001")
         assert "PN" in result
         assert len(result) > 2
@@ -317,13 +324,13 @@ class TestGenerateMachineCode:
     def test_machine_code_increment(self, mock_machine_class):
         """测试机台编号递增"""
         from app.utils.number_generator import generate_machine_code
-        
+
         db = MagicMock()
         mock_m = MagicMock()
         mock_m.machine_code = "PJ250708001-PN003"
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.first.return_value = mock_m
         db.query.return_value = mock_query
-        
+
         result = generate_machine_code(db, project_code="PJ250708001")
         assert result == "PJ250708001-PN004"

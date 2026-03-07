@@ -4,10 +4,10 @@ import pytest
 
 pytest.importorskip("app.services.data_scope.config")
 
-from app.services.data_scope.config import DataScopeConfig, DATA_SCOPE_CONFIGS
-
+from app.services.data_scope.config import DATA_SCOPE_CONFIGS, DataScopeConfig
 
 # ------------------------------------------------------------------ tests ---
+
 
 def test_data_scope_config_defaults():
     cfg = DataScopeConfig()

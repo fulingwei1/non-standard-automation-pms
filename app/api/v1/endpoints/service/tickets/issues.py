@@ -10,12 +10,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.issue import Issue
 from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.issue import IssueListResponse
-from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -35,15 +35,16 @@ def get_ticket_related_issues(
     # 查询关联的问题
     from app.api.v1.endpoints.issues.crud import build_issue_response
 
-    query = db.query(Issue).options(
-        joinedload(Issue.service_ticket)
-    ).filter(
-        Issue.service_ticket_id == ticket_id,
-        Issue.status != 'DELETED'
+    query = (
+        db.query(Issue)
+        .options(joinedload(Issue.service_ticket))
+        .filter(Issue.service_ticket_id == ticket_id, Issue.status != "DELETED")
     )
 
     total = query.count()
-    issues = apply_pagination(query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit).all()
+    issues = apply_pagination(
+        query.order_by(desc(Issue.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [build_issue_response(issue) for issue in issues]
 
@@ -52,5 +53,5 @@ def get_ticket_related_issues(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )

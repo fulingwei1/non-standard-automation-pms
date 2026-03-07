@@ -10,9 +10,9 @@ from unittest.mock import MagicMock, patch
 from app.models.timesheet_reminder import (
     ReminderStatusEnum,
     ReminderTypeEnum,
+    TimesheetAnomalyRecord,
     TimesheetReminderConfig,
     TimesheetReminderRecord,
-    TimesheetAnomalyRecord,
 )
 from app.services.timesheet_reminders.service import TimesheetReminderService
 
@@ -80,11 +80,13 @@ class TestTimesheetReminderService(unittest.TestCase):
             MagicMock(spec=TimesheetReminderConfig, id=1),
             MagicMock(spec=TimesheetReminderConfig, id=2),
         ]
-        
+
         mock_query = MagicMock()
         self.db.query.return_value = mock_query
         mock_query.count.return_value = 2
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_configs
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_configs
+        )
 
         # 调用服务方法
         configs, total = self.service.list_reminder_configs(limit=10, offset=0)
@@ -103,11 +105,13 @@ class TestTimesheetReminderService(unittest.TestCase):
             MagicMock(spec=TimesheetReminderRecord, id=1, user_id=1),
             MagicMock(spec=TimesheetReminderRecord, id=2, user_id=1),
         ]
-        
+
         mock_query = MagicMock()
         self.db.query.return_value.filter.return_value = mock_query
         mock_query.count.return_value = 2
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
 
         # 调用服务方法
         reminders, total = self.service.list_pending_reminders(user_id=1, limit=10, offset=0)
@@ -124,11 +128,13 @@ class TestTimesheetReminderService(unittest.TestCase):
         mock_reminders = [
             MagicMock(spec=TimesheetReminderRecord, id=1, user_id=1),
         ]
-        
+
         mock_query = MagicMock()
         self.db.query.return_value.filter.return_value = mock_query
         mock_query.count.return_value = 1
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_reminders
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_reminders
+        )
 
         # 调用服务方法
         reminders, total = self.service.list_reminder_history(user_id=1, limit=10, offset=0)
@@ -180,11 +186,13 @@ class TestTimesheetReminderService(unittest.TestCase):
         mock_anomalies = [
             MagicMock(spec=TimesheetAnomalyRecord, id=1, user_id=1),
         ]
-        
+
         mock_query = MagicMock()
         self.db.query.return_value.filter.return_value = mock_query
         mock_query.count.return_value = 1
-        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_anomalies
+        mock_query.order_by.return_value.limit.return_value.offset.return_value.all.return_value = (
+            mock_anomalies
+        )
 
         # 调用服务方法
         anomalies, total = self.service.list_anomalies(user_id=1, limit=10, offset=0)
@@ -220,19 +228,21 @@ class TestTimesheetReminderService(unittest.TestCase):
         # Mock 各种统计查询
         mock_query = MagicMock()
         self.db.query.return_value = mock_query
-        
+
         # Mock count 方法返回值
         mock_query.filter.return_value.count.return_value = 10
-        
+
         # Mock 按类型统计
         mock_query.filter.return_value.group_by.return_value.all.return_value = [
             ("DAILY", 5),
             ("WEEKLY", 5),
         ]
-        
+
         # Mock 最近提醒
         mock_reminders = [MagicMock(spec=TimesheetReminderRecord) for _ in range(3)]
-        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = mock_reminders
+        mock_query.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            mock_reminders
+        )
 
         # 调用服务方法
         result = self.service.get_reminder_statistics(user_id=1)

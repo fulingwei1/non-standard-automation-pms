@@ -2,12 +2,14 @@
 """
 第六批覆盖测试 - notification_dispatcher.py
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.notification_dispatcher import NotificationDispatcher
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False
@@ -107,8 +109,10 @@ class TestComputeNextRetry:
 
 class TestBuildNotificationRequest:
     def test_build_request(self, dispatcher):
-        with patch("app.services.notification_dispatcher.resolve_channels", return_value=["SYSTEM"]), \
-             patch("app.services.notification_dispatcher.resolve_recipients", return_value=[1]):
+        with (
+            patch("app.services.notification_dispatcher.resolve_channels", return_value=["SYSTEM"]),
+            patch("app.services.notification_dispatcher.resolve_recipients", return_value=[1]),
+        ):
             try:
                 result = dispatcher.build_notification_request(
                     title="Test",

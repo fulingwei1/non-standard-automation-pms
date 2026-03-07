@@ -5,7 +5,7 @@
 
 使用示例:
     from app.api.v1.core.project_crud_base import create_project_crud_router
-    
+
     router = create_project_crud_router(
         model=ProjectMilestone,
         create_schema=MilestoneCreate,
@@ -16,17 +16,18 @@
     )
 """
 
-from typing import Type, TypeVar, List, Optional, Any, Dict, Callable
-from fastapi import APIRouter, Path, Depends, Query, HTTPException, status, Body, Request
-from sqlalchemy.orm import Session
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request, status
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.utils.permission_helpers import check_project_access_or_raise
 
 ModelType = TypeVar("ModelType")
@@ -55,7 +56,7 @@ def create_project_crud_router(
 ) -> APIRouter:
     """
     创建项目中心CRUD路由
-    
+
     Args:
         model: SQLAlchemy模型类
         create_schema: 创建请求Schema
@@ -73,25 +74,25 @@ def create_project_crud_router(
         after_update: 更新后钩子函数
         before_delete: 删除前钩子函数
         after_delete: 删除后钩子函数
-    
+
     Returns:
         APIRouter实例
     """
     router = APIRouter()
-    
+
     # 默认关键词搜索字段
     if keyword_fields is None:
         keyword_fields = ["name", "code"]
-    
+
     # 默认排序字段
     if default_order_by is None:
         default_order_by = "created_at"
-    
+
     # 获取项目ID字段
     project_id_attr = getattr(model, project_id_field, None)
     if not project_id_attr:
         raise ValueError(f"模型 {model.__name__} 没有字段 {project_id_field}")
-    
+
     @router.get("/", response_model=PaginatedResponse[response_schema])
     def list_items(
         request: Request,  # FastAPI自动注入，必须放在最前面
@@ -150,9 +151,9 @@ def create_project_crud_router(
             total=total,
             page=pagination.page,
             page_size=pagination.page_size,
-            pages=pagination.pages_for_total(total)
+            pages=pagination.pages_for_total(total),
         )
-    
+
     @router.post("/", response_model=response_schema, status_code=status.HTTP_201_CREATED)
     def create_item(
         project_id: int = Path(..., description="项目ID"),
@@ -165,39 +166,37 @@ def create_project_crud_router(
         check_project_access_or_raise(
             db, current_user, project_id, f"您没有权限在该项目中创建{permission_prefix}"
         )
-        
+
         # 验证项目存在
         from app.models.project import Project
+
         project = db.query(Project).filter(Project.id == project_id).first()
         if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="项目不存在"
-            )
-        
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+
         # 准备创建数据
         item_data = item_in.model_dump(exclude_unset=True)
         item_data[project_id_field] = project_id  # 确保使用路径中的项目ID
-        
+
         # 创建前钩子
         if before_create:
             item_data = before_create(item_data, project_id, current_user)
-        
+
         # 创建对象
         db_item = model(**item_data)
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
-        
+
         # 创建后钩子
         if after_create:
             db_item = after_create(db_item, project_id, current_user)
             if db_item:
                 db.commit()
                 db.refresh(db_item)
-        
+
         return response_schema.model_validate(db_item)
-    
+
     @router.get("/{item_id}", response_model=response_schema)
     def get_item(
         project_id: int = Path(..., description="项目ID"),
@@ -208,21 +207,17 @@ def create_project_crud_router(
         """获取项目子资源详情"""
         # 检查项目访问权限
         check_project_access_or_raise(db, current_user, project_id)
-        
+
         # 查询对象（必须属于该项目）
-        item = db.query(model).filter(
-            model.id == item_id,
-            project_id_attr == project_id
-        ).first()
-        
+        item = db.query(model).filter(model.id == item_id, project_id_attr == project_id).first()
+
         if not item:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"{model.__name__} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"{model.__name__} not found"
             )
-        
+
         return response_schema.model_validate(item)
-    
+
     @router.put("/{item_id}", response_model=response_schema)
     def update_item(
         project_id: int = Path(..., description="项目ID"),
@@ -234,50 +229,43 @@ def create_project_crud_router(
         """更新项目子资源"""
         # 检查项目访问权限
         check_project_access_or_raise(db, current_user, project_id)
-        
+
         # 查询对象（必须属于该项目）
-        item = db.query(model).filter(
-            model.id == item_id,
-            project_id_attr == project_id
-        ).first()
-        
+        item = db.query(model).filter(model.id == item_id, project_id_attr == project_id).first()
+
         if not item:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"{model.__name__} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"{model.__name__} not found"
             )
-        
+
         # 更新前钩子
         if before_update:
             item_in = before_update(item, item_in, project_id, current_user)
             if item_in is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="更新被取消"
-                )
-        
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="更新被取消")
+
         # 更新数据（排除项目ID，防止修改）
         update_data = item_in.model_dump(exclude_unset=True)
         if project_id_field in update_data:
             del update_data[project_id_field]  # 不允许修改项目ID
-        
+
         # 应用更新
         for field, value in update_data.items():
             if hasattr(item, field):
                 setattr(item, field, value)
-        
+
         db.commit()
         db.refresh(item)
-        
+
         # 更新后钩子
         if after_update:
             item = after_update(item, project_id, current_user)
             if item:
                 db.commit()
                 db.refresh(item)
-        
+
         return response_schema.model_validate(item)
-    
+
     @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
     def delete_item(
         project_id: int = Path(..., description="项目ID"),
@@ -288,42 +276,35 @@ def create_project_crud_router(
         """删除项目子资源"""
         # 检查项目访问权限
         check_project_access_or_raise(db, current_user, project_id)
-        
+
         # 查询对象（必须属于该项目）
-        item = db.query(model).filter(
-            model.id == item_id,
-            project_id_attr == project_id
-        ).first()
-        
+        item = db.query(model).filter(model.id == item_id, project_id_attr == project_id).first()
+
         if not item:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"{model.__name__} not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"{model.__name__} not found"
             )
-        
+
         # 删除前钩子
         if before_delete:
             if not before_delete(item, project_id, current_user):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="删除被取消"
-                )
-        
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="删除被取消")
+
         # 删除对象
         db.delete(item)
         db.commit()
-        
+
         # 删除后钩子
         if after_delete:
             after_delete(item_id, project_id, current_user)
-    
+
     return router
 
 
 class ProjectCRUDRouter:
     """
     项目中心CRUD路由类（面向对象方式）
-    
+
     使用示例:
         router = ProjectCRUDRouter(
             model=ProjectMilestone,
@@ -334,7 +315,7 @@ class ProjectCRUDRouter:
         )
         router.register_routes()
     """
-    
+
     def __init__(
         self,
         model: Type[ModelType],
@@ -357,7 +338,7 @@ class ProjectCRUDRouter:
         self.default_order_by = default_order_by or "created_at"
         self.default_order_direction = default_order_direction
         self.router = APIRouter()
-    
+
     def register_routes(self) -> APIRouter:
         """注册所有CRUD路由"""
         return create_project_crud_router(

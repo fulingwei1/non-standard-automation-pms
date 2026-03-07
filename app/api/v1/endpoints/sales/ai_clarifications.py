@@ -12,13 +12,13 @@ from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.enums import AssessmentSourceTypeEnum
 from app.models.sales import AIClarification, Lead, Opportunity
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.schemas.sales import (
     AIClarificationCreate,
     AIClarificationResponse,
@@ -49,35 +49,43 @@ def list_ai_clarifications(
         query = query.filter(AIClarification.source_id == source_id)
 
     total = query.count()
-    clarifications = apply_pagination(query.order_by(
-        desc(AIClarification.source_type),
-        desc(AIClarification.source_id),
-        desc(AIClarification.round)
-    ), pagination.offset, pagination.limit).all()
+    clarifications = apply_pagination(
+        query.order_by(
+            desc(AIClarification.source_type),
+            desc(AIClarification.source_id),
+            desc(AIClarification.round),
+        ),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     items = []
     for clarification in clarifications:
-        items.append(AIClarificationResponse(
-            id=clarification.id,
-            source_type=clarification.source_type,
-            source_id=clarification.source_id,
-            round=clarification.round,
-            questions=clarification.questions,
-            answers=clarification.answers,
-            created_at=clarification.created_at,
-            updated_at=clarification.updated_at
-        ))
+        items.append(
+            AIClarificationResponse(
+                id=clarification.id,
+                source_type=clarification.source_type,
+                source_id=clarification.source_id,
+                round=clarification.round,
+                questions=clarification.questions,
+                answers=clarification.answers,
+                created_at=clarification.created_at,
+                updated_at=clarification.updated_at,
+            )
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
-@router.post("/leads/{lead_id}/ai-clarifications", response_model=AIClarificationResponse, status_code=201)
+@router.post(
+    "/leads/{lead_id}/ai-clarifications", response_model=AIClarificationResponse, status_code=201
+)
 def create_ai_clarification_for_lead(
     *,
     db: Session = Depends(deps.get_db),
@@ -91,19 +99,24 @@ def create_ai_clarification_for_lead(
     get_or_404(db, Lead, lead_id, detail="线索不存在")
 
     # 获取当前最大轮次
-    max_round = db.query(func.max(AIClarification.round)).filter(
-        and_(
-            AIClarification.source_type == AssessmentSourceTypeEnum.LEAD.value,
-            AIClarification.source_id == lead_id
+    max_round = (
+        db.query(func.max(AIClarification.round))
+        .filter(
+            and_(
+                AIClarification.source_type == AssessmentSourceTypeEnum.LEAD.value,
+                AIClarification.source_id == lead_id,
+            )
         )
-    ).scalar() or 0
+        .scalar()
+        or 0
+    )
 
     clarification = AIClarification(
         source_type=AssessmentSourceTypeEnum.LEAD.value,
         source_id=lead_id,
         round=max_round + 1,
         questions=clarification_in.questions,
-        answers=clarification_in.answers
+        answers=clarification_in.answers,
     )
 
     save_obj(db, clarification)
@@ -116,11 +129,15 @@ def create_ai_clarification_for_lead(
         questions=clarification.questions,
         answers=clarification.answers,
         created_at=clarification.created_at,
-        updated_at=clarification.updated_at
+        updated_at=clarification.updated_at,
     )
 
 
-@router.post("/opportunities/{opp_id}/ai-clarifications", response_model=AIClarificationResponse, status_code=201)
+@router.post(
+    "/opportunities/{opp_id}/ai-clarifications",
+    response_model=AIClarificationResponse,
+    status_code=201,
+)
 def create_ai_clarification_for_opportunity(
     *,
     db: Session = Depends(deps.get_db),
@@ -134,19 +151,24 @@ def create_ai_clarification_for_opportunity(
     get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
     # 获取当前最大轮次
-    max_round = db.query(func.max(AIClarification.round)).filter(
-        and_(
-            AIClarification.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
-            AIClarification.source_id == opp_id
+    max_round = (
+        db.query(func.max(AIClarification.round))
+        .filter(
+            and_(
+                AIClarification.source_type == AssessmentSourceTypeEnum.OPPORTUNITY.value,
+                AIClarification.source_id == opp_id,
+            )
         )
-    ).scalar() or 0
+        .scalar()
+        or 0
+    )
 
     clarification = AIClarification(
         source_type=AssessmentSourceTypeEnum.OPPORTUNITY.value,
         source_id=opp_id,
         round=max_round + 1,
         questions=clarification_in.questions,
-        answers=clarification_in.answers
+        answers=clarification_in.answers,
     )
 
     save_obj(db, clarification)
@@ -159,7 +181,7 @@ def create_ai_clarification_for_opportunity(
         questions=clarification.questions,
         answers=clarification.answers,
         created_at=clarification.created_at,
-        updated_at=clarification.updated_at
+        updated_at=clarification.updated_at,
     )
 
 
@@ -174,9 +196,7 @@ def update_ai_clarification(
     """
     更新AI澄清
     """
-    clarification = db.query(AIClarification).filter(
-        AIClarification.id == clarification_id
-    ).first()
+    clarification = db.query(AIClarification).filter(AIClarification.id == clarification_id).first()
 
     if not clarification:
         raise HTTPException(status_code=404, detail="AI澄清记录不存在")
@@ -194,7 +214,7 @@ def update_ai_clarification(
         questions=clarification.questions,
         answers=clarification.answers,
         created_at=clarification.created_at,
-        updated_at=clarification.updated_at
+        updated_at=clarification.updated_at,
     )
 
 
@@ -208,9 +228,7 @@ def get_ai_clarification(
     """
     获取AI澄清详情
     """
-    clarification = db.query(AIClarification).filter(
-        AIClarification.id == clarification_id
-    ).first()
+    clarification = db.query(AIClarification).filter(AIClarification.id == clarification_id).first()
 
     if not clarification:
         raise HTTPException(status_code=404, detail="AI澄清记录不存在")
@@ -223,5 +241,5 @@ def get_ai_clarification(
         questions=clarification.questions,
         answers=clarification.answers,
         created_at=clarification.created_at,
-        updated_at=clarification.updated_at
+        updated_at=clarification.updated_at,
     )

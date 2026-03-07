@@ -23,10 +23,7 @@ class WorkLogAutoGenerator:
         self.db = db
 
     def generate_work_log_from_timesheet(
-        self,
-        user_id: int,
-        work_date: date,
-        auto_submit: bool = False
+        self, user_id: int, work_date: date, auto_submit: bool = False
     ) -> Optional[WorkLog]:
         """
         从工时记录自动生成工作日志
@@ -40,22 +37,31 @@ class WorkLogAutoGenerator:
             生成的工作日志对象，如果已存在则返回None
         """
         # 检查是否已存在工作日志
-        existing_log = self.db.query(WorkLog).filter(
-            WorkLog.user_id == user_id,
-            WorkLog.work_date == work_date,
-            WorkLog.status == 'SUBMITTED'
-        ).first()
+        existing_log = (
+            self.db.query(WorkLog)
+            .filter(
+                WorkLog.user_id == user_id,
+                WorkLog.work_date == work_date,
+                WorkLog.status == "SUBMITTED",
+            )
+            .first()
+        )
 
         if existing_log:
             # 如果已存在已提交的日志，不覆盖
             return None
 
         # 获取该日期的所有已审批工时记录
-        timesheets = self.db.query(Timesheet).filter(
-            Timesheet.user_id == user_id,
-            Timesheet.work_date == work_date,
-            Timesheet.status == 'APPROVED'
-        ).order_by(Timesheet.project_id, Timesheet.task_id).all()
+        timesheets = (
+            self.db.query(Timesheet)
+            .filter(
+                Timesheet.user_id == user_id,
+                Timesheet.work_date == work_date,
+                Timesheet.status == "APPROVED",
+            )
+            .order_by(Timesheet.project_id, Timesheet.task_id)
+            .all()
+        )
 
         if not timesheets:
             # 没有工时记录，不生成日志
@@ -69,7 +75,7 @@ class WorkLogAutoGenerator:
         # 聚合工时记录，生成工作日志内容
         work_content_parts = []
         mentioned_projects = []
-        total_hours = Decimal('0')
+        total_hours = Decimal("0")
 
         # 按项目分组
         project_groups = {}
@@ -129,11 +135,15 @@ class WorkLogAutoGenerator:
             content = content[:297] + "..."
 
         # 创建或更新工作日志
-        work_log = self.db.query(WorkLog).filter(
-            WorkLog.user_id == user_id,
-            WorkLog.work_date == work_date,
-            WorkLog.status == 'DRAFT'
-        ).first()
+        work_log = (
+            self.db.query(WorkLog)
+            .filter(
+                WorkLog.user_id == user_id,
+                WorkLog.work_date == work_date,
+                WorkLog.status == "DRAFT",
+            )
+            .first()
+        )
 
         if work_log:
             # 更新现有草稿
@@ -146,7 +156,7 @@ class WorkLogAutoGenerator:
                 user_name=user.real_name or user.username,
                 work_date=work_date,
                 content=content,
-                status='SUBMITTED' if auto_submit else 'DRAFT'
+                status="SUBMITTED" if auto_submit else "DRAFT",
             )
             self.db.add(work_log)
 
@@ -166,7 +176,7 @@ class WorkLogAutoGenerator:
         start_date: date,
         end_date: date,
         user_ids: Optional[List[int]] = None,
-        auto_submit: bool = False
+        auto_submit: bool = False,
     ) -> Dict[str, Any]:
         """
         批量生成工作日志
@@ -181,12 +191,12 @@ class WorkLogAutoGenerator:
             生成统计信息
         """
         stats = {
-            'total_users': 0,
-            'total_days': 0,
-            'generated_count': 0,
-            'skipped_count': 0,
-            'error_count': 0,
-            'errors': []
+            "total_users": 0,
+            "total_days": 0,
+            "generated_count": 0,
+            "skipped_count": 0,
+            "error_count": 0,
+            "errors": [],
         }
 
         # 获取需要处理的用户
@@ -194,49 +204,52 @@ class WorkLogAutoGenerator:
             users = self.db.query(User).filter(User.id.in_(user_ids)).all()
         else:
             # 获取所有有工时记录的用户
-            user_ids_with_timesheet = self.db.query(Timesheet.user_id).filter(
-                Timesheet.work_date.between(start_date, end_date),
-                Timesheet.status == 'APPROVED'
-            ).distinct().all()
+            user_ids_with_timesheet = (
+                self.db.query(Timesheet.user_id)
+                .filter(
+                    Timesheet.work_date.between(start_date, end_date),
+                    Timesheet.status == "APPROVED",
+                )
+                .distinct()
+                .all()
+            )
             user_ids_list = [uid[0] for uid in user_ids_with_timesheet]
             users = self.db.query(User).filter(User.id.in_(user_ids_list)).all()
 
-        stats['total_users'] = len(users)
+        stats["total_users"] = len(users)
 
         # 遍历每个用户和日期
         current_date = start_date
         while current_date <= end_date:
-            stats['total_days'] += 1
+            stats["total_days"] += 1
 
             for user in users:
                 try:
                     work_log = self.generate_work_log_from_timesheet(
-                        user_id=user.id,
-                        work_date=current_date,
-                        auto_submit=auto_submit
+                        user_id=user.id, work_date=current_date, auto_submit=auto_submit
                     )
 
                     if work_log:
-                        stats['generated_count'] += 1
+                        stats["generated_count"] += 1
                     else:
-                        stats['skipped_count'] += 1
+                        stats["skipped_count"] += 1
                 except Exception as e:
-                    stats['error_count'] += 1
-                    stats['errors'].append({
-                        'user_id': user.id,
-                        'user_name': user.real_name or user.username,
-                        'date': current_date.isoformat(),
-                        'error': str(e)
-                    })
+                    stats["error_count"] += 1
+                    stats["errors"].append(
+                        {
+                            "user_id": user.id,
+                            "user_name": user.real_name or user.username,
+                            "date": current_date.isoformat(),
+                            "error": str(e),
+                        }
+                    )
 
             current_date += timedelta(days=1)
 
         return stats
 
     def generate_yesterday_work_logs(
-        self,
-        user_ids: Optional[List[int]] = None,
-        auto_submit: bool = False
+        self, user_ids: Optional[List[int]] = None, auto_submit: bool = False
     ) -> Dict[str, Any]:
         """
         生成昨日工作日志（定时任务使用）
@@ -250,8 +263,5 @@ class WorkLogAutoGenerator:
         """
         yesterday = date.today() - timedelta(days=1)
         return self.batch_generate_work_logs(
-            start_date=yesterday,
-            end_date=yesterday,
-            user_ids=user_ids,
-            auto_submit=auto_submit
+            start_date=yesterday, end_date=yesterday, user_ids=user_ids, auto_submit=auto_submit
         )

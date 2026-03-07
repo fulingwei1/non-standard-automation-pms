@@ -2,6 +2,7 @@
 """ScoringHelpersMixin 单元测试"""
 from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, PropertyMock
+
 import pytest
 
 from app.services.lead_priority_scoring.scoring_helpers import ScoringHelpersMixin

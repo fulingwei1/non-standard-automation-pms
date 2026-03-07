@@ -19,8 +19,8 @@ from app.models.enums import DataScopeEnum
 from app.models.organization import EmployeeOrgAssignment, OrganizationUnit
 from app.models.permission import ScopeType
 from app.models.user import User
-from app.services.permission_service import PermissionService
 from app.services.data_scope.generic_filter import GenericFilterService
+from app.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ SCOPE_TYPE_MAPPING = {
 class DataScopeServiceEnhanced:
     """
     增强的数据权限服务类
-    
+
     优化特性:
     - 统一的枚举处理
     - 性能优化的组织树查询
@@ -53,7 +53,7 @@ class DataScopeServiceEnhanced:
     def normalize_scope_type(scope_type: str) -> str:
         """
         标准化数据范围类型
-        
+
         将 ScopeType 转换为 DataScopeEnum 格式
         """
         return SCOPE_TYPE_MAPPING.get(scope_type, scope_type)
@@ -62,8 +62,8 @@ class DataScopeServiceEnhanced:
     def get_user_org_units(db: Session, user_id: int) -> List[int]:
         """
         获取用户所属的组织单元ID列表
-        
-        优化: 
+
+        优化:
         - 添加详细日志
         - 更好的异常处理
         """
@@ -79,7 +79,7 @@ class DataScopeServiceEnhanced:
 
             for assignment in assignments:
                 org_unit_ids.add(assignment.org_unit_id)
-            
+
             logger.debug(f"用户 {user_id} 的组织单元: {org_unit_ids}")
 
         except Exception as e:
@@ -88,25 +88,19 @@ class DataScopeServiceEnhanced:
         return list(org_unit_ids)
 
     @staticmethod
-    def get_accessible_org_units(
-        db: Session, user_id: int, scope_type: str
-    ) -> List[int]:
+    def get_accessible_org_units(db: Session, user_id: int, scope_type: str) -> List[int]:
         """
         根据数据权限范围获取用户可访问的组织单元ID列表
-        
+
         优化:
         - 支持枚举映射
         - 优化查询性能
         """
         # 标准化范围类型
         normalized_scope = DataScopeServiceEnhanced.normalize_scope_type(scope_type)
-        
+
         if normalized_scope == DataScopeEnum.ALL.value:
-            units = (
-                db.query(OrganizationUnit.id)
-                .filter(OrganizationUnit.is_active)
-                .all()
-            )
+            units = db.query(OrganizationUnit.id).filter(OrganizationUnit.is_active).all()
             return [u.id for u in units]
 
         user_org_ids = DataScopeServiceEnhanced.get_user_org_units(db, user_id)
@@ -117,11 +111,7 @@ class DataScopeServiceEnhanced:
         accessible_ids: Set[int] = set()
 
         for org_id in user_org_ids:
-            org_unit = (
-                db.query(OrganizationUnit)
-                .filter(OrganizationUnit.id == org_id)
-                .first()
-            )
+            org_unit = db.query(OrganizationUnit).filter(OrganizationUnit.id == org_id).first()
 
             if not org_unit:
                 logger.warning(f"组织单元 {org_id} 不存在")
@@ -129,9 +119,7 @@ class DataScopeServiceEnhanced:
 
             # 根据不同的范围类型处理
             if scope_type == ScopeType.BUSINESS_UNIT.value:
-                bu = DataScopeServiceEnhanced._find_ancestor_by_type(
-                    db, org_unit, "BUSINESS_UNIT"
-                )
+                bu = DataScopeServiceEnhanced._find_ancestor_by_type(db, org_unit, "BUSINESS_UNIT")
                 if bu:
                     accessible_ids.update(
                         DataScopeServiceEnhanced._get_subtree_ids_optimized(db, bu.id)
@@ -142,9 +130,7 @@ class DataScopeServiceEnhanced:
                     )
 
             elif scope_type == ScopeType.DEPARTMENT.value:
-                dept = DataScopeServiceEnhanced._find_ancestor_by_type(
-                    db, org_unit, "DEPARTMENT"
-                )
+                dept = DataScopeServiceEnhanced._find_ancestor_by_type(db, org_unit, "DEPARTMENT")
                 if dept:
                     accessible_ids.update(
                         DataScopeServiceEnhanced._get_subtree_ids_optimized(db, dept.id)
@@ -166,13 +152,13 @@ class DataScopeServiceEnhanced:
     ) -> Optional[OrganizationUnit]:
         """
         向上查找指定类型的祖先组织
-        
+
         优化: 添加深度限制防止无限循环
         """
         current = org_unit
         depth = 0
         max_depth = 20  # 防止无限循环
-        
+
         while current and depth < max_depth:
             if current.unit_type == unit_type:
                 return current
@@ -185,44 +171,37 @@ class DataScopeServiceEnhanced:
                 depth += 1
             else:
                 break
-        
+
         if depth >= max_depth:
             logger.warning(f"组织树深度超过限制 ({max_depth})")
-        
+
         return None
 
     @staticmethod
     def _get_subtree_ids_optimized(db: Session, org_unit_id: int) -> Set[int]:
         """
         获取组织单元的所有子节点ID（包括自己）
-        
+
         优化: 使用 path 字段进行批量查询，避免递归
         """
         ids: Set[int] = {org_unit_id}
 
         try:
-            org_unit = (
-                db.query(OrganizationUnit)
-                .filter(OrganizationUnit.id == org_unit_id)
-                .first()
-            )
+            org_unit = db.query(OrganizationUnit).filter(OrganizationUnit.id == org_unit_id).first()
 
             if org_unit and org_unit.path:
                 # 使用 path 字段进行高效的子树查询
                 children_query = db.query(OrganizationUnit.id).filter(
-                    OrganizationUnit.is_active,
-                    OrganizationUnit.path.like(f"{org_unit.path}%")
+                    OrganizationUnit.is_active, OrganizationUnit.path.like(f"{org_unit.path}%")
                 )
                 children = children_query.all()
                 ids.update([c.id for c in children])
-                
+
                 logger.debug(f"组织 {org_unit_id} 的子树包含 {len(ids)} 个节点")
             else:
                 # 降级为传统递归方式（仅在没有 path 字段时）
                 logger.debug(f"组织 {org_unit_id} 没有 path 字段，使用递归查询")
-                ids.update(
-                    DataScopeServiceEnhanced._get_subtree_ids_recursive(db, org_unit_id)
-                )
+                ids.update(DataScopeServiceEnhanced._get_subtree_ids_recursive(db, org_unit_id))
 
         except Exception as e:
             logger.error(f"获取组织子树失败 (org_id={org_unit_id}): {e}", exc_info=True)
@@ -235,7 +214,7 @@ class DataScopeServiceEnhanced:
         递归获取子树ID（备用方法）
         """
         ids: Set[int] = {org_unit_id}
-        
+
         children = (
             db.query(OrganizationUnit)
             .filter(
@@ -246,9 +225,7 @@ class DataScopeServiceEnhanced:
         )
 
         for child in children:
-            ids.update(
-                DataScopeServiceEnhanced._get_subtree_ids_recursive(db, child.id)
-            )
+            ids.update(DataScopeServiceEnhanced._get_subtree_ids_recursive(db, child.id))
 
         return ids
 
@@ -264,7 +241,7 @@ class DataScopeServiceEnhanced:
     ) -> Query:
         """
         应用数据权限过滤到查询
-        
+
         优化:
         - 更清晰的日志
         - 更好的错误处理
@@ -297,9 +274,7 @@ class DataScopeServiceEnhanced:
                 )
 
                 if not accessible_org_ids:
-                    logger.warning(
-                        f"用户 {user.id} 没有可访问的组织单元，返回空结果"
-                    )
+                    logger.warning(f"用户 {user.id} 没有可访问的组织单元，返回空结果")
                     return query.filter(False)
 
                 if hasattr(model_class, org_field):
@@ -308,9 +283,7 @@ class DataScopeServiceEnhanced:
                 elif hasattr(model_class, "department_id"):
                     return query.filter(model_class.department_id.in_(accessible_org_ids))
                 else:
-                    logger.warning(
-                        f"模型 {model_class.__name__} 没有组织字段，跳过数据权限过滤"
-                    )
+                    logger.warning(f"模型 {model_class.__name__} 没有组织字段，跳过数据权限过滤")
                     return query
 
             elif scope_type == ScopeType.PROJECT.value:
@@ -323,9 +296,7 @@ class DataScopeServiceEnhanced:
                 if filters:
                     return query.filter(or_(*filters))
                 else:
-                    logger.warning(
-                        f"模型 {model_class.__name__} 没有项目相关字段，返回空结果"
-                    )
+                    logger.warning(f"模型 {model_class.__name__} 没有项目相关字段，返回空结果")
                     return query.filter(False)
 
             elif scope_type == ScopeType.OWN.value:
@@ -340,9 +311,7 @@ class DataScopeServiceEnhanced:
                 if filters:
                     return query.filter(or_(*filters))
                 else:
-                    logger.warning(
-                        f"模型 {model_class.__name__} 没有所有者字段，返回空结果"
-                    )
+                    logger.warning(f"模型 {model_class.__name__} 没有所有者字段，返回空结果")
                     return query.filter(False)
 
         except Exception as e:
@@ -367,7 +336,7 @@ class DataScopeServiceEnhanced:
     ) -> bool:
         """
         检查用户是否可以访问指定数据
-        
+
         优化: 添加详细日志和更好的错误处理
         """
         if user.is_superuser:
@@ -385,9 +354,7 @@ class DataScopeServiceEnhanced:
                 ScopeType.DEPARTMENT.value,
                 ScopeType.TEAM.value,
             ]:
-                data_org_id = getattr(data, org_field, None) or getattr(
-                    data, "department_id", None
-                )
+                data_org_id = getattr(data, org_field, None) or getattr(data, "department_id", None)
                 if not data_org_id:
                     logger.debug(f"数据没有组织字段，允许访问")
                     return True
@@ -396,7 +363,7 @@ class DataScopeServiceEnhanced:
                     db, user.id, scope_type
                 )
                 has_access = data_org_id in accessible_org_ids
-                
+
                 logger.debug(
                     f"组织权限检查: user={user.id}, data_org={data_org_id}, "
                     f"has_access={has_access}"
@@ -408,7 +375,7 @@ class DataScopeServiceEnhanced:
                 data_owner2 = getattr(data, "owner_id", None)
                 data_pm = getattr(data, "pm_id", None)
                 has_access = user.id in [data_owner, data_owner2, data_pm]
-                
+
                 logger.debug(
                     f"所有者权限检查: user={user.id}, owners=[{data_owner}, "
                     f"{data_owner2}, {data_pm}], has_access={has_access}"

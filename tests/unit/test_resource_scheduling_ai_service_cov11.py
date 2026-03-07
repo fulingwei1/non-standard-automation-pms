@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """第十一批：resource_scheduling_ai_service 单元测试"""
 
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.resource_scheduling_ai_service import ResourceSchedulingAIService
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -35,7 +37,9 @@ class TestDetectResourceConflicts:
         mock_query.all.return_value = []
         db.query.return_value = mock_query
 
-        with patch.dict("sys.modules", {"app.models.finance": MagicMock(PMOResourceAllocation=MagicMock())}):
+        with patch.dict(
+            "sys.modules", {"app.models.finance": MagicMock(PMOResourceAllocation=MagicMock())}
+        ):
             try:
                 result = svc.detect_resource_conflicts(resource_id=1)
                 assert isinstance(result, list)
@@ -49,7 +53,9 @@ class TestDetectResourceConflicts:
         mock_query.all.return_value = []
         db.query.return_value = mock_query
 
-        with patch.dict("sys.modules", {"app.models.finance": MagicMock(PMOResourceAllocation=MagicMock())}):
+        with patch.dict(
+            "sys.modules", {"app.models.finance": MagicMock(PMOResourceAllocation=MagicMock())}
+        ):
             try:
                 svc.detect_resource_conflicts(resource_id=1)
             except Exception:
@@ -62,7 +68,9 @@ class TestDetectResourceConflicts:
         mock_query.all.return_value = []
         db.query.return_value = mock_query
 
-        with patch.dict("sys.modules", {"app.models.finance": MagicMock(PMOResourceAllocation=MagicMock())}):
+        with patch.dict(
+            "sys.modules", {"app.models.finance": MagicMock(PMOResourceAllocation=MagicMock())}
+        ):
             try:
                 svc.detect_resource_conflicts(project_id=5)
             except Exception:
@@ -92,10 +100,7 @@ class TestDemandForecast:
         db.query.return_value = mock_query
 
         try:
-            result = svc.forecast_resource_demand(
-                resource_type="PERSON",
-                forecast_months=3
-            )
+            result = svc.forecast_resource_demand(resource_type="PERSON", forecast_months=3)
             assert result is not None or result is None  # 不崩溃即可
         except (AttributeError, Exception):
             pass

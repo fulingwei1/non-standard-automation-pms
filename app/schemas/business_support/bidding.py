@@ -27,7 +27,9 @@ class BiddingProjectCreate(BaseModel):
     deadline_date: Optional[datetime] = Field(default=None, description="投标截止时间")
     bid_opening_date: Optional[datetime] = Field(default=None, description="开标时间")
     bid_bond: Optional[Decimal] = Field(default=None, description="投标保证金")
-    bid_bond_status: Optional[str] = Field(default="not_required", max_length=20, description="保证金状态")
+    bid_bond_status: Optional[str] = Field(
+        default="not_required", max_length=20, description="保证金状态"
+    )
     estimated_amount: Optional[Decimal] = Field(default=None, description="预估金额")
     submission_method: Optional[str] = Field(default=None, max_length=20, description="投递方式")
     submission_address: Optional[str] = Field(default=None, max_length=500, description="投递地址")

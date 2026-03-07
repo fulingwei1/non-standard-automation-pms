@@ -13,11 +13,11 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from app.services.approval_engine.adapters.purchase import PurchaseOrderApprovalAdapter
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.approval import ApprovalInstance
 from app.models.project import Project
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.vendor import Vendor
+from app.services.approval_engine.adapters.purchase import PurchaseOrderApprovalAdapter
 
 
 class TestPurchaseAdapterCore(unittest.TestCase):
@@ -63,7 +63,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
             tax_rate=Decimal("0.13"),
             tax_amount=Decimal("1300.00"),
             amount_with_tax=Decimal("11300.00"),
-            currency="CNY"
+            currency="CNY",
         )
 
         self._setup_query_returns(mock_order, item_count=5)
@@ -75,23 +75,20 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         self.assertEqual(result["order_title"], "办公用品采购")
         self.assertEqual(result["order_type"], "NORMAL")
         self.assertEqual(result["status"], "DRAFT")
-        
+
         # 验证金额字段
         self.assertEqual(result["total_amount"], 10000.00)
         self.assertEqual(result["tax_rate"], 0.13)
         self.assertEqual(result["tax_amount"], 1300.00)
         self.assertEqual(result["amount_with_tax"], 11300.00)
         self.assertEqual(result["currency"], "CNY")
-        
+
         # 验证明细数量
         self.assertEqual(result["item_count"], 5)
 
     def test_get_entity_data_with_project(self):
         """测试获取包含项目信息的采购订单数据"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-002",
-            project_id=10
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-002", project_id=10)
 
         mock_project = MagicMock(spec=Project)
         mock_project.project_code = "PRJ-001"
@@ -119,10 +116,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_with_vendor(self):
         """测试获取包含供应商信息的采购订单数据"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-003",
-            supplier_id=20
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-003", supplier_id=20)
 
         mock_vendor = MagicMock(spec=Vendor)
         mock_vendor.vendor_name = "优质供应商"
@@ -156,7 +150,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
             order_no="PO-2024-004",
             order_date=order_date,
             required_date=required_date,
-            promised_date=promised_date
+            promised_date=promised_date,
         )
 
         self._setup_query_returns(mock_order, item_count=1)
@@ -175,7 +169,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
             total_amount=None,
             tax_rate=None,
             tax_amount=None,
-            amount_with_tax=None
+            amount_with_tax=None,
         )
 
         self._setup_query_returns(mock_order, item_count=1)
@@ -190,10 +184,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_default_title(self):
         """测试默认标题生成"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-006",
-            order_title=None
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-006", order_title=None)
 
         self._setup_query_returns(mock_order, item_count=1)
 
@@ -204,11 +195,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_default_values(self):
         """测试默认值设置"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-007",
-            order_type=None,
-            currency=None
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-007", order_type=None, currency=None)
 
         self._setup_query_returns(mock_order, item_count=1)
 
@@ -220,10 +207,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_get_entity_data_project_without_priority(self):
         """测试项目没有priority属性"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-008",
-            project_id=10
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-008", project_id=10)
 
         mock_project = MagicMock(spec=Project)
         mock_project.project_code = "PRJ-002"
@@ -264,7 +248,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         mock_order = self._create_mock_order(status="DRAFT")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        with patch('app.services.approval_engine.adapters.purchase.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.purchase.datetime") as mock_datetime:
             mock_now = datetime(2024, 1, 15, 10, 0, 0)
             mock_datetime.now.return_value = mock_now
 
@@ -292,7 +276,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         self.instance.approved_by = 100
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        with patch('app.services.approval_engine.adapters.purchase.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.purchase.datetime") as mock_datetime:
             mock_now = datetime(2024, 1, 15, 10, 0, 0)
             mock_datetime.now.return_value = mock_now
 
@@ -376,10 +360,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_generate_title_with_order_title(self):
         """测试生成包含订单标题的审批标题"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-001",
-            order_title="办公用品采购"
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-001", order_title="办公用品采购")
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         title = self.adapter.generate_title(self.entity_id)
@@ -388,10 +369,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_generate_title_without_order_title(self):
         """测试生成不包含订单标题的审批标题"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-002",
-            order_title=None
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-002", order_title=None)
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         title = self.adapter.generate_title(self.entity_id)
@@ -411,9 +389,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
     def test_generate_summary_basic(self):
         """测试生成基础摘要"""
         mock_order = self._create_mock_order(
-            order_no="PO-2024-001",
-            supplier_id=10,
-            amount_with_tax=Decimal("11300.00")
+            order_no="PO-2024-001", supplier_id=10, amount_with_tax=Decimal("11300.00")
         )
 
         mock_vendor = MagicMock(spec=Vendor)
@@ -442,9 +418,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
     def test_generate_summary_no_vendor(self):
         """测试生成没有供应商的摘要"""
         mock_order = self._create_mock_order(
-            order_no="PO-2024-002",
-            supplier_id=None,
-            amount_with_tax=Decimal("5000.00")
+            order_no="PO-2024-002", supplier_id=None, amount_with_tax=Decimal("5000.00")
         )
 
         def query_side_effect(model):
@@ -466,9 +440,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         """测试生成包含交期的摘要"""
         required_date = datetime(2024, 1, 20, 10, 0, 0)
         mock_order = self._create_mock_order(
-            order_no="PO-2024-003",
-            supplier_id=10,
-            required_date=required_date
+            order_no="PO-2024-003", supplier_id=10, required_date=required_date
         )
 
         mock_vendor = MagicMock(spec=Vendor)
@@ -493,11 +465,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_generate_summary_with_project(self):
         """测试生成包含项目的摘要"""
-        mock_order = self._create_mock_order(
-            order_no="PO-2024-004",
-            supplier_id=10,
-            project_id=20
-        )
+        mock_order = self._create_mock_order(order_no="PO-2024-004", supplier_id=10, project_id=20)
 
         mock_vendor = MagicMock(spec=Vendor)
         mock_vendor.vendor_name = "项目供应商"
@@ -527,9 +495,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
     def test_generate_summary_no_amount(self):
         """测试生成没有金额的摘要"""
         mock_order = self._create_mock_order(
-            order_no="PO-2024-005",
-            supplier_id=10,
-            amount_with_tax=None
+            order_no="PO-2024-005", supplier_id=10, amount_with_tax=None
         )
 
         mock_vendor = MagicMock(spec=Vendor)
@@ -569,7 +535,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
             status="DRAFT",
             supplier_id=10,
             order_date=datetime(2024, 1, 10),
-            amount_with_tax=Decimal("10000.00")
+            amount_with_tax=Decimal("10000.00"),
         )
 
         def query_side_effect(model):
@@ -593,7 +559,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
             status="REJECTED",
             supplier_id=10,
             order_date=datetime(2024, 1, 10),
-            amount_with_tax=Decimal("5000.00")
+            amount_with_tax=Decimal("5000.00"),
         )
 
         def query_side_effect(model):
@@ -632,10 +598,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_validate_submit_missing_supplier(self):
         """测试缺少供应商"""
-        mock_order = self._create_mock_order(
-            status="DRAFT",
-            supplier_id=None
-        )
+        mock_order = self._create_mock_order(status="DRAFT", supplier_id=None)
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         valid, error = self.adapter.validate_submit(self.entity_id)
@@ -645,11 +608,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
     def test_validate_submit_missing_order_date(self):
         """测试缺少订单日期"""
-        mock_order = self._create_mock_order(
-            status="DRAFT",
-            supplier_id=10,
-            order_date=None
-        )
+        mock_order = self._create_mock_order(status="DRAFT", supplier_id=10, order_date=None)
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         valid, error = self.adapter.validate_submit(self.entity_id)
@@ -660,9 +619,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
     def test_validate_submit_no_items(self):
         """测试没有订单明细"""
         mock_order = self._create_mock_order(
-            status="DRAFT",
-            supplier_id=10,
-            order_date=datetime(2024, 1, 10)
+            status="DRAFT", supplier_id=10, order_date=datetime(2024, 1, 10)
         )
 
         def query_side_effect(model):
@@ -686,7 +643,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
             status="DRAFT",
             supplier_id=10,
             order_date=datetime(2024, 1, 10),
-            amount_with_tax=Decimal("0.00")
+            amount_with_tax=Decimal("0.00"),
         )
 
         def query_side_effect(model):
@@ -710,7 +667,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
             status="DRAFT",
             supplier_id=10,
             order_date=datetime(2024, 1, 10),
-            amount_with_tax=Decimal("-1000.00")
+            amount_with_tax=Decimal("-1000.00"),
         )
 
         def query_side_effect(model):
@@ -731,10 +688,7 @@ class TestPurchaseAdapterCore(unittest.TestCase):
     def test_validate_submit_none_amount(self):
         """测试金额为None"""
         mock_order = self._create_mock_order(
-            status="DRAFT",
-            supplier_id=10,
-            order_date=datetime(2024, 1, 10),
-            amount_with_tax=None
+            status="DRAFT", supplier_id=10, order_date=datetime(2024, 1, 10), amount_with_tax=None
         )
 
         def query_side_effect(model):
@@ -781,7 +735,11 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         self.db.query.side_effect = query_side_effect
 
         # Mock基类方法
-        with patch.object(PurchaseOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[200]):
+        with patch.object(
+            PurchaseOrderApprovalAdapter,
+            "get_department_manager_user_ids_by_codes",
+            return_value=[200],
+        ):
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 应包含项目经理和采购部负责人
@@ -795,7 +753,11 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         # Mock基类方法
-        with patch.object(PurchaseOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[200]):
+        with patch.object(
+            PurchaseOrderApprovalAdapter,
+            "get_department_manager_user_ids_by_codes",
+            return_value=[200],
+        ):
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 应只包含采购部负责人
@@ -819,7 +781,11 @@ class TestPurchaseAdapterCore(unittest.TestCase):
 
         self.db.query.side_effect = query_side_effect
 
-        with patch.object(PurchaseOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[200]):
+        with patch.object(
+            PurchaseOrderApprovalAdapter,
+            "get_department_manager_user_ids_by_codes",
+            return_value=[200],
+        ):
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 不应包含项目经理
@@ -833,9 +799,17 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         # Mock基类方法：第一次返回空，第二次返回300
-        with patch.object(PurchaseOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[]), \
-             patch.object(PurchaseOrderApprovalAdapter, 'get_department_manager_user_id', return_value=300):
-            
+        with (
+            patch.object(
+                PurchaseOrderApprovalAdapter,
+                "get_department_manager_user_ids_by_codes",
+                return_value=[],
+            ),
+            patch.object(
+                PurchaseOrderApprovalAdapter, "get_department_manager_user_id", return_value=300
+            ),
+        ):
+
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 应包含通过部门名称找到的负责人
@@ -859,7 +833,11 @@ class TestPurchaseAdapterCore(unittest.TestCase):
         self.db.query.side_effect = query_side_effect
 
         # 模拟重复的用户ID
-        with patch.object(PurchaseOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[100, 200]):
+        with patch.object(
+            PurchaseOrderApprovalAdapter,
+            "get_department_manager_user_ids_by_codes",
+            return_value=[100, 200],
+        ):
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             # 验证去重
@@ -871,45 +849,46 @@ class TestPurchaseAdapterCore(unittest.TestCase):
     def _create_mock_order(self, **kwargs):
         """创建模拟采购订单对象"""
         mock_order = MagicMock(spec=PurchaseOrder)
-        
+
         # 设置默认值
         defaults = {
-            'id': self.entity_id,
-            'order_no': 'PO-TEST-001',
-            'order_title': None,
-            'order_type': None,
-            'status': 'DRAFT',
-            'total_amount': Decimal("10000.00"),
-            'tax_rate': Decimal("0.13"),
-            'tax_amount': Decimal("1300.00"),
-            'amount_with_tax': Decimal("11300.00"),
-            'currency': None,
-            'order_date': None,
-            'required_date': None,
-            'promised_date': None,
-            'payment_terms': None,
-            'project_id': None,
-            'supplier_id': None,
-            'source_request_id': None,
-            'created_by': 1,
-            'contract_no': None,
-            'submitted_at': None,
-            'approved_by': None,
-            'approved_at': None,
-            'approval_note': None,
+            "id": self.entity_id,
+            "order_no": "PO-TEST-001",
+            "order_title": None,
+            "order_type": None,
+            "status": "DRAFT",
+            "total_amount": Decimal("10000.00"),
+            "tax_rate": Decimal("0.13"),
+            "tax_amount": Decimal("1300.00"),
+            "amount_with_tax": Decimal("11300.00"),
+            "currency": None,
+            "order_date": None,
+            "required_date": None,
+            "promised_date": None,
+            "payment_terms": None,
+            "project_id": None,
+            "supplier_id": None,
+            "source_request_id": None,
+            "created_by": 1,
+            "contract_no": None,
+            "submitted_at": None,
+            "approved_by": None,
+            "approved_at": None,
+            "approval_note": None,
         }
-        
+
         # 合并自定义值
         defaults.update(kwargs)
-        
+
         # 设置属性
         for key, value in defaults.items():
             setattr(mock_order, key, value)
-        
+
         return mock_order
 
     def _setup_query_returns(self, mock_order, item_count=0):
         """设置基础查询返回"""
+
         def query_side_effect(model):
             mock_query = MagicMock()
             if model == PurchaseOrder:
@@ -929,5 +908,5 @@ class TestAdapterEntityType(unittest.TestCase):
         self.assertEqual(PurchaseOrderApprovalAdapter.entity_type, "PURCHASE_ORDER")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -2,8 +2,9 @@
 """
 Unit tests for app/services/invoice_auto_service/main.py (cov52)
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.invoice_auto_service.main import check_and_create_invoice_request
@@ -17,8 +18,14 @@ def _make_service():
     return service
 
 
-def _make_order(overall_result="PASSED", status="COMPLETED", acceptance_type="FAT",
-                project_id=10, order_id=1, order_no="ORD-001"):
+def _make_order(
+    overall_result="PASSED",
+    status="COMPLETED",
+    acceptance_type="FAT",
+    project_id=10,
+    order_id=1,
+    order_no="ORD-001",
+):
     order = MagicMock()
     order.id = order_id
     order.order_no = order_no
@@ -30,6 +37,7 @@ def _make_order(overall_result="PASSED", status="COMPLETED", acceptance_type="FA
 
 
 # ──────────────────────── check_and_create_invoice_request ────────────────────────
+
 
 def test_order_not_found():
     """验收单不存在时返回 success=False"""
@@ -107,8 +115,9 @@ def test_success_create_invoice_request(
     service = _make_service()
     order = _make_order(acceptance_type="FAT")
     milestone = MagicMock(id=1, milestone_name="FAT")
-    plan = MagicMock(id=1, invoice_id=None, planned_date=None, status="PENDING",
-                     payment_type="ACCEPTANCE")
+    plan = MagicMock(
+        id=1, invoice_id=None, planned_date=None, status="PENDING", payment_type="ACCEPTANCE"
+    )
 
     # db.query().filter().first() → order
     # db.query().filter().all() → [milestone]
@@ -116,7 +125,7 @@ def test_success_create_invoice_request(
     service.db.query.return_value.filter.return_value.first.return_value = order
     service.db.query.return_value.filter.return_value.all.side_effect = [
         [milestone],  # milestones
-        [plan],       # payment_plans
+        [plan],  # payment_plans
     ]
 
     mock_create.return_value = {"success": True, "request_no": "IR2412-001", "amount": 1130.0}

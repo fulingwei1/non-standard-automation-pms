@@ -16,11 +16,7 @@ from .planning import PLANNING_STAGES
 from .production import PRODUCTION_STAGES
 
 # 标准全流程阶段 (S1-S9) - 聚合所有阶段
-STANDARD_STAGES: List[Dict[str, Any]] = (
-    PLANNING_STAGES
-    + PRODUCTION_STAGES
-    + DELIVERY_STAGES
-)
+STANDARD_STAGES: List[Dict[str, Any]] = PLANNING_STAGES + PRODUCTION_STAGES + DELIVERY_STAGES
 
 # 标准全流程模板（9大阶段）
 STANDARD_TEMPLATE: Dict[str, Any] = {

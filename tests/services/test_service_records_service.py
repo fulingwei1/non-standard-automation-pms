@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """服务记录服务单元测试"""
-import pytest
 from datetime import date, datetime, timezone
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fastapi import HTTPException
+
 from app.models.service import ServiceRecord
 
 # Patch relationship attributes used in joinedload()
-for _attr in ('ticket', 'technician', 'created_by_user'):
+for _attr in ("ticket", "technician", "created_by_user"):
     if not hasattr(ServiceRecord, _attr):
         setattr(ServiceRecord, _attr, MagicMock())
 
@@ -49,6 +50,7 @@ class TestGetRecordStatistics:
         svc = ServiceRecordsService(db)
         # ServiceRecord model lacks technician_id; patch it as a mock column
         from app.models.service.record import ServiceRecord
+
         with patch.object(ServiceRecord, "technician_id", create=True, new=MagicMock()):
             result = svc.get_record_statistics(
                 start_date=date(2025, 1, 1), end_date=date(2025, 12, 31), technician_id=1
@@ -60,15 +62,22 @@ class TestGetServiceRecords:
     def test_list(self):
         db = _make_db()
         q = db.query.return_value.options.return_value
-        for attr in ('filter', 'order_by'):
+        for attr in ("filter", "order_by"):
             setattr(q, attr, MagicMock(return_value=q))
         q.count.return_value = 0
         q.all.return_value = []
 
-        with patch("app.services.service.service_records_service.joinedload", lambda *a, **k: MagicMock()), \
-             patch("app.services.service.service_records_service.apply_keyword_filter", return_value=q), \
-             patch("app.services.service.service_records_service.get_pagination_params") as gpp, \
-             patch("app.services.service.service_records_service.apply_pagination", return_value=q):
+        with (
+            patch(
+                "app.services.service.service_records_service.joinedload",
+                lambda *a, **k: MagicMock(),
+            ),
+            patch(
+                "app.services.service.service_records_service.apply_keyword_filter", return_value=q
+            ),
+            patch("app.services.service.service_records_service.get_pagination_params") as gpp,
+            patch("app.services.service.service_records_service.apply_pagination", return_value=q),
+        ):
             pag = MagicMock(page=1, page_size=20, offset=0, limit=20)
             pag.pages_for_total.return_value = 0
             gpp.return_value = pag
@@ -81,12 +90,20 @@ class TestCreateServiceRecord:
     def test_create(self):
         db = _make_db()
         record_data = MagicMock(
-            ticket_id=1, title="维修记录", description="desc",
-            service_type="repair", service_date=date(2025, 5, 1),
-            start_time=datetime(2025, 5, 1, 9), end_time=datetime(2025, 5, 1, 17),
-            location="现场", technician_id=1, work_summary="完成",
-            parts_used="螺栓x10", next_actions="无", customer_feedback="好",
-            status="in_progress"
+            ticket_id=1,
+            title="维修记录",
+            description="desc",
+            service_type="repair",
+            service_date=date(2025, 5, 1),
+            start_time=datetime(2025, 5, 1, 9),
+            end_time=datetime(2025, 5, 1, 17),
+            location="现场",
+            technician_id=1,
+            work_summary="完成",
+            parts_used="螺栓x10",
+            next_actions="无",
+            customer_feedback="好",
+            status="in_progress",
         )
         svc = ServiceRecordsService(db)
         with patch("app.services.service.service_records_service.ServiceRecord") as MockRecord:

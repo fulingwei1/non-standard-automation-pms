@@ -12,9 +12,7 @@ from app.models.project import Project
 from app.models.user import User
 
 
-def calculate_response_times(
-    acknowledged_alerts: List[AlertRecord]
-) -> List[Dict[str, Any]]:
+def calculate_response_times(acknowledged_alerts: List[AlertRecord]) -> List[Dict[str, Any]]:
     """
     计算响应时间（确认时间 - 触发时间）
 
@@ -26,17 +24,17 @@ def calculate_response_times(
         if alert.triggered_at and alert.acknowledged_at:
             delta = alert.acknowledged_at - alert.triggered_at
             minutes = delta.total_seconds() / 60
-            response_times.append({
-                'alert': alert,
-                'minutes': minutes,
-                'hours': minutes / 60,
-            })
+            response_times.append(
+                {
+                    "alert": alert,
+                    "minutes": minutes,
+                    "hours": minutes / 60,
+                }
+            )
     return response_times
 
 
-def calculate_resolve_times(
-    resolved_alerts: List[AlertRecord]
-) -> List[Dict[str, Any]]:
+def calculate_resolve_times(resolved_alerts: List[AlertRecord]) -> List[Dict[str, Any]]:
     """
     计算解决时间（处理完成时间 - 确认时间）
 
@@ -48,17 +46,17 @@ def calculate_resolve_times(
         if alert.acknowledged_at and alert.handle_end_at:
             delta = alert.handle_end_at - alert.acknowledged_at
             minutes = delta.total_seconds() / 60
-            resolve_times.append({
-                'alert': alert,
-                'minutes': minutes,
-                'hours': minutes / 60,
-            })
+            resolve_times.append(
+                {
+                    "alert": alert,
+                    "minutes": minutes,
+                    "hours": minutes / 60,
+                }
+            )
     return resolve_times
 
 
-def calculate_response_distribution(
-    response_times: List[Dict[str, Any]]
-) -> Dict[str, int]:
+def calculate_response_distribution(response_times: List[Dict[str, Any]]) -> Dict[str, int]:
     """
     计算响应时效分布
 
@@ -66,27 +64,25 @@ def calculate_response_distribution(
         dict: 包含 <1小时、1-4小时、4-8小时、>8小时 的分布
     """
     distribution = {
-        '<1小时': 0,
-        '1-4小时': 0,
-        '4-8小时': 0,
-        '>8小时': 0,
+        "<1小时": 0,
+        "1-4小时": 0,
+        "4-8小时": 0,
+        ">8小时": 0,
     }
     for rt in response_times:
-        hours = rt['hours']
+        hours = rt["hours"]
         if hours < 1:
-            distribution['<1小时'] += 1
+            distribution["<1小时"] += 1
         elif hours < 4:
-            distribution['1-4小时'] += 1
+            distribution["1-4小时"] += 1
         elif hours < 8:
-            distribution['4-8小时'] += 1
+            distribution["4-8小时"] += 1
         else:
-            distribution['>8小时'] += 1
+            distribution[">8小时"] += 1
     return distribution
 
 
-def calculate_level_metrics(
-    response_times: List[Dict[str, Any]]
-) -> Dict[str, Dict[str, float]]:
+def calculate_level_metrics(response_times: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
     """
     按级别统计响应时效
 
@@ -95,25 +91,23 @@ def calculate_level_metrics(
     """
     response_by_level = {}
     for rt in response_times:
-        level = rt['alert'].alert_level or 'UNKNOWN'
+        level = rt["alert"].alert_level or "UNKNOWN"
         if level not in response_by_level:
             response_by_level[level] = []
-        response_by_level[level].append(rt['hours'])
+        response_by_level[level].append(rt["hours"])
 
     level_metrics = {}
     for level, times in response_by_level.items():
         level_metrics[level] = {
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
+            "count": len(times),
+            "avg_hours": sum(times) / len(times) if times else 0,
+            "min_hours": min(times) if times else 0,
+            "max_hours": max(times) if times else 0,
         }
     return level_metrics
 
 
-def calculate_type_metrics(
-    response_times: List[Dict[str, Any]]
-) -> Dict[str, Dict[str, float]]:
+def calculate_type_metrics(response_times: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
     """
     按类型统计响应时效
 
@@ -122,26 +116,25 @@ def calculate_type_metrics(
     """
     response_by_type = {}
     for rt in response_times:
-        rule = rt['alert'].rule
-        rule_type = rule.rule_type if rule else 'UNKNOWN'
+        rule = rt["alert"].rule
+        rule_type = rule.rule_type if rule else "UNKNOWN"
         if rule_type not in response_by_type:
             response_by_type[rule_type] = []
-        response_by_type[rule_type].append(rt['hours'])
+        response_by_type[rule_type].append(rt["hours"])
 
     type_metrics = {}
     for rule_type, times in response_by_type.items():
         type_metrics[rule_type] = {
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
+            "count": len(times),
+            "avg_hours": sum(times) / len(times) if times else 0,
+            "min_hours": min(times) if times else 0,
+            "max_hours": max(times) if times else 0,
         }
     return type_metrics
 
 
 def calculate_project_metrics(
-    response_times: List[Dict[str, Any]],
-    db: Session
+    response_times: List[Dict[str, Any]], db: Session
 ) -> Dict[str, Dict[str, Any]]:
     """
     按项目统计响应时效
@@ -151,33 +144,32 @@ def calculate_project_metrics(
     """
     response_by_project = {}
     for rt in response_times:
-        alert = rt['alert']
+        alert = rt["alert"]
         if alert.project_id:
             project = db.query(Project).filter(Project.id == alert.project_id).first()
             project_name = project.project_name if project else f"项目{alert.project_id}"
             if project_name not in response_by_project:
                 response_by_project[project_name] = {
-                    'project_id': alert.project_id,
-                    'times': [],
+                    "project_id": alert.project_id,
+                    "times": [],
                 }
-            response_by_project[project_name]['times'].append(rt['hours'])
+            response_by_project[project_name]["times"].append(rt["hours"])
 
     project_metrics = {}
     for project_name, data in response_by_project.items():
-        times = data['times']
+        times = data["times"]
         project_metrics[project_name] = {
-            'project_id': data['project_id'],
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
+            "project_id": data["project_id"],
+            "count": len(times),
+            "avg_hours": sum(times) / len(times) if times else 0,
+            "min_hours": min(times) if times else 0,
+            "max_hours": max(times) if times else 0,
         }
     return project_metrics
 
 
 def calculate_handler_metrics(
-    response_times: List[Dict[str, Any]],
-    db: Session
+    response_times: List[Dict[str, Any]], db: Session
 ) -> Dict[str, Dict[str, Any]]:
     """
     按责任人统计响应时效
@@ -187,34 +179,33 @@ def calculate_handler_metrics(
     """
     response_by_handler = {}
     for rt in response_times:
-        alert = rt['alert']
+        alert = rt["alert"]
         handler_id = alert.acknowledged_by
         if handler_id:
             handler = db.query(User).filter(User.id == handler_id).first()
             handler_name = handler.username if handler else f"用户{handler_id}"
             if handler_name not in response_by_handler:
                 response_by_handler[handler_name] = {
-                    'user_id': handler_id,
-                    'times': [],
+                    "user_id": handler_id,
+                    "times": [],
                 }
-            response_by_handler[handler_name]['times'].append(rt['hours'])
+            response_by_handler[handler_name]["times"].append(rt["hours"])
 
     handler_metrics = {}
     for handler_name, data in response_by_handler.items():
-        times = data['times']
+        times = data["times"]
         handler_metrics[handler_name] = {
-            'user_id': data['user_id'],
-            'count': len(times),
-            'avg_hours': sum(times) / len(times) if times else 0,
-            'min_hours': min(times) if times else 0,
-            'max_hours': max(times) if times else 0,
+            "user_id": data["user_id"],
+            "count": len(times),
+            "avg_hours": sum(times) / len(times) if times else 0,
+            "min_hours": min(times) if times else 0,
+            "max_hours": max(times) if times else 0,
         }
     return handler_metrics
 
 
 def generate_response_rankings(
-    project_metrics: Dict[str, Dict[str, Any]],
-    handler_metrics: Dict[str, Dict[str, Any]]
+    project_metrics: Dict[str, Dict[str, Any]], handler_metrics: Dict[str, Dict[str, Any]]
 ) -> Dict[str, List[Dict[str, Any]]]:
     """
     生成响应时效排行榜
@@ -224,64 +215,62 @@ def generate_response_rankings(
     """
     # 最快的项目（平均响应时间最短）
     fastest_projects = sorted(
-        [(name, data) for name, data in project_metrics.items()],
-        key=lambda x: x[1]['avg_hours']
+        [(name, data) for name, data in project_metrics.items()], key=lambda x: x[1]["avg_hours"]
     )[:5]
 
     # 最慢的项目（平均响应时间最长）
     slowest_projects = sorted(
         [(name, data) for name, data in project_metrics.items()],
-        key=lambda x: x[1]['avg_hours'],
-        reverse=True
+        key=lambda x: x[1]["avg_hours"],
+        reverse=True,
     )[:5]
 
     # 最快的责任人（平均响应时间最短）
     fastest_handlers = sorted(
-        [(name, data) for name, data in handler_metrics.items()],
-        key=lambda x: x[1]['avg_hours']
+        [(name, data) for name, data in handler_metrics.items()], key=lambda x: x[1]["avg_hours"]
     )[:5]
 
     # 最慢的责任人（平均响应时间最长）
     slowest_handlers = sorted(
         [(name, data) for name, data in handler_metrics.items()],
-        key=lambda x: x[1]['avg_hours'],
-        reverse=True
+        key=lambda x: x[1]["avg_hours"],
+        reverse=True,
     )[:5]
 
     return {
-        'fastest_projects': [
+        "fastest_projects": [
             {
-                'project_name': name,
-                'project_id': data['project_id'],
-                'avg_hours': round(data['avg_hours'], 2),
-                'count': data['count'],
+                "project_name": name,
+                "project_id": data["project_id"],
+                "avg_hours": round(data["avg_hours"], 2),
+                "count": data["count"],
             }
             for name, data in fastest_projects
         ],
-        'slowest_projects': [
+        "slowest_projects": [
             {
-                'project_name': name,
-                'project_id': data['project_id'],
-                'avg_hours': round(data['avg_hours'], 2),
-                'count': data['count'],
+                "project_name": name,
+                "project_id": data["project_id"],
+                "avg_hours": round(data["avg_hours"], 2),
+                "count": data["count"],
             }
             for name, data in slowest_projects
         ],
-        'fastest_handlers': [
+        "fastest_handlers": [
             {
-                'handler_name': name,
-                'user_id': data['user_id'],
-                'avg_hours': round(data['avg_hours'], 2),
-                'count': data['count'],
+                "handler_name": name,
+                "user_id": data["user_id"],
+                "avg_hours": round(data["avg_hours"], 2),
+                "count": data["count"],
             }
             for name, data in fastest_handlers
         ],
-        'slowest_handlers': [
+        "slowest_handlers": [
             {
-                'handler_name': name,
-                'user_id': data['user_id'],
-                'avg_hours': round(data['avg_hours'], 2),
-                'count': data['count'],
+                "handler_name": name,
+                "user_id": data["user_id"],
+                "avg_hours": round(data["avg_hours"], 2),
+                "count": data["count"],
             }
             for name, data in slowest_handlers
         ],
@@ -307,16 +296,24 @@ class AlertResponseService:
         yesterday = today - timedelta(days=1)
 
         # 查询昨日已确认的预警
-        acknowledged_alerts = self.db.query(AlertRecord).filter(
-            AlertRecord.acknowledged_at >= datetime.combine(yesterday, datetime.min.time()),
-            AlertRecord.acknowledged_at < datetime.combine(today, datetime.min.time())
-        ).all()
+        acknowledged_alerts = (
+            self.db.query(AlertRecord)
+            .filter(
+                AlertRecord.acknowledged_at >= datetime.combine(yesterday, datetime.min.time()),
+                AlertRecord.acknowledged_at < datetime.combine(today, datetime.min.time()),
+            )
+            .all()
+        )
 
         # 查询昨日已解决的预警
-        resolved_alerts = self.db.query(AlertRecord).filter(
-            AlertRecord.handle_end_at >= datetime.combine(yesterday, datetime.min.time()),
-            AlertRecord.handle_end_at < datetime.combine(today, datetime.min.time())
-        ).all()
+        resolved_alerts = (
+            self.db.query(AlertRecord)
+            .filter(
+                AlertRecord.handle_end_at >= datetime.combine(yesterday, datetime.min.time()),
+                AlertRecord.handle_end_at < datetime.combine(today, datetime.min.time()),
+            )
+            .all()
+        )
 
         # 计算响应时间
         response_times = calculate_response_times(acknowledged_alerts)
@@ -345,20 +342,20 @@ class AlertResponseService:
         avg_resolve_hours = 0
 
         if response_times:
-            avg_response_hours = sum(rt['hours'] for rt in response_times) / len(response_times)
+            avg_response_hours = sum(rt["hours"] for rt in response_times) / len(response_times)
         if resolve_times:
-            avg_resolve_hours = sum(rt['hours'] for rt in resolve_times) / len(resolve_times)
+            avg_resolve_hours = sum(rt["hours"] for rt in resolve_times) / len(resolve_times)
 
         return {
-            'date': yesterday.isoformat(),
-            'total_acknowledged': total_acknowledged,
-            'total_resolved': total_resolved,
-            'avg_response_hours': round(avg_response_hours, 2),
-            'avg_resolve_hours': round(avg_resolve_hours, 2),
-            'response_distribution': response_distribution,
-            'level_metrics': level_metrics,
-            'project_metrics': project_metrics,
-            'handler_metrics': handler_metrics,
-            'rankings': rankings,
-            'timestamp': datetime.now().isoformat()
+            "date": yesterday.isoformat(),
+            "total_acknowledged": total_acknowledged,
+            "total_resolved": total_resolved,
+            "avg_response_hours": round(avg_response_hours, 2),
+            "avg_resolve_hours": round(avg_resolve_hours, 2),
+            "response_distribution": response_distribution,
+            "level_metrics": level_metrics,
+            "project_metrics": project_metrics,
+            "handler_metrics": handler_metrics,
+            "rankings": rankings,
+            "timestamp": datetime.now().isoformat(),
         }

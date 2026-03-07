@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """成本预测服务单元测试 (CostForecastService)"""
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 def _make_db():
@@ -31,6 +32,7 @@ def _make_project(**kw):
 class TestCostForecastServiceInit:
     def test_init_sets_db(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         svc = CostForecastService(db)
         assert svc.db is db
@@ -39,6 +41,7 @@ class TestCostForecastServiceInit:
 class TestLinearForecast:
     def test_project_not_found_returns_error(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
         svc = CostForecastService(db)
@@ -48,6 +51,7 @@ class TestLinearForecast:
 
     def test_insufficient_data_returns_error(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
@@ -59,6 +63,7 @@ class TestLinearForecast:
 
     def test_linear_forecast_with_enough_data(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
@@ -79,6 +84,7 @@ class TestLinearForecast:
 class TestGetCostTrend:
     def test_project_not_found(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
         svc = CostForecastService(db)
@@ -87,6 +93,7 @@ class TestGetCostTrend:
 
     def test_no_monthly_data_returns_empty_trend(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
@@ -99,6 +106,7 @@ class TestGetCostTrend:
 
     def test_with_monthly_data_returns_summary(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         project = _make_project()
         db.query.return_value.filter.return_value.first.return_value = project
@@ -117,6 +125,7 @@ class TestGetCostTrend:
 class TestCheckCostAlerts:
     def test_project_not_found_returns_empty_list(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = None
         svc = CostForecastService(db)
@@ -125,15 +134,18 @@ class TestCheckCostAlerts:
 
     def test_no_alerts_for_healthy_project(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         project = _make_project(actual_cost=Decimal("100000"), budget_amount=Decimal("500000"))
         db.query.return_value.filter.return_value.first.return_value = project
         svc = CostForecastService(db)
-        svc._get_alert_rules = MagicMock(return_value={
-            "overspend_threshold": 0.9,
-            "progress_mismatch_threshold": 0.2,
-            "trend_anomaly_threshold": 0.3,
-        })
+        svc._get_alert_rules = MagicMock(
+            return_value={
+                "overspend_threshold": 0.9,
+                "progress_mismatch_threshold": 0.2,
+                "trend_anomaly_threshold": 0.3,
+            }
+        )
         svc._check_overspend_alert = MagicMock(return_value=None)
         svc._check_progress_mismatch_alert = MagicMock(return_value=None)
         svc._check_trend_anomaly_alert = MagicMock(return_value=None)
@@ -142,6 +154,7 @@ class TestCheckCostAlerts:
 
     def test_overspend_alert_triggered(self):
         from app.services.cost_forecast_service import CostForecastService
+
         db = _make_db()
         project = _make_project(actual_cost=Decimal("490000"), budget_amount=Decimal("500000"))
         db.query.return_value.filter.return_value.first.return_value = project

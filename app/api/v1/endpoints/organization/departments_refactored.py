@@ -11,6 +11,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.organization import Department, Employee
@@ -22,8 +24,6 @@ from app.schemas.organization import (
 )
 
 from .utils import build_department_tree
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 
 router = APIRouter()
 
@@ -39,16 +39,17 @@ def read_departments(
     query = db.query(Department)
     if is_active is not None:
         query = query.filter(Department.is_active == is_active)
-    departments = apply_pagination(query.order_by(Department.sort_order, Department.dept_code), pagination.offset, pagination.limit).all()
+    departments = apply_pagination(
+        query.order_by(Department.sort_order, Department.dept_code),
+        pagination.offset,
+        pagination.limit,
+    ).all()
 
     # 转换为Pydantic模型
     dept_responses = [DepartmentResponse.model_validate(dept) for dept in departments]
 
     # 使用统一响应格式
-    return list_response(
-        items=dept_responses,
-        message="获取部门列表成功"
-    )
+    return list_response(items=dept_responses, message="获取部门列表成功")
 
 
 @router.get("/departments/tree")
@@ -63,12 +64,9 @@ def get_department_tree(
         query = query.filter(Department.is_active == is_active)
     departments = query.order_by(Department.sort_order, Department.dept_code).all()
     tree = build_department_tree(departments)
-    
+
     # 使用统一响应格式
-    return list_response(
-        items=tree,
-        message="获取部门树成功"
-    )
+    return list_response(items=tree, message="获取部门树成功")
 
 
 @router.get("/departments/statistics")
@@ -81,32 +79,33 @@ def get_department_statistics(
 
     result = []
     for dept in departments:
-        employee_count = db.query(func.count(Employee.id)).filter(
-            Employee.department == dept.dept_name,
-            Employee.is_active
-        ).scalar() or 0
+        employee_count = (
+            db.query(func.count(Employee.id))
+            .filter(Employee.department == dept.dept_name, Employee.is_active)
+            .scalar()
+            or 0
+        )
 
-        result.append({
-            "id": dept.id,
-            "name": dept.dept_name,
-            "manager": dept.manager.name if dept.manager else "",
-            "employee_count": employee_count,
-            "projects": 0,
-            "revenue": 0,
-            "target": 0,
-            "achievement": 0,
-            "status": "good",
-            "issues": 0,
-            "on_time_rate": 90,
-            "arrival_rate": 85,
-            "pass_rate": 95,
-        })
+        result.append(
+            {
+                "id": dept.id,
+                "name": dept.dept_name,
+                "manager": dept.manager.name if dept.manager else "",
+                "employee_count": employee_count,
+                "projects": 0,
+                "revenue": 0,
+                "target": 0,
+                "achievement": 0,
+                "status": "good",
+                "issues": 0,
+                "on_time_rate": 90,
+                "arrival_rate": 85,
+                "pass_rate": 95,
+            }
+        )
 
     # 使用统一响应格式
-    return success_response(
-        data={"departments": result},
-        message="获取部门统计成功"
-    )
+    return success_response(data={"departments": result}, message="获取部门统计成功")
 
 
 @router.post("/departments")
@@ -129,7 +128,9 @@ def create_department(
 
     existing_dept = query.first()
     if existing_dept:
-        raise HTTPException(status_code=400, detail=f"该部门名称已存在（{existing_dept.dept_code}）")
+        raise HTTPException(
+            status_code=400, detail=f"该部门名称已存在（{existing_dept.dept_code}）"
+        )
 
     if dept_in.parent_id:
         parent = db.query(Department).filter(Department.id == dept_in.parent_id).first()
@@ -155,10 +156,7 @@ def create_department(
     dept_response = DepartmentResponse.model_validate(department)
 
     # 使用统一响应格式
-    return success_response(
-        data=dept_response,
-        message="部门创建成功"
-    )
+    return success_response(data=dept_response, message="部门创建成功")
 
 
 @router.get("/departments/{dept_id}")
@@ -176,10 +174,7 @@ def read_department(
     dept_response = DepartmentResponse.model_validate(department)
 
     # 使用统一响应格式
-    return success_response(
-        data=dept_response,
-        message="获取部门信息成功"
-    )
+    return success_response(data=dept_response, message="获取部门信息成功")
 
 
 @router.put("/departments/{dept_id}")
@@ -197,13 +192,12 @@ def update_department(
 
     update_data = dept_in.model_dump(exclude_unset=True)
 
-    if 'dept_name' in update_data:
-        new_name = update_data['dept_name']
-        parent_id = update_data.get('parent_id', department.parent_id)
+    if "dept_name" in update_data:
+        new_name = update_data["dept_name"]
+        parent_id = update_data.get("parent_id", department.parent_id)
 
         query = db.query(Department).filter(
-            Department.dept_name == new_name,
-            Department.id != dept_id
+            Department.dept_name == new_name, Department.id != dept_id
         )
         if parent_id:
             query = query.filter(Department.parent_id == parent_id)
@@ -212,7 +206,9 @@ def update_department(
 
         existing_dept = query.first()
         if existing_dept:
-            raise HTTPException(status_code=400, detail=f"该部门名称已存在（{existing_dept.dept_code}）")
+            raise HTTPException(
+                status_code=400, detail=f"该部门名称已存在（{existing_dept.dept_code}）"
+            )
 
         if parent_id:
             parent = db.query(Department).filter(Department.id == parent_id).first()
@@ -222,9 +218,9 @@ def update_department(
                     detail=f"部门名称不应包含父部门名称。建议使用：{new_name.replace(parent.dept_name + '-', '').replace(parent.dept_name, '')}",
                 )
 
-    if 'parent_id' in update_data and update_data['parent_id'] != department.parent_id:
-        if update_data['parent_id']:
-            parent = db.query(Department).filter(Department.id == update_data['parent_id']).first()
+    if "parent_id" in update_data and update_data["parent_id"] != department.parent_id:
+        if update_data["parent_id"]:
+            parent = db.query(Department).filter(Department.id == update_data["parent_id"]).first()
             if not parent:
                 raise HTTPException(status_code=404, detail="父部门不存在")
             if parent.id == dept_id:
@@ -234,7 +230,7 @@ def update_department(
             department.level = 1
 
     for field, value in update_data.items():
-        if field != 'parent_id':
+        if field != "parent_id":
             setattr(department, field, value)
 
     db.add(department)
@@ -245,10 +241,7 @@ def update_department(
     dept_response = DepartmentResponse.model_validate(department)
 
     # 使用统一响应格式
-    return success_response(
-        data=dept_response,
-        message="部门更新成功"
-    )
+    return success_response(data=dept_response, message="部门更新成功")
 
 
 @router.get("/departments/{dept_id}/users")
@@ -275,10 +268,13 @@ def get_department_users(
         query = query.filter(User.is_active == is_active)
 
     total = query.count()
-    users = apply_pagination(query.order_by(User.created_at.desc()), pagination.offset, pagination.limit).all()
+    users = apply_pagination(
+        query.order_by(User.created_at.desc()), pagination.offset, pagination.limit
+    ).all()
 
     # 转换为UserResponse并处理roles
     from app.schemas.auth import UserResponse
+
     user_responses = []
     for u in users:
         user_dict = {
@@ -305,8 +301,5 @@ def get_department_users(
 
     # 使用统一分页响应格式
     return paginated_response(
-        items=user_responses,
-        total=total,
-        page=pagination.page,
-        page_size=pagination.page_size
+        items=user_responses, total=total, page=pagination.page, page_size=pagination.page_size
     )

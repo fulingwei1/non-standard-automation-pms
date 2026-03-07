@@ -10,17 +10,17 @@ from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.organization import Department
 from app.models.sales import SalesTarget
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import SalesTargetCreate, SalesTargetResponse, SalesTargetUpdate
-from app.common.pagination import PaginationParams, get_pagination_query
+from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import get_user_role_code
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
 
@@ -35,7 +35,9 @@ def get_sales_targets(
     pagination: PaginationParams = Depends(get_pagination_query),
     target_scope: Optional[str] = Query(None, description="目标范围筛选：PERSONAL/TEAM/DEPARTMENT"),
     target_type: Optional[str] = Query(None, description="目标类型筛选"),
-    target_period: Optional[str] = Query(None, description="目标周期筛选：MONTHLY/QUARTERLY/YEARLY"),
+    target_period: Optional[str] = Query(
+        None, description="目标周期筛选：MONTHLY/QUARTERLY/YEARLY"
+    ),
     period_value: Optional[str] = Query(None, description="周期值筛选：2025-01/2025-Q1/2025"),
     user_id: Optional[int] = Query(None, description="用户ID筛选"),
     department_id: Optional[int] = Query(None, description="部门ID筛选"),
@@ -51,21 +53,20 @@ def get_sales_targets(
     # 根据用户角色确定可见范围
     user_role_code = get_user_role_code(db, current_user)
 
-    if user_role_code == 'SALES_DIR':
+    if user_role_code == "SALES_DIR":
         # 销售总监可以看到所有目标
         pass
-    elif user_role_code == 'SALES_MANAGER':
+    elif user_role_code == "SALES_MANAGER":
         # 销售经理可以看到自己部门的目标
         # 注意：User表没有department_id字段，需要根据department字符串匹配
-        dept_name = getattr(current_user, 'department', None)
+        dept_name = getattr(current_user, "department", None)
         if dept_name:
             # 查找对应的部门ID
             dept = db.query(Department).filter(Department.dept_name == dept_name).first()
             if dept:
                 query = query.filter(
                     or_(
-                        SalesTarget.department_id == dept.id,
-                        SalesTarget.user_id == current_user.id
+                        SalesTarget.department_id == dept.id, SalesTarget.user_id == current_user.id
                     )
                 )
             else:
@@ -93,13 +94,15 @@ def get_sales_targets(
         query = query.filter(SalesTarget.status == status)
 
     total = query.count()
-    targets = apply_pagination(query.order_by(desc(SalesTarget.created_at)), pagination.offset, pagination.limit).all()
+    targets = apply_pagination(
+        query.order_by(desc(SalesTarget.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     # 计算实际完成值和完成率
     items = []
     for target in targets:
         # TODO: 实现目标绩效计算逻辑
-        actual_value = getattr(target, 'actual_value', 0) or 0
+        actual_value = getattr(target, "actual_value", 0) or 0
         completion_rate = (actual_value / target.target_value * 100) if target.target_value else 0
 
         # 获取用户/部门名称
@@ -113,33 +116,35 @@ def get_sales_targets(
             dept = db.query(Department).filter(Department.id == target.department_id).first()
             department_name = dept.dept_name if dept else None
 
-        items.append({
-            "id": target.id,
-            "target_scope": target.target_scope,
-            "user_id": target.user_id,
-            "department_id": target.department_id,
-            "team_id": target.team_id,
-            "target_type": target.target_type,
-            "target_period": target.target_period,
-            "period_value": target.period_value,
-            "target_value": float(target.target_value),
-            "description": target.description,
-            "status": target.status,
-            "created_by": target.created_by,
-            "actual_value": float(actual_value),
-            "completion_rate": completion_rate,
-            "user_name": user_name,
-            "department_name": department_name,
-            "created_at": target.created_at,
-            "updated_at": target.updated_at,
-        })
+        items.append(
+            {
+                "id": target.id,
+                "target_scope": target.target_scope,
+                "user_id": target.user_id,
+                "department_id": target.department_id,
+                "team_id": target.team_id,
+                "target_type": target.target_type,
+                "target_period": target.target_period,
+                "period_value": target.period_value,
+                "target_value": float(target.target_value),
+                "description": target.description,
+                "status": target.status,
+                "created_by": target.created_by,
+                "actual_value": float(actual_value),
+                "completion_rate": completion_rate,
+                "user_name": user_name,
+                "department_name": department_name,
+                "created_at": target.created_at,
+                "updated_at": target.updated_at,
+            }
+        )
 
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages = pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -225,9 +230,9 @@ def update_sales_target(
     # 权限检查：只能修改自己创建的目标或自己部门的目标
     if target.created_by != current_user.id:
         user_role_code = get_user_role_code(db, current_user)
-        if user_role_code != 'SALES_DIR':
+        if user_role_code != "SALES_DIR":
             # User表没有department_id，需要通过department字符串匹配
-            dept_name = getattr(current_user, 'department', None)
+            dept_name = getattr(current_user, "department", None)
             if dept_name:
                 dept = db.query(Department).filter(Department.dept_name == dept_name).first()
                 if dept and target.department_id != dept.id:

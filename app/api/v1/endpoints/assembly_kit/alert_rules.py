@@ -35,23 +35,20 @@ from app.schemas.common import ResponseModel
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
+
 from app.utils.db_helpers import get_or_404
 
-router = APIRouter(
-    prefix="/assembly-kit/alert-rules",
-    tags=["alert_rules"]
-)
+router = APIRouter(prefix="/assembly-kit/alert-rules", tags=["alert_rules"])
 
 # 共 3 个路由
 
 # ==================== 预警规则 ====================
 
+
 @router.get("/alert-rules", response_model=ResponseModel)
 async def get_alert_rules(
-    db: Session = Depends(deps.get_db),
-    include_inactive: bool = Query(False)
+    db: Session = Depends(deps.get_db), include_inactive: bool = Query(False)
 ):
     """获取预警规则列表"""
     query = db.query(ShortageAlertRule)
@@ -63,7 +60,7 @@ async def get_alert_rules(
     return ResponseModel(
         code=200,
         message="success",
-        data=[ShortageAlertRuleResponse.model_validate(r) for r in rules]
+        data=[ShortageAlertRuleResponse.model_validate(r) for r in rules],
     )
 
 
@@ -71,12 +68,14 @@ async def get_alert_rules(
 async def create_alert_rule(
     rule_data: ShortageAlertRuleCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:create"))
+    current_user: User = Depends(security.require_permission("assembly_kit:create")),
 ):
     """创建预警规则"""
-    existing = db.query(ShortageAlertRule).filter(
-        ShortageAlertRule.rule_code == rule_data.rule_code
-    ).first()
+    existing = (
+        db.query(ShortageAlertRule)
+        .filter(ShortageAlertRule.rule_code == rule_data.rule_code)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="规则编码已存在")
 
@@ -86,9 +85,7 @@ async def create_alert_rule(
     db.refresh(rule)
 
     return ResponseModel(
-        code=200,
-        message="创建成功",
-        data=ShortageAlertRuleResponse.model_validate(rule)
+        code=200, message="创建成功", data=ShortageAlertRuleResponse.model_validate(rule)
     )
 
 
@@ -97,7 +94,7 @@ async def update_alert_rule(
     rule_id: int,
     rule_data: ShortageAlertRuleUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("assembly_kit:update"))
+    current_user: User = Depends(security.require_permission("assembly_kit:update")),
 ):
     """更新预警规则"""
     rule = get_or_404(db, ShortageAlertRule, rule_id, "预警规则不存在")
@@ -110,7 +107,6 @@ async def update_alert_rule(
     db.commit()
     db.refresh(rule)
 
-    return ResponseModel(code=200, message="更新成功", data=ShortageAlertRuleResponse.model_validate(rule))
-
-
-
+    return ResponseModel(
+        code=200, message="更新成功", data=ShortageAlertRuleResponse.model_validate(rule)
+    )

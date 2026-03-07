@@ -8,14 +8,14 @@ File Size: 53 lines
 Batch: 3
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.orm import Session
+
 import app.services.project_timeline_service
-
-
 
 
 class TestProjectTimelineService:
@@ -25,43 +25,43 @@ class TestProjectTimelineService:
         """测试 collect_status_change_events 函数"""
         # TODO: 实现测试逻辑
         from app.services.project_timeline_service import collect_status_change_events
-        pass
 
+        pass
 
     def test_collect_milestone_events(self):
         """测试 collect_milestone_events 函数"""
         # TODO: 实现测试逻辑
         from app.services.project_timeline_service import collect_milestone_events
-        pass
 
+        pass
 
     def test_collect_task_events(self):
         """测试 collect_task_events 函数"""
         # TODO: 实现测试逻辑
         from app.services.project_timeline_service import collect_task_events
-        pass
 
+        pass
 
     def test_collect_cost_events(self):
         """测试 collect_cost_events 函数"""
         # TODO: 实现测试逻辑
         from app.services.project_timeline_service import collect_cost_events
-        pass
 
+        pass
 
     def test_collect_document_events(self):
         """测试 collect_document_events 函数"""
         # TODO: 实现测试逻辑
         from app.services.project_timeline_service import collect_document_events
-        pass
 
+        pass
 
     def test_add_project_created_event(self):
         """测试 add_project_created_event 函数"""
         # TODO: 实现测试逻辑
         from app.services.project_timeline_service import add_project_created_event
-        pass
 
+        pass
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

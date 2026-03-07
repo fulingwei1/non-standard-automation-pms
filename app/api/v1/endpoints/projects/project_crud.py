@@ -31,8 +31,6 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=PaginatedResponse[ProjectListResponse])
-
-
 @router.get("/my-projects", response_model=PaginatedResponse[ProjectListResponse])
 def read_my_projects(
     db: Session = Depends(deps.get_db),
@@ -45,7 +43,7 @@ def read_my_projects(
     获取我参与的项目列表（基于项目成员关系）
     """
     from app.models.project.team import ProjectMember
-    
+
     # 查询用户参与的项目 ID
     member_project_ids = (
         db.query(ProjectMember.project_id)
@@ -53,11 +51,13 @@ def read_my_projects(
         .all()
     )
     project_ids = [pid[0] for pid in member_project_ids]
-    
+
     # 如果没有参与任何项目，返回空列表
     if not project_ids:
-        return PaginatedResponse(items=[], total=0, page=pagination.page, page_size=pagination.page_size, pages=0)
-    
+        return PaginatedResponse(
+            items=[], total=0, page=pagination.page, page_size=pagination.page_size, pages=0
+        )
+
     service = ProjectCrudService(db)
     items, total = service.list_projects(
         offset=pagination.offset,
@@ -66,14 +66,15 @@ def read_my_projects(
         is_active=is_active,
         project_ids=project_ids,  # 只返回参与的项目
     )
-    
+
     return PaginatedResponse(
         items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
+
 
 def read_projects(
     db: Session = Depends(deps.get_db),
@@ -91,8 +92,7 @@ def read_projects(
     include_cost: bool = Query(False, description="是否包含成本摘要"),
     overrun_only: bool = Query(False, description="仅显示超支项目"),
     sort: Optional[str] = Query(
-        None, 
-        description="排序方式：cost_desc/cost_asc/budget_used_pct/created_at_desc（默认）"
+        None, description="排序方式：cost_desc/cost_asc/budget_used_pct/created_at_desc（默认）"
     ),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
@@ -103,8 +103,10 @@ def read_projects(
 
     # 判断是否使用缓存
     use_cache = (
-        not keyword 
-        and not any([customer_id, stage, status, health, project_type, pm_id, min_progress, max_progress])
+        not keyword
+        and not any(
+            [customer_id, stage, status, health, project_type, pm_id, min_progress, max_progress]
+        )
         and not include_cost
         and not overrun_only
         and not sort
@@ -114,6 +116,7 @@ def read_projects(
     if use_cache:
         try:
             from app.services.cache_service import CacheService
+
             cache_service = CacheService()
             cache_key_params = {
                 "page": pagination.page,
@@ -151,11 +154,10 @@ def read_projects(
     cost_summaries = {}
     if include_cost and projects:
         from app.services.project_cost_aggregation_service import ProjectCostAggregationService
+
         cost_service = ProjectCostAggregationService(db)
         project_ids = [p.id for p in projects]
-        cost_summaries = cost_service.get_projects_cost_summary(
-            project_ids, include_breakdown=True
-        )
+        cost_summaries = cost_service.get_projects_cost_summary(project_ids, include_breakdown=True)
 
     # 计算分页
     pages = pagination.pages_for_total(total)
@@ -184,7 +186,7 @@ def read_projects(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pages
+        pages=pages,
     )
 
     # 存入缓存（仅在不包含成本数据时）
@@ -192,11 +194,12 @@ def read_projects(
         try:
             from app.core.config import settings
             from app.services.cache_service import CacheService
+
             cache_service = CacheService()
             cache_service.set_project_list(
                 result.model_dump(),
                 expire_seconds=settings.REDIS_CACHE_PROJECT_LIST_TTL,
-                **cache_key_params
+                **cache_key_params,
             )
         except Exception:
             logger.debug("项目列表缓存写入失败，忽略", exc_info=True)
@@ -231,10 +234,11 @@ def read_project(
     Get project by ID.
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     check_project_access_or_raise(db, current_user, project_id, "您没有权限查看该项目")
 
     service = ProjectCrudService(db)
-    
+
     # 获取项目基础信息
     project = service.get_project_by_id(project_id)
     if not project:
@@ -250,10 +254,7 @@ def read_project(
     # 构建响应
     project_base = ProjectResponse.model_validate(project)
     project_detail = ProjectDetailResponse(
-        **project_base.model_dump(),
-        members=members,
-        machines=machines,
-        milestones=milestones
+        **project_base.model_dump(), members=members, machines=machines, milestones=milestones
     )
 
     # 存入缓存
@@ -261,6 +262,7 @@ def read_project(
         try:
             from app.core.config import settings
             from app.services.cache_service import CacheService
+
             cache_service = CacheService()
             project_dict = {
                 "id": project.id,
@@ -268,9 +270,7 @@ def read_project(
                 "project_name": project.project_name,
             }
             cache_service.set_project_detail(
-                project_id,
-                project_dict,
-                expire_seconds=settings.REDIS_CACHE_PROJECT_DETAIL_TTL
+                project_id, project_dict, expire_seconds=settings.REDIS_CACHE_PROJECT_DETAIL_TTL
             )
         except Exception:
             logger.debug("项目详情缓存写入失败，忽略", exc_info=True)
@@ -290,6 +290,7 @@ def update_project(
     Update a project.
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     project = check_project_access_or_raise(db, current_user, project_id, "您没有权限修改该项目")
 
     service = ProjectCrudService(db)
@@ -313,6 +314,7 @@ def delete_project(
     Delete a project (soft delete).
     """
     from app.utils.permission_helpers import check_project_access_or_raise
+
     project = check_project_access_or_raise(db, current_user, project_id, "您没有权限删除该项目")
 
     service = ProjectCrudService(db)
@@ -321,8 +323,4 @@ def delete_project(
     # 使缓存失效
     service.invalidate_project_cache(project_id)
 
-    return ResponseModel(
-        code=200,
-        message="项目删除成功",
-        data={"id": project_id}
-    )
+    return ResponseModel(code=200, message="项目删除成功", data={"id": project_id})

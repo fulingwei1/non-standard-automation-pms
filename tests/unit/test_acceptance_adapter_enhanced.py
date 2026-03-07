@@ -5,12 +5,12 @@
 
 import unittest
 from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
-from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
 from app.models.acceptance import AcceptanceOrder, AcceptanceOrderItem, AcceptanceTemplate
 from app.models.approval import ApprovalInstance
-from app.models.project import Project, Machine
+from app.models.project import Machine, Project
+from app.services.approval_engine.adapters.acceptance import AcceptanceOrderApprovalAdapter
 
 
 class TestAcceptanceOrderApprovalAdapter(unittest.TestCase):
@@ -353,7 +353,7 @@ class TestAcceptanceOrderApprovalAdapter(unittest.TestCase):
         mock_order.overall_result = "PASSED"
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
-        with patch('app.services.approval_engine.adapters.acceptance.datetime') as mock_datetime:
+        with patch("app.services.approval_engine.adapters.acceptance.datetime") as mock_datetime:
             mock_now = datetime(2024, 1, 15, 10, 0, 0)
             mock_datetime.now.return_value = mock_now
 
@@ -751,7 +751,11 @@ class TestAcceptanceOrderApprovalAdapter(unittest.TestCase):
         self.db.query.return_value.filter.return_value.first.return_value = mock_order
 
         # Mock 基类方法
-        with patch.object(AcceptanceOrderApprovalAdapter, 'get_department_manager_user_ids_by_codes', return_value=[100]):
+        with patch.object(
+            AcceptanceOrderApprovalAdapter,
+            "get_department_manager_user_ids_by_codes",
+            return_value=[100],
+        ):
             cc_users = self.adapter.get_cc_user_ids(self.entity_id)
 
             self.assertIn(100, cc_users)
@@ -765,5 +769,5 @@ class TestAcceptanceOrderApprovalAdapter(unittest.TestCase):
         self.assertEqual(cc_users, [])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

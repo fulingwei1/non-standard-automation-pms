@@ -9,7 +9,6 @@ import re
 from pathlib import Path
 from typing import List, Tuple
 
-
 # 前62个未匹配的API端点（从 api_frontend_coverage.md 提取）
 ENDPOINTS_62 = [
     ("GET", "/api/v1/projects/templates"),
@@ -103,22 +102,22 @@ def generate_test_file_content(module: str, endpoints: List[Tuple[str, str]]) ->
     """生成测试文件内容"""
     module_test_name = module.replace("-", "_").replace("/", "_")
     class_name = f"Test{module_test_name.title().replace('_', '')}API"
-    
+
     test_methods = []
     for method, path in endpoints:
         # 生成测试方法名
         path_parts = path.replace("/api/v1/", "").replace("{", "").replace("}", "")
         test_name = path_parts.replace("/", "_").replace("-", "_")
         # 清理测试名
-        test_name = re.sub(r'[^a-zA-Z0-9_]', '_', test_name)
-        test_name = re.sub(r'_+', '_', test_name).strip('_')
-        
+        test_name = re.sub(r"[^a-zA-Z0-9_]", "_", test_name)
+        test_name = re.sub(r"_+", "_", test_name).strip("_")
+
         # 提取路径参数
-        path_params = re.findall(r'\{(\w+)\}', path)
+        path_params = re.findall(r"\{(\w+)\}", path)
         path_without_params = path
         for param in path_params:
             path_without_params = path_without_params.replace(f"{{{param}}}", "1")
-        
+
         # 生成测试方法
         test_method = f'''    def test_{method.lower()}_{test_name}(self, api_client):
         """测试 {method} {path}"""
@@ -133,7 +132,7 @@ def generate_test_file_content(module: str, endpoints: List[Tuple[str, str]]) ->
             f"Expected status 200/201/204/400/403/404, got {{response.status_code}}"
 '''
         test_methods.append(test_method)
-    
+
     content = f'''# -*- coding: utf-8 -*-
 """
 API Integration Tests for {module} module
@@ -179,54 +178,54 @@ class {class_name}:
 def main():
     """生成62个API端点的测试文件"""
     print("🚀 开始为62个API端点生成测试文件...\n")
-    
+
     # 按模块分组
     grouped = group_endpoints_by_module(ENDPOINTS_62)
-    
+
     print(f"📊 统计信息:")
     print(f"  总端点数: {len(ENDPOINTS_62)}")
     print(f"  模块数: {len(grouped)}")
     print(f"\n📦 按模块分组:")
     for module, endpoints in sorted(grouped.items()):
         print(f"  {module}: {len(endpoints)} 个端点")
-    
+
     # 生成测试文件
     output_dir = Path("tests/api")
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     generated = []
     skipped = []
-    
+
     print(f"\n📝 生成测试文件:")
     for module, endpoints in sorted(grouped.items()):
         test_file = output_dir / f"test_{module}_api.py"
-        
+
         # 检查是否已存在
         if test_file.exists():
             print(f"  ⏭️  {module:30s} - 测试文件已存在: {test_file.name}")
             skipped.append(module)
             continue
-        
+
         # 生成测试内容
         try:
             content = generate_test_file_content(module, endpoints)
-            
-            with open(test_file, 'w', encoding='utf-8') as f:
+
+            with open(test_file, "w", encoding="utf-8") as f:
                 f.write(content)
-            
+
             print(f"  ✅ {module:30s} - 已生成: {test_file.name} ({len(endpoints)} 个端点)")
             generated.append((module, len(endpoints)))
-        
+
         except Exception as e:
             print(f"  ❌ {module:30s} - 生成失败: {e}")
             skipped.append(module)
-    
+
     # 输出统计
     print(f"\n📊 生成统计:")
     print(f"  ✅ 成功生成: {len(generated)} 个测试文件")
     print(f"  ⏭️  跳过: {len(skipped)} 个")
     print(f"  📁 输出目录: {output_dir}")
-    
+
     if generated:
         total_endpoints = sum(count for _, count in generated)
         print(f"\n📈 覆盖情况:")
@@ -236,7 +235,9 @@ def main():
         print(f"  1. 检查生成的测试文件")
         print(f"  2. 实现 TODO 标记的测试方法")
         print(f"  3. 运行测试: pytest {output_dir}/test_{generated[0][0]}_api.py -v")
-        print(f"  4. 检查覆盖率: pytest --cov=app/api/v1/endpoints/{generated[0][0]} --cov-report=term-missing")
+        print(
+            f"  4. 检查覆盖率: pytest --cov=app/api/v1/endpoints/{generated[0][0]} --cov-report=term-missing"
+        )
 
 
 if __name__ == "__main__":

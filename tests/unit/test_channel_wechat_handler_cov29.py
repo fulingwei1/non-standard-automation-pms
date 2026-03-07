@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - channel_handlers/wechat_handler.py 单元测试（WeChatChannelHandler）"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.channel_handlers.wechat_handler")
 
-from app.services.channel_handlers.wechat_handler import WeChatChannelHandler
 from app.services.channel_handlers.base import (
-    NotificationRequest,
-    NotificationPriority,
     NotificationChannel,
+    NotificationPriority,
+    NotificationRequest,
 )
-
+from app.services.channel_handlers.wechat_handler import WeChatChannelHandler
 
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -42,6 +43,7 @@ def _make_user(user_id=1, wechat_userid="wx_user_1"):
 
 # ─── 测试：is_enabled ─────────────────────────────────────────────────────────
 
+
 class TestWeChatChannelHandlerIsEnabled:
     """测试 is_enabled 方法"""
 
@@ -61,6 +63,7 @@ class TestWeChatChannelHandlerIsEnabled:
 
 
 # ─── 测试：send ───────────────────────────────────────────────────────────────
+
 
 class TestWeChatChannelHandlerSend:
     """测试 send 方法"""
@@ -114,10 +117,13 @@ class TestWeChatChannelHandlerSend:
         result = handler.send(request)
 
         assert result.success is True
-        mock_client.send_message.assert_called_once_with(["wx_abc"], {
-            "msgtype": "text",
-            "text": {"content": f"【{request.title}】\n{request.content}"},
-        })
+        mock_client.send_message.assert_called_once_with(
+            ["wx_abc"],
+            {
+                "msgtype": "text",
+                "text": {"content": f"【{request.title}】\n{request.content}"},
+            },
+        )
 
     @patch("app.services.channel_handlers.wechat_handler.WeChatClient")
     @patch("app.services.channel_handlers.wechat_handler.settings")

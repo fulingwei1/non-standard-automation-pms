@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - purchase_request_from_bom_service 单元测试"""
 
-import pytest
+from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-from datetime import date
+
+import pytest
 
 pytest.importorskip("app.services.purchase_request_from_bom_service")
 
 from app.services.purchase_request_from_bom_service import (
-    get_purchase_items_from_bom,
-    determine_supplier_for_item,
-    group_items_by_supplier,
     build_request_items,
-    format_request_items,
     create_purchase_request,
+    determine_supplier_for_item,
+    format_request_items,
+    get_purchase_items_from_bom,
+    group_items_by_supplier,
 )
 
 
@@ -46,6 +47,7 @@ def _make_bom_item(
 
 # ── get_purchase_items_from_bom ───────────────────────────────────────────────
 
+
 class TestGetPurchaseItemsFromBom:
     def test_filters_by_purchase_source_type(self):
         bom = MagicMock()
@@ -64,6 +66,7 @@ class TestGetPurchaseItemsFromBom:
 
 
 # ── determine_supplier_for_item ───────────────────────────────────────────────
+
 
 class TestDetermineSupplierForItem:
     def test_uses_default_supplier_id_if_provided(self):
@@ -103,6 +106,7 @@ class TestDetermineSupplierForItem:
 
 # ── group_items_by_supplier ───────────────────────────────────────────────────
 
+
 class TestGroupItemsBySupplier:
     def test_groups_items_by_their_supplier(self):
         db = MagicMock()
@@ -130,9 +134,12 @@ class TestGroupItemsBySupplier:
 
 # ── build_request_items ───────────────────────────────────────────────────────
 
+
 class TestBuildRequestItems:
     def test_calculates_remaining_qty_and_amount(self):
-        item = _make_bom_item(quantity=Decimal("10"), purchased_qty=Decimal("3"), unit_price=Decimal("5"))
+        item = _make_bom_item(
+            quantity=Decimal("10"), purchased_qty=Decimal("3"), unit_price=Decimal("5")
+        )
         items, total = build_request_items([item])
         assert len(items) == 1
         assert items[0]["quantity"] == Decimal("7")
@@ -151,8 +158,12 @@ class TestBuildRequestItems:
         assert len(items) == 0
 
     def test_multiple_items_total(self):
-        item1 = _make_bom_item(quantity=Decimal("10"), purchased_qty=Decimal("0"), unit_price=Decimal("2"))
-        item2 = _make_bom_item(quantity=Decimal("5"), purchased_qty=Decimal("0"), unit_price=Decimal("4"))
+        item1 = _make_bom_item(
+            quantity=Decimal("10"), purchased_qty=Decimal("0"), unit_price=Decimal("2")
+        )
+        item2 = _make_bom_item(
+            quantity=Decimal("5"), purchased_qty=Decimal("0"), unit_price=Decimal("4")
+        )
         items, total = build_request_items([item1, item2])
         assert len(items) == 2
         assert total == Decimal("40")
@@ -160,9 +171,19 @@ class TestBuildRequestItems:
     def test_item_dict_keys(self):
         item = _make_bom_item()
         items, _ = build_request_items([item])
-        expected_keys = {"bom_item_id", "material_id", "material_code", "material_name",
-                         "specification", "unit", "quantity", "unit_price", "amount",
-                         "required_date", "is_key_item"}
+        expected_keys = {
+            "bom_item_id",
+            "material_id",
+            "material_code",
+            "material_name",
+            "specification",
+            "unit",
+            "quantity",
+            "unit_price",
+            "amount",
+            "required_date",
+            "is_key_item",
+        }
         assert expected_keys.issubset(set(items[0].keys()))
 
     def test_zero_unit_price_item(self):
@@ -174,21 +195,24 @@ class TestBuildRequestItems:
 
 # ── format_request_items ──────────────────────────────────────────────────────
 
+
 class TestFormatRequestItems:
     def test_converts_decimal_to_float(self):
-        raw_items = [{
-            "bom_item_id": 1,
-            "material_id": 2,
-            "material_code": "M001",
-            "material_name": "物料",
-            "specification": "规格",
-            "unit": "件",
-            "quantity": Decimal("7"),
-            "unit_price": Decimal("5"),
-            "amount": Decimal("35"),
-            "required_date": None,
-            "is_key_item": False,
-        }]
+        raw_items = [
+            {
+                "bom_item_id": 1,
+                "material_id": 2,
+                "material_code": "M001",
+                "material_name": "物料",
+                "specification": "规格",
+                "unit": "件",
+                "quantity": Decimal("7"),
+                "unit_price": Decimal("5"),
+                "amount": Decimal("35"),
+                "required_date": None,
+                "is_key_item": False,
+            }
+        ]
         result = format_request_items(raw_items)
         assert isinstance(result[0]["quantity"], float)
         assert isinstance(result[0]["unit_price"], float)
@@ -196,22 +220,40 @@ class TestFormatRequestItems:
 
     def test_required_date_formatted_as_isoformat(self):
         d = date(2025, 6, 1)
-        raw_items = [{
-            "bom_item_id": 1, "material_id": 2, "material_code": "M",
-            "material_name": "物", "specification": "规", "unit": "件",
-            "quantity": Decimal("1"), "unit_price": Decimal("1"), "amount": Decimal("1"),
-            "required_date": d, "is_key_item": False,
-        }]
+        raw_items = [
+            {
+                "bom_item_id": 1,
+                "material_id": 2,
+                "material_code": "M",
+                "material_name": "物",
+                "specification": "规",
+                "unit": "件",
+                "quantity": Decimal("1"),
+                "unit_price": Decimal("1"),
+                "amount": Decimal("1"),
+                "required_date": d,
+                "is_key_item": False,
+            }
+        ]
         result = format_request_items(raw_items)
         assert result[0]["required_date"] == "2025-06-01"
 
     def test_none_required_date_stays_none(self):
-        raw_items = [{
-            "bom_item_id": 1, "material_id": None, "material_code": "M",
-            "material_name": "物", "specification": "规", "unit": "件",
-            "quantity": Decimal("1"), "unit_price": Decimal("1"), "amount": Decimal("1"),
-            "required_date": None, "is_key_item": False,
-        }]
+        raw_items = [
+            {
+                "bom_item_id": 1,
+                "material_id": None,
+                "material_code": "M",
+                "material_name": "物",
+                "specification": "规",
+                "unit": "件",
+                "quantity": Decimal("1"),
+                "unit_price": Decimal("1"),
+                "amount": Decimal("1"),
+                "required_date": None,
+                "is_key_item": False,
+            }
+        ]
         result = format_request_items(raw_items)
         assert result[0]["required_date"] is None
 
@@ -220,6 +262,7 @@ class TestFormatRequestItems:
 
 
 # ── create_purchase_request ───────────────────────────────────────────────────
+
 
 class TestCreatePurchaseRequest:
     def test_creates_pr_with_correct_fields(self):
@@ -236,9 +279,14 @@ class TestCreatePurchaseRequest:
         generate_request_no = MagicMock(return_value="PR20250001")
 
         pr = create_purchase_request(
-            db, bom, supplier_id=3, supplier_name="供应商A",
-            request_items=request_items, total_amount=total_amount,
-            current_user_id=1, generate_request_no=generate_request_no
+            db,
+            bom,
+            supplier_id=3,
+            supplier_name="供应商A",
+            request_items=request_items,
+            total_amount=total_amount,
+            current_user_id=1,
+            generate_request_no=generate_request_no,
         )
 
         db.add.assert_called()
@@ -257,16 +305,30 @@ class TestCreatePurchaseRequest:
         bom.required_date = None
 
         request_items = [
-            {"bom_item_id": 1, "material_id": 2, "material_code": "M", "material_name": "物",
-             "specification": "规", "unit": "件", "quantity": Decimal("5"),
-             "unit_price": Decimal("2"), "amount": Decimal("10"), "required_date": None},
+            {
+                "bom_item_id": 1,
+                "material_id": 2,
+                "material_code": "M",
+                "material_name": "物",
+                "specification": "规",
+                "unit": "件",
+                "quantity": Decimal("5"),
+                "unit_price": Decimal("2"),
+                "amount": Decimal("10"),
+                "required_date": None,
+            },
         ]
         generate_request_no = MagicMock(return_value="PR001")
 
         create_purchase_request(
-            db, bom, supplier_id=0, supplier_name="",
-            request_items=request_items, total_amount=Decimal("10"),
-            current_user_id=1, generate_request_no=generate_request_no
+            db,
+            bom,
+            supplier_id=0,
+            supplier_name="",
+            request_items=request_items,
+            total_amount=Decimal("10"),
+            current_user_id=1,
+            generate_request_no=generate_request_no,
         )
 
         # Should add once for PurchaseRequest + once for each PurchaseRequestItem
@@ -283,8 +345,13 @@ class TestCreatePurchaseRequest:
         generate_request_no = MagicMock(return_value="PR002")
 
         pr = create_purchase_request(
-            db, bom, supplier_id=0, supplier_name="",
-            request_items=[], total_amount=Decimal("0"),
-            current_user_id=1, generate_request_no=generate_request_no
+            db,
+            bom,
+            supplier_id=0,
+            supplier_name="",
+            request_items=[],
+            total_amount=Decimal("0"),
+            current_user_id=1,
+            generate_request_no=generate_request_no,
         )
         assert pr.supplier_id is None

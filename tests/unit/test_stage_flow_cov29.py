@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - stage_instance/stage_flow.py 单元测试（StageFlowMixin）"""
 
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.stage_instance.stage_flow")
 
-from app.services.stage_instance.stage_flow import StageFlowMixin
 from app.models.enums import StageStatusEnum
-
+from app.services.stage_instance.stage_flow import StageFlowMixin
 
 # ─── 具体子类（用于测试 Mixin） ─────────────────────────────────────────────
+
 
 class ConcreteStageFlow(StageFlowMixin):
     """用于测试的具体实现类"""
@@ -21,6 +22,7 @@ class ConcreteStageFlow(StageFlowMixin):
 
 
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -47,6 +49,7 @@ def _make_stage(
 
 
 # ─── 测试：start_stage ────────────────────────────────────────────────────────
+
 
 class TestStartStage:
     """测试 start_stage 方法"""
@@ -100,6 +103,7 @@ class TestStartStage:
 
 # ─── 测试：complete_stage ─────────────────────────────────────────────────────
 
+
 class TestCompleteStage:
     """测试 complete_stage 方法"""
 
@@ -149,7 +153,9 @@ class TestCompleteStage:
         db.query.return_value.filter.return_value.first.side_effect = lambda: next(returns, None)
         db.query.return_value.filter.return_value.filter.return_value.count.return_value = 0
         db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.first.return_value = (
+            None
+        )
         flow = ConcreteStageFlow(db)
         current, next_stage = flow.complete_stage(stage_instance_id=1, auto_start_next=False)
         assert current.status == StageStatusEnum.COMPLETED.value
@@ -157,6 +163,7 @@ class TestCompleteStage:
 
 
 # ─── 测试：skip_stage ─────────────────────────────────────────────────────────
+
 
 class TestSkipStage:
     """测试 skip_stage 方法"""

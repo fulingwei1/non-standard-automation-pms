@@ -3,9 +3,10 @@
 进度预测服务单元测试
 覆盖特征提取、线性预测、风险评级等核心逻辑
 """
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.schedule_prediction_service import SchedulePredictionService
 
@@ -165,8 +166,10 @@ class TestPredictCompletionDateLinear:
     """predict_completion_date 端到端（线性模式，mock DB）"""
 
     def test_linear_prediction_returns_expected_structure(self, mock_db):
-        with patch("app.services.schedule_prediction_service.AIClientService"), \
-             patch("app.services.schedule_prediction_service.save_obj"):
+        with (
+            patch("app.services.schedule_prediction_service.AIClientService"),
+            patch("app.services.schedule_prediction_service.save_obj"),
+        ):
             svc = SchedulePredictionService(db=mock_db)
             # mock save_obj sets id
             mock_record = MagicMock()

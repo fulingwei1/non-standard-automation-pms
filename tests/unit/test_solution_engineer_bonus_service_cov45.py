@@ -3,9 +3,10 @@
 第四十五批覆盖：solution_engineer_bonus_service.py
 """
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.solution_engineer_bonus_service")
 
@@ -105,7 +106,9 @@ class TestSolutionEngineerBonusService:
         solutions[0].opportunity_id = 99
 
         contract = MagicMock(contract_amount=Decimal("100000"), status="SIGNED")
-        mock_db.query.return_value.filter.return_value.first.side_effect = [period, contract] + [None] * 10
+        mock_db.query.return_value.filter.return_value.first.side_effect = [period, contract] + [
+            None
+        ] * 10
         mock_db.query.return_value.filter.return_value.all.return_value = solutions
 
         result = service.calculate_solution_bonus(engineer_id=1, period_id=1)

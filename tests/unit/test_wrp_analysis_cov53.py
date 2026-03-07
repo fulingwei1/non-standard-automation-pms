@@ -2,16 +2,17 @@
 """
 Unit tests for app/services/win_rate_prediction_service/analysis.py
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+import pytest
+
 try:
+    from app.models.enums import LeadOutcomeEnum, WinProbabilityLevelEnum
     from app.services.win_rate_prediction_service.analysis import (
         get_win_rate_distribution,
         validate_model_accuracy,
     )
-    from app.models.enums import LeadOutcomeEnum, WinProbabilityLevelEnum
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -19,6 +20,7 @@ except ImportError as e:
 # ---------------------------------------------------------------------------
 # get_win_rate_distribution
 # ---------------------------------------------------------------------------
+
 
 def test_win_rate_distribution_empty():
     svc = MagicMock()
@@ -76,6 +78,7 @@ def test_win_rate_distribution_actual_win_rate_calculated():
 # ---------------------------------------------------------------------------
 # validate_model_accuracy
 # ---------------------------------------------------------------------------
+
 
 def test_validate_model_accuracy_no_data():
     svc = MagicMock()

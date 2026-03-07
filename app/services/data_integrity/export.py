@@ -15,14 +15,12 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from app.services.import_export_engine import ExcelExportEngine
 
+
 class ExportMixin:
     """导出功能混入类"""
 
     def export_data_quality_report(
-        self,
-        period_id: int,
-        department_id: Optional[int] = None,
-        format: str = 'json'
+        self, period_id: int, department_id: Optional[int] = None, format: str = "json"
     ) -> Dict[str, Any]:
         """
         导出数据质量报告
@@ -37,12 +35,12 @@ class ExportMixin:
         """
         report = self.generate_data_quality_report(period_id, department_id)
 
-        if format == 'json':
+        if format == "json":
             return report
-        elif format == 'excel':
+        elif format == "excel":
             # 使用pandas生成Excel
             return self._export_to_excel(report)
-        elif format == 'pdf':
+        elif format == "pdf":
             # 使用reportlab生成PDF
             return self._export_to_pdf(report)
         else:
@@ -60,8 +58,8 @@ class ExportMixin:
         """
         summary_rows = [
             {"指标": "数据完整率", "值": f"{report.get('overall_completeness', 0):.1f}%"},
-            {"指标": "工程师总数", "值": report.get('total_engineers', 0)},
-            {"指标": "有数据的工程师", "值": report.get('engineers_with_data', 0)},
+            {"指标": "工程师总数", "值": report.get("total_engineers", 0)},
+            {"指标": "有数据的工程师", "值": report.get("engineers_with_data", 0)},
             {"指标": "平均完整率", "值": f"{report.get('average_completeness', 0):.1f}%"},
         ]
         summary_columns = ExcelExportEngine.build_columns(["指标", "值"])
@@ -70,18 +68,18 @@ class ExportMixin:
             {"name": "概览", "data": summary_rows, "columns": summary_columns},
         ]
 
-        if 'details' in report and report['details']:
-            sheets.append({"name": "详细数据", "data": report['details']})
+        if "details" in report and report["details"]:
+            sheets.append({"name": "详细数据", "data": report["details"]})
 
-        if 'missing_summary' in report and report['missing_summary']:
-            sheets.append({"name": "缺失统计", "data": report['missing_summary']})
+        if "missing_summary" in report and report["missing_summary"]:
+            sheets.append({"name": "缺失统计", "data": report["missing_summary"]})
 
         output = ExcelExportEngine.export_multi_sheet(sheets)
         return {
-            'format': 'excel',
-            'content': output.getvalue(),
-            'filename': f"data_quality_report_{report.get('period_id', 'unknown')}.xlsx",
-            'content_type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            "format": "excel",
+            "content": output.getvalue(),
+            "filename": f"data_quality_report_{report.get('period_id', 'unknown')}.xlsx",
+            "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         }
 
     def _export_to_pdf(self, report: Dict[str, Any]) -> Dict[str, Any]:
@@ -95,41 +93,45 @@ class ExportMixin:
             包含PDF文件内容的字典
         """
         output = io.BytesIO()
-        doc = SimpleDocTemplate(output, pagesize=A4, topMargin=20*mm, bottomMargin=20*mm)
+        doc = SimpleDocTemplate(output, pagesize=A4, topMargin=20 * mm, bottomMargin=20 * mm)
         styles = getSampleStyleSheet()
         elements = []
 
         # 标题
-        title_style = styles['Heading1']
+        title_style = styles["Heading1"]
         elements.append(Paragraph("数据质量报告", title_style))
-        elements.append(Spacer(1, 10*mm))
+        elements.append(Spacer(1, 10 * mm))
 
         # 概览表格
         overview_data = [
-            ['指标', '值'],
-            ['数据完整率', f"{report.get('overall_completeness', 0):.1f}%"],
-            ['工程师总数', str(report.get('total_engineers', 0))],
-            ['有数据的工程师', str(report.get('engineers_with_data', 0))],
-            ['平均完整率', f"{report.get('average_completeness', 0):.1f}%"]
+            ["指标", "值"],
+            ["数据完整率", f"{report.get('overall_completeness', 0):.1f}%"],
+            ["工程师总数", str(report.get("total_engineers", 0))],
+            ["有数据的工程师", str(report.get("engineers_with_data", 0))],
+            ["平均完整率", f"{report.get('average_completeness', 0):.1f}%"],
         ]
 
-        overview_table = Table(overview_data, colWidths=[80*mm, 60*mm])
-        overview_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+        overview_table = Table(overview_data, colWidths=[80 * mm, 60 * mm])
+        overview_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ]
+            )
+        )
         elements.append(overview_table)
 
         doc.build(elements)
         output.seek(0)
 
         return {
-            'format': 'pdf',
-            'content': output.getvalue(),
-            'filename': f"data_quality_report_{report.get('period_id', 'unknown')}.pdf",
-            'content_type': 'application/pdf'
+            "format": "pdf",
+            "content": output.getvalue(),
+            "filename": f"data_quality_report_{report.get('period_id', 'unknown')}.pdf",
+            "content_type": "application/pdf",
         }

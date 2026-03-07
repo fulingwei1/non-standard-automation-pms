@@ -28,23 +28,19 @@ async def get_ranking(
     department_id: Optional[int] = Query(None, description="部门ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取工程师绩效排名"""
     service = EngineerPerformanceService(db)
 
     # 获取周期
     if not period_id:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active
-        ).first()
+        period = db.query(PerformancePeriod).filter(PerformancePeriod.is_active).first()
         if not period:
             raise HTTPException(status_code=404, detail="未找到当前考核周期")
         period_id = period.id
     else:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.id == period_id
-        ).first()
+        period = db.query(PerformancePeriod).filter(PerformancePeriod.id == period_id).first()
 
     results, total = service.get_ranking(
         period_id=period_id,
@@ -52,23 +48,25 @@ async def get_ranking(
         job_level=job_level,
         department_id=department_id,
         limit=pagination.limit,
-        offset=pagination.offset
+        offset=pagination.offset,
     )
 
     items = []
     for i, r in enumerate(results, pagination.offset + 1):
-        items.append({
-            "rank": i,
-            "user_id": r.user_id,
-            "user_name": r.user_name,
-            "department_name": r.department_name,
-            "job_type": r.job_type,
-            "job_level": r.job_level,
-            "total_score": float(r.total_score or 0),
-            "level": r.level,
-            "score_change": float(r.score_change) if r.score_change else None,
-            "rank_change": r.rank_change
-        })
+        items.append(
+            {
+                "rank": i,
+                "user_id": r.user_id,
+                "user_name": r.user_name,
+                "department_name": r.department_name,
+                "job_type": r.job_type,
+                "job_level": r.job_level,
+                "total_score": float(r.total_score or 0),
+                "level": r.level,
+                "score_change": float(r.score_change) if r.score_change else None,
+                "rank_change": r.rank_change,
+            }
+        )
 
     return ResponseModel(
         code=200,
@@ -77,8 +75,8 @@ async def get_ranking(
             "period_id": period_id,
             "period_name": period.period_name if period else "",
             "total": total,
-            "items": items
-        }
+            "items": items,
+        },
     )
 
 
@@ -88,15 +86,13 @@ async def get_ranking_by_department(
     department_id: int = Query(..., description="部门ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取部门内排名"""
     service = EngineerPerformanceService(db)
 
     if not period_id:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active
-        ).first()
+        period = db.query(PerformancePeriod).filter(PerformancePeriod.is_active).first()
         if period:
             period_id = period.id
 
@@ -104,29 +100,27 @@ async def get_ranking_by_department(
         period_id=period_id,
         department_id=department_id,
         limit=pagination.limit,
-        offset=pagination.offset
+        offset=pagination.offset,
     )
 
     items = []
     for i, r in enumerate(results, pagination.offset + 1):
-        items.append({
-            "rank": i,
-            "user_id": r.user_id,
-            "user_name": r.user_name,
-            "job_type": r.job_type,
-            "job_level": r.job_level,
-            "total_score": float(r.total_score or 0),
-            "level": r.level
-        })
+        items.append(
+            {
+                "rank": i,
+                "user_id": r.user_id,
+                "user_name": r.user_name,
+                "job_type": r.job_type,
+                "job_level": r.job_level,
+                "total_score": float(r.total_score or 0),
+                "level": r.level,
+            }
+        )
 
     return ResponseModel(
         code=200,
         message="success",
-        data={
-            "department_id": department_id,
-            "total": total,
-            "items": items
-        }
+        data={"department_id": department_id, "total": total, "items": items},
     )
 
 
@@ -136,48 +130,39 @@ async def get_ranking_by_job_type(
     job_type: str = Query(..., description="岗位类型"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取岗位类型内排名"""
-    if job_type not in ['mechanical', 'test', 'electrical']:
+    if job_type not in ["mechanical", "test", "electrical"]:
         raise HTTPException(status_code=400, detail="无效的岗位类型")
 
     service = EngineerPerformanceService(db)
 
     if not period_id:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active
-        ).first()
+        period = db.query(PerformancePeriod).filter(PerformancePeriod.is_active).first()
         if period:
             period_id = period.id
 
     results, total = service.get_ranking(
-        period_id=period_id,
-        job_type=job_type,
-        limit=pagination.limit,
-        offset=pagination.offset
+        period_id=period_id, job_type=job_type, limit=pagination.limit, offset=pagination.offset
     )
 
     items = []
     for i, r in enumerate(results, pagination.offset + 1):
-        items.append({
-            "rank": i,
-            "user_id": r.user_id,
-            "user_name": r.user_name,
-            "department_name": r.department_name,
-            "job_level": r.job_level,
-            "total_score": float(r.total_score or 0),
-            "level": r.level
-        })
+        items.append(
+            {
+                "rank": i,
+                "user_id": r.user_id,
+                "user_name": r.user_name,
+                "department_name": r.department_name,
+                "job_level": r.job_level,
+                "total_score": float(r.total_score or 0),
+                "level": r.level,
+            }
+        )
 
     return ResponseModel(
-        code=200,
-        message="success",
-        data={
-            "job_type": job_type,
-            "total": total,
-            "items": items
-        }
+        code=200, message="success", data={"job_type": job_type, "total": total, "items": items}
     )
 
 
@@ -187,39 +172,31 @@ async def get_top_engineers(
     n: int = Query(10, ge=1, le=50, description="返回数量"),
     job_type: Optional[str] = Query(None, description="岗位类型"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """获取 Top N 工程师"""
     service = EngineerPerformanceService(db)
 
     if not period_id:
-        period = db.query(PerformancePeriod).filter(
-            PerformancePeriod.is_active
-        ).first()
+        period = db.query(PerformancePeriod).filter(PerformancePeriod.is_active).first()
         if period:
             period_id = period.id
 
-    results, _ = service.get_ranking(
-        period_id=period_id,
-        job_type=job_type,
-        limit=n
-    )
+    results, _ = service.get_ranking(period_id=period_id, job_type=job_type, limit=n)
 
     items = []
     for i, r in enumerate(results, 1):
-        items.append({
-            "rank": i,
-            "user_id": r.user_id,
-            "user_name": r.user_name,
-            "department_name": r.department_name,
-            "job_type": r.job_type,
-            "job_level": r.job_level,
-            "total_score": float(r.total_score or 0),
-            "level": r.level
-        })
+        items.append(
+            {
+                "rank": i,
+                "user_id": r.user_id,
+                "user_name": r.user_name,
+                "department_name": r.department_name,
+                "job_type": r.job_type,
+                "job_level": r.job_level,
+                "total_score": float(r.total_score or 0),
+                "level": r.level,
+            }
+        )
 
-    return ResponseModel(
-        code=200,
-        message="success",
-        data=items
-    )
+    return ResponseModel(code=200, message="success", data=items)

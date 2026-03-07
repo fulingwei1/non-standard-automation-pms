@@ -17,7 +17,9 @@ from app.schemas.installation_dispatch import InstallationDispatchStatistics
 router = APIRouter()
 
 
-@router.get("/statistics", response_model=InstallationDispatchStatistics, status_code=status.HTTP_200_OK)
+@router.get(
+    "/statistics", response_model=InstallationDispatchStatistics, status_code=status.HTTP_200_OK
+)
 def get_installation_dispatch_statistics(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("installation_dispatch:read")),
@@ -26,12 +28,36 @@ def get_installation_dispatch_statistics(
     获取安装调试派工统计
     """
     total = db.query(InstallationDispatchOrder).count()
-    pending = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.status == "PENDING").count()
-    assigned = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.status == "ASSIGNED").count()
-    in_progress = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.status == "IN_PROGRESS").count()
-    completed = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.status == "COMPLETED").count()
-    cancelled = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.status == "CANCELLED").count()
-    urgent = db.query(InstallationDispatchOrder).filter(InstallationDispatchOrder.priority == "URGENT").count()
+    pending = (
+        db.query(InstallationDispatchOrder)
+        .filter(InstallationDispatchOrder.status == "PENDING")
+        .count()
+    )
+    assigned = (
+        db.query(InstallationDispatchOrder)
+        .filter(InstallationDispatchOrder.status == "ASSIGNED")
+        .count()
+    )
+    in_progress = (
+        db.query(InstallationDispatchOrder)
+        .filter(InstallationDispatchOrder.status == "IN_PROGRESS")
+        .count()
+    )
+    completed = (
+        db.query(InstallationDispatchOrder)
+        .filter(InstallationDispatchOrder.status == "COMPLETED")
+        .count()
+    )
+    cancelled = (
+        db.query(InstallationDispatchOrder)
+        .filter(InstallationDispatchOrder.status == "CANCELLED")
+        .count()
+    )
+    urgent = (
+        db.query(InstallationDispatchOrder)
+        .filter(InstallationDispatchOrder.priority == "URGENT")
+        .count()
+    )
 
     return InstallationDispatchStatistics(
         total=total,

@@ -3,12 +3,12 @@
 代码质量分析工具 - 分析大文件和大函数
 """
 
-import os
 import ast
 import json
+import os
+from collections import defaultdict
 from pathlib import Path
 from typing import List
-from collections import defaultdict
 
 
 class CodeAnalyzer:
@@ -304,12 +304,8 @@ class CodeAnalyzer:
         print("-" * 80)
         print(f"大文件 (Python):     {self.results['summary']['large_py_files']} 个")
         print(f"大文件 (JavaScript): {self.results['summary']['large_js_files']} 个")
-        print(
-            f"大函数 (Python):     {self.results['summary']['large_py_functions']} 个"
-        )
-        print(
-            f"大函数 (JavaScript): {self.results['summary']['large_js_functions']} 个"
-        )
+        print(f"大函数 (Python):     {self.results['summary']['large_py_functions']} 个")
+        print(f"大函数 (JavaScript): {self.results['summary']['large_js_functions']} 个")
         print()
 
         # 大文件详情
@@ -319,9 +315,7 @@ class CodeAnalyzer:
 
             # 按类型分组
             py_files = [f for f in self.results["large_files"] if f["type"] == "Python"]
-            js_files = [
-                f for f in self.results["large_files"] if f["type"] == "JavaScript"
-            ]
+            js_files = [f for f in self.results["large_files"] if f["type"] == "JavaScript"]
 
             if py_files:
                 print("\n🐍 Python 后端:")
@@ -343,12 +337,8 @@ class CodeAnalyzer:
             print("-" * 80)
 
             # 按类型分组
-            py_funcs = [
-                f for f in self.results["large_functions"] if f["type"] == "Python"
-            ]
-            js_funcs = [
-                f for f in self.results["large_functions"] if f["type"] == "JavaScript"
-            ]
+            py_funcs = [f for f in self.results["large_functions"] if f["type"] == "Python"]
+            js_funcs = [f for f in self.results["large_functions"] if f["type"] == "JavaScript"]
 
             if py_funcs:
                 print("\n🐍 Python 后端:")

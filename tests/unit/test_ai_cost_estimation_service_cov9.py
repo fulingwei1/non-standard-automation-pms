@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第九批: test_ai_cost_estimation_service_cov9.py - AICostEstimationService 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.sales.ai_cost_estimation_service")
 
@@ -45,10 +46,7 @@ class TestCalculateHardwareCost:
         assert result == expected
 
     def test_multiple_items(self, service):
-        items = [
-            {"unit_price": "5000", "quantity": "3"},
-            {"unit_price": "2000", "quantity": "1"}
-        ]
+        items = [{"unit_price": "5000", "quantity": "3"}, {"unit_price": "2000", "quantity": "1"}]
         result = service._calculate_hardware_cost(items)
         expected = (Decimal("5000") * 3 + Decimal("2000")) * Decimal("1.15")
         assert result == expected
@@ -90,7 +88,9 @@ class TestCalculateInstallationCost:
 
     def test_installation_high_greater_than_low(self, service):
         hw = Decimal("50000")
-        assert service._calculate_installation_cost("high", hw) > service._calculate_installation_cost("low", hw)
+        assert service._calculate_installation_cost(
+            "high", hw
+        ) > service._calculate_installation_cost("low", hw)
 
 
 class TestCalculateServiceCost:

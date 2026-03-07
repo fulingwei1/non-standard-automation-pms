@@ -39,9 +39,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         order_mock.project_id = 1
         order_mock.machine_id = None
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            order_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = order_mock
 
         # Mock 审批引擎
         instance_mock = MagicMock()
@@ -74,9 +72,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         order_mock = MagicMock()
         order_mock.status = "APPROVED"
 
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            order_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = order_mock
 
         result = self.service.submit_orders_for_approval(
             order_ids=[1], initiator_id=10, urgency="NORMAL"
@@ -112,9 +108,7 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
         order_mock.project = MagicMock(project_name="项目A")
 
         self.service.engine.get_pending_tasks = MagicMock(return_value=[task_mock])
-        self.db_mock.query.return_value.filter.return_value.first.return_value = (
-            order_mock
-        )
+        self.db_mock.query.return_value.filter.return_value.first.return_value = order_mock
 
         result = self.service.get_pending_tasks(user_id=10, offset=0, limit=10)
 
@@ -204,12 +198,8 @@ class TestOutsourcingWorkflowService(unittest.TestCase):
 
         query_mock = self.db_mock.query.return_value
         query_mock.filter.return_value.first.return_value = order_mock
-        query_mock.filter.return_value.order_by.return_value.first.return_value = (
-            instance_mock
-        )
-        query_mock.filter.return_value.order_by.return_value.all.return_value = [
-            task_mock
-        ]
+        query_mock.filter.return_value.order_by.return_value.first.return_value = instance_mock
+        query_mock.filter.return_value.order_by.return_value.all.return_value = [task_mock]
 
         result = self.service.get_approval_status(order_id=1)
 

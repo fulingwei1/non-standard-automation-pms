@@ -3,13 +3,15 @@
 第八批覆盖率测试 - EVM (挣值管理) 服务
 测试 EVMCalculator 的核心计算方法
 """
-import pytest
-from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.evm_service import EVMCalculator, EVMService
+
     HAS_EVM = True
 except Exception:
     HAS_EVM = False
@@ -69,9 +71,7 @@ class TestEVMCalculatorBasic:
 
     def test_schedule_performance_index_zero_pv(self):
         """PV 为 0 时 SPI 应返回 None"""
-        spi = EVMCalculator.calculate_schedule_performance_index(
-            Decimal("100"), Decimal("0")
-        )
+        spi = EVMCalculator.calculate_schedule_performance_index(Decimal("100"), Decimal("0"))
         assert spi is None
 
     def test_cost_performance_index(self):

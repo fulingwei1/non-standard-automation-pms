@@ -19,10 +19,7 @@ from app.models.project import (
 from app.schemas.project import TimelineEvent
 
 
-def collect_status_change_events(
-    db: Session,
-    project_id: int
-) -> List[TimelineEvent]:
+def collect_status_change_events(db: Session, project_id: int) -> List[TimelineEvent]:
     """
     收集状态变更事件
 
@@ -31,9 +28,7 @@ def collect_status_change_events(
     """
     events = []
 
-    status_logs = db.query(ProjectStatusLog).filter(
-        ProjectStatusLog.project_id == project_id
-    ).all()
+    status_logs = db.query(ProjectStatusLog).filter(ProjectStatusLog.project_id == project_id).all()
 
     for log in status_logs:
         event = TimelineEvent(
@@ -50,10 +45,7 @@ def collect_status_change_events(
     return events
 
 
-def collect_milestone_events(
-    db: Session,
-    project_id: int
-) -> List[TimelineEvent]:
+def collect_milestone_events(db: Session, project_id: int) -> List[TimelineEvent]:
     """
     收集里程碑事件
 
@@ -62,9 +54,7 @@ def collect_milestone_events(
     """
     events = []
 
-    milestones = db.query(ProjectMilestone).filter(
-        ProjectMilestone.project_id == project_id
-    ).all()
+    milestones = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id).all()
 
     for milestone in milestones:
         # 里程碑创建
@@ -94,10 +84,7 @@ def collect_milestone_events(
     return events
 
 
-def collect_task_events(
-    db: Session,
-    project_id: int
-) -> List[TimelineEvent]:
+def collect_task_events(db: Session, project_id: int) -> List[TimelineEvent]:
     """
     收集任务事件
 
@@ -136,10 +123,7 @@ def collect_task_events(
     return events
 
 
-def collect_cost_events(
-    db: Session,
-    project_id: int
-) -> List[TimelineEvent]:
+def collect_cost_events(db: Session, project_id: int) -> List[TimelineEvent]:
     """
     收集成本记录事件
 
@@ -165,10 +149,7 @@ def collect_cost_events(
     return events
 
 
-def collect_document_events(
-    db: Session,
-    project_id: int
-) -> List[TimelineEvent]:
+def collect_document_events(db: Session, project_id: int) -> List[TimelineEvent]:
     """
     收集文档上传事件
 

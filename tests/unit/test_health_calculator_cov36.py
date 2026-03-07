@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """项目健康度计算器单元测试 - 第三十六批"""
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.health_calculator")
 
 try:
-    from app.services.health_calculator import HealthCalculator
     from app.models.enums import ProjectHealthEnum
+    from app.services.health_calculator import HealthCalculator
 except ImportError:
     pytestmark = pytest.mark.skip(reason="导入失败")
     HealthCalculator = None
@@ -77,10 +78,7 @@ class TestHasRisks:
 
     def test_deadline_approaching_7_days_returns_h2(self):
         calc, _ = make_calculator()
-        p = make_project(
-            status="ST01",
-            planned_end_date=date.today() + timedelta(days=3)
-        )
+        p = make_project(status="ST01", planned_end_date=date.today() + timedelta(days=3))
         assert calc.calculate_health(p) == "H2"
 
     def test_schedule_variance_over_threshold_returns_h2(self):
@@ -89,7 +87,7 @@ class TestHasRisks:
             status="ST01",
             planned_start_date=date.today() - timedelta(days=100),
             planned_end_date=date.today() + timedelta(days=10),
-            progress_pct=0  # 大幅落后
+            progress_pct=0,  # 大幅落后
         )
         assert calc.calculate_health(p) == "H2"
 
@@ -114,7 +112,9 @@ class TestBatchCalculate:
     def test_batch_empty_returns_zero(self):
         db = MagicMock()
         db.query.return_value.filter.return_value.count.return_value = 0
-        db.query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = (
+            []
+        )
         calc = HealthCalculator(db)
         result = calc.batch_calculate()
         assert result["total"] == 0

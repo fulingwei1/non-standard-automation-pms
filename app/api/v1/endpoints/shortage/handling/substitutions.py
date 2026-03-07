@@ -45,6 +45,7 @@ router = APIRouter()
 # 工具函数
 # ============================================================
 
+
 def _generate_substitution_no(db: Session) -> str:
     """生成替代单号：SUB-yymmdd-xxx"""
     from app.utils.number_generator import generate_sequential_no
@@ -52,19 +53,29 @@ def _generate_substitution_no(db: Session) -> str:
     return generate_sequential_no(
         db=db,
         model_class=MaterialSubstitution,
-        no_field='substitution_no',
-        prefix='SUB',
-        date_format='%y%m%d',
-        separator='-',
-        seq_length=3
+        no_field="substitution_no",
+        prefix="SUB",
+        date_format="%y%m%d",
+        separator="-",
+        seq_length=3,
     )
 
 
-def _build_substitution_response(sub: MaterialSubstitution, db: Session) -> MaterialSubstitutionResponse:
+def _build_substitution_response(
+    sub: MaterialSubstitution, db: Session
+) -> MaterialSubstitutionResponse:
     """构建替代响应对象"""
     project = db.query(Project).filter(Project.id == sub.project_id).first()
-    tech_approver = db.query(User).filter(User.id == sub.tech_approver_id).first() if sub.tech_approver_id else None
-    prod_approver = db.query(User).filter(User.id == sub.prod_approver_id).first() if sub.prod_approver_id else None
+    tech_approver = (
+        db.query(User).filter(User.id == sub.tech_approver_id).first()
+        if sub.tech_approver_id
+        else None
+    )
+    prod_approver = (
+        db.query(User).filter(User.id == sub.prod_approver_id).first()
+        if sub.prod_approver_id
+        else None
+    )
 
     return MaterialSubstitutionResponse(
         id=sub.id,
@@ -84,10 +95,14 @@ def _build_substitution_response(sub: MaterialSubstitution, db: Session) -> Mate
         cost_impact=sub.cost_impact or Decimal("0"),
         status=sub.status,
         tech_approver_id=sub.tech_approver_id,
-        tech_approver_name=tech_approver.real_name or tech_approver.username if tech_approver else None,
+        tech_approver_name=(
+            tech_approver.real_name or tech_approver.username if tech_approver else None
+        ),
         tech_approved_at=sub.tech_approved_at,
         prod_approver_id=sub.prod_approver_id,
-        prod_approver_name=prod_approver.real_name or prod_approver.username if prod_approver else None,
+        prod_approver_name=(
+            prod_approver.real_name or prod_approver.username if prod_approver else None
+        ),
         prod_approved_at=sub.prod_approved_at,
         executed_at=sub.executed_at,
         remark=sub.remark,
@@ -99,6 +114,7 @@ def _build_substitution_response(sub: MaterialSubstitution, db: Session) -> Mate
 # ============================================================
 # CRUD 操作
 # ============================================================
+
 
 @router.get("", response_model=PaginatedResponse)
 def list_substitutions(
@@ -113,7 +129,12 @@ def list_substitutions(
     query = db.query(MaterialSubstitution)
 
     # 应用关键词过滤（替代单号/原物料编码/替代物料编码）
-    query = apply_keyword_filter(query, MaterialSubstitution, keyword, ["substitution_no", "original_material_code", "substitute_material_code"])
+    query = apply_keyword_filter(
+        query,
+        MaterialSubstitution,
+        keyword,
+        ["substitution_no", "original_material_code", "substitute_material_code"],
+    )
 
     if substitution_status:
         query = query.filter(MaterialSubstitution.status == substitution_status)
@@ -121,7 +142,9 @@ def list_substitutions(
         query = query.filter(MaterialSubstitution.project_id == project_id)
 
     total = query.count()
-    substitutions = apply_pagination(query.order_by(desc(MaterialSubstitution.created_at)), pagination.offset, pagination.limit).all()
+    substitutions = apply_pagination(
+        query.order_by(desc(MaterialSubstitution.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = [_build_substitution_response(sub, db) for sub in substitutions]
 
@@ -130,7 +153,7 @@ def list_substitutions(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -172,7 +195,7 @@ def create_substitution(
         cost_impact=sub_in.cost_impact or Decimal("0"),
         status="DRAFT",
         created_by=current_user.id,
-        remark=sub_in.remark
+        remark=sub_in.remark,
     )
 
     save_obj(db, substitution)
@@ -197,6 +220,7 @@ def get_substitution(
 # 审批流程
 # ============================================================
 
+
 @router.put("/{substitution_id}/tech-approve", response_model=MaterialSubstitutionResponse)
 def tech_approve_substitution(
     *,
@@ -209,7 +233,7 @@ def tech_approve_substitution(
     """技术审批"""
     sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
-    if sub.status != 'DRAFT':
+    if sub.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态的申请才能进行技术审批")
 
     sub.tech_approver_id = current_user.id
@@ -217,9 +241,9 @@ def tech_approve_substitution(
     sub.tech_approval_note = approval_note
 
     if approved:
-        sub.status = 'PROD_PENDING'  # 转为待生产审批
+        sub.status = "PROD_PENDING"  # 转为待生产审批
     else:
-        sub.status = 'REJECTED'
+        sub.status = "REJECTED"
 
     save_obj(db, sub)
 
@@ -238,7 +262,7 @@ def prod_approve_substitution(
     """生产审批"""
     sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
-    if sub.status != 'PROD_PENDING':
+    if sub.status != "PROD_PENDING":
         raise HTTPException(status_code=400, detail="只有待生产审批状态的申请才能进行生产审批")
 
     sub.prod_approver_id = current_user.id
@@ -246,9 +270,9 @@ def prod_approve_substitution(
     sub.prod_approval_note = approval_note
 
     if approved:
-        sub.status = 'APPROVED'
+        sub.status = "APPROVED"
     else:
-        sub.status = 'REJECTED'
+        sub.status = "REJECTED"
 
     save_obj(db, sub)
 
@@ -266,10 +290,10 @@ def execute_substitution(
     """执行替代"""
     sub = get_or_404(db, MaterialSubstitution, substitution_id, "替代申请不存在")
 
-    if sub.status != 'APPROVED':
+    if sub.status != "APPROVED":
         raise HTTPException(status_code=400, detail="只能执行已批准的申请")
 
-    sub.status = 'EXECUTED'
+    sub.status = "EXECUTED"
     sub.executed_at = datetime.now()
     sub.executed_by = current_user.id
     sub.execution_note = execution_note
@@ -277,6 +301,7 @@ def execute_substitution(
     # 更新BOM中的物料信息
     if sub.bom_item_id:
         from app.models.material import BomItem
+
         bom_item = db.query(BomItem).filter(BomItem.id == sub.bom_item_id).first()
         if bom_item:
             old_material_id = bom_item.material_id
@@ -285,7 +310,7 @@ def execute_substitution(
             bom_item.material_id = sub.substitute_material_id
             bom_item.material_code = sub.substitute_material_code
             bom_item.material_name = sub.substitute_material_name
-            if hasattr(sub, 'substitute_unit_price') and sub.substitute_unit_price:
+            if hasattr(sub, "substitute_unit_price") and sub.substitute_unit_price:
                 bom_item.unit_price = sub.substitute_unit_price
 
             db.add(bom_item)
@@ -293,6 +318,7 @@ def execute_substitution(
             # 记录物料变更历史
             try:
                 from app.models.material import MaterialChangeHistory
+
                 change_history = MaterialChangeHistory(
                     bom_item_id=sub.bom_item_id,
                     change_type="SUBSTITUTION",
@@ -302,7 +328,7 @@ def execute_substitution(
                     new_material_code=sub.substitute_material_code,
                     change_reason=sub.substitution_reason or "物料替代",
                     changed_by=current_user.id,
-                    substitution_id=sub.id
+                    substitution_id=sub.id,
                 )
                 db.add(change_history)
             except Exception:
@@ -312,8 +338,9 @@ def execute_substitution(
 
     # 发送通知
     try:
+        from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
         from app.services.notification_dispatcher import NotificationDispatcher
-        from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
+
         if sub.project_id:
             project = db.query(Project).filter(Project.id == sub.project_id).first()
             if project and project.pm_id:

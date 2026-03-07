@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """evaluation_notifications 单元测试"""
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.ecn_notification.evaluation_notifications import (
@@ -41,7 +42,10 @@ class TestNotifyEvaluationAssigned:
 
 
 class TestNotifyEvaluationCompleted:
-    @patch("app.services.ecn_notification.evaluation_notifications.check_all_evaluations_completed", return_value=False)
+    @patch(
+        "app.services.ecn_notification.evaluation_notifications.check_all_evaluations_completed",
+        return_value=False,
+    )
     @patch("app.services.ecn_notification.evaluation_notifications.NotificationDispatcher")
     def test_notify_applicant(self, mock_disp, mock_check):
         db = MagicMock()

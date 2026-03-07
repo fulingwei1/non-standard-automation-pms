@@ -29,10 +29,7 @@ class TestMemberCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -45,9 +42,7 @@ class TestMemberCRUD:
         project_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/members/",
-            params={"project_id": project_id},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/members/", params={"project_id": project_id}, headers=headers
         )
 
         assert response.status_code == 200
@@ -61,10 +56,7 @@ class TestMemberCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/members/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/members/", headers=headers)
 
         # 可能需要项目ID参数
         assert response.status_code in [200, 422]
@@ -78,10 +70,7 @@ class TestMemberCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取项目列表
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -100,9 +89,7 @@ class TestMemberCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/members/",
-            json=member_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/members/", json=member_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -122,10 +109,7 @@ class TestMemberCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取项目
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -139,9 +123,7 @@ class TestMemberCRUD:
 
         # 获取成员列表
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/members/",
-            params={"project_id": project_id},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/members/", params={"project_id": project_id}, headers=headers
         )
 
         if members_response.status_code != 200:
@@ -154,10 +136,7 @@ class TestMemberCRUD:
 
         member_id = member_items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/members/{member_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/members/{member_id}", headers=headers)
 
         if response.status_code == 405:
             pytest.skip("Get member by ID endpoint not implemented")
@@ -172,10 +151,7 @@ class TestMemberCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取项目
-        projects_response = client.get(
-            f"{settings.API_V1_PREFIX}/projects/",
-            headers=headers
-        )
+        projects_response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
         if projects_response.status_code != 200:
             pytest.skip("Failed to get projects list")
@@ -189,9 +165,7 @@ class TestMemberCRUD:
 
         # 获取成员列表
         members_response = client.get(
-            f"{settings.API_V1_PREFIX}/members/",
-            params={"project_id": project_id},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/members/", params={"project_id": project_id}, headers=headers
         )
 
         if members_response.status_code != 200:
@@ -209,9 +183,7 @@ class TestMemberCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/members/{member_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/members/{member_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:

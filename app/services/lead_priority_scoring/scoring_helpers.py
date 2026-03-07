@@ -19,17 +19,13 @@ class ScoringHelpersMixin:
         # 通过线索关联的商机查找客户
         if lead.opportunities:
             customer_id = lead.opportunities[0].customer_id
-            customer = (
-                self.db.query(Customer).filter(Customer.id == customer_id).first()
-            )
+            customer = self.db.query(Customer).filter(Customer.id == customer_id).first()
             return self._get_customer_score(customer)
 
         # 如果没有商机，尝试通过客户名称查找
         if lead.customer_name:
             customer = (
-                self.db.query(Customer)
-                .filter(Customer.customer_name == lead.customer_name)
-                .first()
+                self.db.query(Customer).filter(Customer.customer_name == lead.customer_name).first()
             )
             return self._get_customer_score(customer)
 
@@ -78,11 +74,7 @@ class ScoringHelpersMixin:
         if lead.opportunities:
             for opp in lead.opportunities:
                 # 查找关联的项目
-                projects = (
-                    self.db.query(Project)
-                    .filter(Project.opportunity_id == opp.id)
-                    .all()
-                )
+                projects = self.db.query(Project).filter(Project.opportunity_id == opp.id).all()
                 for project in projects:
                     if project.predicted_win_rate:
                         win_rate = float(project.predicted_win_rate)
@@ -131,15 +123,9 @@ class ScoringHelpersMixin:
         # 通过delivery_window判断
         if opportunity.delivery_window:
             # 简单判断：如果包含"紧急"、"急"等关键词
-            if (
-                "紧急" in opportunity.delivery_window
-                or "急" in opportunity.delivery_window
-            ):
+            if "紧急" in opportunity.delivery_window or "急" in opportunity.delivery_window:
                 return 10
-            elif (
-                "正常" in opportunity.delivery_window
-                or "常规" in opportunity.delivery_window
-            ):
+            elif "正常" in opportunity.delivery_window or "常规" in opportunity.delivery_window:
                 return 7
             else:
                 return 3
@@ -151,9 +137,7 @@ class ScoringHelpersMixin:
         # 判断是否老客户
         if lead.customer_name:
             customer = (
-                self.db.query(Customer)
-                .filter(Customer.customer_name == lead.customer_name)
-                .first()
+                self.db.query(Customer).filter(Customer.customer_name == lead.customer_name).first()
             )
 
             if customer:

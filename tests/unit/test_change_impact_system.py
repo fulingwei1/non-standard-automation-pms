@@ -3,10 +3,11 @@
 变更影响智能分析系统 - 单元测试
 """
 
-import pytest
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 from unittest.mock import Mock, patch
+
+import pytest
 
 from app.models import (
     ChangeImpactAnalysis,
@@ -63,7 +64,7 @@ class TestChangeImpactAIService:
     async def test_analyze_schedule_impact(self, mock_db, sample_change_request, sample_project):
         """测试进度影响分析"""
         service = ChangeImpactAIService(mock_db)
-        
+
         context = {
             "change": {
                 "id": 1,
@@ -84,16 +85,14 @@ class TestChangeImpactAIService:
             "dependencies": [],
             "milestones": [],
         }
-        
-        with patch('app.services.change_impact_ai_service.call_glm_api') as mock_glm:
+
+        with patch("app.services.change_impact_ai_service.call_glm_api") as mock_glm:
             mock_glm.return_value = '{"level": "MEDIUM", "delay_days": 10}'
-            
+
             result = await service._analyze_schedule_impact(
-                sample_change_request,
-                sample_project,
-                context
+                sample_change_request, sample_project, context
             )
-            
+
             assert result is not None
             assert "level" in result
             assert "delay_days" in result
@@ -102,42 +101,38 @@ class TestChangeImpactAIService:
     async def test_analyze_cost_impact(self, mock_db, sample_change_request, sample_project):
         """测试成本影响分析"""
         service = ChangeImpactAIService(mock_db)
-        
+
         context = {"change": {}, "project": {}}
-        
-        result = await service._analyze_cost_impact(
-            sample_change_request,
-            sample_project,
-            context
-        )
-        
+
+        result = await service._analyze_cost_impact(sample_change_request, sample_project, context)
+
         assert result is not None
         assert result["level"] == "MEDIUM"
         assert result["amount"] == 50000
         assert result["percentage"] == 10.0
 
-    def test_identify_chain_reactions_no_dependencies(self, mock_db, sample_change_request, sample_project):
+    def test_identify_chain_reactions_no_dependencies(
+        self, mock_db, sample_change_request, sample_project
+    ):
         """测试连锁反应识别 - 无依赖"""
         service = ChangeImpactAIService(mock_db)
-        
+
         context = {
             "tasks": [],
             "dependencies": [],
         }
-        
-        result = service._identify_chain_reactions(
-            sample_change_request,
-            sample_project,
-            context
-        )
-        
+
+        result = service._identify_chain_reactions(sample_change_request, sample_project, context)
+
         assert result["detected"] == False
         assert result["depth"] == 0
 
-    def test_identify_chain_reactions_with_dependencies(self, mock_db, sample_change_request, sample_project):
+    def test_identify_chain_reactions_with_dependencies(
+        self, mock_db, sample_change_request, sample_project
+    ):
         """测试连锁反应识别 - 有依赖"""
         service = ChangeImpactAIService(mock_db)
-        
+
         context = {
             "tasks": [
                 {"id": 1, "name": "任务1", "status": "TODO"},
@@ -147,43 +142,39 @@ class TestChangeImpactAIService:
                 {"task_id": 2, "depends_on": 1, "type": "FS", "lag_days": 0},
             ],
         }
-        
-        result = service._identify_chain_reactions(
-            sample_change_request,
-            sample_project,
-            context
-        )
-        
+
+        result = service._identify_chain_reactions(sample_change_request, sample_project, context)
+
         assert result["detected"] == True
         assert result["depth"] >= 1
 
     def test_calculate_overall_risk_low(self, mock_db):
         """测试综合风险计算 - 低风险"""
         service = ChangeImpactAIService(mock_db)
-        
+
         result = service._calculate_overall_risk(
             {"level": "LOW"},
             {"level": "LOW"},
             {"level": "LOW"},
             {"level": "LOW"},
-            {"detected": False}
+            {"detected": False},
         )
-        
+
         assert result["level"] == "LOW"
         assert result["recommended_action"] == "APPROVE"
 
     def test_calculate_overall_risk_high(self, mock_db):
         """测试综合风险计算 - 高风险"""
         service = ChangeImpactAIService(mock_db)
-        
+
         result = service._calculate_overall_risk(
             {"level": "HIGH"},
             {"level": "HIGH"},
             {"level": "MEDIUM"},
             {"level": "MEDIUM"},
-            {"detected": True}
+            {"detected": True},
         )
-        
+
         assert result["level"] in ["HIGH", "CRITICAL"]
         assert result["recommended_action"] in ["MODIFY", "ESCALATE"]
 
@@ -194,57 +185,45 @@ class TestChangeResponseSuggestionService:
     def test_create_approve_suggestion(self, mock_db, sample_change_request):
         """测试创建批准方案"""
         service = ChangeResponseSuggestionService(mock_db)
-        
+
         analysis = Mock(spec=ChangeImpactAnalysis)
         analysis.id = 1
         analysis.overall_risk_level = "LOW"
         analysis.schedule_delay_days = 5
         analysis.cost_impact_amount = Decimal("10000")
-        
-        suggestion = service._create_approve_suggestion(
-            sample_change_request,
-            analysis,
-            user_id=1
-        )
-        
+
+        suggestion = service._create_approve_suggestion(sample_change_request, analysis, user_id=1)
+
         assert suggestion.suggestion_type == "APPROVE"
         assert suggestion.feasibility_score >= 80
 
     def test_create_modify_suggestion(self, mock_db, sample_change_request):
         """测试创建修改方案"""
         service = ChangeResponseSuggestionService(mock_db)
-        
+
         analysis = Mock(spec=ChangeImpactAnalysis)
         analysis.id = 1
         analysis.overall_risk_level = "MEDIUM"
         analysis.schedule_delay_days = 10
         analysis.cost_impact_amount = Decimal("50000")
-        
-        suggestion = service._create_modify_suggestion(
-            sample_change_request,
-            analysis,
-            user_id=1
-        )
-        
+
+        suggestion = service._create_modify_suggestion(sample_change_request, analysis, user_id=1)
+
         assert suggestion.suggestion_type == "MODIFY"
         assert suggestion.estimated_cost < analysis.cost_impact_amount
 
     def test_create_mitigate_suggestion(self, mock_db, sample_change_request):
         """测试创建缓解方案"""
         service = ChangeResponseSuggestionService(mock_db)
-        
+
         analysis = Mock(spec=ChangeImpactAnalysis)
         analysis.id = 1
         analysis.overall_risk_level = "HIGH"
         analysis.schedule_delay_days = 20
         analysis.cost_impact_amount = Decimal("100000")
-        
-        suggestion = service._create_mitigate_suggestion(
-            sample_change_request,
-            analysis,
-            user_id=1
-        )
-        
+
+        suggestion = service._create_mitigate_suggestion(sample_change_request, analysis, user_id=1)
+
         assert suggestion.suggestion_type == "MITIGATE"
         assert suggestion.estimated_cost > analysis.cost_impact_amount
         assert len(suggestion.action_steps) >= 4
@@ -264,9 +243,9 @@ class TestChangeImpactModels:
             cost_impact_amount=Decimal("5000"),
             overall_risk_level="MEDIUM",
             overall_risk_score=Decimal("50"),
-            created_by=1
+            created_by=1,
         )
-        
+
         assert analysis.change_request_id == 1
         assert analysis.schedule_delay_days == 10
         assert analysis.overall_risk_level == "MEDIUM"
@@ -281,9 +260,9 @@ class TestChangeImpactModels:
             suggestion_priority=8,
             feasibility_score=Decimal("85"),
             technical_feasibility="HIGH",
-            created_by=1
+            created_by=1,
         )
-        
+
         assert suggestion.suggestion_type == "APPROVE"
         assert suggestion.feasibility_score == 85
         assert suggestion.technical_feasibility == "HIGH"
@@ -297,30 +276,34 @@ class TestPerformance:
     async def test_analysis_duration(self, mock_db, sample_change_request, sample_project):
         """测试分析时间 ≤ 10秒"""
         import time
-        
+
         service = ChangeImpactAIService(mock_db)
-        service.db.query = Mock(return_value=Mock(
-            filter=Mock(return_value=Mock(
-                first=Mock(side_effect=[sample_change_request, sample_project]),
-                all=Mock(return_value=[])
-            ))
-        ))
+        service.db.query = Mock(
+            return_value=Mock(
+                filter=Mock(
+                    return_value=Mock(
+                        first=Mock(side_effect=[sample_change_request, sample_project]),
+                        all=Mock(return_value=[]),
+                    )
+                )
+            )
+        )
         service.db.add = Mock()
         service.db.flush = Mock()
         service.db.commit = Mock()
-        
+
         start = time.time()
-        
-        with patch('app.services.change_impact_ai_service.call_glm_api') as mock_glm:
+
+        with patch("app.services.change_impact_ai_service.call_glm_api") as mock_glm:
             mock_glm.return_value = '{"level": "MEDIUM"}'
-            
+
             try:
                 await service.analyze_change_impact(1, 1)
             except:
                 pass  # 忽略Mock导致的错误
-        
+
         duration = time.time() - start
-        
+
         # 实际分析应该≤10秒（这里测试Mock版本应该很快）
         assert duration < 10
 

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - project_import_service 单元测试"""
 
-import pytest
 import io
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.project_import_service")
 
 from app.services.project_import_service import (
-    validate_excel_file,
     parse_excel_data,
+    validate_excel_file,
     validate_project_columns,
 )
 
@@ -24,27 +25,32 @@ class TestValidateExcelFile:
 
     def test_rejects_csv(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException) as exc_info:
             validate_excel_file("data.csv")
         assert exc_info.value.status_code == 400
 
     def test_rejects_pdf(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("report.pdf")
 
     def test_rejects_no_extension(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("noextension")
 
     def test_rejects_txt(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException):
             validate_excel_file("data.txt")
 
     def test_case_sensitivity(self):
         from fastapi import HTTPException
+
         # uppercase should fail since only .xlsx and .xls are accepted
         with pytest.raises(HTTPException):
             validate_excel_file("data.XLSX")
@@ -124,11 +130,13 @@ class TestValidateProjectColumns:
     def test_passes_with_extra_columns(self):
         import pandas as pd
 
-        df = pd.DataFrame({
-            "项目编码*": ["P001"],
-            "项目名称*": ["测试"],
-            "项目类型": ["定制"],
-        })
+        df = pd.DataFrame(
+            {
+                "项目编码*": ["P001"],
+                "项目名称*": ["测试"],
+                "项目类型": ["定制"],
+            }
+        )
         # Should not raise
         validate_project_columns(df)
 
@@ -147,6 +155,11 @@ class TestProjectImportServiceFunctions:
 
     def test_error_message_contains_info(self):
         from fastapi import HTTPException
+
         with pytest.raises(HTTPException) as exc_info:
             validate_excel_file("test.docx")
-        assert "Excel" in exc_info.value.detail or "xlsx" in exc_info.value.detail or exc_info.value.status_code == 400
+        assert (
+            "Excel" in exc_info.value.detail
+            or "xlsx" in exc_info.value.detail
+            or exc_info.value.status_code == 400
+        )

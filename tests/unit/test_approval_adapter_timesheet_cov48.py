@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """单元测试 - TimesheetApprovalAdapter (cov48)"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.approval_engine.adapters.timesheet import TimesheetApprovalAdapter
+
     _IMPORT_OK = True
 except Exception:
     _IMPORT_OK = False

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十批：NodeTaskService 单元测试"""
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
     from app.services.node_task_service import NodeTaskService
+
     HAS_MODULE = True
 except Exception:
     HAS_MODULE = False

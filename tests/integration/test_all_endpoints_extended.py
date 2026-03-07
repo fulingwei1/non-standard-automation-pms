@@ -24,34 +24,33 @@ Each module has 5-10 tests covering:
 """
 
 
-
 import uuid
-
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.material import (
-    BomHeader,
-    MaterialCategory,
-)
-from app.models.purchase import PurchaseOrder
-from app.models.ecn import Ecn
 from app.models.acceptance import (
     AcceptanceOrder,
     AcceptanceTemplate,
 )
+from app.models.alert import AlertRecord, AlertRule
+from app.models.ecn import Ecn
+from app.models.issue import Issue
+from app.models.material import (
+    BomHeader,
+    MaterialCategory,
+)
 from app.models.outsourcing import (
     OutsourcingOrder,
 )
-from app.models.alert import AlertRule, AlertRecord
-from app.models.issue import Issue
-from app.models.project import Project, Machine
-from app.models.vendor import Vendor
+from app.models.project import Machine, Project
+from app.models.purchase import PurchaseOrder
 from app.models.shortage.reports import ShortageReport
+from app.models.vendor import Vendor
 
 # Vendor 模型替代了历史上的 Supplier/OutsourcingVendor，这里保持别名兼容
 Supplier = Vendor
@@ -104,9 +103,7 @@ class TestMaterialsCategoriesAPI:
             data = response.json()
             assert isinstance(data, (list, dict))
 
-    def test_list_categories_with_parent_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_categories_with_parent_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用父分类ID筛选"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/categories/?is_active=true",
@@ -195,9 +192,7 @@ class TestMaterialsSuppliersAPI:
             data = response.json()
             assert "items" in data or isinstance(data, list)
 
-    def test_list_suppliers_with_keyword_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_suppliers_with_keyword_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用关键词筛选供应商"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/suppliers?keyword=测试",
@@ -205,9 +200,7 @@ class TestMaterialsSuppliersAPI:
         )
         assert response.status_code in (200, 404, 422, 500)
 
-    def test_list_suppliers_with_type_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_suppliers_with_type_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用供应商类型筛选"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/materials/suppliers?supplier_type=VENDOR",
@@ -399,18 +392,14 @@ class TestBomAPI:
             headers=admin_auth_headers,
         )
 
-    def test_get_bom_items(
-        self, client: TestClient, admin_auth_headers: dict, test_bom: BomHeader
-    ):
+    def test_get_bom_items(self, client: TestClient, admin_auth_headers: dict, test_bom: BomHeader):
         """测试获取BOM明细"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/bom/{test_bom.id}/items",
             headers=admin_auth_headers,
         )
 
-    def test_bom_versions(
-        self, client: TestClient, admin_auth_headers: dict, test_bom: BomHeader
-    ):
+    def test_bom_versions(self, client: TestClient, admin_auth_headers: dict, test_bom: BomHeader):
         """测试获取BOM版本历史"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/bom/{test_bom.id}/versions",
@@ -480,9 +469,7 @@ class TestPurchaseOrdersAPI:
             data = response.json()
             assert "items" in data or isinstance(data, list)
 
-    def test_list_orders_with_keyword_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_orders_with_keyword_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用关键词搜索订单"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/purchase-orders/?keyword=TEST",
@@ -490,9 +477,7 @@ class TestPurchaseOrdersAPI:
         )
         assert response.status_code in (200, 404, 422, 500)
 
-    def test_list_orders_with_status_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_orders_with_status_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用状态筛选订单"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/purchase-orders/?status=DRAFT",
@@ -560,7 +545,10 @@ class TestPurchaseOrdersAPI:
         assert response.status_code in (200, 400, 404, 422, 500)
 
     def test_approve_order_success(
-        self, client: TestClient, admin_auth_headers: dict, test_order: PurchaseOrder,
+        self,
+        client: TestClient,
+        admin_auth_headers: dict,
+        test_order: PurchaseOrder,
         db_session: Session,
     ):
         """测试审批采购订单"""
@@ -649,9 +637,7 @@ class TestEcnAPI:
             data = response.json()
             assert "items" in data or isinstance(data, list)
 
-    def test_list_ecns_with_keyword_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_ecns_with_keyword_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用关键词搜索ECN"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/ecns?keyword=TEST",
@@ -709,9 +695,7 @@ class TestEcnAPI:
         )
         assert response.status_code in (200, 201, 400, 422, 500)
 
-    def test_update_ecn_success(
-        self, client: TestClient, admin_auth_headers: dict, test_ecn: Ecn
-    ):
+    def test_update_ecn_success(self, client: TestClient, admin_auth_headers: dict, test_ecn: Ecn):
         """测试更新ECN"""
         update_data = {
             "ecn_title": "更新后的ECN标题",
@@ -724,9 +708,7 @@ class TestEcnAPI:
         )
         assert response.status_code in (200, 400, 404, 422, 500)
 
-    def test_submit_ecn_success(
-        self, client: TestClient, admin_auth_headers: dict, test_ecn: Ecn
-    ):
+    def test_submit_ecn_success(self, client: TestClient, admin_auth_headers: dict, test_ecn: Ecn):
         """测试提交ECN"""
         submit_data = {"remark": "提交ECN申请"}
         response = client.put(
@@ -736,9 +718,7 @@ class TestEcnAPI:
         )
         assert response.status_code in (200, 400, 404, 422, 500)
 
-    def test_cancel_ecn_success(
-        self, client: TestClient, admin_auth_headers: dict, test_ecn: Ecn
-    ):
+    def test_cancel_ecn_success(self, client: TestClient, admin_auth_headers: dict, test_ecn: Ecn):
         """测试取消ECN"""
         response = client.put(
             f"{settings.API_V1_PREFIX}/ecns/{test_ecn.id}/cancel",
@@ -859,9 +839,7 @@ class TestAcceptanceOrdersAPI:
         except Exception:
             db_session.rollback()
 
-    def test_list_acceptance_orders_success(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_acceptance_orders_success(self, client: TestClient, admin_auth_headers: dict):
         """测试获取验收订单列表成功"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders?page=1&page_size=10",
@@ -938,7 +916,10 @@ class TestAcceptanceOrdersAPI:
         )
 
     def test_start_order_success(
-        self, client: TestClient, admin_auth_headers: dict, test_order: AcceptanceOrder,
+        self,
+        client: TestClient,
+        admin_auth_headers: dict,
+        test_order: AcceptanceOrder,
         db_session: Session,
     ):
         """测试开始验收"""
@@ -1038,9 +1019,7 @@ class TestOutsourcingOrdersAPI:
         except Exception:
             db_session.rollback()
 
-    def test_list_outsourcing_orders_success(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_outsourcing_orders_success(self, client: TestClient, admin_auth_headers: dict):
         """测试获取外协订单列表成功"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders?page=1&page_size=10",
@@ -1051,9 +1030,7 @@ class TestOutsourcingOrdersAPI:
             data = response.json()
             assert "items" in data or isinstance(data, list)
 
-    def test_list_orders_with_keyword_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_orders_with_keyword_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用关键词搜索"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders?keyword=测试",
@@ -1061,9 +1038,7 @@ class TestOutsourcingOrdersAPI:
         )
         assert response.status_code in (200, 404, 422, 500)
 
-    def test_list_orders_with_status_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_orders_with_status_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用状态筛选"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/outsourcing-orders?status=DRAFT",
@@ -1128,7 +1103,10 @@ class TestOutsourcingOrdersAPI:
         assert response.status_code in (200, 400, 404, 422, 500)
 
     def test_approve_order_success(
-        self, client: TestClient, admin_auth_headers: dict, test_order: OutsourcingOrder,
+        self,
+        client: TestClient,
+        admin_auth_headers: dict,
+        test_order: OutsourcingOrder,
         db_session: Session,
     ):
         """测试审批外协订单"""
@@ -1204,9 +1182,7 @@ class TestAlertRulesAPI:
             data = response.json()
             assert "items" in data or isinstance(data, list)
 
-    def test_list_rules_with_keyword_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_rules_with_keyword_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用关键词搜索规则"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/alert-rules?keyword=测试",
@@ -1279,7 +1255,10 @@ class TestAlertRulesAPI:
         assert response.status_code in (200, 400, 404, 500)
 
     def test_delete_rule_success(
-        self, client: TestClient, admin_auth_headers: dict, test_rule: AlertRule,
+        self,
+        client: TestClient,
+        admin_auth_headers: dict,
+        test_rule: AlertRule,
         db_session: Session,
     ):
         """测试删除预警规则"""
@@ -1304,6 +1283,7 @@ class TestAlertRecordsAPI:
         # target_type/target_id(必填), alert_level/alert_title/alert_content(必填),
         # status 默认 'PENDING'
         from app.models.alert import AlertRule
+
         rule = db_session.query(AlertRule).first()
         if not rule:
             # 如果没有预警规则，创建一个测试用规则
@@ -1353,9 +1333,7 @@ class TestAlertRecordsAPI:
         )
         assert response.status_code in (200, 404, 422, 500)
 
-    def test_list_records_with_status_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_records_with_status_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用状态筛选记录"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/alerts/records?status=OPEN",
@@ -1444,9 +1422,7 @@ class TestIssuesAPI:
         )
         assert response.status_code in (200, 404, 422, 500)
 
-    def test_list_issues_with_status_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_issues_with_status_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用状态筛选"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/issues?status=OPEN",
@@ -1550,8 +1526,9 @@ class TestMaterialShortageAPI:
         # material_id(FK必填), material_code(必填), material_name(必填),
         # required_qty(必填), shortage_qty(必填), reporter_id(FK必填),
         # report_time(必填), status 默认 'REPORTED'
-        from app.models.project import Project
         from app.models.material import Material
+        from app.models.project import Project
+
         project = db_session.query(Project).first()
         material = db_session.query(Material).first()
         if not project or not material:
@@ -1585,9 +1562,7 @@ class TestMaterialShortageAPI:
             headers=admin_auth_headers,
         )
 
-    def test_list_shortages_with_status_filter(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_list_shortages_with_status_filter(self, client: TestClient, admin_auth_headers: dict):
         """测试使用状态筛选"""
         response = client.get(
             f"{settings.API_V1_PREFIX}/shortage/arrivals?status=OPEN",
@@ -1737,9 +1712,7 @@ class TestErrorHandling:
         )
         assert response.status_code in (404, 500)
 
-    def test_validation_error_missing_required(
-        self, client: TestClient, admin_auth_headers: dict
-    ):
+    def test_validation_error_missing_required(self, client: TestClient, admin_auth_headers: dict):
         """测试缺少必填字段的验证错误"""
         response = client.post(
             f"{settings.API_V1_PREFIX}/projects",

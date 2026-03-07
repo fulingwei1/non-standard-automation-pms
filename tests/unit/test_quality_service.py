@@ -3,11 +3,12 @@
 质量管理服务单元测试
 覆盖 SPC 计算、帕累托分析、移动平均预测等核心算法
 """
-import pytest
 import statistics
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.services.quality_service import QualityService
 
@@ -108,8 +109,7 @@ class TestSPCControlLimits:
         values = [10.0, 11.0, 12.0, 9.0, 10.5, 11.5, 10.2, 9.8, 10.8, 11.2]
         db = self._make_db(values)
         result = QualityService.calculate_spc_control_limits(
-            db=db, material_id=1,
-            start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
+            db=db, material_id=1, start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
         )
         limits = result["control_limits"]
         assert limits.ucl > limits.cl > limits.lcl
@@ -118,8 +118,7 @@ class TestSPCControlLimits:
         values = [10.0, 10.0, 10.0, 10.0, 10.0]  # 全相同，均值10
         db = self._make_db(values)
         result = QualityService.calculate_spc_control_limits(
-            db=db, material_id=1,
-            start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
+            db=db, material_id=1, start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
         )
         assert result["control_limits"].cl == pytest.approx(10.0)
 
@@ -127,8 +126,7 @@ class TestSPCControlLimits:
         values = [9.8, 10.0, 10.2, 9.9, 10.1, 10.0, 10.05, 9.95, 10.1, 9.9]
         db = self._make_db(values, spec_upper=12.0, spec_lower=8.0)
         result = QualityService.calculate_spc_control_limits(
-            db=db, material_id=1,
-            start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
+            db=db, material_id=1, start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
         )
         assert result["process_capability_index"] is not None
         assert result["process_capability_index"] > 0
@@ -140,8 +138,7 @@ class TestSPCControlLimits:
         values = normal_values + [1000.0]  # 21个值
         db = self._make_db(values)
         result = QualityService.calculate_spc_control_limits(
-            db=db, material_id=1,
-            start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
+            db=db, material_id=1, start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31)
         )
         assert len(result["out_of_control_points"]) >= 1
 

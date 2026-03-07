@@ -27,8 +27,7 @@ class LeadCreate(BaseModel):
     status: Optional[str] = Field(default="NEW", description="状态")
     next_action_at: Optional[datetime] = Field(default=None, description="下次行动时间")
     selected_advantage_products: Optional[List[int]] = Field(
-        default=None,
-        description="选择的优势产品ID列表"
+        default=None, description="选择的优势产品ID列表"
     )
 
 
@@ -61,7 +60,9 @@ class LeadResponse(TimestampSchema):
     owner_id: Optional[int] = Field(default=None, description="负责人ID")
     status: str = Field(description="状态")
     next_action_at: Optional[datetime] = Field(default=None, description="下次行动时间")
-    selected_advantage_products: Optional[List[int]] = Field(default=None, description="选择的优势产品ID列表")
+    selected_advantage_products: Optional[List[int]] = Field(
+        default=None, description="选择的优势产品ID列表"
+    )
     owner_name: Optional[str] = Field(default=None, description="负责人姓名")
 
 

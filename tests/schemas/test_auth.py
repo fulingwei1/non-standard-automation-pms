@@ -4,20 +4,20 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.auth import (
-    validate_password_strength,
+    DataScopeRuleCreate,
+    LoginRequest,
+    PasswordChange,
+    PermissionResponse,
+    RoleComparisonRequest,
+    RoleTemplateCreate,
+    RoleWithFullPermissions,
     Token,
     TokenData,
-    LoginRequest,
     UserCreate,
-    UserUpdate,
-    PasswordChange,
     UserResponse,
-    PermissionResponse,
     UserRoleAssign,
-    RoleTemplateCreate,
-    RoleComparisonRequest,
-    DataScopeRuleCreate,
-    RoleWithFullPermissions,
+    UserUpdate,
+    validate_password_strength,
 )
 
 
@@ -139,7 +139,9 @@ class TestRoleTemplateCreate:
 
 class TestDataScopeRuleCreate:
     def test_valid(self):
-        d = DataScopeRuleCreate(role_id=1, rule_type="INCLUDE", target_type="DEPARTMENT", target_id=10)
+        d = DataScopeRuleCreate(
+            role_id=1, rule_type="INCLUDE", target_type="DEPARTMENT", target_id=10
+        )
         assert d.role_id == 1
 
     def test_missing(self):

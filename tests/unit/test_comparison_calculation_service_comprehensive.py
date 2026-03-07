@@ -39,7 +39,9 @@ class TestCalculateMomComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 100, "metric_name": "测试指标", "unit": "个", "format_type": "NUMBER"},
@@ -64,7 +66,9 @@ class TestCalculateMomComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 100, "metric_name": "测试指标"},
@@ -84,7 +88,9 @@ class TestCalculateMomComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 100, "metric_name": "测试指标"},
@@ -103,7 +109,9 @@ class TestCalculateMomComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 0, "metric_name": "测试指标"},
@@ -124,7 +132,9 @@ class TestCalculateMomComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 80, "metric_name": "测试指标"},
@@ -149,11 +159,23 @@ class TestCalculateYoyComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
-                {"value": 120, "metric_name": "测试指标", "unit": "万元", "format_type": "CURRENCY"},
-                {"value": 100, "metric_name": "测试指标", "unit": "万元", "format_type": "CURRENCY"},
+                {
+                    "value": 120,
+                    "metric_name": "测试指标",
+                    "unit": "万元",
+                    "format_type": "CURRENCY",
+                },
+                {
+                    "value": 100,
+                    "metric_name": "测试指标",
+                    "unit": "万元",
+                    "format_type": "CURRENCY",
+                },
             ]
             MockMetricService.return_value = mock_metric_service
 
@@ -173,7 +195,9 @@ class TestCalculateYoyComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 200, "metric_name": "测试指标"},
@@ -197,11 +221,23 @@ class TestCalculateAnnualYoyComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
-                {"value": 1000, "metric_name": "年度指标", "unit": "万元", "format_type": "CURRENCY"},
-                {"value": 800, "metric_name": "年度指标", "unit": "万元", "format_type": "CURRENCY"},
+                {
+                    "value": 1000,
+                    "metric_name": "年度指标",
+                    "unit": "万元",
+                    "format_type": "CURRENCY",
+                },
+                {
+                    "value": 800,
+                    "metric_name": "年度指标",
+                    "unit": "万元",
+                    "format_type": "CURRENCY",
+                },
             ]
             MockMetricService.return_value = mock_metric_service
 
@@ -221,7 +257,9 @@ class TestCalculateAnnualYoyComparison:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 500, "metric_name": "测试指标"},
@@ -257,20 +295,19 @@ class TestCalculateComparisonsBatch:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_metric_def
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.return_value = {
-                "value": 100, "metric_name": "测试指标"
+                "value": 100,
+                "metric_name": "测试指标",
             }
             MockMetricService.return_value = mock_metric_service
 
             service = ComparisonCalculationService(mock_db)
             result = service.calculate_comparisons_batch(
-                ["METRIC001"],
-                year=2026,
-                month=3,
-                enable_mom=True,
-                enable_yoy=True
+                ["METRIC001"], year=2026, month=3, enable_mom=True, enable_yoy=True
             )
 
         assert "METRIC001" in result
@@ -291,19 +328,19 @@ class TestCalculateComparisonsBatch:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_metric_def
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.return_value = {
-                "value": 1000, "metric_name": "年度指标"
+                "value": 1000,
+                "metric_name": "年度指标",
             }
             MockMetricService.return_value = mock_metric_service
 
             service = ComparisonCalculationService(mock_db)
             result = service.calculate_comparisons_batch(
-                ["ANNUAL001"],
-                year=2026,
-                month=None,  # Annual comparison
-                enable_yoy=True
+                ["ANNUAL001"], year=2026, month=None, enable_yoy=True  # Annual comparison
             )
 
         assert "ANNUAL001" in result
@@ -318,11 +355,7 @@ class TestCalculateComparisonsBatch:
 
         with patch("app.services.comparison_calculation_service.MetricCalculationService"):
             service = ComparisonCalculationService(mock_db)
-            result = service.calculate_comparisons_batch(
-                ["NONEXISTENT"],
-                year=2026,
-                month=3
-            )
+            result = service.calculate_comparisons_batch(["NONEXISTENT"], year=2026, month=3)
 
         assert "NONEXISTENT" not in result or result.get("NONEXISTENT") is None
 
@@ -340,20 +373,19 @@ class TestCalculateComparisonsBatch:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_metric_def
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.return_value = {
-                "value": 100, "metric_name": "测试指标"
+                "value": 100,
+                "metric_name": "测试指标",
             }
             MockMetricService.return_value = mock_metric_service
 
             service = ComparisonCalculationService(mock_db)
             result = service.calculate_comparisons_batch(
-                ["METRIC001"],
-                year=2026,
-                month=3,
-                enable_mom=False,  # Disabled
-                enable_yoy=True
+                ["METRIC001"], year=2026, month=3, enable_mom=False, enable_yoy=True  # Disabled
             )
 
         assert "METRIC001" in result
@@ -374,17 +406,15 @@ class TestCalculateComparisonsBatch:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_metric_def
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = Exception("计算错误")
             MockMetricService.return_value = mock_metric_service
 
             service = ComparisonCalculationService(mock_db)
-            result = service.calculate_comparisons_batch(
-                ["METRIC001"],
-                year=2026,
-                month=3
-            )
+            result = service.calculate_comparisons_batch(["METRIC001"], year=2026, month=3)
 
         assert "METRIC001" in result
         assert "mom_error" in result["METRIC001"]
@@ -403,10 +433,13 @@ class TestCalculateComparisonsBatch:
 
         mock_db.query.return_value.filter.return_value.first.return_value = mock_metric_def
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.return_value = {
-                "value": 100, "metric_name": "测试指标"
+                "value": 100,
+                "metric_name": "测试指标",
             }
             MockMetricService.return_value = mock_metric_service
 
@@ -416,7 +449,7 @@ class TestCalculateComparisonsBatch:
                 year=2026,
                 month=3,
                 enable_mom=True,  # Enabled but not supported
-                enable_yoy=True
+                enable_yoy=True,
             )
 
         assert "METRIC001" in result
@@ -434,7 +467,9 @@ class TestChangeRateFormatting:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 110, "metric_name": "测试指标"},
@@ -453,7 +488,9 @@ class TestChangeRateFormatting:
 
         mock_db = MagicMock()
 
-        with patch("app.services.comparison_calculation_service.MetricCalculationService") as MockMetricService:
+        with patch(
+            "app.services.comparison_calculation_service.MetricCalculationService"
+        ) as MockMetricService:
             mock_metric_service = MagicMock()
             mock_metric_service.calculate_metric.side_effect = [
                 {"value": 90, "metric_name": "测试指标"},

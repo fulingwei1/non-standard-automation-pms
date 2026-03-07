@@ -4,13 +4,14 @@ Unit tests for app/services/bonus/performance.py
 批次: cov50
 """
 
-import pytest
-from unittest.mock import MagicMock
 from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
 
 try:
-    from app.services.bonus.performance import PerformanceBonusCalculator
     from app.models.bonus import BonusCalculation
+    from app.services.bonus.performance import PerformanceBonusCalculator
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -20,7 +21,7 @@ def _make_calculator():
     return PerformanceBonusCalculator(db=db)
 
 
-def _make_rule(base_amount=Decimal('1000'), trigger_condition=None):
+def _make_rule(base_amount=Decimal("1000"), trigger_condition=None):
     rule = MagicMock()
     rule.base_amount = base_amount
     rule.trigger_condition = trigger_condition
@@ -28,7 +29,7 @@ def _make_rule(base_amount=Decimal('1000'), trigger_condition=None):
     return rule
 
 
-def _make_perf_result(level="EXCELLENT", score=Decimal('90'), user_id=1, period_id=2):
+def _make_perf_result(level="EXCELLENT", score=Decimal("90"), user_id=1, period_id=2):
     pr = MagicMock()
     pr.level = level
     pr.total_score = score
@@ -47,21 +48,21 @@ def test_calculate_returns_calculation_for_valid_input():
     result = calc.calculate(pr, rule)
 
     assert result is not None
-    assert result.status == 'CALCULATED'
+    assert result.status == "CALCULATED"
     assert result.user_id == pr.user_id
 
 
 def test_calculate_amount_uses_base_and_coefficient():
     """计算金额 = base_amount * coefficient"""
     calc = _make_calculator()
-    rule = _make_rule(base_amount=Decimal('1000'))
+    rule = _make_rule(base_amount=Decimal("1000"))
     pr = _make_perf_result(level="EXCELLENT")
 
     result = calc.calculate(pr, rule)
 
     assert result is not None
     # EXCELLENT coefficient is 1.5, so amount should be 1500
-    assert result.calculated_amount == Decimal('1500')
+    assert result.calculated_amount == Decimal("1500")
 
 
 def test_calculate_returns_none_when_condition_not_met():
@@ -98,12 +99,12 @@ def test_calculate_detail_contains_performance_level():
 def test_calculate_with_no_base_amount():
     """base_amount 为0时计算结果为0"""
     calc = _make_calculator()
-    rule = _make_rule(base_amount=Decimal('0'))
+    rule = _make_rule(base_amount=Decimal("0"))
     pr = _make_perf_result()
 
     result = calc.calculate(pr, rule)
     assert result is not None
-    assert result.calculated_amount == Decimal('0')
+    assert result.calculated_amount == Decimal("0")
 
 
 def test_calculate_sets_period_id():

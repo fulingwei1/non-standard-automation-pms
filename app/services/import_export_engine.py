@@ -5,8 +5,6 @@
 提供通用的 Excel/PDF 处理入口，减少各模块重复实现。
 """
 
-from __future__ import annotations
-
 import io
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -113,7 +111,15 @@ class ImportExportEngine:
         return missing
 
     @staticmethod
-    def import_data(*, db, file_content: bytes, filename: str, template_type: str, current_user_id: int, update_existing: bool = False) -> Dict[str, Any]:
+    def import_data(
+        *,
+        db,
+        file_content: bytes,
+        filename: str,
+        template_type: str,
+        current_user_id: int,
+        update_existing: bool = False,
+    ) -> Dict[str, Any]:
         """统一导入入口（委托给 unified_import_service）"""
         from app.services.unified_import import unified_import_service
 

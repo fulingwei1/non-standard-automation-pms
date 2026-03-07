@@ -33,6 +33,7 @@ def make_mock_db_ctx(return_data=None):
 #  check_milestone_alerts
 # ================================================================
 
+
 class TestCheckMilestoneAlerts:
 
     @patch("app.utils.scheduled_tasks.milestone_tasks.get_db_session")
@@ -41,14 +42,13 @@ class TestCheckMilestoneAlerts:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch(
-            "app.services.alert.milestone_alert_service.MilestoneAlertService"
-        ) as MockSvc:
+        with patch("app.services.alert.milestone_alert_service.MilestoneAlertService") as MockSvc:
             instance = MagicMock()
             instance.check_milestone_alerts.return_value = 0
             MockSvc.return_value = instance
 
             from app.utils.scheduled_tasks.milestone_tasks import check_milestone_alerts
+
             result = check_milestone_alerts()
 
         assert result["alert_count"] == 0
@@ -60,14 +60,13 @@ class TestCheckMilestoneAlerts:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch(
-            "app.services.alert.milestone_alert_service.MilestoneAlertService"
-        ) as MockSvc:
+        with patch("app.services.alert.milestone_alert_service.MilestoneAlertService") as MockSvc:
             instance = MagicMock()
             instance.check_milestone_alerts.return_value = 5
             MockSvc.return_value = instance
 
             from app.utils.scheduled_tasks.milestone_tasks import check_milestone_alerts
+
             result = check_milestone_alerts()
 
         assert result["alert_count"] == 5
@@ -83,6 +82,7 @@ class TestCheckMilestoneAlerts:
             side_effect=Exception("milestone error"),
         ):
             from app.utils.scheduled_tasks.milestone_tasks import check_milestone_alerts
+
             result = check_milestone_alerts()
 
         assert "error" in result
@@ -92,6 +92,7 @@ class TestCheckMilestoneAlerts:
 #  check_milestone_status_and_adjust_payments
 # ================================================================
 
+
 class TestCheckMilestoneStatusAndAdjustPayments:
 
     @patch("app.utils.scheduled_tasks.milestone_tasks.get_db_session")
@@ -100,9 +101,7 @@ class TestCheckMilestoneStatusAndAdjustPayments:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch(
-            "app.services.payment_adjustment_service.PaymentAdjustmentService"
-        ) as MockSvc:
+        with patch("app.services.payment_adjustment_service.PaymentAdjustmentService") as MockSvc:
             instance = MagicMock()
             instance.check_and_adjust_all.return_value = {"checked": 0, "adjusted": 0}
             MockSvc.return_value = instance
@@ -110,6 +109,7 @@ class TestCheckMilestoneStatusAndAdjustPayments:
             from app.utils.scheduled_tasks.milestone_tasks import (
                 check_milestone_status_and_adjust_payments,
             )
+
             result = check_milestone_status_and_adjust_payments()
 
         assert result.get("checked") == 0
@@ -121,9 +121,7 @@ class TestCheckMilestoneStatusAndAdjustPayments:
         ctx, mock_db = make_mock_db_ctx()
         mock_get_db.side_effect = ctx
 
-        with patch(
-            "app.services.payment_adjustment_service.PaymentAdjustmentService"
-        ) as MockSvc:
+        with patch("app.services.payment_adjustment_service.PaymentAdjustmentService") as MockSvc:
             instance = MagicMock()
             instance.check_and_adjust_all.return_value = {"checked": 5, "adjusted": 2}
             MockSvc.return_value = instance
@@ -131,6 +129,7 @@ class TestCheckMilestoneStatusAndAdjustPayments:
             from app.utils.scheduled_tasks.milestone_tasks import (
                 check_milestone_status_and_adjust_payments,
             )
+
             result = check_milestone_status_and_adjust_payments()
 
         assert result["adjusted"] == 2
@@ -148,6 +147,7 @@ class TestCheckMilestoneStatusAndAdjustPayments:
             from app.utils.scheduled_tasks.milestone_tasks import (
                 check_milestone_status_and_adjust_payments,
             )
+
             result = check_milestone_status_and_adjust_payments()
 
         assert "error" in result
@@ -156,6 +156,7 @@ class TestCheckMilestoneStatusAndAdjustPayments:
 # ================================================================
 #  check_milestone_risk_alerts
 # ================================================================
+
 
 class TestCheckMilestoneRiskAlerts:
 
@@ -167,6 +168,7 @@ class TestCheckMilestoneRiskAlerts:
         mock_get_db.side_effect = ctx
 
         from app.utils.scheduled_tasks.milestone_tasks import check_milestone_risk_alerts
+
         result = check_milestone_risk_alerts()
 
         assert result["checked_projects"] == 0
@@ -195,6 +197,7 @@ class TestCheckMilestoneRiskAlerts:
         mock_db.query.side_effect = q
 
         from app.utils.scheduled_tasks.milestone_tasks import check_milestone_risk_alerts
+
         result = check_milestone_risk_alerts()
 
         assert result["risk_alerts"] == 0
@@ -217,7 +220,7 @@ class TestCheckMilestoneRiskAlerts:
         m2 = MagicMock()
         m2.planned_date = today - timedelta(days=10)  # 逾期
         m3 = MagicMock()
-        m3.planned_date = today + timedelta(days=5)   # 未逾期
+        m3.planned_date = today + timedelta(days=5)  # 未逾期
 
         def q(model_cls):
             m = MagicMock()
@@ -237,6 +240,7 @@ class TestCheckMilestoneRiskAlerts:
             side_effect=lambda query, *args, **kwargs: query,
         ):
             from app.utils.scheduled_tasks.milestone_tasks import check_milestone_risk_alerts
+
             result = check_milestone_risk_alerts()
 
         assert mock_db.add.called
@@ -271,6 +275,7 @@ class TestCheckMilestoneRiskAlerts:
         mock_db.query.side_effect = q
 
         from app.utils.scheduled_tasks.milestone_tasks import check_milestone_risk_alerts
+
         result = check_milestone_risk_alerts()
 
         assert result["risk_alerts"] == 0
@@ -309,6 +314,7 @@ class TestCheckMilestoneRiskAlerts:
             side_effect=lambda query, *args, **kwargs: query,
         ):
             from app.utils.scheduled_tasks.milestone_tasks import check_milestone_risk_alerts
+
             result = check_milestone_risk_alerts()
 
         assert result["risk_alerts"] == 0
@@ -316,6 +322,7 @@ class TestCheckMilestoneRiskAlerts:
     @patch("app.utils.scheduled_tasks.milestone_tasks.get_db_session")
     def test_exception_returns_error(self, mock_get_db):
         """异常 → 返回 error"""
+
         @contextmanager
         def bad_ctx():
             raise Exception("milestone risk error")
@@ -324,6 +331,7 @@ class TestCheckMilestoneRiskAlerts:
         mock_get_db.side_effect = bad_ctx
 
         from app.utils.scheduled_tasks.milestone_tasks import check_milestone_risk_alerts
+
         result = check_milestone_risk_alerts()
 
         assert "error" in result

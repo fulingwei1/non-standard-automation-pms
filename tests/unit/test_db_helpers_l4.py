@@ -10,9 +10,9 @@ Covers:
 - safe_commit: 成功返回 True；失败回滚并返回 False
 """
 
-import pytest
 from unittest.mock import MagicMock, call, patch
 
+import pytest
 from fastapi import HTTPException
 
 from app.utils.db_helpers import (
@@ -23,10 +23,10 @@ from app.utils.db_helpers import (
     update_obj,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_db():
     """Return a mock SQLAlchemy Session."""
@@ -43,6 +43,7 @@ def _make_model(name: str = "FakeModel"):
 # ---------------------------------------------------------------------------
 # get_or_404
 # ---------------------------------------------------------------------------
+
 
 class TestGetOr404:
     """Tests for get_or_404."""
@@ -128,6 +129,7 @@ class TestGetOr404:
 # save_obj
 # ---------------------------------------------------------------------------
 
+
 class TestSaveObj:
     """Tests for save_obj."""
 
@@ -185,6 +187,7 @@ class TestSaveObj:
 # delete_obj
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteObj:
     """Tests for delete_obj."""
 
@@ -230,6 +233,7 @@ class TestDeleteObj:
 # ---------------------------------------------------------------------------
 # update_obj
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateObj:
     """Tests for update_obj."""
@@ -315,6 +319,7 @@ class TestUpdateObj:
 # ---------------------------------------------------------------------------
 # safe_commit
 # ---------------------------------------------------------------------------
+
 
 class TestSafeCommit:
     """Tests for safe_commit."""

@@ -9,8 +9,8 @@ Batch: 3
 
 import pytest
 from sqlalchemy.orm import Session
-from app.services.resource_plan_service import ResourcePlanningService
 
+from app.services.resource_plan_service import ResourcePlanningService
 
 
 @pytest.fixture
@@ -26,9 +26,8 @@ class TestResourcePlanningService:
         """测试服务初始化"""
         service = ResourcePlanningService(db_session)
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_analyze_user_workload(self, resource_planning_service):
         """测试 analyze_user_workload 方法"""
@@ -38,7 +37,6 @@ class TestResourcePlanningService:
         # 3. 验证结果
         pass
 
-
     def test_predict_project_resource_needs(self, resource_planning_service):
         """测试 predict_project_resource_needs 方法"""
         # TODO: 实现测试逻辑
@@ -47,7 +45,6 @@ class TestResourcePlanningService:
         # 3. 验证结果
         pass
 
-
     def test_get_department_workload_stats(self, resource_planning_service):
         """测试 get_department_workload_stats 方法"""
         # TODO: 实现测试逻辑
@@ -55,7 +52,6 @@ class TestResourcePlanningService:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

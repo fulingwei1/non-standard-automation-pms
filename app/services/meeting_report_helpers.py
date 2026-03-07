@@ -58,10 +58,7 @@ def calculate_periods(year: int, month: int) -> Tuple[date, date, date, date]:
 
 
 def query_meetings(
-    db: Session,
-    period_start: date,
-    period_end: date,
-    rhythm_level: Optional[str] = None
+    db: Session, period_start: date, period_end: date, rhythm_level: Optional[str] = None
 ) -> List[StrategicMeeting]:
     """
     查询指定周期内的会议
@@ -72,7 +69,7 @@ def query_meetings(
     query = db.query(StrategicMeeting).filter(
         and_(
             StrategicMeeting.meeting_date >= period_start,
-            StrategicMeeting.meeting_date <= period_end
+            StrategicMeeting.meeting_date <= period_end,
         )
     )
 
@@ -82,9 +79,7 @@ def query_meetings(
     return query.order_by(StrategicMeeting.meeting_date).all()
 
 
-def calculate_meeting_statistics(
-    meetings: List[StrategicMeeting]
-) -> Tuple[int, int]:
+def calculate_meeting_statistics(meetings: List[StrategicMeeting]) -> Tuple[int, int]:
     """
     计算会议统计信息
 
@@ -96,10 +91,7 @@ def calculate_meeting_statistics(
     return total, completed
 
 
-def calculate_action_item_statistics(
-    db: Session,
-    meeting_ids: List[int]
-) -> Tuple[int, int, int]:
+def calculate_action_item_statistics(db: Session, meeting_ids: List[int]) -> Tuple[int, int, int]:
     """
     计算行动项统计信息
 
@@ -109,23 +101,31 @@ def calculate_action_item_statistics(
     if not meeting_ids:
         return 0, 0, 0
 
-    total = db.query(MeetingActionItem).filter(
-        MeetingActionItem.meeting_id.in_(meeting_ids)
-    ).count()
+    total = (
+        db.query(MeetingActionItem).filter(MeetingActionItem.meeting_id.in_(meeting_ids)).count()
+    )
 
-    completed = db.query(MeetingActionItem).filter(
-        and_(
-            MeetingActionItem.meeting_id.in_(meeting_ids),
-            MeetingActionItem.status == ActionItemStatus.DONE.value
+    completed = (
+        db.query(MeetingActionItem)
+        .filter(
+            and_(
+                MeetingActionItem.meeting_id.in_(meeting_ids),
+                MeetingActionItem.status == ActionItemStatus.DONE.value,
+            )
         )
-    ).count()
+        .count()
+    )
 
-    overdue = db.query(MeetingActionItem).filter(
-        and_(
-            MeetingActionItem.meeting_id.in_(meeting_ids),
-            MeetingActionItem.status == ActionItemStatus.OVERDUE.value
+    overdue = (
+        db.query(MeetingActionItem)
+        .filter(
+            and_(
+                MeetingActionItem.meeting_id.in_(meeting_ids),
+                MeetingActionItem.status == ActionItemStatus.OVERDUE.value,
+            )
         )
-    ).count()
+        .count()
+    )
 
     return total, completed, overdue
 
@@ -155,7 +155,7 @@ def calculate_change(current: int, previous: int) -> Dict[str, Any]:
         "previous": previous,
         "change": change,
         "change_rate": f"{change_rate:+.1f}%",
-        "change_abs": abs(change)
+        "change_abs": abs(change),
     }
 
 
@@ -167,7 +167,7 @@ def build_comparison_data(
     current_stats: Dict[str, int],
     prev_stats: Dict[str, int],
     current_completion_rate: float,
-    prev_completion_rate: float
+    prev_completion_rate: float,
 ) -> Dict[str, Any]:
     """
     构建对比数据
@@ -178,26 +178,23 @@ def build_comparison_data(
     return {
         "previous_period": f"{prev_year}-{prev_month:02d}",
         "current_period": f"{year}-{month:02d}",
-        "meetings_comparison": calculate_change(
-            current_stats['total'], prev_stats['total']
-        ),
+        "meetings_comparison": calculate_change(current_stats["total"], prev_stats["total"]),
         "completed_meetings_comparison": calculate_change(
-            current_stats['completed'], prev_stats['completed']
+            current_stats["completed"], prev_stats["completed"]
         ),
         "action_items_comparison": calculate_change(
-            current_stats.get('action_items_total', 0),
-            prev_stats.get('action_items_total', 0)
+            current_stats.get("action_items_total", 0), prev_stats.get("action_items_total", 0)
         ),
         "completed_action_items_comparison": calculate_change(
-            current_stats.get('action_items_completed', 0),
-            prev_stats.get('action_items_completed', 0)
+            current_stats.get("action_items_completed", 0),
+            prev_stats.get("action_items_completed", 0),
         ),
         "completion_rate_comparison": {
             "current": f"{current_completion_rate:.1f}%",
             "previous": f"{prev_completion_rate:.1f}%",
             "change": f"{current_completion_rate - prev_completion_rate:+.1f}%",
-            "change_value": current_completion_rate - prev_completion_rate
-        }
+            "change_value": current_completion_rate - prev_completion_rate,
+        },
     }
 
 
@@ -215,10 +212,7 @@ def collect_key_decisions(meetings: List[StrategicMeeting]) -> List[str]:
     return key_decisions
 
 
-def build_meetings_data(
-    db: Session,
-    meetings: List[StrategicMeeting]
-) -> List[Dict[str, Any]]:
+def build_meetings_data(db: Session, meetings: List[StrategicMeeting]) -> List[Dict[str, Any]]:
     """
     构建会议数据列表
 
@@ -234,17 +228,15 @@ def build_meetings_data(
             "cycle_type": m.cycle_type,
             "status": m.status,
             "organizer_name": m.organizer_name,
-            "action_items_count": db.query(MeetingActionItem).filter(
-                MeetingActionItem.meeting_id == m.id
-            ).count()
+            "action_items_count": db.query(MeetingActionItem)
+            .filter(MeetingActionItem.meeting_id == m.id)
+            .count(),
         }
         for m in meetings
     ]
 
 
-def calculate_by_level_statistics(
-    meetings: List[StrategicMeeting]
-) -> Dict[str, Dict[str, int]]:
+def calculate_by_level_statistics(meetings: List[StrategicMeeting]) -> Dict[str, Dict[str, int]]:
     """
     按层级统计会议
 
@@ -263,9 +255,7 @@ def calculate_by_level_statistics(
 
 
 def build_report_summary(
-    meeting_stats: Dict[str, int],
-    action_item_stats: Dict[str, int],
-    completion_rate: float
+    meeting_stats: Dict[str, int], action_item_stats: Dict[str, int], completion_rate: float
 ) -> Dict[str, Any]:
     """
     构建报告摘要
@@ -274,21 +264,22 @@ def build_report_summary(
         dict: 报告摘要数据
     """
     return {
-        "total_meetings": meeting_stats['total'],
-        "completed_meetings": meeting_stats['completed'],
-        "completion_rate": f"{(meeting_stats['completed'] / meeting_stats['total'] * 100):.1f}%" if meeting_stats['total'] > 0 else "0%",
-        "total_action_items": action_item_stats['total'],
-        "completed_action_items": action_item_stats['completed'],
-        "overdue_action_items": action_item_stats['overdue'],
-        "action_completion_rate": f"{completion_rate:.1f}%"
+        "total_meetings": meeting_stats["total"],
+        "completed_meetings": meeting_stats["completed"],
+        "completion_rate": (
+            f"{(meeting_stats['completed'] / meeting_stats['total'] * 100):.1f}%"
+            if meeting_stats["total"] > 0
+            else "0%"
+        ),
+        "total_action_items": action_item_stats["total"],
+        "completed_action_items": action_item_stats["completed"],
+        "overdue_action_items": action_item_stats["overdue"],
+        "action_completion_rate": f"{completion_rate:.1f}%",
     }
 
 
 def calculate_business_metrics(
-    db: Session,
-    config: MeetingReportConfig,
-    period_start: date,
-    period_end: date
+    db: Session, config: MeetingReportConfig, period_start: date, period_end: date
 ) -> Dict[str, Any]:
     """
     计算业务指标
@@ -301,7 +292,7 @@ def calculate_business_metrics(
 
     metric_service = MetricCalculationService(db)
     business_metrics = {}
-    metric_codes = [m.get('metric_code') for m in config.enabled_metrics if m.get('enabled', True)]
+    metric_codes = [m.get("metric_code") for m in config.enabled_metrics if m.get("enabled", True)]
 
     for metric_code in metric_codes:
         try:
@@ -311,18 +302,14 @@ def calculate_business_metrics(
             business_metrics[metric_code] = {
                 "metric_code": metric_code,
                 "error": str(e),
-                "value": None
+                "value": None,
             }
 
     return business_metrics
 
 
 def calculate_metric_comparisons(
-    db: Session,
-    config_id: int,
-    year: int,
-    month: int,
-    metric_codes: List[str]
+    db: Session, config_id: int, year: int, month: int, metric_codes: List[str]
 ) -> Optional[Dict[str, Any]]:
     """
     计算指标对比数据
@@ -334,19 +321,15 @@ def calculate_metric_comparisons(
     if not config or not config.comparison_config:
         return None
 
-    enable_mom = config.comparison_config.get('enable_mom', False)
-    enable_yoy = config.comparison_config.get('enable_yoy', False)
+    enable_mom = config.comparison_config.get("enable_mom", False)
+    enable_yoy = config.comparison_config.get("enable_yoy", False)
 
     if not (enable_mom or enable_yoy):
         return None
 
     comparison_service = ComparisonCalculationService(db)
     comparisons = comparison_service.calculate_comparisons_batch(
-        metric_codes,
-        year,
-        month=month,
-        enable_mom=enable_mom,
-        enable_yoy=enable_yoy
+        metric_codes, year, month=month, enable_mom=enable_mom, enable_yoy=enable_yoy
     )
 
     return comparisons
@@ -362,20 +345,19 @@ def collect_strategic_structures(meetings: List[StrategicMeeting]) -> List[Dict[
     strategic_structures = []
     for meeting in meetings:
         if meeting.strategic_structure:
-            strategic_structures.append({
-                "meeting_id": meeting.id,
-                "meeting_name": meeting.meeting_name,
-                "meeting_date": meeting.meeting_date.isoformat(),
-                "structure": meeting.strategic_structure
-            })
+            strategic_structures.append(
+                {
+                    "meeting_id": meeting.id,
+                    "meeting_name": meeting.meeting_name,
+                    "meeting_date": meeting.meeting_date.isoformat(),
+                    "structure": meeting.strategic_structure,
+                }
+            )
     return strategic_structures
 
 
 def calculate_yoy_comparisons(
-    db: Session,
-    metric_codes: List[str],
-    year: int,
-    month: Optional[int] = None
+    db: Session, metric_codes: List[str], year: int, month: Optional[int] = None
 ) -> Optional[Dict[str, Any]]:
     """
     计算同比对比数据
@@ -385,11 +367,7 @@ def calculate_yoy_comparisons(
     """
     comparison_service = ComparisonCalculationService(db)
     yoy_comparisons = comparison_service.calculate_comparisons_batch(
-        metric_codes,
-        year,
-        month=month,
-        enable_mom=False,
-        enable_yoy=True
+        metric_codes, year, month=month, enable_mom=False, enable_yoy=True
     )
     return {"yoy_comparisons": yoy_comparisons}
 
@@ -406,7 +384,7 @@ def create_report_record(
     rhythm_level: str,
     report_data: Dict[str, Any],
     comparison_data: Optional[Dict[str, Any]],
-    generated_by: Optional[int]
+    generated_by: Optional[int],
 ) -> "MeetingReport":
     """
     创建报告记录
@@ -429,7 +407,7 @@ def create_report_record(
         comparison_data=comparison_data,
         status="GENERATED",
         generated_by=generated_by,
-        generated_at=datetime.now()
+        generated_at=datetime.now(),
     )
 
     save_obj(db, report)

@@ -3,8 +3,9 @@
 第四十五批覆盖：staff_matching/base.py
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.staff_matching.base")
 

@@ -59,8 +59,8 @@ def update_review_issue_counts(db: Session, review_id: int):
         return
 
     issues = db.query(ReviewIssue).filter(ReviewIssue.review_id == review_id).all()
-    review.issue_count_a = sum(1 for i in issues if i.issue_level == 'A')
-    review.issue_count_b = sum(1 for i in issues if i.issue_level == 'B')
-    review.issue_count_c = sum(1 for i in issues if i.issue_level == 'C')
-    review.issue_count_d = sum(1 for i in issues if i.issue_level == 'D')
+    review.issue_count_a = sum(1 for i in issues if i.issue_level == "A")
+    review.issue_count_b = sum(1 for i in issues if i.issue_level == "B")
+    review.issue_count_c = sum(1 for i in issues if i.issue_level == "C")
+    review.issue_count_d = sum(1 for i in issues if i.issue_level == "D")
     db.commit()

@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """Tests for app/schemas/common.py"""
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from app.schemas.common import (
-    ResponseModel,
-    PaginatedResponse,
-    PageParams,
+    AuditSchema,
+    BaseSchema,
+    BatchOperationResponse,
     IdResponse,
     MessageResponse,
-    BatchOperationResponse,
-    StatusUpdate,
-    BaseSchema,
-    TimestampSchema,
-    AuditSchema,
+    PageParams,
     PageResponse,
+    PaginatedResponse,
+    ResponseModel,
+    StatusUpdate,
+    TimestampSchema,
 )
 
 

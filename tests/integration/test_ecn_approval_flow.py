@@ -8,14 +8,15 @@ ECN审批流程集成测试
 3. 状态同步
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models.ecn import (
     Ecn,
-    EcnEvaluation,
     EcnApprovalMatrix,
+    EcnEvaluation,
 )
 from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
 from app.services.approval_engine.workflow_engine import WorkflowEngine
@@ -143,9 +144,7 @@ class TestEcnApprovalFlow:
             assert record.status == "PENDING"
             assert record.approval_level in [1, 2, 3]
 
-    def test_sync_from_approval_instance_approved(
-        self, db_session: Session, ecn_sample: Ecn
-    ):
+    def test_sync_from_approval_instance_approved(self, db_session: Session, ecn_sample: Ecn):
         """测试审批通过后的同步"""
         adapter = EcnApprovalAdapter(db_session)
 
@@ -173,9 +172,7 @@ class TestEcnApprovalFlow:
         assert ecn_sample.status == "APPROVED"
         assert ecn_sample.approval_result == "APPROVED"
 
-    def test_sync_from_approval_instance_rejected(
-        self, db_session: Session, ecn_sample: Ecn
-    ):
+    def test_sync_from_approval_instance_rejected(self, db_session: Session, ecn_sample: Ecn):
         """测试审批驳回后的同步"""
         adapter = EcnApprovalAdapter(db_session)
 

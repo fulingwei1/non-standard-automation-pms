@@ -25,7 +25,9 @@ from .batch_helpers import log_task_operation
 router = APIRouter()
 
 
-@router.post("/batch/complete", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/batch/complete", response_model=BatchOperationResponse, status_code=status.HTTP_200_OK
+)
 def batch_complete_tasks(
     *,
     db: Session = Depends(deps.get_db),
@@ -35,33 +37,34 @@ def batch_complete_tasks(
     """
     批量完成任务
     """
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def complete_task(task: TaskUnified):
         """完成任务的操作函数"""
         task.status = "COMPLETED"
         task.progress = 100
         task.actual_end_date = datetime.now().date()
         task.updated_by = current_user.id
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
         log_task_operation(
-            db, task.id, "BATCH_COMPLETE", f"批量完成任务：{task.title}",
-            current_user.id, current_user.real_name or current_user.username
+            db,
+            task.id,
+            "BATCH_COMPLETE",
+            f"批量完成任务：{task.title}",
+            current_user.id,
+            current_user.real_name or current_user.username,
         )
-    
+
     # 预过滤：只处理分配给当前用户的任务
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(TaskUnified.id.in_(ids), TaskUnified.assignee_id == current_user.id)
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=complete_task,
@@ -69,9 +72,9 @@ def batch_complete_tasks(
         error_message="任务已完成，不能重复完成",
         log_func=log_operation,
         operation_type="BATCH_COMPLETE",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())
 
 
@@ -85,35 +88,36 @@ def batch_start_tasks(
     """
     批量开始任务
     """
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def start_task(task: TaskUnified):
         """开始任务的操作函数"""
         task.status = "IN_PROGRESS"
         if not task.actual_start_date:
             task.actual_start_date = datetime.now().date()
         task.updated_by = current_user.id
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
-        old_status = getattr(task, '_old_status', task.status)
+        old_status = getattr(task, "_old_status", task.status)
         log_task_operation(
-            db, task.id, "BATCH_START", f"批量开始任务：{task.title}",
-            current_user.id, current_user.real_name or current_user.username,
+            db,
+            task.id,
+            "BATCH_START",
+            f"批量开始任务：{task.title}",
+            current_user.id,
+            current_user.real_name or current_user.username,
             old_value={"status": old_status},
-            new_value={"status": "IN_PROGRESS"}
+            new_value={"status": "IN_PROGRESS"},
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(TaskUnified.id.in_(ids), TaskUnified.assignee_id == current_user.id)
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=start_task,
@@ -121,9 +125,9 @@ def batch_start_tasks(
         error_message="任务已开始或已完成",
         log_func=log_operation,
         operation_type="BATCH_START",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())
 
 
@@ -137,33 +141,34 @@ def batch_pause_tasks(
     """
     批量暂停任务
     """
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def pause_task(task: TaskUnified):
         """暂停任务的操作函数"""
         task.status = "PAUSED"
         task.updated_by = current_user.id
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志"""
-        old_status = getattr(task, '_old_status', task.status)
+        old_status = getattr(task, "_old_status", task.status)
         log_task_operation(
-            db, task.id, "BATCH_PAUSE", f"批量暂停任务：{task.title}",
-            current_user.id, current_user.real_name or current_user.username,
+            db,
+            task.id,
+            "BATCH_PAUSE",
+            f"批量暂停任务：{task.title}",
+            current_user.id,
+            current_user.real_name or current_user.username,
             old_value={"status": old_status},
-            new_value={"status": "PAUSED"}
+            new_value={"status": "PAUSED"},
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(TaskUnified.id.in_(ids), TaskUnified.assignee_id == current_user.id)
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=pause_task,
@@ -171,9 +176,9 @@ def batch_pause_tasks(
         error_message="只能暂停进行中的任务",
         log_func=log_operation,
         operation_type="BATCH_PAUSE",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())
 
 
@@ -187,30 +192,34 @@ def batch_delete_tasks(
     """
     批量删除任务（仅个人任务，硬删除）
     """
-    executor = BatchOperationExecutor(
-        model=TaskUnified,
-        db=db,
-        current_user=current_user
-    )
-    
+    executor = BatchOperationExecutor(model=TaskUnified, db=db, current_user=current_user)
+
     def delete_task(task: TaskUnified):
         """删除任务的操作函数（硬删除）"""
         db.delete(task)
-    
+
     def log_operation(task: TaskUnified, op_type: str):
         """记录操作日志（在删除前记录）"""
         log_task_operation(
-            db, task.id, "BATCH_DELETE", f"批量删除任务：{task.title}",
-            current_user.id, current_user.real_name or current_user.username
+            db,
+            task.id,
+            "BATCH_DELETE",
+            f"批量删除任务：{task.title}",
+            current_user.id,
+            current_user.real_name or current_user.username,
         )
-    
+
     def pre_filter(db: Session, ids: List[int]) -> List[TaskUnified]:
-        return db.query(TaskUnified).filter(
-            TaskUnified.id.in_(ids),
-            TaskUnified.assignee_id == current_user.id,
-            TaskUnified.task_type == "PERSONAL"  # 只能删除个人任务
-        ).all()
-    
+        return (
+            db.query(TaskUnified)
+            .filter(
+                TaskUnified.id.in_(ids),
+                TaskUnified.assignee_id == current_user.id,
+                TaskUnified.task_type == "PERSONAL",  # 只能删除个人任务
+            )
+            .all()
+        )
+
     result = executor.execute(
         entity_ids=task_ids,
         operation_func=delete_task,
@@ -218,7 +227,7 @@ def batch_delete_tasks(
         error_message="只能删除个人任务",
         log_func=log_operation,
         operation_type="BATCH_DELETE",
-        pre_filter_func=pre_filter
+        pre_filter_func=pre_filter,
     )
-    
+
     return BatchOperationResponse(**result.to_dict())

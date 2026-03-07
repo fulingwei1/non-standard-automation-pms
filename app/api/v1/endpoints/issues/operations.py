@@ -26,10 +26,9 @@ from .utils import generate_issue_no
 
 router = APIRouter()
 
+
 def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optional[Issue]:
-    query = db.query(Issue).options(
-        joinedload(Issue.service_ticket)
-    ).filter(Issue.id == issue_id)
+    query = db.query(Issue).options(joinedload(Issue.service_ticket)).filter(Issue.id == issue_id)
     query = DataScopeService.filter_issues_by_scope(db, query, current_user)
     return query.first()
 
@@ -37,6 +36,7 @@ def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optiona
 def _build_issue_response(issue: Issue) -> IssueResponse:
     """构建问题响应对象"""
     import json
+
     return IssueResponse(
         id=issue.id,
         issue_no=issue.issue_no,
@@ -73,11 +73,11 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
         is_blocking=issue.is_blocking,
         attachments=json.loads(issue.attachments) if issue.attachments else [],
         tags=json.loads(issue.tags) if issue.tags else [],
-        root_cause=getattr(issue, 'root_cause', None),
-        responsible_engineer_id=getattr(issue, 'responsible_engineer_id', None),
-        responsible_engineer_name=getattr(issue, 'responsible_engineer_name', None),
-        estimated_inventory_loss=getattr(issue, 'estimated_inventory_loss', None),
-        estimated_extra_hours=getattr(issue, 'estimated_extra_hours', None),
+        root_cause=getattr(issue, "root_cause", None),
+        responsible_engineer_id=getattr(issue, "responsible_engineer_id", None),
+        responsible_engineer_name=getattr(issue, "responsible_engineer_name", None),
+        estimated_inventory_loss=getattr(issue, "estimated_inventory_loss", None),
+        estimated_extra_hours=getattr(issue, "estimated_extra_hours", None),
         created_at=issue.created_at,
         updated_at=issue.updated_at,
         project_code=issue.project.project_code if issue.project else None,
@@ -100,22 +100,22 @@ def close_issue(
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
-    if issue.status == 'CLOSED':
+    if issue.status == "CLOSED":
         raise HTTPException(status_code=400, detail="问题已关闭")
 
     # 更新状态为已关闭
     old_status = issue.status
-    issue.status = 'CLOSED'
+    issue.status = "CLOSED"
 
     # 记录跟进记录
     follow_up = IssueFollowUpRecord(
         issue_id=issue_id,
-        follow_up_type='STATUS_CHANGE',
-        content='问题已关闭',
+        follow_up_type="STATUS_CHANGE",
+        content="问题已关闭",
         operator_id=current_user.id,
         operator_name=current_user.real_name or current_user.username,
         old_status=old_status,
-        new_status='CLOSED',
+        new_status="CLOSED",
     )
     db.add(follow_up)
     db.add(issue)
@@ -137,22 +137,22 @@ def cancel_issue(
     if not issue:
         raise HTTPException(status_code=404, detail="问题不存在")
 
-    if issue.status in ['CLOSED', 'CANCELLED']:
+    if issue.status in ["CLOSED", "CANCELLED"]:
         raise HTTPException(status_code=400, detail="问题已关闭或已取消")
 
     # 更新状态为已取消
     old_status = issue.status
-    issue.status = 'CANCELLED'
+    issue.status = "CANCELLED"
 
     # 记录跟进记录
     follow_up = IssueFollowUpRecord(
         issue_id=issue_id,
-        follow_up_type='STATUS_CHANGE',
+        follow_up_type="STATUS_CHANGE",
         content=f'问题已取消：{cancel_reason or "无原因"}',
         operator_id=current_user.id,
         operator_name=current_user.real_name or current_user.username,
         old_status=old_status,
-        new_status='CANCELLED',
+        new_status="CANCELLED",
     )
     db.add(follow_up)
     db.add(issue)
@@ -182,9 +182,11 @@ def get_related_issues(
             related_issues.append(_build_issue_response(parent))
 
     # 获取子问题
-    children_query = db.query(Issue).options(
-        joinedload(Issue.service_ticket)
-    ).filter(Issue.related_issue_id == issue_id)
+    children_query = (
+        db.query(Issue)
+        .options(joinedload(Issue.service_ticket))
+        .filter(Issue.related_issue_id == issue_id)
+    )
     children_query = DataScopeService.filter_issues_by_scope(db, children_query, current_user)
     children = children_query.all()
     for child in children:
@@ -193,7 +195,9 @@ def get_related_issues(
     return related_issues
 
 
-@router.post("/{issue_id}/related", response_model=IssueResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{issue_id}/related", response_model=IssueResponse, status_code=status.HTTP_201_CREATED
+)
 def create_related_issue(
     issue_id: int,
     issue_in: IssueCreate,
@@ -226,9 +230,15 @@ def create_related_issue(
         reporter_name=current_user.real_name or current_user.username,
         report_date=datetime.now(),
         assignee_id=issue_in.assignee_id,
-        assignee_name=(lambda u: u.real_name if u else None)(db.query(User).filter(User.id == issue_in.assignee_id).first()) if issue_in.assignee_id else None,
+        assignee_name=(
+            (lambda u: u.real_name if u else None)(
+                db.query(User).filter(User.id == issue_in.assignee_id).first()
+            )
+            if issue_in.assignee_id
+            else None
+        ),
         due_date=issue_in.due_date,
-        status='OPEN',
+        status="OPEN",
         impact_scope=issue_in.impact_scope,
         impact_level=issue_in.impact_level,
         is_blocking=issue_in.is_blocking,
@@ -259,27 +269,24 @@ def delete_issue(
         raise HTTPException(status_code=404, detail="问题不存在")
 
     # 软删除：将状态标记为DELETED
-    if issue.status == 'DELETED':
+    if issue.status == "DELETED":
         raise HTTPException(status_code=400, detail="问题已删除")
 
     old_status = issue.status
-    issue.status = 'DELETED'
+    issue.status = "DELETED"
 
     # 创建跟进记录
     follow_up = IssueFollowUpRecord(
         issue_id=issue_id,
-        follow_up_type='STATUS_CHANGE',
-        content='问题已删除（管理员操作）',
+        follow_up_type="STATUS_CHANGE",
+        content="问题已删除（管理员操作）",
         operator_id=current_user.id,
         operator_name=current_user.real_name or current_user.username,
         old_status=old_status,
-        new_status='DELETED',
+        new_status="DELETED",
     )
     db.add(follow_up)
     db.add(issue)
     db.commit()
 
-    return ResponseModel(
-        code=200,
-        message="问题已删除"
-    )
+    return ResponseModel(code=200, message="问题已删除")

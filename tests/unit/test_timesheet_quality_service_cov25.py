@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十五批 - timesheet_quality_service 单元测试"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.timesheet_quality_service")
 
@@ -39,6 +40,7 @@ def _make_user(user_id=1, real_name="张三", username="zhangsan"):
 
 # ── 常量 ──────────────────────────────────────────────────────────────────────
 
+
 class TestConstants:
     def test_max_daily_hours(self, service):
         assert service.MAX_DAILY_HOURS == 16
@@ -54,6 +56,7 @@ class TestConstants:
 
 
 # ── detect_anomalies - daily ──────────────────────────────────────────────────
+
 
 class TestDetectAnomaliesDaily:
     def test_detects_excessive_daily_hours(self, service, db):
@@ -89,6 +92,7 @@ class TestDetectAnomaliesDaily:
 
 # ── detect_anomalies - weekly ─────────────────────────────────────────────────
 
+
 class TestDetectAnomaliesWeekly:
     def test_detects_excessive_weekly_hours(self, service, db):
         # Monday of a week
@@ -109,12 +113,12 @@ class TestDetectAnomaliesWeekly:
 
 # ── detect_anomalies - monthly ────────────────────────────────────────────────
 
+
 class TestDetectAnomaliesMonthly:
     def test_detects_excessive_monthly_hours(self, service, db):
         # 22 workdays × 14h = 308h > 300h
         timesheets = [
-            _make_timesheet(user_id=3, work_date=date(2025, 3, i), hours=14)
-            for i in range(1, 23)
+            _make_timesheet(user_id=3, work_date=date(2025, 3, i), hours=14) for i in range(1, 23)
         ]
         user = _make_user(3, "王五")
         db.query.return_value.filter.return_value.all.side_effect = [timesheets]
@@ -127,6 +131,7 @@ class TestDetectAnomaliesMonthly:
 
 # ── detect_anomalies with filters ─────────────────────────────────────────────
 
+
 class TestDetectAnomaliesWithFilters:
     def test_applies_user_id_filter(self, service, db):
         db.query.return_value.filter.return_value.all.return_value = []
@@ -136,14 +141,12 @@ class TestDetectAnomaliesWithFilters:
 
     def test_applies_date_range_filter(self, service, db):
         db.query.return_value.filter.return_value.all.return_value = []
-        service.detect_anomalies(
-            start_date=date(2025, 1, 1),
-            end_date=date(2025, 3, 31)
-        )
+        service.detect_anomalies(start_date=date(2025, 1, 1), end_date=date(2025, 3, 31))
         assert db.query.return_value.filter.called
 
 
 # ── check_work_log_completeness ───────────────────────────────────────────────
+
 
 class TestCheckWorkLogCompleteness:
     def test_returns_dict_with_expected_keys(self, service, db):
@@ -164,8 +167,7 @@ class TestCheckWorkLogCompleteness:
         db.query.return_value.filter.return_value.first.side_effect = [None, user]
 
         result = service.check_work_log_completeness(
-            start_date=date(2025, 3, 1),
-            end_date=date(2025, 3, 31)
+            start_date=date(2025, 3, 1), end_date=date(2025, 3, 31)
         )
         # Should detect missing log
         assert isinstance(result, dict)

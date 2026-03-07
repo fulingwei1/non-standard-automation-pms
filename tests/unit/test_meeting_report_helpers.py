@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """Tests for meeting_report_helpers.py"""
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
 
 from app.services.meeting_report_helpers import (
-    calculate_periods,
-    calculate_meeting_statistics,
-    calculate_action_item_statistics,
-    calculate_completion_rate,
-    calculate_change,
-    collect_key_decisions,
-    calculate_by_level_statistics,
     build_report_summary,
+    calculate_action_item_statistics,
+    calculate_by_level_statistics,
+    calculate_change,
+    calculate_completion_rate,
+    calculate_meeting_statistics,
+    calculate_periods,
+    collect_key_decisions,
 )
 
 
@@ -74,16 +74,16 @@ class TestCalculateCompletionRate:
 class TestCalculateChange:
     def test_increase(self):
         result = calculate_change(10, 8)
-        assert result['change'] == 2
-        assert result['current'] == 10
+        assert result["change"] == 2
+        assert result["current"] == 10
 
     def test_from_zero(self):
         result = calculate_change(5, 0)
-        assert result['change_rate'] == "+100.0%"
+        assert result["change_rate"] == "+100.0%"
 
     def test_both_zero(self):
         result = calculate_change(0, 0)
-        assert result['change'] == 0
+        assert result["change"] == 0
 
 
 class TestCollectKeyDecisions:
@@ -103,18 +103,16 @@ class TestCalculateByLevelStatistics:
             MagicMock(rhythm_level="L2", status="COMPLETED"),
         ]
         result = calculate_by_level_statistics(meetings)
-        assert result['L1']['total'] == 2
-        assert result['L1']['completed'] == 1
-        assert result['L2']['total'] == 1
+        assert result["L1"]["total"] == 2
+        assert result["L1"]["completed"] == 1
+        assert result["L2"]["total"] == 1
 
 
 class TestBuildReportSummary:
     def test_basic(self):
         result = build_report_summary(
-            {'total': 10, 'completed': 8},
-            {'total': 20, 'completed': 15, 'overdue': 3},
-            75.0
+            {"total": 10, "completed": 8}, {"total": 20, "completed": 15, "overdue": 3}, 75.0
         )
-        assert result['total_meetings'] == 10
-        assert result['completion_rate'] == "80.0%"
-        assert result['action_completion_rate'] == "75.0%"
+        assert result["total_meetings"] == 10
+        assert result["completion_rate"] == "80.0%"
+        assert result["action_completion_rate"] == "75.0%"

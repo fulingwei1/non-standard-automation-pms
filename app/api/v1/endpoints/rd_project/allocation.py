@@ -17,13 +17,14 @@ from app.models.timesheet import Timesheet
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.rd_project import RdCostAllocationRuleResponse
+from app.utils.db_helpers import get_or_404
 
 from .utils import generate_cost_no
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
 # ==================== 费用分摊规则 ====================
+
 
 @router.get("/rd-cost-allocation-rules", response_model=ResponseModel)
 def get_rd_cost_allocation_rules(
@@ -44,7 +45,7 @@ def get_rd_cost_allocation_rules(
     return ResponseModel(
         code=200,
         message="success",
-        data=[RdCostAllocationRuleResponse.model_validate(rule) for rule in rules]
+        data=[RdCostAllocationRuleResponse.model_validate(rule) for rule in rules],
     )
 
 
@@ -53,7 +54,9 @@ def apply_cost_allocation(
     *,
     db: Session = Depends(deps.get_db),
     rule_id: int = Query(..., description="分摊规则ID"),
-    cost_ids: Optional[List[int]] = Query(None, description="费用ID列表（不提供则应用规则范围内的所有费用）"),
+    cost_ids: Optional[List[int]] = Query(
+        None, description="费用ID列表（不提供则应用规则范围内的所有费用）"
+    ),
     current_user: User = Depends(security.require_permission("rd_project:read")),
 ) -> Any:
     """
@@ -77,21 +80,13 @@ def apply_cost_allocation(
     costs = query_allocatable_costs(db, rule, cost_ids)
 
     if not costs:
-        return ResponseModel(
-            code=200,
-            message="没有需要分摊的费用",
-            data={"allocated_count": 0}
-        )
+        return ResponseModel(code=200, message="没有需要分摊的费用", data={"allocated_count": 0})
 
     # 获取目标项目列表
     target_project_ids = get_target_project_ids(db, rule)
 
     if not target_project_ids:
-        return ResponseModel(
-            code=400,
-            message="没有可分摊的目标项目",
-            data={"allocated_count": 0}
-        )
+        return ResponseModel(code=400, message="没有可分摊的目标项目", data={"allocated_count": 0})
 
     # 计算分摊比例
     allocation_rates = calculate_allocation_rates(db, rule, target_project_ids)
@@ -118,8 +113,8 @@ def apply_cost_allocation(
         data={
             "allocated_count": allocated_count,
             "target_projects": len(target_project_ids),
-            "allocation_rates": allocation_rates
-        }
+            "allocation_rates": allocation_rates,
+        },
     )
 
 
@@ -154,14 +149,13 @@ def get_rd_project_timesheet_summary(
                 "total_participants": 0,
                 "by_user": [],
                 "by_date": {},
-                "note": "研发项目未关联非标项目，无法统计工时"
-            }
+                "note": "研发项目未关联非标项目，无法统计工时",
+            },
         )
 
     # 查询工时记录（从关联的非标项目）
     query = db.query(Timesheet).filter(
-        Timesheet.project_id.in_(linked_project_ids),
-        Timesheet.status == 'APPROVED'
+        Timesheet.project_id.in_(linked_project_ids), Timesheet.status == "APPROVED"
     )
 
     if start_date:
@@ -187,13 +181,13 @@ def get_rd_project_timesheet_summary(
         user_name = user.real_name or user.username if user else f"用户{ts.user_id}"
         if user_name not in by_user:
             by_user[user_name] = {
-                'user_id': ts.user_id,
-                'user_name': user_name,
-                'total_hours': Decimal(0),
-                'days': 0
+                "user_id": ts.user_id,
+                "user_name": user_name,
+                "total_hours": Decimal(0),
+                "days": 0,
             }
-        by_user[user_name]['total_hours'] += hours
-        by_user[user_name]['days'] += 1
+        by_user[user_name]["total_hours"] += hours
+        by_user[user_name]["days"] += 1
 
         # 按日期统计
         date_str = ts.work_date.isoformat()
@@ -219,8 +213,5 @@ def get_rd_project_timesheet_summary(
             "by_date": {k: float(v) for k, v in by_date.items()},
             "start_date": start_date.isoformat() if start_date else None,
             "end_date": end_date.isoformat() if end_date else None,
-        }
+        },
     )
-
-
-

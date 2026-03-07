@@ -1,36 +1,40 @@
 # -*- coding: utf-8 -*-
 """Tests for cost_overrun_analysis_service"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from sqlalchemy.orm import Session
+
 
 class TestCostOverrunAnalysisService:
     """Test suite for CostOverrunAnalysisService"""
-    
+
     @pytest.fixture
     def service(self, db_session: Session):
         from app.services.cost_overrun_analysis_service import CostOverrunAnalysisService
+
         return CostOverrunAnalysisService(db_session)
-    
+
     def test_analyze_reasons(self, service):
         """Test analyzing cost overrun reasons"""
         result = service.analyze_reasons()
         assert result is not None
         assert isinstance(result, dict)
-        assert 'analysis_period' in result
-        assert 'total_overrun_projects' in result
-        assert 'reasons' in result
+        assert "analysis_period" in result
+        assert "total_overrun_projects" in result
+        assert "reasons" in result
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # G4 补充测试（MagicMock，不依赖真实数据库）
 # ──────────────────────────────────────────────────────────────────────────────
 
-import pytest
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestCostOverrunAnalysisServiceG4:
@@ -38,6 +42,7 @@ class TestCostOverrunAnalysisServiceG4:
 
     def _make_service(self):
         from app.services.cost_overrun_analysis_service import CostOverrunAnalysisService
+
         db = MagicMock()
         service = CostOverrunAnalysisService(db)
         return service, db
@@ -77,14 +82,15 @@ class TestCostOverrunAnalysisServiceG4:
 
         # patch _analyze_project_overrun 返回确定的超支结果
         with patch.object(
-            service, "_analyze_project_overrun",
+            service,
+            "_analyze_project_overrun",
             return_value={
                 "has_overrun": True,
                 "overrun_amount": 50000,
                 "project_id": 1,
                 "project_code": "PJ-001",
-                "reasons": ["scope_change"]
-            }
+                "reasons": ["scope_change"],
+            },
         ):
             result = service.analyze_reasons()
 
@@ -102,10 +108,7 @@ class TestCostOverrunAnalysisServiceG4:
         q.all.return_value = []
         db.query.return_value = q
 
-        result = service.analyze_reasons(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
-        )
+        result = service.analyze_reasons(start_date=date(2024, 1, 1), end_date=date(2024, 12, 31))
         assert result["analysis_period"]["start_date"] == "2024-01-01"
         assert result["analysis_period"]["end_date"] == "2024-12-31"
 
@@ -128,8 +131,9 @@ class TestCostOverrunAnalysisServiceG4:
         """无超支项目时 accountability 返回空"""
         service, db = self._make_service()
         with patch.object(
-            service, "analyze_reasons",
-            return_value={"projects": [], "total_overrun_projects": 0, "reasons": []}
+            service,
+            "analyze_reasons",
+            return_value={"projects": [], "total_overrun_projects": 0, "reasons": []},
         ):
             result = service.analyze_accountability()
         assert isinstance(result, dict)

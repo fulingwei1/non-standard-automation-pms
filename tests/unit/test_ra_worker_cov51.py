@@ -3,9 +3,10 @@
 tests/unit/test_ra_worker_cov51.py
 Unit tests for app/services/resource_allocation_service/worker.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.resource_allocation_service.worker import (
@@ -35,6 +36,7 @@ def _make_worker(worker_id=1, is_active=True, status="ACTIVE"):
 
 
 # ─── check_worker_availability ────────────────────────────────────────────────
+
 
 def test_worker_not_found():
     db = MagicMock()
@@ -72,12 +74,15 @@ def test_worker_available_no_conflicts():
         __iter__=lambda self: iter([])
     )
 
-    with patch(
-        "app.services.resource_allocation_service.worker.calculate_workdays",
-        return_value=20,
-    ), patch(
-        "app.services.resource_allocation_service.worker.calculate_overlap_days",
-        return_value=0,
+    with (
+        patch(
+            "app.services.resource_allocation_service.worker.calculate_workdays",
+            return_value=20,
+        ),
+        patch(
+            "app.services.resource_allocation_service.worker.calculate_overlap_days",
+            return_value=0,
+        ),
     ):
         ok, reason, hours = check_worker_availability(db, 1, START, END)
 
@@ -110,12 +115,15 @@ def test_worker_insufficient_hours():
         MagicMock(filter=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))),
     ]
 
-    with patch(
-        "app.services.resource_allocation_service.worker.calculate_workdays",
-        return_value=20,
-    ), patch(
-        "app.services.resource_allocation_service.worker.calculate_overlap_days",
-        return_value=20,
+    with (
+        patch(
+            "app.services.resource_allocation_service.worker.calculate_workdays",
+            return_value=20,
+        ),
+        patch(
+            "app.services.resource_allocation_service.worker.calculate_overlap_days",
+            return_value=20,
+        ),
     ):
         ok, reason, hours = check_worker_availability(db, 1, START, END)
 
@@ -123,6 +131,7 @@ def test_worker_insufficient_hours():
 
 
 # ─── find_available_workers ────────────────────────────────────────────────────
+
 
 def test_find_available_workers_empty_db():
     db = MagicMock()
@@ -158,6 +167,7 @@ def test_find_available_workers_returns_sorted():
 
 
 # ─── check_worker_skill ────────────────────────────────────────────────────────
+
 
 def test_check_worker_skill_no_skills():
     db = MagicMock()

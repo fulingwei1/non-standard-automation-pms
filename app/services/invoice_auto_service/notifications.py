@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.sales import Contract
+from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
 from app.services.notification_dispatcher import NotificationDispatcher
-from app.services.channel_handlers.base import NotificationRequest, NotificationPriority
 
 if TYPE_CHECKING:
     from app.services.invoice_auto_service import InvoiceAutoService
@@ -42,23 +42,26 @@ def send_invoice_notifications(
         # 获取合同信息
         contract = None
         if project.contract_id:
-            contract = service.db.query(Contract).filter(
-                Contract.id == project.contract_id
-            ).first()
+            contract = service.db.query(Contract).filter(Contract.id == project.contract_id).first()
 
         # 确定通知对象
         recipient_ids = set()
 
         # 1. 财务
         from app.models.user import Role, UserRole
-        finance_role_ids = service.db.query(Role.id).filter(
-            Role.role_code.in_(["FINANCE", "财务", "FINANCE_MANAGER", "财务经理"])
-        ).all()
+
+        finance_role_ids = (
+            service.db.query(Role.id)
+            .filter(Role.role_code.in_(["FINANCE", "财务", "FINANCE_MANAGER", "财务经理"]))
+            .all()
+        )
         finance_role_ids = [r[0] for r in finance_role_ids]
         if finance_role_ids:
-            finance_user_ids = service.db.query(UserRole.user_id).filter(
-                UserRole.role_id.in_(finance_role_ids)
-            ).all()
+            finance_user_ids = (
+                service.db.query(UserRole.user_id)
+                .filter(UserRole.role_id.in_(finance_role_ids))
+                .all()
+            )
             for uid in finance_user_ids:
                 recipient_ids.add(uid[0])
 
@@ -68,7 +71,10 @@ def send_invoice_notifications(
 
         # 构建通知内容
         item_type = "发票" if auto_create else "发票申请"
-        item_list = [f"{item.get('invoice_code') or item.get('request_no')}（金额：¥{item.get('amount', 0):,.2f}）" for item in created_items]
+        item_list = [
+            f"{item.get('invoice_code') or item.get('request_no')}（金额：¥{item.get('amount', 0):,.2f}）"
+            for item in created_items
+        ]
 
         notification_content = (
             f"验收通过自动触发开票：\n"
@@ -126,7 +132,7 @@ def log_auto_invoice(
             "project_id": order.project_id,
             "auto_create": auto_create,
             "created_items": created_items,
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
         # 将日志记录到验收单的备注中（简化实现）

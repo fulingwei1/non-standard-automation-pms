@@ -177,9 +177,7 @@ class TestSalesPredictionServiceEnhanced(unittest.TestCase):
         self.db_mock.query.return_value = query_mock
 
         result = self.service.predict_win_probability(
-            stage="NEGOTIATION",
-            amount=Decimal("800000"),
-            customer_id=123
+            stage="NEGOTIATION", amount=Decimal("800000"), customer_id=123
         )
 
         self.assertIn("win_probability", result)
@@ -202,8 +200,7 @@ class TestSalesPredictionServiceEnhanced(unittest.TestCase):
         self.db_mock.query.return_value = query_mock
 
         result = self.service.predict_win_probability(
-            stage="PROPOSAL",
-            amount=Decimal("1500000")  # >100万
+            stage="PROPOSAL", amount=Decimal("1500000")  # >100万
         )
 
         # 大金额应该降低赢单概率（factor=0.9）
@@ -218,8 +215,7 @@ class TestSalesPredictionServiceEnhanced(unittest.TestCase):
         self.db_mock.query.return_value = query_mock
 
         result = self.service.predict_win_probability(
-            stage="PROPOSAL",
-            amount=Decimal("50000")  # <10万
+            stage="PROPOSAL", amount=Decimal("50000")  # <10万
         )
 
         # 小金额应该提高赢单概率（factor=1.1）
@@ -237,10 +233,7 @@ class TestSalesPredictionServiceEnhanced(unittest.TestCase):
         filter_mock.all.return_value = [won_opp, lost_opp]
         self.db_mock.query.return_value = query_mock
 
-        result = self.service.predict_win_probability(
-            stage="PROPOSAL",
-            customer_id=123
-        )
+        result = self.service.predict_win_probability(stage="PROPOSAL", customer_id=123)
 
         self.assertIn("customer_factor", result)
 
@@ -462,7 +455,9 @@ class TestSalesPredictionServiceEnhanced(unittest.TestCase):
 
     def test_calculate_confidence_high(self):
         """测试高置信度计算"""
-        monthly_data = [{"month": f"2023-{i:02d}", "revenue": 100000, "count": 2} for i in range(1, 7)]
+        monthly_data = [
+            {"month": f"2023-{i:02d}", "revenue": 100000, "count": 2} for i in range(1, 7)
+        ]
         result = self.service._calculate_confidence(monthly_data, 5)
         self.assertEqual(result, "HIGH")
 
@@ -562,11 +557,7 @@ class TestSalesPredictionServiceEnhanced(unittest.TestCase):
         return contract
 
     def _create_mock_opportunity(
-        self, 
-        opp_id: int, 
-        stage: str, 
-        amount: Decimal, 
-        customer_id: int = 1
+        self, opp_id: int, stage: str, amount: Decimal, customer_id: int = 1
     ) -> Mock:
         """创建模拟商机对象"""
         opp = Mock(spec=Opportunity)

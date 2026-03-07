@@ -41,12 +41,12 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         mock_project.actual_start_date = date.today() - timedelta(days=30)
 
         # Mock calculate helpers
-        with patch.object(self.service, '_calculate_milestone_factors') as mock_milestone:
-            with patch.object(self.service, '_calculate_pmo_risk_factors') as mock_pmo:
-                with patch.object(self.service, '_calculate_progress_factors') as mock_progress:
+        with patch.object(self.service, "_calculate_milestone_factors") as mock_milestone:
+            with patch.object(self.service, "_calculate_pmo_risk_factors") as mock_pmo:
+                with patch.object(self.service, "_calculate_progress_factors") as mock_progress:
                     # Mock数据库查询
                     self.db.query.return_value.filter.return_value.first.return_value = mock_project
-                    
+
                     # Mock各因子计算结果
                     mock_milestone.return_value = {
                         "total_milestones_count": 10,
@@ -80,7 +80,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             self.service.calculate_project_risk(999)
-        
+
         self.assertIn("项目不存在", str(context.exception))
 
     # ========== _calculate_milestone_factors() 测试 ==========
@@ -101,13 +101,13 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         """测试有逾期里程碑"""
         # Mock总数查询
         self.db.query.return_value.filter.return_value.scalar.return_value = 5
-        
+
         # Mock逾期里程碑
         mock_m1 = MagicMock()
         mock_m1.planned_date = date.today() - timedelta(days=10)
         mock_m2 = MagicMock()
         mock_m2.planned_date = date.today() - timedelta(days=5)
-        
+
         self.db.query.return_value.filter.return_value.all.return_value = [mock_m1, mock_m2]
 
         result = self.service._calculate_milestone_factors(1, date.today())
@@ -150,9 +150,12 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         mock_r3.risk_level = "HIGH"
         mock_r4 = MagicMock()
         mock_r4.risk_level = "MEDIUM"
-        
+
         self.db.query.return_value.filter.return_value.all.return_value = [
-            mock_r1, mock_r2, mock_r3, mock_r4
+            mock_r1,
+            mock_r2,
+            mock_r3,
+            mock_r4,
         ]
 
         result = self.service._calculate_pmo_risk_factors(1)
@@ -348,7 +351,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         # "LOW"(1) -> "INVALID"(0): 0 > 1 = False (不是升级)
         result1 = self.service._is_risk_upgrade("INVALID", "LOW")
         result2 = self.service._is_risk_upgrade("LOW", "INVALID")
-        self.assertTrue(result1)   # INVALID(0) -> LOW(1) 被判定为升级
+        self.assertTrue(result1)  # INVALID(0) -> LOW(1) 被判定为升级
         self.assertFalse(result2)  # LOW(1) -> INVALID(0) 不是升级
 
     # ========== auto_upgrade_risk_level() 测试 ==========
@@ -356,7 +359,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
     def test_auto_upgrade_risk_level_first_time(self):
         """测试首次计算风险（无历史记录）"""
         # Mock calculate_project_risk
-        with patch.object(self.service, 'calculate_project_risk') as mock_calc:
+        with patch.object(self.service, "calculate_project_risk") as mock_calc:
             mock_calc.return_value = {
                 "project_id": 1,
                 "project_code": "PRJ001",
@@ -364,11 +367,13 @@ class TestProjectRiskServiceCore(unittest.TestCase):
                 "risk_factors": {
                     "overdue_milestones_count": 0,
                     "total_milestones_count": 5,
-                }
+                },
             }
 
             # Mock无历史记录
-            self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+            self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                None
+            )
 
             # Mock项目查询（用于通知）
             mock_project = MagicMock()
@@ -389,8 +394,8 @@ class TestProjectRiskServiceCore(unittest.TestCase):
     def test_auto_upgrade_risk_level_with_upgrade(self):
         """测试风险升级"""
         # Mock calculate_project_risk返回HIGH风险
-        with patch.object(self.service, 'calculate_project_risk') as mock_calc:
-            with patch('app.services.project.project_risk_service.logger'):
+        with patch.object(self.service, "calculate_project_risk") as mock_calc:
+            with patch("app.services.project.project_risk_service.logger"):
                 mock_calc.return_value = {
                     "project_id": 1,
                     "project_code": "PRJ001",
@@ -399,13 +404,15 @@ class TestProjectRiskServiceCore(unittest.TestCase):
                         "overdue_milestones_count": 3,
                         "total_milestones_count": 10,
                         "overdue_milestone_ratio": 0.3,
-                    }
+                    },
                 }
 
                 # Mock历史记录（上次是LOW）
                 mock_last_history = MagicMock()
                 mock_last_history.new_risk_level = "LOW"
-                self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = mock_last_history
+                self.db.query.return_value.filter.return_value.order_by.return_value.first.return_value = (
+                    mock_last_history
+                )
 
                 # Mock项目查询（用于通知）
                 mock_project = MagicMock()
@@ -413,7 +420,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
                 self.db.query.return_value.filter.return_value.first.return_value = mock_project
 
                 # Mock通知函数
-                with patch.object(self.service, '_send_risk_upgrade_notification'):
+                with patch.object(self.service, "_send_risk_upgrade_notification"):
                     # 执行测试
                     result = self.service.auto_upgrade_risk_level(1)
 
@@ -431,7 +438,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         mock_p1.id = 1
         mock_p1.project_code = "PRJ001"
         mock_p1.is_active = True
-        
+
         mock_p2 = MagicMock()
         mock_p2.id = 2
         mock_p2.project_code = "PRJ002"
@@ -440,7 +447,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         self.db.query.return_value.filter.return_value.all.return_value = [mock_p1, mock_p2]
 
         # Mock auto_upgrade_risk_level
-        with patch.object(self.service, 'auto_upgrade_risk_level') as mock_upgrade:
+        with patch.object(self.service, "auto_upgrade_risk_level") as mock_upgrade:
             mock_upgrade.side_effect = [
                 {"project_id": 1, "project_code": "PRJ001"},
                 {"project_id": 2, "project_code": "PRJ002"},
@@ -458,9 +465,11 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         mock_p1.id = 1
         mock_p1.project_code = "PRJ001"
 
-        self.db.query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_p1]
+        self.db.query.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_p1
+        ]
 
-        with patch.object(self.service, 'auto_upgrade_risk_level') as mock_upgrade:
+        with patch.object(self.service, "auto_upgrade_risk_level") as mock_upgrade:
             mock_upgrade.return_value = {"project_id": 1, "project_code": "PRJ001"}
 
             results = self.service.batch_calculate_risks(project_ids=[1])
@@ -473,20 +482,20 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         mock_p1 = MagicMock()
         mock_p1.id = 1
         mock_p1.project_code = "PRJ001"
-        
+
         mock_p2 = MagicMock()
         mock_p2.id = 2
         mock_p2.project_code = "PRJ002"
 
         self.db.query.return_value.filter.return_value.all.return_value = [mock_p1, mock_p2]
 
-        with patch.object(self.service, 'auto_upgrade_risk_level') as mock_upgrade:
+        with patch.object(self.service, "auto_upgrade_risk_level") as mock_upgrade:
             mock_upgrade.side_effect = [
                 {"project_id": 1, "project_code": "PRJ001"},
                 Exception("计算失败"),
             ]
 
-            with patch('app.services.project.project_risk_service.logger'):
+            with patch("app.services.project.project_risk_service.logger"):
                 results = self.service.batch_calculate_risks()
 
         # 验证错误处理
@@ -500,12 +509,12 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         mock_p1 = MagicMock()
         mock_p1.id = 1
         mock_p1.is_active = True
-        
+
         self.db.query.return_value.all.return_value = [mock_p1]
 
-        with patch.object(self.service, 'auto_upgrade_risk_level') as mock_upgrade:
+        with patch.object(self.service, "auto_upgrade_risk_level") as mock_upgrade:
             mock_upgrade.return_value = {"project_id": 1}
-            
+
             results = self.service.batch_calculate_risks(active_only=False)
 
         self.assertEqual(len(results), 1)
@@ -514,7 +523,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
 
     def test_create_risk_snapshot_success(self):
         """测试创建风险快照"""
-        with patch.object(self.service, 'calculate_project_risk') as mock_calc:
+        with patch.object(self.service, "calculate_project_risk") as mock_calc:
             mock_calc.return_value = {
                 "project_id": 1,
                 "risk_level": "MEDIUM",
@@ -524,7 +533,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
                     "overdue_tasks_count": 5,
                     "open_risks_count": 3,
                     "high_risks_count": 1,
-                }
+                },
             }
 
             snapshot = self.service.create_risk_snapshot(1)
@@ -539,9 +548,10 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         """测试获取风险历史"""
         mock_h1 = MagicMock()
         mock_h2 = MagicMock()
-        
+
         self.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
-            mock_h1, mock_h2
+            mock_h1,
+            mock_h2,
         ]
 
         result = self.service.get_risk_history(1, limit=10)
@@ -550,7 +560,9 @@ class TestProjectRiskServiceCore(unittest.TestCase):
 
     def test_get_risk_history_empty(self):
         """测试获取空历史"""
-        self.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        self.db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
 
         result = self.service.get_risk_history(1)
 
@@ -575,7 +587,8 @@ class TestProjectRiskServiceCore(unittest.TestCase):
         mock_s2.high_risks_count = 1
 
         self.db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
-            mock_s1, mock_s2
+            mock_s1,
+            mock_s2,
         ]
 
         result = self.service.get_risk_trend(1, days=7)
@@ -598,8 +611,8 @@ class TestProjectRiskServiceCore(unittest.TestCase):
 
     def test_send_risk_upgrade_notification_success(self):
         """测试发送风险升级通知"""
-        with patch('app.services.project.project_risk_service.logger'):
-            with patch('app.utils.scheduled_tasks.base.send_notification_for_alert'):
+        with patch("app.services.project.project_risk_service.logger"):
+            with patch("app.utils.scheduled_tasks.base.send_notification_for_alert"):
                 self.service._send_risk_upgrade_notification(
                     project_id=1,
                     project_code="PRJ001",
@@ -610,7 +623,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
                         "overdue_milestones_count": 3,
                         "high_risks_count": 2,
                         "schedule_variance": -15.0,
-                    }
+                    },
                 )
 
                 # 验证添加了预警记录
@@ -619,22 +632,22 @@ class TestProjectRiskServiceCore(unittest.TestCase):
 
     def test_send_risk_upgrade_notification_critical_level(self):
         """测试CRITICAL级别通知"""
-        with patch('app.services.project.project_risk_service.logger'):
-            with patch('app.utils.scheduled_tasks.base.send_notification_for_alert'):
+        with patch("app.services.project.project_risk_service.logger"):
+            with patch("app.utils.scheduled_tasks.base.send_notification_for_alert"):
                 self.service._send_risk_upgrade_notification(
                     project_id=1,
                     project_code="PRJ001",
                     project_name="测试项目",
                     old_level="MEDIUM",
                     new_level="CRITICAL",
-                    risk_factors={}
+                    risk_factors={},
                 )
 
                 self.db.add.assert_called_once()
 
     def test_send_risk_upgrade_notification_exception(self):
         """测试通知发送异常（不影响主流程）"""
-        with patch('app.services.project.project_risk_service.logger') as mock_logger:
+        with patch("app.services.project.project_risk_service.logger") as mock_logger:
             self.db.add.side_effect = Exception("数据库错误")
 
             # 不应抛出异常
@@ -644,7 +657,7 @@ class TestProjectRiskServiceCore(unittest.TestCase):
                 project_name="测试项目",
                 old_level="LOW",
                 new_level="HIGH",
-                risk_factors={}
+                risk_factors={},
             )
 
             # 验证记录了错误日志
@@ -668,10 +681,10 @@ class TestProjectRiskServiceEdgeCases(unittest.TestCase):
     def test_calculate_milestone_factors_milestone_without_planned_date(self):
         """测试里程碑无计划日期"""
         self.db.query.return_value.filter.return_value.scalar.return_value = 1
-        
+
         mock_m = MagicMock()
         mock_m.planned_date = None
-        
+
         self.db.query.return_value.filter.return_value.all.return_value = [mock_m]
 
         result = self.service._calculate_milestone_factors(1, date.today())
@@ -696,19 +709,39 @@ class TestProjectRiskServiceEdgeCases(unittest.TestCase):
     def test_calculate_risk_level_boundary_values(self):
         """测试边界值判断"""
         # 恰好50%逾期 -> CRITICAL
-        factors = {"overdue_milestone_ratio": 0.5, "critical_risks_count": 0, "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0.5,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         self.assertEqual(self.service._calculate_risk_level(factors), "CRITICAL")
 
         # 49%逾期 -> HIGH
-        factors = {"overdue_milestone_ratio": 0.49, "critical_risks_count": 0, "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0.49,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         self.assertNotEqual(self.service._calculate_risk_level(factors), "CRITICAL")
 
         # 恰好30%逾期 -> HIGH
-        factors = {"overdue_milestone_ratio": 0.3, "critical_risks_count": 0, "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0.3,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         self.assertEqual(self.service._calculate_risk_level(factors), "HIGH")
 
         # 恰好10%逾期 -> MEDIUM
-        factors = {"overdue_milestone_ratio": 0.1, "critical_risks_count": 0, "high_risks_count": 0, "schedule_variance": 0}
+        factors = {
+            "overdue_milestone_ratio": 0.1,
+            "critical_risks_count": 0,
+            "high_risks_count": 0,
+            "schedule_variance": 0,
+        }
         self.assertEqual(self.service._calculate_risk_level(factors), "MEDIUM")
 
     def test_progress_expected_exceeds_100(self):

@@ -10,7 +10,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List
 
-from app.services.report_framework.renderers.base import Renderer, ReportResult, RenderError
+from app.services.report_framework.renderers.base import Renderer, RenderError, ReportResult
 
 
 class CustomJSONEncoder(json.JSONEncoder):

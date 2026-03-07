@@ -38,9 +38,7 @@ class TestDocumentsCRUDAPI:
         }
 
         try:
-            response = self.helper.get(
-                "/documents/", params=params, resource_type="documents_list"
-            )
+            response = self.helper.get("/documents/", params=params, resource_type="documents_list")
         except (NameError, TypeError, AttributeError) as e:
             self.helper.print_warning(f"服务端异常（已知问题）: {type(e).__name__}")
             return
@@ -57,9 +55,7 @@ class TestDocumentsCRUDAPI:
         self.helper.print_info("测试获取文档详情...")
 
         doc_id = 1
-        response = self.helper.get(
-            f"/documents/{doc_id}", resource_type=f"document_{doc_id}"
-        )
+        response = self.helper.get(f"/documents/{doc_id}", resource_type=f"document_{doc_id}")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:

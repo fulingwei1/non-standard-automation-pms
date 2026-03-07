@@ -11,18 +11,14 @@
 """
 
 
-
-
 # ==================== 枚举值常量 ====================
 
-JOB_TYPES = ['mechanical', 'test', 'electrical']
-JOB_LEVELS = ['junior', 'intermediate', 'senior', 'expert']
-CONTRIBUTION_TYPES = ['document', 'template', 'module', 'training', 'patent', 'standard']
-CONTRIBUTION_STATUSES = ['draft', 'pending', 'approved', 'rejected']
-REVIEW_RESULTS = ['passed', 'rejected', 'conditional']
-ISSUE_SEVERITIES = ['critical', 'major', 'normal', 'minor']
-ISSUE_STATUSES = ['open', 'in_progress', 'resolved', 'closed']
-BUG_FOUND_STAGES = ['internal_debug', 'site_debug', 'acceptance', 'production']
-PLC_BRANDS = ['siemens', 'mitsubishi', 'omron', 'beckhoff', 'inovance', 'delta']
-
-
+JOB_TYPES = ["mechanical", "test", "electrical"]
+JOB_LEVELS = ["junior", "intermediate", "senior", "expert"]
+CONTRIBUTION_TYPES = ["document", "template", "module", "training", "patent", "standard"]
+CONTRIBUTION_STATUSES = ["draft", "pending", "approved", "rejected"]
+REVIEW_RESULTS = ["passed", "rejected", "conditional"]
+ISSUE_SEVERITIES = ["critical", "major", "normal", "minor"]
+ISSUE_STATUSES = ["open", "in_progress", "resolved", "closed"]
+BUG_FOUND_STAGES = ["internal_debug", "site_debug", "acceptance", "production"]
+PLC_BRANDS = ["siemens", "mitsubishi", "omron", "beckhoff", "inovance", "delta"]

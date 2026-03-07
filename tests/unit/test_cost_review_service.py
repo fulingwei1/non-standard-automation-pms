@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tests for cost_review_service.py"""
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.cost_review_service import CostReviewService
@@ -30,23 +31,29 @@ class TestGenerateCostReviewReport:
         with pytest.raises(ValueError, match="已存在"):
             CostReviewService.generate_cost_review_report(self.db, 1, 1)
 
-    @patch.object(CostReviewService, '_generate_review_no', return_value="REV-250101-001")
-    @patch.object(CostReviewService, '_generate_cost_summary', return_value="总结")
+    @patch.object(CostReviewService, "_generate_review_no", return_value="REV-250101-001")
+    @patch.object(CostReviewService, "_generate_cost_summary", return_value="总结")
     def test_successful_generation(self, mock_summary, mock_no):
         project = MagicMock(
-            id=1, stage="S9", status="ST30", project_code="P001",
-            planned_start_date=date(2024, 1, 1), planned_end_date=date(2024, 6, 30),
-            actual_start_date=date(2024, 1, 15), actual_end_date=date(2024, 7, 15),
-            actual_cost=Decimal("100000"), budget_amount=Decimal("90000")
+            id=1,
+            stage="S9",
+            status="ST30",
+            project_code="P001",
+            planned_start_date=date(2024, 1, 1),
+            planned_end_date=date(2024, 6, 30),
+            actual_start_date=date(2024, 1, 15),
+            actual_end_date=date(2024, 7, 15),
+            actual_cost=Decimal("100000"),
+            budget_amount=Decimal("90000"),
         )
         budget = MagicMock(total_amount=Decimal("90000"))
         reviewer = MagicMock(real_name="张三", username="zhangsan")
 
         self.db.query.return_value.filter.return_value.first.side_effect = [
             project,  # project
-            None,     # no existing review
-            budget,   # budget
-            reviewer, # reviewer (User query)
+            None,  # no existing review
+            budget,  # budget
+            reviewer,  # reviewer (User query)
         ]
         self.db.query.return_value.filter.return_value.all.return_value = []  # costs
         self.db.query.return_value.filter.return_value.count.return_value = 2  # ecn_count
@@ -75,22 +82,24 @@ class TestGenerateReviewNo:
 class TestGenerateCostSummary:
     def test_over_budget(self):
         result = CostReviewService._generate_cost_summary(
-            Decimal("100000"), Decimal("120000"), Decimal("20000"),
-            {"人工": Decimal("80000"), "物料": Decimal("40000")}, {}, 3
+            Decimal("100000"),
+            Decimal("120000"),
+            Decimal("20000"),
+            {"人工": Decimal("80000"), "物料": Decimal("40000")},
+            {},
+            3,
         )
         assert "超出预算" in result
         assert "工程变更" in result
 
     def test_under_budget(self):
         result = CostReviewService._generate_cost_summary(
-            Decimal("100000"), Decimal("90000"), Decimal("-10000"),
-            {}, {}, 0
+            Decimal("100000"), Decimal("90000"), Decimal("-10000"), {}, {}, 0
         )
         assert "成本控制良好" in result
 
     def test_on_budget(self):
         result = CostReviewService._generate_cost_summary(
-            Decimal("100000"), Decimal("101000"), Decimal("1000"),
-            {}, {}, 0
+            Decimal("100000"), Decimal("101000"), Decimal("1000"), {}, {}, 0
         )
         assert "基本一致" in result

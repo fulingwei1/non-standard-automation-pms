@@ -2,9 +2,10 @@
 """
 Unit tests for PriceAnalyzer (第三十八批)
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.procurement_analysis.price_analysis", reason="导入失败，跳过")
 
@@ -21,9 +22,14 @@ def mock_db():
 
 
 def make_price_row(
-    material_code="MAT001", material_name="钢板", unit_price=100.0,
-    order_date=date(2024, 1, 15), supplier_name="供应商A", supplier_id=1,
-    category_name="原材料", standard_price=95.0
+    material_code="MAT001",
+    material_name="钢板",
+    unit_price=100.0,
+    order_date=date(2024, 1, 15),
+    supplier_name="供应商A",
+    supplier_id=1,
+    category_name="原材料",
+    standard_price=95.0,
 ):
     row = MagicMock()
     row.material_code = material_code
@@ -84,9 +90,7 @@ class TestGetPriceFluctuationData:
         """按日期范围过滤"""
         self._setup_query(mock_db, [])
         result = PriceAnalyzer.get_price_fluctuation_data(
-            mock_db,
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
+            mock_db, start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
         )
         assert mock_db.query.called
 

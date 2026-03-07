@@ -130,6 +130,7 @@ class TestConfigLoader:
     def test_import_class(self):
         """测试导入类"""
         from app.services.report_framework.config_loader import ConfigLoader
+
         assert ConfigLoader is not None
 
     def test_get_config(self, db_session):
@@ -158,6 +159,7 @@ class TestDataResolver:
     def test_import_class(self):
         """测试导入类"""
         from app.services.report_framework.data_resolver import DataResolver
+
         assert DataResolver is not None
 
     def test_resolve_all(self, db_session):
@@ -166,9 +168,7 @@ class TestDataResolver:
 
         resolver = DataResolver(db_session)
 
-        config = {
-            "data_sources": []
-        }
+        config = {"data_sources": []}
 
         result = resolver.resolve_all(config)
 
@@ -181,6 +181,7 @@ class TestExpressionParser:
     def test_import_class(self):
         """测试导入类"""
         from app.services.report_framework.expression_parser import ExpressionParser
+
         assert ExpressionParser is not None
 
     def test_parse_simple_expression(self):
@@ -211,6 +212,7 @@ class TestReportCacheManager:
     def test_import_class(self):
         """测试导入类"""
         from app.services.report_framework.cache_manager import ReportCacheManager
+
         assert ReportCacheManager is not None
 
     def test_get_cache_miss(self):
@@ -242,6 +244,7 @@ class TestReportEngine:
     def engine(self, db_session):
         """创建报表引擎"""
         from app.services.report_framework.engine import ReportEngine
+
         return ReportEngine(db_session)
 
     def test_engine_initialization(self, engine):
@@ -288,6 +291,7 @@ class TestRenderers:
         """测试导入PDF渲染器"""
         try:
             from app.services.report_framework.renderers.pdf_renderer import PdfRenderer
+
             assert PdfRenderer is not None
         except ImportError:
             # PDF依赖可能未安装
@@ -297,6 +301,7 @@ class TestRenderers:
         """测试导入Excel渲染器"""
         try:
             from app.services.report_framework.renderers.excel_renderer import ExcelRenderer
+
             assert ExcelRenderer is not None
         except ImportError:
             # Excel依赖可能未安装
@@ -309,6 +314,7 @@ class TestReportFrameworkModule:
     def test_import_module(self):
         """测试导入模块"""
         from app.services.report_framework import ReportEngine
+
         assert ReportEngine is not None
 
     def test_import_formatters(self):

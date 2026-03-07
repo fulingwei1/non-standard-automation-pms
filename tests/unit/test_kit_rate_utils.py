@@ -7,7 +7,6 @@ Covers: app/api/v1/endpoints/kit_rate/utils.py
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-
 from app.api.v1.endpoints.kit_rate.utils import calculate_kit_rate
 
 
@@ -37,7 +36,7 @@ class TestCalculateKitRate:
         mock_item.unit_price = Decimal("10.00")
 
         # Mock 采购订单查询返回空
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
             result = calculate_kit_rate(db_session, [mock_item], calculate_by="quantity")
@@ -70,7 +69,7 @@ class TestCalculateKitRate:
         mock_item2.received_qty = 0
         mock_item2.unit_price = Decimal("10.00")
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
             result = calculate_kit_rate(db_session, [mock_item1, mock_item2])
@@ -98,8 +97,10 @@ class TestCalculateKitRate:
             mock_item.unit_price = Decimal("1.00")
             items.append(mock_item)
 
-            with patch.object(db_session, 'query') as mock_query:
-                mock_query.return_value.filter.return_value.filter.return_value.all.return_value = []
+            with patch.object(db_session, "query") as mock_query:
+                mock_query.return_value.filter.return_value.filter.return_value.all.return_value = (
+                    []
+                )
 
                 result = calculate_kit_rate(db_session, items)
 
@@ -118,7 +119,7 @@ class TestCalculateKitRate:
         mock_item.received_qty = 0
         mock_item.unit_price = Decimal("20.00")
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
             result = calculate_kit_rate(db_session, [mock_item], calculate_by="amount")
@@ -144,8 +145,10 @@ class TestCalculateKitRate:
         mock_po_item.quantity = 60
         mock_po_item.received_qty = 10  # 在途 50
 
-        with patch.object(db_session, 'query') as mock_query:
-            mock_query.return_value.filter.return_value.filter.return_value.all.return_value = [mock_po_item]
+        with patch.object(db_session, "query") as mock_query:
+            mock_query.return_value.filter.return_value.filter.return_value.all.return_value = [
+                mock_po_item
+            ]
 
             result = calculate_kit_rate(db_session, [mock_item])
 

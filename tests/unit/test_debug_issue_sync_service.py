@@ -35,15 +35,10 @@ class TestSyncMechanicalDebugIssue:
 
     def test_wrong_category(self, db_session):
         """测试非项目类别"""
-        from app.services.debug_issue_sync_service import DebugIssueSyncService
         from app.models.issue import Issue
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
-        issue = Issue(
-        issue_no="ISS001",
-        category="OTHER",
-        issue_type="DEFECT",
-        reporter_id=1
-    )
+        issue = Issue(issue_no="ISS001", category="OTHER", issue_type="DEFECT", reporter_id=1)
         db_session.add(issue)
         db_session.flush()
 
@@ -67,14 +62,11 @@ class TestSyncTestBugRecord:
 
     def test_wrong_issue_type(self, db_session):
         """测试非Bug类型"""
-        from app.services.debug_issue_sync_service import DebugIssueSyncService
         from app.models.issue import Issue
+        from app.services.debug_issue_sync_service import DebugIssueSyncService
 
         issue = Issue(
-            issue_no="ISS002",
-            category="PROJECT",
-            issue_type="DEFECT",  # 不是BUG
-            reporter_id=1
+            issue_no="ISS002", category="PROJECT", issue_type="DEFECT", reporter_id=1  # 不是BUG
         )
         db_session.add(issue)
         db_session.flush()
@@ -95,8 +87,8 @@ class TestSyncIssue:
         service = DebugIssueSyncService(db_session)
         result = service.sync_issue(99999)
 
-        assert result['synced'] is False
-        assert result['error'] == '问题不存在'
+        assert result["synced"] is False
+        assert result["error"] == "问题不存在"
 
     def test_result_structure(self, db_session):
         """测试结果结构"""
@@ -105,11 +97,11 @@ class TestSyncIssue:
         service = DebugIssueSyncService(db_session)
         result = service.sync_issue(99999)
 
-        assert 'issue_id' in result
-        assert 'synced' in result
-        assert 'type' in result
-        assert 'record_id' in result
-        assert 'error' in result
+        assert "issue_id" in result
+        assert "synced" in result
+        assert "type" in result
+        assert "record_id" in result
+        assert "error" in result
 
 
 class TestSyncAllProjectIssues:
@@ -122,8 +114,8 @@ class TestSyncAllProjectIssues:
         service = DebugIssueSyncService(db_session)
         result = service.sync_all_project_issues()
 
-        assert result['total_issues'] == 0
-        assert result['synced_count'] == 0
+        assert result["total_issues"] == 0
+        assert result["synced_count"] == 0
 
     def test_with_date_filter(self, db_session):
         """测试带日期过滤"""
@@ -131,11 +123,10 @@ class TestSyncAllProjectIssues:
 
         service = DebugIssueSyncService(db_session)
         result = service.sync_all_project_issues(
-        start_date=date(2025, 1, 1),
-        end_date=date(2025, 12, 31)
+            start_date=date(2025, 1, 1), end_date=date(2025, 12, 31)
         )
 
-        assert 'total_issues' in result
+        assert "total_issues" in result
 
     def test_stats_structure(self, db_session):
         """测试统计结构"""
@@ -145,8 +136,13 @@ class TestSyncAllProjectIssues:
         result = service.sync_all_project_issues()
 
         expected_fields = [
-        'total_issues', 'synced_count', 'skipped_count',
-        'error_count', 'mechanical_debug_count', 'test_bug_count', 'errors'
+            "total_issues",
+            "synced_count",
+            "skipped_count",
+            "error_count",
+            "mechanical_debug_count",
+            "test_bug_count",
+            "errors",
         ]
         for field in expected_fields:
             assert field in result
@@ -157,40 +153,40 @@ class TestFoundStageInference:
 
     def test_site_stage(self):
         """测试现场阶段"""
-        tags = ['site', 'debug']
-        tags_str = ','.join(tags).lower()
+        tags = ["site", "debug"]
+        tags_str = ",".join(tags).lower()
 
-        found_stage = 'internal_debug'
-        if 'site' in tags_str or '现场' in tags_str:
-            found_stage = 'site_debug'
+        found_stage = "internal_debug"
+        if "site" in tags_str or "现场" in tags_str:
+            found_stage = "site_debug"
 
-            assert found_stage == 'site_debug'
+            assert found_stage == "site_debug"
 
     def test_acceptance_stage(self):
         """测试验收阶段"""
-        tags = ['acceptance', 'issue']
-        tags_str = ','.join(tags).lower()
+        tags = ["acceptance", "issue"]
+        tags_str = ",".join(tags).lower()
 
-        found_stage = 'internal_debug'
-        if 'site' in tags_str or '现场' in tags_str:
-            found_stage = 'site_debug'
-        elif 'acceptance' in tags_str or '验收' in tags_str:
-            found_stage = 'acceptance'
+        found_stage = "internal_debug"
+        if "site" in tags_str or "现场" in tags_str:
+            found_stage = "site_debug"
+        elif "acceptance" in tags_str or "验收" in tags_str:
+            found_stage = "acceptance"
 
-            assert found_stage == 'acceptance'
+            assert found_stage == "acceptance"
 
     def test_default_stage(self):
         """测试默认阶段"""
-        tags = ['other']
-        tags_str = ','.join(tags).lower()
+        tags = ["other"]
+        tags_str = ",".join(tags).lower()
 
-        found_stage = 'internal_debug'
-        if 'site' in tags_str:
-            found_stage = 'site_debug'
-        elif 'acceptance' in tags_str:
-            found_stage = 'acceptance'
+        found_stage = "internal_debug"
+        if "site" in tags_str:
+            found_stage = "site_debug"
+        elif "acceptance" in tags_str:
+            found_stage = "acceptance"
 
-            assert found_stage == 'internal_debug'
+            assert found_stage == "internal_debug"
 
 
 class TestFixDurationCalculation:
@@ -204,7 +200,7 @@ class TestFixDurationCalculation:
         duration = resolved_at - report_date
         fix_duration_hours = Decimal(str(duration.total_seconds() / 3600))
 
-        assert fix_duration_hours == Decimal('8')
+        assert fix_duration_hours == Decimal("8")
 
     def test_multi_day_duration(self):
         """测试跨天修复时长"""
@@ -214,7 +210,7 @@ class TestFixDurationCalculation:
         duration = resolved_at - report_date
         fix_duration_hours = Decimal(str(duration.total_seconds() / 3600))
 
-        assert fix_duration_hours == Decimal('24')
+        assert fix_duration_hours == Decimal("24")
 
 
 # pytest fixtures
@@ -224,6 +220,7 @@ def db_session():
     try:
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
+
         from app.models.base import Base
 
         engine = create_engine("sqlite:///:memory:")

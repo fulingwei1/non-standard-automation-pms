@@ -15,12 +15,12 @@ from sqlalchemy.orm import Session
 from app.common.pagination import get_pagination_params
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core.security import get_password_hash
-from app.models.tenant import Tenant, TenantStatus, TenantPlan
+from app.models.tenant import Tenant, TenantPlan, TenantStatus
 from app.models.user import Role, RoleTemplate, User, UserRole
 from app.schemas.tenant import (
     TenantCreate,
-    TenantUpdate,
     TenantInitRequest,
+    TenantUpdate,
 )
 from app.utils.db_helpers import save_obj
 
@@ -160,10 +160,11 @@ class TenantService:
             templates = self.db.query(RoleTemplate).filter(RoleTemplate.is_active).all()
             for template in templates:
                 # 检查角色是否已存在
-                existing_role = self.db.query(Role).filter(
-                    Role.tenant_id == tenant_id,
-                    Role.role_code == template.role_code
-                ).first()
+                existing_role = (
+                    self.db.query(Role)
+                    .filter(Role.tenant_id == tenant_id, Role.role_code == template.role_code)
+                    .first()
+                )
 
                 if not existing_role:
                     role = Role(
@@ -185,12 +186,15 @@ class TenantService:
 
         # 2. 创建租户管理员
         # 检查用户名是否已存在
-        existing_user = self.db.query(User).filter(User.username == init_data.admin_username).first()
+        existing_user = (
+            self.db.query(User).filter(User.username == init_data.admin_username).first()
+        )
         if existing_user:
             raise ValueError(f"用户名 {init_data.admin_username} 已存在")
 
         # 创建员工记录（简化处理）
         from app.models.organization import Employee
+
         employee = Employee(
             name=init_data.admin_real_name or init_data.admin_username,
             email=init_data.admin_email,
@@ -214,10 +218,11 @@ class TenantService:
         self.db.flush()
 
         # 分配 TENANT_ADMIN 角色
-        tenant_admin_role = self.db.query(Role).filter(
-            Role.tenant_id == tenant_id,
-            Role.role_code == "TENANT_ADMIN"
-        ).first()
+        tenant_admin_role = (
+            self.db.query(Role)
+            .filter(Role.tenant_id == tenant_id, Role.role_code == "TENANT_ADMIN")
+            .first()
+        )
 
         if tenant_admin_role:
             user_role = UserRole(user_id=admin_user.id, role_id=tenant_admin_role.id)
@@ -246,11 +251,15 @@ class TenantService:
         project_count = 0
         try:
             from app.models.project import Project
+
             # 获取该租户的所有用户ID
             tenant_user_ids = self.db.query(User.id).filter(User.tenant_id == tenant_id).subquery()
-            project_count = self.db.query(func.count(Project.id)).filter(
-                Project.created_by.in_(tenant_user_ids)
-            ).scalar() or 0
+            project_count = (
+                self.db.query(func.count(Project.id))
+                .filter(Project.created_by.in_(tenant_user_ids))
+                .scalar()
+                or 0
+            )
         except Exception:
             pass
 
@@ -258,11 +267,15 @@ class TenantService:
         storage_used_mb = 0
         try:
             from app.models.document import Attachment
+
             # 统计该租户用户上传的附件大小
             tenant_user_ids = self.db.query(User.id).filter(User.tenant_id == tenant_id).subquery()
-            total_bytes = self.db.query(func.sum(Attachment.file_size)).filter(
-                Attachment.uploaded_by.in_(tenant_user_ids)
-            ).scalar() or 0
+            total_bytes = (
+                self.db.query(func.sum(Attachment.file_size))
+                .filter(Attachment.uploaded_by.in_(tenant_user_ids))
+                .scalar()
+                or 0
+            )
             storage_used_mb = round(total_bytes / (1024 * 1024), 2)
         except Exception:
             # 如果 Attachment 模型不存在或查询失败，返回0

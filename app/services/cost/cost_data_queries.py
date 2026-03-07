@@ -22,14 +22,16 @@ def get_project_budget_stats(db: Session) -> Dict[str, float]:
     Returns:
         dict with keys: total_budget, total_actual_cost, total_contract_amount, total_projects
     """
-    stats = db.query(
-        func.sum(Project.budget_amount).label("total_budget"),
-        func.sum(Project.actual_cost).label("total_actual_cost"),
-        func.sum(Project.contract_amount).label("total_contract_amount"),
-        func.count(Project.id).label("total_projects"),
-    ).filter(
-        Project.stage.notin_(["S0", "S9"])
-    ).first()
+    stats = (
+        db.query(
+            func.sum(Project.budget_amount).label("total_budget"),
+            func.sum(Project.actual_cost).label("total_actual_cost"),
+            func.sum(Project.contract_amount).label("total_contract_amount"),
+            func.count(Project.id).label("total_projects"),
+        )
+        .filter(Project.stage.notin_(["S0", "S9"]))
+        .first()
+    )
 
     return {
         "total_budget": float(stats.total_budget or 0),
@@ -39,9 +41,7 @@ def get_project_budget_stats(db: Session) -> Dict[str, float]:
     }
 
 
-def get_project_actual_cost_from_records(
-    db: Session, project_id: int
-) -> Decimal:
+def get_project_actual_cost_from_records(db: Session, project_id: int) -> Decimal:
     """
     从 ProjectCost + FinancialProjectCost 合计项目实际成本
     """
@@ -109,11 +109,13 @@ def get_monthly_cost_data(
     for month in sorted(monthly_dict.keys()):
         cost = monthly_dict[month]
         cumulative += cost
-        result.append({
-            "month": month,
-            "monthly_cost": cost,
-            "cumulative_cost": cumulative,
-        })
+        result.append(
+            {
+                "month": month,
+                "monthly_cost": cost,
+                "cumulative_cost": cumulative,
+            }
+        )
     return result
 
 
@@ -130,7 +132,10 @@ def get_month_cost_total(
         and_(ProjectCost.cost_date >= month_start, ProjectCost.cost_date <= month_end)
     )
     q2 = db.query(func.sum(FinancialProjectCost.amount)).filter(
-        and_(FinancialProjectCost.cost_date >= month_start, FinancialProjectCost.cost_date <= month_end)
+        and_(
+            FinancialProjectCost.cost_date >= month_start,
+            FinancialProjectCost.cost_date <= month_end,
+        )
     )
     if project_id:
         q1 = q1.filter(ProjectCost.project_id == project_id)
@@ -139,9 +144,7 @@ def get_month_cost_total(
     return float(q1.scalar() or 0) + float(q2.scalar() or 0)
 
 
-def get_cost_by_type(
-    db: Session, project_id: int, cost_type: str
-) -> Decimal:
+def get_cost_by_type(db: Session, project_id: int, cost_type: str) -> Decimal:
     """按类型获取项目成本"""
     result = db.query(func.sum(ProjectCost.amount)).filter(
         ProjectCost.project_id == project_id,

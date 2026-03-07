@@ -41,9 +41,9 @@ def sync_scheduler_configs(force=False):
             task_id = task["id"]
 
             # 检查是否已存在
-            config = db.query(SchedulerTaskConfig).filter(
-                SchedulerTaskConfig.task_id == task_id
-            ).first()
+            config = (
+                db.query(SchedulerTaskConfig).filter(SchedulerTaskConfig.task_id == task_id).first()
+            )
 
             # 准备配置数据
             cron_config = task.get("cron", {})
@@ -107,11 +107,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="同步定时服务配置到数据库")
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="强制同步（覆盖已有配置）"
-    )
+    parser.add_argument("--force", action="store_true", help="强制同步（覆盖已有配置）")
 
     args = parser.parse_args()
 
@@ -122,5 +118,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ 配置同步失败: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

@@ -13,17 +13,18 @@
 测试数据来自 tests/fixtures/industry_data.py
 """
 
-import pytest
 from datetime import date, timedelta
 from unittest.mock import MagicMock
 
+import pytest
+
 from tests.fixtures.industry_data import (
-    SAMPLE_PROJECTS,
     CUSTOMERS,
-    SAMPLE_TIMESHEETS,
-    SAMPLE_COSTS,
     KPI_BENCHMARKS,
     PROJECT_TYPES,
+    SAMPLE_COSTS,
+    SAMPLE_PROJECTS,
+    SAMPLE_TIMESHEETS,
     make_mock_project,
 )
 
@@ -151,9 +152,7 @@ def calculate_engineer_efficiency(timesheet_records: list) -> dict:
     """
     total_hours = sum(r.get("hours", 0.0) for r in timesheet_records)
     productive_hours = sum(
-        r.get("hours", 0.0)
-        for r in timesheet_records
-        if r.get("status") == "APPROVED"
+        r.get("hours", 0.0) for r in timesheet_records if r.get("status") == "APPROVED"
     )
     efficiency = productive_hours / total_hours if total_hours > 0 else 0.0
     return {
@@ -173,9 +172,7 @@ def calculate_rework_rate(work_records: list) -> dict:
     REWORK_TYPES = {"REWORK", "DEBUGGING"}
     total_hours = sum(r.get("hours", 0.0) for r in work_records)
     rework_hours = sum(
-        r.get("hours", 0.0)
-        for r in work_records
-        if r.get("type", "") in REWORK_TYPES
+        r.get("hours", 0.0) for r in work_records if r.get("type", "") in REWORK_TYPES
     )
     return {
         "rework_rate": round(rework_hours / total_hours, 4) if total_hours > 0 else 0.0,
@@ -189,16 +186,23 @@ def calculate_rework_rate(work_records: list) -> dict:
 # 测试类 1：准时交付率
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestOnTimeDeliveryRate:
     """项目准时交付率 KPI 测试"""
 
     def test_all_projects_on_time_odr_100_percent(self):
         """所有项目准时交付：ODR=100%"""
         projects = [
-            {"status": "COMPLETED", "planned_end_date": date(2025, 10, 15),
-             "actual_end_date": date(2025, 10, 12)},
-            {"status": "COMPLETED", "planned_end_date": date(2025, 11, 30),
-             "actual_end_date": date(2025, 11, 30)},  # 恰好准时
+            {
+                "status": "COMPLETED",
+                "planned_end_date": date(2025, 10, 15),
+                "actual_end_date": date(2025, 10, 12),
+            },
+            {
+                "status": "COMPLETED",
+                "planned_end_date": date(2025, 11, 30),
+                "actual_end_date": date(2025, 11, 30),
+            },  # 恰好准时
         ]
         result = calculate_on_time_delivery_rate(projects)
         assert result["odr"] == pytest.approx(1.0)
@@ -208,12 +212,21 @@ class TestOnTimeDeliveryRate:
     def test_mixed_on_time_and_delayed(self):
         """3个完成项目，2个准时1个延期：ODR≈67%"""
         projects = [
-            {"status": "COMPLETED", "planned_end_date": date(2025, 10, 15),
-             "actual_end_date": date(2025, 10, 14)},
-            {"status": "COMPLETED", "planned_end_date": date(2025, 11, 30),
-             "actual_end_date": date(2025, 11, 28)},
-            {"status": "COMPLETED", "planned_end_date": date(2025, 9, 30),
-             "actual_end_date": date(2025, 10, 12)},  # 延期12天
+            {
+                "status": "COMPLETED",
+                "planned_end_date": date(2025, 10, 15),
+                "actual_end_date": date(2025, 10, 14),
+            },
+            {
+                "status": "COMPLETED",
+                "planned_end_date": date(2025, 11, 30),
+                "actual_end_date": date(2025, 11, 28),
+            },
+            {
+                "status": "COMPLETED",
+                "planned_end_date": date(2025, 9, 30),
+                "actual_end_date": date(2025, 10, 12),
+            },  # 延期12天
         ]
         result = calculate_on_time_delivery_rate(projects)
         assert result["odr"] == pytest.approx(2 / 3, abs=0.001)
@@ -237,10 +250,16 @@ class TestOnTimeDeliveryRate:
     def test_odr_excludes_in_progress_projects(self):
         """进行中的项目不计入ODR统计"""
         projects = [
-            {"status": "IN_PROGRESS", "planned_end_date": date(2026, 5, 31),
-             "actual_end_date": None},
-            {"status": "COMPLETED", "planned_end_date": date(2025, 10, 15),
-             "actual_end_date": date(2025, 10, 10)},
+            {
+                "status": "IN_PROGRESS",
+                "planned_end_date": date(2026, 5, 31),
+                "actual_end_date": None,
+            },
+            {
+                "status": "COMPLETED",
+                "planned_end_date": date(2025, 10, 15),
+                "actual_end_date": date(2025, 10, 10),
+            },
         ]
         result = calculate_on_time_delivery_rate(projects)
         assert result["total"] == 1
@@ -249,8 +268,11 @@ class TestOnTimeDeliveryRate:
     def test_odr_below_kpi_target_85_percent(self):
         """ODR低于85%目标时需要关注"""
         projects = [
-            {"status": "COMPLETED", "planned_end_date": date(2025, i, 28),
-             "actual_end_date": date(2025, i + 1, 5)}   # 每个均延期
+            {
+                "status": "COMPLETED",
+                "planned_end_date": date(2025, i, 28),
+                "actual_end_date": date(2025, i + 1, 5),
+            }  # 每个均延期
             for i in range(1, 8)
         ]
         result = calculate_on_time_delivery_rate(projects)
@@ -261,6 +283,7 @@ class TestOnTimeDeliveryRate:
 # ─────────────────────────────────────────────────────────────────────────────
 # 测试类 2：毛利率计算
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestGrossMarginCalculation:
     """项目毛利率计算测试"""
@@ -350,6 +373,7 @@ class TestGrossMarginCalculation:
 # 测试类 3：FAT一次通过率
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestFATFirstPassRate:
     """工厂验收测试（FAT）一次通过率 KPI 测试"""
 
@@ -367,10 +391,9 @@ class TestFATFirstPassRate:
 
     def test_fat_mixed_results_correct_rate(self):
         """10个项目中9个一次通过：FPR=90%，恰好达到目标"""
-        records = [
-            {"project_id": i, "passed_first_attempt": True}
-            for i in range(1, 10)
-        ] + [{"project_id": 10, "passed_first_attempt": False}]
+        records = [{"project_id": i, "passed_first_attempt": True} for i in range(1, 10)] + [
+            {"project_id": 10, "passed_first_attempt": False}
+        ]
 
         result = calculate_fat_first_pass_rate(records)
         assert result["fpr"] == pytest.approx(0.90)
@@ -390,9 +413,7 @@ class TestFATFirstPassRate:
 
     def test_fat_single_project_pass(self):
         """单个项目FAT通过"""
-        result = calculate_fat_first_pass_rate([
-            {"project_id": 3, "passed_first_attempt": True}
-        ])
+        result = calculate_fat_first_pass_rate([{"project_id": 3, "passed_first_attempt": True}])
         assert result["fpr"] == 1.0
         assert result["total"] == 1
 
@@ -406,6 +427,7 @@ class TestFATFirstPassRate:
 # ─────────────────────────────────────────────────────────────────────────────
 # 测试类 4：客户满意度加权平均
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestCustomerSatisfactionWeightedAverage:
     """客户满意度加权平均计算（A级客户权重2倍）"""
@@ -470,6 +492,7 @@ class TestCustomerSatisfactionWeightedAverage:
 # 测试类 5：工程师人效
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestEngineerEfficiency:
     """工程师人效（产出工时/总工时）KPI 测试"""
 
@@ -514,6 +537,7 @@ class TestEngineerEfficiency:
 # ─────────────────────────────────────────────────────────────────────────────
 # 测试类 6：返工率统计
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestReworkRateStatistics:
     """项目返工率统计 KPI 测试"""
@@ -565,7 +589,7 @@ class TestReworkRateStatistics:
         records = [
             {"hours": 8.0, "type": "DESIGN", "status": "APPROVED"},
             {"hours": 3.0, "type": "DEBUGGING", "status": "APPROVED"},  # 视觉算法调试
-            {"hours": 2.0, "type": "REWORK", "status": "APPROVED"},     # 返工
+            {"hours": 2.0, "type": "REWORK", "status": "APPROVED"},  # 返工
         ]
         result = calculate_rework_rate(records)
         assert result["rework_rate"] > KPI_BENCHMARKS["rework_rate_limit"]  # > 5%

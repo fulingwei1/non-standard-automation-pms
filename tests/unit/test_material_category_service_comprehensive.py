@@ -8,8 +8,8 @@ MaterialCategoryService 综合单元测试
 - get_tree: 获取分类树
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -30,8 +30,8 @@ class TestMaterialCategoryServiceInit:
 
     def test_sets_correct_model(self):
         """测试设置正确的模型"""
-        from app.services.material_category_service import MaterialCategoryService
         from app.models.material import MaterialCategory
+        from app.services.material_category_service import MaterialCategoryService
 
         mock_db = MagicMock()
 
@@ -59,7 +59,7 @@ class TestToResponse:
         mock_category.created_at = datetime(2024, 1, 1)
         mock_category.updated_at = datetime(2024, 1, 1)
 
-        with patch('app.schemas.material.MaterialCategoryResponse.model_validate') as mock_validate:
+        with patch("app.schemas.material.MaterialCategoryResponse.model_validate") as mock_validate:
             mock_response = MagicMock()
             mock_validate.return_value = mock_response
 
@@ -88,10 +88,13 @@ class TestGetTree:
         mock_cat2.category_name = "机械零件"
 
         mock_query = MagicMock()
-        mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_cat1, mock_cat2]
+        mock_query.filter.return_value.order_by.return_value.all.return_value = [
+            mock_cat1,
+            mock_cat2,
+        ]
         mock_db.query.return_value = mock_query
 
-        with patch.object(service, '_to_response') as mock_to_response:
+        with patch.object(service, "_to_response") as mock_to_response:
             mock_resp1 = MagicMock()
             mock_resp1.children = []
             mock_resp2 = MagicMock()
@@ -146,7 +149,7 @@ class TestGetTree:
         ]
         mock_db.query.return_value = mock_query
 
-        with patch.object(service, '_to_response') as mock_to_response:
+        with patch.object(service, "_to_response") as mock_to_response:
             mock_resp = MagicMock()
             mock_resp.children = []
             mock_to_response.return_value = mock_resp
@@ -196,14 +199,14 @@ class TestGetTree:
 
         mock_query = MagicMock()
         mock_query.filter.return_value.order_by.return_value.all.side_effect = [
-            [mock_root],        # 根分类
-            [mock_child],       # root 的子分类
+            [mock_root],  # 根分类
+            [mock_child],  # root 的子分类
             [mock_grandchild],  # child 的子分类
-            [],                 # grandchild 的子分类
+            [],  # grandchild 的子分类
         ]
         mock_db.query.return_value = mock_query
 
-        with patch.object(service, '_to_response') as mock_to_response:
+        with patch.object(service, "_to_response") as mock_to_response:
             mock_resp_root = MagicMock()
             mock_resp_child = MagicMock()
             mock_resp_grandchild = MagicMock()

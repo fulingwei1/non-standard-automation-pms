@@ -9,16 +9,16 @@ Alert Exceptions Service 单元测试
 """
 
 import unittest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
-from app.services.alert_exceptions.service import AlertExceptionsService
 from app.models.alert import ExceptionAction, ExceptionEscalation, ExceptionEvent
 from app.models.issue import Issue
 from app.models.project import Machine, Project
 from app.models.user import User
 from app.schemas.alert import ExceptionEventCreate
+from app.services.alert_exceptions.service import AlertExceptionsService
 
 
 class TestAlertExceptionsService(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         # Mock查询
         mock_query = MagicMock()
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
-        
+
         # 设置返回值 (offset=0时不调用offset(),只调用limit())
         mock_query.count.return_value = 1
         mock_query.order_by.return_value.limit.return_value.all.return_value = [mock_event]
@@ -55,16 +55,14 @@ class TestAlertExceptionsService(unittest.TestCase):
         """测试关键词筛选"""
         mock_query = MagicMock()
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
-        
+
         # 设置filter返回同一个query对象，使链式调用可以继续
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 1
         mock_query.order_by.return_value.limit.return_value.all.return_value = [mock_event]
         self.mock_db.query.return_value = mock_query
 
-        events, total = self.service.get_exception_events(
-            offset=0, limit=10, keyword="测试"
-        )
+        events, total = self.service.get_exception_events(offset=0, limit=10, keyword="测试")
 
         self.assertEqual(total, 1)
 
@@ -72,15 +70,13 @@ class TestAlertExceptionsService(unittest.TestCase):
         """测试项目筛选"""
         mock_query = MagicMock()
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
-        
+
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 1
         mock_query.order_by.return_value.limit.return_value.all.return_value = [mock_event]
         self.mock_db.query.return_value = mock_query
 
-        events, total = self.service.get_exception_events(
-            offset=0, limit=10, project_id=1
-        )
+        events, total = self.service.get_exception_events(offset=0, limit=10, project_id=1)
 
         self.assertEqual(total, 1)
         # 验证filter被调用
@@ -90,7 +86,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         """测试所有筛选条件"""
         mock_query = MagicMock()
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
-        
+
         mock_query.filter.return_value = mock_query
         mock_query.count.return_value = 1
         mock_query.order_by.return_value.limit.return_value.all.return_value = [mock_event]
@@ -129,7 +125,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_event.discovered_by = 1
         mock_event.discovered_at = datetime(2024, 1, 1, 10, 0, 0)
         mock_event.created_at = datetime(2024, 1, 1, 9, 0, 0)
-        
+
         # Mock用户查询
         mock_user = MagicMock()
         mock_user.real_name = "张三"
@@ -194,7 +190,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         # Mock项目和设备查询
         mock_project = MagicMock()
         mock_machine = MagicMock()
-        
+
         def mock_query_side_effect(model):
             if model == Project:
                 query = MagicMock()
@@ -287,13 +283,13 @@ class TestAlertExceptionsService(unittest.TestCase):
 
     # ========== get_exception_event_detail() 测试 ==========
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_get_exception_event_detail_success(self, mock_get_or_404):
         """测试获取详情成功"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.discovered_by = 1
         mock_event.discovered_at = datetime(2024, 1, 1, 10, 0, 0)
-        
+
         # Mock actions
         mock_action = MagicMock()
         mock_action.id = 1
@@ -303,9 +299,9 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_action.new_status = "OPEN"
         mock_action.created_by = 1
         mock_action.created_at = datetime(2024, 1, 2, 10, 0, 0)
-        
+
         mock_event.actions.order_by.return_value.all.return_value = [mock_action]
-        
+
         mock_get_or_404.return_value = mock_event
 
         # Mock用户查询
@@ -322,25 +318,25 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.assertEqual(result["actions"][0]["action_type"], "COMMENT")
         self.assertEqual(result["actions"][0]["action_user_name"], "张三")
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_get_exception_event_detail_no_discovered_by(self, mock_get_or_404):
         """测试无发现人"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.discovered_by = None
         mock_event.actions.order_by.return_value.all.return_value = []
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.get_exception_event_detail(1)
 
         self.assertIsNone(result["discovered_by_name"])
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_get_exception_event_detail_no_actions(self, mock_get_or_404):
         """测试无处理记录"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.actions.order_by.return_value.all.return_value = []
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.get_exception_event_detail(1)
@@ -349,14 +345,14 @@ class TestAlertExceptionsService(unittest.TestCase):
 
     # ========== update_exception_status() 测试 ==========
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_update_exception_status_to_resolved(self, mock_get_or_404):
         """测试更新状态为已解决"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.status = "OPEN"
         mock_event.resolved_at = None
         mock_event.resolved_by = None
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.update_exception_status(
@@ -371,12 +367,12 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.mock_db.add.assert_called_once()
         self.mock_db.commit.assert_called_once()
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_update_exception_status_to_in_progress(self, mock_get_or_404):
         """测试更新状态为处理中"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.status = "OPEN"
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.update_exception_status(
@@ -388,14 +384,14 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.assertEqual(mock_event.status, "IN_PROGRESS")
         self.mock_db.commit.assert_called_once()
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_update_exception_status_already_resolved(self, mock_get_or_404):
         """测试已经标记过解决时间的情况"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.status = "OPEN"
         mock_event.resolved_at = datetime(2024, 1, 1, 10, 0, 0)
         mock_event.resolved_by = 2
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.update_exception_status(
@@ -410,12 +406,12 @@ class TestAlertExceptionsService(unittest.TestCase):
 
     # ========== add_exception_action() 测试 ==========
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_add_exception_action_success(self, mock_get_or_404):
         """测试添加处理记录成功"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.status = "OPEN"
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.add_exception_action(
@@ -427,7 +423,7 @@ class TestAlertExceptionsService(unittest.TestCase):
 
         self.mock_db.add.assert_called_once()
         self.mock_db.commit.assert_called_once()
-        
+
         # 验证添加的action参数
         added_action = self.mock_db.add.call_args[0][0]
         self.assertEqual(added_action.event_id, 1)
@@ -439,13 +435,13 @@ class TestAlertExceptionsService(unittest.TestCase):
 
     # ========== escalate_exception() 测试 ==========
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_escalate_exception_with_user(self, mock_get_or_404):
         """测试升级到指定用户"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.severity = "MINOR"
         mock_event.responsible_user_id = 1
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.escalate_exception(
@@ -458,17 +454,17 @@ class TestAlertExceptionsService(unittest.TestCase):
 
         # 验证升级记录被添加
         self.assertEqual(self.mock_db.add.call_count, 2)  # escalation + event
-        
+
         # 验证严重程度提升
         self.assertEqual(mock_event.severity, "MAJOR")
-        
+
         # 验证责任人更新
         self.assertEqual(mock_event.responsible_user_id, 2)
         self.assertEqual(mock_event.responsible_dept, "技术部")
-        
+
         self.mock_db.commit.assert_called_once()
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_escalate_exception_severity_upgrade(self, mock_get_or_404):
         """测试严重程度升级逻辑"""
         # MINOR -> MAJOR
@@ -513,13 +509,13 @@ class TestAlertExceptionsService(unittest.TestCase):
         )
         self.assertEqual(mock_event3.severity, "CRITICAL")
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_escalate_exception_without_user(self, mock_get_or_404):
         """测试升级但不指定用户"""
         mock_event = self._create_mock_event(1, "EXC-001", "测试异常")
         mock_event.severity = "MINOR"
         mock_event.responsible_user_id = 1
-        
+
         mock_get_or_404.return_value = mock_event
 
         result = self.service.escalate_exception(
@@ -537,7 +533,7 @@ class TestAlertExceptionsService(unittest.TestCase):
 
     # ========== create_exception_from_issue() 测试 ==========
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_create_exception_from_issue_success(self, mock_get_or_404):
         """测试从问题创建异常"""
         mock_issue = MagicMock(spec=Issue)
@@ -548,7 +544,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_issue.machine_id = 1
         mock_issue.reporter_id = 1
         mock_issue.created_at = datetime(2024, 1, 1, 10, 0, 0)
-        
+
         mock_get_or_404.return_value = mock_issue
 
         result = self.service.create_exception_from_issue(
@@ -561,7 +557,7 @@ class TestAlertExceptionsService(unittest.TestCase):
 
         self.mock_db.add.assert_called_once()
         self.mock_db.commit.assert_called_once()
-        
+
         # 验证创建的事件
         added_event = self.mock_db.add.call_args[0][0]
         self.assertEqual(added_event.event_no, "EXC-001")
@@ -572,7 +568,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         self.assertEqual(added_event.project_id, 1)
         self.assertEqual(added_event.discovered_by, 1)
 
-    @patch('app.services.alert_exceptions.service.get_or_404')
+    @patch("app.services.alert_exceptions.service.get_or_404")
     def test_create_exception_from_issue_without_reporter(self, mock_get_or_404):
         """测试问题无报告人的情况"""
         mock_issue = MagicMock(spec=Issue)
@@ -583,7 +579,7 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_issue.machine_id = None
         mock_issue.reporter_id = None
         mock_issue.created_at = None
-        
+
         mock_get_or_404.return_value = mock_issue
 
         result = self.service.create_exception_from_issue(
@@ -622,16 +618,16 @@ class TestAlertExceptionsService(unittest.TestCase):
         mock_event.due_date = None
         mock_event.is_overdue = False
         mock_event.created_at = None
-        
+
         # Mock关系对象
         mock_project = MagicMock()
         mock_project.project_name = "测试项目"
         mock_event.project = mock_project
-        
+
         mock_machine = MagicMock()
         mock_machine.machine_name = "测试设备"
         mock_event.machine = mock_machine
-        
+
         return mock_event
 
 

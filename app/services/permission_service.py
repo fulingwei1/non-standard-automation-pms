@@ -39,67 +39,67 @@ class PermissionService:
     def get_user_effective_roles(db: Session, user_id: int) -> List[Role]:
         """
         获取用户的有效角色（直接分配 + 岗位默认角色）
-        
+
         Args:
             db: 数据库会话
             user_id: 用户ID
-            
+
         Returns:
             角色列表
         """
         roles_set: Set[int] = set()
         roles: List[Role] = []
-        
+
         try:
             # 1. 获取直接分配的角色
-            user_roles = db.query(UserRole).filter(
-                UserRole.user_id == user_id
-            ).all()
-            
+            user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
+
             for ur in user_roles:
                 if ur.role_id not in roles_set:
-                    role = db.query(Role).filter(
-                        Role.id == ur.role_id,
-                        Role.is_active
-                    ).first()
+                    role = db.query(Role).filter(Role.id == ur.role_id, Role.is_active).first()
                     if role:
                         roles_set.add(role.id)
                         roles.append(role)
-            
+
             # 2. 获取岗位默认角色
-            assignments = db.query(EmployeeOrgAssignment).join(
-                User, User.employee_id == EmployeeOrgAssignment.employee_id
-            ).filter(
-                User.id == user_id,
-                EmployeeOrgAssignment.is_active
-            ).all()
-            
+            assignments = (
+                db.query(EmployeeOrgAssignment)
+                .join(User, User.employee_id == EmployeeOrgAssignment.employee_id)
+                .filter(User.id == user_id, EmployeeOrgAssignment.is_active)
+                .all()
+            )
+
             for assignment in assignments:
                 if assignment.position_id:
-                    position_roles = db.query(PositionRole).filter(
-                        PositionRole.position_id == assignment.position_id,
-                        PositionRole.is_active
-                    ).all()
-                    
+                    position_roles = (
+                        db.query(PositionRole)
+                        .filter(
+                            PositionRole.position_id == assignment.position_id,
+                            PositionRole.is_active,
+                        )
+                        .all()
+                    )
+
                     for pr in position_roles:
                         if pr.role_id not in roles_set:
-                            role = db.query(Role).filter(
-                                Role.id == pr.role_id,
-                                Role.is_active
-                            ).first()
+                            role = (
+                                db.query(Role).filter(Role.id == pr.role_id, Role.is_active).first()
+                            )
                             if role:
                                 roles_set.add(role.id)
                                 roles.append(role)
-            
+
         except Exception as e:
             logger.warning(f"获取用户角色失败 (user_id={user_id}): {e}")
             # 降级：仅返回直接分配的角色
             try:
-                sql = text("""
+                sql = text(
+                    """
                     SELECT r.* FROM roles r
                     JOIN user_roles ur ON r.id = ur.role_id
                     WHERE ur.user_id = :user_id AND r.is_active = 1
-                """)
+                """
+                )
                 result = db.execute(sql, {"user_id": user_id})
                 for row in result:
                     role = Role()
@@ -109,9 +109,9 @@ class PermissionService:
                     roles.append(role)
             except Exception as e2:
                 logger.error(f"降级查询也失败: {e2}")
-        
+
         return roles
-    
+
     @staticmethod
     def get_user_permissions(
         db: Session, user_id: int, tenant_id: Optional[int] = None
@@ -146,7 +146,9 @@ class PermissionService:
         cache_service = get_permission_cache_service()
         cached_permissions = cache_service.get_user_permissions(user_id, tenant_id)
         if cached_permissions is not None:
-            logger.debug(f"缓存命中: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(cached_permissions)}")
+            logger.debug(
+                f"缓存命中: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(cached_permissions)}"
+            )
             return list(cached_permissions)
 
         # 2. 缓存未命中，从数据库查询
@@ -155,7 +157,8 @@ class PermissionService:
 
         try:
             # 使用递归 SQL 查询（支持角色继承 + 租户隔离）
-            sql = text("""
+            sql = text(
+                """
                 WITH RECURSIVE role_tree AS (
                     -- 用户直接拥有的角色
                     SELECT r.id, r.parent_id, r.inherit_permissions
@@ -177,7 +180,8 @@ class PermissionService:
                 JOIN api_permissions ap ON rap.permission_id = ap.id
                 WHERE ap.is_active = 1
                 AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
-            """)
+            """
+            )
             result = db.execute(sql, {"user_id": user_id, "tenant_id": tenant_id})
             for row in result:
                 if row[0]:
@@ -187,14 +191,16 @@ class PermissionService:
             logger.warning(f"获取用户权限失败（角色继承查询），回退到简单查询: {e}")
             try:
                 # 回退到简单查询（不含角色继承）
-                sql = text("""
+                sql = text(
+                    """
                     SELECT DISTINCT ap.perm_code
                     FROM api_permissions ap
                     JOIN role_api_permissions rap ON ap.id = rap.permission_id
                     JOIN user_roles ur ON rap.role_id = ur.role_id
                     WHERE ur.user_id = :user_id AND ap.is_active = 1
                     AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
-                """)
+                """
+                )
                 result = db.execute(sql, {"user_id": user_id, "tenant_id": tenant_id})
                 for row in result:
                     if row[0]:
@@ -205,17 +211,19 @@ class PermissionService:
         # 3. 写入缓存
         permissions_list = list(permissions_set)
         cache_service.set_user_permissions(user_id, permissions_set, tenant_id)
-        logger.debug(f"权限已缓存: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(permissions_list)}")
+        logger.debug(
+            f"权限已缓存: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(permissions_list)}"
+        )
 
         return permissions_list
-    
+
     @staticmethod
     def check_permission(
         db: Session,
         user_id: int,
         permission_code: str,
         user: Optional[User] = None,
-        tenant_id: Optional[int] = None
+        tenant_id: Optional[int] = None,
     ) -> bool:
         """
         检查用户是否有指定权限（支持多租户隔离）
@@ -252,7 +260,7 @@ class PermissionService:
         user_id: int,
         permission_codes: List[str],
         user: Optional[User] = None,
-        tenant_id: Optional[int] = None
+        tenant_id: Optional[int] = None,
     ) -> bool:
         """
         检查用户是否有任一权限（支持多租户隔离）
@@ -273,14 +281,14 @@ class PermissionService:
         effective_tenant_id = tenant_id or (user.tenant_id if user else None)
         permissions = PermissionService.get_user_permissions(db, user_id, effective_tenant_id)
         return any(code in permissions for code in permission_codes)
-    
+
     @staticmethod
     def check_all_permissions(
         db: Session,
         user_id: int,
         permission_codes: List[str],
         user: Optional[User] = None,
-        tenant_id: Optional[int] = None
+        tenant_id: Optional[int] = None,
     ) -> bool:
         """
         检查用户是否有所有权限（支持多租户隔离）
@@ -301,58 +309,69 @@ class PermissionService:
         effective_tenant_id = tenant_id or (user.tenant_id if user else None)
         permissions = PermissionService.get_user_permissions(db, user_id, effective_tenant_id)
         return all(code in permissions for code in permission_codes)
-    
+
     @staticmethod
-    def get_user_menus(db: Session, user_id: int, user: Optional[User] = None) -> List[Dict[str, Any]]:
+    def get_user_menus(
+        db: Session, user_id: int, user: Optional[User] = None
+    ) -> List[Dict[str, Any]]:
         """
         获取用户可访问的菜单树
-        
+
         Args:
             db: 数据库会话
             user_id: 用户ID
             user: 用户对象（可选）
-            
+
         Returns:
             菜单树列表
         """
         # 超级管理员获取所有菜单
         if user and user.is_superuser:
-            menus = db.query(MenuPermission).filter(
-                MenuPermission.is_active == True,
-                MenuPermission.is_visible == True,
-                MenuPermission.parent_id.is_(None)
-            ).order_by(MenuPermission.sort_order).all()
+            menus = (
+                db.query(MenuPermission)
+                .filter(
+                    MenuPermission.is_active == True,
+                    MenuPermission.is_visible == True,
+                    MenuPermission.parent_id.is_(None),
+                )
+                .order_by(MenuPermission.sort_order)
+                .all()
+            )
             return [menu.to_dict() for menu in menus]
-        
+
         # 获取用户的所有角色
         roles = PermissionService.get_user_effective_roles(db, user_id)
         role_ids = [r.id for r in roles]
-        
+
         if not role_ids:
             return []
-        
+
         # 获取角色关联的菜单ID
         menu_ids: Set[int] = set()
-        role_menus = db.query(RoleMenu).filter(
-            RoleMenu.role_id.in_(role_ids),
-            RoleMenu.is_active
-        ).all()
-        
+        role_menus = (
+            db.query(RoleMenu).filter(RoleMenu.role_id.in_(role_ids), RoleMenu.is_active).all()
+        )
+
         for rm in role_menus:
             menu_ids.add(rm.menu_id)
-        
+
         if not menu_ids:
             return []
-        
+
         # 构建菜单树
         def build_menu_tree(parent_id: Optional[int] = None) -> List[Dict[str, Any]]:
-            menus = db.query(MenuPermission).filter(
-                MenuPermission.id.in_(menu_ids),
-                MenuPermission.is_active,
-                MenuPermission.is_visible,
-                MenuPermission.parent_id == parent_id
-            ).order_by(MenuPermission.sort_order).all()
-            
+            menus = (
+                db.query(MenuPermission)
+                .filter(
+                    MenuPermission.id.in_(menu_ids),
+                    MenuPermission.is_active,
+                    MenuPermission.is_visible,
+                    MenuPermission.parent_id == parent_id,
+                )
+                .order_by(MenuPermission.sort_order)
+                .all()
+            )
+
             result = []
             for menu in menus:
                 menu_dict = {
@@ -369,72 +388,71 @@ class PermissionService:
                     menu_dict["children"] = children
                 result.append(menu_dict)
             return result
-        
+
         return build_menu_tree()
-    
+
     @staticmethod
     def get_user_data_scopes(db: Session, user_id: int) -> Dict[str, str]:
         """
         获取用户的数据权限范围映射
-        
+
         Args:
             db: 数据库会话
             user_id: 用户ID
-            
+
         Returns:
             数据权限映射 { resource_type: scope_type }
         """
         scopes: Dict[str, str] = {}
-        
+
         try:
             # 获取用户的所有角色
             roles = PermissionService.get_user_effective_roles(db, user_id)
             role_ids = [r.id for r in roles]
-            
+
             if not role_ids:
                 return scopes
-            
+
             # 获取每个角色的数据权限
-            role_data_scopes = db.query(RoleDataScope).filter(
-                RoleDataScope.role_id.in_(role_ids),
-                RoleDataScope.is_active
-            ).all()
-            
+            role_data_scopes = (
+                db.query(RoleDataScope)
+                .filter(RoleDataScope.role_id.in_(role_ids), RoleDataScope.is_active)
+                .all()
+            )
+
             # 合并数据权限（取最大范围）
             scope_priority = {
-                'ALL': 6,
-                'BUSINESS_UNIT': 5,
-                'DEPARTMENT': 4,
-                'TEAM': 3,
-                'PROJECT': 2,
-                'OWN': 1,
-                'CUSTOM': 0,
+                "ALL": 6,
+                "BUSINESS_UNIT": 5,
+                "DEPARTMENT": 4,
+                "TEAM": 3,
+                "PROJECT": 2,
+                "OWN": 1,
+                "CUSTOM": 0,
             }
-            
+
             for rds in role_data_scopes:
-                rule = db.query(DataScopeRule).filter(
-                    DataScopeRule.id == rds.scope_rule_id
-                ).first()
-                
+                rule = db.query(DataScopeRule).filter(DataScopeRule.id == rds.scope_rule_id).first()
+
                 if rule:
                     resource = rds.resource_type
                     current_scope = scopes.get(resource)
                     new_scope = rule.scope_type
-                    
+
                     # 取更大的权限范围
-                    if not current_scope or scope_priority.get(new_scope, 0) > scope_priority.get(current_scope, 0):
+                    if not current_scope or scope_priority.get(new_scope, 0) > scope_priority.get(
+                        current_scope, 0
+                    ):
                         scopes[resource] = new_scope
-            
+
         except Exception as e:
             logger.error(f"获取用户数据权限失败: {e}")
-        
+
         return scopes
-    
+
     @staticmethod
     def get_full_permission_data(
-        db: Session,
-        user_id: int,
-        user: Optional[User] = None
+        db: Session, user_id: int, user: Optional[User] = None
     ) -> Dict[str, Any]:
         """
         获取用户的完整权限数据（用于前端）
@@ -461,6 +479,7 @@ class PermissionService:
 # 兼容层：保持与旧系统的兼容性
 # ============================================================
 
+
 def check_permission_compat(user: User, permission_code: str, db: Session) -> bool:
     """
     兼容层：检查权限（保持与旧代码兼容，自动获取租户ID）
@@ -475,6 +494,7 @@ def check_permission_compat(user: User, permission_code: str, db: Session) -> bo
     """
     tenant_id = getattr(user, "tenant_id", None)
     return PermissionService.check_permission(db, user.id, permission_code, user, tenant_id)
+
 
 # 模块级权限检查（兼容旧函数）
 def has_module_permission(user: User, module: str, db: Session) -> bool:

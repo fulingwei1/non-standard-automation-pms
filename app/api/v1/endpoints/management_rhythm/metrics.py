@@ -30,17 +30,14 @@ from app.schemas.management_rhythm import (
 router = APIRouter()
 
 
-
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="/metrics",
-    tags=["metrics"]
-)
+router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 # 共 3 个路由
 
 # ==================== 指标定义管理 ====================
+
 
 @router.get("/meeting-reports/metrics/available", response_model=AvailableMetricsResponse)
 def get_available_metrics(
@@ -60,7 +57,9 @@ def get_available_metrics(
     if is_active is not None:
         query = query.filter(ReportMetricDefinition.is_active == is_active)
 
-    metrics = query.order_by(ReportMetricDefinition.category, ReportMetricDefinition.metric_name).all()
+    metrics = query.order_by(
+        ReportMetricDefinition.category, ReportMetricDefinition.metric_name
+    ).all()
 
     # 获取所有分类
     categories = db.query(ReportMetricDefinition.category).distinct().all()
@@ -68,37 +67,39 @@ def get_available_metrics(
 
     items = []
     for metric in metrics:
-        items.append(ReportMetricDefinitionResponse(
-            id=metric.id,
-            metric_code=metric.metric_code,
-            metric_name=metric.metric_name,
-            category=metric.category,
-            description=metric.description,
-            data_source=metric.data_source,
-            data_field=metric.data_field,
-            filter_conditions=metric.filter_conditions,
-            calculation_type=metric.calculation_type,
-            calculation_formula=metric.calculation_formula,
-            support_mom=metric.support_mom,
-            support_yoy=metric.support_yoy,
-            unit=metric.unit,
-            format_type=metric.format_type,
-            decimal_places=metric.decimal_places,
-            is_active=metric.is_active,
-            is_system=metric.is_system,
-            created_by=metric.created_by,
-            created_at=metric.created_at,
-            updated_at=metric.updated_at,
-        ))
+        items.append(
+            ReportMetricDefinitionResponse(
+                id=metric.id,
+                metric_code=metric.metric_code,
+                metric_name=metric.metric_name,
+                category=metric.category,
+                description=metric.description,
+                data_source=metric.data_source,
+                data_field=metric.data_field,
+                filter_conditions=metric.filter_conditions,
+                calculation_type=metric.calculation_type,
+                calculation_formula=metric.calculation_formula,
+                support_mom=metric.support_mom,
+                support_yoy=metric.support_yoy,
+                unit=metric.unit,
+                format_type=metric.format_type,
+                decimal_places=metric.decimal_places,
+                is_active=metric.is_active,
+                is_system=metric.is_system,
+                created_by=metric.created_by,
+                created_at=metric.created_at,
+                updated_at=metric.updated_at,
+            )
+        )
 
-    return AvailableMetricsResponse(
-        metrics=items,
-        categories=category_list,
-        total_count=len(items)
-    )
+    return AvailableMetricsResponse(metrics=items, categories=category_list, total_count=len(items))
 
 
-@router.post("/meeting-reports/metrics", response_model=ReportMetricDefinitionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/meeting-reports/metrics",
+    response_model=ReportMetricDefinitionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_metric_definition(
     metric_data: ReportMetricDefinitionCreate,
     db: Session = Depends(deps.get_db),
@@ -108,9 +109,11 @@ def create_metric_definition(
     创建指标定义
     """
     # 检查指标编码是否已存在
-    existing = db.query(ReportMetricDefinition).filter(
-        ReportMetricDefinition.metric_code == metric_data.metric_code
-    ).first()
+    existing = (
+        db.query(ReportMetricDefinition)
+        .filter(ReportMetricDefinition.metric_code == metric_data.metric_code)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="指标编码已存在")
 
@@ -178,7 +181,11 @@ def update_metric_definition(
 
     # 系统预置指标不能修改某些字段
     if metric.is_system:
-        if metric_data.data_source or metric_data.calculation_type or metric_data.calculation_formula:
+        if (
+            metric_data.data_source
+            or metric_data.calculation_type
+            or metric_data.calculation_formula
+        ):
             raise HTTPException(status_code=403, detail="系统预置指标不能修改数据源和计算方式")
 
     update_data = metric_data.dict(exclude_unset=True)
@@ -210,6 +217,3 @@ def update_metric_definition(
         created_at=metric.created_at,
         updated_at=metric.updated_at,
     )
-
-
-

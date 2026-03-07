@@ -13,8 +13,8 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from tests.helpers.response_helpers import (
-    assert_success_response,
     assert_list_response,
+    assert_success_response,
 )
 
 
@@ -35,10 +35,7 @@ class TestDepartmentCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/org/departments", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -54,9 +51,7 @@ class TestDepartmentCRUD:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments",
-            params={"is_active": True},
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/departments", params={"is_active": True}, headers=headers
         )
 
         assert response.status_code == 200
@@ -75,10 +70,7 @@ class TestDepartmentCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments/tree",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/org/departments/tree", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -102,9 +94,7 @@ class TestDepartmentCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/org/departments",
-            json=dept_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/departments", json=dept_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -126,10 +116,7 @@ class TestDepartmentCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取部门列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/org/departments", headers=headers)
 
         list_data = list_response.json()
         if list_response.status_code != 200 or not list_data.get("items"):
@@ -138,8 +125,7 @@ class TestDepartmentCRUD:
         dept_id = list_data["items"][0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments/{dept_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/departments/{dept_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -154,10 +140,7 @@ class TestDepartmentCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/org/departments/99999", headers=headers)
 
         assert response.status_code == 404
 
@@ -169,14 +152,11 @@ class TestDepartmentCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取部门列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/org/departments", headers=headers)
 
         if list_response.status_code != 200:
             pytest.skip("Failed to get departments list")
-        
+
         response_data = list_response.json()
         # 使用统一响应格式辅助函数提取items
         list_data = assert_list_response(response_data)
@@ -192,9 +172,7 @@ class TestDepartmentCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/org/departments/{dept_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/departments/{dept_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -213,10 +191,7 @@ class TestDepartmentCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取部门列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/org/departments", headers=headers)
 
         list_data = list_response.json()
         if list_response.status_code != 200 or not list_data.get("items"):
@@ -225,8 +200,7 @@ class TestDepartmentCRUD:
         dept_id = list_data["items"][0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/org/departments/{dept_id}/users",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/departments/{dept_id}/users", headers=headers
         )
 
         assert response.status_code == 200
@@ -243,10 +217,7 @@ class TestEmployeeCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/org/employees",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/org/employees", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -270,9 +241,7 @@ class TestEmployeeCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/org/employees",
-            json=emp_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/employees", json=emp_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -293,10 +262,7 @@ class TestEmployeeCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取员工列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/org/employees",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/org/employees", headers=headers)
 
         list_data = list_response.json()
         if list_response.status_code != 200 or not list_data.get("items"):
@@ -304,10 +270,7 @@ class TestEmployeeCRUD:
 
         emp_id = list_data["items"][0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/org/employees/{emp_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/org/employees/{emp_id}", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -323,10 +286,7 @@ class TestEmployeeCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取员工列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/org/employees",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/org/employees", headers=headers)
 
         list_data = list_response.json()
         if list_response.status_code != 200 or not list_data.get("items"):
@@ -340,9 +300,7 @@ class TestEmployeeCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/org/employees/{emp_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/employees/{emp_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -363,10 +321,7 @@ class TestHrProfiles:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/org/hr-profiles",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/org/hr-profiles", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -379,8 +334,7 @@ class TestHrProfiles:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/org/hr-profiles/statistics/overview",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/org/hr-profiles/statistics/overview", headers=headers
         )
 
         assert response.status_code == 200

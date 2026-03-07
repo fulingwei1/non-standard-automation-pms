@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十八批 - status_update_service 单元测试（通用状态更新服务）"""
 
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import datetime
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.status_update_service")
 
@@ -12,8 +13,8 @@ from app.services.status_update_service import (
     StatusUpdateService,
 )
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_entity(status="DRAFT"):
     e = MagicMock()
@@ -35,6 +36,7 @@ def _make_service(db=None):
 
 
 # ─── StatusUpdateResult ──────────────────────────────────────
+
 
 class TestStatusUpdateResult:
 
@@ -68,6 +70,7 @@ class TestStatusUpdateResult:
 
 # ─── update_status ───────────────────────────────────────────
 
+
 class TestUpdateStatus:
 
     @patch("app.services.status_update_service.save_obj")
@@ -89,8 +92,7 @@ class TestUpdateStatus:
         operator = _make_operator()
 
         result = svc.update_status(
-            entity, "INVALID", operator,
-            valid_statuses=["DRAFT", "ACTIVE", "CLOSED"]
+            entity, "INVALID", operator, valid_statuses=["DRAFT", "ACTIVE", "CLOSED"]
         )
 
         assert result.success is False
@@ -104,8 +106,7 @@ class TestUpdateStatus:
         operator = _make_operator()
 
         result = svc.update_status(
-            entity, "ACTIVE", operator,
-            valid_statuses=["DRAFT", "ACTIVE", "CLOSED"]
+            entity, "ACTIVE", operator, valid_statuses=["DRAFT", "ACTIVE", "CLOSED"]
         )
 
         assert result.success is True
@@ -116,10 +117,7 @@ class TestUpdateStatus:
         operator = _make_operator()
 
         rules = {"DRAFT": ["ACTIVE"], "ACTIVE": ["CLOSED"]}
-        result = svc.update_status(
-            entity, "DRAFT", operator,
-            transition_rules=rules
-        )
+        result = svc.update_status(entity, "DRAFT", operator, transition_rules=rules)
 
         assert result.success is False
         assert any("转换" in e for e in result.errors)
@@ -132,10 +130,7 @@ class TestUpdateStatus:
         operator = _make_operator()
 
         rules = {"DRAFT": ["ACTIVE"], "ACTIVE": ["CLOSED"]}
-        result = svc.update_status(
-            entity, "ACTIVE", operator,
-            transition_rules=rules
-        )
+        result = svc.update_status(entity, "ACTIVE", operator, transition_rules=rules)
 
         assert result.success is True
         assert entity.status == "ACTIVE"
@@ -163,8 +158,7 @@ class TestUpdateStatus:
         operator = _make_operator()
 
         result = svc.update_status(
-            entity, "ACTIVE", operator,
-            timestamp_fields={"ACTIVE": "activated_at"}
+            entity, "ACTIVE", operator, timestamp_fields={"ACTIVE": "activated_at"}
         )
 
         assert result.success is True
@@ -180,10 +174,7 @@ class TestUpdateStatus:
         entity.activated_at = existing_ts
         operator = _make_operator()
 
-        svc.update_status(
-            entity, "ACTIVE", operator,
-            timestamp_fields={"ACTIVE": "activated_at"}
-        )
+        svc.update_status(entity, "ACTIVE", operator, timestamp_fields={"ACTIVE": "activated_at"})
 
         assert entity.activated_at == existing_ts
 
@@ -220,9 +211,7 @@ class TestUpdateStatus:
         history_cb = MagicMock()
 
         svc.update_status(
-            entity, "ACTIVE", operator,
-            history_callback=history_cb,
-            reason="测试原因"
+            entity, "ACTIVE", operator, history_callback=history_cb, reason="测试原因"
         )
 
         history_cb.assert_called_once()
@@ -242,8 +231,10 @@ class TestUpdateStatus:
         related.status = "OLD"
 
         svc.update_status(
-            entity, "ACTIVE", operator,
-            related_entities=[{"entity": related, "field": "status", "value": "SYNCED"}]
+            entity,
+            "ACTIVE",
+            operator,
+            related_entities=[{"entity": related, "field": "status", "value": "SYNCED"}],
         )
 
         assert related.status == "SYNCED"
@@ -259,10 +250,7 @@ class TestUpdateStatus:
         def bad_callback(*args, **kwargs):
             raise ValueError("回调异常")
 
-        result = svc.update_status(
-            entity, "ACTIVE", operator,
-            before_update_callback=bad_callback
-        )
+        result = svc.update_status(entity, "ACTIVE", operator, before_update_callback=bad_callback)
 
         assert result.success is False
         assert any("回调" in e for e in result.errors)
@@ -288,9 +276,6 @@ class TestUpdateStatus:
         operator = _make_operator()
 
         rules = {"DRAFT": ["ACTIVE"], "ACTIVE": ["CLOSED"]}
-        result = svc.update_status(
-            entity, "ACTIVE", operator,
-            transition_rules=rules
-        )
+        result = svc.update_status(entity, "ACTIVE", operator, transition_rules=rules)
 
         assert result.success is False

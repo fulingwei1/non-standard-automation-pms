@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - 模板报表核心单元测试"""
-import pytest
 from datetime import date
 
-pytest.importorskip("app.services.template_report.core",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.template_report.core", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock, patch
+
 from app.services.template_report.core import TemplateReportCore
 
 
@@ -29,9 +30,7 @@ class TestGenerateFromTemplate:
         with patch("app.services.template_report.core.ProjectReportMixin") as mock_p:
             mock_p._generate_project_weekly.return_value = {}
             result = TemplateReportCore.generate_from_template(
-                db, template,
-                start_date=date(2024, 1, 1),
-                end_date=date(2024, 1, 7)
+                db, template, start_date=date(2024, 1, 1), end_date=date(2024, 1, 7)
             )
 
         assert result["period"]["start_date"] == "2024-01-01"
@@ -62,11 +61,13 @@ class TestGenerateFromTemplate:
         db = MagicMock()
         template = _make_template("COMPANY_MONTHLY")
 
-        with patch("app.services.template_report.core.CompanyReportMixin") as mock_c, \
-             patch("app.services.template_report.core.ProjectReportMixin"), \
-             patch("app.services.template_report.core.DeptReportMixin"), \
-             patch("app.services.template_report.core.AnalysisReportMixin"), \
-             patch("app.services.template_report.core.GenericReportMixin"):
+        with (
+            patch("app.services.template_report.core.CompanyReportMixin") as mock_c,
+            patch("app.services.template_report.core.ProjectReportMixin"),
+            patch("app.services.template_report.core.DeptReportMixin"),
+            patch("app.services.template_report.core.AnalysisReportMixin"),
+            patch("app.services.template_report.core.GenericReportMixin"),
+        ):
             mock_c._generate_company_monthly.return_value = {}
             result = TemplateReportCore.generate_from_template(db, template)
 
@@ -76,11 +77,13 @@ class TestGenerateFromTemplate:
         db = MagicMock()
         template = _make_template("UNKNOWN_TYPE")
 
-        with patch("app.services.template_report.core.ProjectReportMixin"), \
-             patch("app.services.template_report.core.DeptReportMixin"), \
-             patch("app.services.template_report.core.AnalysisReportMixin"), \
-             patch("app.services.template_report.core.CompanyReportMixin"), \
-             patch("app.services.template_report.core.GenericReportMixin") as mock_g:
+        with (
+            patch("app.services.template_report.core.ProjectReportMixin"),
+            patch("app.services.template_report.core.DeptReportMixin"),
+            patch("app.services.template_report.core.AnalysisReportMixin"),
+            patch("app.services.template_report.core.CompanyReportMixin"),
+            patch("app.services.template_report.core.GenericReportMixin") as mock_g,
+        ):
             mock_g._generate_generic_report.return_value = {}
             result = TemplateReportCore.generate_from_template(db, template)
 

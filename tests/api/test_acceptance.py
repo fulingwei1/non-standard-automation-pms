@@ -21,10 +21,7 @@ def _auth_headers(token: str) -> dict:
 def _get_first_project(client: TestClient, token: str) -> dict:
     """获取第一个可用的项目"""
     headers = _auth_headers(token)
-    response = client.get(
-        f"{settings.API_V1_PREFIX}/projects/",
-        headers=headers
-    )
+    response = client.get(f"{settings.API_V1_PREFIX}/projects/", headers=headers)
 
     if response.status_code != 200:
         return None
@@ -49,7 +46,7 @@ class TestAcceptanceTemplates:
         response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-templates",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -71,9 +68,7 @@ class TestAcceptanceTemplates:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/acceptance-templates",
-            json=template_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-templates", json=template_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -94,7 +89,7 @@ class TestAcceptanceTemplates:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-templates",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -108,8 +103,7 @@ class TestAcceptanceTemplates:
         template_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-templates/{template_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-templates/{template_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -125,7 +119,7 @@ class TestAcceptanceTemplates:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-templates",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -139,8 +133,7 @@ class TestAcceptanceTemplates:
         template_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-templates/{template_id}/items",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-templates/{template_id}/items", headers=headers
         )
 
         assert response.status_code == 200
@@ -160,7 +153,7 @@ class TestAcceptanceOrders:
         response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -176,7 +169,7 @@ class TestAcceptanceOrders:
         response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10, "acceptance_type": "FAT"},
-            headers=headers
+            headers=headers,
         )
 
         assert response.status_code == 200
@@ -192,7 +185,7 @@ class TestAcceptanceOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -206,8 +199,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -223,7 +215,7 @@ class TestAcceptanceOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -237,8 +229,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/items",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/items", headers=headers
         )
 
         assert response.status_code == 200
@@ -256,7 +247,7 @@ class TestAcceptanceOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -270,8 +261,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues", headers=headers
         )
 
         assert response.status_code == 200
@@ -289,7 +279,7 @@ class TestAcceptanceOrders:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -303,8 +293,7 @@ class TestAcceptanceOrders:
         order_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/signatures",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/signatures", headers=headers
         )
 
         assert response.status_code == 200
@@ -326,7 +315,7 @@ class TestAcceptanceIssues:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -341,8 +330,7 @@ class TestAcceptanceIssues:
 
         # 获取问题列表
         issues_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues", headers=headers
         )
 
         if issues_response.status_code != 200 or not issues_response.json():
@@ -351,8 +339,7 @@ class TestAcceptanceIssues:
         issue_id = issues_response.json()[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-issues/{issue_id}",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-issues/{issue_id}", headers=headers
         )
 
         assert response.status_code == 200
@@ -368,7 +355,7 @@ class TestAcceptanceIssues:
         list_response = client.get(
             f"{settings.API_V1_PREFIX}/acceptance-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if list_response.status_code != 200:
@@ -383,8 +370,7 @@ class TestAcceptanceIssues:
 
         # 获取问题列表
         issues_response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-orders/{order_id}/issues", headers=headers
         )
 
         if issues_response.status_code != 200 or not issues_response.json():
@@ -393,8 +379,7 @@ class TestAcceptanceIssues:
         issue_id = issues_response.json()[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/acceptance-issues/{issue_id}/follow-ups",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/acceptance-issues/{issue_id}/follow-ups", headers=headers
         )
 
         assert response.status_code == 200

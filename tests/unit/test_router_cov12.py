@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第十二批：审批路由决策服务单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.approval_engine.router import ApprovalRouterService
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -54,7 +56,7 @@ class TestSelectFlow:
 
         db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [rule]
 
-        with patch.object(svc, '_evaluate_conditions', return_value=True):
+        with patch.object(svc, "_evaluate_conditions", return_value=True):
             context = {"form_data": {"amount": 50000}}
             result = svc.select_flow(template_id=1, context=context)
 
@@ -92,7 +94,7 @@ class TestEvaluateConditions:
 
     def test_simple_eq_condition_true(self):
         svc, _ = _make_service()
-        if not hasattr(svc, '_evaluate_conditions'):
+        if not hasattr(svc, "_evaluate_conditions"):
             pytest.skip("无此方法")
         conditions = {"field": "entity.ecn_type", "operator": "eq", "value": "DESIGN"}
         context = {"entity": {"ecn_type": "DESIGN"}}
@@ -101,7 +103,7 @@ class TestEvaluateConditions:
 
     def test_empty_conditions_returns_bool(self):
         svc, _ = _make_service()
-        if not hasattr(svc, '_evaluate_conditions'):
+        if not hasattr(svc, "_evaluate_conditions"):
             pytest.skip("无此方法")
         result = svc._evaluate_conditions({}, {})
         assert isinstance(result, bool)
@@ -112,7 +114,7 @@ class TestGetDefaultFlow:
 
     def test_returns_flow_from_db(self):
         svc, db = _make_service()
-        if not hasattr(svc, '_get_default_flow'):
+        if not hasattr(svc, "_get_default_flow"):
             pytest.skip("无此方法")
         flow = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = flow
@@ -121,7 +123,7 @@ class TestGetDefaultFlow:
 
     def test_returns_none_when_not_found(self):
         svc, db = _make_service()
-        if not hasattr(svc, '_get_default_flow'):
+        if not hasattr(svc, "_get_default_flow"):
             pytest.skip("无此方法")
         db.query.return_value.filter.return_value.first.return_value = None
         result = svc._get_default_flow(template_id=999)

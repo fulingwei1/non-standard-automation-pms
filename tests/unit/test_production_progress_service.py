@@ -14,7 +14,7 @@ production_progress_service.py 单元测试
 
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -29,6 +29,7 @@ def _make_service():
 # =============================================================================
 # calculate_progress_deviation / _calculate_planned_progress
 # =============================================================================
+
 
 class TestCalculateProgressDeviation:
     def test_returns_zeros_when_work_order_not_found(self):
@@ -101,6 +102,7 @@ class TestCalculateProgressDeviation:
 # calculate_deviation_percentage
 # =============================================================================
 
+
 class TestCalculateDeviationPercentage:
     def setup_method(self):
         self.svc, _ = _make_service()
@@ -122,6 +124,7 @@ class TestCalculateDeviationPercentage:
 # =============================================================================
 # _calculate_bottleneck_level
 # =============================================================================
+
 
 class TestCalculateBottleneckLevel:
     def setup_method(self):
@@ -163,6 +166,7 @@ class TestCalculateBottleneckLevel:
 # =============================================================================
 # evaluate_alert_rules
 # =============================================================================
+
 
 class TestEvaluateAlertRules:
     def setup_method(self):
@@ -252,6 +256,7 @@ class TestEvaluateAlertRules:
             if call_count == 0:
                 return wo
             return ws_status
+
         side_effect_first.count = 0
 
         self.db.query.return_value.filter.return_value.first.side_effect = side_effect_first
@@ -263,6 +268,7 @@ class TestEvaluateAlertRules:
 # =============================================================================
 # dismiss_alert
 # =============================================================================
+
 
 class TestDismissAlert:
     def setup_method(self):
@@ -292,12 +298,17 @@ class TestDismissAlert:
         result = self.svc.dismiss_alert(1, user_id=5)
         assert result is True
         # note should NOT be set
-        alert.resolution_note.__set__.assert_not_called() if hasattr(alert.resolution_note, '__set__') else None
+        (
+            alert.resolution_note.__set__.assert_not_called()
+            if hasattr(alert.resolution_note, "__set__")
+            else None
+        )
 
 
 # =============================================================================
 # get_alerts
 # =============================================================================
+
 
 class TestGetAlerts:
     def setup_method(self):
@@ -334,6 +345,7 @@ class TestGetAlerts:
 # =============================================================================
 # get_work_order_timeline
 # =============================================================================
+
 
 class TestGetWorkOrderTimeline:
     def setup_method(self):

@@ -37,9 +37,7 @@ class TestMaterialsCRUDAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/materials/", params=params, resource_type="materials_list"
-        )
+        response = self.helper.get("/materials/", params=params, resource_type="materials_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -61,9 +59,7 @@ class TestMaterialsCRUDAPI:
             "description": "贴片电阻",
         }
 
-        response = self.helper.post(
-            "/materials/", material_data, resource_type="material"
-        )
+        response = self.helper.post("/materials/", material_data, resource_type="material")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:

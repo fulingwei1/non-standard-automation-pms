@@ -10,8 +10,8 @@ import json
 from unittest.mock import MagicMock, patch
 
 from app.services.invoice_auto_service.notifications import (
-    send_invoice_notifications,
     log_auto_invoice,
+    send_invoice_notifications,
 )
 
 
@@ -67,9 +67,11 @@ def test_send_notifications_invoice_request_mode():
 
     items = [{"request_no": "IR001", "amount": 1000.0}]
 
-    with patch("app.services.invoice_auto_service.notifications.NotificationDispatcher") as MockDisp, \
-         patch("app.services.invoice_auto_service.notifications.NotificationRequest"), \
-         patch("app.services.invoice_auto_service.notifications.NotificationPriority"):
+    with (
+        patch("app.services.invoice_auto_service.notifications.NotificationDispatcher") as MockDisp,
+        patch("app.services.invoice_auto_service.notifications.NotificationRequest"),
+        patch("app.services.invoice_auto_service.notifications.NotificationPriority"),
+    ):
         mock_dispatcher = MagicMock()
         mock_dispatcher.send_notification_request.return_value = {"success": True}
         MockDisp.return_value = mock_dispatcher
@@ -142,8 +144,7 @@ def test_log_auto_invoice_exception_silenced():
     # Trigger exception by making json.loads raise inside
     order.conditions = None
     type(order).conditions = property(
-        fget=lambda self: None,
-        fset=MagicMock(side_effect=Exception("write error"))
+        fget=lambda self: None, fset=MagicMock(side_effect=Exception("write error"))
     )
 
     # Should not raise

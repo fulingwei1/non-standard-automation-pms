@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """第二十三批：customer_service 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.customer_service")
 
@@ -47,10 +48,7 @@ class TestCustomerServiceListCustomers:
         result_obj.page_size = 10
         with patch.object(svc, "list", return_value=result_obj):
             result = svc.list_customers(
-                page=1, page_size=10,
-                customer_type="企业",
-                industry="制造",
-                status="ACTIVE"
+                page=1, page_size=10, customer_type="企业", industry="制造", status="ACTIVE"
             )
         assert result["total"] == 1
 
@@ -87,9 +85,11 @@ class TestCustomerServiceListCustomers:
         result_obj.page = 1
         result_obj.page_size = 20
         captured = {}
+
         def mock_list(params):
             captured["search"] = params.search
             return result_obj
+
         with patch.object(svc, "list", side_effect=mock_list):
             svc.list_customers(keyword="客户名")
         assert captured["search"] == "客户名"

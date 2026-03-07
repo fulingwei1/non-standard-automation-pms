@@ -27,7 +27,7 @@ from . import (
     related_lists,
     statistics,
     templates,
- workflow,
+    workflow,
 )
 
 # 创建主路由
@@ -78,5 +78,5 @@ __all__ = [
     "template_router",
     "create_blocking_issue_alert",
     "close_blocking_issue_alerts",
-    "generate_issue_no"
+    "generate_issue_no",
 ]

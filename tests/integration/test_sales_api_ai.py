@@ -36,9 +36,7 @@ class TestSalesLeadsAPI:
             "page_size": 20,
         }
 
-        response = self.helper.get(
-            "/sales/leads", params=params, resource_type="sales_leads_list"
-        )
+        response = self.helper.get("/sales/leads", params=params, resource_type="sales_leads_list")
 
         result = self.helper.assert_success(response)
         if result:
@@ -60,9 +58,7 @@ class TestSalesLeadsAPI:
             "description": "ICT测试设备需求",
         }
 
-        response = self.helper.post(
-            "/sales/leads", lead_data, resource_type="sales_lead"
-        )
+        response = self.helper.post("/sales/leads", lead_data, resource_type="sales_lead")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -83,9 +79,7 @@ class TestSalesLeadsAPI:
         self.helper.print_info("测试获取销售线索详情...")
 
         lead_id = 1
-        response = self.helper.get(
-            f"/sales/leads/{lead_id}", resource_type=f"sales_lead_{lead_id}"
-        )
+        response = self.helper.get(f"/sales/leads/{lead_id}", resource_type=f"sales_lead_{lead_id}")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -141,9 +135,7 @@ class TestSalesOpportunitiesAPI:
             "description": "客户需要ICT测试设备",
         }
 
-        response = self.helper.post(
-            "/sales/opportunities", opp_data, resource_type="opportunity"
-        )
+        response = self.helper.post("/sales/opportunities", opp_data, resource_type="opportunity")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:
@@ -213,9 +205,7 @@ class TestSalesQuotesAPI:
         self.helper.print_info("测试获取报价详情...")
 
         quote_id = 1
-        response = self.helper.get(
-            f"/sales/quotes/{quote_id}", resource_type=f"quote_{quote_id}"
-        )
+        response = self.helper.get(f"/sales/quotes/{quote_id}", resource_type=f"quote_{quote_id}")
 
         status_code = response.get("status_code")
         if status_code and 200 <= status_code < 300:

@@ -22,9 +22,7 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.get(
-    "/configs", response_model=ProjectRoleConfigListResponse, summary="获取项目角色配置"
-)
+@router.get("/configs", response_model=ProjectRoleConfigListResponse, summary="获取项目角色配置")
 async def get_project_role_configs(
     project_id: int = Path(..., description="项目ID"),
     db: Session = Depends(deps.get_db),
@@ -60,16 +58,12 @@ async def init_project_role_configs(
     get_or_404(db, Project, project_id, detail="项目不存在")
 
     existing = (
-        db.query(ProjectRoleConfig)
-        .filter(ProjectRoleConfig.project_id == project_id)
-        .count()
+        db.query(ProjectRoleConfig).filter(ProjectRoleConfig.project_id == project_id).count()
     )
     if existing > 0:
         raise HTTPException(status_code=400, detail="项目已初始化角色配置")
 
-    role_types = (
-        db.query(ProjectRoleType).filter(ProjectRoleType.is_active).all()
-    )
+    role_types = db.query(ProjectRoleType).filter(ProjectRoleType.is_active).all()
 
     configs = []
     for rt in role_types:

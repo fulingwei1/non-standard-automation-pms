@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """第二十九批 - ecn_notification/task_notifications.py 单元测试（ECN任务通知）"""
 
-import pytest
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 pytest.importorskip("app.services.ecn_notification.task_notifications")
 
@@ -12,8 +13,8 @@ from app.services.ecn_notification.task_notifications import (
     notify_task_completed,
 )
 
-
 # ─── 辅助工厂 ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -50,6 +51,7 @@ def _make_user(user_id=1, real_name="张三", username="zhangsan"):
 
 # ─── 测试：notify_task_assigned ────────────────────────────────────────────────
 
+
 class TestNotifyTaskAssigned:
     """测试任务分配通知"""
 
@@ -83,7 +85,9 @@ class TestNotifyTaskAssigned:
 
     @patch("app.services.ecn_notification.task_notifications.find_users_by_department")
     @patch("app.services.ecn_notification.task_notifications.NotificationDispatcher")
-    def test_finds_assignee_via_department_when_none_given(self, mock_dispatcher_cls, mock_find_users):
+    def test_finds_assignee_via_department_when_none_given(
+        self, mock_dispatcher_cls, mock_find_users
+    ):
         db = _make_db()
         ecn = _make_ecn()
         task = _make_task()
@@ -117,6 +121,7 @@ class TestNotifyTaskAssigned:
         assert call_args is not None
         request = call_args[0][0]
         from app.services.channel_handlers.base import NotificationPriority
+
         assert request.priority == NotificationPriority.URGENT
 
     @patch("app.services.ecn_notification.task_notifications.NotificationDispatcher")
@@ -152,6 +157,7 @@ class TestNotifyTaskAssigned:
 
 
 # ─── 测试：notify_task_completed ────────────────────────────────────────────────
+
 
 class TestNotifyTaskCompleted:
     """测试任务完成通知"""

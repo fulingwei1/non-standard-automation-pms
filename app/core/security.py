@@ -7,11 +7,12 @@
 """
 
 # 从认证模块导入
+from .auth import create_token_pair  # Token刷新功能
+from .auth import extract_jti_from_token  # 从token提取JTI
+from .auth import verify_refresh_token  # 验证refresh token
 from .auth import (
     check_permission,
     create_access_token,
-    create_token_pair,  # Token刷新功能
-    extract_jti_from_token,  # 从token提取JTI
     get_current_active_superuser,
     get_current_active_user,
     get_current_user,
@@ -23,7 +24,6 @@ from .auth import (
     require_permission,
     revoke_token,
     verify_password,
-    verify_refresh_token,  # 验证refresh token
 )
 
 # 从销售权限模块导入

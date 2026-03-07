@@ -17,7 +17,7 @@ def allocate_resources(
     project_id: int,
     machine_id: Optional[int],
     suggested_start_date: date,
-    suggested_end_date: date
+    suggested_end_date: date,
 ) -> Dict:
     """
     分配资源（工位和人员）
@@ -32,48 +32,38 @@ def allocate_resources(
     Returns:
         资源分配结果
     """
-    result = {
-        'workstations': [],
-        'workers': [],
-        'conflicts': [],
-        'can_allocate': True
-    }
+    result = {"workstations": [], "workers": [], "conflicts": [], "can_allocate": True}
 
     # 1. 检测资源冲突
     conflicts = detect_resource_conflicts(
         db, project_id, machine_id, suggested_start_date, suggested_end_date
     )
-    result['conflicts'] = conflicts
+    result["conflicts"] = conflicts
 
     if conflicts:
-        result['can_allocate'] = False
+        result["can_allocate"] = False
         return result
 
     # 2. 查找可用工位
     available_workstations = find_available_workstations(
-        db,
-        start_date=suggested_start_date,
-        end_date=suggested_end_date
+        db, start_date=suggested_start_date, end_date=suggested_end_date
     )
-    result['workstations'] = available_workstations[:3]  # 返回前3个
+    result["workstations"] = available_workstations[:3]  # 返回前3个
 
     # 3. 查找可用人员
     available_workers = find_available_workers(
-        db,
-        start_date=suggested_start_date,
-        end_date=suggested_end_date,
-        min_available_hours=8.0
+        db, start_date=suggested_start_date, end_date=suggested_end_date, min_available_hours=8.0
     )
-    result['workers'] = available_workers[:5]  # 返回前5个
+    result["workers"] = available_workers[:5]  # 返回前5个
 
     # 4. 判断是否可以分配
     if not available_workstations:
-        result['can_allocate'] = False
-        result['reason'] = '无可用工位'
+        result["can_allocate"] = False
+        result["reason"] = "无可用工位"
     elif not available_workers:
-        result['can_allocate'] = False
-        result['reason'] = '无可用人员'
+        result["can_allocate"] = False
+        result["reason"] = "无可用人员"
     else:
-        result['can_allocate'] = True
+        result["can_allocate"] = True
 
     return result

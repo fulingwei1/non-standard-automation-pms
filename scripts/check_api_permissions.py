@@ -36,7 +36,7 @@ class APIPermissionChecker:
         results = {
             "with_permission": [],
             "without_permission": [],
-            "public": []  # 公开API（如登录、注册等）
+            "public": [],  # 公开API（如登录、注册等）
         }
 
         # 公开API路径（不需要权限检查）
@@ -52,7 +52,7 @@ class APIPermissionChecker:
                 continue
 
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     lines = f.readlines()
                     ''.join(lines)
 
@@ -85,7 +85,7 @@ class APIPermissionChecker:
                         # 提取函数名（下一行应该是函数定义）
                         func_name = None
                         if i < len(lines):
-                            func_match = re.search(r'def\s+(\w+)', lines[i])
+                            func_match = re.search(r"def\s+(\w+)", lines[i])
                             if func_match:
                                 func_name = func_match.group(1)
 
@@ -112,15 +112,18 @@ class APIPermissionChecker:
 
         return results
 
-
     def check_permissions_in_db(self):
         """检查数据库中是否存在这些权限编码"""
         with get_db_session() as session:
-            result = session.execute(text("""
+            result = session.execute(
+                text(
+                    """
                 SELECT perm_code, perm_name, module, action
                 FROM permissions
                 WHERE is_active = 1 OR is_active IS NULL
-            """))
+            """
+                )
+            )
 
             for row in result:
                 self.permission_codes_in_db.add(row[0])
@@ -134,9 +137,9 @@ class APIPermissionChecker:
 
         # 统计信息
         total_endpoints = (
-            len(results["with_permission"]) +
-            len(results["without_permission"]) +
-            len(results["public"])
+            len(results["with_permission"])
+            + len(results["without_permission"])
+            + len(results["public"])
         )
 
         print(f"📊 统计信息:")
@@ -194,20 +197,22 @@ class APIPermissionChecker:
         print("=" * 80)
 
         with get_db_session() as session:
-            result = session.execute(text("""
+            result = session.execute(
+                text(
+                    """
                 SELECT module, perm_code, perm_name, action
                 FROM permissions
                 WHERE is_active = 1 OR is_active IS NULL
                 ORDER BY module, perm_code
-            """))
+            """
+                )
+            )
 
             by_module = defaultdict(list)
             for row in result:
-                by_module[row[0] or "未分类"].append({
-                    "code": row[1],
-                    "name": row[2],
-                    "action": row[3]
-                })
+                by_module[row[0] or "未分类"].append(
+                    {"code": row[1], "name": row[2], "action": row[3]}
+                )
 
             for module, perms in sorted(by_module.items()):
                 print(f"\n📦 {module} ({len(perms)} 个权限):")
@@ -230,7 +235,9 @@ class APIPermissionChecker:
         if missing_permissions:
             print("2. 在数据库中创建缺失的权限:")
             print("   - 创建迁移脚本: migrations/YYYYMMDD_new_permissions_sqlite.sql")
-            print("   - 使用格式: INSERT INTO permissions (perm_code, perm_name, module, action) VALUES ...")
+            print(
+                "   - 使用格式: INSERT INTO permissions (perm_code, perm_name, module, action) VALUES ..."
+            )
             print()
 
         print("3. 权限编码规范:")

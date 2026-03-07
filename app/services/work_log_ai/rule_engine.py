@@ -16,10 +16,7 @@ class RuleEngineMixin:
     """规则引擎分析功能混入类"""
 
     def _analyze_with_rules(
-        self,
-        content: str,
-        user_projects: List[Dict[str, Any]],
-        work_date: date
+        self, content: str, user_projects: List[Dict[str, Any]], work_date: date
     ) -> Dict[str, Any]:
         """
         使用规则引擎分析工作日志内容（AI不可用时的fallback）
@@ -38,10 +35,10 @@ class RuleEngineMixin:
         # 1. 尝试提取工时信息（使用正则表达式）
         # 匹配模式：如"6小时"、"4.5h"、"工作8小时"等
         hour_patterns = [
-            r'(\d+\.?\d*)\s*小时',
-            r'(\d+\.?\d*)\s*h',
-            r'工作\s*(\d+\.?\d*)\s*小时',
-            r'耗时\s*(\d+\.?\d*)\s*小时',
+            r"(\d+\.?\d*)\s*小时",
+            r"(\d+\.?\d*)\s*h",
+            r"工作\s*(\d+\.?\d*)\s*小时",
+            r"耗时\s*(\d+\.?\d*)\s*小时",
         ]
 
         extracted_hours = []
@@ -59,12 +56,12 @@ class RuleEngineMixin:
         matched_project = None
         for project in user_projects:
             # 检查项目编码是否在工作日志中
-            if project['code'] in content:
+            if project["code"] in content:
                 matched_project = project
                 break
 
             # 检查项目名称关键词是否在工作日志中
-            for keyword in project['keywords']:
+            for keyword in project["keywords"]:
                 if keyword and keyword in content:
                     matched_project = project
                     break
@@ -83,30 +80,36 @@ class RuleEngineMixin:
         if extracted_hours:
             # 如果有明确的工时信息，使用提取的工时
             for hours in extracted_hours:
-                work_items.append({
-                    "work_content": content[:100],  # 截取前100字作为工作内容
-                    "hours": float(hours),
-                    "project_id": matched_project['id'] if matched_project else None,
-                    "project_code": matched_project['code'] if matched_project else None,
-                    "project_name": matched_project['name'] if matched_project else None,
-                    "work_type": work_type,
-                    "confidence": 0.7  # 规则引擎的置信度较低
-                })
+                work_items.append(
+                    {
+                        "work_content": content[:100],  # 截取前100字作为工作内容
+                        "hours": float(hours),
+                        "project_id": matched_project["id"] if matched_project else None,
+                        "project_code": matched_project["code"] if matched_project else None,
+                        "project_name": matched_project["name"] if matched_project else None,
+                        "work_type": work_type,
+                        "confidence": 0.7,  # 规则引擎的置信度较低
+                    }
+                )
                 total_hours += Decimal(str(hours))
         else:
             # 如果没有明确的工时信息，根据内容长度和复杂度估算
             # 简单规则：内容越长，工时越多（但不超过8小时）
-            estimated_hours = min(8.0, max(2.0, len(content) / 50))  # 每50字约1小时，最少2小时，最多8小时
+            estimated_hours = min(
+                8.0, max(2.0, len(content) / 50)
+            )  # 每50字约1小时，最少2小时，最多8小时
 
-            work_items.append({
-                "work_content": content,
-                "hours": estimated_hours,
-                "project_id": matched_project['id'] if matched_project else None,
-                "project_code": matched_project['code'] if matched_project else None,
-                "project_name": matched_project['name'] if matched_project else None,
-                "work_type": work_type,
-                "confidence": 0.5  # 估算的置信度更低
-            })
+            work_items.append(
+                {
+                    "work_content": content,
+                    "hours": estimated_hours,
+                    "project_id": matched_project["id"] if matched_project else None,
+                    "project_code": matched_project["code"] if matched_project else None,
+                    "project_name": matched_project["name"] if matched_project else None,
+                    "work_type": work_type,
+                    "confidence": 0.5,  # 估算的置信度更低
+                }
+            )
             total_hours = Decimal(str(estimated_hours))
 
         return {
@@ -114,5 +117,5 @@ class RuleEngineMixin:
             "total_hours": float(total_hours),
             "confidence": 0.6,  # 规则引擎的整体置信度
             "analysis_notes": "使用规则引擎分析（AI服务未配置）",
-            "suggested_projects": [p for p in user_projects[:5]]  # 推荐前5个最常用的项目
+            "suggested_projects": [p for p in user_projects[:5]],  # 推荐前5个最常用的项目
         }

@@ -17,8 +17,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-
-from sqlalchemy.orm import relationship, deferred
+from sqlalchemy.orm import deferred, relationship
 
 from .base import Base, TimestampMixin
 
@@ -30,14 +29,10 @@ class User(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     # 多租户支持
-    tenant_id = Column(
-        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID"
-    )
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     is_tenant_admin = Column(Boolean, default=False, comment="是否租户管理员")
 
-    employee_id = Column(
-        Integer, ForeignKey("employees.id"), nullable=True, comment="员工ID"
-    )
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=True, comment="员工ID")
     username = Column(String(50), unique=True, nullable=False, comment="用户名")
     password_hash = Column(String(255), nullable=False, comment="密码哈希")
     auth_type = Column(String(20), default="password", comment="认证方式")
@@ -53,7 +48,7 @@ class User(Base, TimestampMixin):
     is_superuser = Column(Boolean, default=False, comment="是否超级管理员")
     last_login_at = Column(DateTime, comment="最后登录时间")
     last_login_ip = Column(String(50), comment="最后登录IP")
-    
+
     # 双因素认证（2FA）字段
     two_factor_enabled = Column(Boolean, default=False, comment="是否启用2FA")
     two_factor_method = Column(String(20), comment="2FA方式: totp")
@@ -63,9 +58,7 @@ class User(Base, TimestampMixin):
     reporting_to = Column(Integer, ForeignKey("users.id"), comment="直接上级用户ID")
 
     # 方案生成积分系统
-    solution_credits = Column(
-        Integer, default=100, nullable=False, comment="方案生成积分余额"
-    )
+    solution_credits = Column(Integer, default=100, nullable=False, comment="方案生成积分余额")
     credits_updated_at = Column(DateTime, comment="积分最后变动时间")
 
     # 关系
@@ -81,9 +74,7 @@ class User(Base, TimestampMixin):
     manager = relationship(
         "User", remote_side=[id], foreign_keys=[reporting_to], back_populates="subordinates"
     )
-    subordinates = relationship(
-        "User", back_populates="manager", foreign_keys=[reporting_to]
-    )
+    subordinates = relationship("User", back_populates="manager", foreign_keys=[reporting_to])
     # 项目成员关系（补充缺失的反向关系）
     project_memberships = relationship(
         "ProjectMember", back_populates="user", foreign_keys="ProjectMember.user_id"
@@ -96,12 +87,12 @@ class User(Base, TimestampMixin):
         "User2FABackupCode", back_populates="user", cascade="all, delete-orphan"
     )
     # API Key关系
-    api_keys = relationship(
-        "APIKey", back_populates="user", cascade="all, delete-orphan"
-    )
+    api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
     # 积分交易关系
     credit_transactions = relationship(
-        "SolutionCreditTransaction", back_populates="user", foreign_keys="SolutionCreditTransaction.user_id"
+        "SolutionCreditTransaction",
+        back_populates="user",
+        foreign_keys="SolutionCreditTransaction.user_id",
     )
 
     # ========================================================================
@@ -154,9 +145,7 @@ class Role(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     # 多租户支持
-    tenant_id = Column(
-        Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID"
-    )
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, comment="租户ID")
     source_template_id = Column(
         Integer, ForeignKey("role_templates.id"), nullable=True, comment="来源模板ID"
     )
@@ -165,9 +154,7 @@ class Role(Base, TimestampMixin):
     role_name = Column(String(100), nullable=False, comment="角色名称")
     description = Column(Text, comment="角色描述")
     data_scope = Column(String(20), default="OWN", comment="数据权限范围")
-    parent_id = Column(
-        Integer, ForeignKey("roles.id"), nullable=True, comment="父角色ID（继承）"
-    )
+    parent_id = Column(Integer, ForeignKey("roles.id"), nullable=True, comment="父角色ID（继承）")
     is_system = Column(Boolean, default=False, comment="是否系统预置")
     is_active = Column(Boolean, default=True, comment="是否启用")
     sort_order = Column(Integer, default=0, comment="排序")
@@ -175,26 +162,20 @@ class Role(Base, TimestampMixin):
     nav_groups = Column(JSON, comment="导航组配置（JSON数组）")
     ui_config = Column(JSON, comment="UI配置（JSON对象，包含导航、权限等前端配置）")
     # 数据库中存在但模型中缺失的字段
-    role_type = Column(
-        String(20), default="BUSINESS", nullable=True, comment="角色类型"
-    )
+    role_type = Column(String(20), default="BUSINESS", nullable=True, comment="角色类型")
     scope_type = Column(String(20), default="GLOBAL", nullable=True, comment="范围类型")
     level = Column(Integer, default=2, nullable=True, comment="层级")
-    inherit_permissions = Column(
-        Boolean, default=False, nullable=True, comment="是否继承权限"
-    )
+    inherit_permissions = Column(Boolean, default=False, nullable=True, comment="是否继承权限")
     status = Column(String(20), default="ACTIVE", nullable=True, comment="状态")
     role_category = Column(String(50), nullable=True, comment="角色分类")
 
     # 关系
     tenant = relationship("Tenant", back_populates="roles")
     users = relationship("UserRole", back_populates="role", lazy="dynamic")
-    api_permissions = relationship(
-        "RoleApiPermission", back_populates="role", lazy="dynamic"
-    )
+    api_permissions = relationship("RoleApiPermission", back_populates="role", lazy="dynamic")
     parent = relationship("Role", remote_side=[id], back_populates="children")
     children = relationship("Role", back_populates="parent", remote_side=[parent_id])
-    
+
     # 来自 permission.py 的反向关系
     data_scopes = relationship("RoleDataScope", back_populates="role")
     menu_assignments = relationship("RoleMenu", back_populates="role")
@@ -227,13 +208,9 @@ class ApiPermission(Base, TimestampMixin):
     perm_name = Column(String(200), nullable=False, comment="权限名称")
     module = Column(String(50), comment="所属模块编码")
     page_code = Column(String(50), nullable=True, comment="所属页面编码")
-    action = Column(
-        String(20), comment="操作类型: VIEW/CREATE/EDIT/DELETE/APPROVE/EXPORT"
-    )
+    action = Column(String(20), comment="操作类型: VIEW/CREATE/EDIT/DELETE/APPROVE/EXPORT")
     description = Column(Text, nullable=True, comment="权限描述")
-    permission_type = Column(
-        String(20), default="API", nullable=False, comment="权限类型"
-    )
+    permission_type = Column(String(20), default="API", nullable=False, comment="权限类型")
     group_id = deferred(Column(Integer, nullable=True, comment="权限组ID"))
     is_active = Column(Boolean, default=True, nullable=False, comment="是否启用")
     is_system = Column(Boolean, default=False, nullable=False, comment="是否系统预置权限")
@@ -271,9 +248,7 @@ class RoleApiPermission(Base):
     role = relationship("Role", back_populates="api_permissions")
     permission = relationship("ApiPermission", back_populates="role_api_permissions")
 
-    __table_args__ = (
-        UniqueConstraint("role_id", "permission_id", name="uk_role_api_permission"),
-    )
+    __table_args__ = (UniqueConstraint("role_id", "permission_id", name="uk_role_api_permission"),)
 
 
 class UserRole(Base):
@@ -298,9 +273,7 @@ class RoleTemplate(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     template_code = Column(String(30), unique=True, nullable=False, comment="模板编码")
     template_name = Column(String(50), nullable=False, comment="模板名称")
-    role_type = Column(
-        String(20), nullable=False, default="BUSINESS", comment="角色类型"
-    )
+    role_type = Column(String(20), nullable=False, default="BUSINESS", comment="角色类型")
     scope_type = Column(String(20), default="GLOBAL", comment="范围类型")
     data_scope = Column(String(20), default="PROJECT", comment="数据权限范围")
     level = Column(Integer, default=2, comment="层级")
@@ -318,13 +291,9 @@ class PermissionAudit(Base, TimestampMixin):
     __tablename__ = "permission_audits"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    operator_id = Column(
-        Integer, ForeignKey("users.id"), nullable=False, comment="操作人ID"
-    )
+    operator_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="操作人ID")
     action = Column(String(50), nullable=False, comment="操作类型")
-    target_type = Column(
-        String(20), nullable=False, comment="目标类型（user/role/permission）"
-    )
+    target_type = Column(String(20), nullable=False, comment="目标类型（user/role/permission）")
     target_id = Column(Integer, nullable=False, comment="目标ID")
     detail = Column(Text, comment="详细信息（JSON格式）")
     ip_address = Column(String(50), comment="操作IP地址")

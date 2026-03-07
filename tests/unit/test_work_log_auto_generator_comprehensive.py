@@ -9,9 +9,9 @@ WorkLogAutoGenerator 综合单元测试
 - generate_yesterday_work_logs: 生成昨日工作日志
 """
 
-from unittest.mock import MagicMock, patch
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -43,10 +43,7 @@ class TestGenerateWorkLogFromTimesheet:
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        result = generator.generate_work_log_from_timesheet(
-            user_id=1,
-            work_date=date(2024, 1, 15)
-        )
+        result = generator.generate_work_log_from_timesheet(user_id=1, work_date=date(2024, 1, 15))
 
         assert result is None
 
@@ -65,10 +62,7 @@ class TestGenerateWorkLogFromTimesheet:
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        result = generator.generate_work_log_from_timesheet(
-            user_id=1,
-            work_date=date(2024, 1, 15)
-        )
+        result = generator.generate_work_log_from_timesheet(user_id=1, work_date=date(2024, 1, 15))
 
         assert result is None
 
@@ -86,13 +80,15 @@ class TestGenerateWorkLogFromTimesheet:
         # 设置查询返回
         def query_side_effect(model):
             mock_query = MagicMock()
-            model_name = model.__name__ if hasattr(model, '__name__') else str(model)
+            model_name = model.__name__ if hasattr(model, "__name__") else str(model)
 
-            if 'WorkLog' in model_name:
+            if "WorkLog" in model_name:
                 mock_query.filter.return_value.first.return_value = None
-            elif 'Timesheet' in model_name:
-                mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_timesheet]
-            elif 'User' in model_name:
+            elif "Timesheet" in model_name:
+                mock_query.filter.return_value.order_by.return_value.all.return_value = [
+                    mock_timesheet
+                ]
+            elif "User" in model_name:
                 mock_query.filter.return_value.first.return_value = None
             return mock_query
 
@@ -101,8 +97,7 @@ class TestGenerateWorkLogFromTimesheet:
         generator = WorkLogAutoGenerator(mock_db)
 
         result = generator.generate_work_log_from_timesheet(
-            user_id=999,
-            work_date=date(2024, 1, 15)
+            user_id=999, work_date=date(2024, 1, 15)
         )
 
         assert result is None
@@ -138,21 +133,23 @@ class TestGenerateWorkLogFromTimesheet:
 
         def query_side_effect(model):
             mock_query = MagicMock()
-            model_name = model.__name__ if hasattr(model, '__name__') else str(model)
+            model_name = model.__name__ if hasattr(model, "__name__") else str(model)
             call_count[0] += 1
 
-            if 'WorkLog' in model_name:
+            if "WorkLog" in model_name:
                 if call_count[0] == 1:
                     # 第一次检查已提交日志
                     mock_query.filter.return_value.first.return_value = None
                 else:
                     # 后续查询草稿
                     mock_query.filter.return_value.first.return_value = None
-            elif 'Timesheet' in model_name:
-                mock_query.filter.return_value.order_by.return_value.all.return_value = [mock_timesheet]
-            elif 'User' in model_name:
+            elif "Timesheet" in model_name:
+                mock_query.filter.return_value.order_by.return_value.all.return_value = [
+                    mock_timesheet
+                ]
+            elif "User" in model_name:
                 mock_query.filter.return_value.first.return_value = mock_user
-            elif 'Project' in model_name:
+            elif "Project" in model_name:
                 mock_query.filter.return_value.first.return_value = mock_project
             return mock_query
 
@@ -164,10 +161,7 @@ class TestGenerateWorkLogFromTimesheet:
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        result = generator.generate_work_log_from_timesheet(
-            user_id=1,
-            work_date=date(2024, 1, 15)
-        )
+        result = generator.generate_work_log_from_timesheet(user_id=1, work_date=date(2024, 1, 15))
 
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
@@ -203,16 +197,18 @@ class TestGenerateWorkLogFromTimesheet:
 
         def query_side_effect(model):
             mock_query = MagicMock()
-            model_name = model.__name__ if hasattr(model, '__name__') else str(model)
+            model_name = model.__name__ if hasattr(model, "__name__") else str(model)
             call_count[0] += 1
 
-            if 'WorkLog' in model_name:
+            if "WorkLog" in model_name:
                 mock_query.filter.return_value.first.return_value = None
-            elif 'Timesheet' in model_name:
-                mock_query.filter.return_value.order_by.return_value.all.return_value = mock_timesheets
-            elif 'User' in model_name:
+            elif "Timesheet" in model_name:
+                mock_query.filter.return_value.order_by.return_value.all.return_value = (
+                    mock_timesheets
+                )
+            elif "User" in model_name:
                 mock_query.filter.return_value.first.return_value = mock_user
-            elif 'Project' in model_name:
+            elif "Project" in model_name:
                 mock_query.filter.return_value.first.return_value = mock_project
             return mock_query
 
@@ -224,10 +220,7 @@ class TestGenerateWorkLogFromTimesheet:
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        generator.generate_work_log_from_timesheet(
-            user_id=1,
-            work_date=date(2024, 1, 15)
-        )
+        generator.generate_work_log_from_timesheet(user_id=1, work_date=date(2024, 1, 15))
 
         # 验证 add 被调用，内容会被截断
         mock_db.add.assert_called_once()
@@ -246,22 +239,23 @@ class TestBatchGenerateWorkLogs:
         mock_user.id = 1
         mock_user.real_name = "张三"
 
-        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(1,)]
+        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [
+            (1,)
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_user]
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        with patch.object(generator, 'generate_work_log_from_timesheet', return_value=None):
+        with patch.object(generator, "generate_work_log_from_timesheet", return_value=None):
             result = generator.batch_generate_work_logs(
-                start_date=date(2024, 1, 15),
-                end_date=date(2024, 1, 15)
+                start_date=date(2024, 1, 15), end_date=date(2024, 1, 15)
             )
 
-        assert 'total_users' in result
-        assert 'total_days' in result
-        assert 'generated_count' in result
-        assert 'skipped_count' in result
-        assert 'error_count' in result
+        assert "total_users" in result
+        assert "total_days" in result
+        assert "generated_count" in result
+        assert "skipped_count" in result
+        assert "error_count" in result
 
     def test_processes_multiple_days(self):
         """测试处理多天"""
@@ -274,18 +268,19 @@ class TestBatchGenerateWorkLogs:
         mock_user.real_name = "张三"
         mock_user.username = "zhangsan"
 
-        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(1,)]
+        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [
+            (1,)
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_user]
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        with patch.object(generator, 'generate_work_log_from_timesheet', return_value=None):
+        with patch.object(generator, "generate_work_log_from_timesheet", return_value=None):
             result = generator.batch_generate_work_logs(
-                start_date=date(2024, 1, 15),
-                end_date=date(2024, 1, 17)
+                start_date=date(2024, 1, 15), end_date=date(2024, 1, 17)
             )
 
-        assert result['total_days'] == 3
+        assert result["total_days"] == 3
 
     def test_handles_errors(self):
         """测试处理错误"""
@@ -298,19 +293,22 @@ class TestBatchGenerateWorkLogs:
         mock_user.real_name = "张三"
         mock_user.username = "zhangsan"
 
-        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(1,)]
+        mock_db.query.return_value.filter.return_value.distinct.return_value.all.return_value = [
+            (1,)
+        ]
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_user]
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        with patch.object(generator, 'generate_work_log_from_timesheet', side_effect=Exception("测试错误")):
+        with patch.object(
+            generator, "generate_work_log_from_timesheet", side_effect=Exception("测试错误")
+        ):
             result = generator.batch_generate_work_logs(
-                start_date=date(2024, 1, 15),
-                end_date=date(2024, 1, 15)
+                start_date=date(2024, 1, 15), end_date=date(2024, 1, 15)
             )
 
-        assert result['error_count'] == 1
-        assert len(result['errors']) == 1
+        assert result["error_count"] == 1
+        assert len(result["errors"]) == 1
 
     def test_processes_specified_users(self):
         """测试处理指定用户"""
@@ -330,15 +328,13 @@ class TestBatchGenerateWorkLogs:
 
         generator = WorkLogAutoGenerator(mock_db)
 
-        with patch.object(generator, 'generate_work_log_from_timesheet', return_value=MagicMock()):
+        with patch.object(generator, "generate_work_log_from_timesheet", return_value=MagicMock()):
             result = generator.batch_generate_work_logs(
-                start_date=date(2024, 1, 15),
-                end_date=date(2024, 1, 15),
-                user_ids=[1, 2]
+                start_date=date(2024, 1, 15), end_date=date(2024, 1, 15), user_ids=[1, 2]
             )
 
-        assert result['total_users'] == 2
-        assert result['generated_count'] == 2
+        assert result["total_users"] == 2
+        assert result["generated_count"] == 2
 
 
 class TestGenerateYesterdayWorkLogs:
@@ -353,14 +349,13 @@ class TestGenerateYesterdayWorkLogs:
 
         yesterday = date.today() - timedelta(days=1)
 
-        with patch.object(generator, 'batch_generate_work_logs', return_value={'status': 'ok'}) as mock_batch:
+        with patch.object(
+            generator, "batch_generate_work_logs", return_value={"status": "ok"}
+        ) as mock_batch:
             result = generator.generate_yesterday_work_logs()
 
             mock_batch.assert_called_once_with(
-                start_date=yesterday,
-                end_date=yesterday,
-                user_ids=None,
-                auto_submit=False
+                start_date=yesterday, end_date=yesterday, user_ids=None, auto_submit=False
             )
 
     def test_passes_user_ids(self):
@@ -372,14 +367,13 @@ class TestGenerateYesterdayWorkLogs:
 
         yesterday = date.today() - timedelta(days=1)
 
-        with patch.object(generator, 'batch_generate_work_logs', return_value={'status': 'ok'}) as mock_batch:
+        with patch.object(
+            generator, "batch_generate_work_logs", return_value={"status": "ok"}
+        ) as mock_batch:
             result = generator.generate_yesterday_work_logs(user_ids=[1, 2, 3])
 
             mock_batch.assert_called_once_with(
-                start_date=yesterday,
-                end_date=yesterday,
-                user_ids=[1, 2, 3],
-                auto_submit=False
+                start_date=yesterday, end_date=yesterday, user_ids=[1, 2, 3], auto_submit=False
             )
 
     def test_passes_auto_submit(self):
@@ -391,12 +385,11 @@ class TestGenerateYesterdayWorkLogs:
 
         yesterday = date.today() - timedelta(days=1)
 
-        with patch.object(generator, 'batch_generate_work_logs', return_value={'status': 'ok'}) as mock_batch:
+        with patch.object(
+            generator, "batch_generate_work_logs", return_value={"status": "ok"}
+        ) as mock_batch:
             result = generator.generate_yesterday_work_logs(auto_submit=True)
 
             mock_batch.assert_called_once_with(
-                start_date=yesterday,
-                end_date=yesterday,
-                user_ids=None,
-                auto_submit=True
+                start_date=yesterday, end_date=yesterday, user_ids=None, auto_submit=True
             )

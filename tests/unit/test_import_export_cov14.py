@@ -2,11 +2,13 @@
 """
 第十四批：阶段模板导入导出 Mixin 单元测试
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.stage_template.import_export import ImportExportMixin
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -16,6 +18,7 @@ pytestmark = pytest.mark.skipif(SKIP, reason="导入失败，跳过")
 
 class ConcreteImportExport(ImportExportMixin):
     """用于测试的具体实现"""
+
     def __init__(self, db=None):
         self.db = db or MagicMock()
 
@@ -118,9 +121,9 @@ class TestImportExportMixin:
                             "node_type": "TASK",
                             "sequence": 1,
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
         result = ie.import_template(data, created_by=1)
         assert result is not None
@@ -128,31 +131,19 @@ class TestImportExportMixin:
 
     def test_import_template_override_code(self):
         ie = ConcreteImportExport()
-        data = {
-            "template_code": "ORIG-001",
-            "template_name": "原名",
-            "stages": []
-        }
+        data = {"template_code": "ORIG-001", "template_name": "原名", "stages": []}
         result = ie.import_template(data, override_code="OVERRIDE-001", override_name="新名")
         assert result is not None
 
     def test_import_template_empty_stages(self):
         ie = ConcreteImportExport()
-        data = {
-            "template_code": "EMPTY-001",
-            "template_name": "空模板",
-            "stages": []
-        }
+        data = {"template_code": "EMPTY-001", "template_name": "空模板", "stages": []}
         result = ie.import_template(data)
         assert result is not None
 
     def test_import_then_export_roundtrip(self):
         ie = ConcreteImportExport()
-        template_data = {
-            "template_code": "RT-001",
-            "template_name": "往返测试",
-            "stages": []
-        }
+        template_data = {"template_code": "RT-001", "template_name": "往返测试", "stages": []}
         imported = ie.import_template(template_data, created_by=1)
         # 导出
         ie._mock_template = make_template_with_stages()

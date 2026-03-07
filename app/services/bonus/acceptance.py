@@ -18,11 +18,7 @@ class AcceptanceBonusTrigger(BonusCalculatorBase):
     def __init__(self, db: Session):
         super().__init__(db)
 
-    def trigger_calculation(
-        self,
-        project: Project,
-        acceptance_order
-    ) -> List[Any]:
+    def trigger_calculation(self, project: Project, acceptance_order) -> List[Any]:
         """
         验收完成后触发奖金计算（仅计算总奖金，不分配到个人）
 
@@ -50,19 +46,19 @@ class AcceptanceBonusTrigger(BonusCalculatorBase):
         allocations = []
 
         # 1. 计算销售奖金总额（团队奖金）
-        sales_rules = get_active_rules(self.db, bonus_type='SALES_BASED')
+        sales_rules = get_active_rules(self.db, bonus_type="SALES_BASED")
         sales_allocation = calculate_sales_bonus(self.db, project, sales_rules)
         if sales_allocation:
             allocations.append(sales_allocation)
 
         # 2. 计算售前技术奖金总额（团队奖金）
-        presale_rules = get_active_rules(self.db, bonus_type='PRESALE_BASED')
+        presale_rules = get_active_rules(self.db, bonus_type="PRESALE_BASED")
         presale_allocation = calculate_presale_bonus(self.db, project, presale_rules)
         if presale_allocation:
             allocations.append(presale_allocation)
 
         # 3. 计算项目奖金总额（团队奖金）
-        project_rules = get_active_rules(self.db, bonus_type='PROJECT_BASED')
+        project_rules = get_active_rules(self.db, bonus_type="PROJECT_BASED")
         project_allocation = calculate_project_bonus(self.db, project, project_rules)
         if project_allocation:
             allocations.append(project_allocation)

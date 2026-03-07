@@ -61,21 +61,20 @@ def get_all_statuses(
     Returns:
         ResponseModel: 状态定义列表
     """
-    statuses = [{
-        "code": code,
-        "name": info["name"],
-        "color": info["color"],
-        "order": info["order"],
-        "allowed_transitions": STATUS_TRANSITIONS.get(code, [])
-    } for code, info in QUOTE_STATUSES.items()]
+    statuses = [
+        {
+            "code": code,
+            "name": info["name"],
+            "color": info["color"],
+            "order": info["order"],
+            "allowed_transitions": STATUS_TRANSITIONS.get(code, []),
+        }
+        for code, info in QUOTE_STATUSES.items()
+    ]
 
     statuses.sort(key=lambda x: x["order"])
 
-    return ResponseModel(
-        code=200,
-        message="获取状态定义成功",
-        data={"statuses": statuses}
-    )
+    return ResponseModel(code=200, message="获取状态定义成功", data={"statuses": statuses})
 
 
 @router.get("/quotes/{quote_id}/status", response_model=ResponseModel)
@@ -109,11 +108,11 @@ def get_quote_status(
             "current_status": current_status,
             "status_name": status_info["name"],
             "status_color": status_info["color"],
-            "allowed_transitions": [{
-                "code": t,
-                "name": QUOTE_STATUSES.get(t, {}).get("name", t)
-            } for t in allowed_transitions]
-        }
+            "allowed_transitions": [
+                {"code": t, "name": QUOTE_STATUSES.get(t, {}).get("name", t)}
+                for t in allowed_transitions
+            ],
+        },
     )
 
 
@@ -196,58 +195,67 @@ def get_status_history(
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
     # 从审批记录获取状态变更
-    approvals = db.query(QuoteApproval).filter(
-        QuoteApproval.quote_id == quote_id
-    ).order_by(QuoteApproval.created_at).all()
+    approvals = (
+        db.query(QuoteApproval)
+        .filter(QuoteApproval.quote_id == quote_id)
+        .order_by(QuoteApproval.created_at)
+        .all()
+    )
 
     history = []
 
     # 添加创建记录
-    history.append({
-        "status": "DRAFT",
-        "status_name": "草稿",
-        "action": "创建",
-        "operator": None,
-        "timestamp": quote.created_at.isoformat() if quote.created_at else None,
-        "remark": "报价创建"
-    })
+    history.append(
+        {
+            "status": "DRAFT",
+            "status_name": "草稿",
+            "action": "创建",
+            "operator": None,
+            "timestamp": quote.created_at.isoformat() if quote.created_at else None,
+            "remark": "报价创建",
+        }
+    )
 
     # 从审批记录推断状态变更
     for a in approvals:
         if a.status == "APPROVED":
-            history.append({
-                "status": "APPROVED",
-                "status_name": "已批准",
-                "action": "审批通过",
-                "operator": a.approver_name,
-                "timestamp": a.approved_at.isoformat() if a.approved_at else None,
-                "remark": a.approval_opinion
-            })
+            history.append(
+                {
+                    "status": "APPROVED",
+                    "status_name": "已批准",
+                    "action": "审批通过",
+                    "operator": a.approver_name,
+                    "timestamp": a.approved_at.isoformat() if a.approved_at else None,
+                    "remark": a.approval_opinion,
+                }
+            )
         elif a.status == "REJECTED":
-            history.append({
-                "status": "REJECTED",
-                "status_name": "已拒绝",
-                "action": "审批拒绝",
-                "operator": a.approver_name,
-                "timestamp": a.approved_at.isoformat() if a.approved_at else None,
-                "remark": a.approval_opinion
-            })
+            history.append(
+                {
+                    "status": "REJECTED",
+                    "status_name": "已拒绝",
+                    "action": "审批拒绝",
+                    "operator": a.approver_name,
+                    "timestamp": a.approved_at.isoformat() if a.approved_at else None,
+                    "remark": a.approval_opinion,
+                }
+            )
 
     # 添加当前状态
     if quote.status not in ["DRAFT", "APPROVED", "REJECTED"]:
-        history.append({
-            "status": quote.status,
-            "status_name": QUOTE_STATUSES.get(quote.status, {}).get("name", quote.status),
-            "action": "状态变更",
-            "operator": None,
-            "timestamp": quote.updated_at.isoformat() if quote.updated_at else None,
-            "remark": None
-        })
+        history.append(
+            {
+                "status": quote.status,
+                "status_name": QUOTE_STATUSES.get(quote.status, {}).get("name", quote.status),
+                "action": "状态变更",
+                "operator": None,
+                "timestamp": quote.updated_at.isoformat() if quote.updated_at else None,
+                "remark": None,
+            }
+        )
 
     return ResponseModel(
-        code=200,
-        message="获取状态历史成功",
-        data={"quote_id": quote_id, "history": history}
+        code=200, message="获取状态历史成功", data={"quote_id": quote_id, "history": history}
     )
 
 
@@ -269,18 +277,18 @@ def get_status_summary(
     summary = []
     for status_code, status_info in QUOTE_STATUSES.items():
         count = db.query(Quote).filter(Quote.status == status_code).count()
-        summary.append({
-            "status": status_code,
-            "name": status_info["name"],
-            "color": status_info["color"],
-            "count": count
-        })
+        summary.append(
+            {
+                "status": status_code,
+                "name": status_info["name"],
+                "color": status_info["color"],
+                "count": count,
+            }
+        )
 
     summary.sort(key=lambda x: QUOTE_STATUSES.get(x["status"], {}).get("order", 99))
     total = sum(s["count"] for s in summary)
 
     return ResponseModel(
-        code=200,
-        message="获取状态统计成功",
-        data={"total": total, "summary": summary}
+        code=200, message="获取状态统计成功", data={"total": total, "summary": summary}
     )

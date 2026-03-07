@@ -24,9 +24,7 @@ def get_purchase_items_from_bom(bom: BomHeader) -> List[BomItem]:
 
 
 def determine_supplier_for_item(
-    db: Session,
-    item: BomItem,
-    default_supplier_id: Optional[int]
+    db: Session, item: BomItem, default_supplier_id: Optional[int]
 ) -> int:
     """
     确定物料的供应商ID
@@ -47,9 +45,7 @@ def determine_supplier_for_item(
 
 
 def group_items_by_supplier(
-    db: Session,
-    bom_items: List[BomItem],
-    default_supplier_id: Optional[int]
+    db: Session, bom_items: List[BomItem], default_supplier_id: Optional[int]
 ) -> Dict[int, List[BomItem]]:
     """
     按供应商分组物料
@@ -85,19 +81,21 @@ def build_request_items(items: List[BomItem]) -> tuple[List[Dict[str, Any]], Dec
         amount = remaining_qty * unit_price
         total_amount += amount
 
-        request_items.append({
-            "bom_item_id": item.id,
-            "material_id": item.material_id,
-            "material_code": item.material_code,
-            "material_name": item.material_name,
-            "specification": item.specification,
-            "unit": item.unit or "件",
-            "quantity": remaining_qty,
-            "unit_price": unit_price,
-            "amount": amount,
-            "required_date": item.required_date,
-            "is_key_item": item.is_key_item,
-        })
+        request_items.append(
+            {
+                "bom_item_id": item.id,
+                "material_id": item.material_id,
+                "material_code": item.material_code,
+                "material_name": item.material_name,
+                "specification": item.specification,
+                "unit": item.unit or "件",
+                "quantity": remaining_qty,
+                "unit_price": unit_price,
+                "amount": amount,
+                "required_date": item.required_date,
+                "is_key_item": item.is_key_item,
+            }
+        )
 
     return request_items, total_amount
 
@@ -135,7 +133,7 @@ def create_purchase_request(
     request_items: List[Dict[str, Any]],
     total_amount: Decimal,
     current_user_id: int,
-    generate_request_no
+    generate_request_no,
 ) -> PurchaseRequest:
     """
     创建采购申请

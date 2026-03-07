@@ -6,46 +6,52 @@ import pandas as pd
 import pytest
 
 from app.services.employee_import_service import (
-    find_name_column, find_department_columns, find_other_columns,
-    clean_name, get_department_name, is_active_employee,
-    generate_employee_code, clean_phone, import_employees_from_dataframe,
+    clean_name,
+    clean_phone,
+    find_department_columns,
+    find_name_column,
+    find_other_columns,
+    generate_employee_code,
+    get_department_name,
+    import_employees_from_dataframe,
+    is_active_employee,
 )
 
 
 class TestFindNameColumn:
     def test_found(self):
-        assert find_name_column(['姓名', '部门']) == '姓名'
+        assert find_name_column(["姓名", "部门"]) == "姓名"
 
     def test_english(self):
-        assert find_name_column(['name', 'dept']) == 'name'
+        assert find_name_column(["name", "dept"]) == "name"
 
     def test_not_found(self):
-        assert find_name_column(['部门', '电话']) is None
+        assert find_name_column(["部门", "电话"]) is None
 
 
 class TestFindDepartmentColumns:
     def test_multi_level(self):
-        cols = find_department_columns(['一级部门', '二级部门', '三级部门'])
+        cols = find_department_columns(["一级部门", "二级部门", "三级部门"])
         assert len(cols) == 3
 
     def test_single(self):
-        cols = find_department_columns(['部门'])
-        assert cols == ['部门']
+        cols = find_department_columns(["部门"])
+        assert cols == ["部门"]
 
     def test_none(self):
-        assert find_department_columns(['姓名']) == []
+        assert find_department_columns(["姓名"]) == []
 
 
 class TestFindOtherColumns:
     def test_found(self):
-        result = find_other_columns(['职务', '联系方式', '在职离职状态'])
-        assert result['position'] == '职务'
-        assert result['phone'] == '联系方式'
-        assert result['status'] == '在职离职状态'
+        result = find_other_columns(["职务", "联系方式", "在职离职状态"])
+        assert result["position"] == "职务"
+        assert result["phone"] == "联系方式"
+        assert result["status"] == "在职离职状态"
 
     def test_not_found(self):
-        result = find_other_columns(['姓名'])
-        assert result['position'] is None
+        result = find_other_columns(["姓名"])
+        assert result["position"] is None
 
 
 class TestCleanName:
@@ -54,6 +60,7 @@ class TestCleanName:
 
     def test_nan(self):
         import numpy as np
+
         assert clean_name(np.nan) is None
 
     def test_empty(self):
@@ -78,6 +85,7 @@ class TestIsActiveEmployee:
 
     def test_nan(self):
         import numpy as np
+
         assert is_active_employee(np.nan) is True
 
 
@@ -90,12 +98,13 @@ class TestCleanPhone:
 
     def test_nan(self):
         import numpy as np
+
         assert clean_phone(np.nan) is None
 
 
 class TestGenerateEmployeeCode:
-    @patch('app.utils.code_config.CODE_PREFIX', {'EMPLOYEE': 'EMP'})
-    @patch('app.utils.code_config.SEQ_LENGTH', {'EMPLOYEE': 5})
+    @patch("app.utils.code_config.CODE_PREFIX", {"EMPLOYEE": "EMP"})
+    @patch("app.utils.code_config.SEQ_LENGTH", {"EMPLOYEE": 5})
     def test_generate(self):
         existing = set()
         code = generate_employee_code(1, existing)
@@ -105,6 +114,7 @@ class TestGenerateEmployeeCode:
 class TestImportEmployees:
     def test_missing_name_column(self):
         from fastapi import HTTPException
+
         db = MagicMock()
         df = pd.DataFrame({"部门": ["技术"]})
         with pytest.raises(HTTPException):

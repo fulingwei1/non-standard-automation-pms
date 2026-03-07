@@ -25,6 +25,7 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
+from app.core.config import settings
 from app.models.project import Customer, Project
 from app.models.service import ServiceRecord
 from app.models.user import User
@@ -33,11 +34,9 @@ from app.schemas.service import (
     ServiceRecordCreate,
     ServiceRecordResponse,
 )
+from app.utils.db_helpers import get_or_404
 
 from .number_utils import generate_record_no
-
-from app.core.config import settings
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -58,7 +57,9 @@ def get_service_record_statistics(
     # 本月服务数
     today = date.today()
     this_month_start = date(today.year, today.month, 1)
-    this_month = db.query(ServiceRecord).filter(ServiceRecord.service_date >= this_month_start).count()
+    this_month = (
+        db.query(ServiceRecord).filter(ServiceRecord.service_date >= this_month_start).count()
+    )
 
     # 总服务时长
     total_duration = db.query(func.sum(ServiceRecord.duration_hours)).scalar() or 0
@@ -73,7 +74,9 @@ def get_service_record_statistics(
     }
 
 
-@router.get("", response_model=PaginatedResponse[ServiceRecordResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "", response_model=PaginatedResponse[ServiceRecordResponse], status_code=status.HTTP_200_OK
+)
 def read_service_records(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -105,10 +108,14 @@ def read_service_records(
         query = query.filter(ServiceRecord.service_date <= date_to)
 
     # 应用关键词过滤（记录编号/服务内容/位置）
-    query = apply_keyword_filter(query, ServiceRecord, keyword, ["record_no", "service_content", "location"])
+    query = apply_keyword_filter(
+        query, ServiceRecord, keyword, ["record_no", "service_content", "location"]
+    )
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(ServiceRecord.service_date)), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(desc(ServiceRecord.service_date)), pagination.offset, pagination.limit
+    ).all()
 
     # 获取项目名称和客户名称
     for item in items:
@@ -122,6 +129,7 @@ def read_service_records(
                 item.customer_name = customer.customer_name
         if item.service_engineer_id:
             from app.models.user import User
+
             engineer = db.query(User).filter(User.id == item.service_engineer_id).first()
             if engineer:
                 item.service_engineer_name = engineer.name or engineer.username
@@ -157,9 +165,12 @@ def create_service_record(
 
     # 验证服务工程师是否存在
     from app.models.user import User
+
     engineer = db.query(User).filter(User.id == record_in.service_engineer_id).first()
     if not engineer:
-        raise HTTPException(status_code=404, detail=f"服务工程师不存在 (ID: {record_in.service_engineer_id})")
+        raise HTTPException(
+            status_code=404, detail=f"服务工程师不存在 (ID: {record_in.service_engineer_id})"
+        )
 
     record = ServiceRecord(
         record_no=generate_record_no(db),
@@ -203,7 +214,9 @@ def create_service_record(
     return record
 
 
-@router.post("/{record_id}/photos", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{record_id}/photos", response_model=ResponseModel, status_code=status.HTTP_201_CREATED
+)
 async def upload_service_record_photo(
     *,
     db: Session = Depends(deps.get_db),
@@ -219,7 +232,7 @@ async def upload_service_record_photo(
     record = get_or_404(db, ServiceRecord, record_id, "服务记录不存在")
 
     # 验证文件类型
-    if not file.content_type or not file.content_type.startswith('image/'):
+    if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="只支持图片文件")
 
     # 验证文件大小（最大5MB）
@@ -248,15 +261,17 @@ async def upload_service_record_photo(
 
     # 更新服务记录的照片列表
     photos = record.photos or []
-    photos.append({
-        "url": relative_path,
-        "filename": file.filename,
-        "size": len(file_content),
-        "type": file.content_type,
-        "description": description,
-        "uploaded_at": datetime.now().isoformat(),
-        "uploaded_by": current_user.real_name or current_user.username,
-    })
+    photos.append(
+        {
+            "url": relative_path,
+            "filename": file.filename,
+            "size": len(file_content),
+            "type": file.content_type,
+            "description": description,
+            "uploaded_at": datetime.now().isoformat(),
+            "uploaded_by": current_user.real_name or current_user.username,
+        }
+    )
     record.photos = photos
 
     db.add(record)
@@ -270,11 +285,15 @@ async def upload_service_record_photo(
             "record_id": record_id,
             "photo": photos[-1],
             "total_photos": len(photos),
-        }
+        },
     )
 
 
-@router.delete("/{record_id}/photos/{photo_index}", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.delete(
+    "/{record_id}/photos/{photo_index}",
+    response_model=ResponseModel,
+    status_code=status.HTTP_200_OK,
+)
 def delete_service_record_photo(
     *,
     db: Session = Depends(deps.get_db),
@@ -301,6 +320,7 @@ def delete_service_record_photo(
                 file_path.unlink()
             except Exception as e:
                 import logging
+
                 logging.warning(f"删除照片文件失败: {str(e)}")
 
     # 从列表中移除
@@ -316,5 +336,5 @@ def delete_service_record_photo(
         data={
             "record_id": record_id,
             "total_photos": len(photos),
-        }
+        },
     )

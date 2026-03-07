@@ -23,4 +23,4 @@ router.include_router(progress_router)
 router.include_router(payments_router)
 router.include_router(workflow_router)
 
-__all__ = ['router']
+__all__ = ["router"]

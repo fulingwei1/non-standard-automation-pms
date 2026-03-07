@@ -21,14 +21,18 @@ from app.models.acceptance import AcceptanceOrder
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.acceptance import AcceptanceOrderResponse
+from app.utils.db_helpers import get_or_404
 
 from .order_crud import read_acceptance_order
-from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
 
-@router.post("/acceptance-orders/{order_id}/upload-signed-document", response_model=AcceptanceOrderResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/acceptance-orders/{order_id}/upload-signed-document",
+    response_model=AcceptanceOrderResponse,
+    status_code=status.HTTP_200_OK,
+)
 async def upload_customer_signed_document(
     *,
     db: Session = Depends(deps.get_db),
@@ -115,8 +119,4 @@ def download_customer_signed_document(
     filename = os.path.basename(file_path)
     media_type = "application/pdf" if filename.endswith(".pdf") else "application/octet-stream"
 
-    return FileResponse(
-        path=file_path,
-        filename=filename,
-        media_type=media_type
-    )
+    return FileResponse(path=file_path, filename=filename, media_type=media_type)

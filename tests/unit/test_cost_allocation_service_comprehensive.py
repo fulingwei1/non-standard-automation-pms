@@ -30,7 +30,7 @@ class TestQueryAllocatableCosts:
 
         mock_cost = MagicMock()
         mock_cost.id = 1
-        mock_cost.status = 'APPROVED'
+        mock_cost.status = "APPROVED"
         mock_cost.is_allocated = False
 
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_cost]
@@ -97,7 +97,10 @@ class TestGetTargetProjectIds:
         mock_project2 = MagicMock()
         mock_project2.id = 20
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [mock_project1, mock_project2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            mock_project1,
+            mock_project2,
+        ]
 
         result = get_target_project_ids(mock_db, mock_rule)
 
@@ -134,13 +137,15 @@ class TestCalculateAllocationRatesByHours:
 
         def side_effect(model):
             query = MagicMock()
+
             def filter_side_effect(*args, **kwargs):
                 result = MagicMock()
                 # Return projects based on project_id
-                if args and hasattr(args[0], 'right'):
+                if args and hasattr(args[0], "right"):
                     # Get project_id from filter
                     result.first.return_value = mock_project1
                 return result
+
             query.filter = filter_side_effect
             return query
 
@@ -199,7 +204,10 @@ class TestCalculateAllocationRatesByHeadcount:
         mock_project2 = MagicMock()
         mock_project2.participant_count = 5
 
-        mock_db.query.return_value.filter.return_value.first.side_effect = [mock_project1, mock_project2]
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            mock_project1,
+            mock_project2,
+        ]
 
         result = calculate_allocation_rates_by_headcount(mock_db, [1, 2])
 
@@ -236,7 +244,10 @@ class TestCalculateAllocationRatesByHeadcount:
         mock_project2 = MagicMock()
         mock_project2.participant_count = 7
 
-        mock_db.query.return_value.filter.return_value.first.side_effect = [mock_project1, mock_project2]
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            mock_project1,
+            mock_project2,
+        ]
 
         result = calculate_allocation_rates_by_headcount(mock_db, [1, 2])
 
@@ -254,7 +265,7 @@ class TestCalculateAllocationRates:
 
         mock_db = MagicMock()
         mock_rule = MagicMock()
-        mock_rule.allocation_basis = 'HOURS'
+        mock_rule.allocation_basis = "HOURS"
 
         mock_project = MagicMock()
         mock_project.total_hours = None
@@ -271,7 +282,7 @@ class TestCalculateAllocationRates:
 
         mock_db = MagicMock()
         mock_rule = MagicMock()
-        mock_rule.allocation_basis = 'HEADCOUNT'
+        mock_rule.allocation_basis = "HEADCOUNT"
 
         mock_project = MagicMock()
         mock_project.participant_count = None
@@ -288,7 +299,7 @@ class TestCalculateAllocationRates:
 
         mock_db = MagicMock()
         mock_rule = MagicMock()
-        mock_rule.allocation_basis = 'REVENUE'
+        mock_rule.allocation_basis = "REVENUE"
 
         result = calculate_allocation_rates(mock_db, mock_rule, [1, 2, 3, 4])
 
@@ -304,7 +315,7 @@ class TestCalculateAllocationRates:
 
         mock_db = MagicMock()
         mock_rule = MagicMock()
-        mock_rule.allocation_basis = 'UNKNOWN'
+        mock_rule.allocation_basis = "UNKNOWN"
 
         result = calculate_allocation_rates(mock_db, mock_rule, [1, 2])
 
@@ -337,9 +348,7 @@ class TestCreateAllocatedCost:
 
         mock_generate_cost_no = MagicMock(return_value="COST002")
 
-        result = create_allocated_cost(
-            mock_db, mock_cost, 1, 30.0, 100, mock_generate_cost_no
-        )
+        result = create_allocated_cost(mock_db, mock_cost, 1, 30.0, 100, mock_generate_cost_no)
 
         mock_db.add.assert_called_once()
         assert result.cost_amount == Decimal("300")  # 1000 * 30%
@@ -368,9 +377,7 @@ class TestCreateAllocatedCost:
 
         mock_generate_cost_no = MagicMock(return_value="COST002")
 
-        create_allocated_cost(
-            mock_db, mock_cost, 1, 50.0, 100, mock_generate_cost_no
-        )
+        create_allocated_cost(mock_db, mock_cost, 1, 50.0, 100, mock_generate_cost_no)
 
         # 5000 + 500 (1000 * 50%) = 5500
         assert mock_project.total_cost == Decimal("5500")
@@ -397,9 +404,7 @@ class TestCreateAllocatedCost:
 
         mock_generate_cost_no = MagicMock(return_value="COST002")
 
-        create_allocated_cost(
-            mock_db, mock_cost, 1, 25.0, 100, mock_generate_cost_no
-        )
+        create_allocated_cost(mock_db, mock_cost, 1, 25.0, 100, mock_generate_cost_no)
 
         # 0 + 250 (1000 * 25%) = 250
         assert mock_project.total_cost == Decimal("250")
@@ -426,9 +431,7 @@ class TestCreateAllocatedCost:
 
         mock_generate_cost_no = MagicMock(return_value="COST002")
 
-        result = create_allocated_cost(
-            mock_db, mock_cost, 1, 50.0, 100, mock_generate_cost_no
-        )
+        result = create_allocated_cost(mock_db, mock_cost, 1, 50.0, 100, mock_generate_cost_no)
 
         # 分摊金额500元，可抵扣比例200/1000 = 20%，所以可抵扣金额 = 500 * 20% = 100
         assert result.deductible_amount == Decimal("100")

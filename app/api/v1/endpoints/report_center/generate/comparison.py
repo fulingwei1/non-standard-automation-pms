@@ -39,7 +39,7 @@ def compare_role_perspectives(
             compare_in.project_id,
             compare_in.department_id,
             compare_in.start_date,
-            compare_in.end_date
+            compare_in.end_date,
         )
         role_data[role] = report_data
 
@@ -67,26 +67,25 @@ def compare_role_perspectives(
                 values_by_role[role] = role_value
 
             if is_common and value is not None:
-                common_points.append({
-                    "field": key,
-                    "value": value,
-                    "description": "所有角色在此项上一致"
-                })
+                common_points.append(
+                    {"field": key, "value": value, "description": "所有角色在此项上一致"}
+                )
             elif values_by_role:
-                differences.append({
-                    "field": key,
-                    "values": values_by_role,
-                    "description": "各角色在此项上存在差异"
-                })
+                differences.append(
+                    {
+                        "field": key,
+                        "values": values_by_role,
+                        "description": "各角色在此项上存在差异",
+                    }
+                )
 
     comparison_data = {
         "roles": compare_in.roles,
         "role_data": role_data,
         "differences": differences,
-        "common_points": common_points
+        "common_points": common_points,
     }
 
     return ReportCompareResponse(
-        report_type=compare_in.report_type,
-        comparison_data=comparison_data
+        report_type=compare_in.report_type, comparison_data=comparison_data
     )

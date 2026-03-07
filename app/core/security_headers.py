@@ -29,7 +29,7 @@ from .config import settings
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
     安全HTTP响应头中间件
-    
+
     为所有响应添加标准的安全响应头
     """
 
@@ -43,59 +43,59 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        
+
         # 生成CSP nonce（用于内联脚本）
         csp_nonce = secrets.token_urlsafe(16)
-        
+
         # 添加安全响应头
         self._add_security_headers(response, request, csp_nonce)
-        
+
         # 敏感路径的缓存控制
         if request.url.path in self.SENSITIVE_PATHS:
             self._add_no_cache_headers(response)
-        
+
         return response
 
     def _add_security_headers(self, response, request: Request, csp_nonce: str) -> None:
         """添加所有安全响应头"""
-        
+
         # ============================================
         # 1. X-Frame-Options - 防止点击劫持
         # ============================================
         # DENY: 不允许在任何iframe中嵌入
         # SAMEORIGIN: 只允许同源iframe
         response.headers["X-Frame-Options"] = "DENY"
-        
+
         # ============================================
         # 2. X-Content-Type-Options - 防止MIME类型混淆
         # ============================================
         # nosniff: 浏览器不会尝试猜测文件类型
         response.headers["X-Content-Type-Options"] = "nosniff"
-        
+
         # ============================================
         # 3. X-XSS-Protection - XSS保护（旧版浏览器）
         # ============================================
         # 现代浏览器依赖CSP，但保留兼容性
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        
+
         # ============================================
         # 4. Content-Security-Policy - 内容安全策略
         # ============================================
         csp = self._build_csp_policy(csp_nonce)
         response.headers["Content-Security-Policy"] = csp
-        
+
         # ============================================
         # 5. Referrer-Policy - 推荐人策略
         # ============================================
         # strict-origin-when-cross-origin: 跨域时只发送origin，同源发送完整URL
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        
+
         # ============================================
         # 6. Permissions-Policy - 权限策略（替代Feature-Policy）
         # ============================================
         permissions_policy = self._build_permissions_policy()
         response.headers["Permissions-Policy"] = permissions_policy
-        
+
         # ============================================
         # 7. Strict-Transport-Security - 强制HTTPS
         # ============================================
@@ -106,32 +106,32 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # preload: 允许浏览器预加载HSTS
             hsts = "max-age=31536000; includeSubDomains; preload"
             response.headers["Strict-Transport-Security"] = hsts
-        
+
         # ============================================
         # 8. Server - 隐藏服务器信息
         # ============================================
         # 不暴露服务器类型和版本
         response.headers["Server"] = "PMS"
-        
+
         # ============================================
         # 9. X-Permitted-Cross-Domain-Policies - 跨域策略
         # ============================================
         # none: 不允许Flash/PDF等跨域访问
         response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
-        
+
         # ============================================
         # 10. Cross-Origin-Embedder-Policy - 跨域嵌入策略
         # ============================================
         # require-corp: 要求跨域资源设置CORP头
         if not settings.DEBUG:
             response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
-        
+
         # ============================================
         # 11. Cross-Origin-Opener-Policy - 跨域打开策略
         # ============================================
         # same-origin: 仅允许同源窗口访问
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-        
+
         # ============================================
         # 12. Cross-Origin-Resource-Policy - 跨域资源策略
         # ============================================
@@ -141,10 +141,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     def _build_csp_policy(self, nonce: str) -> str:
         """
         构建Content Security Policy
-        
+
         Args:
             nonce: CSP nonce值（用于内联脚本）
-            
+
         Returns:
             str: CSP策略字符串
         """
@@ -169,7 +169,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # ============================================
             # 构建CORS origins用于connect-src
             cors_origins = " ".join(settings.CORS_ORIGINS) if settings.CORS_ORIGINS else "'self'"
-            
+
             csp_directives = [
                 "default-src 'self'",
                 f"script-src 'self' 'nonce-{nonce}'",  # 只允许nonce标记的脚本
@@ -187,13 +187,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "frame-src 'none'",  # 禁止iframe
                 "upgrade-insecure-requests",  # 自动升级HTTP到HTTPS
             ]
-        
+
         return "; ".join(csp_directives)
 
     def _build_permissions_policy(self) -> str:
         """
         构建Permissions Policy（替代Feature-Policy）
-        
+
         Returns:
             str: Permissions Policy字符串
         """
@@ -215,7 +215,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "screen-wake-lock=()",  # 禁用屏幕唤醒锁
             "web-share=()",  # 禁用Web分享
         ]
-        
+
         return ", ".join(policies)
 
     def _add_no_cache_headers(self, response) -> None:
@@ -228,7 +228,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 def setup_security_headers(app: FastAPI) -> None:
     """
     配置安全响应头中间件
-    
+
     Args:
         app: FastAPI应用实例
     """
@@ -237,7 +237,4 @@ def setup_security_headers(app: FastAPI) -> None:
     app.add_middleware(SecurityHeadersMiddleware)
 
 
-__all__ = [
-    "SecurityHeadersMiddleware",
-    "setup_security_headers"
-]
+__all__ = ["SecurityHeadersMiddleware", "setup_security_headers"]

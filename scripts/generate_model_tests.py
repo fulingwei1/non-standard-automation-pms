@@ -159,21 +159,21 @@ MODELS_TO_TEST = [
         "module": "app.models.sales.leads",
         "fields": 'opp_code="OPP001", opp_name="测试商机", owner_id=sample_user.id',
         "fixtures": ", sample_user",
-        "path": "tests/unit/models/sales/test_opportunity_model.py"
+        "path": "tests/unit/models/sales/test_opportunity_model.py",
     },
     {
         "name": "Contract",
         "module": "app.models.sales.contracts",
         "fields": 'contract_code="CONTRACT001", contract_name="测试合同", owner_id=sample_user.id, contract_amount=Decimal("100000")',
         "fixtures": ", sample_user",
-        "path": "tests/unit/models/sales/test_contract_model.py"
+        "path": "tests/unit/models/sales/test_contract_model.py",
     },
     {
         "name": "Quote",
         "module": "app.models.sales.quotes",
         "fields": 'quote_code="QUOTE001", quote_name="测试报价", created_by=sample_user.id, quote_amount=Decimal("50000")',
         "fixtures": ", sample_user",
-        "path": "tests/unit/models/sales/test_quote_model.py"
+        "path": "tests/unit/models/sales/test_quote_model.py",
     },
     # Procurement - 需要先检查实际的模型定义
     {
@@ -181,7 +181,7 @@ MODELS_TO_TEST = [
         "module": "app.models.vendor",
         "fields": 'supplier_code="SUP001", supplier_name="测试供应商"',
         "fixtures": "",
-        "path": "tests/unit/models/procurement/test_supplier_model.py"
+        "path": "tests/unit/models/procurement/test_supplier_model.py",
     },
     # Finance
     {
@@ -189,7 +189,7 @@ MODELS_TO_TEST = [
         "module": "app.models.sales.invoices",
         "fields": 'invoice_code="INV001", invoice_amount=Decimal("10000"), customer_id=sample_customer.id',
         "fixtures": ", sample_customer",
-        "path": "tests/unit/models/finance/test_invoice_model.py"
+        "path": "tests/unit/models/finance/test_invoice_model.py",
     },
     # Auth
     {
@@ -197,14 +197,14 @@ MODELS_TO_TEST = [
         "module": "app.models.permission",
         "fields": 'role_code="ROLE001", role_name="测试角色"',
         "fixtures": "",
-        "path": "tests/unit/models/auth/test_role_model.py"
+        "path": "tests/unit/models/auth/test_role_model.py",
     },
     {
         "name": "Permission",
         "module": "app.models.permission",
         "fields": 'permission_code="PERM001", permission_name="测试权限", resource="test"',
         "fixtures": "",
-        "path": "tests/unit/models/auth/test_permission_model.py"
+        "path": "tests/unit/models/auth/test_permission_model.py",
     },
 ]
 
@@ -216,9 +216,9 @@ def generate_test_file(model_info):
         model_lower=model_info["name"].lower(),
         model_import=model_info["module"],
         fields=model_info["fields"],
-        fixtures=model_info["fixtures"]
+        fixtures=model_info["fixtures"],
     )
-    
+
     path = Path(model_info["path"])
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
@@ -229,15 +229,15 @@ def main():
     """主函数"""
     repo_root = Path(__file__).parent.parent
     os.chdir(repo_root)
-    
+
     print("🚀 开始生成 Models 测试文件...\n")
-    
+
     for model_info in MODELS_TO_TEST:
         try:
             generate_test_file(model_info)
         except Exception as e:
             print(f"✗ Error creating {model_info['path']}: {e}")
-    
+
     print(f"\n✅ 完成！共生成 {len(MODELS_TO_TEST)} 个测试文件")
 
 

@@ -24,7 +24,11 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
-@router.post("/technical-reviews/{review_id}/participants", response_model=ReviewParticipantResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/technical-reviews/{review_id}/participants",
+    response_model=ReviewParticipantResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_review_participant(
     review_id: int,
     participant_in: ReviewParticipantCreate,
@@ -34,10 +38,14 @@ def create_review_participant(
     """添加评审参与人"""
     get_or_404(db, TechnicalReview, review_id, "技术评审不存在")
 
-    existing = db.query(ReviewParticipant).filter(
-        ReviewParticipant.review_id == review_id,
-        ReviewParticipant.user_id == participant_in.user_id
-    ).first()
+    existing = (
+        db.query(ReviewParticipant)
+        .filter(
+            ReviewParticipant.review_id == review_id,
+            ReviewParticipant.user_id == participant_in.user_id,
+        )
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="该用户已参与评审")
 
@@ -66,7 +74,11 @@ def create_review_participant(
     )
 
 
-@router.put("/technical-reviews/participants/{participant_id}", response_model=ReviewParticipantResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/technical-reviews/participants/{participant_id}",
+    response_model=ReviewParticipantResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_review_participant(
     participant_id: int,
     participant_in: ReviewParticipantUpdate,
@@ -80,7 +92,7 @@ def update_review_participant(
     for field, value in update_data.items():
         setattr(participant, field, value)
 
-    if participant_in.attendance == 'CONFIRMED' and not participant.sign_time:
+    if participant_in.attendance == "CONFIRMED" and not participant.sign_time:
         participant.sign_time = datetime.now()
 
     db.commit()

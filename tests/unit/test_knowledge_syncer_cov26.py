@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - knowledge_syncer 单元测试"""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.project_review_ai.knowledge_syncer")
 
@@ -12,17 +13,13 @@ from app.services.project_review_ai.knowledge_syncer import ProjectKnowledgeSync
 class TestProjectKnowledgeSyncerInit:
     def test_instantiation(self):
         db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ):
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService"):
             syncer = ProjectKnowledgeSyncer(db)
         assert syncer.db is db
 
     def test_has_ai_client(self):
         db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ) as mock_ai:
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService") as mock_ai:
             syncer = ProjectKnowledgeSyncer(db)
         assert syncer.ai_client is not None
 
@@ -30,9 +27,7 @@ class TestProjectKnowledgeSyncerInit:
 class TestSyncToKnowledgeBase:
     def setup_method(self):
         self.db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ):
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService"):
             self.syncer = ProjectKnowledgeSyncer(self.db)
 
     def test_raises_when_review_not_found(self):
@@ -46,7 +41,7 @@ class TestSyncToKnowledgeBase:
         # Mock the remaining DB interactions
         self.db.query.return_value.filter.return_value.first.side_effect = [
             review,  # get review
-            None,    # check existing case
+            None,  # check existing case
         ]
         with patch.object(
             self.syncer,
@@ -105,9 +100,7 @@ class TestSyncToKnowledgeBase:
 class TestProjectKnowledgeSyncerHelpers:
     def setup_method(self):
         self.db = MagicMock()
-        with patch(
-            "app.services.project_review_ai.knowledge_syncer.AIClientService"
-        ):
+        with patch("app.services.project_review_ai.knowledge_syncer.AIClientService"):
             self.syncer = ProjectKnowledgeSyncer(self.db)
 
     def test_sync_method_exists(self):

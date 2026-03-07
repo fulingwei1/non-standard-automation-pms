@@ -8,13 +8,14 @@ File Size: 51 lines
 Batch: 3
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.orm import Session
-from app.services.alert_rule_engine.alert_creator import AlertCreator
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+from sqlalchemy.orm import Session
+
+from app.services.alert_rule_engine.alert_creator import AlertCreator
 
 
 @pytest.fixture
@@ -30,9 +31,8 @@ class TestAlertCreator:
         """测试服务初始化"""
         service = AlertCreator(db_session)
         assert service is not None
-        if hasattr(service, 'db'):
+        if hasattr(service, "db"):
             assert service.db == db_session
-
 
     def test_notification_service(self, db_session: Session):
         """测试 notification_service 方法"""
@@ -42,7 +42,6 @@ class TestAlertCreator:
         # 3. 验证结果
         pass
 
-
     def test_subscription_service(self, db_session: Session):
         """测试 subscription_service 方法"""
         # TODO: 实现测试逻辑
@@ -50,7 +49,6 @@ class TestAlertCreator:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     def test_should_create_alert(self, db_session: Session):
         """测试 should_create_alert 方法"""
@@ -60,7 +58,6 @@ class TestAlertCreator:
         # 3. 验证结果
         pass
 
-
     def test_create_alert(self, db_session: Session):
         """测试 create_alert 方法"""
         # TODO: 实现测试逻辑
@@ -68,7 +65,6 @@ class TestAlertCreator:
         # 2. 调用方法
         # 3. 验证结果
         pass
-
 
     # TODO: 添加更多测试用例
     # - 正常流程测试 (Happy Path)

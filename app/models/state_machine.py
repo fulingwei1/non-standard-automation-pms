@@ -5,7 +5,7 @@
 统一状态转换审计日志
 """
 
-from sqlalchemy import Column, Integer, String, Text, JSON, ForeignKey, Index
+from sqlalchemy import JSON, Column, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -21,6 +21,7 @@ class StateTransitionLog(Base, TimestampMixin):
     - 操作人追踪
     - 业务备注记录
     """
+
     __tablename__ = "state_transition_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
@@ -41,7 +42,7 @@ class StateTransitionLog(Base, TimestampMixin):
         Index("idx_state_log_entity", "entity_type", "entity_id"),
         Index("idx_state_log_operator", "operator_id"),
         Index("idx_state_log_created", "created_at"),
-        {"comment": "统一状态转换审计日志表"}
+        {"comment": "统一状态转换审计日志表"},
     )
 
     def __repr__(self):

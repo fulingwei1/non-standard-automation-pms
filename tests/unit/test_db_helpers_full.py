@@ -3,22 +3,23 @@
 Tests for app/utils/db_helpers.py
 Uses MagicMock to simulate SQLAlchemy Session – no real DB needed.
 """
+from unittest.mock import MagicMock, call, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
 from fastapi import HTTPException
 
 from app.utils.db_helpers import (
-    get_or_404,
-    save_obj,
     delete_obj,
-    update_obj,
+    get_or_404,
     safe_commit,
+    save_obj,
+    update_obj,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_db():
     db = MagicMock()
@@ -45,6 +46,7 @@ def _make_obj(**attrs):
 # ---------------------------------------------------------------------------
 # get_or_404
 # ---------------------------------------------------------------------------
+
 
 class TestGetOr404:
     def test_found_returns_object(self):
@@ -98,6 +100,7 @@ class TestGetOr404:
 # save_obj
 # ---------------------------------------------------------------------------
 
+
 class TestSaveObj:
     def test_add_commit_refresh_called(self):
         db = _make_db()
@@ -131,6 +134,7 @@ class TestSaveObj:
 # delete_obj
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteObj:
     def test_delete_and_commit_called(self):
         db = _make_db()
@@ -151,6 +155,7 @@ class TestDeleteObj:
 # ---------------------------------------------------------------------------
 # update_obj
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateObj:
     def test_updates_existing_fields(self):
@@ -198,6 +203,7 @@ class TestUpdateObj:
 # ---------------------------------------------------------------------------
 # safe_commit
 # ---------------------------------------------------------------------------
+
 
 class TestSafeCommit:
     def test_success_returns_true(self):

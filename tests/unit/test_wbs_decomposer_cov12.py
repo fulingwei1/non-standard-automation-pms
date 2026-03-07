@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """第十二批：AI WBS分解器单元测试"""
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 try:
     from app.services.ai_planning.wbs_decomposer import AIWbsDecomposer
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -61,7 +63,7 @@ class TestDecomposeProject:
 
         # GLM 返回空（模拟无建议）
         glm.generate_wbs = AsyncMock(return_value=None)
-        if hasattr(glm, 'chat_completion'):
+        if hasattr(glm, "chat_completion"):
             glm.chat_completion = AsyncMock(return_value=MagicMock())
 
         try:
@@ -77,6 +79,7 @@ class TestDecomposeProject:
         template.id = 5
 
         call_count = 0
+
         def get_side_effect(model):
             nonlocal call_count
             call_count += 1
@@ -101,7 +104,7 @@ class TestDecomposeTask:
 
     def test_decompose_task_exists(self):
         decomposer, _, _ = _make_decomposer()
-        assert hasattr(decomposer, 'decompose_project') or True
+        assert hasattr(decomposer, "decompose_project") or True
 
     def test_max_level_respected(self):
         decomposer, db, glm = _make_decomposer()

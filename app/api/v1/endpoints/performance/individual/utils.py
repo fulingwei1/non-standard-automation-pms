@@ -11,7 +11,9 @@ from app.models.project import Project
 from app.models.user import User
 
 
-def _check_performance_view_permission(current_user: User, target_user_id: int, db: Session) -> bool:
+def _check_performance_view_permission(
+    current_user: User, target_user_id: int, db: Session
+) -> bool:
     """
     检查用户是否有权限查看指定用户的绩效
 
@@ -37,14 +39,22 @@ def _check_performance_view_permission(current_user: User, target_user_id: int, 
         return False
 
     # 检查是否有管理角色
-    manager_roles = ['dept_manager', 'department_manager', '部门经理',
-                     'pm', 'project_manager', '项目经理',
-                     'admin', 'super_admin', '管理员']
+    manager_roles = [
+        "dept_manager",
+        "department_manager",
+        "部门经理",
+        "pm",
+        "project_manager",
+        "项目经理",
+        "admin",
+        "super_admin",
+        "管理员",
+    ]
 
     has_manager_role = False
-    for user_role in (current_user.roles or []):
-        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
-        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ''
+    for user_role in current_user.roles or []:
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
         if role_code in manager_roles or role_name in manager_roles:
             has_manager_role = True
             break
@@ -64,10 +74,12 @@ def _check_performance_view_permission(current_user: User, target_user_id: int, 
     for project in target_projects:
         # 检查目标用户是否是项目成员
         from app.models.progress import Task
-        member_task = db.query(Task).filter(
-            Task.project_id == project.id,
-            Task.owner_id == target_user_id
-        ).first()
+
+        member_task = (
+            db.query(Task)
+            .filter(Task.project_id == project.id, Task.owner_id == target_user_id)
+            .first()
+        )
         if member_task:
             return True
 
@@ -86,10 +98,7 @@ def _get_team_members(db: Session, team_id: int) -> List[int]:
         List[int]: 成员ID列表
     """
     # 临时使用部门作为团队
-    users = db.query(User).filter(
-        User.department_id == team_id,
-        User.is_active
-    ).all()
+    users = db.query(User).filter(User.department_id == team_id, User.is_active).all()
     return [u.id for u in users]
 
 
@@ -104,10 +113,7 @@ def _get_department_members(db: Session, dept_id: int) -> List[int]:
     Returns:
         List[int]: 成员ID列表
     """
-    users = db.query(User).filter(
-        User.department_id == dept_id,
-        User.is_active
-    ).all()
+    users = db.query(User).filter(User.department_id == dept_id, User.is_active).all()
     return [u.id for u in users]
 
 
@@ -125,23 +131,31 @@ def _get_evaluator_type(user: User, db: Session) -> str:
     is_dept_manager = False
     is_project_manager = False
 
-    for user_role in (user.roles or []):
-        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ''
-        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ''
+    for user_role in user.roles or []:
+        role_code = user_role.role.role_code.lower() if user_role.role.role_code else ""
+        role_name = user_role.role.role_name.lower() if user_role.role.role_name else ""
 
-        if role_code in ['dept_manager', 'department_manager', '部门经理'] or role_name in ['dept_manager', 'department_manager', '部门经理']:
+        if role_code in ["dept_manager", "department_manager", "部门经理"] or role_name in [
+            "dept_manager",
+            "department_manager",
+            "部门经理",
+        ]:
             is_dept_manager = True
-        if role_code in ['pm', 'project_manager', '项目经理'] or role_name in ['pm', 'project_manager', '项目经理']:
+        if role_code in ["pm", "project_manager", "项目经理"] or role_name in [
+            "pm",
+            "project_manager",
+            "项目经理",
+        ]:
             is_project_manager = True
 
     if is_dept_manager and is_project_manager:
-        return 'BOTH'
+        return "BOTH"
     elif is_dept_manager:
-        return 'DEPT_MANAGER'
+        return "DEPT_MANAGER"
     elif is_project_manager:
-        return 'PROJECT_MANAGER'
+        return "PROJECT_MANAGER"
     else:
-        return 'OTHER'
+        return "OTHER"
 
 
 def _get_team_name(db: Session, team_id: int) -> str:

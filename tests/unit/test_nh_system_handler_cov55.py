@@ -2,8 +2,9 @@
 """
 Tests for app/services/notification_handlers/system_handler.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.notification_handlers.system_handler import SystemNotificationHandler
@@ -43,7 +44,9 @@ def test_send_skips_if_existing(handler, mock_db, alert):
     existing = MagicMock()
     mock_db.query.return_value.filter.return_value.first.return_value = existing
 
-    with patch("app.services.notification_handlers.system_handler.send_alert_via_unified") as mock_send:
+    with patch(
+        "app.services.notification_handlers.system_handler.send_alert_via_unified"
+    ) as mock_send:
         handler.send(notification, alert)
         mock_send.assert_not_called()
 
@@ -54,7 +57,9 @@ def test_send_calls_unified_when_no_existing(handler, mock_db, alert):
     notification.notify_user_id = 1
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
-    with patch("app.services.notification_handlers.system_handler.send_alert_via_unified") as mock_send:
+    with patch(
+        "app.services.notification_handlers.system_handler.send_alert_via_unified"
+    ) as mock_send:
         handler.send(notification, alert)
         mock_send.assert_called_once()
 
@@ -75,11 +80,14 @@ def test_handler_stores_parent(mock_db):
 def test_send_passes_correct_channel(handler, mock_db, alert):
     """验证传给 unified 的 channel 参数是 SYSTEM"""
     from app.services.notification_handlers.unified_adapter import NotificationChannel
+
     notification = MagicMock()
     notification.notify_user_id = 42
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
-    with patch("app.services.notification_handlers.system_handler.send_alert_via_unified") as mock_send:
+    with patch(
+        "app.services.notification_handlers.system_handler.send_alert_via_unified"
+    ) as mock_send:
         handler.send(notification, alert)
         call_kwargs = mock_send.call_args[1]
         assert call_kwargs.get("channel") == NotificationChannel.SYSTEM

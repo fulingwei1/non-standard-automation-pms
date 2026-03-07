@@ -18,11 +18,10 @@ from app.schemas.strategy import (
     HealthScoreResponse,
 )
 
-
-
 # ============================================
 # 健康度汇总
 # ============================================
+
 
 def get_health_score_summary(db: Session, strategy_id: int) -> HealthScoreResponse:
     """
@@ -74,5 +73,3 @@ def get_health_score_summary(db: Session, strategy_id: int) -> HealthScoreRespon
         trend=trend_data,
         calculated_at=datetime.now(),
     )
-
-

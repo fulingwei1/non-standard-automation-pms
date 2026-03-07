@@ -5,12 +5,13 @@
 提供现场调试任务管理、签到、进度更新、问题报告等功能
 """
 
+import os
+import sqlite3
+from datetime import datetime
+from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from datetime import datetime
-import sqlite3
-import os
 
 router = APIRouter()
 
@@ -29,9 +30,10 @@ def init_tables():
     """Lazy init 创建表"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # 现场调试任务表
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS field_tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_no TEXT UNIQUE NOT NULL,
@@ -48,10 +50,12 @@ def init_tables():
             completion_signature TEXT,
             completion_time TIMESTAMP
         )
-    """)
-    
+    """
+    )
+
     # 签到记录表
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS field_checkins (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_id INTEGER NOT NULL,
@@ -61,10 +65,12 @@ def init_tables():
             checkin_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (task_id) REFERENCES field_tasks(id)
         )
-    """)
-    
+    """
+    )
+
     # 问题记录表
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS field_issues (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_id INTEGER NOT NULL,
@@ -78,8 +84,9 @@ def init_tables():
             resolution_note TEXT,
             FOREIGN KEY (task_id) REFERENCES field_tasks(id)
         )
-    """)
-    
+    """
+    )
+
     conn.commit()
     conn.close()
 
@@ -89,6 +96,7 @@ init_tables()
 
 
 # ==================== Pydantic Models ====================
+
 
 class FieldTask(BaseModel):
     id: int
@@ -144,49 +152,52 @@ class DashboardStats(BaseModel):
 
 # ==================== API Endpoints ====================
 
+
 @router.get("/field/tasks", response_model=List[FieldTask], tags=["field-commissioning"])
 async def get_field_tasks(
     status: Optional[str] = Query(None, description="任务状态筛选"),
-    assigned_to: Optional[str] = Query(None, description="负责人筛选")
+    assigned_to: Optional[str] = Query(None, description="负责人筛选"),
 ):
     """获取当前用户的现场调试任务列表"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     query = "SELECT * FROM field_tasks WHERE 1=1"
     params = []
-    
+
     if status:
         query += " AND status = ?"
         params.append(status)
-    
+
     if assigned_to:
         query += " AND assigned_to = ?"
         params.append(assigned_to)
-    
+
     query += " ORDER BY scheduled_date DESC, created_at DESC"
-    
+
     cursor.execute(query, params)
     rows = cursor.fetchall()
     conn.close()
-    
+
     tasks = []
     for row in rows:
-        tasks.append(FieldTask(
-            id=row["id"],
-            task_no=row["task_no"],
-            customer_name=row["customer_name"],
-            project_name=row["project_name"],
-            address=row["address"],
-            status=row["status"],
-            assigned_to=row["assigned_to"],
-            scheduled_date=row["scheduled_date"],
-            progress=row["progress"],
-            progress_note=row["progress_note"],
-            created_at=row["created_at"],
-            updated_at=row["updated_at"]
-        ))
-    
+        tasks.append(
+            FieldTask(
+                id=row["id"],
+                task_no=row["task_no"],
+                customer_name=row["customer_name"],
+                project_name=row["project_name"],
+                address=row["address"],
+                status=row["status"],
+                assigned_to=row["assigned_to"],
+                scheduled_date=row["scheduled_date"],
+                progress=row["progress"],
+                progress_note=row["progress_note"],
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
+            )
+        )
+
     return tasks
 
 
@@ -195,25 +206,25 @@ async def get_field_task_detail(task_id: int):
     """获取任务详情"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # 获取任务基本信息
     cursor.execute("SELECT * FROM field_tasks WHERE id = ?", (task_id,))
     row = cursor.fetchone()
-    
+
     if not row:
         conn.close()
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     # 获取签到次数
     cursor.execute("SELECT COUNT(*) as count FROM field_checkins WHERE task_id = ?", (task_id,))
     checkin_count = cursor.fetchone()["count"]
-    
+
     # 获取问题数量
     cursor.execute("SELECT COUNT(*) as count FROM field_issues WHERE task_id = ?", (task_id,))
     issue_count = cursor.fetchone()["count"]
-    
+
     conn.close()
-    
+
     return FieldTaskDetail(
         id=row["id"],
         task_no=row["task_no"],
@@ -230,7 +241,7 @@ async def get_field_task_detail(task_id: int):
         created_at=row["created_at"],
         updated_at=row["updated_at"],
         checkin_count=checkin_count,
-        issue_count=issue_count
+        issue_count=issue_count,
     )
 
 
@@ -239,33 +250,39 @@ async def checkin(task_id: int, request: CheckinRequest):
     """现场签到（记录 GPS 坐标、时间）"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # 验证任务存在
     cursor.execute("SELECT id, status FROM field_tasks WHERE id = ?", (task_id,))
     task = cursor.fetchone()
-    
+
     if not task:
         conn.close()
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     # 记录签到
     user_id = request.user_id or "anonymous"
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO field_checkins (task_id, user_id, latitude, longitude)
         VALUES (?, ?, ?, ?)
-    """, (task_id, user_id, request.latitude, request.longitude))
-    
+    """,
+        (task_id, user_id, request.latitude, request.longitude),
+    )
+
     # 如果任务是 pending 状态，自动转为 in_progress
     if task["status"] == "pending":
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE field_tasks 
             SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
-        """, (task_id,))
-    
+        """,
+            (task_id,),
+        )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "签到成功", "checkin_time": datetime.now().isoformat()}
 
 
@@ -274,23 +291,26 @@ async def update_progress(task_id: int, request: ProgressRequest):
     """更新进度（百分比 + 备注）"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # 验证任务存在
     cursor.execute("SELECT id FROM field_tasks WHERE id = ?", (task_id,))
     if not cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     # 更新进度
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE field_tasks 
         SET progress = ?, progress_note = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-    """, (request.progress, request.note, task_id))
-    
+    """,
+        (request.progress, request.note, task_id),
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "进度更新成功", "progress": request.progress}
 
 
@@ -299,24 +319,27 @@ async def report_issue(task_id: int, request: IssueRequest):
     """报告问题（描述、照片 URL、严重程度）"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # 验证任务存在
     cursor.execute("SELECT id FROM field_tasks WHERE id = ?", (task_id,))
     if not cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     # 创建问题记录
     reported_by = request.reported_by or "anonymous"
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO field_issues (task_id, description, photo_url, severity, reported_by)
         VALUES (?, ?, ?, ?, ?)
-    """, (task_id, request.description, request.photo_url, request.severity, reported_by))
-    
+    """,
+        (task_id, request.description, request.photo_url, request.severity, reported_by),
+    )
+
     issue_id = cursor.lastrowid
     conn.commit()
     conn.close()
-    
+
     return {"message": "问题报告成功", "issue_id": issue_id}
 
 
@@ -325,15 +348,16 @@ async def complete_task(task_id: int, request: CompleteRequest):
     """完成调试（签名确认）"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # 验证任务存在
     cursor.execute("SELECT id FROM field_tasks WHERE id = ?", (task_id,))
     if not cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=404, detail="任务不存在")
-    
+
     # 更新任务状态为 completed
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE field_tasks 
         SET status = 'completed', 
             progress = 100,
@@ -341,11 +365,13 @@ async def complete_task(task_id: int, request: CompleteRequest):
             completion_time = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-    """, (request.signature, task_id))
-    
+    """,
+        (request.signature, task_id),
+    )
+
     conn.commit()
     conn.close()
-    
+
     return {"message": "任务完成确认成功", "completion_time": datetime.now().isoformat()}
 
 
@@ -354,42 +380,51 @@ async def get_dashboard():
     """调试概览（今日任务数、进行中、已完成、问题数）"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     today = datetime.now().strftime("%Y-%m-%d")
-    
+
     # 今日任务数
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT COUNT(*) as count FROM field_tasks 
         WHERE date(scheduled_date) = date(?)
-    """, (today,))
+    """,
+        (today,),
+    )
     today_tasks = cursor.fetchone()["count"]
-    
+
     # 进行中任务数
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT COUNT(*) as count FROM field_tasks 
         WHERE status = 'in_progress'
-    """)
+    """
+    )
     in_progress = cursor.fetchone()["count"]
-    
+
     # 已完成任务数
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT COUNT(*) as count FROM field_tasks 
         WHERE status = 'completed'
-    """)
+    """
+    )
     completed = cursor.fetchone()["count"]
-    
+
     # 未解决问题数
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT COUNT(*) as count FROM field_issues 
         WHERE status IN ('open', 'in_progress')
-    """)
+    """
+    )
     issue_count = cursor.fetchone()["count"]
-    
+
     conn.close()
-    
+
     return DashboardStats(
         today_tasks=today_tasks,
         in_progress=in_progress,
         completed=completed,
-        issue_count=issue_count
+        issue_count=issue_count,
     )

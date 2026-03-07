@@ -32,11 +32,13 @@ class ProgressQueryMixin:
                 "stages": [阶段列表]
             }
         """
-        stages = self.db.query(ProjectStageInstance).filter(
-            ProjectStageInstance.project_id == project_id
-        ).options(
-            joinedload(ProjectStageInstance.nodes)
-        ).order_by(ProjectStageInstance.sequence).all()
+        stages = (
+            self.db.query(ProjectStageInstance)
+            .filter(ProjectStageInstance.project_id == project_id)
+            .options(joinedload(ProjectStageInstance.nodes))
+            .order_by(ProjectStageInstance.sequence)
+            .all()
+        )
 
         total_stages = len(stages)
         completed_stages = sum(1 for s in stages if s.status == StageStatusEnum.COMPLETED.value)
@@ -59,23 +61,37 @@ class ProgressQueryMixin:
                     "id": stage.id,
                     "stage_code": stage.stage_code,
                     "stage_name": stage.stage_name,
-                    "progress_pct": round(stage_completed / stage_total * 100, 1) if stage_total > 0 else 0,
+                    "progress_pct": (
+                        round(stage_completed / stage_total * 100, 1) if stage_total > 0 else 0
+                    ),
                 }
 
-            stage_list.append({
-                "id": stage.id,
-                "stage_code": stage.stage_code,
-                "stage_name": stage.stage_name,
-                "status": stage.status,
-                "sequence": stage.sequence,
-                "total_nodes": stage_total,
-                "completed_nodes": stage_completed,
-                "progress_pct": round(stage_completed / stage_total * 100, 1) if stage_total > 0 else 0,
-                "planned_start_date": stage.planned_start_date.isoformat() if stage.planned_start_date else None,
-                "planned_end_date": stage.planned_end_date.isoformat() if stage.planned_end_date else None,
-                "actual_start_date": stage.actual_start_date.isoformat() if stage.actual_start_date else None,
-                "actual_end_date": stage.actual_end_date.isoformat() if stage.actual_end_date else None,
-            })
+            stage_list.append(
+                {
+                    "id": stage.id,
+                    "stage_code": stage.stage_code,
+                    "stage_name": stage.stage_name,
+                    "status": stage.status,
+                    "sequence": stage.sequence,
+                    "total_nodes": stage_total,
+                    "completed_nodes": stage_completed,
+                    "progress_pct": (
+                        round(stage_completed / stage_total * 100, 1) if stage_total > 0 else 0
+                    ),
+                    "planned_start_date": (
+                        stage.planned_start_date.isoformat() if stage.planned_start_date else None
+                    ),
+                    "planned_end_date": (
+                        stage.planned_end_date.isoformat() if stage.planned_end_date else None
+                    ),
+                    "actual_start_date": (
+                        stage.actual_start_date.isoformat() if stage.actual_start_date else None
+                    ),
+                    "actual_end_date": (
+                        stage.actual_end_date.isoformat() if stage.actual_end_date else None
+                    ),
+                }
+            )
 
         return {
             "total_stages": total_stages,
@@ -89,32 +105,41 @@ class ProgressQueryMixin:
 
     def get_stage_detail(self, stage_instance_id: int) -> Dict[str, Any]:
         """获取阶段详情（包含所有节点）"""
-        stage = self.db.query(ProjectStageInstance).options(
-            joinedload(ProjectStageInstance.nodes)
-        ).filter(ProjectStageInstance.id == stage_instance_id).first()
+        stage = (
+            self.db.query(ProjectStageInstance)
+            .options(joinedload(ProjectStageInstance.nodes))
+            .filter(ProjectStageInstance.id == stage_instance_id)
+            .first()
+        )
 
         if not stage:
             return None
 
         nodes = []
         for node in sorted(stage.nodes, key=lambda n: n.sequence):
-            nodes.append({
-                "id": node.id,
-                "node_code": node.node_code,
-                "node_name": node.node_name,
-                "node_type": node.node_type,
-                "status": node.status,
-                "sequence": node.sequence,
-                "completion_method": node.completion_method,
-                "is_required": node.is_required,
-                "planned_date": node.planned_date.isoformat() if node.planned_date else None,
-                "actual_date": node.actual_date.isoformat() if node.actual_date else None,
-                "completed_by": node.completed_by,
-                "completed_at": node.completed_at.isoformat() if node.completed_at else None,
-                "attachments": node.attachments,
-                "dependency_node_instance_ids": node.dependency_node_instance_ids,
-                "can_start": self._check_node_dependencies(node) if node.status == StageStatusEnum.PENDING.value else False,
-            })
+            nodes.append(
+                {
+                    "id": node.id,
+                    "node_code": node.node_code,
+                    "node_name": node.node_name,
+                    "node_type": node.node_type,
+                    "status": node.status,
+                    "sequence": node.sequence,
+                    "completion_method": node.completion_method,
+                    "is_required": node.is_required,
+                    "planned_date": node.planned_date.isoformat() if node.planned_date else None,
+                    "actual_date": node.actual_date.isoformat() if node.actual_date else None,
+                    "completed_by": node.completed_by,
+                    "completed_at": node.completed_at.isoformat() if node.completed_at else None,
+                    "attachments": node.attachments,
+                    "dependency_node_instance_ids": node.dependency_node_instance_ids,
+                    "can_start": (
+                        self._check_node_dependencies(node)
+                        if node.status == StageStatusEnum.PENDING.value
+                        else False
+                    ),
+                }
+            )
 
         return {
             "id": stage.id,
@@ -123,9 +148,15 @@ class ProgressQueryMixin:
             "stage_name": stage.stage_name,
             "status": stage.status,
             "sequence": stage.sequence,
-            "planned_start_date": stage.planned_start_date.isoformat() if stage.planned_start_date else None,
-            "planned_end_date": stage.planned_end_date.isoformat() if stage.planned_end_date else None,
-            "actual_start_date": stage.actual_start_date.isoformat() if stage.actual_start_date else None,
+            "planned_start_date": (
+                stage.planned_start_date.isoformat() if stage.planned_start_date else None
+            ),
+            "planned_end_date": (
+                stage.planned_end_date.isoformat() if stage.planned_end_date else None
+            ),
+            "actual_start_date": (
+                stage.actual_start_date.isoformat() if stage.actual_start_date else None
+            ),
             "actual_end_date": stage.actual_end_date.isoformat() if stage.actual_end_date else None,
             "is_modified": stage.is_modified,
             "remark": stage.remark,

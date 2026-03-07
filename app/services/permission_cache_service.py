@@ -88,9 +88,7 @@ class PermissionCacheService:
         key = self._build_key(CACHE_PREFIX_USER_PERMISSIONS, tenant_id, user_id)
         return self._cache.set(key, list(permissions), PERMISSION_CACHE_TTL)
 
-    def invalidate_user_permissions(
-        self, user_id: int, tenant_id: Optional[int] = None
-    ) -> bool:
+    def invalidate_user_permissions(self, user_id: int, tenant_id: Optional[int] = None) -> bool:
         """使用户权限缓存失效
 
         Args:
@@ -135,9 +133,7 @@ class PermissionCacheService:
         key = self._build_key(CACHE_PREFIX_ROLE_PERMISSIONS, tenant_id, role_id)
         return self._cache.set(key, data, ROLE_CACHE_TTL)
 
-    def invalidate_role_permissions(
-        self, role_id: int, tenant_id: Optional[int] = None
-    ) -> bool:
+    def invalidate_role_permissions(self, role_id: int, tenant_id: Optional[int] = None) -> bool:
         """使角色权限缓存失效"""
         key = self._build_key(CACHE_PREFIX_ROLE_PERMISSIONS, tenant_id, role_id)
         logger.info(f"Invalidating role permission cache: tenant_id={tenant_id}, role_id={role_id}")
@@ -266,7 +262,9 @@ class PermissionCacheService:
         """
         count = 0
         count += self._cache.delete_pattern(f"perm:t{tenant_id}:*")
-        logger.info(f"Invalidated all permission caches for tenant: tenant_id={tenant_id}, count={count}")
+        logger.info(
+            f"Invalidated all permission caches for tenant: tenant_id={tenant_id}, count={count}"
+        )
         return count
 
     def invalidate_all(self) -> int:

@@ -46,26 +46,24 @@ def get_alert_trends(
     if not start_date:
         start_date = end_date - timedelta(days=30)
 
-    query = db.query(AlertRecord).filter(
-        AlertRecord.triggered_at.isnot(None)
-    )
+    query = db.query(AlertRecord).filter(AlertRecord.triggered_at.isnot(None))
 
     if project_id:
         query = query.filter(AlertRecord.project_id == project_id)
 
     query = query.filter(
         AlertRecord.triggered_at >= datetime.combine(start_date, datetime.min.time()),
-        AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time())
+        AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time()),
     )
 
     alerts = query.all()
 
     # 构建趋势统计
     trend_stats = build_trend_statistics(alerts, period)
-    date_trends = trend_stats['date_trends']
-    level_trends = trend_stats['level_trends']
-    type_trends = trend_stats['type_trends']
-    status_trends = trend_stats['status_trends']
+    date_trends = trend_stats["date_trends"]
+    level_trends = trend_stats["level_trends"]
+    type_trends = trend_stats["type_trends"]
+    status_trends = trend_stats["status_trends"]
 
     # 生成完整的时间序列
     date_range = generate_date_range(start_date, end_date, period)
@@ -73,13 +71,15 @@ def get_alert_trends(
     # 构建趋势数据数组
     trends_data = []
     for date_key in date_range:
-        trends_data.append({
-            "date": date_key,
-            "total": date_trends.get(date_key, 0),
-            "by_level": level_trends.get(date_key, {}),
-            "by_type": type_trends.get(date_key, {}),
-            "by_status": status_trends.get(date_key, {}),
-        })
+        trends_data.append(
+            {
+                "date": date_key,
+                "total": date_trends.get(date_key, 0),
+                "by_level": level_trends.get(date_key, {}),
+                "by_type": type_trends.get(date_key, {}),
+                "by_status": status_trends.get(date_key, {}),
+            }
+        )
 
     # 汇总统计
     summary_stats = build_summary_statistics(alerts)
@@ -91,8 +91,8 @@ def get_alert_trends(
         "trends": trends_data,
         "summary": {
             "total": len(alerts),
-            "by_level": summary_stats['by_level'],
-            "by_type": summary_stats['by_type'],
-            "by_status": summary_stats['by_status'],
-        }
+            "by_level": summary_stats["by_level"],
+            "by_type": summary_stats["by_type"],
+            "by_status": summary_stats["by_status"],
+        },
     }

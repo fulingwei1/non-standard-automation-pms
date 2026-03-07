@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """ApprovalProcessMixin (engine/approve.py) 单元测试"""
 
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 class TestApprovalProcessMixin:
@@ -80,7 +81,9 @@ class TestApprovalProcessMixin:
         task = MagicMock(id=1, node_id=1, instance=instance, node=MagicMock())
         engine._mock_task = task
         engine.executor.process_approval.return_value = (True, None)
-        engine.db.query.return_value.filter.return_value.first.return_value = MagicMock(real_name="R", username="r")
+        engine.db.query.return_value.filter.return_value.first.return_value = MagicMock(
+            real_name="R", username="r"
+        )
 
         result = engine.reject(1, 1, comment="不行", reject_to="START")
         assert instance.status == "REJECTED"
@@ -92,7 +95,9 @@ class TestApprovalProcessMixin:
         task = MagicMock(id=1, node_id=1, instance=instance, node=MagicMock())
         engine._mock_task = task
         engine.executor.process_approval.return_value = (True, None)
-        engine.db.query.return_value.filter.return_value.first.return_value = MagicMock(real_name="R", username="r")
+        engine.db.query.return_value.filter.return_value.first.return_value = MagicMock(
+            real_name="R", username="r"
+        )
 
         # _get_previous_node returns None -> rejected
         result = engine.reject(1, 1, comment="退回", reject_to="PREV")
@@ -111,6 +116,7 @@ class TestApprovalProcessMixin:
             m = MagicMock()
             m.filter.return_value.first.return_value = approver
             return m
+
         engine.db.query.side_effect = query_side
 
         # Override to test specific node path
@@ -125,7 +131,9 @@ class TestApprovalProcessMixin:
         task = MagicMock(id=1, node_id=1, instance=instance, node=MagicMock())
         engine._mock_task = task
         engine.executor.process_approval.return_value = (True, None)
-        engine.db.query.return_value.filter.return_value.first.return_value = MagicMock(real_name="R", username="r")
+        engine.db.query.return_value.filter.return_value.first.return_value = MagicMock(
+            real_name="R", username="r"
+        )
 
         result = engine.reject(1, 1, comment="bad", reject_to="not_a_number")
         assert instance.status == "REJECTED"
@@ -170,13 +178,22 @@ class TestApprovalProcessMixin:
         engine = self._make_engine()
         node = MagicMock(can_transfer=True)
         instance = MagicMock(id=1)
-        task = MagicMock(id=1, node=node, node_id=1, instance=instance,
-                         task_type="APPROVAL", task_order=1, due_at=None, is_countersign=False)
+        task = MagicMock(
+            id=1,
+            node=node,
+            node_id=1,
+            instance=instance,
+            task_type="APPROVAL",
+            task_order=1,
+            due_at=None,
+            is_countersign=False,
+        )
         engine._mock_task = task
         from_user = MagicMock(real_name="A", username="a")
         to_user = MagicMock(real_name="B", username="b")
 
         call_count = [0]
+
         def query_side(model):
             m = MagicMock()
             call_count[0] += 1
@@ -187,6 +204,7 @@ class TestApprovalProcessMixin:
             else:
                 m.filter.return_value.first.return_value = MagicMock()
             return m
+
         engine.db.query.side_effect = query_side
 
         result = engine.transfer(1, 1, 2)
@@ -208,8 +226,15 @@ class TestApprovalProcessMixin:
         engine = self._make_engine()
         node = MagicMock(can_add_approver=True)
         instance = MagicMock(id=1)
-        task = MagicMock(id=1, node=node, node_id=1, instance=instance,
-                         task_order=1, due_at=None, status="PENDING")
+        task = MagicMock(
+            id=1,
+            node=node,
+            node_id=1,
+            instance=instance,
+            task_order=1,
+            due_at=None,
+            status="PENDING",
+        )
         engine._mock_task = task
         operator = MagicMock(real_name="Op", username="op")
         approver = MagicMock(real_name="New", username="new")

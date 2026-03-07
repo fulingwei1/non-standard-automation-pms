@@ -2,12 +2,14 @@
 """
 第八批覆盖率测试 - 项目风险服务
 """
-import pytest
-from unittest.mock import MagicMock, call
 from datetime import date
+from unittest.mock import MagicMock, call
+
+import pytest
 
 try:
     from app.services.project.project_risk_service import ProjectRiskService
+
     HAS_PRS = True
 except Exception:
     HAS_PRS = False
@@ -20,8 +22,13 @@ class TestProjectRiskServiceInit:
 
     def test_risk_level_order(self):
         """风险等级顺序校验"""
-        assert ProjectRiskService.RISK_LEVEL_ORDER["LOW"] < ProjectRiskService.RISK_LEVEL_ORDER["HIGH"]
-        assert ProjectRiskService.RISK_LEVEL_ORDER["MEDIUM"] < ProjectRiskService.RISK_LEVEL_ORDER["CRITICAL"]
+        assert (
+            ProjectRiskService.RISK_LEVEL_ORDER["LOW"] < ProjectRiskService.RISK_LEVEL_ORDER["HIGH"]
+        )
+        assert (
+            ProjectRiskService.RISK_LEVEL_ORDER["MEDIUM"]
+            < ProjectRiskService.RISK_LEVEL_ORDER["CRITICAL"]
+        )
 
     def test_init(self):
         """测试构造函数"""
@@ -88,10 +95,12 @@ class TestRiskSnapshotHistory:
     def test_get_risk_trend_empty(self):
         """无历史数据时返回空列表"""
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         svc = ProjectRiskService(db)
         # 若有 get_risk_trend 方法
-        if hasattr(svc, 'get_risk_trend'):
+        if hasattr(svc, "get_risk_trend"):
             result = svc.get_risk_trend(1)
             assert isinstance(result, list)
         else:

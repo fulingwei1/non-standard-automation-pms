@@ -5,8 +5,6 @@
 聚合项目成本、预算及费用分布，供分析端点复用。
 """
 
-from __future__ import annotations
-
 from datetime import date
 from typing import Any, Dict, List, Optional
 
@@ -65,9 +63,7 @@ class ProjectFinanceService:
             .group_by(group_attr)
             .all()
         )
-        breakdown = {
-            (label or "未分类"): float(total or 0) for label, total in grouped_rows
-        }
+        breakdown = {(label or "未分类"): float(total or 0) for label, total in grouped_rows}
 
         top_rows = (
             cost_query.with_entities(
@@ -81,7 +77,9 @@ class ProjectFinanceService:
         )
         project_map = {
             project.id: project
-            for project in self.db.query(Project).filter(Project.id.in_([pid for pid, _ in top_rows])).all()
+            for project in self.db.query(Project)
+            .filter(Project.id.in_([pid for pid, _ in top_rows]))
+            .all()
         }
         top_projects = [
             {

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """ECN BOM级联分析单元测试 - 第三十四批"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.ecn_bom_analysis_service.cascade")
 

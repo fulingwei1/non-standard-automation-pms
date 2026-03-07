@@ -12,8 +12,8 @@ from fastapi.testclient import TestClient
 
 from app.core.config import settings
 from tests.helpers.response_helpers import (
-    assert_success_response,
     assert_list_response,
+    assert_success_response,
 )
 
 
@@ -30,10 +30,7 @@ class TestTenantCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/tenants/", headers=headers)
 
         # 可能返回 403（非超级管理员）或 200
         if response.status_code == 403:
@@ -60,9 +57,7 @@ class TestTenantCRUD:
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/tenants/",
-            json=tenant_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/tenants/", json=tenant_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -87,10 +82,7 @@ class TestTenantCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取租户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/tenants/", headers=headers)
 
         if list_response.status_code == 403:
             pytest.skip("User is not superuser")
@@ -105,10 +97,7 @@ class TestTenantCRUD:
 
         tenant_id = items[0]["id"]
 
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/{tenant_id}",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/tenants/{tenant_id}", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
@@ -121,10 +110,7 @@ class TestTenantCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/99999",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/tenants/99999", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User is not superuser")
@@ -139,10 +125,7 @@ class TestTenantCRUD:
         headers = _auth_headers(admin_token)
 
         # 先获取租户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/tenants/", headers=headers)
 
         if list_response.status_code == 403:
             pytest.skip("User is not superuser")
@@ -162,9 +145,7 @@ class TestTenantCRUD:
         }
 
         response = client.put(
-            f"{settings.API_V1_PREFIX}/tenants/{tenant_id}",
-            json=update_data,
-            headers=headers
+            f"{settings.API_V1_PREFIX}/tenants/{tenant_id}", json=update_data, headers=headers
         )
 
         if response.status_code == 403:
@@ -188,10 +169,7 @@ class TestTenantStats:
         headers = _auth_headers(admin_token)
 
         # 先获取租户列表
-        list_response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/",
-            headers=headers
-        )
+        list_response = client.get(f"{settings.API_V1_PREFIX}/tenants/", headers=headers)
 
         if list_response.status_code == 403:
             pytest.skip("User is not superuser")
@@ -207,8 +185,7 @@ class TestTenantStats:
         tenant_id = items[0]["id"]
 
         response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/{tenant_id}/stats",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/tenants/{tenant_id}/stats", headers=headers
         )
 
         if response.status_code == 403:
@@ -230,10 +207,7 @@ class TestTenantPermissions:
             pytest.skip("Normal user token not available")
 
         headers = _auth_headers(normal_user_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/tenants/",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/tenants/", headers=headers)
 
         # 非超级管理员应该返回 403
         assert response.status_code == 403

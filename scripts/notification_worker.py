@@ -15,10 +15,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from app.models.alert import AlertNotification
 from app.models.base import get_db_session
 from app.models.user import User
+from app.services.channel_handlers.base import NotificationRequest
 from app.services.notification_dispatcher import (
     NotificationDispatcher,
 )
-from app.services.channel_handlers.base import NotificationRequest
 from app.services.notification_queue import dequeue_notification
 from app.utils.redis_client import get_redis_client
 
@@ -42,7 +42,9 @@ async def main():
             continue
 
         with get_db_session() as db:
-            notification = db.query(AlertNotification).filter(AlertNotification.id == notification_id).first()
+            notification = (
+                db.query(AlertNotification).filter(AlertNotification.id == notification_id).first()
+            )
             if not notification:
                 logger.warning(f"通知记录 {notification_id} 不存在，跳过")
                 continue

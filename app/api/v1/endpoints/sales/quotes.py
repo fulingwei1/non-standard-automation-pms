@@ -16,13 +16,13 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.sales import Opportunity, Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 # 导入重构后的服务
 from app.services.sales.quotes_service import QuotesService
-from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -37,7 +37,7 @@ def read_quotes(
     customer_id: Optional[int] = Query(None, description="客户筛选"),
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.get_current_active_user),
 ):
     """获取报价列表（已集成数据权限过滤）"""
     service = QuotesService(db)
@@ -49,7 +49,7 @@ def read_quotes(
         customer_id=customer_id,
         start_date=start_date,
         end_date=end_date,
-        current_user=current_user
+        current_user=current_user,
     )
 
 
@@ -57,7 +57,7 @@ def read_quotes(
 def create_quote(
     quote_data: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.get_current_active_user),
 ):
     """创建报价"""
     opportunity_id = quote_data.get("opportunity_id")
@@ -72,10 +72,13 @@ def create_quote(
         raise HTTPException(status_code=422, detail="version 必填")
 
     quote = Quote(
-        quote_code=quote_data.get("quote_code") or f"QUOTE-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        quote_code=quote_data.get("quote_code")
+        or f"QUOTE-{datetime.now().strftime('%Y%m%d%H%M%S')}",
         opportunity_id=opportunity_id,
         customer_id=customer_id,
-        valid_until=date.fromisoformat(quote_data["valid_until"]) if quote_data.get("valid_until") else None,
+        valid_until=(
+            date.fromisoformat(quote_data["valid_until"]) if quote_data.get("valid_until") else None
+        ),
         owner_id=current_user.id,
         status="DRAFT",
     )
@@ -95,7 +98,7 @@ def create_quote(
     db.add(version)
     db.flush()
 
-    for item in (version_payload.get("items") or []):
+    for item in version_payload.get("items") or []:
         db.add(
             QuoteItem(
                 quote_version_id=version.id,
@@ -126,7 +129,9 @@ def create_quote(
 # 已移除 POST /quotes/{quote_id}/versions —— 与 quote_versions.py 重复，保留 quote_versions.py 中更完整的实现
 
 
-@router.post("/quotes/{quote_id}/approve", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+@router.post(
+    "/quotes/{quote_id}/approve", response_model=ResponseModel, status_code=status.HTTP_200_OK
+)
 def approve_quote(
     quote_id: int,
     payload: dict = Body(...),
@@ -145,6 +150,9 @@ def approve_quote(
             version.approved_at = datetime.now()
     quote.status = "APPROVED" if approved else "REJECTED"
     db.commit()
-    return ResponseModel(code=200, message="报价审批完成", data={"status": quote.status, "remark": remark})
+    return ResponseModel(
+        code=200, message="报价审批完成", data={"status": quote.status, "remark": remark}
+    )
+
 
 # 其他接口可按需补全...

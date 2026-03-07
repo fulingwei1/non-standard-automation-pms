@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """decomposition_tree 单元测试"""
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.strategy.decomposition.decomposition_tree import (
@@ -10,14 +11,18 @@ from app.services.strategy.decomposition.decomposition_tree import (
 
 
 class TestGetDecompositionTree:
-    @pytest.mark.skip(reason="DecompositionTreeResponse schema requires year/root fields not passed by function")
+    @pytest.mark.skip(
+        reason="DecompositionTreeResponse schema requires year/root fields not passed by function"
+    )
     def test_strategy_not_found(self):
         db = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = None
         result = get_decomposition_tree(db, 999)
         assert result.strategy_id == 999
 
-    @pytest.mark.skip(reason="DecompositionTreeResponse schema requires year/root fields not passed by function")
+    @pytest.mark.skip(
+        reason="DecompositionTreeResponse schema requires year/root fields not passed by function"
+    )
     def test_strategy_found_no_csfs(self):
         db = MagicMock()
         strategy = MagicMock()
@@ -36,7 +41,9 @@ class TestTraceToStrategy:
         result = trace_to_strategy(db, 999)
         assert result is None
 
-    @pytest.mark.skip(reason="TraceToStrategyResponse schema requires personal_kpi field not passed by function")
+    @pytest.mark.skip(
+        reason="TraceToStrategyResponse schema requires personal_kpi field not passed by function"
+    )
     @patch("app.services.strategy.decomposition.decomposition_tree.get_personal_kpi")
     def test_pkpi_found_minimal(self, mock_get):
         pkpi = MagicMock()

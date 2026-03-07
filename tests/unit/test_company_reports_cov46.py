@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第四十六批 - 公司报表单元测试"""
-import pytest
 from datetime import date
 
-pytest.importorskip("app.services.template_report.company_reports",
-                    reason="依赖不满足，跳过")
+import pytest
+
+pytest.importorskip("app.services.template_report.company_reports", reason="依赖不满足，跳过")
 
 from unittest.mock import MagicMock
+
 from app.services.template_report.company_reports import CompanyReportMixin
 
 
@@ -17,14 +18,14 @@ def _make_db(projects=None, departments=None):
 
     def query_side(model):
         q = MagicMock()
-        name = getattr(model, '__name__', str(model))
-        if 'Project' in name:
+        name = getattr(model, "__name__", str(model))
+        if "Project" in name:
             q.filter.return_value.all.return_value = projects
-        elif 'Department' in name:
+        elif "Department" in name:
             q.all.return_value = departments
-        elif 'User' in name:
+        elif "User" in name:
             q.filter.return_value.all.return_value = []
-        elif 'Timesheet' in name:
+        elif "Timesheet" in name:
             q.filter.return_value.all.return_value = []
         return q
 
@@ -40,7 +41,7 @@ class TestGenerateCompanyMonthly:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             sections_config={},
-            metrics_config={}
+            metrics_config={},
         )
 
         assert "summary" in result
@@ -54,7 +55,7 @@ class TestGenerateCompanyMonthly:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             sections_config={},
-            metrics_config={}
+            metrics_config={},
         )
         assert "sections" in result
         assert "project_status" in result["sections"]
@@ -71,7 +72,7 @@ class TestGenerateCompanyMonthly:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             sections_config={},
-            metrics_config={}
+            metrics_config={},
         )
         assert result["summary"]["total_projects"] == 2
 
@@ -82,7 +83,7 @@ class TestGenerateCompanyMonthly:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             sections_config={},
-            metrics_config={}
+            metrics_config={},
         )
         assert "metrics" in result
         assert "total_projects" in result["metrics"]
@@ -98,7 +99,7 @@ class TestGenerateCompanyMonthly:
         def query_side(model):
             call_count[0] += 1
             q = MagicMock()
-            name = getattr(model, '__name__', str(model))
+            name = getattr(model, "__name__", str(model))
             if call_count[0] == 1:  # Project
                 q.filter.return_value.all.return_value = []
             elif call_count[0] == 2:  # Department
@@ -115,6 +116,6 @@ class TestGenerateCompanyMonthly:
             start_date=date(2024, 1, 1),
             end_date=date(2024, 1, 31),
             sections_config={},
-            metrics_config={}
+            metrics_config={},
         )
         assert result["sections"]["department_hours"]["data"] == []

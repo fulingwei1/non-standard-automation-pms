@@ -20,8 +20,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
-from app.services.permission_service import PermissionService
 from app.services.permission_cache_service import get_permission_cache_service
+from app.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,7 @@ class PerformanceTestContext:
 
         # 为角色分配权限（每个角色分配 10-30 个权限）
         import random
+
         for role in self.test_roles:
             num_perms = random.randint(10, 30)
             selected_perms = random.sample(self.test_permissions, num_perms)
@@ -202,9 +203,7 @@ def measure_permission_query_time(
     return result
 
 
-def compare_performance(
-    db: Session, user_ids: List[int], iterations: int = 10
-) -> Dict[str, Any]:
+def compare_performance(db: Session, user_ids: List[int], iterations: int = 10) -> Dict[str, Any]:
     """对比启用和禁用缓存的性能差异
 
     Args:
@@ -227,9 +226,7 @@ def compare_performance(
 
     # 2. 测试使用缓存的性能（第一轮：冷启动）
     logger.info("\n2️⃣  测试使用缓存的性能（冷启动）...")
-    cache_cold_result = measure_permission_query_time(
-        db, user_ids, iterations=1, use_cache=True
-    )
+    cache_cold_result = measure_permission_query_time(db, user_ids, iterations=1, use_cache=True)
 
     # 3. 测试使用缓存的性能（第二轮：热缓存）
     logger.info("\n3️⃣  测试使用缓存的性能（热缓存）...")
@@ -251,9 +248,7 @@ def compare_performance(
             "avg_time_reduction_percent": round(
                 (1 - cache_hot_result["avg_time_ms"] / no_cache_result["avg_time_ms"]) * 100, 2
             ),
-            "qps_improvement": round(
-                cache_hot_result["qps"] / no_cache_result["qps"], 2
-            ),
+            "qps_improvement": round(cache_hot_result["qps"] / no_cache_result["qps"], 2),
         },
     }
 
@@ -379,9 +374,7 @@ def test_permission_cache_performance(test_db):
 
         # 验证性能提升
         assert comparison["improvement"]["avg_speedup"] > 2.0, "缓存性能提升应大于 2 倍"
-        assert (
-            comparison["cache_hot"]["cache_stats"]["hit_rate"] > 80.0
-        ), "缓存命中率应大于 80%"
+        assert comparison["cache_hot"]["cache_stats"]["hit_rate"] > 80.0, "缓存命中率应大于 80%"
 
     finally:
         # 清理测试数据
@@ -494,6 +487,7 @@ if __name__ == "__main__":
         print("📈 详细性能报告")
         print("=" * 80)
         import json
+
         print(json.dumps(comparison, indent=2, ensure_ascii=False))
 
     finally:

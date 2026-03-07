@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """第十七批 - 审批工作流服务单元测试"""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
 pytest.importorskip("app.services.approval_workflow_service")
 
@@ -12,6 +13,7 @@ def _make_db():
 
 def _make_service(db=None):
     from app.services.approval_workflow_service import ApprovalWorkflowService
+
     return ApprovalWorkflowService(db or _make_db())
 
 
@@ -20,13 +22,18 @@ class TestApprovalWorkflowService:
     def test_start_approval_returns_existing_if_pending(self):
         """已存在 PENDING 审批时直接返回"""
         from app.models.enums import ApprovalRecordStatusEnum
+
         existing = MagicMock()
         db = _make_db()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = existing
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            existing
+        )
 
         svc = _make_service(db)
-        with patch("app.services.approval_workflow_service.ApprovalWorkflowService.start_approval",
-                   wraps=svc.start_approval):
+        with patch(
+            "app.services.approval_workflow_service.ApprovalWorkflowService.start_approval",
+            wraps=svc.start_approval,
+        ):
             with patch("app.models.sales.workflow.ApprovalRecord", MagicMock()):
                 result = svc.start_approval("QUOTE", 1, 10)
         # 现有记录被返回
@@ -35,11 +42,14 @@ class TestApprovalWorkflowService:
     def test_start_approval_creates_new_record(self):
         """无现有审批时创建新记录"""
         db = _make_db()
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = None
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.first.return_value = (
+            None
+        )
 
         mock_record = MagicMock()
         with patch.dict("sys.modules", {"app.models.sales.workflow": MagicMock()}):
             import app.models.sales.workflow as wf_mod
+
             wf_mod.ApprovalRecord = MagicMock(return_value=mock_record)
             svc = _make_service(db)
             result = svc.start_approval("QUOTE", 42, 5)
@@ -60,6 +70,7 @@ class TestApprovalWorkflowService:
     def test_approve_step_sets_status_approved(self):
         """approve_step 成功后状态变为 APPROVED"""
         from app.models.enums import ApprovalRecordStatusEnum
+
         record = MagicMock()
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = record
@@ -74,6 +85,7 @@ class TestApprovalWorkflowService:
     def test_reject_step_sets_status_rejected(self):
         """reject_step 成功后状态变为 REJECTED"""
         from app.models.enums import ApprovalRecordStatusEnum
+
         record = MagicMock()
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = record
@@ -97,6 +109,7 @@ class TestApprovalWorkflowService:
     def test_withdraw_approval_sets_cancelled(self):
         """withdraw_approval 成功后状态变为 CANCELLED"""
         from app.models.enums import ApprovalRecordStatusEnum
+
         record = MagicMock()
         db = _make_db()
         db.query.return_value.filter.return_value.first.return_value = record

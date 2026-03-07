@@ -9,13 +9,13 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.date_range import get_month_range_by_ym
 from app.common.query_filters import apply_like_filter
 from app.models.project import FinancialProjectCost
 from app.models.rd_project import RdCost, RdProject
 from app.models.timesheet import Timesheet
 from app.services.hourly_rate_service import HourlyRateService
 from app.services.labor_cost_service import LaborCostService
-from app.common.date_range import get_month_range_by_ym
 from app.utils.db_helpers import save_obj
 
 
@@ -30,7 +30,7 @@ class TimesheetSyncService:
         timesheet_id: Optional[int] = None,
         project_id: Optional[int] = None,
         year: Optional[int] = None,
-        month: Optional[int] = None
+        month: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         同步到财务系统（生成FinancialProjectCost记录）
@@ -48,13 +48,13 @@ class TimesheetSyncService:
             # 同步单个工时记录
             timesheet = self.db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
             if not timesheet:
-                return {'success': False, 'message': '工时记录不存在'}
+                return {"success": False, "message": "工时记录不存在"}
 
-            if timesheet.status != 'APPROVED':
-                return {'success': False, 'message': '只能同步已审批的工时记录'}
+            if timesheet.status != "APPROVED":
+                return {"success": False, "message": "只能同步已审批的工时记录"}
 
             if not timesheet.project_id:
-                return {'success': False, 'message': '工时记录未关联项目'}
+                return {"success": False, "message": "工时记录未关联项目"}
 
             result = self._create_financial_cost_from_timesheet(timesheet)
             return result
@@ -63,12 +63,16 @@ class TimesheetSyncService:
             # 批量同步某个项目的月度数据
             start_date, end_date = get_month_range_by_ym(year, month)
 
-            timesheets = self.db.query(Timesheet).filter(
-                Timesheet.project_id == project_id,
-                Timesheet.status == 'APPROVED',
-                Timesheet.work_date >= start_date,
-                Timesheet.work_date <= end_date
-            ).all()
+            timesheets = (
+                self.db.query(Timesheet)
+                .filter(
+                    Timesheet.project_id == project_id,
+                    Timesheet.status == "APPROVED",
+                    Timesheet.work_date >= start_date,
+                    Timesheet.work_date <= end_date,
+                )
+                .all()
+            )
 
             created_count = 0
             updated_count = 0
@@ -77,31 +81,35 @@ class TimesheetSyncService:
             for ts in timesheets:
                 try:
                     result = self._create_financial_cost_from_timesheet(ts)
-                    if result.get('created'):
+                    if result.get("created"):
                         created_count += 1
-                    elif result.get('updated'):
+                    elif result.get("updated"):
                         updated_count += 1
                 except Exception as e:
                     errors.append(f"工时记录{ts.id}: {str(e)}")
 
             return {
-                'success': True,
-                'message': f'同步完成：新建{created_count}条，更新{updated_count}条',
-                'created_count': created_count,
-                'updated_count': updated_count,
-                'errors': errors
+                "success": True,
+                "message": f"同步完成：新建{created_count}条，更新{updated_count}条",
+                "created_count": created_count,
+                "updated_count": updated_count,
+                "errors": errors,
             }
 
         else:
-            return {'success': False, 'message': '参数不完整'}
+            return {"success": False, "message": "参数不完整"}
 
     def _create_financial_cost_from_timesheet(self, timesheet: Timesheet) -> Dict[str, Any]:
         """从工时记录创建财务成本记录"""
         # 检查是否已存在
-        existing = self.db.query(FinancialProjectCost).filter(
-            FinancialProjectCost.source_type == 'TIMESHEET',
-            FinancialProjectCost.source_no == str(timesheet.id)
-        ).first()
+        existing = (
+            self.db.query(FinancialProjectCost)
+            .filter(
+                FinancialProjectCost.source_type == "TIMESHEET",
+                FinancialProjectCost.source_no == str(timesheet.id),
+            )
+            .first()
+        )
 
         # 获取用户时薪
         hourly_rate = HourlyRateService.get_user_hourly_rate(
@@ -110,7 +118,7 @@ class TimesheetSyncService:
 
         # 计算成本金额
         cost_amount = Decimal(str(timesheet.hours or 0)) * hourly_rate
-        cost_month = timesheet.work_date.strftime('%Y-%m')
+        cost_month = timesheet.work_date.strftime("%Y-%m")
 
         if existing:
             # 更新现有记录
@@ -124,16 +132,16 @@ class TimesheetSyncService:
             existing.user_name = timesheet.user_name
 
             self.db.commit()
-            return {'success': True, 'created': False, 'updated': True, 'cost_id': existing.id}
+            return {"success": True, "created": False, "updated": True, "cost_id": existing.id}
         else:
             # 创建新记录
             cost = FinancialProjectCost(
                 project_id=timesheet.project_id,
                 project_code=timesheet.project_code,
                 project_name=timesheet.project_name,
-                cost_type='LABOR',
-                cost_category='人工费',
-                cost_item='工时成本',
+                cost_type="LABOR",
+                cost_category="人工费",
+                cost_item="工时成本",
                 amount=cost_amount,
                 cost_date=timesheet.work_date,
                 cost_month=cost_month,
@@ -142,24 +150,24 @@ class TimesheetSyncService:
                 user_name=timesheet.user_name,
                 hours=Decimal(str(timesheet.hours or 0)),
                 hourly_rate=hourly_rate,
-                source_type='TIMESHEET',
+                source_type="TIMESHEET",
                 source_no=str(timesheet.id),
                 uploaded_by=timesheet.user_id,
                 is_verified=True,
                 verified_by=timesheet.approver_id,
-                verified_at=timesheet.approve_time
+                verified_at=timesheet.approve_time,
             )
 
             save_obj(self.db, cost)
 
-            return {'success': True, 'created': True, 'updated': False, 'cost_id': cost.id}
+            return {"success": True, "created": True, "updated": False, "cost_id": cost.id}
 
     def sync_to_rd(
         self,
         timesheet_id: Optional[int] = None,
         rd_project_id: Optional[int] = None,
         year: Optional[int] = None,
-        month: Optional[int] = None
+        month: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         同步到研发系统（生成RdCost记录）
@@ -177,13 +185,13 @@ class TimesheetSyncService:
             # 同步单个工时记录
             timesheet = self.db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
             if not timesheet:
-                return {'success': False, 'message': '工时记录不存在'}
+                return {"success": False, "message": "工时记录不存在"}
 
-            if timesheet.status != 'APPROVED':
-                return {'success': False, 'message': '只能同步已审批的工时记录'}
+            if timesheet.status != "APPROVED":
+                return {"success": False, "message": "只能同步已审批的工时记录"}
 
             if not timesheet.rd_project_id:
-                return {'success': False, 'message': '工时记录未关联研发项目'}
+                return {"success": False, "message": "工时记录未关联研发项目"}
 
             result = self._create_rd_cost_from_timesheet(timesheet)
             return result
@@ -192,12 +200,16 @@ class TimesheetSyncService:
             # 批量同步某个研发项目的月度数据
             start_date, end_date = get_month_range_by_ym(year, month)
 
-            timesheets = self.db.query(Timesheet).filter(
-                Timesheet.rd_project_id == rd_project_id,
-                Timesheet.status == 'APPROVED',
-                Timesheet.work_date >= start_date,
-                Timesheet.work_date <= end_date
-            ).all()
+            timesheets = (
+                self.db.query(Timesheet)
+                .filter(
+                    Timesheet.rd_project_id == rd_project_id,
+                    Timesheet.status == "APPROVED",
+                    Timesheet.work_date >= start_date,
+                    Timesheet.work_date <= end_date,
+                )
+                .all()
+            )
 
             created_count = 0
             updated_count = 0
@@ -206,61 +218,64 @@ class TimesheetSyncService:
             for ts in timesheets:
                 try:
                     result = self._create_rd_cost_from_timesheet(ts)
-                    if result.get('created'):
+                    if result.get("created"):
                         created_count += 1
-                    elif result.get('updated'):
+                    elif result.get("updated"):
                         updated_count += 1
                 except Exception as e:
                     errors.append(f"工时记录{ts.id}: {str(e)}")
 
             return {
-                'success': True,
-                'message': f'同步完成：新建{created_count}条，更新{updated_count}条',
-                'created_count': created_count,
-                'updated_count': updated_count,
-                'errors': errors
+                "success": True,
+                "message": f"同步完成：新建{created_count}条，更新{updated_count}条",
+                "created_count": created_count,
+                "updated_count": updated_count,
+                "errors": errors,
             }
 
         else:
-            return {'success': False, 'message': '参数不完整'}
+            return {"success": False, "message": "参数不完整"}
 
     def _create_rd_cost_from_timesheet(self, timesheet: Timesheet) -> Dict[str, Any]:
         """从工时记录创建研发费用记录"""
         # 获取研发项目
-        rd_project = self.db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
+        rd_project = (
+            self.db.query(RdProject).filter(RdProject.id == timesheet.rd_project_id).first()
+        )
         if not rd_project:
-            return {'success': False, 'message': '研发项目不存在'}
+            return {"success": False, "message": "研发项目不存在"}
 
         # 获取费用类型（人工费用）
         from app.models.rd_project import RdCostType
-        cost_type = self.db.query(RdCostType).filter(
-            RdCostType.type_code == 'LABOR'
-        ).first()
+
+        cost_type = self.db.query(RdCostType).filter(RdCostType.type_code == "LABOR").first()
 
         # 如果不存在，查找category为LABOR的费用类型
         if not cost_type:
-            cost_type = self.db.query(RdCostType).filter(
-                RdCostType.category == 'LABOR',
-                RdCostType.is_active
-            ).first()
+            cost_type = (
+                self.db.query(RdCostType)
+                .filter(RdCostType.category == "LABOR", RdCostType.is_active)
+                .first()
+            )
 
         # 如果还是不存在，创建一个默认的人工费用类型
         if not cost_type:
             cost_type = RdCostType(
-                type_code='LABOR',
-                type_name='人工费用',
-                category='LABOR',
-                description='研发项目人工费用',
-                is_active=True
+                type_code="LABOR",
+                type_name="人工费用",
+                category="LABOR",
+                description="研发项目人工费用",
+                is_active=True,
             )
             self.db.add(cost_type)
             self.db.flush()
 
         # 检查是否已存在
-        existing = self.db.query(RdCost).filter(
-            RdCost.source_type == 'TIMESHEET',
-            RdCost.source_id == timesheet.id
-        ).first()
+        existing = (
+            self.db.query(RdCost)
+            .filter(RdCost.source_type == "TIMESHEET", RdCost.source_id == timesheet.id)
+            .first()
+        )
 
         # 获取用户时薪
         hourly_rate = HourlyRateService.get_user_hourly_rate(
@@ -280,12 +295,13 @@ class TimesheetSyncService:
             existing.user_id = timesheet.user_id
 
             self.db.commit()
-            return {'success': True, 'created': False, 'updated': True, 'cost_id': existing.id}
+            return {"success": True, "created": False, "updated": True, "cost_id": existing.id}
         else:
             # 生成费用编号
             from datetime import datetime
 
             from sqlalchemy import desc
+
             today = datetime.now()
             date_str = today.strftime("%y%m%d")
             prefix = f"RDCOST{date_str}"
@@ -323,19 +339,17 @@ class TimesheetSyncService:
                 user_id=timesheet.user_id,
                 hours=Decimal(str(timesheet.hours or 0)),
                 hourly_rate=hourly_rate,
-                source_type='CALCULATED',  # 自动计算的费用
+                source_type="CALCULATED",  # 自动计算的费用
                 source_id=timesheet.id,
-                status='APPROVED'  # 已审批的工时自动创建已审批的费用
+                status="APPROVED",  # 已审批的工时自动创建已审批的费用
             )
 
             save_obj(self.db, cost)
 
-            return {'success': True, 'created': True, 'updated': False, 'cost_id': cost.id}
+            return {"success": True, "created": True, "updated": False, "cost_id": cost.id}
 
     def sync_to_project(
-        self,
-        timesheet_id: Optional[int] = None,
-        project_id: Optional[int] = None
+        self, timesheet_id: Optional[int] = None, project_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         同步到项目系统（更新项目成本和进度）
@@ -351,13 +365,13 @@ class TimesheetSyncService:
             # 同步单个工时记录
             timesheet = self.db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
             if not timesheet:
-                return {'success': False, 'message': '工时记录不存在'}
+                return {"success": False, "message": "工时记录不存在"}
 
-            if timesheet.status != 'APPROVED':
-                return {'success': False, 'message': '只能同步已审批的工时记录'}
+            if timesheet.status != "APPROVED":
+                return {"success": False, "message": "只能同步已审批的工时记录"}
 
             if not timesheet.project_id:
-                return {'success': False, 'message': '工时记录未关联项目'}
+                return {"success": False, "message": "工时记录未关联项目"}
 
             # 使用LaborCostService计算项目成本
             result = LaborCostService.calculate_project_labor_cost(
@@ -365,7 +379,7 @@ class TimesheetSyncService:
                 timesheet.project_id,
                 start_date=timesheet.work_date,
                 end_date=timesheet.work_date,
-                recalculate=False
+                recalculate=False,
             )
 
             return result
@@ -373,21 +387,16 @@ class TimesheetSyncService:
         elif project_id:
             # 批量同步项目所有已审批工时
             result = LaborCostService.calculate_project_labor_cost(
-                self.db,
-                project_id,
-                recalculate=False
+                self.db, project_id, recalculate=False
             )
 
             return result
 
         else:
-            return {'success': False, 'message': '参数不完整'}
+            return {"success": False, "message": "参数不完整"}
 
     def sync_to_hr(
-        self,
-        year: int,
-        month: int,
-        department_id: Optional[int] = None
+        self, year: int, month: int, department_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         同步到HR系统（生成加班工资数据）
@@ -408,11 +417,7 @@ class TimesheetSyncService:
         # 获取所有用户的加班统计
         stats = overtime_service.get_overtime_statistics(year, month, department_id)
 
-        return {
-            'success': True,
-            'message': 'HR数据准备完成',
-            'statistics': stats
-        }
+        return {"success": True, "message": "HR数据准备完成", "statistics": stats}
 
     def sync_all_on_approval(self, timesheet_id: int) -> Dict[str, Any]:
         """
@@ -426,29 +431,25 @@ class TimesheetSyncService:
         """
         timesheet = self.db.query(Timesheet).filter(Timesheet.id == timesheet_id).first()
         if not timesheet:
-            return {'success': False, 'message': '工时记录不存在'}
+            return {"success": False, "message": "工时记录不存在"}
 
         results = {
-            'timesheet_id': timesheet_id,
-            'finance': None,
-            'rd': None,
-            'project': None,
-            'hr': None
+            "timesheet_id": timesheet_id,
+            "finance": None,
+            "rd": None,
+            "project": None,
+            "hr": None,
         }
 
         # 同步到财务（如果有项目）
         if timesheet.project_id:
-            results['finance'] = self.sync_to_finance(timesheet_id=timesheet_id)
-            results['project'] = self.sync_to_project(timesheet_id=timesheet_id)
+            results["finance"] = self.sync_to_finance(timesheet_id=timesheet_id)
+            results["project"] = self.sync_to_project(timesheet_id=timesheet_id)
 
         # 同步到研发（如果是研发项目）
         if timesheet.rd_project_id:
-            results['rd'] = self.sync_to_rd(timesheet_id=timesheet_id)
+            results["rd"] = self.sync_to_rd(timesheet_id=timesheet_id)
 
         # HR数据会在月度汇总时统一处理，这里不单独同步
 
-        return {
-            'success': True,
-            'message': '自动同步完成',
-            'results': results
-        }
+        return {"success": True, "message": "自动同步完成", "results": results}

@@ -8,11 +8,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ==================== 任务响应 ====================
+
 
 class ApprovalTaskResponse(BaseModel):
     """审批任务响应"""
+
     id: int
     instance_id: int
     node_id: int
@@ -46,6 +47,7 @@ class ApprovalTaskResponse(BaseModel):
 
 class ApprovalTaskListResponse(BaseModel):
     """审批任务列表响应"""
+
     total: int
     page: int
     page_size: int
@@ -54,8 +56,10 @@ class ApprovalTaskListResponse(BaseModel):
 
 # ==================== 操作请求 ====================
 
+
 class ApproveRequest(BaseModel):
     """审批通过请求"""
+
     comment: Optional[str] = Field(None, description="审批意见")
     attachments: Optional[List[Dict[str, Any]]] = Field(None, description="附件列表")
     eval_data: Optional[Dict[str, Any]] = Field(None, description="评估数据（ECN场景）")
@@ -63,6 +67,7 @@ class ApproveRequest(BaseModel):
 
 class RejectRequest(BaseModel):
     """审批驳回请求"""
+
     comment: str = Field(..., min_length=1, description="驳回原因（必填）")
     reject_to: str = Field("START", description="驳回目标：START/PREV/节点ID")
     attachments: Optional[List[Dict[str, Any]]] = Field(None, description="附件列表")
@@ -70,18 +75,21 @@ class RejectRequest(BaseModel):
 
 class ReturnRequest(BaseModel):
     """退回请求"""
+
     target_node_id: int = Field(..., description="目标节点ID")
     comment: str = Field(..., min_length=1, description="退回原因")
 
 
 class TransferRequest(BaseModel):
     """转审请求"""
+
     to_user_id: int = Field(..., description="转审目标用户ID")
     comment: Optional[str] = Field(None, description="转审说明")
 
 
 class AddApproverRequest(BaseModel):
     """加签请求"""
+
     approver_ids: List[int] = Field(..., min_items=1, description="要添加的审批人ID列表")
     position: str = Field("AFTER", description="加签位置：BEFORE/AFTER")
     comment: Optional[str] = Field(None, description="加签说明")
@@ -89,28 +97,34 @@ class AddApproverRequest(BaseModel):
 
 class AddCCRequest(BaseModel):
     """加抄送请求"""
+
     cc_user_ids: List[int] = Field(..., min_items=1, description="抄送人ID列表")
 
 
 class WithdrawRequest(BaseModel):
     """撤回请求"""
+
     comment: Optional[str] = Field(None, description="撤回说明")
 
 
 class TerminateRequest(BaseModel):
     """终止请求"""
+
     comment: str = Field(..., min_length=1, description="终止原因")
 
 
 class RemindRequest(BaseModel):
     """催办请求"""
+
     pass
 
 
 # ==================== 评论 ====================
 
+
 class CommentRequest(BaseModel):
     """评论请求"""
+
     content: str = Field(..., min_length=1, description="评论内容")
     parent_id: Optional[int] = Field(None, description="父评论ID（回复时）")
     reply_to_user_id: Optional[int] = Field(None, description="回复的用户ID")
@@ -120,6 +134,7 @@ class CommentRequest(BaseModel):
 
 class CommentResponse(BaseModel):
     """评论响应"""
+
     id: int
     instance_id: int
     user_id: int
@@ -139,8 +154,10 @@ class CommentResponse(BaseModel):
 
 # ==================== 抄送 ====================
 
+
 class CarbonCopyResponse(BaseModel):
     """抄送记录响应"""
+
     id: int
     instance_id: int
     node_id: Optional[int] = None
@@ -163,6 +180,7 @@ class CarbonCopyResponse(BaseModel):
 
 class CarbonCopyListResponse(BaseModel):
     """抄送列表响应"""
+
     total: int
     page: int
     page_size: int
@@ -171,8 +189,10 @@ class CarbonCopyListResponse(BaseModel):
 
 # ==================== 代理人 ====================
 
+
 class DelegateCreate(BaseModel):
     """创建代理人配置"""
+
     delegate_id: int = Field(..., description="代理人ID")
     start_date: str = Field(..., description="开始日期 YYYY-MM-DD")
     end_date: str = Field(..., description="结束日期 YYYY-MM-DD")
@@ -186,6 +206,7 @@ class DelegateCreate(BaseModel):
 
 class DelegateUpdate(BaseModel):
     """更新代理人配置"""
+
     delegate_id: Optional[int] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
@@ -200,6 +221,7 @@ class DelegateUpdate(BaseModel):
 
 class DelegateResponse(BaseModel):
     """代理人配置响应"""
+
     id: int
     user_id: int
     delegate_id: int

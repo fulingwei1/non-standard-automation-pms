@@ -9,19 +9,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
-from app.common.pagination import get_pagination_query, PaginationParams
 from app.models.project.customer import Customer
 from app.models.sales.contacts import Contact
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (
     ContactCreate,
-    ContactUpdate,
     ContactResponse,
+    ContactUpdate,
 )
-
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+
 router = APIRouter()
 
 
@@ -38,7 +38,7 @@ def read_customer_contacts(
     # 检查客户是否存在及权限
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权访问该客户的联系人")
 
     # 查询联系人
@@ -82,6 +82,7 @@ def read_contacts(
     # 关键词搜索
     if keyword:
         from sqlalchemy import or_
+
         query = query.filter(
             or_(
                 Contact.name.contains(keyword),
@@ -138,7 +139,7 @@ def read_contact(
 
     # 检查权限
     if contact.customer and not security.check_sales_data_permission(
-        contact.customer, current_user, db, 'sales_owner_id'
+        contact.customer, current_user, db, "sales_owner_id"
     ):
         raise HTTPException(status_code=403, detail="无权访问该联系人")
 
@@ -164,7 +165,7 @@ def create_contact(
     # 检查客户是否存在及权限
     customer = get_or_404(db, Customer, customer_id, detail="客户不存在")
 
-    if not security.check_sales_data_permission(customer, current_user, db, 'sales_owner_id'):
+    if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权为该客户添加联系人")
 
     # 确保 customer_id 一致
@@ -174,15 +175,14 @@ def create_contact(
     # 如果设置为主要联系人，先取消其他主要联系人
     if contact_data.get("is_primary"):
         db.query(Contact).filter(
-            Contact.customer_id == customer_id,
-            Contact.is_primary == True
+            Contact.customer_id == customer_id, Contact.is_primary == True
         ).update({"is_primary": False})
 
     contact = Contact(**contact_data)
     save_obj(db, contact)
 
     # 加载客户信息
-    db.refresh(contact, attribute_names=['customer'])
+    db.refresh(contact, attribute_names=["customer"])
 
     contact_dict = {
         **{c.name: getattr(contact, c.name) for c in contact.__table__.columns},
@@ -208,19 +208,19 @@ def update_contact(
     # 检查权限
     customer = db.query(Customer).filter(Customer.id == contact.customer_id).first()
     if customer and not security.check_sales_data_permission(
-        customer, current_user, db, 'sales_owner_id'
+        customer, current_user, db, "sales_owner_id"
     ):
         raise HTTPException(status_code=403, detail="无权修改该联系人")
 
     # 更新字段
     update_data = contact_in.model_dump(exclude_unset=True)
-    
+
     # 如果设置为主要联系人，先取消其他主要联系人
     if update_data.get("is_primary"):
         db.query(Contact).filter(
             Contact.customer_id == contact.customer_id,
             Contact.id != contact_id,
-            Contact.is_primary == True
+            Contact.is_primary == True,
         ).update({"is_primary": False})
 
     for field, value in update_data.items():
@@ -230,7 +230,7 @@ def update_contact(
     db.refresh(contact)
 
     # 加载客户信息
-    db.refresh(contact, attribute_names=['customer'])
+    db.refresh(contact, attribute_names=["customer"])
 
     contact_dict = {
         **{c.name: getattr(contact, c.name) for c in contact.__table__.columns},
@@ -254,7 +254,7 @@ def delete_contact(
     # 检查权限
     customer = db.query(Customer).filter(Customer.id == contact.customer_id).first()
     if customer and not security.check_sales_data_permission(
-        customer, current_user, db, 'sales_owner_id'
+        customer, current_user, db, "sales_owner_id"
     ):
         if not security.is_admin(current_user):
             raise HTTPException(status_code=403, detail="无权删除该联系人")
@@ -276,7 +276,7 @@ def set_primary_contact(
     # 检查权限
     customer = db.query(Customer).filter(Customer.id == contact.customer_id).first()
     if customer and not security.check_sales_data_permission(
-        customer, current_user, db, 'sales_owner_id'
+        customer, current_user, db, "sales_owner_id"
     ):
         raise HTTPException(status_code=403, detail="无权修改该联系人")
 
@@ -284,7 +284,7 @@ def set_primary_contact(
     db.query(Contact).filter(
         Contact.customer_id == contact.customer_id,
         Contact.id != contact_id,
-        Contact.is_primary == True
+        Contact.is_primary == True,
     ).update({"is_primary": False})
 
     # 设置为主要联系人
@@ -293,7 +293,7 @@ def set_primary_contact(
     db.refresh(contact)
 
     # 加载客户信息
-    db.refresh(contact, attribute_names=['customer'])
+    db.refresh(contact, attribute_names=["customer"])
 
     contact_dict = {
         **{c.name: getattr(contact, c.name) for c in contact.__table__.columns},

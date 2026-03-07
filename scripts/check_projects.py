@@ -45,6 +45,7 @@ def check_projects(project_codes):
     print(f"  - 总项目数: {total}")
     print(f"  - 启用项目数: {active}")
 
+
 if __name__ == "__main__":
     # 要检查的项目编码
     project_codes = ["PJ250111", "PJ250110", "PJ250109"]

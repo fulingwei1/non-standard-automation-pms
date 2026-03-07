@@ -43,24 +43,30 @@ def get_timesheet_report_summary(
         base_filter.append(Timesheet.department_id == department_id)
 
     # 汇总统计
-    result = db.query(
-        func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
-        func.count(func.distinct(Timesheet.user_id)).label("total_users"),
-        func.count(Timesheet.id).label("total_records"),
-        func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
-    ).filter(*base_filter).first()
+    result = (
+        db.query(
+            func.coalesce(func.sum(Timesheet.hours), 0).label("total_hours"),
+            func.count(func.distinct(Timesheet.user_id)).label("total_users"),
+            func.count(Timesheet.id).label("total_records"),
+            func.count(func.distinct(Timesheet.project_id)).label("total_projects"),
+        )
+        .filter(*base_filter)
+        .first()
+    )
 
     # 按用户汇总
-    user_rows = db.query(
-        Timesheet.user_id,
-        Timesheet.user_name,
-        func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
-        func.count(Timesheet.id).label("records"),
-    ).filter(
-        *base_filter
-    ).group_by(
-        Timesheet.user_id, Timesheet.user_name
-    ).order_by(func.sum(Timesheet.hours).desc()).all()
+    user_rows = (
+        db.query(
+            Timesheet.user_id,
+            Timesheet.user_name,
+            func.coalesce(func.sum(Timesheet.hours), 0).label("hours"),
+            func.count(Timesheet.id).label("records"),
+        )
+        .filter(*base_filter)
+        .group_by(Timesheet.user_id, Timesheet.user_name)
+        .order_by(func.sum(Timesheet.hours).desc())
+        .all()
+    )
 
     users = [
         {

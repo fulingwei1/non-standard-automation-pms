@@ -45,7 +45,7 @@ class PermissionAuditService:
         target_id: int,
         detail: Optional[Dict[str, Any]] = None,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ) -> PermissionAudit:
         """
         记录审计日志
@@ -72,7 +72,7 @@ class PermissionAuditService:
             target_id=target_id,
             detail=json.dumps(detail, ensure_ascii=False) if detail else None,
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
         save_obj(db, audit)
@@ -87,7 +87,7 @@ class PermissionAuditService:
         role_ids: list,
         action: str = ACTION_USER_ROLE_ASSIGNED,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ):
         """记录用户角色分配"""
         PermissionAuditService.log_audit(
@@ -96,12 +96,9 @@ class PermissionAuditService:
             action=action,
             target_type="user",
             target_id=user_id,
-            detail={
-                "role_ids": role_ids,
-                "description": f"分配角色: {role_ids}"
-            },
+            detail={"role_ids": role_ids, "description": f"分配角色: {role_ids}"},
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
     @staticmethod
@@ -112,7 +109,7 @@ class PermissionAuditService:
         permission_ids: list,
         action: str = ACTION_ROLE_PERMISSION_ASSIGNED,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ):
         """记录角色权限分配"""
         PermissionAuditService.log_audit(
@@ -121,12 +118,9 @@ class PermissionAuditService:
             action=action,
             target_type="role",
             target_id=role_id,
-            detail={
-                "permission_ids": permission_ids,
-                "description": f"分配权限: {permission_ids}"
-            },
+            detail={"permission_ids": permission_ids, "description": f"分配权限: {permission_ids}"},
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
     @staticmethod
@@ -137,7 +131,7 @@ class PermissionAuditService:
         action: str,
         changes: Optional[Dict[str, Any]] = None,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ):
         """记录用户操作"""
         PermissionAuditService.log_audit(
@@ -146,12 +140,9 @@ class PermissionAuditService:
             action=action,
             target_type="user",
             target_id=user_id,
-            detail={
-                "changes": changes,
-                "description": f"用户操作: {action}"
-            },
+            detail={"changes": changes, "description": f"用户操作: {action}"},
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
     @staticmethod
@@ -162,7 +153,7 @@ class PermissionAuditService:
         action: str,
         changes: Optional[Dict[str, Any]] = None,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ):
         """记录角色操作"""
         PermissionAuditService.log_audit(
@@ -171,13 +162,7 @@ class PermissionAuditService:
             action=action,
             target_type="role",
             target_id=role_id,
-            detail={
-                "changes": changes,
-                "description": f"角色操作: {action}"
-            },
+            detail={"changes": changes, "description": f"角色操作: {action}"},
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
-
-
-

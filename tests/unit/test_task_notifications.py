@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """task_notifications 单元测试"""
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.services.ecn_notification.task_notifications import (

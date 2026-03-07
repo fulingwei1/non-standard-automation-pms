@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
 """Tests for app/services/report_framework/models.py"""
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 try:
     from app.services.report_framework.models import (
-        ReportConfig, ReportMeta, ParameterConfig, ParameterType,
-        DataSourceConfig, DataSourceType, SectionConfig, SectionType,
-        CacheConfig, ScheduleConfig, ExportConfig,
+        CacheConfig,
+        DataSourceConfig,
+        DataSourceType,
+        ExportConfig,
+        ParameterConfig,
+        ParameterType,
+        ReportConfig,
+        ReportMeta,
+        ScheduleConfig,
+        SectionConfig,
+        SectionType,
     )
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)

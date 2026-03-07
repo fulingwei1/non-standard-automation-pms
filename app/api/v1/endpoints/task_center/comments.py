@@ -38,16 +38,18 @@ logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter
 
-router = APIRouter(
-    prefix="",
-    tags=["comments"]
-)
+router = APIRouter(prefix="", tags=["comments"])
 
 # 共 2 个路由
 
 # ==================== 任务评论 ====================
 
-@router.post("/tasks/{task_id}/comments", response_model=TaskCommentResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/tasks/{task_id}/comments",
+    response_model=TaskCommentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_task_comment(
     *,
     db: Session = Depends(deps.get_db),
@@ -63,7 +65,9 @@ def create_task_comment(
     # 验证父评论
     parent_comment = None
     if comment_in.parent_id:
-        parent_comment = db.query(TaskComment).filter(TaskComment.id == comment_in.parent_id).first()
+        parent_comment = (
+            db.query(TaskComment).filter(TaskComment.id == comment_in.parent_id).first()
+        )
         if not parent_comment or parent_comment.task_id != task_id:
             raise HTTPException(status_code=400, detail="父评论不存在或不属于此任务")
 
@@ -74,7 +78,7 @@ def create_task_comment(
         parent_id=comment_in.parent_id,
         commenter_id=current_user.id,
         commenter_name=current_user.real_name or current_user.username,
-        mentioned_users=comment_in.mentioned_users if comment_in.mentioned_users else []
+        mentioned_users=comment_in.mentioned_users if comment_in.mentioned_users else [],
     )
 
     db.add(comment)
@@ -98,7 +102,11 @@ def create_task_comment(
                             source_id=task.id,
                             link_url=f"/tasks/{task.id}",
                             priority="NORMAL",
-                            extra_data={"task_id": task.id, "comment_id": comment.id, "commenter": current_user.real_name or current_user.username}
+                            extra_data={
+                                "task_id": task.id,
+                                "comment_id": comment.id,
+                                "commenter": current_user.real_name or current_user.username,
+                            },
                         )
             db.commit()
         except Exception:
@@ -115,11 +123,15 @@ def create_task_comment(
         commenter_name=comment.commenter_name,
         mentioned_users=comment.mentioned_users if comment.mentioned_users else [],
         created_at=comment.created_at,
-        replies=None
+        replies=None,
     )
 
 
-@router.get("/tasks/{task_id}/comments", response_model=List[TaskCommentResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/tasks/{task_id}/comments",
+    response_model=List[TaskCommentResponse],
+    status_code=status.HTTP_200_OK,
+)
 def get_task_comments(
     *,
     db: Session = Depends(deps.get_db),
@@ -131,46 +143,53 @@ def get_task_comments(
     """
     get_or_404(db, TaskUnified, task_id, "任务不存在")
 
-    comments = db.query(TaskComment).filter(
-        TaskComment.task_id == task_id,
-        TaskComment.parent_id.is_(None)  # 只获取顶级评论
-    ).order_by(TaskComment.created_at).all()
+    comments = (
+        db.query(TaskComment)
+        .filter(TaskComment.task_id == task_id, TaskComment.parent_id.is_(None))  # 只获取顶级评论
+        .order_by(TaskComment.created_at)
+        .all()
+    )
 
     items = []
     for comment in comments:
         # 获取回复
-        replies = db.query(TaskComment).filter(
-            TaskComment.parent_id == comment.id
-        ).order_by(TaskComment.created_at).all()
+        replies = (
+            db.query(TaskComment)
+            .filter(TaskComment.parent_id == comment.id)
+            .order_by(TaskComment.created_at)
+            .all()
+        )
 
         reply_items = []
         for reply in replies:
-            reply_items.append(TaskCommentResponse(
-                id=reply.id,
-                task_id=reply.task_id,
-                content=reply.content,
-                comment_type=reply.comment_type,
-                parent_id=reply.parent_id,
-                commenter_id=reply.commenter_id,
-                commenter_name=reply.commenter_name,
-                mentioned_users=reply.mentioned_users if reply.mentioned_users else [],
-                created_at=reply.created_at,
-                replies=None
-            ))
+            reply_items.append(
+                TaskCommentResponse(
+                    id=reply.id,
+                    task_id=reply.task_id,
+                    content=reply.content,
+                    comment_type=reply.comment_type,
+                    parent_id=reply.parent_id,
+                    commenter_id=reply.commenter_id,
+                    commenter_name=reply.commenter_name,
+                    mentioned_users=reply.mentioned_users if reply.mentioned_users else [],
+                    created_at=reply.created_at,
+                    replies=None,
+                )
+            )
 
-        items.append(TaskCommentResponse(
-            id=comment.id,
-            task_id=comment.task_id,
-            content=comment.content,
-            comment_type=comment.comment_type,
-            parent_id=comment.parent_id,
-            commenter_id=comment.commenter_id,
-            commenter_name=comment.commenter_name,
-            mentioned_users=comment.mentioned_users if comment.mentioned_users else [],
-            created_at=comment.created_at,
-            replies=reply_items if reply_items else None
-        ))
+        items.append(
+            TaskCommentResponse(
+                id=comment.id,
+                task_id=comment.task_id,
+                content=comment.content,
+                comment_type=comment.comment_type,
+                parent_id=comment.parent_id,
+                commenter_id=comment.commenter_id,
+                commenter_name=comment.commenter_name,
+                mentioned_users=comment.mentioned_users if comment.mentioned_users else [],
+                created_at=comment.created_at,
+                replies=reply_items if reply_items else None,
+            )
+        )
 
     return items
-
-

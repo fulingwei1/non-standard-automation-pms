@@ -40,9 +40,7 @@ async def get_sales_daily_report(
 
                 datetime.strptime(report_date, "%Y-%m-%d")
             except ValueError:
-                raise HTTPException(
-                    status_code=400, detail="日期格式错误，应为YYYY-MM-DD"
-                )
+                raise HTTPException(status_code=400, detail="日期格式错误，应为YYYY-MM-DD")
 
         # 调用服务层
         service = BusinessSupportReportsService(db)
@@ -65,9 +63,7 @@ async def get_sales_daily_report(
     summary="获取销售周报",
 )
 async def get_sales_weekly_report(
-    week: Optional[str] = Query(
-        None, description="周（YYYY-WW格式），不提供则使用当前周"
-    ),
+    week: Optional[str] = Query(None, description="周（YYYY-WW格式），不提供则使用当前周"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
@@ -105,9 +101,7 @@ async def get_sales_weekly_report(
     summary="获取销售月报",
 )
 async def get_sales_monthly_report(
-    month: Optional[str] = Query(
-        None, description="月份（YYYY-MM格式），不提供则使用当前月份"
-    ),
+    month: Optional[str] = Query(None, description="月份（YYYY-MM格式），不提供则使用当前月份"),
     format: str = Query("json", description="格式：json/pdf/excel"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -166,18 +160,12 @@ async def get_sales_monthly_report(
                     new_contracts_count=contract_stats.get("new_contracts_count", 0),
                     new_contracts_amount=contract_stats.get("new_contracts_amount", 0),
                     active_contracts_count=contract_stats.get("active_contracts", 0),
-                    completed_contracts_count=contract_stats.get(
-                        "completed_contracts", 0
-                    ),
+                    completed_contracts_count=contract_stats.get("completed_contracts", 0),
                     new_orders_count=order_stats.get("new_orders_count", 0),
                     new_orders_amount=order_stats.get("new_orders_amount", 0),
-                    planned_receipt_amount=receipt_stats.get(
-                        "planned_receipt_amount", 0
-                    ),
+                    planned_receipt_amount=receipt_stats.get("planned_receipt_amount", 0),
                     actual_receipt_amount=receipt_stats.get("actual_receipt_amount", 0),
-                    receipt_completion_rate=receipt_stats.get(
-                        "receipt_completion_rate", 0
-                    ),
+                    receipt_completion_rate=receipt_stats.get("receipt_completion_rate", 0),
                     overdue_amount=receipt_stats.get("overdue_amount", 0),
                     invoices_count=invoice_stats.get("invoices_count", 0),
                     invoices_amount=invoice_stats.get("invoices_amount", 0),

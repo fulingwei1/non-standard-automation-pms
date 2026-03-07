@@ -69,9 +69,7 @@ class Pitfall(Base, TimestampMixin):
     source_project = relationship("Project", foreign_keys=[source_project_id])
     creator = relationship("User", foreign_keys=[created_by])
     recommendations = relationship("PitfallRecommendation", back_populates="pitfall")
-    learning_progress = relationship(
-        "PitfallLearningProgress", back_populates="pitfall"
-    )
+    learning_progress = relationship("PitfallLearningProgress", back_populates="pitfall")
 
     __table_args__ = (
         Index("idx_pitfall_stage", "stage"),
@@ -89,17 +87,14 @@ class Pitfall(Base, TimestampMixin):
 
 class PitfallRecommendation(Base, TimestampMixin):
     """踩坑推荐记录表
-    
+
     【状态】未启用 - 陷阱推荐"""
+
     __tablename__ = "pitfall_recommendations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
-    pitfall_id = Column(
-        Integer, ForeignKey("pitfalls.id"), nullable=False, comment="踩坑ID"
-    )
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
-    )
+    pitfall_id = Column(Integer, ForeignKey("pitfalls.id"), nullable=False, comment="踩坑ID")
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
 
     trigger_type = Column(String(20), nullable=False, comment="触发类型")
     trigger_context = Column(JSON, comment="触发上下文")
@@ -123,15 +118,14 @@ class PitfallRecommendation(Base, TimestampMixin):
 
 class PitfallLearningProgress(Base, TimestampMixin):
     """踩坑学习进度表
-    
+
     【状态】未启用 - 学习进度"""
+
     __tablename__ = "pitfall_learning_progress"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="主键ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
-    pitfall_id = Column(
-        Integer, ForeignKey("pitfalls.id"), nullable=False, comment="踩坑ID"
-    )
+    pitfall_id = Column(Integer, ForeignKey("pitfalls.id"), nullable=False, comment="踩坑ID")
 
     read_at = Column(DateTime, comment="阅读时间")
     is_marked = Column(Boolean, default=False, comment="是否标记已掌握")
@@ -148,6 +142,4 @@ class PitfallLearningProgress(Base, TimestampMixin):
     )
 
     def __repr__(self):
-        return (
-            f"<PitfallLearningProgress user={self.user_id} pitfall={self.pitfall_id}>"
-        )
+        return f"<PitfallLearningProgress user={self.user_id} pitfall={self.pitfall_id}>"

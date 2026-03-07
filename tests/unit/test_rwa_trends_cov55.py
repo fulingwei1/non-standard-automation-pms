@@ -2,10 +2,11 @@
 """
 Tests for app/services/resource_waste_analysis/trends_comparison.py
 """
-import pytest
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.resource_waste_analysis.trends_comparison import TrendsComparisonMixin
@@ -25,7 +26,7 @@ def _make_period_data(**kwargs):
         "wasted_hours": 20.0,
         "wasted_cost": Decimal("2000"),
         "waste_rate": 0.4,
-        "loss_reasons": {}
+        "loss_reasons": {},
     }
     base.update(kwargs)
     return base
@@ -57,8 +58,17 @@ def test_get_monthly_trend_item_keys(trends):
     """每个月度数据项应包含必要的键"""
     result = trends.get_monthly_trend(months=1)
     item = result[0]
-    required_keys = ["month", "total_leads", "won_leads", "lost_leads",
-                     "win_rate", "total_hours", "wasted_hours", "waste_rate", "wasted_cost"]
+    required_keys = [
+        "month",
+        "total_leads",
+        "won_leads",
+        "lost_leads",
+        "win_rate",
+        "total_hours",
+        "wasted_hours",
+        "waste_rate",
+        "wasted_cost",
+    ]
     for key in required_keys:
         assert key in item
 

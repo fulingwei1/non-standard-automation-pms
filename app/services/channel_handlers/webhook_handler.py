@@ -4,7 +4,7 @@ Webhook通知处理器（钉钉、飞书等）
 """
 
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 
 try:
     import requests
@@ -35,9 +35,7 @@ class WebhookChannelHandler(ChannelHandler):
 
         message = self._build_message(request)
         try:
-            response = requests.post(
-                settings.WECHAT_WEBHOOK_URL, json=message, timeout=10
-            )
+            response = requests.post(settings.WECHAT_WEBHOOK_URL, json=message, timeout=10)
             if response.status_code == 200:
                 return NotificationResult(
                     channel=self.channel,
@@ -51,9 +49,7 @@ class WebhookChannelHandler(ChannelHandler):
             )
         except Exception as e:
             self.logger.error(f"发送Webhook通知失败: {e}")
-            return NotificationResult(
-                channel=self.channel, success=False, error_message=str(e)
-            )
+            return NotificationResult(channel=self.channel, success=False, error_message=str(e))
 
     def _build_message(self, request: NotificationRequest) -> Dict[str, Any]:
         if request.wechat_template:

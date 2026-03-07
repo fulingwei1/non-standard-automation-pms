@@ -6,16 +6,16 @@
 
 import json
 import logging
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc
+from sqlalchemy.orm import Session
 
 from app.models.project.schedule_prediction import (
-    ProjectSchedulePrediction,
     CatchUpSolution,
+    ProjectSchedulePrediction,
     ScheduleAlert,
 )
 from app.services.ai_client_service import AIClientService
@@ -128,24 +128,19 @@ class SchedulePredictionService:
 
         # 计算所需日均进度（未来）
         remaining_progress = 100 - current_progress
-        required_daily_progress = (
-            remaining_progress / remaining_days if remaining_days > 0 else 0
-        )
+        required_daily_progress = remaining_progress / remaining_days if remaining_days > 0 else 0
 
         # 计算速度比率
         velocity_ratio = (
-            avg_daily_progress / required_daily_progress
-            if required_daily_progress > 0
-            else 1.0
+            avg_daily_progress / required_daily_progress if required_daily_progress > 0 else 1.0
         )
 
         # 提取其他特征
         complexity = project_data.get("complexity", "medium") if project_data else "medium"
-        
+
         # 查询历史类似项目数据
         similar_projects_stats = self._get_similar_projects_stats(
-            complexity=complexity,
-            team_size=team_size
+            complexity=complexity, team_size=team_size
         )
 
         features = {
@@ -247,9 +242,7 @@ class SchedulePredictionService:
 """
         return prompt
 
-    def _parse_ai_prediction(
-        self, ai_response: str, features: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _parse_ai_prediction(self, ai_response: str, features: Dict[str, Any]) -> Dict[str, Any]:
         """解析AI预测结果"""
         try:
             # 尝试提取JSON
@@ -326,9 +319,7 @@ class SchedulePredictionService:
         else:
             return "critical"
 
-    def _get_similar_projects_stats(
-        self, complexity: str, team_size: int
-    ) -> Dict[str, Any]:
+    def _get_similar_projects_stats(self, complexity: str, team_size: int) -> Dict[str, Any]:
         """获取类似项目统计数据"""
         try:
             # 查询历史预测记录，获取类似项目的统计
@@ -350,9 +341,7 @@ class SchedulePredictionService:
                 avg_delay = sum(p.delay_days or 0 for p in similar_predictions) / len(
                     similar_predictions
                 )
-                delay_count = sum(
-                    1 for p in similar_predictions if (p.delay_days or 0) > 0
-                )
+                delay_count = sum(1 for p in similar_predictions if (p.delay_days or 0) > 0)
                 delay_rate = delay_count / len(similar_predictions)
 
                 return {
@@ -740,9 +729,7 @@ class SchedulePredictionService:
         Returns:
             预警列表
         """
-        query = self.db.query(ScheduleAlert).filter(
-            ScheduleAlert.project_id == project_id
-        )
+        query = self.db.query(ScheduleAlert).filter(ScheduleAlert.project_id == project_id)
 
         if severity:
             query = query.filter(ScheduleAlert.severity == severity)
@@ -801,9 +788,7 @@ class SchedulePredictionService:
         # 统计
         total_projects = len(latest_predictions)
         at_risk = sum(
-            1
-            for p in latest_predictions
-            if p.risk_level in ["medium", "high", "critical"]
+            1 for p in latest_predictions if p.risk_level in ["medium", "high", "critical"]
         )
         critical = sum(1 for p in latest_predictions if p.risk_level == "critical")
 

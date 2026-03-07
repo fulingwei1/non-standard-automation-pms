@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """Tests for wechat_alert_service.py"""
-from unittest.mock import MagicMock, patch
 from datetime import date
+from unittest.mock import MagicMock, patch
 
 
 class TestWeChatAlertService:
     def setup_method(self):
         self.db = MagicMock()
 
-    @patch("app.services.wechat_alert_service.WeChatAlertService._send_wechat_message", return_value=True)
+    @patch(
+        "app.services.wechat_alert_service.WeChatAlertService._send_wechat_message",
+        return_value=True,
+    )
     @patch("app.services.wechat_alert_service.WeChatAlertService._get_notify_users")
     @patch("app.services.wechat_alert_service.WeChatAlertService._build_alert_message")
     def test_send_shortage_alert_success(self, mock_build, mock_users, mock_send):
@@ -19,7 +22,9 @@ class TestWeChatAlertService:
         user = MagicMock(id=1, username="user1")
 
         self.db.query.return_value.filter.return_value.first.side_effect = [
-            readiness, project, None  # readiness, project, rule
+            readiness,
+            project,
+            None,  # readiness, project, rule
         ]
         mock_build.return_value = {"msgtype": "template_card"}
         mock_users.return_value = [user]
@@ -30,6 +35,7 @@ class TestWeChatAlertService:
 
     def test_send_shortage_alert_no_readiness(self):
         from app.services.wechat_alert_service import WeChatAlertService
+
         self.db.query.return_value.filter.return_value.first.return_value = None
         shortage = MagicMock(readiness_id=1)
         result = WeChatAlertService.send_shortage_alert(self.db, shortage, "L1")
@@ -37,10 +43,14 @@ class TestWeChatAlertService:
 
     def test_build_alert_message(self):
         from app.services.wechat_alert_service import WeChatAlertService
+
         shortage = MagicMock(
-            material_name="物料A", material_code="M001",
-            shortage_qty=5, unit="个", assembly_stage="MECH",
-            expected_arrival=None
+            material_name="物料A",
+            material_code="M001",
+            shortage_qty=5,
+            unit="个",
+            assembly_stage="MECH",
+            expected_arrival=None,
         )
         readiness = MagicMock(id=1, stage_kit_rates={}, current_workable_stage="FRAME")
         project = MagicMock(project_no="P001", name="项目A", planned_start_date=date(2025, 6, 1))
@@ -55,6 +65,7 @@ class TestWeChatAlertService:
 
     def test_get_notify_users_default(self):
         from app.services.wechat_alert_service import WeChatAlertService
+
         project = MagicMock(project_manager_id=1)
         pm = MagicMock(id=1)
         self.db.query.return_value.filter.return_value.first.return_value = pm
@@ -63,12 +74,14 @@ class TestWeChatAlertService:
 
     def test_get_notify_users_no_rule_no_pm(self):
         from app.services.wechat_alert_service import WeChatAlertService
+
         project = MagicMock(project_manager_id=None)
         users = WeChatAlertService._get_notify_users(self.db, None, project)
         assert users == []
 
     def test_batch_send_alerts(self):
         from app.services.wechat_alert_service import WeChatAlertService
+
         self.db.query.return_value.filter.return_value.all.return_value = []
         result = WeChatAlertService.batch_send_alerts(self.db)
-        assert result['total'] == 0
+        assert result["total"] == 0

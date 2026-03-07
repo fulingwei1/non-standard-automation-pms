@@ -2,12 +2,13 @@
 """
 Tests for app/services/notification_handlers/sms_handler.py
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 try:
-    from app.services.notification_handlers.sms_handler import SMSNotificationHandler
     from app.models.enums import AlertLevelEnum
+    from app.services.notification_handlers.sms_handler import SMSNotificationHandler
 except ImportError as e:
     pytest.skip(f"Import failed: {e}", allow_module_level=True)
 
@@ -100,8 +101,10 @@ def test_send_success(handler, urgent_alert):
     notification = MagicMock()
     notification.notify_target = "13800138000"
     notification.notify_title = "测试标题"
-    with patch("app.services.notification_handlers.sms_handler.settings") as mock_settings, \
-         patch("app.services.notification_handlers.sms_handler.send_alert_via_unified") as mock_send:
+    with (
+        patch("app.services.notification_handlers.sms_handler.settings") as mock_settings,
+        patch("app.services.notification_handlers.sms_handler.send_alert_via_unified") as mock_send,
+    ):
         mock_settings.SMS_ENABLED = True
         mock_settings.SMS_MAX_PER_DAY = 100
         mock_settings.SMS_MAX_PER_HOUR = 20

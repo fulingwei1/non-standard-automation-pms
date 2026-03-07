@@ -3,11 +3,13 @@
 第四十批覆盖测试 - 跨部门协作评价 合作人员选择器
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.collaboration_rating.selector import CollaboratorSelector
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -76,8 +78,9 @@ class TestGetCollaboratorsFromProjects:
         profile2.job_type = "mechanical"  # 不应被包含（同为机械）
 
         def query_side(model):
-            from app.models.project import ProjectMember
             from app.models.engineer_performance import EngineerProfile
+            from app.models.project import ProjectMember
+
             if model is ProjectMember:
                 qm = MagicMock()
                 qm.filter.return_value.all.return_value = [member1, member2]

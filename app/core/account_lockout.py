@@ -26,7 +26,7 @@ from threading import Lock
 class AccountLockout:
     """基于内存的账号锁定机制（线程安全）"""
 
-    MAX_FAILURES: int = 5          # 允许的最大失败次数
+    MAX_FAILURES: int = 5  # 允许的最大失败次数
     LOCKOUT_DURATION: int = 30 * 60  # 锁定时长（秒），默认 30 分钟
 
     def __init__(self):

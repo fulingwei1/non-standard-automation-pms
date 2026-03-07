@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """第五批：progress_service.py 单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
     from app.services.progress_service import (
-        progress_error_to_http,
         apply_task_progress_update,
+        progress_error_to_http,
     )
+
     HAS_MODULE = True
 except ImportError:
     HAS_MODULE = False

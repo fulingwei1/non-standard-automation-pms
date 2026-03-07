@@ -11,10 +11,10 @@ import pytest
 
 from app.services.purchase_suggestion_engine import PurchaseSuggestionEngine
 
-
 # ────────────────────────────────────────────────
 # Helpers
 # ────────────────────────────────────────────────
+
 
 def _make_db():
     return MagicMock()
@@ -77,6 +77,7 @@ def _make_shortage(
 # 1. _determine_urgency
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestDetermineUrgency:
 
@@ -115,6 +116,7 @@ class TestDetermineUrgency:
 # 2. _generate_suggestion_no
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestGenerateSuggestionNo:
 
@@ -138,6 +140,7 @@ class TestGenerateSuggestionNo:
 # 3. _calculate_avg_consumption
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestCalculateAvgConsumption:
 
@@ -149,13 +152,17 @@ class TestCalculateAvgConsumption:
 
     def test_calculates_monthly_average(self):
         engine, db = _make_engine()
-        db.query.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("120")
+        db.query.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
+            "120"
+        )
         result = engine._calculate_avg_consumption(material_id=1, months=6)
         assert result == Decimal("20")  # 120 / 6
 
     def test_returns_none_when_zero_result(self):
         engine, db = _make_engine()
-        db.query.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal("0")
+        db.query.return_value.join.return_value.filter.return_value.scalar.return_value = Decimal(
+            "0"
+        )
         result = engine._calculate_avg_consumption(material_id=1, months=3)
         assert result is None
 
@@ -163,6 +170,7 @@ class TestCalculateAvgConsumption:
 # ────────────────────────────────────────────────
 # 4. generate_from_shortages
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestGenerateFromShortages:
@@ -188,12 +196,15 @@ class TestGenerateFromShortages:
         result = engine.generate_from_shortages()
         assert result == []
 
-    @patch.object(PurchaseSuggestionEngine, "_recommend_supplier",
-                  return_value=(1, Decimal("85"), {"total_score": 85}, []))
-    @patch.object(PurchaseSuggestionEngine, "_generate_suggestion_no",
-                  return_value="PS202401010001")
-    @patch.object(PurchaseSuggestionEngine, "_determine_urgency",
-                  return_value="NORMAL")
+    @patch.object(
+        PurchaseSuggestionEngine,
+        "_recommend_supplier",
+        return_value=(1, Decimal("85"), {"total_score": 85}, []),
+    )
+    @patch.object(
+        PurchaseSuggestionEngine, "_generate_suggestion_no", return_value="PS202401010001"
+    )
+    @patch.object(PurchaseSuggestionEngine, "_determine_urgency", return_value="NORMAL")
     def test_creates_suggestion_for_open_shortage(self, mock_urgency, mock_no, mock_supplier):
         engine, db = _make_engine()
         shortage = _make_shortage()
@@ -224,6 +235,7 @@ class TestGenerateFromShortages:
 # 5. generate_from_safety_stock
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestGenerateFromSafetyStock:
 
@@ -243,10 +255,14 @@ class TestGenerateFromSafetyStock:
         result = engine.generate_from_safety_stock()
         assert result == []
 
-    @patch.object(PurchaseSuggestionEngine, "_recommend_supplier",
-                  return_value=(2, Decimal("75"), {"total_score": 75}, []))
-    @patch.object(PurchaseSuggestionEngine, "_generate_suggestion_no",
-                  return_value="PS202401010002")
+    @patch.object(
+        PurchaseSuggestionEngine,
+        "_recommend_supplier",
+        return_value=(2, Decimal("75"), {"total_score": 75}, []),
+    )
+    @patch.object(
+        PurchaseSuggestionEngine, "_generate_suggestion_no", return_value="PS202401010002"
+    )
     def test_creates_suggestion_for_low_stock(self, mock_no, mock_supplier):
         engine, db = _make_engine()
         material = _make_material(
@@ -281,6 +297,7 @@ class TestGenerateFromSafetyStock:
 # 6. generate_from_forecast
 # ────────────────────────────────────────────────
 
+
 @pytest.mark.unit
 class TestGenerateFromForecast:
 
@@ -307,10 +324,14 @@ class TestGenerateFromForecast:
             result = engine.generate_from_forecast(material_id=1, forecast_months=3)
         assert result is None
 
-    @patch.object(PurchaseSuggestionEngine, "_recommend_supplier",
-                  return_value=(1, Decimal("90"), {"total_score": 90}, []))
-    @patch.object(PurchaseSuggestionEngine, "_generate_suggestion_no",
-                  return_value="PS202401010003")
+    @patch.object(
+        PurchaseSuggestionEngine,
+        "_recommend_supplier",
+        return_value=(1, Decimal("90"), {"total_score": 90}, []),
+    )
+    @patch.object(
+        PurchaseSuggestionEngine, "_generate_suggestion_no", return_value="PS202401010003"
+    )
     def test_creates_suggestion_when_stock_insufficient(self, mock_no, mock_supplier):
         engine, db = _make_engine()
         material = _make_material(current_stock=Decimal("5"))
@@ -325,10 +346,12 @@ class TestGenerateFromForecast:
         # suggested_qty = 300 - 5 = 295
         assert result.suggested_qty == Decimal("295")
 
-    @patch.object(PurchaseSuggestionEngine, "_recommend_supplier",
-                  return_value=(1, Decimal("90"), {}, []))
-    @patch.object(PurchaseSuggestionEngine, "_generate_suggestion_no",
-                  return_value="PS202401010004")
+    @patch.object(
+        PurchaseSuggestionEngine, "_recommend_supplier", return_value=(1, Decimal("90"), {}, [])
+    )
+    @patch.object(
+        PurchaseSuggestionEngine, "_generate_suggestion_no", return_value="PS202401010004"
+    )
     def test_returns_none_if_existing_suggestion(self, mock_no, mock_supplier):
         engine, db = _make_engine()
         material = _make_material(current_stock=Decimal("5"))
@@ -342,6 +365,7 @@ class TestGenerateFromForecast:
 # ────────────────────────────────────────────────
 # 7. _calculate_supplier_score
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestCalculateSupplierScore:
@@ -360,7 +384,8 @@ class TestCalculateSupplierScore:
         db.query.return_value.filter.return_value.order_by.return_value.first.return_value = perf
         # MaterialSupplier prices query
         db.query.return_value.filter.return_value.all.return_value = [
-            (price,), (price,)  # two suppliers with same price
+            (price,),
+            (price,),  # two suppliers with same price
         ]
         # Current supplier
         ms = MagicMock()
@@ -384,19 +409,31 @@ class TestCalculateSupplierScore:
 
     def test_short_lead_time_gives_max_delivery_score(self):
         engine, db = self._setup_engine_with_supplier(lead_time_days=5)
-        scores = engine._calculate_supplier_score(1, 1, {"performance": Decimal("0"),
-                                                         "price": Decimal("0"),
-                                                         "delivery": Decimal("100"),
-                                                         "history": Decimal("0")})
+        scores = engine._calculate_supplier_score(
+            1,
+            1,
+            {
+                "performance": Decimal("0"),
+                "price": Decimal("0"),
+                "delivery": Decimal("100"),
+                "history": Decimal("0"),
+            },
+        )
         # lead_time <= 7 → delivery_score = 100
         assert scores["delivery_score"] == Decimal("100")
 
     def test_many_orders_gives_max_history_score(self):
         engine, db = self._setup_engine_with_supplier(order_count=25)
-        scores = engine._calculate_supplier_score(1, 1, {"performance": Decimal("0"),
-                                                         "price": Decimal("0"),
-                                                         "delivery": Decimal("0"),
-                                                         "history": Decimal("100")})
+        scores = engine._calculate_supplier_score(
+            1,
+            1,
+            {
+                "performance": Decimal("0"),
+                "price": Decimal("0"),
+                "delivery": Decimal("0"),
+                "history": Decimal("100"),
+            },
+        )
         assert scores["history_score"] == Decimal("100")
 
     def test_default_performance_score_when_no_history(self):
@@ -405,12 +442,16 @@ class TestCalculateSupplierScore:
         db.query.return_value.filter.return_value.all.return_value = []
         db.query.return_value.filter.return_value.first.return_value = None
         db.query.return_value.filter.return_value.scalar.return_value = 0
-        scores = engine._calculate_supplier_score(1, 1, {
-            "performance": Decimal("100"),
-            "price": Decimal("0"),
-            "delivery": Decimal("0"),
-            "history": Decimal("0"),
-        })
+        scores = engine._calculate_supplier_score(
+            1,
+            1,
+            {
+                "performance": Decimal("100"),
+                "price": Decimal("0"),
+                "delivery": Decimal("0"),
+                "history": Decimal("0"),
+            },
+        )
         # Default performance is 60 when no record
         assert scores["performance_score"] == Decimal("60")
 
@@ -418,6 +459,7 @@ class TestCalculateSupplierScore:
 # ────────────────────────────────────────────────
 # 8. _recommend_supplier
 # ────────────────────────────────────────────────
+
 
 @pytest.mark.unit
 class TestRecommendSupplier:
@@ -437,13 +479,17 @@ class TestRecommendSupplier:
         ms.lead_time_days = 7
         db.query.return_value.filter.return_value.all.return_value = [ms]
 
-        with patch.object(engine, "_calculate_supplier_score", return_value={
-            "total_score": Decimal("80"),
-            "performance_score": Decimal("80"),
-            "price_score": Decimal("80"),
-            "delivery_score": Decimal("80"),
-            "history_score": Decimal("80"),
-        }):
+        with patch.object(
+            engine,
+            "_calculate_supplier_score",
+            return_value={
+                "total_score": Decimal("80"),
+                "performance_score": Decimal("80"),
+                "price_score": Decimal("80"),
+                "delivery_score": Decimal("80"),
+                "history_score": Decimal("80"),
+            },
+        ):
             supplier_id, confidence, reason, alternatives = engine._recommend_supplier(1)
 
         assert supplier_id == 10

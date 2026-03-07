@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """中标率预测因子计算单元测试 - 第三十六批"""
 
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.win_rate_prediction_service.factors")
 
 try:
     from app.services.win_rate_prediction_service.factors import (
-        calculate_base_score,
-        calculate_salesperson_factor,
-        calculate_customer_factor,
-        calculate_competitor_factor,
         calculate_amount_factor,
+        calculate_base_score,
+        calculate_competitor_factor,
+        calculate_customer_factor,
         calculate_product_factor,
+        calculate_salesperson_factor,
     )
 except ImportError:
     pytestmark = pytest.mark.skip(reason="导入失败")

@@ -4,16 +4,18 @@
 目标覆盖率: 60%+
 覆盖: 数据转换、验证、审批回调、工作流集成
 """
-import pytest
-from decimal import Decimal
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 try:
-    from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
     from app.models.approval import ApprovalInstance, ApprovalTask
     from app.models.sales.invoices import Invoice, InvoiceApproval
     from app.models.user import User
+    from app.services.approval_engine.adapters.invoice import InvoiceApprovalAdapter
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -49,14 +51,14 @@ def make_invoice(**kwargs):
     invoice.due_date = kwargs.get("due_date", datetime.now() + timedelta(days=30))
     invoice.approval_instance_id = kwargs.get("approval_instance_id", None)
     invoice.approval_status = kwargs.get("approval_status", None)
-    
+
     # Mock contract
     contract = kwargs.get("contract", None)
     if contract:
         type(invoice).contract = PropertyMock(return_value=contract)
     else:
         type(invoice).contract = PropertyMock(return_value=None)
-    
+
     return invoice
 
 
@@ -112,20 +114,20 @@ class TestInvoiceApprovalAdapter:
         db = make_db()
         invoice = make_invoice(id=1)
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         result = adapter.get_entity(1)
-        
+
         assert result == invoice
 
     def test_get_entity_not_found(self):
         """测试获取发票实体 - 未找到"""
         db = make_db()
         db.query.return_value.filter.return_value.first.return_value = None
-        
+
         adapter = InvoiceApprovalAdapter(db)
         result = adapter.get_entity(999)
-        
+
         assert result is None
 
     def test_get_entity_data_complete(self):
@@ -143,13 +145,13 @@ class TestInvoiceApprovalAdapter:
             project_id=200,
             buyer_name="客户A",
             buyer_tax_no="91110000MA001234XX",
-            contract=contract
+            contract=contract,
         )
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         data = adapter.get_entity_data(1)
-        
+
         assert data["invoice_code"] == "INV-001"
         assert data["invoice_type"] == "VAT_SPECIAL"
         assert data["amount"] == 150000.0
@@ -164,10 +166,10 @@ class TestInvoiceApprovalAdapter:
         db = make_db()
         invoice = make_invoice(contract_id=None, contract=None)
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         data = adapter.get_entity_data(1)
-        
+
         assert data["contract_id"] is None
         assert data["contract_code"] is None
 
@@ -175,10 +177,10 @@ class TestInvoiceApprovalAdapter:
         """测试获取实体数据 - 实体不存在"""
         db = make_db()
         db.query.return_value.filter.return_value.first.return_value = None
-        
+
         adapter = InvoiceApprovalAdapter(db)
         data = adapter.get_entity_data(999)
-        
+
         assert data == {}
 
     def test_on_submit(self):
@@ -187,10 +189,10 @@ class TestInvoiceApprovalAdapter:
         invoice = make_invoice(status="DRAFT")
         db.query.return_value.filter.return_value.first.return_value = invoice
         instance = make_approval_instance()
-        
+
         adapter = InvoiceApprovalAdapter(db)
         adapter.on_submit(1, instance)
-        
+
         assert invoice.status == "PENDING_APPROVAL"
         db.flush.assert_called_once()
 
@@ -200,10 +202,10 @@ class TestInvoiceApprovalAdapter:
         invoice = make_invoice(status="PENDING_APPROVAL")
         db.query.return_value.filter.return_value.first.return_value = invoice
         instance = make_approval_instance()
-        
+
         adapter = InvoiceApprovalAdapter(db)
         adapter.on_approved(1, instance)
-        
+
         assert invoice.status == "APPROVED"
         db.flush.assert_called_once()
 
@@ -213,10 +215,10 @@ class TestInvoiceApprovalAdapter:
         invoice = make_invoice(status="PENDING_APPROVAL")
         db.query.return_value.filter.return_value.first.return_value = invoice
         instance = make_approval_instance()
-        
+
         adapter = InvoiceApprovalAdapter(db)
         adapter.on_rejected(1, instance)
-        
+
         assert invoice.status == "REJECTED"
         db.flush.assert_called_once()
 
@@ -226,25 +228,22 @@ class TestInvoiceApprovalAdapter:
         invoice = make_invoice(status="PENDING_APPROVAL")
         db.query.return_value.filter.return_value.first.return_value = invoice
         instance = make_approval_instance()
-        
+
         adapter = InvoiceApprovalAdapter(db)
         adapter.on_withdrawn(1, instance)
-        
+
         assert invoice.status == "DRAFT"
         db.flush.assert_called_once()
 
     def test_get_title_complete(self):
         """测试生成审批标题 - 完整信息"""
         db = make_db()
-        invoice = make_invoice(
-            invoice_code="INV-123",
-            buyer_name="测试企业"
-        )
+        invoice = make_invoice(invoice_code="INV-123", buyer_name="测试企业")
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         title = adapter.get_title(1)
-        
+
         assert "发票审批" in title
         assert "INV-123" in title
         assert "测试企业" in title
@@ -252,15 +251,12 @@ class TestInvoiceApprovalAdapter:
     def test_get_title_no_buyer(self):
         """测试生成审批标题 - 无购买方"""
         db = make_db()
-        invoice = make_invoice(
-            invoice_code="INV-456",
-            buyer_name=None
-        )
+        invoice = make_invoice(invoice_code="INV-456", buyer_name=None)
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         title = adapter.get_title(1)
-        
+
         assert "未知客户" in title
 
     def test_get_summary_complete(self):
@@ -272,13 +268,13 @@ class TestInvoiceApprovalAdapter:
             total_amount="200000",
             invoice_type="VAT_SPECIAL",
             contract_id=100,
-            contract=contract
+            contract=contract,
         )
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         summary = adapter.get_summary(1)
-        
+
         assert "客户B" in summary
         assert "200,000.00" in summary
         assert "VAT_SPECIAL" in summary
@@ -287,16 +283,12 @@ class TestInvoiceApprovalAdapter:
     def test_get_summary_minimal(self):
         """测试生成审批摘要 - 最小化信息"""
         db = make_db()
-        invoice = make_invoice(
-            buyer_name=None,
-            contract_id=None,
-            contract=None
-        )
+        invoice = make_invoice(buyer_name=None, contract_id=None, contract=None)
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         summary = adapter.get_summary(1)
-        
+
         # 应该只包含金额和类型
         assert "113,000.00" in summary
         assert "VAT_SPECIAL" in summary
@@ -304,16 +296,12 @@ class TestInvoiceApprovalAdapter:
     def test_validate_submit_success(self):
         """测试提交验证 - 成功"""
         db = make_db()
-        invoice = make_invoice(
-            status="DRAFT",
-            amount="50000",
-            buyer_name="测试公司"
-        )
+        invoice = make_invoice(status="DRAFT", amount="50000", buyer_name="测试公司")
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is True
         assert error == ""
 
@@ -321,10 +309,10 @@ class TestInvoiceApprovalAdapter:
         """测试提交验证 - 实体不存在"""
         db = make_db()
         db.query.return_value.filter.return_value.first.return_value = None
-        
+
         adapter = InvoiceApprovalAdapter(db)
         valid, error = adapter.validate_submit(999)
-        
+
         assert valid is False
         assert "不存在" in error
 
@@ -333,81 +321,71 @@ class TestInvoiceApprovalAdapter:
         db = make_db()
         invoice = make_invoice(status="APPROVED")
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "不允许提交审批" in error
 
     def test_validate_submit_zero_amount(self):
         """测试提交验证 - 金额为0"""
         db = make_db()
-        invoice = make_invoice(
-            status="DRAFT",
-            amount="0"
-        )
+        invoice = make_invoice(status="DRAFT", amount="0")
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "必须大于0" in error
 
     def test_validate_submit_no_buyer(self):
         """测试提交验证 - 缺少购买方"""
         db = make_db()
-        invoice = make_invoice(
-            status="DRAFT",
-            amount="50000",
-            buyer_name=None
-        )
+        invoice = make_invoice(status="DRAFT", amount="50000", buyer_name=None)
         db.query.return_value.filter.return_value.first.return_value = invoice
-        
+
         adapter = InvoiceApprovalAdapter(db)
         valid, error = adapter.validate_submit(1)
-        
+
         assert valid is False
         assert "购买方名称" in error
 
-    @patch('app.services.approval_engine.adapters.invoice.WorkflowEngine')
+    @patch("app.services.approval_engine.adapters.invoice.WorkflowEngine")
     def test_submit_for_approval_success(self, mock_workflow_engine):
         """测试提交审批 - 成功"""
         db = make_db()
         invoice = make_invoice(approval_instance_id=None)
         instance = make_approval_instance(id=5000)
-        
+
         # Mock WorkflowEngine
         mock_engine = MagicMock()
         mock_engine.create_instance.return_value = instance
         mock_workflow_engine.return_value = mock_engine
-        
+
         adapter = InvoiceApprovalAdapter(db)
         result = adapter.submit_for_approval(
-            invoice,
-            initiator_id=10,
-            title="发票审批测试",
-            summary="测试摘要"
+            invoice, initiator_id=10, title="发票审批测试", summary="测试摘要"
         )
-        
+
         assert result == instance
         assert invoice.approval_instance_id == 5000
         db.add.assert_called_with(invoice)
         db.commit.assert_called_once()
 
-    @patch('app.services.approval_engine.adapters.invoice.WorkflowEngine')
+    @patch("app.services.approval_engine.adapters.invoice.WorkflowEngine")
     def test_submit_for_approval_already_submitted(self, mock_workflow_engine):
         """测试提交审批 - 已提交"""
         db = make_db()
         existing_instance = make_approval_instance(id=6000)
         invoice = make_invoice(approval_instance_id=6000)
-        
+
         db.query.return_value.filter.return_value.first.return_value = existing_instance
-        
+
         adapter = InvoiceApprovalAdapter(db)
         result = adapter.submit_for_approval(invoice, initiator_id=10)
-        
+
         assert result == existing_instance
         # 不应该创建新实例
         mock_workflow_engine.assert_not_called()
@@ -418,7 +396,7 @@ class TestInvoiceApprovalAdapter:
         instance = make_approval_instance(entity_id=100)
         task = make_approval_task(node_order=1, assignee_id=20, due_at=None)
         user = make_user(real_name="审批人A")
-        
+
         def query_side_effect(model):
             query_mock = MagicMock()
             if model == InvoiceApproval:
@@ -426,12 +404,12 @@ class TestInvoiceApprovalAdapter:
             elif model == User:
                 query_mock.filter.return_value.first.return_value = user
             return query_mock
-        
+
         db.query.side_effect = query_side_effect
-        
+
         adapter = InvoiceApprovalAdapter(db)
         approval = adapter.create_invoice_approval(instance, task)
-        
+
         assert approval is not None
         assert approval.invoice_id == 100
         assert approval.approval_level == 1
@@ -447,7 +425,7 @@ class TestInvoiceApprovalAdapter:
         custom_due = datetime.now() + timedelta(hours=24)
         task = make_approval_task(node_order=1, assignee_id=20, due_at=custom_due)
         user = make_user(real_name="审批人B")
-        
+
         def query_side_effect(model):
             query_mock = MagicMock()
             if model == InvoiceApproval:
@@ -455,12 +433,12 @@ class TestInvoiceApprovalAdapter:
             elif model == User:
                 query_mock.filter.return_value.first.return_value = user
             return query_mock
-        
+
         db.query.side_effect = query_side_effect
-        
+
         adapter = InvoiceApprovalAdapter(db)
         approval = adapter.create_invoice_approval(instance, task)
-        
+
         assert approval.due_date == custom_due
 
     def test_create_invoice_approval_existing(self):
@@ -469,12 +447,12 @@ class TestInvoiceApprovalAdapter:
         instance = make_approval_instance(entity_id=100)
         task = make_approval_task(node_order=1)
         existing_approval = MagicMock()
-        
+
         db.query.return_value.filter.return_value.first.return_value = existing_approval
-        
+
         adapter = InvoiceApprovalAdapter(db)
         approval = adapter.create_invoice_approval(instance, task)
-        
+
         assert approval == existing_approval
         # 不应该添加新记录
         db.add.assert_not_called()
@@ -485,16 +463,14 @@ class TestInvoiceApprovalAdapter:
         instance = make_approval_instance(entity_id=100)
         task = make_approval_task(node_order=1, instance=instance)
         approval = MagicMock()
-        
+
         db.query.return_value.filter.return_value.first.return_value = approval
-        
+
         adapter = InvoiceApprovalAdapter(db)
         result = adapter.update_invoice_approval_from_action(
-            task,
-            action="APPROVE",
-            comment="发票信息准确"
+            task, action="APPROVE", comment="发票信息准确"
         )
-        
+
         assert result == approval
         assert approval.approval_result == "APPROVED"
         assert approval.approval_opinion == "发票信息准确"
@@ -509,16 +485,14 @@ class TestInvoiceApprovalAdapter:
         instance = make_approval_instance(entity_id=100)
         task = make_approval_task(node_order=2, instance=instance)
         approval = MagicMock()
-        
+
         db.query.return_value.filter.return_value.first.return_value = approval
-        
+
         adapter = InvoiceApprovalAdapter(db)
         result = adapter.update_invoice_approval_from_action(
-            task,
-            action="REJECT",
-            comment="发票金额有误"
+            task, action="REJECT", comment="发票金额有误"
         )
-        
+
         assert result == approval
         assert approval.approval_result == "REJECTED"
         assert approval.approval_opinion == "发票金额有误"
@@ -530,14 +504,11 @@ class TestInvoiceApprovalAdapter:
         db = make_db()
         instance = make_approval_instance(entity_id=100)
         task = make_approval_task(node_order=1, instance=instance)
-        
+
         db.query.return_value.filter.return_value.first.return_value = None
-        
+
         adapter = InvoiceApprovalAdapter(db)
-        result = adapter.update_invoice_approval_from_action(
-            task,
-            action="APPROVE"
-        )
-        
+        result = adapter.update_invoice_approval_from_action(task, action="APPROVE")
+
         assert result is None
         db.commit.assert_not_called()

@@ -19,7 +19,7 @@ class ImportBase:
     @staticmethod
     def validate_file(filename: str) -> None:
         """验证Excel文件类型"""
-        if not filename.endswith(('.xlsx', '.xls')):
+        if not filename.endswith((".xlsx", ".xls")):
             raise HTTPException(status_code=400, detail="只支持Excel文件(.xlsx, .xls)")
 
     @staticmethod
@@ -40,7 +40,7 @@ class ImportBase:
         """检查必需列是否存在，返回缺失列列表"""
         missing = []
         for col in required_columns:
-            if col not in df.columns and col.replace('*', '') not in df.columns:
+            if col not in df.columns and col.replace("*", "") not in df.columns:
                 missing.append(col)
         return missing
 

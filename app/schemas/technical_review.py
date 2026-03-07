@@ -12,6 +12,7 @@ from .common import BaseSchema, TimestampSchema
 
 # ==================== 评审主表 ====================
 
+
 class TechnicalReviewCreate(BaseModel):
     """创建技术评审"""
 
@@ -94,6 +95,7 @@ class TechnicalReviewResponse(TimestampSchema):
 
 # ==================== 评审参与人 ====================
 
+
 class ReviewParticipantCreate(BaseModel):
     """创建评审参与人"""
 
@@ -138,6 +140,7 @@ class ReviewParticipantResponse(BaseSchema):
 
 # ==================== 评审材料 ====================
 
+
 class ReviewMaterialCreate(BaseModel):
     """创建评审材料"""
 
@@ -172,6 +175,7 @@ class ReviewMaterialResponse(TimestampSchema):
 
 
 # ==================== 评审检查项记录 ====================
+
 
 class ReviewChecklistRecordCreate(BaseModel):
     """创建评审检查项记录"""
@@ -226,6 +230,7 @@ class ReviewChecklistRecordResponse(BaseSchema):
 
 
 # ==================== 评审问题 ====================
+
 
 class ReviewIssueCreate(BaseModel):
     """创建评审问题"""
@@ -286,6 +291,7 @@ class ReviewIssueResponse(TimestampSchema):
 
 # ==================== 评审详情（包含关联数据） ====================
 
+
 class TechnicalReviewDetailResponse(TechnicalReviewResponse):
     """技术评审详情响应（包含关联数据）"""
 
@@ -296,9 +302,3 @@ class TechnicalReviewDetailResponse(TechnicalReviewResponse):
 
     class Config:
         from_attributes = True
-
-
-
-
-
-

@@ -3,7 +3,6 @@
 现场服务记录管理服务
 """
 import logging
-
 import os
 import uuid
 from datetime import date, datetime, timezone
@@ -32,7 +31,6 @@ from app.schemas.service import (
 )
 from app.utils.db_helpers import save_obj
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -46,7 +44,7 @@ class ServiceRecordsService:
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        technician_id: Optional[int] = None
+        technician_id: Optional[int] = None,
     ) -> dict:
         """获取服务记录统计"""
         query = self.db.query(ServiceRecord)
@@ -64,18 +62,22 @@ class ServiceRecordsService:
         total_records = query.count()
 
         # 按类型统计
-        type_stats = query.with_entities(
-            ServiceRecord.service_type,
-            func.count(ServiceRecord.id).label('count')
-        ).group_by(ServiceRecord.service_type).all()
+        type_stats = (
+            query.with_entities(
+                ServiceRecord.service_type, func.count(ServiceRecord.id).label("count")
+            )
+            .group_by(ServiceRecord.service_type)
+            .all()
+        )
 
         type_distribution = {stat.service_type: stat.count for stat in type_stats}
 
         # 按状态统计
-        status_stats = query.with_entities(
-            ServiceRecord.status,
-            func.count(ServiceRecord.id).label('count')
-        ).group_by(ServiceRecord.status).all()
+        status_stats = (
+            query.with_entities(ServiceRecord.status, func.count(ServiceRecord.id).label("count"))
+            .group_by(ServiceRecord.status)
+            .all()
+        )
 
         status_distribution = {stat.status: stat.count for stat in status_stats}
 
@@ -94,7 +96,11 @@ class ServiceRecordsService:
             "status_distribution": status_distribution,
             "average_service_duration_hours": round(avg_duration, 2),
             "completed_records": status_distribution.get("completed", 0),
-            "completion_rate": (status_distribution.get("completed", 0) / total_records * 100) if total_records > 0 else 0
+            "completion_rate": (
+                (status_distribution.get("completed", 0) / total_records * 100)
+                if total_records > 0
+                else 0
+            ),
         }
 
     def get_service_records(
@@ -107,13 +113,13 @@ class ServiceRecordsService:
         technician_id: Optional[int] = None,
         ticket_id: Optional[int] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
     ) -> PaginatedResponse[ServiceRecordResponse]:
         """获取服务记录列表"""
         query = self.db.query(ServiceRecord).options(
             joinedload(ServiceRecord.ticket),
             joinedload(ServiceRecord.technician),
-            joinedload(ServiceRecord.created_by_user)
+            joinedload(ServiceRecord.created_by_user),
         )
 
         # 搜索条件
@@ -157,13 +163,11 @@ class ServiceRecordsService:
             page=pagination.page,
             page_size=pagination.page_size,
             pages=pagination.pages_for_total(total),
-            items=[ServiceRecordResponse.model_validate(item) for item in items]
+            items=[ServiceRecordResponse.model_validate(item) for item in items],
         )
 
     def create_service_record(
-        self,
-        record_data: ServiceRecordCreate,
-        current_user: User
+        self, record_data: ServiceRecordCreate, current_user: User
     ) -> ServiceRecord:
         """创建服务记录"""
         service_record = ServiceRecord(
@@ -181,7 +185,7 @@ class ServiceRecordsService:
             next_actions=record_data.next_actions,
             customer_feedback=record_data.customer_feedback,
             status=record_data.status or "in_progress",
-            created_by=current_user.id
+            created_by=current_user.id,
         )
 
         save_obj(self.db, service_record)
@@ -192,28 +196,22 @@ class ServiceRecordsService:
         return service_record
 
     def upload_record_photos(
-        self,
-        record_id: int,
-        photos: List[UploadFile],
-        current_user: User
+        self, record_id: int, photos: List[UploadFile], current_user: User
     ) -> dict:
         """上传服务记录照片"""
-        service_record = self.db.query(ServiceRecord).filter(
-            ServiceRecord.id == record_id
-        ).first()
+        service_record = self.db.query(ServiceRecord).filter(ServiceRecord.id == record_id).first()
 
         if not service_record:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="服务记录不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="服务记录不存在")
 
         uploaded_photos = []
 
         for i, photo in enumerate(photos):
             # 生成文件名
             file_extension = os.path.splitext(photo.filename)[1]
-            unique_filename = f"record_{record_id}_photo_{i+1}_{uuid.uuid4().hex[:8]}{file_extension}"
+            unique_filename = (
+                f"record_{record_id}_photo_{i+1}_{uuid.uuid4().hex[:8]}{file_extension}"
+            )
 
             # 保存文件
             upload_dir = Path(settings.UPLOAD_DIR) / "service_records" / str(record_id)
@@ -227,16 +225,14 @@ class ServiceRecordsService:
                     f.write(content)
 
                 photo_url = f"/uploads/service_records/{record_id}/{unique_filename}"
-                uploaded_photos.append({
-                    "filename": unique_filename,
-                    "url": photo_url,
-                    "size": len(content)
-                })
+                uploaded_photos.append(
+                    {"filename": unique_filename, "url": photo_url, "size": len(content)}
+                )
 
             except Exception as e:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"照片上传失败: {str(e)}"
+                    detail=f"照片上传失败: {str(e)}",
                 )
 
         # 更新记录的照片字段
@@ -249,38 +245,24 @@ class ServiceRecordsService:
 
         self.db.commit()
 
-        return {
-            "message": f"成功上传 {len(uploaded_photos)} 张照片",
-            "photos": uploaded_photos
-        }
+        return {"message": f"成功上传 {len(uploaded_photos)} 张照片", "photos": uploaded_photos}
 
-    def delete_record_photo(
-        self,
-        record_id: int,
-        photo_index: int,
-        current_user: User
-    ) -> dict:
+    def delete_record_photo(self, record_id: int, photo_index: int, current_user: User) -> dict:
         """删除服务记录照片"""
-        service_record = self.db.query(ServiceRecord).filter(
-            ServiceRecord.id == record_id
-        ).first()
+        service_record = self.db.query(ServiceRecord).filter(ServiceRecord.id == record_id).first()
 
         if not service_record:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="服务记录不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="服务记录不存在")
 
         if not service_record.photos or photo_index >= len(service_record.photos):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="照片不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="照片不存在")
 
         photo = service_record.photos[photo_index]
 
         # 删除文件
-        file_path = Path(settings.UPLOAD_DIR) / "service_records" / str(record_id) / photo["filename"]
+        file_path = (
+            Path(settings.UPLOAD_DIR) / "service_records" / str(record_id) / photo["filename"]
+        )
         if file_path.exists():
             file_path.unlink()
 
@@ -299,7 +281,10 @@ class ServiceRecordsService:
             # 根据服务记录状态更新工单状态
             if service_record.status == "completed" and not service_record.ticket.resolved_at:
                 # TODO: 完善实现 - 设置工单为解决状态或等待客户确认
-                logger.info("工单状态联动: 暂未实现 (record_id=%s, ticket_id=%s)",
-                            service_record.id, service_record.ticket.id)
+                logger.info(
+                    "工单状态联动: 暂未实现 (record_id=%s, ticket_id=%s)",
+                    service_record.id,
+                    service_record.ticket.id,
+                )
 
     # 其他方法可以根据需要添加...

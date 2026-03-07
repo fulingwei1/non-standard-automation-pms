@@ -2,17 +2,18 @@
 """
 I1组: PresaleMobileService 单元测试
 """
-import pytest
 from datetime import date
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.presale_mobile_service import PresaleMobileService
+import pytest
+
 from app.schemas.presale_mobile import QuestionType, SyncStatus
-
+from app.services.presale_mobile_service import PresaleMobileService
 
 # ============================================================
 # Helper factory
 # ============================================================
+
 
 def _make_service():
     db = MagicMock()
@@ -39,6 +40,7 @@ def _make_visit_record(**kwargs):
 # ============================================================
 # TestClassifyQuestion
 # ============================================================
+
 
 class TestClassifyQuestion:
     def setup_method(self):
@@ -77,6 +79,7 @@ class TestClassifyQuestion:
 # TestBuildChatPrompt
 # ============================================================
 
+
 class TestBuildChatPrompt:
     def setup_method(self):
         self.svc, _ = _make_service()
@@ -108,6 +111,7 @@ class TestBuildChatPrompt:
 # TestChat (async)
 # ============================================================
 
+
 class TestChat:
     @pytest.mark.asyncio
     async def test_chat_basic(self):
@@ -116,8 +120,10 @@ class TestChat:
         mock_chat_record.id = 1
         mock_chat_record.created_at = MagicMock()
 
-        with patch("app.services.presale_mobile_service.save_obj") as mock_save, \
-             patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="AI回答内容")):
+        with (
+            patch("app.services.presale_mobile_service.save_obj") as mock_save,
+            patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="AI回答内容")),
+        ):
             result = await svc.chat(
                 user_id=1,
                 question="这个设备的技术参数是多少？",  # "技术" is in the keyword list
@@ -132,8 +138,10 @@ class TestChat:
     async def test_chat_without_ticket(self):
         svc, db = _make_service()
 
-        with patch("app.services.presale_mobile_service.save_obj"), \
-             patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="回答")):
+        with (
+            patch("app.services.presale_mobile_service.save_obj"),
+            patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="回答")),
+        ):
             result = await svc.chat(user_id=1, question="价格多少？")
 
         assert result["answer"] == "回答"
@@ -143,8 +151,10 @@ class TestChat:
     async def test_chat_records_response_time(self):
         svc, db = _make_service()
 
-        with patch("app.services.presale_mobile_service.save_obj"), \
-             patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="回答")):
+        with (
+            patch("app.services.presale_mobile_service.save_obj"),
+            patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="回答")),
+        ):
             result = await svc.chat(user_id=1, question="问题")
 
         assert result["response_time"] >= 0
@@ -154,15 +164,18 @@ class TestChat:
 # TestVoiceQuestion (async)
 # ============================================================
 
+
 class TestVoiceQuestion:
     @pytest.mark.asyncio
     async def test_voice_question_basic(self):
         svc, db = _make_service()
 
-        with patch.object(svc, "_speech_to_text", new=AsyncMock(return_value="识别的文字")), \
-             patch.object(svc, "_text_to_speech", new=AsyncMock(return_value="http://audio.url")), \
-             patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="AI回答")), \
-             patch("app.services.presale_mobile_service.save_obj"):
+        with (
+            patch.object(svc, "_speech_to_text", new=AsyncMock(return_value="识别的文字")),
+            patch.object(svc, "_text_to_speech", new=AsyncMock(return_value="http://audio.url")),
+            patch.object(svc, "_call_ai_service", new=AsyncMock(return_value="AI回答")),
+            patch("app.services.presale_mobile_service.save_obj"),
+        ):
 
             result = await svc.voice_question(
                 user_id=1,
@@ -179,6 +192,7 @@ class TestVoiceQuestion:
 # TestGetVisitPreparation
 # ============================================================
 
+
 class TestGetVisitPreparation:
     def test_get_visit_preparation(self):
         svc, db = _make_service()
@@ -193,6 +207,7 @@ class TestGetVisitPreparation:
 # ============================================================
 # TestQuickEstimate (async)
 # ============================================================
+
 
 class TestQuickEstimate:
     @pytest.mark.asyncio
@@ -216,10 +231,19 @@ class TestQuickEstimate:
     async def test_quick_estimate_with_photo(self):
         svc, db = _make_service()
 
-        with patch.object(svc, "_recognize_equipment", new=AsyncMock(return_value={
-            "equipment_name": "识别出的机器人",
-            "confidence": 90,
-        })), patch("app.services.presale_mobile_service.save_obj"):
+        with (
+            patch.object(
+                svc,
+                "_recognize_equipment",
+                new=AsyncMock(
+                    return_value={
+                        "equipment_name": "识别出的机器人",
+                        "confidence": 90,
+                    }
+                ),
+            ),
+            patch("app.services.presale_mobile_service.save_obj"),
+        ):
             result = await svc.quick_estimate(
                 user_id=1,
                 equipment_description="机器人",
@@ -247,6 +271,7 @@ class TestQuickEstimate:
 # TestMatchBomAndEstimate
 # ============================================================
 
+
 class TestMatchBomAndEstimate:
     def test_match_bom_and_estimate(self):
         svc, _ = _make_service()
@@ -263,14 +288,19 @@ class TestMatchBomAndEstimate:
 # TestCreateVisitRecord
 # ============================================================
 
+
 class TestCreateVisitRecord:
     def test_create_visit_record_success(self):
         svc, db = _make_service()
 
         # mock PresaleVisitRecord 以保证 created_at 有值
         mock_record = _make_visit_record()
-        with patch("app.services.presale_mobile_service.save_obj"), \
-             patch("app.services.presale_mobile_service.PresaleVisitRecord", return_value=mock_record):
+        with (
+            patch("app.services.presale_mobile_service.save_obj"),
+            patch(
+                "app.services.presale_mobile_service.PresaleVisitRecord", return_value=mock_record
+            ),
+        ):
             result = svc.create_visit_record(
                 user_id=1,
                 presale_ticket_id=10,
@@ -301,22 +331,33 @@ class TestCreateVisitRecord:
 # TestVoiceToVisitRecord (async)
 # ============================================================
 
+
 class TestVoiceToVisitRecord:
     @pytest.mark.asyncio
     async def test_voice_to_visit_record(self):
         svc, db = _make_service()
         mock_record = _make_visit_record(visit_type="电话会议")
 
-        with patch.object(svc, "_speech_to_text", new=AsyncMock(return_value="会议录音内容")), \
-             patch.object(svc, "_extract_visit_info", new=AsyncMock(return_value={
-                 "attendees": [{"name": "李四"}],
-                 "discussion_points": "技术方案讨论",
-                 "customer_feedback": "需要调整价格",
-                 "next_steps": "发送修改后的方案",
-                 "summary": "综合讨论了技术和价格",
-             })), \
-             patch("app.services.presale_mobile_service.save_obj"), \
-             patch("app.services.presale_mobile_service.PresaleVisitRecord", return_value=mock_record):
+        with (
+            patch.object(svc, "_speech_to_text", new=AsyncMock(return_value="会议录音内容")),
+            patch.object(
+                svc,
+                "_extract_visit_info",
+                new=AsyncMock(
+                    return_value={
+                        "attendees": [{"name": "李四"}],
+                        "discussion_points": "技术方案讨论",
+                        "customer_feedback": "需要调整价格",
+                        "next_steps": "发送修改后的方案",
+                        "summary": "综合讨论了技术和价格",
+                    }
+                ),
+            ),
+            patch("app.services.presale_mobile_service.save_obj"),
+            patch(
+                "app.services.presale_mobile_service.PresaleVisitRecord", return_value=mock_record
+            ),
+        ):
 
             result = await svc.voice_to_visit_record(
                 user_id=1,
@@ -334,6 +375,7 @@ class TestVoiceToVisitRecord:
 # TestGetVisitHistory
 # ============================================================
 
+
 class TestGetVisitHistory:
     def test_get_visit_history_empty(self):
         svc, db = _make_service()
@@ -347,7 +389,9 @@ class TestGetVisitHistory:
     def test_get_visit_history_with_visits(self):
         svc, db = _make_service()
         mock_record = _make_visit_record()
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_record]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_record
+        ]
 
         result = svc.get_visit_history(customer_id=20)
         assert result["total_visits"] == 1
@@ -357,6 +401,7 @@ class TestGetVisitHistory:
 # ============================================================
 # TestGetCustomerSnapshot
 # ============================================================
+
 
 class TestGetCustomerSnapshot:
     def test_get_customer_snapshot(self):
@@ -372,6 +417,7 @@ class TestGetCustomerSnapshot:
 # ============================================================
 # TestSyncOfflineData
 # ============================================================
+
 
 class TestSyncOfflineData:
     def test_sync_chat_data_new(self):

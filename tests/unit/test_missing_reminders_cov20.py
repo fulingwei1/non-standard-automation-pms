@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """第二十批 - missing_reminders 单元测试"""
 import pytest
+
 pytest.importorskip("app.services.timesheet_reminder.missing_reminders")
 
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
+
 from app.services.timesheet_reminder.missing_reminders import (
     notify_timesheet_missing,
     notify_weekly_timesheet_missing,
@@ -69,14 +71,14 @@ class TestNotifyTimesheetMissing:
             q.all.return_value = []
             q.first.return_value = None
             q.count.return_value = 0
-            name = getattr(model, '__name__', str(model))
-            if name == 'Role':
+            name = getattr(model, "__name__", str(model))
+            if name == "Role":
                 q.all.return_value = []
-            elif name == 'Department':
+            elif name == "Department":
                 q.all.return_value = []
-            elif name == 'User':
+            elif name == "User":
                 q.all.return_value = [engineer]
-            elif name == 'Timesheet':
+            elif name == "Timesheet":
                 # existing timesheet found
                 ts = MagicMock()
                 q.first.return_value = ts
@@ -129,10 +131,10 @@ class TestNotifyWeeklyTimesheetMissing:
             q.all.return_value = []
             q.first.return_value = None
             q.count.return_value = 0
-            name = getattr(model, '__name__', str(model))
-            if name == 'User':
+            name = getattr(model, "__name__", str(model))
+            if name == "User":
                 q.all.return_value = [engineer]
-            elif name == 'Timesheet':
+            elif name == "Timesheet":
                 q.count.return_value = 5  # 5 days -> skip
             return q
 

@@ -12,7 +12,7 @@
 import unittest
 from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 from app.models import (
     GoodsReceipt,
@@ -20,12 +20,12 @@ from app.models import (
     Material,
     PurchaseOrder,
     PurchaseOrderItem,
+    PurchaseOrderTracking,
     PurchaseSuggestion,
     SupplierPerformance,
     SupplierQuotation,
     User,
     Vendor,
-    PurchaseOrderTracking,
 )
 from app.services.purchase_intelligence.service import PurchaseIntelligenceService
 
@@ -45,10 +45,28 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # Mock 数据 - 使用完整的mock对象，避免Pydantic验证错误
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
         # 设置所有必需的属性为真实类型
-        for attr in ['id', 'material_id', 'material_code', 'material_name', 'specification', 'unit',
-                     'suggested_qty', 'estimated_unit_price', 'required_date', 'urgency_level', 
-                     'source_type', 'source_ref', 'status', 'reason', 'suggested_supplier_id', 
-                     'purchase_order_id', 'created_at', 'reviewed_at', 'reviewed_by', 'review_note']:
+        for attr in [
+            "id",
+            "material_id",
+            "material_code",
+            "material_name",
+            "specification",
+            "unit",
+            "suggested_qty",
+            "estimated_unit_price",
+            "required_date",
+            "urgency_level",
+            "source_type",
+            "source_ref",
+            "status",
+            "reason",
+            "suggested_supplier_id",
+            "purchase_order_id",
+            "created_at",
+            "reviewed_at",
+            "reviewed_by",
+            "review_note",
+        ]:
             setattr(mock_suggestion, attr, None)
         mock_suggestion.id = 1
 
@@ -65,11 +83,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # 由于from_orm验证问题，直接测试数据库调用
         # 执行测试
         suggestions = (
-            self.db.query(PurchaseSuggestion)
-            .order_by(MagicMock())
-            .offset(0)
-            .limit(20)
-            .all()
+            self.db.query(PurchaseSuggestion).order_by(MagicMock()).offset(0).limit(20).all()
         )
 
         # 验证
@@ -90,11 +104,11 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
 
         # 执行测试（只验证查询逻辑，不验证返回值）
         self.service.get_purchase_suggestions(
-            status='PENDING',
-            source_type='MRP',
+            status="PENDING",
+            source_type="MRP",
             material_id=50,
             project_id=20,
-            urgency_level='HIGH',
+            urgency_level="HIGH",
             skip=10,
             limit=5,
         )
@@ -109,7 +123,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         """测试批准采购建议"""
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
         mock_suggestion.id = 1
-        mock_suggestion.status = 'PENDING'
+        mock_suggestion.status = "PENDING"
 
         self.db.query.return_value.get.return_value = mock_suggestion
 
@@ -123,7 +137,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         )
 
         # 验证
-        self.assertEqual(suggestion.status, 'APPROVED')
+        self.assertEqual(suggestion.status, "APPROVED")
         self.assertEqual(message, "采购建议已批准")
         self.assertEqual(suggestion.reviewed_by, 10)
         self.assertEqual(suggestion.review_note, "批准通过")
@@ -134,7 +148,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
     def test_approve_purchase_suggestion_rejected(self):
         """测试拒绝采购建议"""
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
-        mock_suggestion.status = 'PENDING'
+        mock_suggestion.status = "PENDING"
 
         self.db.query.return_value.get.return_value = mock_suggestion
 
@@ -147,7 +161,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         )
 
         # 验证
-        self.assertEqual(suggestion.status, 'REJECTED')
+        self.assertEqual(suggestion.status, "REJECTED")
         self.assertEqual(message, "采购建议已拒绝")
         self.db.commit.assert_called_once()
 
@@ -169,7 +183,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
     def test_approve_purchase_suggestion_invalid_status(self):
         """测试批准状态不正确的建议"""
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
-        mock_suggestion.status = 'APPROVED'
+        mock_suggestion.status = "APPROVED"
 
         self.db.query.return_value.get.return_value = mock_suggestion
 
@@ -217,7 +231,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # 执行测试（只验证查询逻辑）
         self.service.get_supplier_performance(
             supplier_id=10,
-            evaluation_period='2024-01',
+            evaluation_period="2024-01",
             limit=5,
         )
 
@@ -234,12 +248,12 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             self.service.evaluate_supplier_performance(
                 supplier_id=999,
-                evaluation_period='2024-01',
+                evaluation_period="2024-01",
             )
 
         self.assertIn("供应商不存在", str(ctx.exception))
 
-    @patch('app.services.purchase_intelligence.service.SupplierPerformanceEvaluator')
+    @patch("app.services.purchase_intelligence.service.SupplierPerformanceEvaluator")
     def test_evaluate_supplier_performance_success(self, mock_evaluator_class):
         """测试成功评估供应商绩效"""
         # Mock 供应商
@@ -249,7 +263,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # Mock 评估结果
         mock_performance = MagicMock(spec=SupplierPerformance)
         mock_performance.id = 1
-        mock_performance.overall_score = Decimal('85.5')
+        mock_performance.overall_score = Decimal("85.5")
 
         # Mock 评估器
         mock_evaluator = MagicMock()
@@ -259,19 +273,19 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # 执行测试
         result = self.service.evaluate_supplier_performance(
             supplier_id=10,
-            evaluation_period='2024-01',
-            weight_config={'quality': 0.4, 'delivery': 0.3},
+            evaluation_period="2024-01",
+            weight_config={"quality": 0.4, "delivery": 0.3},
         )
 
         # 验证
         self.assertEqual(result, mock_performance)
         mock_evaluator.evaluate_supplier.assert_called_once_with(
             supplier_id=10,
-            evaluation_period='2024-01',
-            weight_config={'quality': 0.4, 'delivery': 0.3},
+            evaluation_period="2024-01",
+            weight_config={"quality": 0.4, "delivery": 0.3},
         )
 
-    @patch('app.services.purchase_intelligence.service.SupplierPerformanceEvaluator')
+    @patch("app.services.purchase_intelligence.service.SupplierPerformanceEvaluator")
     def test_evaluate_supplier_performance_failed(self, mock_evaluator_class):
         """测试绩效评估失败"""
         mock_supplier = MagicMock(spec=Vendor)
@@ -286,7 +300,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         with self.assertRaises(RuntimeError) as ctx:
             self.service.evaluate_supplier_performance(
                 supplier_id=10,
-                evaluation_period='2024-01',
+                evaluation_period="2024-01",
             )
 
         self.assertIn("绩效评估失败", str(ctx.exception))
@@ -296,31 +310,31 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # Mock 绩效数据
         mock_perf1 = MagicMock(spec=SupplierPerformance)
         mock_perf1.supplier_id = 10
-        mock_perf1.supplier_code = 'SUP001'
-        mock_perf1.supplier_name = '供应商A'
-        mock_perf1.overall_score = Decimal('90.0')
-        mock_perf1.rating = 'A'
-        mock_perf1.on_time_delivery_rate = Decimal('95.0')
-        mock_perf1.quality_pass_rate = Decimal('98.0')
-        mock_perf1.price_competitiveness = Decimal('85.0')
-        mock_perf1.response_speed_score = Decimal('88.0')
+        mock_perf1.supplier_code = "SUP001"
+        mock_perf1.supplier_name = "供应商A"
+        mock_perf1.overall_score = Decimal("90.0")
+        mock_perf1.rating = "A"
+        mock_perf1.on_time_delivery_rate = Decimal("95.0")
+        mock_perf1.quality_pass_rate = Decimal("98.0")
+        mock_perf1.price_competitiveness = Decimal("85.0")
+        mock_perf1.response_speed_score = Decimal("88.0")
         mock_perf1.total_orders = 100
-        mock_perf1.total_amount = Decimal('1000000.00')
-        mock_perf1.evaluation_period = '2024-01'
+        mock_perf1.total_amount = Decimal("1000000.00")
+        mock_perf1.evaluation_period = "2024-01"
 
         mock_perf2 = MagicMock(spec=SupplierPerformance)
         mock_perf2.supplier_id = 20
-        mock_perf2.supplier_code = 'SUP002'
-        mock_perf2.supplier_name = '供应商B'
-        mock_perf2.overall_score = Decimal('85.0')
-        mock_perf2.rating = 'B'
-        mock_perf2.on_time_delivery_rate = Decimal('90.0')
-        mock_perf2.quality_pass_rate = Decimal('95.0')
-        mock_perf2.price_competitiveness = Decimal('80.0')
-        mock_perf2.response_speed_score = Decimal('82.0')
+        mock_perf2.supplier_code = "SUP002"
+        mock_perf2.supplier_name = "供应商B"
+        mock_perf2.overall_score = Decimal("85.0")
+        mock_perf2.rating = "B"
+        mock_perf2.on_time_delivery_rate = Decimal("90.0")
+        mock_perf2.quality_pass_rate = Decimal("95.0")
+        mock_perf2.price_competitiveness = Decimal("80.0")
+        mock_perf2.response_speed_score = Decimal("82.0")
         mock_perf2.total_orders = 80
-        mock_perf2.total_amount = Decimal('800000.00')
-        mock_perf2.evaluation_period = '2024-01'
+        mock_perf2.total_amount = Decimal("800000.00")
+        mock_perf2.evaluation_period = "2024-01"
 
         # Mock 查询链
         mock_query = MagicMock()
@@ -333,7 +347,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
 
         # 执行测试
         rankings, total = self.service.get_supplier_ranking(
-            evaluation_period='2024-01',
+            evaluation_period="2024-01",
             limit=20,
         )
 
@@ -356,9 +370,9 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # Mock 物料
         mock_material = MagicMock(spec=Material)
         mock_material.id = 100
-        mock_material.material_code = 'MAT001'
-        mock_material.material_name = '测试物料'
-        mock_material.specification = '规格A'
+        mock_material.material_code = "MAT001"
+        mock_material.material_name = "测试物料"
+        mock_material.specification = "规格A"
 
         # Mock 查询
         def query_side_effect(model):
@@ -385,16 +399,16 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
             supplier_id=10,
             material_id=100,
             unit_price=100.0,
-            currency='CNY',
+            currency="CNY",
             min_order_qty=10,
             lead_time_days=7,
             valid_from=date(2024, 1, 1),
             valid_to=date(2024, 12, 31),
             user_id=1,
-            payment_terms='30天账期',
-            warranty_period='12个月',
+            payment_terms="30天账期",
+            warranty_period="12个月",
             tax_rate=0.13,
-            remark='测试报价',
+            remark="测试报价",
         )
 
         # 验证
@@ -415,7 +429,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
                 supplier_id=999,
                 material_id=100,
                 unit_price=100.0,
-                currency='CNY',
+                currency="CNY",
                 min_order_qty=10,
                 lead_time_days=7,
                 valid_from=date(2024, 1, 1),
@@ -448,7 +462,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
                 supplier_id=10,
                 material_id=999,
                 unit_price=100.0,
-                currency='CNY',
+                currency="CNY",
                 min_order_qty=10,
                 lead_time_days=7,
                 valid_from=date(2024, 1, 1),
@@ -511,49 +525,49 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # Mock 报价 - 设置所有必需的属性为实际值
         mock_quotation1 = MagicMock(spec=SupplierQuotation)
         mock_quotation1.id = 1
-        mock_quotation1.quotation_no = 'QT001'
+        mock_quotation1.quotation_no = "QT001"
         mock_quotation1.supplier_id = 10
         mock_quotation1.unit_price = 100.0
-        mock_quotation1.currency = 'CNY'
+        mock_quotation1.currency = "CNY"
         mock_quotation1.min_order_qty = 10
         mock_quotation1.lead_time_days = 7
         mock_quotation1.valid_from = date(2024, 1, 1)
         mock_quotation1.valid_to = date(2024, 12, 31)
-        mock_quotation1.payment_terms = '30天'
+        mock_quotation1.payment_terms = "30天"
         mock_quotation1.tax_rate = 0.13
         mock_quotation1.is_selected = False
 
         mock_quotation2 = MagicMock(spec=SupplierQuotation)
         mock_quotation2.id = 2
-        mock_quotation2.quotation_no = 'QT002'
+        mock_quotation2.quotation_no = "QT002"
         mock_quotation2.supplier_id = 20
         mock_quotation2.unit_price = 110.0
-        mock_quotation2.currency = 'CNY'
+        mock_quotation2.currency = "CNY"
         mock_quotation2.min_order_qty = 5
         mock_quotation2.lead_time_days = 5
         mock_quotation2.valid_from = date(2024, 1, 1)
         mock_quotation2.valid_to = date(2024, 12, 31)
-        mock_quotation2.payment_terms = '现金'
+        mock_quotation2.payment_terms = "现金"
         mock_quotation2.tax_rate = 0.13
         mock_quotation2.is_selected = False
 
         # Mock 供应商
         mock_supplier1 = MagicMock(spec=Vendor)
-        mock_supplier1.supplier_code = 'SUP001'
-        mock_supplier1.supplier_name = '供应商A'
+        mock_supplier1.supplier_code = "SUP001"
+        mock_supplier1.supplier_name = "供应商A"
 
         mock_supplier2 = MagicMock(spec=Vendor)
-        mock_supplier2.supplier_code = 'SUP002'
-        mock_supplier2.supplier_name = '供应商B'
+        mock_supplier2.supplier_code = "SUP002"
+        mock_supplier2.supplier_name = "供应商B"
 
         # Mock 绩效
         mock_perf1 = MagicMock(spec=SupplierPerformance)
-        mock_perf1.overall_score = Decimal('90.0')
-        mock_perf1.rating = 'A'
+        mock_perf1.overall_score = Decimal("90.0")
+        mock_perf1.rating = "A"
 
         mock_perf2 = MagicMock(spec=SupplierPerformance)
-        mock_perf2.overall_score = Decimal('85.0')
-        mock_perf2.rating = 'B'
+        mock_perf2.overall_score = Decimal("85.0")
+        mock_perf2.rating = "B"
 
         # Mock 查询逻辑 - 简化版本，避免复杂的side_effect
         material_query = MagicMock()
@@ -570,13 +584,14 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         perf_query = MagicMock()
         perf_query.filter.return_value = perf_query
         perf_query.order_by.return_value = perf_query
-        
+
         # 为两个供应商返回不同的绩效
         call_counter = [0]
+
         def perf_first():
             call_counter[0] += 1
             return mock_perf1 if call_counter[0] == 1 else mock_perf2
-        
+
         perf_query.first.side_effect = perf_first
 
         # 根据模型类型返回不同的查询
@@ -670,14 +685,14 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         # Mock 订单
         mock_order = MagicMock(spec=PurchaseOrder)
         mock_order.id = 100
-        mock_order.order_no = 'PO20240101'
+        mock_order.order_no = "PO20240101"
         mock_order.supplier_id = 10
 
         # Mock 订单明细
         mock_order_item = MagicMock(spec=PurchaseOrderItem)
         mock_order_item.id = 1
-        mock_order_item.material_code = 'MAT001'
-        mock_order_item.material_name = '测试物料'
+        mock_order_item.material_code = "MAT001"
+        mock_order_item.material_name = "测试物料"
         mock_order_item.received_qty = 0
 
         # Mock 查询
@@ -712,21 +727,21 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
             receipt_date=date.today(),
             items=[
                 {
-                    'order_item_id': 1,
-                    'delivery_qty': 10,
-                    'received_qty': 10,
-                    'remark': '正常收货',
+                    "order_item_id": 1,
+                    "delivery_qty": 10,
+                    "received_qty": 10,
+                    "remark": "正常收货",
                 }
             ],
             user_id=1,
-            delivery_note_no='DN001',
-            logistics_company='顺丰',
-            tracking_no='SF123456',
-            remark='测试收货',
+            delivery_note_no="DN001",
+            logistics_company="顺丰",
+            tracking_no="SF123456",
+            remark="测试收货",
         )
 
         # 验证
-        self.assertTrue(receipt_no.startswith('GR'))
+        self.assertTrue(receipt_no.startswith("GR"))
         self.assertEqual(self.db.add.call_count, 3)  # receipt + receipt_item + tracking
         self.db.flush.assert_called_once()
         self.db.commit.assert_called_once()
@@ -748,7 +763,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
     def test_create_order_from_suggestion_not_approved(self):
         """测试从建议创建订单（未批准）"""
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
-        mock_suggestion.status = 'PENDING'
+        mock_suggestion.status = "PENDING"
 
         self.db.query.return_value.get.return_value = mock_suggestion
 
@@ -765,7 +780,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
     def test_create_order_from_suggestion_already_ordered(self):
         """测试从建议创建订单（已创建订单）"""
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
-        mock_suggestion.status = 'APPROVED'
+        mock_suggestion.status = "APPROVED"
         mock_suggestion.purchase_order_id = 100
 
         self.db.query.return_value.get.return_value = mock_suggestion
@@ -783,7 +798,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
     def test_create_order_from_suggestion_no_supplier(self):
         """测试从建议创建订单（无供应商）"""
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
-        mock_suggestion.status = 'APPROVED'
+        mock_suggestion.status = "APPROVED"
         mock_suggestion.purchase_order_id = None
         mock_suggestion.suggested_supplier_id = None
 
@@ -802,7 +817,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
     def test_create_order_from_suggestion_supplier_not_found(self):
         """测试从建议创建订单（供应商不存在）"""
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
-        mock_suggestion.status = 'APPROVED'
+        mock_suggestion.status = "APPROVED"
         mock_suggestion.purchase_order_id = None
         mock_suggestion.suggested_supplier_id = 10
 
@@ -838,14 +853,14 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         """测试从建议创建订单（成功）"""
         # Mock 建议
         mock_suggestion = MagicMock(spec=PurchaseSuggestion)
-        mock_suggestion.status = 'APPROVED'
+        mock_suggestion.status = "APPROVED"
         mock_suggestion.purchase_order_id = None
         mock_suggestion.suggested_supplier_id = 10
         mock_suggestion.material_id = 100
-        mock_suggestion.material_code = 'MAT001'
-        mock_suggestion.material_name = '测试物料'
-        mock_suggestion.specification = '规格A'
-        mock_suggestion.unit = '件'
+        mock_suggestion.material_code = "MAT001"
+        mock_suggestion.material_name = "测试物料"
+        mock_suggestion.specification = "规格A"
+        mock_suggestion.unit = "件"
         mock_suggestion.suggested_qty = 100
         mock_suggestion.estimated_unit_price = 50.0
         mock_suggestion.required_date = date(2024, 6, 1)
@@ -888,13 +903,13 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
             user_id=1,
             supplier_id=10,
             required_date=date(2024, 7, 1),
-            payment_terms='30天账期',
-            delivery_address='测试地址',
-            remark='测试备注',
+            payment_terms="30天账期",
+            delivery_address="测试地址",
+            remark="测试备注",
         )
 
         # 验证
-        self.assertTrue(order_no.startswith('PO'))
+        self.assertTrue(order_no.startswith("PO"))
         self.assertEqual(self.db.add.call_count, 2)  # order + order_item
         self.db.flush.assert_called_once()
         self.db.commit.assert_called_once()
@@ -914,14 +929,14 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         quotation_no = self.service._generate_quotation_no()
 
         # 验证
-        self.assertTrue(quotation_no.startswith('QT'))
+        self.assertTrue(quotation_no.startswith("QT"))
         self.assertEqual(len(quotation_no), 14)
-        self.assertTrue(quotation_no.endswith('0001'))
+        self.assertTrue(quotation_no.endswith("0001"))
 
     def test_generate_quotation_no_existing(self):
         """测试生成报价单号（已有单号）"""
         mock_quotation = MagicMock()
-        mock_quotation.quotation_no = 'QT202401010005'
+        mock_quotation.quotation_no = "QT202401010005"
 
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -934,7 +949,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         quotation_no = self.service._generate_quotation_no()
 
         # 验证
-        self.assertTrue(quotation_no.endswith('0006'))
+        self.assertTrue(quotation_no.endswith("0006"))
 
     def test_generate_receipt_no_new_day(self):
         """测试生成收货单号（当天首个）"""
@@ -949,14 +964,14 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         receipt_no = self.service._generate_receipt_no()
 
         # 验证
-        self.assertTrue(receipt_no.startswith('GR'))
+        self.assertTrue(receipt_no.startswith("GR"))
         self.assertEqual(len(receipt_no), 14)
-        self.assertTrue(receipt_no.endswith('0001'))
+        self.assertTrue(receipt_no.endswith("0001"))
 
     def test_generate_receipt_no_existing(self):
         """测试生成收货单号（已有单号）"""
         mock_receipt = MagicMock()
-        mock_receipt.receipt_no = 'GR202401010010'
+        mock_receipt.receipt_no = "GR202401010010"
 
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -969,7 +984,7 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         receipt_no = self.service._generate_receipt_no()
 
         # 验证
-        self.assertTrue(receipt_no.endswith('0011'))
+        self.assertTrue(receipt_no.endswith("0011"))
 
     def test_generate_purchase_order_no_new_day(self):
         """测试生成采购订单编号（当天首个）"""
@@ -984,14 +999,14 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         order_no = self.service._generate_purchase_order_no()
 
         # 验证
-        self.assertTrue(order_no.startswith('PO'))
+        self.assertTrue(order_no.startswith("PO"))
         self.assertEqual(len(order_no), 14)
-        self.assertTrue(order_no.endswith('0001'))
+        self.assertTrue(order_no.endswith("0001"))
 
     def test_generate_purchase_order_no_existing(self):
         """测试生成采购订单编号（已有单号）"""
         mock_order = MagicMock()
-        mock_order.order_no = 'PO202401010020'
+        mock_order.order_no = "PO202401010020"
 
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -1004,8 +1019,8 @@ class TestPurchaseIntelligenceService(unittest.TestCase):
         order_no = self.service._generate_purchase_order_no()
 
         # 验证
-        self.assertTrue(order_no.endswith('0021'))
+        self.assertTrue(order_no.endswith("0021"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

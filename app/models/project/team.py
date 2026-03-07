@@ -25,9 +25,7 @@ class ProjectMember(Base, TimestampMixin):
     __tablename__ = "project_members"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID"
-    )
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
     role_code = Column(String(50), nullable=False, comment="角色编码（兼容旧版）")
 
@@ -36,16 +34,13 @@ class ProjectMember(Base, TimestampMixin):
         Integer,
         ForeignKey("project_role_types.id"),
         nullable=True,
-        comment="角色类型ID（关联角色字典）"
+        comment="角色类型ID（关联角色字典）",
     )
     is_lead = Column(Boolean, default=False, comment="是否为该角色的负责人")
 
     # 新增：设备级成员分配
     machine_id = Column(
-        Integer,
-        ForeignKey("machines.id"),
-        nullable=True,
-        comment="设备ID（设备级成员分配）"
+        Integer, ForeignKey("machines.id"), nullable=True, comment="设备ID（设备级成员分配）"
     )
 
     # 新增：团队层级关系
@@ -53,7 +48,7 @@ class ProjectMember(Base, TimestampMixin):
         Integer,
         ForeignKey("project_members.id"),
         nullable=True,
-        comment="所属负责人ID（团队成员指向其负责人）"
+        comment="所属负责人ID（团队成员指向其负责人）",
     )
 
     # 分配信息
@@ -81,9 +76,7 @@ class ProjectMember(Base, TimestampMixin):
     machine = relationship("Machine", foreign_keys=[machine_id])
     lead = relationship("ProjectMember", remote_side=[id], foreign_keys=[lead_member_id])
     team_members = relationship(
-        "ProjectMember",
-        back_populates="lead",
-        foreign_keys=[lead_member_id]
+        "ProjectMember", back_populates="lead", foreign_keys=[lead_member_id]
     )
 
     __table_args__ = (
@@ -93,12 +86,19 @@ class ProjectMember(Base, TimestampMixin):
         Index("idx_project_members_is_lead", "is_lead"),
         Index("idx_project_members_machine", "machine_id"),
         Index("idx_project_members_lead", "lead_member_id"),
-        Index("idx_project_members_project_user_role", "project_id", "user_id", "role_code", unique=True),
+        Index(
+            "idx_project_members_project_user_role",
+            "project_id",
+            "user_id",
+            "role_code",
+            unique=True,
+        ),
     )
 
 
 class ProjectMemberContribution(Base, TimestampMixin):
     """项目成员贡献度表"""
+
     __tablename__ = "project_member_contributions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

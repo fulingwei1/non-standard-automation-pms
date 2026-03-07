@@ -3,20 +3,22 @@
 app/common/ 工具模块覆盖率测试
 目标: date_range.py, context.py, query_filters.py
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
 
-# ─── date_range.py ───────────────────────────────────────────────────────────
+import pytest
 
 from app.common.date_range import (
-    get_month_range,
     get_last_month_range,
+    get_month_range,
     get_month_range_by_ym,
-    month_start,
-    month_end,
     get_week_range,
+    month_end,
+    month_start,
 )
+
+# ─── date_range.py ───────────────────────────────────────────────────────────
+
 
 
 class TestGetMonthRange:
@@ -99,14 +101,14 @@ class TestGetWeekRange:
         d = date(2026, 2, 9)  # 周一
         start, end = get_week_range(d)
         assert start.weekday() == 0  # 周一
-        assert end.weekday() == 6    # 周日
+        assert end.weekday() == 6  # 周日
         assert (end - start).days == 6
 
     def test_wednesday(self):
         d = date(2026, 2, 11)  # 周三
         start, end = get_week_range(d)
         assert start == date(2026, 2, 9)  # 本周一
-        assert end == date(2026, 2, 15)   # 本周日
+        assert end == date(2026, 2, 15)  # 本周日
 
     def test_sunday(self):
         d = date(2026, 2, 15)  # 周日
@@ -118,10 +120,10 @@ class TestGetWeekRange:
 # ─── context.py ──────────────────────────────────────────────────────────────
 
 from app.common.context import (
-    set_audit_context,
-    get_audit_context,
     clear_audit_context,
+    get_audit_context,
     get_current_tenant_id,
+    set_audit_context,
     set_current_tenant_id,
 )
 
@@ -174,8 +176,8 @@ class TestTenantContext:
 
 from app.common.query_filters import (
     _normalize_keywords,
-    build_keyword_conditions,
     apply_pagination,
+    build_keyword_conditions,
 )
 
 

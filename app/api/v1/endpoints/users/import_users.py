@@ -31,7 +31,7 @@ async def import_users(
 ) -> Any:
     """
     批量导入用户
-    
+
     - 支持Excel (.xlsx, .xls) 和CSV格式
     - 单次最多导入500条数据
     - 支持字段：用户名、密码、真实姓名、邮箱、手机号、工号、部门、职位、角色、是否启用
@@ -45,12 +45,12 @@ async def import_users(
         if not UserImportService.validate_file_format(file.filename):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="不支持的文件格式，请上传 .xlsx、.xls 或 .csv 文件"
+                detail="不支持的文件格式，请上传 .xlsx、.xls 或 .csv 文件",
             )
 
         # 读取文件内容
         file_content = await file.read()
-        
+
         # 读取为DataFrame
         df = UserImportService.read_file(file.filename, file_content)
 
@@ -64,7 +64,7 @@ async def import_users(
 
         # 构建响应消息
         message = f"导入完成：成功 {result['success_count']} 条，失败 {result['failed_count']} 条"
-        
+
         return success_response(
             data={
                 "total": result["total"],
@@ -73,19 +73,15 @@ async def import_users(
                 "errors": result["errors"][:20],  # 最多返回前20条错误
                 "success_users": result["success_users"],
             },
-            message=message
+            message=message,
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"批量导入用户失败: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"导入失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"导入失败: {str(e)}"
         )
 
 
@@ -96,7 +92,7 @@ def download_import_template(
 ) -> Any:
     """
     下载用户导入模板
-    
+
     - 支持格式: xlsx (默认), csv
     - 包含示例数据和字段说明
     """
@@ -126,16 +122,13 @@ def download_import_template(
         return StreamingResponse(
             iter([content]),
             media_type=media_type,
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except Exception as e:
         logger.error(f"生成导入模板失败: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"生成模板失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"生成模板失败: {str(e)}"
         )
 
 
@@ -147,7 +140,7 @@ async def preview_import_data(
 ) -> Any:
     """
     预览导入数据（不实际导入）
-    
+
     - 验证文件格式和数据有效性
     - 返回前20条数据预览
     - 返回所有验证错误
@@ -157,12 +150,12 @@ async def preview_import_data(
         if not UserImportService.validate_file_format(file.filename):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="不支持的文件格式，请上传 .xlsx、.xls 或 .csv 文件"
+                detail="不支持的文件格式，请上传 .xlsx、.xls 或 .csv 文件",
             )
 
         # 读取文件内容
         file_content = await file.read()
-        
+
         # 读取为DataFrame
         df = UserImportService.read_file(file.filename, file_content)
 
@@ -179,7 +172,7 @@ async def preview_import_data(
                     "errors": structure_errors,
                     "is_valid": False,
                 },
-                message="数据验证失败"
+                message="数据验证失败",
             )
 
         # 验证每一行
@@ -198,15 +191,17 @@ async def preview_import_data(
         # 预览数据（前20条）
         preview_data = []
         for idx, row in df.head(20).iterrows():
-            preview_data.append({
-                "row": idx + 2,
-                "username": row.get("username"),
-                "real_name": row.get("real_name"),
-                "email": row.get("email"),
-                "department": row.get("department"),
-                "position": row.get("position"),
-                "roles": row.get("roles"),
-            })
+            preview_data.append(
+                {
+                    "row": idx + 2,
+                    "username": row.get("username"),
+                    "real_name": row.get("real_name"),
+                    "email": row.get("email"),
+                    "department": row.get("department"),
+                    "position": row.get("position"),
+                    "roles": row.get("roles"),
+                }
+            )
 
         return success_response(
             data={
@@ -215,17 +210,13 @@ async def preview_import_data(
                 "errors": validation_errors[:50],  # 最多返回前50条错误
                 "is_valid": len(validation_errors) == 0,
             },
-            message=f"数据预览：共 {len(df)} 条，{'验证通过' if not validation_errors else f'发现 {len(validation_errors)} 个错误'}"
+            message=f"数据预览：共 {len(df)} 条，{'验证通过' if not validation_errors else f'发现 {len(validation_errors)} 个错误'}",
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"预览导入数据失败: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"预览失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"预览失败: {str(e)}"
         )

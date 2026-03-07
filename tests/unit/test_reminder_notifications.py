@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """审批提醒通知单元测试"""
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from app.services.approval_engine.notify.reminder_notifications import ReminderNotificationsMixin
 
 

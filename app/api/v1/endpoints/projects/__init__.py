@@ -25,13 +25,13 @@ from . import (
     archive,
     cache,
     core,
-    extended,
     ext_best_practices,
     ext_lessons,
     ext_relations,
     ext_resources,
     ext_reviews,
     ext_risks,
+    extended,
     overview,
     payment_plans,
     risk_analytics,
@@ -40,26 +40,26 @@ from . import (
     sync,
     templates,
 )
+from .approvals import router as approvals_router
+from .change_requests import router as change_requests_router
 
 # === 项目模块整合：迁移的子模块路由 ===
 from .costs import router as costs_router
 from .evaluations import router as evaluations_router
+
+# Export gate check functions for use by stage_advance_service
+from .gate_checks import check_gate, check_gate_detailed
 from .machines import router as machines_router
 from .members import router as members_router
 from .milestones import router as milestones_router
 from .progress import router as progress_router
 from .resource_plan import router as resource_plan_router
 from .roles import router as roles_router
+from .schedule_prediction import router as schedule_prediction_router
 from .stages import router as stages_router
 from .timesheet import router as timesheet_router
 from .work_logs import router as work_logs_router
 from .workload import router as workload_router
-from .approvals import router as approvals_router
-from .change_requests import router as change_requests_router
-from .schedule_prediction import router as schedule_prediction_router
-
-# Export gate check functions for use by stage_advance_service
-from .gate_checks import check_gate, check_gate_detailed
 
 __all__ = [
     "check_gate",
@@ -75,6 +75,7 @@ router = APIRouter()
 
 # 看板路由（静态路径必须在/{project_id}之前）
 from .project_board import router as project_board_router
+
 router.include_router(project_board_router, tags=["projects-board"])
 
 # 模板路由（放在最前面，避免与/{project_id}冲突）
@@ -82,6 +83,7 @@ router.include_router(templates.router, tags=["projects-templates"])
 
 # 项目克隆路由
 from .project_clone import router as project_clone_router
+
 router.include_router(project_clone_router, tags=["projects-clone"])
 
 # 缓存管理路由
@@ -235,9 +237,9 @@ router.include_router(
 
 # 全局风险概览路由（无project_id前缀）
 from .schedule_prediction import router as schedule_overview_router
+
 router.include_router(
     schedule_overview_router,
     prefix="/schedule",
     tags=["projects-schedule-overview"],
 )
-

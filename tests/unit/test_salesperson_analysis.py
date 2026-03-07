@@ -3,7 +3,7 @@
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -11,7 +11,9 @@ import pytest
 class TestSalespersonAnalysisMixin:
 
     def _make_mixin(self):
-        from app.services.resource_waste_analysis.salesperson_analysis import SalespersonAnalysisMixin
+        from app.services.resource_waste_analysis.salesperson_analysis import (
+            SalespersonAnalysisMixin,
+        )
 
         class TestClass(SalespersonAnalysisMixin):
             def __init__(self, db):
@@ -60,17 +62,19 @@ class TestSalespersonAnalysisMixin:
 
     def test_get_department_comparison_with_data(self):
         obj, db = self._make_mixin()
-        sp_data = [{
-            "salesperson_id": 1,
-            "salesperson_name": "张三",
-            "department": "销售一部",
-            "total_leads": 10,
-            "won_leads": 5,
-            "lost_leads": 3,
-            "total_hours": 100.0,
-            "wasted_hours": 30.0,
-            "won_amount": Decimal("500000"),
-        }]
+        sp_data = [
+            {
+                "salesperson_id": 1,
+                "salesperson_name": "张三",
+                "department": "销售一部",
+                "total_leads": 10,
+                "won_leads": 5,
+                "lost_leads": 3,
+                "total_hours": 100.0,
+                "wasted_hours": 30.0,
+                "won_amount": Decimal("500000"),
+            }
+        ]
         with patch.object(obj, "get_salesperson_waste_ranking", return_value=sp_data):
             result = obj.get_department_comparison()
             assert len(result) == 1

@@ -38,15 +38,27 @@ def get_customer_satisfaction_statistics(
     获取满意度调查统计
     """
     total = db.query(CustomerSatisfaction).count()
-    sent = db.query(CustomerSatisfaction).filter(CustomerSatisfaction.status.in_(["SENT", "PENDING", "COMPLETED"])).count()
-    pending = db.query(CustomerSatisfaction).filter(CustomerSatisfaction.status == "PENDING").count()
-    completed = db.query(CustomerSatisfaction).filter(CustomerSatisfaction.status == "COMPLETED").count()
+    sent = (
+        db.query(CustomerSatisfaction)
+        .filter(CustomerSatisfaction.status.in_(["SENT", "PENDING", "COMPLETED"]))
+        .count()
+    )
+    pending = (
+        db.query(CustomerSatisfaction).filter(CustomerSatisfaction.status == "PENDING").count()
+    )
+    completed = (
+        db.query(CustomerSatisfaction).filter(CustomerSatisfaction.status == "COMPLETED").count()
+    )
 
     # 计算平均分
-    completed_surveys = db.query(CustomerSatisfaction).filter(
-        CustomerSatisfaction.status == "COMPLETED",
-        CustomerSatisfaction.overall_score.isnot(None)
-    ).all()
+    completed_surveys = (
+        db.query(CustomerSatisfaction)
+        .filter(
+            CustomerSatisfaction.status == "COMPLETED",
+            CustomerSatisfaction.overall_score.isnot(None),
+        )
+        .all()
+    )
     average_score = 0.0
     if completed_surveys:
         total_score = sum(float(s.overall_score) for s in completed_surveys)
@@ -67,7 +79,11 @@ def get_customer_satisfaction_statistics(
     }
 
 
-@router.get("", response_model=PaginatedResponse[CustomerSatisfactionResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "",
+    response_model=PaginatedResponse[CustomerSatisfactionResponse],
+    status_code=status.HTTP_200_OK,
+)
 def read_customer_satisfactions(
     db: Session = Depends(deps.get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -93,10 +109,14 @@ def read_customer_satisfactions(
         query = query.filter(CustomerSatisfaction.survey_date <= date_to)
 
     # 应用关键词过滤（调查编号/客户名称/项目名称）
-    query = apply_keyword_filter(query, CustomerSatisfaction, keyword, ["survey_no", "customer_name", "project_name"])
+    query = apply_keyword_filter(
+        query, CustomerSatisfaction, keyword, ["survey_no", "customer_name", "project_name"]
+    )
 
     total = query.count()
-    items = apply_pagination(query.order_by(desc(CustomerSatisfaction.survey_date)), pagination.offset, pagination.limit).all()
+    items = apply_pagination(
+        query.order_by(desc(CustomerSatisfaction.survey_date)), pagination.offset, pagination.limit
+    ).all()
 
     # 获取创建人姓名
     for item in items:
@@ -143,7 +163,9 @@ def create_customer_satisfaction(
     return save_obj(db, survey)
 
 
-@router.get("/{survey_id}", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{survey_id}", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK
+)
 def read_customer_satisfaction(
     *,
     db: Session = Depends(deps.get_db),
@@ -158,7 +180,9 @@ def read_customer_satisfaction(
     return survey
 
 
-@router.put("/{survey_id}", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{survey_id}", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK
+)
 def update_customer_satisfaction(
     *,
     db: Session = Depends(deps.get_db),
@@ -192,7 +216,9 @@ def update_customer_satisfaction(
     return save_obj(db, survey)
 
 
-@router.post("/{survey_id}/send", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{survey_id}/send", response_model=CustomerSatisfactionResponse, status_code=status.HTTP_200_OK
+)
 def send_customer_satisfaction(
     *,
     db: Session = Depends(deps.get_db),

@@ -2,9 +2,10 @@
 """
 Unit tests for app/services/ecn_bom_analysis_service/utils.py (cov52)
 """
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.ecn_bom_analysis_service.utils import (
@@ -21,8 +22,9 @@ def _make_service():
     return service
 
 
-def _make_affected_mat(change_type="UPDATE", old_qty=None, new_qty=None,
-                       old_spec=None, new_spec=None):
+def _make_affected_mat(
+    change_type="UPDATE", old_qty=None, new_qty=None, old_spec=None, new_spec=None
+):
     mat = MagicMock()
     mat.change_type = change_type
     mat.old_quantity = old_qty
@@ -40,6 +42,7 @@ def _make_affected_mat(change_type="UPDATE", old_qty=None, new_qty=None,
 
 
 # ──────────────────────── get_impact_description ────────────────────────
+
 
 def test_get_impact_description_add():
     # ADD 类型应返回 "新增"
@@ -75,6 +78,7 @@ def test_get_impact_description_unknown_type():
 
 # ──────────────────────── save_bom_impact ────────────────────────
 
+
 def test_save_bom_impact_create_new():
     """不存在时应 add 新记录并 commit"""
     service = _make_service()
@@ -89,7 +93,7 @@ def test_save_bom_impact_create_new():
         affected_item_count=2,
         total_cost_impact=Decimal("500"),
         schedule_impact_days=7,
-        impact_analysis={"bom_impacts": []}
+        impact_analysis={"bom_impacts": []},
     )
 
     service.db.add.assert_called_once()
@@ -111,7 +115,7 @@ def test_save_bom_impact_update_existing():
         affected_item_count=4,
         total_cost_impact=Decimal("999"),
         schedule_impact_days=14,
-        impact_analysis={"bom_impacts": []}
+        impact_analysis={"bom_impacts": []},
     )
 
     service.db.add.assert_not_called()

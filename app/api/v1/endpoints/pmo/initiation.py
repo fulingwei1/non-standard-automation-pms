@@ -9,8 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.pmo import (
@@ -36,9 +36,7 @@ def _to_response(initiation) -> InitiationResponse:
         project_level=initiation.project_level,
         customer_name=initiation.customer_name,
         contract_no=initiation.contract_no,
-        contract_amount=float(initiation.contract_amount)
-        if initiation.contract_amount
-        else None,
+        contract_amount=float(initiation.contract_amount) if initiation.contract_amount else None,
         required_start_date=initiation.required_start_date,
         required_end_date=initiation.required_end_date,
         technical_solution_id=initiation.technical_solution_id,
@@ -87,9 +85,7 @@ def read_initiations(
         import traceback
 
         error_detail = f"查询立项申请列表失败: {str(e)}\n{traceback.format_exc()}"
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_detail)
 
 
 @router.post(
@@ -169,15 +165,11 @@ def approve_initiation(
     """立项评审通过"""
     try:
         service = PmoInitiationService(db)
-        initiation = service.approve_initiation(
-            initiation_id, approve_request, current_user
-        )
+        initiation = service.approve_initiation(initiation_id, approve_request, current_user)
         return ResponseModel(
             code=200,
             message="审批通过",
-            data={"project_id": initiation.project_id}
-            if initiation.project_id
-            else None,
+            data={"project_id": initiation.project_id} if initiation.project_id else None,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

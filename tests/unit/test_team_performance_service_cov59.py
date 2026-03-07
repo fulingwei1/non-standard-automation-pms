@@ -28,9 +28,7 @@ class TestTeamPerformanceService(unittest.TestCase):
         """测试获取存在的团队名称"""
         mock_dept = MagicMock()
         mock_dept.name = "研发部"
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_team_name(1)
 
@@ -48,9 +46,7 @@ class TestTeamPerformanceService(unittest.TestCase):
         """测试获取存在的部门名称"""
         mock_dept = MagicMock()
         mock_dept.name = "技术部"
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_dept
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_dept
 
         result = self.service.get_department_name(1)
 
@@ -107,9 +103,7 @@ class TestTeamPerformanceService(unittest.TestCase):
         mock_period.id = 1
         mock_period.period_name = "2024Q1"
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_period
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_period
 
         result = self.service.get_period(period_id=1)
 
@@ -217,13 +211,9 @@ class TestTeamPerformanceService(unittest.TestCase):
         mock_target_user = MagicMock()
         mock_target_user.department_id = 10
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = (
-            mock_target_user
-        )
+        self.mock_db.query.return_value.filter.return_value.first.return_value = mock_target_user
 
-        result = self.service.check_performance_view_permission(
-            mock_current_user, 2
-        )
+        result = self.service.check_performance_view_permission(mock_current_user, 2)
 
         self.assertTrue(result)
 
@@ -277,6 +267,7 @@ class TestTeamPerformanceService(unittest.TestCase):
                     mock_user1,
                     mock_user2,
                 ]
+
                 # 对于获取单个用户
                 def first_side_effect():
                     # 简化处理，返回第一个用户
@@ -416,9 +407,7 @@ class TestTeamPerformanceService(unittest.TestCase):
 
         self.mock_db.query.side_effect = query_side_effect
 
-        result = self.service.get_performance_ranking(
-            ranking_type="COMPANY", period_id=1
-        )
+        result = self.service.get_performance_ranking(ranking_type="COMPANY", period_id=1)
 
         self.assertEqual(result["ranking_type"], "COMPANY")
         self.assertEqual(result["period_id"], 1)

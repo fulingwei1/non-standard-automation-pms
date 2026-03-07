@@ -12,13 +12,13 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.sales import QuoteTemplate, QuoteTemplateVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
-from app.utils.db_helpers import get_or_404, save_obj, delete_obj
+from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
 router = APIRouter()
 
@@ -45,9 +45,7 @@ def get_quote_templates(
     Returns:
         ResponseModel: 模板列表
     """
-    query = db.query(QuoteTemplate).options(
-        joinedload(QuoteTemplate.versions)
-    )
+    query = db.query(QuoteTemplate).options(joinedload(QuoteTemplate.versions))
 
     if status:
         query = query.filter(QuoteTemplate.status == status)
@@ -56,30 +54,32 @@ def get_quote_templates(
 
     # 按可见范围过滤
     query = query.filter(
-        (QuoteTemplate.visibility_scope == "PUBLIC") |
-        (QuoteTemplate.created_by == current_user.id)
+        (QuoteTemplate.visibility_scope == "PUBLIC") | (QuoteTemplate.created_by == current_user.id)
     )
 
     total = query.count()
-    templates = apply_pagination(query.order_by(desc(QuoteTemplate.created_at)), pagination.offset, pagination.limit).all()
+    templates = apply_pagination(
+        query.order_by(desc(QuoteTemplate.created_at)), pagination.offset, pagination.limit
+    ).all()
 
-    templates_data = [{
-        "id": t.id,
-        "template_code": t.template_code,
-        "template_name": t.template_name,
-        "description": t.description,
-        "status": t.status,
-        "visibility_scope": t.visibility_scope,
-        "current_version_id": t.current_version_id,
-        "version_count": len(t.versions) if t.versions else 0,
-        "created_by": t.created_by,
-        "created_at": t.created_at.isoformat() if t.created_at else None,
-    } for t in templates]
+    templates_data = [
+        {
+            "id": t.id,
+            "template_code": t.template_code,
+            "template_name": t.template_name,
+            "description": t.description,
+            "status": t.status,
+            "visibility_scope": t.visibility_scope,
+            "current_version_id": t.current_version_id,
+            "version_count": len(t.versions) if t.versions else 0,
+            "created_by": t.created_by,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+        }
+        for t in templates
+    ]
 
     return ResponseModel(
-        code=200,
-        message="获取模板列表成功",
-        data={"total": total, "items": templates_data}
+        code=200, message="获取模板列表成功", data={"total": total, "items": templates_data}
     )
 
 
@@ -100,9 +100,12 @@ def get_template_detail(
     Returns:
         ResponseModel: 模板详情
     """
-    template = db.query(QuoteTemplate).options(
-        joinedload(QuoteTemplate.versions)
-    ).filter(QuoteTemplate.id == template_id).first()
+    template = (
+        db.query(QuoteTemplate)
+        .options(joinedload(QuoteTemplate.versions))
+        .filter(QuoteTemplate.id == template_id)
+        .first()
+    )
 
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
@@ -111,13 +114,20 @@ def get_template_detail(
     if template.visibility_scope != "PUBLIC" and template.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="无权限查看此模板")
 
-    versions_data = [{
-        "id": v.id,
-        "version_no": v.version_no,
-        "status": v.status,
-        "content_json": v.content_json,
-        "created_at": v.created_at.isoformat() if v.created_at else None,
-    } for v in template.versions] if template.versions else []
+    versions_data = (
+        [
+            {
+                "id": v.id,
+                "version_no": v.version_no,
+                "status": v.status,
+                "content_json": v.content_json,
+                "created_at": v.created_at.isoformat() if v.created_at else None,
+            }
+            for v in template.versions
+        ]
+        if template.versions
+        else []
+    )
 
     return ResponseModel(
         code=200,
@@ -132,7 +142,7 @@ def get_template_detail(
             "current_version_id": template.current_version_id,
             "versions": versions_data,
             "created_at": template.created_at.isoformat() if template.created_at else None,
-        }
+        },
     )
 
 
@@ -183,9 +193,7 @@ def create_quote_template(
     db.commit()
 
     return ResponseModel(
-        code=200,
-        message="模板创建成功",
-        data={"id": template.id, "template_code": template_code}
+        code=200, message="模板创建成功", data={"id": template.id, "template_code": template_code}
     )
 
 
@@ -278,9 +286,12 @@ def create_template_version(
         raise HTTPException(status_code=403, detail="无权限操作此模板")
 
     # 获取最大版本号
-    max_version = db.query(QuoteTemplateVersion).filter(
-        QuoteTemplateVersion.template_id == template_id
-    ).order_by(desc(QuoteTemplateVersion.version_no)).first()
+    max_version = (
+        db.query(QuoteTemplateVersion)
+        .filter(QuoteTemplateVersion.template_id == template_id)
+        .order_by(desc(QuoteTemplateVersion.version_no))
+        .first()
+    )
 
     new_version_no = (max_version.version_no + 1) if max_version else 1
 
@@ -294,9 +305,7 @@ def create_template_version(
     save_obj(db, version)
 
     return ResponseModel(
-        code=200,
-        message="版本创建成功",
-        data={"id": version.id, "version_no": new_version_no}
+        code=200, message="版本创建成功", data={"id": version.id, "version_no": new_version_no}
     )
 
 
@@ -326,9 +335,11 @@ def publish_template(
         raise HTTPException(status_code=400, detail="模板没有版本，无法发布")
 
     # 更新当前版本状态
-    version = db.query(QuoteTemplateVersion).filter(
-        QuoteTemplateVersion.id == template.current_version_id
-    ).first()
+    version = (
+        db.query(QuoteTemplateVersion)
+        .filter(QuoteTemplateVersion.id == template.current_version_id)
+        .first()
+    )
     if version:
         version.status = "PUBLISHED"
         version.published_at = datetime.now()

@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_keyword_filter
 from app.models.approval import ApprovalActionLog, ApprovalInstance, ApprovalTask
 from app.schemas.approval.instance import (
     ApprovalInstanceCreate,
@@ -20,8 +22,6 @@ from app.schemas.approval.instance import (
     ApprovalTaskBrief,
 )
 from app.services.approval_engine import ApprovalEngineService
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -155,9 +155,12 @@ def get_instance(
     # 获取当前节点名称
     if instance.current_node_id:
         from app.models.approval import ApprovalNodeDefinition
-        current_node = db.query(ApprovalNodeDefinition).filter(
-            ApprovalNodeDefinition.id == instance.current_node_id
-        ).first()
+
+        current_node = (
+            db.query(ApprovalNodeDefinition)
+            .filter(ApprovalNodeDefinition.id == instance.current_node_id)
+            .first()
+        )
         if current_node:
             result.current_node_name = current_node.node_name
 

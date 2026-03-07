@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """第二十六批 - notification_utils 单元测试"""
 
-import pytest
 from datetime import datetime, time, timedelta
 from unittest.mock import MagicMock
+
+import pytest
 
 pytest.importorskip("app.services.notification_utils")
 
 from app.services.notification_utils import (
-    get_alert_icon_url,
-    resolve_channels,
-    resolve_recipients,
-    resolve_channel_target,
     channel_allowed,
-    parse_time_str,
+    get_alert_icon_url,
     is_quiet_hours,
     next_quiet_resume,
+    parse_time_str,
+    resolve_channel_target,
+    resolve_channels,
+    resolve_recipients,
 )
 
 

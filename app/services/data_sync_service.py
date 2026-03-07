@@ -61,11 +61,15 @@ class DataSyncService:
         # 优先从 Contract 的 delivery_deadline 字段获取（如果存在）
         # 否则从关联的 QuoteVersion 获取 delivery_date
         delivery_date = None
-        if hasattr(contract, 'delivery_deadline') and contract.delivery_deadline:
+        if hasattr(contract, "delivery_deadline") and contract.delivery_deadline:
             delivery_date = contract.delivery_deadline
-        elif contract.quote_version and hasattr(contract.quote_version, 'delivery_date') and contract.quote_version.delivery_date:
+        elif (
+            contract.quote_version
+            and hasattr(contract.quote_version, "delivery_date")
+            and contract.quote_version.delivery_date
+        ):
             delivery_date = contract.quote_version.delivery_date
-        
+
         if delivery_date and delivery_date != project.planned_end_date:
             project.planned_end_date = delivery_date
             updated_fields.append("planned_end_date")
@@ -76,7 +80,7 @@ class DataSyncService:
             return {
                 "success": True,
                 "message": f"已同步字段：{', '.join(updated_fields)}",
-                "updated_fields": updated_fields
+                "updated_fields": updated_fields,
             }
 
         return {"success": True, "message": "数据已是最新，无需同步"}
@@ -104,14 +108,16 @@ class DataSyncService:
         # 这里假设收款计划已经通过 _generate_payment_plans_from_contract 生成
         # 如果需要从合同配置同步，可以在这里实现
 
-        existing_plans = self.db.query(ProjectPaymentPlan).filter(
-            ProjectPaymentPlan.contract_id == contract_id
-        ).all()
+        existing_plans = (
+            self.db.query(ProjectPaymentPlan)
+            .filter(ProjectPaymentPlan.contract_id == contract_id)
+            .all()
+        )
 
         return {
             "success": True,
             "message": f"已找到 {len(existing_plans)} 个收款计划",
-            "plan_count": len(existing_plans)
+            "plan_count": len(existing_plans),
         }
 
     def sync_project_to_contract(self, project_id: int) -> Dict[str, Any]:
@@ -157,12 +163,14 @@ class DataSyncService:
             return {
                 "success": True,
                 "message": f"已更新 {len(updated_contracts)} 个合同",
-                "updated_contracts": updated_contracts
+                "updated_contracts": updated_contracts,
             }
 
         return {"success": True, "message": "数据已是最新，无需同步"}
 
-    def get_sync_status(self, project_id: Optional[int] = None, contract_id: Optional[int] = None) -> Dict[str, Any]:
+    def get_sync_status(
+        self, project_id: Optional[int] = None, contract_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         获取数据同步状态
 
@@ -193,7 +201,7 @@ class DataSyncService:
                         "amount_synced": c.contract_amount == project.contract_amount,
                     }
                     for c in contracts
-                ]
+                ],
             }
 
         if contract_id:
@@ -202,7 +210,12 @@ class DataSyncService:
                 return {"success": False, "message": "合同不存在"}
 
             if not contract.project_id:
-                return {"success": True, "contract_id": contract_id, "project_id": None, "synced": False}
+                return {
+                    "success": True,
+                    "contract_id": contract_id,
+                    "project_id": None,
+                    "synced": False,
+                }
 
             project = self.db.query(Project).filter(Project.id == contract.project_id).first()
             if not project:
@@ -273,7 +286,7 @@ class DataSyncService:
                 "message": f"已同步 {len(updated_projects)} 个项目的客户信息",
                 "updated_count": len(updated_projects),
                 "updated_projects": updated_projects,
-                "updated_fields": list(set(updated_fields_list))
+                "updated_fields": list(set(updated_fields_list)),
             }
 
         return {"success": True, "message": "所有项目的客户信息已是最新", "updated_count": 0}
@@ -307,19 +320,19 @@ class DataSyncService:
 
             # 检查合同是否有冗余的客户信息字段
             # 如果合同模型有 customer_name 字段，则同步
-            if hasattr(contract, 'customer_name'):
+            if hasattr(contract, "customer_name"):
                 if customer.customer_name and customer.customer_name != contract.customer_name:
                     contract.customer_name = customer.customer_name
                     updated_fields.append("customer_name")
 
             # 如果合同模型有 contact_person 字段，则同步
-            if hasattr(contract, 'contact_person'):
+            if hasattr(contract, "contact_person"):
                 if customer.contact_person and customer.contact_person != contract.contact_person:
                     contract.contact_person = customer.contact_person
                     updated_fields.append("contact_person")
 
             # 如果合同模型有 contact_phone 字段，则同步
-            if hasattr(contract, 'contact_phone'):
+            if hasattr(contract, "contact_phone"):
                 if customer.contact_phone and customer.contact_phone != contract.contact_phone:
                     contract.contact_phone = customer.contact_phone
                     updated_fields.append("contact_phone")
@@ -336,7 +349,11 @@ class DataSyncService:
                 "message": f"已同步 {len(updated_contracts)} 个合同的客户信息",
                 "updated_count": len(updated_contracts),
                 "updated_contracts": updated_contracts,
-                "updated_fields": list(set(updated_fields_list))
+                "updated_fields": list(set(updated_fields_list)),
             }
 
-        return {"success": True, "message": "所有合同的客户信息已是最新，或合同模型无冗余字段", "updated_count": 0}
+        return {
+            "success": True,
+            "message": "所有合同的客户信息已是最新，或合同模型无冗余字段",
+            "updated_count": 0,
+        }

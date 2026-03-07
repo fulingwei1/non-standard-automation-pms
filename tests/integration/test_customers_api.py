@@ -8,8 +8,8 @@ Updated for unified response format
 from datetime import date
 
 from tests.helpers.response_helpers import (
-    assert_success_response,
     assert_paginated_response,
+    assert_success_response,
     extract_items,
 )
 
@@ -60,9 +60,7 @@ class TestCustomersAPI:
         items = paginated_data["items"]
         for item in items:
             if item.get("customer_name"):
-                assert "测试" in item["customer_name"] or "测试" in item.get(
-                    "customer_code", ""
-                )
+                assert "测试" in item["customer_name"] or "测试" in item.get("customer_code", "")
 
     def test_get_customer_detail(self, client, admin_token, test_customer):
         """测试获取客户详情"""
@@ -204,9 +202,7 @@ class TestCustomersAPI:
         )
         assert response.status_code == 200
 
-    def test_delete_customer_with_projects(
-        self, client, admin_token, test_project, db_session
-    ):
+    def test_delete_customer_with_projects(self, client, admin_token, test_project, db_session):
         """测试删除有关联项目的客户"""
         # test_customer 可能没有关联项目，使用 test_project 中的客户
         from app.models.project import Customer

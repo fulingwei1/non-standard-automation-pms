@@ -23,7 +23,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'DAILY'
+        mock_template.frequency = "DAILY"
         mock_template.generate_before_days = 0
 
         today = date.today()
@@ -37,7 +37,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'DAILY'
+        mock_template.frequency = "DAILY"
         mock_template.generate_before_days = 1
 
         today = date.today()
@@ -51,7 +51,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'WEEKLY'
+        mock_template.frequency = "WEEKLY"
         mock_template.day_of_week = date.today().weekday() + 1  # 设置为今天
         mock_template.generate_before_days = 0
 
@@ -65,7 +65,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'WEEKLY'
+        mock_template.frequency = "WEEKLY"
         # 设置目标为2天后的星期几
         future_weekday = (date.today().weekday() + 2) % 7 + 1
         mock_template.day_of_week = future_weekday
@@ -82,7 +82,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'MONTHLY'
+        mock_template.frequency = "MONTHLY"
         mock_template.day_of_month = date.today().day
         mock_template.generate_before_days = 0
 
@@ -96,7 +96,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'MONTHLY'
+        mock_template.frequency = "MONTHLY"
         # 设置目标为2天后
         target_day = min(date.today().day + 2, 28)  # 避免月末问题
         mock_template.day_of_month = target_day
@@ -114,7 +114,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'YEARLY'
+        mock_template.frequency = "YEARLY"
         mock_template.month_of_year = date.today().month
         mock_template.day_of_month = date.today().day
         mock_template.generate_before_days = 0
@@ -129,7 +129,7 @@ class TestShouldGenerateTask:
         from app.services.job_duty_task_service import should_generate_task
 
         mock_template = MagicMock()
-        mock_template.frequency = 'UNKNOWN'
+        mock_template.frequency = "UNKNOWN"
 
         today = date.today()
         should_gen, target = should_generate_task(mock_template, today)
@@ -155,7 +155,7 @@ class TestFindTemplateUsers:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_user]
 
         # Mock User class to have position_id attribute
-        with patch('app.services.job_duty_task_service.User') as MockUser:
+        with patch("app.services.job_duty_task_service.User") as MockUser:
             MockUser.position_id = MagicMock()
             MockUser.is_active = MagicMock()
 
@@ -178,7 +178,7 @@ class TestFindTemplateUsers:
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_user]
 
         # Mock User class
-        with patch('app.services.job_duty_task_service.User') as MockUser:
+        with patch("app.services.job_duty_task_service.User") as MockUser:
             MockUser.department_id = MagicMock()
             MockUser.is_active = MagicMock()
             # Remove position_id
@@ -197,7 +197,7 @@ class TestFindTemplateUsers:
         mock_template.position_id = None
         mock_template.department_id = None
 
-        with patch('app.services.job_duty_task_service.User') as MockUser:
+        with patch("app.services.job_duty_task_service.User") as MockUser:
             # No position_id or department_id attributes
             del MockUser.position_id
             del MockUser.department_id
@@ -240,9 +240,9 @@ class TestCreateTaskFromTemplate:
         assert result.title == "每日工作汇报"
         assert result.assignee_id == 10
         assert result.assignee_name == "张三"
-        assert result.task_type == 'JOB_DUTY'
+        assert result.task_type == "JOB_DUTY"
         assert result.priority == "HIGH"
-        assert result.source_type == 'JOB_DUTY_TEMPLATE'
+        assert result.source_type == "JOB_DUTY_TEMPLATE"
         assert result.source_id == 1
 
     def test_calculates_deadline(self):
@@ -298,7 +298,7 @@ class TestCreateTaskFromTemplate:
             mock_db, mock_template, mock_user, date.today(), mock_generate_func
         )
 
-        assert result.priority == 'MEDIUM'  # 默认中等优先级
+        assert result.priority == "MEDIUM"  # 默认中等优先级
         assert result.assignee_name == "user1"  # 使用username
 
 

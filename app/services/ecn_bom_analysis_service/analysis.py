@@ -22,7 +22,7 @@ def analyze_bom_impact(
     service: "EcnBomAnalysisService",
     ecn_id: int,
     machine_id: Optional[int] = None,
-    include_cascade: bool = True
+    include_cascade: bool = True,
 ) -> Dict[str, Any]:
     """
     分析ECN对BOM的影响
@@ -48,16 +48,16 @@ def analyze_bom_impact(
         raise ValueError("需要指定设备ID或ECN必须关联设备")
 
     # 获取受影响的物料
-    affected_materials = service.db.query(EcnAffectedMaterial).filter(
-        EcnAffectedMaterial.ecn_id == ecn_id
-    ).all()
+    affected_materials = (
+        service.db.query(EcnAffectedMaterial).filter(EcnAffectedMaterial.ecn_id == ecn_id).all()
+    )
 
     if not affected_materials:
         return {
             "ecn_id": ecn_id,
             "machine_id": machine_id,
             "has_impact": False,
-            "message": "没有受影响的物料"
+            "message": "没有受影响的物料",
         }
 
     # 获取设备的BOM
@@ -65,18 +65,20 @@ def analyze_bom_impact(
     if not machine:
         raise ValueError(f"设备 {machine_id} 不存在")
 
-    bom_headers = service.db.query(BomHeader).filter(
-        BomHeader.machine_id == machine_id,
-        BomHeader.status == 'RELEASED',
-        BomHeader.is_latest
-    ).all()
+    bom_headers = (
+        service.db.query(BomHeader)
+        .filter(
+            BomHeader.machine_id == machine_id, BomHeader.status == "RELEASED", BomHeader.is_latest
+        )
+        .all()
+    )
 
     if not bom_headers:
         return {
             "ecn_id": ecn_id,
             "machine_id": machine_id,
             "has_impact": False,
-            "message": "设备没有已发布的BOM"
+            "message": "设备没有已发布的BOM",
         }
 
     # 分析每个BOM的影响
@@ -91,7 +93,7 @@ def analyze_bom_impact(
             ecn_id=ecn_id,
             bom_header=bom_header,
             affected_materials=affected_materials,
-            include_cascade=include_cascade
+            include_cascade=include_cascade,
         )
 
         if impact_result["has_impact"]:
@@ -99,8 +101,7 @@ def analyze_bom_impact(
             total_cost_impact += Decimal(impact_result.get("cost_impact", 0))
             total_affected_items += impact_result.get("affected_item_count", 0)
             max_schedule_impact = max(
-                max_schedule_impact,
-                impact_result.get("schedule_impact_days", 0)
+                max_schedule_impact, impact_result.get("schedule_impact_days", 0)
             )
 
     # 保存分析结果
@@ -116,8 +117,8 @@ def analyze_bom_impact(
             schedule_impact_days=max_schedule_impact,
             impact_analysis={
                 "bom_impacts": bom_impacts,
-                "analysis_time": datetime.now().isoformat()
-            }
+                "analysis_time": datetime.now().isoformat(),
+            },
         )
 
     return {
@@ -129,7 +130,7 @@ def analyze_bom_impact(
         "total_affected_items": total_affected_items,
         "max_schedule_impact_days": max_schedule_impact,
         "bom_impacts": bom_impacts,
-        "analyzed_at": datetime.now().isoformat()
+        "analyzed_at": datetime.now().isoformat(),
     }
 
 
@@ -138,13 +139,11 @@ def analyze_single_bom(
     ecn_id: int,
     bom_header: BomHeader,
     affected_materials: List[EcnAffectedMaterial],
-    include_cascade: bool = True
+    include_cascade: bool = True,
 ) -> Dict[str, Any]:
     """分析单个BOM的影响"""
     # 获取BOM所有物料项
-    bom_items = service.db.query(BomItem).filter(
-        BomItem.bom_id == bom_header.id
-    ).all()
+    bom_items = service.db.query(BomItem).filter(BomItem.bom_id == bom_header.id).all()
 
     # 构建物料编码到BOM项的映射
     material_code_to_items = {}
@@ -168,34 +167,36 @@ def analyze_single_bom(
         if affected_mat.material_code in material_code_to_items:
             for bom_item in material_code_to_items[affected_mat.material_code]:
                 affected_item_ids.add(bom_item.id)
-                direct_impact.append({
-                    "bom_item_id": bom_item.id,
-                    "material_code": bom_item.material_code,
-                    "material_name": bom_item.material_name,
-                    "change_type": affected_mat.change_type,
-                    "impact": get_impact_description(affected_mat)
-                })
+                direct_impact.append(
+                    {
+                        "bom_item_id": bom_item.id,
+                        "material_code": bom_item.material_code,
+                        "material_name": bom_item.material_name,
+                        "change_type": affected_mat.change_type,
+                        "impact": get_impact_description(affected_mat),
+                    }
+                )
 
         # 通过物料ID匹配
         if affected_mat.material_id and affected_mat.material_id in material_id_to_items:
             for bom_item in material_id_to_items[affected_mat.material_id]:
                 if bom_item.id not in affected_item_ids:
                     affected_item_ids.add(bom_item.id)
-                    direct_impact.append({
-                        "bom_item_id": bom_item.id,
-                        "material_code": bom_item.material_code,
-                        "material_name": bom_item.material_name,
-                        "change_type": affected_mat.change_type,
-                        "impact": get_impact_description(affected_mat)
-                    })
+                    direct_impact.append(
+                        {
+                            "bom_item_id": bom_item.id,
+                            "material_code": bom_item.material_code,
+                            "material_name": bom_item.material_name,
+                            "change_type": affected_mat.change_type,
+                            "impact": get_impact_description(affected_mat),
+                        }
+                    )
 
     # 分析级联影响
     cascade_impact = []
     if include_cascade:
         cascade_impact = analyze_cascade_impact(
-            service=service,
-            bom_items=bom_items,
-            affected_item_ids=affected_item_ids
+            service=service, bom_items=bom_items, affected_item_ids=affected_item_ids
         )
 
     # 计算成本影响
@@ -203,7 +204,7 @@ def analyze_single_bom(
         service=service,
         affected_materials=affected_materials,
         bom_items=bom_items,
-        affected_item_ids=affected_item_ids
+        affected_item_ids=affected_item_ids,
     )
 
     # 计算交期影响
@@ -211,7 +212,7 @@ def analyze_single_bom(
         service=service,
         affected_materials=affected_materials,
         bom_items=bom_items,
-        affected_item_ids=affected_item_ids
+        affected_item_ids=affected_item_ids,
     )
 
     return {
@@ -223,5 +224,5 @@ def analyze_single_bom(
         "cascade_impact": cascade_impact,
         "affected_item_count": len(affected_item_ids) + len(cascade_impact),
         "cost_impact": float(cost_impact),
-        "schedule_impact_days": schedule_impact
+        "schedule_impact_days": schedule_impact,
     }

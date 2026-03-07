@@ -9,7 +9,7 @@ from .risk_keyword_extractor import RiskKeywordExtractor
 from .test_recommendation_engine import TestRecommendationEngine
 
 __all__ = [
-    'QualityRiskAnalyzer',
-    'RiskKeywordExtractor',
-    'TestRecommendationEngine',
+    "QualityRiskAnalyzer",
+    "RiskKeywordExtractor",
+    "TestRecommendationEngine",
 ]

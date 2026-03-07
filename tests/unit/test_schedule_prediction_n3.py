@@ -21,14 +21,14 @@ SchedulePredictionService 深度覆盖测试（N3组）
 import json
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_db():
@@ -41,6 +41,7 @@ def mock_db():
 def service(mock_db):
     with patch("app.services.schedule_prediction_service.AIClientService"):
         from app.services.schedule_prediction_service import SchedulePredictionService
+
         svc = SchedulePredictionService(db=mock_db)
     return svc
 
@@ -48,6 +49,7 @@ def service(mock_db):
 # ---------------------------------------------------------------------------
 # _extract_features — EVM 相关计算
 # ---------------------------------------------------------------------------
+
 
 class TestExtractFeatures:
     def test_progress_deviation(self, service):
@@ -60,8 +62,7 @@ class TestExtractFeatures:
 
     def test_avg_daily_progress_from_project_data(self, service):
         features = service._extract_features(
-            1, 50.0, 60.0, 20, 5,
-            project_data={"days_elapsed": 25}
+            1, 50.0, 60.0, 20, 5, project_data={"days_elapsed": 25}
         )
         # avg_daily = 50 / 25 = 2.0
         assert features["avg_daily_progress"] == pytest.approx(2.0, abs=0.001)
@@ -73,16 +74,14 @@ class TestExtractFeatures:
 
     def test_velocity_ratio_above_one_when_fast(self, service):
         features = service._extract_features(
-            1, 80.0, 50.0, 5, 10,
-            project_data={"days_elapsed": 10}
+            1, 80.0, 50.0, 5, 10, project_data={"days_elapsed": 10}
         )
         # avg_daily = 80/10 = 8; required = 20/5 = 4; ratio = 2.0
         assert features["velocity_ratio"] == pytest.approx(2.0, abs=0.01)
 
     def test_velocity_ratio_below_one_when_slow(self, service):
         features = service._extract_features(
-            1, 30.0, 60.0, 30, 5,
-            project_data={"days_elapsed": 30}
+            1, 30.0, 60.0, 30, 5, project_data={"days_elapsed": 30}
         )
         # avg_daily = 30/30 = 1.0; required = 70/30 ≈ 2.33; ratio ≈ 0.43
         assert features["velocity_ratio"] < 1.0
@@ -96,16 +95,12 @@ class TestExtractFeatures:
         assert features["velocity_ratio"] == pytest.approx(1.0, abs=0.01)
 
     def test_zero_elapsed_days_doesnt_divide_by_zero(self, service):
-        features = service._extract_features(
-            1, 50.0, 50.0, 20, 5,
-            project_data={"days_elapsed": 0}
-        )
+        features = service._extract_features(1, 50.0, 50.0, 20, 5, project_data={"days_elapsed": 0})
         assert features["avg_daily_progress"] == 0
 
     def test_complexity_from_project_data(self, service):
         features = service._extract_features(
-            1, 50.0, 50.0, 20, 5,
-            project_data={"complexity": "high"}
+            1, 50.0, 50.0, 20, 5, project_data={"complexity": "high"}
         )
         assert features["complexity"] == "high"
 
@@ -116,10 +111,18 @@ class TestExtractFeatures:
     def test_all_required_keys_present(self, service):
         features = service._extract_features(1, 50.0, 60.0, 25, 7)
         required_keys = [
-            "current_progress", "planned_progress", "progress_deviation",
-            "remaining_days", "remaining_progress", "team_size",
-            "avg_daily_progress", "required_daily_progress", "velocity_ratio",
-            "complexity", "similar_projects_avg_duration", "similar_projects_delay_rate",
+            "current_progress",
+            "planned_progress",
+            "progress_deviation",
+            "remaining_days",
+            "remaining_progress",
+            "team_size",
+            "avg_daily_progress",
+            "required_daily_progress",
+            "velocity_ratio",
+            "complexity",
+            "similar_projects_avg_duration",
+            "similar_projects_delay_rate",
         ]
         for key in required_keys:
             assert key in features, f"Missing key: {key}"
@@ -128,6 +131,7 @@ class TestExtractFeatures:
 # ---------------------------------------------------------------------------
 # _predict_linear
 # ---------------------------------------------------------------------------
+
 
 class TestPredictLinear:
     def test_no_delay_when_velocity_sufficient(self, service):
@@ -179,18 +183,22 @@ class TestPredictLinear:
 # _assess_risk_level
 # ---------------------------------------------------------------------------
 
+
 class TestAssessRiskLevel:
-    @pytest.mark.parametrize("delay_days,expected", [
-        (-5, "low"),
-        (0, "low"),
-        (3, "low"),
-        (5, "medium"),
-        (7, "medium"),
-        (10, "high"),
-        (14, "high"),
-        (15, "critical"),
-        (100, "critical"),
-    ])
+    @pytest.mark.parametrize(
+        "delay_days,expected",
+        [
+            (-5, "low"),
+            (0, "low"),
+            (3, "low"),
+            (5, "medium"),
+            (7, "medium"),
+            (10, "high"),
+            (14, "high"),
+            (15, "critical"),
+            (100, "critical"),
+        ],
+    )
     def test_risk_levels(self, service, delay_days, expected):
         assert service._assess_risk_level(delay_days) == expected
 
@@ -199,14 +207,17 @@ class TestAssessRiskLevel:
 # _parse_ai_prediction
 # ---------------------------------------------------------------------------
 
+
 class TestParseAiPrediction:
     def test_parses_valid_json(self, service):
-        ai_response = json.dumps({
-            "delay_days": 10,
-            "confidence": 0.85,
-            "risk_factors": ["人力不足"],
-            "recommendations": ["增加人手"],
-        })
+        ai_response = json.dumps(
+            {
+                "delay_days": 10,
+                "confidence": 0.85,
+                "risk_factors": ["人力不足"],
+                "recommendations": ["增加人手"],
+            }
+        )
         features = {"remaining_days": 20}
         result = service._parse_ai_prediction(ai_response, features)
         assert result["delay_days"] == 10
@@ -214,7 +225,7 @@ class TestParseAiPrediction:
         assert result["predicted_date"] == date.today() + timedelta(days=30)
 
     def test_parses_json_wrapped_in_text(self, service):
-        ai_response = "分析结果如下：\n```json\n{\"delay_days\": 5, \"confidence\": 0.7, \"risk_factors\": [], \"recommendations\": []}\n```"
+        ai_response = '分析结果如下：\n```json\n{"delay_days": 5, "confidence": 0.7, "risk_factors": [], "recommendations": []}\n```'
         features = {"remaining_days": 15}
         result = service._parse_ai_prediction(ai_response, features)
         assert result["delay_days"] == 5
@@ -237,6 +248,7 @@ class TestParseAiPrediction:
 # ---------------------------------------------------------------------------
 # _parse_ai_solutions
 # ---------------------------------------------------------------------------
+
 
 class TestParseAiSolutions:
     def test_parses_valid_solutions(self, service):
@@ -264,6 +276,7 @@ class TestParseAiSolutions:
 # _generate_default_solutions
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateDefaultSolutions:
     def test_returns_three_solutions(self, service):
         result = service._generate_default_solutions(delay_days=10)
@@ -290,6 +303,7 @@ class TestGenerateDefaultSolutions:
 # ---------------------------------------------------------------------------
 # create_alert
 # ---------------------------------------------------------------------------
+
 
 class TestCreateAlert:
     def test_creates_alert_record(self, service, mock_db):
@@ -336,6 +350,7 @@ class TestCreateAlert:
 # check_and_create_alerts
 # ---------------------------------------------------------------------------
 
+
 class TestCheckAndCreateAlerts:
     def test_creates_delay_alert_when_delay_gte_3(self, service):
         with patch.object(service, "create_alert", return_value=MagicMock()) as mock_create:
@@ -378,6 +393,7 @@ class TestCheckAndCreateAlerts:
 # get_project_alerts
 # ---------------------------------------------------------------------------
 
+
 class TestGetProjectAlerts:
     def _setup_alerts(self, mock_db):
         a1 = MagicMock()
@@ -390,8 +406,12 @@ class TestGetProjectAlerts:
         a1.is_read = False
         a1.is_resolved = False
         a1.created_at = datetime(2024, 1, 10)
-        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [a1]
-        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [a1]
+        mock_db.query.return_value.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            a1
+        ]
+        mock_db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            a1
+        ]
         return a1
 
     def test_returns_alert_list(self, service, mock_db):
@@ -414,6 +434,7 @@ class TestGetProjectAlerts:
 # _get_similar_projects_stats
 # ---------------------------------------------------------------------------
 
+
 class TestGetSimilarProjectsStats:
     def test_returns_defaults_when_no_data(self, service, mock_db):
         mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
@@ -430,12 +451,17 @@ class TestGetSimilarProjectsStats:
         p3.delay_days = 5
         # Need to setup the complex query chain properly
         from unittest.mock import MagicMock as MM
+
         q = MM()
         q.all.return_value = [p1, p2, p3]
         mock_db.query.return_value.filter.return_value.limit.return_value = q
         mock_db.query.return_value.filter.return_value.filter.return_value.limit.return_value = q
         # All chained filters
-        mock_db.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = [p1, p2, p3]
+        mock_db.query.return_value.filter.return_value.filter.return_value.limit.return_value.all.return_value = [
+            p1,
+            p2,
+            p3,
+        ]
         result = service._get_similar_projects_stats("medium", 5)
         # delay_rate = 2/3 ≈ 0.67
         assert "delay_rate" in result
@@ -450,12 +476,19 @@ class TestGetSimilarProjectsStats:
 # predict_completion_date (linear mode)
 # ---------------------------------------------------------------------------
 
+
 class TestPredictCompletionDate:
     def test_predict_linear_mode(self, service, mock_db):
         prediction_record = MagicMock()
         prediction_record.id = 1
-        with patch("app.services.schedule_prediction_service.save_obj"), \
-             patch.object(service, "_get_similar_projects_stats", return_value={"avg_duration": 90, "delay_rate": 0.3, "avg_delay": 10}):
+        with (
+            patch("app.services.schedule_prediction_service.save_obj"),
+            patch.object(
+                service,
+                "_get_similar_projects_stats",
+                return_value={"avg_duration": 90, "delay_rate": 0.3, "avg_delay": 10},
+            ),
+        ):
             mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
             result = service.predict_completion_date(
                 project_id=1,
@@ -470,8 +503,14 @@ class TestPredictCompletionDate:
         assert result["project_id"] == 1
 
     def test_predict_includes_risk_level(self, service, mock_db):
-        with patch("app.services.schedule_prediction_service.save_obj"), \
-             patch.object(service, "_get_similar_projects_stats", return_value={"avg_duration": 90, "delay_rate": 0.3, "avg_delay": 10}):
+        with (
+            patch("app.services.schedule_prediction_service.save_obj"),
+            patch.object(
+                service,
+                "_get_similar_projects_stats",
+                return_value={"avg_duration": 90, "delay_rate": 0.3, "avg_delay": 10},
+            ),
+        ):
             mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
             result = service.predict_completion_date(
                 project_id=2,
@@ -489,9 +528,12 @@ class TestPredictCompletionDate:
 # generate_catch_up_solutions (AI fail → fallback)
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateCatchUpSolutions:
     def test_fallback_to_default_when_ai_fails(self, service, mock_db):
-        with patch.object(service, "_generate_solutions_with_ai", side_effect=Exception("AI error")):
+        with patch.object(
+            service, "_generate_solutions_with_ai", side_effect=Exception("AI error")
+        ):
             with pytest.raises(Exception):
                 service.generate_catch_up_solutions(
                     project_id=1,
@@ -527,9 +569,11 @@ class TestGenerateCatchUpSolutions:
 # get_risk_overview
 # ---------------------------------------------------------------------------
 
+
 class TestGetRiskOverview:
     def test_returns_overview_structure(self, service, mock_db):
         from sqlalchemy import func
+
         subq = MagicMock()
         mock_db.query.return_value.group_by.return_value.subquery.return_value = subq
         mock_db.query.return_value.join.return_value.all.return_value = []

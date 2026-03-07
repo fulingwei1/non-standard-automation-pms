@@ -41,19 +41,14 @@ class ProductionDashboardAdapter(DashboardAdapter):
 
         # 统计车间数量
         workshop_count = (
-            self.db.query(func.count(Workshop.id))
-            .filter(Workshop.is_active)
-            .scalar()
-            or 0
+            self.db.query(func.count(Workshop.id)).filter(Workshop.is_active).scalar() or 0
         )
 
         # 统计本月工单
         work_order_stats = (
             self.db.query(
                 func.count(WorkOrder.id).label("total"),
-                func.sum(case((WorkOrder.status == "COMPLETED", 1), else_=0)).label(
-                    "completed"
-                ),
+                func.sum(case((WorkOrder.status == "COMPLETED", 1), else_=0)).label("completed"),
                 func.sum(case((WorkOrder.status == "IN_PROGRESS", 1), else_=0)).label(
                     "in_progress"
                 ),
@@ -85,9 +80,7 @@ class ProductionDashboardAdapter(DashboardAdapter):
             total_produced = sum(r.produced_quantity or 0 for r in recent_reports)
             total_defects = sum(r.defect_quantity or 0 for r in recent_reports)
             if total_produced > 0:
-                pass_rate = round(
-                    (total_produced - total_defects) / total_produced * 100, 1
-                )
+                pass_rate = round((total_produced - total_defects) / total_produced * 100, 1)
 
         return [
             DashboardStatCard(

@@ -10,8 +10,8 @@ import pytest
 
 # 跳过如果模块不存在
 pytest.importorskip("app.services.kpi_service", reason="Module not implemented")
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 
 
 class TestKPIService:
@@ -21,12 +21,13 @@ class TestKPIService:
         """Test importing KPI service module."""
         try:
             from app.services.kpi_service import (
-            calculate_project_kpi,
-            calculate_team_kpi,
-            calculate_department_kpi,
-            get_kpi_dashboard_data,
-            generate_kpi_report
+                calculate_department_kpi,
+                calculate_project_kpi,
+                calculate_team_kpi,
+                generate_kpi_report,
+                get_kpi_dashboard_data,
             )
+
             assert callable(calculate_project_kpi)
             assert callable(calculate_team_kpi)
             assert callable(calculate_department_kpi)
@@ -38,18 +39,18 @@ class TestKPIService:
     def test_calculate_project_kpi_basic(self):
         """Test basic project KPI calculation."""
         from app.services.kpi_service import calculate_project_kpi
-        
+
         # Test data
         project_data = {
-        "progress_pct": 75.0,
-        "schedule_variance_days": 5,
-        "cost_variance_rate": 5.0,
-        "quality_score": 95.0,
-        "client_satisfaction": 4.5,
+            "progress_pct": 75.0,
+            "schedule_variance_days": 5,
+            "cost_variance_rate": 5.0,
+            "quality_score": 95.0,
+            "client_satisfaction": 4.5,
         }
-        
+
         result = calculate_project_kpi(project_data)
-        
+
         # Verify structure
         assert isinstance(result, dict)
         assert "overall_score" in result
@@ -59,29 +60,29 @@ class TestKPIService:
     def test_calculate_team_kpi_basic(self):
         """Test basic team KPI calculation."""
         from app.services.kpi_service import calculate_team_kpi
-        
+
         # Test data
         team_data = [
-        {
-        "member_id": 1,
-        "member_name": "张三",
-        "completed_tasks": 15,
-        "on_time_tasks": 12,
-        "quality_score": 4.8,
-        "productivity": 1.25,
-        },
-        {
-        "member_id": 2,
-        "member_name": "李四",
-        "completed_tasks": 20,
-        "on_time_tasks": 18,
-        "quality_score": 4.9,
-        "productivity": 1.5,
-        },
+            {
+                "member_id": 1,
+                "member_name": "张三",
+                "completed_tasks": 15,
+                "on_time_tasks": 12,
+                "quality_score": 4.8,
+                "productivity": 1.25,
+            },
+            {
+                "member_id": 2,
+                "member_name": "李四",
+                "completed_tasks": 20,
+                "on_time_tasks": 18,
+                "quality_score": 4.9,
+                "productivity": 1.5,
+            },
         ]
-        
+
         result = calculate_team_kpi(team_data)
-        
+
         # Verify structure
         assert isinstance(result, list)
         assert len(result) == 2
@@ -91,20 +92,20 @@ class TestKPIService:
     def test_calculate_department_kpi_basic(self):
         """Test basic department KPI calculation."""
         from app.services.kpi_service import calculate_department_kpi
-        
+
         # Test data
         department_data = {
-        "department_id": 1,
-        "department_name": "研发部",
-        "active_projects": 5,
-        "completed_projects": 12,
-        "avg_cycle_days": 85.0,
-        "on_time_rate": 0.92,
-        "budget_utilization": 0.88,
+            "department_id": 1,
+            "department_name": "研发部",
+            "active_projects": 5,
+            "completed_projects": 12,
+            "avg_cycle_days": 85.0,
+            "on_time_rate": 0.92,
+            "budget_utilization": 0.88,
         }
-        
+
         result = calculate_department_kpi(department_data)
-        
+
         # Verify structure
         assert isinstance(result, dict)
         assert "overall_score" in result

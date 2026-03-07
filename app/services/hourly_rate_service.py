@@ -28,7 +28,9 @@ class HourlyRateService:
     DEFAULT_HOURLY_RATE = Decimal("100")  # 默认100元/小时
 
     @staticmethod
-    def get_user_hourly_rate(db: Session, user_id: int, work_date: Optional[date] = None) -> Decimal:
+    def get_user_hourly_rate(
+        db: Session, user_id: int, work_date: Optional[date] = None
+    ) -> Decimal:
         """
         获取用户时薪（按优先级：用户配置 > 角色配置 > 部门配置 > 默认配置）
 
@@ -48,13 +50,24 @@ class HourlyRateService:
             return HourlyRateService.DEFAULT_HOURLY_RATE
 
         # 1. 优先查找用户配置
-        user_config = db.query(HourlyRateConfig).filter(
-            HourlyRateConfig.config_type == "USER",
-            HourlyRateConfig.user_id == user_id,
-            HourlyRateConfig.is_active,
-            (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
-            (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
-        ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
+        user_config = (
+            db.query(HourlyRateConfig)
+            .filter(
+                HourlyRateConfig.config_type == "USER",
+                HourlyRateConfig.user_id == user_id,
+                HourlyRateConfig.is_active,
+                (
+                    HourlyRateConfig.effective_date.is_(None)
+                    | (HourlyRateConfig.effective_date <= work_date)
+                ),
+                (
+                    HourlyRateConfig.expiry_date.is_(None)
+                    | (HourlyRateConfig.expiry_date >= work_date)
+                ),
+            )
+            .order_by(HourlyRateConfig.effective_date.desc().nullslast())
+            .first()
+        )
 
         if user_config:
             return user_config.hourly_rate
@@ -62,13 +75,24 @@ class HourlyRateService:
         # 2. 查找角色配置（用户可能有多个角色，取第一个有效的）
         user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
         for user_role in user_roles:
-            role_config = db.query(HourlyRateConfig).filter(
-                HourlyRateConfig.config_type == "ROLE",
-                HourlyRateConfig.role_id == user_role.role_id,
-                HourlyRateConfig.is_active,
-                (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
-                (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
-            ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
+            role_config = (
+                db.query(HourlyRateConfig)
+                .filter(
+                    HourlyRateConfig.config_type == "ROLE",
+                    HourlyRateConfig.role_id == user_role.role_id,
+                    HourlyRateConfig.is_active,
+                    (
+                        HourlyRateConfig.effective_date.is_(None)
+                        | (HourlyRateConfig.effective_date <= work_date)
+                    ),
+                    (
+                        HourlyRateConfig.expiry_date.is_(None)
+                        | (HourlyRateConfig.expiry_date >= work_date)
+                    ),
+                )
+                .order_by(HourlyRateConfig.effective_date.desc().nullslast())
+                .first()
+            )
 
             if role_config:
                 return role_config.hourly_rate
@@ -79,29 +103,52 @@ class HourlyRateService:
 
         # 3.1 尝试通过User.department字段匹配
         if user.department:
-            dept = db.query(Department).filter(
-                Department.dept_name == user.department,
-                Department.is_active
-            ).first()
+            dept = (
+                db.query(Department)
+                .filter(Department.dept_name == user.department, Department.is_active)
+                .first()
+            )
             if dept:
-                dept_config = db.query(HourlyRateConfig).filter(
-                    HourlyRateConfig.config_type == "DEPT",
-                    HourlyRateConfig.dept_id == dept.id,
-                    HourlyRateConfig.is_active,
-                    (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
-                    (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
-                ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
+                dept_config = (
+                    db.query(HourlyRateConfig)
+                    .filter(
+                        HourlyRateConfig.config_type == "DEPT",
+                        HourlyRateConfig.dept_id == dept.id,
+                        HourlyRateConfig.is_active,
+                        (
+                            HourlyRateConfig.effective_date.is_(None)
+                            | (HourlyRateConfig.effective_date <= work_date)
+                        ),
+                        (
+                            HourlyRateConfig.expiry_date.is_(None)
+                            | (HourlyRateConfig.expiry_date >= work_date)
+                        ),
+                    )
+                    .order_by(HourlyRateConfig.effective_date.desc().nullslast())
+                    .first()
+                )
 
         if dept_config:
             return dept_config.hourly_rate
 
         # 4. 查找默认配置
-        default_config = db.query(HourlyRateConfig).filter(
-            HourlyRateConfig.config_type == "DEFAULT",
-            HourlyRateConfig.is_active,
-            (HourlyRateConfig.effective_date.is_(None) | (HourlyRateConfig.effective_date <= work_date)),
-            (HourlyRateConfig.expiry_date.is_(None) | (HourlyRateConfig.expiry_date >= work_date))
-        ).order_by(HourlyRateConfig.effective_date.desc().nullslast()).first()
+        default_config = (
+            db.query(HourlyRateConfig)
+            .filter(
+                HourlyRateConfig.config_type == "DEFAULT",
+                HourlyRateConfig.is_active,
+                (
+                    HourlyRateConfig.effective_date.is_(None)
+                    | (HourlyRateConfig.effective_date <= work_date)
+                ),
+                (
+                    HourlyRateConfig.expiry_date.is_(None)
+                    | (HourlyRateConfig.expiry_date >= work_date)
+                ),
+            )
+            .order_by(HourlyRateConfig.effective_date.desc().nullslast())
+            .first()
+        )
 
         if default_config:
             return default_config.hourly_rate
@@ -111,9 +158,7 @@ class HourlyRateService:
 
     @staticmethod
     def get_users_hourly_rates(
-        db: Session,
-        user_ids: List[int],
-        work_date: Optional[date] = None
+        db: Session, user_ids: List[int], work_date: Optional[date] = None
     ) -> Dict[int, Decimal]:
         """
         批量获取多个用户的时薪
@@ -128,9 +173,7 @@ class HourlyRateService:
         """
         result = {}
         for user_id in user_ids:
-            result[user_id] = HourlyRateService.get_user_hourly_rate(
-                db, user_id, work_date
-            )
+            result[user_id] = HourlyRateService.get_user_hourly_rate(db, user_id, work_date)
         return result
 
     @staticmethod
@@ -140,7 +183,7 @@ class HourlyRateService:
         role_id: Optional[int] = None,
         dept_id: Optional[int] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
     ) -> List[Dict]:
         """
         获取时薪配置历史记录
@@ -166,35 +209,36 @@ class HourlyRateService:
             query = query.filter(HourlyRateConfig.dept_id == dept_id)
         if start_date:
             query = query.filter(
-                (HourlyRateConfig.effective_date.is_(None)) |
-                (HourlyRateConfig.effective_date >= start_date)
+                (HourlyRateConfig.effective_date.is_(None))
+                | (HourlyRateConfig.effective_date >= start_date)
             )
         if end_date:
             query = query.filter(
-                (HourlyRateConfig.expiry_date.is_(None)) |
-                (HourlyRateConfig.expiry_date <= end_date)
+                (HourlyRateConfig.expiry_date.is_(None))
+                | (HourlyRateConfig.expiry_date <= end_date)
             )
 
         configs = query.order_by(
-            HourlyRateConfig.effective_date.desc().nullslast(),
-            HourlyRateConfig.created_at.desc()
+            HourlyRateConfig.effective_date.desc().nullslast(), HourlyRateConfig.created_at.desc()
         ).all()
 
         result = []
         for config in configs:
-            result.append({
-                "id": config.id,
-                "config_type": config.config_type,
-                "user_id": config.user_id,
-                "role_id": config.role_id,
-                "dept_id": config.dept_id,
-                "hourly_rate": config.hourly_rate,
-                "effective_date": config.effective_date,
-                "expiry_date": config.expiry_date,
-                "is_active": config.is_active,
-                "remark": config.remark,
-                "created_at": config.created_at,
-                "updated_at": config.updated_at
-            })
+            result.append(
+                {
+                    "id": config.id,
+                    "config_type": config.config_type,
+                    "user_id": config.user_id,
+                    "role_id": config.role_id,
+                    "dept_id": config.dept_id,
+                    "hourly_rate": config.hourly_rate,
+                    "effective_date": config.effective_date,
+                    "expiry_date": config.expiry_date,
+                    "is_active": config.is_active,
+                    "remark": config.remark,
+                    "created_at": config.created_at,
+                    "updated_at": config.updated_at,
+                }
+            )
 
         return result

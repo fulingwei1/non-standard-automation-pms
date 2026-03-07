@@ -12,6 +12,7 @@ def test_login(client: TestClient, admin_token: str):
     assert admin_token is not None
     assert len(admin_token) > 0
 
+
 def test_get_current_user(client: TestClient, admin_token: str):
     if not admin_token:
         pytest.skip("Admin token not available")
@@ -23,13 +24,15 @@ def test_get_current_user(client: TestClient, admin_token: str):
     assert data["username"] == "admin"
     # assert "email" in data # email 可能是可选的
 
+
 def test_login_wrong_password(client: TestClient):
     login_data = {
         "username": "admin",
         "password": "wrongpassword",
     }
     response = client.post(f"{settings.API_V1_PREFIX}/auth/login", data=login_data)
-    assert response.status_code != 200 # 应该是 400 或 401
+    assert response.status_code != 200  # 应该是 400 或 401
+
 
 def test_refresh_token(client: TestClient, admin_token: str):
     if not admin_token:

@@ -2,17 +2,15 @@
 """
 Unit tests for ExpressionParser (report_framework/expressions/parser.py) (第三十八批)
 """
-import pytest
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
-pytest.importorskip(
-    "app.services.report_framework.expressions.parser",
-    reason="导入失败，跳过"
-)
+import pytest
+
+pytest.importorskip("app.services.report_framework.expressions.parser", reason="导入失败，跳过")
 
 try:
-    from app.services.report_framework.expressions.parser import ExpressionParser, ExpressionError
+    from app.services.report_framework.expressions.parser import ExpressionError, ExpressionParser
 except ImportError:
     pytestmark = pytest.mark.skip(reason="expression parser 不可用")
     ExpressionParser = None

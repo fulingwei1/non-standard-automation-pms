@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """第二十三批：data_scope/generic_filter 单元测试"""
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.data_scope.generic_filter")
 
-from app.services.data_scope.generic_filter import GenericFilterService
 from app.services.data_scope.config import DataScopeConfig
+from app.services.data_scope.generic_filter import GenericFilterService
 
 
 def _mock_user(is_superuser=False, data_scope="OWN", user_id=1, department="研发部"):
@@ -40,8 +41,13 @@ class TestFilterByScopeOWN:
         model = MagicMock()
         # No owner_field → filter(False)
         config = DataScopeConfig(owner_field=None)
-        with patch("app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope", return_value="OWN"):
-            result = GenericFilterService.filter_by_scope(db, query, model, user=_mock_user(), config=config)
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value="OWN",
+        ):
+            result = GenericFilterService.filter_by_scope(
+                db, query, model, user=_mock_user(), config=config
+            )
         query.filter.assert_called_once()
 
     def test_own_scope_calls_filter(self):
@@ -50,8 +56,13 @@ class TestFilterByScopeOWN:
         query = MagicMock()
         query.filter.return_value = MagicMock()
         config = DataScopeConfig(owner_field=None)
-        with patch("app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope", return_value="OWN"):
-            result = GenericFilterService.filter_by_scope(db, query, MagicMock(), _mock_user(), config)
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value="OWN",
+        ):
+            result = GenericFilterService.filter_by_scope(
+                db, query, MagicMock(), _mock_user(), config
+            )
         assert query.filter.called
 
 
@@ -62,7 +73,10 @@ class TestFilterByScopeALL:
         model = MagicMock()
         user = _mock_user(is_superuser=False)
         config = DataScopeConfig()
-        with patch("app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope", return_value="ALL"):
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value="ALL",
+        ):
             result = GenericFilterService.filter_by_scope(db, query, model, user, config)
         assert result is query
 
@@ -75,8 +89,14 @@ class TestFilterByScopeSubordinate:
         query.filter.return_value = MagicMock()
         config = DataScopeConfig(owner_field=None)
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope", return_value="SUBORDINATE"):
-            with patch("app.services.data_scope.generic_filter.UserScopeService.get_subordinate_ids", return_value={2, 3}):
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value="SUBORDINATE",
+        ):
+            with patch(
+                "app.services.data_scope.generic_filter.UserScopeService.get_subordinate_ids",
+                return_value={2, 3},
+            ):
                 result = GenericFilterService.filter_by_scope(db, query, MagicMock(), user, config)
         assert query.filter.called
 
@@ -91,7 +111,10 @@ class TestCheckCustomerAccess:
     def test_all_scope_has_access(self):
         db = _mock_db()
         user = _mock_user(is_superuser=False)
-        with patch("app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope", return_value="ALL"):
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value="ALL",
+        ):
             result = GenericFilterService.check_customer_access(db, user, 99)
         assert result is True
 
@@ -105,8 +128,17 @@ class TestCheckCustomerAccess:
         db.query.return_value = q
         # 补丁 DataScopeEnum，添加 CUSTOMER 属性
         from app.models.enums import DataScopeEnum
-        with patch.object(DataScopeEnum, "CUSTOMER", create=True, new=MagicMock(value="CUSTOMER_PORTAL")):
-            with patch("app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope", return_value="SUBORDINATE"):
-                with patch("app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids", return_value=set()):
+
+        with patch.object(
+            DataScopeEnum, "CUSTOMER", create=True, new=MagicMock(value="CUSTOMER_PORTAL")
+        ):
+            with patch(
+                "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+                return_value="SUBORDINATE",
+            ):
+                with patch(
+                    "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
+                    return_value=set(),
+                ):
                     result = GenericFilterService.check_customer_access(db, user, 99)
         assert result is False

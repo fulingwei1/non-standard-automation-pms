@@ -14,9 +14,9 @@ from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.date_range import get_month_range_by_ym
 from app.common.query_filters import apply_pagination
 from app.models.strategy import StrategyCalendarEvent
-from app.common.date_range import get_month_range_by_ym
 from app.schemas.strategy import (
     CalendarMonthResponse,
     CalendarYearResponse,
@@ -25,16 +25,12 @@ from app.schemas.strategy import (
     StrategyCalendarEventUpdate,
 )
 
-
-
 # ============================================
 # 战略日历管理
 # ============================================
 
-def create_calendar_event(
-    db: Session,
-    data: StrategyCalendarEventCreate
-) -> StrategyCalendarEvent:
+
+def create_calendar_event(db: Session, data: StrategyCalendarEventCreate) -> StrategyCalendarEvent:
     """
     创建日历事件
 
@@ -76,10 +72,11 @@ def get_calendar_event(db: Session, event_id: int) -> Optional[StrategyCalendarE
     Returns:
         Optional[StrategyCalendarEvent]: 日历事件
     """
-    return db.query(StrategyCalendarEvent).filter(
-        StrategyCalendarEvent.id == event_id,
-        StrategyCalendarEvent.is_active
-    ).first()
+    return (
+        db.query(StrategyCalendarEvent)
+        .filter(StrategyCalendarEvent.id == event_id, StrategyCalendarEvent.is_active)
+        .first()
+    )
 
 
 def list_calendar_events(
@@ -89,7 +86,7 @@ def list_calendar_events(
     end_date: Optional[date] = None,
     event_type: Optional[str] = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
 ) -> tuple[List[StrategyCalendarEvent], int]:
     """
     获取日历事件列表
@@ -107,8 +104,7 @@ def list_calendar_events(
         tuple: (事件列表, 总数)
     """
     query = db.query(StrategyCalendarEvent).filter(
-        StrategyCalendarEvent.strategy_id == strategy_id,
-        StrategyCalendarEvent.is_active
+        StrategyCalendarEvent.strategy_id == strategy_id, StrategyCalendarEvent.is_active
     )
 
     if start_date:
@@ -125,9 +121,7 @@ def list_calendar_events(
 
 
 def update_calendar_event(
-    db: Session,
-    event_id: int,
-    data: StrategyCalendarEventUpdate
+    db: Session, event_id: int, data: StrategyCalendarEventUpdate
 ) -> Optional[StrategyCalendarEvent]:
     """
     更新日历事件
@@ -174,10 +168,7 @@ def delete_calendar_event(db: Session, event_id: int) -> bool:
 
 
 def get_calendar_month(
-    db: Session,
-    strategy_id: int,
-    year: int,
-    month: int
+    db: Session, strategy_id: int, year: int, month: int
 ) -> CalendarMonthResponse:
     """
     获取月度日历
@@ -193,9 +184,7 @@ def get_calendar_month(
     """
     start_date, end_date = get_month_range_by_ym(year, month)
 
-    events, _ = list_calendar_events(
-        db, strategy_id, start_date, end_date, limit=1000
-    )
+    events, _ = list_calendar_events(db, strategy_id, start_date, end_date, limit=1000)
 
     # 按日期分组
     events_by_date: Dict[str, List[StrategyCalendarEventResponse]] = {}
@@ -203,25 +192,27 @@ def get_calendar_month(
         date_key = e.event_date.isoformat()
         if date_key not in events_by_date:
             events_by_date[date_key] = []
-        events_by_date[date_key].append(StrategyCalendarEventResponse(
-            id=e.id,
-            strategy_id=e.strategy_id,
-            event_type=e.event_type,
-            title=e.title,
-            description=e.description,
-            event_date=e.event_date,
-            start_time=e.start_time,
-            end_time=e.end_time,
-            is_recurring=e.is_recurring,
-            recurrence_pattern=e.recurrence_pattern,
-            status=e.status,
-            owner_user_id=e.owner_user_id,
-            related_csf_id=e.related_csf_id,
-            related_kpi_id=e.related_kpi_id,
-            is_active=e.is_active,
-            created_at=e.created_at,
-            updated_at=e.updated_at,
-        ))
+        events_by_date[date_key].append(
+            StrategyCalendarEventResponse(
+                id=e.id,
+                strategy_id=e.strategy_id,
+                event_type=e.event_type,
+                title=e.title,
+                description=e.description,
+                event_date=e.event_date,
+                start_time=e.start_time,
+                end_time=e.end_time,
+                is_recurring=e.is_recurring,
+                recurrence_pattern=e.recurrence_pattern,
+                status=e.status,
+                owner_user_id=e.owner_user_id,
+                related_csf_id=e.related_csf_id,
+                related_kpi_id=e.related_kpi_id,
+                is_active=e.is_active,
+                created_at=e.created_at,
+                updated_at=e.updated_at,
+            )
+        )
 
     return CalendarMonthResponse(
         year=year,
@@ -231,11 +222,7 @@ def get_calendar_month(
     )
 
 
-def get_calendar_year(
-    db: Session,
-    strategy_id: int,
-    year: int
-) -> CalendarYearResponse:
+def get_calendar_year(db: Session, strategy_id: int, year: int) -> CalendarYearResponse:
     """
     获取年度日历概览
 
@@ -250,9 +237,7 @@ def get_calendar_year(
     start_date = date(year, 1, 1)
     end_date = date(year, 12, 31)
 
-    events, total = list_calendar_events(
-        db, strategy_id, start_date, end_date, limit=10000
-    )
+    events, total = list_calendar_events(db, strategy_id, start_date, end_date, limit=10000)
 
     # 按月份统计
     monthly_counts: Dict[int, int] = {i: 0 for i in range(1, 13)}
@@ -271,5 +256,3 @@ def get_calendar_year(
         type_counts=type_counts,
         total_events=total,
     )
-
-

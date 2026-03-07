@@ -49,7 +49,7 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": ["PM"],
                     "deliverables": ["生产计划"],
                 },
-            ]
+            ],
         },
         {
             "stage_code": "R2",
@@ -100,7 +100,7 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": [],
                     "deliverables": ["齐套确认单"],
                 },
-            ]
+            ],
         },
         {
             "stage_code": "R3",
@@ -165,7 +165,7 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": [],
                     "deliverables": ["质检报告"],
                 },
-            ]
+            ],
         },
         {
             "stage_code": "R4",
@@ -216,7 +216,7 @@ REPEAT_TEMPLATE: Dict[str, Any] = {
                     "participant_role_codes": [],
                     "deliverables": ["签收单"],
                 },
-            ]
+            ],
         },
-    ]
+    ],
 }

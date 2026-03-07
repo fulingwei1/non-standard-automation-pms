@@ -28,7 +28,7 @@ class TestWorkshops:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/workshops",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -49,7 +49,7 @@ class TestWorkshops:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/workshops",
             params={"workshop_type": "MACHINING"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -65,10 +65,7 @@ class TestWorkshops:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workshops/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/production/workshops/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have production:read permission")
@@ -84,8 +81,7 @@ class TestWorkshops:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workshops/1/capacity",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/production/workshops/1/capacity", headers=headers
         )
 
         if response.status_code == 403:
@@ -106,8 +102,7 @@ class TestWorkstations:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workshops/1/workstations",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/production/workshops/1/workstations", headers=headers
         )
 
         if response.status_code == 403:
@@ -130,7 +125,7 @@ class TestProductionPlans:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/plans",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -146,10 +141,7 @@ class TestProductionPlans:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/production/plans/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/production/plans/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have production:read permission")
@@ -171,7 +163,7 @@ class TestWorkOrders:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/work-orders",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -190,7 +182,7 @@ class TestWorkOrders:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/work-orders",
             params={"status": "PENDING"},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -206,10 +198,7 @@ class TestWorkOrders:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/production/work-orders/1",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/production/work-orders/1", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have production:read permission")
@@ -231,7 +220,7 @@ class TestWorkReports:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/work-reports",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -254,7 +243,7 @@ class TestMaterialRequisition:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/material-requisitions",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -277,7 +266,7 @@ class TestProductionExceptions:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/exceptions",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -297,10 +286,7 @@ class TestProductionDashboard:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(
-            f"{settings.API_V1_PREFIX}/production/dashboard",
-            headers=headers
-        )
+        response = client.get(f"{settings.API_V1_PREFIX}/production/dashboard", headers=headers)
 
         if response.status_code == 403:
             pytest.skip("User does not have production:read permission")
@@ -316,8 +302,7 @@ class TestProductionDashboard:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workshops/1/task-board",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/production/workshops/1/task-board", headers=headers
         )
 
         if response.status_code == 403:
@@ -340,7 +325,7 @@ class TestWorkerManagement:
         response = client.get(
             f"{settings.API_V1_PREFIX}/production/workers",
             params={"page": 1, "page_size": 10},
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -357,8 +342,7 @@ class TestWorkerManagement:
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workers/1/performance",
-            headers=headers
+            f"{settings.API_V1_PREFIX}/production/workers/1/performance", headers=headers
         )
 
         if response.status_code == 403:

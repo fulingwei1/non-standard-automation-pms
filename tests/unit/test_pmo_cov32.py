@@ -2,11 +2,13 @@
 """
 第三十二批覆盖率测试 - PMO Dashboard 适配器
 """
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.dashboard_adapters.pmo import PmoDashboardAdapter
+
     HAS_PMO = True
 except Exception:
     HAS_PMO = False

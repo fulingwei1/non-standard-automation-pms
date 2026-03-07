@@ -25,12 +25,14 @@ class TestEcnApprovalAdapterInit:
 
     def test_init_stores_db(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         db = MagicMock()
         adapter = EcnApprovalAdapter(db)
         assert adapter.db is db
 
     def test_entity_type_is_ecn(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         assert EcnApprovalAdapter.entity_type == "ECN"
 
 
@@ -39,6 +41,7 @@ class TestGetEntity:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -59,6 +62,7 @@ class TestGetEntityData:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -139,6 +143,7 @@ class TestOnSubmit:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -165,6 +170,7 @@ class TestOnApproved:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -185,6 +191,7 @@ class TestOnRejected:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -204,6 +211,7 @@ class TestOnWithdrawn:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -223,6 +231,7 @@ class TestGetTitle:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -247,6 +256,7 @@ class TestGetSummary:
 
     def setup_method(self):
         from app.services.approval_engine.adapters.ecn import EcnApprovalAdapter
+
         self.db = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db)
 
@@ -256,23 +266,27 @@ class TestGetSummary:
         assert summary == ""
 
     def test_includes_cost_impact_in_summary(self):
-        self.adapter.get_entity_data = MagicMock(return_value={
-            "ecn_type": "DESIGN",
-            "project_name": "测试项目",
-            "cost_impact": 5000.0,
-            "schedule_impact_days": 3,
-            "priority": "HIGH",
-        })
+        self.adapter.get_entity_data = MagicMock(
+            return_value={
+                "ecn_type": "DESIGN",
+                "project_name": "测试项目",
+                "cost_impact": 5000.0,
+                "schedule_impact_days": 3,
+                "priority": "HIGH",
+            }
+        )
         summary = self.adapter.get_summary(1)
         assert "5,000.00" in summary or "5000" in summary
 
     def test_summary_uses_pipe_separator(self):
-        self.adapter.get_entity_data = MagicMock(return_value={
-            "ecn_type": "DESIGN",
-            "project_name": "项目A",
-            "cost_impact": 1000.0,
-            "schedule_impact_days": 0,
-            "priority": "NORMAL",
-        })
+        self.adapter.get_entity_data = MagicMock(
+            return_value={
+                "ecn_type": "DESIGN",
+                "project_name": "项目A",
+                "cost_impact": 1000.0,
+                "schedule_impact_days": 0,
+                "priority": "NORMAL",
+            }
+        )
         summary = self.adapter.get_summary(1)
         assert "|" in summary

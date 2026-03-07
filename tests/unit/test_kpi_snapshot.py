@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import MagicMock, patch
 from datetime import date
-from app.services.strategy.kpi_service.snapshot import _get_current_period, _calculate_trend, create_kpi_snapshot
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from app.services.strategy.kpi_service.snapshot import (
+    _calculate_trend,
+    _get_current_period,
+    create_kpi_snapshot,
+)
 
 
 class TestGetCurrentPeriod:
@@ -30,28 +36,45 @@ class TestGetCurrentPeriod:
 class TestCalculateTrend:
     def test_insufficient_history(self):
         db = MagicMock()
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = (
+            []
+        )
         assert _calculate_trend(db, 1) is None
 
     def test_trend_up(self):
         db = MagicMock()
-        h1 = MagicMock(); h1.value = 100
-        h2 = MagicMock(); h2.value = 80
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [h1, h2]
+        h1 = MagicMock()
+        h1.value = 100
+        h2 = MagicMock()
+        h2.value = 80
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            h1,
+            h2,
+        ]
         assert _calculate_trend(db, 1) == "UP"
 
     def test_trend_down(self):
         db = MagicMock()
-        h1 = MagicMock(); h1.value = 60
-        h2 = MagicMock(); h2.value = 80
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [h1, h2]
+        h1 = MagicMock()
+        h1.value = 60
+        h2 = MagicMock()
+        h2.value = 80
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            h1,
+            h2,
+        ]
         assert _calculate_trend(db, 1) == "DOWN"
 
     def test_trend_stable(self):
         db = MagicMock()
-        h1 = MagicMock(); h1.value = 80
-        h2 = MagicMock(); h2.value = 80
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [h1, h2]
+        h1 = MagicMock()
+        h1.value = 80
+        h2 = MagicMock()
+        h2.value = 80
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = [
+            h1,
+            h2,
+        ]
         assert _calculate_trend(db, 1) == "STABLE"
 
 

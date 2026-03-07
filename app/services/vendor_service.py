@@ -4,18 +4,17 @@
 基于统一的 BaseService 实现
 """
 
-from typing import Any, Dict, Optional
-from sqlalchemy.orm import Session
 from decimal import Decimal
+from typing import Any, Dict, Optional
+
+from sqlalchemy.orm import Session
 
 from app.common.crud.base import BaseService
 from app.models.vendor import Vendor
-from app.schemas.material import SupplierCreate, SupplierUpdate, SupplierResponse
+from app.schemas.material import SupplierCreate, SupplierResponse, SupplierUpdate
 
 
-class VendorService(
-    BaseService[Vendor, SupplierCreate, SupplierUpdate, SupplierResponse]
-):
+class VendorService(BaseService[Vendor, SupplierCreate, SupplierUpdate, SupplierResponse]):
     """
     供应商服务类 (Vendor/Supplier)
     """

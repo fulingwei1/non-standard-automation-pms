@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class ReportResult:
     """报告结果"""
+
     data: Dict[str, Any]
     format: str
     file_path: Optional[str] = None
@@ -25,6 +26,7 @@ class ReportResult:
 
 class RenderError(Exception):
     """渲染错误"""
+
     pass
 
 

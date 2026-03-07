@@ -17,9 +17,9 @@ WorkflowEngine 和 ApprovalRouter 综合单元测试
 - ApprovalRouter.determine_approval_flow: 决定使用哪个审批流程
 """
 
-from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timedelta
 from decimal import Decimal
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -66,7 +66,7 @@ class TestCreateInstance:
             business_type="TEST",
             business_id=1,
             business_title="测试审批",
-            submitted_by=1
+            submitted_by=1,
         )
 
         mock_db.add.assert_called_once()
@@ -87,7 +87,7 @@ class TestCreateInstance:
                 business_type="TEST",
                 business_id=1,
                 business_title="测试",
-                submitted_by=1
+                submitted_by=1,
             )
 
         assert "不存在或未启用" in str(exc_info.value)
@@ -98,8 +98,8 @@ class TestGetCurrentNode:
 
     def test_returns_none_for_completed_status(self):
         """测试已完成状态返回None"""
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import ApprovalStatus
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         mock_db = MagicMock()
 
@@ -114,8 +114,8 @@ class TestGetCurrentNode:
 
     def test_returns_first_node_when_no_current(self):
         """测试无当前节点时返回第一个节点"""
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import ApprovalStatus
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         mock_db = MagicMock()
 
@@ -142,8 +142,8 @@ class TestGetCurrentNode:
 
     def test_returns_next_node_when_has_current(self):
         """测试有当前节点时返回下一个节点"""
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import ApprovalStatus
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         mock_db = MagicMock()
 
@@ -216,8 +216,8 @@ class TestSubmitApproval:
 
     def test_submits_approval_successfully(self):
         """测试成功提交审批"""
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import ApprovalNodeRole
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         mock_db = MagicMock()
 
@@ -239,10 +239,7 @@ class TestSubmitApproval:
         engine._update_instance_status = MagicMock()
 
         result = engine.submit_approval(
-            instance=mock_instance,
-            approver_id=1,
-            decision="APPROVED",
-            comment="同意"
+            instance=mock_instance, approver_id=1, decision="APPROVED", comment="同意"
         )
 
         mock_db.add.assert_called()
@@ -260,11 +257,7 @@ class TestSubmitApproval:
         engine.get_current_node = MagicMock(return_value=None)
 
         with pytest.raises(ValueError) as exc_info:
-            engine.submit_approval(
-                instance=mock_instance,
-                approver_id=1,
-                decision="APPROVED"
-            )
+            engine.submit_approval(instance=mock_instance, approver_id=1, decision="APPROVED")
 
         assert "没有可审批的节点" in str(exc_info.value)
 
@@ -327,8 +320,8 @@ class TestGetApproverRole:
 
     def test_returns_user_role(self):
         """测试返回用户角色"""
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import ApprovalNodeRole
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         mock_db = MagicMock()
 
@@ -343,8 +336,8 @@ class TestGetApproverRole:
 
     def test_returns_role_role(self):
         """测试返回角色类型"""
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import ApprovalNodeRole
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         mock_db = MagicMock()
 
@@ -359,8 +352,8 @@ class TestGetApproverRole:
 
     def test_returns_department_role(self):
         """测试返回部门类型"""
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
         from app.services.approval_engine.models import ApprovalNodeRole
+        from app.services.approval_engine.workflow_engine import WorkflowEngine
 
         mock_db = MagicMock()
 
@@ -379,8 +372,8 @@ class TestUpdateInstanceStatus:
 
     def test_updates_to_approved_when_no_next_node(self):
         """测试无下一节点时更新为已批准"""
+        from app.services.approval_engine.models import ApprovalDecision, ApprovalStatus
         from app.services.approval_engine.workflow_engine import WorkflowEngine
-        from app.services.approval_engine.models import ApprovalStatus, ApprovalDecision
 
         mock_db = MagicMock()
         mock_db.add = MagicMock()
@@ -406,8 +399,8 @@ class TestUpdateInstanceStatus:
 
     def test_moves_to_next_node_when_approved(self):
         """测试批准时移动到下一节点"""
+        from app.services.approval_engine.models import ApprovalDecision, ApprovalStatus
         from app.services.approval_engine.workflow_engine import WorkflowEngine
-        from app.services.approval_engine.models import ApprovalStatus, ApprovalDecision
 
         mock_db = MagicMock()
         mock_db.add = MagicMock()
@@ -438,8 +431,8 @@ class TestUpdateInstanceStatus:
 
     def test_updates_to_rejected(self):
         """测试更新为已拒绝"""
+        from app.services.approval_engine.models import ApprovalDecision, ApprovalStatus
         from app.services.approval_engine.workflow_engine import WorkflowEngine
-        from app.services.approval_engine.models import ApprovalStatus, ApprovalDecision
 
         mock_db = MagicMock()
         mock_db.add = MagicMock()

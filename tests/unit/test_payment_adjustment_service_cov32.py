@@ -2,12 +2,14 @@
 """
 第三十二批覆盖率测试 - 收款计划调整服务 (扩展)
 """
-import pytest
-from unittest.mock import MagicMock, patch, call
 from datetime import date
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 try:
     from app.services.payment_adjustment_service import PaymentAdjustmentService
+
     HAS_PAS = True
 except Exception:
     HAS_PAS = False
@@ -52,8 +54,10 @@ class TestAdjustByMilestoneCompleted:
 
         db.query.return_value.filter.side_effect = side_effect
 
-        with patch.object(svc, "_record_adjustment_history"), \
-             patch.object(svc, "_send_adjustment_notifications"):
+        with (
+            patch.object(svc, "_record_adjustment_history"),
+            patch.object(svc, "_send_adjustment_notifications"),
+        ):
             result = svc.adjust_payment_plan_by_milestone(1, "测试调整")
 
         assert result["success"] is True
@@ -129,8 +133,10 @@ class TestManualAdjustPaymentPlan:
 
         db.query.return_value.filter.return_value.first.return_value = mock_plan
 
-        with patch.object(svc, "_record_adjustment_history"), \
-             patch.object(svc, "_send_adjustment_notifications", side_effect=Exception):
+        with (
+            patch.object(svc, "_record_adjustment_history"),
+            patch.object(svc, "_send_adjustment_notifications", side_effect=Exception),
+        ):
             # 即使通知失败，也应该返回结果
             try:
                 result = svc.manual_adjust_payment_plan(202, date(2024, 3, 15), "调整原因", 1)
@@ -155,7 +161,9 @@ class TestGetPaymentAdjustmentHistory:
         mock_record.field_name = "planned_date"
         mock_record.old_value = "2024-01-01"
         mock_record.new_value = "2024-02-01"
-        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_record]
+        db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+            mock_record
+        ]
 
         if hasattr(svc, "get_adjustment_history"):
             result = svc.get_adjustment_history(plan_id=1)

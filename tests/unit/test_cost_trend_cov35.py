@@ -2,12 +2,14 @@
 """
 第三十五批 - cost_trend.py / cost_trend_analyzer.py 单元测试
 """
-import pytest
 from datetime import date
 from unittest.mock import MagicMock
 
+import pytest
+
 try:
     from app.services.procurement_analysis.cost_trend import CostTrendAnalyzer
+
     IMPORT_OK = True
 except Exception:
     IMPORT_OK = False
@@ -55,17 +57,13 @@ class TestCostTrendAnalyzer:
             _make_order(date(2024, 3, 20), 500),
         ]
         db = self._make_db(orders)
-        result = CostTrendAnalyzer.get_cost_trend_data(
-            db, date(2024, 3, 1), date(2024, 3, 31)
-        )
+        result = CostTrendAnalyzer.get_cost_trend_data(db, date(2024, 3, 1), date(2024, 3, 31))
         assert result["summary"]["total_amount"] == 1000.0
 
     def test_empty_orders_returns_zero_amounts(self):
         """没有订单时各统计项为0"""
         db = self._make_db([])
-        result = CostTrendAnalyzer.get_cost_trend_data(
-            db, date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = CostTrendAnalyzer.get_cost_trend_data(db, date(2024, 1, 1), date(2024, 1, 31))
         assert result["summary"]["total_amount"] == 0.0
         assert result["summary"]["total_orders"] == 0
 
@@ -76,9 +74,7 @@ class TestCostTrendAnalyzer:
             _make_order(date(2024, 2, 10), 1500),
         ]
         db = self._make_db(orders)
-        result = CostTrendAnalyzer.get_cost_trend_data(
-            db, date(2024, 1, 1), date(2024, 2, 29)
-        )
+        result = CostTrendAnalyzer.get_cost_trend_data(db, date(2024, 1, 1), date(2024, 2, 29))
         trend = result["trend_data"]
         assert trend[0]["mom_rate"] == 0  # 第一期无环比
         assert trend[1]["mom_rate"] == 50.0  # (1500-1000)/1000*100
@@ -110,18 +106,19 @@ class TestCostTrendAnalyzer:
             _make_order(date(2024, 1, 20), 300),
         ]
         db = self._make_db(orders)
-        result = CostTrendAnalyzer.get_cost_trend_data(
-            db, date(2024, 1, 1), date(2024, 1, 31)
-        )
+        result = CostTrendAnalyzer.get_cost_trend_data(db, date(2024, 1, 1), date(2024, 1, 31))
         jan = next(d for d in result["trend_data"] if d["period"] == "2024-01")
         assert jan["avg_amount"] == 200.0
 
     def test_summary_has_required_keys(self):
         """汇总数据包含所有必要键"""
         db = self._make_db([])
-        result = CostTrendAnalyzer.get_cost_trend_data(
-            db, date(2024, 1, 1), date(2024, 1, 31)
-        )
-        for key in ["total_amount", "total_orders", "avg_monthly_amount",
-                    "max_month_amount", "min_month_amount"]:
+        result = CostTrendAnalyzer.get_cost_trend_data(db, date(2024, 1, 1), date(2024, 1, 31))
+        for key in [
+            "total_amount",
+            "total_orders",
+            "avg_monthly_amount",
+            "max_month_amount",
+            "min_month_amount",
+        ]:
             assert key in result["summary"]

@@ -3,12 +3,13 @@
 G3组 - 通知调度器服务单元测试（扩展）
 目标文件: app/services/notification_dispatcher.py
 """
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
-from app.services.notification_dispatcher import NotificationDispatcher
+import pytest
+
 from app.services.channel_handlers.base import NotificationChannel, NotificationPriority
+from app.services.notification_dispatcher import NotificationDispatcher
 
 
 def make_dispatcher(db=None):
@@ -16,8 +17,9 @@ def make_dispatcher(db=None):
     if db is None:
         db = MagicMock()
     mock_service = MagicMock()
-    with patch("app.services.notification_dispatcher.get_notification_service",
-               return_value=mock_service):
+    with patch(
+        "app.services.notification_dispatcher.get_notification_service", return_value=mock_service
+    ):
         dispatcher = NotificationDispatcher(db)
     dispatcher.unified_service = mock_service
     return dispatcher, mock_service, db
@@ -222,9 +224,13 @@ class TestDispatch:
         user = MagicMock()
         user.id = 1
 
-        with patch("app.services.notification_dispatcher.is_quiet_hours", return_value=True), \
-             patch("app.services.notification_dispatcher.next_quiet_resume",
-                   return_value=datetime.now() + timedelta(hours=1)):
+        with (
+            patch("app.services.notification_dispatcher.is_quiet_hours", return_value=True),
+            patch(
+                "app.services.notification_dispatcher.next_quiet_resume",
+                return_value=datetime.now() + timedelta(hours=1),
+            ),
+        ):
             result = self.dispatcher.dispatch(notif, alert, user)
 
         assert result is True

@@ -81,20 +81,20 @@ class StaffMatchingService(StaffMatchingBase):
 
 # 向后兼容：导出主服务类
 __all__ = [
-    'StaffMatchingService',
+    "StaffMatchingService",
     # 基类
-    'StaffMatchingBase',
+    "StaffMatchingBase",
     # 匹配引擎
-    'MatchingEngine',
+    "MatchingEngine",
     # 档案聚合器
-    'ProfileAggregator',
+    "ProfileAggregator",
     # 候选人管理器
-    'CandidateManager',
+    "CandidateManager",
     # 得分计算器
-    'SkillScoreCalculator',
-    'DomainScoreCalculator',
-    'AttitudeScoreCalculator',
-    'QualityScoreCalculator',
-    'WorkloadScoreCalculator',
-    'SpecialScoreCalculator',
+    "SkillScoreCalculator",
+    "DomainScoreCalculator",
+    "AttitudeScoreCalculator",
+    "QualityScoreCalculator",
+    "WorkloadScoreCalculator",
+    "SpecialScoreCalculator",
 ]

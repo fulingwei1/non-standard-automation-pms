@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """WorkflowEngine 单元测试"""
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
+import pytest
 
 
 class TestWorkflowEngine:
@@ -11,6 +12,7 @@ class TestWorkflowEngine:
 
     def _make_engine(self):
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         db = MagicMock()
         return WorkflowEngine(db), db
 
@@ -94,16 +96,17 @@ class TestWorkflowEngine:
         node = MagicMock(id=1, flow_id=1, role_type="USER", sequence=1)
         node.role = MagicMock()
         instance = MagicMock(
-            id=1, current_status="PENDING", current_node_id=1,
-            flow_id=1, completed_nodes=0
+            id=1, current_status="PENDING", current_node_id=1, flow_id=1, completed_nodes=0
         )
 
-        with patch.object(engine, 'get_current_node', return_value=node), \
-             patch.object(engine, 'evaluate_node_conditions', return_value=True), \
-             patch.object(engine, '_get_approver_name', return_value="张三"), \
-             patch.object(engine, '_get_approver_role', return_value="用户"), \
-             patch.object(engine, '_update_instance_status'), \
-             patch.object(engine, '_find_next_node', return_value=None):
+        with (
+            patch.object(engine, "get_current_node", return_value=node),
+            patch.object(engine, "evaluate_node_conditions", return_value=True),
+            patch.object(engine, "_get_approver_name", return_value="张三"),
+            patch.object(engine, "_get_approver_role", return_value="用户"),
+            patch.object(engine, "_update_instance_status"),
+            patch.object(engine, "_find_next_node", return_value=None),
+        ):
             record = engine.submit_approval(instance, 1, "APPROVED", "ok")
             assert record is not None
 
@@ -128,6 +131,7 @@ class TestWorkflowEngine:
 
     def test_generate_instance_no_format(self):
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         no = WorkflowEngine._generate_instance_no()
         assert no.startswith("AP")
         assert len(no) > 10
@@ -149,18 +153,21 @@ class TestWorkflowEngine:
     def test_get_approver_role_user(self):
         engine, _ = self._make_engine()
         from app.services.approval_engine.models import ApprovalNodeRole
+
         node = MagicMock(role_type=ApprovalNodeRole.USER.value)
         assert engine._get_approver_role(node) == "用户"
 
     def test_get_approver_role_role(self):
         engine, _ = self._make_engine()
         from app.services.approval_engine.models import ApprovalNodeRole
+
         node = MagicMock(role_type=ApprovalNodeRole.ROLE.value)
         assert engine._get_approver_role(node) == "角色"
 
     def test_get_approver_role_department(self):
         engine, _ = self._make_engine()
         from app.services.approval_engine.models import ApprovalNodeRole
+
         node = MagicMock(role_type=ApprovalNodeRole.DEPARTMENT.value)
         assert engine._get_approver_role(node) == "部门"
 
@@ -170,6 +177,7 @@ class TestApprovalFlowResolver:
 
     def _make_resolver(self):
         from app.services.approval_engine.workflow_engine import WorkflowEngine
+
         db = MagicMock()
         return WorkflowEngine.ApprovalFlowResolver(db), db
 
@@ -201,6 +209,7 @@ class TestApprovalRouter:
 
     def _make_router(self):
         from app.services.approval_engine.workflow_engine import ApprovalRouter
+
         db = MagicMock()
         return ApprovalRouter(db), db
 

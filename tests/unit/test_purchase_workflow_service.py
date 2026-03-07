@@ -37,7 +37,10 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
         self.mock_engine = MagicMock()
-        with patch("app.services.purchase_workflow.service.ApprovalEngineService", return_value=self.mock_engine):
+        with patch(
+            "app.services.purchase_workflow.service.ApprovalEngineService",
+            return_value=self.mock_engine,
+        ):
             self.service = PurchaseWorkflowService(self.mock_db)
 
     def test_submit_single_order_success(self):
@@ -62,10 +65,7 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
 
         # 执行
         result = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=999,
-            urgency="HIGH",
-            comment="紧急采购"
+            order_ids=[1], initiator_id=999, urgency="HIGH", comment="紧急采购"
         )
 
         # 验证
@@ -92,10 +92,7 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
         mock_query = self.mock_db.query.return_value
         mock_query.filter.return_value.first.return_value = None
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[999],
-            initiator_id=1
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[999], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -111,10 +108,7 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
         mock_query = self.mock_db.query.return_value
         mock_query.filter.return_value.first.return_value = mock_order
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -138,10 +132,7 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
         mock_instance.id = 200
         self.mock_engine.submit.return_value = mock_instance
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 1)
         self.assertEqual(len(result["errors"]), 0)
@@ -166,25 +157,25 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
 
         def query_side_effect(*args):
             mock_q = MagicMock()
-            
+
             def filter_side_effect(*filter_args):
                 # 通过检查过滤条件来决定返回哪个订单
                 mock_f = MagicMock()
-                
+
                 # 简化：根据调用次数返回不同结果
-                if not hasattr(query_side_effect, 'call_count'):
+                if not hasattr(query_side_effect, "call_count"):
                     query_side_effect.call_count = 0
                 query_side_effect.call_count += 1
-                
+
                 if query_side_effect.call_count == 1:
                     mock_f.first.return_value = mock_order1
                 elif query_side_effect.call_count == 2:
                     mock_f.first.return_value = None
                 else:
                     mock_f.first.return_value = mock_order3
-                
+
                 return mock_f
-            
+
             mock_q.filter = filter_side_effect
             return mock_q
 
@@ -194,10 +185,7 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
         mock_instance.id = 100
         self.mock_engine.submit.return_value = mock_instance
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1, 2, 3],
-            initiator_id=1
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1, 2, 3], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 1)
         self.assertEqual(len(result["errors"]), 2)
@@ -218,10 +206,7 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
 
         self.mock_engine.submit.side_effect = Exception("审批模板不存在")
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         self.assertEqual(len(result["success"]), 0)
         self.assertEqual(len(result["errors"]), 1)
@@ -245,10 +230,7 @@ class TestSubmitOrdersForApproval(unittest.TestCase):
         mock_instance.id = 100
         self.mock_engine.submit.return_value = mock_instance
 
-        result = self.service.submit_orders_for_approval(
-            order_ids=[1],
-            initiator_id=1
-        )
+        result = self.service.submit_orders_for_approval(order_ids=[1], initiator_id=1)
 
         # 应该成功，金额转换为0
         self.assertEqual(len(result["success"]), 1)
@@ -262,7 +244,10 @@ class TestGetPendingTasks(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
         self.mock_engine = MagicMock()
-        with patch("app.services.purchase_workflow.service.ApprovalEngineService", return_value=self.mock_engine):
+        with patch(
+            "app.services.purchase_workflow.service.ApprovalEngineService",
+            return_value=self.mock_engine,
+        ):
             self.service = PurchaseWorkflowService(self.mock_db)
 
     def test_get_pending_tasks_success(self):
@@ -371,7 +356,7 @@ class TestGetPendingTasks(unittest.TestCase):
 
         # 重置mock
         mock_filter.first.side_effect = [create_mock_order(i) for i in range(5, 10)]
-        
+
         # 测试第二页（5条）
         result = self.service.get_pending_tasks(user_id=1, offset=5, limit=5)
         self.assertEqual(result["total"], 10)
@@ -451,7 +436,10 @@ class TestPerformApprovalAction(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
         self.mock_engine = MagicMock()
-        with patch("app.services.purchase_workflow.service.ApprovalEngineService", return_value=self.mock_engine):
+        with patch(
+            "app.services.purchase_workflow.service.ApprovalEngineService",
+            return_value=self.mock_engine,
+        ):
             self.service = PurchaseWorkflowService(self.mock_db)
 
     def test_approve_action(self):
@@ -461,20 +449,13 @@ class TestPerformApprovalAction(unittest.TestCase):
         self.mock_engine.approve.return_value = mock_result
 
         result = self.service.perform_approval_action(
-            task_id=1,
-            action="approve",
-            approver_id=10,
-            comment="同意"
+            task_id=1, action="approve", approver_id=10, comment="同意"
         )
 
         self.assertEqual(result["task_id"], 1)
         self.assertEqual(result["action"], "approve")
         self.assertEqual(result["instance_status"], "APPROVED")
-        self.mock_engine.approve.assert_called_once_with(
-            task_id=1,
-            approver_id=10,
-            comment="同意"
-        )
+        self.mock_engine.approve.assert_called_once_with(task_id=1, approver_id=10, comment="同意")
 
     def test_reject_action(self):
         """测试驳回操作"""
@@ -483,29 +464,20 @@ class TestPerformApprovalAction(unittest.TestCase):
         self.mock_engine.reject.return_value = mock_result
 
         result = self.service.perform_approval_action(
-            task_id=2,
-            action="reject",
-            approver_id=20,
-            comment="不符合要求"
+            task_id=2, action="reject", approver_id=20, comment="不符合要求"
         )
 
         self.assertEqual(result["task_id"], 2)
         self.assertEqual(result["action"], "reject")
         self.assertEqual(result["instance_status"], "REJECTED")
         self.mock_engine.reject.assert_called_once_with(
-            task_id=2,
-            approver_id=20,
-            comment="不符合要求"
+            task_id=2, approver_id=20, comment="不符合要求"
         )
 
     def test_unsupported_action(self):
         """测试不支持的操作"""
         with self.assertRaises(HTTPException) as context:
-            self.service.perform_approval_action(
-                task_id=1,
-                action="invalid_action",
-                approver_id=1
-            )
+            self.service.perform_approval_action(task_id=1, action="invalid_action", approver_id=1)
 
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("不支持的操作类型", context.exception.detail)
@@ -516,18 +488,10 @@ class TestPerformApprovalAction(unittest.TestCase):
         mock_result.status = "APPROVED"
         self.mock_engine.approve.return_value = mock_result
 
-        result = self.service.perform_approval_action(
-            task_id=1,
-            action="approve",
-            approver_id=10
-        )
+        result = self.service.perform_approval_action(task_id=1, action="approve", approver_id=10)
 
         self.assertEqual(result["action"], "approve")
-        self.mock_engine.approve.assert_called_once_with(
-            task_id=1,
-            approver_id=10,
-            comment=None
-        )
+        self.mock_engine.approve.assert_called_once_with(task_id=1, approver_id=10, comment=None)
 
 
 class TestPerformBatchApproval(unittest.TestCase):
@@ -536,7 +500,10 @@ class TestPerformBatchApproval(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
         self.mock_engine = MagicMock()
-        with patch("app.services.purchase_workflow.service.ApprovalEngineService", return_value=self.mock_engine):
+        with patch(
+            "app.services.purchase_workflow.service.ApprovalEngineService",
+            return_value=self.mock_engine,
+        ):
             self.service = PurchaseWorkflowService(self.mock_db)
 
     def test_batch_approve_all_success(self):
@@ -544,10 +511,7 @@ class TestPerformBatchApproval(unittest.TestCase):
         self.mock_engine.approve.return_value = MagicMock()
 
         result = self.service.perform_batch_approval(
-            task_ids=[1, 2, 3],
-            action="approve",
-            approver_id=10,
-            comment="批量通过"
+            task_ids=[1, 2, 3], action="approve", approver_id=10, comment="批量通过"
         )
 
         self.assertEqual(len(result["success"]), 3)
@@ -559,10 +523,7 @@ class TestPerformBatchApproval(unittest.TestCase):
         self.mock_engine.reject.return_value = MagicMock()
 
         result = self.service.perform_batch_approval(
-            task_ids=[1, 2],
-            action="reject",
-            approver_id=10,
-            comment="不符合要求"
+            task_ids=[1, 2], action="reject", approver_id=10, comment="不符合要求"
         )
 
         self.assertEqual(len(result["success"]), 2)
@@ -573,7 +534,7 @@ class TestPerformBatchApproval(unittest.TestCase):
         """测试批量审批部分失败"""
         # 第一个成功，第二个失败，第三个成功
         call_count = [0]
-        
+
         def approve_side_effect(*args, **kwargs):
             call_count[0] += 1
             if call_count[0] == 2:
@@ -583,9 +544,7 @@ class TestPerformBatchApproval(unittest.TestCase):
         self.mock_engine.approve.side_effect = approve_side_effect
 
         result = self.service.perform_batch_approval(
-            task_ids=[1, 2, 3],
-            action="approve",
-            approver_id=10
+            task_ids=[1, 2, 3], action="approve", approver_id=10
         )
 
         self.assertEqual(len(result["success"]), 2)
@@ -596,9 +555,7 @@ class TestPerformBatchApproval(unittest.TestCase):
     def test_batch_approval_unsupported_action(self):
         """测试批量操作不支持的动作"""
         result = self.service.perform_batch_approval(
-            task_ids=[1, 2],
-            action="cancel",  # 不支持的操作
-            approver_id=10
+            task_ids=[1, 2], action="cancel", approver_id=10  # 不支持的操作
         )
 
         self.assertEqual(len(result["success"]), 0)
@@ -612,7 +569,10 @@ class TestGetApprovalStatus(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
         self.mock_engine = MagicMock()
-        with patch("app.services.purchase_workflow.service.ApprovalEngineService", return_value=self.mock_engine):
+        with patch(
+            "app.services.purchase_workflow.service.ApprovalEngineService",
+            return_value=self.mock_engine,
+        ):
             self.service = PurchaseWorkflowService(self.mock_db)
 
     @patch("app.services.purchase_workflow.service.get_or_404")
@@ -656,7 +616,7 @@ class TestGetApprovalStatus(unittest.TestCase):
         mock_task_filter = mock_task_query.filter.return_value
         mock_task_order = mock_task_filter.order_by.return_value
         mock_task_order.all.return_value = [mock_task1]
-        
+
         # 设置query的side_effect
         self.mock_db.query.side_effect = [mock_query, mock_task_query]
 
@@ -711,7 +671,10 @@ class TestWithdrawApproval(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
         self.mock_engine = MagicMock()
-        with patch("app.services.purchase_workflow.service.ApprovalEngineService", return_value=self.mock_engine):
+        with patch(
+            "app.services.purchase_workflow.service.ApprovalEngineService",
+            return_value=self.mock_engine,
+        ):
             self.service = PurchaseWorkflowService(self.mock_db)
 
     @patch("app.services.purchase_workflow.service.get_or_404")
@@ -732,18 +695,13 @@ class TestWithdrawApproval(unittest.TestCase):
         mock_filter.first.return_value = mock_instance
 
         result = self.service.withdraw_approval(
-            order_id=1,
-            user_id=10,  # 相同的用户ID
-            reason="信息有误"
+            order_id=1, user_id=10, reason="信息有误"  # 相同的用户ID
         )
 
         self.assertEqual(result["order_id"], 1)
         self.assertEqual(result["order_no"], "PO001")
         self.assertEqual(result["status"], "withdrawn")
-        self.mock_engine.withdraw.assert_called_once_with(
-            instance_id=100,
-            user_id=10
-        )
+        self.mock_engine.withdraw.assert_called_once_with(instance_id=100, user_id=10)
 
     @patch("app.services.purchase_workflow.service.get_or_404")
     def test_withdraw_approval_no_pending_instance(self, mock_get_or_404):
@@ -779,10 +737,7 @@ class TestWithdrawApproval(unittest.TestCase):
         mock_filter.first.return_value = mock_instance
 
         with self.assertRaises(HTTPException) as context:
-            self.service.withdraw_approval(
-                order_id=1,
-                user_id=20  # 不同的用户ID
-            )
+            self.service.withdraw_approval(order_id=1, user_id=20)  # 不同的用户ID
 
         self.assertEqual(context.exception.status_code, 403)
         self.assertIn("只能撤回自己提交的审批", context.exception.detail)
@@ -794,7 +749,10 @@ class TestGetApprovalHistory(unittest.TestCase):
     def setUp(self):
         self.mock_db = MagicMock()
         self.mock_engine = MagicMock()
-        with patch("app.services.purchase_workflow.service.ApprovalEngineService", return_value=self.mock_engine):
+        with patch(
+            "app.services.purchase_workflow.service.ApprovalEngineService",
+            return_value=self.mock_engine,
+        ):
             self.service = PurchaseWorkflowService(self.mock_db)
 
     def test_get_approval_history_success(self):
@@ -822,7 +780,7 @@ class TestGetApprovalHistory(unittest.TestCase):
         mock_join = self.mock_db.query.return_value.join.return_value
         mock_filter = mock_join.filter.return_value
         mock_filter.count.return_value = 2
-        
+
         mock_order_by = mock_filter.order_by.return_value
         mock_offset = mock_order_by.offset.return_value
         mock_limit = mock_offset.limit.return_value
@@ -843,7 +801,7 @@ class TestGetApprovalHistory(unittest.TestCase):
         order_query = MagicMock()
         order_filter = order_query.filter.return_value
         order_filter.first.side_effect = [mock_order1, mock_order2]
-        
+
         # 注意：第一次query是任务查询，后续的是订单查询
         self.mock_db.query.side_effect = [
             self.mock_db.query.return_value,  # 任务查询
@@ -865,16 +823,13 @@ class TestGetApprovalHistory(unittest.TestCase):
         mock_filter1 = mock_join.filter.return_value
         mock_filter2 = mock_filter1.filter.return_value  # 第二次filter（状态筛选）
         mock_filter2.count.return_value = 0
-        
+
         mock_order_by = mock_filter2.order_by.return_value
         mock_offset = mock_order_by.offset.return_value
         mock_limit = mock_offset.limit.return_value
         mock_limit.all.return_value = []
 
-        result = self.service.get_approval_history(
-            user_id=1,
-            status_filter="APPROVED"
-        )
+        result = self.service.get_approval_history(user_id=1, status_filter="APPROVED")
 
         self.assertEqual(result["total"], 0)
         self.assertEqual(len(result["items"]), 0)
@@ -897,7 +852,7 @@ class TestGetApprovalHistory(unittest.TestCase):
         mock_join = self.mock_db.query.return_value.join.return_value
         mock_filter = mock_join.filter.return_value
         mock_filter.count.return_value = 5
-        
+
         mock_order_by = mock_filter.order_by.return_value
         mock_offset = mock_order_by.offset.return_value
         mock_limit = mock_offset.limit.return_value
@@ -914,17 +869,15 @@ class TestGetApprovalHistory(unittest.TestCase):
         order_query = MagicMock()
         order_filter = order_query.filter.return_value
         order_filter.first.side_effect = [create_order(i) for i in range(3)]
-        
+
         self.mock_db.query.side_effect = [
             self.mock_db.query.return_value,
-            order_query, order_query, order_query
+            order_query,
+            order_query,
+            order_query,
         ]
 
-        result = self.service.get_approval_history(
-            user_id=1,
-            offset=0,
-            limit=3
-        )
+        result = self.service.get_approval_history(user_id=1, offset=0, limit=3)
 
         self.assertEqual(result["total"], 5)
         self.assertEqual(len(result["items"]), 3)
@@ -934,7 +887,7 @@ class TestGetApprovalHistory(unittest.TestCase):
         mock_join = self.mock_db.query.return_value.join.return_value
         mock_filter = mock_join.filter.return_value
         mock_filter.count.return_value = 0
-        
+
         mock_order_by = mock_filter.order_by.return_value
         mock_offset = mock_order_by.offset.return_value
         mock_limit = mock_offset.limit.return_value

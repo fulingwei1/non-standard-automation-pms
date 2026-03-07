@@ -100,7 +100,5 @@ def withdraw_project_approval(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(
-            f"撤回项目审批失败: project_id={project_id}, error={str(e)}", exc_info=True
-        )
+        logger.error(f"撤回项目审批失败: project_id={project_id}, error={str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="撤回审批失败，请稍后重试")

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """项目进度预测服务单元测试 (SchedulePredictionService)"""
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def _make_db():
@@ -13,8 +14,9 @@ def _make_db():
 class TestSchedulePredictionServiceInit:
     def test_init_sets_db(self):
         from app.services.schedule_prediction_service import SchedulePredictionService
+
         db = _make_db()
-        with patch('app.services.schedule_prediction_service.AIClientService'):
+        with patch("app.services.schedule_prediction_service.AIClientService"):
             svc = SchedulePredictionService(db)
         assert svc.db is db
 
@@ -22,9 +24,10 @@ class TestSchedulePredictionServiceInit:
 class TestExtractFeatures:
     def _make_svc(self):
         from app.services.schedule_prediction_service import SchedulePredictionService
+
         db = _make_db()
         db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
-        with patch('app.services.schedule_prediction_service.AIClientService'):
+        with patch("app.services.schedule_prediction_service.AIClientService"):
             svc = SchedulePredictionService(db)
         return svc
 
@@ -62,7 +65,7 @@ class TestExtractFeatures:
             planned_progress=50.0,
             remaining_days=30,
             team_size=4,
-            project_data={"days_elapsed": 20, "complexity": "medium"}
+            project_data={"days_elapsed": 20, "complexity": "medium"},
         )
         # avg_daily_progress = 40/20 = 2.0
         # required_daily_progress = 60/30 = 2.0
@@ -73,8 +76,9 @@ class TestExtractFeatures:
 class TestPredictLinear:
     def _make_svc(self):
         from app.services.schedule_prediction_service import SchedulePredictionService
+
         db = _make_db()
-        with patch('app.services.schedule_prediction_service.AIClientService'):
+        with patch("app.services.schedule_prediction_service.AIClientService"):
             svc = SchedulePredictionService(db)
         return svc
 
@@ -112,8 +116,9 @@ class TestPredictLinear:
 class TestAssessRiskLevel:
     def _make_svc(self):
         from app.services.schedule_prediction_service import SchedulePredictionService
+
         db = _make_db()
-        with patch('app.services.schedule_prediction_service.AIClientService'):
+        with patch("app.services.schedule_prediction_service.AIClientService"):
             svc = SchedulePredictionService(db)
         return svc
 
@@ -142,21 +147,22 @@ class TestAssessRiskLevel:
 class TestPredictCompletionDate:
     def test_returns_prediction_dict(self):
         from app.services.schedule_prediction_service import SchedulePredictionService
+
         db = _make_db()
         # Mock DB: no similar predictions
         db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
         db.query.return_value.filter.return_value.first.return_value = None
-        with patch('app.services.schedule_prediction_service.AIClientService'):
+        with patch("app.services.schedule_prediction_service.AIClientService"):
             svc = SchedulePredictionService(db)
 
-        with patch('app.utils.db_helpers.save_obj'):
+        with patch("app.utils.db_helpers.save_obj"):
             result = svc.predict_completion_date(
                 project_id=1,
                 current_progress=50.0,
                 planned_progress=60.0,
                 remaining_days=30,
                 team_size=5,
-                use_ai=False  # 不调用真实AI
+                use_ai=False,  # 不调用真实AI
             )
         assert isinstance(result, dict)
         # Result contains prediction info - check for any valid key

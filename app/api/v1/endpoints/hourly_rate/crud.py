@@ -11,11 +11,11 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.hourly_rate import HourlyRateConfig
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.common.query_filters import apply_pagination
 from app.schemas.hourly_rate import (
     HourlyRateConfigCreate,
     HourlyRateConfigResponse,
@@ -53,7 +53,9 @@ def list_hourly_rate_configs(
         query = query.filter(HourlyRateConfig.is_active == is_active)
 
     total = query.count()
-    configs = apply_pagination(query.order_by(desc(HourlyRateConfig.created_at)), pagination.offset, pagination.limit).all()
+    configs = apply_pagination(
+        query.order_by(desc(HourlyRateConfig.created_at)), pagination.offset, pagination.limit
+    ).all()
 
     items = []
     for config in configs:
@@ -70,7 +72,7 @@ def list_hourly_rate_configs(
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total)
+        pages=pagination.pages_for_total(total),
     )
 
 
@@ -95,34 +97,47 @@ def create_hourly_rate_config(
     # 检查是否已存在相同配置
     existing = None
     if config_in.config_type == "USER" and config_in.user_id:
-        existing = db.query(HourlyRateConfig).filter(
-            HourlyRateConfig.config_type == "USER",
-            HourlyRateConfig.user_id == config_in.user_id,
-            HourlyRateConfig.is_active
-        ).first()
+        existing = (
+            db.query(HourlyRateConfig)
+            .filter(
+                HourlyRateConfig.config_type == "USER",
+                HourlyRateConfig.user_id == config_in.user_id,
+                HourlyRateConfig.is_active,
+            )
+            .first()
+        )
     elif config_in.config_type == "ROLE" and config_in.role_id:
-        existing = db.query(HourlyRateConfig).filter(
-            HourlyRateConfig.config_type == "ROLE",
-            HourlyRateConfig.role_id == config_in.role_id,
-            HourlyRateConfig.is_active
-        ).first()
+        existing = (
+            db.query(HourlyRateConfig)
+            .filter(
+                HourlyRateConfig.config_type == "ROLE",
+                HourlyRateConfig.role_id == config_in.role_id,
+                HourlyRateConfig.is_active,
+            )
+            .first()
+        )
     elif config_in.config_type == "DEPT" and config_in.dept_id:
-        existing = db.query(HourlyRateConfig).filter(
-            HourlyRateConfig.config_type == "DEPT",
-            HourlyRateConfig.dept_id == config_in.dept_id,
-            HourlyRateConfig.is_active
-        ).first()
+        existing = (
+            db.query(HourlyRateConfig)
+            .filter(
+                HourlyRateConfig.config_type == "DEPT",
+                HourlyRateConfig.dept_id == config_in.dept_id,
+                HourlyRateConfig.is_active,
+            )
+            .first()
+        )
     elif config_in.config_type == "DEFAULT":
-        existing = db.query(HourlyRateConfig).filter(
-            HourlyRateConfig.config_type == "DEFAULT",
-            HourlyRateConfig.is_active
-        ).first()
+        existing = (
+            db.query(HourlyRateConfig)
+            .filter(HourlyRateConfig.config_type == "DEFAULT", HourlyRateConfig.is_active)
+            .first()
+        )
 
     if existing:
         raise HTTPException(status_code=400, detail="该配置已存在，请先禁用或删除现有配置")
 
     config_data = config_in.model_dump()
-    config_data['created_by'] = current_user.id
+    config_data["created_by"] = current_user.id
 
     config = HourlyRateConfig(**config_data)
     db.add(config)

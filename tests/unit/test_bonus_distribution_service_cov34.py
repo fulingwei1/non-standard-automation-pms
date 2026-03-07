@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """奖金发放服务单元测试 - 第三十四批"""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytest.importorskip("app.services.bonus_distribution_service")
 
 try:
     from app.services.bonus_distribution_service import (
-        validate_sheet_for_distribution,
         create_calculation_from_team_allocation,
+        validate_sheet_for_distribution,
     )
 except ImportError:
     pytestmark = pytest.mark.skip(reason="导入失败")
@@ -96,8 +97,6 @@ class TestCreateCalculationFromTeamAllocation:
 
         # Should not raise even if implementation varies
         try:
-            result = create_calculation_from_team_allocation(
-                db, 1, 42, Decimal("500"), calculator
-            )
+            result = create_calculation_from_team_allocation(db, 1, 42, Decimal("500"), calculator)
         except Exception:
             pass  # Some implementations may need more context; we just verify no import errors

@@ -25,6 +25,7 @@ class TestAlertRuleEngineBase:
     def engine_base(self):
         """创建基类实例"""
         from app.services.alert_rule_engine.base import AlertRuleEngineBase
+
         return AlertRuleEngineBase()
 
     def test_level_priority_info(self, engine_base):
@@ -55,12 +56,7 @@ class TestAlertRuleEngineBase:
 
     def test_get_field_value_nested(self, engine_base):
         """测试获取嵌套字段值"""
-        target_data = {
-            "project": {
-                "progress": 80,
-                "status": "进行中"
-            }
-        }
+        target_data = {"project": {"progress": 80, "status": "进行中"}}
         assert engine_base.get_field_value("project.progress", target_data) == 80
         assert engine_base.get_field_value("project.status", target_data) == "进行中"
 
@@ -87,6 +83,7 @@ class TestAlertRuleEngineBase:
 
     def test_get_nested_value_with_object(self, engine_base):
         """测试获取对象属性"""
+
         class MockObj:
             def __init__(self):
                 self.value = 42
@@ -102,6 +99,7 @@ class TestConditionEvaluator:
     def evaluator(self, db_session):
         """创建条件评估器"""
         from app.services.alert_rule_engine.condition_evaluator import ConditionEvaluator
+
         return ConditionEvaluator()
 
     @pytest.fixture
@@ -184,10 +182,7 @@ class TestConditionEvaluator:
         mock_rule.threshold_value = 10
         mock_rule.target_field = "actual_cost"
 
-        target_data = {
-            "actual_cost": 120,
-            "planned_cost": 100
-        }
+        target_data = {"actual_cost": 120, "planned_cost": 100}
         assert evaluator.match_deviation(mock_rule, target_data) is True
 
     def test_match_deviation_within_threshold(self, evaluator, mock_rule):
@@ -197,10 +192,7 @@ class TestConditionEvaluator:
         mock_rule.threshold_value = 10
         mock_rule.target_field = "actual_cost"
 
-        target_data = {
-            "actual_cost": 105,
-            "planned_cost": 100
-        }
+        target_data = {"actual_cost": 105, "planned_cost": 100}
         assert evaluator.match_deviation(mock_rule, target_data) is False
 
     def test_match_deviation_missing_values(self, evaluator, mock_rule):
@@ -351,6 +343,7 @@ class TestAlertRuleEngine:
     def engine(self, db_session):
         """创建预警规则引擎"""
         from app.services.alert_rule_engine import AlertRuleEngine
+
         return AlertRuleEngine(db_session)
 
     @pytest.fixture
@@ -382,9 +375,15 @@ class TestAlertRuleEngine:
 
     def test_level_priority_comparison(self, engine):
         """测试级别优先级比较"""
-        assert engine.level_priority(AlertLevelEnum.INFO.value) < engine.level_priority(AlertLevelEnum.WARNING.value)
-        assert engine.level_priority(AlertLevelEnum.WARNING.value) < engine.level_priority(AlertLevelEnum.CRITICAL.value)
-        assert engine.level_priority(AlertLevelEnum.CRITICAL.value) < engine.level_priority(AlertLevelEnum.URGENT.value)
+        assert engine.level_priority(AlertLevelEnum.INFO.value) < engine.level_priority(
+            AlertLevelEnum.WARNING.value
+        )
+        assert engine.level_priority(AlertLevelEnum.WARNING.value) < engine.level_priority(
+            AlertLevelEnum.CRITICAL.value
+        )
+        assert engine.level_priority(AlertLevelEnum.CRITICAL.value) < engine.level_priority(
+            AlertLevelEnum.URGENT.value
+        )
 
 
 class TestAlertGenerator:
@@ -393,6 +392,7 @@ class TestAlertGenerator:
     def test_import_alert_generator(self):
         """测试导入预警生成器"""
         from app.services.alert_rule_engine.alert_generator import AlertGenerator
+
         assert AlertGenerator is not None
 
 
@@ -402,6 +402,7 @@ class TestLevelDeterminer:
     def test_import_level_determiner(self):
         """测试导入级别确定器"""
         from app.services.alert_rule_engine.level_determiner import LevelDeterminer
+
         assert LevelDeterminer is not None
 
 
@@ -411,4 +412,5 @@ class TestRuleManager:
     def test_import_rule_manager(self):
         """测试导入规则管理器"""
         from app.services.alert_rule_engine.rule_manager import RuleManager
+
         assert RuleManager is not None

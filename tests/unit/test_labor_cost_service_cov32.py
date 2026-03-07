@@ -2,13 +2,15 @@
 """
 第三十二批覆盖率测试 - 工时成本服务 (扩展)
 """
-import pytest
-from unittest.mock import MagicMock, patch
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
-    from app.services.labor_cost_service import LaborCostService, LaborCostExpenseService
+    from app.services.labor_cost_service import LaborCostExpenseService, LaborCostService
+
     HAS_LCS = True
 except Exception:
     HAS_LCS = False
@@ -72,9 +74,20 @@ class TestCalculateProjectLaborCost:
         mock_created = [MagicMock()]
         mock_total_cost = Decimal("500.00")
 
-        with patch("app.services.labor_cost_service.query_approved_timesheets", return_value=mock_timesheets), \
-             patch("app.services.labor_cost_service.group_timesheets_by_user", return_value=mock_user_costs), \
-             patch("app.services.labor_cost_service.process_user_costs", return_value=(mock_created, mock_total_cost)):
+        with (
+            patch(
+                "app.services.labor_cost_service.query_approved_timesheets",
+                return_value=mock_timesheets,
+            ),
+            patch(
+                "app.services.labor_cost_service.group_timesheets_by_user",
+                return_value=mock_user_costs,
+            ),
+            patch(
+                "app.services.labor_cost_service.process_user_costs",
+                return_value=(mock_created, mock_total_cost),
+            ),
+        ):
             result = LaborCostService.calculate_project_labor_cost(db, project_id=1)
 
         assert result["success"] is True
@@ -91,11 +104,24 @@ class TestCalculateProjectLaborCost:
         mock_user_costs = {1: {"total_hours": 5, "timesheets": []}}
         mock_created = [MagicMock()]
 
-        with patch("app.services.labor_cost_service.query_approved_timesheets", return_value=mock_timesheets), \
-             patch("app.services.labor_cost_service.delete_existing_costs") as mock_del, \
-             patch("app.services.labor_cost_service.group_timesheets_by_user", return_value=mock_user_costs), \
-             patch("app.services.labor_cost_service.process_user_costs", return_value=(mock_created, Decimal("200"))):
-            result = LaborCostService.calculate_project_labor_cost(db, project_id=1, recalculate=True)
+        with (
+            patch(
+                "app.services.labor_cost_service.query_approved_timesheets",
+                return_value=mock_timesheets,
+            ),
+            patch("app.services.labor_cost_service.delete_existing_costs") as mock_del,
+            patch(
+                "app.services.labor_cost_service.group_timesheets_by_user",
+                return_value=mock_user_costs,
+            ),
+            patch(
+                "app.services.labor_cost_service.process_user_costs",
+                return_value=(mock_created, Decimal("200")),
+            ),
+        ):
+            result = LaborCostService.calculate_project_labor_cost(
+                db, project_id=1, recalculate=True
+            )
 
         mock_del.assert_called_once()
 
@@ -125,12 +151,13 @@ class TestLaborCostExpenseServiceIdentify:
         """按日期范围过滤"""
         db = MagicMock()
         svc = LaborCostExpenseService(db)
-        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = []
+        db.query.return_value.filter.return_value.filter.return_value.filter.return_value.all.return_value = (
+            []
+        )
         db.query.return_value.filter.return_value.filter.return_value.all.return_value = []
 
         result = svc.identify_lost_projects(
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 12, 31)
+            start_date=date(2024, 1, 1), end_date=date(2024, 12, 31)
         )
         assert isinstance(result, list)
 

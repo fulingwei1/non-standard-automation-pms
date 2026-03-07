@@ -2,16 +2,18 @@
 """
 第十六批：个人KPI管理 单元测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from app.services.strategy.decomposition.personal_kpis import (
+        batch_create_personal_kpis,
         create_personal_kpi,
         get_personal_kpi,
-        batch_create_personal_kpis,
     )
+
     SKIP = False
 except Exception:
     SKIP = True
@@ -47,8 +49,7 @@ class TestCreatePersonalKpi:
         data = make_create_data()
         mock_kpi = MagicMock()
         with patch(
-            "app.services.strategy.decomposition.personal_kpis.PersonalKPI",
-            return_value=mock_kpi
+            "app.services.strategy.decomposition.personal_kpis.PersonalKPI", return_value=mock_kpi
         ):
             result = create_personal_kpi(db, data)
         db.add.assert_called_once_with(mock_kpi)
@@ -60,8 +61,7 @@ class TestCreatePersonalKpi:
         data = make_create_data()
         mock_kpi = MagicMock()
         with patch(
-            "app.services.strategy.decomposition.personal_kpis.PersonalKPI",
-            return_value=mock_kpi
+            "app.services.strategy.decomposition.personal_kpis.PersonalKPI", return_value=mock_kpi
         ):
             result = create_personal_kpi(db, data)
         assert result is mock_kpi
@@ -93,8 +93,7 @@ class TestBatchCreatePersonalKpis:
         items = [make_create_data(code=f"KPI-{i:03d}") for i in range(3)]
         mock_kpi = MagicMock()
         with patch(
-            "app.services.strategy.decomposition.personal_kpis.PersonalKPI",
-            return_value=mock_kpi
+            "app.services.strategy.decomposition.personal_kpis.PersonalKPI", return_value=mock_kpi
         ):
             result = batch_create_personal_kpis(db, items)
         assert len(result) == 3
@@ -105,8 +104,7 @@ class TestBatchCreatePersonalKpis:
         items = [make_create_data()]
         mock_kpi = MagicMock()
         with patch(
-            "app.services.strategy.decomposition.personal_kpis.PersonalKPI",
-            return_value=mock_kpi
+            "app.services.strategy.decomposition.personal_kpis.PersonalKPI", return_value=mock_kpi
         ):
             result = batch_create_personal_kpis(db, items)
         assert len(result) == 1

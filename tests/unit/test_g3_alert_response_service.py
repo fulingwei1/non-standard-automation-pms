@@ -3,24 +3,30 @@
 G3组 - 预警响应时效分析服务单元测试
 目标文件: app/services/alert_response_service.py
 """
-import pytest
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.services.alert_response_service import (
-    calculate_response_times,
+    calculate_level_metrics,
+    calculate_project_metrics,
     calculate_resolve_times,
     calculate_response_distribution,
-    calculate_level_metrics,
+    calculate_response_times,
     calculate_type_metrics,
-    calculate_project_metrics,
 )
 
 
-def make_alert(triggered_at=None, acknowledged_at=None,
-               handle_end_at=None, alert_level="WARNING", rule_type="THRESHOLD",
-               project_id=1):
+def make_alert(
+    triggered_at=None,
+    acknowledged_at=None,
+    handle_end_at=None,
+    alert_level="WARNING",
+    rule_type="THRESHOLD",
+    project_id=1,
+):
     """工厂：创建模拟告警对象"""
     alert = MagicMock()
     alert.triggered_at = triggered_at

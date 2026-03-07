@@ -51,7 +51,9 @@ class DeliveryOrder(Base, TimestampMixin):
     delivery_amount = Column(Numeric(15, 2), comment="本次发货金额")
 
     # 审批
-    approval_status = Column(String(20), default="pending", comment="审批状态：pending/approved/rejected")
+    approval_status = Column(
+        String(20), default="pending", comment="审批状态：pending/approved/rejected"
+    )
     approval_comment = Column(Text, comment="审批意见")
     approved_by = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
     approved_at = Column(DateTime, comment="审批时间")
@@ -62,13 +64,19 @@ class DeliveryOrder(Base, TimestampMixin):
     special_approval_reason = Column(Text, comment="特殊审批原因")
 
     # 送货单状态
-    delivery_status = Column(String(20), default="draft", comment="送货单状态：draft/approved/printed/shipped/received/returned")
+    delivery_status = Column(
+        String(20),
+        default="draft",
+        comment="送货单状态：draft/approved/printed/shipped/received/returned",
+    )
     print_date = Column(DateTime, comment="打印时间")
     ship_date = Column(DateTime, comment="实际发货时间")
     receive_date = Column(Date, comment="客户签收日期")
 
     # 送货单回收
-    return_status = Column(String(20), default="pending", comment="送货单回收状态：pending/received/lost")
+    return_status = Column(
+        String(20), default="pending", comment="送货单回收状态：pending/received/lost"
+    )
     return_date = Column(Date, comment="回收日期")
     signed_delivery_file_id = Column(Integer, comment="签收送货单文件ID")
 

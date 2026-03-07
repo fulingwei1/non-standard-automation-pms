@@ -30,31 +30,27 @@ def calculate_workdays(start_date: date, end_date: date) -> int:
     return workdays
 
 
-def get_user_tasks(
-    db: Session,
-    user_id: int,
-    start_date: date,
-    end_date: date
-) -> List[Task]:
+def get_user_tasks(db: Session, user_id: int, start_date: date, end_date: date) -> List[Task]:
     """
     获取用户的任务列表
 
     Returns:
         List[Task]: 任务列表
     """
-    return db.query(Task).filter(
-        Task.owner_id == user_id,
-        Task.plan_start <= end_date,
-        Task.plan_end >= start_date,
-        Task.status != 'CANCELLED'
-    ).all()
+    return (
+        db.query(Task)
+        .filter(
+            Task.owner_id == user_id,
+            Task.plan_start <= end_date,
+            Task.plan_end >= start_date,
+            Task.status != "CANCELLED",
+        )
+        .all()
+    )
 
 
 def get_user_allocations(
-    db: Session,
-    user_id: int,
-    start_date: date,
-    end_date: date
+    db: Session, user_id: int, start_date: date, end_date: date
 ) -> List[PmoResourceAllocation]:
     """
     获取用户的资源分配列表
@@ -62,12 +58,16 @@ def get_user_allocations(
     Returns:
         List[PmoResourceAllocation]: 资源分配列表
     """
-    return db.query(PmoResourceAllocation).filter(
-        PmoResourceAllocation.resource_id == user_id,
-        PmoResourceAllocation.start_date <= end_date,
-        PmoResourceAllocation.end_date >= start_date,
-        PmoResourceAllocation.status != 'CANCELLED'
-    ).all()
+    return (
+        db.query(PmoResourceAllocation)
+        .filter(
+            PmoResourceAllocation.resource_id == user_id,
+            PmoResourceAllocation.start_date <= end_date,
+            PmoResourceAllocation.end_date >= start_date,
+            PmoResourceAllocation.status != "CANCELLED",
+        )
+        .all()
+    )
 
 
 def calculate_task_hours(task: Task) -> float:
@@ -84,8 +84,7 @@ def calculate_task_hours(task: Task) -> float:
 
 
 def calculate_total_assigned_hours(
-    tasks: List[Task],
-    allocations: List[PmoResourceAllocation]
+    tasks: List[Task], allocations: List[PmoResourceAllocation]
 ) -> float:
     """
     计算总分配工时
@@ -131,17 +130,17 @@ def build_project_workload(tasks: List[Task]) -> List[ProjectWorkloadItem]:
         project = task.project
         if project.id not in project_dict:
             project_dict[project.id] = {
-                'project_id': project.id,
-                'project_code': project.project_code,
-                'project_name': project.project_name,
-                'assigned_hours': 0.0,
-                'actual_hours': 0.0,
-                'task_count': 0
+                "project_id": project.id,
+                "project_code": project.project_code,
+                "project_name": project.project_name,
+                "assigned_hours": 0.0,
+                "actual_hours": 0.0,
+                "task_count": 0,
             }
 
         hours = calculate_task_hours(task)
-        project_dict[project.id]['assigned_hours'] += hours
-        project_dict[project.id]['task_count'] += 1
+        project_dict[project.id]["assigned_hours"] += hours
+        project_dict[project.id]["task_count"] += 1
 
     return [ProjectWorkloadItem(**p) for p in project_dict.values()]
 
@@ -161,16 +160,14 @@ def build_task_list(tasks: List[Task]) -> List[TaskWorkloadItem]:
             plan_hours=calculate_task_hours(task),
             actual_hours=0.0,
             progress=task.progress_percent or 0,
-            deadline=task.plan_end
+            deadline=task.plan_end,
         )
         for task in tasks
     ]
 
 
 def build_daily_load(
-    tasks: List[Task],
-    start_date: date,
-    end_date: date
+    tasks: List[Task], start_date: date, end_date: date
 ) -> List[DailyWorkloadItem]:
     """
     构建每日负荷列表
@@ -193,11 +190,11 @@ def build_daily_load(
                 else:
                     day_assigned += 8.0
 
-        daily_load.append(DailyWorkloadItem(
-            date=current,
-            assigned=round(day_assigned, 2),
-            actual=round(day_actual, 2)
-        ))
+        daily_load.append(
+            DailyWorkloadItem(
+                date=current, assigned=round(day_assigned, 2), actual=round(day_actual, 2)
+            )
+        )
         current += timedelta(days=1)
 
     return daily_load

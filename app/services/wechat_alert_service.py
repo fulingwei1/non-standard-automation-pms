@@ -64,9 +64,7 @@ class WeChatAlertService:
 
         machine = None
         if readiness.machine_id:
-            machine = (
-                db.query(Machine).filter(Machine.id == readiness.machine_id).first()
-            )
+            machine = db.query(Machine).filter(Machine.id == readiness.machine_id).first()
 
         # 获取预警规则
         rule = (
@@ -167,9 +165,11 @@ class WeChatAlertService:
                     },
                     {
                         "keyname": "预计到货",
-                        "value": shortage.expected_arrival.strftime("%Y-%m-%d")
-                        if shortage.expected_arrival
-                        else "未确定",
+                        "value": (
+                            shortage.expected_arrival.strftime("%Y-%m-%d")
+                            if shortage.expected_arrival
+                            else "未确定"
+                        ),
                     },
                     {
                         "keyname": "预计延误",
@@ -234,9 +234,7 @@ class WeChatAlertService:
             # 默认通知项目负责人和PMC负责人
             users = []
             if project.project_manager_id:
-                pm = (
-                    db.query(User).filter(User.id == project.project_manager_id).first()
-                )
+                pm = db.query(User).filter(User.id == project.project_manager_id).first()
                 if pm:
                     users.append(pm)
             return users
@@ -259,9 +257,7 @@ class WeChatAlertService:
         for role_code in notify_roles:
             role = db.query(Role).filter(Role.code == role_code).first()
             if role:
-                user_roles = (
-                    db.query(UserRole).filter(UserRole.role_id == role.id).all()
-                )
+                user_roles = db.query(UserRole).filter(UserRole.role_id == role.id).all()
                 for ur in user_roles:
                     user = db.query(User).filter(User.id == ur.user_id).first()
                     if user and user not in users:
@@ -276,12 +272,12 @@ class WeChatAlertService:
 
         通过统一通知服务发送，避免重复实现发送逻辑。
         """
-        from app.services.notification_dispatcher import NotificationDispatcher
         from app.services.channel_handlers.base import (
             NotificationChannel,
-            NotificationRequest,
             NotificationPriority,
+            NotificationRequest,
         )
+        from app.services.notification_dispatcher import NotificationDispatcher
 
         title = ""
         content = ""
@@ -351,7 +347,9 @@ class WeChatAlertService:
 # ── Re-exports for unified WeChat access (#45) ───────────────────────
 from app.utils.wechat_client import WeChatClient  # noqa: F401, E402
 
+
 def get_wechat_notification_handler():
     """Lazy import to avoid circular dependency."""
     from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
+
     return WeChatNotificationHandler
