@@ -106,7 +106,7 @@ class InstallationDispatchOrderResponse(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     actual_hours: Optional[Decimal] = None
-    progress: int
+    progress: Optional[int] = 0
     customer_contact: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_address: Optional[str] = None

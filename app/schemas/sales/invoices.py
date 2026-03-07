@@ -55,7 +55,8 @@ class InvoiceResponse(TimestampSchema):
     contract_id: int = Field(description="合同ID")
     invoice_code: str = Field(description="发票编码")
     invoice_type: Optional[str] = Field(default=None, description="发票类型")
-    invoice_amount: Decimal = Field(description="发票金额")
+    # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
+    invoice_amount: Optional[Decimal] = Field(default=None, description="发票金额")
     tax_rate: Optional[Decimal] = Field(default=None, description="税率")
     tax_amount: Optional[Decimal] = Field(default=None, description="税额")
     total_amount: Optional[Decimal] = Field(default=None, description="总金额")
@@ -71,7 +72,7 @@ class InvoiceResponse(TimestampSchema):
     paid_amount: Optional[Decimal] = Field(default=None, description="已付金额")
     paid_date: Optional[date] = Field(default=None, description="付款日期")
     payment_status: Optional[str] = Field(default=None, description="付款状态")
-    status: str = Field(description="发票状态")
+    status: Optional[str] = Field(default=None, description="发票状态")
     issue_date: Optional[date] = Field(default=None, description="开票日期")
 
 

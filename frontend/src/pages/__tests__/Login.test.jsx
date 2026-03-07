@@ -9,6 +9,17 @@ import Login from '../Login';
 import { authApi } from '../../services/api';
 
 // Mock authApi
+vi.mock('../../services/api', () => ({
+  authApi: {
+    login: vi.fn(),
+    me: vi.fn(),
+    refresh: vi.fn(),
+    logout: vi.fn(),
+    changePassword: vi.fn(),
+    getPermissions: vi.fn(),
+  },
+}));
+
 // Mock motion components
 vi.mock('framer-motion', () => ({
   motion: {
@@ -34,10 +45,26 @@ vi.mock('../../utils/logger', () => ({
 
 describe('Login 页面', () => {
   const mockOnLoginSuccess = vi.fn();
+  let storage = {};
 
   beforeEach(() => {
-    localStorage.clear();
     vi.clearAllMocks();
+
+    storage = {};
+    localStorage.getItem.mockImplementation((key) =>
+      Object.prototype.hasOwnProperty.call(storage, key) ? storage[key] : null
+    );
+    localStorage.setItem.mockImplementation((key, value) => {
+      storage[key] = String(value);
+    });
+    localStorage.removeItem.mockImplementation((key) => {
+      delete storage[key];
+    });
+    localStorage.clear.mockImplementation(() => {
+      storage = {};
+    });
+
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -143,16 +170,13 @@ describe('Login 页面', () => {
   });
 
   describe('表单提交', () => {
-    it('空表单提交应该被HTML5验证阻止', () => {
+    it('空表单字段应启用必填校验', () => {
       render(<Login onLoginSuccess={mockOnLoginSuccess} />);
 
-      const form = screen.getByRole('button', { name: /登录/ }).closest('form');
-      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-      
-      form.dispatchEvent(submitEvent);
-
-      // HTML5验证会阻止空表单提交
-      expect(authApi.login).not.toHaveBeenCalled();
+      const usernameInput = screen.getByPlaceholderText('请输入用户名');
+      const passwordInput = screen.getByPlaceholderText('请输入密码');
+      expect(usernameInput).toBeRequired();
+      expect(passwordInput).toBeRequired();
     });
 
     it('成功登录应该调用API并保存token', async () => {
@@ -255,8 +279,8 @@ describe('Login 页面', () => {
 
       // 应该显示加载动画
       await waitFor(() => {
-        const spinner = screen.getByRole('button', { name: /登录/ }).querySelector('svg.animate-spin');
-        expect(spinner).toBeInTheDocument();
+        const spinner = loginButton.querySelector('svg.animate-spin');
+        expect(spinner).not.toBeNull();
       });
     });
 

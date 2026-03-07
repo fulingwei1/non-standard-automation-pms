@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.alert import (
     AlertRecord,
@@ -23,13 +22,13 @@ from app.schemas.alert import (
     AlertRecordResponse,
 )
 from app.schemas.common import PaginatedResponse
+from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter(tags=["records"])
 
 # ==================== 路由定义 ====================
 # 共 6 个路由
-
 
 @router.get("/alerts", response_model=PaginatedResponse, status_code=status.HTTP_200_OK)
 def read_alert_records(
@@ -75,13 +74,9 @@ def read_alert_records(
     date_from_value = date_from or start_date
     date_to_value = date_to or end_date
     if date_from_value:
-        query = query.filter(
-            AlertRecord.triggered_at >= datetime.combine(date_from_value, datetime.min.time())
-        )
+        query = query.filter(AlertRecord.triggered_at >= datetime.combine(date_from_value, datetime.min.time()))
     if date_to_value:
-        query = query.filter(
-            AlertRecord.triggered_at <= datetime.combine(date_to_value, datetime.max.time())
-        )
+        query = query.filter(AlertRecord.triggered_at <= datetime.combine(date_to_value, datetime.max.time()))
 
     # 计算总数
     total = query.count()
@@ -90,7 +85,7 @@ def read_alert_records(
     alerts_query = query.options(
         joinedload(AlertRecord.rule),
         joinedload(AlertRecord.project),
-        joinedload(AlertRecord.machine),
+        joinedload(AlertRecord.machine)
     ).order_by(AlertRecord.triggered_at.desc())
     alerts = apply_pagination(alerts_query, pagination.offset, pagination.limit).all()
 
@@ -111,27 +106,23 @@ def read_alert_records(
             handler = handlers_map[alert.handler_id]
             handler_name = handler.real_name or handler.username
 
-        items.append(
-            {
-                "id": alert.id,
-                "alert_no": alert.alert_no,
-                "alert_level": alert.alert_level,
-                "alert_title": alert.alert_title,
-                "target_type": alert.target_type,
-                "target_name": alert.target_name,
-                "project_name": project_name,
-                "triggered_at": alert.triggered_at,
-                "status": alert.status,
-                "handler_name": handler_name,
-            }
-        )
+        items.append({
+            "id": alert.id,
+            "alert_no": alert.alert_no,
+            "alert_level": alert.alert_level,
+            "alert_title": alert.alert_title,
+            "target_type": alert.target_type,
+            "target_name": alert.target_name,
+            "project_name": project_name,
+            "triggered_at": alert.triggered_at,
+            "status": alert.status,
+            "handler_name": handler_name
+        })
 
     return pagination.to_response(items, total)
 
 
-@router.get(
-    "/alerts/{alert_id}", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/alerts/{alert_id:int}", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK)
 def read_alert_record(
     alert_id: int,
     db: Session = Depends(deps.get_db),
@@ -140,16 +131,11 @@ def read_alert_record(
     """
     获取预警详情
     """
-    alert = (
-        db.query(AlertRecord)
-        .options(
-            joinedload(AlertRecord.rule),
-            joinedload(AlertRecord.project),
-            joinedload(AlertRecord.machine),
-        )
-        .filter(AlertRecord.id == alert_id)
-        .first()
-    )
+    alert = db.query(AlertRecord).options(
+        joinedload(AlertRecord.rule),
+        joinedload(AlertRecord.project),
+        joinedload(AlertRecord.machine)
+    ).filter(AlertRecord.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="预警记录不存在")
 
@@ -188,15 +174,11 @@ def read_alert_record(
         "handle_end_at": alert.handle_end_at,
         "handle_result": alert.handle_result,
         "created_at": alert.created_at,
-        "updated_at": alert.updated_at,
+        "updated_at": alert.updated_at
     }
 
 
-@router.put(
-    "/alerts/{alert_id}/acknowledge",
-    response_model=AlertRecordResponse,
-    status_code=status.HTTP_200_OK,
-)
+@router.put("/alerts/{alert_id:int}/acknowledge", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK)
 def acknowledge_alert(
     *,
     db: Session = Depends(deps.get_db),
@@ -223,9 +205,7 @@ def acknowledge_alert(
     return read_alert_record(alert_id, db, current_user)
 
 
-@router.put(
-    "/alerts/{alert_id}/resolve", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK
-)
+@router.put("/alerts/{alert_id:int}/resolve", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK)
 def resolve_alert(
     *,
     db: Session = Depends(deps.get_db),
@@ -258,9 +238,7 @@ def resolve_alert(
     return read_alert_record(alert_id, db, current_user)
 
 
-@router.put(
-    "/alerts/{alert_id}/close", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK
-)
+@router.put("/alerts/{alert_id:int}/close", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK)
 def close_alert(
     *,
     db: Session = Depends(deps.get_db),
@@ -289,9 +267,7 @@ def close_alert(
     return read_alert_record(alert_id, db, current_user)
 
 
-@router.put(
-    "/alerts/{alert_id}/ignore", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK
-)
+@router.put("/alerts/{alert_id:int}/ignore", response_model=AlertRecordResponse, status_code=status.HTTP_200_OK)
 def ignore_alert(
     *,
     db: Session = Depends(deps.get_db),

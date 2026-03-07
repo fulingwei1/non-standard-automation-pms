@@ -20,7 +20,15 @@ export const authApi = {
     });
   },
   me: () => api.get("/auth/me"),
-  refresh: () => api.post("/auth/refresh"),
+  refresh: (refreshToken) => {
+    const storedToken =
+      typeof window !== "undefined" ? localStorage.getItem("refresh_token") : null;
+    const tokenToUse = refreshToken || storedToken;
+    if (!tokenToUse) {
+      return Promise.reject(new Error("refresh_token 不存在，请重新登录"));
+    }
+    return api.post("/auth/refresh", { refresh_token: tokenToUse });
+  },
   logout: () => api.post("/auth/logout"),
   changePassword: (data) => api.put("/auth/password", data),
   /**

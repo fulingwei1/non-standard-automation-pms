@@ -6,16 +6,14 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import TimestampSchema
 
 # ==================== 立项管理 ====================
 
-
 class InitiationCreate(BaseModel):
     """创建立项申请"""
-
     project_name: str = Field(..., description="项目名称")
     project_type: str = Field(default="NEW", description="项目类型")
     project_level: Optional[str] = Field(None, description="建议级别")
@@ -34,7 +32,6 @@ class InitiationCreate(BaseModel):
 
 class InitiationUpdate(BaseModel):
     """更新立项申请"""
-
     project_name: Optional[str] = None
     project_type: Optional[str] = None
     project_level: Optional[str] = None
@@ -53,7 +50,6 @@ class InitiationUpdate(BaseModel):
 
 class InitiationApproveRequest(BaseModel):
     """立项审批请求"""
-
     review_result: str = Field(..., description="评审结论")
     approved_pm_id: Optional[int] = Field(None, description="指定项目经理ID")
     approved_level: Optional[str] = Field(None, description="评定级别")
@@ -61,20 +57,18 @@ class InitiationApproveRequest(BaseModel):
 
 class InitiationRejectRequest(BaseModel):
     """立项驳回请求"""
-
     review_result: str = Field(..., description="驳回原因")
 
 
 class InitiationResponse(TimestampSchema):
-    """立项申请响应"""
-
+    """立项申请响应。对可能为 NULL 的字段做默认值回退，避免列表接口 500。"""
     id: int
-    application_no: str
+    application_no: str = ""
     project_id: Optional[int] = None
-    project_name: str
-    project_type: str
+    project_name: str = ""
+    project_type: str = "NEW"
     project_level: Optional[str] = None
-    customer_name: str
+    customer_name: str = ""
     contract_no: Optional[str] = None
     contract_amount: Optional[float] = None
     required_start_date: Optional[date] = None
@@ -85,23 +79,43 @@ class InitiationResponse(TimestampSchema):
     estimated_hours: Optional[int] = None
     resource_requirements: Optional[str] = None
     risk_assessment: Optional[str] = None
-    applicant_id: int
+    applicant_id: int = 0
     applicant_name: Optional[str] = None
     apply_time: Optional[datetime] = None
-    status: str
+    status: str = "DRAFT"
     review_result: Optional[str] = None
     approved_pm_id: Optional[int] = None
     approved_level: Optional[str] = None
     approved_at: Optional[datetime] = None
     approved_by: Optional[int] = None
 
+    @field_validator("application_no", "project_name", "customer_name", mode="before")
+    @classmethod
+    def default_str_empty(cls, v):
+        """字符串字段在 ORM 返回 NULL/空白时回退为空串"""
+        if v is None or (isinstance(v, str) and v.strip() == ""):
+            return ""
+        return v
+
+    @field_validator("project_type", "status", mode="before")
+    @classmethod
+    def default_type_status(cls, v, info):
+        if v is None or (isinstance(v, str) and v.strip() == ""):
+            return "NEW" if info.field_name == "project_type" else "DRAFT"
+        return v
+
+    @field_validator("applicant_id", mode="before")
+    @classmethod
+    def default_applicant_id(cls, v):
+        if v is None:
+            return 0
+        return v
+
 
 # ==================== 项目阶段 ====================
 
-
 class PhaseResponse(TimestampSchema):
     """项目阶段响应"""
-
     id: int
     project_id: int
     phase_code: str
@@ -125,38 +139,32 @@ class PhaseResponse(TimestampSchema):
 
 class PhaseEntryCheckRequest(BaseModel):
     """阶段入口检查请求"""
-
     check_result: str = Field(..., description="检查结果")
     notes: Optional[str] = Field(None, description="检查说明")
 
 
 class PhaseExitCheckRequest(BaseModel):
     """阶段出口检查请求"""
-
     check_result: str = Field(..., description="检查结果")
     notes: Optional[str] = Field(None, description="检查说明")
 
 
 class PhaseReviewRequest(BaseModel):
     """阶段评审请求"""
-
     review_result: str = Field(..., description="评审结果")
     review_notes: Optional[str] = Field(None, description="评审记录")
 
 
 class PhaseAdvanceRequest(BaseModel):
     """阶段推进请求"""
-
     actual_start_date: Optional[date] = Field(None, description="实际开始日期")
     notes: Optional[str] = Field(None, description="推进说明")
 
 
 # ==================== 风险管理 ====================
 
-
 class RiskCreate(BaseModel):
     """创建风险"""
-
     risk_category: str = Field(..., description="风险类别")
     risk_name: str = Field(..., description="风险名称")
     description: Optional[str] = Field(None, description="风险描述")
@@ -168,7 +176,6 @@ class RiskCreate(BaseModel):
 
 class RiskAssessRequest(BaseModel):
     """风险评估请求"""
-
     probability: str = Field(..., description="发生概率")
     impact: str = Field(..., description="影响程度")
     risk_level: Optional[str] = Field(None, description="风险等级（自动计算）")
@@ -176,7 +183,6 @@ class RiskAssessRequest(BaseModel):
 
 class RiskResponseRequest(BaseModel):
     """风险应对计划请求"""
-
     response_strategy: str = Field(..., description="应对策略")
     response_plan: str = Field(..., description="应对措施")
     owner_id: Optional[int] = Field(None, description="责任人ID")
@@ -184,7 +190,6 @@ class RiskResponseRequest(BaseModel):
 
 class RiskStatusUpdateRequest(BaseModel):
     """风险状态更新请求"""
-
     status: str = Field(..., description="状态")
     last_update: Optional[str] = Field(None, description="最新进展")
     follow_up_date: Optional[date] = Field(None, description="跟踪日期")
@@ -192,13 +197,11 @@ class RiskStatusUpdateRequest(BaseModel):
 
 class RiskCloseRequest(BaseModel):
     """风险关闭请求"""
-
     closed_reason: str = Field(..., description="关闭原因")
 
 
 class RiskResponse(TimestampSchema):
     """风险响应"""
-
     id: int
     project_id: int
     risk_no: str
@@ -224,10 +227,8 @@ class RiskResponse(TimestampSchema):
 
 # ==================== 项目结项 ====================
 
-
 class ClosureCreate(BaseModel):
     """创建结项申请"""
-
     acceptance_date: Optional[date] = Field(None, description="验收日期")
     acceptance_result: Optional[str] = Field(None, description="验收结果")
     acceptance_notes: Optional[str] = Field(None, description="验收说明")
@@ -241,21 +242,18 @@ class ClosureCreate(BaseModel):
 
 class ClosureReviewRequest(BaseModel):
     """结项评审请求"""
-
     review_result: str = Field(..., description="评审结果")
     review_notes: Optional[str] = Field(None, description="评审记录")
 
 
 class ClosureLessonsRequest(BaseModel):
     """经验教训更新请求"""
-
     lessons_learned: str = Field(..., description="经验教训")
     improvement_suggestions: Optional[str] = Field(None, description="改进建议")
 
 
 class ClosureResponse(TimestampSchema):
     """结项响应"""
-
     id: int
     project_id: int
     acceptance_date: Optional[date] = None
@@ -285,10 +283,8 @@ class ClosureResponse(TimestampSchema):
 
 # ==================== PMO 驾驶舱 ====================
 
-
 class DashboardSummary(BaseModel):
     """驾驶舱汇总"""
-
     total_projects: int = 0
     active_projects: int = 0
     completed_projects: int = 0
@@ -302,7 +298,6 @@ class DashboardSummary(BaseModel):
 
 class DashboardResponse(BaseModel):
     """驾驶舱响应"""
-
     summary: DashboardSummary
     projects_by_status: Dict[str, int] = {}
     projects_by_stage: Dict[str, int] = {}
@@ -311,7 +306,6 @@ class DashboardResponse(BaseModel):
 
 class WeeklyReportResponse(BaseModel):
     """周报响应"""
-
     report_date: date
     week_start: date
     week_end: date
@@ -325,7 +319,6 @@ class WeeklyReportResponse(BaseModel):
 
 class ResourceOverviewResponse(BaseModel):
     """资源总览响应"""
-
     total_resources: int = 0
     allocated_resources: int = 0
     available_resources: int = 0
@@ -335,7 +328,6 @@ class ResourceOverviewResponse(BaseModel):
 
 class RiskWallResponse(BaseModel):
     """风险预警墙响应"""
-
     total_risks: int = 0
     critical_risks: List[RiskResponse] = []
     high_risks: List[RiskResponse] = []
@@ -345,10 +337,8 @@ class RiskWallResponse(BaseModel):
 
 # ==================== 会议管理 ====================
 
-
 class MeetingCreate(BaseModel):
     """创建会议"""
-
     project_id: Optional[int] = Field(None, description="项目ID（可为空表示跨项目会议）")
     meeting_type: str = Field(..., description="会议类型")
     meeting_name: str = Field(..., description="会议名称")
@@ -363,7 +353,6 @@ class MeetingCreate(BaseModel):
 
 class MeetingUpdate(BaseModel):
     """更新会议"""
-
     meeting_name: Optional[str] = None
     meeting_date: Optional[date] = None
     start_time: Optional[time] = None
@@ -377,7 +366,6 @@ class MeetingUpdate(BaseModel):
 
 class MeetingMinutesRequest(BaseModel):
     """会议纪要请求"""
-
     minutes: str = Field(..., description="会议纪要")
     decisions: Optional[str] = Field(None, description="会议决议")
     action_items: Optional[List[Dict[str, Any]]] = Field(None, description="待办事项")
@@ -385,7 +373,6 @@ class MeetingMinutesRequest(BaseModel):
 
 class MeetingResponse(TimestampSchema):
     """会议响应"""
-
     id: int
     project_id: Optional[int] = None
     meeting_type: str
@@ -402,5 +389,6 @@ class MeetingResponse(TimestampSchema):
     decisions: Optional[str] = None
     action_items: Optional[List[Dict[str, Any]]] = None
     attachments: Optional[List[Dict[str, Any]]] = None
-    status: str
+    # 兼容历史数据中的 NULL，避免会议列表接口因脏数据返回 500
+    status: Optional[str] = None
     created_by: Optional[int] = None

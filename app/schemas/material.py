@@ -7,16 +7,14 @@ from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .common import BaseSchema, TimestampSchema
 
 # ==================== 物料分类 ====================
 
-
 class MaterialCategoryCreate(BaseModel):
     """创建物料分类"""
-
     category_code: str = Field(max_length=50)
     category_name: str = Field(max_length=100)
     parent_id: Optional[int] = None
@@ -26,26 +24,31 @@ class MaterialCategoryCreate(BaseModel):
 
 class MaterialCategoryResponse(TimestampSchema):
     """物料分类响应"""
-
     id: int
     category_code: str
     category_name: str
     parent_id: Optional[int] = None
-    level: int = 1
+    level: Optional[int] = 1
     full_path: Optional[str] = None
-    is_active: bool = True
-    children: List["MaterialCategoryResponse"] = []
+    is_active: Optional[bool] = True
+    children: List['MaterialCategoryResponse'] = []
+
+    @field_validator("level", mode="before")
+    @classmethod
+    def _normalize_level(cls, v):
+        return 1 if v is None else v
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_is_active(cls, v):
+        return True if v is None else v
 
 
 # ==================== 物料 ====================
 
-
 class MaterialCreate(BaseModel):
     """创建物料"""
-
-    material_code: Optional[str] = Field(
-        default=None, max_length=50, description="物料编码（不提供则根据类别自动生成）"
-    )
+    material_code: Optional[str] = Field(default=None, max_length=50, description="物料编码（不提供则根据类别自动生成）")
     material_name: str = Field(max_length=200, description="物料名称")
     category_id: Optional[int] = None
     specification: Optional[str] = None
@@ -65,7 +68,6 @@ class MaterialCreate(BaseModel):
 
 class MaterialUpdate(BaseModel):
     """更新物料"""
-
     material_name: Optional[str] = None
     category_id: Optional[int] = None
     specification: Optional[str] = None
@@ -86,29 +88,59 @@ class MaterialUpdate(BaseModel):
 
 class MaterialResponse(TimestampSchema):
     """物料响应"""
-
     id: int
-    material_code: str
+    material_code: Optional[str] = ""
     material_name: str
     category_id: Optional[int] = None
     category_name: Optional[str] = None
     specification: Optional[str] = None
     brand: Optional[str] = None
-    unit: str = "件"
+    unit: Optional[str] = "件"
     material_type: Optional[str] = None
-    source_type: str = "PURCHASE"
-    standard_price: Decimal = 0
-    last_price: Decimal = 0
-    safety_stock: Decimal = 0
-    current_stock: Decimal = 0
-    lead_time_days: int = 0
-    is_key_material: bool = False
-    is_active: bool = True
+    source_type: Optional[str] = "PURCHASE"
+    standard_price: Optional[Decimal] = Decimal("0")
+    last_price: Optional[Decimal] = Decimal("0")
+    safety_stock: Optional[Decimal] = Decimal("0")
+    current_stock: Optional[Decimal] = Decimal("0")
+    lead_time_days: Optional[int] = 0
+    is_key_material: Optional[bool] = False
+    is_active: Optional[bool] = True
+
+    @field_validator("material_code", mode="before")
+    @classmethod
+    def _normalize_material_code(cls, v):
+        return "" if v is None else v
+
+    @field_validator("unit", mode="before")
+    @classmethod
+    def _normalize_unit(cls, v):
+        return "件" if v is None else v
+
+    @field_validator("source_type", mode="before")
+    @classmethod
+    def _normalize_source_type(cls, v):
+        return "PURCHASE" if v is None else v
+
+    @field_validator("standard_price", "last_price", "safety_stock", "current_stock", mode="before")
+    @classmethod
+    def _normalize_decimal_fields(cls, v):
+        return Decimal("0") if v is None else v
+
+    @field_validator("lead_time_days", mode="before")
+    @classmethod
+    def _normalize_lead_time_days(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("is_key_material", "is_active", mode="before")
+    @classmethod
+    def _normalize_bool_fields(cls, v, info):
+        if v is None:
+            return False if info.field_name == "is_key_material" else True
+        return v
 
 
 class WarehouseStatistics(BaseModel):
     """仓储统计（给生产总监看）"""
-
     total_items: int = 0
     in_stock_items: int = 0
     low_stock_items: int = 0
@@ -121,7 +153,6 @@ class WarehouseStatistics(BaseModel):
 
 class MaterialSearchResponse(BaseModel):
     """物料查找响应"""
-
     material_id: int
     material_code: str
     material_name: str
@@ -138,10 +169,8 @@ class MaterialSearchResponse(BaseModel):
 
 # ==================== 供应商 ====================
 
-
 class SupplierCreate(BaseModel):
     """创建供应商"""
-
     supplier_code: str = Field(max_length=50, description="供应商编码")
     supplier_name: str = Field(max_length=200, description="供应商名称")
     supplier_short_name: Optional[str] = None
@@ -160,7 +189,6 @@ class SupplierCreate(BaseModel):
 
 class SupplierUpdate(BaseModel):
     """更新供应商"""
-
     supplier_name: Optional[str] = None
     supplier_short_name: Optional[str] = None
     supplier_type: Optional[str] = None
@@ -179,7 +207,6 @@ class SupplierUpdate(BaseModel):
 
 class SupplierResponse(TimestampSchema):
     """供应商响应"""
-
     id: int
     supplier_code: str
     supplier_name: str
@@ -201,10 +228,8 @@ class SupplierResponse(TimestampSchema):
 
 # ==================== BOM ====================
 
-
 class BomItemCreate(BaseModel):
     """BOM明细创建"""
-
     material_id: Optional[int] = None
     material_code: str = Field(max_length=50)
     material_name: str = Field(max_length=200)
@@ -222,7 +247,6 @@ class BomItemCreate(BaseModel):
 
 class BomCreate(BaseModel):
     """创建BOM"""
-
     bom_no: str = Field(max_length=50)
     bom_name: str = Field(max_length=200)
     project_id: int
@@ -234,7 +258,6 @@ class BomCreate(BaseModel):
 
 class BomUpdate(BaseModel):
     """更新BOM"""
-
     bom_name: Optional[str] = None
     version: Optional[str] = None
     status: Optional[str] = None
@@ -243,27 +266,25 @@ class BomUpdate(BaseModel):
 
 class BomItemResponse(BaseSchema):
     """BOM明细响应"""
-
     id: int
     item_no: int
     material_id: Optional[int] = None
-    material_code: str
-    material_name: str
+    material_code: Optional[str] = None
+    material_name: Optional[str] = None
     specification: Optional[str] = None
-    unit: str
+    unit: Optional[str] = None
     quantity: Decimal
-    unit_price: Decimal = 0
-    amount: Decimal = 0
-    source_type: str
+    unit_price: Optional[Decimal] = 0
+    amount: Optional[Decimal] = 0
+    source_type: Optional[str] = None
     required_date: Optional[date] = None
-    purchased_qty: Decimal = 0
-    received_qty: Decimal = 0
-    is_key_item: bool = False
+    purchased_qty: Optional[Decimal] = 0
+    received_qty: Optional[Decimal] = 0
+    is_key_item: Optional[bool] = False
 
 
 class BomResponse(TimestampSchema):
     """BOM响应"""
-
     id: int
     bom_no: str
     bom_name: str
@@ -271,9 +292,9 @@ class BomResponse(TimestampSchema):
     project_name: Optional[str] = None
     machine_id: Optional[int] = None
     machine_name: Optional[str] = None
-    version: str = "1.0"
-    is_latest: bool = True
-    status: str = "DRAFT"
-    total_items: int = 0
-    total_amount: Decimal = 0
+    version: Optional[str] = "1.0"
+    is_latest: Optional[bool] = True
+    status: Optional[str] = "DRAFT"
+    total_items: Optional[int] = 0
+    total_amount: Optional[Decimal] = 0
     items: List[BomItemResponse] = []

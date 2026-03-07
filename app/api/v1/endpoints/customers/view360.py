@@ -106,7 +106,7 @@ def get_customer_360_overview(
             contract_id=c.id,
             contract_code=c.contract_code,
             status=c.status,
-            contract_amount=c.contract_amount,
+            contract_amount=getattr(c, "total_amount", None) or getattr(c, "contract_amount", None),
             signed_date=c.signing_date,
             project_code=c.project.project_code if c.project else None,
         )

@@ -23,6 +23,7 @@ import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { cn } from "../../lib/utils";
+import { resolveIcon } from "@/utils/iconMap";
 import {
   quoteStatusConfig,
   getQuoteStatusConfig,
@@ -190,9 +191,10 @@ export const QuoteListManager = ({
   // 渲染状态徽章
   const renderStatusBadge = (status) => {
     const config = getQuoteStatusConfig(status);
+    const StatusIcon = resolveIcon(config.icon);
     return (
       <Badge variant="outline" className={config.color}>
-        <config.icon className="w-3 h-3 mr-1"  />
+        {StatusIcon && <StatusIcon className="w-3 h-3 mr-1" />}
         {config.label}
       </Badge>);
 

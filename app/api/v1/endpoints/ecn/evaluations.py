@@ -184,7 +184,7 @@ def submit_ecn_evaluation(
         raise HTTPException(status_code=403, detail="只能提交自己的评估")
 
     eval.status = "SUBMITTED"
-    eval.submitted_at = datetime.now()
+    eval.evaluated_at = datetime.now()
 
     # 更新ECN的影响评估（汇总所有评估）
     ecn = db.query(Ecn).filter(Ecn.id == eval.ecn_id).first()
@@ -373,7 +373,8 @@ def _build_evaluation_response(db: Session, eval: EcnEvaluation) -> EcnEvaluatio
         eval_result=eval.eval_result,
         eval_opinion=eval.eval_opinion,
         conditions=eval.conditions,
-        submitted_at=eval.submitted_at,
+        evaluated_at=eval.evaluated_at,
+        status=eval.status,
         created_at=eval.created_at,
         updated_at=eval.updated_at,
     )

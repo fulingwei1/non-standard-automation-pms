@@ -214,7 +214,8 @@ export const paymentApi = {
 };
 
 export const receivableApi = {
-  list: (params) => api.get("/sales/receivables/overdue", { params }),
+  list: (params) => api.get("/sales/receivables", { params }),
+  getOverdue: (params) => api.get("/sales/receivables/overdue", { params }),
   getAging: (params) => api.get("/sales/receivables/aging", { params }),
   getSummary: (params) => api.get("/sales/receivables/summary", { params }),
 };

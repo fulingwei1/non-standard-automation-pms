@@ -33,7 +33,8 @@ class ContractDeliverableResponse(TimestampSchema):
 
     id: int = Field(description="交付物ID")
     contract_id: int = Field(description="合同ID")
-    deliverable_name: str = Field(description="交付物名称")
+    # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
+    deliverable_name: Optional[str] = Field(default=None, description="交付物名称")
     deliverable_type: Optional[str] = Field(default=None, description="交付物类型")
     specification: Optional[str] = Field(default=None, description="规格要求")
     quantity: Optional[int] = Field(default=None, description="数量")
@@ -93,7 +94,8 @@ class ContractResponse(TimestampSchema):
     id: int = Field(description="合同ID")
     contract_code: str = Field(description="合同编码（内部）")
     customer_contract_no: Optional[str] = Field(default=None, description="客户合同编号（外部）")
-    opportunity_id: int = Field(description="商机ID")
+    # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
+    opportunity_id: Optional[int] = Field(default=None, description="商机ID")
     quote_version_id: Optional[int] = Field(default=None, description="报价版本ID")
     customer_id: int = Field(description="客户ID")
     project_id: Optional[int] = Field(default=None, description="项目ID")

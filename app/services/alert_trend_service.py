@@ -109,7 +109,7 @@ def build_trend_statistics(alerts: List[AlertRecord], period: str) -> Dict[str, 
         # 按类型统计趋势
         if period_key not in type_trends:
             type_trends[period_key] = {}
-        rule_type = alert.rule_type or "UNKNOWN"
+        rule_type = (alert.rule.rule_type if getattr(alert, "rule", None) else None) or "UNKNOWN"
         type_trends[period_key][rule_type] = type_trends[period_key].get(rule_type, 0) + 1
 
         # 按状态统计趋势
@@ -144,7 +144,7 @@ def build_summary_statistics(alerts: List[AlertRecord]) -> Dict[str, Dict[str, i
         level = alert.alert_level or "UNKNOWN"
         total_by_level[level] = total_by_level.get(level, 0) + 1
 
-        rule_type = alert.rule_type or "UNKNOWN"
+        rule_type = (alert.rule.rule_type if getattr(alert, "rule", None) else None) or "UNKNOWN"
         total_by_type[rule_type] = total_by_type.get(rule_type, 0) + 1
 
         status = alert.status or "UNKNOWN"

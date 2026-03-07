@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime, timezone
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -83,6 +85,18 @@ if os.getenv("RATE_LIMIT_ENABLED", "true").lower() != "false":
 
     app.add_middleware(InMemoryRateLimitMiddleware)
 
+# 认证路由优先注册到主应用，确保 /api/v1/auth/* 先于 stub 兜底匹配
+try:
+    from app.api.v1.endpoints import auth as auth_router_module
+    app.include_router(
+        auth_router_module.router,
+        prefix=f"{settings.API_V1_PREFIX}/auth",
+        tags=["auth"],
+    )
+except Exception as e:  # noqa: BLE001
+    import logging
+    logging.getLogger(__name__).warning("Auth router not registered at app level: %s", e)
+
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 # 初始化进度跟踪定时任务调度器（如果启用）
@@ -145,6 +159,14 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "ok", "version": settings.APP_VERSION}
+
+
+@app.get("/api/health")
+def api_health_check():
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 if __name__ == "__main__":

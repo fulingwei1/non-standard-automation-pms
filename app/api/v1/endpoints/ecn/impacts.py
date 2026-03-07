@@ -32,10 +32,7 @@ router = APIRouter()
 
 # ==================== 受影响物料 ====================
 
-
-@router.get(
-    "/ecns/{ecn_id}/affected-materials", response_model=List[dict], status_code=status.HTTP_200_OK
-)
+@router.get("/ecns/{ecn_id}/affected-materials", response_model=List[dict], status_code=status.HTTP_200_OK)
 def read_ecn_affected_materials(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -46,36 +43,27 @@ def read_ecn_affected_materials(
     """
     get_or_404(db, Ecn, ecn_id, "ECN不存在")
 
-    affected_materials = (
-        db.query(EcnAffectedMaterial).filter(EcnAffectedMaterial.ecn_id == ecn_id).all()
-    )
+    affected_materials = db.query(EcnAffectedMaterial).filter(EcnAffectedMaterial.ecn_id == ecn_id).all()
 
     items = []
     for am in affected_materials:
         from app.models.material import Material
-
         material = db.query(Material).filter(Material.id == am.material_id).first()
 
-        items.append(
-            {
-                "id": am.id,
-                "material_id": am.material_id,
-                "material_code": material.material_code if material else None,
-                "material_name": material.material_name if material else None,
-                "change_type": am.change_type,
-                "change_description": am.change_description,
-                "impact_analysis": am.impact_analysis,
-            }
-        )
+        items.append({
+            "id": am.id,
+            "material_id": am.material_id,
+            "material_code": material.material_code if material else None,
+            "material_name": material.material_name if material else None,
+            "change_type": am.change_type,
+            "change_description": am.remark,
+            "impact_analysis": am.bom_impact_scope
+        })
 
     return items
 
 
-@router.post(
-    "/ecns/{ecn_id}/affected-materials",
-    response_model=EcnAffectedMaterialResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/ecns/{ecn_id}/affected-materials", response_model=EcnAffectedMaterialResponse, status_code=status.HTTP_201_CREATED)
 def create_ecn_affected_material(
     *,
     db: Session = Depends(deps.get_db),
@@ -91,7 +79,6 @@ def create_ecn_affected_material(
     # 验证物料是否存在（如果提供了material_id）
     if material_in.material_id:
         from app.models.material import Material
-
         material = db.query(Material).filter(Material.id == material_in.material_id).first()
         if not material:
             raise HTTPException(status_code=404, detail="物料不存在")
@@ -112,7 +99,7 @@ def create_ecn_affected_material(
         new_supplier_id=material_in.new_supplier_id,
         cost_impact=material_in.cost_impact or Decimal("0"),
         status="PENDING",
-        remark=material_in.remark,
+        remark=material_in.remark
     )
 
     db.add(affected_material)
@@ -130,11 +117,7 @@ def create_ecn_affected_material(
     return _build_affected_material_response(affected_material)
 
 
-@router.put(
-    "/ecns/{ecn_id}/affected-materials/{material_id}",
-    response_model=EcnAffectedMaterialResponse,
-    status_code=status.HTTP_200_OK,
-)
+@router.put("/ecns/{ecn_id}/affected-materials/{material_id}", response_model=EcnAffectedMaterialResponse, status_code=status.HTTP_200_OK)
 def update_ecn_affected_material(
     *,
     db: Session = Depends(deps.get_db),
@@ -146,11 +129,10 @@ def update_ecn_affected_material(
     """
     更新受影响物料
     """
-    affected_material = (
-        db.query(EcnAffectedMaterial)
-        .filter(EcnAffectedMaterial.id == material_id, EcnAffectedMaterial.ecn_id == ecn_id)
-        .first()
-    )
+    affected_material = db.query(EcnAffectedMaterial).filter(
+        EcnAffectedMaterial.id == material_id,
+        EcnAffectedMaterial.ecn_id == ecn_id
+    ).first()
     if not affected_material:
         raise HTTPException(status_code=404, detail="受影响物料记录不存在")
 
@@ -159,7 +141,7 @@ def update_ecn_affected_material(
         setattr(affected_material, field, value)
 
     # 如果更新了成本影响，重新计算ECN的总成本影响
-    if "cost_impact" in update_data:
+    if 'cost_impact' in update_data:
         total_cost_impact = db.query(func.sum(EcnAffectedMaterial.cost_impact)).filter(
             EcnAffectedMaterial.ecn_id == ecn_id
         ).scalar() or Decimal("0")
@@ -186,11 +168,10 @@ def delete_ecn_affected_material(
     """
     删除受影响物料
     """
-    affected_material = (
-        db.query(EcnAffectedMaterial)
-        .filter(EcnAffectedMaterial.id == material_id, EcnAffectedMaterial.ecn_id == ecn_id)
-        .first()
-    )
+    affected_material = db.query(EcnAffectedMaterial).filter(
+        EcnAffectedMaterial.id == material_id,
+        EcnAffectedMaterial.ecn_id == ecn_id
+    ).first()
     if not affected_material:
         raise HTTPException(status_code=404, detail="受影响物料记录不存在")
 
@@ -212,10 +193,7 @@ def delete_ecn_affected_material(
 
 # ==================== 受影响订单 ====================
 
-
-@router.get(
-    "/ecns/{ecn_id}/affected-orders", response_model=List[dict], status_code=status.HTTP_200_OK
-)
+@router.get("/ecns/{ecn_id}/affected-orders", response_model=List[dict], status_code=status.HTTP_200_OK)
 def read_ecn_affected_orders(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -230,26 +208,20 @@ def read_ecn_affected_orders(
 
     items = []
     for ao in affected_orders:
-        items.append(
-            {
-                "id": ao.id,
-                "order_type": ao.order_type,
-                "order_id": ao.order_id,
-                "order_no": ao.order_no,
-                "impact_type": ao.impact_type,
-                "impact_description": ao.impact_description,
-                "action_required": ao.action_required,
-            }
-        )
+        items.append({
+            "id": ao.id,
+            "order_type": ao.order_type,
+            "order_id": ao.order_id,
+            "order_no": ao.order_no,
+            "impact_type": ao.action_type,
+            "impact_description": ao.impact_description,
+            "action_required": ao.action_description
+        })
 
     return items
 
 
-@router.post(
-    "/ecns/{ecn_id}/affected-orders",
-    response_model=EcnAffectedOrderResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/ecns/{ecn_id}/affected-orders", response_model=EcnAffectedOrderResponse, status_code=status.HTTP_201_CREATED)
 def create_ecn_affected_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -265,13 +237,11 @@ def create_ecn_affected_order(
     # 验证订单是否存在
     if order_in.order_type == "PURCHASE":
         from app.models.purchase import PurchaseOrder
-
         order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_in.order_id).first()
         if not order:
             raise HTTPException(status_code=404, detail="采购订单不存在")
     elif order_in.order_type == "OUTSOURCING":
         from app.models.outsourcing import OutsourcingOrder
-
         order = db.query(OutsourcingOrder).filter(OutsourcingOrder.id == order_in.order_id).first()
         if not order:
             raise HTTPException(status_code=404, detail="外协订单不存在")
@@ -284,7 +254,7 @@ def create_ecn_affected_order(
         impact_description=order_in.impact_description,
         action_type=order_in.action_type,
         action_description=order_in.action_description,
-        status="PENDING",
+        status="PENDING"
     )
 
     db.add(affected_order)
@@ -294,11 +264,7 @@ def create_ecn_affected_order(
     return _build_affected_order_response(affected_order)
 
 
-@router.put(
-    "/ecns/{ecn_id}/affected-orders/{order_id}",
-    response_model=EcnAffectedOrderResponse,
-    status_code=status.HTTP_200_OK,
-)
+@router.put("/ecns/{ecn_id}/affected-orders/{order_id}", response_model=EcnAffectedOrderResponse, status_code=status.HTTP_200_OK)
 def update_ecn_affected_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -310,11 +276,10 @@ def update_ecn_affected_order(
     """
     更新受影响订单
     """
-    affected_order = (
-        db.query(EcnAffectedOrder)
-        .filter(EcnAffectedOrder.id == order_id, EcnAffectedOrder.ecn_id == ecn_id)
-        .first()
-    )
+    affected_order = db.query(EcnAffectedOrder).filter(
+        EcnAffectedOrder.id == order_id,
+        EcnAffectedOrder.ecn_id == ecn_id
+    ).first()
     if not affected_order:
         raise HTTPException(status_code=404, detail="受影响订单记录不存在")
 
@@ -340,11 +305,10 @@ def delete_ecn_affected_order(
     """
     删除受影响订单
     """
-    affected_order = (
-        db.query(EcnAffectedOrder)
-        .filter(EcnAffectedOrder.id == order_id, EcnAffectedOrder.ecn_id == ecn_id)
-        .first()
-    )
+    affected_order = db.query(EcnAffectedOrder).filter(
+        EcnAffectedOrder.id == order_id,
+        EcnAffectedOrder.ecn_id == ecn_id
+    ).first()
     if not affected_order:
         raise HTTPException(status_code=404, detail="受影响订单记录不存在")
 
@@ -376,7 +340,7 @@ def _build_affected_material_response(am: EcnAffectedMaterial) -> EcnAffectedMat
         processed_at=am.processed_at,
         remark=am.remark,
         created_at=am.created_at,
-        updated_at=am.updated_at,
+        updated_at=am.updated_at
     )
 
 
@@ -395,5 +359,5 @@ def _build_affected_order_response(ao: EcnAffectedOrder) -> EcnAffectedOrderResp
         processed_by=ao.processed_by,
         processed_at=ao.processed_at,
         created_at=ao.created_at,
-        updated_at=ao.updated_at,
+        updated_at=ao.updated_at
     )

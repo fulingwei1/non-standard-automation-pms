@@ -62,7 +62,23 @@ def get_project_cost_forecast(
         )
 
     if result.get("error"):
-        raise HTTPException(status_code=400, detail=result["error"])
+        # 兼容场景：项目刚启动时历史数据不足，返回空预测而不是400
+        # 便于前端直接渲染空图表并提示用户补充数据。
+        error_msg = str(result["error"])
+        if "数据不足" in error_msg:
+            return ResponseModel(
+                code=200,
+                message=error_msg,
+                data={
+                    "forecasted_completion_cost": 0,
+                    "monthly_forecast_data": [],
+                    "trend_data": [],
+                    "is_over_budget": False,
+                    "method": method,
+                    "error": error_msg,
+                },
+            )
+        raise HTTPException(status_code=400, detail=error_msg)
 
     # 保存预测结果（可选）
     if save_result:

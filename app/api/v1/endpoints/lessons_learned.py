@@ -263,12 +263,19 @@ def search_lessons(
     *,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
-    q: str = Query(..., description="搜索关键词"),
+    q: Optional[str] = Query(None, description="搜索关键词"),
 ) -> Any:
     """
     搜索经验教训（标题、描述、建议）
     """
     _ensure_table(db)
+    if not q or not q.strip():
+        return {
+            "total": 0,
+            "keyword": "",
+            "items": [],
+        }
+
     keyword = f"%{q}%"
     sql = text(
         """
@@ -315,7 +322,7 @@ def search_lessons(
     }
 
 
-@router.get("/{id}", summary="经验教训详情")
+@router.get("/{id:int}", summary="经验教训详情")
 def get_lesson(
     *,
     db: Session = Depends(deps.get_db),

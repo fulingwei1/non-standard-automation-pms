@@ -123,9 +123,9 @@ def get_responsibility_summary(
                 {
                     "id": r.id,
                     "dept": r.dept,
-                    "responsibility_ratio": float(r.responsibility_ratio),
+                    "responsibility_ratio": float(r.responsibility_ratio or 0),
                     "responsibility_type": r.responsibility_type,
-                    "cost_allocation": float(r.cost_allocation),
+                    "cost_allocation": float(r.cost_allocation or 0),
                     "impact_description": r.impact_description,
                     "confirmed": r.confirmed,
                     "confirmed_at": r.confirmed_at.isoformat() if r.confirmed_at else None,

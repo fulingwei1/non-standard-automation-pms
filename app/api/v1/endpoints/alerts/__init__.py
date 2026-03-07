@@ -33,11 +33,11 @@ router = APIRouter()
 # 因为 records_router 有 /alerts/{alert_id} 路由会匹配 /alerts/statistics
 router.include_router(rules_router)
 router.include_router(statistics_router)  # 先注册 /alerts/statistics 等具体路由
-router.include_router(records_router)  # 再注册 /alerts/{alert_id} 参数化路由
+router.include_router(subscriptions_router)  # 先注册 /alerts/subscriptions 等具体路由
+router.include_router(records_router)        # 再注册 /alerts/{alert_id} 参数化路由
 router.include_router(notifications_router)
 router.include_router(exceptions_router)
-router.include_router(subscriptions_router)
 router.include_router(exports_router)
 
 # 导出
-__all__ = ["router"]
+__all__ = ['router']

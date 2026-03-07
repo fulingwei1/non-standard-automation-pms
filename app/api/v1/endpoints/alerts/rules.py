@@ -100,7 +100,8 @@ def read_alert_rules(
         query.order_by(AlertRule.created_at.desc()), pagination.offset, pagination.limit
     ).all()
 
-    return pagination.to_response(rules, total)
+    items = [AlertRuleResponse.model_validate(rule) for rule in rules]
+    return pagination.to_response(items, total)
 
 
 @router.get(

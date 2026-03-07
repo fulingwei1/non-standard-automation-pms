@@ -7,6 +7,7 @@ EXPORTS - 自动生成
 import io
 from datetime import date, datetime
 from typing import Any, Optional
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
@@ -14,22 +15,19 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.services.import_export_engine import ExcelExportEngine
 from app.models.alert import (
     AlertRecord,
     AlertRule,
 )
 from app.models.user import User
-from app.services.import_export_engine import ExcelExportEngine
 
 router = APIRouter(tags=["exports"])
 
 # ==================== 路由定义 ====================
 # 共 2 个路由
 
-
-@router.get(
-    "/alerts/export/excel", response_class=StreamingResponse, status_code=status.HTTP_200_OK
-)
+@router.get("/alerts/export/excel", response_class=StreamingResponse, status_code=status.HTTP_200_OK)
 def export_alerts_excel(
     db: Session = Depends(deps.get_db),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
@@ -59,13 +57,9 @@ def export_alerts_excel(
     if rule_type:
         query = query.join(AlertRule).filter(AlertRule.rule_type == rule_type)
     if start_date:
-        query = query.filter(
-            AlertRecord.triggered_at >= datetime.combine(start_date, datetime.min.time())
-        )
+        query = query.filter(AlertRecord.triggered_at >= datetime.combine(start_date, datetime.min.time()))
     if end_date:
-        query = query.filter(
-            AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time())
-        )
+        query = query.filter(AlertRecord.triggered_at <= datetime.combine(end_date, datetime.max.time()))
 
     alerts = query.order_by(AlertRecord.triggered_at.desc()).all()
 
@@ -100,40 +94,30 @@ def export_alerts_excel(
         elif alert.acknowledged_by:
             handler = db.query(User).filter(User.id == alert.acknowledged_by).first()
 
-        data.append(
-            {
-                "预警编号": alert.alert_no,
-                "预警级别": alert.alert_level,
-                "预警标题": alert.alert_title,
-                "预警类型": rule.rule_type if rule else "UNKNOWN",
-                "项目名称": project.project_name if project else "",
-                "项目编码": project.project_code if project else "",
-                "触发时间": (
-                    alert.triggered_at.strftime("%Y-%m-%d %H:%M:%S") if alert.triggered_at else ""
-                ),
-                "状态": alert.status,
-                "处理人": handler.username if handler else "",
-                "确认时间": (
-                    alert.acknowledged_at.strftime("%Y-%m-%d %H:%M:%S")
-                    if alert.acknowledged_at
-                    else ""
-                ),
-                "处理完成时间": (
-                    alert.handle_end_at.strftime("%Y-%m-%d %H:%M:%S") if alert.handle_end_at else ""
-                ),
-                "是否升级": "是" if alert.is_escalated else "否",
-                "处理结果": alert.handle_result or "",
-            }
-        )
+        data.append({
+            '预警编号': alert.alert_no,
+            '预警级别': alert.alert_level,
+            '预警标题': alert.alert_title,
+            '预警类型': rule.rule_type if rule else 'UNKNOWN',
+            '项目名称': project.project_name if project else '',
+            '项目编码': project.project_code if project else '',
+            '触发时间': alert.triggered_at.strftime('%Y-%m-%d %H:%M:%S') if alert.triggered_at else '',
+            '状态': alert.status,
+            '处理人': handler.username if handler else '',
+            '确认时间': alert.acknowledged_at.strftime('%Y-%m-%d %H:%M:%S') if alert.acknowledged_at else '',
+            '处理完成时间': alert.handle_end_at.strftime('%Y-%m-%d %H:%M:%S') if alert.handle_end_at else '',
+            '是否升级': '是' if alert.is_escalated else '否',
+            '处理结果': alert.handle_result or '',
+        })
 
     def post_process(worksheet, sheet_config):
         _format_alert_excel_sheet(worksheet, sheet_config.get("level"))
 
-    if group_by == "level":
+    if group_by == 'level':
         # 按级别分组
         level_groups = {}
         for item in data:
-            level = item["预警级别"]
+            level = item['预警级别']
             if level not in level_groups:
                 level_groups[level] = []
             level_groups[level].append(item)
@@ -141,22 +125,20 @@ def export_alerts_excel(
         sheets = []
         for level, items in level_groups.items():
             sheet_name = f"{level}级预警"[:31]
-            sheets.append(
-                {
-                    "name": sheet_name,
-                    "data": items,
-                    "columns": columns,
-                    "level": level,
-                }
-            )
+            sheets.append({
+                "name": sheet_name,
+                "data": items,
+                "columns": columns,
+                "level": level,
+            })
 
         output = ExcelExportEngine.export_multi_sheet(sheets, sheet_post_process=post_process)
 
-    elif group_by == "type":
+    elif group_by == 'type':
         # 按类型分组
         type_groups = {}
         for item in data:
-            rule_type = item["预警类型"]
+            rule_type = item['预警类型']
             if rule_type not in type_groups:
                 type_groups[rule_type] = []
             type_groups[rule_type].append(item)
@@ -164,13 +146,11 @@ def export_alerts_excel(
         sheets = []
         for rule_type, items in type_groups.items():
             sheet_name = rule_type[:31]
-            sheets.append(
-                {
-                    "name": sheet_name,
-                    "data": items,
-                    "columns": columns,
-                }
-            )
+            sheets.append({
+                "name": sheet_name,
+                "data": items,
+                "columns": columns,
+            })
 
         output = ExcelExportEngine.export_multi_sheet(sheets, sheet_post_process=post_process)
 
@@ -183,11 +163,14 @@ def export_alerts_excel(
 
     # 生成文件名
     filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    filename_encoded = quote(filename)
 
     return StreamingResponse(
         io.BytesIO(output.read()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{filename_encoded}"
+        }
     )
 
 
@@ -197,10 +180,10 @@ def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
 
     # 级别颜色映射
     level_colors = {
-        "URGENT": "FF0000",  # 红色
-        "CRITICAL": "FF8C00",  # 橙色
-        "WARNING": "FFD700",  # 黄色
-        "INFO": "4169E1",  # 蓝色
+        'URGENT': 'FF0000',      # 红色
+        'CRITICAL': 'FF8C00',    # 橙色
+        'WARNING': 'FFD700',     # 黄色
+        'INFO': '4169E1',        # 蓝色
     }
 
     # 设置表头样式
@@ -215,19 +198,19 @@ def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
 
     # 设置列宽
     column_widths = {
-        "A": 20,  # 预警编号
-        "B": 12,  # 预警级别
-        "C": 40,  # 预警标题
-        "D": 20,  # 预警类型
-        "E": 25,  # 项目名称
-        "F": 15,  # 项目编码
-        "G": 18,  # 触发时间
-        "H": 12,  # 状态
-        "I": 12,  # 处理人
-        "J": 18,  # 确认时间
-        "K": 18,  # 处理完成时间
-        "L": 10,  # 是否升级
-        "M": 40,  # 处理结果
+        'A': 20,  # 预警编号
+        'B': 12,  # 预警级别
+        'C': 40,  # 预警标题
+        'D': 20,  # 预警类型
+        'E': 25,  # 项目名称
+        'F': 15,  # 项目编码
+        'G': 18,  # 触发时间
+        'H': 12,  # 状态
+        'I': 12,  # 处理人
+        'J': 18,  # 确认时间
+        'K': 18,  # 处理完成时间
+        'L': 10,  # 是否升级
+        'M': 40,  # 处理结果
     }
     for col, width in column_widths.items():
         worksheet.column_dimensions[col].width = width
@@ -238,15 +221,13 @@ def _format_alert_excel_sheet(worksheet, level: Optional[str] = None):
         for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row):
             # 只对级别列（B列）设置颜色
             if row[1].value == level:
-                row[1].fill = PatternFill(
-                    start_color=fill_color, end_color=fill_color, fill_type="solid"
-                )
+                row[1].fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                 row[1].font = Font(color="FFFFFF", bold=True)
 
     # 设置数据行对齐
     for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row):
         for cell in row:
-            if cell.column_letter in ["G", "J", "K"]:  # 时间列
+            if cell.column_letter in ['G', 'J', 'K']:  # 时间列
                 cell.alignment = Alignment(horizontal="center", vertical="center")
             else:
                 cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
@@ -298,10 +279,10 @@ def export_alerts_pdf(
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
-            rightMargin=2 * cm,
-            leftMargin=2 * cm,
-            topMargin=2 * cm,
-            bottomMargin=2 * cm,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
         )
 
         # 获取样式
@@ -316,13 +297,17 @@ def export_alerts_pdf(
 
         # 生成文件名
         filename = f"预警报表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filename_encoded = quote(filename)
 
         return StreamingResponse(
             io.BytesIO(buffer.read()),
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+            headers={
+                "Content-Disposition": f"attachment; filename*=UTF-8''{filename_encoded}"
+            }
         )
     except ImportError:
         raise HTTPException(
-            status_code=500, detail="PDF处理库未安装，请安装reportlab: pip install reportlab"
+            status_code=500,
+            detail="PDF处理库未安装，请安装reportlab: pip install reportlab"
         )

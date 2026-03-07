@@ -46,7 +46,7 @@ class RhythmConfigResponse(BaseModel):
     meeting_template: Optional[Dict[str, Any]]
     key_metrics: Optional[List[Dict[str, Any]]]
     output_artifacts: Optional[List[str]]
-    is_active: str
+    is_active: Optional[str] = "ACTIVE"
     created_by: Optional[int]
     created_at: datetime
     updated_at: datetime

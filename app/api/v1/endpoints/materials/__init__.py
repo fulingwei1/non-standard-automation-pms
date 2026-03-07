@@ -18,14 +18,14 @@ from .suppliers import router as suppliers_router
 
 router = APIRouter()
 
-# 物料CRUD（使用重构后的端点，使用通用CRUD路由生成器和统一响应格式）
-router.include_router(crud_refactored_router, tags=["物料管理"])
-
 # 物料分类
 router.include_router(categories_router, tags=["物料分类"])
+
+# 仓储统计和搜索（先注册 /search 等静态路径，避免与 /{item_id} 冲突）
+router.include_router(statistics_router, tags=["仓储统计"])
 
 # 供应商
 router.include_router(suppliers_router, tags=["物料供应商"])
 
-# 仓储统计和搜索
-router.include_router(statistics_router, tags=["仓储统计"])
+# 物料CRUD（使用重构后的端点，使用通用CRUD路由生成器和统一响应格式）
+router.include_router(crud_refactored_router, tags=["物料管理"])

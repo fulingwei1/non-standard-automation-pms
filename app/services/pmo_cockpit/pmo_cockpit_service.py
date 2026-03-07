@@ -37,10 +37,14 @@ class PmoCockpitService:
         # 统计项目
         total_projects = self.db.query(func.count(Project.id)).scalar() or 0
         active_projects = (
-            self.db.query(func.count(Project.id)).filter(Project.is_active).scalar() or 0
+            self.db.query(func.count(Project.id)).filter(Project.is_active).scalar()
+            or 0
         )
         completed_projects = (
-            self.db.query(func.count(Project.id)).filter(Project.stage == "S9").scalar() or 0
+            self.db.query(func.count(Project.id))
+            .filter(Project.stage == "S9")
+            .scalar()
+            or 0
         )
 
         # 统计延期项目（简化：计划结束日期已过但未完成）
@@ -119,7 +123,9 @@ class PmoCockpitService:
         """
         # 统计风险
         total_risks = (
-            self.db.query(PmoProjectRisk).filter(PmoProjectRisk.status != "CLOSED").count()
+            self.db.query(PmoProjectRisk)
+            .filter(PmoProjectRisk.status != "CLOSED")
+            .count()
         )
 
         # 严重风险
@@ -211,8 +217,10 @@ class PmoCockpitService:
         new_risks = (
             self.db.query(PmoProjectRisk)
             .filter(
-                PmoProjectRisk.created_at >= datetime.combine(week_start, datetime.min.time()),
-                PmoProjectRisk.created_at <= datetime.combine(week_end, datetime.max.time()),
+                PmoProjectRisk.created_at
+                >= datetime.combine(week_start, datetime.min.time()),
+                PmoProjectRisk.created_at
+                <= datetime.combine(week_end, datetime.max.time()),
             )
             .count()
         )
@@ -281,20 +289,24 @@ class PmoCockpitService:
         """按状态统计项目"""
         projects_by_status = {}
         status_counts = (
-            self.db.query(Project.status, func.count(Project.id)).group_by(Project.status).all()
+            self.db.query(Project.status, func.count(Project.id))
+            .group_by(Project.status)
+            .all()
         )
         for status, count in status_counts:
-            projects_by_status[status] = count
+            projects_by_status[status or "UNKNOWN"] = count
         return projects_by_status
 
     def _get_projects_by_stage(self) -> Dict[str, int]:
         """按阶段统计项目"""
         projects_by_stage = {}
         stage_counts = (
-            self.db.query(Project.stage, func.count(Project.id)).group_by(Project.stage).all()
+            self.db.query(Project.stage, func.count(Project.id))
+            .group_by(Project.stage)
+            .all()
         )
         for stage, count in stage_counts:
-            projects_by_stage[stage] = count
+            projects_by_stage[stage or "UNKNOWN"] = count
         return projects_by_stage
 
     def _get_recent_risks(self, limit: int = 10) -> List[RiskResponse]:
@@ -368,7 +380,9 @@ class PmoCockpitService:
         )
 
         for project_id, risk_count in project_risks:
-            project = self.db.query(Project).filter(Project.id == project_id).first()
+            project = (
+                self.db.query(Project).filter(Project.id == project_id).first()
+            )
             if project:
                 by_project.append(
                     {
@@ -415,10 +429,10 @@ class PmoCockpitService:
     def _calculate_overloaded_resources(self, standard_workload: int = 160) -> int:
         """
         计算超负荷资源数量
-
+        
         Args:
             standard_workload: 标准工作负荷（小时/月），默认160小时
-
+            
         Returns:
             超负荷资源数量
         """
@@ -435,7 +449,9 @@ class PmoCockpitService:
             # 计算该分配的预估工时（使用分配比例）
             if alloc.allocation_percent:
                 # 假设每个项目的标准工时为160小时
-                estimated_hours = (alloc.allocation_percent / 100) * standard_workload
+                estimated_hours = (
+                    alloc.allocation_percent / 100
+                ) * standard_workload
                 resource_workload[alloc.resource_id] += estimated_hours
 
         # 统计超负荷资源数量
@@ -453,14 +469,16 @@ class PmoCockpitService:
 
         for dept in departments:
             dept_users = (
-                self.db.query(User).filter(User.department == dept.name, User.is_active).count()
+                self.db.query(User)
+                .filter(User.department == dept.dept_name, User.is_active)
+                .count()
             )
 
             dept_allocated = (
                 self.db.query(PmoResourceAllocation.resource_id)
                 .join(User, PmoResourceAllocation.resource_id == User.id)
                 .filter(
-                    User.department == dept.name,
+                    User.department == dept.dept_name,
                     PmoResourceAllocation.status.in_(["PLANNED", "ACTIVE"]),
                 )
                 .distinct()
@@ -470,7 +488,7 @@ class PmoCockpitService:
             by_department.append(
                 {
                     "department_id": dept.id,
-                    "department_name": dept.name,
+                    "department_name": dept.dept_name,
                     "total_resources": dept_users,
                     "allocated_resources": dept_allocated,
                     "available_resources": dept_users - dept_allocated,

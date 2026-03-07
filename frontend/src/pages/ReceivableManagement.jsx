@@ -87,20 +87,11 @@ export default function ReceivableManagement() {
         page_size: pageSize,
         payment_status: statusFilter !== "all" ? statusFilter : undefined
       };
-      // 如果只显示逾期，使用逾期接口
-      if (overdueOnly) {
-        const response = await receivableApi.list(params);
-        if (response.data && response.data.items) {
-          setReceivables(response.data.items);
-          setTotal(response.data.total || 0);
-        }
-      } else {
-        // 否则使用回款记录列表接口
-        const response = await paymentApi.list(params);
-        if (response.data && response.data.items) {
-          setReceivables(response.data.items);
-          setTotal(response.data.total || 0);
-        }
+      // 使用逾期应收接口获取发票列表
+      const response = await receivableApi.list(params);
+      if (response.data && response.data.items) {
+        setReceivables(response.data.items);
+        setTotal(response.data.total || 0);
       }
     } catch (error) {
       console.error("加载应收账款列表失败:", error);

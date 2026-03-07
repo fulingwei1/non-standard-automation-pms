@@ -65,11 +65,11 @@ export default function QuoteManagementCenter() {
         </TabsList>
 
         <TabsContent value={TAB_QUOTES || "unknown"} className="space-y-6">
-          <QuoteManagement embedded />
+          {activeTab === TAB_QUOTES && <QuoteManagement embedded />}
         </TabsContent>
 
         <TabsContent value={TAB_TEMPLATES || "unknown"} className="space-y-6">
-          <SalesTemplateCenter embedded />
+          {activeTab === TAB_TEMPLATES && <SalesTemplateCenter embedded />}
         </TabsContent>
       </Tabs>
     </div>

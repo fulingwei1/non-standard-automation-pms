@@ -29,6 +29,78 @@ router = APIRouter()
 # ==================== 应收账款分析 ====================
 
 
+@router.get("/receivables", response_model=PaginatedResponse)
+def get_receivables_list(
+    *,
+    db: Session = Depends(deps.get_db),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    customer_id: Optional[int] = Query(None, description="客户 ID 筛选"),
+    contract_id: Optional[int] = Query(None, description="合同 ID 筛选"),
+    payment_status: Optional[str] = Query(None, description="收款状态筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    应收账款列表（已集成数据权限过滤）
+    """
+    from app.core.sales_permissions import filter_sales_finance_data_by_scope
+
+    today = date.today()
+
+    query = db.query(Invoice).filter(
+        Invoice.status == "ISSUED",
+        Invoice.payment_status.in_(["PENDING", "PARTIAL", "OVERDUE"])
+    )
+
+    # 应用数据权限过滤（发票使用财务数据权限）
+    query = filter_sales_finance_data_by_scope(query, current_user, db, Invoice, "created_by")
+
+    if customer_id:
+        query = query.join(Contract).filter(Contract.customer_id == customer_id)
+
+    if contract_id:
+        query = query.filter(Invoice.contract_id == contract_id)
+
+    if payment_status:
+        query = query.filter(Invoice.payment_status == payment_status)
+
+    total = query.count()
+    invoices = apply_pagination(query.order_by(Invoice.due_date.desc()), pagination.offset, pagination.limit).all()
+
+    items = []
+    for invoice in invoices:
+        contract = invoice.contract
+        unpaid = (invoice.total_amount or invoice.amount or Decimal("0")) - (invoice.paid_amount or Decimal("0"))
+        overdue_days = (today - invoice.due_date).days if invoice.due_date else 0
+
+        items.append({
+            "id": invoice.id,
+            "invoice_code": invoice.invoice_code,
+            "contract_id": invoice.contract_id,
+            "contract_code": contract.contract_code if contract else None,
+            "customer_id": contract.customer_id if contract else None,
+            "customer_name": contract.customer.customer_name if contract and contract.customer else None,
+            "invoice_amount": float(invoice.total_amount or invoice.amount or 0),
+            "paid_amount": float(invoice.paid_amount or 0),
+            "unpaid_amount": float(unpaid),
+            "due_date": invoice.due_date,
+            "overdue_days": max(0, overdue_days),
+            "payment_status": invoice.payment_status,
+            "issue_date": invoice.issue_date,
+            "remark": invoice.remark,
+        })
+
+    return PaginatedResponse(
+        code=200,
+        message="success",
+        data={
+            "items": items,
+            "total": total,
+            "page": pagination.page,
+            "page_size": pagination.page_size,
+        }
+    )
+
+
 @router.get("/receivables/aging", response_model=ResponseModel)
 def get_receivables_aging(
     *,

@@ -22,19 +22,20 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('month');
 
   const overviewStats = useMemo(() => {
-    if (!data?.contracts) {return {};}
-
-    const totalContracts = data.contracts?.length;
-    const activeContracts = (data.contracts || []).filter((c) =>
+    const contractsList = data?.contracts || data?.items || [];
+    
+    const totalContracts = contractsList.length;
+    const activeContracts = contractsList.filter((c) =>
     ['signed', 'executing'].includes(c.status)
     ).length;
-    const totalValue = (data.contracts || []).reduce((acc, c) => acc + (c.value || 0), 0);
-    const pendingSignatures = (data.contracts || []).filter((c) =>
+    const totalValue = contractsList.reduce((acc, c) => acc + (c.value || 0), 0);
+    const pendingSignatures = contractsList.filter((c) =>
     c.signatureStatus === 'pending'
     ).length;
 
     const monthlyGrowth = data.monthlyStats?.growth || 8.5;
-    const completionRate = (data.contracts || []).filter((c) => c.status === 'completed').length / totalContracts * 100 || 0;
+    const completionRate = totalContracts > 0 ? 
+      (contractsList.filter((c) => c.status === 'completed').length / totalContracts * 100) : 0;
 
     return {
       totalContracts,
@@ -47,14 +48,14 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const statusDistribution = useMemo(() => {
-    if (!data?.contracts) {return {};}
+    const contractsList = data?.contracts || data?.items || [];
 
     const distribution = {};
     Object.keys(CONTRACT_STATUS).forEach((key) => {
       distribution[key] = 0;
     });
 
-    (data.contracts || []).forEach((contract) => {
+    contractsList.forEach((contract) => {
       if (contract.status && CONTRACT_STATUS[contract.status.toUpperCase()]) {
         distribution[contract.status.toUpperCase()]++;
       }
@@ -64,9 +65,9 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
   }, [data]);
 
   const upcomingDeadlines = useMemo(() => {
-    if (!data?.contracts) {return [];}
+    const contractsList = data?.contracts || data?.items || [];
 
-    return data.contracts.
+    return contractsList.
     filter((c) => {
       const today = new Date();
       const deadline = new Date(c.signingDeadline || c.expiryDate);

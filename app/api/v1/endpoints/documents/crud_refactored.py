@@ -10,17 +10,18 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_pagination
 from app.core import security
+from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.schemas import list_response, paginated_response, success_response
 from app.models.project import Machine, Project, ProjectDocument
 from app.models.user import User
 from app.schemas.project import (
     ProjectDocumentCreate,
+    ProjectDocumentResponse,
 )
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
+from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -30,6 +31,20 @@ DOCUMENT_DATA_SCOPE_CONFIG = DataScopeConfig(
     owner_field="uploaded_by",
     project_field="project_id",
 )
+
+
+def _build_document_response(document: ProjectDocument) -> ProjectDocumentResponse:
+    """将 ORM 文档对象转换为可序列化响应对象。"""
+    data = {column.name: getattr(document, column.name) for column in document.__table__.columns}
+
+    # 兼容历史数据中的空值，避免列表页直接 500
+    data["version"] = data.get("version") or "1.0"
+    data["doc_type"] = data.get("doc_type") or "UNKNOWN"
+    data["doc_name"] = data.get("doc_name") or "未命名文档"
+    data["file_path"] = data.get("file_path") or ""
+    data["file_name"] = data.get("file_name") or data["doc_name"]
+
+    return ProjectDocumentResponse.model_validate(data)
 
 
 @router.get("/")
@@ -65,13 +80,12 @@ def read_documents(
         query = query.filter(ProjectDocument.status == status)
 
     total = query.count()
-    documents = apply_pagination(
-        query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit
-    ).all()
+    documents = apply_pagination(query.order_by(desc(ProjectDocument.created_at)), pagination.offset, pagination.limit).all()
+    items = [_build_document_response(document) for document in documents]
 
     # 使用统一响应格式
     return paginated_response(
-        items=documents,
+        items=items,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
@@ -100,9 +114,13 @@ def get_project_documents(
         query = query.filter(ProjectDocument.doc_type == doc_type)
 
     documents = query.order_by(desc(ProjectDocument.created_at)).all()
-
+    items = [_build_document_response(document) for document in documents]
+    
     # 使用统一响应格式
-    return list_response(items=documents, message="获取项目文档列表成功")
+    return list_response(
+        items=items,
+        message="获取项目文档列表成功"
+    )
 
 
 @router.get("/{doc_id}")
@@ -124,7 +142,10 @@ def read_document(
         check_project_access_or_raise(db, current_user, document.project_id)
 
     # 使用统一响应格式
-    return success_response(data=document, message="获取文档详情成功")
+    return success_response(
+        data=_build_document_response(document),
+        message="获取文档详情成功"
+    )
 
 
 @router.post("/")
@@ -143,24 +164,29 @@ def create_document(
 
     # 如果指定了机台ID，验证机台是否存在且属于该项目
     if doc_in.machine_id:
-        machine = (
-            db.query(Machine)
-            .filter(Machine.id == doc_in.machine_id, Machine.project_id == doc_in.project_id)
-            .first()
-        )
+        machine = db.query(Machine).filter(
+            Machine.id == doc_in.machine_id,
+            Machine.project_id == doc_in.project_id
+        ).first()
         if not machine:
-            raise HTTPException(status_code=404, detail="机台不存在或不属于该项目")
+            raise HTTPException(
+                status_code=404,
+                detail="机台不存在或不属于该项目"
+            )
 
     doc_data = doc_in.model_dump()
-    doc_data["uploaded_by"] = current_user.id
+    doc_data['uploaded_by'] = current_user.id
 
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
     db.refresh(document)
-
+    
     # 使用统一响应格式
-    return success_response(data=document, message="文档创建成功")
+    return success_response(
+        data=_build_document_response(document),
+        message="文档创建成功"
+    )
 
 
 @router.post("/projects/{project_id}/documents")
@@ -178,23 +204,28 @@ def create_project_document(
 
     # 确保project_id一致
     doc_data = doc_in.model_dump()
-    doc_data["project_id"] = project_id
-    doc_data["uploaded_by"] = current_user.id
+    doc_data['project_id'] = project_id
+    doc_data['uploaded_by'] = current_user.id
 
     # 如果指定了机台ID，验证机台是否存在且属于该项目
-    if doc_data.get("machine_id"):
-        machine = (
-            db.query(Machine)
-            .filter(Machine.id == doc_data["machine_id"], Machine.project_id == project_id)
-            .first()
-        )
+    if doc_data.get('machine_id'):
+        machine = db.query(Machine).filter(
+            Machine.id == doc_data['machine_id'],
+            Machine.project_id == project_id
+        ).first()
         if not machine:
-            raise HTTPException(status_code=404, detail="机台不存在或不属于该项目")
+            raise HTTPException(
+                status_code=404,
+                detail="机台不存在或不属于该项目"
+            )
 
     document = ProjectDocument(**doc_data)
     db.add(document)
     db.commit()
     db.refresh(document)
-
+    
     # 使用统一响应格式
-    return success_response(data=document, message="项目文档创建成功")
+    return success_response(
+        data=_build_document_response(document),
+        message="项目文档创建成功"
+    )

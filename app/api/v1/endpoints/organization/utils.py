@@ -50,6 +50,7 @@ def build_department_tree(
             "manager_id": dept.manager_id,
             "manager_name": dept.manager.name if dept.manager else None,
         },
-        sort_key=lambda n: n.get("sort_order", 0),
+        # sort_order 可能是 None，统一回退为 0，避免排序时 TypeError
+        sort_key=lambda n: n.get("sort_order") or 0,
         root_parent=parent_id,
     )

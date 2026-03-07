@@ -125,7 +125,10 @@ def get_sales_teams_ranking(
                 .all()
             )
             contract_count = len(contracts)
-            contract_amount = sum(float(c.contract_amount or 0) for c in contracts)
+            contract_amount = sum(
+                float(getattr(c, "total_amount", None) or getattr(c, "contract_amount", 0) or 0)
+                for c in contracts
+            )
 
             # 回款金额
             invoices = (

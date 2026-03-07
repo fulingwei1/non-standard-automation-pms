@@ -5,6 +5,18 @@
  */
 
 import { cn, formatDate, formatDateTime, formatCurrency } from "../../lib/utils";
+import {
+  FileText,
+  Clock,
+  CheckCircle2,
+  Send,
+  XCircle,
+  Settings,
+  Users,
+  Folder,
+  List,
+  Grid,
+} from "lucide-react";
 
 export { cn, formatDate, formatDateTime, formatCurrency };
 
@@ -15,7 +27,7 @@ export const quoteStatusConfig = {
     value: "DRAFT",
     color: "text-slate-400 bg-slate-400/10 border-slate-400/30",
     bg: "bg-slate-500",
-    icon: "FileText",
+    icon: FileText,
     order: 1,
     description: "报价草稿，尚未提交审批"
   },
@@ -24,7 +36,7 @@ export const quoteStatusConfig = {
     value: "IN_REVIEW",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
     bg: "bg-amber-500",
-    icon: "Clock",
+    icon: Clock,
     order: 2,
     description: "报价正在审批流程中"
   },
@@ -33,7 +45,7 @@ export const quoteStatusConfig = {
     value: "APPROVED",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
     bg: "bg-blue-500",
-    icon: "CheckCircle2",
+    icon: CheckCircle2,
     order: 3,
     description: "报价已通过审批"
   },
@@ -42,7 +54,7 @@ export const quoteStatusConfig = {
     value: "SENT",
     color: "text-purple-400 bg-purple-400/10 border-purple-400/30",
     bg: "bg-purple-500",
-    icon: "Send",
+    icon: Send,
     order: 4,
     description: "报价已发送给客户"
   },
@@ -51,7 +63,7 @@ export const quoteStatusConfig = {
     value: "EXPIRED",
     color: "text-red-400 bg-red-400/10 border-red-400/30",
     bg: "bg-red-500",
-    icon: "XCircle",
+    icon: XCircle,
     order: 5,
     description: "报价已过期"
   },
@@ -60,7 +72,7 @@ export const quoteStatusConfig = {
     value: "REJECTED",
     color: "text-red-500 bg-red-500/10 border-red-500/30",
     bg: "bg-red-600",
-    icon: "XCircle",
+    icon: XCircle,
     order: 6,
     description: "报价被拒绝"
   },
@@ -69,7 +81,7 @@ export const quoteStatusConfig = {
     value: "ACCEPTED",
     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
     bg: "bg-emerald-500",
-    icon: "CheckCircle2",
+    icon: CheckCircle2,
     order: 7,
     description: "报价已被客户接受"
   },
@@ -78,7 +90,7 @@ export const quoteStatusConfig = {
     value: "CONVERTED",
     color: "text-green-400 bg-green-400/10 border-green-400/30",
     bg: "bg-green-500",
-    icon: "CheckCircle2",
+    icon: CheckCircle2,
     order: 8,
     description: "报价已转换为销售订单"
   }
@@ -122,28 +134,28 @@ export const quoteTypeConfig = {
     label: "标准报价",
     value: "STANDARD",
     color: "text-blue-400 bg-blue-400/10 border-blue-400/30",
-    icon: "FileText",
+    icon: FileText,
     description: "标准产品报价"
   },
   CUSTOM: {
     label: "定制报价",
     value: "CUSTOM",
     color: "text-purple-400 bg-purple-400/10 border-purple-400/30",
-    icon: "Settings",
+    icon: Settings,
     description: "定制化产品报价"
   },
   SERVICE: {
     label: "服务报价",
     value: "SERVICE",
     color: "text-green-400 bg-green-400/10 border-green-400/30",
-    icon: "Users",
+    icon: Users,
     description: "服务类报价"
   },
   PROJECT: {
     label: "项目报价",
     value: "PROJECT",
     color: "text-orange-400 bg-orange-400/10 border-orange-400/30",
-    icon: "Folder",
+    icon: Folder,
     description: "项目制报价"
   }
 };
@@ -154,19 +166,19 @@ export const approvalStatusConfig = {
     label: "待审批",
     value: "PENDING",
     color: "text-amber-400 bg-amber-400/10 border-amber-400/30",
-    icon: "Clock"
+    icon: Clock
   },
   APPROVED: {
     label: "已通过",
     value: "APPROVED",
     color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30",
-    icon: "CheckCircle2"
+    icon: CheckCircle2
   },
   REJECTED: {
     label: "已拒绝",
     value: "REJECTED",
     color: "text-red-400 bg-red-400/10 border-red-400/30",
-    icon: "XCircle"
+    icon: XCircle
   }
 };
 
@@ -281,13 +293,13 @@ export const QUOTE_VIEW_MODES = [
   {
     value: "list",
     label: "列表视图",
-    icon: "List",
+    icon: List,
     description: "传统的表格列表形式展示"
   },
   {
     value: "card",
     label: "卡片视图",
-    icon: "Grid",
+    icon: Grid,
     description: "卡片形式展示报价信息"
   }
 ];

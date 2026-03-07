@@ -46,7 +46,7 @@ class ApprovalInstanceResponse(BaseModel):
     initiator_dept_id: Optional[int] = None
     status: str
     current_node_id: Optional[int] = None
-    urgency: str
+    urgency: Optional[str] = "NORMAL"
     title: Optional[str] = None
     summary: Optional[str] = None
     submitted_at: Optional[datetime] = None

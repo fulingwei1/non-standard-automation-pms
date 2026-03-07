@@ -19,8 +19,10 @@ from app.schemas.project.customer import (
 
 class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, CustomerResponse]):
     """
-    客户服务类
+    客户服务类。
+    Customer 模型无 deleted_at，禁用软删除过滤避免列表查询异常。
     """
+    soft_delete_field = None  # Customer 表无 deleted_at
 
     def __init__(self, db: Session):
         super().__init__(

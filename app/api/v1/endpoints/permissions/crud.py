@@ -310,7 +310,7 @@ def get_role_permissions(
 @router.post("/roles/{role_id}", response_model=ResponseModel)
 def assign_role_permissions(
     role_id: int,
-    permission_ids: List[int] = Query(..., description="权限ID列表"),
+    permission_ids: List[int] = Query(default=[], description="权限ID列表"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("role:update")),
 ):

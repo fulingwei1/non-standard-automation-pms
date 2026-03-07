@@ -3,46 +3,87 @@
  * 集中管理所有动态图标的渲染，避免 React 大小写警告
  */
 
-import {
-  CheckCircle2,
-  FileText,
-  Clock,
-  Truck,
-  AlertTriangle,
-  Package,
-  Trash2,
-  Eye,
-  Edit3,
-  AlertCircle,
-  XCircle,
-  Info,
-  Circle,
-  MessageSquare,
-  CheckCircle,
-  Send,
-  // 按需添加其他图标
-} from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 
 /**
  * 图标映射表：将字符串名称映射到实际的 React 组件
  */
 export const iconMap = {
-  CheckCircle2,
-  FileText,
-  Clock,
-  Truck,
-  AlertTriangle,
-  Package,
-  Trash2,
-  Eye,
-  Edit3,
-  AlertCircle,
-  XCircle,
-  Info,
-  Circle,
-  MessageSquare,
-  CheckCircle,
-  Send,
+  // 常用图标
+  FileText: LucideIcons.FileText,
+  CheckCircle2: LucideIcons.CheckCircle2,
+  CheckCircle: LucideIcons.CheckCircle,
+  XCircle: LucideIcons.XCircle,
+  AlertCircle: LucideIcons.AlertCircle,
+  AlertTriangle: LucideIcons.AlertTriangle,
+  Clock: LucideIcons.Clock,
+  Calendar: LucideIcons.Calendar,
+  User: LucideIcons.User,
+  Users: LucideIcons.Users,
+  Building: LucideIcons.Building,
+  Building2: LucideIcons.Building2,
+  Package: LucideIcons.Package,
+  Truck: LucideIcons.Truck,
+  DollarSign: LucideIcons.DollarSign,
+  TrendingUp: LucideIcons.TrendingUp,
+  TrendingDown: LucideIcons.TrendingDown,
+  
+  // 操作图标
+  Search: LucideIcons.Search,
+  Filter: LucideIcons.Filter,
+  Plus: LucideIcons.Plus,
+  Minus: LucideIcons.Minus,
+  Edit: LucideIcons.Edit,
+  Edit2: LucideIcons.Edit2,
+  Edit3: LucideIcons.Edit3,
+  Trash: LucideIcons.Trash,
+  Trash2: LucideIcons.Trash2,
+  Eye: LucideIcons.Eye,
+  Copy: LucideIcons.Copy,
+  Send: LucideIcons.Send,
+  Download: LucideIcons.Download,
+  Upload: LucideIcons.Upload,
+  Save: LucideIcons.Save,
+  X: LucideIcons.X,
+  Check: LucideIcons.Check,
+  ChevronLeft: LucideIcons.ChevronLeft,
+  ChevronRight: LucideIcons.ChevronRight,
+  ChevronUp: LucideIcons.ChevronUp,
+  ChevronDown: LucideIcons.ChevronDown,
+  MoreHorizontal: LucideIcons.MoreHorizontal,
+  MoreVertical: LucideIcons.MoreVertical,
+  
+  // 状态图标
+  Circle: LucideIcons.Circle,
+  Dot: LucideIcons.Dot,
+  Square: LucideIcons.Square,
+  Star: LucideIcons.Star,
+  Heart: LucideIcons.Heart,
+  
+  // 通讯图标
+  MessageSquare: LucideIcons.MessageSquare,
+  MessageCircle: LucideIcons.MessageCircle,
+  Mail: LucideIcons.Mail,
+  Phone: LucideIcons.Phone,
+  
+  // 导航图标
+  Home: LucideIcons.Home,
+  Settings: LucideIcons.Settings,
+  Menu: LucideIcons.Menu,
+  Grid: LucideIcons.Grid,
+  List: LucideIcons.List,
+  
+  // 其他常用图标
+  Info: LucideIcons.Info,
+  HelpCircle: LucideIcons.HelpCircle,
+  Loader: LucideIcons.Loader,
+  Loader2: LucideIcons.Loader2,
+  RefreshCw: LucideIcons.RefreshCw,
+  ExternalLink: LucideIcons.ExternalLink,
+  Link: LucideIcons.Link,
+  Archive: LucideIcons.Archive,
+  History: LucideIcons.History,
+  
   // 按需添加其他图标
 };
 
@@ -84,7 +125,33 @@ export const DynamicIcon = ({ name, ...props }) => {
  */
 export function getIcon(iconName) {
   if (!iconName || typeof iconName !== 'string') {
-    return Package;
+    return iconMap.Package;
   }
-  return iconMap[iconName] || Package;
+  return iconMap[iconName] || iconMap.Package;
 }
+
+/**
+ * 统一解析图标（支持字符串或组件）
+ * @param {string|Function|Object|null|undefined} icon
+ * @param {Function|null} fallback
+ * @returns {Function|null}
+ */
+export function resolveIcon(icon, fallback = iconMap.Package) {
+  if (!icon) {
+    return fallback;
+  }
+
+  if (typeof icon === "string") {
+    return getIcon(icon);
+  }
+
+  const iconName = icon.displayName || icon.name;
+  if (iconName && typeof iconName === "string") {
+    return getIcon(iconName);
+  }
+
+  return icon;
+}
+
+// 重新导出所有 Lucide 图标供直接使用
+export * from 'lucide-react';

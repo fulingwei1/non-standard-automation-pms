@@ -70,6 +70,7 @@ const ContractManagement = () => {
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [contracts, setContracts] = useState([]);
+  const [overviewData, setOverviewData] = useState({ contracts: [], total: 0 });
   const [selectedContract, setSelectedContract] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -87,9 +88,39 @@ const ContractManagement = () => {
     setLoading(true);
     try {
       const data = await getContracts();
-      // 确保 contracts 是数组
-      const items = data?.items || data;
-      setContracts(Array.isArray(items) ? items : []);
+      // 后端返回分页格式：{ items: [...], total: N }
+      const items = data?.items || data?.data?.items || data;
+      const contractsData = Array.isArray(items) ? items : [];
+      
+      // 转换后端数据格式为前端期望的格式
+      const transformedContracts = contractsData.map((c) => ({
+        id: c.id,
+        title: c.contract_name || c.contract_code || `合同-${c.id}`,
+        contract_no: c.contract_code,
+        contract_name: c.contract_name,
+        client_name: c.customer_name,
+        clientName: c.customer_name,
+        value: c.total_amount || c.amount,
+        amount: c.total_amount || c.amount,
+        status: c.status?.toLowerCase() || 'draft',
+        type: c.contract_type || 'sales',
+        signatureStatus: c.status === 'executing' ? 'signed' : 'pending',
+        riskLevel: 'normal',
+        created_at: c.created_at,
+        signing_date: c.signing_date,
+        customer_id: c.customer_id,
+        contract_id: c.id,
+      }));
+      
+      setContracts(transformedContracts);
+      
+      // 同时保存完整数据供概览组件使用
+      setOverviewData({
+        contracts: transformedContracts,
+        total: data?.total || data?.data?.total || transformedContracts.length,
+        page: data?.page || data?.data?.page || 1
+      });
+      
       setLoading(false);
     } catch (_error) {
       message.error('加载合同数据失败');
@@ -407,7 +438,7 @@ const ContractManagement = () => {
             ),
             children: (
               <ContractOverview
-                data={contracts}
+                data={overviewData}
                 loading={loading}
                 onNavigate={(type, value) => {
                   setActiveTab('contracts');

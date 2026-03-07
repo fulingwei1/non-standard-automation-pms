@@ -20,16 +20,10 @@ from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
 router = APIRouter()
 
 
-@router.post(
-    "/ecns/{ecn_id}/analyze-bom-impact",
-    response_model=ResponseModel,
-    status_code=status.HTTP_200_OK,
-)
+@router.post("/ecns/{ecn_id}/analyze-bom-impact", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def analyze_bom_impact(
     ecn_id: int,
-    machine_id: Optional[int] = Query(
-        None, description="设备ID（可选，如果ECN已关联设备则自动获取）"
-    ),
+    machine_id: Optional[int] = Query(None, description="设备ID（可选，如果ECN已关联设备则自动获取）"),
     include_cascade: bool = Query(True, description="是否包含级联影响分析"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
@@ -41,21 +35,23 @@ def analyze_bom_impact(
     try:
         service = EcnBomAnalysisService(db)
         result = service.analyze_bom_impact(
-            ecn_id=ecn_id, machine_id=machine_id, include_cascade=include_cascade
+            ecn_id=ecn_id,
+            machine_id=machine_id,
+            include_cascade=include_cascade
         )
 
-        return ResponseModel(code=200, message="BOM影响分析完成", data=result)
+        return ResponseModel(
+            code=200,
+            message="BOM影响分析完成",
+            data=result
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"分析失败: {str(e)}")
 
 
-@router.get(
-    "/ecns/{ecn_id}/bom-impact-summary",
-    response_model=ResponseModel,
-    status_code=status.HTTP_200_OK,
-)
+@router.get("/ecns/{ecn_id}/bom-impact-summary", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def get_bom_impact_summary(
     ecn_id: int,
     db: Session = Depends(deps.get_db),
@@ -64,11 +60,18 @@ def get_bom_impact_summary(
     """
     获取BOM影响汇总
     """
-    bom_impacts = db.query(EcnBomImpact).filter(EcnBomImpact.ecn_id == ecn_id).all()
+    bom_impacts = db.query(EcnBomImpact).filter(
+        EcnBomImpact.ecn_id == ecn_id
+    ).all()
 
     if not bom_impacts:
         return ResponseModel(
-            code=200, message="暂无BOM影响分析结果", data={"ecn_id": ecn_id, "has_impact": False}
+            code=200,
+            message="暂无BOM影响分析结果",
+            data={
+                "ecn_id": ecn_id,
+                "has_impact": False
+            }
         )
 
     total_cost = sum(float(impact.total_cost_impact or 0) for impact in bom_impacts)
@@ -87,14 +90,14 @@ def get_bom_impact_summary(
             "impacts": [
                 {
                     "id": impact.id,
-                    "bom_level": impact.bom_level,
+                    "bom_level": impact.bom_version_id,
                     "affected_item_count": impact.affected_item_count,
                     "total_cost_impact": float(impact.total_cost_impact or 0),
                     "schedule_impact_days": impact.schedule_impact_days,
-                    "impact_type": impact.impact_type,
-                    "analysis_note": impact.analysis_note,
+                    "impact_type": impact.analysis_status,
+                    "analysis_note": impact.remark,
                 }
                 for impact in bom_impacts
-            ],
-        },
+            ]
+        }
     )

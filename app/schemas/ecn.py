@@ -66,21 +66,21 @@ class EcnResponse(TimestampSchema):
     id: int
     ecn_no: str
     ecn_title: str
-    ecn_type: str
-    source_type: str
+    ecn_type: Optional[str] = None
+    source_type: Optional[str] = None
     source_no: Optional[str] = None
-    project_id: int
+    project_id: Optional[int] = None
     project_name: Optional[str] = None
     machine_id: Optional[int] = None
     machine_name: Optional[str] = None
-    change_reason: str
-    change_description: str
-    change_scope: str
-    priority: str
-    urgency: str
+    change_reason: Optional[str] = None
+    change_description: Optional[str] = None
+    change_scope: Optional[str] = None
+    priority: Optional[str] = None
+    urgency: Optional[str] = None
     cost_impact: Decimal = 0
     schedule_impact_days: int = 0
-    status: str = "DRAFT"
+    status: Optional[str] = "DRAFT"
     current_step: Optional[str] = None
     applicant_id: Optional[int] = None
     applicant_name: Optional[str] = None
@@ -94,10 +94,10 @@ class EcnListResponse(BaseSchema):
     id: int
     ecn_no: str
     ecn_title: str
-    ecn_type: str
+    ecn_type: Optional[str] = None
     project_name: Optional[str] = None
-    priority: str
-    status: str
+    priority: Optional[str] = None
+    status: Optional[str] = None
     applicant_name: Optional[str] = None
     applied_at: Optional[datetime] = None
     created_at: datetime
@@ -135,7 +135,7 @@ class EcnEvaluationResponse(TimestampSchema):
     schedule_estimate: int = 0
     eval_result: Optional[str] = None
     eval_opinion: Optional[str] = None
-    status: str = "PENDING"
+    status: Optional[str] = "PENDING"
     evaluated_at: Optional[datetime] = None
 
 
@@ -170,7 +170,7 @@ class EcnApprovalResponse(TimestampSchema):
     approver_name: Optional[str] = None
     approval_result: Optional[str] = None
     approval_opinion: Optional[str] = None
-    status: str = "PENDING"
+    status: Optional[str] = "PENDING"
     approved_at: Optional[datetime] = None
     due_date: Optional[datetime] = None
     is_overdue: bool = False
@@ -213,7 +213,7 @@ class EcnTaskResponse(TimestampSchema):
 
     id: int
     ecn_id: int
-    task_no: int
+    task_no: Optional[int] = 0
     task_name: str
     task_type: Optional[str] = None
     task_dept: Optional[str] = None
@@ -224,7 +224,7 @@ class EcnTaskResponse(TimestampSchema):
     actual_start: Optional[date] = None
     actual_end: Optional[date] = None
     progress_pct: int = 0
-    status: str = "PENDING"
+    status: Optional[str] = "PENDING"
 
 
 # ==================== ECN受影响物料 ====================
@@ -283,7 +283,7 @@ class EcnAffectedMaterialResponse(TimestampSchema):
     new_specification: Optional[str] = None
     new_supplier_id: Optional[int] = None
     cost_impact: Decimal = 0
-    status: str = "PENDING"
+    status: Optional[str] = "PENDING"
     processed_at: Optional[datetime] = None
     remark: Optional[str] = None
 
@@ -323,7 +323,7 @@ class EcnAffectedOrderResponse(TimestampSchema):
     impact_description: Optional[str] = None
     action_type: Optional[str] = None
     action_description: Optional[str] = None
-    status: str = "PENDING"
+    status: Optional[str] = "PENDING"
     processed_by: Optional[int] = None
     processed_at: Optional[datetime] = None
 
@@ -364,7 +364,7 @@ class EcnTypeResponse(TimestampSchema):
     required_depts: Optional[List[str]] = None
     optional_depts: Optional[List[str]] = None
     approval_matrix: Optional[dict] = None
-    is_active: bool = True
+    is_active: Optional[bool] = True
 
 
 # ==================== ECN执行操作 ====================

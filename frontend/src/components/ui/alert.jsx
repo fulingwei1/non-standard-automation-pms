@@ -6,6 +6,7 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
+import { resolveIcon } from "@/utils/iconMap";
 import {
   CheckCircle2,
   Info,
@@ -44,7 +45,7 @@ const iconMap = {
 
 const Alert = React.forwardRef(
   ({ className, variant = "default", children, ...props }, ref) => {
-    const Icon = iconMap[variant];
+    const Icon = resolveIcon(iconMap[variant], Info);
     return (
       <div
         ref={ref}

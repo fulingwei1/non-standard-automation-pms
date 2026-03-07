@@ -5,7 +5,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, status
-from sqlalchemy import func
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -62,3 +62,26 @@ def get_upload_quota(
         "remaining_gb": (USER_UPLOAD_QUOTA - used) / (1024 * 1024 * 1024),
         "usage_percent": (used / USER_UPLOAD_QUOTA * 100) if USER_UPLOAD_QUOTA > 0 else 0,
     }
+
+
+@router.get("/categories", response_model=list, status_code=status.HTTP_200_OK)
+def get_knowledge_base_categories(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取知识库分类列表（兼容前端下拉）
+    """
+    rows = db.query(
+        KnowledgeBase.category,
+        func.count(KnowledgeBase.id).label("count")
+    ).filter(
+        KnowledgeBase.category.isnot(None),
+        KnowledgeBase.category != ""
+    ).group_by(
+        KnowledgeBase.category
+    ).order_by(
+        desc("count"), KnowledgeBase.category.asc()
+    ).all()
+
+    return [row.category for row in rows]

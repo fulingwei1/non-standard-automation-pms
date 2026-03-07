@@ -90,7 +90,7 @@ def get_project_lessons(
     )
 
 
-@router.get("/lessons/{lesson_id}", response_model=ResponseModel)
+@router.get("/lessons/{lesson_id:int}", response_model=ResponseModel)
 def get_lesson_detail(
     lesson_id: int,
     db: Session = Depends(get_db),
@@ -176,7 +176,7 @@ def create_project_lesson(
     return ResponseModel(code=200, message="经验教训创建成功", data={"id": lesson.id})
 
 
-@router.put("/lessons/{lesson_id}", response_model=ResponseModel)
+@router.put("/lessons/{lesson_id:int}", response_model=ResponseModel)
 def update_project_lesson(
     lesson_id: int,
     lesson_data: dict,
@@ -227,7 +227,7 @@ def update_project_lesson(
     return ResponseModel(code=200, message="经验教训更新成功", data={"id": lesson.id})
 
 
-@router.delete("/lessons/{lesson_id}", response_model=ResponseModel)
+@router.delete("/lessons/{lesson_id:int}", response_model=ResponseModel)
 def delete_project_lesson(
     lesson_id: int,
     db: Session = Depends(get_db),

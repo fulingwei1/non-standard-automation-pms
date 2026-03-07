@@ -42,9 +42,10 @@ class DepartmentResponse(TimestampSchema):
     dept_name: str
     parent_id: Optional[int] = None
     manager_id: Optional[int] = None
-    level: int
-    sort_order: int
-    is_active: bool
+    # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
+    level: Optional[int] = None
+    sort_order: Optional[int] = None
+    is_active: Optional[bool] = None
 
     class Config:
         from_attributes = True
@@ -82,7 +83,8 @@ class EmployeeResponse(TimestampSchema):
     role: Optional[str] = None
     phone: Optional[str] = None
     wechat_userid: Optional[str] = None
-    is_active: bool
+    # 兼容历史数据中的 NULL，避免员工列表接口因脏数据返回 500
+    is_active: Optional[bool] = None
     employment_status: Optional[str] = None
     employment_type: Optional[str] = None
     id_card: Optional[str] = None

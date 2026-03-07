@@ -20,16 +20,36 @@ fi
 echo "✓ Docker 正在运行"
 echo ""
 
+generate_secure_secret() {
+    if command -v openssl > /dev/null 2>&1; then
+        openssl rand -base64 48 | tr -d '\n'
+    else
+        LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64
+    fi
+}
+
+generate_secure_password() {
+    if command -v openssl > /dev/null 2>&1; then
+        openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24
+    else
+        LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24
+    fi
+}
+
 # 检查环境变量文件
 if [ ! -f .env.production ]; then
     echo "❌ 错误: .env.production 文件不存在"
-    echo "正在创建默认配置文件..."
+    echo "正在创建安全随机配置文件..."
+
+    DB_ROOT_PASSWORD="$(generate_secure_password)"
+    DB_PASSWORD="$(generate_secure_password)"
+    SECRET_KEY="$(generate_secure_secret)"
     
-    cat > .env.production << 'EOF'
+    cat > .env.production << EOF
 # 数据库配置
-DB_ROOT_PASSWORD=RootPass2026!SecureDB
-DB_PASSWORD=PMSPass2026!AppDB
-SECRET_KEY=Nb+cWzRHBeCbboAsAeaEeYn216fNvQknCsbvKWimDJ0=
+DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+DB_PASSWORD=${DB_PASSWORD}
+SECRET_KEY=${SECRET_KEY}
 
 # Redis 配置
 REDIS_URL=redis://redis:6379/0
@@ -39,7 +59,8 @@ DEBUG=false
 CORS_ORIGINS=http://localhost,http://localhost:80
 EOF
     
-    echo "✓ 已创建 .env.production 文件"
+    chmod 600 .env.production
+    echo "✓ 已创建 .env.production 文件（已设置随机密钥）"
 fi
 
 echo "✓ 环境配置文件存在"

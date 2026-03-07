@@ -25,6 +25,17 @@ from app.schemas.hourly_rate import (
 router = APIRouter()
 
 
+def _build_config_response(config: HourlyRateConfig) -> HourlyRateConfigResponse:
+    config_dict = {
+        **{c.name: getattr(config, c.name) for c in config.__table__.columns},
+        "is_active": bool(config.is_active) if config.is_active is not None else False,
+        "user_name": config.user.real_name if config.user else None,
+        "role_name": config.role.role_name if config.role else None,
+        "dept_name": config.dept.dept_name if config.dept else None,
+    }
+    return HourlyRateConfigResponse(**config_dict)
+
+
 @router.get("/", response_model=PaginatedResponse[HourlyRateConfigResponse])
 def list_hourly_rate_configs(
     db: Session = Depends(deps.get_db),
@@ -59,13 +70,7 @@ def list_hourly_rate_configs(
 
     items = []
     for config in configs:
-        config_dict = {
-            **{c.name: getattr(config, c.name) for c in config.__table__.columns},
-            "user_name": config.user.real_name if config.user else None,
-            "role_name": config.role.role_name if config.role else None,
-            "dept_name": config.dept.dept_name if config.dept else None,
-        }
-        items.append(HourlyRateConfigResponse(**config_dict))
+        items.append(_build_config_response(config))
 
     return PaginatedResponse(
         items=items,
@@ -144,17 +149,10 @@ def create_hourly_rate_config(
     db.commit()
     db.refresh(config)
 
-    config_dict = {
-        **{c.name: getattr(config, c.name) for c in config.__table__.columns},
-        "user_name": config.user.real_name if config.user else None,
-        "role_name": config.role.role_name if config.role else None,
-        "dept_name": config.dept.dept_name if config.dept else None,
-    }
-
-    return HourlyRateConfigResponse(**config_dict)
+    return _build_config_response(config)
 
 
-@router.get("/{config_id}", response_model=HourlyRateConfigResponse)
+@router.get("/{config_id:int}", response_model=HourlyRateConfigResponse)
 def get_hourly_rate_config(
     *,
     db: Session = Depends(deps.get_db),
@@ -168,17 +166,10 @@ def get_hourly_rate_config(
     if not config:
         raise HTTPException(status_code=404, detail="时薪配置不存在")
 
-    config_dict = {
-        **{c.name: getattr(config, c.name) for c in config.__table__.columns},
-        "user_name": config.user.real_name if config.user else None,
-        "role_name": config.role.role_name if config.role else None,
-        "dept_name": config.dept.dept_name if config.dept else None,
-    }
-
-    return HourlyRateConfigResponse(**config_dict)
+    return _build_config_response(config)
 
 
-@router.put("/{config_id}", response_model=HourlyRateConfigResponse)
+@router.put("/{config_id:int}", response_model=HourlyRateConfigResponse)
 def update_hourly_rate_config(
     *,
     db: Session = Depends(deps.get_db),
@@ -202,17 +193,10 @@ def update_hourly_rate_config(
     db.commit()
     db.refresh(config)
 
-    config_dict = {
-        **{c.name: getattr(config, c.name) for c in config.__table__.columns},
-        "user_name": config.user.real_name if config.user else None,
-        "role_name": config.role.role_name if config.role else None,
-        "dept_name": config.dept.dept_name if config.dept else None,
-    }
-
-    return HourlyRateConfigResponse(**config_dict)
+    return _build_config_response(config)
 
 
-@router.delete("/{config_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{config_id:int}", status_code=status.HTTP_200_OK)
 def delete_hourly_rate_config(
     *,
     db: Session = Depends(deps.get_db),

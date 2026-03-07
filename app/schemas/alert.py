@@ -68,11 +68,11 @@ class AlertRuleResponse(TimestampSchema):
     rule_type: str
     target_type: str
     condition_type: str
-    alert_level: str
-    advance_days: int = 0
-    check_frequency: str = "DAILY"
-    is_enabled: bool = True
-    is_system: bool = False
+    alert_level: Optional[str] = None
+    advance_days: Optional[int] = 0
+    check_frequency: Optional[str] = "DAILY"
+    is_enabled: Optional[bool] = True
+    is_system: Optional[bool] = False
 
 
 # ==================== 预警记录 ====================
@@ -104,7 +104,7 @@ class AlertRecordResponse(TimestampSchema):
     triggered_at: Optional[datetime] = None
     trigger_value: Optional[str] = None
     threshold_value: Optional[str] = None
-    status: str = "PENDING"
+    status: Optional[str] = "PENDING"
     acknowledged_by: Optional[int] = None
     acknowledged_at: Optional[datetime] = None
     handler_id: Optional[int] = None
@@ -125,7 +125,7 @@ class AlertRecordListResponse(BaseSchema):
     target_name: Optional[str] = None
     project_name: Optional[str] = None
     triggered_at: datetime
-    status: str
+    status: Optional[str] = None
     handler_name: Optional[str] = None
 
 
@@ -211,7 +211,7 @@ class ExceptionEventResponse(TimestampSchema):
     impact_scope: Optional[str] = None
     schedule_impact: int = 0
     cost_impact: Decimal = 0
-    status: str = "OPEN"
+    status: Optional[str] = "OPEN"
     responsible_dept: Optional[str] = None
     responsible_user_id: Optional[int] = None
     responsible_user_name: Optional[str] = None
@@ -231,7 +231,7 @@ class ExceptionEventListResponse(BaseSchema):
     severity: str
     event_title: str
     project_name: Optional[str] = None
-    status: str
+    status: Optional[str] = None
     responsible_user_name: Optional[str] = None
     due_date: Optional[date] = None
     is_overdue: bool = False

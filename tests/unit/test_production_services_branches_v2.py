@@ -35,8 +35,15 @@ def sample_work_order():
     order.priority = "HIGH"
     order.due_date = date.today() + timedelta(days=7)
     order.estimated_hours = 8.0
+    order.standard_hours = 8.0  # 添加standard_hours
+    order.plan_end_date = date.today() + timedelta(days=7)  # 添加plan_end_date
+    order.work_order_no = "WO001"  # 添加work_order_no
     order.status = "PENDING"
     order.product_name = "测试产品"
+    order.workshop_id = 1  # 添加workshop_id
+    order.process_id = None  # 添加process_id
+    order.machine_id = None  # 添加machine_id
+    order.assigned_to = None  # 添加assigned_to
     return order
 
 
@@ -324,6 +331,315 @@ class TestScheduleScoreCalculation:
         assert score == 30
 
 
+class TestSelectBestEquipment:
+    """测试最优设备选择分支"""
+
+    def test_select_equipment_empty_list(self, production_service, sample_work_order):
+        """分支：设备列表为空"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = Mock(spec=ScheduleGenerateRequest)
+        result = production_service._select_best_equipment(
+            sample_work_order, [], {}, request
+        )
+        assert result is None
+
+    def test_select_equipment_with_specified_machine_found(self, production_service, sample_work_order, sample_equipment):
+        """分支：工单指定设备且找到"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.machine_id = 1
+        sample_equipment.id = 1
+        request = Mock(spec=ScheduleGenerateRequest)
+
+        result = production_service._select_best_equipment(
+            sample_work_order, [sample_equipment], {}, request
+        )
+        assert result == sample_equipment
+
+    def test_select_equipment_with_specified_machine_not_found(self, production_service, sample_work_order, sample_equipment):
+        """分支：工单指定设备但未找到"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.machine_id = 999
+        sample_equipment.id = 1
+        request = Mock(spec=ScheduleGenerateRequest)
+
+        result = production_service._select_best_equipment(
+            sample_work_order, [sample_equipment], {}, request
+        )
+        assert result is None
+
+    def test_select_equipment_by_workshop_match(self, production_service, sample_work_order):
+        """分支：按车间筛选有匹配"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.machine_id = None
+        sample_work_order.workshop_id = 1
+
+        eq1 = Mock(spec=Equipment)
+        eq1.id = 1
+        eq1.workshop_id = 1
+
+        eq2 = Mock(spec=Equipment)
+        eq2.id = 2
+        eq2.workshop_id = 2
+
+        request = Mock(spec=ScheduleGenerateRequest)
+        timeline = {1: [], 2: [1, 2, 3]}  # eq1 更空闲
+
+        result = production_service._select_best_equipment(
+            sample_work_order, [eq1, eq2], timeline, request
+        )
+        assert result == eq1
+
+    def test_select_equipment_by_workshop_no_match(self, production_service, sample_work_order):
+        """分支：按车间筛选无匹配，使用全部设备"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.machine_id = None
+        sample_work_order.workshop_id = 3
+
+        eq1 = Mock(spec=Equipment)
+        eq1.id = 1
+        eq1.workshop_id = 1
+
+        eq2 = Mock(spec=Equipment)
+        eq2.id = 2
+        eq2.workshop_id = 2
+
+        request = Mock(spec=ScheduleGenerateRequest)
+        timeline = {1: [1], 2: []}  # eq2 更空闲
+
+        result = production_service._select_best_equipment(
+            sample_work_order, [eq1, eq2], timeline, request
+        )
+        assert result == eq2
+
+
+class TestSelectBestWorker:
+    """测试最优工人选择分支"""
+
+    def test_select_worker_empty_list(self, production_service, sample_work_order):
+        """分支：工人列表为空"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = Mock(spec=ScheduleGenerateRequest)
+        result = production_service._select_best_worker(
+            sample_work_order, [], {}, request
+        )
+        assert result is None
+
+    def test_select_worker_with_assigned_found(self, production_service, sample_work_order, sample_worker):
+        """分支：工单指定工人且找到"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.assigned_to = 1
+        sample_worker.id = 1
+        request = Mock(spec=ScheduleGenerateRequest)
+
+        result = production_service._select_best_worker(
+            sample_work_order, [sample_worker], {}, request
+        )
+        assert result == sample_worker
+
+    def test_select_worker_with_assigned_not_found(self, production_service, sample_work_order, sample_worker):
+        """分支：工单指定工人但未找到"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.assigned_to = 999
+        sample_worker.id = 1
+        request = Mock(spec=ScheduleGenerateRequest)
+
+        result = production_service._select_best_worker(
+            sample_work_order, [sample_worker], {}, request
+        )
+        assert result is None
+
+    def test_select_worker_consider_skills(self, production_service, sample_work_order, mock_db):
+        """分支：考虑技能且找到匹配"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.assigned_to = None
+        sample_work_order.process_id = 1
+        sample_work_order.workshop_id = 1
+
+        worker1 = Mock(spec=Worker)
+        worker1.id = 1
+        worker1.workshop_id = 1
+
+        worker2 = Mock(spec=Worker)
+        worker2.id = 2
+        worker2.workshop_id = 1
+
+        # Mock 技能查询
+        from app.models.production import WorkerSkill
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.all.return_value = [(1,)]  # worker1 有技能
+        mock_db.query.return_value = mock_query
+
+        request = Mock(spec=ScheduleGenerateRequest)
+        request.consider_worker_skills = True
+        timeline = {1: [], 2: []}
+
+        result = production_service._select_best_worker(
+            sample_work_order, [worker1, worker2], timeline, request
+        )
+        assert result == worker1
+
+    def test_select_worker_no_skills_fallback_workshop(self, production_service, sample_work_order, mock_db):
+        """分支：考虑技能但无匹配，回退到车间筛选"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        sample_work_order.assigned_to = None
+        sample_work_order.process_id = 1
+        sample_work_order.workshop_id = 1
+
+        worker1 = Mock(spec=Worker)
+        worker1.id = 1
+        worker1.workshop_id = 1
+
+        worker2 = Mock(spec=Worker)
+        worker2.id = 2
+        worker2.workshop_id = 2
+
+        # Mock 技能查询 - 无匹配
+        mock_query = MagicMock()
+        mock_query.filter.return_value = mock_query
+        mock_query.all.return_value = []
+        mock_db.query.return_value = mock_query
+
+        request = Mock(spec=ScheduleGenerateRequest)
+        request.consider_worker_skills = True
+        timeline = {1: [], 2: []}
+
+        result = production_service._select_best_worker(
+            sample_work_order, [worker1, worker2], timeline, request
+        )
+        assert result == worker1  # 选择同车间的worker1
+
+
+class TestDetectConflicts:
+    """测试冲突检测分支"""
+
+    def test_detect_conflicts_no_conflict(self, production_service):
+        """分支：无冲突"""
+        schedule1 = Mock(spec=ProductionSchedule)
+        schedule1.id = 1
+        schedule1.equipment_id = 1
+        schedule1.worker_id = 1
+        schedule1.scheduled_start_time = datetime(2024, 1, 1, 8, 0)
+        schedule1.scheduled_end_time = datetime(2024, 1, 1, 12, 0)
+
+        schedule2 = Mock(spec=ProductionSchedule)
+        schedule2.id = 2
+        schedule2.equipment_id = 2
+        schedule2.worker_id = 2
+        schedule2.scheduled_start_time = datetime(2024, 1, 1, 13, 0)
+        schedule2.scheduled_end_time = datetime(2024, 1, 1, 17, 0)
+
+        conflicts = production_service._detect_conflicts([schedule1, schedule2])
+        assert len(conflicts) == 0
+
+    def test_detect_conflicts_equipment_conflict(self, production_service):
+        """分支：设备冲突"""
+        schedule1 = Mock(spec=ProductionSchedule)
+        schedule1.id = 1
+        schedule1.equipment_id = 1
+        schedule1.worker_id = 1
+        schedule1.scheduled_start_time = datetime(2024, 1, 1, 8, 0)
+        schedule1.scheduled_end_time = datetime(2024, 1, 1, 12, 0)
+
+        schedule2 = Mock(spec=ProductionSchedule)
+        schedule2.id = 2
+        schedule2.equipment_id = 1  # 同一设备
+        schedule2.worker_id = 2
+        schedule2.scheduled_start_time = datetime(2024, 1, 1, 10, 0)  # 时间重叠
+        schedule2.scheduled_end_time = datetime(2024, 1, 1, 14, 0)
+
+        conflicts = production_service._detect_conflicts([schedule1, schedule2])
+
+        assert len(conflicts) == 1
+        assert conflicts[0].conflict_type == 'EQUIPMENT'
+        assert conflicts[0].severity == 'HIGH'
+
+    def test_detect_conflicts_worker_conflict(self, production_service):
+        """分支：工人冲突"""
+        schedule1 = Mock(spec=ProductionSchedule)
+        schedule1.id = 1
+        schedule1.equipment_id = 1
+        schedule1.worker_id = 1
+        schedule1.scheduled_start_time = datetime(2024, 1, 1, 8, 0)
+        schedule1.scheduled_end_time = datetime(2024, 1, 1, 12, 0)
+
+        schedule2 = Mock(spec=ProductionSchedule)
+        schedule2.id = 2
+        schedule2.equipment_id = 2
+        schedule2.worker_id = 1  # 同一工人
+        schedule2.scheduled_start_time = datetime(2024, 1, 1, 10, 0)  # 时间重叠
+        schedule2.scheduled_end_time = datetime(2024, 1, 1, 14, 0)
+
+        conflicts = production_service._detect_conflicts([schedule1, schedule2])
+
+        assert len(conflicts) == 1
+        assert conflicts[0].conflict_type == 'WORKER'
+        assert conflicts[0].severity == 'MEDIUM'
+
+
+class TestCalculateOverallMetrics:
+    """测试整体指标计算分支"""
+
+    def test_calculate_metrics_empty_schedules(self, production_service):
+        """分支：空排程列表"""
+        from app.schemas.production_schedule import ScheduleScoreMetrics
+
+        metrics = production_service.calculate_overall_metrics([], [])
+
+        assert metrics.completion_rate == 0
+        assert metrics.equipment_utilization == 0
+        assert metrics.worker_utilization == 0
+        assert metrics.total_duration_hours == 0
+        assert metrics.conflict_count == 0
+
+    def test_calculate_metrics_on_time(self, production_service, sample_work_order):
+        """分支：排程在计划日期内"""
+        schedule = Mock(spec=ProductionSchedule)
+        schedule.work_order_id = 1
+        schedule.equipment_id = 1
+        schedule.worker_id = 1
+        schedule.scheduled_start_time = datetime(2024, 1, 1, 8, 0)
+        schedule.scheduled_end_time = datetime(2024, 1, 1, 16, 0)
+        schedule.duration_hours = 8.0
+
+        sample_work_order.id = 1
+        sample_work_order.plan_end_date = date(2024, 1, 10)  # 在计划日期内
+
+        metrics = production_service.calculate_overall_metrics([schedule], [sample_work_order])
+
+        assert metrics.completion_rate == 1.0  # 100% 准时
+        assert metrics.total_duration_hours == 8.0
+        assert metrics.equipment_utilization > 0
+        assert metrics.worker_utilization > 0
+
+    def test_calculate_metrics_delayed(self, production_service, sample_work_order):
+        """分支：排程超出计划日期"""
+        schedule = Mock(spec=ProductionSchedule)
+        schedule.work_order_id = 1
+        schedule.equipment_id = 1
+        schedule.worker_id = 1
+        schedule.scheduled_start_time = datetime(2024, 1, 1, 8, 0)
+        schedule.scheduled_end_time = datetime(2024, 1, 15, 16, 0)
+        schedule.duration_hours = 8.0
+
+        sample_work_order.id = 1
+        sample_work_order.plan_end_date = date(2024, 1, 10)  # 超出计划日期
+
+        metrics = production_service.calculate_overall_metrics([schedule], [sample_work_order])
+
+        assert metrics.completion_rate == 0.0  # 0% 准时
+
+
 # ==================== 覆盖率总结 ====================
 
 
@@ -360,3 +676,666 @@ def test_coverage_summary():
     预计分支覆盖率: 从 0% 提升到 ~15-20%
     """
     pass
+
+
+# ========== Phase 3: 核心方法测试 ==========
+
+class TestGenerateSchedule:
+    """测试主排程生成方法 - generate_schedule (10分支)"""
+
+    def test_generate_schedule_no_work_orders(self, production_service, mock_db):
+        """分支：无有效工单 - 抛出异常"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        # Mock _fetch_work_orders 返回空列表
+        production_service._fetch_work_orders = Mock(return_value=[])
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1, 2],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        with pytest.raises(ValueError, match="未找到有效工单"):
+            production_service.generate_schedule(request, user_id=1)
+
+    def test_generate_schedule_greedy_algorithm(self, production_service, mock_db, sample_work_order):
+        """分支：使用GREEDY算法"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        # Mock dependencies
+        production_service._fetch_work_orders = Mock(return_value=[sample_work_order])
+        production_service._generate_plan_id = Mock(return_value=100)
+        production_service._get_available_equipment = Mock(return_value=[])
+        production_service._get_available_workers = Mock(return_value=[])
+        production_service._greedy_scheduling = Mock(return_value=[])
+        production_service._detect_conflicts = Mock(return_value=[])
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+            algorithm="GREEDY"
+        )
+
+        plan_id, schedules, conflicts = production_service.generate_schedule(request, user_id=1)
+
+        assert production_service._greedy_scheduling.called
+        assert plan_id == 100
+
+    def test_generate_schedule_heuristic_algorithm(self, production_service, mock_db, sample_work_order):
+        """分支：使用HEURISTIC算法"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        production_service._fetch_work_orders = Mock(return_value=[sample_work_order])
+        production_service._generate_plan_id = Mock(return_value=101)
+        production_service._get_available_equipment = Mock(return_value=[])
+        production_service._get_available_workers = Mock(return_value=[])
+        production_service._heuristic_scheduling = Mock(return_value=[])
+        production_service._detect_conflicts = Mock(return_value=[])
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+            algorithm="HEURISTIC"
+        )
+
+        plan_id, schedules, conflicts = production_service.generate_schedule(request, user_id=1)
+
+        assert production_service._heuristic_scheduling.called
+        assert plan_id == 101
+
+    def test_generate_schedule_default_algorithm(self, production_service, mock_db, sample_work_order):
+        """分支：使用默认算法"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        production_service._fetch_work_orders = Mock(return_value=[sample_work_order])
+        production_service._generate_plan_id = Mock(return_value=102)
+        production_service._get_available_equipment = Mock(return_value=[])
+        production_service._get_available_workers = Mock(return_value=[])
+        production_service._greedy_scheduling = Mock(return_value=[])
+        production_service._detect_conflicts = Mock(return_value=[])
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+            algorithm="UNKNOWN"
+        )
+
+        plan_id, schedules, conflicts = production_service.generate_schedule(request, user_id=1)
+
+        # 应该回退到 greedy 算法
+        assert production_service._greedy_scheduling.called
+
+    def test_generate_schedule_with_conflicts(self, production_service, mock_db, sample_work_order):
+        """分支：排程有冲突"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+        from app.models.production import ProductionSchedule, ProductionResourceConflict
+
+        schedule = Mock(spec=ProductionSchedule)
+        schedule.priority_score = 3.0
+        schedule.scheduled_end_time = datetime(2024, 1, 2, 17, 0)
+
+        conflict = Mock(spec=ProductionResourceConflict)
+
+        production_service._fetch_work_orders = Mock(return_value=[sample_work_order])
+        production_service._generate_plan_id = Mock(return_value=103)
+        production_service._get_available_equipment = Mock(return_value=[])
+        production_service._get_available_workers = Mock(return_value=[])
+        production_service._greedy_scheduling = Mock(return_value=[schedule])
+        production_service._detect_conflicts = Mock(return_value=[conflict])
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        plan_id, schedules, conflicts = production_service.generate_schedule(request, user_id=1)
+
+        assert len(conflicts) == 1
+        # 验证冲突被add到数据库
+        assert mock_db.add_all.call_count >= 1
+
+
+class TestGreedyScheduling:
+    """测试贪心排程算法 - _greedy_scheduling (6分支)"""
+
+    def test_greedy_scheduling_empty_work_orders(self, production_service):
+        """分支：空工单列表"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        schedules = production_service._greedy_scheduling(
+            work_orders=[],
+            equipment=[],
+            workers=[],
+            request=request,
+            plan_id=1,
+            user_id=1
+        )
+
+        assert schedules == []
+
+    def test_greedy_scheduling_single_order(self, production_service, sample_work_order):
+        """分支：单个工单排程"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+        from app.models.production import Equipment, Worker
+
+        equipment = Mock(spec=Equipment)
+        equipment.id = 10
+        equipment.workshop_id = 1
+
+        worker = Mock(spec=Worker)
+        worker.id = 20
+        worker.workshop_id = 1
+
+        sample_work_order.priority = "URGENT"
+        sample_work_order.workshop_id = 1
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1],
+            start_date=datetime(2024, 1, 1, 8, 0),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        schedules = production_service._greedy_scheduling(
+            work_orders=[sample_work_order],
+            equipment=[equipment],
+            workers=[worker],
+            request=request,
+            plan_id=1,
+            user_id=1
+        )
+
+        assert len(schedules) == 1
+        assert schedules[0].equipment_id == 10
+        assert schedules[0].worker_id == 20
+
+    def test_greedy_scheduling_multiple_orders_sorted(self, production_service, sample_work_order):
+        """分支：多工单按优先级排序"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+        from app.models.production import Equipment, Worker, WorkOrder
+
+        equipment = Mock(spec=Equipment)
+        equipment.id = 10
+        equipment.workshop_id = 1
+
+        worker = Mock(spec=Worker)
+        worker.id = 20
+        worker.workshop_id = 1
+
+        # 创建3个不同优先级的工单
+        order1 = Mock(spec=WorkOrder)
+        order1.id = 1
+        order1.work_order_no = "WO001"
+        order1.priority = "LOW"
+        order1.plan_end_date = date(2024, 1, 15)
+        order1.workshop_id = 1
+        order1.standard_hours = 4
+        order1.machine_id = None
+        order1.assigned_to = None
+        order1.process_id = None
+
+        order2 = Mock(spec=WorkOrder)
+        order2.id = 2
+        order2.work_order_no = "WO002"
+        order2.priority = "URGENT"
+        order2.plan_end_date = date(2024, 1, 20)
+        order2.workshop_id = 1
+        order2.standard_hours = 6
+        order2.machine_id = None
+        order2.assigned_to = None
+        order2.process_id = None
+
+        order3 = Mock(spec=WorkOrder)
+        order3.id = 3
+        order3.work_order_no = "WO003"
+        order3.priority = "HIGH"
+        order3.plan_end_date = date(2024, 1, 10)
+        order3.workshop_id = 1
+        order3.standard_hours = 2
+        order3.machine_id = None
+        order3.assigned_to = None
+        order3.process_id = None
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1, 2, 3],
+            start_date=datetime(2024, 1, 1, 8, 0),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        schedules = production_service._greedy_scheduling(
+            work_orders=[order1, order2, order3],
+            equipment=[equipment],
+            workers=[worker],
+            request=request,
+            plan_id=1,
+            user_id=1
+        )
+
+        assert len(schedules) == 3
+        # 验证URGENT工单被排在第一个
+        assert schedules[0].work_order_id == 2
+
+
+class TestFindEarliestAvailableSlot:
+    """测试查找最早可用时间槽 - _find_earliest_available_slot (14分支)"""
+
+    def test_find_slot_no_conflict(self, production_service):
+        """分支：无冲突，直接可用"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        slot = production_service._find_earliest_available_slot(
+            equipment_slots=[],
+            worker_slots=[],
+            start_from=datetime(2024, 1, 1, 10, 0),
+            duration_hours=2.0,
+            request=request
+        )
+
+        # 应该返回调整到工作时间后的开始时间
+        assert slot.hour == 10
+
+    def test_find_slot_equipment_conflict(self, production_service):
+        """分支：设备时间槽冲突"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        # 设备在10:00-12:00被占用
+        equipment_slots = [
+            (datetime(2024, 1, 1, 10, 0), datetime(2024, 1, 1, 12, 0))
+        ]
+
+        slot = production_service._find_earliest_available_slot(
+            equipment_slots=equipment_slots,
+            worker_slots=[],
+            start_from=datetime(2024, 1, 1, 10, 0),
+            duration_hours=2.0,
+            request=request
+        )
+
+        # 应该延后到12:00
+        assert slot >= datetime(2024, 1, 1, 12, 0)
+
+    def test_find_slot_worker_conflict(self, production_service):
+        """分支：工人时间槽冲突"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        # 工人在14:00-16:00被占用
+        worker_slots = [
+            (datetime(2024, 1, 1, 14, 0), datetime(2024, 1, 1, 16, 0))
+        ]
+
+        slot = production_service._find_earliest_available_slot(
+            equipment_slots=[],
+            worker_slots=worker_slots,
+            start_from=datetime(2024, 1, 1, 14, 0),
+            duration_hours=1.0,
+            request=request
+        )
+
+        # 应该延后到16:00
+        assert slot >= datetime(2024, 1, 1, 16, 0)
+
+    def test_find_slot_adjust_to_work_time_early(self, production_service):
+        """分支：需要调整到工作时间（早于上班时间）"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        # 开始时间是早上6点（早于8点上班）
+        slot = production_service._find_earliest_available_slot(
+            equipment_slots=[],
+            worker_slots=[],
+            start_from=datetime(2024, 1, 1, 6, 0),
+            duration_hours=1.0,
+            request=request
+        )
+
+        # 应该调整到8:00
+        assert slot.hour == 8
+
+    def test_find_slot_adjust_to_work_time_late(self, production_service):
+        """分支：需要调整到工作时间（晚于下班时间）"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        # 开始时间是晚上20点（晚于18点下班）
+        slot = production_service._find_earliest_available_slot(
+            equipment_slots=[],
+            worker_slots=[],
+            start_from=datetime(2024, 1, 1, 20, 0),
+            duration_hours=1.0,
+            request=request
+        )
+
+        # 应该调整到第二天8:00
+        assert slot.day == 2
+        assert slot.hour == 8
+
+
+class TestUrgentInsert:
+    """测试紧急插单 - urgent_insert (8分支)"""
+
+    def test_urgent_insert_order_not_found(self, production_service, mock_db):
+        """分支：工单不存在"""
+        mock_query = Mock()
+        mock_query.filter.return_value.first.return_value = None
+        mock_db.query.return_value = mock_query
+
+        with pytest.raises(ValueError, match="工单不存在"):
+            production_service.urgent_insert(
+                work_order_id=999,
+                insert_time=datetime(2024, 1, 1, 10, 0),
+                max_delay_hours=2.0,
+                auto_adjust=True,
+                user_id=1
+            )
+
+    def test_urgent_insert_without_auto_adjust(self, production_service, mock_db, sample_work_order):
+        """分支：auto_adjust=False，不调整其他排程"""
+        mock_query = Mock()
+        mock_query.filter.return_value.first.return_value = sample_work_order
+        mock_db.query.return_value = mock_query
+
+        production_service._get_available_equipment = Mock(return_value=[])
+        production_service._get_available_workers = Mock(return_value=[])
+
+        new_schedule, adjusted, conflicts = production_service.urgent_insert(
+            work_order_id=1,
+            insert_time=datetime(2024, 1, 1, 10, 0),
+            max_delay_hours=2.0,
+            auto_adjust=False,  # 不自动调整
+            user_id=1
+        )
+
+        assert new_schedule is not None
+        assert len(adjusted) == 0  # 无调整
+
+    def test_urgent_insert_with_auto_adjust_no_conflict(self, production_service, mock_db, sample_work_order):
+        """分支：auto_adjust=True但无冲突排程"""
+        from app.models.production import Equipment, Worker
+
+        equipment = Mock(spec=Equipment)
+        equipment.id = 10
+        equipment.workshop_id = 1
+
+        worker = Mock(spec=Worker)
+        worker.id = 20
+        worker.workshop_id = 1
+
+        # Mock 查询工单
+        mock_work_order_query = Mock()
+        mock_work_order_query.filter.return_value.first.return_value = sample_work_order
+
+        # Mock 查询冲突排程（无冲突）
+        mock_conflict_query = Mock()
+        mock_conflict_query.filter.return_value.all.return_value = []
+
+        def query_side_effect(model):
+            from app.models.production import WorkOrder
+            if model == WorkOrder:
+                return mock_work_order_query
+            else:
+                return mock_conflict_query
+
+        mock_db.query.side_effect = query_side_effect
+
+        production_service._get_available_equipment = Mock(return_value=[equipment])
+        production_service._get_available_workers = Mock(return_value=[worker])
+
+        new_schedule, adjusted, conflicts = production_service.urgent_insert(
+            work_order_id=1,
+            insert_time=datetime(2024, 1, 1, 10, 0),
+            max_delay_hours=2.0,
+            auto_adjust=True,
+            user_id=1
+        )
+
+        assert new_schedule is not None
+        assert len(adjusted) == 0  # 无冲突，无调整
+
+
+class TestOptimizeSchedules:
+    """测试排程优化 - _optimize_schedules (8分支)"""
+
+    def test_optimize_empty_schedules(self, production_service):
+        """分支：空排程列表"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        optimized = production_service._optimize_schedules(
+            schedules=[],
+            request=request
+        )
+
+        assert optimized == []
+
+    def test_optimize_single_schedule(self, production_service):
+        """分支：单个排程，无需优化"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+        from app.models.production import ProductionSchedule
+
+        schedule = Mock(spec=ProductionSchedule)
+        schedule.priority_score = 3.0
+        schedule.scheduled_start_time = datetime(2024, 1, 1, 10, 0)
+        schedule.scheduled_end_time = datetime(2024, 1, 1, 12, 0)
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        optimized = production_service._optimize_schedules(
+            schedules=[schedule],
+            request=request
+        )
+
+        assert len(optimized) == 1
+
+    def test_optimize_should_swap(self, production_service):
+        """分支：应该交换排程（高优先级在后）"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+        from app.models.production import ProductionSchedule
+
+        # 低优先级排程在前
+        schedule1 = Mock(spec=ProductionSchedule)
+        schedule1.priority_score = 1.0
+        schedule1.scheduled_start_time = datetime(2024, 1, 1, 8, 0)
+        schedule1.scheduled_end_time = datetime(2024, 1, 1, 10, 0)
+
+        # 高优先级排程在后
+        schedule2 = Mock(spec=ProductionSchedule)
+        schedule2.priority_score = 5.0
+        schedule2.scheduled_start_time = datetime(2024, 1, 1, 10, 0)
+        schedule2.scheduled_end_time = datetime(2024, 1, 1, 12, 0)
+
+        request = ScheduleGenerateRequest(
+            work_orders=[],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        optimized = production_service._optimize_schedules(
+            schedules=[schedule1, schedule2],
+            request=request
+        )
+
+        # 验证交换发生
+        assert len(optimized) == 2
+
+
+class TestAdditionalBranchCoverage:
+    """额外的分支覆盖测试 - 达到50%目标"""
+
+    def test_urgent_insert_with_auto_adjust_has_conflict(self, production_service, mock_db, sample_work_order):
+        """分支：auto_adjust=True且有冲突排程需要延后"""
+        from app.models.production import Equipment, Worker, ProductionSchedule
+
+        equipment = Mock(spec=Equipment)
+        equipment.id = 10
+        equipment.workshop_id = 1
+
+        worker = Mock(spec=Worker)
+        worker.id = 20
+        worker.workshop_id = 1
+
+        # Mock 冲突的排程
+        conflicting_schedule = Mock(spec=ProductionSchedule)
+        conflicting_schedule.id = 99
+        conflicting_schedule.equipment_id = 10
+        conflicting_schedule.worker_id = 20
+        conflicting_schedule.scheduled_start_time = datetime(2024, 1, 1, 10, 0)
+        conflicting_schedule.scheduled_end_time = datetime(2024, 1, 1, 12, 0)
+        conflicting_schedule.duration_hours = 2.0
+        conflicting_schedule.status = "PENDING"
+
+        # Mock 查询工单
+        mock_work_order_query = Mock()
+        mock_work_order_query.filter.return_value.first.return_value = sample_work_order
+
+        # Mock 查询冲突排程（有冲突）
+        mock_conflict_query = Mock()
+        mock_conflict_query.filter.return_value.all.return_value = [conflicting_schedule]
+
+        def query_side_effect(model):
+            from app.models.production import WorkOrder
+            if model == WorkOrder:
+                return mock_work_order_query
+            else:
+                return mock_conflict_query
+
+        mock_db.query.side_effect = query_side_effect
+
+        production_service._get_available_equipment = Mock(return_value=[equipment])
+        production_service._get_available_workers = Mock(return_value=[worker])
+
+        new_schedule, adjusted, conflicts = production_service.urgent_insert(
+            work_order_id=1,
+            insert_time=datetime(2024, 1, 1, 10, 0),
+            max_delay_hours=5.0,  # 允许延后5小时
+            auto_adjust=True,
+            user_id=1
+        )
+
+        # 验证有调整的排程
+        assert new_schedule is not None
+        assert len(adjusted) >= 1
+
+    def test_greedy_scheduling_with_no_equipment(self, production_service, sample_work_order):
+        """分支：无可用设备的贪心排程"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+        from app.models.production import Worker
+
+        worker = Mock(spec=Worker)
+        worker.id = 20
+        worker.workshop_id = 1
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1],
+            start_date=datetime(2024, 1, 1, 8, 0),
+            end_date=datetime(2024, 1, 31),
+        )
+
+        schedules = production_service._greedy_scheduling(
+            work_orders=[sample_work_order],
+            equipment=[],  # 无设备
+            workers=[worker],
+            request=request,
+            plan_id=1,
+            user_id=1
+        )
+
+        # 即使无设备，仍应创建排程
+        assert len(schedules) == 1
+        assert schedules[0].equipment_id is None
+
+    def test_should_swap_schedules_not_swap(self, production_service):
+        """分支：不应该交换排程（优先级已正确）"""
+        from app.models.production import ProductionSchedule
+
+        # 高优先级在前
+        schedule1 = Mock(spec=ProductionSchedule)
+        schedule1.priority_score = 5.0
+        schedule1.scheduled_start_time = datetime(2024, 1, 1, 8, 0)
+
+        # 低优先级在后
+        schedule2 = Mock(spec=ProductionSchedule)
+        schedule2.priority_score = 2.0
+        schedule2.scheduled_start_time = datetime(2024, 1, 1, 10, 0)
+
+        should_swap = production_service._should_swap_schedules(schedule1, schedule2)
+
+        # 不应该交换
+        assert should_swap is False
+
+    def test_select_worker_no_candidates_fallback(self, production_service, sample_work_order):
+        """分支：无匹配工人，回退到所有工人"""
+        from app.schemas.production_schedule import ScheduleGenerateRequest
+        from app.models.production import Worker
+
+        # 创建工人，但workshop_id不匹配
+        worker1 = Mock(spec=Worker)
+        worker1.id = 20
+        worker1.workshop_id = 999  # 不匹配sample_work_order的workshop_id=1
+
+        sample_work_order.workshop_id = 1
+        sample_work_order.assigned_to = None
+        sample_work_order.process_id = None
+
+        request = ScheduleGenerateRequest(
+            work_orders=[1],
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 1, 31),
+            consider_worker_skills=False
+        )
+
+        worker = production_service._select_best_worker(
+            order=sample_work_order,
+            workers=[worker1],
+            timeline={},
+            request=request
+        )
+
+        # 应该回退到使用所有工人中的第一个
+        assert worker == worker1

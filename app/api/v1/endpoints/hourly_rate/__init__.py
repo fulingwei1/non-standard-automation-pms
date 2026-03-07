@@ -14,8 +14,8 @@ from .query import router as query_router
 
 router = APIRouter()
 
-# 时薪配置CRUD（需放在query之前，避免/{config_id}与/history冲突）
-router.include_router(crud_router, tags=["时薪配置"])
-
-# 时薪查询API
+# 时薪查询API（先注册 /history 等静态路径，避免与 /{config_id} 冲突）
 router.include_router(query_router, tags=["时薪查询"])
+
+# 时薪配置CRUD
+router.include_router(crud_router, tags=["时薪配置"])

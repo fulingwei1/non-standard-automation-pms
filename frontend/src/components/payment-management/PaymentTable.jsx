@@ -7,6 +7,7 @@ import { FileText, Eye } from 'lucide-react';
 import { Card, CardContent, Badge, Button } from '../ui';
 import { cn } from '../../lib/utils';
 import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constants/finance';
+import { getIcon } from '@/utils/iconMap';
 
 /**
  * 支付表格组件
@@ -46,7 +47,10 @@ export default function PaymentTable({ payments, onInvoice, onViewDetail }) {
               {(payments || []).map((payment, index) => {
                 const paymentType = getPaymentType(payment.type);
                 const paymentStatus = getPaymentStatus(payment.status);
-                const StatusIcon = paymentStatus.icon;
+                const StatusIcon =
+                  typeof paymentStatus.icon === 'string'
+                    ? getIcon(paymentStatus.icon)
+                    : paymentStatus.icon;
 
                 return (
                   <motion.tr

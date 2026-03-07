@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Progress } from "../../components/ui/progress";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
+import { resolveIcon } from "@/utils/iconMap";
 import {
   DEFAULT_QUOTE_STATS,
   calculateConversionRate,
@@ -245,18 +246,21 @@ export const QuoteStatsOverview = ({
         {onViewModeChange &&
         <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500">视图模式:</span>
-            {QUOTE_VIEW_MODES.map((mode) =>
-          <Button
-            key={mode.value}
-            variant={viewMode === mode.value ? "default" : "outline"}
-            size="sm"
-            onClick={() => onViewModeChange(mode.value)}
-            className="text-xs">
+            {QUOTE_VIEW_MODES.map((mode) => {
+              const ModeIcon = resolveIcon(mode.icon);
+              return (
+                <Button
+                  key={mode.value}
+                  variant={viewMode === mode.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onViewModeChange(mode.value)}
+                  className="text-xs">
 
-                <mode.icon className="w-3 h-3 mr-1"  />
-                {mode.label}
-          </Button>
-          )}
+                  {ModeIcon && <ModeIcon className="w-3 h-3 mr-1" />}
+                  {mode.label}
+                </Button>);
+
+            })}
         </div>
         }
       </motion.div>
@@ -277,7 +281,7 @@ export const QuoteStatsOverview = ({
         className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 
         {statsCards.map((card, index) => {
-          const Icon = card.icon;
+          const Icon = resolveIcon(card.icon);
           return (
             <motion.div
               key={card.title}
@@ -304,7 +308,7 @@ export const QuoteStatsOverview = ({
                       {renderTrendIndicator(card.trend, card.trendValue)}
                     </div>
                     <div className={cn("p-2 rounded-lg", card.iconBg)}>
-                      <Icon className={cn("w-5 h-5", card.iconColor)} />
+                      {Icon && <Icon className={cn("w-5 h-5", card.iconColor)} />}
                     </div>
                   </div>
                 </CardContent>
@@ -322,7 +326,7 @@ export const QuoteStatsOverview = ({
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
         {financialCards.map((card, index) => {
-          const Icon = card.icon;
+          const Icon = resolveIcon(card.icon);
           return (
             <motion.div
               key={card.title}
@@ -335,7 +339,7 @@ export const QuoteStatsOverview = ({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className={cn("p-2 rounded-lg", card.iconBg)}>
-                        <Icon className={cn("w-4 h-4", card.iconColor)} />
+                        {Icon && <Icon className={cn("w-4 h-4", card.iconColor)} />}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-white">{card.title}</p>

@@ -7,6 +7,7 @@ import { DollarSign, FileText, Eye } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import { cn } from '../../lib/utils';
 import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constants/finance';
+import { getIcon } from '@/utils/iconMap';
 
 /**
  * 支付卡片组件
@@ -18,6 +19,8 @@ import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constant
 export default function PaymentCard({ payment, onInvoice, onViewDetail }) {
   const statusInfo = getPaymentStatus(payment.status);
   const typeInfo = getPaymentType(payment.type);
+  const StatusIcon =
+    typeof statusInfo.icon === 'string' ? getIcon(statusInfo.icon) : statusInfo.icon;
   const isOverdue = payment.status === 'overdue';
 
   return (
@@ -67,7 +70,7 @@ export default function PaymentCard({ payment, onInvoice, onViewDetail }) {
                   statusInfo.textColor
                 )}
               >
-                <statusInfo.icon className="w-3 h-3 mr-1"  />
+                {StatusIcon && <StatusIcon className="w-3 h-3 mr-1" />}
                 {statusInfo.label}
               </Badge>
               {isOverdue && (

@@ -185,7 +185,8 @@ class SolutionResponse(TimestampSchema):
     id: int
     solution_no: str
     name: str
-    solution_type: str
+    # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
+    solution_type: Optional[str] = None
     industry: Optional[str] = None
     test_type: Optional[str] = None
     ticket_id: Optional[int] = None
@@ -199,8 +200,8 @@ class SolutionResponse(TimestampSchema):
     cost_breakdown: Optional[Dict[str, Any]] = None
     estimated_hours: Optional[int] = None
     estimated_duration: Optional[int] = None
-    status: str
-    version: str
+    status: Optional[str] = None
+    version: Optional[str] = None
     parent_id: Optional[int] = None
     reviewer_id: Optional[int] = None
     review_time: Optional[datetime] = None
@@ -294,6 +295,7 @@ class TenderResponse(TimestampSchema):
     technical_score: Optional[float] = None
     commercial_score: Optional[float] = None
     total_score: Optional[float] = None
-    result: str
+    # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
+    result: Optional[str] = None
     result_reason: Optional[str] = None
     leader_id: Optional[int] = None

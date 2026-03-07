@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { Star, Lock } from "lucide-react";
 import { Box } from "lucide-react";
+import { resolveIcon } from "@/utils/iconMap";
 
 const NavItem = memo(function NavItem({
   item,
@@ -22,7 +23,11 @@ const NavItem = memo(function NavItem({
 }) {
   const location = useLocation();
   const isActive = !disabled && (location.pathname === item.path || activePath === item.path);
-  const Icon = iconMap[item.icon] || Box;
+  const iconCandidate =
+    item?.icon && typeof item.icon === "string"
+      ? iconMap[item.icon] || item.icon
+      : item?.icon;
+  const Icon = resolveIcon(iconCandidate, Box);
 
   // 禁用状态的内容
   const content = (

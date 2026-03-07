@@ -59,12 +59,12 @@ class CultureWallContentResponse(BaseModel):
     images: Optional[List[Dict[str, Any]]]
     videos: Optional[List[Dict[str, Any]]]
     attachments: Optional[List[Dict[str, Any]]]
-    is_published: bool
+    is_published: Optional[bool] = False
     publish_date: Optional[date]
     expire_date: Optional[date]
-    priority: int
-    display_order: int
-    view_count: int
+    priority: Optional[int] = 0
+    display_order: Optional[int] = 0
+    view_count: Optional[int] = 0
     related_project_id: Optional[int]
     related_department_id: Optional[int]
     published_by: Optional[int]

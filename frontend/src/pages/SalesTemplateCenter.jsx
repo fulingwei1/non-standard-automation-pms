@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   UploadCloud } from
 "lucide-react";
+import { resolveIcon } from "@/utils/iconMap";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -83,14 +84,25 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [quoteRes, contractRes, ruleRes] = await Promise.all([
+      const [quoteRes, contractRes, ruleRes] = await Promise.allSettled([
       salesTemplateApi.listQuoteTemplates({ page: 1, page_size: 50 }),
       salesTemplateApi.listContractTemplates({ page: 1, page_size: 50 }),
       salesTemplateApi.listRuleSets({ page: 1, page_size: 50 })]
       );
-      setQuoteTemplates(quoteRes.data?.items || quoteRes.items || []);
-      setContractTemplates(contractRes.data?.items || contractRes.items || []);
-      setRuleSets(ruleRes.data?.items || ruleRes.items || []);
+
+      const quoteItems = quoteRes.status === "fulfilled" ?
+      quoteRes.value?.data?.items || quoteRes.value?.items || [] :
+      [];
+      const contractItems = contractRes.status === "fulfilled" ?
+      contractRes.value?.data?.items || contractRes.value?.items || [] :
+      [];
+      const ruleItems = ruleRes.status === "fulfilled" ?
+      ruleRes.value?.data?.items || ruleRes.value?.items || [] :
+      [];
+
+      setQuoteTemplates(Array.isArray(quoteItems) ? quoteItems : []);
+      setContractTemplates(Array.isArray(contractItems) ? contractItems : []);
+      setRuleSets(Array.isArray(ruleItems) ? ruleItems : []);
     } catch (error) {
       console.error("加载模板数据失败", error);
     } finally {
@@ -400,7 +412,7 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
 
       <div className="flex gap-2">
         {(tabs || []).map((tab) => {
-          const Icon = tab.icon;
+          const Icon = resolveIcon(tab.icon);
           return (
             <Button
               key={tab.key}
@@ -408,7 +420,7 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
               onClick={() => setActiveTab(tab.key)}
               className="flex items-center gap-2">
 
-              <Icon className="w-4 h-4" />
+              {Icon && <Icon className="w-4 h-4" />}
               {tab.label}
             </Button>);
 

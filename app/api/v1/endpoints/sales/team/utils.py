@@ -86,7 +86,10 @@ def collect_sales_team_members(
         contract_query = contract_query.filter(Contract.created_at <= end_datetime)
         contracts = contract_query.all()
         contract_count = len(contracts)
-        contract_amount = sum(float(c.contract_amount or 0) for c in contracts)
+        contract_amount = sum(
+            float(getattr(c, "total_amount", None) or getattr(c, "contract_amount", 0) or 0)
+            for c in contracts
+        )
 
         invoice_query = db.query(Invoice).join(Contract).filter(Contract.sales_owner_id == user.id)
         invoice_query = invoice_query.filter(Invoice.paid_date.isnot(None))

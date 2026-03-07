@@ -9,8 +9,12 @@ Stub endpoints — 为前端已调用但后端尚未实现的API提供空响应
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from fastapi import status
 
 router = APIRouter()
+
+# 已由认证模块负责的路径。若请求落到 stub，返回 404 便于排查模块加载问题。
+AUTH_PREFIX = "auth/"
 
 
 @router.api_route(
@@ -24,6 +28,15 @@ async def stub_handler(request: Request, path: str):
     GET请求返回空列表/分页，其他请求返回成功响应。
     """
     full_path = f"/{path}"
+
+    if path == "auth" or path.startswith(AUTH_PREFIX):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": "认证接口未匹配到实现，请确认后端认证模块已加载并重启服务",
+                "_auth_expected": True,
+            },
+        )
 
     if request.method == "GET":
         return JSONResponse(

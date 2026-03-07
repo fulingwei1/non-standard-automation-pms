@@ -15,6 +15,18 @@ from sqlalchemy.orm import Session
 from app.models.project import FinancialProjectCost, Project, ProjectCost
 
 
+def _month_expr(db: Session, column):
+    """Build a cross-database month expression in YYYY-MM format."""
+    bind = db.get_bind()
+    dialect = (bind.dialect.name if bind and bind.dialect else "").lower()
+
+    if dialect == "sqlite":
+        return func.strftime("%Y-%m", column)
+    if dialect in {"postgres", "postgresql"}:
+        return func.to_char(column, "YYYY-MM")
+    return func.date_format(column, "%Y-%m")
+
+
 def get_project_budget_stats(db: Session) -> Dict[str, float]:
     """
     获取全局预算统计
@@ -66,20 +78,22 @@ def get_monthly_cost_data(
     获取项目月度成本数据（合并 ProjectCost 和 FinancialProjectCost），
     返回按月排序的列表，包含 monthly_cost 和 cumulative_cost。
     """
+    project_cost_month_expr = _month_expr(db, ProjectCost.cost_date)
+
     # ProjectCost
     q1 = (
         db.query(
-            func.date_format(ProjectCost.cost_date, "%Y-%m").label("month"),
+            project_cost_month_expr.label("month"),
             func.sum(ProjectCost.amount).label("monthly_cost"),
         )
         .filter(ProjectCost.project_id == project_id)
         .filter(ProjectCost.cost_date.isnot(None))
     )
     if start_month:
-        q1 = q1.filter(func.date_format(ProjectCost.cost_date, "%Y-%m") >= start_month)
+        q1 = q1.filter(project_cost_month_expr >= start_month)
     if end_month:
-        q1 = q1.filter(func.date_format(ProjectCost.cost_date, "%Y-%m") <= end_month)
-    result1 = q1.group_by("month").all()
+        q1 = q1.filter(project_cost_month_expr <= end_month)
+    result1 = q1.group_by(project_cost_month_expr).all()
 
     # FinancialProjectCost
     q2 = (

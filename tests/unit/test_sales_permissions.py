@@ -30,11 +30,17 @@ class MockUser:
         roles: list = None,
         department: str = None,
         user_id: int = 1,
+        username: str = "test_user",
+        tenant_id: int = None,
+        password_hash: str = None,
     ):
         self.is_superuser = is_superuser
         self.id = user_id
+        self.username = username
+        self.tenant_id = tenant_id
         self.department = department
         self.roles = roles or []
+        self.password_hash = password_hash
 
 
 class MockUserRole:

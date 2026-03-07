@@ -354,7 +354,7 @@ class SalesRankingService:
             .group_by(Contract.sales_owner_id)
         )
         for row in contract_query.all():
-            result[row.owner_id]["contract_amount"] = float(row.total_amount or 0)
+            result[row.owner_id]["contract_amount"] = float(row.contract_amount or 0)
             result[row.owner_id]["contract_count"] = int(row.count or 0)
 
         # 回款金额

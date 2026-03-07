@@ -67,7 +67,7 @@ def read_knowledge_base(
         if item.author_id:
             author = db.query(User).filter(User.id == item.author_id).first()
             if author:
-                item.author_name = author.name or author.username
+                item.author_name = author.real_name or author.username
 
     return {
         "items": items,
@@ -103,7 +103,7 @@ def create_knowledge_base(
     return save_obj(db, article)
 
 
-@router.get("/{article_id}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
+@router.get("/{article_id:int}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
 def read_knowledge_base_article(
     *,
     db: Session = Depends(deps.get_db),
@@ -120,7 +120,7 @@ def read_knowledge_base_article(
     return save_obj(db, article)
 
 
-@router.put("/{article_id}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
+@router.put("/{article_id:int}", response_model=KnowledgeBaseResponse, status_code=status.HTTP_200_OK)
 def update_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),
@@ -151,7 +151,7 @@ def update_knowledge_base(
     return save_obj(db, article)
 
 
-@router.delete("/{article_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{article_id:int}", status_code=status.HTTP_200_OK)
 def delete_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),

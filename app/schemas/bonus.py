@@ -100,11 +100,11 @@ class BonusCalculationResponse(BonusCalculationBase):
 
     id: int
     calculation_code: str
-    status: str
+    status: Optional[str] = None
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
     approval_comment: Optional[str] = None
-    calculated_at: datetime
+    calculated_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
@@ -146,7 +146,7 @@ class BonusDistributionResponse(BonusDistributionBase):
 
     id: int
     distribution_code: str
-    status: str
+    status: Optional[str] = None
     paid_by: Optional[int] = None
     paid_at: Optional[datetime] = None
     created_at: datetime
@@ -187,7 +187,7 @@ class TeamBonusAllocationResponse(TeamBonusAllocationBase):
     """团队奖金分配响应"""
 
     id: int
-    status: str
+    status: Optional[str] = None
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
     created_at: datetime
@@ -326,7 +326,7 @@ class BonusAllocationSheetResponse(BaseModel):
     total_rows: int = 0
     valid_rows: int = 0
     invalid_rows: int = 0
-    status: str
+    status: Optional[str] = None
     parse_result: Optional[Dict[str, Any]] = None
     parse_errors: Optional[Dict[str, Any]] = None
     finance_confirmed: bool = False

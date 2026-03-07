@@ -39,6 +39,17 @@ class DependencyCreate(BaseModel):
     lag_days: int = Field(default=0, description="滞后天数")
 
 
+def _table_has_column(db: Session, table_name: str, column_name: str) -> bool:
+    rows = db.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    columns = []
+    for row in rows:
+        if hasattr(row, "_mapping") and "name" in row._mapping:
+            columns.append(row._mapping["name"])
+        elif len(row) > 1:
+            columns.append(row[1])
+    return column_name in columns
+
+
 def _ensure_table(db: Session) -> None:
     global _table_created
     if _table_created:
@@ -47,6 +58,11 @@ def _ensure_table(db: Session) -> None:
     try:
         db.execute(CREATE_TABLE_SQL)
         db.commit()
+
+        # 兼容历史库：旧 task_dependencies 表可能缺少 project_id 列
+        if not _table_has_column(db, "task_dependencies", "project_id"):
+            db.execute(text("ALTER TABLE task_dependencies ADD COLUMN project_id INTEGER"))
+            db.commit()
     except Exception:
         db.rollback()
         raise

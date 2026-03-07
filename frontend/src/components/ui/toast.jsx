@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, AlertCircle, Info, XCircle } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { resolveIcon } from "@/utils/iconMap";
 
 const toastTypes = {
   success: {
@@ -35,7 +36,7 @@ export function Toast({
 }) {
   const [isVisible, setIsVisible] = useState(true);
   const config = toastTypes[type] || toastTypes.info;
-  const Icon = config.icon;
+  const Icon = resolveIcon(config.icon);
 
   useEffect(() => {
     if (duration > 0) {

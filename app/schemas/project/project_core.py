@@ -280,7 +280,7 @@ class ProjectDocumentResponse(TimestampSchema):
     version: str
     file_path: str
     file_name: str
-    status: str
+    status: Optional[str] = None
     approved_by: Optional[int] = None
     approved_at: Optional[date] = None
     description: Optional[str] = None

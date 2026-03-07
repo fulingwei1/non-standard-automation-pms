@@ -73,14 +73,26 @@ export default function Login({ onLoginSuccess }) {
       // 纯真实 API 登录
       const response = await authApi.login(formData);
 
-      // 处理响应数据
+      // 处理响应数据（兼容直接返回 / 统一包装 { data: { access_token } }）
+      const data = response.data?.data ?? response.data;
       const token =
-      response.data?.access_token ||
-      response.data?.data?.access_token ||
-      response.access_token;
+        data?.access_token ??
+        response.data?.access_token ??
+        response.access_token;
+      const refreshToken =
+        data?.refresh_token ??
+        response.data?.refresh_token ??
+        response.refresh_token;
 
       if (!token) {
+        const isStub = response.data?._stub ?? response.data?._message;
         logger.error("登录响应格式错误:", response);
+        if (isStub) {
+          throw new Error("登录接口返回了占位数据，请确认后端已启动且认证模块已加载，可尝试重启后端服务");
+        }
+        if (response.status === 404) {
+          throw new Error("登录服务暂不可用(404)，请检查后端是否正常启动或重启后端服务");
+        }
         throw new Error("服务器返回格式错误，请检查后端服务");
       }
 
@@ -89,6 +101,11 @@ export default function Login({ onLoginSuccess }) {
 
       // 保存 token
       localStorage.setItem("token", token);
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      } else {
+        localStorage.removeItem("refresh_token");
+      }
 
       // 获取用户信息
       try {
@@ -214,6 +231,7 @@ export default function Login({ onLoginSuccess }) {
             logger.warn("[Login] 用户没有分配角色:", userData.username);
             // 清除 token
             localStorage.removeItem("token");
+            localStorage.removeItem("refresh_token");
             setError("您的账号尚未分配角色，请联系管理员进行角色配置");
             setLoading(false);
             return;
@@ -248,6 +266,7 @@ export default function Login({ onLoginSuccess }) {
         logger.error("获取用户信息失败:", userErr);
         // 清除已保存的 token，因为无法获取用户信息
         localStorage.removeItem("token");
+        localStorage.removeItem("refresh_token");
 
         // 根据错误类型给出不同提示
         let userErrMessage = "获取用户信息失败，请重新登录";
@@ -340,6 +359,9 @@ export default function Login({ onLoginSuccess }) {
           errorMessage = detail;
         } else if (err.response.data?.message) {
           errorMessage = err.response.data.message || errorMessage;
+        } else if (status === 404) {
+          errorMessage =
+            "登录接口不可用(404)，请确认后端已启动且认证模块已加载，可尝试重启后端服务";
         } else if (status === 500) {
           errorMessage =
           "后端服务发生内部错误(500)。请查看后端日志 logs/backend.log 获取具体报错";

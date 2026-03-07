@@ -386,3 +386,42 @@ def delete_alert_subscription(
     db.commit()
 
     return ResponseModel(code=200, message="订阅配置已删除")
+
+
+@router.put("/alerts/subscriptions/{subscription_id}/toggle", response_model=AlertSubscriptionResponse, status_code=status.HTTP_200_OK)
+def toggle_alert_subscription(
+    *,
+    db: Session = Depends(deps.get_db),
+    subscription_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    切换订阅启用状态
+    """
+    subscription = db.query(AlertSubscription).filter(
+        AlertSubscription.id == subscription_id,
+        AlertSubscription.user_id == current_user.id
+    ).first()
+
+    if not subscription:
+        raise HTTPException(status_code=404, detail="订阅配置不存在")
+
+    subscription.is_active = not bool(subscription.is_active)
+    db.add(subscription)
+    db.commit()
+    db.refresh(subscription)
+
+    return {
+        "id": subscription.id,
+        "user_id": subscription.user_id,
+        "alert_type": subscription.alert_type,
+        "project_id": subscription.project_id,
+        "project_name": subscription.project.project_name if subscription.project else None,
+        "min_level": subscription.min_level,
+        "notify_channels": subscription.notify_channels or ["SYSTEM"],
+        "quiet_start": subscription.quiet_start,
+        "quiet_end": subscription.quiet_end,
+        "is_active": subscription.is_active,
+        "created_at": subscription.created_at.isoformat() if subscription.created_at else None,
+        "updated_at": subscription.updated_at.isoformat() if subscription.updated_at else None,
+    }
