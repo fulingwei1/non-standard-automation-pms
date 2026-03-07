@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FileWarning, Camera, X, Send } from "lucide-react";
 import {
   Dialog,

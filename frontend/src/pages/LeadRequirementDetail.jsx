@@ -8,10 +8,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Save,
-  FileText,
-  CheckCircle2,
-  Lock,
-  ExternalLink } from
+  Lock } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -28,7 +25,7 @@ import {
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { leadApi as _leadApi, technicalAssessmentApi } from "../services/api";
+import { technicalAssessmentApi } from "../services/api";
 import { Badge } from "../components/ui";
 
 export default function LeadRequirementDetail() {

@@ -3,21 +3,16 @@
  * 员工档案详情页面
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  User,
   Briefcase,
-  Clock,
-  Award,
   Star,
   Target,
   Heart,
-  Zap,
-  RefreshCw,
-  TrendingUp } from
+  Zap } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

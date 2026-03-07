@@ -112,7 +112,7 @@ def benchmark_roundtrip(iterations: int = 10000):
     for plaintext in test_data:
         for _ in range(iterations):
             encrypted = data_encryption.encrypt(plaintext)
-            decrypted = data_encryption.decrypt(encrypted)
+            data_encryption.decrypt(encrypted)
     
     return time.time() - start
 

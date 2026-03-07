@@ -12,7 +12,6 @@ FRONTEND_DIR = Path("/Users/flw/non-standard-automation-pm/frontend/src/pages")
 def fix_file(file_path: Path) -> int:
     """修复单个文件，返回修改的行数"""
     content = file_path.read_text(encoding='utf-8')
-    original_content = content
     modified = False
     changes = 0
 

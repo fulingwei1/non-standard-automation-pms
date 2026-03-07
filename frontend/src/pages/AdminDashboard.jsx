@@ -11,39 +11,9 @@ import api from "../services/api";
 import {
   Users,
   Shield,
-  Cog,
-  Database,
-  Server,
   Activity,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
-  UserPlus,
-  UserCog,
-  Key,
-  Settings,
-  BarChart3,
-  TrendingUp,
-  TrendingDown,
-  FileText,
-  Lock,
-  Unlock,
-  HardDrive,
-  Cpu,
-  Network,
-  Bell,
-  Eye,
-  Edit,
-  Trash2,
-  RefreshCw,
-  Download,
-  Upload,
-  Archive,
-  ShieldCheck,
-  AlertCircle,
-  XCircle,
-  Info,
-  Search } from
+  Key } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -51,8 +21,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Button,
-  Badge,
   Progress } from
 "../components/ui";
 import { fadeIn, staggerContainer } from "../lib/animations";

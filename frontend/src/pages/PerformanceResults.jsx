@@ -5,7 +5,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Award,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -14,11 +13,9 @@ import {
   Target,
   BarChart3,
   Download,
-  Eye,
   MessageSquare,
   ChevronRight,
   CheckCircle,
-  AlertCircle,
   Loader2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";

@@ -2,12 +2,11 @@
  * AI工作台主页面
  * Team 10: 售前AI系统集成与前端UI
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -29,7 +28,6 @@ import {
   Workflow,
   TrendingUp,
   FileText,
-  Filter,
 } from 'lucide-react';
 import { presaleAIService } from '@/services/presaleAIService';
 import { presaleApi } from '@/services/api';

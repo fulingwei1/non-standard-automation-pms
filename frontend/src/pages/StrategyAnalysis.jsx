@@ -1,12 +1,9 @@
-import { useState as _useState } from "react";
 import { motion } from "framer-motion";
-import { Target, TrendingUp, BarChart3, PieChart } from "lucide-react";
+import { Target } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
+  CardContent } from
 "../components/ui/card";
 import { fadeIn } from "../lib/animations";
 

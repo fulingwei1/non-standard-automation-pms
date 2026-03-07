@@ -1,4 +1,3 @@
-import React from 'react';
 import { Upload, FileSpreadsheet, Download } from "lucide-react";
 import {
     Card,

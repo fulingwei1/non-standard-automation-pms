@@ -19,8 +19,6 @@ import {
   Calendar,
   Target,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
   Users,
   FileText } from
 "lucide-react";

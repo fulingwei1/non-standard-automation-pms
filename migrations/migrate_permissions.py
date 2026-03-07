@@ -169,7 +169,7 @@ def migrate_permissions(
             continue
 
         try:
-            result = db.execute(
+            db.execute(
                 text("""
                 INSERT INTO api_permissions (
                     perm_code, perm_name, module, page_code, action,

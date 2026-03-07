@@ -3,7 +3,7 @@
  * Team 3 - Root Cause Analysis
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getRootCauseAnalysis } from '@/services/api/shortage';
 import RootCauseBarChart from './components/RootCauseBarChart';

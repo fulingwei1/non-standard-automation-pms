@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import { Badge } from '../../components/ui/badge';
-import { User, ChevronDown } from 'lucide-react';
+import { User } from 'lucide-react';
 
 /**
  * 角色切换器

@@ -406,7 +406,7 @@ def main():
         
         # Check if test imports default api but component uses named apis
         test_imports_default = 'import api from' in test_content
-        has_named_in_test = any(api in test_content for api in comp_apis if api != 'api')
+        any(api in test_content for api in comp_apis if api != 'api')
         
         needs_fix = test_imports_default and comp_apis and not all(a == 'api' for a in comp_apis)
         

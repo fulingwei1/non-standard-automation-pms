@@ -17,22 +17,16 @@ import {
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import {
   Search,
-  Filter,
   Plus,
   Eye,
   Edit3,
-  MoreHorizontal,
   ChevronDown,
   ChevronUp,
   Download,
   Upload,
-  List,
-  Kanban,
   AlertTriangle,
   User,
-  Calendar,
-  Tag,
-  ArrowRight } from
+  Calendar } from
 "lucide-react";
 import { DynamicIcon } from "../../utils/iconMap.jsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -46,15 +40,13 @@ import {
   issueStatusConfig,
   issueSeverityConfig,
   issueCategoryConfig,
-  issuePriorityConfig as _issuePriorityConfig,
   getIssueStatusConfig,
   getIssueSeverityConfig,
   getIssueCategoryConfig,
   getIssuePriorityConfig,
   isIssueOverdue,
   isIssueBlocking,
-  ISSUE_SORT_OPTIONS,
-  ISSUE_VIEW_MODES } from
+  ISSUE_SORT_OPTIONS } from
 "@/lib/constants/issue";
 
 export const IssueListManager = ({

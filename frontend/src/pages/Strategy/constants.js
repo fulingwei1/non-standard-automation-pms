@@ -2,7 +2,6 @@
  * 战略管理模块常量配置
  */
 import {
-  Target,
   TrendingUp,
   Users,
   BookOpen,
@@ -12,7 +11,6 @@ import {
   Clock,
   Activity,
   BarChart3,
-  PieChart,
   Calendar,
   FileText,
   Award,

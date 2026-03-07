@@ -6,15 +6,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Search,
-  Filter,
   UserCheck,
   Calendar,
-  Clock,
   TrendingUp,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
   Download,
   BarChart3 } from
 "lucide-react";
@@ -26,7 +22,6 @@ import {
   CardTitle,
   Button,
   Badge,
-  Input,
   Tabs,
   TabsContent,
   TabsList,
@@ -35,11 +30,8 @@ import {
 "../components/ui";
 import { cn } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import {
-  SimpleBarChart,
-  MonthlyTrendChart,
-  TrendComparisonCard } from
-"../components/administrative/StatisticsCharts";
+
+
 import { adminApi } from "../services/api";
 
 export default function AttendanceManagement() {

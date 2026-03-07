@@ -9,7 +9,6 @@ import {
   CardContent,
   DashboardStatCard,
   Badge,
-  SkeletonCard,
 } from "../components/ui";
 import {
   Target,

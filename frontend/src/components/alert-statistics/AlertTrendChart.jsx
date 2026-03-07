@@ -3,7 +3,7 @@
  * 用于展示告警随时间的变化趋势
  */
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -19,18 +19,13 @@ import {
   Bar } from
 "recharts";
 import {
-  TimeRangeSelector,
-  DateRangePicker } from
+  TimeRangeSelector } from
 "../../components/ui/time-range-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
   ALERT_LEVEL_STATS,
-  TIME_DIMENSIONS,
-  CHART_TYPES,
-  generateTimeSeries as _generateTimeSeries,
   getTrendDirection,
   getTrendColor,
   getTrendIcon } from

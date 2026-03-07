@@ -6,7 +6,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Grid3X3, List, Calendar } from "lucide-react";
+import { ArrowLeft, RefreshCw, List, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout";

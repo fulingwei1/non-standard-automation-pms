@@ -104,8 +104,7 @@ def query_review_detail(db: Session, review_no: str):
     print(f"  统计: 通过 {pass_count} | 不通过 {fail_count} | 不适用 {na_count}")
 
     for c in checklist:
-        checker = db.query(User).filter(User.id == c.checker_id).first()
-        checker_name = checker.real_name or checker.username if checker else f"用户{c.checker_id}"
+        db.query(User).filter(User.id == c.checker_id).first()
         result_icon = "✓" if c.result == "PASS" else "✗" if c.result == "FAIL" else "-"
         issue_info = f" (问题: {c.issue_level}类)" if c.issue_level else ""
         print(f"  {result_icon} [{c.category}] {c.check_item}{issue_info}")

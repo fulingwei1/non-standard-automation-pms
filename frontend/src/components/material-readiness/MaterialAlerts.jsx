@@ -6,7 +6,7 @@
 
 import { useState, useMemo } from "react";
 import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import {
   Dialog,
@@ -19,8 +19,7 @@ import {
 import {
   Tabs,
   TabsList,
-  TabsTrigger,
-  TabsContent } from
+  TabsTrigger } from
 "../../components/ui/tabs";
 import {
   Tooltip,
@@ -35,38 +34,22 @@ import {
   XCircle,
   AlertTriangle,
   Info,
-  Search,
-  Filter,
   Download,
   RefreshCw,
   Eye,
-  ExternalLink,
   Calendar,
   Package,
   MapPin,
-  Phone,
-  Mail,
   User } from
 "lucide-react";
 import {
   cn,
-  formatDate as _formatDate,
   formatDateTime,
-  formatCurrency as _formatCurrency,
   formatRelativeTime } from
 "../../lib/utils";
 import { Truck } from "lucide-react";
 import {
-  getReadinessStatusConfig as _getReadinessStatusConfig,
-  getMaterialTypeConfig as _getMaterialTypeConfig,
-  getUrgencyConfig as _getUrgencyConfig,
-  calculateReadinessProgress as _calculateReadinessProgress,
-  formatReadinessStatus as _formatReadinessStatus,
-  formatMaterialType,
-  formatUrgency as _formatUrgency,
-  isMaterialReady as _isMaterialReady,
-  isMaterialDelayed as _isMaterialDelayed,
-  isMaterialCritical as _isMaterialCritical } from
+  formatMaterialType } from
 "@/lib/constants/materialReadiness";
 
 /**

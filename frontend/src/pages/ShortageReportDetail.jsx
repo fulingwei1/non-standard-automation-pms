@@ -8,17 +8,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Package,
-  AlertTriangle,
   CheckCircle2,
   Clock,
-  User,
-  Calendar,
-  MapPin,
-  FileText,
   RefreshCw,
   XCircle,
-  Edit,
   Truck,
   ArrowRightLeft,
 } from "lucide-react";
@@ -37,7 +30,6 @@ import {
   DialogTitle,
   DialogBody,
   DialogFooter,
-  Input,
   Label,
   Textarea,
   Select,

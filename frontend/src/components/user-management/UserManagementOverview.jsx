@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import {
   Shield,
   Building2,
   TrendingUp,
-  UserCog,
   AlertCircle,
   Calendar,
   BarChart3,
@@ -20,21 +19,14 @@ import {
   USER_STATUS,
   USER_STATUS_LABELS,
   USER_STATUS_COLORS,
-  USER_ROLE,
   USER_ROLE_LABELS,
-  USER_DEPARTMENT,
   USER_DEPARTMENT_LABELS,
   getUserStatusStats,
   getRoleDistributionStats,
   getDepartmentDistributionStats,
   getMonthlyNewUsers,
   calculateUserGrowthRate,
-  getUserStatusLabel as _getUserStatusLabel,
-  getUserRoleLabel as _getUserRoleLabel,
-  getUserDepartmentLabel as _getUserDepartmentLabel,
-  getUserStatusColor as _getUserStatusColor,
-  getRoleColor,
-  getDepartmentColor as _getDepartmentColor } from
+  getRoleColor } from
 '@/lib/constants/userManagement';
 
 const UserManagementOverview = ({

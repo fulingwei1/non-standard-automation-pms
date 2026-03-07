@@ -2,7 +2,7 @@
  * 新建检验任务
  * 调用 POST /production/quality/inspection
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FileCheck, ArrowLeft, Save, Loader2 } from "lucide-react";

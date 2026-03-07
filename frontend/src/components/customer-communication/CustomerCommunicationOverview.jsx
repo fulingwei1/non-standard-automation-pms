@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Phone,
-  Mail,
   MessageSquare,
   Users,
   Clock,
@@ -13,21 +11,16 @@ import {
   TrendingUp,
   Star,
   Calendar,
-  BarChart3,
-  Filter } from
+  BarChart3 } from
 'lucide-react';
 import {
   COMMUNICATION_STATUS,
   COMMUNICATION_STATUS_LABELS,
   COMMUNICATION_STATUS_COLORS,
-  COMMUNICATION_TYPE,
   COMMUNICATION_TYPE_LABELS,
   COMMUNICATION_PRIORITY,
-  COMMUNICATION_PRIORITY_LABELS,
   COMMUNICATION_TOPIC,
   COMMUNICATION_TOPIC_LABELS,
-  CUSTOMER_SATISFACTION,
-  CUSTOMER_SATISFACTION_LABELS,
   calculateAverageSatisfaction,
   calculateResponseRate,
   getCommunicationStatusStats,

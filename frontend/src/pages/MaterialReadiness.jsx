@@ -3,39 +3,26 @@
  * 统一管理物料齐套检查（工单级别）和齐套分析（项目级别）
  */
 
-import { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Package,
-  CheckCircle2,
   AlertTriangle,
   Clock,
   RefreshCw,
   Search,
-  Filter,
   Eye,
-  Play,
-  Calendar,
   TrendingUp,
-  TrendingDown,
   Truck,
   Box,
   BarChart3,
-  PieChart,
-  LineChart,
   Download,
   Wrench,
   Zap,
-  Cable,
-  Bug,
   FileText,
   Settings,
   Plus,
-  Edit,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  Minus } from
+  Edit } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -69,24 +56,15 @@ import {
   DialogTitle,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { materialApi, projectApi, supplierApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import {
   MATERIAL_STATUS,
-  READINESS_STATUS,
   MATERIAL_TYPE,
   PRIORITY_LEVEL,
-  MATERIAL_STATUS_LABELS,
-  READINESS_STATUS_LABELS,
-  MATERIAL_TYPE_LABELS,
-  PRIORITY_LEVEL_LABELS,
-  MATERIAL_STATUS_COLORS,
-  READINESS_STATUS_COLORS,
-  PRIORITY_COLORS,
   MATERIAL_STATUS_FILTER_OPTIONS,
   TYPE_FILTER_OPTIONS,
-  PRIORITY_FILTER_OPTIONS,
   calculateReadinessRate,
   getMaterialStatusStats,
   getCriticalShortages,

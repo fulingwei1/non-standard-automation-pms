@@ -4,7 +4,7 @@
  * 管理员工能力评估标签，包括技能、领域、态度等维度
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Plus,

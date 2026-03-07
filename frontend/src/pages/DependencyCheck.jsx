@@ -9,7 +9,6 @@ import {
   AlertCircle,
   Wrench,
   Eye,
-  Play,
   AlertOctagon,
   GitBranch,
   Link2 } from
@@ -31,7 +30,6 @@ import {
   DialogFooter,
   DialogBody } from
 "../components/ui/dialog";
-import { formatDate as _formatDate } from "../lib/utils";
 import { progressApi } from "../services/api";
 
 export default function DependencyCheck({ projectId }) {

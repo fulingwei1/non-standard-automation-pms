@@ -742,7 +742,7 @@ class ReportGenerator:
     def _generate_workload_analysis(self, role: RoleType, config: RoleConfig, **kwargs) -> GeneratedReport:
         """生成负荷分析报表"""
         users = kwargs.get('users', [])
-        timesheets = kwargs.get('timesheets', [])
+        kwargs.get('timesheets', [])
         
         metrics = []
         sections = []
@@ -800,7 +800,7 @@ class ReportGenerator:
     def _generate_risk_report(self, role: RoleType, config: RoleConfig, **kwargs) -> GeneratedReport:
         """生成风险报告"""
         alerts = kwargs.get('alerts', [])
-        projects = kwargs.get('projects', [])
+        kwargs.get('projects', [])
         
         # 根据角色风险偏好过滤
         filtered_alerts = [a for a in alerts if self._should_show_alert(a, role, config)]
@@ -881,7 +881,6 @@ class ReportGenerator:
     def _should_show_alert(self, alert: Dict, role: RoleType, config: RoleConfig) -> bool:
         """判断是否应该显示预警"""
         level = alert.get('level', 'low')
-        thresholds = config.risk_thresholds
         
         # 高风险对所有角色可见
         if level == 'high' or level == 'critical':
@@ -899,7 +898,7 @@ class ReportGenerator:
     
     def _generate_actions(self, alert: Dict, role: RoleType) -> List[str]:
         """根据角色生成建议行动"""
-        alert_type = alert.get('type', '')
+        alert.get('type', '')
         
         if role == RoleType.GM:
             return ["安排专项会议讨论", "评估资源调配方案", "跟进整改进展"]

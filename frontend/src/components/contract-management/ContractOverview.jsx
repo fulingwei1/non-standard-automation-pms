@@ -3,7 +3,7 @@
  * 合同概览组件
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Timeline, Alert, Button } from 'antd';
 import {
   FileCheck,
@@ -11,14 +11,10 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  TrendingUp,
-  Users,
-  Calendar } from
+  Users } from
 'lucide-react';
 import {
   CONTRACT_STATUS,
-  SIGNATURE_STATUS,
-  RISK_LEVELS,
   CHART_COLORS } from
 '@/lib/constants/contractManagement';
 

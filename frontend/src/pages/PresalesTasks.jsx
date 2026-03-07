@@ -2,13 +2,12 @@
  * 售前技术任务中心
  * 管理技术支持请求、方案设计、投标任务等
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   ListTodo,
   Search,
-  Filter,
   Plus,
   Calendar,
   Clock,
@@ -19,20 +18,13 @@ import {
   ClipboardList,
   MessageSquare,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
-  ChevronRight,
   MoreHorizontal,
-  Flag,
-  ArrowUpRight,
   Eye,
   Edit,
   Trash2,
-  LayoutGrid,
   List,
   Kanban,
   Briefcase,
-  Timer,
   User,
   X,
   DollarSign } from
@@ -56,7 +48,7 @@ import {
 "../components/ui/dropdown-menu";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { presaleApi, opportunityApi as _opportunityApi } from "../services/api";
+import { presaleApi } from "../services/api";
 
 // 任务类型配置
 const taskTypes = [

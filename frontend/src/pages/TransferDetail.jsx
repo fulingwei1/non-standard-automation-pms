@@ -8,14 +8,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  ArrowRightLeft,
   CheckCircle2,
   XCircle,
   Clock,
   User,
-  Calendar,
-  Package,
-  AlertTriangle,
   FileText,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -24,7 +20,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   Button,
   Badge,
   Input,

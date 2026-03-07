@@ -5,50 +5,20 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { fadeIn as _fadeIn } from "../../lib/animations";
 import {
   Search,
   Filter,
   X,
-  Calendar,
-  Eye,
-  User,
-  Bookmark,
-  Star,
-  TrendingUp,
-  Clock,
-  Tag,
-  FileText,
-  Settings,
-  SlidersHorizontal,
   RotateCcw,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  ChevronDown,
-  ChevronUp,
-  Filter as FilterIcon,
-  Grid3X3,
-  List,
   SortAsc,
-  SortDesc,
-  Calendar as CalendarIcon,
-  Tag as TagIcon,
-  User as UserIcon } from
+  SortDesc } from
 "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import {
   searchConfigs,
-  articleStatusConfigs as _articleStatusConfigs,
-  articlePriorityConfigs as _articlePriorityConfigs,
-  articleTypeConfigs as _articleTypeConfigs,
-  viewConfigs,
-  isValidCategory as _isValidCategory,
-  isValidStatus as _isValidStatus,
-  isValidPriority as _isValidPriority,
-  isValidType as _isValidType } from
+  viewConfigs } from
 "@/lib/constants/knowledge";
 
 export default function SearchPanel({

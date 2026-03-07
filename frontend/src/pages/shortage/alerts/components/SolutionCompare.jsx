@@ -2,7 +2,6 @@
  * 方案对比表格组件
  */
 
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SOLUTION_TYPES, getScoreColor } from '../../constants';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';

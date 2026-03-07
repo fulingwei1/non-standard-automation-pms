@@ -3,7 +3,7 @@
  * 告警趋势分析组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Table, Tag } from 'antd';
 import { ALERT_LEVELS, ALERT_STATUS, CHART_COLORS } from '@/lib/constants/alert';
 

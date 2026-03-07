@@ -11,15 +11,12 @@ import {
   TrendingDown,
   BarChart3,
   PieChart,
-  Calendar,
   Download,
-  Filter,
   Package,
   Car,
   Building2,
   Coffee,
-  Printer,
-  Loader2 } from
+  Printer } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

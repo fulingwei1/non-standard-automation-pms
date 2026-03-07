@@ -3,7 +3,7 @@
  * 客户服务记录组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Table, Rate, Tag, Typography } from 'antd';
 import { TABLE_CONFIG } from '@/lib/constants/customer360';
 

@@ -10,9 +10,7 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-  DollarSign,
   FileText,
-  ArrowRight,
 } from "lucide-react";
 import { Badge } from "../ui/badge";
 

@@ -11,10 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Separator } from "../../components/ui/separator";
-import { cn, formatDate as _formatDate, formatDateTime } from "../../lib/utils";
+import { cn, formatDateTime } from "../../lib/utils";
 import {
   interactionTypeConfigs,
-  customer360TabConfigs as _customer360TabConfigs,
   getInteractionTypeConfig,
   formatInteractionType } from
 "@/lib/constants/customer360";

@@ -3,7 +3,7 @@
  * Features: Financial statements, Profit & loss, Cash flow, Budget analysis, Export reports
  */
 
-import { useState, useMemo as _useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -12,27 +12,17 @@ import {
   DollarSign,
   FileText,
   Download,
-  Calendar,
   Filter,
-  PieChart,
-  LineChart,
-  Activity,
   Receipt,
-  CreditCard,
   Wallet,
-  Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  ChevronRight } from
+  Target } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
   Button,
-  Badge,
   Progress,
   Tabs,
   TabsContent,
@@ -41,9 +31,8 @@ import {
 "../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { financialReportApi, reportCenterApi as _reportCenterApi } from "../services/api";
+import { financialReportApi } from "../services/api";
 import {
-  LineChart as LineChartComponent,
   BarChart as BarChartComponent,
   PieChart as PieChartComponent,
   AreaChart as AreaChartComponent,

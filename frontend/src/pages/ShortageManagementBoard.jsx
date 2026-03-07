@@ -8,12 +8,9 @@ import {
   AlertTriangle,
   Package,
   TrendingUp,
-  TrendingDown,
   Clock,
-  CheckCircle2,
   XCircle,
   RefreshCw,
-  Eye,
   ArrowRight } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -25,15 +22,8 @@ import {
 "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
+
+
 import { cn, formatDate } from "../lib/utils";
 import { shortageApi, shortageAlertApi } from "../services/api";
 export default function ShortageManagementBoard() {

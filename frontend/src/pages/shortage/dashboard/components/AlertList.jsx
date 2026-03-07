@@ -2,11 +2,9 @@
  * 预警列表组件
  */
 
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ALERT_LEVELS, ALERT_STATUS } from '../../constants';
 import { ChevronRight, AlertCircle, Package, Calendar } from 'lucide-react';

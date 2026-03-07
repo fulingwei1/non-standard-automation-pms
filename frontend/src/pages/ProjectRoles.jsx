@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback as _useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import {
   Plus,
-  Edit,
   Trash2,
   Users,
   Briefcase,

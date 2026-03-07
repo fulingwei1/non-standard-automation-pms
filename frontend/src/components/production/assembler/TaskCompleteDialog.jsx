@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ClipboardCheck, Minus, Plus, CheckCircle2 } from "lucide-react";
 import {
   Dialog,

@@ -84,7 +84,7 @@ def add_missing_methods(file_path):
         # Insert after the opening brace
         pos = match.end()
         # Find the first existing method or closing brace
-        after_brace = content[pos:pos+200]
+        content[pos:pos+200]
         
         # Insert at the beginning of the API block
         new_methods = '\n' + '\n'.join(method_lines)

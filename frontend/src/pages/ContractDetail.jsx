@@ -3,15 +3,10 @@
  * Shows contract information, payment tracking, documents, and actions
  */
 
-import { useState, useEffect, useMemo as _useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  FileText,
-  DollarSign,
-  Calendar,
-  User,
-  Building2,
   Phone,
   Mail,
   CheckCircle2,
@@ -21,15 +16,8 @@ import {
   Upload,
   Edit,
   Send,
-  Archive,
-  MoreVertical,
-  ChevronRight,
-  TrendingUp,
   Paperclip,
-  Eye,
-  Printer,
-  Loader2,
-  ArrowLeft } from
+  Printer } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -39,14 +27,7 @@ import {
   CardTitle,
   Button,
   Badge,
-  Progress,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter } from
+  Progress } from
 "../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";

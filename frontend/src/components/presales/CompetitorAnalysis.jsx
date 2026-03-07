@@ -2,7 +2,6 @@
  * 竞品分析组件
  * 展示竞争对手信息和比较
  */
-import React from "react";
 import { motion } from "framer-motion";
 import {
   Shield,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -9,9 +9,7 @@ import {
   Layers,
   Settings,
   CheckCircle,
-  Clock,
   FileText,
-  Download,
   Upload,
   Star,
   Eye,

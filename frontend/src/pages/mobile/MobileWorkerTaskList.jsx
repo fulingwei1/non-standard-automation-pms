@@ -7,11 +7,8 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   RefreshCw,
-  Package,
   Clock,
   PlayCircle,
-  CheckCircle2,
-  AlertCircle,
   Filter } from
 "lucide-react";
 import { Button } from "../../components/ui/button";
@@ -24,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue } from
 "../../components/ui/select";
-import { cn, formatDate as _formatDate } from "../../lib/utils";
+import { cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
 const statusConfigs = {

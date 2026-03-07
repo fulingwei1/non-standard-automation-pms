@@ -364,7 +364,7 @@ def main():
     with get_db_session() as db:
         # 0. 先创建员工记录
         print("0. 创建演示员工记录...")
-        employees = create_demo_employees(db)
+        create_demo_employees(db)
 
         # 1. 创建用户
         print("\n1. 创建演示用户...")

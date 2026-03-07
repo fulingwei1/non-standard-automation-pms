@@ -9,17 +9,10 @@ import {
   Users,
   Trophy,
   Target,
-  TrendingUp,
-  TrendingDown,
   Award,
-  Star,
   Search,
-  Filter,
   Settings,
-  ChevronDown,
-  ChevronUp,
-  BarChart3,
-  PieChart } from
+  BarChart3 } from
 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
 import { Button } from '../../components/ui';
@@ -29,13 +22,11 @@ import { Progress } from '../../components/ui';
 import { cn } from '../../lib/utils';
 import {
   RANKING_METRIC_LIBRARY,
-  PERFORMANCE_GRADES,
   SALES_REGIONS,
   formatCurrency,
   formatPercentage,
   getPerformanceGrade,
-  calculateRankingValidation,
-  validateMetricConfig as _validateMetricConfig } from
+  calculateRankingValidation } from
 '@/lib/constants/sales';
 
 export default function SalesTeamPerformance({

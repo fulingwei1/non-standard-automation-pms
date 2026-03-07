@@ -4,8 +4,6 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { cn as _cn } from "../lib/utils";
 import { technicalReviewApi, projectApi, userApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -18,21 +16,14 @@ import {
   Badge,
   Input,
   Select,
-  Textarea,
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
   SkeletonCard } from
 "../components/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
+
+
 import {
   ArrowLeft,
   Save,
@@ -40,13 +31,7 @@ import {
   Trash2,
   Upload,
   FileText,
-  Users,
-  CheckSquare,
-  AlertCircle,
-  Calendar,
-  MapPin,
-  User,
-  X } from
+  User } from
 "lucide-react";
 
 import { confirmAction } from "@/lib/confirmAction";

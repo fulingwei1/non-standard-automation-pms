@@ -3,7 +3,7 @@
  * 高级搜索组件（占位实现）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Form, Row, Col, Select, Space, Button, Tag, Typography } from 'antd';
 import {
   KNOWLEDGE_TYPES,

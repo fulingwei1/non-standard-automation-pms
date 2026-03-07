@@ -6,7 +6,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronDown,
   ChevronRight,
   Play,
   CheckCircle2,
@@ -35,7 +34,6 @@ import {
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import {
-  STAGE_STATUS,
   NODE_TYPES,
   getStatusConfig,
   getCategoryConfig,

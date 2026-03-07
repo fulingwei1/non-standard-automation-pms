@@ -3,7 +3,6 @@
  * 用于展示员工任职资格各维度能力得分
  */
 import { useMemo } from "react";
-import { cn as _cn } from "../../lib/utils";
 
 export function CompetencyRadarChart({
   data,

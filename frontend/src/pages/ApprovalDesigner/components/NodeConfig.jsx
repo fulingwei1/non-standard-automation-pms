@@ -19,8 +19,6 @@ import {
 } from 'antd';
 import {
   UserCheck,
-  Copy,
-  GitBranch,
   Settings,
   Clock,
   Users,

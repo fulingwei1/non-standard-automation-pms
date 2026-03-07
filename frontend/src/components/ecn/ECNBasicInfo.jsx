@@ -7,9 +7,6 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { cn, formatDate } from "../../lib/utils";
 import {
-  statusConfigs as _statusConfigs,
-  typeConfigs as _typeConfigs,
-  priorityConfigs as _priorityConfigs,
   getStatusConfig,
   getTypeConfig,
   getPriorityConfig } from

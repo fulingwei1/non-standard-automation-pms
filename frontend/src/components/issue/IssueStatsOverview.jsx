@@ -3,7 +3,7 @@
  * 问题统计概览组件 - 展示问题管理关键指标
  */
 
-import { useState as _useState, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -14,13 +14,11 @@ import {
   TrendingUp,
   TrendingDown,
   Activity,
-  Eye,
   BarChart3,
   Users,
   Calendar } from
 "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
@@ -34,7 +32,6 @@ import {
 "@/lib/constants/issue";
 import {
   SimpleBarChart,
-  SimpleLineChart,
   SimplePieChart } from
 "../administrative/StatisticsCharts";
 

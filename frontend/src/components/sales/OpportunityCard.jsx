@@ -6,17 +6,13 @@ import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import {
-  Target,
   Building2,
   Calendar,
   DollarSign,
   User,
-  MessageSquare,
   ChevronRight,
   Clock,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
   Flame,
 } from "lucide-react";
 import { Badge } from "../ui/badge";

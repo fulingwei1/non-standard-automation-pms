@@ -15,7 +15,7 @@ import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { cn } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { staggerContainer } from "../lib/animations";
 import { purchaseApi } from "../services/api";
 import {
   MaterialStatsOverview } from

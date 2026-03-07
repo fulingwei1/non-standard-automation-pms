@@ -3,13 +3,10 @@
  * 用户查看自己的奖金计算记录、发放记录和统计信息
  */
 
-import { useState, useEffect, useMemo as _useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Award,
-  DollarSign,
-  TrendingUp,
-  Calendar,
   CheckCircle2,
   Clock,
   AlertCircle,

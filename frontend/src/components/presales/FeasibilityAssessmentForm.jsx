@@ -2,14 +2,12 @@
  * 可行性评估表单组件
  * 售前技术工程师评估销售线索/商机的可行性
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  FileText,
-  Save,
   Send,
   X,
   TrendingUp,
@@ -18,13 +16,9 @@ import {
   Users,
   Clock,
   DollarSign,
-  Shield,
-  Lightbulb,
-  AlertCircle,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { cn } from "../../lib/utils";

@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderKanban,
   Search,
-  Filter,
   Calendar,
   DollarSign,
   Building2,
@@ -19,13 +18,11 @@ import {
   ChevronRight,
   X,
   FileText,
-  Milestone,
   Eye,
   Flag,
   Target,
   Truck,
   ClipboardCheck,
-  Shield,
   Phone,
   MessageSquare } from
 "lucide-react";
@@ -33,8 +30,6 @@ import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Button,
   Badge,
   Input,

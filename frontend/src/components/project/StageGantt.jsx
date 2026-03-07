@@ -1,4 +1,3 @@
-import React from "react";
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
 import { CheckCircle2, Circle } from "lucide-react";

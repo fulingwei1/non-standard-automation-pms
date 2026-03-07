@@ -7,10 +7,7 @@ import {
   Package,
   AlertTriangle,
   CheckCircle2,
-  TrendingUp,
-  TrendingDown,
   RefreshCw,
-  Filter,
   BarChart3 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -38,7 +35,7 @@ import {
   TableHeader,
   TableRow } from
 "../components/ui/table";
-import { cn, formatCurrency as _formatCurrency } from "../lib/utils";
+import { cn } from "../lib/utils";
 import { purchaseApi, projectApi } from "../services/api";
 export default function KitRateBoard() {
   const [loading, setLoading] = useState(true);

@@ -7,20 +7,14 @@ import {
   Trash2,
   Power,
   PowerOff,
-  Search,
   RefreshCw,
   CheckCircle2,
   XCircle,
-  Settings,
-  Clock,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";

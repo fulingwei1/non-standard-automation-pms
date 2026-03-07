@@ -1,4 +1,3 @@
-import React from "react";
 import { Eye, Edit, Copy, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";

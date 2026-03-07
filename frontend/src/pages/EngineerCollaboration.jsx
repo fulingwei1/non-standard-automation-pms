@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Form, Rate, Input, Select, Tag, Space, message, Tabs } from 'antd';
 import { TeamOutlined, StarOutlined, CommentOutlined } from '@ant-design/icons';
 import api from '../services/api';

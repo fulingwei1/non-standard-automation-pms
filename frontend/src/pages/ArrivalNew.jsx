@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Truck, Save, X, Search, Calendar } from "lucide-react";
+import { ArrowLeft, Save, X } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -28,7 +28,6 @@ import { fadeIn } from "../lib/animations";
 import {
   shortageApi,
   materialApi,
-  purchaseApi as _purchaseApi,
   supplierApi } from
 "../services/api";
 

@@ -3,7 +3,6 @@
  */
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from '../ui/dialog';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Slider } from '../ui/slider';

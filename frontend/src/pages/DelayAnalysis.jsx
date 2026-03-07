@@ -4,16 +4,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Clock,
-  TrendingDown,
-  AlertTriangle,
-  BarChart3,
-  Calendar,
-  Filter,
-  DollarSign } from
-"lucide-react";
+
+
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -21,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Badge,
   Input,
   Table,
   TableBody,
@@ -34,9 +25,8 @@ import {
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { delayAnalysisApi } from "../services/api";
-import { formatAmount, formatDate as _formatDate } from "../lib/utils";
+import { formatAmount } from "../lib/utils";
 
 export default function DelayAnalysis() {
   const [_loading, setLoading] = useState(false);

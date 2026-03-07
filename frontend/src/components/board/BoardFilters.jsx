@@ -1,13 +1,12 @@
 import { memo } from "react";
 import { cn } from "../../lib/utils";
-import { HEALTH_CONFIG, PROJECT_STATUS } from "../../lib/constants";
+import { HEALTH_CONFIG } from "../../lib/constants";
 import { Input, Button } from "../ui";
 import {
   Search,
   LayoutGrid,
   List,
   Table2,
-  Filter,
   X,
   User,
   Users,

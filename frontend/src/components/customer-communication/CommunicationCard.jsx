@@ -2,14 +2,12 @@
  * Customer Communication Card Component
  * 客户沟通卡片组件
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronDown, ChevronRight, MessageSquare, Phone,
-  Mail, Calendar, Clock, AlertCircle, CheckCircle,
-  EllipsisVertical, Send, Copy, Download, MoreHorizontal } from
+  ChevronDown, ChevronRight, Clock, Send, Copy, Download, MoreHorizontal } from
 "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -23,10 +21,6 @@ import {
 import { Delete, Edit, FileText } from "lucide-react";
 import { cn } from "../../lib/utils";
 import {
-  statusConfigs as _statusConfigs,
-  typeConfigs as _typeConfigs,
-  priorityConfigs as _priorityConfigs,
-  channelConfigs as _channelConfigs,
   getStatusConfig,
   getTypeConfig,
   getPriorityConfig,

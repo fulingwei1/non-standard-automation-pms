@@ -17,7 +17,7 @@ def analyze_page_integration(file_path: Path) -> Dict:
     """分析单个页面的API集成情况"""
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
-        lines = content.split('\n')
+        content.split('\n')
 
     result = {
         "file": file_path.name,

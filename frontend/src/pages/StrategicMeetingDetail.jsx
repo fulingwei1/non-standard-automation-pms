@@ -16,13 +16,9 @@ import {
 } from "../components/ui";
 import {
   ArrowLeft,
-  Calendar,
-  Users,
   FileText,
   Target,
   CheckCircle2,
-  Clock,
-  Save,
 } from "lucide-react";
 
 export default function StrategicMeetingDetail() {

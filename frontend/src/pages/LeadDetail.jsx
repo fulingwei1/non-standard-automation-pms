@@ -10,13 +10,11 @@ import {
   Phone,
   Mail,
   MapPin,
-  Building2,
   Calendar,
   Clock,
   RefreshCw,
   Plus,
   ArrowRight,
-  CheckCircle2,
   AlertTriangle } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -36,14 +34,8 @@ import {
   SelectTrigger,
   SelectValue } from
 "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
+
+
 import {
   Dialog,
   DialogContent,
@@ -52,7 +44,7 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { leadApi, customerApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -13,11 +13,9 @@ import {
 '@/components/ui';
 import {
   PROJECT_STAGES,
-  MILESTONE_STATUSES,
-  PROJECT_HEALTH } from
+  MILESTONE_STATUSES } from
 '@/lib/constants/projectDetail';
-import { format, differenceInDays, isAfter, isBefore as _isBefore } from 'date-fns';
-import { zhCN as _zhCN } from 'date-fns/locale';
+import { format, differenceInDays, isAfter } from 'date-fns';
 
 const MilestoneTracker = ({ project, onStageClick, onAddMilestone }) => {
   const [expandedStage, setExpandedStage] = useState(null);

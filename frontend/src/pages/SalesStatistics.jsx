@@ -7,14 +7,10 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Target,
   Users,
   Calendar,
-  BarChart3,
-  PieChart,
-  LineChart,
   ArrowUpRight,
   ArrowDownRight,
   Download } from
@@ -32,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { staggerContainer } from "../lib/animations";
 import { salesStatisticsApi } from "../services/api";
 
 export default function SalesStatistics() {

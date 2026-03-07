@@ -12,34 +12,20 @@
  * 7. 沟通统计分析
  */
 
-import { useState, useMemo as _useMemo, useEffect, useCallback as _useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
-  Filter,
   Eye,
   Edit,
   Phone,
   Mail,
   MessageSquare,
-  Calendar,
-  User,
   Users,
-  Clock,
-  FileText,
-  CheckCircle2,
   XCircle,
-  RefreshCw,
   MapPin,
   Video,
-  TrendingUp,
-  Download,
-  Star,
-  AlertCircle,
-  ChevronRight,
-  Send,
-  Tag } from
+  Star } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -71,7 +57,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
@@ -95,10 +80,6 @@ import {
   TYPE_FILTER_OPTIONS,
   TOPIC_FILTER_OPTIONS,
   getCommunicationTypeIcon,
-  getCommunicationStatusColor as _getCommunicationStatusColor,
-  getPriorityColor as _getPriorityColor,
-  getTopicColor as _getTopicColor,
-  getSatisfactionColor as _getSatisfactionColor,
   validateCommunicationData } from
 "../components/customer-communication";
 

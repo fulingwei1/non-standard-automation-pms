@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FileImage, ZoomOut, ZoomIn, RotateCw, Download } from "lucide-react";
 import {
   Dialog,

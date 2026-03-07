@@ -8,8 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  FileSpreadsheet,
-  Mail } from
+  FileSpreadsheet } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -31,7 +30,7 @@ import {
 "../components/ui/dialog";
 import { timesheetApi } from "../services/api";
 import { cn } from "../lib/utils";
-import { fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
+import { fadeIn } from "../lib/animations";
 
 export default function TimesheetBatchOperations() {
   const [loading, setLoading] = useState(false);

@@ -3,22 +3,15 @@
  * Features: Purchase cost analysis, supplier cost comparison, cost trends
  */
 
-import { useState, useEffect, useMemo as _useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  BarChart3,
-  TrendingUp,
   TrendingDown,
   DollarSign,
   Package,
   Building2,
   Calendar,
-  Search,
-  Filter,
-  Download,
-  PieChart,
-  ArrowUpRight,
-  ArrowDownRight } from
+  Download } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -28,8 +21,6 @@ import {
   CardTitle,
   CardDescription,
   Button,
-  Badge,
-  Input,
   Select,
   SelectContent,
   SelectItem,
@@ -42,7 +33,7 @@ import {
 "../components/ui";
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import { purchaseApi, supplierApi as _supplierApi, costApi as _costApi, projectApi as _projectApi } from "../services/api";
+import { purchaseApi } from "../services/api";
 
 // Mock cost analysis data - 已移除，使用真实API
 

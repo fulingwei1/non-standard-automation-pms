@@ -9,17 +9,10 @@ import {
   Users,
   UserPlus,
   Search,
-  Filter,
   Edit,
-  MoreHorizontal,
   TrendingUp,
-  TrendingDown,
   Award,
-  Target,
-  Phone,
   Mail,
-  Calendar,
-  Star,
   ArrowUp,
   ArrowDown
 } from "lucide-react";

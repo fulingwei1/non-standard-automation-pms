@@ -2,17 +2,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Clock,
-  TrendingUp,
   Users,
   Briefcase,
-  Calendar,
   Download,
   RefreshCw,
   AlertCircle,
-  CheckCircle2,
-  BarChart3,
-  PieChart,
-  Activity } from
+  CheckCircle2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -31,7 +26,6 @@ import {
   TabsTrigger } from
 "../components/ui/tabs";
 import { timesheetApi } from "../services/api";
-import { cn as _cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import {
   TimesheetTrendChart,

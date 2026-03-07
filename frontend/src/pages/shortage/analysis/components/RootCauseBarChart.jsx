@@ -2,7 +2,6 @@
  * 根因分析柱状图组件
  */
 
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { ROOT_CAUSE_TYPES } from '../../constants';

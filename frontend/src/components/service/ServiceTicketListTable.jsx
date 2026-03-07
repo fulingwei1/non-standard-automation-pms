@@ -3,7 +3,7 @@
  * 服务工单列表表格组件
  */
 import { useState } from "react";
-import { Eye, Edit, Clock, CheckCircle2, AlertTriangle, User, Calendar, MapPin } from "lucide-react";
+import { Eye, Edit, Clock, CheckCircle2, AlertTriangle, User, Calendar } from "lucide-react";
 import { Checkbox } from "../ui/checkbox";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -20,7 +20,6 @@ import { formatDate } from "../../lib/utils";
 import {
   statusConfigs,
   urgencyConfigs,
-  problemTypeConfigs as _problemTypeConfigs,
   getStatusLabel,
   getUrgencyLabel,
   getProblemTypeIcon } from

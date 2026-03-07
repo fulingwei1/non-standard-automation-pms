@@ -8,12 +8,8 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Search,
-  Filter,
   Download,
-  Eye,
-  Calendar,
-  TrendingUp,
-  Award } from
+  Eye } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

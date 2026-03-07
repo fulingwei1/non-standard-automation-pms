@@ -10,12 +10,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Calendar,
-  Building2,
-  DollarSign,
   Package,
-  User,
-  MessageSquare,
   Loader2,
   ShoppingCart,
 } from "lucide-react";

@@ -7,11 +7,9 @@ import { motion } from "framer-motion";
 import { Card, CardContent, Progress, Badge } from "../ui";
 import {
   Users,
-  TrendingUp,
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Target,
 } from "lucide-react";
 import { engineersApi } from "../../services/api";
 import { cn } from "../../lib/utils";

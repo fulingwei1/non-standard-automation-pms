@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, Minus, Plus, Send } from "lucide-react";
 import {
   Dialog,

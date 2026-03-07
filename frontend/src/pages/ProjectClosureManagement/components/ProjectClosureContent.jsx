@@ -1,4 +1,3 @@
-import React from "react";
 import { FileText } from "lucide-react";
 import { Card, CardContent, Button, SkeletonCard } from "../../../components/ui";
 import { ProjectClosureStatusCard } from "./ProjectClosureStatusCard";

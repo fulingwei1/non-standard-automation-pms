@@ -3,7 +3,6 @@
  * 客户基本信息组件
  */
 
-import React from 'react';
 import { Card, Row, Col, Tag, Avatar, Space, Divider, Typography, Progress } from 'antd';
 import { 
   Building2, 

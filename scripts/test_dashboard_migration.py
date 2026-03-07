@@ -108,7 +108,7 @@ def test_adapter_methods():
 
             # 测试get_detailed_data
             try:
-                detailed = adapter.get_detailed_data()
+                adapter.get_detailed_data()
                 print("  ✓ get_detailed_data() 返回详细数据")
             except NotImplementedError:
                 print("  ⊘ get_detailed_data() 未实现（可选）")

@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Clock,
   BarChart3,
-  CalendarDays,
   Activity,
   TrendingUp,
   ShieldAlert,

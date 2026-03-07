@@ -1,13 +1,10 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
-  GitBranch, AlertTriangle, Users, FileText,
-  DollarSign, Clock, Package } from
+  GitBranch, AlertTriangle, Users, FileText, Package } from
 'lucide-react';
-import { cn as _cn } from "../../lib/utils";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

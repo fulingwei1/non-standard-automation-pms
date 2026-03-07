@@ -26,8 +26,7 @@ import { handleApiError } from "../utils/apiErrorHandler";
 import {
   QuoteStatsOverview,
   QuoteListManager,
-  DEFAULT_QUOTE_STATS,
-  QUOTE_VIEW_MODES } from
+  DEFAULT_QUOTE_STATS } from
 "../components/quote";
 
 // Import services

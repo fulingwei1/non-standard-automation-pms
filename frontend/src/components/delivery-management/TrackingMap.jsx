@@ -1,17 +1,14 @@
-import React, { useState, useEffect as _useEffect, useRef as _useRef } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
-  MapPin, Navigation, Truck, Users, Timer, Phone,
-  MessageCircle, AlertTriangle, CheckCircle, Eye, RefreshCw,
+  MapPin, Navigation, Truck, Phone, AlertTriangle,
   ZoomIn, ZoomOut, RotateCcw, Pause, Play } from
 'lucide-react';
 import { cn } from "../../lib/utils";
 import {
-  deliveryStatusConfigs as _deliveryStatusConfigs,
-  deliveryPriorityConfigs as _deliveryPriorityConfigs,
   getStatusConfig,
   formatStatus } from
 '@/lib/constants/service';

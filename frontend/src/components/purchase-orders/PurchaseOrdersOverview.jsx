@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -7,7 +6,6 @@ import {
   AlertTriangle,
   TrendingUp,
   DollarSign,
-  Truck,
   BarChart3,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";

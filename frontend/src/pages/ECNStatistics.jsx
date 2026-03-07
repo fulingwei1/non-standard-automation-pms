@@ -8,8 +8,6 @@ import {
   DollarSign,
   Clock,
   FileText,
-  BarChart3,
-  PieChart,
   Download } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -30,13 +28,11 @@ import {
   SelectValue } from
 "../components/ui/select";
 import {
-  SimpleBarChart,
   SimpleLineChart,
   SimplePieChart,
   MonthlyTrendChart } from
 "../components/administrative/StatisticsCharts";
 import { ecnApi } from "../services/api";
-import { formatDate as _formatDate } from "../lib/utils";
 
 const statusConfigs = {
   DRAFT: { label: "草稿", color: "bg-slate-500" },

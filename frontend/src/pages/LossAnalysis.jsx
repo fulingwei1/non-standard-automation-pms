@@ -9,14 +9,7 @@ import {
   TrendingDown,
   DollarSign,
   Clock,
-  Users,
-  Building2,
-  AlertTriangle,
-  BarChart3,
-  PieChart,
-  Download,
-  Filter,
-  Calendar } from
+  AlertTriangle } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -34,7 +27,7 @@ import {
   TableHeader,
   TableRow } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { staggerContainer } from "../lib/animations";
 import { lossAnalysisApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 

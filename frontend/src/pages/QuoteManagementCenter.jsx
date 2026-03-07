@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";

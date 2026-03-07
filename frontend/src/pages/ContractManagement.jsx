@@ -7,65 +7,39 @@ import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
-  Filter,
   Plus,
   FileCheck,
   DollarSign,
   Calendar,
-  User,
-  Building2,
-  CheckCircle2,
   XCircle,
   Clock,
   Edit,
   Eye,
   FileText,
-  Briefcase,
-  X,
   Layers,
   Download,
   Upload,
   AlertTriangle,
   MoreHorizontal,
-  TrendingUp,
-  Users,
-  Settings } from
+  TrendingUp } from
 "lucide-react";
 
 import {
   Card,
-  Table,
   Button,
   Input,
   Select,
   DatePicker,
   Modal,
-  Form,
   Space,
   Tag,
-  Tooltip,
   Row,
   Col,
-  Statistic,
-  Divider,
-  List,
-  Avatar,
   Typography,
-  Alert,
-  Badge,
   Dropdown,
   Menu,
-  Switch,
-  Radio,
-  Checkbox,
-  Upload as AntUpload,
   message,
-  Spin,
-  Tabs,
-  Progress,
-  Timeline,
-  InputNumber,
-  Rate } from
+  Tabs } from
 "antd";
 
 // 导入拆分后的组件
@@ -81,15 +55,8 @@ import {
   CONTRACT_TYPES,
   CONTRACT_STATUS,
   SIGNATURE_STATUS,
-  PAYMENT_TERMS,
   RISK_LEVELS,
-  APPROVAL_LEVELS,
-  CONTRACT_TEMPLATES,
-  DOCUMENT_TYPES,
-  NOTIFICATION_EVENTS,
-  TABLE_CONFIG,
-  DEFAULT_FILTERS,
-  CHART_COLORS } from
+  DEFAULT_FILTERS } from
 '@/lib/constants/contractManagement';
 
 // 导入 API service

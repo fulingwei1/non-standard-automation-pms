@@ -4,12 +4,10 @@ import {
   Plus,
   Edit,
   Trash2,
-  Search,
   DollarSign,
   Users,
   Briefcase,
   Building2,
-  History,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -36,12 +34,8 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
+
+
 import { hourlyRateApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";

@@ -227,7 +227,7 @@ def build_project_mapping(source_db_path: str, target_db_session) -> tuple:
     project_to_opp_map = {}
 
     for project in projects:
-        project_code = project.get('projectCode')
+        project.get('projectCode')
         customer_name = project.get('customerName')
 
         # 尝试通过客户名称和项目编码匹配线索或商机

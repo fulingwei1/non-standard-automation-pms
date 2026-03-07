@@ -9,17 +9,11 @@ import { motion } from "framer-motion";
 import {
   CreditCard,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  CheckCircle2,
   Search,
-  Filter,
   Download,
   Eye,
-  DollarSign,
-  Calendar,
-  Target,
-  BarChart3 } from
+  Target } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -45,7 +39,7 @@ import {
   TableRow } from
 "../components/ui";
 import { cn, formatCurrency, formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { staggerContainer } from "../lib/animations";
 import { projectApi, costApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API

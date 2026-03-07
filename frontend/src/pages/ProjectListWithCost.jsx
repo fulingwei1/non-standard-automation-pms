@@ -30,9 +30,6 @@ import {
   Briefcase,
   Calendar,
   Users,
-  DollarSign,
-  TrendingUp,
-  AlertCircle,
   Eye,
 } from "lucide-react";
 import ProjectFormStepper from "../components/project/ProjectFormStepper";

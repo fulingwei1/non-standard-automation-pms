@@ -4,17 +4,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  DollarSign,
-  TrendingUp,
-  AlertTriangle,
-  Users,
-  Building2,
-  BarChart3,
-  Calendar,
-  Filter } from
-"lucide-react";
+
+
 import { PageHeader } from "../components/layout";
 import {
   Card,
@@ -22,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Badge,
   Input,
   Table,
   TableBody,
@@ -35,9 +25,8 @@ import {
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { costOverrunApi } from "../services/api";
-import { formatAmount, formatDate as _formatDate } from "../lib/utils";
+import { formatAmount } from "../lib/utils";
 
 export default function CostOverrunAnalysis() {
   const [_loading, setLoading] = useState(false);

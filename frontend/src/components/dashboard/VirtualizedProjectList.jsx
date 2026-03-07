@@ -2,7 +2,6 @@
  * VirtualizedProjectList - 虚拟滚动的项目列表组件
  * 用于优化长项目列表的渲染性能
  */
-import { useMemo as _useMemo } from "react";
 import { Link } from "react-router-dom";
 import { VirtualizedList } from "./VirtualizedList";
 import { Progress, HealthBadge } from "../ui";

@@ -2,15 +2,13 @@
  * 需求调研管理
  * 管理客户需求调研记录、现场勘察、问题跟踪
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ClipboardList,
   Search,
-  Filter,
   Plus,
   Calendar,
-  Clock,
   Users,
   Building2,
   MapPin,
@@ -20,19 +18,13 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
-  ChevronRight,
   FileText,
   Image,
   CheckCircle,
-  XCircle,
   AlertTriangle,
-  MessageSquare,
   Paperclip,
-  Camera,
-  Upload,
   X,
   User,
-  Briefcase,
   Target,
   Package,
   Settings,
@@ -47,13 +39,9 @@ import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,

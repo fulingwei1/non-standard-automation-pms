@@ -204,7 +204,7 @@ class CodeAnalyzer:
         in_function = False
 
         for i, line in enumerate(lines, 1):
-            stripped = line.strip()
+            line.strip()
 
             # 检测函数定义
             if not in_function:

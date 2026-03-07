@@ -4,13 +4,10 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import {
-  FileText,
   Plus,
   Search,
   Eye,
-  Edit,
-  CheckSquare,
-  Trash2 } from
+  CheckSquare } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

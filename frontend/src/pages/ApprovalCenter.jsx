@@ -12,10 +12,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ClipboardCheck,
   Clock,
   CheckCircle2,
-  XCircle,
   Search,
   FileText,
   Eye,
@@ -33,8 +31,6 @@ import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "../components/ui/card";
 import StatCard from "../components/common/StatCard";
 import { Button } from "../components/ui/button";

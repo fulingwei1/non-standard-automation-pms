@@ -268,7 +268,7 @@ class PermissionService:
         
         # 生成随机密码
         password = auth.generate_random_password()
-        password_hash = auth.hash_password(password)
+        auth.hash_password(password)
         
         return {
             "success": True,

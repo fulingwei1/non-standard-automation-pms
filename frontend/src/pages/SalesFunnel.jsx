@@ -8,8 +8,6 @@ import {
   Users,
   DollarSign,
   Filter,
-  Calendar,
-  Search,
   ChevronRight } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -18,7 +16,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Button,
   Input } from
 "../components/ui";
 import {

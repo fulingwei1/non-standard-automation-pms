@@ -3,7 +3,7 @@
  * 付款跟踪组件（占位实现，保证页面可运行）
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag } from 'antd';
 import { DollarSign } from 'lucide-react';
 import { CONTRACT_STATUS, CHART_COLORS } from '@/lib/constants/contractManagement';

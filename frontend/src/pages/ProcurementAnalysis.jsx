@@ -12,8 +12,7 @@ import {
   RequestEfficiencyTab,
   QualityRateTab,
   useProcurementData,
-  TIME_RANGE_LABELS,
-  formatAmount as _formatAmount } from
+  TIME_RANGE_LABELS } from
 '../components/procurement-analysis';
 
 export default function ProcurementAnalysis() {

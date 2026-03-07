@@ -2,7 +2,7 @@
  * Alert Center Overview Component - 预警中心概览组件
  * 显示预警的关键指标和快速操作入口
  */
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import {
   AlertTriangle,
   AlertCircle,
@@ -13,8 +13,7 @@ import {
   Activity,
   BarChart3,
   Eye,
-  Settings,
-  RefreshCw } from
+  Settings } from
 "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -22,12 +21,9 @@ import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import {
   ALERT_LEVELS,
-  ALERT_STATUS,
-  ALERT_TYPES,
   getAlertLevelConfig,
   getAlertStatusConfig,
   getAlertTypeConfig,
-  getAlertSummary as _getAlertSummary,
   isBusinessHour,
   formatAlertTime,
   requiresEscalation } from

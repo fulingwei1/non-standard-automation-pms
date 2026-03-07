@@ -8,16 +8,13 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
-  Clock,
   CheckCircle2,
   Circle,
   PlayCircle,
   PauseCircle,
   AlertTriangle,
-  Filter,
   Search,
   ChevronRight,
-  ChevronLeft,
   Flag,
   Folder,
   Timer,
@@ -25,16 +22,12 @@ import {
   CalendarDays,
   List,
   Briefcase,
-  ZoomIn,
-  ZoomOut,
   FileText,
   Upload,
   Send,
   ClipboardCheck,
   Box,
-  Layers,
-  Target,
-  TrendingUp } from
+  Layers } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -47,7 +40,7 @@ import {
 "../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { taskCenterApi, progressApi as _progressApi, projectApi as _projectApi } from "../services/api";
+import { taskCenterApi } from "../services/api";
 
 // Import engineer components
 import GanttChart from "../components/engineer/GanttChart";

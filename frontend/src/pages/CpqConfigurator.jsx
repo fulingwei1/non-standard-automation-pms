@@ -3,17 +3,13 @@
  * Features: Product configuration, Real-time price preview, Price adjustment tracking, Approval prompts
  */
 
-import { useState, useEffect, useCallback as _useCallback, useMemo as _useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Calculator,
   Settings,
   AlertTriangle,
-  CheckCircle2,
   Save,
-  FileText,
-  TrendingUp,
-  TrendingDown,
   History,
   Info,
   Plus,
@@ -34,11 +30,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Textarea,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
   Alert,
   AlertDescription } from
 "../components/ui";

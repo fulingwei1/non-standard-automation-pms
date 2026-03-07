@@ -4,16 +4,13 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
   Save,
-  RefreshCw,
   TrendingUp,
   BarChart3,
   Target,
-  AlertCircle,
   CheckCircle,
   Calculator,
   Info } from
@@ -35,7 +32,6 @@ import {
   RadioGroup,
   RadioGroupItem } from
 "../../components/ui/radio-group";
-import { Checkbox } from "../../components/ui/checkbox";
 import {
   Textarea } from
 "../../components/ui/textarea";
@@ -57,9 +53,7 @@ import {
   BUDGET_RANGES,
   LEAD_TYPES,
   INDUSTRIES,
-  LEAD_SOURCES,
-  LEAD_PRIORITIES,
-  LEAD_STATUSES } from
+  LEAD_SOURCES } from
 "@/lib/constants/leadAssessment";
 
 export const AssessmentForm = ({

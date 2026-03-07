@@ -304,7 +304,7 @@ def create_project(db, customer, contract, users, stage_config, project_index):
     project_name = f"{customer.short_name}{equipment_type}测试设备项目"
 
     # 根据阶段计算进度和日期
-    days_elapsed = {
+    {
         "S1": 5, "S2": 20, "S3": 45, "S4": 75, "S5": 105,
         "S6": 130, "S7": 145, "S8": 160, "S9": 180
     }.get(stage_config["stage"], 0)

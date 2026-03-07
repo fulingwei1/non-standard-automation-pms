@@ -6,16 +6,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Target,
-  Building2,
-  User,
-  Calendar,
-  DollarSign,
-  TrendingUp,
   RefreshCw,
   CheckCircle2,
-  XCircle,
-  Clock,
   AlertTriangle } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -28,12 +20,8 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
+
+
 import {
   Dialog,
   DialogContent,
@@ -49,7 +37,7 @@ import {
   SelectTrigger,
   SelectValue } from
 "../components/ui/select";
-import { cn, formatDate, formatCurrency as _formatCurrency } from "../lib/utils";
+import { cn, formatDate } from "../lib/utils";
 import { opportunityApi } from "../services/api";
 const stageConfigs = {
   DISCOVERY: { label: "发现", color: "bg-blue-500", order: 1 },

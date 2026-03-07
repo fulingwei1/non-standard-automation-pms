@@ -17,12 +17,6 @@ import {
   getCustomerSourceConfig,
   getCustomerScoreConfig,
   getRiskLevelConfig,
-  formatCustomerType as _formatCustomerType,
-  formatCustomerStatus as _formatCustomerStatus,
-  formatCustomerIndustry as _formatCustomerIndustry,
-  formatCustomerSource as _formatCustomerSource,
-  formatCustomerScore as _formatCustomerScore,
-  formatRiskLevel as _formatRiskLevel,
   calculateCustomerValueScore,
   DEFAULT_CUSTOMER_360_DATA } from
 "@/lib/constants/customer360";

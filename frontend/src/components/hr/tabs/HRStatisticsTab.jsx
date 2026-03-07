@@ -15,12 +15,9 @@ import {
   Users,
   Clock,
   GraduationCap,
-  TrendingUp,
   Filter,
   FileSpreadsheet,
-  BarChart3,
-  PieChart,
-  Activity } from
+  BarChart3 } from
 "lucide-react";
 import { fadeIn } from "../../../lib/animations";
 import { cn } from "../../../lib/utils";

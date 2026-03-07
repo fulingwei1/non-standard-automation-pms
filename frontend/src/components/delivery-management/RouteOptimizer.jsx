@@ -1,27 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import {
-  Map, Route, Navigation, MapPin, Truck, Timer, AlertTriangle,
-  CheckCircle, XCircle, RefreshCw, Settings, Eye, Download } from
+  Map, Route, Navigation, MapPin, Truck, RefreshCw, Settings, Download } from
 'lucide-react';
 import { cn } from "../../lib/utils";
 import {
-  deliveryStatusConfigs as _deliveryStatusConfigs,
-  deliveryPriorityConfigs as _deliveryPriorityConfigs,
-  deliveryMethodConfigs as _deliveryMethodConfigs,
-  deliveryStageConfigs as _deliveryStageConfigs,
-  getStatusConfig,
-  getPriorityConfig as _getPriorityConfig,
-  getMethodConfig as _getMethodConfig,
-  getStageConfig as _getStageConfig,
-  formatStatus as _formatStatus,
-  formatPriority as _formatPriority,
-  formatMethod as _formatMethod,
-  formatStage as _formatStage } from
+  getStatusConfig } from
 '@/lib/constants/service';
 
 const fadeIn = {

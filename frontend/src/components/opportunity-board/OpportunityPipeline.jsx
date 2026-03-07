@@ -3,28 +3,21 @@
  * 商机管道视图组件 - 看板式商机管理
  */
 
-import { useState, useEffect, useMemo, useCallback as _useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import {
   Plus,
   BarChart3,
-  Users,
-  DollarSign,
   Target,
-  TrendingUp,
   RefreshCw,
-  Settings,
-  Filter,
   Grid,
-  List,
-  Calendar,
-  Eye } from
+  List } from
 "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { cn, formatCurrency } from "../../lib/utils";
 import OpportunityCard from "./OpportunityCard";
 import OpportunityFilters from "./OpportunityFilters";

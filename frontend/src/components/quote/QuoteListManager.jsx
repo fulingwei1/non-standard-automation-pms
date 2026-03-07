@@ -3,33 +3,21 @@
  * 报价列表管理组件 - 支持列表和卡片视图
  */
 
-import { useState as _useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
-  Filter,
   Plus,
   Eye,
   Edit,
   Copy,
-  Send,
-  History,
-  MoreHorizontal,
-  FileText,
-  DollarSign,
-  Calendar,
   User,
-  Building2,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   XCircle,
   Download,
-  Upload,
-  Grid,
-  List } from
+  Upload } from
 "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
@@ -44,8 +32,7 @@ import {
   isQuoteExpiringSoon,
   formatQuoteNumber,
   formatCurrency,
-  QUOTE_SORT_OPTIONS,
-  QUOTE_VIEW_MODES } from
+  QUOTE_SORT_OPTIONS } from
 "@/lib/constants/quote";
 
 export const QuoteListManager = ({

@@ -1,7 +1,6 @@
 /**
  * 开工报工对话框组件
  */
-import { CheckCircle2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';

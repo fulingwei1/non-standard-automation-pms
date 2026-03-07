@@ -124,7 +124,7 @@ def migrate_table(db, engine, table_name: str, config: Dict, tenant_id: int, dry
         统计信息字典
     """
     tenant_field = config['tenant_field']
-    id_field = config['id_field']
+    config['id_field']
     
     # 检查表是否存在
     if not check_table_exists(engine, table_name):

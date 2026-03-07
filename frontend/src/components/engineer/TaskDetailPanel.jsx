@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import {
   X,
   Calendar,
-  Clock,
   Timer,
   Flag,
   Folder,
@@ -25,7 +24,6 @@ import {
   Layers,
   Box,
   ClipboardCheck,
-  MoreHorizontal,
   ExternalLink,
   ChevronRight,
   Target,

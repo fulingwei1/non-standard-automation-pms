@@ -4,75 +4,49 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Search,
-  Filter,
   Plus,
   LayoutGrid,
   List as ListIcon,
   Calendar,
   Building2,
-  User,
   Phone,
   Mail,
-  MapPin,
-  Clock,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
-  Star,
-  TrendingUp,
-  TrendingDown,
   Eye,
   Edit,
   FileText,
   Target,
-  PhoneCall,
   MessageSquare,
   Users,
   Award,
   BarChart3,
   Settings,
-  RefreshCw,
   Download,
   Upload } from
 "lucide-react";
 
 import {
   Card,
-  Table,
   Button,
   Input,
   Select,
   DatePicker,
   Modal,
-  Form,
   Space,
   Tag,
-  Tooltip,
   Row,
   Col,
-  Statistic,
-  Divider,
-  List,
-  Avatar,
   Typography,
-  Alert,
-  Badge,
   Dropdown,
   Menu,
-  Switch,
   Radio,
-  Checkbox,
   message,
-  Spin,
   Tabs,
   Progress,
-  Timeline,
-  Rate,
-  InputNumber,
-  Slider,
   Steps } from
 "antd";
 
@@ -96,10 +70,7 @@ import {
   BUDGET_RANGES,
   DECISION_MAKER_ROLES,
   ASSESSMENT_CRITERIA,
-  FOLLOW_UP_STATUS,
-  TASK_TYPES,
   SCORE_COLORS,
-  TABLE_CONFIG,
   DEFAULT_FILTERS } from
 '@/lib/constants/leadAssessment';
 

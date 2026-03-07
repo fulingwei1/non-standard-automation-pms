@@ -3,26 +3,15 @@
  * PMC 发货管理页面 (重构版本) - shadcn/Tailwind Dark Theme
  */
 
-import { useState, useEffect, useCallback as _useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Truck,
   Calendar,
-  Package,
-  MapPin,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   Search,
-  Filter,
   Plus,
-  Edit,
-  Eye,
-  FileText,
-  TrendingUp,
   PackageCheck,
-  PackageX,
   RefreshCw,
   Download,
   ChevronRight,

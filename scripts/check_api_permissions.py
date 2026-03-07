@@ -54,7 +54,7 @@ class APIPermissionChecker:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     lines = f.readlines()
-                    content = ''.join(lines)
+                    ''.join(lines)
 
                 # 使用正则表达式查找路由装饰器和权限检查
                 # 匹配 @router.get/post/put/delete("path")

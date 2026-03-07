@@ -6,12 +6,9 @@ import {
   TrendingDown,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Truck,
   BarChart3,
   Activity,
-  Target,
-  Zap,
   RefreshCw } from
 "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -20,15 +17,10 @@ import { Progress } from "../../components/ui/progress";
 import { Button } from "../../components/ui/button";
 import { SimpleBarChart, SimplePieChart, SimpleLineChart } from "../../components/administrative/StatisticsCharts";
 import {
-  MATERIAL_STATUS,
-  MATERIAL_TYPES,
-  IMPACT_LEVELS,
-  ANALYSIS_METRICS,
   getMaterialStatus,
   getMaterialType,
   getImpactLevel,
-  calculateReadinessRate,
-  calculateAnalysisScore as _calculateAnalysisScore } from
+  calculateReadinessRate } from
 "@/lib/constants/materialAnalysis";
 import { api, purchaseApi } from "../../services/api";
 import { cn } from "../../lib/utils";

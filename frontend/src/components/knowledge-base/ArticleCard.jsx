@@ -7,11 +7,9 @@ import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/formatters";
 import { fadeIn, scaleIn } from "../../lib/animations";
 import {
-  FileText,
   Clock,
   Eye,
   User,
-  Tag,
   Bookmark,
   Share2,
   MoreHorizontal,
@@ -19,18 +17,13 @@ import {
   TrendingUp,
   ChevronRight,
   Calendar,
-  MessageCircle,
   ThumbsUp,
   File,
-  ExternalLink,
   Download } from
 "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
-  articleCategoryConfigs as _articleCategoryConfigs,
-  articleStatusConfigs as _articleStatusConfigs,
-  articlePriorityConfigs as _articlePriorityConfigs,
   articleTypeConfigs,
   getCategoryConfig,
   formatCategory,

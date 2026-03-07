@@ -3,7 +3,7 @@
  * 用于展示告警的详细信息列表
  */
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -12,9 +12,6 @@ import {
   Download,
   Eye,
   AlertTriangle,
-  Clock,
-  CheckCircle2,
-  XCircle,
   RefreshCw } from
 "lucide-react";
 import {
@@ -44,8 +41,7 @@ import {
 import {
   ALERT_LEVEL_STATS,
   ALERT_STATUS_STATS,
-  ALERT_TYPE_STATS,
-  formatStatValue as _formatStatValue } from
+  ALERT_TYPE_STATS } from
 "@/lib/constants/alert";
 
 export function AlertTable({

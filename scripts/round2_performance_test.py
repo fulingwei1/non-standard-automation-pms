@@ -82,7 +82,7 @@ def test_import_performance():
     for module_name, class_name in test_modules:
         start_time = time.time()
         try:
-            module = __import__(module_name, fromlist=[class_name])
+            __import__(module_name, fromlist=[class_name])
             import_time = time.time() - start_time
             import_times.append(import_time)
             print(f"  ✅ {module_name}: {import_time:.4f}s")

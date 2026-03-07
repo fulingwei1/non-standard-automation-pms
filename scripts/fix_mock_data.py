@@ -100,7 +100,6 @@ def remove_mock_usage_from_catch(content: str) -> str:
     """移除 catch 块中的 Mock 数据使用"""
 
     # 模式: } catch (err) { if (isDemoAccount) { setData(mockData); } }
-    pattern = r'}\s*catch\s*\([^)]*\)\s*\{\s*(?:if\s*\(!?isDemoAccount.*?\)\s*\{[^}]*\}\s*)?(?:if\s*\(\!?isDemoAccount.*?\)\s*\{[^}]*\}\s*)?(?:else\s*\{[^}]*\})?\s*\}'
 
     # 更简单的模式：只移除 isDemoAccount 相关
     pattern2 = r'if\s*\(!?isDemoAccount.*?\)\s*\{[^}]*\}'

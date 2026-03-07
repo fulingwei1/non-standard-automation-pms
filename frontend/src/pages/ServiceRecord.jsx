@@ -15,11 +15,10 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Plus,
   Search,
-  Filter,
   Eye,
   Edit,
   FileText,
@@ -28,29 +27,20 @@ import {
   User,
   Clock,
   Camera,
-  CheckCircle2,
-  XCircle,
   Download,
   RefreshCw,
   Wrench,
   Users,
-  Settings,
   AlertTriangle,
   Star,
-  Phone,
-  Mail,
-  ChevronRight,
   Upload,
-  Image as ImageIcon,
   FileCheck,
   X } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
+  CardContent } from
 "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -60,14 +50,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogBody } from
+  DialogFooter } from
 "../components/ui/dialog";
 import { Textarea } from "../components/ui/textarea";
 import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
 import { toast } from "../components/ui/toast";
-import { cn as _cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { serviceApi } from "../services/api";
 
@@ -76,10 +63,8 @@ import {
   ServiceRecordOverview,
   SERVICE_STATUS,
   SERVICE_TYPES,
-  FEEDBACK_RATINGS,
   getServiceStatusConfig,
   getServiceTypeConfig,
-  getFeedbackConfig as _getFeedbackConfig,
   calculateServiceDuration } from
 "../components/service-record";
 

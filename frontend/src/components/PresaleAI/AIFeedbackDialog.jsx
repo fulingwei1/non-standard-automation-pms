@@ -2,7 +2,7 @@
  * AI反馈对话框组件
  * Team 10: 售前AI系统集成与前端UI
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,

@@ -3,22 +3,15 @@
  * 可视化评分矩阵 - 线索评分的视觉化展示和分析
  */
 
-import { useState, useMemo, useEffect as _useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
   BarChart3,
-  PieChart,
-  Radar,
-  Eye,
-  Filter,
-  Download,
   RefreshCw,
   Target,
   Zap,
-  AlertCircle,
   CheckCircle,
-  Clock,
   ArrowUpRight,
   ArrowDownRight,
   Minus } from
@@ -33,13 +26,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { cn } from "../../lib/utils";
 import {
   SCORING_CATEGORIES,
-  SCORE_THRESHOLDS,
   FOLLOW_UP_STRATEGIES,
   LEAD_SOURCES,
-  LEAD_TYPES,
   INDUSTRIES,
   BUDGET_RANGES,
-  DECISION_TIMELINES,
   LEAD_STATUSES } from
 "@/lib/constants/leadAssessment";
 import { Checkbox } from "../ui/checkbox";

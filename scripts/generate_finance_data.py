@@ -474,7 +474,6 @@ def generate_funding_usages(db, funding_rounds, users):
 
     for round_obj in funding_rounds:
         total_planned = 0
-        usage_items = []
 
         # 根据轮次类型调整用途分配
         if round_obj.round_type == "SEED":

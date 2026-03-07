@@ -4,7 +4,7 @@
  * Features: Team member management, Performance tracking, Target assignment, Team analytics
  */
 
-import { useState, useMemo, useEffect, useRef as _useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {

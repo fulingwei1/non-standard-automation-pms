@@ -10,8 +10,8 @@ import {
   Skeleton } from
 "../components/ui";
 import ContributionChart from "../components/project/ContributionChart";
-import { formatCurrency, formatDate as _formatDate } from "../lib/utils";
-import { Award, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
+import { formatCurrency } from "../lib/utils";
+import { Award } from "lucide-react";
 
 export default function ProjectContributionReport() {
   const { id } = useParams();

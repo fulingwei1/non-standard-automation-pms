@@ -139,7 +139,7 @@ def import_employees():
             )
             phone = clean_phone(row.get("联系方式"))
             is_active = is_active_employee(row.get("在职离职状态"))
-            entry_date = parse_entry_date(row.get("入职时间"))
+            parse_entry_date(row.get("入职时间"))
 
             # 检查是否已存在（按姓名+部门匹配）
             existing = (

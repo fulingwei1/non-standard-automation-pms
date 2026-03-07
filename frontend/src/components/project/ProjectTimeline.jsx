@@ -17,7 +17,6 @@ import {
 "../ui";
 import {
   Search,
-  Filter,
   Calendar,
   User,
   FileText,

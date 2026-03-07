@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { rdProjectApi, projectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
   Button,
   Badge,
   Progress,
-  CircularProgress,
   Skeleton,
   Tabs,
   TabsList,
@@ -22,7 +20,6 @@ import {
   ArrowLeft,
   Edit2,
   FlaskConical,
-  Calendar,
   Users,
   DollarSign,
   FileText,

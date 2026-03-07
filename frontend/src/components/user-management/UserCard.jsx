@@ -19,20 +19,16 @@ import {
   Eye,
   Edit,
   Trash2,
-  Settings,
   User as UserIcon,
   Mail,
   Phone,
   Building2,
-  MapPin,
-  CreditCard,
   Calendar,
   Lock,
   Key,
   MoreHorizontal,
   Shield,
   UserCheck,
-  UserX,
   RefreshCw,
   Ban,
   Check,
@@ -40,12 +36,10 @@ import {
   Activity } from
 "lucide-react";
 import {
-  userStatusConfigs as _userStatusConfigs,
   userRoleConfigs,
   accountStatusConfigs,
   getAccountStatusConfig,
   formatUserRole,
-  getUserStatusConfig as _getUserStatusConfig,
   cn } from
 "@/lib/constants/userManagement";
 import { formatDate, formatDateTime } from "../../lib/utils";

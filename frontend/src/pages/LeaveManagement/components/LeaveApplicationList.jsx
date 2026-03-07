@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent, Button, Badge, Input } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { LEAVE_TYPES, LEAVE_STATUSES } from '../constants';

@@ -16,7 +16,7 @@ import {
   AlertTriangle,
   Calculator,
 } from "lucide-react";
-import { Card, CardContent, Badge, Button, Progress } from "../ui";
+import { Badge, Button, Progress } from "../ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

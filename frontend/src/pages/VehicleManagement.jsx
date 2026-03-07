@@ -6,21 +6,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Search,
-  Filter,
   Plus,
   Car,
-  Fuel,
   Wrench,
   MapPin,
-  Clock,
-  User,
   CheckCircle2,
-  XCircle,
-  AlertTriangle,
   Edit,
-  Eye,
-  Calendar } from
+  Eye } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -36,10 +28,9 @@ import {
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { cn, formatCurrency } from "../lib/utils";
+import { staggerContainer } from "../lib/animations";
 import {
-  SimpleBarChart,
   MonthlyTrendChart,
   SimplePieChart,
   TrendComparisonCard } from

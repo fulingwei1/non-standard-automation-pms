@@ -3,41 +3,31 @@
  * 客服工程师工作台 - 客户技术支持、问题处理、现场服务、客户沟通 (重构版本)
  */
 
-import { useState, useMemo, useEffect, useCallback as _useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   AlertCircle,
   CheckCircle2,
   Clock,
   TrendingUp,
   Users,
-  Wrench,
   FileText,
-  Phone,
-  MapPin,
-  Calendar,
   Star,
-  ChevronRight,
   Plus,
   Search,
-  Filter,
   Eye,
   Edit,
-  MessageSquare,
   Settings,
   RefreshCw,
   Download,
-  Upload,
   BarChart3,
   Headphones,
   Car,
-  Shield,
-  Award } from
+  Shield } from
 "lucide-react";
 
 import {
   Card,
-  Table,
   Button,
   Input,
   Select,
@@ -46,28 +36,14 @@ import {
   Form,
   Space,
   Tag,
-  Tooltip,
   Row,
   Col,
-  Statistic,
-  Divider,
-  List,
-  Avatar,
   Typography,
-  Alert,
-  Badge,
   Dropdown,
   Menu,
-  Switch,
-  Radio,
-  Checkbox,
   message,
-  Spin,
   Tabs,
-  Progress,
-  Timeline,
   Rate,
-  InputNumber,
   Steps } from
 "antd";
 
@@ -84,15 +60,6 @@ import {
   SERVICE_TYPES,
   TICKET_STATUS,
   PRIORITY_LEVELS,
-  SATISFACTION_LEVELS,
-  SERVICE_PHASES,
-  RESPONSE_CHANNELS,
-  RESOLUTION_METHODS,
-  WARRANTY_TYPES,
-  PERFORMANCE_METRICS,
-  ESCALATION_LEVELS,
-  TABLE_CONFIG,
-  CHART_COLORS,
   DEFAULT_FILTERS } from
 '../lib/constants/service';
 

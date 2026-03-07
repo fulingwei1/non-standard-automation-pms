@@ -19,7 +19,6 @@ import {
   DialogBody,
   DialogFooter,
   Input,
-  Textarea,
   Select,
   SelectContent,
   SelectItem,
@@ -29,28 +28,19 @@ import {
 import {
   Plus,
   Search,
-  Filter,
   User,
   MapPin,
   Phone,
   Mail,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
   UserCheck,
   UserX,
-  Building,
   Briefcase,
   Award,
   Star,
-  MessageCircle,
-  ChevronDown,
-  CalendarDays } from
+  ChevronDown } from
 "lucide-react";
 import { cn } from "../../lib/utils";
 import {
-  roleConfigs as _roleConfigs,
   formatDate,
   formatDuration,
   hasPermission } from

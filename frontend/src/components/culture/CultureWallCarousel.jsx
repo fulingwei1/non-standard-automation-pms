@@ -8,7 +8,6 @@ import {
   Bell,
   Award,
   TrendingUp,
-  Calendar,
   CheckCircle2,
   Clock,
   ArrowRight,
@@ -16,7 +15,6 @@ import {
   Pause,
   ChevronLeft,
   ChevronRight,
-  X,
 } from "lucide-react";
 import { Card, CardContent, Badge, Button } from "../ui";
 import { cn } from "../../lib/utils";

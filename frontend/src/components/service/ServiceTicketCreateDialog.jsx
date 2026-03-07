@@ -17,7 +17,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Send, Plus, X } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { problemTypeConfigs, urgencyConfigs } from "@/lib/constants/service";import { toast } from "sonner";
 
 export function ServiceTicketCreateDialog({ onClose, onSubmit, submitting }) {

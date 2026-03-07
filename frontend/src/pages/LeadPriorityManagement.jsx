@@ -4,17 +4,9 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   Star,
-  TrendingUp,
   Target,
-  Users,
-  Building2,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Filter,
   RefreshCw } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -25,7 +17,6 @@ import {
   CardTitle,
   Button,
   Badge,
-  Input,
   Table,
   TableBody,
   TableCell,
@@ -37,7 +28,6 @@ import {
   TabsList,
   TabsTrigger } from
 "../components/ui";
-import { fadeIn as _fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
 import { priorityApi } from "../services/api";
 
 export default function LeadPriorityManagement() {

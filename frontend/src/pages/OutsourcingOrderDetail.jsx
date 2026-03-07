@@ -7,13 +7,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Package,
-  Clock,
   CheckCircle2,
-  XCircle,
-  TrendingUp,
   RefreshCw,
-  Calendar,
-  FileText,
   Factory,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";

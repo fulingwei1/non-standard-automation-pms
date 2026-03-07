@@ -5,14 +5,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Factory,
   Plus,
   Search,
   Eye,
   Edit,
   Wrench,
-  Users,
-  Settings,
   CheckCircle2,
   XCircle } from
 "lucide-react";
@@ -27,7 +24,6 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -51,7 +47,6 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn, formatDate as _formatDate } from "../lib/utils";
 import { productionApi, userApi } from "../services/api";
 
 const typeConfigs = {

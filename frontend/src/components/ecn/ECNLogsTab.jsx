@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";

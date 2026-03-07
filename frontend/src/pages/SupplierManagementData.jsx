@@ -1,18 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Plus,
   Search,
   Edit3,
-  Trash2,
   Eye,
-  Building2,
-  Phone,
-  Mail,
-  MapPin,
   Star,
-  Award,
-  Package } from
+  Award } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

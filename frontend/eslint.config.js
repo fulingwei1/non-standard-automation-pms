@@ -4,6 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import react from 'eslint-plugin-react'
 import importX from 'eslint-plugin-import-x'
+import unusedImports from 'eslint-plugin-unused-imports'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
@@ -18,6 +19,7 @@ export default defineConfig([
     plugins: {
       react,
       'import-x': importX,
+      'unused-imports': unusedImports,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -34,18 +36,20 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': [
+      'no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
         'error',
         {
+          vars: 'all',
           varsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
-          argsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig)$',
+          args: 'after-used',
+          argsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|_).*',
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      // Import 检查 - 防止导入不存在的导出名
       'import-x/named': 'off',
       'import-x/no-unresolved': 'off',
-      // React Compiler 相关规则过于严格，先关闭以便渐进式收敛
       'react-hooks/preserve-manual-memoization': 'off',
       'react-hooks/static-components': 'off',
       'react-hooks/immutability': 'off',
@@ -53,7 +57,6 @@ export default defineConfig([
       'react-hooks/set-state-in-render': 'off',
       'react-hooks/exhaustive-deps': 'off',
       'react-refresh/only-export-components': 'off',
-      // React JSX 规则 - 检测未转义的字符和标签问题
       'react/no-unescaped-entities': [
         'error',
         {
@@ -61,7 +64,6 @@ export default defineConfig([
         },
       ],
       'react/jsx-closing-tag-location': 'off',
-      // 关闭过于严格的格式规则，只保留关键的错误检测
       'react/jsx-closing-bracket-location': 'off',
       'react/jsx-indent': 'off',
       'react/jsx-indent-props': 'off',
@@ -100,6 +102,9 @@ export default defineConfig([
   {
     files: ['src/**/*.{test,spec}.{js,jsx}', 'src/test/**/*.{js,jsx}'],
     extends: [js.configs.recommended],
+    plugins: {
+      'unused-imports': unusedImports,
+    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -126,10 +131,13 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': [
+      'no-unused-vars': 'off',
+      'unused-imports/no-unused-vars': [
         'error',
         {
+          vars: 'all',
           varsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|container|_).*',
+          args: 'after-used',
           argsIgnorePattern: '^(?:[A-Z_].*|motion|AnimatePresence|LazyMotion|MotionConfig|_).*',
           caughtErrorsIgnorePattern: '^_',
         },

@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import {
-  FileText,
   Plus,
   Search,
   Edit3,
-  Trash2,
-  Upload,
-  AlertCircle } from
+  Trash2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

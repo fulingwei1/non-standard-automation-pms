@@ -5,17 +5,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package,
   Plus,
   Search,
-  Filter,
-  Eye,
-  Edit,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  TrendingUp,
-  Factory } from
+  Eye } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -52,7 +44,7 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { outsourcingApi, projectApi } from "../services/api";
 const statusConfigs = {
   DRAFT: { label: "草稿", color: "bg-slate-500" },

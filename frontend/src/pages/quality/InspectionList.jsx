@@ -2,11 +2,11 @@
  * 检验任务列表
  * 调用 GET /production/quality/inspection
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  FileCheck, Search, Filter, ChevronLeft, ChevronRight, Plus,
+  FileCheck, Search, ChevronLeft, ChevronRight, Plus,
   RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";

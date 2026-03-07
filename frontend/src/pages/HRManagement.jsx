@@ -1,15 +1,11 @@
-import { useState, useEffect, useCallback as _useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
   FileText,
   Calendar,
   AlertCircle,
-  TrendingUp,
-  CheckCircle,
-  Plus,
-  Edit,
-  Eye } from
+  Plus } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -36,7 +32,6 @@ import {
   DialogFooter } from
 "../components/ui/dialog";
 import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
 import {
   Tabs,
   TabsContent,

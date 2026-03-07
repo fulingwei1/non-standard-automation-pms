@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn as _cn } from "../lib/utils";
 import { pmoApi, projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -27,13 +26,11 @@ import {
   Search,
   CheckCircle2,
   XCircle,
-  Clock,
   Target,
   FileCheck,
   ArrowRight,
   Play,
-  Eye,
-  Calendar } from
+  Eye } from
 "lucide-react";
 
 const staggerContainer = {

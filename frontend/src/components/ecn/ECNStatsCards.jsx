@@ -3,7 +3,6 @@
  * ECN统计卡片组件
  */
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
 import { 
   FileText, 
   Clock, 

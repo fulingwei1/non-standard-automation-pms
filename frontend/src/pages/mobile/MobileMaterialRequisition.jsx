@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue } from
 "../../components/ui/select";
-import { cn as _cn } from "../../lib/utils";
 import { productionApi, materialApi } from "../../services/api";
 
 export default function MobileMaterialRequisition() {

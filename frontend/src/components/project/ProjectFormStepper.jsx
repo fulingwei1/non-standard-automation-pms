@@ -9,11 +9,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Button,
-  Input,
-  FormField,
-  FormTextarea,
-  FormSelect,
-  Badge,
 } from "../ui";
 import {
   Dialog,
@@ -30,9 +25,7 @@ import {
   Building2,
   DollarSign,
   Calendar,
-  User,
   FileText,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
 import { cn } from "../../lib/utils";

@@ -5,16 +5,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package,
   Plus,
   Search,
-  Filter,
   Eye,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  FileText,
-  TrendingUp } from
+  CheckCircle2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -50,7 +44,7 @@ import {
   DialogBody,
   DialogFooter } from
 "../components/ui/dialog";
-import { cn as _cn, formatDate } from "../lib/utils";
+import { formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
 const statusConfigs = {
   PENDING: { label: "待审批", color: "bg-blue-500" },

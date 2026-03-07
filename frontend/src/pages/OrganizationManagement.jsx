@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Plus,
-  Search,
   Edit3,
   Trash2,
   Eye,
@@ -14,7 +13,6 @@ import {
   List,
   Network,
   UserCircle,
-  MoreHorizontal,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -32,7 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui";

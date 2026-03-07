@@ -8,7 +8,7 @@
  * - 异步错误边界
  */
 
-import { describe, it, expect, vi, beforeEach, _afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { message, Modal } from 'antd';
 import * as errorService from '../errorService';
 

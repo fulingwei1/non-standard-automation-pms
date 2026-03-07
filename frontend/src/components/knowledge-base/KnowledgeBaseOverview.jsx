@@ -3,11 +3,10 @@
  * 知识库概览组件
  */
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Row, Col, Statistic, Progress, Tag, Avatar, Button, Flex } from 'antd';
 import {
   BookOpen,
-  FileText,
   Users,
   Download,
   Eye,
@@ -18,9 +17,7 @@ import {
 'lucide-react';
 import {
   KNOWLEDGE_TYPES,
-  FILE_TYPES,
-  CATEGORIES,
-  ACCESS_LEVELS } from
+  FILE_TYPES } from
 '@/lib/constants/knowledge';
 
 const KnowledgeBaseOverview = ({ data, loading, onNavigate }) => {

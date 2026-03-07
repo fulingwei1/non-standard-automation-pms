@@ -979,14 +979,13 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
             bom_materials = []
 
     # 创建采购订单（只在S3及以后阶段创建，使用BOM物料）
-    purchase_orders = []
     if project.stage in ["S3", "S4", "S5", "S6", "S7", "S8", "S9"]:
         try:
             # 如果没有BOM物料，使用所有有供应商的物料
             if not bom_materials:
                 bom_materials = [m for m in materials if m.default_supplier_id]
             if bom_materials:
-                purchase_orders = create_purchase_orders(db, project, bom_materials, suppliers, users)
+                create_purchase_orders(db, project, bom_materials, suppliers, users)
         except Exception as e:
             import traceback
             print(f"    警告: 项目 {project.project_code} 采购订单创建失败: {e}")
@@ -994,48 +993,43 @@ def create_project(db, customer, contract, users, stage_config, project_index, m
 
     # 创建验收单
     try:
-        acceptance = create_acceptance_orders(db, project, machine, users, stage_config)
+        create_acceptance_orders(db, project, machine, users, stage_config)
     except Exception as e:
         import traceback
         print(f"    警告: 项目 {project.project_code} 验收单创建失败: {e}")
         traceback.print_exc()
-        acceptance = None
 
     # 创建发票
     try:
-        invoices = create_invoices(db, project, contract, payment_plans, users)
+        create_invoices(db, project, contract, payment_plans, users)
     except Exception as e:
         import traceback
         print(f"    警告: 项目 {project.project_code} 发票创建失败: {e}")
         traceback.print_exc()
-        invoices = []
 
     # 创建项目成员
     try:
-        members = create_project_members(db, project, users)
+        create_project_members(db, project, users)
     except Exception as e:
         import traceback
         print(f"    警告: 项目 {project.project_code} 项目成员创建失败: {e}")
         traceback.print_exc()
-        members = []
 
     # 创建项目文档
     try:
-        docs = create_project_documents(db, project, stage_config)
+        create_project_documents(db, project, stage_config)
     except Exception as e:
         import traceback
         print(f"    警告: 项目 {project.project_code} 项目文档创建失败: {e}")
         traceback.print_exc()
-        docs = []
 
     # 创建项目成本
     try:
-        costs = create_project_costs(db, project, stage_config)
+        create_project_costs(db, project, stage_config)
     except Exception as e:
         import traceback
         print(f"    警告: 项目 {project.project_code} 项目成本创建失败: {e}")
         traceback.print_exc()
-        costs = []
 
     # 创建任务
     tasks_config = {

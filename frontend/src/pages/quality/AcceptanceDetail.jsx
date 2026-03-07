@@ -2,7 +2,7 @@
  * 验收详情页
  * 调用 GET /acceptance-orders/:id
  */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {

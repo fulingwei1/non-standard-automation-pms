@@ -28,9 +28,7 @@ import {
   TrendingUp,
   DollarSign,
   Clock,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle } from
+  AlertTriangle } from
 "lucide-react";
 import {
   evaluationStatusConfigs,

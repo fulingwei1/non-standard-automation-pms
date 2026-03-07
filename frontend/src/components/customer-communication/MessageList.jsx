@@ -2,12 +2,12 @@
  * Customer Communication Message List Component
  * 客户沟通消息列表组件
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import {
-  Search, Filter, Send, CheckCircle, Circle,
-  MessageSquare, FileText, AlertCircle, Clock } from
+  Search, Send, CheckCircle, Circle,
+  MessageSquare, AlertCircle, Clock } from
 "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -27,9 +27,6 @@ import {
   statusConfigs,
   typeConfigs,
   priorityConfigs,
-  channelConfigs as _channelConfigs,
-  getStatusConfig as _getStatusConfig,
-  getTypeConfig as _getTypeConfig,
   getPriorityConfig,
   getChannelConfig,
   formatStatus,

@@ -7,8 +7,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { salesTeamApi } from "../../../../services/api";
 import {
   DEFAULT_RANKING_METRICS,
-  FALLBACK_RANKING_FIELDS,
-  buildMetricDetailMap as _buildMetricDetailMap } from
+  FALLBACK_RANKING_FIELDS } from
 "@/lib/constants/salesTeam";
 
 export const useSalesTeamRanking = (filters, showRanking, dateError) => {

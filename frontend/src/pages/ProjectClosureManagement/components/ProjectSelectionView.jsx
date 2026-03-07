@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { Search, ArrowRight } from "lucide-react";
 import { PageHeader } from "../../../components/layout/PageHeader";

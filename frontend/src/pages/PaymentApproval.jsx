@@ -4,24 +4,18 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ClipboardCheck,
   Search,
-  Filter,
   CheckCircle2,
-  XCircle,
-  Clock,
   AlertTriangle,
   DollarSign,
-  Building2,
   FileText,
-  ChevronRight,
   Eye,
   Check,
   X,
   Download,
-  Calendar,
   CreditCard,
   Receipt,
   ShoppingCart,
@@ -36,7 +30,6 @@ import {
   Button,
   Badge,
   Input,
-  Progress,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -44,7 +37,7 @@ import {
   DialogDescription,
   DialogFooter } from
 "../components/ui";
-import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
+import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { invoiceApi, purchaseApi } from "../services/api";
 import { toast } from "../components/ui/toast";

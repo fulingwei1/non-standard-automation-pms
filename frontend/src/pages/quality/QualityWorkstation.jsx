@@ -2,26 +2,18 @@
  * 质量工程师/质量主管工作台
  * 核心入口页面，展示检验任务、质量问题、验收任务等
  */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { qualityApi } from "../../services/api/quality";
 import { motion } from "framer-motion";
 import {
-  CheckCircle,
   AlertCircle,
   FileCheck,
   TrendingUp,
-  Search,
-  Bell,
   Shield,
-  ClipboardList,
   Award,
   AlertTriangle,
-  Clock,
-  CheckSquare,
-  XCircle,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片

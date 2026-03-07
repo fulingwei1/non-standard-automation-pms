@@ -8,7 +8,6 @@ import { ArrowLeft, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 

@@ -4,7 +4,7 @@
  */
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import { Card, CardContent, Button, Badge, Progress } from "../../../components/ui";
+import { Card, CardContent, Badge, Progress } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { getStrategyHealthConfig } from "../../../lib/constants/strategy";

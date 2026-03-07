@@ -2,12 +2,12 @@
  * 不合格品管理
  * 调用 /production/quality/defect-analysis, /production/quality/rework, /production/quality/corrective-action
  */
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  XCircle, Search, ChevronLeft, ChevronRight, RefreshCw,
-  Plus, AlertTriangle, Clock, CheckCircle, Wrench, FileText,
+  XCircle, ChevronLeft, ChevronRight, RefreshCw,
+  Plus, AlertTriangle, Wrench,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import { Button } from "../../components/ui/button";

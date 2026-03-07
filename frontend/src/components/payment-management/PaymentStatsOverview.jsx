@@ -10,22 +10,13 @@ import {
   BarChart3,
   PieChart,
   Calendar,
-  Target,
-  FileText,
-  Bell,
-  CreditCard,
-  Banknote } from
+  Bell } from
 "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
 import { SimpleBarChart, SimplePieChart, SimpleLineChart } from "../../components/administrative/StatisticsCharts";
 import {
-  PAYMENT_STATUS,
-  PAYMENT_TYPES,
-  AGING_PERIODS,
   COLLECTION_LEVELS,
-  PAYMENT_METRICS,
   getPaymentStatus,
   getPaymentType,
   getAgingPeriod,
@@ -33,8 +24,7 @@ import {
   calculateCollectionRate,
   calculateDSO,
   formatCurrency,
-  formatPercentage,
-  generateCollectionReport as _generateCollectionReport } from
+  formatPercentage } from
 "@/lib/constants/finance";
 import { cn } from "../../lib/utils";
 

@@ -27,15 +27,10 @@ import {
   GitBranch,
   AlertTriangle,
   Users,
-  DollarSign,
-  Calendar,
-  FileText,
-  TrendingUp } from
+  FileText } from
 "lucide-react";
-import {
-  impactTypeConfigs as _impactTypeConfigs } from
-"@/lib/constants/ecn";
-import { cn as _cn, formatDate as _formatDate } from "../../lib/utils";
+
+
 
 export function ECNImpactAnalysis({
   ecn,

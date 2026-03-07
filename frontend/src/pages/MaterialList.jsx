@@ -5,18 +5,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Package,
   Plus,
   Search,
-  Filter,
-  Edit,
-  Trash2,
   Eye,
-  Building2,
-  Tag,
-  DollarSign,
-  Box,
-  AlertCircle } from
+  Building2 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -53,8 +45,7 @@ import {
   DialogFooter } from
 "../components/ui/dialog";
 import { ApiIntegrationError } from "../components/ui";
-import { cn as _cn, formatCurrency } from "../lib/utils";
-import { fadeIn as _fadeIn } from "../lib/animations";
+import { formatCurrency } from "../lib/utils";
 import { materialApi, supplierApi } from "../services/api";
 export default function MaterialList() {
   const _navigate = useNavigate();

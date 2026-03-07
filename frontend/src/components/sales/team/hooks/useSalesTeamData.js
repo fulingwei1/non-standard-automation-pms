@@ -3,7 +3,7 @@
  * 负责获取和处理销售团队数据
  */
 
-import { useState, useCallback, useEffect, useMemo as _useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   salesStatisticsApi,
   salesTeamApi,

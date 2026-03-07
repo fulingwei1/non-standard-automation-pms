@@ -13,7 +13,6 @@ import {
   GitBranch,
   Split,
   Trash2,
-  Settings,
 } from 'lucide-react';
 import { Button, Tooltip } from 'antd';
 

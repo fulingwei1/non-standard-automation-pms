@@ -2,10 +2,10 @@
  * 质量报表页
  * 调用 GET /production/quality/trend, /production/quality/statistics, /production/quality/pareto
  */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  TrendingUp, RefreshCw, Calendar, BarChart3,
+  TrendingUp, RefreshCw, BarChart3,
   PieChart, AlertTriangle, CheckCircle, Target,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";

@@ -7,16 +7,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
-  Search,
-  Filter,
   Eye,
-  Send,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  User,
-  CheckCircle2,
   XCircle,
   RefreshCw,
   Download,
@@ -85,13 +76,8 @@ import {
 } from "../components/customer-satisfaction";
 
 import {
-  SATISFACTION_LEVELS,
   SURVEY_STATUS,
   SURVEY_TYPES,
-  QUESTION_TYPES,
-  ANALYSIS_PERIODS,
-  FEEDBACK_CATEGORIES,
-  CHART_COLORS,
   EXPORT_FORMATS,
   DEFAULT_FILTERS,
   TABLE_CONFIG,

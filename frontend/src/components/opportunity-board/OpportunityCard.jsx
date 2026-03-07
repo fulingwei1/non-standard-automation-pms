@@ -14,22 +14,16 @@ import {
   Phone,
   Mail,
   Calendar,
-  DollarSign,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
   Clock,
-  Star,
   ArrowRight,
   ExternalLink,
-  Copy,
-  Share2
+  Copy
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Progress } from "../../components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 import { cn } from "../../lib/utils";
 import {

@@ -3,7 +3,7 @@
  * 用于展示告警在各维度上的分布情况
  */
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -29,9 +29,7 @@ import { Button } from "../../components/ui/button";
 import {
   ALERT_LEVEL_STATS,
   ALERT_STATUS_STATS,
-  ALERT_TYPE_STATS,
-  CHART_TYPES,
-  formatStatValue as _formatStatValue } from
+  ALERT_TYPE_STATS } from
 "@/lib/constants/alert";
 
 export function AlertDistribution({

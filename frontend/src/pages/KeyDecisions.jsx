@@ -1,15 +1,11 @@
-import { useState as _useState } from "react";
 import { motion } from "framer-motion";
-import { Crown, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Crown } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
+  CardContent } from
 "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { fadeIn, staggerContainer as _staggerContainer } from "../lib/animations";
+import { fadeIn } from "../lib/animations";
 
 export default function KeyDecisions() {
   return (

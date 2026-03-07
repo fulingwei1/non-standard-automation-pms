@@ -7,8 +7,6 @@ import {
   User,
   Target,
   Calendar,
-  CheckCircle2,
-  AlertCircle,
   Clock,
   ChevronRight,
   TrendingUp,

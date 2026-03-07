@@ -6,13 +6,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
-  Lock,
-  Unlock,
-  Clock,
-  User,
-  FileText,
-  AlertTriangle } from
+  Lock } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {

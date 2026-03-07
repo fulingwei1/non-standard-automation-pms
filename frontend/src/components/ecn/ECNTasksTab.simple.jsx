@@ -2,7 +2,6 @@
  * ECN执行任务标签页组件（简化版）
  * 用途：展示和管理ECN的执行任务（看板视图）
  */
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';

@@ -5,24 +5,16 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import {
-  Search,
-  Filter,
   Plus,
   Package,
   AlertTriangle,
   ShoppingCart,
-  TrendingUp,
-  TrendingDown,
   Edit,
   Eye,
-  Trash2,
   Download,
   Upload,
-  BarChart3,
-  Calendar,
-  Building2 } from
+  BarChart3 } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -45,10 +37,9 @@ import {
   DialogDescription,
   DialogBody } from
 "../components/ui";
-import { cn, formatCurrency, formatDate as _formatDate } from "../lib/utils";
-import { fadeIn as _fadeIn, staggerContainer } from "../lib/animations";
+import { cn, formatCurrency } from "../lib/utils";
+import { staggerContainer } from "../lib/animations";
 import {
-  SimpleBarChart,
   MonthlyTrendChart,
   CategoryBreakdownCard } from
 "../components/administrative/StatisticsCharts";

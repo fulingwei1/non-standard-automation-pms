@@ -7,10 +7,6 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  User,
-  Calendar,
-  FileText,
-  TrendingUp,
   MessageSquare,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -22,7 +18,6 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
 import { cn } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { alertApi } from "../services/api";

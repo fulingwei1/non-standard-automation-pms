@@ -3,13 +3,11 @@
  * 服务工单统计卡片组件
  */
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
 import { 
   Clock,
   CheckCircle2,
   AlertTriangle,
   TrendingUp,
-  Users,
   Star,
   Timer,
   Activity

@@ -6,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
   Badge,
-  Button,
   Tabs,
   TabsContent,
   TabsList,
@@ -15,9 +14,6 @@ import {
 import {
   AlertCircle,
   CheckCircle2,
-  XCircle,
-  Clock,
-  Search,
 } from "lucide-react";
 import { formatDate } from "../../lib/utils";
 import { projectWorkspaceApi } from "../../services/api";

@@ -3,23 +3,17 @@
  * 客户服务统计卡片组件
  */
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
 import {
   Activity,
   Clock,
   CheckCircle2,
   AlertTriangle,
-  TrendingUp,
-  Users,
   Star,
   Timer,
-  Phone,
   MessageSquare,
-  Mail,
   Building2,
   Ticket,
-  AlertCircle,
-  Target
+  AlertCircle
 } from "lucide-react";
 import {
   servicePriorityConfigs,

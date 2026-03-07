@@ -2,7 +2,6 @@
  * 预警级别统计卡片组件
  */
 
-import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ALERT_LEVELS } from '../../constants';
 

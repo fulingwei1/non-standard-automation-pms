@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { cn as _cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
 import {
   Card,
   CardContent,
@@ -28,11 +26,8 @@ import {
   Plus,
   Save,
   Calculator,
-  DollarSign,
-  Calendar,
   FileText,
-  AlertCircle,
-  CheckCircle2 } from
+  AlertCircle } from
 "lucide-react";
 
 const _costTypeMap = {
