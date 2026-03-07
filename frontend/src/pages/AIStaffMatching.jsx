@@ -59,16 +59,7 @@ const PRIORITY_CONFIG = {
   P5: { color: "slate", text: "P5-最低", threshold: 50 }
 };
 
-// 模拟匹配历史
-// Mock data - 已移除，使用真实API
-const mockMatchingResult = {
-  request_id: "mock",
-  total_candidates: 0,
-  qualified_count: 0,
-  candidates: [],
-  priority: "P3",
-  priority_threshold: 65
-};
+
 
 export default function AIStaffMatching() {
   const [searchParams] = useSearchParams();
@@ -146,29 +137,21 @@ export default function AIStaffMatching() {
       if (response.data) {
         setMatchingResult(response.data);
       } else {
-        // 使用模拟数据
         setMatchingResult({
-          ...mockMatchingResult,
+          request_id: "",
+          total_candidates: 0,
+          qualified_count: 0,
+          candidates: [],
           staffing_need_id: selectedNeed.id,
           project_name: selectedNeed.project_name,
           role_name: selectedNeed.role_name,
           priority: selectedNeed.priority,
-          priority_threshold:
-          PRIORITY_CONFIG[selectedNeed.priority]?.threshold || 65
+          priority_threshold: PRIORITY_CONFIG[selectedNeed.priority]?.threshold || 65
         });
       }
     } catch (error) {
       console.error("匹配失败:", error);
-      // 使用模拟数据
-      setMatchingResult({
-        ...mockMatchingResult,
-        staffing_need_id: selectedNeed.id,
-        project_name: selectedNeed.project_name,
-        role_name: selectedNeed.role_name,
-        priority: selectedNeed.priority,
-        priority_threshold:
-        PRIORITY_CONFIG[selectedNeed.priority]?.threshold || 65
-      });
+      alert("匹配失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setMatching(false);
     }
