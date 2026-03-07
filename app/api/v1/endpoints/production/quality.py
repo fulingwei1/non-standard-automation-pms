@@ -219,7 +219,7 @@ def create_quality_alert_rule(
     return service.create_alert_rule(rule_data, current_user_id=current_user["id"])
 
 
-@router.get("/alert-rules", response_model=list, summary="质量预警规则列表")
+@router.get("/alert-rules", response_model=list[QualityAlertRuleResponse], summary="质量预警规则列表")
 def list_quality_alert_rules(
     db: Session = Depends(deps.get_db),
     enabled: Optional[int] = None,

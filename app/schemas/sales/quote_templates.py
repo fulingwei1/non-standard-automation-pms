@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== CPQ 规则集 ====================
 
@@ -56,9 +56,14 @@ class CpqRuleSetResponse(CpqRuleSetBase):
     """CPQ规则集响应"""
 
     id: int
-    status: str = Field("ACTIVE", description="状态")
+    status: Optional[str] = Field("ACTIVE", description="状态")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_rule_set_status(cls, v):
+        return "ACTIVE" if v is None else v
 
     model_config = {"from_attributes": True}
 
@@ -89,7 +94,7 @@ class QuoteTemplateVersionResponse(QuoteTemplateVersionBase):
 
     id: int
     template_id: int
-    status: str = Field("DRAFT", description="状态")
+    status: Optional[str] = Field("DRAFT", description="状态")
     created_by: Optional[int] = None
     creator_name: Optional[str] = None
     published_by: Optional[int] = None
@@ -97,6 +102,11 @@ class QuoteTemplateVersionResponse(QuoteTemplateVersionBase):
     published_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_quote_version_status(cls, v):
+        return "DRAFT" if v is None else v
 
     model_config = {"from_attributes": True}
 
@@ -111,8 +121,18 @@ class QuoteTemplateBase(BaseModel):
     template_name: str = Field(..., max_length=200, description="模板名称")
     category: Optional[str] = Field(None, max_length=50, description="模板分类")
     description: Optional[str] = Field(None, description="描述")
-    visibility_scope: str = Field("TEAM", description="可见范围")
-    is_default: bool = Field(False, description="是否默认模板")
+    visibility_scope: Optional[str] = Field("TEAM", description="可见范围")
+    is_default: Optional[bool] = Field(False, description="是否默认模板")
+
+    @field_validator("visibility_scope", mode="before")
+    @classmethod
+    def _normalize_visibility_scope(cls, v):
+        return "TEAM" if v is None else v
+
+    @field_validator("is_default", mode="before")
+    @classmethod
+    def _normalize_is_default(cls, v):
+        return False if v is None else v
 
 
 class QuoteTemplateCreate(QuoteTemplateBase):
@@ -138,7 +158,7 @@ class QuoteTemplateResponse(QuoteTemplateBase):
     """报价模板响应"""
 
     id: int
-    status: str = Field("DRAFT", description="状态")
+    status: Optional[str] = Field("DRAFT", description="状态")
     current_version_id: Optional[int] = None
     owner_id: Optional[int] = None
     owner_name: Optional[str] = None
@@ -147,6 +167,11 @@ class QuoteTemplateResponse(QuoteTemplateBase):
     version_count: int = Field(0, description="版本数量")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_quote_template_status(cls, v):
+        return "DRAFT" if v is None else v
 
     model_config = {"from_attributes": True}
 
@@ -167,11 +192,16 @@ class TemplateApprovalHistoryRecord(BaseModel):
 
     version_id: int
     version_no: str
-    status: str
+    status: Optional[str] = "DRAFT"
     published_by: Optional[int] = None
     publisher_name: Optional[str] = None
     published_at: Optional[datetime] = None
     release_notes: Optional[str] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_template_history_status(cls, v):
+        return "DRAFT" if v is None else v
 
 
 # ==================== 报价模板应用 ====================

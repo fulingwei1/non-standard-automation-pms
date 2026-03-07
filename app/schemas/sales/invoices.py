@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import TimestampSchema
 
@@ -104,11 +104,16 @@ class ReceivableDisputeResponse(TimestampSchema):
     payment_id: int = Field(description="付款节点ID")
     reason_code: Optional[str] = Field(default=None, description="原因代码")
     description: Optional[str] = Field(default=None, description="描述")
-    status: str = Field(description="状态")
+    status: Optional[str] = Field(default="OPEN", description="状态")
     responsible_dept: Optional[str] = Field(default=None, description="责任部门")
     responsible_id: Optional[int] = Field(default=None, description="责任人ID")
     responsible_name: Optional[str] = Field(default=None, description="责任人姓名")
     expect_resolve_date: Optional[date] = Field(default=None, description="预期解决日期")
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_dispute_status(cls, v):
+        return "OPEN" if v is None else v
 
 
 # 审批相关 Schema（多级审批 - 旧版）

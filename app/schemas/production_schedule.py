@@ -5,14 +5,13 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
 
 # ==================== 基础Schema ====================
 
-
 class ScheduleBase(BaseModel):
     """排程基础Schema"""
-
     work_order_id: int = Field(..., description="工单ID")
     equipment_id: Optional[int] = Field(None, description="设备ID")
     worker_id: Optional[int] = Field(None, description="工人ID")
@@ -25,16 +24,24 @@ class ScheduleBase(BaseModel):
     is_urgent: bool = Field(False, description="是否紧急插单")
     remark: Optional[str] = Field(None, description="备注")
 
+    @field_validator("priority_score", mode="before")
+    @classmethod
+    def _normalize_priority_score(cls, v):
+        return 0.0 if v is None else v
+
+    @field_validator("is_urgent", mode="before")
+    @classmethod
+    def _normalize_is_urgent(cls, v):
+        return False if v is None else v
+
 
 class ScheduleCreate(ScheduleBase):
     """创建排程"""
-
     pass
 
 
 class ScheduleUpdate(BaseModel):
     """更新排程"""
-
     scheduled_start_time: Optional[datetime] = None
     scheduled_end_time: Optional[datetime] = None
     equipment_id: Optional[int] = None
@@ -46,33 +53,40 @@ class ScheduleUpdate(BaseModel):
 
 class ScheduleResponse(ScheduleBase):
     """排程响应"""
-
     id: int
     schedule_plan_id: Optional[int]
-    status: str
+    status: Optional[str] = "PENDING"
     actual_start_time: Optional[datetime]
     actual_end_time: Optional[datetime]
     actual_duration_hours: Optional[float]
     algorithm_version: Optional[str]
     score: Optional[float]
     constraints_met: Optional[Dict[str, Any]]
-    is_manually_adjusted: bool
+    is_manually_adjusted: Optional[bool] = False
     adjustment_reason: Optional[str]
     sequence_no: Optional[int]
     created_at: datetime
     updated_at: datetime
     confirmed_at: Optional[datetime]
 
+    @field_validator("is_manually_adjusted", mode="before")
+    @classmethod
+    def _normalize_is_manually_adjusted(cls, v):
+        return False if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_schedule_status(cls, v):
+        return "PENDING" if v is None else v
+    
     class Config:
         from_attributes = True
 
 
 # ==================== 排程生成相关 ====================
 
-
 class WorkOrderScheduleInput(BaseModel):
     """工单排程输入"""
-
     work_order_id: int = Field(..., description="工单ID")
     priority: str = Field("NORMAL", description="优先级: LOW/NORMAL/HIGH/URGENT")
     preferred_start_time: Optional[datetime] = Field(None, description="期望开始时间")
@@ -82,7 +96,6 @@ class WorkOrderScheduleInput(BaseModel):
 
 class ScheduleGenerateRequest(BaseModel):
     """生成排程请求"""
-
     work_orders: List[int] = Field(..., description="工单ID列表")
     start_date: datetime = Field(..., description="排程开始日期")
     end_date: datetime = Field(..., description="排程结束日期")
@@ -92,7 +105,7 @@ class ScheduleGenerateRequest(BaseModel):
     consider_worker_skills: bool = Field(True, description="考虑工人技能匹配")
     consider_equipment_capacity: bool = Field(True, description="考虑设备产能")
     allow_overtime: bool = Field(False, description="允许加班")
-
+    
     class Config:
         json_schema_extra = {
             "example": {
@@ -102,14 +115,13 @@ class ScheduleGenerateRequest(BaseModel):
                 "algorithm": "GREEDY",
                 "optimize_target": "BALANCED",
                 "consider_worker_skills": True,
-                "consider_equipment_capacity": True,
+                "consider_equipment_capacity": True
             }
         }
 
 
 class ScheduleGenerateResponse(BaseModel):
     """生成排程响应"""
-
     plan_id: int = Field(..., description="排程方案ID")
     schedules: List[ScheduleResponse] = Field(..., description="排程列表")
     total_count: int = Field(..., description="排程总数")
@@ -123,10 +135,8 @@ class ScheduleGenerateResponse(BaseModel):
 
 # ==================== 紧急插单 ====================
 
-
 class UrgentInsertRequest(BaseModel):
     """紧急插单请求"""
-
     work_order_id: int = Field(..., description="工单ID")
     insert_time: datetime = Field(..., description="期望插入时间")
     max_delay_hours: float = Field(4, description="允许最大延迟(小时)")
@@ -136,7 +146,6 @@ class UrgentInsertRequest(BaseModel):
 
 class UrgentInsertResponse(BaseModel):
     """紧急插单响应"""
-
     success: bool
     schedule: Optional[ScheduleResponse]
     adjusted_schedules: List[ScheduleResponse] = Field(default_factory=list)
@@ -146,10 +155,8 @@ class UrgentInsertResponse(BaseModel):
 
 # ==================== 冲突检测 ====================
 
-
 class ConflictResponse(BaseModel):
     """冲突响应"""
-
     id: int
     schedule_id: int
     conflicting_schedule_id: Optional[int]
@@ -164,14 +171,13 @@ class ConflictResponse(BaseModel):
     resolution_suggestion: Optional[str]
     status: str
     detected_at: datetime
-
+    
     class Config:
         from_attributes = True
 
 
 class ConflictCheckResponse(BaseModel):
     """冲突检测响应"""
-
     has_conflicts: bool
     total_conflicts: int
     conflicts_by_type: Dict[str, int]
@@ -181,10 +187,8 @@ class ConflictCheckResponse(BaseModel):
 
 # ==================== 排程调整 ====================
 
-
 class ScheduleAdjustRequest(BaseModel):
     """排程调整请求"""
-
     schedule_id: int = Field(..., description="排程ID")
     adjustment_type: str = Field(..., description="调整类型")
     new_start_time: Optional[datetime] = Field(None, description="新开始时间")
@@ -197,7 +201,6 @@ class ScheduleAdjustRequest(BaseModel):
 
 class AdjustmentLogResponse(BaseModel):
     """调整日志响应"""
-
     id: int
     schedule_id: int
     adjustment_type: str
@@ -207,29 +210,31 @@ class AdjustmentLogResponse(BaseModel):
     changes_summary: Optional[str]
     reason: str
     impact_analysis: Optional[Dict[str, Any]]
-    affected_schedules_count: int
+    affected_schedules_count: Optional[int] = 0
     adjusted_at: datetime
 
+    @field_validator("affected_schedules_count", mode="before")
+    @classmethod
+    def _normalize_affected_schedules_count(cls, v):
+        return 0 if v is None else v
+    
     class Config:
         from_attributes = True
 
 
 # ==================== 排程对比 ====================
 
-
 class ScheduleComparisonRequest(BaseModel):
     """排程方案对比请求"""
-
     plan_ids: List[int] = Field(..., description="方案ID列表", min_length=2, max_length=5)
     comparison_metrics: List[str] = Field(
         default_factory=lambda: ["completion_rate", "equipment_utilization", "total_duration"],
-        description="对比指标",
+        description="对比指标"
     )
 
 
 class ComparisonResult(BaseModel):
     """对比结果"""
-
     plan_id: int
     plan_name: str
     metrics: Dict[str, Any]
@@ -239,7 +244,6 @@ class ComparisonResult(BaseModel):
 
 class ScheduleComparisonResponse(BaseModel):
     """排程对比响应"""
-
     comparison_time: datetime
     plans_compared: int
     results: List[ComparisonResult]
@@ -249,10 +253,8 @@ class ScheduleComparisonResponse(BaseModel):
 
 # ==================== 甘特图数据 ====================
 
-
 class GanttTask(BaseModel):
     """甘特图任务"""
-
     id: int
     name: str
     work_order_no: str
@@ -271,7 +273,6 @@ class GanttTask(BaseModel):
 
 class GanttDataResponse(BaseModel):
     """甘特图数据响应"""
-
     tasks: List[GanttTask]
     total_tasks: int
     start_date: datetime
@@ -282,10 +283,8 @@ class GanttDataResponse(BaseModel):
 
 # ==================== 排程预览和历史 ====================
 
-
 class SchedulePreviewResponse(BaseModel):
     """排程预览响应"""
-
     plan_id: int
     schedules: List[ScheduleResponse]
     statistics: Dict[str, Any]
@@ -297,7 +296,6 @@ class SchedulePreviewResponse(BaseModel):
 
 class ScheduleHistoryResponse(BaseModel):
     """排程历史响应"""
-
     schedules: List[ScheduleResponse]
     adjustments: List[AdjustmentLogResponse]
     total_count: int
@@ -307,10 +305,8 @@ class ScheduleHistoryResponse(BaseModel):
 
 # ==================== 排程评分 ====================
 
-
 class ScheduleScoreMetrics(BaseModel):
     """排程评分指标"""
-
     completion_rate: float = Field(..., description="交期达成率 (0-1)")
     equipment_utilization: float = Field(..., description="设备利用率 (0-1)")
     worker_utilization: float = Field(..., description="工人利用率 (0-1)")
@@ -320,32 +316,32 @@ class ScheduleScoreMetrics(BaseModel):
     priority_satisfaction: float = Field(..., description="优先级满足度 (0-1)")
     conflict_count: int = Field(..., description="冲突数量")
     overtime_hours: float = Field(0, description="加班时长(小时)")
-
+    
     def calculate_overall_score(self) -> float:
         """计算综合评分"""
         # 权重配置
         weights = {
-            "completion_rate": 0.25,
-            "equipment_utilization": 0.15,
-            "worker_utilization": 0.10,
-            "skill_match_rate": 0.15,
-            "priority_satisfaction": 0.20,
+            'completion_rate': 0.25,
+            'equipment_utilization': 0.15,
+            'worker_utilization': 0.10,
+            'skill_match_rate': 0.15,
+            'priority_satisfaction': 0.20,
         }
-
+        
         # 负面因素惩罚
         conflict_penalty = min(self.conflict_count * 0.02, 0.5)  # 每个冲突扣2%,最多扣50%
         overtime_penalty = min(self.overtime_hours * 0.001, 0.1)  # 加班惩罚
-
+        
         # 计算基础分数
         base_score = (
-            weights["completion_rate"] * self.completion_rate
-            + weights["equipment_utilization"] * self.equipment_utilization
-            + weights["worker_utilization"] * self.worker_utilization
-            + weights["skill_match_rate"] * self.skill_match_rate
-            + weights["priority_satisfaction"] * self.priority_satisfaction
+            weights['completion_rate'] * self.completion_rate +
+            weights['equipment_utilization'] * self.equipment_utilization +
+            weights['worker_utilization'] * self.worker_utilization +
+            weights['skill_match_rate'] * self.skill_match_rate +
+            weights['priority_satisfaction'] * self.priority_satisfaction
         )
-
+        
         # 应用惩罚
         final_score = max(0, base_score - conflict_penalty - overtime_penalty)
-
+        
         return round(final_score * 100, 2)  # 转换为百分制

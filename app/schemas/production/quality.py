@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ..common import PaginatedResponse, TimestampSchema
 
@@ -52,10 +52,10 @@ class QualityInspectionResponse(TimestampSchema):
     inspector_id: int
     inspector_name: Optional[str] = None
     inspection_qty: int
-    qualified_qty: int
-    defect_qty: int
-    inspection_result: str
-    defect_rate: float
+    qualified_qty: Optional[int] = 0
+    defect_qty: Optional[int] = 0
+    inspection_result: Optional[str] = "PENDING"
+    defect_rate: Optional[float] = 0.0
     measured_value: Optional[float] = None
     spec_upper_limit: Optional[float] = None
     spec_lower_limit: Optional[float] = None
@@ -65,6 +65,21 @@ class QualityInspectionResponse(TimestampSchema):
     handling_result: Optional[str] = None
     rework_order_id: Optional[int] = None
     remark: Optional[str] = None
+
+    @field_validator("qualified_qty", "defect_qty", mode="before")
+    @classmethod
+    def _normalize_inspection_qty_fields(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("defect_rate", mode="before")
+    @classmethod
+    def _normalize_defect_rate(cls, v):
+        return 0.0 if v is None else v
+
+    @field_validator("inspection_result", mode="before")
+    @classmethod
+    def _normalize_inspection_result(cls, v):
+        return "PENDING" if v is None else v
 
 
 class QualityInspectionListResponse(PaginatedResponse):
@@ -194,17 +209,37 @@ class QualityAlertRuleResponse(TimestampSchema):
     alert_type: str
     target_material_id: Optional[int] = None
     target_process_id: Optional[int] = None
-    threshold_value: float
-    threshold_operator: str
-    time_window_hours: int
-    min_sample_size: int
-    alert_level: str
+    threshold_value: Optional[float] = 0.0
+    threshold_operator: Optional[str] = "GT"
+    time_window_hours: Optional[int] = 24
+    min_sample_size: Optional[int] = 5
+    alert_level: Optional[str] = "WARNING"
     notify_users: Optional[str] = None
     notify_channels: Optional[str] = None
-    enabled: int
+    enabled: Optional[int] = 1
     last_triggered_at: Optional[datetime] = None
-    trigger_count: int
+    trigger_count: Optional[int] = 0
     description: Optional[str] = None
+
+    @field_validator("threshold_value", mode="before")
+    @classmethod
+    def _normalize_rule_threshold_value(cls, v):
+        return 0.0 if v is None else v
+
+    @field_validator("time_window_hours", "min_sample_size", "enabled", "trigger_count", mode="before")
+    @classmethod
+    def _normalize_rule_int_fields(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("threshold_operator", mode="before")
+    @classmethod
+    def _normalize_threshold_operator(cls, v):
+        return "GT" if v is None else v
+
+    @field_validator("alert_level", mode="before")
+    @classmethod
+    def _normalize_rule_alert_level(cls, v):
+        return "WARNING" if v is None else v
 
 
 class QualityAlertResponse(BaseModel):
@@ -280,14 +315,29 @@ class ReworkOrderResponse(TimestampSchema):
     plan_end_date: Optional[datetime] = None
     actual_start_time: Optional[datetime] = None
     actual_end_time: Optional[datetime] = None
-    completed_qty: int
-    qualified_qty: int
-    scrap_qty: int
-    actual_hours: float
-    rework_cost: float
-    status: str
+    completed_qty: Optional[int] = 0
+    qualified_qty: Optional[int] = 0
+    scrap_qty: Optional[int] = 0
+    actual_hours: Optional[float] = 0.0
+    rework_cost: Optional[float] = 0.0
+    status: Optional[str] = "PENDING"
     completion_note: Optional[str] = None
     remark: Optional[str] = None
+
+    @field_validator("completed_qty", "qualified_qty", "scrap_qty", mode="before")
+    @classmethod
+    def _normalize_rework_qty_fields(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("actual_hours", "rework_cost", mode="before")
+    @classmethod
+    def _normalize_rework_float_fields(cls, v):
+        return 0.0 if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_rework_status(cls, v):
+        return "PENDING" if v is None else v
 
 
 class ReworkOrderListResponse(PaginatedResponse):

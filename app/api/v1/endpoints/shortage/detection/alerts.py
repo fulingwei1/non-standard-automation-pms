@@ -17,6 +17,7 @@
 import json
 import logging
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
@@ -44,6 +45,16 @@ router = APIRouter()
 
 def _build_alert_response(alert: MaterialShortage) -> Dict[str, Any]:
     """构建预警响应对象"""
+    def _safe_float(value: Any) -> float:
+        if value is None:
+            return 0.0
+        if isinstance(value, Decimal):
+            return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
     return {
         "id": alert.id,
         "project_id": alert.project_id,
@@ -51,12 +62,12 @@ def _build_alert_response(alert: MaterialShortage) -> Dict[str, Any]:
         "material_id": alert.material_id,
         "material_code": alert.material_code,
         "material_name": alert.material_name,
-        "required_qty": float(alert.required_qty),
-        "available_qty": float(alert.available_qty),
-        "shortage_qty": float(alert.shortage_qty),
+        "required_qty": _safe_float(alert.required_qty),
+        "available_qty": _safe_float(alert.available_qty),
+        "shortage_qty": _safe_float(alert.shortage_qty),
         "required_date": alert.required_date.isoformat() if alert.required_date else None,
-        "status": alert.status,
-        "alert_level": alert.alert_level,
+        "status": alert.status or "OPEN",
+        "alert_level": alert.alert_level or "WARNING",
         "handler_id": alert.handler_id,
         "solution": alert.solution,
         "resolved_at": alert.resolved_at.isoformat() if alert.resolved_at else None,
@@ -66,6 +77,16 @@ def _build_alert_response(alert: MaterialShortage) -> Dict[str, Any]:
 
 def _build_alert_detail_response(alert: MaterialShortage) -> Dict[str, Any]:
     """构建预警详情响应对象"""
+    def _safe_float(value: Any) -> float:
+        if value is None:
+            return 0.0
+        if isinstance(value, Decimal):
+            return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
     return {
         "id": alert.id,
         "project_id": alert.project_id,
@@ -74,12 +95,12 @@ def _build_alert_detail_response(alert: MaterialShortage) -> Dict[str, Any]:
         "material_id": alert.material_id,
         "material_code": alert.material_code,
         "material_name": alert.material_name,
-        "required_qty": float(alert.required_qty),
-        "available_qty": float(alert.available_qty),
-        "shortage_qty": float(alert.shortage_qty),
+        "required_qty": _safe_float(alert.required_qty),
+        "available_qty": _safe_float(alert.available_qty),
+        "shortage_qty": _safe_float(alert.shortage_qty),
         "required_date": alert.required_date.isoformat() if alert.required_date else None,
-        "status": alert.status,
-        "alert_level": alert.alert_level,
+        "status": alert.status or "OPEN",
+        "alert_level": alert.alert_level or "WARNING",
         "handler_id": alert.handler_id,
         "solution": alert.solution,
         "resolved_at": alert.resolved_at.isoformat() if alert.resolved_at else None,

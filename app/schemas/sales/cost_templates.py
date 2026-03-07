@@ -5,9 +5,9 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class QuoteCostTemplateCreate(BaseModel):
@@ -15,10 +15,31 @@ class QuoteCostTemplateCreate(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    name: str = Field(description="模板名称")
+    name: Optional[str] = Field(default=None, description="模板名称")
     description: Optional[str] = Field(default=None, description="描述")
     category: Optional[str] = Field(default=None, description="分类")
     items: Optional[List[dict]] = Field(default=None, description="模板项")
+    template_code: Optional[str] = Field(default=None, description="模板编码")
+    template_name: Optional[str] = Field(default=None, description="模板名称（兼容字段）")
+    template_type: Optional[str] = Field(default=None, description="模板类型")
+    equipment_type: Optional[str] = Field(default=None, description="设备类型")
+    industry: Optional[str] = Field(default=None, description="行业")
+    cost_structure: Optional[Dict[str, Any]] = Field(default=None, description="成本结构")
+    is_active: Optional[bool] = Field(default=True, description="是否启用")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_create_fields(cls, values):
+        if not isinstance(values, dict):
+            return values
+        data = dict(values)
+        if not data.get("name") and data.get("template_name"):
+            data["name"] = data["template_name"]
+        if data.get("cost_structure") is None and data.get("items") is not None:
+            data["cost_structure"] = {"items": data.get("items")}
+        if data.get("template_type") is None and data.get("category"):
+            data["template_type"] = data.get("category")
+        return data
 
 
 class QuoteCostTemplateUpdate(BaseModel):
@@ -30,6 +51,27 @@ class QuoteCostTemplateUpdate(BaseModel):
     description: Optional[str] = Field(default=None, description="描述")
     category: Optional[str] = Field(default=None, description="分类")
     items: Optional[List[dict]] = Field(default=None, description="模板项")
+    template_code: Optional[str] = Field(default=None, description="模板编码")
+    template_name: Optional[str] = Field(default=None, description="模板名称（兼容字段）")
+    template_type: Optional[str] = Field(default=None, description="模板类型")
+    equipment_type: Optional[str] = Field(default=None, description="设备类型")
+    industry: Optional[str] = Field(default=None, description="行业")
+    cost_structure: Optional[Dict[str, Any]] = Field(default=None, description="成本结构")
+    is_active: Optional[bool] = Field(default=None, description="是否启用")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_update_fields(cls, values):
+        if not isinstance(values, dict):
+            return values
+        data = dict(values)
+        if not data.get("name") and data.get("template_name"):
+            data["name"] = data["template_name"]
+        if data.get("cost_structure") is None and data.get("items") is not None:
+            data["cost_structure"] = {"items": data.get("items")}
+        if data.get("template_type") is None and data.get("category"):
+            data["template_type"] = data.get("category")
+        return data
 
 
 class QuoteCostTemplateResponse(BaseModel):
@@ -38,12 +80,49 @@ class QuoteCostTemplateResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int
-    name: str
+    name: Optional[str] = None
+    template_code: Optional[str] = None
+    template_name: Optional[str] = None
+    template_type: Optional[str] = None
+    equipment_type: Optional[str] = None
+    industry: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
     items: Optional[List[dict]] = None
+    cost_structure: Optional[Dict[str, Any]] = None
+    total_cost: Optional[Decimal] = None
+    is_active: Optional[bool] = True
+    usage_count: Optional[int] = None
+    creator_name: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_compat_fields(cls, values):
+        if not isinstance(values, dict):
+            return values
+        data = dict(values)
+
+        if not data.get("name") and data.get("template_name"):
+            data["name"] = data["template_name"]
+        if not data.get("template_name") and data.get("name"):
+            data["template_name"] = data["name"]
+
+        if not data.get("category") and data.get("template_type"):
+            data["category"] = data["template_type"]
+
+        if data.get("items") is None and isinstance(data.get("cost_structure"), dict):
+            structure = data["cost_structure"]
+            if isinstance(structure.get("items"), list):
+                data["items"] = structure.get("items")
+            elif isinstance(structure.get("categories"), list):
+                data["items"] = structure.get("categories")
+
+        if data.get("cost_structure") is None and isinstance(data.get("items"), list):
+            data["cost_structure"] = {"items": data["items"]}
+
+        return data
 
 
 class PurchaseMaterialCostCreate(BaseModel):

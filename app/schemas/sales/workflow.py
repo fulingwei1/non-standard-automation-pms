@@ -7,7 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.common import TimestampSchema
 
@@ -46,7 +46,12 @@ class ApprovalWorkflowBase(BaseModel):
     workflow_name: str = Field(..., description="工作流名称")
     workflow_type: str = Field(..., description="工作流类型：QUOTE/CONTRACT/LEAD")
     description: Optional[str] = Field(None, description="工作流描述")
-    is_active: bool = Field(True, description="是否启用")
+    is_active: Optional[bool] = Field(True, description="是否启用")
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_is_active(cls, v):
+        return True if v is None else v
 
 
 class ApprovalWorkflowCreate(ApprovalWorkflowBase):

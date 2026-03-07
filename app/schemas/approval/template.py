@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ApprovalTemplateBase(BaseModel):
@@ -44,11 +44,26 @@ class ApprovalTemplateResponse(ApprovalTemplateBase):
     """审批模板响应"""
 
     id: int
-    version: int
-    is_published: bool
-    is_active: bool
+    version: Optional[int] = 1
+    is_published: Optional[bool] = False
+    is_active: Optional[bool] = True
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+    @field_validator("version", mode="before")
+    @classmethod
+    def _normalize_version(cls, v):
+        return 1 if v is None else v
+
+    @field_validator("is_published", mode="before")
+    @classmethod
+    def _normalize_is_published(cls, v):
+        return False if v is None else v
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_is_active(cls, v):
+        return True if v is None else v
 
     class Config:
         from_attributes = True

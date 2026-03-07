@@ -7,16 +7,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .common import TimestampSchema
 
 # ==================== 研发项目分类 ====================
 
-
 class RdProjectCategoryCreate(BaseModel):
     """创建研发项目分类"""
-
     category_code: str = Field(max_length=20, description="分类编码")
     category_name: str = Field(max_length=50, description="分类名称")
     category_type: str = Field(description="分类类型：SELF/ENTRUST/COOPERATION")
@@ -27,7 +25,6 @@ class RdProjectCategoryCreate(BaseModel):
 
 class RdProjectCategoryUpdate(BaseModel):
     """更新研发项目分类"""
-
     category_name: Optional[str] = None
     description: Optional[str] = None
     sort_order: Optional[int] = None
@@ -36,14 +33,23 @@ class RdProjectCategoryUpdate(BaseModel):
 
 class RdProjectCategoryResponse(TimestampSchema):
     """研发项目分类响应"""
-
     id: int
     category_code: str
     category_name: str
     category_type: str
     description: Optional[str] = None
-    sort_order: int
-    is_active: bool
+    sort_order: Optional[int] = 0
+    is_active: Optional[bool] = True
+
+    @field_validator("sort_order", mode="before")
+    @classmethod
+    def _normalize_category_sort_order(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_category_is_active(cls, v):
+        return True if v is None else v
 
     class Config:
         from_attributes = True
@@ -51,10 +57,8 @@ class RdProjectCategoryResponse(TimestampSchema):
 
 # ==================== 研发项目 ====================
 
-
 class RdProjectCreate(BaseModel):
     """创建研发项目"""
-
     project_name: str = Field(max_length=200, description="研发项目名称")
     category_id: Optional[int] = None
     category_type: str = Field(description="项目类型：SELF/ENTRUST/COOPERATION")
@@ -73,7 +77,6 @@ class RdProjectCreate(BaseModel):
 
 class RdProjectUpdate(BaseModel):
     """更新研发项目"""
-
     project_name: Optional[str] = None
     category_id: Optional[int] = None
     planned_start_date: Optional[date] = None
@@ -90,7 +93,6 @@ class RdProjectUpdate(BaseModel):
 
 class RdProjectResponse(TimestampSchema):
     """研发项目响应"""
-
     id: int
     project_no: str
     project_name: str
@@ -107,20 +109,40 @@ class RdProjectResponse(TimestampSchema):
     research_goal: Optional[str] = None
     research_content: Optional[str] = None
     expected_result: Optional[str] = None
-    budget_amount: Decimal
+    budget_amount: Optional[Decimal] = Decimal("0")
     linked_project_id: Optional[int] = None
-    status: str
-    approval_status: str
+    status: Optional[str] = "DRAFT"
+    approval_status: Optional[str] = "PENDING"
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
     approval_remark: Optional[str] = None
     close_date: Optional[date] = None
     close_reason: Optional[str] = None
     close_result: Optional[str] = None
-    total_cost: Decimal
-    total_hours: Decimal
-    participant_count: int
+    total_cost: Optional[Decimal] = Decimal("0")
+    total_hours: Optional[Decimal] = Decimal("0")
+    participant_count: Optional[int] = 0
     remark: Optional[str] = None
+
+    @field_validator("budget_amount", "total_cost", "total_hours", mode="before")
+    @classmethod
+    def _normalize_project_decimal_fields(cls, v):
+        return Decimal("0") if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_project_status(cls, v):
+        return "DRAFT" if v is None else v
+
+    @field_validator("approval_status", mode="before")
+    @classmethod
+    def _normalize_project_approval_status(cls, v):
+        return "PENDING" if v is None else v
+
+    @field_validator("participant_count", mode="before")
+    @classmethod
+    def _normalize_participant_count(cls, v):
+        return 0 if v is None else v
 
     class Config:
         from_attributes = True
@@ -128,30 +150,25 @@ class RdProjectResponse(TimestampSchema):
 
 class RdProjectApproveRequest(BaseModel):
     """研发项目审批请求"""
-
     approved: bool = Field(description="是否批准")
     approval_remark: Optional[str] = Field(default=None, description="审批意见")
 
 
 class RdProjectCloseRequest(BaseModel):
     """研发项目结项请求"""
-
     close_reason: str = Field(description="结项原因")
     close_result: str = Field(description="结项成果")
 
 
 class RdProjectLinkRequest(BaseModel):
     """关联非标项目请求"""
-
     linked_project_id: int = Field(description="关联的非标项目ID")
 
 
 # ==================== 研发费用类型 ====================
 
-
 class RdCostTypeCreate(BaseModel):
     """创建研发费用类型"""
-
     type_code: str = Field(max_length=20, description="费用类型编码")
     type_name: str = Field(max_length=50, description="费用类型名称")
     category: str = Field(description="费用大类：LABOR/MATERIAL/DEPRECIATION/OTHER")
@@ -164,16 +181,35 @@ class RdCostTypeCreate(BaseModel):
 
 class RdCostTypeResponse(TimestampSchema):
     """研发费用类型响应"""
-
     id: int
     type_code: str
     type_name: str
     category: str
     description: Optional[str] = None
-    sort_order: int
-    is_active: bool
-    is_deductible: bool
-    deduction_rate: Decimal
+    sort_order: Optional[int] = 0
+    is_active: Optional[bool] = True
+    is_deductible: Optional[bool] = True
+    deduction_rate: Optional[Decimal] = Decimal("100")
+
+    @field_validator("sort_order", mode="before")
+    @classmethod
+    def _normalize_cost_type_sort_order(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_cost_type_is_active(cls, v):
+        return True if v is None else v
+
+    @field_validator("is_deductible", mode="before")
+    @classmethod
+    def _normalize_cost_type_is_deductible(cls, v):
+        return True if v is None else v
+
+    @field_validator("deduction_rate", mode="before")
+    @classmethod
+    def _normalize_cost_type_deduction_rate(cls, v):
+        return Decimal("100") if v is None else v
 
     class Config:
         from_attributes = True
@@ -181,10 +217,8 @@ class RdCostTypeResponse(TimestampSchema):
 
 # ==================== 研发费用 ====================
 
-
 class RdCostCreate(BaseModel):
     """创建研发费用"""
-
     rd_project_id: int = Field(description="研发项目ID")
     cost_type_id: int = Field(description="费用类型ID")
     cost_date: date = Field(description="费用发生日期")
@@ -215,7 +249,6 @@ class RdCostCreate(BaseModel):
 
 class RdCostUpdate(BaseModel):
     """更新研发费用"""
-
     cost_date: Optional[date] = None
     cost_amount: Optional[Decimal] = None
     cost_description: Optional[str] = None
@@ -233,7 +266,6 @@ class RdCostUpdate(BaseModel):
 
 class RdCostResponse(TimestampSchema):
     """研发费用响应"""
-
     id: int
     cost_no: str
     rd_project_id: int
@@ -251,14 +283,24 @@ class RdCostResponse(TimestampSchema):
     depreciation_period: Optional[str] = None
     source_type: Optional[str] = None
     source_id: Optional[int] = None
-    is_allocated: bool
+    is_allocated: Optional[bool] = False
     allocation_rule_id: Optional[int] = None
     allocation_rate: Optional[Decimal] = None
     deductible_amount: Optional[Decimal] = None
-    status: str
+    status: Optional[str] = "DRAFT"
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
     remark: Optional[str] = None
+
+    @field_validator("is_allocated", mode="before")
+    @classmethod
+    def _normalize_cost_is_allocated(cls, v):
+        return False if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_cost_status(cls, v):
+        return "DRAFT" if v is None else v
 
     class Config:
         from_attributes = True
@@ -266,7 +308,6 @@ class RdCostResponse(TimestampSchema):
 
 class RdCostCalculateLaborRequest(BaseModel):
     """人工费用自动计算请求"""
-
     rd_project_id: int = Field(description="研发项目ID")
     user_id: int = Field(description="人员ID")
     start_date: date = Field(description="开始日期")
@@ -276,7 +317,6 @@ class RdCostCalculateLaborRequest(BaseModel):
 
 class RdCostSummaryResponse(BaseModel):
     """项目费用汇总响应"""
-
     rd_project_id: int
     rd_project_name: str
     total_cost: Decimal
@@ -290,10 +330,8 @@ class RdCostSummaryResponse(BaseModel):
 
 # ==================== 费用分摊规则 ====================
 
-
 class RdCostAllocationRuleCreate(BaseModel):
     """创建费用分摊规则"""
-
     rule_name: str = Field(max_length=100, description="规则名称")
     rule_type: str = Field(description="分摊类型：PROPORTION/MANUAL")
     allocation_basis: str = Field(description="分摊依据：HOURS/REVENUE/HEADCOUNT")
@@ -308,7 +346,6 @@ class RdCostAllocationRuleCreate(BaseModel):
 
 class RdCostAllocationRuleResponse(TimestampSchema):
     """费用分摊规则响应"""
-
     id: int
     rule_name: str
     rule_type: str
@@ -316,10 +353,15 @@ class RdCostAllocationRuleResponse(TimestampSchema):
     allocation_formula: Optional[dict] = None
     cost_type_ids: Optional[List[int]] = None
     project_ids: Optional[List[int]] = None
-    is_active: bool
+    is_active: Optional[bool] = True
     effective_date: Optional[date] = None
     expiry_date: Optional[date] = None
     remark: Optional[str] = None
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_rule_is_active(cls, v):
+        return True if v is None else v
 
     class Config:
         from_attributes = True
@@ -327,10 +369,8 @@ class RdCostAllocationRuleResponse(TimestampSchema):
 
 # ==================== 报表记录 ====================
 
-
 class RdReportRecordResponse(TimestampSchema):
     """研发报表记录响应"""
-
     id: int
     report_no: str
     report_type: str
@@ -348,3 +388,5 @@ class RdReportRecordResponse(TimestampSchema):
 
     class Config:
         from_attributes = True
+
+

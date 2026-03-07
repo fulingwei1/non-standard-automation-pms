@@ -7,16 +7,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .common import PaginatedResponse, TimestampSchema
 
 # ==================== 缺料上报 ====================
 
-
 class ShortageReportCreate(BaseModel):
     """创建缺料上报"""
-
     project_id: int = Field(description="项目ID")
     machine_id: Optional[int] = None
     work_order_id: Optional[int] = None
@@ -30,7 +28,6 @@ class ShortageReportCreate(BaseModel):
 
 class ShortageReportResponse(TimestampSchema):
     """缺料上报响应"""
-
     id: int
     report_no: str
     project_id: int
@@ -43,8 +40,8 @@ class ShortageReportResponse(TimestampSchema):
     material_name: str
     required_qty: Decimal
     shortage_qty: Decimal
-    urgent_level: str
-    status: str
+    urgent_level: Optional[str] = "NORMAL"
+    status: Optional[str] = "REPORTED"
     reporter_id: int
     reporter_name: Optional[str] = None
     report_time: datetime
@@ -56,19 +53,26 @@ class ShortageReportResponse(TimestampSchema):
     solution_note: Optional[str] = None
     remark: Optional[str] = None
 
+    @field_validator("urgent_level", mode="before")
+    @classmethod
+    def _normalize_urgent_level(cls, v):
+        return "NORMAL" if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_report_status(cls, v):
+        return "REPORTED" if v is None else v
+
 
 class ShortageReportListResponse(PaginatedResponse):
     """缺料上报列表响应"""
-
     items: List[ShortageReportResponse]
 
 
 # ==================== 到货跟踪 ====================
 
-
 class MaterialArrivalCreate(BaseModel):
     """创建到货跟踪"""
-
     shortage_report_id: Optional[int] = None
     purchase_order_id: Optional[int] = None
     purchase_order_item_id: Optional[int] = None
@@ -82,7 +86,6 @@ class MaterialArrivalCreate(BaseModel):
 
 class ArrivalFollowUpCreate(BaseModel):
     """创建跟催记录"""
-
     follow_up_type: str = Field(default="CALL", description="跟催方式：CALL/EMAIL/VISIT/OTHER")
     follow_up_note: str = Field(description="跟催内容")
     supplier_response: Optional[str] = None
@@ -91,7 +94,6 @@ class ArrivalFollowUpCreate(BaseModel):
 
 class ArrivalFollowUpResponse(TimestampSchema):
     """到货跟催记录响应"""
-
     id: int
     arrival_id: int
     follow_up_type: str
@@ -105,7 +107,6 @@ class ArrivalFollowUpResponse(TimestampSchema):
 
 class MaterialArrivalResponse(TimestampSchema):
     """到货跟踪响应"""
-
     id: int
     arrival_no: str
     shortage_report_id: Optional[int] = None
@@ -118,28 +119,45 @@ class MaterialArrivalResponse(TimestampSchema):
     supplier_name: Optional[str] = None
     expected_date: date
     actual_date: Optional[date] = None
-    is_delayed: bool = False
-    delay_days: int = 0
-    status: str
-    received_qty: Decimal = 0
+    is_delayed: Optional[bool] = False
+    delay_days: Optional[int] = 0
+    status: Optional[str] = "PENDING"
+    received_qty: Optional[Decimal] = Decimal("0")
     received_by: Optional[int] = None
     received_at: Optional[datetime] = None
-    follow_up_count: int = 0
+    follow_up_count: Optional[int] = 0
     remark: Optional[str] = None
+
+    @field_validator("is_delayed", mode="before")
+    @classmethod
+    def _normalize_is_delayed(cls, v):
+        return False if v is None else v
+
+    @field_validator("delay_days", "follow_up_count", mode="before")
+    @classmethod
+    def _normalize_arrival_int_fields(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("received_qty", mode="before")
+    @classmethod
+    def _normalize_received_qty(cls, v):
+        return Decimal("0") if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_arrival_status(cls, v):
+        return "PENDING" if v is None else v
 
 
 class MaterialArrivalListResponse(PaginatedResponse):
     """到货跟踪列表响应"""
-
     items: List[MaterialArrivalResponse]
 
 
 # ==================== 物料替代 ====================
 
-
 class MaterialSubstitutionCreate(BaseModel):
     """创建物料替代申请"""
-
     shortage_report_id: Optional[int] = None
     project_id: int = Field(description="项目ID")
     bom_item_id: Optional[int] = None
@@ -155,7 +173,6 @@ class MaterialSubstitutionCreate(BaseModel):
 
 class MaterialSubstitutionResponse(TimestampSchema):
     """物料替代响应"""
-
     id: int
     substitution_no: str
     project_id: int
@@ -170,8 +187,8 @@ class MaterialSubstitutionResponse(TimestampSchema):
     substitute_qty: Decimal
     substitution_reason: str
     technical_impact: Optional[str] = None
-    cost_impact: Decimal = 0
-    status: str
+    cost_impact: Optional[Decimal] = Decimal("0")
+    status: Optional[str] = "DRAFT"
     tech_approver_id: Optional[int] = None
     tech_approver_name: Optional[str] = None
     tech_approved_at: Optional[datetime] = None
@@ -181,19 +198,26 @@ class MaterialSubstitutionResponse(TimestampSchema):
     executed_at: Optional[datetime] = None
     remark: Optional[str] = None
 
+    @field_validator("cost_impact", mode="before")
+    @classmethod
+    def _normalize_sub_cost_impact(cls, v):
+        return Decimal("0") if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_sub_status(cls, v):
+        return "DRAFT" if v is None else v
+
 
 class MaterialSubstitutionListResponse(PaginatedResponse):
     """物料替代列表响应"""
-
     items: List[MaterialSubstitutionResponse]
 
 
 # ==================== 物料调拨 ====================
 
-
 class MaterialTransferCreate(BaseModel):
     """创建物料调拨申请"""
-
     shortage_report_id: Optional[int] = None
     from_project_id: Optional[int] = None
     from_location: Optional[str] = None
@@ -208,7 +232,6 @@ class MaterialTransferCreate(BaseModel):
 
 class MaterialTransferResponse(TimestampSchema):
     """物料调拨响应"""
-
     id: int
     transfer_no: str
     from_project_id: Optional[int] = None
@@ -221,10 +244,10 @@ class MaterialTransferResponse(TimestampSchema):
     material_code: str
     material_name: str
     transfer_qty: Decimal
-    available_qty: Decimal = 0
+    available_qty: Optional[Decimal] = Decimal("0")
     transfer_reason: str
-    urgent_level: str
-    status: str
+    urgent_level: Optional[str] = "NORMAL"
+    status: Optional[str] = "DRAFT"
     approver_id: Optional[int] = None
     approver_name: Optional[str] = None
     approved_at: Optional[datetime] = None
@@ -232,8 +255,22 @@ class MaterialTransferResponse(TimestampSchema):
     actual_qty: Optional[Decimal] = None
     remark: Optional[str] = None
 
+    @field_validator("available_qty", mode="before")
+    @classmethod
+    def _normalize_transfer_available_qty(cls, v):
+        return Decimal("0") if v is None else v
+
+    @field_validator("urgent_level", mode="before")
+    @classmethod
+    def _normalize_transfer_urgent_level(cls, v):
+        return "NORMAL" if v is None else v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_transfer_status(cls, v):
+        return "DRAFT" if v is None else v
+
 
 class MaterialTransferListResponse(PaginatedResponse):
     """物料调拨列表响应"""
-
     items: List[MaterialTransferResponse]

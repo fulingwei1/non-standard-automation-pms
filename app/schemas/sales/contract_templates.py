@@ -8,7 +8,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== 合同模板版本 ====================
 
@@ -35,7 +35,7 @@ class ContractTemplateVersionResponse(ContractTemplateVersionBase):
 
     id: int
     template_id: int
-    status: str = Field("DRAFT", description="状态: DRAFT/PUBLISHED/ARCHIVED")
+    status: Optional[str] = Field("DRAFT", description="状态: DRAFT/PUBLISHED/ARCHIVED")
     created_by: Optional[int] = None
     creator_name: Optional[str] = None
     published_by: Optional[int] = None
@@ -43,6 +43,11 @@ class ContractTemplateVersionResponse(ContractTemplateVersionBase):
     published_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_contract_version_status(cls, v):
+        return "DRAFT" if v is None else v
 
     model_config = {"from_attributes": True}
 
@@ -57,8 +62,18 @@ class ContractTemplateBase(BaseModel):
     template_name: str = Field(..., max_length=200, description="模板名称")
     contract_type: Optional[str] = Field(None, max_length=50, description="合同类型")
     description: Optional[str] = Field(None, description="描述")
-    visibility_scope: str = Field("TEAM", description="可见范围: PERSONAL/TEAM/DEPARTMENT/COMPANY")
-    is_default: bool = Field(False, description="是否默认模板")
+    visibility_scope: Optional[str] = Field("TEAM", description="可见范围: PERSONAL/TEAM/DEPARTMENT/COMPANY")
+    is_default: Optional[bool] = Field(False, description="是否默认模板")
+
+    @field_validator("visibility_scope", mode="before")
+    @classmethod
+    def _normalize_visibility_scope(cls, v):
+        return "TEAM" if v is None else v
+
+    @field_validator("is_default", mode="before")
+    @classmethod
+    def _normalize_is_default(cls, v):
+        return False if v is None else v
 
 
 class ContractTemplateCreate(ContractTemplateBase):
@@ -84,7 +99,7 @@ class ContractTemplateResponse(ContractTemplateBase):
     """合同模板响应"""
 
     id: int
-    status: str = Field("DRAFT", description="状态: DRAFT/ACTIVE/ARCHIVED")
+    status: Optional[str] = Field("DRAFT", description="状态: DRAFT/ACTIVE/ARCHIVED")
     current_version_id: Optional[int] = None
     owner_id: Optional[int] = None
     owner_name: Optional[str] = None
@@ -92,6 +107,11 @@ class ContractTemplateResponse(ContractTemplateBase):
     version_count: int = Field(0, description="版本数量")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_contract_template_status(cls, v):
+        return "DRAFT" if v is None else v
 
     model_config = {"from_attributes": True}
 
@@ -154,12 +174,17 @@ class VersionHistoryItem(BaseModel):
 
     version_id: int
     version_no: str
-    status: str
+    status: Optional[str] = "DRAFT"
     release_notes: Optional[str] = None
     created_by: Optional[int] = None
     creator_name: Optional[str] = None
     published_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_version_history_status(cls, v):
+        return "DRAFT" if v is None else v
 
 
 class ContractTemplateHistoryResponse(BaseModel):

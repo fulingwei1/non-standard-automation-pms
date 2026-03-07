@@ -6,7 +6,7 @@
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from ..common import TimestampSchema
 
@@ -68,7 +68,12 @@ class ContactResponse(TimestampSchema):
     birthday: Optional[date] = Field(default=None, description="生日")
     hobbies: Optional[str] = Field(default=None, description="兴趣爱好")
     notes: Optional[str] = Field(default=None, description="备注")
-    is_primary: bool = Field(description="是否为主要联系人")
+    is_primary: Optional[bool] = Field(default=False, description="是否为主要联系人")
+
+    @field_validator("is_primary", mode="before")
+    @classmethod
+    def _normalize_is_primary(cls, v):
+        return False if v is None else v
 
 
 class ContactListResponse(BaseModel):

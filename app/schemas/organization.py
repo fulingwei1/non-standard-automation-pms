@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .common import TimestampSchema
 
@@ -486,15 +486,30 @@ class OrganizationUnitResponse(TimestampSchema):
     unit_type: str
     parent_id: Optional[int] = None
     manager_id: Optional[int] = None
-    level: int
+    level: Optional[int] = 1
     path: Optional[str] = None
-    sort_order: int
-    is_active: bool
+    sort_order: Optional[int] = 0
+    is_active: Optional[bool] = True
 
     # 额外字段便于前端使用
     manager_name: Optional[str] = None
     parent_name: Optional[str] = None
     children: Optional[list] = None
+
+    @field_validator("level", mode="before")
+    @classmethod
+    def _normalize_level(cls, v):
+        return 1 if v is None else v
+
+    @field_validator("sort_order", mode="before")
+    @classmethod
+    def _normalize_sort_order(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_is_active(cls, v):
+        return True if v is None else v
 
     class Config:
         from_attributes = True
@@ -540,8 +555,18 @@ class PositionResponse(TimestampSchema):
     org_unit_name: Optional[str] = None
     description: Optional[str] = None
     responsibilities: Optional[dict] = None
-    is_active: bool
-    sort_order: int
+    is_active: Optional[bool] = True
+    sort_order: Optional[int] = 0
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_position_is_active(cls, v):
+        return True if v is None else v
+
+    @field_validator("sort_order", mode="before")
+    @classmethod
+    def _normalize_position_sort_order(cls, v):
+        return 0 if v is None else v
 
     class Config:
         from_attributes = True
@@ -579,10 +604,25 @@ class JobLevelResponse(TimestampSchema):
     level_code: str
     level_name: str
     level_category: str
-    level_rank: int
+    level_rank: Optional[int] = 0
     description: Optional[str] = None
-    is_active: bool
-    sort_order: int
+    is_active: Optional[bool] = True
+    sort_order: Optional[int] = 0
+
+    @field_validator("level_rank", mode="before")
+    @classmethod
+    def _normalize_level_rank(cls, v):
+        return 0 if v is None else v
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_job_level_is_active(cls, v):
+        return True if v is None else v
+
+    @field_validator("sort_order", mode="before")
+    @classmethod
+    def _normalize_job_level_sort_order(cls, v):
+        return 0 if v is None else v
 
     class Config:
         from_attributes = True

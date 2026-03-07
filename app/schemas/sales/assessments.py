@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ..common import TimestampSchema
 
@@ -58,10 +58,15 @@ class ScoringRuleResponse(TimestampSchema):
 
     id: int
     version: str
-    is_active: bool
+    is_active: Optional[bool] = True
     description: Optional[str] = None
     created_by: Optional[int] = None
     creator_name: Optional[str] = None
+
+    @field_validator("is_active", mode="before")
+    @classmethod
+    def _normalize_is_active(cls, v):
+        return True if v is None else v
 
 
 class FailureCaseCreate(BaseModel):
@@ -136,8 +141,18 @@ class OpenItemResponse(TimestampSchema):
     responsible_party: str
     responsible_person_id: Optional[int] = None
     due_date: Optional[datetime] = None
-    status: str
+    status: Optional[str] = "OPEN"
     close_evidence: Optional[str] = None
-    blocks_quotation: bool = False
+    blocks_quotation: Optional[bool] = False
     closed_at: Optional[datetime] = None
     responsible_person_name: Optional[str] = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_open_item_status(cls, v):
+        return "OPEN" if v is None else v
+
+    @field_validator("blocks_quotation", mode="before")
+    @classmethod
+    def _normalize_blocks_quotation(cls, v):
+        return False if v is None else v
