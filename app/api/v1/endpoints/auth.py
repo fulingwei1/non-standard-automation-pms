@@ -8,7 +8,7 @@ import secrets
 from datetime import timedelta
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -24,22 +24,22 @@ from app.models.user import (
     UserRole,
 )
 from app.schemas.auth import PasswordChange, UserResponse
-from app.schemas.common import ResponseModel
 from app.schemas.session import (
     DeviceInfo,
     LogoutRequest,
     RefreshTokenRequest,
     RefreshTokenResponse,
 )
-from app.services.account_lockout_service import AccountLockoutService
 from app.services.session_service import SessionService
+from app.services.account_lockout_service import AccountLockoutService
+from app.schemas.common import ResponseModel
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=dict, status_code=status.HTTP_200_OK)
-# @limiter.limit("5/minute")  # FIXME: 暂时禁用，slowapi有兼容性问题
+# @limiter.limit("5/minute")  # FIXME: 暂时禁用，slowapi有兼容性问题  
 def login(
     request: Request,  # 用于获取客户端IP和User-Agent
     db: Session = Depends(deps.get_db),
@@ -69,9 +69,9 @@ def login(
     # 获取客户端信息
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("User-Agent", "unknown")
-
+    
     # 检查IP黑名单
-    if AccountLockoutService.is_ip_blacklisted(client_ip):
+    if AccountLockoutService.is_ip_blacklisted(client_ip, db=db):
         logger.warning(f"来自黑名单IP的登录尝试: {client_ip}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -80,7 +80,7 @@ def login(
                 "message": "您的IP已被限制访问，请联系管理员",
             },
         )
-
+    
     # 检查账户锁定状态
     lockout_status = AccountLockoutService.check_lockout(form_data.username, db)
     if lockout_status["locked"]:
@@ -100,7 +100,7 @@ def login(
 
         result = db.execute(
             text("SELECT * FROM users WHERE username = :username LIMIT 1"),
-            {"username": form_data.username},
+            {"username": form_data.username}
         ).fetchone()
 
         if not result:
@@ -110,7 +110,7 @@ def login(
                 ip=client_ip,
                 user_agent=user_agent,
                 reason="user_not_found",
-                db=db,
+                db=db
             )
             # 统一返回"用户名或密码错误"，不泄露用户是否存在
             raise HTTPException(
@@ -133,25 +133,21 @@ def login(
                 ip=client_ip,
                 user_agent=user_agent,
                 reason="wrong_password",
-                db=db,
+                db=db
             )
-
+            
             # 构建错误消息
             error_detail = {
                 "error_code": "WRONG_PASSWORD",
                 "message": "用户名或密码错误",  # 统一错误消息，不泄露信息
             }
-
+            
             # 如果账户被锁定，更新错误消息
             if lockout_result["locked"]:
                 error_detail["error_code"] = "ACCOUNT_LOCKED"
-                error_detail["message"] = (
-                    f"登录失败次数过多，账户已被锁定{AccountLockoutService.LOCKOUT_DURATION_MINUTES}分钟"
-                )
+                error_detail["message"] = f"登录失败次数过多，账户已被锁定{AccountLockoutService.LOCKOUT_DURATION_MINUTES}分钟"
                 error_detail["locked_until"] = lockout_result["locked_until"]
-                logger.warning(
-                    f"账户已锁定: {form_data.username}, IP: {client_ip}, 失败次数: {lockout_result['attempts']}"
-                )
+                logger.warning(f"账户已锁定: {form_data.username}, IP: {client_ip}, 失败次数: {lockout_result['attempts']}")
                 status_code = status.HTTP_423_LOCKED
             else:
                 # 提示剩余尝试次数
@@ -159,7 +155,7 @@ def login(
                 if remaining <= 2:
                     error_detail["message"] += f"，剩余尝试次数: {remaining}"
                 status_code = status.HTTP_401_UNAUTHORIZED
-
+            
             raise HTTPException(
                 status_code=status_code,
                 detail=error_detail,
@@ -171,7 +167,7 @@ def login(
             # 检查关联的员工状态来区分是未激活还是离职
             employee_result = db.execute(
                 text("SELECT employment_status FROM employees WHERE id = :employee_id LIMIT 1"),
-                {"employee_id": user_dict["employee_id"]},
+                {"employee_id": user_dict["employee_id"]}
             ).fetchone()
 
             if employee_result and employee_result[0] != "active":
@@ -198,12 +194,20 @@ def login(
         if user_dict.get("two_factor_enabled"):
             # 返回特殊响应，要求提供2FA码
             # 生成临时令牌（有效期5分钟）用于2FA验证
-            temp_token_data = {"sub": str(user_dict["id"]), "purpose": "2fa_pending"}
+            temp_token_data = {
+                "sub": str(user_dict["id"]),
+                "purpose": "2fa_pending"
+            }
             temp_token = security.create_access_token(
-                data=temp_token_data, expires_delta=timedelta(minutes=5)
+                data=temp_token_data,
+                expires_delta=timedelta(minutes=5)
             )
-            return {"requires_2fa": True, "temp_token": temp_token, "message": "请提供双因素认证码"}
-
+            return {
+                "requires_2fa": True,
+                "temp_token": temp_token,
+                "message": "请提供双因素认证码"
+            }
+        
         # 更新最后登录时间（临时禁用以绕过只读数据库问题）
         # user.last_login_at = datetime.now()
         # db.add(user)
@@ -212,13 +216,13 @@ def login(
         # 创建Access Token和Refresh Token对
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         refresh_token_expires = timedelta(days=7)  # Refresh Token有效期7天
-
+        
         access_token, refresh_token, access_jti, refresh_jti = security.create_token_pair(
             data={"sub": str(user_dict["id"])},
             access_expires=access_token_expires,
             refresh_expires=refresh_token_expires,
         )
-
+        
         # 创建会话记录
         try:
             SessionService.create_session(
@@ -232,10 +236,13 @@ def login(
             )
         except Exception as e:
             logger.warning(f"创建会话记录失败: {e}")
-
+        
         # 登录成功，清除失败计数和记录成功登录
         AccountLockoutService.record_successful_login(
-            username=form_data.username, ip=client_ip, user_agent=user_agent, db=db
+            username=form_data.username,
+            ip=client_ip,
+            user_agent=user_agent,
+            db=db
         )
 
         # 显式回滚任何可能的更改，确保不触发数据库写入
@@ -259,19 +266,22 @@ def login(
 @router.post("/logout", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def logout(
     request: Request,
-    logout_data: LogoutRequest,
+    logout_data: Optional[LogoutRequest] = None,
     token: str = Depends(security.oauth2_scheme),
     current_user: User = Depends(security.get_current_active_user),
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
     用户登出，使 Token 失效
-
+    
     - **logout_all**: 是否登出所有设备（默认false，只登出当前设备）
     """
+    # 兼容空请求体：默认仅登出当前设备
+    logout_data = logout_data or LogoutRequest()
+
     # 提取当前token的JTI
     current_jti = security.extract_jti_from_token(token)
-
+    
     if logout_data.logout_all:
         # 登出所有设备
         count = SessionService.revoke_all_sessions(
@@ -292,7 +302,7 @@ def logout(
         else:
             security.revoke_token(token)
         message = "登出成功"
-
+    
     return ResponseModel(code=200, message=message)
 
 
@@ -300,37 +310,53 @@ def logout(
 @limiter.limit("10/minute")  # 防止token刷新滥用
 def refresh_token(
     request: Request,
-    refresh_data: RefreshTokenRequest,
+    refresh_data: Optional[RefreshTokenRequest] = None,
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
     使用Refresh Token刷新Access Token
-
+    
     - **refresh_token**: 刷新令牌
     - **device_info**: 可选的设备信息
-
+    
     错误码：
     - 401: Refresh Token无效或已过期
     - 403: 会话已被撤销
     """
+    # 兼容两种请求方式：
+    # 1) JSON body: {"refresh_token": "..."}
+    # 2) Authorization: Bearer <refresh_token>
+    refresh_token_value = None
+    if refresh_data and refresh_data.refresh_token:
+        refresh_token_value = refresh_data.refresh_token
+    elif authorization and authorization.startswith("Bearer "):
+        refresh_token_value = authorization.split(" ", 1)[1].strip()
+
+    if not refresh_token_value:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="缺少Refresh Token",
+        )
+
     # 验证Refresh Token
-    payload = security.verify_refresh_token(refresh_data.refresh_token)
+    payload = security.verify_refresh_token(refresh_token_value)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh Token无效或已过期",
         )
-
+    
     # 提取用户ID和JTI
     user_id_str = payload.get("sub")
     refresh_jti = payload.get("jti")
-
+    
     if not user_id_str or not refresh_jti:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh Token格式错误",
         )
-
+    
     try:
         user_id = int(user_id_str)
     except (ValueError, TypeError):
@@ -338,7 +364,7 @@ def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh Token格式错误",
         )
-
+    
     # 检查会话是否存在且有效
     session = SessionService.get_session_by_jti(db, refresh_jti, "refresh")
     if not session or not session.is_active:
@@ -346,7 +372,7 @@ def refresh_token(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="会话已失效，请重新登录",
         )
-
+    
     # 验证用户
     user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
@@ -354,7 +380,7 @@ def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户不存在或已被禁用",
         )
-
+    
     # 生成新的Access Token（使用滑动窗口策略）
     new_access_jti = secrets.token_hex(16)
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -363,20 +389,23 @@ def refresh_token(
         expires_delta=access_token_expires,
         jti=new_access_jti,
     )
-
+    
     # 将旧的Access Token加入黑名单
     if session.access_token_jti:
-        security.revoke_token(session.access_token_jti)
-
+        security.revoke_token_jti(
+            session.access_token_jti,
+            ttl_seconds=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+    
     # 更新会话记录
     SessionService.update_session_activity(
         db=db,
         jti=refresh_jti,
         new_access_jti=new_access_jti,
     )
-
+    
     logger.info(f"刷新Token成功: user_id={user_id}, session_id={session.id}")
-
+    
     return RefreshTokenResponse(
         access_token=new_access_token,
         token_type="bearer",
@@ -411,8 +440,8 @@ def get_me(
     admin_role_codes = {"admin", "super_admin", "system_admin"}
     admin_role_names = {"系统管理员", "超级管理员", "管理员"}
     is_admin = any(
-        (row.role_code or "").lower() in admin_role_codes
-        or (row.role_name or "") in admin_role_names
+        (row.role_code or "").lower() in admin_role_codes or
+        (row.role_name or "") in admin_role_names
         for row in role_rows
     )
 
@@ -421,7 +450,11 @@ def get_me(
 
     # 超级管理员获得所有权限，普通用户通过角色获取权限
     if is_superuser:
-        permission_rows = db.query(ApiPermission.perm_code).filter(ApiPermission.is_active).all()
+        permission_rows = (
+            db.query(ApiPermission.perm_code)
+            .filter(ApiPermission.is_active)
+            .all()
+        )
     else:
         permission_rows = (
             db.query(ApiPermission.perm_code)
@@ -431,7 +464,9 @@ def get_me(
             .distinct()
             .all()
         )
-    permission_codes = sorted({row.perm_code for row in permission_rows if row.perm_code})
+    permission_codes = sorted(
+        {row.perm_code for row in permission_rows if row.perm_code}
+    )
     user_data = {
         "id": db_user.id,
         "username": db_user.username,
@@ -476,7 +511,9 @@ def change_password(
 
     # 验证原密码
     if not security.verify_password(password_data.old_password, db_user.password_hash):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="原密码错误")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="原密码错误"
+        )
 
     # 更新密码
     db_user.password_hash = security.get_password_hash(password_data.new_password)
@@ -505,7 +542,13 @@ def get_permissions(
     from app.services.permission_service import PermissionService
 
     permission_data = PermissionService.get_full_permission_data(
-        db=db, user_id=current_user.id, user=current_user
+        db=db,
+        user_id=current_user.id,
+        user=current_user
     )
 
-    return ResponseModel(code=200, message="获取成功", data=permission_data)
+    return ResponseModel(
+        code=200,
+        message="获取成功",
+        data=permission_data
+    )

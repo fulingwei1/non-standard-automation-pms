@@ -23,6 +23,7 @@ from .auth import (
     pwd_context,
     require_permission,
     revoke_token,
+    revoke_token_jti,
     verify_password,
 )
 
@@ -61,6 +62,7 @@ __all__ = [
     "oauth2_scheme",
     "pwd_context",
     "revoke_token",
+    "revoke_token_jti",
     "is_token_revoked",
     # 销售权限
     "has_sales_assessment_access",
