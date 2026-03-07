@@ -20,14 +20,37 @@ def create_api_router() -> APIRouter:
     print("开始加载API路由...")
     
     # ==================== 核心认证模块 ====================
+    auth_loaded = 0
+
     try:
-        from app.api.v1.endpoints import auth, sessions, two_factor
+        from app.api.v1.endpoints import auth
         api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
-        api_router.include_router(sessions.router, prefix="/auth", tags=["sessions"])
-        api_router.include_router(two_factor.router, prefix="/auth/2fa", tags=["2fa"])
-        print("✓ 认证模块加载成功")
+        auth_loaded += 1
+        print("✓ auth 模块加载成功")
     except Exception as e:
-        print(f"✗ 认证模块加载失败: {e}")
+        print(f"✗ auth 模块加载失败: {e}")
+
+    try:
+        from app.api.v1.endpoints import sessions
+        api_router.include_router(sessions.router, prefix="/auth", tags=["sessions"])
+        auth_loaded += 1
+        print("✓ sessions 模块加载成功")
+    except Exception as e:
+        print(f"✗ sessions 模块加载失败: {e}")
+
+    try:
+        from app.api.v1.endpoints import two_factor
+        api_router.include_router(two_factor.router, prefix="/auth/2fa", tags=["2fa"])
+        auth_loaded += 1
+        print("✓ two_factor 模块加载成功")
+    except Exception as e:
+        # 2FA 为增强能力，不应阻断基础登录路由
+        print(f"⚠️ two_factor 模块加载失败（不影响基础登录）: {e}")
+
+    if auth_loaded >= 2:
+        print("✓ 认证基础模块加载成功")
+    else:
+        print("✗ 认证基础模块加载不完整")
     
     # ==================== 用户和组织 ====================
     try:
