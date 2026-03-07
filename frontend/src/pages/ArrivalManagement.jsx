@@ -139,40 +139,6 @@ export default function ArrivalManagement() {
     });
   }, [receipts, searchKeyword]);
 
-  useEffect(() => {
-    setLoading(true);
-    // Mock data - replace with API call
-    setReceipts([
-      {
-        id: 1,
-        receipt_no: "GR-250115-001",
-        order_no: "PO-250115-001",
-        purchase_order_no: "PO-250115-001",
-        supplier_name: "东莞XX机械加工",
-        project_name: "FCT测试治具",
-        item_count: 3,
-        total_amount: 12500,
-        receipt_date: "2025-01-15",
-        status: "RECEIVED",
-        inspect_status: "QUALIFIED",
-      },
-      {
-        id: 2,
-        receipt_no: "GR-250115-002",
-        order_no: "PO-250115-002",
-        purchase_order_no: "PO-250115-002",
-        supplier_name: "THK(深圳)销售",
-        project_name: "BMS老化测试设备",
-        item_count: 1,
-        total_amount: 18984,
-        receipt_date: "2025-01-15",
-        status: "RECEIVED",
-        inspect_status: "QUALIFIED",
-      },
-    ]);
-    setLoading(false);
-  }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-6 space-y-6">

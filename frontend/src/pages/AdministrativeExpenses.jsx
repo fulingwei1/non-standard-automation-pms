@@ -43,75 +43,11 @@ import {
 "../components/administrative/StatisticsCharts";
 import { adminApi } from "../services/api";
 
-// Mock data
-const _expenseStats = {
-  monthlyBudget: 500000,
-  monthlySpent: 385000,
-  budgetUtilization: 77,
-  remainingBudget: 115000,
-  lastMonthSpent: 420000,
-  trend: -8.3
-};
-
-const _categoryExpenses = [
-{
-  category: "办公用品",
-  amount: 45000,
-  percentage: 11.7,
-  icon: Package,
-  color: "text-blue-400"
-},
-{
-  category: "车辆费用",
-  amount: 28000,
-  percentage: 7.3,
-  icon: Car,
-  color: "text-cyan-400"
-},
-{
-  category: "固定资产",
-  amount: 120000,
-  percentage: 31.2,
-  icon: Building2,
-  color: "text-purple-400"
-},
-{
-  category: "会议费用",
-  amount: 15000,
-  percentage: 3.9,
-  icon: Coffee,
-  color: "text-green-400"
-},
-{
-  category: "设备维护",
-  amount: 35000,
-  percentage: 9.1,
-  icon: Printer,
-  color: "text-amber-400"
-},
-{
-  category: "其他费用",
-  amount: 152000,
-  percentage: 39.5,
-  icon: DollarSign,
-  color: "text-slate-400"
-}];
-
-
-const _monthlyTrend = [
-{ month: "2024-07", amount: 380000 },
-{ month: "2024-08", amount: 395000 },
-{ month: "2024-09", amount: 410000 },
-{ month: "2024-10", amount: 425000 },
-{ month: "2024-11", amount: 420000 },
-{ month: "2024-12", amount: 385000 }];
-
-
 export default function AdministrativeExpenses() {
   const [_loading, setLoading] = useState(true);
-  const [expenseStats, setExpenseStats] = useState(expenseStats);
-  const [categoryExpenses, _setCategoryExpenses] = useState(categoryExpenses);
-  const [monthlyTrend, _setMonthlyTrend] = useState(monthlyTrend);
+  const [expenseStats, setExpenseStats] = useState(null);
+  const [categoryExpenses, _setCategoryExpenses] = useState([]);
+  const [monthlyTrend, _setMonthlyTrend] = useState([]);
   const [periodFilter, setPeriodFilter] = useState("month");
 
   // Load data from API with fallback to mock data
