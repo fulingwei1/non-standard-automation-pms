@@ -59,10 +59,25 @@ def list_department_objectives(
     year: Optional[int] = Query(None, description="年度筛选"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
+    current_user=Depends(deps.get_current_user),
 ):
     """
-    获取部门目标列表
+    获取部门目标列表 - 权限控制版本
     """
+    # 简单权限分层：根据用户角色过滤
+    from app.models.user import User
+    
+    user = db.query(User).filter(User.id == current_user.id).first()
+    
+    # 如果不是总经理/高管，只能看本部门
+    if user and user.department_id:
+        # 检查是否是高管 (通过 username 简单判断)
+        is_executive = user.username in ['fulingwei', 'admin'] or user.is_superuser
+        
+        if not is_executive:
+            department_id = user.department_id
+            print(f"DEBUG: User {user.username} filtered to department {department_id}")
+    
     items, total = strategy_service.list_department_objectives(
         db,
         strategy_id=strategy_id,
