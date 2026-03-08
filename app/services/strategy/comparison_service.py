@@ -35,8 +35,8 @@ def create_strategy_comparison(
         StrategyComparison: 创建的对比记录
     """
     comparison = StrategyComparison(
-        base_strategy_id=data.base_strategy_id,
-        compare_strategy_id=data.compare_strategy_id,
+        current_strategy_id=data.current_strategy_id,
+        previous_strategy_id=data.previous_strategy_id,
         comparison_type=data.comparison_type,
         base_year=data.base_year,
         compare_year=data.compare_year,
@@ -68,14 +68,14 @@ def get_strategy_comparison(db: Session, comparison_id: int) -> Optional[Strateg
 
 
 def list_strategy_comparisons(
-    db: Session, base_strategy_id: Optional[int] = None, skip: int = 0, limit: int = 20
+    db: Session, current_strategy_id: Optional[int] = None, skip: int = 0, limit: int = 20
 ) -> tuple[List[StrategyComparison], int]:
     """
     获取战略对比记录列表
 
     Args:
         db: 数据库会话
-        base_strategy_id: 基准战略 ID 筛选
+        current_strategy_id: 当前战略 ID 筛选
         skip: 跳过数量
         limit: 限制数量
 
@@ -84,8 +84,8 @@ def list_strategy_comparisons(
     """
     query = db.query(StrategyComparison).filter(StrategyComparison.is_active)
 
-    if base_strategy_id:
-        query = query.filter(StrategyComparison.base_strategy_id == base_strategy_id)
+    if current_strategy_id:
+        query = query.filter(StrategyComparison.current_strategy_id == base_strategy_id)
 
     total = query.count()
     items = apply_pagination(

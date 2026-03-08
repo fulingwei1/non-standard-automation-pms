@@ -33,8 +33,8 @@ def create_comparison(
     comparison = strategy_service.create_strategy_comparison(db, data, current_user.id)
     return StrategyComparisonResponse(
         id=comparison.id,
-        base_strategy_id=comparison.base_strategy_id,
-        compare_strategy_id=comparison.compare_strategy_id,
+        current_strategy_id=comparison.current_strategy_id,
+        previous_strategy_id=comparison.previous_strategy_id,
         comparison_type=comparison.comparison_type,
         base_year=comparison.base_year,
         compare_year=comparison.compare_year,
@@ -48,7 +48,7 @@ def create_comparison(
 
 @router.get("", response_model=PageResponse[StrategyComparisonResponse])
 def list_comparisons(
-    base_strategy_id: Optional[int] = Query(None, description="基准战略 ID 筛选"),
+    current_strategy_id: Optional[int] = Query(None, description="当前战略 ID 筛选"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
@@ -56,14 +56,14 @@ def list_comparisons(
     获取战略对比记录列表
     """
     items, total = strategy_service.list_strategy_comparisons(
-        db, base_strategy_id, pagination.offset, pagination.limit
+        db, current_strategy_id, pagination.offset, pagination.limit
     )
 
     responses = [
         StrategyComparisonResponse(
             id=c.id,
-            base_strategy_id=c.base_strategy_id,
-            compare_strategy_id=c.compare_strategy_id,
+            current_strategy_id=c.current_strategy_id,
+            previous_strategy_id=c.previous_strategy_id,
             comparison_type=c.comparison_type,
             base_year=c.base_year,
             compare_year=c.compare_year,
@@ -133,8 +133,8 @@ def get_comparison(
 
     return StrategyComparisonResponse(
         id=comparison.id,
-        base_strategy_id=comparison.base_strategy_id,
-        compare_strategy_id=comparison.compare_strategy_id,
+        current_strategy_id=comparison.current_strategy_id,
+        previous_strategy_id=comparison.previous_strategy_id,
         comparison_type=comparison.comparison_type,
         base_year=comparison.base_year,
         compare_year=comparison.compare_year,

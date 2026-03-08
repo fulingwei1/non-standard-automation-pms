@@ -3,6 +3,7 @@
 战略管理 API 端点 - 战略审视与日历
 """
 
+import json
 from datetime import date
 from typing import Any, Dict, Optional
 
@@ -25,6 +26,8 @@ from app.schemas.strategy import (
     StrategyReviewUpdate,
 )
 from app.services import strategy as strategy_service
+from app.services.strategy.review.strategy_reviews import _review_to_response, _safe_json_loads as _review_json
+from app.services.strategy.review.calendar_events import _event_to_response
 
 router = APIRouter()
 
@@ -40,16 +43,12 @@ def create_strategy_review(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
-    """
-    创建战略审视记录
-    """
-    # 验证战略是否存在
     strategy = strategy_service.get_strategy(db, data.strategy_id)
     if not strategy:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="关联的战略不存在")
 
     review = strategy_service.create_strategy_review(db, data, current_user.id)
-    return review
+    return _review_to_response(review)
 
 
 @router.get("/reviews", response_model=PageResponse[StrategyReviewResponse])
@@ -59,37 +58,11 @@ def list_strategy_reviews(
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取战略审视记录列表
-    """
     items, total = strategy_service.list_strategy_reviews(
         db, strategy_id, review_type, pagination.offset, pagination.limit
     )
 
-    responses = [
-        StrategyReviewResponse(
-            id=r.id,
-            strategy_id=r.strategy_id,
-            review_date=r.review_date,
-            review_period=r.review_period,
-            review_type=r.review_type,
-            health_score=r.health_score,
-            financial_score=r.financial_score,
-            customer_score=r.customer_score,
-            internal_score=r.internal_score,
-            learning_score=r.learning_score,
-            summary=r.summary,
-            achievements=r.achievements,
-            issues=r.issues,
-            action_items=r.action_items,
-            next_steps=r.next_steps,
-            created_by=r.created_by,
-            is_active=r.is_active,
-            created_at=r.created_at,
-            updated_at=r.updated_at,
-        )
-        for r in items
-    ]
+    responses = [_review_to_response(r) for r in items]
 
     return PageResponse(
         items=responses,
@@ -104,9 +77,6 @@ def get_latest_review(
     strategy_id: int,
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取最新的战略审视记录
-    """
     review = strategy_service.get_latest_review(db, strategy_id)
     if not review:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="没有审视记录")
@@ -118,34 +88,10 @@ def get_strategy_review(
     review_id: int,
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取战略审视记录详情
-    """
     review = strategy_service.get_strategy_review(db, review_id)
     if not review:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="审视记录不存在")
-
-    return StrategyReviewResponse(
-        id=review.id,
-        strategy_id=review.strategy_id,
-        review_date=review.review_date,
-        review_period=review.review_period,
-        review_type=review.review_type,
-        health_score=review.health_score,
-        financial_score=review.financial_score,
-        customer_score=review.customer_score,
-        internal_score=review.internal_score,
-        learning_score=review.learning_score,
-        summary=review.summary,
-        achievements=review.achievements,
-        issues=review.issues,
-        action_items=review.action_items,
-        next_steps=review.next_steps,
-        created_by=review.created_by,
-        is_active=review.is_active,
-        created_at=review.created_at,
-        updated_at=review.updated_at,
-    )
+    return _review_to_response(review)
 
 
 @router.put("/reviews/{review_id}", response_model=StrategyReviewResponse)
@@ -155,34 +101,10 @@ def update_strategy_review(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
-    """
-    更新战略审视记录
-    """
     review = strategy_service.update_strategy_review(db, review_id, data)
     if not review:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="审视记录不存在")
-
-    return StrategyReviewResponse(
-        id=review.id,
-        strategy_id=review.strategy_id,
-        review_date=review.review_date,
-        review_period=review.review_period,
-        review_type=review.review_type,
-        health_score=review.health_score,
-        financial_score=review.financial_score,
-        customer_score=review.customer_score,
-        internal_score=review.internal_score,
-        learning_score=review.learning_score,
-        summary=review.summary,
-        achievements=review.achievements,
-        issues=review.issues,
-        action_items=review.action_items,
-        next_steps=review.next_steps,
-        created_by=review.created_by,
-        is_active=review.is_active,
-        created_at=review.created_at,
-        updated_at=review.updated_at,
-    )
+    return _review_to_response(review)
 
 
 @router.delete("/reviews/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -191,9 +113,6 @@ def delete_strategy_review(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
-    """
-    删除战略审视记录（软删除）
-    """
     success = strategy_service.delete_strategy_review(db, review_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="审视记录不存在")
@@ -210,9 +129,6 @@ def get_health_score(
     strategy_id: int,
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取健康度汇总
-    """
     return strategy_service.get_health_score_summary(db, strategy_id)
 
 
@@ -231,29 +147,8 @@ def create_calendar_event(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
-    """
-    创建日历事件
-    """
     event = strategy_service.create_calendar_event(db, data)
-    return StrategyCalendarEventResponse(
-        id=event.id,
-        strategy_id=event.strategy_id,
-        event_type=event.event_type,
-        title=event.title,
-        description=event.description,
-        event_date=event.event_date,
-        start_time=event.start_time,
-        end_time=event.end_time,
-        is_recurring=event.is_recurring,
-        recurrence_pattern=event.recurrence_pattern,
-        status=event.status,
-        owner_user_id=event.owner_user_id,
-        related_csf_id=event.related_csf_id,
-        related_kpi_id=event.related_kpi_id,
-        is_active=event.is_active,
-        created_at=event.created_at,
-        updated_at=event.updated_at,
-    )
+    return _event_to_response(event)
 
 
 @router.get("/calendar/events", response_model=PageResponse[StrategyCalendarEventResponse])
@@ -265,35 +160,11 @@ def list_calendar_events(
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取日历事件列表
-    """
     items, total = strategy_service.list_calendar_events(
         db, strategy_id, start_date, end_date, event_type, pagination.offset, pagination.limit
     )
 
-    responses = [
-        StrategyCalendarEventResponse(
-            id=e.id,
-            strategy_id=e.strategy_id,
-            event_type=e.event_type,
-            title=e.title,
-            description=e.description,
-            event_date=e.event_date,
-            start_time=e.start_time,
-            end_time=e.end_time,
-            is_recurring=e.is_recurring,
-            recurrence_pattern=e.recurrence_pattern,
-            status=e.status,
-            owner_user_id=e.owner_user_id,
-            related_csf_id=e.related_csf_id,
-            related_kpi_id=e.related_kpi_id,
-            is_active=e.is_active,
-            created_at=e.created_at,
-            updated_at=e.updated_at,
-        )
-        for e in items
-    ]
+    responses = [_event_to_response(e) for e in items]
 
     return PageResponse(
         items=responses,
@@ -308,32 +179,10 @@ def get_calendar_event(
     event_id: int,
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取日历事件详情
-    """
     event = strategy_service.get_calendar_event(db, event_id)
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="事件不存在")
-
-    return StrategyCalendarEventResponse(
-        id=event.id,
-        strategy_id=event.strategy_id,
-        event_type=event.event_type,
-        title=event.title,
-        description=event.description,
-        event_date=event.event_date,
-        start_time=event.start_time,
-        end_time=event.end_time,
-        is_recurring=event.is_recurring,
-        recurrence_pattern=event.recurrence_pattern,
-        status=event.status,
-        owner_user_id=event.owner_user_id,
-        related_csf_id=event.related_csf_id,
-        related_kpi_id=event.related_kpi_id,
-        is_active=event.is_active,
-        created_at=event.created_at,
-        updated_at=event.updated_at,
-    )
+    return _event_to_response(event)
 
 
 @router.get("/calendar/month/{strategy_id}", response_model=CalendarMonthResponse)
@@ -343,9 +192,6 @@ def get_calendar_month(
     month: int = Query(..., ge=1, le=12, description="月份"),
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取月度日历
-    """
     return strategy_service.get_calendar_month(db, strategy_id, year, month)
 
 
@@ -355,9 +201,6 @@ def get_calendar_year(
     year: int = Query(..., description="年份"),
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取年度日历概览
-    """
     return strategy_service.get_calendar_year(db, strategy_id, year)
 
 
@@ -368,32 +211,10 @@ def update_calendar_event(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
-    """
-    更新日历事件
-    """
     event = strategy_service.update_calendar_event(db, event_id, data)
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="事件不存在")
-
-    return StrategyCalendarEventResponse(
-        id=event.id,
-        strategy_id=event.strategy_id,
-        event_type=event.event_type,
-        title=event.title,
-        description=event.description,
-        event_date=event.event_date,
-        start_time=event.start_time,
-        end_time=event.end_time,
-        is_recurring=event.is_recurring,
-        recurrence_pattern=event.recurrence_pattern,
-        status=event.status,
-        owner_user_id=event.owner_user_id,
-        related_csf_id=event.related_csf_id,
-        related_kpi_id=event.related_kpi_id,
-        is_active=event.is_active,
-        created_at=event.created_at,
-        updated_at=event.updated_at,
-    )
+    return _event_to_response(event)
 
 
 @router.delete("/calendar/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -402,9 +223,6 @@ def delete_calendar_event(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
-    """
-    删除日历事件（软删除）
-    """
     success = strategy_service.delete_calendar_event(db, event_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="事件不存在")
@@ -421,9 +239,6 @@ def get_routine_management_cycle(
     strategy_id: int,
     db: Session = Depends(deps.get_db),
 ):
-    """
-    获取例行管理周期配置
-    """
     return strategy_service.get_routine_management_cycle(db, strategy_id)
 
 
@@ -434,9 +249,6 @@ def generate_routine_events(
     db: Session = Depends(deps.get_db),
     current_user=Depends(deps.get_current_user),
 ):
-    """
-    生成年度例行管理事件
-    """
     events = strategy_service.generate_routine_events(db, strategy_id, year)
     return {
         "message": f"成功生成 {len(events)} 个例行管理事件",
