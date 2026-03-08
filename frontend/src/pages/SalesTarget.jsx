@@ -78,10 +78,21 @@ export default function SalesTarget() {
   });
   const [aggregationMode, setAggregationMode] = useState("organization");
 
+  const currentUserId = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (!raw) {return null;}
+      const parsed = JSON.parse(raw);
+      return parsed?.id ? Number(parsed.id) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   // Form state
   const [formData, setFormData] = useState({
     target_scope: "PERSONAL",
-    user_id: null,
+    user_id: currentUserId,
     department_id: null,
     team_id: null,
     target_type: "CONTRACT_AMOUNT",
@@ -136,6 +147,20 @@ export default function SalesTarget() {
     };
     loadTeamMembers();
   }, []);
+
+  useEffect(() => {
+    if (formData.target_scope !== "PERSONAL") {return;}
+    if (formData.user_id) {return;}
+
+    const firstMemberId = (teamMembers || [])[0]?.user_id;
+    const fallbackId = firstMemberId || currentUserId;
+    if (!fallbackId) {return;}
+
+    setFormData((prev) => ({
+      ...prev,
+      user_id: Number(fallbackId),
+    }));
+  }, [formData.target_scope, formData.user_id, teamMembers, currentUserId]);
 
   // Generate period value based on period type
   const generatePeriodValue = (periodType) => {
@@ -246,9 +271,30 @@ export default function SalesTarget() {
   }, [aggregationMode, normalizedTargets]);
 
   const handleCreate = async () => {
+    const normalizedTargetValue = Number(formData.target_value || 0);
+    if (normalizedTargetValue <= 0) {
+      toast.error("目标值必须大于 0");
+      return;
+    }
+
+    if (formData.target_scope === "PERSONAL" && !formData.user_id) {
+      toast.error("个人目标必须选择负责人");
+      return;
+    }
+
+    if (formData.target_scope === "DEPARTMENT" && !formData.department_id) {
+      toast.error("部门目标必须选择部门");
+      return;
+    }
+
     try {
       const payload = {
         ...formData,
+        target_value: normalizedTargetValue,
+        user_id:
+          formData.target_scope === "PERSONAL"
+            ? Number(formData.user_id)
+            : formData.user_id,
         description: buildDescriptionWithMeta(formData.description, {
           manager_group: formData.manager_group,
           director_group: formData.director_group,
@@ -264,7 +310,8 @@ export default function SalesTarget() {
       loadTargets();
     } catch (err) {
       console.error("Failed to create target:", err);
-      toast.error(err.response?.data?.message || "创建目标失败");
+      const detail = err?.response?.data?.detail;
+      toast.error(detail || err.response?.data?.message || "创建目标失败");
     }
   };
 
@@ -312,7 +359,7 @@ export default function SalesTarget() {
   const resetForm = () => {
     setFormData({
       target_scope: "PERSONAL",
-      user_id: null,
+      user_id: currentUserId,
       department_id: null,
       team_id: null,
       target_type: "CONTRACT_AMOUNT",

@@ -15,9 +15,19 @@ import {
   Download } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+} from "../components/ui";
 import { salesTeamApi } from "../services/api";
 import { fadeIn, staggerContainer } from "../lib/animations";
+import { toast } from "sonner";
 import { getDefaultDateRange } from "@/lib/constants/salesTeam";
 import { useSalesTeamFilters } from "../components/sales/team/hooks/useSalesTeamFilters";
 import { useSalesTeamData } from "../components/sales/team/hooks/useSalesTeamData";
@@ -83,6 +93,18 @@ export default function SalesTeam() {
   // 成员详情对话框
   const [selectedMember, setSelectedMember] = useState(null);
   const [showMemberDialog, setShowMemberDialog] = useState(false);
+
+  // 创建团队对话框
+  const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [createTeamForm, setCreateTeamForm] = useState({
+    team_name: "",
+    team_code: "",
+    team_type: "REGION",
+    department_id: "",
+    leader_id: "",
+    description: "",
+  });
 
   // 从其他页面跳转时，直接打开成员详情
   useEffect(() => {
@@ -181,6 +203,57 @@ export default function SalesTeam() {
     navigate(`/sales/customers?owner_id=${member.id}`);
   };
 
+  const resetCreateTeamForm = () => {
+    setCreateTeamForm({
+      team_name: "",
+      team_code: "",
+      team_type: "REGION",
+      department_id: "",
+      leader_id: "",
+      description: "",
+    });
+  };
+
+  const generateTeamCode = () => `TEAM${Date.now().toString().slice(-8)}`;
+
+  const handleCreateTeam = async () => {
+    if (!createTeamForm.team_name?.trim()) {
+      toast.error("团队名称不能为空");
+      return;
+    }
+
+    const teamCode = (createTeamForm.team_code || generateTeamCode())
+      .toUpperCase()
+      .replace(/\s+/g, "")
+      .slice(0, 20);
+
+    try {
+      setCreatingTeam(true);
+      await salesTeamApi.createTeam({
+        team_code: teamCode,
+        team_name: createTeamForm.team_name.trim(),
+        description: createTeamForm.description?.trim() || undefined,
+        team_type: createTeamForm.team_type || "REGION",
+        department_id: createTeamForm.department_id
+          ? Number(createTeamForm.department_id)
+          : undefined,
+        leader_id: createTeamForm.leader_id
+          ? Number(createTeamForm.leader_id)
+          : undefined,
+      });
+
+      toast.success(`团队创建成功（${teamCode}）`);
+      setShowCreateTeamDialog(false);
+      resetCreateTeamForm();
+      fetchTeamData();
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      toast.error(detail || "创建团队失败");
+    } finally {
+      setCreatingTeam(false);
+    }
+  };
+
   return (
     <motion.div
       variants={staggerContainer}
@@ -231,9 +304,11 @@ export default function SalesTeam() {
               <Users className="w-4 h-4" />
               CRM
             </Button>
-            <Button className="flex items-center gap-2">
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setShowCreateTeamDialog(true)}>
               <UserPlus className="w-4 h-4" />
-              添加成员
+              新建团队
             </Button>
         </motion.div>
         } />
@@ -295,7 +370,7 @@ export default function SalesTeam() {
               <input
                 type="text"
                 placeholder="搜索团队成员..."
-                value={searchTerm || "unknown"}
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
@@ -321,6 +396,123 @@ export default function SalesTeam() {
         member={selectedMember}
         onNavigatePerformance={handleNavigatePerformance}
         onNavigateCRM={handleNavigateCRM} />
+
+      {/* 新建团队对话框 */}
+      <Dialog open={showCreateTeamDialog} onOpenChange={setShowCreateTeamDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>新建销售团队</DialogTitle>
+            <DialogDescription>创建团队实体，用于目标分配与统计</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-sm text-slate-300">团队名称 *</label>
+              <Input
+                placeholder="请输入团队名称"
+                value={createTeamForm.team_name}
+                onChange={(e) =>
+                  setCreateTeamForm((prev) => ({ ...prev, team_name: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-slate-300">团队编码</label>
+              <Input
+                placeholder="留空自动生成"
+                value={createTeamForm.team_code}
+                onChange={(e) =>
+                  setCreateTeamForm((prev) => ({ ...prev, team_code: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-sm text-slate-300">团队类型</label>
+                <select
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white"
+                  value={createTeamForm.team_type}
+                  onChange={(e) =>
+                    setCreateTeamForm((prev) => ({ ...prev, team_type: e.target.value }))
+                  }
+                >
+                  <option value="REGION">按区域</option>
+                  <option value="INDUSTRY">按行业</option>
+                  <option value="SCALE">按规模</option>
+                  <option value="OTHER">其他</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm text-slate-300">所属部门</label>
+                <select
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white"
+                  value={createTeamForm.department_id}
+                  onChange={(e) =>
+                    setCreateTeamForm((prev) => ({ ...prev, department_id: e.target.value }))
+                  }
+                >
+                  <option value="">不指定</option>
+                  {(departmentOptions || [])
+                    .filter((d) => d.value !== "all")
+                    .map((dept) => (
+                      <option key={dept.value} value={dept.value}>
+                        {dept.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-slate-300">负责人</label>
+              <select
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white"
+                value={createTeamForm.leader_id}
+                onChange={(e) =>
+                  setCreateTeamForm((prev) => ({ ...prev, leader_id: e.target.value }))
+                }
+              >
+                <option value="">不指定</option>
+                {(teamMembers || []).map((member) => (
+                  <option key={member.user_id} value={member.user_id}>
+                    {member.user_name || member.name || `用户${member.user_id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm text-slate-300">描述</label>
+              <Input
+                placeholder="可选"
+                value={createTeamForm.description}
+                onChange={(e) =>
+                  setCreateTeamForm((prev) => ({ ...prev, description: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={creatingTeam}
+              onClick={() => {
+                setShowCreateTeamDialog(false);
+                resetCreateTeamForm();
+              }}
+            >
+              取消
+            </Button>
+            <Button disabled={creatingTeam} onClick={handleCreateTeam}>
+              {creatingTeam ? "创建中..." : "创建团队"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </motion.div>);
 

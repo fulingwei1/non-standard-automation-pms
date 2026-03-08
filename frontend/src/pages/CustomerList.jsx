@@ -53,6 +53,8 @@ import { cn } from "../lib/utils"
 import { fadeIn, staggerContainer } from "../lib/animations"
 import { CustomerCard } from "../components/sales"
 import { useCustomerList } from "./CustomerList/hooks"
+import { customerApi } from "../services/api"
+import { toast } from "sonner"
 
 const gradeOptions = [
   { value: "all", label: "全部等级" },
@@ -201,7 +203,7 @@ const normalizeCustomer = (customer = {}) => {
 };
 
 export default function CustomerList() {
-  const { customers: rawCustomers, setPagination } = useCustomerList()
+  const { customers: rawCustomers, setPagination, loadCustomers } = useCustomerList()
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
@@ -209,6 +211,17 @@ export default function CustomerList() {
   const [selectedIndustry, setSelectedIndustry] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    customer_name: "",
+    short_name: "",
+    customer_level: "B",
+    industry: "",
+    contact_name: "",
+    phone: "",
+    address: "",
+    remark: "",
+  });
 
   useEffect(() => {
     setPagination((prev) =>
@@ -260,6 +273,49 @@ export default function CustomerList() {
 
   const handleCustomerClick = (customer) => {
     setSelectedCustomer(customer);
+  };
+
+  const resetCreateForm = () => {
+    setCreateForm({
+      customer_name: "",
+      short_name: "",
+      customer_level: "B",
+      industry: "",
+      contact_name: "",
+      phone: "",
+      address: "",
+      remark: "",
+    });
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!createForm.customer_name?.trim()) {
+      toast.error("公司全称不能为空");
+      return;
+    }
+
+    try {
+      setCreating(true);
+      await customerApi.create({
+        customer_name: createForm.customer_name.trim(),
+        short_name: createForm.short_name?.trim() || undefined,
+        industry: createForm.industry || undefined,
+        address: createForm.address?.trim() || undefined,
+        customer_type: "enterprise",
+        status: "potential",
+        customer_source: "manual",
+      });
+
+      toast.success("客户创建成功");
+      setShowCreateDialog(false);
+      resetCreateForm();
+      await loadCustomers();
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      toast.error(detail || "创建客户失败");
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -621,15 +677,33 @@ export default function CustomerList() {
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
               <label className="text-sm text-slate-400">公司全称 *</label>
-              <Input placeholder="请输入公司全称" />
+              <Input
+                placeholder="请输入公司全称"
+                value={createForm.customer_name}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, customer_name: e.target.value }))
+                }
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-400">公司简称</label>
-              <Input placeholder="请输入公司简称" />
+              <Input
+                placeholder="请输入公司简称"
+                value={createForm.short_name}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, short_name: e.target.value }))
+                }
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-400">客户等级</label>
-              <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
+              <select
+                value={createForm.customer_level}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, customer_level: e.target.value }))
+                }
+                className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white"
+              >
                 <option value="B">B级客户</option>
                 <option value="A">A级客户</option>
                 <option value="C">C级客户</option>
@@ -638,7 +712,13 @@ export default function CustomerList() {
             </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-400">所属行业</label>
-              <select className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white">
+              <select
+                value={createForm.industry}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, industry: e.target.value }))
+                }
+                className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white"
+              >
                 <option value="">请选择行业</option>
                 <option value="新能源电池">新能源电池</option>
                 <option value="消费电子">消费电子</option>
@@ -649,20 +729,42 @@ export default function CustomerList() {
             </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-400">联系人</label>
-              <Input placeholder="请输入联系人姓名" />
+              <Input
+                placeholder="请输入联系人姓名"
+                value={createForm.contact_name}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, contact_name: e.target.value }))
+                }
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-400">联系电话</label>
-              <Input placeholder="请输入联系电话" />
+              <Input
+                placeholder="请输入联系电话"
+                value={createForm.phone}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, phone: e.target.value }))
+                }
+              />
             </div>
             <div className="col-span-2 space-y-2">
               <label className="text-sm text-slate-400">公司地址</label>
-              <Input placeholder="请输入公司地址" />
+              <Input
+                placeholder="请输入公司地址"
+                value={createForm.address}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, address: e.target.value }))
+                }
+              />
             </div>
             <div className="col-span-2 space-y-2">
               <label className="text-sm text-slate-400">备注</label>
               <textarea
                 placeholder="请输入备注信息"
+                value={createForm.remark}
+                onChange={(e) =>
+                  setCreateForm((prev) => ({ ...prev, remark: e.target.value }))
+                }
                 className="w-full px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white resize-none h-20"
               />
             </div>
@@ -670,11 +772,17 @@ export default function CustomerList() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
+              onClick={() => {
+                setShowCreateDialog(false);
+                resetCreateForm();
+              }}
+              disabled={creating}
             >
               取消
             </Button>
-            <Button onClick={() => setShowCreateDialog(false)}>创建客户</Button>
+            <Button onClick={handleCreateCustomer} disabled={creating}>
+              {creating ? "创建中..." : "创建客户"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

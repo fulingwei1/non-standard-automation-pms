@@ -231,8 +231,15 @@ export const disputeApi = {
 };
 
 export const salesTeamApi = {
-  // 获取销售团队列表
+  // 获取销售团队成员统计视图
   getTeam: (params) => api.get("/sales/team", { params }),
+  // 获取销售团队实体列表
+  listTeams: (params) => api.get("/sales/sales-teams", { params }),
+  // 创建销售团队实体
+  createTeam: (data) => api.post("/sales/sales-teams", data),
+  // 添加团队成员
+  addTeamMember: (teamId, data) =>
+    api.post(`/sales/sales-teams/${teamId}/members`, data),
   // 获取销售业绩排名
   getRanking: (params) => api.get("/sales/team/ranking", { params }),
   // 导出销售团队数据
