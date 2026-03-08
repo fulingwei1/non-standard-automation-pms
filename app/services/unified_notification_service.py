@@ -410,7 +410,7 @@ class NotificationService:
 
     @staticmethod
     def create_alert_notification(
-        db: Session, alert: Alert, notify_channel: str, status: str = "pending"
+        db: Session, alert: "Alert", notify_channel: str, status: str = "pending"
     ) -> AlertNotification:
         """创建预警通知记录（向后兼容）"""
         notification = AlertNotification(

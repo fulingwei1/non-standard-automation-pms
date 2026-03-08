@@ -221,7 +221,7 @@ class ContractApprovalAdapter(ApprovalAdapter):
         self,
         instance: ApprovalInstance,
         task: ApprovalTask,
-    ) -> Optional[ContractApproval]:
+    ) -> Optional["ContractApproval"]:
         """创建合同审批记录"""
         from app.models.sales.contracts import ContractApproval
 
@@ -269,7 +269,7 @@ class ContractApprovalAdapter(ApprovalAdapter):
         task: ApprovalTask,
         action: str,
         comment: Optional[str] = None,
-    ) -> Optional[ContractApproval]:
+    ) -> Optional["ContractApproval"]:
         """更新合同审批记录"""
         approval_level = task.node_order
         approval = (
