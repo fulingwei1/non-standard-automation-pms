@@ -355,13 +355,13 @@ export default function CustomerList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索客户名称、联系人..."
-              value={searchTerm || "unknown"}
+              value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-64"
             />
           </div>
           <select
-            value={selectedGrade || "unknown"}
+            value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
@@ -372,7 +372,7 @@ export default function CustomerList() {
             ))}
           </select>
           <select
-            value={selectedStatus || "unknown"}
+            value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >
@@ -383,7 +383,7 @@ export default function CustomerList() {
             ))}
           </select>
           <select
-            value={selectedIndustry || "unknown"}
+            value={selectedIndustry}
             onChange={(e) => setSelectedIndustry(e.target.value)}
             className="px-3 py-2 bg-surface-100 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary"
           >

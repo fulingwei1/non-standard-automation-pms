@@ -5,9 +5,9 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 class QuoteCostTemplateCreate(BaseModel):
@@ -15,31 +15,10 @@ class QuoteCostTemplateCreate(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    name: Optional[str] = Field(default=None, description="模板名称")
+    name: str = Field(description="模板名称")
     description: Optional[str] = Field(default=None, description="描述")
     category: Optional[str] = Field(default=None, description="分类")
     items: Optional[List[dict]] = Field(default=None, description="模板项")
-    template_code: Optional[str] = Field(default=None, description="模板编码")
-    template_name: Optional[str] = Field(default=None, description="模板名称（兼容字段）")
-    template_type: Optional[str] = Field(default=None, description="模板类型")
-    equipment_type: Optional[str] = Field(default=None, description="设备类型")
-    industry: Optional[str] = Field(default=None, description="行业")
-    cost_structure: Optional[Dict[str, Any]] = Field(default=None, description="成本结构")
-    is_active: Optional[bool] = Field(default=True, description="是否启用")
-
-    @model_validator(mode="before")
-    @classmethod
-    def _normalize_create_fields(cls, values):
-        if not isinstance(values, dict):
-            return values
-        data = dict(values)
-        if not data.get("name") and data.get("template_name"):
-            data["name"] = data["template_name"]
-        if data.get("cost_structure") is None and data.get("items") is not None:
-            data["cost_structure"] = {"items": data.get("items")}
-        if data.get("template_type") is None and data.get("category"):
-            data["template_type"] = data.get("category")
-        return data
 
 
 class QuoteCostTemplateUpdate(BaseModel):
@@ -51,27 +30,6 @@ class QuoteCostTemplateUpdate(BaseModel):
     description: Optional[str] = Field(default=None, description="描述")
     category: Optional[str] = Field(default=None, description="分类")
     items: Optional[List[dict]] = Field(default=None, description="模板项")
-    template_code: Optional[str] = Field(default=None, description="模板编码")
-    template_name: Optional[str] = Field(default=None, description="模板名称（兼容字段）")
-    template_type: Optional[str] = Field(default=None, description="模板类型")
-    equipment_type: Optional[str] = Field(default=None, description="设备类型")
-    industry: Optional[str] = Field(default=None, description="行业")
-    cost_structure: Optional[Dict[str, Any]] = Field(default=None, description="成本结构")
-    is_active: Optional[bool] = Field(default=None, description="是否启用")
-
-    @model_validator(mode="before")
-    @classmethod
-    def _normalize_update_fields(cls, values):
-        if not isinstance(values, dict):
-            return values
-        data = dict(values)
-        if not data.get("name") and data.get("template_name"):
-            data["name"] = data["template_name"]
-        if data.get("cost_structure") is None and data.get("items") is not None:
-            data["cost_structure"] = {"items": data.get("items")}
-        if data.get("template_type") is None and data.get("category"):
-            data["template_type"] = data.get("category")
-        return data
 
 
 class QuoteCostTemplateResponse(BaseModel):
@@ -80,69 +38,71 @@ class QuoteCostTemplateResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int
-    name: Optional[str] = None
-    template_code: Optional[str] = None
-    template_name: Optional[str] = None
-    template_type: Optional[str] = None
-    equipment_type: Optional[str] = None
-    industry: Optional[str] = None
+    name: str
     description: Optional[str] = None
     category: Optional[str] = None
     items: Optional[List[dict]] = None
-    cost_structure: Optional[Dict[str, Any]] = None
-    total_cost: Optional[Decimal] = None
-    is_active: Optional[bool] = True
-    usage_count: Optional[int] = None
-    creator_name: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    @model_validator(mode="before")
-    @classmethod
-    def _normalize_compat_fields(cls, values):
-        if not isinstance(values, dict):
-            return values
-        data = dict(values)
-
-        if not data.get("name") and data.get("template_name"):
-            data["name"] = data["template_name"]
-        if not data.get("template_name") and data.get("name"):
-            data["template_name"] = data["name"]
-
-        if not data.get("category") and data.get("template_type"):
-            data["category"] = data["template_type"]
-
-        if data.get("items") is None and isinstance(data.get("cost_structure"), dict):
-            structure = data["cost_structure"]
-            if isinstance(structure.get("items"), list):
-                data["items"] = structure.get("items")
-            elif isinstance(structure.get("categories"), list):
-                data["items"] = structure.get("categories")
-
-        if data.get("cost_structure") is None and isinstance(data.get("items"), list):
-            data["cost_structure"] = {"items": data["items"]}
-
-        return data
-
 
 class PurchaseMaterialCostCreate(BaseModel):
-    """创建采购物料成本"""
+    """创建采购物料成本（与 PurchaseMaterialCost ORM 字段对齐）"""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    material_id: int = Field(description="物料ID")
+    material_code: Optional[str] = Field(default=None, description="物料编码")
+    material_name: str = Field(description="物料名称")
+    specification: Optional[str] = Field(default=None, description="规格型号")
+    brand: Optional[str] = Field(default=None, description="品牌")
+    unit: Optional[str] = Field(default="件", description="单位")
+    material_type: Optional[str] = Field(default=None, description="物料类型")
+    is_standard_part: Optional[bool] = Field(default=True, description="是否标准件")
+    unit_cost: Decimal = Field(
+        description="单位成本",
+        validation_alias=AliasChoices("unit_cost", "unit_price"),
+    )
+    currency: Optional[str] = Field(default="CNY", description="货币")
     supplier_id: Optional[int] = Field(default=None, description="供应商ID")
-    unit_price: Decimal = Field(description="单价")
-    currency: str = Field(default="CNY", description="货币")
+    supplier_name: Optional[str] = Field(default=None, description="供应商名称")
+    purchase_date: Optional[date] = Field(default=None, description="采购日期")
+    purchase_order_no: Optional[str] = Field(default=None, description="采购订单号")
+    purchase_quantity: Optional[Decimal] = Field(default=None, description="采购数量")
+    lead_time_days: Optional[int] = Field(default=None, description="交期(天)")
+    is_active: Optional[bool] = Field(default=True, description="是否启用")
+    match_priority: Optional[int] = Field(default=0, description="匹配优先级")
+    match_keywords: Optional[str] = Field(default=None, description="匹配关键词")
+    remark: Optional[str] = Field(default=None, description="备注")
 
 
 class PurchaseMaterialCostUpdate(BaseModel):
-    """更新采购物料成本"""
+    """更新采购物料成本（与 PurchaseMaterialCost ORM 字段对齐）"""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    unit_price: Optional[Decimal] = Field(default=None, description="单价")
+    material_code: Optional[str] = Field(default=None, description="物料编码")
+    material_name: Optional[str] = Field(default=None, description="物料名称")
+    specification: Optional[str] = Field(default=None, description="规格型号")
+    brand: Optional[str] = Field(default=None, description="品牌")
+    unit: Optional[str] = Field(default=None, description="单位")
+    material_type: Optional[str] = Field(default=None, description="物料类型")
+    is_standard_part: Optional[bool] = Field(default=None, description="是否标准件")
+    unit_cost: Optional[Decimal] = Field(
+        default=None,
+        description="单位成本",
+        validation_alias=AliasChoices("unit_cost", "unit_price"),
+    )
     currency: Optional[str] = Field(default=None, description="货币")
+    supplier_id: Optional[int] = Field(default=None, description="供应商ID")
+    supplier_name: Optional[str] = Field(default=None, description="供应商名称")
+    purchase_date: Optional[date] = Field(default=None, description="采购日期")
+    purchase_order_no: Optional[str] = Field(default=None, description="采购订单号")
+    purchase_quantity: Optional[Decimal] = Field(default=None, description="采购数量")
+    lead_time_days: Optional[int] = Field(default=None, description="交期(天)")
+    is_active: Optional[bool] = Field(default=None, description="是否启用")
+    match_priority: Optional[int] = Field(default=None, description="匹配优先级")
+    match_keywords: Optional[str] = Field(default=None, description="匹配关键词")
+    remark: Optional[str] = Field(default=None, description="备注")
 
 
 class PurchaseMaterialCostResponse(BaseModel):

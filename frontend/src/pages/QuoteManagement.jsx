@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { DollarSign, PieChart, TrendingDown, TrendingUp } from "lucide-react";
 import { PageHeader } from "../components/layout";
@@ -84,6 +85,8 @@ const COST_RANGE_LABELS = {
 };
 
 export default function QuoteManagement({ embedded = false } = {}) {
+  const navigate = useNavigate();
+
   // 状态管理
   const [quotes, setQuotes] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
@@ -131,117 +134,8 @@ export default function QuoteManagement({ embedded = false } = {}) {
       const quotesData = response.data?.items || response.data?.items || response.data || [];
       setQuotes(Array.isArray(quotesData) ? quotesData : []);
     } catch (error) {
-      const { useMockData: _useMockData } = handleApiError(error, '获取报价列表');
-
-      // 使用模拟数据
-      const mockQuotes = [
-      {
-        id: "QT-000001",
-        title: "ERP系统年度维护服务",
-        status: "SENT",
-        type: "SERVICE",
-        priority: "HIGH",
-        customer_id: "CUST001",
-        customer_name: "ABC科技有限公司",
-        opportunity_id: "OPP001",
-        opportunity_title: "ERP系统升级项目",
-        created_by: "USER001",
-        created_by_name: "张三",
-        created_at: "2024-01-10T10:00:00Z",
-        updated_at: "2024-01-12T15:30:00Z",
-        valid_until: "2024-02-10T23:59:59Z",
-        version: {
-          version_no: "V1",
-          total_price: 150000,
-          cost_total: 120000,
-          gross_margin: 20.0,
-          lead_time_days: 30,
-          delivery_date: "2024-02-20",
-          items: [
-          {
-            id: 1,
-            name: "系统维护服务",
-            description: "全年系统维护和技术支持",
-            quantity: 1,
-            unit_price: 150000,
-            discount: 0,
-            total_price: 150000
-          }]
-
-        }
-      },
-      {
-        id: "QT-000002",
-        title: "生产设备自动化改造",
-        status: "APPROVED",
-        type: "PROJECT",
-        priority: "URGENT",
-        customer_id: "CUST002",
-        customer_name: "XYZ制造公司",
-        opportunity_id: "OPP002",
-        opportunity_title: "生产线自动化项目",
-        created_by: "USER002",
-        created_by_name: "李四",
-        created_at: "2024-01-08T14:00:00Z",
-        updated_at: "2024-01-11T09:15:00Z",
-        valid_until: "2024-02-08T23:59:59Z",
-        version: {
-          version_no: "V2",
-          total_price: 850000,
-          cost_total: 680000,
-          gross_margin: 20.0,
-          lead_time_days: 45,
-          delivery_date: "2024-03-15",
-          items: [
-          {
-            id: 1,
-            name: "自动化设备",
-            description: "生产线自动化改造设备",
-            quantity: 5,
-            unit_price: 170000,
-            discount: 0,
-            total_price: 850000
-          }]
-
-        }
-      },
-      {
-        id: "QT-000003",
-        title: "办公用品批量采购",
-        status: "DRAFT",
-        type: "STANDARD",
-        priority: "MEDIUM",
-        customer_id: "CUST003",
-        customer_name: "DEF贸易公司",
-        opportunity_id: "OPP003",
-        opportunity_title: "办公用品供应",
-        created_by: "USER003",
-        created_by_name: "王五",
-        created_at: "2024-01-12T16:00:00Z",
-        updated_at: "2024-01-12T16:00:00Z",
-        valid_until: "2024-02-12T23:59:59Z",
-        version: {
-          version_no: "V1",
-          total_price: 25000,
-          cost_total: 20000,
-          gross_margin: 20.0,
-          lead_time_days: 7,
-          delivery_date: "2024-01-20",
-          items: [
-          {
-            id: 1,
-            name: "办公桌椅",
-            description: "办公桌椅套装",
-            quantity: 10,
-            unit_price: 2500,
-            discount: 0,
-            total_price: 25000
-          }]
-
-        }
-      }];
-
-      setQuotes(mockQuotes);
+      handleApiError(error, '获取报价列表');
+      setQuotes([]);
     } finally {
       setLoading(false);
     }
@@ -254,26 +148,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
       setStats(response.data || DEFAULT_QUOTE_STATS);
     } catch (error) {
       handleApiError(error, '获取统计数据');
-      // 使用模拟数据
-      setStats({
-        total: 25,
-        draft: 3,
-        inReview: 5,
-        approved: 8,
-        sent: 6,
-        expired: 2,
-        rejected: 1,
-        accepted: 4,
-        converted: 3,
-        totalAmount: 3500000,
-        avgAmount: 140000,
-        avgMargin: 18.5,
-        conversionRate: 75.0,
-        thisMonth: 12,
-        lastMonth: 10,
-        growth: 20.0,
-        expiringSoon: 2
-      });
+      setStats(DEFAULT_QUOTE_STATS);
     }
   }, [timeRange]);
 
@@ -284,12 +159,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
       setOpportunities(response.data?.items || response.data || []);
     } catch (error) {
       handleApiError(error, '获取商机列表');
-      // 使用模拟数据
-      setOpportunities([
-      { id: "OPP001", title: "ERP系统升级项目", customer_id: "CUST001" },
-      { id: "OPP002", title: "生产线自动化项目", customer_id: "CUST002" },
-      { id: "OPP003", title: "办公用品供应", customer_id: "CUST003" }]
-      );
+      setOpportunities([]);
     }
   }, []);
 
@@ -300,12 +170,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
       setCustomers(response.data?.items || response.data || []);
     } catch (error) {
       handleApiError(error, '获取客户列表');
-      // 使用模拟数据
-      setCustomers([
-      { id: "CUST001", name: "ABC科技有限公司" },
-      { id: "CUST002", name: "XYZ制造公司" },
-      { id: "CUST003", name: "DEF贸易公司" }]
-      );
+      setCustomers([]);
     }
   }, []);
 
@@ -323,9 +188,15 @@ export default function QuoteManagement({ embedded = false } = {}) {
 
   // 处理编辑报价
   const handleQuoteEdit = useCallback((quote) => {
+    if (quote?.id) {
+      navigate(`/sales/quotes/${quote.id}/edit`);
+      return;
+    }
+
+    // 兜底：没有可用ID时保留旧行为
     setSelectedQuote(quote);
     setShowEditDialog(true);
-  }, []);
+  }, [navigate]);
 
   // 处理复制报价
   const handleQuoteCopy = useCallback((quote) => {
@@ -354,9 +225,8 @@ export default function QuoteManagement({ embedded = false } = {}) {
 
   // 处理创建报价
   const handleQuoteCreate = useCallback(() => {
-    setSelectedQuote(null);
-    setShowCreateDialog(true);
-  }, []);
+    navigate("/sales/quotes/create");
+  }, [navigate]);
 
   const loadCostInsights = useCallback(async () => {
     const now = new Date();
@@ -585,7 +455,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
                 <Badge variant="outline" className="text-xs border-slate-700 text-slate-300">
                   {COST_RANGE_LABELS[costTimeRange]}
                 </Badge>
-                <Select value={costTimeRange || "unknown"} onValueChange={setCostTimeRange}>
+                <Select value={costTimeRange} onValueChange={setCostTimeRange}>
                   <SelectTrigger className="w-[130px] border-slate-700">
                     <SelectValue placeholder="选择周期" />
                   </SelectTrigger>
@@ -906,7 +776,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
             <DialogTitle>新建报价</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-slate-400">创建新报价的表单将在这里显示</p>
+            <p className="text-slate-400">为保证字段完整性，请在独立页面创建报价。</p>
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
@@ -914,8 +784,12 @@ export default function QuoteManagement({ embedded = false } = {}) {
 
                 取消
               </Button>
-              <Button>
-                创建
+              <Button
+                onClick={() => {
+                  setShowCreateDialog(false);
+                  navigate("/sales/quotes/create");
+                }}>
+                去创建页
               </Button>
             </div>
           </div>
@@ -929,7 +803,7 @@ export default function QuoteManagement({ embedded = false } = {}) {
             <DialogTitle>编辑报价</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-slate-400">编辑报价的表单将在这里显示</p>
+            <p className="text-slate-400">编辑请跳转到报价编辑页，避免字段丢失。</p>
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
@@ -937,8 +811,14 @@ export default function QuoteManagement({ embedded = false } = {}) {
 
                 取消
               </Button>
-              <Button>
-                保存
+              <Button
+                onClick={() => {
+                  setShowEditDialog(false);
+                  if (selectedQuote?.id) {
+                    navigate(`/sales/quotes/${selectedQuote.id}/edit`);
+                  }
+                }}>
+                去编辑页
               </Button>
             </div>
           </div>
