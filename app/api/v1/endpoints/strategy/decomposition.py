@@ -281,7 +281,7 @@ def self_rating(
     员工自评
     """
     kpi = strategy_service.self_rating(
-        db, kpi_id, data.actual_value, data.self_score, data.self_comment
+        db, kpi_id, data.actual_value, data.self_rating, data.self_comment
     )
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
@@ -298,7 +298,7 @@ def manager_rating(
     """
     主管评分
     """
-    kpi = strategy_service.manager_rating(db, kpi_id, data.manager_score, data.manager_comment)
+    kpi = strategy_service.manager_rating(db, kpi_id, data.manager_rating, data.manager_comment)
     if not kpi:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="个人 KPI 不存在")
     return kpi

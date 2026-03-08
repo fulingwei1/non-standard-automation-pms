@@ -166,7 +166,7 @@ def self_rating(
     db: Session,
     kpi_id: int,
     actual_value: Decimal,
-    self_score: int,
+    self_rating: int,
     self_comment: Optional[str] = None,
 ) -> Optional[PersonalKPI]:
     """
@@ -176,7 +176,7 @@ def self_rating(
         db: 数据库会话
         kpi_id: KPI ID
         actual_value: 实际值
-        self_score: 自评分数
+        self_rating: 自评分数
         self_comment: 自评说明
 
     Returns:
@@ -187,7 +187,7 @@ def self_rating(
         return None
 
     kpi.actual_value = actual_value
-    kpi.self_score = self_score
+    kpi.self_rating = self_rating
     kpi.self_comment = self_comment
     kpi.status = "SELF_RATED"
 
@@ -197,7 +197,7 @@ def self_rating(
 
 
 def manager_rating(
-    db: Session, kpi_id: int, manager_score: int, manager_comment: Optional[str] = None
+    db: Session, kpi_id: int, manager_rating: int, manager_comment: Optional[str] = None
 ) -> Optional[PersonalKPI]:
     """
     主管评分
@@ -205,7 +205,7 @@ def manager_rating(
     Args:
         db: 数据库会话
         kpi_id: KPI ID
-        manager_score: 主管评分
+        manager_rating: 主管评分
         manager_comment: 主管评语
 
     Returns:
@@ -215,12 +215,12 @@ def manager_rating(
     if not kpi:
         return None
 
-    kpi.manager_score = manager_score
+    kpi.manager_rating = manager_rating
     kpi.manager_comment = manager_comment
     kpi.status = "MANAGER_RATED"
 
     # 计算最终得分（主管评分）
-    kpi.final_score = manager_score
+    kpi.final_score = manager_rating
 
     db.commit()
     db.refresh(kpi)
