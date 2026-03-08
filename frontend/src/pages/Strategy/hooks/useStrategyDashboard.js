@@ -36,7 +36,7 @@ export function useStrategyDashboard() {
   const loadStrategies = useCallback(async () => {
     try {
       const response = await strategyApi.list({ limit: 10 });
-      setStrategies(response.data?.items || []);
+      setStrategies(response.formatted?.items || response.data?.items || []);
     } catch (error) {
       console.error("加载战略列表失败:", error);
     }
@@ -46,7 +46,7 @@ export function useStrategyDashboard() {
   const loadActiveStrategy = useCallback(async () => {
     try {
       const response = await strategyApi.getActive();
-      const strategy = response.data;
+      const strategy = response.formatted || response.data;
       setActiveStrategy(strategy);
       setSelectedStrategyId(strategy?.id);
       return strategy;
