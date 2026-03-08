@@ -155,6 +155,24 @@ def delete_calendar_event(db: Session, event_id: int) -> bool:
     return True
 
 
+def get_calendar_month(db: Session, strategy_id: int, year: int, month: int) -> CalendarMonthResponse:
+    if month == 12:
+        start_date_val = date(year, 12, 1)
+        end_date_val = date(year + 1, 1, 1)
+    else:
+        start_date_val = date(year, month, 1)
+        end_date_val = date(year, month + 1, 1)
+
+    events, _ = list_calendar_events(db, strategy_id, start_date_val, end_date_val, limit=1000)
+    event_responses = [_event_to_response(e) for e in events]
+
+    return CalendarMonthResponse(
+        year=year,
+        month=month,
+        events=event_responses,
+    )
+
+
 def get_calendar_year(db: Session, strategy_id: int, year: int) -> CalendarYearResponse:
     start_date_val = date(year, 1, 1)
     end_date_val = date(year, 12, 31)
