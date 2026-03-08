@@ -100,8 +100,12 @@ export default function QuoteCreateEdit() {
         risk_terms: quote.risk_terms || "",
         note: quote.note || "",
       });
-      if (quote.versions && quote.versions?.length > 0) {
-        const latestVersion = quote.versions[0];
+      const latestVersion =
+        quote.current_version ||
+        quote.currentVersion ||
+        (quote.versions && quote.versions?.length > 0 ? quote.versions[0] : null);
+
+      if (latestVersion) {
         setVersionData({
           version_no: latestVersion.version_no || "V1.0",
           total_price: latestVersion.total_price || 0,
@@ -113,7 +117,38 @@ export default function QuoteCreateEdit() {
           risk_terms: latestVersion.risk_terms || "",
           note: latestVersion.note || "",
         });
-        setItems(latestVersion.items || []);
+        setItems(
+          (latestVersion.items || []).map((item) => {
+            const materialCost = Number(item.material_cost || 0);
+            const laborCost = Number(item.labor_cost || 0);
+            const overheadCost = Number(item.overhead_cost || 0);
+            const totalCost = Number(
+              item.total_cost || materialCost + laborCost + overheadCost || item.cost || 0,
+            );
+            const qty = Number(item.qty || 0);
+            const unitPrice = Number(item.unit_price || 0);
+            return {
+              ...item,
+              qty,
+              unit_price: unitPrice,
+              cost: Number(item.cost || totalCost || 0),
+              amount: qty * unitPrice,
+              cost_amount: qty * totalCost,
+              station_count: Number(item.station_count || 0),
+              ct_seconds: Number(item.ct_seconds || 0),
+              uph: Number(item.uph || 0),
+              fixture_qty: Number(item.fixture_qty || 0),
+              camera_count: Number(item.camera_count || 0),
+              light_count: Number(item.light_count || 0),
+              operator_hours: Number(item.operator_hours || 0),
+              engineering_hours: Number(item.engineering_hours || 0),
+              material_cost: materialCost,
+              labor_cost: laborCost,
+              overhead_cost: overheadCost,
+              total_cost: totalCost,
+            };
+          }),
+        );
       }
     } catch (error) {
       console.error("Failed to fetch quote detail:", error);
@@ -134,6 +169,19 @@ export default function QuoteCreateEdit() {
         cost: 0,
         amount: 0,
         cost_amount: 0,
+        // 方案-报价一体化字段
+        station_count: 1,
+        ct_seconds: 0,
+        uph: 0,
+        fixture_qty: 0,
+        camera_count: 0,
+        light_count: 0,
+        operator_hours: 0,
+        engineering_hours: 0,
+        material_cost: 0,
+        labor_cost: 0,
+        overhead_cost: 0,
+        total_cost: 0,
         remark: "",
       },
     ]);
@@ -145,15 +193,27 @@ export default function QuoteCreateEdit() {
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
-    // Calculate amount and cost_amount
-    if (field === "qty" || field === "unit_price") {
-      newItems[index].amount =
-        (newItems[index].qty || 0) * (newItems[index].unit_price || 0);
+
+    const item = newItems[index];
+    const qty = Number(item.qty || 0);
+    const unitPrice = Number(item.unit_price || 0);
+    const materialCost = Number(item.material_cost || 0);
+    const laborCost = Number(item.labor_cost || 0);
+    const overheadCost = Number(item.overhead_cost || 0);
+
+    // 成本字段联动：材料+人工+制造费用 -> 单位总成本
+    if (["material_cost", "labor_cost", "overhead_cost"].includes(field)) {
+      item.total_cost = materialCost + laborCost + overheadCost;
+      item.cost = item.total_cost;
     }
-    if (field === "qty" || field === "cost") {
-      newItems[index].cost_amount =
-        (newItems[index].qty || 0) * (newItems[index].cost || 0);
+
+    if (field === "total_cost") {
+      item.cost = Number(item.total_cost || 0);
     }
+
+    item.amount = qty * unitPrice;
+    item.cost_amount = qty * Number(item.cost || 0);
+
     setItems(newItems);
     calculateTotals();
   };
@@ -199,6 +259,19 @@ export default function QuoteCreateEdit() {
             unit: item.unit,
             unit_price: item.unit_price,
             cost: item.cost,
+            // 方案-报价一体化字段
+            station_count: item.station_count,
+            ct_seconds: item.ct_seconds,
+            uph: item.uph,
+            fixture_qty: item.fixture_qty,
+            camera_count: item.camera_count,
+            light_count: item.light_count,
+            operator_hours: item.operator_hours,
+            engineering_hours: item.engineering_hours,
+            material_cost: item.material_cost,
+            labor_cost: item.labor_cost,
+            overhead_cost: item.overhead_cost,
+            total_cost: item.total_cost,
             remark: item.remark,
           })),
         },
@@ -217,6 +290,47 @@ export default function QuoteCreateEdit() {
       setLoading(false);
     }
   };
+  const handleRecalculate = async () => {
+    // 新建态直接本地重算
+    if (!isEdit) {
+      calculateTotals();
+      alert("已完成本地重算");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await quoteApi.recalculateCost(id);
+      const data = res?.data?.data || res?.data || res;
+      setVersionData((prev) => ({
+        ...prev,
+        total_price: Number(data.total_price || prev.total_price || 0),
+        cost_total: Number(data.total_cost || prev.cost_total || 0),
+      }));
+      alert("成本重算完成");
+    } catch (error) {
+      console.error("Failed to recalculate quote cost:", error);
+      alert("重算失败: " + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const costStructure = {
+    material: (items || []).reduce(
+      (sum, item) => sum + Number(item.qty || 0) * Number(item.material_cost || 0),
+      0,
+    ),
+    labor: (items || []).reduce(
+      (sum, item) => sum + Number(item.qty || 0) * Number(item.labor_cost || 0),
+      0,
+    ),
+    overhead: (items || []).reduce(
+      (sum, item) => sum + Number(item.qty || 0) * Number(item.overhead_cost || 0),
+      0,
+    ),
+  };
+
   const grossMargin =
     versionData.total_price > 0
       ? (
@@ -242,10 +356,16 @@ export default function QuoteCreateEdit() {
             description="报价表单、成本拆解、版本管理"
           />
         </div>
-        <Button onClick={handleSave} disabled={loading}>
-          <Save className="w-4 h-4 mr-2" />
-          保存
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleRecalculate} disabled={loading}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            重算成本
+          </Button>
+          <Button onClick={handleSave} disabled={loading}>
+            <Save className="w-4 h-4 mr-2" />
+            保存
+          </Button>
+        </div>
       </div>
       {/* Basic Information */}
       <Card>
@@ -350,6 +470,18 @@ export default function QuoteCreateEdit() {
                   <TableHead>金额</TableHead>
                   <TableHead>成本</TableHead>
                   <TableHead>成本金额</TableHead>
+                  <TableHead>工站</TableHead>
+                  <TableHead>CT(s)</TableHead>
+                  <TableHead>UPH</TableHead>
+                  <TableHead>治具</TableHead>
+                  <TableHead>相机</TableHead>
+                  <TableHead>光源</TableHead>
+                  <TableHead>操作工时</TableHead>
+                  <TableHead>工程工时</TableHead>
+                  <TableHead>材料成本</TableHead>
+                  <TableHead>人工成本</TableHead>
+                  <TableHead>制造费用</TableHead>
+                  <TableHead>单位总成本</TableHead>
                   <TableHead>备注</TableHead>
                   <TableHead>操作</TableHead>
                 </TableRow>
@@ -452,6 +584,126 @@ export default function QuoteCreateEdit() {
                     </TableCell>
                     <TableCell>
                       <Input
+                        type="number"
+                        value={item.station_count || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "station_count", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.ct_seconds || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "ct_seconds", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.uph || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "uph", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.fixture_qty || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "fixture_qty", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.camera_count || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "camera_count", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.light_count || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "light_count", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-20"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.operator_hours || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "operator_hours", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.engineering_hours || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "engineering_hours", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.material_cost || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "material_cost", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.labor_cost || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "labor_cost", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.overhead_cost || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "overhead_cost", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={item.total_cost || 0}
+                        onChange={(e) =>
+                          handleItemChange(index, "total_cost", parseFloat(e.target.value) || 0)
+                        }
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
                         value={item.remark}
                         onChange={(e) =>
                           handleItemChange(index, "remark", e.target.value)
@@ -538,6 +790,18 @@ export default function QuoteCreateEdit() {
                   {formatCurrency(versionData.cost_total || 0)}
                 </span>
               </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">材料成本:</span>
+                <span>{formatCurrency(costStructure.material)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">人工成本:</span>
+                <span>{formatCurrency(costStructure.labor)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">制造费用:</span>
+                <span>{formatCurrency(costStructure.overhead)}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -561,19 +825,19 @@ export default function QuoteCreateEdit() {
                 <Badge
                   className={cn(
                     parseFloat(grossMargin) >= 20 && "bg-emerald-500",
-                    parseFloat(grossMargin) >= 10 &&
+                    parseFloat(grossMargin) >= 15 &&
                       parseFloat(grossMargin) < 20 &&
                       "bg-amber-500",
-                    parseFloat(grossMargin) < 10 && "bg-red-500",
+                    parseFloat(grossMargin) < 15 && "bg-red-500",
                     "bg-slate-500",
                   )}
                 >
                   {grossMargin}%
                 </Badge>
               </div>
-              {parseFloat(grossMargin) < 10 && (
+              {parseFloat(grossMargin) < 15 && (
                 <div className="text-xs text-red-600 mt-2">
-                  ⚠️ 毛利率低于10%，建议重新评估
+                  ⚠️ 毛利率低于15%，存在盈利风险，建议重算并复核关键成本。
                 </div>
               )}
             </div>

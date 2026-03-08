@@ -67,6 +67,8 @@ export const quoteApi = {
     }),
   // Cost Management APIs
   getCostBreakdown: (id) => api.get(`/sales/quotes/${id}/cost-breakdown`),
+  recalculateCost: (id, params) =>
+    api.post(`/sales/quotes/${id}/recalculate`, null, { params }),
   applyCostTemplate: (templateId, data) =>
     api.post(`/sales/quote-templates/${templateId}/apply`, data || {}),
   calculateCost: (id, versionId) =>

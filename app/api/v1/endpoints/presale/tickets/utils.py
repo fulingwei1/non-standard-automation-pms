@@ -76,7 +76,7 @@ def build_ticket_response(ticket: PresaleSupportTicket) -> TicketResponse:
         ticket_no=ticket.ticket_no,
         title=ticket.title,
         ticket_type=ticket.ticket_type,
-        urgency=ticket.urgency,
+        urgency=ticket.urgency or 'normal',
         description=ticket.description,
         customer_id=ticket.customer_id,
         customer_name=ticket.customer_name,

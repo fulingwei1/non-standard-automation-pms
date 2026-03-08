@@ -74,7 +74,7 @@ const ContractManagement = () => {
   const [selectedContract, setSelectedContract] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState('');  // 搜索框初始化为空字符串
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
@@ -92,25 +92,58 @@ const ContractManagement = () => {
       const items = data?.items || data?.data?.items || data;
       const contractsData = Array.isArray(items) ? items : [];
       
+      // 调试：打印第一个合同的原始数据
+      if (contractsData.length > 0) {
+        const first = contractsData[0];
+        console.log('[合同数据] 第一个合同原始数据:', {
+          id: first.id,
+          contract_code: first.contract_code,
+          total_amount: first.total_amount,
+          contract_amount: first.contract_amount,
+          amount: first.amount,
+          status: first.status,
+          allKeys: Object.keys(first).filter(k => k.includes('amount') || k.includes('total'))
+        });
+      }
+      
       // 转换后端数据格式为前端期望的格式
-      const transformedContracts = contractsData.map((c) => ({
-        id: c.id,
-        title: c.contract_name || c.contract_code || `合同-${c.id}`,
-        contract_no: c.contract_code,
-        contract_name: c.contract_name,
-        client_name: c.customer_name,
-        clientName: c.customer_name,
-        value: c.total_amount || c.amount,
-        amount: c.total_amount || c.amount,
-        status: c.status?.toLowerCase() || 'draft',
-        type: c.contract_type || 'sales',
-        signatureStatus: c.status === 'executing' ? 'signed' : 'pending',
-        riskLevel: 'normal',
-        created_at: c.created_at,
-        signing_date: c.signing_date,
-        customer_id: c.customer_id,
-        contract_id: c.id,
-      }));
+      const transformedContracts = contractsData.map((c) => {
+        // 金额字段：后端可能返回 total_amount 或 contract_amount
+        // Decimal 类型会被序列化为字符串或数字
+        let rawAmount = c.total_amount ?? c.contract_amount ?? c.amount ?? 0;
+        
+        // 处理可能的 Decimal 对象、字符串或数字
+        let numericAmount = 0;
+        if (rawAmount === null || rawAmount === undefined) {
+          numericAmount = 0;
+        } else if (typeof rawAmount === 'number') {
+          numericAmount = rawAmount;
+        } else if (typeof rawAmount === 'string') {
+          numericAmount = parseFloat(rawAmount) || 0;
+        } else if (typeof rawAmount === 'object' && rawAmount !== null) {
+          // 处理 Decimal 对象
+          numericAmount = parseFloat(rawAmount.toString()) || 0;
+        }
+        
+        return {
+          id: c.id,
+          title: c.contract_name || c.contract_code || `合同-${c.id}`,
+          contract_no: c.contract_code,
+          contract_name: c.contract_name,
+          client_name: c.customer_name,
+          clientName: c.customer_name,
+          value: numericAmount,
+          amount: numericAmount,
+          status: (c.status || 'draft').toLowerCase(),
+          type: c.contract_type || 'sales',
+          signatureStatus: (c.status || 'draft').toLowerCase() === 'executing' ? 'signed' : 'pending',
+          riskLevel: 'normal',
+          created_at: c.created_at,
+          signing_date: c.signing_date,
+          customer_id: c.customer_id,
+          contract_id: c.id,
+        };
+      });
       
       setContracts(transformedContracts);
       
@@ -123,6 +156,7 @@ const ContractManagement = () => {
       
       setLoading(false);
     } catch (_error) {
+      console.error('加载合同数据失败:', _error);
       message.error('加载合同数据失败');
       setContracts([]);
       setLoading(false);
@@ -370,7 +404,7 @@ const ContractManagement = () => {
             <Input
               placeholder="搜索合同标题、客户名称..."
               prefix={<Search size={16} />}
-              value={searchText || "unknown"}
+              value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 

@@ -21,53 +21,62 @@ import {
 const ContractOverview = ({ data, loading, onNavigate }) => {
   const [_selectedPeriod, _setSelectedPeriod] = useState('month');
 
-  const overviewStats = useMemo(() => {
-    const contractsList = data?.contracts || data?.items || [];
-    
-    const totalContracts = contractsList.length;
-    const activeContracts = contractsList.filter((c) =>
+  // 直接使用 data.contracts 作为合同列表
+  const contractsList = data?.contracts || [];
+  
+  console.log('[ContractOverview] data:', data);
+  console.log('[ContractOverview] contractsList:', contractsList.length, 'contracts');
+  console.log('[ContractOverview] first contract status:', contractsList[0]?.status);
+  
+  // 计算统计数据
+  const totalContracts = contractsList.length;
+  const activeContracts = contractsList.filter((c) =>
     ['signed', 'executing'].includes(c.status)
-    ).length;
-    const totalValue = contractsList.reduce((acc, c) => acc + (c.value || 0), 0);
-    const pendingSignatures = contractsList.filter((c) =>
+  ).length;
+  
+  // 调试金额计算
+  const totalValue = contractsList.reduce((acc, c, i) => {
+    const v = typeof c.value === 'number' ? c.value : (parseFloat(c.value) || 0);
+    if (i < 3) console.log('[金额调试]', i, c.contract_no, 'value:', c.value, 'parsed:', v);
+    return acc + v;
+  }, 0);
+  console.log('[金额调试] 合同数:', totalContracts, '总价值:', totalValue);
+  
+  const pendingSignatures = contractsList.filter((c) =>
     c.signatureStatus === 'pending'
-    ).length;
+  ).length;
+  const completionRate = totalContracts > 0 ? 
+    (contractsList.filter((c) => c.status === 'completed').length / totalContracts * 100) : 0;
 
-    const monthlyGrowth = data.monthlyStats?.growth || 8.5;
-    const completionRate = totalContracts > 0 ? 
-      (contractsList.filter((c) => c.status === 'completed').length / totalContracts * 100) : 0;
+  const overviewStats = {
+    totalContracts,
+    activeContracts,
+    totalValue,
+    pendingSignatures,
+    completionRate: completionRate.toFixed(1)
+  };
 
-    return {
-      totalContracts,
-      activeContracts,
-      totalValue,
-      pendingSignatures,
-      monthlyGrowth,
-      completionRate: completionRate.toFixed(1)
-    };
-  }, [data]);
+  // 计算状态分布
+  const statusDistribution = {};
+  Object.keys(CONTRACT_STATUS).forEach((key) => {
+    statusDistribution[key] = 0;
+  });
+  
+  // 调试：打印合同状态
+  console.log('[状态分布] 合同数量:', contractsList.length);
+  console.log('[状态分布] 合同状态列表:', contractsList.map(c => ({ id: c.id, code: c.contract_no, status: c.status })));
+  
+  contractsList.forEach((contract) => {
+    const statusUpper = (contract.status || '').toUpperCase();
+    if (contract.status && CONTRACT_STATUS[statusUpper]) {
+      statusDistribution[statusUpper]++;
+    }
+  });
+  
+  console.log('[状态分布] 结果:', statusDistribution);
 
-  const statusDistribution = useMemo(() => {
-    const contractsList = data?.contracts || data?.items || [];
-
-    const distribution = {};
-    Object.keys(CONTRACT_STATUS).forEach((key) => {
-      distribution[key] = 0;
-    });
-
-    contractsList.forEach((contract) => {
-      if (contract.status && CONTRACT_STATUS[contract.status.toUpperCase()]) {
-        distribution[contract.status.toUpperCase()]++;
-      }
-    });
-
-    return distribution;
-  }, [data]);
-
-  const upcomingDeadlines = useMemo(() => {
-    const contractsList = data?.contracts || data?.items || [];
-
-    return contractsList.
+  // 计算即将到期
+  const upcomingDeadlines = contractsList.
     filter((c) => {
       const today = new Date();
       const deadline = new Date(c.signingDeadline || c.expiryDate);
@@ -76,7 +85,6 @@ const ContractOverview = ({ data, loading, onNavigate }) => {
     }).
     sort((a, b) => new Date(a.signingDeadline || a.expiryDate) - new Date(b.signingDeadline || b.expiryDate)).
     slice(0, 5);
-  }, [data]);
 
   const renderStatusCard = (statusKey, count) => {
     const config = CONTRACT_STATUS[statusKey];

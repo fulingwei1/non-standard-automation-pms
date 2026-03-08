@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 
 const backendTarget =
   process.env.VITE_BACKEND_URL ||
-  `http://127.0.0.1:${process.env.VITE_BACKEND_PORT || '8000'}`
+  `http://127.0.0.1:${process.env.VITE_BACKEND_PORT || '8001'}`
 
 // https://vite.dev/config/
 export default defineConfig({
