@@ -6,10 +6,9 @@ Presale AI Solution Generation Service
 import json
 import time
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
