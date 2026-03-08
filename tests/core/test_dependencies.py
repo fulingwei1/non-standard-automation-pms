@@ -89,27 +89,25 @@ class TestGetDBDependency:
             assert mock_session.close.called
 
 
-class TestGetDBSessionAlias:
-    """测试get_db_session别名"""
+class TestGetDBSessionContextManager:
+    """测试get_db_session上下文管理器"""
 
-    def test_get_db_session_is_alias(self):
-        """测试get_db_session是get_db的别名"""
-        assert get_db_session is get_db
+    def test_get_db_session_is_context_manager(self):
+        """测试get_db_session返回上下文管理器"""
+        ctx = get_db_session()
+        assert hasattr(ctx, "__enter__")
+        assert hasattr(ctx, "__exit__")
 
-    def test_get_db_session_works_same(self):
-        """测试get_db_session功能相同"""
+    def test_get_db_session_works_with_with(self):
+        """测试get_db_session可通过with正常使用"""
         mock_session = MagicMock(spec=Session)
 
         with patch("app.models.base.get_session", return_value=mock_session):
-            gen = get_db_session()
-            db = next(gen)
+            with get_db_session() as db:
+                assert db is mock_session
 
-            assert db is mock_session
-
-            try:
-                next(gen)
-            except StopIteration:
-                pass
+        assert mock_session.commit.called
+        assert mock_session.close.called
 
 
 class TestDependencyErrorHandling:
