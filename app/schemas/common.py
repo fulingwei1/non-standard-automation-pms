@@ -98,7 +98,7 @@ class AuditSchema(TimestampSchema):
     created_by_name: Optional[str] = None
 
 
-class PageResponse(BaseModel, Generic[T]):
+class PageResponse(BaseSchema, Generic[T]):
     """分页响应模型（使用 skip/limit）"""
 
     items: List[T] = Field(default=[], description="数据列表")

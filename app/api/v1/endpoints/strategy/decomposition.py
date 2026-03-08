@@ -71,8 +71,29 @@ def list_department_objectives(
         skip=pagination.offset,
         limit=pagination.limit,
     )
+    # Convert models to responses with JSON fields parsed
+    from app.services.strategy.decomposition.department_objectives import _safe_json_loads
+    responses = []
+    for item in items:
+        responses.append(DepartmentObjectiveResponse(
+            id=item.id,
+            strategy_id=item.strategy_id,
+            department_id=item.department_id,
+            year=item.year,
+            quarter=item.quarter,
+            objectives=_safe_json_loads(item.objectives),
+            key_results=_safe_json_loads(item.key_results),
+            kpis_config=_safe_json_loads(item.kpis_config),
+            status=item.status or "DRAFT",
+            owner_user_id=item.owner_user_id,
+            approved_by=item.approved_by,
+            approved_at=str(item.approved_at) if item.approved_at else None,
+            is_active=item.is_active,
+            created_at=item.created_at,
+            updated_at=item.updated_at,
+        ))
     return PageResponse(
-        items=items,
+        items=responses,
         total=total,
         skip=pagination.offset,
         limit=pagination.limit,

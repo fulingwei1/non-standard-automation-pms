@@ -22,18 +22,18 @@ class DepartmentObjectiveCreate(BaseModel):
     department_id: int = Field(description="部门ID")
     year: int = Field(description="年度")
     quarter: Optional[int] = Field(default=None, description="季度")
-    objectives: Optional[Dict[str, Any]] = Field(default=None, description="部门级目标列表")
-    key_results: Optional[Dict[str, Any]] = Field(default=None, description="关键成果")
-    kpis_config: Optional[Dict[str, Any]] = Field(default=None, description="部门级 KPI")
+    objectives: Optional[Any] = Field(default=None, description="部门级目标列表")
+    key_results: Optional[Any] = Field(default=None, description="关键成果")
+    kpis_config: Optional[Any] = Field(default=None, description="部门级 KPI")
     owner_user_id: Optional[int] = Field(default=None, description="部门负责人")
 
 
 class DepartmentObjectiveUpdate(BaseModel):
     """更新部门目标"""
 
-    objectives: Optional[Dict[str, Any]] = None
-    key_results: Optional[Dict[str, Any]] = None
-    kpis_config: Optional[Dict[str, Any]] = None
+    objectives: Optional[Any] = None
+    key_results: Optional[Any] = None
+    kpis_config: Optional[Any] = None
     status: Optional[str] = None
     owner_user_id: Optional[int] = None
 
@@ -46,9 +46,9 @@ class DepartmentObjectiveResponse(TimestampSchema):
     department_id: int
     year: int
     quarter: Optional[int] = None
-    objectives: Optional[Dict[str, Any]] = None
-    key_results: Optional[Dict[str, Any]] = None
-    kpis_config: Optional[Dict[str, Any]] = None
+    objectives: Optional[Any] = None
+    key_results: Optional[Any] = None
+    kpis_config: Optional[Any] = None
     status: str = "DRAFT"
     owner_user_id: Optional[int] = None
     approved_by: Optional[int] = None
