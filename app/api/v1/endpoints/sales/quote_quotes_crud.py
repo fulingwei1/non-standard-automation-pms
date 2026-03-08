@@ -84,13 +84,28 @@ def get_quote_detail(
         "id": quote.id,
         "quote_code": quote.quote_code,
         "opportunity_id": quote.opportunity_id,
-        "opportunity_name": quote.opportunity.name if quote.opportunity else None,
+        "opportunity_name": (
+            getattr(quote.opportunity, "opp_name", None)
+            or getattr(quote.opportunity, "name", None)
+            if quote.opportunity
+            else None
+        ),
         "customer_id": quote.customer_id,
-        "customer_name": quote.customer.customer_name if quote.customer else None,
+        "customer_name": (
+            getattr(quote.customer, "customer_name", None)
+            or getattr(quote.customer, "name", None)
+            if quote.customer
+            else None
+        ),
         "status": quote.status,
         "valid_until": quote.valid_until.isoformat() if quote.valid_until else None,
         "owner_id": quote.owner_id,
-        "owner_name": quote.owner.real_name if quote.owner else None,
+        "owner_name": (
+            getattr(quote.owner, "real_name", None)
+            or getattr(quote.owner, "name", None)
+            if quote.owner
+            else None
+        ),
         "current_version": {
             "id": current_version.id,
             "version_no": current_version.version_no,
