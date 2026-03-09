@@ -18,15 +18,43 @@ cd "$PROJECT_DIR"
 
 echo -e "${YELLOW}📍 项目目录: $PROJECT_DIR${NC}"
 
-# ========== 步骤1: 同步种子数据 ==========
-echo -e "\n${YELLOW}🌱 步骤1: 同步演示数据...${NC}"
-if [ -f "scripts/seed_blm_bem.py" ]; then
-    echo "运行种子数据脚本..."
-    python3 scripts/seed_blm_bem.py
-    echo -e "${GREEN}✅ 演示数据同步完成${NC}"
+# ========== 步骤0: 检查数据库同步 ==========
+echo -e "\n${YELLOW}🔄 步骤0: 检查数据库同步...${NC}"
+if [ -f "sync-db.sh" ]; then
+    # 检查是否有更新的备份需要导入
+    if [ -f "db-backups/backup-latest.sql" ] && [ -f "data/app.db" ]; then
+        local backup_time=$(stat -f%m "db-backups/backup-latest.sql" 2>/dev/null || stat -c%Y "db-backups/backup-latest.sql" 2>/dev/null)
+        local db_time=$(stat -f%m "data/app.db" 2>/dev/null || stat -c%Y "data/app.db" 2>/dev/null)
+        
+        if [ "$backup_time" -gt "$db_time" ]; then
+            echo -e "${YELLOW}⚠️  检测到新的数据库备份，正在导入...${NC}"
+            ./sync-db.sh import
+        else
+            echo -e "${GREEN}✅ 数据库已是最新${NC}"
+        fi
+    elif [ -f "db-backups/backup-latest.sql" ] && [ ! -f "data/app.db" ]; then
+        echo -e "${YELLOW}⚠️  首次运行，导入数据库备份...${NC}"
+        ./sync-db.sh import
+    else
+        echo -e "${GREEN}✅ 使用本地数据库${NC}"
+    fi
 else
-    echo -e "${RED}❌ 种子脚本不存在: scripts/seed_blm_bem.py${NC}"
-    exit 1
+    echo -e "${YELLOW}⚠️  同步脚本不存在，跳过同步检查${NC}"
+fi
+
+# ========== 步骤1: 同步种子数据（如果数据库为空） ==========
+echo -e "\n${YELLOW}🌱 步骤1: 同步演示数据...${NC}"
+if [ ! -f "data/app.db" ]; then
+    if [ -f "scripts/seed_blm_bem.py" ]; then
+        echo "运行种子数据脚本..."
+        python3 scripts/seed_blm_bem.py
+        echo -e "${GREEN}✅ 演示数据同步完成${NC}"
+    else
+        echo -e "${RED}❌ 种子脚本不存在: scripts/seed_blm_bem.py${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}✅ 数据库已存在，跳过种子数据${NC}"
 fi
 
 # ========== 步骤2: 启动后端 ==========
