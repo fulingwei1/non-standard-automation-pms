@@ -10,3 +10,4 @@ export * from "@/lib/constants/quote";
 export { QuoteStatsOverview } from "./QuoteStatsOverview";
 export { QuoteListManager } from "./QuoteListManager";
 export { default as QuoteFilters } from "./QuoteFilters";
+export { default as MarginAnalysis } from "./MarginAnalysis";

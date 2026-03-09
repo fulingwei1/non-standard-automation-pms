@@ -15,7 +15,7 @@ export function SolutionHeader({ solution, navigate }) {
             <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate("/solutions")}
+                onClick={() => navigate("/presales/solutions")}
                 className="text-slate-400 hover:text-white"
             >
                 <ArrowLeft className="w-5 h-5" />

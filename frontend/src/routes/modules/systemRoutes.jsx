@@ -44,6 +44,7 @@ import ECNDetail from "../../pages/ECNDetail";
 import ECNTypeManagement from "../../pages/ECNTypeManagement";
 import ECNOverdueAlerts from "../../pages/ECNOverdueAlerts";
 import ECNStatistics from "../../pages/ECNStatistics";
+import ECNCenter from "../../pages/ECNCenter";
 import TechnicalSpecManagement from "../../pages/TechnicalSpecManagement";
 import TechnicalReviewList from "../../pages/TechnicalReviewList";
 import TechnicalReviewDetail from "../../pages/TechnicalReviewDetail";
@@ -55,6 +56,8 @@ import CustomerCommunication from "../../pages/CustomerCommunication";
 import CustomerSatisfaction from "../../pages/CustomerSatisfaction";
 import ServiceAnalytics from "../../pages/ServiceAnalytics";
 import ServiceKnowledgeBase from "../../pages/ServiceKnowledgeBase";
+import ServiceCenter from "../../pages/ServiceCenter";
+import DeliveryAcceptanceCenter from "../../pages/DeliveryAcceptanceCenter";
 import RdProjectList from "../../pages/RdProjectList";
 import RdProjectDetail from "../../pages/RdProjectDetail";
 import RdProjectWorklogs from "../../pages/RdProjectWorklogs";
@@ -81,6 +84,9 @@ import ReportTemplates from "../../pages/ReportTemplates";
 import ReportArchives from "../../pages/ReportArchives";
 import TemplateConfigList from "../../pages/TemplateConfigList";
 import TemplateConfigEditor from "../../pages/TemplateConfigEditor";
+import TemplateCenter from "../../pages/TemplateCenter";
+import AccountPermissionCenter from "../../pages/AccountPermissionCenter";
+import OrganizationCenter from "../../pages/OrganizationCenter";
 
 export function SystemRoutes() {
   return (
@@ -101,6 +107,7 @@ export function SystemRoutes() {
       />
 
       {/* ECN Management */}
+      <Route path="/change-management/ecn-center" element={<ECNCenter />} />
       <Route path="/change-management/ecn" element={<ECNManagement />} />
       <Route path="/change-management/ecn/:id" element={<ECNDetail />} />
       <Route path="/change-management/ecn-types" element={<ECNTypeManagement />} />
@@ -143,6 +150,8 @@ export function SystemRoutes() {
       <Route path="/spec-match-check" element={<SpecMatchCheck />} />
 
       {/* Customer Service */}
+      <Route path="/service/center" element={<ServiceCenter />} />
+      <Route path="/delivery/acceptance-center" element={<DeliveryAcceptanceCenter />} />
       <Route
         path="/customer-service-dashboard"
         element={<CustomerServiceDashboard />}
@@ -201,6 +210,9 @@ export function SystemRoutes() {
       <Route path="/settings" element={<Settings />} />
 
       {/* System Management */}
+      <Route path="/system/template-center" element={<TemplateCenter />} />
+      <Route path="/system/account-permission-center" element={<AccountPermissionCenter />} />
+      <Route path="/system/organization-center" element={<OrganizationCenter />} />
       <Route path="/stage-templates" element={<StageTemplateManagement />} />
       <Route path="/stage-templates/:templateId/edit" element={<StageTemplateEditor />} />
       <Route path="/report-generation" element={<ReportGeneration />} />

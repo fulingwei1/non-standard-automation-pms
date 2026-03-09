@@ -25,10 +25,18 @@ import WorkloadBoard from "../../pages/WorkloadBoard";
 import WorkshopTaskBoard from "../../pages/WorkshopTaskBoard";
 import AssemblyTemplateManagement from "../../pages/AssemblyTemplateManagement";
 import ScheduleOptimization from "../../pages/ScheduleOptimization";
+import ExceptionCenter from "../../pages/ExceptionCenter";
+import ProductionExecutionCenter from "../../pages/ProductionExecutionCenter";
+import AssemblyCenter from "../../pages/AssemblyCenter";
+import FieldResourceCenter from "../../pages/FieldResourceCenter";
 
 export function ProductionRoutes() {
   return (
     <>
+      <Route path="/production/exception-center" element={<ExceptionCenter />} />
+      <Route path="/production/execution-center" element={<ProductionExecutionCenter />} />
+      <Route path="/production/assembly-center" element={<AssemblyCenter />} />
+      <Route path="/production/resource-center" element={<FieldResourceCenter />} />
       <Route path="/work-orders" element={<WorkOrderManagement />} />
       <Route path="/work-orders/:id" element={<WorkOrderDetail />} />
       <Route path="/dispatch-management" element={<DispatchManagement />} />

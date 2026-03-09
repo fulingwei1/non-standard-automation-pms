@@ -90,7 +90,7 @@ const isGatePassed = (status) => {
   return normalized === "PASS" || normalized === "PASSED";
 };
 
-export default function OpportunityManagement() {
+export default function OpportunityManagement({ embedded = false }) {
   const [opportunities, setOpportunities] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [owners, setOwners] = useState([]);
@@ -507,16 +507,18 @@ export default function OpportunityManagement() {
 
   return (
     <div className="space-y-6 p-6">
-
-      <PageHeader
-        title="商机管理"
-        description="管理销售商机，跟踪项目进展"
-        action={
-        <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            新建商机
-        </Button>
-        } />
+      {!embedded ? (
+        <PageHeader
+          title="商机管理"
+          description="管理销售商机，跟踪项目进展"
+          action={
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              新建商机
+            </Button>
+          }
+        />
+      ) : null}
 
 
       {/* 统计卡片 */}

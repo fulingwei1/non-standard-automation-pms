@@ -42,8 +42,9 @@ def get_sales_funnel(
     query_leads = filter_sales_data_by_scope(query_leads, current_user, db, Lead, "owner_id")
     query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
     query_quotes = filter_sales_data_by_scope(query_quotes, current_user, db, Quote, "owner_id")
+    # Contract 模型使用 sales_owner_id 而非 owner_id
     query_contracts = filter_sales_data_by_scope(
-        query_contracts, current_user, db, Contract, "owner_id"
+        query_contracts, current_user, db, Contract, "sales_owner_id"
     )
 
     # 日期过滤
@@ -169,8 +170,9 @@ def get_sales_summary(
     # 应用数据权限过滤
     query_leads = filter_sales_data_by_scope(query_leads, current_user, db, Lead, "owner_id")
     query_opps = filter_sales_data_by_scope(query_opps, current_user, db, Opportunity, "owner_id")
+    # Contract 模型使用 sales_owner_id 而非 owner_id
     query_contracts = filter_sales_data_by_scope(
-        query_contracts, current_user, db, Contract, "owner_id"
+        query_contracts, current_user, db, Contract, "sales_owner_id"
     )
 
     # 日期过滤（先应用日期过滤，再获取合同ID用于发票过滤）

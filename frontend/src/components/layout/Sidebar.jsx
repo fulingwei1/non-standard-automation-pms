@@ -23,6 +23,7 @@ import { filterNavItemsByRole, getNavGroupsForRole } from "./sidebarUtils";
 
 export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   const location = useLocation();
+  const shouldUseBackendNav = import.meta.env.VITE_ENABLE_BACKEND_NAV === "true";
 
   // 获取权限检查函数
   const { hasPermission } = usePermission();
@@ -101,6 +102,10 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
   // Fetch dynamic menu from backend
   useEffect(() => {
     const fetchDynamicMenu = async () => {
+      if (!shouldUseBackendNav) {
+        return;
+      }
+
       // Skip if no token (not logged in)
       const token = localStorage.getItem("token");
       if (!token) {
@@ -132,19 +137,19 @@ export function Sidebar({ collapsed = false, onToggle, onLogout, user }) {
     };
 
     fetchDynamicMenu();
-  }, [currentUser]);
+  }, [currentUser, shouldUseBackendNav]);
 
   // Get navigation groups based on role - memoized
   // Priority: dynamic menu from backend > hardcoded menu based on role
   const navGroups = useMemo(() => {
     // If we have dynamic menu from backend, use it
-    if (dynamicNavGroups && dynamicNavGroups.length > 0) {
+    if (shouldUseBackendNav && dynamicNavGroups && dynamicNavGroups.length > 0) {
       return dynamicNavGroups;
     }
     // Otherwise, fall back to hardcoded menu
     const groups = getNavGroupsForRole(role, isSuperuser);
     return filterNavItemsByRole(groups, role, isSuperuser);
-  }, [role, isSuperuser, dynamicNavGroups]);
+  }, [role, isSuperuser, dynamicNavGroups, shouldUseBackendNav]);
 
   // Toggle group collapse
   const toggleGroupCollapse = (groupLabel) => {

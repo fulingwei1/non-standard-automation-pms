@@ -50,6 +50,38 @@ router = APIRouter(prefix="/proposals", tags=["proposals"])
 # ==================== 技术方案管理 ====================
 
 
+def build_solution_response(solution: PresaleSolution) -> SolutionResponse:
+    return SolutionResponse(
+        id=solution.id,
+        solution_no=solution.solution_no,
+        name=solution.name,
+        author_name=solution.author_name,
+        solution_type=solution.solution_type,
+        industry=solution.industry,
+        test_type=solution.test_type,
+        ticket_id=solution.ticket_id,
+        customer_id=solution.customer_id,
+        opportunity_id=solution.opportunity_id,
+        requirement_summary=solution.requirement_summary,
+        solution_overview=solution.solution_overview,
+        technical_spec=solution.technical_spec,
+        estimated_cost=float(solution.estimated_cost) if solution.estimated_cost else None,
+        suggested_price=float(solution.suggested_price) if solution.suggested_price else None,
+        cost_breakdown=solution.cost_breakdown,
+        estimated_hours=solution.estimated_hours,
+        estimated_duration=solution.estimated_duration,
+        status=solution.status,
+        version=solution.version,
+        parent_id=solution.parent_id,
+        reviewer_id=solution.reviewer_id,
+        review_time=solution.review_time,
+        review_status=solution.review_status,
+        review_comment=solution.review_comment,
+        created_at=solution.created_at,
+        updated_at=solution.updated_at,
+    )
+
+
 @router.get("/solutions", response_model=PaginatedResponse)
 def read_solutions(
     db: Session = Depends(deps.get_db),
@@ -69,7 +101,11 @@ def read_solutions(
     query = apply_keyword_filter(query, PresaleSolution, keyword, ["solution_no", "name"])
 
     if status:
-        query = query.filter(PresaleSolution.status == status)
+        status_values = [item.strip() for item in status.split(",") if item.strip()]
+        if len(status_values) == 1:
+            query = query.filter(PresaleSolution.status == status_values[0])
+        elif status_values:
+            query = query.filter(PresaleSolution.status.in_(status_values))
 
     if solution_type:
         query = query.filter(PresaleSolution.solution_type == solution_type)
@@ -85,40 +121,7 @@ def read_solutions(
         query.order_by(desc(PresaleSolution.created_at)), pagination.offset, pagination.limit
     ).all()
 
-    items = []
-    for solution in solutions:
-        items.append(
-            SolutionResponse(
-                id=solution.id,
-                solution_no=solution.solution_no,
-                name=solution.name,
-                solution_type=solution.solution_type,
-                industry=solution.industry,
-                test_type=solution.test_type,
-                ticket_id=solution.ticket_id,
-                customer_id=solution.customer_id,
-                opportunity_id=solution.opportunity_id,
-                requirement_summary=solution.requirement_summary,
-                solution_overview=solution.solution_overview,
-                technical_spec=solution.technical_spec,
-                estimated_cost=float(solution.estimated_cost) if solution.estimated_cost else None,
-                suggested_price=(
-                    float(solution.suggested_price) if solution.suggested_price else None
-                ),
-                cost_breakdown=solution.cost_breakdown,
-                estimated_hours=solution.estimated_hours,
-                estimated_duration=solution.estimated_duration,
-                status=solution.status,
-                version=solution.version,
-                parent_id=solution.parent_id,
-                reviewer_id=solution.reviewer_id,
-                review_time=solution.review_time,
-                review_status=solution.review_status,
-                review_comment=solution.review_comment,
-                created_at=solution.created_at,
-                updated_at=solution.updated_at,
-            )
-        )
+    items = [build_solution_response(solution) for solution in solutions]
 
     return pagination.to_response(items, total)
 
@@ -157,34 +160,7 @@ def create_solution(
 
     save_obj(db, solution)
 
-    return SolutionResponse(
-        id=solution.id,
-        solution_no=solution.solution_no,
-        name=solution.name,
-        solution_type=solution.solution_type,
-        industry=solution.industry,
-        test_type=solution.test_type,
-        ticket_id=solution.ticket_id,
-        customer_id=solution.customer_id,
-        opportunity_id=solution.opportunity_id,
-        requirement_summary=solution.requirement_summary,
-        solution_overview=solution.solution_overview,
-        technical_spec=solution.technical_spec,
-        estimated_cost=float(solution.estimated_cost) if solution.estimated_cost else None,
-        suggested_price=float(solution.suggested_price) if solution.suggested_price else None,
-        cost_breakdown=solution.cost_breakdown,
-        estimated_hours=solution.estimated_hours,
-        estimated_duration=solution.estimated_duration,
-        status=solution.status,
-        version=solution.version,
-        parent_id=solution.parent_id,
-        reviewer_id=solution.reviewer_id,
-        review_time=solution.review_time,
-        review_status=solution.review_status,
-        review_comment=solution.review_comment,
-        created_at=solution.created_at,
-        updated_at=solution.updated_at,
-    )
+    return build_solution_response(solution)
 
 
 @router.get("/solutions/{solution_id}", response_model=SolutionResponse)
@@ -199,34 +175,7 @@ def read_solution(
     """
     solution = get_or_404(db, PresaleSolution, solution_id, detail="方案不存在")
 
-    return SolutionResponse(
-        id=solution.id,
-        solution_no=solution.solution_no,
-        name=solution.name,
-        solution_type=solution.solution_type,
-        industry=solution.industry,
-        test_type=solution.test_type,
-        ticket_id=solution.ticket_id,
-        customer_id=solution.customer_id,
-        opportunity_id=solution.opportunity_id,
-        requirement_summary=solution.requirement_summary,
-        solution_overview=solution.solution_overview,
-        technical_spec=solution.technical_spec,
-        estimated_cost=float(solution.estimated_cost) if solution.estimated_cost else None,
-        suggested_price=float(solution.suggested_price) if solution.suggested_price else None,
-        cost_breakdown=solution.cost_breakdown,
-        estimated_hours=solution.estimated_hours,
-        estimated_duration=solution.estimated_duration,
-        status=solution.status,
-        version=solution.version,
-        parent_id=solution.parent_id,
-        reviewer_id=solution.reviewer_id,
-        review_time=solution.review_time,
-        review_status=solution.review_status,
-        review_comment=solution.review_comment,
-        created_at=solution.created_at,
-        updated_at=solution.updated_at,
-    )
+    return build_solution_response(solution)
 
 
 @router.put("/solutions/{solution_id}", response_model=SolutionResponse)
@@ -366,37 +315,4 @@ def get_solution_versions(
     )
     versions.extend(child_versions)
 
-    result = []
-    for sol in versions:
-        result.append(
-            SolutionResponse(
-                id=sol.id,
-                solution_no=sol.solution_no,
-                name=sol.name,
-                solution_type=sol.solution_type,
-                industry=sol.industry,
-                test_type=sol.test_type,
-                ticket_id=sol.ticket_id,
-                customer_id=sol.customer_id,
-                opportunity_id=sol.opportunity_id,
-                requirement_summary=sol.requirement_summary,
-                solution_overview=sol.solution_overview,
-                technical_spec=sol.technical_spec,
-                estimated_cost=float(sol.estimated_cost) if sol.estimated_cost else None,
-                suggested_price=float(sol.suggested_price) if sol.suggested_price else None,
-                cost_breakdown=sol.cost_breakdown,
-                estimated_hours=sol.estimated_hours,
-                estimated_duration=sol.estimated_duration,
-                status=sol.status,
-                version=sol.version,
-                parent_id=sol.parent_id,
-                reviewer_id=sol.reviewer_id,
-                review_time=sol.review_time,
-                review_status=sol.review_status,
-                review_comment=sol.review_comment,
-                created_at=sol.created_at,
-                updated_at=sol.updated_at,
-            )
-        )
-
-    return result
+    return [build_solution_response(sol) for sol in versions]

@@ -44,7 +44,7 @@ import { projectApi, costApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
 
-export default function BudgetManagement() {
+export default function BudgetManagement({ embedded = false }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [budgets, setBudgets] = useState([]);
@@ -163,11 +163,20 @@ export default function BudgetManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        <PageHeader
-          title="预算管理"
-          description="项目预算跟踪、使用情况监控、预算预警" />
+    <div
+      className={
+        embedded
+          ? ""
+          : "min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+      }
+    >
+      <div className={embedded ? "space-y-6" : "container mx-auto px-4 py-6 space-y-6"}>
+        {!embedded ? (
+          <PageHeader
+            title="预算管理"
+            description="项目预算跟踪、使用情况监控、预算预警"
+          />
+        ) : null}
 
 
         {/* Statistics */}

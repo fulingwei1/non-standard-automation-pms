@@ -47,7 +47,7 @@ export default function SolutionDetail() {
                 <div className="text-center py-16 text-red-400">
                     <div className="text-lg font-medium">加载失败</div>
                     <div className="text-sm mt-2">{error || "方案不存在"}</div>
-                    <Button className="mt-4" onClick={() => navigate("/solutions")}>
+                    <Button className="mt-4" onClick={() => navigate("/presales/solutions")}>
                         返回方案列表
                     </Button>
                 </div>

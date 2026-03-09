@@ -4,7 +4,6 @@
 
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { fadeIn } from "../../lib/animations";
 import {
   Building2,
   MapPin,
@@ -56,7 +55,9 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
   if (compact) {
     return (
       <motion.div
-        variants={fadeIn}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
         onClick={() => onClick?.(customer)}
         className="flex items-center justify-between p-3 bg-surface-50 rounded-lg hover:bg-surface-100 cursor-pointer transition-colors group"
       >
@@ -88,7 +89,9 @@ export default function CustomerCard({ customer, onClick, compact = false }) {
 
   return (
     <motion.div
-      variants={fadeIn}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
       onClick={() => onClick?.(customer)}
       className={cn(
         "bg-surface-100/50 backdrop-blur-sm rounded-xl border border-white/5 p-4",

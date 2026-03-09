@@ -27,7 +27,7 @@ import { issueApi } from "../services/api";
 // Import utilities
 import { fadeIn, staggerContainer } from "../lib/animations";
 
-export default function IssueManagement() {
+export default function IssueManagement({ embedded = false }) {
   // 状态管理
   const [_issues, setIssues] = useState([]);
   const [filteredIssues, setFilteredIssues] = useState([]);
@@ -259,29 +259,32 @@ export default function IssueManagement() {
       variants={staggerContainer}
       className="space-y-6">
 
-      <PageHeader
-        title="问题异常"
-        subtitle="问题跟踪、状态管理、优先级分配、分析统计"
-        breadcrumbs={[
-        { label: "项目管理", href: "/projects" },
-        { label: "问题异常", href: "/issues" }]
-        }
-        actions={
-        <div className="flex items-center gap-3">
-            <Button
-            variant="outline"
-            onClick={() => window.location.href = "/issue-statistics-snapshot"}>
-
-              数据分析
-            </Button>
-            <Button
-            onClick={handleIssueCreate}
-            className="bg-blue-600 hover:bg-blue-700 text-white">
-
-              新建问题
-            </Button>
-        </div>
-        } />
+      {!embedded ? (
+        <PageHeader
+          title="问题异常"
+          subtitle="问题跟踪、状态管理、优先级分配、分析统计"
+          breadcrumbs={[
+            { label: "项目管理", href: "/projects" },
+            { label: "问题异常", href: "/issues" },
+          ]}
+          actions={
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = "/issue-statistics-snapshot"}
+              >
+                数据分析
+              </Button>
+              <Button
+                onClick={handleIssueCreate}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                新建问题
+              </Button>
+            </div>
+          }
+        />
+      ) : null}
 
 
       <motion.div variants={fadeIn} className="space-y-6">

@@ -66,9 +66,26 @@ const NavGroup = memo(function NavGroup({
             {(group.items || []).map((item) => {
               const isFavorite = (favorites || []).some((fav) => fav.path === item.path);
 
-              // 检查权限：如果配置了 permission 字段，则检查用户是否有该权限
-              const hasPermission = !item.permission ||
-                (checkPermission ? checkPermission(item.permission) : true);
+              // 支持单权限或任一权限命中，便于合并同域菜单入口。
+              const hasPermission = (() => {
+                if (!item.permission && !item.permissionAny) {
+                  return true;
+                }
+
+                if (!checkPermission) {
+                  return true;
+                }
+
+                if (Array.isArray(item.permissionAny) && item.permissionAny.length > 0) {
+                  return item.permissionAny.some((permissionCode) => checkPermission(permissionCode));
+                }
+
+                if (item.permission) {
+                  return checkPermission(item.permission);
+                }
+
+                return true;
+              })();
 
               return (
                 <NavItem

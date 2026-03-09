@@ -65,6 +65,11 @@ class Customer(Base, TimestampMixin):
     contacts = relationship("Contact", back_populates="customer", cascade="all, delete-orphan")
     tags = relationship("CustomerTag", back_populates="customer", cascade="all, delete-orphan")
     opportunities = relationship("Opportunity", back_populates="customer")
+    relationship_scores = relationship(
+        "CustomerRelationshipScore",
+        back_populates="customer",
+        cascade="all, delete-orphan",
+    )
 
     # ========================================================================
     # 便捷属性方法

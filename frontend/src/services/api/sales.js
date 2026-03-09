@@ -404,3 +404,22 @@ export const quoteDeliveryApi = {
   overdue: () => api.get("/sales/quotes/delivery/overdue"),
   calendar: (params) => api.get("/sales/quotes/delivery/calendar", { params }),
 };
+
+// 销售漏斗优化 API（Issue 6.x）
+export const funnelOptimizationApi = {
+  // 获取转化率分析数据
+  getConversionRates: (params) =>
+    api.get("/sales/funnel/conversion-rates", { params }),
+  // 获取瓶颈识别数据
+  getBottlenecks: (params) =>
+    api.get("/sales/funnel/bottlenecks", { params }),
+  // 获取预测准确性数据
+  getPredictionAccuracy: (params) =>
+    api.get("/sales/funnel/prediction-accuracy", { params }),
+  // 获取健康度仪表盘
+  getHealthDashboard: (params) =>
+    api.get("/sales/funnel/health-dashboard", { params }),
+  // 获取趋势数据
+  getTrends: (params) =>
+    api.get("/sales/funnel/trends", { params }),
+};

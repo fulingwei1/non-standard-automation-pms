@@ -12,6 +12,13 @@ export const customerApi = {
   delete: (id) => api.delete(`/customers/${id}`),
   getProjects: (id, params) => api.get(`/customers/${id}/projects`, { params }),
   get360: (id) => api.get(`/customers/${id}/360`),
+
+  // Customer 360 API endpoints
+  get360View: (id) => api.get(`/api/v1/customer-360/customers/${id}/360-view`),
+  getDecisionChain: (id) => api.get(`/api/v1/customer-360/customers/${id}/decision-chain`),
+  getHealthScore: (id) => api.get(`/api/v1/customer-360/customers/${id}/health-score`),
+  getTimeline: (id) => api.get(`/api/v1/customer-360/customers/${id}/timeline`),
+  getBuyingPreferences: (id) => api.get(`/api/v1/customer-360/customers/${id}/buying-preferences`),
 };
 
 export const supplierApi = {

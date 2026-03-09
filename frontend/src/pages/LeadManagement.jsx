@@ -22,7 +22,7 @@ import {
 } from "../components/lead-management";
 
 import { confirmAction } from "@/lib/confirmAction";
-export default function LeadManagement() {
+export default function LeadManagement({ embedded = false }) {
   const [leads, setLeads] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -336,16 +336,18 @@ export default function LeadManagement() {
 
   return (
     <div className="space-y-6 p-6">
-      <PageHeader
-        title="线索管理"
-        description="管理销售线索，跟进潜在客户需求"
-        action={
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            新建线索
-          </Button>
-        }
-      />
+      {!embedded ? (
+        <PageHeader
+          title="线索管理"
+          description="管理销售线索，跟进潜在客户需求"
+          action={
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              新建线索
+            </Button>
+          }
+        />
+      ) : null}
 
       {/* 统计卡片 */}
       <LeadStatsCards stats={stats} leads={leads} />

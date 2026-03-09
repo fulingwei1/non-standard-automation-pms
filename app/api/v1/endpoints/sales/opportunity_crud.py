@@ -55,7 +55,11 @@ def read_opportunities(
     query = apply_keyword_filter(query, Opportunity, keyword, ["opp_code", "opp_name"])
 
     if stage:
-        query = query.filter(Opportunity.stage == stage)
+        stage_values = [item.strip() for item in stage.split(",") if item.strip()]
+        if len(stage_values) == 1:
+            query = query.filter(Opportunity.stage == stage_values[0])
+        elif stage_values:
+            query = query.filter(Opportunity.stage.in_(stage_values))
 
     if customer_id:
         query = query.filter(Opportunity.customer_id == customer_id)

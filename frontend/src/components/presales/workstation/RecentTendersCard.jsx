@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { cn } from "../../../lib/utils";
+import { formatAmountWan } from "./utils";
 
 export default function RecentTendersCard({ tenders }) {
   return (
@@ -52,14 +53,14 @@ export default function RecentTendersCard({ tenders }) {
                 <span
                   className={cn(
                     "font-medium",
-                    bid.daysLeft <= 7 ? "text-red-400" : "text-white"
+                    bid.daysLeft !== null && bid.daysLeft <= 7 ? "text-red-400" : "text-white"
                   )}
                 >
-                  {bid.daysLeft}
+                  {bid.daysLeft ?? "--"}
                 </span>{" "}
                 天
               </span>
-              <span className="text-slate-400">¥{bid.amount}万</span>
+              <span className="text-slate-400">¥{formatAmountWan(bid.amount)}万</span>
             </div>
           </motion.div>
         ))}

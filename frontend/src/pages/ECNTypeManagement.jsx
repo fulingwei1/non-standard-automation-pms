@@ -58,7 +58,7 @@ const deptOptions = [
 "生产部"];
 
 
-export default function ECNTypeManagement() {
+export default function ECNTypeManagement({ embedded = false }) {
   const [loading, setLoading] = useState(true);
   const [ecnTypes, setEcnTypes] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -190,9 +190,12 @@ export default function ECNTypeManagement() {
 
   return (
     <div className="space-y-6 p-6">
-      <PageHeader
-        title="ECN类型配置管理"
-        description="管理ECN类型配置，包括评估部门、审批矩阵等" />
+      {!embedded ? (
+        <PageHeader
+          title="ECN类型配置管理"
+          description="管理ECN类型配置，包括评估部门、审批矩阵等"
+        />
+      ) : null}
 
 
       {/* Search Bar */}

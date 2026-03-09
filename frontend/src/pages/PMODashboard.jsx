@@ -58,7 +58,7 @@ const getRiskLevelName = (level) => {
 
 // Mock data removed - using real API only
 
-export default function PMODashboard() {
+export default function PMODashboard({ embedded = false }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
@@ -83,10 +83,14 @@ export default function PMODashboard() {
     fetchData();
   }, []);
 
+  const header = !embedded ? (
+    <PageHeader title="PMO 驾驶舱" description="项目管理部全景视图" />
+  ) : null;
+
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="PMO 驾驶舱" description="项目管理部全景视图" />
+        {header}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array(8)
             .fill(null)
@@ -107,7 +111,7 @@ export default function PMODashboard() {
   if (error) {
     return (
       <div className="space-y-6">
-        <PageHeader title="PMO 驾驶舱" description="项目管理部全景视图" />
+        {header}
         <ApiIntegrationError
           error={error}
           apiEndpoint="/api/v1/pmo/dashboard"
@@ -120,7 +124,7 @@ export default function PMODashboard() {
   if (!dashboardData) {
     return (
       <div className="space-y-6">
-        <PageHeader title="PMO 驾驶舱" description="项目管理部全景视图" />
+        {header}
         <Card>
           <CardContent className="p-12 text-center text-slate-500">
             暂无数据
@@ -205,12 +209,14 @@ export default function PMODashboard() {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-      <motion.div variants={staggerChild}>
-        <PageHeader
-          title="PMO 驾驶舱"
-          description="项目管理部全景视图与关键指标监控"
-        />
-      </motion.div>
+      {!embedded ? (
+        <motion.div variants={staggerChild}>
+          <PageHeader
+            title="PMO 驾驶舱"
+            description="项目管理部全景视图与关键指标监控"
+          />
+        </motion.div>
+      ) : null}
 
       {/* Stats Grid */}
       <motion.div

@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { PROJECT_STAGES, HEALTH_CONFIG } from "../lib/constants";
 import { useRoleFilter } from "../hooks/useRoleFilter";
-import { projectApi } from "../services/api";
+import { projectApi, milestoneApi } from "../services/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { BoardColumn, BoardFilters } from "../components/board";
+import { ProjectCard, ProjectFormStepper } from "../components/project";
+import { Button } from "../components/ui/button";
 import { ApiIntegrationError, Badge, Card, CardContent, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui";
 import {
   Layers,
@@ -15,6 +18,11 @@ import {
   RefreshCw,
   Calendar,
   GitBranch,
+  Plus,
+  Target,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
 // 导入阶段视图组件
@@ -50,13 +58,21 @@ const getStoredUser = () => {
 };
 
 export default function ProjectBoard() {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState([]);
   const [user] = useState(getStoredUser);
 
+  // 从 URL 参数获取初始视图模式
+  const getInitialViewMode = () => {
+    const viewParam = searchParams.get("view");
+    const validViews = ["card", "kanban", "matrix", "list", "pipeline", "timeline", "tree"];
+    return validViews.includes(viewParam) ? viewParam : "kanban";
+  };
+
   // 筛选状态
-  const [viewMode, setViewMode] = useState("kanban");
+  const [viewMode, setViewMode] = useState(getInitialViewMode);
   const [filterMode, setFilterMode] = useState("my");
   const [statusFilter, setStatusFilter] = useState("all");
   const [healthFilter, setHealthFilter] = useState("all");
@@ -70,6 +86,14 @@ export default function ProjectBoard() {
   // 新增：阶段视图相关状态
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [detailViewMode, setDetailViewMode] = useState(VIEW_TYPES.PIPELINE);
+
+  // 新建项目对话框状态
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [recommendedTemplates, setRecommendedTemplates] = useState([]);
+
+  // 里程碑数据状态
+  const [milestones, setMilestones] = useState([]);
+  const [milestonesLoading, setMilestonesLoading] = useState(false);
 
   // 使用阶段视图Hook
   const stageViewsHook = useStageViews(VIEW_TYPES.PIPELINE);
@@ -106,6 +130,49 @@ export default function ProjectBoard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // 加载模板推荐
+  useEffect(() => {
+    if (showCreateDialog) {
+      const loadRecommendedTemplates = async () => {
+        try {
+          const response = await projectApi.recommendTemplates({ limit: 5 });
+          setRecommendedTemplates(response.data?.recommendations || []);
+        } catch (err) {
+          console.error("Failed to load recommended templates:", err);
+          setRecommendedTemplates([]);
+        }
+      };
+      loadRecommendedTemplates();
+    }
+  }, [showCreateDialog]);
+
+  // 加载里程碑数据
+  const loadMilestones = useCallback(async (projectId) => {
+    if (!projectId) return;
+    setMilestonesLoading(true);
+    try {
+      const res = await milestoneApi.list({ project_id: projectId });
+      const list = res?.data?.items ?? res?.data ?? res ?? [];
+      setMilestones(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error("Failed to load milestones:", err);
+      setMilestones([]);
+    } finally {
+      setMilestonesLoading(false);
+    }
+  }, []);
+
+  // 创建项目处理
+  const handleCreateProject = async (data) => {
+    try {
+      await projectApi.create(data);
+      setShowCreateDialog(false);
+      fetchData();
+    } catch (err) {
+      alert("创建项目失败: " + (err.response?.data?.detail || err.message));
+    }
+  };
 
   // 当切换到阶段视图模式时，加载对应的数据
   useEffect(() => {
@@ -216,6 +283,8 @@ export default function ProjectBoard() {
         stageViewsHook.loadTimelineData(selectedProjectId);
       } else if (viewType === VIEW_TYPES.TREE) {
         stageViewsHook.loadTreeData(selectedProjectId);
+      } else if (viewType === "milestones") {
+        loadMilestones(selectedProjectId);
       }
     }
   };
@@ -241,9 +310,16 @@ export default function ProjectBoard() {
 
       {/* 页面头部 */}
       <PageHeader
-        title="项目看板"
+        title="项目中心"
         description="多维度可视化项目状态，快速定位关注项目"
-        breadcrumb={[{ label: "首页", href: "/" }, { label: "项目看板" }]} />
+        breadcrumb={[{ label: "首页", href: "/" }, { label: "项目中心" }]}
+        actions={
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            新建项目
+          </Button>
+        }
+      />
 
 
       {/* 筛选器 */}
@@ -289,6 +365,23 @@ export default function ProjectBoard() {
         </div>
         )}
       </div>
+      }
+
+      {/* 卡片视图 */}
+      {!loading && !error && viewMode === "card" &&
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      >
+        {(filteredProjects || []).map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onClick={() => handleProjectClick(project)}
+          />
+        ))}
+      </motion.div>
       }
 
       {/* 看板视图 */}
@@ -434,6 +527,10 @@ export default function ProjectBoard() {
               <GitBranch className="w-4 h-4 mr-2" />
               分解树视图
             </TabsTrigger>
+            <TabsTrigger value="milestones" className="data-[state=active]:bg-amber-500">
+              <Target className="w-4 h-4 mr-2" />
+              里程碑
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={VIEW_TYPES.PIPELINE} className="mt-4">
@@ -464,6 +561,14 @@ export default function ProjectBoard() {
               onRefresh={stageViewsHook.refresh}
             />
           </TabsContent>
+
+          <TabsContent value="milestones" className="mt-4">
+            <MilestonePanel
+              milestones={milestones}
+              loading={milestonesLoading}
+              onRefresh={() => loadMilestones(selectedProjectId)}
+            />
+          </TabsContent>
         </Tabs>
       </motion.div>
       }
@@ -476,8 +581,20 @@ export default function ProjectBoard() {
           <p className="text-slate-400">
             {searchQuery ? "没有找到匹配的项目" : "当前筛选条件下没有项目"}
           </p>
+          <Button className="mt-4" onClick={() => setShowCreateDialog(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            新建项目
+          </Button>
       </div>
       }
+
+      {/* 新建项目对话框 */}
+      <ProjectFormStepper
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreateProject}
+        recommendedTemplates={recommendedTemplates}
+      />
     </motion.div>);
 
 }
@@ -685,4 +802,152 @@ function ListView({ projects, onProjectClick, isProjectRelevant }) {
       )}
     </div>);
 
+}
+
+// 里程碑面板组件
+function MilestonePanel({ milestones, loading, onRefresh }) {
+  // 里程碑状态配置
+  const statusConfig = {
+    PENDING: { label: "待开始", color: "bg-slate-500", textColor: "text-slate-400", Icon: Clock },
+    IN_PROGRESS: { label: "进行中", color: "bg-blue-500", textColor: "text-blue-400", Icon: Clock },
+    COMPLETED: { label: "已完成", color: "bg-emerald-500", textColor: "text-emerald-400", Icon: CheckCircle2 },
+    OVERDUE: { label: "已逾期", color: "bg-red-500", textColor: "text-red-400", Icon: AlertTriangle },
+  };
+
+  // 获取里程碑状态（兼容 actual_date 和 completed_at 字段）
+  const getMilestoneStatus = (milestone) => {
+    if (milestone.actual_date || milestone.completed_at || milestone.status === "COMPLETED") return "COMPLETED";
+    if (milestone.status === "OVERDUE") return "OVERDUE";
+    if (milestone.status === "IN_PROGRESS") return "IN_PROGRESS";
+
+    // 基于日期判断
+    if (milestone.planned_date) {
+      const now = new Date();
+      const planned = new Date(milestone.planned_date);
+      if (planned < now) return "OVERDUE";
+    }
+    return "PENDING";
+  };
+
+  if (loading) {
+    return (
+      <Card className="bg-surface-1 border-white/10">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-20" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!milestones || milestones.length === 0) {
+    return (
+      <Card className="bg-surface-1 border-white/10">
+        <CardContent className="p-8 text-center">
+          <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-white mb-2">暂无里程碑</h3>
+          <p className="text-slate-400">该项目尚未设置里程碑</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 统计数据
+  const stats = milestones.reduce((acc, m) => {
+    const status = getMilestoneStatus(m);
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-4">
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-4 gap-4">
+        {Object.entries(statusConfig).map(([key, config]) => {
+          const count = stats[key] || 0;
+          const IconComp = config.Icon;
+          return (
+            <Card key={key} className="bg-surface-1 border-white/10">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={cn("p-2 rounded-lg", config.color + "/20")}>
+                  <IconComp className={cn("w-5 h-5", config.textColor)} />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-white">{count}</div>
+                  <div className="text-xs text-slate-400">{config.label}</div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* 里程碑列表 */}
+      <Card className="bg-surface-1 border-white/10">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-white">里程碑列表</h3>
+            <Button variant="ghost" size="sm" onClick={onRefresh} className="text-slate-400 hover:text-white">
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {milestones.map((milestone) => {
+              const status = getMilestoneStatus(milestone);
+              const config = statusConfig[status];
+              const IconComp = config.Icon;
+              return (
+                <motion.div
+                  key={milestone.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-4 p-4 rounded-lg bg-surface-2/50 border border-white/5 hover:border-white/10 transition-colors"
+                >
+                  {/* 状态图标 */}
+                  <div className={cn("p-2 rounded-lg", config.color + "/20")}>
+                    <IconComp className={cn("w-5 h-5", config.textColor)} />
+                  </div>
+
+                  {/* 内容 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h4 className="font-medium text-white truncate">
+                        {milestone.milestone_name || milestone.name}
+                      </h4>
+                      <Badge className={cn(config.color + "/20", config.textColor, "text-xs")}>
+                        {config.label}
+                      </Badge>
+                    </div>
+                    {(milestone.remark || milestone.description) && (
+                      <p className="text-sm text-slate-400 line-clamp-2 mb-2">
+                        {milestone.remark || milestone.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        计划: {milestone.planned_date || "未设置"}
+                      </span>
+                      {(milestone.actual_date || milestone.completed_at) && (
+                        <span className="flex items-center gap-1 text-emerald-400">
+                          <CheckCircle2 className="w-3 h-3" />
+                          完成: {milestone.actual_date || milestone.completed_at}
+                        </span>
+                      )}
+                      {milestone.is_key && (
+                        <Badge className="bg-amber-500/20 text-amber-400 text-xs">关键</Badge>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

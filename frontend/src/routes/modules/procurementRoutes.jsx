@@ -39,10 +39,16 @@ import TransferNew from "../../pages/TransferNew";
 import ArrivalNew from "../../pages/ArrivalNew";
 import SupplierPriceTrend from "../../pages/SupplierPriceTrend";
 import TimeBasedKitRateBoard from "../../pages/TimeBasedKitRateBoard";
+import ProcurementExecutionCenter from "../../pages/ProcurementExecutionCenter";
+import MaterialCenter from "../../pages/MaterialCenter";
+import ProcurementAnalysisCenter from "../../pages/ProcurementAnalysisCenter";
 
 export function ProcurementRoutes() {
   return (
     <>
+      <Route path="/procurement/execution-center" element={<ProcurementExecutionCenter />} />
+      <Route path="/procurement/material-center" element={<MaterialCenter />} />
+      <Route path="/procurement/analysis-center" element={<ProcurementAnalysisCenter />} />
       <Route
         path="/purchases"
         element={

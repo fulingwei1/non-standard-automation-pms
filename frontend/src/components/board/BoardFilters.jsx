@@ -15,6 +15,7 @@ import {
   Calendar,
   GitBranch,
   Copy,
+  Grid3X3,
 } from "lucide-react";
 /**
  * 看板筛选器组件
@@ -53,6 +54,18 @@ const BoardFilters = memo(function BoardFilters({
       <div className="flex flex-wrap items-center gap-4">
         {/* 视图切换 */}
         <div className="flex items-center bg-surface-1 rounded-lg p-1 border border-white/10">
+          <button
+            onClick={() => onViewModeChange?.("card")}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all",
+              viewMode === "card"
+                ? "bg-primary text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/10",
+            )}
+          >
+            <Grid3X3 className="w-4 h-4" />
+            <span>卡片</span>
+          </button>
           <button
             onClick={() => onViewModeChange?.("kanban")}
             className={cn(

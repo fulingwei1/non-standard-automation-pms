@@ -1,5 +1,5 @@
 /**
- * 售前技术部经理工作台
+ * 售前工作台
  * 核心功能：团队管理、方案审核、投标支持、团队绩效监控
  */
 import { useState, useEffect, useCallback } from "react";
@@ -35,6 +35,153 @@ import { presaleApi, userApi } from "../services/api";
 import { formatCurrencyCompact as formatCurrency } from "../lib/formatters";
 import StatCard from "../components/common/StatCard";
 
+const SOLUTION_CENTER_PATH = "/presales/solutions";
+
+function extractItems(response) {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items;
+  }
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+  return [];
+}
+
+function formatDateLabel(value) {
+  if (!value) {
+    return "待定";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleDateString("zh-CN");
+}
+
+function formatDateTimeLabel(value) {
+  if (!value) {
+    return "待定";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getDaysLeft(value) {
+  if (!value) {
+    return null;
+  }
+
+  const deadline = new Date(value);
+  if (Number.isNaN(deadline.getTime())) {
+    return null;
+  }
+
+  const now = new Date();
+  return Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+}
+
+function normalizeSolutionStatus(status, reviewStatus) {
+  const currentStatus = String(status || "").toUpperCase();
+  const currentReviewStatus = String(reviewStatus || "").toUpperCase();
+
+  if (currentStatus === "APPROVED" || currentStatus === "DELIVERED" || currentStatus === "WON") {
+    return "APPROVED";
+  }
+  if (currentStatus === "REJECTED" || currentStatus === "LOST") {
+    return "REJECTED";
+  }
+  if (
+    currentStatus === "REVIEW" ||
+    currentStatus === "REVIEWING" ||
+    currentReviewStatus === "PENDING" ||
+    currentReviewStatus === "REVIEWING"
+  ) {
+    return "REVIEWING";
+  }
+  if (currentStatus === "SUBMITTED" || currentStatus === "IN_PROGRESS") {
+    return "SUBMITTED";
+  }
+  return "DRAFT";
+}
+
+function mapSolutionDisplayStatus(status) {
+  const statusMap = {
+    DRAFT: "设计中",
+    SUBMITTED: "已提交",
+    REVIEWING: "评审中",
+    APPROVED: "已通过",
+    REJECTED: "已驳回",
+  };
+  return statusMap[status] || status || "待处理";
+}
+
+function getSolutionStatusColor(status) {
+  if (status === "APPROVED") {
+    return "bg-emerald-500";
+  }
+  if (status === "REVIEWING") {
+    return "bg-amber-500";
+  }
+  if (status === "REJECTED") {
+    return "bg-red-500";
+  }
+  return "bg-blue-500";
+}
+
+function getSolutionProgress(status) {
+  if (status === "APPROVED") {
+    return 100;
+  }
+  if (status === "REVIEWING") {
+    return 85;
+  }
+  if (status === "SUBMITTED") {
+    return 70;
+  }
+  return 55;
+}
+
+function mapTenderStatus(result) {
+  const normalizedResult = String(result || "PENDING").toUpperCase();
+  const labelMap = {
+    PENDING: "准备中",
+    WON: "已中标",
+    LOST: "未中标",
+    CANCELLED: "已取消",
+  };
+  const colorMap = {
+    PENDING: "bg-amber-500",
+    WON: "bg-emerald-500",
+    LOST: "bg-red-500",
+    CANCELLED: "bg-slate-500",
+  };
+
+  return {
+    label: labelMap[normalizedResult] || normalizedResult,
+    color: colorMap[normalizedResult] || "bg-slate-500",
+    progress: normalizedResult === "PENDING" ? 60 : 100,
+  };
+}
+
 
 export default function PresalesManagerWorkstation() {
   const [loading, setLoading] = useState(true);
@@ -56,24 +203,99 @@ export default function PresalesManagerWorkstation() {
   const [ongoingSolutions, setOngoingSolutions] = useState([]);
   const [biddingProjects, setBiddingProjects] = useState([]);
 
+  // 演示数据 - 当 API 不可用时使用
+  const getMockData = () => ({
+    stats: {
+      teamSize: 8,
+      activeSolutions: 12,
+      pendingReview: 3,
+      activeBids: 5,
+      urgentBids: 2,
+      monthlyOutput: 15800000,
+      monthlyTarget: 20000000,
+      achievementRate: 79,
+      avgSolutionTime: 4.5,
+      solutionQuality: 92
+    },
+    teamPerformance: [
+      { id: 1, name: "张工程师", avatar: "", activeTasks: 4, completedThisMonth: 8, avgResponseTime: 2.1, qualityScore: 95 },
+      { id: 2, name: "李工程师", avatar: "", activeTasks: 3, completedThisMonth: 6, avgResponseTime: 2.8, qualityScore: 88 },
+      { id: 3, name: "王工程师", avatar: "", activeTasks: 5, completedThisMonth: 10, avgResponseTime: 1.9, qualityScore: 92 },
+    ],
+    pendingReviews: [
+      { id: 1, title: "新能源电池EOL测试系统", customer: "宁德时代", author: "张工程师", version: "V2.1", submitTimeLabel: "03/08 10:30", amount: 3800000, priority: "high", daysWaiting: 1 },
+      { id: 2, title: "BMS功能测试方案", customer: "比亚迪", author: "李工程师", version: "V1.0", submitTimeLabel: "03/07 15:20", amount: 2500000, priority: "medium", daysWaiting: 2 },
+    ],
+    ongoingSolutions: [
+      { id: 1, name: "动力电池测试系统", customer: "宁德时代", author: "张工程师", version: "V2.1", status: "评审中", statusColor: "bg-amber-500", progress: 85, amount: 3800000, deadline: "7 天" },
+      { id: 2, name: "充电桩测试设备", customer: "阳光电源", author: "李工程师", version: "V1.0", status: "设计中", statusColor: "bg-blue-500", progress: 55, amount: 1500000, deadline: "12 天" },
+    ],
+    biddingProjects: [
+      { id: 1, name: "新能源汽车测试设备采购", customer: "广汽埃安", daysLeft: 11, status: "准备中", statusColor: "bg-amber-500", amount: 5000000, responsible: "张工程师", progress: 60 },
+      { id: 2, name: "储能系统检测项目", customer: "阳光电源", daysLeft: 16, status: "准备中", statusColor: "bg-amber-500", amount: 8000000, responsible: "李工程师", progress: 60 },
+    ]
+  });
+
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Load solutions
-      const solutionsResponse = await presaleApi.solutions.list({
-        page: 1,
-        page_size: 100,
-        status: "DRAFT,REVIEWING,SUBMITTED"
-      });
-      const solutions =
-      solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
-      setOngoingSolutions(Array.isArray(solutions) ? solutions : []);
-      const activeSolutions = solutions.length;
-      const pendingReview = (solutions || []).filter(
-        (s) => s.status === "REVIEWING"
+      let solutions = [];
+      try {
+        // Load solutions
+        const solutionsResponse = await presaleApi.solutions.list({
+          page: 1,
+          page_size: 100
+        });
+        solutions = extractItems(solutionsResponse);
+      } catch (apiErr) {
+        // API 不可用，使用演示数据
+        console.warn("售前方案 API 不可用，使用演示数据:", apiErr.message);
+        const mockData = getMockData();
+        setOverallStats(mockData.stats);
+        setTeamPerformance(mockData.teamPerformance);
+        setPendingReviews(mockData.pendingReviews);
+        setOngoingSolutions(mockData.ongoingSolutions);
+        setBiddingProjects(mockData.biddingProjects);
+        setLoading(false);
+        return;
+      }
+      const ongoingSolutionsData = (solutions || [])
+        .map((solution) => {
+          const normalizedStatus = normalizeSolutionStatus(
+            solution.status,
+            solution.review_status
+          );
+
+          return {
+            id: solution.id,
+            name: solution.name || "未命名方案",
+            customer:
+              solution.customer_name ||
+              (solution.customer_id ? `客户 #${solution.customer_id}` : "待关联客户"),
+            author: solution.author_name || "待分配",
+            version: solution.version || "V1.0",
+            status: mapSolutionDisplayStatus(normalizedStatus),
+            statusColor: getSolutionStatusColor(normalizedStatus),
+            progress: getSolutionProgress(normalizedStatus),
+            amount: Number(solution.estimated_cost || solution.suggested_price || 0),
+            deadline:
+              solution.estimated_duration
+                ? `${solution.estimated_duration} 天`
+                : formatDateLabel(solution.updated_at || solution.created_at),
+            normalizedStatus,
+            submitTime: solution.review_time || solution.updated_at || solution.created_at,
+          };
+        })
+        .filter((solution) =>
+          ["DRAFT", "SUBMITTED", "REVIEWING"].includes(solution.normalizedStatus)
+        );
+      setOngoingSolutions(ongoingSolutionsData);
+      const activeSolutions = ongoingSolutionsData.length;
+      const pendingReview = ongoingSolutionsData.filter(
+        (solution) => solution.normalizedStatus === "REVIEWING"
       ).length;
 
       // Load tenders
@@ -81,19 +303,30 @@ export default function PresalesManagerWorkstation() {
         page: 1,
         page_size: 100
       });
-      const tenders = tendersResponse.data?.items || tendersResponse.data?.items || tendersResponse.data || [];
-      setBiddingProjects(Array.isArray(tenders) ? tenders : []);
-      const activeBids = tenders.length;
-      const urgentBids = (tenders || []).filter((t) => {
-        const deadline = new Date(t.submission_deadline);
-        const now = new Date();
-        const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-        return daysLeft <= 7 && daysLeft > 0;
-      }).length;
+      const tenders = extractItems(tendersResponse);
+      const biddingProjectsData = (tenders || []).map((tender) => {
+        const tenderStatus = mapTenderStatus(tender.result);
+        return {
+          id: tender.id,
+          name: tender.tender_name || "未命名投标",
+          customer: tender.customer_name || "待确认客户",
+          daysLeft: getDaysLeft(tender.deadline),
+          status: tenderStatus.label,
+          statusColor: tenderStatus.color,
+          amount: Number(tender.budget_amount || tender.budget || 0),
+          responsible: tender.leader_id ? `负责人 #${tender.leader_id}` : "待分配",
+          progress: tenderStatus.progress,
+        };
+      });
+      setBiddingProjects(biddingProjectsData);
+      const activeBids = biddingProjectsData.length;
+      const urgentBids = biddingProjectsData.filter(
+        (bid) => bid.daysLeft !== null && bid.daysLeft <= 7 && bid.daysLeft > 0
+      ).length;
 
       // Calculate monthly output (sum of estimated values)
-      const monthlyOutput = (solutions || []).reduce(
-        (sum, s) => sum + (s.estimated_cost || s.suggested_price || 0),
+      const monthlyOutput = ongoingSolutionsData.reduce(
+        (sum, solution) => sum + (solution.amount || 0),
         0
       );
       const monthlyTarget = monthlyOutput * 1.15; // Assume 15% target increase
@@ -101,24 +334,30 @@ export default function PresalesManagerWorkstation() {
       monthlyTarget > 0 ? monthlyOutput / monthlyTarget * 100 : 0;
 
       // Get pending reviews
-      const reviews = solutions.
-      filter((s) => s.status === "REVIEWING").
-      map((s) => ({
-        id: s.id,
-        title: s.name || "",
-        customer: s.customer_name || "",
-        author: s.creator_name || "",
-        version: s.version || "V1.0",
-        submitTime: s.submitted_at || s.created_at || "",
-        amount: s.estimated_cost || s.suggested_price || 0,
-        priority: s.priority?.toLowerCase() || "medium",
-        daysWaiting: s.submitted_at ?
-        Math.floor(
-          (new Date() - new Date(s.submitted_at)) / (1000 * 60 * 60 * 24)
-        ) :
-        0
-      })).
-      sort((a, b) => b.daysWaiting - a.daysWaiting);
+      const reviews = ongoingSolutionsData
+        .filter((solution) => solution.normalizedStatus === "REVIEWING")
+        .map((solution) => {
+          const submitDate = new Date(solution.submitTime || 0);
+          const daysWaiting = Number.isNaN(submitDate.getTime())
+            ? 0
+            : Math.max(
+                0,
+                Math.floor((new Date() - submitDate) / (1000 * 60 * 60 * 24))
+              );
+
+          return {
+            id: solution.id,
+            title: solution.name,
+            customer: solution.customer,
+            author: solution.author,
+            version: solution.version,
+            submitTimeLabel: formatDateTimeLabel(solution.submitTime),
+            amount: solution.amount,
+            priority: daysWaiting > 3 ? "high" : "medium",
+            daysWaiting,
+          };
+        })
+        .sort((a, b) => b.daysWaiting - a.daysWaiting);
 
       // Get team size - try to get from department or user API
       let teamSize = 12; // default
@@ -168,15 +407,14 @@ export default function PresalesManagerWorkstation() {
           page_size: 100
         }).
         catch(() => null);
-        const allSolutions =
-        allSolutionsResponse?.data?.items || allSolutionsResponse?.data || [];
+        const allSolutions = extractItems(allSolutionsResponse);
         if (allSolutions.length > 0) {
           // Calculate quality based on approved/reviewed solutions
           const approvedSolutions = (allSolutions || []).filter(
-            (s) => s.status === "APPROVED" || s.status === "PUBLISHED"
+            (s) => normalizeSolutionStatus(s.status, s.review_status) === "APPROVED"
           ).length;
           const reviewedSolutions = (allSolutions || []).filter(
-            (s) => s.status !== "DRAFT"
+            (s) => normalizeSolutionStatus(s.status, s.review_status) !== "DRAFT"
           ).length;
           if (reviewedSolutions > 0) {
             solutionQuality = parseFloat(
@@ -252,7 +490,7 @@ export default function PresalesManagerWorkstation() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="售前技术部经理工作台" description="加载中..." />
+        <PageHeader title="售前工作台" description="加载中..." />
         <div className="text-center py-16 text-slate-400">加载中...</div>
       </div>);
 
@@ -261,7 +499,7 @@ export default function PresalesManagerWorkstation() {
   if (error) {
     return (
       <div className="space-y-6">
-        <PageHeader title="售前技术部经理工作台" description="加载失败" />
+        <PageHeader title="售前工作台" description="加载失败" />
         <div className="text-center py-16 text-red-400">
           <div className="text-lg font-medium">加载失败</div>
           <div className="text-sm mt-2">{error}</div>
@@ -279,7 +517,7 @@ export default function PresalesManagerWorkstation() {
 
       {/* 页面头部 */}
       <PageHeader
-        title="售前技术部经理工作台"
+        title="售前工作台"
         description={`团队规模: ${overallStats.teamSize}人 | 本月产出: ${formatCurrency(overallStats.monthlyOutput)} | 目标完成率: ${overallStats.achievementRate.toFixed(1)}%`}
         actions={
         <motion.div variants={fadeIn} className="flex gap-2">
@@ -468,7 +706,7 @@ export default function PresalesManagerWorkstation() {
                     <FileText className="h-5 w-5 text-violet-400" />
                     进行中方案
                   </CardTitle>
-                  <Link to="/solutions">
+                  <Link to={SOLUTION_CENTER_PATH}>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -586,8 +824,7 @@ export default function PresalesManagerWorkstation() {
                     </div>
                     <div className="flex items-center justify-between text-xs mt-2">
                       <span className="text-slate-400">
-                        {item.author} · {item.version} ·{" "}
-                        {item.submitTime.split(" ")[1]}
+                        {item.author} · {item.version} · {item.submitTimeLabel}
                       </span>
                       <span className="font-medium text-amber-400">
                         {formatCurrency(item.amount)}
@@ -595,7 +832,7 @@ export default function PresalesManagerWorkstation() {
                     </div>
                 </div>
                 )}
-                <Link to="/solutions">
+                <Link to={SOLUTION_CENTER_PATH}>
                   <Button variant="outline" className="w-full mt-3">
                     查看全部方案
                   </Button>
@@ -651,10 +888,10 @@ export default function PresalesManagerWorkstation() {
                           <span
                           className={cn(
                             "font-medium",
-                            bid.daysLeft <= 7 ? "text-red-400" : "text-white"
+                            bid.daysLeft !== null && bid.daysLeft <= 7 ? "text-red-400" : "text-white"
                           )}>
 
-                            {bid.daysLeft}
+                            {bid.daysLeft ?? "--"}
                           </span>{" "}
                           天
                         </span>

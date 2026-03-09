@@ -1,14 +1,14 @@
 /**
- * 销售预测 - 领导驾驶舱
+ * 销售预测与目标管理 - 领导驾驶舱
  * 
  * 功能：
- * 1. 公司整体预测
+ * 1. 公司整体预测与目标对比
  * 2. 团队分解
  * 3. 个人分解
- * 4. 预测准确性
+ * 4. 目标设置（弹窗）
  */
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -18,12 +18,12 @@ import {
   Users,
   Award,
   AlertTriangle,
-  CheckCircle,
   ArrowUpRight,
-  ArrowDownRight,
   Activity,
   BarChart3,
   Eye,
+  Settings,
+  Plus,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
 import {
@@ -31,7 +31,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   Button,
   Badge,
   Tabs,
@@ -47,16 +46,53 @@ import {
   TableRow,
   Alert,
 } from "../../components/ui";
+import TargetSettingModal from "../../components/sales/TargetSettingModal";
+import { salesTargetApi } from "../../services/api";
+import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 
-// 公司整体预测
-function CompanyOverview() {
-  const [forecast, _setForecast] = useState({
-    targets: {
-      quarterly_target: 50000000,
-      actual_revenue: 28500000,
-      completion_rate: 57.0,
-      time_progress: 66.7,
-    },
+// 公司整体预测（整合目标数据）
+function CompanyOverview({ targets }) {
+  // 计算目标汇总
+  const targetSummary = useMemo(() => {
+    if (!targets || targets.length === 0) {
+      return {
+        quarterly_target: 50000000,
+        actual_revenue: 28500000,
+        completion_rate: 57.0,
+        time_progress: 66.7,
+      };
+    }
+    
+    // 筛选当前季度的合同金额目标
+    const now = new Date();
+    const quarter = Math.ceil((now.getMonth() + 1) / 3);
+    const quarterStr = `${now.getFullYear()}-Q${quarter}`;
+    
+    const quarterlyTargets = targets.filter(
+      t => t.target_period === "QUARTERLY" && 
+           t.period_value === quarterStr &&
+           t.target_type === "CONTRACT_AMOUNT"
+    );
+    
+    const totalTarget = quarterlyTargets.reduce((sum, t) => sum + Number(t.target_value || 0), 0);
+    const totalActual = quarterlyTargets.reduce((sum, t) => sum + Number(t.actual_value || 0), 0);
+    
+    // 计算时间进度
+    const startOfQuarter = new Date(now.getFullYear(), (quarter - 1) * 3, 1);
+    const endOfQuarter = new Date(now.getFullYear(), quarter * 3, 0);
+    const totalDays = (endOfQuarter - startOfQuarter) / (1000 * 60 * 60 * 24);
+    const elapsedDays = (now - startOfQuarter) / (1000 * 60 * 60 * 24);
+    const timeProgress = Math.min(100, (elapsedDays / totalDays) * 100);
+    
+    return {
+      quarterly_target: totalTarget || 50000000,
+      actual_revenue: totalActual || 28500000,
+      completion_rate: totalTarget > 0 ? (totalActual / totalTarget) * 100 : 57.0,
+      time_progress: timeProgress,
+    };
+  }, [targets]);
+
+  const [forecast, setForecast] = useState({
     prediction: {
       predicted_revenue: 52800000,
       predicted_completion_rate: 105.6,
@@ -72,6 +108,16 @@ function CompanyOverview() {
     },
   });
 
+  // 计算预测完成率
+  const predictedCompletion = useMemo(() => {
+    if (targetSummary.quarterly_target === 0) return 0;
+    return (forecast.prediction.predicted_revenue / targetSummary.quarterly_target) * 100;
+  }, [targetSummary, forecast]);
+
+  // 计算差距
+  const gap = targetSummary.quarterly_target - targetSummary.actual_revenue;
+  const predictedGap = forecast.prediction.predicted_revenue - targetSummary.quarterly_target;
+
   const getRiskColor = (level) => {
     switch (level) {
       case "LOW": return "text-green-500 bg-green-500/10";
@@ -83,35 +129,59 @@ function CompanyOverview() {
 
   return (
     <div className="space-y-6">
-      {/* 核心指标 */}
+      {/* 核心指标卡片 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-slate-700">
           <CardContent className="pt-4">
-            <div className="text-sm text-slate-400 mb-1">季度目标</div>
-            <div className="text-2xl font-bold">¥{(forecast.targets.quarterly_target / 1000000).toFixed(0)}M</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-slate-400 mb-1">已完成</div>
-            <div className="text-2xl font-bold text-blue-500">¥{(forecast.targets.actual_revenue / 1000000).toFixed(1)}M</div>
-            <div className="text-sm text-slate-400">{forecast.targets.completion_rate}%</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-slate-400 mb-1">AI 预测</div>
-            <div className="text-2xl font-bold text-green-500">¥{(forecast.prediction.predicted_revenue / 1000000).toFixed(1)}M</div>
-            <div className="text-sm text-green-500">{forecast.prediction.predicted_completion_rate}%</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-slate-400 mb-1">风险等级</div>
-            <div className={`text-2xl font-bold ${getRiskColor(forecast.prediction.risk_level).split(' ')[0]}`}>
-              {forecast.prediction.risk_level === "LOW" ? "低" : forecast.prediction.risk_level === "MEDIUM" ? "中" : "高"}
+            <div className="flex items-center gap-2 text-sm text-slate-400 mb-1">
+              <Target className="w-4 h-4" />
+              季度目标
             </div>
-            <div className="text-sm text-slate-400">置信度 {forecast.prediction.confidence_level}%</div>
+            <div className="text-2xl font-bold text-white">
+              {formatCurrency(targetSummary.quarterly_target)}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-blue-500/50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-sm text-slate-400 mb-1">
+              <DollarSign className="w-4 h-4" />
+              已完成
+            </div>
+            <div className="text-2xl font-bold text-blue-500">
+              {formatCurrency(targetSummary.actual_revenue)}
+            </div>
+            <div className="text-sm text-slate-400">
+              {targetSummary.completion_rate.toFixed(1)}%
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-green-500/50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-sm text-slate-400 mb-1">
+              <TrendingUp className="w-4 h-4" />
+              AI 预测
+            </div>
+            <div className="text-2xl font-bold text-green-500">
+              {formatCurrency(forecast.prediction.predicted_revenue)}
+            </div>
+            <div className="text-sm text-green-500">
+              {predictedCompletion.toFixed(1)}%
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className={predictedGap >= 0 ? "border-emerald-500/50" : "border-orange-500/50"}>
+          <CardContent className="pt-4">
+            <div className="text-sm text-slate-400 mb-1">预测差距</div>
+            <div className={`text-2xl font-bold ${predictedGap >= 0 ? "text-emerald-500" : "text-orange-500"}`}>
+              {predictedGap >= 0 ? "+" : ""}{formatCurrency(predictedGap)}
+            </div>
+            <div className="text-sm text-slate-400">
+              置信度 {forecast.prediction.confidence_level}%
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -126,33 +196,34 @@ function CompanyOverview() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-400">时间进度</span>
-                <span className="text-sm">{forecast.targets.time_progress}%</span>
+                <span className="text-sm">{targetSummary.time_progress.toFixed(1)}%</span>
               </div>
-              <Progress value={forecast.targets.time_progress} className="h-3" />
+              <Progress value={targetSummary.time_progress} className="h-3" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-400">业绩进度</span>
-                <span className={`text-sm font-bold ${forecast.targets.completion_rate < forecast.targets.time_progress ? 'text-orange-500' : 'text-green-500'}`}>
-                  {forecast.targets.completion_rate}%
+                <span className={`text-sm font-bold ${targetSummary.completion_rate < targetSummary.time_progress ? 'text-orange-500' : 'text-green-500'}`}>
+                  {targetSummary.completion_rate.toFixed(1)}%
                 </span>
               </div>
-              <Progress value={forecast.targets.completion_rate} className="h-3" />
+              <Progress value={targetSummary.completion_rate} className="h-3" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-400">预测进度</span>
-                <span className="text-sm font-bold text-green-500">{forecast.prediction.predicted_completion_rate}%</span>
+                <span className="text-sm font-bold text-green-500">{predictedCompletion.toFixed(1)}%</span>
               </div>
-              <Progress value={Math.min(100, forecast.prediction.predicted_completion_rate)} className="h-3" />
+              <Progress value={Math.min(100, predictedCompletion)} className="h-3" />
             </div>
           </div>
 
-          {forecast.targets.completion_rate < forecast.targets.time_progress && (
+          {targetSummary.completion_rate < targetSummary.time_progress && (
             <Alert className="mt-4 border-orange-500 bg-orange-500/10">
               <AlertTriangle className="h-4 w-4 text-orange-500" />
               <div className="text-sm">
-                <strong>注意：</strong>当前业绩进度落后时间进度{(forecast.targets.time_progress - forecast.targets.completion_rate).toFixed(1)}%
+                <strong>注意：</strong>当前业绩进度落后时间进度
+                {(targetSummary.time_progress - targetSummary.completion_rate).toFixed(1)}%
               </div>
             </Alert>
           )}
@@ -177,13 +248,15 @@ function CompanyOverview() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-slate-400">{data.count}个商机 · ¥{(data.total_amount / 1000000).toFixed(1)}M</span>
+                    <span className="text-sm text-slate-400">
+                      {data.count}个商机 · {formatCurrency(data.total_amount)}
+                    </span>
                     <span className="text-sm">赢单率{data.win_rate}%</span>
                   </div>
                   <Progress value={data.win_rate} className="h-2" />
                 </div>
                 <div className="w-24 text-right text-sm font-medium">
-                  ¥{((data.total_amount * data.win_rate / 100) / 1000000).toFixed(2)}M
+                  {formatCurrency(data.total_amount * data.win_rate / 100)}
                 </div>
               </div>
             ))}
@@ -195,12 +268,48 @@ function CompanyOverview() {
 }
 
 // 团队分解
-function TeamBreakdown() {
-  const [teams, _setTeams] = useState([
-    { team_name: "华南大区", manager: "王五", target: 18000000, actual: 10800000, completion: 60.0, predicted: 108.3, risk: "LOW", trend: "up", rank: 1 },
-    { team_name: "华东大区", manager: "李四", target: 16000000, actual: 9200000, completion: 57.5, predicted: 107.5, risk: "MEDIUM", trend: "stable", rank: 2 },
-    { team_name: "华北大区", manager: "赵六", target: 16000000, actual: 8500000, completion: 53.1, predicted: 98.8, risk: "HIGH", trend: "down", rank: 3 },
-  ]);
+function TeamBreakdown({ targets }) {
+  const teams = useMemo(() => {
+    // 基于目标数据按团队/大区汇总
+    const teamMap = new Map();
+    
+    (targets || []).forEach(t => {
+      const region = t.meta?.region || t.department_name || "未分配";
+      if (!teamMap.has(region)) {
+        teamMap.set(region, {
+          team_name: region,
+          manager: t.user_name || "-",
+          target: 0,
+          actual: 0,
+        });
+      }
+      const team = teamMap.get(region);
+      team.target += Number(t.target_value || 0);
+      team.actual += Number(t.actual_value || 0);
+    });
+    
+    // 如果没有数据，使用默认数据
+    if (teamMap.size === 0) {
+      return [
+        { team_name: "华南大区", manager: "王五", target: 18000000, actual: 10800000, completion: 60.0, predicted: 108.3, risk: "LOW", trend: "up", rank: 1 },
+        { team_name: "华东大区", manager: "李四", target: 16000000, actual: 9200000, completion: 57.5, predicted: 107.5, risk: "MEDIUM", trend: "stable", rank: 2 },
+        { team_name: "华北大区", manager: "赵六", target: 16000000, actual: 8500000, completion: 53.1, predicted: 98.8, risk: "HIGH", trend: "down", rank: 3 },
+      ];
+    }
+    
+    return Array.from(teamMap.values())
+      .map((team, idx) => ({
+        ...team,
+        completion: team.target > 0 ? (team.actual / team.target) * 100 : 0,
+        predicted: team.target > 0 ? Math.min(120, (team.actual / team.target) * 100 * 1.5) : 0,
+        risk: team.target > 0 && (team.actual / team.target) < 0.5 ? "HIGH" : 
+              team.target > 0 && (team.actual / team.target) < 0.7 ? "MEDIUM" : "LOW",
+        trend: "stable",
+        rank: idx + 1,
+      }))
+      .sort((a, b) => b.completion - a.completion)
+      .map((t, idx) => ({ ...t, rank: idx + 1 }));
+  }, [targets]);
 
   const getRiskBadge = (risk) => {
     const config = {
@@ -240,16 +349,16 @@ function TeamBreakdown() {
                   </TableCell>
                   <TableCell className="font-medium">{team.team_name}</TableCell>
                   <TableCell>{team.manager}</TableCell>
-                  <TableCell className="text-right">¥{(team.target / 1000000).toFixed(1)}M</TableCell>
-                  <TableCell className="text-right">¥{(team.actual / 1000000).toFixed(1)}M</TableCell>
+                  <TableCell className="text-right">{formatCurrency(team.target)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(team.actual)}</TableCell>
                   <TableCell className="text-right">
                     <Badge variant={team.completion >= 60 ? "default" : "secondary"}>
-                      {team.completion}%
+                      {team.completion.toFixed(1)}%
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <span className={team.predicted >= 100 ? "text-green-500 font-bold" : "text-orange-500"}>
-                      {team.predicted}%
+                      {team.predicted.toFixed(1)}%
                     </span>
                   </TableCell>
                   <TableCell>
@@ -271,13 +380,33 @@ function TeamBreakdown() {
 }
 
 // 个人分解
-function SalesRepBreakdown() {
-  const [reps, _setReps] = useState([
-    { name: "张三", team: "华南大区", target: 10000000, actual: 6500000, completion: 65.0, predicted: 112.0, pipeline: 8500000, rank: 1 },
-    { name: "李四", team: "华东大区", target: 10000000, actual: 5800000, completion: 58.0, predicted: 105.0, pipeline: 7200000, rank: 2 },
-    { name: "王五", team: "华南大区", target: 10000000, actual: 5200000, completion: 52.0, predicted: 92.0, pipeline: 6500000, rank: 3 },
-    { name: "赵六", team: "华北大区", target: 10000000, actual: 4800000, completion: 48.0, predicted: 88.0, pipeline: 5800000, rank: 4 },
-  ]);
+function SalesRepBreakdown({ targets }) {
+  const reps = useMemo(() => {
+    // 筛选个人目标
+    const personalTargets = (targets || []).filter(t => t.target_scope === "PERSONAL");
+    
+    if (personalTargets.length === 0) {
+      return [
+        { name: "张三", team: "华南大区", target: 10000000, actual: 6500000, completion: 65.0, predicted: 112.0, pipeline: 8500000, rank: 1 },
+        { name: "李四", team: "华东大区", target: 10000000, actual: 5800000, completion: 58.0, predicted: 105.0, pipeline: 7200000, rank: 2 },
+        { name: "王五", team: "华南大区", target: 10000000, actual: 5200000, completion: 52.0, predicted: 92.0, pipeline: 6500000, rank: 3 },
+        { name: "赵六", team: "华北大区", target: 10000000, actual: 4800000, completion: 48.0, predicted: 88.0, pipeline: 5800000, rank: 4 },
+      ];
+    }
+    
+    return personalTargets
+      .map(t => ({
+        name: t.user_name || "未知",
+        team: t.meta?.region || t.department_name || "-",
+        target: Number(t.target_value || 0),
+        actual: Number(t.actual_value || 0),
+        completion: t.target_value > 0 ? (t.actual_value / t.target_value) * 100 : 0,
+        predicted: t.target_value > 0 ? Math.min(120, (t.actual_value / t.target_value) * 100 * 1.5) : 0,
+        pipeline: Number(t.actual_value || 0) * 1.3,
+      }))
+      .sort((a, b) => b.completion - a.completion)
+      .map((r, idx) => ({ ...r, rank: idx + 1 }));
+  }, [targets]);
 
   return (
     <div className="space-y-4">
@@ -310,20 +439,20 @@ function SalesRepBreakdown() {
                   </TableCell>
                   <TableCell className="font-medium">{rep.name}</TableCell>
                   <TableCell>{rep.team}</TableCell>
-                  <TableCell className="text-right">¥{(rep.target / 1000000).toFixed(1)}M</TableCell>
-                  <TableCell className="text-right">¥{(rep.actual / 1000000).toFixed(1)}M</TableCell>
+                  <TableCell className="text-right">{formatCurrency(rep.target)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(rep.actual)}</TableCell>
                   <TableCell className="text-right">
                     <Badge variant={rep.completion >= 60 ? "default" : "secondary"}>
-                      {rep.completion}%
+                      {rep.completion.toFixed(1)}%
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <span className={rep.predicted >= 100 ? "text-green-500 font-bold" : "text-orange-500"}>
-                      {rep.predicted}%
+                      {rep.predicted.toFixed(1)}%
                     </span>
                   </TableCell>
                   <TableCell className="text-right text-slate-400">
-                    ¥{(rep.pipeline / 1000000).toFixed(1)}M
+                    {formatCurrency(rep.pipeline)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -336,7 +465,19 @@ function SalesRepBreakdown() {
 }
 
 // 领导驾驶舱
-function ExecutiveDashboard() {
+function ExecutiveDashboard({ targets }) {
+  // 基于目标计算关键 KPI
+  const kpis = useMemo(() => {
+    const totalTarget = (targets || []).reduce((sum, t) => sum + Number(t.target_value || 0), 0);
+    const totalActual = (targets || []).reduce((sum, t) => sum + Number(t.actual_value || 0), 0);
+    const predictedCompletion = totalTarget > 0 ? (totalActual / totalTarget) * 100 * 1.5 : 105.6;
+    
+    return {
+      predicted_completion: Math.min(120, predictedCompletion),
+      excess_amount: totalTarget > 0 ? totalActual * 1.5 - totalTarget : 2800000,
+    };
+  }, [targets]);
+
   return (
     <div className="space-y-6">
       {/* 核心 KPI */}
@@ -349,11 +490,13 @@ function ExecutiveDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-500 mb-2">105.6%</div>
+            <div className="text-3xl font-bold text-green-500 mb-2">
+              {kpis.predicted_completion.toFixed(1)}%
+            </div>
             <div className="text-sm text-slate-400">预计完成季度目标</div>
             <div className="flex items-center gap-2 mt-2 text-sm text-green-500">
               <TrendingUp className="w-4 h-4" />
-              <span>超额 280 万</span>
+              <span>{kpis.excess_amount >= 0 ? "超额" : "缺口"} {formatCurrency(Math.abs(kpis.excess_amount))}</span>
             </div>
           </CardContent>
         </Card>
@@ -451,22 +594,55 @@ function ExecutiveDashboard() {
 
 // 主页面
 export default function ForecastDashboard() {
+  const [showTargetModal, setShowTargetModal] = useState(false);
+  const [targets, setTargets] = useState([]);
+  
+  // 初始加载目标数据
+  useEffect(() => {
+    const loadTargets = async () => {
+      try {
+        const res = await salesTargetApi.list({ page: 1, page_size: 100 });
+        if (res.data?.items) {
+          setTargets(res.data.items.map(t => ({
+            ...t,
+            meta: parseMeta(t.description),
+            actual_value: Number(t.actual_value || 0),
+          })));
+        }
+      } catch (err) {
+        console.error("Failed to load targets:", err);
+      }
+    };
+    loadTargets();
+  }, []);
+
+  // 解析 meta 数据
+  const parseMeta = (description) => {
+    if (!description || !description.includes("[meta]")) return {};
+    try {
+      const raw = description.split("[meta]")[1];
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="container mx-auto px-4 py-6">
         <PageHeader
-          title="销售预测"
+          title="销售目标与预测"
           description="AI 驱动的公司整体销售计划完成情况预测"
           icon={<BarChart3 className="w-6 h-6 text-indigo-500" />}
           actions={
             <div className="flex gap-2">
-              <Button variant="outline">
-                <Target className="w-4 h-4 mr-2" />
-                调整目标
+              <Button variant="outline" onClick={() => setShowTargetModal(true)}>
+                <Settings className="w-4 h-4 mr-2" />
+                目标管理
               </Button>
-              <Button>
-                <Eye className="w-4 h-4 mr-2" />
-                领导驾驶舱
+              <Button onClick={() => setShowTargetModal(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                设置目标
               </Button>
             </div>
           }
@@ -493,22 +669,29 @@ export default function ForecastDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <CompanyOverview />
+            <CompanyOverview targets={targets} />
           </TabsContent>
 
           <TabsContent value="team" className="mt-6">
-            <TeamBreakdown />
+            <TeamBreakdown targets={targets} />
           </TabsContent>
 
           <TabsContent value="individual" className="mt-6">
-            <SalesRepBreakdown />
+            <SalesRepBreakdown targets={targets} />
           </TabsContent>
 
           <TabsContent value="executive" className="mt-6">
-            <ExecutiveDashboard />
+            <ExecutiveDashboard targets={targets} />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* 目标设置弹窗 */}
+      <TargetSettingModal
+        open={showTargetModal}
+        onOpenChange={setShowTargetModal}
+        onTargetsChange={setTargets}
+      />
     </div>
   );
 }

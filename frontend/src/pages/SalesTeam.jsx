@@ -1,7 +1,10 @@
 /**
- * Sales Team Management Page - Team performance and management for sales directors
- * 重构版本：使用拆分的子组件和自定义Hooks
- * Features: Team member management, Performance tracking, Target assignment, Team analytics
+ * 团队管理页面 - 统一入口
+ * 整合：组织架构 + 成员列表 + 业绩排行
+ *
+ * Tab 1: 组织架构 - 4层层级树形结构展示
+ * Tab 2: 成员列表 - 扁平化团队成员管理
+ * Tab 3: 业绩排行 - 业绩榜单与排名
  */
 
 import { useState, useMemo, useEffect } from "react";
@@ -9,11 +12,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users,
+  User,
   UserPlus,
   TrendingUp,
   BarChart3,
-  Download } from
-"lucide-react";
+  Download,
+  Building2,
+  ChevronRight,
+  ChevronDown,
+  Briefcase,
+} from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Button,
@@ -24,6 +32,17 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  Badge,
+  Progress,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "../components/ui";
 import { salesTeamApi } from "../services/api";
 import { fadeIn, staggerContainer } from "../lib/animations";
@@ -37,16 +56,322 @@ import {
   TeamFilters,
   TeamRankingBoard,
   TeamMemberList,
-  TeamMemberDetailDialog } from
-"../components/sales/team";
+  TeamMemberDetailDialog,
+} from "../components/sales/team";
 
-export default function SalesTeam() {
+// ============================================
+// 组织架构组件 (来自 SalesOrganization.jsx)
+// ============================================
+
+// 组织树节点组件
+function OrgNode({ node, level, onSelect, selectedId }) {
+  const [expanded, setExpanded] = useState(level < 2);
+
+  const hasChildren = node.children && node.children.length > 0;
+  const isSelected = selectedId === node.id;
+
+  const getLevelColor = () => {
+    const colors = {
+      GM: "border-purple-500 bg-purple-500/10",
+      Director: "border-blue-500 bg-blue-500/10",
+      Manager: "border-green-500 bg-green-500/10",
+      Sales: "border-slate-500 bg-slate-500/10",
+    };
+    return colors[node.level] || colors.Sales;
+  };
+
+  const getRateColor = (rate) => {
+    if (rate >= 70) return "text-green-500";
+    if (rate >= 60) return "text-blue-500";
+    if (rate >= 50) return "text-orange-500";
+    return "text-red-500";
+  };
+
+  return (
+    <div className="ml-4">
+      <div
+        className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${getLevelColor()} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+        onClick={() => onSelect(node)}
+      >
+        {hasChildren ? (
+          <button onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>
+            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+        ) : (
+          <div className="w-4" />
+        )}
+
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{node.name}</span>
+            <Badge variant="outline" className="text-xs">{node.level}</Badge>
+          </div>
+          {node.person && (
+            <div className="text-xs text-slate-400">{node.person.name} · {node.person.title}</div>
+          )}
+        </div>
+
+        {node.metrics && (
+          <div className="text-right">
+            <div className={`text-sm font-bold ${getRateColor(node.metrics.achievement_rate || node.metrics.rate)}`}>
+              {node.metrics.achievement_rate || node.metrics.rate}%
+            </div>
+            {node.metrics.achieved_ytd && (
+              <div className="text-xs text-slate-400">
+                ¥{(node.metrics.achieved_ytd / 1000000).toFixed(1)}M / ¥{(node.metrics.quota_annual / 1000000).toFixed(0)}M
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {expanded && hasChildren && (
+        <div className="mt-2 border-l-2 border-slate-700 pl-2">
+          {node.children.map((child) => (
+            <OrgNode
+              key={child.id}
+              node={child}
+              level={level + 1}
+              onSelect={onSelect}
+              selectedId={selectedId}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 组织树视图
+function OrganizationTree() {
+  const [selectedNode, setSelectedNode] = useState(null);
+
+  // Mock组织架构数据（后续可对接真实API）
+  const orgTree = {
+    id: 1,
+    name: "销售总部",
+    level: "GM",
+    person: { id: 1, name: "陈总", title: "销售总经理" },
+    metrics: { quota_annual: 800000000, achieved_ytd: 512000000, achievement_rate: 64.0, team_size: 28 },
+    children: [
+      {
+        id: 2,
+        name: "深圳分公司",
+        level: "Director",
+        person: { id: 2, name: "张总监", title: "销售总监" },
+        metrics: { quota_annual: 300000000, achieved_ytd: 198000000, achievement_rate: 66.0, team_size: 10 },
+        children: [
+          {
+            id: 5,
+            name: "华南一区",
+            level: "Manager",
+            person: { id: 5, name: "张三", title: "销售经理" },
+            metrics: { quota_annual: 100000000, achieved_ytd: 68000000, achievement_rate: 68.0, team_size: 4 },
+            children: [
+              { id: 11, name: "张三", level: "Sales", role: "销售工程师", metrics: { rate: 64.0 } },
+              { id: 12, name: "李小妹", level: "Sales", role: "销售工程师", metrics: { rate: 73.3 } },
+              { id: 13, name: "王小助", level: "Sales", role: "销售助理", metrics: { rate: 70.0 } },
+            ],
+          },
+          {
+            id: 6,
+            name: "华南二区",
+            level: "Manager",
+            person: { id: 6, name: "李四", title: "销售经理" },
+            metrics: { quota_annual: 100000000, achieved_ytd: 65000000, achievement_rate: 65.0, team_size: 3 },
+            children: [
+              { id: 14, name: "赵六", level: "Sales", role: "销售工程师", metrics: { rate: 62.0 } },
+              { id: 15, name: "钱七", level: "Sales", role: "销售工程师", metrics: { rate: 60.0 } },
+              { id: 16, name: "孙八", level: "Sales", role: "销售助理", metrics: { rate: 60.0 } },
+            ],
+          },
+          {
+            id: 7,
+            name: "华南三区",
+            level: "Manager",
+            person: { id: 7, name: "王五", title: "销售经理" },
+            metrics: { quota_annual: 100000000, achieved_ytd: 65000000, achievement_rate: 65.0, team_size: 3 },
+            children: [
+              { id: 17, name: "周九", level: "Sales", metrics: { rate: 68.0 } },
+              { id: 18, name: "吴十", level: "Sales", metrics: { rate: 63.0 } },
+              { id: 19, name: "郑十一", level: "Sales", metrics: { rate: 64.0 } },
+            ],
+          },
+        ],
+      },
+      {
+        id: 3,
+        name: "苏州分公司",
+        level: "Director",
+        person: { id: 3, name: "李总监", title: "销售总监" },
+        metrics: { quota_annual: 280000000, achieved_ytd: 175000000, achievement_rate: 62.5, team_size: 10 },
+        children: [
+          {
+            id: 8,
+            name: "华东一区",
+            level: "Manager",
+            person: { id: 8, name: "赵经理", title: "销售经理" },
+            metrics: { quota_annual: 100000000, achieved_ytd: 62000000, achievement_rate: 62.0, team_size: 4 },
+            children: [
+              { id: 20, name: "队员 A", level: "Sales", metrics: { rate: 65.0 } },
+              { id: 21, name: "队员 B", level: "Sales", metrics: { rate: 61.0 } },
+              { id: 22, name: "队员 C", level: "Sales", metrics: { rate: 60.0 } },
+              { id: 23, name: "队员 D", level: "Sales", metrics: { rate: 62.0 } },
+            ],
+          },
+          {
+            id: 9,
+            name: "华东二区",
+            level: "Manager",
+            person: { id: 9, name: "钱经理", title: "销售经理" },
+            metrics: { quota_annual: 80000000, achieved_ytd: 48000000, achievement_rate: 60.0, team_size: 3 },
+            children: [
+              { id: 24, name: "队员 E", level: "Sales", metrics: { rate: 62.0 } },
+              { id: 25, name: "队员 F", level: "Sales", metrics: { rate: 59.0 } },
+              { id: 26, name: "队员 G", level: "Sales", metrics: { rate: 59.0 } },
+            ],
+          },
+        ],
+      },
+      {
+        id: 4,
+        name: "合肥分公司",
+        level: "Director",
+        person: { id: 4, name: "王总监", title: "销售总监" },
+        metrics: { quota_annual: 220000000, achieved_ytd: 139000000, achievement_rate: 63.2, team_size: 8 },
+        children: [
+          {
+            id: 10,
+            name: "华北一区",
+            level: "Manager",
+            person: { id: 10, name: "孙经理", title: "销售经理" },
+            metrics: { quota_annual: 80000000, achieved_ytd: 47000000, achievement_rate: 58.8, team_size: 3 },
+            children: [
+              { id: 27, name: "队员 H", level: "Sales", metrics: { rate: 60.0 } },
+              { id: 28, name: "队员 I", level: "Sales", metrics: { rate: 58.0 } },
+              { id: 29, name: "队员 J", level: "Sales", metrics: { rate: 58.5 } },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-6">
+      {/* 组织树 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>销售组织架构</CardTitle>
+          <CardDescription>点击节点查看详情，4层层级：总经理 → 总监 → 经理 → 销售</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OrgNode node={orgTree} level={0} onSelect={setSelectedNode} selectedId={selectedNode?.id} />
+        </CardContent>
+      </Card>
+
+      {/* 选中节点详情 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {selectedNode ? (
+              <div className="flex items-center gap-2">
+                {selectedNode.level === "GM" && <Briefcase className="w-5 h-5 text-purple-500" />}
+                {selectedNode.level === "Director" && <Building2 className="w-5 h-5 text-blue-500" />}
+                {selectedNode.level === "Manager" && <Users className="w-5 h-5 text-green-500" />}
+                {selectedNode.level === "Sales" && <User className="w-5 h-5 text-slate-500" />}
+                {selectedNode.name}
+              </div>
+            ) : (
+              "选择节点查看详情"
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {selectedNode ? (
+            <div className="space-y-4">
+              {selectedNode.person && (
+                <div>
+                  <div className="text-sm text-slate-400">负责人</div>
+                  <div className="font-medium">{selectedNode.person.name} · {selectedNode.person.title}</div>
+                </div>
+              )}
+
+              {selectedNode.metrics && (
+                <>
+                  <div>
+                    <div className="text-sm text-slate-400 mb-1">业绩完成率</div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-3xl font-bold ${(selectedNode.metrics.achievement_rate || selectedNode.metrics.rate) >= 70 ? 'text-green-500' : (selectedNode.metrics.achievement_rate || selectedNode.metrics.rate) >= 60 ? 'text-blue-500' : 'text-orange-500'}`}>
+                        {selectedNode.metrics.achievement_rate || selectedNode.metrics.rate}%
+                      </span>
+                      <Progress value={selectedNode.metrics.achievement_rate || selectedNode.metrics.rate} className="flex-1" />
+                    </div>
+                  </div>
+
+                  {selectedNode.metrics.achieved_ytd && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-slate-400">已完成</div>
+                        <div className="text-lg font-bold">¥{(selectedNode.metrics.achieved_ytd / 1000000).toFixed(1)}M</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-slate-400">年度指标</div>
+                        <div className="text-lg font-bold">¥{(selectedNode.metrics.quota_annual / 1000000).toFixed(0)}M</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-slate-400">团队人数</div>
+                        <div className="text-lg font-bold">{selectedNode.metrics.team_size}人</div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {selectedNode.children && selectedNode.children.length > 0 && (
+                <div>
+                  <div className="text-sm text-slate-400 mb-2">下属团队/成员 ({selectedNode.children.length}个)</div>
+                  <div className="space-y-2">
+                    {selectedNode.children.map((child) => (
+                      <div key={child.id} className="p-2 border rounded text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{child.name}</span>
+                          <Badge variant="outline">{child.level}</Badge>
+                        </div>
+                        {child.metrics && (
+                          <div className="text-xs text-slate-400 mt-1">
+                            完成率：<span className={(child.metrics.rate || child.metrics.achievement_rate) >= 70 ? 'text-green-500' : (child.metrics.rate || child.metrics.achievement_rate) >= 60 ? 'text-blue-500' : 'text-orange-500'}>{child.metrics.rate || child.metrics.achievement_rate}%</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center text-slate-400 py-8">
+              <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <div>点击左侧组织节点查看详情</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================
+// 主页面组件
+// ============================================
+
+export default function SalesTeam({ embedded = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const defaultRange = useMemo(() => getDefaultDateRange(), []);
 
-  // 根据 URL 路径判断初始显示模式
-  const isRankingPath = location.pathname.includes('/ranking');
+  // 当前激活的Tab
+  const [activeTab, setActiveTab] = useState("organization");
 
   // 筛选器状态管理
   const {
@@ -59,7 +384,7 @@ export default function SalesTeam() {
     handleApplyQuickRange,
     handleResetFilters,
     triggerAutoRefreshToast,
-    validateDateRange
+    validateDateRange,
   } = useSalesTeamFilters(defaultRange);
 
   // 团队数据获取
@@ -70,11 +395,10 @@ export default function SalesTeam() {
     error: dataError,
     departmentOptions,
     regionOptions,
-    fetchTeamData
+    fetchTeamData,
   } = useSalesTeamData(filters, defaultRange, triggerAutoRefreshToast);
 
   // 排名数据管理
-  const [showRanking, setShowRanking] = useState(isRankingPath || true);
   const {
     loading: rankingLoading,
     data: rankingData,
@@ -83,8 +407,8 @@ export default function SalesTeam() {
     metricConfigList,
     rankingOptions,
     selectedRankingOption,
-    setRankingType
-  } = useSalesTeamRanking(filters, showRanking, dateError);
+    setRankingType,
+  } = useSalesTeamRanking(filters, true, dateError);
 
   // 搜索和导出状态
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,10 +433,10 @@ export default function SalesTeam() {
   // 从其他页面跳转时，直接打开成员详情
   useEffect(() => {
     const openMember = location.state?.openMember;
-    if (!openMember) {return;}
+    if (!openMember) return;
     setSelectedMember(openMember);
     setShowMemberDialog(true);
-    // 清理 state，避免刷新/返回时重复弹窗
+    setActiveTab("members");
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.state?.openMember, navigate, location.pathname]);
 
@@ -121,52 +445,46 @@ export default function SalesTeam() {
     validateDateRange();
   }, [filters.startDate, filters.endDate, validateDateRange]);
 
-  // 获取团队数据（依赖筛选条件）
+  // 获取团队数据
   useEffect(() => {
-    if (dateError) {return;}
+    if (dateError) return;
     fetchTeamData();
   }, [
-  filters.departmentId,
-  filters.region,
-  filters.startDate,
-  filters.endDate,
-  dateError,
-  fetchTeamData]
-  );
+    filters.departmentId,
+    filters.region,
+    filters.startDate,
+    filters.endDate,
+    dateError,
+    fetchTeamData,
+  ]);
 
   // 搜索过滤
   const filteredMembers = useMemo(() => {
-    if (!searchTerm) {return teamMembers;}
+    if (!searchTerm) return teamMembers;
     const keyword = searchTerm.toLowerCase();
     return (teamMembers || []).filter((member) => {
       const name = member.name?.toLowerCase?.() || "";
       const role = member.role?.toLowerCase?.() || "";
       const regionText = member.region?.toLowerCase?.() || "";
-      return (
-        name.includes(keyword) ||
-        role.includes(keyword) ||
-        regionText.includes(keyword));
-
+      return name.includes(keyword) || role.includes(keyword) || regionText.includes(keyword);
     });
   }, [teamMembers, searchTerm]);
 
   // 页面头部描述
-  const headerDescription = `团队规模: ${teamStats.totalMembers}人 | 活跃成员: ${teamStats.activeMembers}人 | 平均完成率: ${teamStats.avgAchievementRate}% | 统计区间: ${filters.startDate} ~ ${filters.endDate}`;
-
+  const headerDescription = `团队规模: ${teamStats.totalMembers}人 | 活跃成员: ${teamStats.activeMembers}人 | 平均完成率: ${teamStats.avgAchievementRate}%`;
 
   // 导出数据
   const handleExport = async () => {
-    if (dataError || dateError) {return;}
+    if (dataError || dateError) return;
     try {
       setExporting(true);
       const params = {};
-      // department_id 为 "all" 时不传递该参数（后端期望 Optional[int]）
       if (filters.departmentId && filters.departmentId !== "all") {
         params.department_id = parseInt(filters.departmentId, 10);
       }
-      if (filters.region) {params.region = filters.region.trim();}
-      if (filters.startDate) {params.start_date = filters.startDate;}
-      if (filters.endDate) {params.end_date = filters.endDate;}
+      if (filters.region) params.region = filters.region.trim();
+      if (filters.startDate) params.start_date = filters.startDate;
+      if (filters.endDate) params.end_date = filters.endDate;
       const res = await salesTeamApi.exportTeam(params);
       const blob = new Blob([res.data], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
@@ -193,13 +511,13 @@ export default function SalesTeam() {
 
   // 导航到绩效页面
   const handleNavigatePerformance = (member) => {
-    if (!member?.id) {return;}
+    if (!member?.id) return;
     navigate(`/performance/results/${member.id}`);
   };
 
   // 导航到CRM页面
   const handleNavigateCRM = (member) => {
-    if (!member?.id) {return;}
+    if (!member?.id) return;
     navigate(`/sales/customers?owner_id=${member.id}`);
   };
 
@@ -259,60 +577,52 @@ export default function SalesTeam() {
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="space-y-6">
-
+      className="space-y-6"
+    >
       {/* Page Header */}
-      <PageHeader
-        title="团队管理"
-        description={headerDescription}
-        actions={
-        <motion.div
-          variants={fadeIn}
-          className="flex flex-wrap gap-2 justify-end">
-
-            <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => setShowRanking(!showRanking)}>
-
-              <BarChart3 className="w-4 h-4" />
-              {showRanking ? "隐藏排名" : "业绩排名"}
-            </Button>
-            <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={handleExport}
-            loading={exporting}
-            disabled={!!dataError || exporting || !!dateError}>
-
-              <Download className="w-4 h-4" />
-              导出
-            </Button>
-            <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => navigate("/performance")}>
-
-              <TrendingUp className="w-4 h-4" />
-              绩效中心
-            </Button>
-            <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => navigate("/sales/customers")}>
-
-              <Users className="w-4 h-4" />
-              CRM
-            </Button>
-            <Button
-              className="flex items-center gap-2"
-              onClick={() => setShowCreateTeamDialog(true)}>
-              <UserPlus className="w-4 h-4" />
-              新建团队
-            </Button>
-        </motion.div>
-        } />
-
+      {!embedded ? (
+        <PageHeader
+          title="团队管理"
+          description={headerDescription}
+          actions={
+            <motion.div variants={fadeIn} className="flex flex-wrap gap-2 justify-end">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={handleExport}
+                loading={exporting}
+                disabled={!!dataError || exporting || !!dateError}
+              >
+                <Download className="w-4 h-4" />
+                导出
+              </Button>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => navigate("/performance")}
+              >
+                <TrendingUp className="w-4 h-4" />
+                绩效中心
+              </Button>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => navigate("/sales/customers")}
+              >
+                <Users className="w-4 h-4" />
+                CRM
+              </Button>
+              <Button
+                className="flex items-center gap-2"
+                onClick={() => setShowCreateTeamDialog(true)}
+              >
+                <UserPlus className="w-4 h-4" />
+                新建团队
+              </Button>
+            </motion.div>
+          }
+        />
+      ) : null}
 
       {/* 数据加载错误提示 */}
       {dataError && (
@@ -329,65 +639,137 @@ export default function SalesTeam() {
         </div>
       )}
 
-      {/* 筛选器 */}
-      <TeamFilters
-        filters={filters}
-        departmentOptions={departmentOptions}
-        regionOptions={regionOptions}
-        dateError={dateError}
-        onFilterChange={handleFilterChange}
-        onQuickRange={handleApplyQuickRange}
-        onReset={handleResetFilters}
-        activeQuickRange={activeQuickRange}
-        lastAutoRefreshAt={lastAutoRefreshAt}
-        highlightAutoRefresh={highlightAutoRefresh} />
+      {/* 主内容区：三个Tab视角 */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
+          <TabsTrigger value="organization" className="flex items-center gap-2">
+            <Building2 className="w-4 h-4" />
+            组织架构
+          </TabsTrigger>
+          <TabsTrigger value="members" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            成员列表
+          </TabsTrigger>
+          <TabsTrigger value="ranking" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            业绩排行
+          </TabsTrigger>
+        </TabsList>
 
+        {/* Tab 1: 组织架构 */}
+        <TabsContent value="organization" className="mt-6">
+          <OrganizationTree />
 
-      {/* 团队统计卡片 */}
-      <TeamStatsCards teamStats={teamStats} />
+          {/* 层级定义说明 */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>销售组织层级定义</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-4 gap-4">
+                {[
+                  { level: "L1", name: "销售总经理", code: "GM", scope: "全公司", report: "CEO", manage: "所有总监" },
+                  { level: "L2", name: "销售总监", code: "Director", scope: "分公司", report: "销售总经理", manage: "2-3 个经理" },
+                  { level: "L3", name: "销售经理", code: "Manager", scope: "销售团队", report: "销售总监", manage: "3-5 人" },
+                  { level: "L4", name: "销售", code: "Sales", scope: "个人", report: "销售经理", manage: "-" },
+                ].map((item) => (
+                  <Card key={item.level}>
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline">{item.level}</Badge>
+                        <span className="font-medium">{item.name}</span>
+                      </div>
+                      <div className="text-sm text-slate-400 space-y-1">
+                        <div>范围：{item.scope}</div>
+                        <div>汇报：{item.report}</div>
+                        <div>管理：{item.manage}</div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* 业绩排名 */}
-      {showRanking &&
-      <TeamRankingBoard
-        rankingData={rankingData}
-        rankingConfig={rankingConfig}
-        rankingType={rankingType}
-        onRankingTypeChange={setRankingType}
-        filters={filters}
-        onConfigClick={() => navigate("/sales-director-dashboard")}
-        loading={rankingLoading}
-        metricConfigList={metricConfigList}
-        rankingOptions={rankingOptions}
-        selectedRankingOption={selectedRankingOption} />
+        {/* Tab 2: 成员列表 */}
+        <TabsContent value="members" className="mt-6 space-y-6">
+          {/* 筛选器 */}
+          <TeamFilters
+            filters={filters}
+            departmentOptions={departmentOptions}
+            regionOptions={regionOptions}
+            dateError={dateError}
+            onFilterChange={handleFilterChange}
+            onQuickRange={handleApplyQuickRange}
+            onReset={handleResetFilters}
+            activeQuickRange={activeQuickRange}
+            lastAutoRefreshAt={lastAutoRefreshAt}
+            highlightAutoRefresh={highlightAutoRefresh}
+          />
 
-      }
+          {/* 团队统计卡片 */}
+          <TeamStatsCards teamStats={teamStats} />
 
-      {/* 搜索框 */}
-      <motion.div variants={fadeIn}>
-        <div className="p-4 bg-slate-900/40 rounded-lg border border-slate-700/50">
-          <div className="flex items-center gap-4">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="搜索团队成员..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-
-              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          {/* 搜索框 */}
+          <motion.div variants={fadeIn}>
+            <div className="p-4 bg-slate-900/40 rounded-lg border border-slate-700/50">
+              <div className="flex items-center gap-4">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="搜索团队成员..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </motion.div>
+          </motion.div>
 
-      {/* 团队成员列表 */}
-      <TeamMemberList
-        loading={loading}
-        members={filteredMembers}
-        onViewDetail={handleViewMember}
-        onNavigatePerformance={handleNavigatePerformance}
-        onNavigateCRM={handleNavigateCRM} />
+          {/* 团队成员列表 */}
+          <TeamMemberList
+            loading={loading}
+            members={filteredMembers}
+            onViewDetail={handleViewMember}
+            onNavigatePerformance={handleNavigatePerformance}
+            onNavigateCRM={handleNavigateCRM}
+          />
+        </TabsContent>
 
+        {/* Tab 3: 业绩排行 */}
+        <TabsContent value="ranking" className="mt-6 space-y-6">
+          {/* 筛选器 */}
+          <TeamFilters
+            filters={filters}
+            departmentOptions={departmentOptions}
+            regionOptions={regionOptions}
+            dateError={dateError}
+            onFilterChange={handleFilterChange}
+            onQuickRange={handleApplyQuickRange}
+            onReset={handleResetFilters}
+            activeQuickRange={activeQuickRange}
+            lastAutoRefreshAt={lastAutoRefreshAt}
+            highlightAutoRefresh={highlightAutoRefresh}
+          />
+
+          {/* 业绩排名 */}
+          <TeamRankingBoard
+            rankingData={rankingData}
+            rankingConfig={rankingConfig}
+            rankingType={rankingType}
+            onRankingTypeChange={setRankingType}
+            filters={filters}
+            onConfigClick={() => navigate("/sales-director-dashboard")}
+            loading={rankingLoading}
+            metricConfigList={metricConfigList}
+            rankingOptions={rankingOptions}
+            selectedRankingOption={selectedRankingOption}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* 成员详情对话框 */}
       <TeamMemberDetailDialog
@@ -395,7 +777,8 @@ export default function SalesTeam() {
         onOpenChange={setShowMemberDialog}
         member={selectedMember}
         onNavigatePerformance={handleNavigatePerformance}
-        onNavigateCRM={handleNavigateCRM} />
+        onNavigateCRM={handleNavigateCRM}
+      />
 
       {/* 新建团队对话框 */}
       <Dialog open={showCreateTeamDialog} onOpenChange={setShowCreateTeamDialog}>
@@ -513,7 +896,6 @@ export default function SalesTeam() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-    </motion.div>);
-
+    </motion.div>
+  );
 }

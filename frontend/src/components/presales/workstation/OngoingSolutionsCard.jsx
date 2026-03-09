@@ -13,6 +13,7 @@ import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { Progress } from "../../ui/progress";
 import { cn } from "../../../lib/utils";
+import { formatAmountWan } from "./utils";
 
 export default function OngoingSolutionsCard({ solutions }) {
   return (
@@ -22,7 +23,7 @@ export default function OngoingSolutionsCard({ solutions }) {
           <FileText className="w-5 h-5 text-violet-400" />
           进行中方案
         </CardTitle>
-        <Link to="/solutions">
+        <Link to="/presales/solutions">
           <Button
             variant="ghost"
             size="sm"
@@ -62,7 +63,7 @@ export default function OngoingSolutionsCard({ solutions }) {
                     {solution.deviceType}
                   </span>
                   <span className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3" />¥{solution.amount}万
+                    <DollarSign className="w-3 h-3" />¥{formatAmountWan(solution.amount)}万
                   </span>
                 </div>
               </div>

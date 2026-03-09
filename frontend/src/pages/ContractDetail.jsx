@@ -232,7 +232,7 @@ export default function ContractDetail() {
         title={contract.projectName}
         description={`${contract.customer.name} | ${contract.id}`}
         breadcrumb={[
-        { label: "商务工作台", path: "/business-support" },
+        { label: "技术方案", path: "/presales/technical-solutions" },
         { label: "合同管理", path: "/contracts" },
         { label: contract.projectName }]
         }

@@ -9,19 +9,15 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Trophy,
   Medal,
-  Target,
   TrendingUp,
   Award,
   Zap,
   DollarSign,
   Users,
   Crown,
-  Star,
-  Flame,
   Gift,
 } from "lucide-react";
 import { PageHeader } from "../../components/layout";
@@ -463,17 +459,25 @@ function Achievements() {
 }
 
 // 主页面
-export default function PerformanceIncentive() {
+export default function PerformanceIncentive({ embedded = false }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <div className="container mx-auto px-4 py-6">
-        <PageHeader
-          title="绩效与激励"
-          description="实时排行榜、提成计算、PK 对战、成就系统"
-          icon={<Award className="w-6 h-6 text-yellow-500" />}
-        />
+    <div
+      className={
+        embedded
+          ? ""
+          : "min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+      }
+    >
+      <div className={embedded ? "space-y-6" : "container mx-auto px-4 py-6"}>
+        {!embedded ? (
+          <PageHeader
+            title="奖金激励"
+            description="实时排行榜、提成计算、PK 对战、成就系统"
+            icon={<Award className="w-6 h-6 text-yellow-500" />}
+          />
+        ) : null}
 
-        <Tabs defaultValue="leaderboard" className="mt-6">
+        <Tabs defaultValue="leaderboard" className={embedded ? "" : "mt-6"}>
           <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
             <TabsTrigger value="leaderboard">
               <Trophy className="w-4 h-4 mr-2" />

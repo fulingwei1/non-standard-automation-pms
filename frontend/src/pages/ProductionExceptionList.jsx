@@ -66,7 +66,7 @@ const levelConfigs = {
   MINOR: { label: "一般", color: "bg-amber-500" },
   LOW: { label: "轻微", color: "bg-blue-500" }
 };
-export default function ProductionExceptionList() {
+export default function ProductionExceptionList({ embedded = false }) {
   const _navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [exceptions, setExceptions] = useState([]);
@@ -212,9 +212,12 @@ export default function ProductionExceptionList() {
   }, [exceptions, searchKeyword]);
   return (
     <div className="space-y-6 p-6">
-      <PageHeader
-        title="生产异常管理"
-        description="生产异常列表、上报、处理、关闭" />
+      {!embedded ? (
+        <PageHeader
+          title="生产异常管理"
+          description="生产异常列表、上报、处理、关闭"
+        />
+      ) : null}
 
       {/* Filters */}
       <Card>

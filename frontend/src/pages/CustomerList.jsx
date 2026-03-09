@@ -3,6 +3,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Building2,
@@ -203,6 +204,7 @@ const normalizeCustomer = (customer = {}) => {
 };
 
 export default function CustomerList() {
+  const navigate = useNavigate();
   const { customers: rawCustomers, setPagination, loadCustomers } = useCustomerList()
   const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [searchTerm, setSearchTerm] = useState("");
@@ -272,7 +274,8 @@ export default function CustomerList() {
   }, [normalizedCustomers]);
 
   const handleCustomerClick = (customer) => {
-    setSelectedCustomer(customer);
+    // 跳转到客户详情页（整合版：包含360画像、关系成熟度等）
+    navigate(`/sales/customers/${customer.id}`);
   };
 
   const resetCreateForm = () => {

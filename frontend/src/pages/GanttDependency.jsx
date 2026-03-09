@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { GitBranch, RefreshCw, Trash2, Link2, Route } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { GitBranch, RefreshCw, Trash2, Link2, Route, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import { Button } from "../components/ui/button";
 import { fadeIn, staggerContainer } from "../lib/animations";
@@ -110,6 +110,10 @@ export default function GanttDependency() {
     dependency_type: "FS",
     lag_days: 0,
   });
+
+  // 阻塞高亮模式
+  const [blockingMode, setBlockingMode] = useState(false);
+  const [highlightedTaskId, setHighlightedTaskId] = useState(null);
 
   const loadProjects = useCallback(async () => {
     try {
@@ -258,6 +262,74 @@ export default function GanttDependency() {
   }, [sortedTasks, timelineRange]);
 
   const criticalTaskSet = useMemo(() => new Set(criticalPathTaskIds), [criticalPathTaskIds]);
+
+  // 计算阻塞高亮模式下的高亮任务链
+  const highlightedChain = useMemo(() => {
+    if (!blockingMode || !highlightedTaskId) {
+      return { upstream: new Set(), downstream: new Set(), center: null };
+    }
+
+    const upstream = new Set();
+    const downstream = new Set();
+
+    // 递归查找上游任务（阻塞当前任务的）
+    const findUpstream = (taskId, visited = new Set()) => {
+      if (visited.has(taskId)) return;
+      visited.add(taskId);
+
+      dependencies.forEach((dep) => {
+        if (dep.task_id === taskId) {
+          upstream.add(dep.depends_on_task_id);
+          findUpstream(dep.depends_on_task_id, visited);
+        }
+      });
+    };
+
+    // 递归查找下游任务（被当前任务阻塞的）
+    const findDownstream = (taskId, visited = new Set()) => {
+      if (visited.has(taskId)) return;
+      visited.add(taskId);
+
+      dependencies.forEach((dep) => {
+        if (dep.depends_on_task_id === taskId) {
+          downstream.add(dep.task_id);
+          findDownstream(dep.task_id, visited);
+        }
+      });
+    };
+
+    findUpstream(highlightedTaskId);
+    findDownstream(highlightedTaskId);
+
+    return { upstream, downstream, center: highlightedTaskId };
+  }, [blockingMode, highlightedTaskId, dependencies]);
+
+  // 判断任务是否应该被高亮
+  const isTaskHighlighted = useCallback((taskId) => {
+    if (!blockingMode) return false;
+    if (!highlightedTaskId) return false;
+    return (
+      taskId === highlightedTaskId ||
+      highlightedChain.upstream.has(taskId) ||
+      highlightedChain.downstream.has(taskId)
+    );
+  }, [blockingMode, highlightedTaskId, highlightedChain]);
+
+  // 获取任务在阻塞链中的角色
+  const getTaskBlockingRole = useCallback((taskId) => {
+    if (!blockingMode || !highlightedTaskId) return null;
+    if (taskId === highlightedTaskId) return "center";
+    if (highlightedChain.upstream.has(taskId)) return "upstream";
+    if (highlightedChain.downstream.has(taskId)) return "downstream";
+    return null;
+  }, [blockingMode, highlightedTaskId, highlightedChain]);
+
+  // 处理任务点击（阻塞高亮模式）
+  const handleTaskClick = useCallback((taskId) => {
+    if (blockingMode) {
+      setHighlightedTaskId(highlightedTaskId === taskId ? null : taskId);
+    }
+  }, [blockingMode, highlightedTaskId]);
 
   const dependencyLines = useMemo(() => {
     return dependencies
@@ -408,6 +480,31 @@ export default function GanttDependency() {
                   关键路径工期: {criticalPathDuration || 0} 天
                 </div>
                 <Button
+                  variant={blockingMode ? "default" : "outline"}
+                  className={blockingMode
+                    ? "bg-amber-600 text-white hover:bg-amber-500"
+                    : "border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                  }
+                  onClick={() => {
+                    setBlockingMode(!blockingMode);
+                    if (blockingMode) {
+                      setHighlightedTaskId(null);
+                    }
+                  }}
+                >
+                  {blockingMode ? (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      关闭阻塞高亮
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="mr-2 h-4 w-4" />
+                      阻塞高亮模式
+                    </>
+                  )}
+                </Button>
+                <Button
                   variant="outline"
                   className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
                   onClick={handleRefresh}
@@ -418,7 +515,11 @@ export default function GanttDependency() {
               </div>
             </div>
             <p className="mt-3 text-xs text-slate-400">
-              当前项目: {selectedProject?.project_name || selectedProject?.name || "-"}，关键路径任务将以橙色高亮。
+              当前项目: {selectedProject?.project_name || selectedProject?.name || "-"}
+              {blockingMode
+                ? "，阻塞高亮模式已启用，点击任务查看上下游依赖链。"
+                : "，关键路径任务将以橙色高亮。"
+              }
             </p>
           </motion.section>
 
@@ -463,15 +564,37 @@ export default function GanttDependency() {
                         {sortedTasks.map((task) => {
                           const statusMeta = STATUS_META[task.status] || STATUS_META.TODO;
                           const isCritical = criticalTaskSet.has(task.id);
+                          const blockingRole = getTaskBlockingRole(task.id);
+                          const isHighlighted = isTaskHighlighted(task.id);
+                          const shouldDim = blockingMode && highlightedTaskId && !isHighlighted;
+
+                          // 阻塞高亮模式下的背景色
+                          const getBlockingBgClass = () => {
+                            if (!blockingMode) return isCritical ? "bg-orange-500/10" : "bg-transparent";
+                            if (blockingRole === "center") return "bg-cyan-500/20";
+                            if (blockingRole === "upstream") return "bg-red-500/15";
+                            if (blockingRole === "downstream") return "bg-amber-500/15";
+                            return shouldDim ? "bg-transparent opacity-30" : "bg-transparent";
+                          };
 
                           return (
                             <div
                               key={`task-info-${task.id}`}
-                              className={`flex h-14 flex-col justify-center border-b border-slate-800 px-4 ${
-                                isCritical ? "bg-orange-500/10" : "bg-transparent"
-                              }`}
+                              className={`flex h-14 flex-col justify-center border-b border-slate-800 px-4 transition-all cursor-pointer ${getBlockingBgClass()}`}
+                              onClick={() => handleTaskClick(task.id)}
                             >
-                              <div className="truncate text-sm font-medium text-slate-100">{task.task_name}</div>
+                              <div className="flex items-center gap-2">
+                                <div className="truncate text-sm font-medium text-slate-100">{task.task_name}</div>
+                                {blockingRole === "upstream" && (
+                                  <span className="text-[10px] px-1 py-0.5 rounded bg-red-500/30 text-red-300">阻塞源</span>
+                                )}
+                                {blockingRole === "downstream" && (
+                                  <span className="text-[10px] px-1 py-0.5 rounded bg-amber-500/30 text-amber-300">被阻塞</span>
+                                )}
+                                {blockingRole === "center" && (
+                                  <span className="text-[10px] px-1 py-0.5 rounded bg-cyan-500/30 text-cyan-300">当前</span>
+                                )}
+                              </div>
                               <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
                                 <span
                                   className={`rounded border px-1.5 py-0.5 ${statusMeta.badgeClass}`}
@@ -495,22 +618,38 @@ export default function GanttDependency() {
                             const placement = taskPlacementMap[task.id];
                             const statusMeta = STATUS_META[task.status] || STATUS_META.TODO;
                             const isCritical = criticalTaskSet.has(task.id);
+                            const blockingRole = getTaskBlockingRole(task.id);
+                            const isHighlighted = isTaskHighlighted(task.id);
+                            const shouldDim = blockingMode && highlightedTaskId && !isHighlighted;
+
+                            // 阻塞高亮模式下的边框样式
+                            const getBlockingRingClass = () => {
+                              if (!blockingMode) return isCritical ? "ring-2 ring-orange-300/70" : "";
+                              if (blockingRole === "center") return "ring-2 ring-cyan-400";
+                              if (blockingRole === "upstream") return "ring-2 ring-red-400/70";
+                              if (blockingRole === "downstream") return "ring-2 ring-amber-400/70";
+                              return "";
+                            };
 
                             return (
-                              <div key={`task-bar-${task.id}`}>
+                              <div
+                                key={`task-bar-${task.id}`}
+                                className={`transition-opacity ${shouldDim ? "opacity-30" : ""}`}
+                              >
                                 <div
                                   className="absolute left-0 right-0 border-b border-slate-800/80"
                                   style={{ top: `${(index + 1) * ROW_HEIGHT}px` }}
                                 />
                                 <div
-                                  className={`absolute top-2 h-9 rounded-md px-2 text-xs font-medium text-white shadow-lg ${
+                                  className={`absolute top-2 h-9 rounded-md px-2 text-xs font-medium text-white shadow-lg cursor-pointer ${
                                     statusMeta.barClass
-                                  } ${isCritical ? "ring-2 ring-orange-300/70" : ""}`}
+                                  } ${getBlockingRingClass()}`}
                                   style={{
                                     left: `${placement.leftPct}%`,
                                     width: `${placement.widthPct}%`,
                                   }}
                                   title={`${task.task_name}: ${formatDate(task.plan_start)} - ${formatDate(task.plan_end)}`}
+                                  onClick={() => handleTaskClick(task.id)}
                                 >
                                   <div className="truncate leading-9">{task.task_name}</div>
                                 </div>
