@@ -309,6 +309,67 @@ python3 -m app.main
 
 ---
 
+## 🚀 快速开始
+
+### 一键启动开发环境
+
+我们提供了便捷的启动脚本，**自动同步演示数据**并启动前后端服务：
+
+#### macOS / Linux
+```bash
+# 克隆项目
+git clone https://github.com/fulingwei1/non-standard-automation-pms.git
+cd non-standard-automation-pms
+
+# 安装依赖
+pip3 install -r requirements.txt
+cd frontend && npm install && cd ..
+
+# 一键启动（自动同步种子数据 + 启动前后端）
+./start-dev.sh
+```
+
+#### Windows
+```cmd
+# 克隆项目
+git clone https://github.com/fulingwei1/non-standard-automation-pms.git
+cd non-standard-automation-pms
+
+# 安装依赖
+pip3 install -r requirements.txt
+cd frontend && npm install && cd ..
+
+# 一键启动（双击运行）
+start-dev.bat
+```
+
+### 演示数据说明
+
+启动脚本会自动运行 `scripts/seed_blm_bem.py`，确保：
+- ✅ **所有电脑数据一致**：79条战略管理演示数据
+- ✅ **统一登录账户**：
+  - `fulingwei` / `admin123` (总经理)
+  - `zhangzq` / `123456` (销售总监)
+  - `limh` / `123456` (技术总监)
+- ✅ **BLM+BEM框架**：包含战略、CSF、KPI、部门目标等完整数据
+
+> 💡 **提示**：`data/app.db` 是本地 SQLite 数据库，不会同步到 GitHub。每台电脑通过种子脚本生成一致的数据。
+
+### 手动启动（高级用户）
+
+```bash
+# 1. 同步演示数据
+python3 scripts/seed_blm_bem.py
+
+# 2. 启动后端
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
+
+# 3. 启动前端（新终端）
+cd frontend && npm run dev
+```
+
+---
+
 ## 📊 系统完成度
 
 | 模块 | 完成度 | 核心功能 |
