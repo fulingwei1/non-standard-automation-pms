@@ -8,37 +8,37 @@ import {
   ArrowLeft,
   RefreshCw,
   CheckCircle2,
-  AlertTriangle } from
-"lucide-react";
+  AlertTriangle
+} from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle } from
-"../components/ui/card";
+  CardTitle
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
-
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+  DialogFooter
+} from "../components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
+  SelectValue
+} from "../components/ui/select";
 import { cn, formatDate } from "../lib/utils";
 import { opportunityApi } from "../services/api";
+import WinRateAnalysisCard from "../components/opportunity/WinRateAnalysisCard";
+
 const stageConfigs = {
   DISCOVERY: { label: "发现", color: "bg-blue-500", order: 1 },
   QUALIFYING: { label: "资格评估", color: "bg-amber-500", order: 2 },
@@ -361,6 +361,10 @@ export default function OpportunityDetail() {
           </CardContent>
       </Card>
       }
+
+      {/* 赢单率分析 */}
+      <WinRateAnalysisCard opportunity={opportunity} />
+
       {/* Gate Dialog */}
       <Dialog open={showGateDialog} onOpenChange={setShowGateDialog}>
         <DialogContent>

@@ -1,70 +1,89 @@
 import { Route, Navigate } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 
-import SalesReports from "../../pages/SalesReports";
-import SalesTeam from "../../pages/SalesTeam";
-import SalesTarget from "../../pages/SalesTarget";
-import CpqConfigurator from "../../pages/CpqConfigurator";
-import ContractApproval from "../../pages/ContractApproval";
+// 客户管理
 import CustomerList from "../../pages/CustomerList";
-import OpportunityBoard from "../../pages/OpportunityBoard";
-import LeadAssessment from "../../pages/LeadAssessment";
-import QuotationList from "../../pages/QuotationList";
-import ContractList from "../../pages/ContractList";
-import ContractDetail from "../../pages/ContractDetail";
-import PaymentManagement from "../../pages/PaymentManagement";
-import InvoiceManagement from "../../pages/invoice";
-import SalesProjectTrack from "../../pages/SalesProjectTrack";
-import SalesFunnel from "../../pages/SalesFunnel";
-import BiddingDetail from "../../pages/BiddingDetail";
+import CustomerDetail from "../../pages/CustomerManagement/CustomerDetail";
+import Customer360 from "../../pages/Customer360";
+
+// 线索管理
 import LeadManagement from "../../pages/LeadManagement";
-import OpportunityManagement from "../../pages/OpportunityManagement";
-import TechnicalAssessment from "../../pages/TechnicalAssessment";
+import LeadDetail from "../../pages/LeadDetail";
+import LeadAssessment from "../../pages/LeadAssessment";
 import LeadRequirementDetail from "../../pages/LeadRequirementDetail";
-import OpenItemsManagement from "../../pages/OpenItemsManagement";
-import RequirementFreezeManagement from "../../pages/RequirementFreezeManagement";
-import AIClarificationChat from "../../pages/AIClarificationChat";
+import LeadPriorityManagement from "../../pages/LeadPriorityManagement";
+
+// 商机管理
+import OpportunityBoard from "../../pages/OpportunityBoard";
+import OpportunityManagement from "../../pages/OpportunityManagement";
+import OpportunityDetail from "../../pages/OpportunityDetail";
+
+// 报价管理
+import QuotationList from "../../pages/QuotationList";
 import QuoteManagementCenter from "../../pages/QuoteManagementCenter";
+import QuoteManagement from "../../pages/QuoteManagement";
+import QuoteCreateEdit from "../../pages/QuoteCreateEdit";
 import QuoteCostManagement from "../../pages/QuoteCostManagement";
+import QuoteCostAnalysis from "../../pages/QuoteCostAnalysis";
 import CostTemplateManagement from "../../pages/CostTemplateManagement";
 import PurchaseMaterialCostManagement from "../../pages/PurchaseMaterialCostManagement";
 import FinancialCostUpload from "../../pages/FinancialCostUpload";
+import CpqConfigurator from "../../pages/CpqConfigurator";
+
+// 合同管理
+import ContractList from "../../pages/ContractList";
+import ContractDetail from "../../pages/ContractDetail";
 import ContractManagement from "../../pages/ContractManagement";
+import ContractApproval from "../../pages/ContractApproval";
+
+// 财务相关
+import PaymentManagement from "../../pages/PaymentManagement";
+import InvoiceManagement from "../../pages/invoice/InvoiceManagement";
 import ReceivableManagement from "../../pages/ReceivableManagement";
+
+// 销售团队
+import SalesTeam from "../../pages/SalesTeam";
+import SalesTeamCenter from "../../pages/SalesTeamCenter";
+import SalesTarget from "../../pages/SalesTarget";
+import SalesReports from "../../pages/SalesReports";
 import SalesStatistics from "../../pages/SalesStatistics";
-import LossAnalysis from "../../pages/LossAnalysis";
+import SalesOrganization from "../../pages/SalesAI/SalesOrganization";
+import SalesOpportunityCenter from "../../pages/SalesOpportunityCenter";
+
+// 销售漏斗
+import SalesFunnel from "../../pages/SalesFunnel";
+
+// 售前相关
+import PresalesTasks from "../../pages/PresalesTasks";
+import TechnicalAssessment from "../../pages/TechnicalAssessment";
+import OpenItemsManagement from "../../pages/OpenItemsManagement";
+import RequirementFreezeManagement from "../../pages/RequirementFreezeManagement";
+import AIClarificationChat from "../../pages/AIClarificationChat";
 import PresaleExpenseManagement from "../../pages/PresaleExpenseManagement";
-import LeadPriorityManagement from "../../pages/LeadPriorityManagement";
+import BiddingDetail from "../../pages/BiddingDetail";
+import SalesProjectTrack from "../../pages/SalesProjectTrack";
+import SalesTemplateCenter from "../../pages/SalesTemplateCenter";
+
+// AI 销售助手
+import IntelligentQuote from "../../pages/SalesAI/IntelligentQuote";
+import SalesAutomation from "../../pages/SalesAI/Automation";
+import ForecastDashboard from "../../pages/SalesAI/ForecastDashboard";
+import PerformanceIncentive from "../../pages/SalesAI/PerformanceIncentive";
+import Collaboration from "../../pages/SalesAI/Collaboration";
+import RelationshipMaturity from "../../pages/SalesAI/RelationshipMaturity";
+import WinRatePrediction from "../../pages/SalesAI/WinRatePrediction";
+import CompetitorAnalysis from "../../pages/SalesAI/CompetitorAnalysis";
+import DataQuality from "../../pages/SalesAI/DataQuality";
+import RoleBasedView from "../../pages/SalesAI/RoleBasedView";
+
+// 分析相关
+import LossAnalysis from "../../pages/LossAnalysis";
 import PipelineBreakAnalysis from "../../pages/PipelineBreakAnalysis";
 import AccountabilityAnalysis from "../../pages/AccountabilityAnalysis";
 import PipelineHealthMonitoring from "../../pages/PipelineHealthMonitoring";
 import DelayAnalysis from "../../pages/DelayAnalysis";
 import CostOverrunAnalysis from "../../pages/CostOverrunAnalysis";
 import InformationGapAnalysis from "../../pages/InformationGapAnalysis";
-import LeadDetail from "../../pages/LeadDetail";
-import OpportunityDetail from "../../pages/OpportunityDetail";
-import QuoteCostAnalysis from "../../pages/QuoteCostAnalysis";
-import QuoteCreateEdit from "../../pages/QuoteCreateEdit";
-import QuoteManagement from "../../pages/QuoteManagement";
-import SalesTemplateCenter from "../../pages/SalesTemplateCenter";
-import PresalesTasks from "../../pages/PresalesTasks";
-
-// AI 销售助手相关组件
-import { default as SalesAIAssistant } from "../../pages/SalesAI";
-import IntelligentQuote from "../../pages/SalesAI/IntelligentQuote";
-import SalesAutomation from "../../pages/SalesAI/Automation";
-import ForecastDashboard from "../../pages/SalesAI/ForecastDashboard";
-import FunnelOptimization from "../../pages/SalesAI/FunnelOptimization";
-import Customer360 from "../../pages/SalesAI/Customer360";
-import PerformanceIncentive from "../../pages/SalesAI/PerformanceIncentive";
-import Collaboration from "../../pages/SalesAI/Collaboration";
-import RelationshipMaturity from "../../pages/SalesAI/RelationshipMaturity";
-import WinRatePrediction from "../../pages/SalesAI/WinRatePrediction";
-import CompetitorAnalysis from "../../pages/SalesAI/CompetitorAnalysis";
-import SalesOrganization from "../../pages/SalesAI/SalesOrganization";
-import DataQuality from "../../pages/SalesAI/DataQuality";
-import RoleBasedView from "../../pages/SalesAI/RoleBasedView";
-
 
 export function SalesRoutes() {
   return (
@@ -72,17 +91,21 @@ export function SalesRoutes() {
       {/* 销售漏斗（固定路径，放在最前避免被 /sales/:param 抢匹配） */}
       <Route path="/sales-funnel" element={<Navigate to="/sales/funnel" replace />} />
       <Route path="/sales/funnel" element={<SalesFunnel />} />
+      {/* 销售目标已整合到销售预测页面 */}
+      <Route path="/sales/targets" element={<Navigate to="/sales/forecast-dashboard" replace />} />
       <Route path="/sales/sales-analysis" element={<Navigate to="/presales/presale-analytics" replace />} />
 
       <Route path="/sales-reports" element={<SalesReports />} />
+      <Route path="/sales/opportunity-center" element={<SalesOpportunityCenter />} />
+      <Route path="/sales/team-center" element={<SalesTeamCenter />} />
       <Route path="/sales-team" element={<SalesTeam />} />
       <Route path="/sales/team" element={<SalesTeam />} />
       <Route path="/sales/team/ranking" element={<SalesTeam />} />
-      <Route path="/sales/targets" element={<SalesTarget />} />
       <Route path="/contract-approval" element={<ContractApproval />} />
       <Route path="/sales/contracts/approval" element={<ContractApproval />} />
       <Route path="/customers" element={<Navigate to="/sales/customers" replace />} />
       <Route path="/sales/customers" element={<CustomerList />} />
+      <Route path="/sales/customers/:id" element={<CustomerDetail />} />
       <Route path="/opportunities" element={<OpportunityBoard />} />
       <Route path="/lead-assessment" element={<LeadAssessment />} />
       <Route path="/quotations" element={<QuotationList />} />
@@ -161,11 +184,10 @@ export function SalesRoutes() {
       <Route path="/sales/cost-overrun-analysis" element={<CostOverrunAnalysis />} />
       <Route path="/sales/information-gap-analysis" element={<InformationGapAnalysis />} />
       {/* AI 销售助手相关路由 */}
-      <Route path="/sales/ai-assistant" element={<SalesAIAssistant />} />
       <Route path="/sales/intelligent-quote" element={<IntelligentQuote />} />
       <Route path="/sales/automation" element={<SalesAutomation />} />
       <Route path="/sales/forecast-dashboard" element={<ForecastDashboard />} />
-      <Route path="/sales/funnel-optimization" element={<FunnelOptimization />} />
+      <Route path="/sales/funnel-optimization" element={<Navigate to="/sales/funnel" replace />} />
       <Route path="/sales/customer-360" element={<Customer360 />} />
       <Route path="/sales/customer-360/:id" element={<Customer360 />} />
       <Route path="/sales/performance-incentive" element={<PerformanceIncentive />} />

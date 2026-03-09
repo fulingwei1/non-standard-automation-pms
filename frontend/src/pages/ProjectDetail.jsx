@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../lib/utils";
 import {
@@ -29,6 +29,7 @@ import {
   DialogDescription,
   DialogFooter } from
 "../components/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import QuickActionPanel from "../components/project/QuickActionPanel";
 import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
 import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
@@ -48,12 +49,27 @@ import {
   Activity,
   Download,
   Share,
-  Plus } from
+  Plus,
+  LayoutDashboard,
+  ListTodo,
+  Flag,
+  GitBranch,
+  CreditCard } from
 "lucide-react";
+
+// Tab 配置
+const PROJECT_TABS = [
+  { id: "overview", label: "概览", icon: LayoutDashboard },
+  { id: "tasks", label: "任务", icon: ListTodo },
+  { id: "milestones", label: "里程碑", icon: Flag },
+  { id: "gantt", label: "甘特图", icon: GitBranch },
+  { id: "budget", label: "预算", icon: CreditCard },
+];
 
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState(null);
   const [_machines, setMachines] = useState([]);
@@ -68,6 +84,21 @@ export default function ProjectDetail() {
   const [addingMember, setAddingMember] = useState(false);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Tab 状态
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "overview");
+
+  // 同步 Tab 到 URL
+  useEffect(() => {
+    const currentTab = searchParams.get("tab");
+    if (currentTab !== activeTab && activeTab !== "overview") {
+      setSearchParams({ tab: activeTab }, { replace: true });
+    } else if (activeTab === "overview" && currentTab) {
+      // 清除 URL 中的 tab 参数（概览是默认）
+      searchParams.delete("tab");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     fetchProjectData();
@@ -322,9 +353,28 @@ export default function ProjectDetail() {
         </div>
         } />
 
+      {/* Tab 导航 */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+          {PROJECT_TABS.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className="flex items-center gap-2"
+              >
+                <Icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
 
-      {/* 项目概览卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* 概览 Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* 项目概览卡片 */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -491,82 +541,162 @@ export default function ProjectDetail() {
           <SolutionLibrary projectId={project.id} />
         </div>
       </div>
+        </TabsContent>
 
-      {/* 其他组件 */}
-      <div className="space-y-6">
-        {/* 甘特图 */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">项目进度甘特图</h3>
-            <StageGantt stages={stages} />
-          </CardContent>
-        </Card>
-
-        {/* 里程碑 */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">项目里程碑</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {(milestones || []).map((milestone) =>
-              <div key={milestone.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{milestone.name}</h4>
-                    {milestone.status === 'completed' ?
-                  <CheckCircle className="h-5 w-5 text-green-500" /> :
-
-                  <Clock className="h-5 w-5 text-gray-400" />
-                  }
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">{milestone.description}</p>
-                  <p className="text-sm font-medium">
-                    {formatDate(milestone.target_date)}
-                  </p>
+        {/* 任务 Tab */}
+        <TabsContent value="tasks" className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">项目任务</h3>
+                <Button onClick={() => navigate(`/projects/${id}/tasks`)}>
+                  <ListTodo className="mr-2 h-4 w-4" />
+                  任务管理
+                </Button>
               </div>
-              )}
-              {milestones.length === 0 &&
-              <p className="text-center text-gray-500 py-4 col-span-3">暂无里程碑</p>
-              }
-            </div>
-          </CardContent>
-        </Card>
+              <p className="text-muted-foreground text-center py-8">
+                点击"任务管理"查看完整任务列表
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* 项目文档 */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">项目文档</h3>
-              <Button variant="outline" size="sm" onClick={handleOpenAddMember}>
-                <Plus className="mr-2 h-4 w-4" />
-                上传文档
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {(documents || []).map((doc) =>
-              <div key={doc.id} className="flex items-center justify-between p-3 border rounded">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <p className="font-medium">{doc.name}</p>
-                      <p className="text-sm text-gray-600">{doc.type}</p>
+        {/* 里程碑 Tab */}
+        <TabsContent value="milestones" className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">项目里程碑</h3>
+                <Button onClick={() => navigate(`/projects/${id}/milestones`)}>
+                  <Flag className="mr-2 h-4 w-4" />
+                  里程碑管理
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(milestones || []).map((milestone) =>
+                <div key={milestone.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">{milestone.name || milestone.milestone_name}</h4>
+                      {milestone.status === 'COMPLETED' || milestone.status === 'completed' ?
+                    <CheckCircle className="h-5 w-5 text-green-500" /> :
+                    <Clock className="h-5 w-5 text-gray-400" />
+                    }
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">
-                      {formatDate(doc.created_at)}
-                    </span>
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
+                    <p className="text-sm text-gray-600 mb-2">{milestone.description}</p>
+                    <p className="text-sm font-medium">
+                      {formatDate(milestone.target_date || milestone.planned_date)}
+                    </p>
+                </div>
+                )}
+                {milestones.length === 0 &&
+                <p className="text-center text-gray-500 py-4 col-span-3">暂无里程碑</p>
+                }
               </div>
-              )}
-              {documents?.length === 0 &&
-              <p className="text-center text-gray-500 py-4">暂无文档</p>
-              }
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 甘特图 Tab */}
+        <TabsContent value="gantt" className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">项目进度甘特图</h3>
+                <Button onClick={() => navigate(`/projects/${id}/gantt`)}>
+                  <GitBranch className="mr-2 h-4 w-4" />
+                  完整甘特图
+                </Button>
+              </div>
+              <StageGantt stages={stages} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 预算 Tab */}
+        <TabsContent value="budget" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">预算概览</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">项目预算</span>
+                    <span className="font-bold">{formatCurrency(p.budget)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">已使用</span>
+                    <span className="font-bold">{formatCurrency((costs || []).reduce((sum, c) => sum + (c.amount || 0), 0))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">使用率</span>
+                    <span className="font-bold">{calculateBudgetUtilization()}%</span>
+                  </div>
+                  <Progress value={calculateBudgetUtilization()} className="mt-2" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">成本明细</h3>
+                  <Button variant="outline" size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    添加成本
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {(costs || []).slice(0, 5).map((cost) => (
+                    <div key={cost.id} className="flex justify-between py-2 border-b">
+                      <span>{cost.name || cost.description}</span>
+                      <span className="font-medium">{formatCurrency(cost.amount)}</span>
+                    </div>
+                  ))}
+                  {costs.length === 0 && (
+                    <p className="text-center text-gray-500 py-4">暂无成本记录</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 项目文档 */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">项目文档</h3>
+                <Button variant="outline" size="sm" onClick={handleOpenAddMember}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  上传文档
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {(documents || []).map((doc) =>
+                <div key={doc.id} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex items-center space-x-3">
+                      <FileText className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <p className="font-medium">{doc.name}</p>
+                        <p className="text-sm text-gray-600">{doc.type}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-500">
+                        {formatDate(doc.created_at)}
+                      </span>
+                      <Button variant="ghost" size="sm">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                </div>
+                )}
+                {documents?.length === 0 &&
+                <p className="text-center text-gray-500 py-4">暂无文档</p>
+                }
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* 编辑对话框 */}
 

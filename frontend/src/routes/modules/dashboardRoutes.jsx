@@ -123,12 +123,7 @@ export function DashboardRoutes() {
       <Route path="/sales-manager-dashboard" element={<Navigate to="/workstation/sales" replace />} />
 
       {/* 售前相关旧路由重定向 */}
-      <Route path="/presales-dashboard" element={<Navigate to="/workstation/presales" replace />} />
-      <Route path="/presales-manager-dashboard" element={<Navigate to="/workstation/presales" replace />} />
-      <Route path="/business-support" element={<Navigate to="/workstation/presales" replace />} />
-
-      {/* 项目相关旧路由重定向 */}
-      <Route path="/pmo/dashboard" element={<Navigate to="/workstation/project" replace />} />
+      <Route path="/business-support" element={<Navigate to="/presales/technical-solutions" replace />} />
 
       {/* 工程相关旧路由重定向 */}
       <Route path="/engineer-workstation" element={<Navigate to="/workstation/engineering" replace />} />

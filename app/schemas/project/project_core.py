@@ -161,9 +161,9 @@ class ProjectListResponse(BaseSchema):
     project_code: str
     project_name: str
     customer_name: Optional[str] = None
-    stage: str
-    health: str
-    progress_pct: Decimal
+    stage: Optional[str] = "S1"  # 允许 None，默认 S1
+    health: Optional[str] = "H1"  # 允许 None，默认 H1
+    progress_pct: Optional[Decimal] = ZERO_DECIMAL  # 允许 None，默认 0
     pm_name: Optional[str] = None
     # 筛选所需的ID字段
     pm_id: Optional[int] = None

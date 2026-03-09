@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { cn } from "../../../lib/utils";
+import { formatAmountWan } from "./utils";
 
 export default function LinkedOpportunitiesCard({ opportunities }) {
   return (
@@ -56,7 +57,7 @@ export default function LinkedOpportunitiesCard({ opportunities }) {
                 <span className="text-slate-400">
                   赢率 <span className="text-white">{opp.winRate}%</span>
                 </span>
-                <span className="text-emerald-400">¥{opp.amount}万</span>
+                <span className="text-emerald-400">¥{formatAmountWan(opp.amount)}万</span>
               </div>
             </div>
           </motion.div>

@@ -13,7 +13,9 @@ import {
   AlertTriangle,
   Target,
   TrendingUp,
-  Eye } from
+  Eye,
+  Search,
+  Filter } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -54,9 +56,14 @@ export default function MilestoneManagement() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState(null);
+  const [projects, setProjects] = useState([]);
   const [milestones, setMilestones] = useState([]);
+  // 全局模式：是否有项目ID参数
+  const isGlobalMode = !id;
   // Filters
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterProjectId, setFilterProjectId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   // Dialogs
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
@@ -68,20 +75,53 @@ export default function MilestoneManagement() {
     planned_date: "",
     target_amount: 0,
     description: "",
-    auto_invoice: false
+    auto_invoice: false,
+    project_id: ""
   });
+  // 加载项目列表（全局模式）
   useEffect(() => {
-    if (id) {
+    if (isGlobalMode) {
+      fetchProjects();
+      fetchAllMilestones();
+    } else {
       fetchProject();
       fetchMilestones();
     }
-  }, [id, filterStatus]);
+  }, [id, filterStatus, filterProjectId]);
+  // 获取项目列表（全局模式用）
+  const fetchProjects = async () => {
+    try {
+      const res = await projectApi.list({ page_size: 200 });
+      const list = res?.data?.items ?? res?.items ?? res?.data ?? res ?? [];
+      setProjects(Array.isArray(list) ? list : []);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+    }
+  };
   const fetchProject = async () => {
     try {
       const res = await projectApi.get(id);
       setProject(res.data || res);
     } catch (error) {
       console.error("Failed to fetch project:", error);
+    }
+  };
+  // 获取所有里程碑（全局模式）
+  const fetchAllMilestones = async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (filterStatus && filterStatus !== "all") params.status = filterStatus;
+      if (filterProjectId && filterProjectId !== "all") params.project_id = filterProjectId;
+      // 假设 milestoneApi.listAll 存在，否则需要调用 /milestones 接口
+      const res = await milestoneApi.listAll ? milestoneApi.listAll(params) : milestoneApi.list(null, params);
+      const milestoneList = res?.data?.items ?? res?.data ?? res ?? [];
+      setMilestones(Array.isArray(milestoneList) ? milestoneList : []);
+    } catch (error) {
+      console.error("Failed to fetch all milestones:", error);
+      setMilestones([]);
+    } finally {
+      setLoading(false);
     }
   };
   const fetchMilestones = async () => {
@@ -98,15 +138,29 @@ export default function MilestoneManagement() {
       setLoading(false);
     }
   };
+  // 筛选后的里程碑
+  const filteredMilestones = milestones.filter((m) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      (m.milestone_name || "").toLowerCase().includes(query) ||
+      (m.project_name || "").toLowerCase().includes(query)
+    );
+  });
   const handleCreateMilestone = async () => {
+    const projectIdToUse = isGlobalMode ? newMilestone.project_id : id;
     if (!newMilestone.milestone_name || !newMilestone.planned_date) {
       alert("请填写里程碑名称和计划日期");
+      return;
+    }
+    if (isGlobalMode && !projectIdToUse) {
+      alert("请选择项目");
       return;
     }
     try {
       await milestoneApi.create({
         ...newMilestone,
-        project_id: parseInt(id)
+        project_id: parseInt(projectIdToUse)
       });
       setShowCreateDialog(false);
       setNewMilestone({
@@ -115,9 +169,14 @@ export default function MilestoneManagement() {
         planned_date: "",
         target_amount: 0,
         description: "",
-        auto_invoice: false
+        auto_invoice: false,
+        project_id: ""
       });
-      fetchMilestones();
+      if (isGlobalMode) {
+        fetchAllMilestones();
+      } else {
+        fetchMilestones();
+      }
     } catch (error) {
       console.error("Failed to create milestone:", error);
       alert(
@@ -129,7 +188,11 @@ export default function MilestoneManagement() {
     if (!await confirmAction("确认完成此里程碑？")) {return;}
     try {
       await milestoneApi.complete(milestoneId);
-      fetchMilestones();
+      if (isGlobalMode) {
+        fetchAllMilestones();
+      } else {
+        fetchMilestones();
+      }
     } catch (error) {
       console.error("Failed to complete milestone:", error);
       alert(
@@ -160,18 +223,18 @@ export default function MilestoneManagement() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(`/projects/${id}`)}>
-
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            返回项目
-          </Button>
+          {!isGlobalMode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/projects/${id}`)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              返回项目
+            </Button>
+          )}
           <PageHeader
-            title={`${project?.project_name || "项目"} - 里程碑管理`}
-            description="里程碑列表、创建、完成、时间线展示" />
-
+            title={isGlobalMode ? "里程碑管理" : `${project?.project_name || "项目"} - 里程碑管理`}
+            description={isGlobalMode ? "全局里程碑视图，支持筛选和搜索" : "里程碑列表、创建、完成、时间线展示"} />
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -181,15 +244,42 @@ export default function MilestoneManagement() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* 搜索框 */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="搜索里程碑..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {/* 项目筛选（仅全局模式） */}
+            {isGlobalMode && (
+              <Select value={filterProjectId || "all"} onValueChange={setFilterProjectId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择项目" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部项目</SelectItem>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name || p.project_name || `项目 ${p.id}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {/* 状态筛选 */}
+            <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -206,11 +296,11 @@ export default function MilestoneManagement() {
         <CardContent>
           {loading ?
           <div className="text-center py-8 text-slate-400">加载中...</div> :
-          milestones.length === 0 ?
+          filteredMilestones.length === 0 ?
           <div className="text-center py-8 text-slate-400">暂无里程碑</div> :
 
           <div className="space-y-4">
-              {(milestones || []).map((milestone, _index) => {
+              {(filteredMilestones || []).map((milestone, _index) => {
               const overdue = isOverdue(milestone);
               const status = overdue ? "OVERDUE" : milestone.status;
               const config = statusConfigs[status] || statusConfigs.PENDING;
@@ -239,6 +329,11 @@ export default function MilestoneManagement() {
                           {milestone.milestone_type &&
                         <Badge variant="outline">
                               {milestone.milestone_type}
+                        </Badge>
+                        }
+                          {isGlobalMode && milestone.project_name &&
+                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
+                              {milestone.project_name}
                         </Badge>
                         }
                           {overdue &&
@@ -312,6 +407,30 @@ export default function MilestoneManagement() {
           </DialogHeader>
           <DialogBody>
             <div className="space-y-4">
+              {/* 全局模式需要选择项目 */}
+              {isGlobalMode && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    所属项目 *
+                  </label>
+                  <Select
+                    value={newMilestone.project_id}
+                    onValueChange={(val) =>
+                    setNewMilestone({ ...newMilestone, project_id: val })
+                    }>
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择项目" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.name || p.project_name || `项目 ${p.id}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium mb-2 block">
                   里程碑名称 *

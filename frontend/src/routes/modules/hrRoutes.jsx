@@ -22,10 +22,14 @@ import EngineerPerformanceDetail from "../../pages/EngineerPerformanceDetail";
 import PerformanceContract from "../../pages/PerformanceContract";
 import EngineerCollaboration from "../../pages/EngineerCollaboration";
 import EngineerKnowledge from "../../pages/EngineerKnowledge";
+import PerformanceCenter from "../../pages/PerformanceCenter";
+import TalentMatchingCenter from "../../pages/TalentMatchingCenter";
 
 export function HRRoutes() {
   return (
     <>
+      <Route path="/hr/performance-center" element={<PerformanceCenter />} />
+      <Route path="/hr/talent-matching-center" element={<TalentMatchingCenter />} />
       <Route path="/performance" element={<PerformanceManagement />} />
       <Route path="/performance/ranking" element={<PerformanceRanking />} />
       <Route path="/performance-contract" element={<PerformanceContract />} />

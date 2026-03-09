@@ -185,6 +185,7 @@ class SolutionResponse(TimestampSchema):
     id: int
     solution_no: str
     name: str
+    author_name: Optional[str] = None
     # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
     solution_type: Optional[str] = None
     industry: Optional[str] = None

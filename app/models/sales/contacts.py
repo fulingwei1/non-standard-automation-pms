@@ -52,6 +52,16 @@ class Contact(Base, TimestampMixin):
     # 主要联系人标记
     is_primary = Column(Boolean, default=False, comment="是否为主要联系人")
 
+    # 决策链相关字段
+    decision_role = Column(String(20), comment="决策角色: EB/TB/PB/UB/COACH")
+    influence_level = Column(String(10), comment="影响力: HIGH/MEDIUM/LOW")
+    attitude = Column(
+        String(20), default="unknown", comment="态度: supportive/neutral/resistant/unknown"
+    )
+    relationship_strength = Column(Integer, default=0, comment="关系强度 0-100")
+    last_contact_date = Column(Date, comment="最后联系日期")
+    key_concerns = Column(Text, comment="关键关注点JSON数组")
+
     # 关系
     customer = relationship("Customer", back_populates="contacts")
 
@@ -61,6 +71,9 @@ class Contact(Base, TimestampMixin):
         Index("idx_contact_primary", "is_primary"),
         Index("idx_contact_mobile", "mobile"),
         Index("idx_contact_email", "email"),
+        Index("idx_contact_decision_role", "decision_role"),
+        Index("idx_contact_influence", "influence_level"),
+        Index("idx_contact_attitude", "attitude"),
     )
 
     def __repr__(self):

@@ -15,12 +15,13 @@ class LeadStatusEnum(str, Enum):
 
 
 class OpportunityStageEnum(str, Enum):
-    DISCOVERY = "DISCOVERY"
-    QUALIFICATION = "QUALIFICATION"
-    PROPOSAL = "PROPOSAL"
-    NEGOTIATION = "NEGOTIATION"
-    WON = "WON"
-    LOST = "LOST"
+    DISCOVERY = "DISCOVERY"        # 初步接触
+    QUALIFICATION = "QUALIFICATION"  # 需求挖掘
+    PROPOSAL = "PROPOSAL"          # 方案介绍
+    NEGOTIATION = "NEGOTIATION"    # 价格谈判
+    CLOSING = "CLOSING"            # 成交促成
+    WON = "WON"                    # 赢单
+    LOST = "LOST"                  # 输单
 
 
 class GateStatusEnum(str, Enum):

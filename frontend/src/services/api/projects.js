@@ -83,6 +83,9 @@ export const projectApi = {
   getHealthDetails: (id) => api.get(`/projects/${id}/health/details`),
   // Sprint 3.2: 项目经理统计
   getStats: (params) => api.get("/projects/stats", { params }),
+  // 项目工时汇总
+  getTimesheetSummary: (projectId, params) =>
+    api.get(`/projects/${projectId}/timesheet/summary`, { params }),
 };
 
 export const machineApi = {

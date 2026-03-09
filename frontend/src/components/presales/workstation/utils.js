@@ -37,3 +37,11 @@ export const getTypeColor = (type) => {
   };
   return colorMap[type] || "bg-slate-500";
 };
+
+export const formatAmountWan = (amount) => {
+  const numeric = Number(amount || 0);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return "0.0";
+  }
+  return (numeric / 10000).toFixed(1);
+};

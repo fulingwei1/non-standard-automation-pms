@@ -99,6 +99,30 @@ const AI_TEMPLATE_SUGGESTIONS = [
   },
 ];
 
+function normalizeSolutionStatus(status, reviewStatus) {
+  const currentStatus = String(status || "").toUpperCase();
+  const currentReviewStatus = String(reviewStatus || "").toUpperCase();
+
+  if (currentStatus === "APPROVED" || currentStatus === "DELIVERED" || currentStatus === "WON") {
+    return "APPROVED";
+  }
+  if (currentStatus === "REJECTED" || currentStatus === "LOST") {
+    return "REJECTED";
+  }
+  if (
+    currentStatus === "REVIEW" ||
+    currentStatus === "REVIEWING" ||
+    currentReviewStatus === "PENDING" ||
+    currentReviewStatus === "REVIEWING"
+  ) {
+    return "REVIEWING";
+  }
+  if (currentStatus === "IN_PROGRESS" || currentStatus === "SUBMITTED") {
+    return "IN_PROGRESS";
+  }
+  return "DRAFT";
+}
+
 function extractItems(response) {
   const payload = response?.data ?? response;
   if (Array.isArray(payload)) {
@@ -131,7 +155,7 @@ function normalizeSolution(solution) {
     suggestedPrice: Number(solution?.suggested_price) || 0,
     estimatedHours: Number(solution?.estimated_hours) || 0,
     estimatedDuration: Number(solution?.estimated_duration) || 0,
-    status: solution?.status || "DRAFT",
+    status: normalizeSolutionStatus(solution?.status, solution?.review_status),
     version: solution?.version || "V1.0",
     reviewStatus: solution?.review_status,
     reviewComment: solution?.review_comment,
@@ -229,19 +253,21 @@ export default function PresaleProposals() {
 
     try {
       const params = { page: 1, page_size: 100 };
-      if (statusFilter !== "all") {
-        params.status = statusFilter;
-      }
       if (searchKeyword.trim()) {
         params.keyword = searchKeyword.trim();
       }
 
       const response = await presaleApi.solutions.list(params);
       const list = extractItems(response).map(normalizeSolution);
-      setSolutions(list);
+      const filteredList =
+        statusFilter === "all"
+          ? list
+          : list.filter((solution) => solution.status === statusFilter);
 
-      if (list.length > 0) {
-        setSelectedSolutionId((previous) => previous || String(list[0].id));
+      setSolutions(filteredList);
+
+      if (filteredList.length > 0) {
+        setSelectedSolutionId((previous) => previous || String(filteredList[0].id));
       }
     } catch (requestError) {
       console.error("加载方案失败:", requestError);

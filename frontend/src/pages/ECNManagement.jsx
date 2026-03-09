@@ -83,7 +83,7 @@ const statusOptions = [
   { value: "closed", label: "已关闭" },
 ];
 
-export default function ECNManagement() {
+export default function ECNManagement({ embedded = false }) {
   const [loading, setLoading] = useState(true);
   const [ecns, setEcns] = useState([]);
   const [total, setTotal] = useState(0);
@@ -215,12 +215,14 @@ export default function ECNManagement() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-950 min-h-screen">
-      <PageHeader
-        title="ECN 工程变更管理"
-        description="工程变更通知与 BOM 联动管理"
-        icon={FileText}
-      />
+    <div className={embedded ? "space-y-6" : "p-6 space-y-6 bg-gray-950 min-h-screen"}>
+      {!embedded ? (
+        <PageHeader
+          title="ECN 工程变更管理"
+          description="工程变更通知与 BOM 联动管理"
+          icon={FileText}
+        />
+      ) : null}
 
       {loading && !ecns.length ? (
         <div className="flex items-center justify-center py-20">

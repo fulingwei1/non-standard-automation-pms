@@ -31,6 +31,7 @@ import FeasibilityAssessmentDialog from "../components/presales/workstation/Feas
 import { getTypeColor } from "../components/presales/workstation/utils";
 
 const YUAN_TO_CENTS = 10000;
+const SOLUTION_CENTER_PATH = "/presales/solutions";
 
 const statsData = [
   {
@@ -79,19 +80,19 @@ const quickActions = [
   {
     name: "新建方案",
     icon: FileText,
-    path: "/solutions",
+    path: SOLUTION_CENTER_PATH,
     color: "from-violet-500 to-purple-600"
   },
   {
     name: "新建调研",
     icon: ClipboardList,
-    path: "/requirement-survey",
+    path: "/presales/technical-solutions?tab=surveys",
     color: "from-emerald-500 to-teal-600"
   },
   {
     name: "上传文档",
     icon: Upload,
-    path: "#",
+    path: "/documents",
     color: "from-blue-500 to-cyan-600"
   },
   {
@@ -101,6 +102,122 @@ const quickActions = [
     color: "from-amber-500 to-orange-600"
   }
 ];
+
+function extractItems(response) {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items;
+  }
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+  return [];
+}
+
+function formatDateLabel(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleDateString("zh-CN");
+}
+
+function getDaysLeft(value) {
+  if (!value) {
+    return null;
+  }
+
+  const deadline = new Date(value);
+  if (Number.isNaN(deadline.getTime())) {
+    return null;
+  }
+
+  const now = new Date();
+  return Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+}
+
+function normalizeSolutionStatus(status, reviewStatus) {
+  const currentStatus = String(status || "").toUpperCase();
+  const currentReviewStatus = String(reviewStatus || "").toUpperCase();
+
+  if (currentStatus === "APPROVED" || currentStatus === "DELIVERED" || currentStatus === "WON") {
+    return "APPROVED";
+  }
+  if (currentStatus === "REJECTED" || currentStatus === "LOST") {
+    return "REJECTED";
+  }
+  if (
+    currentStatus === "REVIEW" ||
+    currentStatus === "REVIEWING" ||
+    currentReviewStatus === "PENDING" ||
+    currentReviewStatus === "REVIEWING"
+  ) {
+    return "REVIEWING";
+  }
+  if (currentStatus === "SUBMITTED" || currentStatus === "IN_PROGRESS") {
+    return "SUBMITTED";
+  }
+  return "DRAFT";
+}
+
+function isOngoingSolution(solution) {
+  return ["DRAFT", "REVIEWING", "SUBMITTED"].includes(
+    normalizeSolutionStatus(solution?.status, solution?.review_status)
+  );
+}
+
+function mapOpportunityStage(stage) {
+  const stageMap = {
+    QUALIFICATION: "资格评估",
+    PROPOSAL: "方案跟进",
+    QUOTATION: "报价阶段",
+    NEGOTIATION: "商务谈判",
+  };
+  return stageMap[stage] || stage || "待推进";
+}
+
+function getOpportunityStageColor(stage) {
+  const colorMap = {
+    QUALIFICATION: "bg-blue-500/20 text-blue-300",
+    PROPOSAL: "bg-violet-500/20 text-violet-300",
+    QUOTATION: "bg-amber-500/20 text-amber-300",
+    NEGOTIATION: "bg-emerald-500/20 text-emerald-300",
+  };
+  return colorMap[stage] || "bg-slate-500/20 text-slate-300";
+}
+
+function mapTenderStatus(result) {
+  const normalizedResult = String(result || "PENDING").toUpperCase();
+  const labelMap = {
+    PENDING: "准备中",
+    WON: "已中标",
+    LOST: "未中标",
+    CANCELLED: "已取消",
+  };
+  const colorMap = {
+    PENDING: "bg-amber-500",
+    WON: "bg-emerald-500",
+    LOST: "bg-red-500",
+    CANCELLED: "bg-slate-500",
+  };
+
+  return {
+    key: normalizedResult,
+    label: labelMap[normalizedResult] || normalizedResult,
+    color: colorMap[normalizedResult] || "bg-slate-500",
+  };
+}
 
 export default function PresalesWorkstation() {
   const [_loading, setLoading] = useState(true);
@@ -117,12 +234,18 @@ export default function PresalesWorkstation() {
 
   const mapTicketType = (backendType) => {
     const typeMap = {
+      SOLUTION: "方案设计",
       SOLUTION_DESIGN: "方案设计",
+      QUOTATION: "成本核算",
       COST_ESTIMATE: "成本核算",
       COST_SUPPORT: "成本支持",
+      MEETING: "技术交流",
       TECHNICAL_EXCHANGE: "技术交流",
+      SURVEY: "需求调研",
       REQUIREMENT_RESEARCH: "需求调研",
+      TENDER: "投标支持",
       TENDER_SUPPORT: "投标支持",
+      CONSULT: "技术交流",
       SOLUTION_REVIEW: "方案评审",
       FEASIBILITY_ASSESSMENT: "可行性评估"
     };
@@ -132,6 +255,7 @@ export default function PresalesWorkstation() {
   const mapSolutionStatus = (backendStatus) => {
     const statusMap = {
       DRAFT: "设计中",
+      REVIEW: "评审中",
       REVIEWING: "评审中",
       APPROVED: "已通过",
       REJECTED: "已驳回",
@@ -140,88 +264,131 @@ export default function PresalesWorkstation() {
     return statusMap[backendStatus] || backendStatus;
   };
 
+  // 演示数据 - 当 API 不可用时使用
+  const getMockData = () => {
+    const mockTasks = [
+      { id: 1, title: "新能源电池测试方案", type: "方案设计", typeColor: "bg-blue-500", source: "销售：张经理", deadline: "2026-03-15", priority: "high", customer: "宁德时代" },
+      { id: 2, title: "汽车电子成本核算", type: "成本核算", typeColor: "bg-amber-500", source: "销售：李总", deadline: "2026-03-12", priority: "medium", customer: "比亚迪" },
+      { id: 3, title: "充电桩测试可行性评估", type: "可行性评估", typeColor: "bg-violet-500", source: "内部流程", deadline: "2026-03-18", priority: "low", customer: "特来电" },
+    ];
+    const mockSolutions = [
+      { id: 1, name: "动力电池EOL测试系统", customer: "宁德时代", version: "V2.1", status: "评审中", statusColor: "bg-amber-500", progress: 85, amount: 3800000 },
+      { id: 2, name: "BMS测试方案", customer: "比亚迪", version: "V1.0", status: "设计中", statusColor: "bg-blue-500", progress: 60, amount: 2500000 },
+    ];
+    const mockTenders = [
+      { id: 1, name: "新能源汽车测试设备采购", customer: "广汽埃安", deadline: "2026-03-20", status: "准备中", statusColor: "bg-amber-500", amount: 5000000, progress: 60, daysLeft: 11 },
+    ];
+    const mockOpportunities = [
+      { id: 1, name: "储能系统测试项目", customer: "阳光电源", stage: "方案跟进", stageColor: "bg-violet-500/20 text-violet-300", amount: 8000000, winRate: 60, salesPerson: "张经理", expectedDate: "2026-04-30" },
+    ];
+    return { mockTasks, mockSolutions, mockTenders, mockOpportunities };
+  };
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const ticketsResponse = await presaleApi.tickets.list({
-        page: 1,
-        page_size: 50,
-        status: "PENDING,ACCEPTED,IN_PROGRESS"
-      });
-      const tickets = ticketsResponse.data?.items || ticketsResponse.data?.items || ticketsResponse.data || [];
-
-      const transformedTasks = await Promise.all(
-        (tickets || []).map(async (ticket) => {
-          let solutionId = null;
-          try {
-            const solutionsResponse = await presaleApi.solutions.list({
-              ticket_id: ticket.id,
-              page: 1,
-              page_size: 1
-            });
-            const solutions =
-            solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
-            if (solutions.length > 0) {
-              solutionId = solutions[0].id;
-            }
-          } catch (_err) {
-            solutionId = null;
-          }
-          return {
-            id: ticket.id,
-            title: ticket.title,
-            type: mapTicketType(ticket.ticket_type),
-            typeColor: getTypeColor(mapTicketType(ticket.ticket_type)),
-            source: ticket.applicant_name ?
-            `销售：${ticket.applicant_name}` :
-            "内部流程",
-            deadline: ticket.deadline || ticket.expected_date || "",
-            priority: ticket.urgency?.toLowerCase() || "medium",
-            customer: ticket.customer_name || "",
-            ticketId: ticket.id,
-            opportunityId: ticket.opportunity_id,
-            biddingId: ticket.project_id,
-            solutionId,
-            requestedBy: ticket.applicant_name,
-            requestedAt: ticket.apply_time
-          };
-        })
-      );
-
-      setTodoTasks(transformedTasks);
+      let tickets = [];
+      try {
+        const ticketsResponse = await presaleApi.tickets.list({
+          page: 1,
+          page_size: 50,
+          status: "PENDING,ACCEPTED,PROCESSING,REVIEW,IN_PROGRESS"
+        });
+        tickets = extractItems(ticketsResponse);
+      } catch (apiErr) {
+        // API 调用失败，使用演示数据
+        console.warn("售前工单 API 不可用，使用演示数据:", apiErr.message);
+        const { mockTasks, mockSolutions, mockTenders, mockOpportunities } = getMockData();
+        setTodoTasks(mockTasks);
+        setOngoingSolutions(mockSolutions);
+        setRecentTenders(mockTenders);
+        setRelatedOpportunities(mockOpportunities);
+        setStats(statsData);
+        setLoading(false);
+        return;
+      }
 
       const solutionsResponse = await presaleApi.solutions.list({
         page: 1,
-        page_size: 20,
-        status: "DRAFT,REVIEWING,SUBMITTED"
+        page_size: 100
       });
-      const solutions =
-      solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
+      const allSolutions = extractItems(solutionsResponse);
+      const latestSolutionByTicketId = new Map();
 
-      const transformedSolutions = (solutions || []).map((solution) => ({
+      [...allSolutions]
+        .sort((left, right) => {
+          const leftTime = new Date(left?.updated_at || left?.created_at || 0).getTime();
+          const rightTime = new Date(right?.updated_at || right?.created_at || 0).getTime();
+          return rightTime - leftTime;
+        })
+        .forEach((solution) => {
+          if (solution?.ticket_id && !latestSolutionByTicketId.has(solution.ticket_id)) {
+            latestSolutionByTicketId.set(solution.ticket_id, solution);
+          }
+        });
+
+      const transformedTasks = (tickets || []).map((ticket) => {
+        const taskType = mapTicketType(ticket.ticket_type);
+        const relatedSolution = latestSolutionByTicketId.get(ticket.id);
+
+        return {
+          id: ticket.id,
+          title: ticket.title,
+          type: taskType,
+          typeColor: getTypeColor(taskType),
+          source: ticket.applicant_name ? `销售：${ticket.applicant_name}` : "内部流程",
+          deadline: formatDateLabel(ticket.deadline || ticket.expected_date) || "待排期",
+          priority:
+            ticket.urgency === "VERY_URGENT" || ticket.urgency === "URGENT"
+              ? "high"
+              : "medium",
+          customer: ticket.customer_name || "待确认客户",
+          ticketId: ticket.id,
+          opportunityId: ticket.opportunity_id,
+          biddingId: ticket.project_id,
+          solutionId: relatedSolution?.id || null,
+          requestedBy: ticket.applicant_name,
+          requestedAt: ticket.apply_time,
+          description: ticket.description || ""
+        };
+      });
+
+      setTodoTasks(transformedTasks);
+
+      const activeSolutions = (allSolutions || []).filter(isOngoingSolution);
+      const transformedSolutions = activeSolutions.map((solution) => {
+        const normalizedStatus = normalizeSolutionStatus(solution.status, solution.review_status);
+
+        return {
         id: solution.id,
         name: solution.name,
-        customer: solution.customer_id ? "客户" : "",
+        customer:
+          solution.customer_name ||
+          (solution.customer_id ? `客户 #${solution.customer_id}` : "待关联客户"),
         version: solution.version || "V1.0",
-        status: mapSolutionStatus(solution.status),
+        status: mapSolutionStatus(normalizedStatus),
         statusColor:
-        solution.status === "REVIEWING" ?
+        normalizedStatus === "REVIEWING" ?
         "bg-amber-500" :
-        solution.status === "APPROVED" ?
+        normalizedStatus === "APPROVED" ?
         "bg-emerald-500" :
         "bg-blue-500",
         progress:
-        solution.status === "APPROVED" ?
+        normalizedStatus === "APPROVED" ?
         100 :
-        solution.status === "REVIEWING" ?
+        normalizedStatus === "REVIEWING" ?
         85 :
         60,
-        deadline: solution.estimated_duration ? "" : "",
-        amount: solution.estimated_cost || solution.suggested_price || 0,
-        deviceType: solution.test_type || solution.solution_type || ""
-      }));
+        deadline:
+          solution.estimated_duration
+            ? `${solution.estimated_duration} 天`
+            : formatDateLabel(solution.updated_at || solution.created_at) || "待排期",
+        amount: Number(solution.estimated_cost || solution.suggested_price || 0),
+        deviceType: solution.test_type || solution.solution_type || "未分类"
+      };
+      });
 
       setOngoingSolutions(transformedSolutions);
 
@@ -229,19 +396,23 @@ export default function PresalesWorkstation() {
         page: 1,
         page_size: 10
       });
-      const tenders = tendersResponse.data?.items || tendersResponse.data?.items || tendersResponse.data || [];
+      const tenders = extractItems(tendersResponse);
 
-      const transformedTenders = (tenders || []).map((tender) => ({
-        id: tender.id,
-        name: tender.tender_name || tender.project_name || "",
-        customer: tender.customer_name || "",
-        deadline: tender.submission_deadline || "",
-        status: tender.status || "PREPARING",
-        statusColor:
-        tender.status === "SUBMITTED" ? "bg-emerald-500" : "bg-amber-500",
-        amount: tender.budget || 0,
-        progress: tender.status === "SUBMITTED" ? 100 : 60
-      }));
+      const transformedTenders = (tenders || []).map((tender) => {
+        const tenderStatus = mapTenderStatus(tender.result);
+
+        return {
+          id: tender.id,
+          name: tender.tender_name || tender.project_name || "",
+          customer: tender.customer_name || "待确认客户",
+          deadline: formatDateLabel(tender.deadline) || "待定",
+          status: tenderStatus.label,
+          statusColor: tenderStatus.color,
+          amount: Number(tender.budget_amount || tender.budget || 0),
+          progress: tenderStatus.key === "PENDING" ? 60 : 100,
+          daysLeft: getDaysLeft(tender.deadline)
+        };
+      });
 
       setRecentTenders(transformedTenders);
 
@@ -250,17 +421,18 @@ export default function PresalesWorkstation() {
         page_size: 10,
         stage: "QUALIFICATION,PROPOSAL"
       });
-      const opportunities =
-      opportunitiesResponse.data?.items || opportunitiesResponse.data?.items || opportunitiesResponse.data || [];
+      const opportunities = extractItems(opportunitiesResponse);
 
       const transformedOpportunities = (opportunities || []).map((opp) => ({
         id: opp.id,
-        name: opp.name,
-        customer: opp.customer_name || "",
-        stage: opp.stage || "",
-        amount: opp.estimated_value || 0,
-        probability: opp.probability || 0,
-        expectedDate: opp.expected_close_date || ""
+        name: opp.opp_name || opp.opportunity_name || opp.name || "未命名商机",
+        customer: opp.customer_name || "待确认客户",
+        stage: mapOpportunityStage(opp.stage),
+        stageColor: getOpportunityStageColor(opp.stage),
+        amount: Number(opp.est_amount || opp.estimated_value || 0),
+        winRate: opp.probability || 0,
+        salesPerson: opp.owner_name || "待分配",
+        expectedDate: formatDateLabel(opp.expected_close_date) || "待定"
       }));
 
       setRelatedOpportunities(transformedOpportunities);
@@ -268,8 +440,8 @@ export default function PresalesWorkstation() {
       const pendingTickets = (tickets || []).filter(
         (t) => t.status === "PENDING"
       ).length;
-      const reviewingSolutions = (solutions || []).filter(
-        (s) => s.status === "REVIEWING"
+      const reviewingSolutions = (activeSolutions || []).filter(
+        (s) => normalizeSolutionStatus(s.status, s.review_status) === "REVIEWING"
       ).length;
       const totalEstimatedValue = (transformedSolutions || []).reduce(
         (sum, s) => sum + (s.amount || 0),
@@ -290,7 +462,7 @@ export default function PresalesWorkstation() {
       {
         id: 2,
         title: "进行中方案",
-        value: solutions.length.toString(),
+        value: activeSolutions.length.toString(),
         subtitle: `待评审 ${reviewingSolutions}`,
         icon: FileText,
         color: "text-violet-400",
@@ -302,14 +474,7 @@ export default function PresalesWorkstation() {
         title: "投标项目",
         value: tenders.length.toString(),
         subtitle: `本月截止 ${
-        (tenders || []).filter((t) => {
-          const deadline = new Date(t.submission_deadline);
-          const now = new Date();
-          return (
-            deadline >= now &&
-            deadline <= new Date(now.getFullYear(), now.getMonth() + 1, 0));
-
-        }).length}`,
+        (transformedTenders || []).filter((t) => t.daysLeft !== null && t.daysLeft >= 0 && t.daysLeft <= 31).length}`,
 
         icon: Target,
         color: "text-amber-400",
@@ -369,8 +534,7 @@ export default function PresalesWorkstation() {
           page: 1,
           page_size: 1
         });
-        const solutions =
-        solutionsResponse.data?.items || solutionsResponse.data?.items || solutionsResponse.data || [];
+        const solutions = extractItems(solutionsResponse);
 
         if (solutions.length > 0) {
           await presaleApi.solutions.update(solutions[0].id, {
@@ -381,7 +545,7 @@ export default function PresalesWorkstation() {
           const ticketResponse = await presaleApi.tickets.get(
             selectedCostTask.ticketId
           );
-          const ticket = ticketResponse.data;
+          const ticket = ticketResponse.data?.data || ticketResponse.data;
 
           if (ticket.opportunity_id) {
             await presaleApi.solutions.create({
@@ -398,8 +562,8 @@ export default function PresalesWorkstation() {
 
       if (selectedCostTask?.ticketId && costData.status === "submitted") {
         await presaleApi.tickets.updateProgress(selectedCostTask.ticketId, {
-          progress: 100,
-          notes: `成本估算已完成，总成本：¥${costData.totalAmount}万，建议报价：¥${costData.suggestedPrice}万`
+          progress_note: `成本估算已完成，总成本：¥${costData.totalAmount}万，建议报价：¥${costData.suggestedPrice}万`,
+          progress_percent: 100
         });
       }
 
@@ -427,8 +591,8 @@ export default function PresalesWorkstation() {
         await presaleApi.tickets.updateProgress(
           selectedFeasibilityTask.ticketId,
           {
-            progress: 100,
-            notes: `可行性评估已完成，综合评分：${assessmentData.overallScore.toFixed(1)}分`
+            progress_note: `可行性评估已完成，综合评分：${assessmentData.overallScore.toFixed(1)}分`,
+            progress_percent: 100
           }
         );
       }

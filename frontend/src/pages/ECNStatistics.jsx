@@ -94,7 +94,7 @@ const typeConfigs = {
   OTHER: { label: "其他", color: "bg-slate-500" }
 };
 
-export default function ECNStatistics() {
+export default function ECNStatistics({ embedded = false }) {
   const [loading, setLoading] = useState(true);
   const [statistics, setStatistics] = useState(null);
   const [timeRange, setTimeRange] = useState("month");
@@ -122,7 +122,9 @@ export default function ECNStatistics() {
   if (loading) {
     return (
       <div className="space-y-6 p-6">
-        <PageHeader title="ECN统计报表" description="ECN变更管理统计分析" />
+        {!embedded ? (
+          <PageHeader title="ECN统计报表" description="ECN变更管理统计分析" />
+        ) : null}
         <div className="text-center py-8 text-slate-400">加载中...</div>
       </div>);
 
@@ -131,7 +133,9 @@ export default function ECNStatistics() {
   if (!statistics) {
     return (
       <div className="space-y-6 p-6">
-        <PageHeader title="ECN统计报表" description="ECN变更管理统计分析" />
+        {!embedded ? (
+          <PageHeader title="ECN统计报表" description="ECN变更管理统计分析" />
+        ) : null}
         <div className="text-center py-8 text-slate-400">暂无统计数据</div>
       </div>);
 
@@ -257,9 +261,14 @@ export default function ECNStatistics() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <PageHeader
-          title="ECN统计报表"
-          description="ECN变更管理统计分析，包括数量、成本、工期、类型分布等" />
+        {!embedded ? (
+          <PageHeader
+            title="ECN统计报表"
+            description="ECN变更管理统计分析，包括数量、成本、工期、类型分布等"
+          />
+        ) : (
+          <div />
+        )}
 
         <Button onClick={handleExport} variant="outline">
           <Download className="w-4 h-4 mr-2" />

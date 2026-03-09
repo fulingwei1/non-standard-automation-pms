@@ -506,7 +506,7 @@ function SurveyDetailPanel({ survey, onClose }) {
   );
 }
 
-export default function RequirementSurvey() {
+export default function RequirementSurvey({ embedded = false }) {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedMethod, setSelectedMethod] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -648,19 +648,20 @@ export default function RequirementSurvey() {
       animate="visible"
       className="space-y-6"
     >
-      {/* 页面头部 */}
-      <PageHeader
-        title="需求调研"
-        description="管理客户需求调研记录、现场勘察、问题跟踪"
-        actions={
-          <motion.div variants={fadeIn} className="flex gap-2">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              新建调研
-            </Button>
-          </motion.div>
-        }
-      />
+      {!embedded && (
+        <PageHeader
+          title="需求调研"
+          description="管理客户需求调研记录、现场勘察、问题跟踪"
+          actions={
+            <motion.div variants={fadeIn} className="flex gap-2">
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                新建调研
+              </Button>
+            </motion.div>
+          }
+        />
+      )}
 
       {/* 统计卡片 */}
       <motion.div

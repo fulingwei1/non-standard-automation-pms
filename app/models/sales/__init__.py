@@ -67,6 +67,9 @@ from .quotes import (
 # 销售区域
 from .region import SalesRegion
 
+# 客户关系成熟度评分
+from .relationship_scores import CustomerRelationshipScore
+
 # 销售目标 V2
 from .target_v2 import (
     SalesTargetV2,
@@ -177,4 +180,6 @@ __all__ = [
     "PresaleAICostEstimation",
     "PresaleCostHistory",
     "PresaleCostOptimizationRecord",
+    # 客户关系成熟度评分
+    "CustomerRelationshipScore",
 ]
