@@ -10,11 +10,14 @@ nested `version` object and expects endpoints:
 """
 
 import json
+import logging
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -46,11 +49,13 @@ TECH_META_FIELDS = [
 
 
 def _to_decimal(value) -> Decimal:
+    """安全转换为 Decimal，失败返回 0"""
     if value in (None, ""):
         return Decimal("0")
     try:
         return Decimal(str(value))
-    except Exception:
+    except (InvalidOperation, ValueError, TypeError) as e:
+        logger.warning(f"成本字段转换失败: value={value!r}, error={e}")
         return Decimal("0")
 
 

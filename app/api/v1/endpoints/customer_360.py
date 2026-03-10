@@ -7,11 +7,15 @@
 """
 
 import json
+import logging
 from datetime import date, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.api import deps
 from app.core import security
@@ -89,8 +93,15 @@ def get_customer_timeline(
                 "next_action": comm.next_action or "",
                 "sentiment": comm.sentiment or "neutral",
             })
-    except Exception:
-        # 如果沟通记录表不存在，返回基于联系人最后联系日期的记录
+    except ImportError:
+        # 沟通记录模型尚未定义，回退到基于联系人的记录
+        logger.debug("CustomerCommunication 模型未找到，使用联系人记录回退")
+    except SQLAlchemyError as e:
+        # 数据库查询异常（如表不存在），记录日志并回退
+        logger.warning(f"查询沟通记录失败: {e}")
+
+    # 如果沟通记录表不存在或查询失败，返回基于联系人最后联系日期的记录
+    if not timeline:
         contacts = db.query(Contact).filter(Contact.customer_id == customer_id).all()
         for contact in contacts:
             if contact.last_contact_date:
@@ -124,7 +135,8 @@ def get_customer_timeline(
         try:
             last_date = date.fromisoformat(timeline[0]["date"])
             days_since_last = (date.today() - last_date).days
-        except Exception:
+        except ValueError:
+            # 日期格式无效，保持默认值 999
             pass
 
     return {
@@ -203,7 +215,8 @@ def get_decision_chain(
         if contact.key_concerns:
             try:
                 key_concerns = json.loads(contact.key_concerns)
-            except Exception:
+            except (json.JSONDecodeError, TypeError):
+                # JSON 格式无效，当作纯文本处理
                 key_concerns = [contact.key_concerns]
 
         contact_list.append({
@@ -474,7 +487,8 @@ def get_buying_preferences(
                 days = (close_date - create_date).days
                 if days > 0:
                     decision_cycles.append(days)
-            except Exception:
+            except (AttributeError, TypeError):
+                # 日期字段格式异常，跳过该记录
                 pass
 
     avg_decision_cycle = round(sum(decision_cycles) / len(decision_cycles)) if decision_cycles else 45
@@ -487,7 +501,8 @@ def get_buying_preferences(
             try:
                 concerns = json.loads(contact.key_concerns)
                 key_concerns.extend(concerns)
-            except Exception:
+            except (json.JSONDecodeError, TypeError):
+                # JSON 格式无效，当作纯文本处理
                 key_concerns.append(contact.key_concerns)
 
     # 去重并统计频率

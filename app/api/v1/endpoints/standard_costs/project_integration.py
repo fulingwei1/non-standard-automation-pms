@@ -64,7 +64,8 @@ def _generate_budget_version(db: Session, project_id: int) -> str:
         try:
             last_num = int(last_version.version.replace("V", ""))
             new_num = last_num + 1
-        except:
+        except ValueError:
+            # 版本号格式不符合预期（如 "V1" → 1），回退到版本 1
             new_num = 1
     else:
         new_num = 1

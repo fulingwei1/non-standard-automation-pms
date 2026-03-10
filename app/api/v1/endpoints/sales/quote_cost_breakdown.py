@@ -4,10 +4,13 @@
 包含：成本分类明细、成本项管理
 """
 
-from decimal import Decimal
+import logging
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -27,7 +30,8 @@ def _to_decimal(value) -> Decimal:
         return Decimal("0")
     try:
         return Decimal(str(value))
-    except Exception:
+    except (InvalidOperation, ValueError, TypeError) as e:
+        logger.warning(f"成本字段转换失败: value={value!r}, error={e}")
         return Decimal("0")
 
 
