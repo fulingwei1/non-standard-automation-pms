@@ -76,7 +76,8 @@ class SecretKeyManager:
             padding = "=" * (4 - len(key) % 4)
             base64.urlsafe_b64decode(key + padding)
             return True
-        except Exception as e:
+        except (ValueError, TypeError) as e:
+            # Base64 解码失败
             logger.error(f"密钥格式无效: {e}")
             return False
 

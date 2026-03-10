@@ -23,6 +23,7 @@
 from typing import Any, Optional, Type, TypeVar
 
 from fastapi import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 T = TypeVar("T")
@@ -121,6 +122,7 @@ def safe_commit(db: Session) -> bool:
     try:
         db.commit()
         return True
-    except Exception:
+    except SQLAlchemyError:
+        # 数据库提交失败，回滚事务
         db.rollback()
         return False

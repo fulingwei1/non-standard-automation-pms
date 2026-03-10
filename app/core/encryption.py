@@ -44,7 +44,8 @@ class DataEncryption:
             try:
                 self.key = base64.urlsafe_b64decode(key_b64)
                 logger.info("✅ 数据加密密钥加载成功")
-            except Exception as e:
+            except (ValueError, TypeError) as e:
+                # Base64 解码失败
                 raise ValueError(f"❌ 数据加密密钥格式错误: {e}")
 
         # 初始化 AES-GCM 加密器
@@ -85,7 +86,8 @@ class DataEncryption:
             # Base64编码（URL安全）
             return base64.urlsafe_b64encode(encrypted).decode("utf-8")
 
-        except Exception as e:
+        except (TypeError, ValueError) as e:
+            # 编码或加密异常
             logger.error(f"❌ 加密失败: {e}")
             raise ValueError(f"数据加密失败: {e}")
 
@@ -123,7 +125,8 @@ class DataEncryption:
 
             return plaintext_bytes.decode("utf-8")
 
-        except Exception as e:
+        except (TypeError, ValueError, UnicodeDecodeError) as e:
+            # Base64 解码、解密或字符解码失败
             logger.error(f"❌ 解密失败: {e}")
             return "[解密失败]"
 
