@@ -188,7 +188,8 @@ class AIScheduleOptimizer:
                     dep_id = dep.get("task_id")
                     if dep_id and dep_id in task_dict:
                         predecessors.append(task_dict[dep_id])
-            except:
+            except (json.JSONDecodeError, KeyError, TypeError, AttributeError):
+                # 依赖关系解析失败，忽略
                 pass
 
         return predecessors
@@ -208,7 +209,8 @@ class AIScheduleOptimizer:
                         if dep.get("task_id") == task.id:
                             successors.append(other_task)
                             break
-                except:
+                except (json.JSONDecodeError, KeyError, TypeError, AttributeError):
+                    # 依赖关系解析失败，忽略
                     pass
 
         return successors

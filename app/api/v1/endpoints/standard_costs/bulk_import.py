@@ -261,7 +261,7 @@ async def import_standard_costs(
                             expiry_date = datetime.strptime(row["expiry_date"], "%Y-%m-%d").date()
                         else:
                             expiry_date = pd.to_datetime(row["expiry_date"]).date()
-                    except:
+                    except (ValueError, TypeError, AttributeError):
                         warnings.append(
                             {
                                 "row": row_num,

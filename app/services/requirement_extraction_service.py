@@ -312,7 +312,8 @@ class RequirementExtractionService:
 
             try:
                 engineer_skills = json.loads(capacity.skill_tags)
-            except:
+            except (json.JSONDecodeError, TypeError):
+                # JSON 格式无效，使用空列表
                 engineer_skills = []
 
         matched_skills = [

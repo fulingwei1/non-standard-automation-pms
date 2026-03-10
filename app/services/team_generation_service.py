@@ -218,7 +218,8 @@ class TeamGenerationService:
         if capacity.skill_tags:
             try:
                 engineer_skills = json.loads(capacity.skill_tags)
-            except:
+            except (json.JSONDecodeError, TypeError):
+                # JSON 格式无效，保持空列表
                 pass
 
         required_skills = role_info.get("required_skills", [])
