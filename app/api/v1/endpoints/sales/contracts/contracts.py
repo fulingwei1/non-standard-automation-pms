@@ -4,6 +4,8 @@
 创建日期：2026-01-25
 """
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +16,15 @@ from app.common.query_filters import build_like_conditions
 from app.models.project import Project
 from app.models.project.financial import ProjectMilestone
 from app.models.project.financial import ProjectPaymentPlan as PaymentPlan
-from app.models.sales.contracts import Contract
+from app.models.sales.contracts import Contract, ContractDeliverable
+from app.utils.json_helpers import safe_json_loads
+
+from ..utils.gate_validation import validate_g4_contract_to_project
+
+logger = logging.getLogger(__name__)
+
+# 允许创建项目的合同状态
+ALLOWED_CONTRACT_STATUSES = {"signed", "executing", "SIGNED", "EXECUTING"}
 
 router = APIRouter(prefix="/contracts", tags=["contracts"])
 
@@ -30,104 +40,139 @@ async def create_project_from_contract(
 
     功能说明：
     1. 查询合同（包含客户信息）
-    2. 创建项目
-    3. 从合同的payment_nodes字段提取付款节点列表
-    4. 如果有付款节点，为每个节点创建收款计划和对应里程碑
-    5. 将合同金额同步到项目
-    6. 同步SOW/验收标准到项目
+    2. 验证合同状态和 G4 阶段门条件
+    3. 创建项目
+    4. 从合同的payment_nodes字段提取付款节点列表
+    5. 如果有付款节点，为每个节点创建收款计划和对应里程碑
+    6. 将合同金额同步到项目
+    7. 同步SOW/验收标准到项目
     """
 
-    # 1. 查询合同
+    # 1. 查询合同（包含客户信息和交付物）
     result = await db.execute(
-        select(Contract).options(selectinload(Contract.customer)).where(Contract.id == contract_id)
+        select(Contract)
+        .options(
+            selectinload(Contract.customer),
+            selectinload(Contract.deliverables),
+        )
+        .where(Contract.id == contract_id)
     )
     contract = result.scalar_one_or_none()
 
     if not contract:
         raise HTTPException(status_code=404, detail=f"合同不存在: {contract_id}")
 
+    # 2. 验证合同状态（只有已签署/执行中的合同才能创建项目）
+    if contract.status not in ALLOWED_CONTRACT_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"合同状态为 '{contract.status}'，只有已签署(signed)或执行中(executing)的合同才能创建项目",
+        )
+
+    # 3. G4 阶段门验证
+    deliverables = contract.deliverables or []
+    g4_passed, g4_errors = validate_g4_contract_to_project(contract, deliverables, db=None)
+    if not g4_passed:
+        # G4 验证失败返回详细错误信息
+        raise HTTPException(
+            status_code=400,
+            detail=f"G4 阶段门验证失败: {'; '.join(g4_errors)}",
+        )
+
     customer = contract.customer
 
-    # 2. 检查合同是否有付款节点
-    payment_nodes = contract.payment_nodes or []
-    if payment_nodes:
-        if isinstance(payment_nodes, list):
-            payment_nodes = payment_nodes
-        elif isinstance(payment_nodes, str):
-            import json
-
-            try:
-                payment_nodes = json.loads(payment_nodes)
-            except (json.JSONDecodeError, TypeError, ValueError):
-                payment_nodes = []
-
-    # 3. 创建项目
-    project = Project(
-        code=await _generate_project_code(db),
-        name=f"{contract.contract_code}-{customer.name}",
-        customer_id=customer.id,
-        contract_id=contract.id,
-        amount=contract.contract_amount,
-        sow_text=contract.sow_text or "",
-        acceptance_criteria=contract.acceptance_criteria or [],
-        stage="S1",  # 需求进入
-        status="ST01",  # 未启动
-        health_status="H1",  # 正常
+    # 4. 安全解析付款节点（使用 safe_json_loads 避免 JSON 解析异常）
+    payment_nodes = safe_json_loads(
+        contract.payment_nodes,
+        default=[],
+        field_name="payment_nodes",
     )
 
-    db.add(project)
-    await db.flush()
-
-    # 4. 处理付款节点
-    milestone_count = 0
-    if payment_nodes:
-        milestone_count = len(payment_nodes)
-
-        for idx, node in enumerate(payment_nodes, 1):
-            # 计算里程碑序号
-            milestone_seq = idx + 1
-
-            # 创建收款计划
-            payment_plan = PaymentPlan(
-                project_id=project.id,
+    # 5. 使用事务保护创建项目及相关数据
+    try:
+        async with db.begin_nested():
+            # 创建项目
+            project = Project(
+                code=await _generate_project_code(db),
+                name=f"{contract.contract_code}-{customer.name}",
+                customer_id=customer.id,
                 contract_id=contract.id,
-                node_name=node.get("name", f"付款节点{milestone_seq}"),
-                percentage=node.get("percentage", 0),
-                amount=(
-                    contract.contract_amount * node.get("percentage", 0) / 100
-                    if node.get("percentage")
-                    else 0
-                ),
-                due_date=node.get("due_date"),
-                status="PENDING",
+                amount=contract.contract_amount,
+                sow_text=contract.sow_text or "",
+                acceptance_criteria=contract.acceptance_criteria or [],
+                stage="S1",  # 需求进入
+                status="ST01",  # 未启动
+                health_status="H1",  # 正常
             )
 
-            db.add(payment_plan)
+            db.add(project)
             await db.flush()
 
-            # 创建对应的里程碑
-            milestone = ProjectMilestone(
-                project_id=project.id,
-                name=f"M{milestone_seq}",
-                description=node.get("description", f"付款里程碑{milestone_seq}"),
-                planned_date=node.get("due_date"),
-                sequence=milestone_seq,
-                status="NOT_STARTED",
-            )
+            # 处理付款节点
+            milestone_count = 0
+            if payment_nodes:
+                milestone_count = len(payment_nodes)
 
-            db.add(milestone)
-            await db.flush()
+                for idx, node in enumerate(payment_nodes, 1):
+                    # 计算里程碑序号
+                    milestone_seq = idx + 1
 
-    await db.commit()
+                    # 创建收款计划
+                    payment_plan = PaymentPlan(
+                        project_id=project.id,
+                        contract_id=contract.id,
+                        node_name=node.get("name", f"付款节点{milestone_seq}"),
+                        percentage=node.get("percentage", 0),
+                        amount=(
+                            contract.contract_amount * node.get("percentage", 0) / 100
+                            if node.get("percentage")
+                            else 0
+                        ),
+                        due_date=node.get("due_date"),
+                        status="PENDING",
+                    )
 
-    return {
-        "success": True,
-        "message": "项目创建成功，付款节点已关联到里程碑",
-        "project_id": project.id,
-        "project_code": project.code,
-        "payment_plans_count": milestone_count,
-        "milestones_count": milestone_count,
-    }
+                    db.add(payment_plan)
+                    await db.flush()
+
+                    # 创建对应的里程碑
+                    milestone = ProjectMilestone(
+                        project_id=project.id,
+                        name=f"M{milestone_seq}",
+                        description=node.get("description", f"付款里程碑{milestone_seq}"),
+                        planned_date=node.get("due_date"),
+                        sequence=milestone_seq,
+                        status="NOT_STARTED",
+                    )
+
+                    db.add(milestone)
+                    await db.flush()
+
+        await db.commit()
+
+        logger.info(
+            "合同 %s 成功创建项目 %s，付款节点数: %d",
+            contract.contract_code,
+            project.code,
+            milestone_count,
+        )
+
+        return {
+            "success": True,
+            "message": "项目创建成功，付款节点已关联到里程碑",
+            "project_id": project.id,
+            "project_code": project.code,
+            "payment_plans_count": milestone_count,
+            "milestones_count": milestone_count,
+        }
+
+    except Exception as e:
+        await db.rollback()
+        logger.error("从合同 %s 创建项目失败: %s", contract_id, str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"创建项目失败: {str(e)}",
+        )
 
 
 # 辅助函数

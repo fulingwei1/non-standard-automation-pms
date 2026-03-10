@@ -5,8 +5,6 @@
 注：列表和创建在 quotes.py 中实现
 """
 
-import json
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -15,22 +13,36 @@ from app.core import security
 from app.models.sales import Quote, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
-
 from app.utils.db_helpers import delete_obj, get_or_404
+from app.utils.json_helpers import safe_json_loads
+
 router = APIRouter()
 
 
 def _parse_item_tech_meta(remark: str) -> tuple[str, dict]:
+    """
+    解析报价项备注中的技术元数据
+
+    Args:
+        remark: 备注字符串，可能包含 [tech-meta] 标记
+
+    Returns:
+        (清理后的备注, 技术元数据字典)
+    """
     if not remark:
         return "", {}
     if "[tech-meta]" not in remark:
         return remark, {}
 
     base, raw_meta = remark.split("[tech-meta]", 1)
-    try:
-        return base.strip(), json.loads(raw_meta)
-    except Exception:
-        return base.strip(), {}
+    # 使用 safe_json_loads 安全解析，失败时返回空字典
+    tech_meta = safe_json_loads(
+        raw_meta,
+        default={},
+        field_name="tech_meta",
+        log_error=False,  # 不记录日志，因为格式不正确是正常情况
+    )
+    return base.strip(), tech_meta
 
 
 @router.get("/quotes/{quote_id}", response_model=ResponseModel)

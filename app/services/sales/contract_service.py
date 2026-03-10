@@ -10,6 +10,7 @@
 4. 同步SOW/验收标准到项目
 """
 
+import logging
 from typing import Any, Dict
 
 from sqlalchemy import Column, Date, Integer, Numeric, String, select
@@ -23,6 +24,12 @@ from app.models.project import (
     ProjectMilestone,
 )
 from app.models.sales.contracts import Contract
+from app.utils.json_helpers import safe_json_loads
+
+logger = logging.getLogger(__name__)
+
+# 允许创建项目的合同状态
+ALLOWED_CONTRACT_STATUSES = {"signed", "executing", "SIGNED", "EXECUTING"}
 
 
 class ContractService:
@@ -41,7 +48,7 @@ class ContractService:
             包含项目ID、收款计划数量等的字典
 
         Raises:
-            ValueError: 如果合同不存在
+            ValueError: 如果合同不存在、状态不允许或已关联项目
         """
 
         # 1. 查询合同（包含客户信息）
@@ -58,94 +65,108 @@ class ContractService:
         contract = contract_data[0]
         customer = contract_data[1]
 
-        # 2. 查询合同中的付款节点
-        payment_nodes = contract.payment_nodes or []
-        if payment_nodes:
-            if isinstance(payment_nodes, list):
-                payment_nodes = payment_nodes
-            elif isinstance(payment_nodes, str):
-                import json
-
-                payment_nodes = json.loads(payment_nodes)
+        # 2. 验证合同状态（只有已签署/执行中的合同才能创建项目）
+        if contract.status not in ALLOWED_CONTRACT_STATUSES:
+            raise ValueError(
+                f"合同状态为 '{contract.status}'，只有已签署(signed)或执行中(executing)的合同才能创建项目"
+            )
 
         # 3. 检查是否有项目ID，如果合同已关联项目则返回
         if contract.project_id:
             return {
                 "success": False,
-                "message": "该合同已关联项目ID " + str(contract.project_id) + "，无需重复创建项目",
+                "message": f"该合同已关联项目ID {contract.project_id}，无需重复创建项目",
                 "project_id": contract.project_id,
             }
 
-        # 4. 创建项目
-        project = Project(
-            code=await ProjectService.generate_code(),  # 假设这个方法存在
-            name=f"{contract.contract_code}-{customer.name}",
-            customer_id=customer.id,
-            contract_id=contract.id,
-            amount=contract.contract_amount,
-            sow_text=contract.sow_text or "",
-            acceptance_criteria=contract.acceptance_criteria or [],
-            stage="S1",  # 需求进入
-            status="ST01",  # 未启动
-            health_status="H1",  # 正常
+        # 4. 安全解析付款节点（使用 safe_json_loads 避免 JSON 解析异常）
+        payment_nodes = safe_json_loads(
+            contract.payment_nodes,
+            default=[],
+            field_name="payment_nodes",
         )
 
-        db.add(project)
-        await db.flush()
-
-        # 5. 如果有付款节点，创建收款计划和里程碑并关联
-        created_payment_plans = 0
-        created_milestones = 0
-
-        if payment_nodes:
-            milestone_seq = 1
-
-            for idx, node in enumerate(payment_nodes, 1):
-                # 计算里程碑序号
-                milestone_seq = idx + 1
-
-                # 创建收款计划
-                payment_plan = ProjectPaymentPlan(
-                    project_id=project.id,
+        # 5. 使用事务保护创建项目
+        try:
+            async with db.begin_nested():
+                # 创建项目
+                project = Project(
+                    code=await ProjectService.generate_code(),
+                    name=f"{contract.contract_code}-{customer.name}",
+                    customer_id=customer.id,
                     contract_id=contract.id,
-                    node_name=node.get("name", f"付款节点{milestone_seq}"),
-                    percentage=node.get("percentage", 0),
-                    amount=project.amount * node.get("percentage", 0) / 100,
-                    due_date=node.get("due_date"),
-                    milestone_id=None,  # 稍后关联
-                    status="PENDING",
+                    amount=contract.contract_amount,
+                    sow_text=contract.sow_text or "",
+                    acceptance_criteria=contract.acceptance_criteria or [],
+                    stage="S1",  # 需求进入
+                    status="ST01",  # 未启动
+                    health_status="H1",  # 正常
                 )
 
-                db.add(payment_plan)
-                created_payment_plans += 1
+                db.add(project)
+                await db.flush()
 
-                # 创建对应的里程碑（简化逻辑）
-                milestone = ProjectMilestone(
-                    project_id=project.id,
-                    name=f"M{milestone_seq}",
-                    description=node.get("description", f"付款里程碑{milestone_seq}"),
-                    planned_date=node.get("due_date"),
-                    sequence=milestone_seq,
-                    status="NOT_STARTED",
-                )
+                # 6. 如果有付款节点，创建收款计划和里程碑并关联
+                created_payment_plans = 0
+                created_milestones = 0
 
-                db.add(milestone)
-                created_milestones += 1
+                if payment_nodes:
+                    for idx, node in enumerate(payment_nodes, 1):
+                        # 计算里程碑序号
+                        milestone_seq = idx + 1
 
-                # 关联收款计划与里程碑
-                payment_plan.milestone_id = milestone.id
-                db.flush()
-                created_milestones += 1
+                        # 创建收款计划
+                        payment_plan = ProjectPaymentPlan(
+                            project_id=project.id,
+                            contract_id=contract.id,
+                            node_name=node.get("name", f"付款节点{milestone_seq}"),
+                            percentage=node.get("percentage", 0),
+                            amount=project.amount * node.get("percentage", 0) / 100,
+                            due_date=node.get("due_date"),
+                            milestone_id=None,  # 稍后关联
+                            status="PENDING",
+                        )
 
-        await db.commit()
+                        db.add(payment_plan)
+                        created_payment_plans += 1
 
-        return {
-            "success": True,
-            "message": "项目创建成功，付款节点已关联到里程碑",
-            "project_id": project.id,
-            "payment_plans_count": created_payment_plans,
-            "milestones_count": created_milestones,
-        }
+                        # 创建对应的里程碑
+                        milestone = ProjectMilestone(
+                            project_id=project.id,
+                            name=f"M{milestone_seq}",
+                            description=node.get("description", f"付款里程碑{milestone_seq}"),
+                            planned_date=node.get("due_date"),
+                            sequence=milestone_seq,
+                            status="NOT_STARTED",
+                        )
+
+                        db.add(milestone)
+                        await db.flush()
+                        created_milestones += 1
+
+                        # 关联收款计划与里程碑
+                        payment_plan.milestone_id = milestone.id
+
+            await db.commit()
+
+            logger.info(
+                "合同 %s 成功创建项目，付款节点数: %d",
+                contract.contract_code,
+                created_payment_plans,
+            )
+
+            return {
+                "success": True,
+                "message": "项目创建成功，付款节点已关联到里程碑",
+                "project_id": project.id,
+                "payment_plans_count": created_payment_plans,
+                "milestones_count": created_milestones,
+            }
+
+        except Exception as e:
+            await db.rollback()
+            logger.error("从合同 %s 创建项目失败: %s", contract_id, str(e))
+            raise ValueError(f"创建项目失败: {str(e)}")
 
 
 class ProjectPaymentPlan(Base):

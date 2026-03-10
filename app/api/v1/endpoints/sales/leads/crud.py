@@ -5,7 +5,7 @@
 """
 
 import json
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc
@@ -25,11 +25,47 @@ from app.schemas.sales import (
     LeadUpdate,
 )
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+from app.utils.json_helpers import safe_json_loads
 
 from ..utils import (
     generate_lead_code,
     get_entity_creator_id,
 )
+
+
+def _get_advantage_products_for_lead(db: Session, lead: Lead) -> List[dict]:
+    """
+    获取线索关联的优势产品详情
+
+    Args:
+        db: 数据库会话
+        lead: 线索对象
+
+    Returns:
+        优势产品列表，解析失败返回空列表
+    """
+    if not lead.selected_advantage_products:
+        return []
+
+    product_ids = safe_json_loads(
+        lead.selected_advantage_products,
+        default=[],
+        field_name="selected_advantage_products",
+    )
+
+    if not product_ids:
+        return []
+
+    products = db.query(AdvantageProduct).filter(AdvantageProduct.id.in_(product_ids)).all()
+    return [
+        {
+            "id": p.id,
+            "product_code": p.product_code,
+            "product_name": p.product_name,
+            "category_id": p.category_id,
+        }
+        for p in products
+    ]
 
 router = APIRouter()
 
@@ -78,24 +114,8 @@ def read_leads(
             "owner_name": lead.owner.real_name if lead.owner else None,
         }
 
-        # 获取优势产品详情（简化版，只在列表中显示产品数量）
-        if lead.selected_advantage_products:
-            try:
-                product_ids = json.loads(lead.selected_advantage_products)
-                products = (
-                    db.query(AdvantageProduct).filter(AdvantageProduct.id.in_(product_ids)).all()
-                )
-                lead_dict["advantage_products"] = [
-                    {
-                        "id": p.id,
-                        "product_code": p.product_code,
-                        "product_name": p.product_name,
-                        "category_id": p.category_id,
-                    }
-                    for p in products
-                ]
-            except (json.JSONDecodeError, Exception):
-                lead_dict["advantage_products"] = []
+        # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
+        lead_dict["advantage_products"] = _get_advantage_products_for_lead(db, lead)
 
         lead_responses.append(LeadResponse(**lead_dict))
 
@@ -164,22 +184,8 @@ def create_lead(
         "owner_name": lead.owner.real_name if lead.owner else None,
     }
 
-    # 获取优势产品详情
-    if lead.selected_advantage_products:
-        try:
-            product_ids = json.loads(lead.selected_advantage_products)
-            products = db.query(AdvantageProduct).filter(AdvantageProduct.id.in_(product_ids)).all()
-            lead_dict["advantage_products"] = [
-                {
-                    "id": p.id,
-                    "product_code": p.product_code,
-                    "product_name": p.product_name,
-                    "category_id": p.category_id,
-                }
-                for p in products
-            ]
-        except (json.JSONDecodeError, Exception):
-            lead_dict["advantage_products"] = []
+    # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
+    lead_dict["advantage_products"] = _get_advantage_products_for_lead(db, lead)
 
     return LeadResponse(**lead_dict)
 
@@ -201,22 +207,8 @@ def read_lead(
         "owner_name": lead.owner.real_name if lead.owner else None,
     }
 
-    # 获取优势产品详情
-    if lead.selected_advantage_products:
-        try:
-            product_ids = json.loads(lead.selected_advantage_products)
-            products = db.query(AdvantageProduct).filter(AdvantageProduct.id.in_(product_ids)).all()
-            lead_dict["advantage_products"] = [
-                {
-                    "id": p.id,
-                    "product_code": p.product_code,
-                    "product_name": p.product_name,
-                    "category_id": p.category_id,
-                }
-                for p in products
-            ]
-        except (json.JSONDecodeError, Exception):
-            lead_dict["advantage_products"] = []
+    # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
+    lead_dict["advantage_products"] = _get_advantage_products_for_lead(db, lead)
 
     return LeadResponse(**lead_dict)
 
