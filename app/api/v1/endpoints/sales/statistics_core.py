@@ -120,7 +120,7 @@ def get_opportunities_by_stage(
     """
     按阶段统计商机（已集成数据权限过滤）
     """
-    stages = ["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
+    stages = ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
     result = {}
 
     from sqlalchemy import func

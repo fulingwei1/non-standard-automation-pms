@@ -88,7 +88,7 @@ def update_opportunity_stage(
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
 
-    valid_stages = ["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
+    valid_stages = ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
     if stage not in valid_stages:
         raise HTTPException(
             status_code=400, detail=f"无效的阶段，必须是: {', '.join(valid_stages)}"

@@ -65,7 +65,7 @@ def get_customer_360_overview(
 
     stage_probability = {
         "DISCOVERY": 0.15,
-        "QUALIFIED": 0.3,
+        "QUALIFICATION": 0.3,
         "PROPOSAL": 0.55,
         "NEGOTIATION": 0.75,
         "WON": 1.0,

@@ -3,8 +3,8 @@
 商机状态机
 
 状态转换规则（阶段推进）：
-- DISCOVERY → QUALIFIED: 发现 → 合格
-- QUALIFIED → PROPOSAL: 合格 → 提案
+- DISCOVERY → QUALIFICATION: 发现 → 需求挖掘
+- QUALIFICATION → PROPOSAL: 需求挖掘 → 提案
 - PROPOSAL → NEGOTIATION: 提案 → 谈判
 - NEGOTIATION → WON: 谈判 → 赢单
 - 任意阶段 → LOST: 输单
@@ -30,7 +30,7 @@ class OpportunityStateMachine(StateMachine):
 
     @transition(
         from_state="DISCOVERY",
-        to_state="QUALIFIED",
+        to_state="QUALIFICATION",
         required_permission="opportunity:update",
         action_type="QUALIFY",
         notify_users=["owner"],
@@ -55,7 +55,7 @@ class OpportunityStateMachine(StateMachine):
                 self.model.risk_level = "HIGH"
 
     @transition(
-        from_state="QUALIFIED",
+        from_state="QUALIFICATION",
         to_state="PROPOSAL",
         required_permission="opportunity:update",
         action_type="PROPOSE",
@@ -129,7 +129,7 @@ class OpportunityStateMachine(StateMachine):
         self._handle_lose(**kwargs)
 
     @transition(
-        from_state="QUALIFIED",
+        from_state="QUALIFICATION",
         to_state="LOST",
         required_permission="opportunity:update",
         action_type="LOSE",
@@ -177,7 +177,7 @@ class OpportunityStateMachine(StateMachine):
         self._handle_hold(**kwargs)
 
     @transition(
-        from_state="QUALIFIED",
+        from_state="QUALIFICATION",
         to_state="ON_HOLD",
         required_permission="opportunity:update",
         action_type="HOLD",
@@ -220,7 +220,7 @@ class OpportunityStateMachine(StateMachine):
 
     @transition(
         from_state="ON_HOLD",
-        to_state="QUALIFIED",
+        to_state="QUALIFICATION",
         required_permission="opportunity:update",
         action_type="RESUME",
     )

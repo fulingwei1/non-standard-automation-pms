@@ -25,7 +25,7 @@ class SalesPredictionService:
     }
     DEFAULT_STAGE_WIN_RATES = {
         "DISCOVERY": 0.1,
-        "QUALIFIED": 0.3,
+        "QUALIFICATION": 0.3,
         "PROPOSAL": 0.5,
         "NEGOTIATION": 0.7,
         "WON": 1.0,
@@ -305,7 +305,7 @@ class SalesPredictionService:
             self.db.query(Opportunity)
             .filter(
                 Opportunity.stage.in_(
-                    ["DISCOVERY", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]
+                    ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]
                 )
             )
             .all()
