@@ -24,6 +24,7 @@ from app.schemas.issue import (
     IssueUpdate,
 )
 from app.services.data_scope import DataScopeService
+from app.utils.json_helpers import safe_json_loads
 
 from .utils import close_blocking_issue_alerts, create_blocking_issue_alert, generate_issue_no
 
@@ -82,8 +83,8 @@ def build_issue_response(issue: Issue) -> IssueResponse:
         responsible_engineer_name=issue.responsible_engineer_name,
         estimated_inventory_loss=issue.estimated_inventory_loss,
         estimated_extra_hours=issue.estimated_extra_hours,
-        attachments=json.loads(issue.attachments) if issue.attachments else [],
-        tags=json.loads(issue.tags) if issue.tags else [],
+        attachments=safe_json_loads(issue.attachments, default=[]),
+        tags=safe_json_loads(issue.tags, default=[]),
         follow_up_count=issue.follow_up_count or 0,
         last_follow_up_at=issue.last_follow_up_at,
         created_at=issue.created_at,

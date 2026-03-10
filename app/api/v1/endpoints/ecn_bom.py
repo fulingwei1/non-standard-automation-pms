@@ -315,8 +315,8 @@ def get_ecn(ecn_id: int):
                 "project_id": change_row["project_id"],
                 "material_code": change_row["material_code"],
                 "change_action": change_row["change_action"],
-                "old_value": json.loads(change_row["old_value"]) if change_row["old_value"] else None,
-                "new_value": json.loads(change_row["new_value"]) if change_row["new_value"] else None,
+                "old_value": safe_json_loads(change_row["old_value"], default=None, field_name="old_value"),
+                "new_value": safe_json_loads(change_row["new_value"], default=None, field_name="new_value"),
                 "cost_impact": float(change_row["cost_impact"]) if change_row["cost_impact"] else 0,
                 "applied_at": change_row["applied_at"],
                 "created_at": change_row["created_at"]

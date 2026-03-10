@@ -29,6 +29,7 @@ from app.schemas.issue import (
 )
 from app.services.data_scope import DataScopeService
 from app.services.issue_cost_service import IssueCostService
+from app.utils.json_helpers import safe_json_loads
 
 router = APIRouter()
 
@@ -198,8 +199,8 @@ def get_engineer_design_issues_statistics(
             impact_scope=issue.impact_scope,
             impact_level=issue.impact_level,
             is_blocking=issue.is_blocking,
-            attachments=json.loads(issue.attachments) if issue.attachments else [],
-            tags=json.loads(issue.tags) if issue.tags else [],
+            attachments=safe_json_loads(issue.attachments, default=[]),
+            tags=safe_json_loads(issue.tags, default=[]),
             root_cause=issue.root_cause,
             responsible_engineer_id=issue.responsible_engineer_id,
             responsible_engineer_name=issue.responsible_engineer_name,

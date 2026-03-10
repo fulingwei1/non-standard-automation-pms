@@ -23,6 +23,7 @@ from app.models.project import Customer
 from app.models.sales import Contact, Opportunity
 from app.models.user import User
 from app.services.relationship_scoring_service import RelationshipScoringService
+from app.utils.json_helpers import safe_json_loads
 
 router = APIRouter()
 
@@ -88,7 +89,7 @@ def get_customer_timeline(
                 "date": str(comm.communication_date),
                 "type": comm.communication_type or "其他",
                 "title": comm.subject or "沟通记录",
-                "participants": json.loads(comm.participants) if comm.participants else [],
+                "participants": safe_json_loads(comm.participants, default=[], field_name="participants"),
                 "outcome": comm.content or "",
                 "next_action": comm.next_action or "",
                 "sentiment": comm.sentiment or "neutral",

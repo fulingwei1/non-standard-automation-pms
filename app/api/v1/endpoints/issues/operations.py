@@ -35,7 +35,7 @@ def _get_scoped_issue(db: Session, current_user: User, issue_id: int) -> Optiona
 
 def _build_issue_response(issue: Issue) -> IssueResponse:
     """构建问题响应对象"""
-    import json
+    from app.utils.json_helpers import safe_json_loads
 
     return IssueResponse(
         id=issue.id,
@@ -71,8 +71,8 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
         impact_scope=issue.impact_scope,
         impact_level=issue.impact_level,
         is_blocking=issue.is_blocking,
-        attachments=json.loads(issue.attachments) if issue.attachments else [],
-        tags=json.loads(issue.tags) if issue.tags else [],
+        attachments=safe_json_loads(issue.attachments, default=[]),
+        tags=safe_json_loads(issue.tags, default=[]),
         root_cause=getattr(issue, "root_cause", None),
         responsible_engineer_id=getattr(issue, "responsible_engineer_id", None),
         responsible_engineer_name=getattr(issue, "responsible_engineer_name", None),

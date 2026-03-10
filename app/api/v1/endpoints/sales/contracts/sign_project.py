@@ -10,6 +10,7 @@ from typing import Any, List
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -132,6 +133,20 @@ def create_contract_project(
     """
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
+    # P0-3: 验证合同状态必须为已签订
+    if contract.status != "SIGNED":
+        raise HTTPException(
+            status_code=400,
+            detail=f"合同状态必须为已签订才能创建项目，当前状态: {contract.status}",
+        )
+
+    # 检查是否已关联项目
+    if contract.project_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"合同已关联项目（ID: {contract.project_id}），不能重复创建",
+        )
+
     # 获取交付物清单
     deliverables = (
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
@@ -161,35 +176,43 @@ def create_contract_project(
         if opportunity and hasattr(opportunity, "lead_id"):
             lead_id = opportunity.lead_id
 
-    # 创建项目
-    project = Project(
-        project_code=project_request.project_code,
-        project_name=project_request.project_name,
-        customer_id=contract.customer_id,
-        contract_no=contract.contract_code,
-        customer_contract_no=getattr(contract, "customer_contract_no", None),
-        contract_amount=contract.contract_amount,
-        contract_date=contract.signing_date,
-        pm_id=project_request.pm_id,
-        planned_start_date=project_request.planned_start_date,
-        planned_end_date=project_request.planned_end_date,
-        lead_id=lead_id,
-        opportunity_id=contract.opportunity_id,
-        contract_id=contract.id,
-    )
+    # P0-2: 使用事务保护确保数据一致性
+    try:
+        # 创建项目
+        project = Project(
+            project_code=project_request.project_code,
+            project_name=project_request.project_name,
+            customer_id=contract.customer_id,
+            contract_no=contract.contract_code,
+            customer_contract_no=getattr(contract, "customer_contract_no", None),
+            contract_amount=contract.contract_amount,
+            contract_date=contract.signing_date,
+            pm_id=project_request.pm_id,
+            planned_start_date=project_request.planned_start_date,
+            planned_end_date=project_request.planned_end_date,
+            lead_id=lead_id,
+            opportunity_id=contract.opportunity_id,
+            contract_id=contract.id,
+        )
 
-    # 填充客户信息
-    customer = db.query(Customer).filter(Customer.id == contract.customer_id).first()
-    if customer:
-        project.customer_name = customer.customer_name
-        project.customer_contact = customer.contact_person
-        project.customer_phone = customer.contact_phone
+        # 填充客户信息
+        customer = db.query(Customer).filter(Customer.id == contract.customer_id).first()
+        if customer:
+            project.customer_name = customer.customer_name
+            project.customer_contact = customer.contact_person
+            project.customer_phone = customer.contact_phone
 
-    db.add(project)
-    db.flush()
+        db.add(project)
+        db.flush()
 
-    # 关联合同和项目
-    contract.project_id = project.id
-    db.commit()
+        # 关联合同和项目
+        contract.project_id = project.id
+        db.commit()
 
-    return ResponseModel(code=200, message="项目创建成功", data={"project_id": project.id})
+        logger.info(f"合同 {contract_id} 成功创建项目 {project.id}")
+        return ResponseModel(code=200, message="项目创建成功", data={"project_id": project.id})
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"合同 {contract_id} 创建项目失败: {e}")
+        raise HTTPException(status_code=500, detail="项目创建失败，请稍后重试")

@@ -30,6 +30,7 @@ from app.schemas.issue import (
     IssueTemplateResponse,
     IssueTemplateUpdate,
 )
+from app.utils.json_helpers import safe_json_loads
 
 from .utils import generate_issue_no
 
@@ -50,7 +51,7 @@ def _build_template_response(template: IssueTemplate) -> IssueTemplateResponse:
         title_template=template.title_template,
         description_template=template.description_template,
         solution_template=template.solution_template,
-        default_tags=json.loads(template.default_tags) if template.default_tags else [],
+        default_tags=safe_json_loads(template.default_tags, default=[]),
         default_impact_scope=template.default_impact_scope,
         default_is_blocking=template.default_is_blocking,
         is_active=template.is_active,
@@ -98,8 +99,8 @@ def _build_issue_response(issue: Issue) -> IssueResponse:
         impact_scope=issue.impact_scope,
         impact_level=issue.impact_level,
         is_blocking=issue.is_blocking,
-        attachments=json.loads(issue.attachments) if issue.attachments else [],
-        tags=json.loads(issue.tags) if issue.tags else [],
+        attachments=safe_json_loads(issue.attachments, default=[]),
+        tags=safe_json_loads(issue.tags, default=[]),
         root_cause=getattr(issue, "root_cause", None),
         responsible_engineer_id=getattr(issue, "responsible_engineer_id", None),
         responsible_engineer_name=getattr(issue, "responsible_engineer_name", None),
