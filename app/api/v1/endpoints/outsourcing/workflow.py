@@ -9,6 +9,7 @@ import logging
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -122,7 +123,8 @@ def perform_approval_action(
         return ResponseModel(code=200, message="审批操作成功", data=result)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except SQLAlchemyError as e:
+        # 数据库操作失败时回滚
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -212,7 +214,8 @@ def withdraw_approval(
             raise HTTPException(status_code=403, detail=str(e))
         else:
             raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except SQLAlchemyError as e:
+        # 数据库操作失败时回滚
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 

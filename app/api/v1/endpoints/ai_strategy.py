@@ -39,7 +39,8 @@ if not API_KEY:
                     if p.get("id") == "bailian":
                         API_KEY = p.get("apiKey", "")
                         break
-        except Exception:
+        except (FileNotFoundError, json.JSONDecodeError, KeyError):
+            # 配置文件不存在、格式错误或缺少字段时忽略
             pass
 
 # DB 路径（5 个 parent 到项目根目录）
@@ -569,7 +570,9 @@ async def ai_apply(
 
         return result
 
-    except Exception as e:
+    except (sqlite3.Error, TypeError, KeyError) as e:
+        # sqlite3.Error: 数据库操作失败
+        # TypeError/KeyError: 数据格式或字段缺失
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"数据库写入失败：{str(e)}"
         )

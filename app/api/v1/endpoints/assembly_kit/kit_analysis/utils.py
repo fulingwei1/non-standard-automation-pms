@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
 from sqlalchemy import func, or_
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models import Material, ShortageAlertRule
@@ -57,7 +58,8 @@ def calculate_available_qty(
             .scalar()
         )
         in_transit_qty = Decimal(in_transit or 0)
-    except Exception:
+    except SQLAlchemyError:
+        # 采购订单表查询失败时忽略在途数量
         logger.debug("查询在途数量失败，已忽略", exc_info=True)
 
     available = max(Decimal(0), stock_qty - allocated_qty + in_transit_qty)
@@ -109,7 +111,8 @@ def calculate_estimated_ready_date(
                 .order_by(PurchaseOrder.promised_date.desc(), PurchaseOrder.required_date.desc())
                 .all()
             )
-        except Exception:
+        except SQLAlchemyError:
+            # 采购订单查询失败时返回空列表
             logger.debug("查询采购订单失败，已忽略", exc_info=True)
             po_items = []
 

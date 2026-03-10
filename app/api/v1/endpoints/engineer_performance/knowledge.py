@@ -6,6 +6,7 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -159,16 +160,18 @@ async def create_contribution_compat(
             file_path=payload.get("file_path"),
             tags=_normalize_tags(payload.get("tags")),
         )
-    except Exception as exc:
+    except (ValidationError, ValueError, TypeError) as exc:
+        # Pydantic 验证失败或类型转换错误
         raise HTTPException(status_code=400, detail=f"请求参数错误: {exc}") from exc
 
     service = KnowledgeContributionService(db)
     contribution = service.create_contribution(data, current_user.id)
 
-    # 兼容前端“提交后即待审核”的流程
+    # 兼容前端"提交后即待审核"的流程
     try:
         contribution = service.submit_for_review(contribution.id, current_user.id)
-    except Exception:
+    except (ValueError, PermissionError):
+        # 提交审核失败时忽略（贡献已创建成功）
         pass
 
     return ResponseModel(
@@ -222,7 +225,8 @@ async def record_reuse_compat(
             rating=rating,
             feedback=payload.get("feedback") or payload.get("usage_note"),
         )
-    except Exception as exc:
+    except (ValidationError, ValueError, TypeError) as exc:
+        # Pydantic 验证失败或类型转换错误
         raise HTTPException(status_code=400, detail=f"请求参数错误: {exc}") from exc
 
     service = KnowledgeContributionService(db)

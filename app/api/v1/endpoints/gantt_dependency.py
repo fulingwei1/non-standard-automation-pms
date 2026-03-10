@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Set
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -63,7 +64,8 @@ def _ensure_table(db: Session) -> None:
         if not _table_has_column(db, "task_dependencies", "project_id"):
             db.execute(text("ALTER TABLE task_dependencies ADD COLUMN project_id INTEGER"))
             db.commit()
-    except Exception:
+    except SQLAlchemyError:
+        # 表创建/修改失败时回滚
         db.rollback()
         raise
 

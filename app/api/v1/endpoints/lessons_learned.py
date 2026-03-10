@@ -11,6 +11,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -53,7 +54,8 @@ def _ensure_table(db: Session):
         try:
             db.execute(CREATE_TABLE_SQL)
             db.commit()
-        except Exception:
+        except SQLAlchemyError:
+            # 表已存在或创建失败时回滚
             db.rollback()
         _table_created = True
 
