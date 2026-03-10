@@ -202,34 +202,85 @@ def create_quote_version(
     )
 
 
+def _build_item_key(item) -> str:
+    """构建明细项唯一标识（类型+名称）"""
+    item_type = item.item_type or ""
+    item_name = item.item_name or ""
+    return f"{item_type}:{item_name}"
+
+
+def _serialize_item(item) -> dict:
+    """序列化明细项"""
+    return {
+        "id": item.id,
+        "item_type": item.item_type,
+        "item_name": item.item_name,
+        "qty": float(item.qty) if item.qty else None,
+        "unit_price": float(item.unit_price) if item.unit_price else None,
+        "cost": float(item.cost) if item.cost else None,
+        "lead_time_days": item.lead_time_days,
+    }
+
+
+def _compare_items(item1, item2) -> dict:
+    """
+    对比两个明细项的差异
+
+    返回变更的字段列表，每个字段包含旧值和新值
+    """
+    changes = {}
+    fields = ["qty", "unit_price", "cost", "lead_time_days"]
+
+    for field in fields:
+        val1 = getattr(item1, field, None)
+        val2 = getattr(item2, field, None)
+
+        # 统一转换为 float 进行比较（避免 Decimal vs float 问题）
+        if val1 is not None:
+            val1 = float(val1) if field != "lead_time_days" else val1
+        if val2 is not None:
+            val2 = float(val2) if field != "lead_time_days" else val2
+
+        if val1 != val2:
+            changes[field] = {"old": val1, "new": val2}
+
+    return changes
+
+
 @router.get("/quotes/{quote_id}/versions/compare", response_model=ResponseModel)
 def compare_versions(
     quote_id: int,
-    version_id_1: int = Query(..., description="版本1 ID"),
-    version_id_2: int = Query(..., description="版本2 ID"),
+    version_id_1: int = Query(..., description="版本1 ID（基准版本）"),
+    version_id_2: int = Query(..., description="版本2 ID（对比版本）"),
     db: Session = Depends(get_db),
     current_user: User = Depends(security.get_current_active_user),
 ):
     """
-    对比两个版本
+    对比两个版本（包含明细项级别差异）
 
     Args:
         quote_id: 报价ID
-        version_id_1: 版本1 ID
-        version_id_2: 版本2 ID
+        version_id_1: 版本1 ID（基准版本）
+        version_id_2: 版本2 ID（对比版本）
         db: 数据库会话
         current_user: 当前用户
 
     Returns:
-        ResponseModel: 对比结果
+        ResponseModel: 对比结果，包含：
+        - version_1/version_2: 两个版本的基本信息
+        - summary_diff: 总价/成本/毛利率差异
+        - item_diff: 明细项差异（新增/删除/变更）
     """
+    # 加载两个版本及其明细项
     v1 = (
         db.query(QuoteVersion)
+        .options(joinedload(QuoteVersion.items))
         .filter(QuoteVersion.id == version_id_1, QuoteVersion.quote_id == quote_id)
         .first()
     )
     v2 = (
         db.query(QuoteVersion)
+        .options(joinedload(QuoteVersion.items))
         .filter(QuoteVersion.id == version_id_2, QuoteVersion.quote_id == quote_id)
         .first()
     )
@@ -237,7 +288,7 @@ def compare_versions(
     if not v1 or not v2:
         raise HTTPException(status_code=404, detail="版本不存在")
 
-    # 计算差异
+    # 计算汇总差异
     price_diff = None
     if v1.total_price and v2.total_price:
         price_diff = float(v2.total_price - v1.total_price)
@@ -250,6 +301,32 @@ def compare_versions(
     if v1.gross_margin and v2.gross_margin:
         margin_diff = float(v2.gross_margin - v1.gross_margin)
 
+    # 构建明细项索引
+    v1_items = {_build_item_key(item): item for item in (v1.items or [])}
+    v2_items = {_build_item_key(item): item for item in (v2.items or [])}
+
+    v1_keys = set(v1_items.keys())
+    v2_keys = set(v2_items.keys())
+
+    # 计算明细项差异
+    added_keys = v2_keys - v1_keys  # v2 新增的
+    removed_keys = v1_keys - v2_keys  # v2 删除的
+    common_keys = v1_keys & v2_keys  # 两边都有的
+
+    added_items = [_serialize_item(v2_items[k]) for k in added_keys]
+    removed_items = [_serialize_item(v1_items[k]) for k in removed_keys]
+
+    # 检查共同项的变更
+    modified_items = []
+    for key in common_keys:
+        changes = _compare_items(v1_items[key], v2_items[key])
+        if changes:
+            modified_items.append({
+                "item_type": v1_items[key].item_type,
+                "item_name": v1_items[key].item_name,
+                "changes": changes,
+            })
+
     data = {
         "version_1": {
             "id": v1.id,
@@ -257,6 +334,7 @@ def compare_versions(
             "total_price": float(v1.total_price) if v1.total_price else None,
             "cost_total": float(v1.cost_total) if v1.cost_total else None,
             "gross_margin": float(v1.gross_margin) if v1.gross_margin else None,
+            "item_count": len(v1.items or []),
         },
         "version_2": {
             "id": v2.id,
@@ -264,11 +342,20 @@ def compare_versions(
             "total_price": float(v2.total_price) if v2.total_price else None,
             "cost_total": float(v2.cost_total) if v2.cost_total else None,
             "gross_margin": float(v2.gross_margin) if v2.gross_margin else None,
+            "item_count": len(v2.items or []),
         },
-        "diff": {
+        "summary_diff": {
             "price_diff": price_diff,
             "cost_diff": cost_diff,
             "margin_diff": margin_diff,
+        },
+        "item_diff": {
+            "added": added_items,  # 新增的明细项
+            "removed": removed_items,  # 删除的明细项
+            "modified": modified_items,  # 变更的明细项
+            "added_count": len(added_items),
+            "removed_count": len(removed_items),
+            "modified_count": len(modified_items),
         },
     }
 
