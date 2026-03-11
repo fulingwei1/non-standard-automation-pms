@@ -136,6 +136,19 @@ export default function LeadList({
                       <Calendar className="h-3 w-3" />
                       <span>{formatDate(lead.created_at)}</span>
                     </div>
+                    {lead.latest_follow_up_at ? (
+                      <div className="flex items-center gap-1 text-blue-400" title={lead.latest_follow_up_content}>
+                        <MessageSquare className="h-3 w-3" />
+                        <span>{formatDate(lead.latest_follow_up_at)}</span>
+                        {lead.latest_follow_up_type && (
+                          <Badge variant="outline" className="text-[10px] px-1 py-0">
+                            {lead.latest_follow_up_type}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-slate-600">未跟进</span>
+                    )}
                     {lead.next_action_at && (
                       <div className="flex items-center gap-1 text-amber-400">
                         <Clock className="h-3 w-3" />

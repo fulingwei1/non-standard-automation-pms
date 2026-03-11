@@ -15,7 +15,7 @@ from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.advantage_product import AdvantageProduct
-from app.models.sales import Lead
+from app.models.sales import Lead, LeadFollowUp
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.sales import (
@@ -95,12 +95,31 @@ def read_leads(
     """
 
     def transform_lead(lead: Lead) -> LeadResponse:
-        """将 Lead 模型转换为响应对象"""
+        """将 Lead 模型转换为响应对象，附带跟进摘要"""
         lead_dict = {
             **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
             "owner_name": lead.owner.real_name if lead.owner else None,
             "advantage_products": _get_advantage_products_for_lead(db, lead),
         }
+
+        # 跟进摘要（只查最近 1 条，避免 N+1）
+        latest_fu = (
+            db.query(LeadFollowUp)
+            .filter(LeadFollowUp.lead_id == lead.id)
+            .order_by(desc(LeadFollowUp.created_at))
+            .first()
+        )
+        follow_up_count = (
+            db.query(LeadFollowUp).filter(LeadFollowUp.lead_id == lead.id).count()
+        )
+
+        lead_dict["latest_follow_up_at"] = latest_fu.created_at if latest_fu else None
+        lead_dict["latest_follow_up_type"] = latest_fu.follow_up_type if latest_fu else None
+        lead_dict["latest_follow_up_content"] = (
+            (latest_fu.content[:60] + "…") if latest_fu and latest_fu.content else None
+        )
+        lead_dict["follow_up_count"] = follow_up_count
+
         return LeadResponse(**lead_dict)
 
     # 使用 SalesQueryBuilder 链式构建查询

@@ -65,6 +65,12 @@ class LeadResponse(TimestampSchema):
     )
     owner_name: Optional[str] = Field(default=None, description="负责人姓名")
 
+    # 跟进摘要（列表快捷展示）
+    latest_follow_up_at: Optional[datetime] = Field(default=None, description="最近跟进时间")
+    latest_follow_up_type: Optional[str] = Field(default=None, description="最近跟进类型")
+    latest_follow_up_content: Optional[str] = Field(default=None, description="最近跟进内容摘要")
+    follow_up_count: Optional[int] = Field(default=0, description="跟进记录总数")
+
 
 class LeadFollowUpCreate(BaseModel):
     """创建线索跟进
