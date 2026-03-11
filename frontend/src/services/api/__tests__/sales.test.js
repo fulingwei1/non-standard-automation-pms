@@ -147,6 +147,28 @@ describe('Sales API', () => {
       expect(response.status).toBe(200);
     });
 
+    it('delete() - 应该删除商机', async () => {
+      mock.onDelete('/api/v1/sales/opportunities/1').reply(200, {
+        success: true,
+      });
+
+      const response = await opportunityApi.delete(1);
+
+      expect(response.status).toBe(200);
+    });
+
+    it('updateStage() - 应该更新商机阶段', async () => {
+      mock.onPut('/api/v1/sales/opportunities/1/stage').reply(200, {
+        success: true,
+        data: { id: 1, stage: 'NEGOTIATION' },
+      });
+
+      const response = await opportunityApi.updateStage(1, 'NEGOTIATION');
+
+      expect(response.status).toBe(200);
+      expect(mock.history.put[0].params).toEqual({ stage: 'NEGOTIATION' });
+    });
+
     it('getWinProbability() - 应该获取赢单概率', async () => {
       mock.onGet('/api/v1/sales/opportunities/1/win-probability').reply(200, {
         success: true,
@@ -206,6 +228,23 @@ describe('Sales API', () => {
       const response = await quoteApi.createVersion(1, version);
 
       expect(response.status).toBe(201);
+    });
+
+    it('compareVersions() - 应该对比两个报价版本', async () => {
+      mock.onGet('/api/v1/sales/quotes/1/versions/compare').reply(200, {
+        success: true,
+        data: {
+          summary_diff: { price_diff: 1000, cost_diff: 500, margin_diff: 2.5 },
+        },
+      });
+
+      const response = await quoteApi.compareVersions(1, 101, 102);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.get[0].params).toEqual({
+        version_id_1: 101,
+        version_id_2: 102,
+      });
     });
 
     it('getItems() - 应该获取报价条目', async () => {

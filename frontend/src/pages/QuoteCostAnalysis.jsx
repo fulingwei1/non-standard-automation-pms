@@ -114,12 +114,51 @@ export default function QuoteCostAnalysis() {
 
   const loadComparison = async () => {
     try {
-      const res = await quoteApi.compareCosts(id, {
-        version_ids: `${selectedVersions[0].id},${selectedVersions[1].id}`
-      });
-      setComparison(res.data?.data || res.data);
+      // 优先使用后端版本对比接口
+      const res = await quoteApi.compareVersions(
+        id,
+        selectedVersions[0].id,
+        selectedVersions[1].id
+      );
+      const data = res.data?.data || res.data;
+
+      // 适配旧页面展示结构
+      if (data?.summary_diff) {
+        const v1Price = data?.version_1?.total_price || 0;
+        const v1Cost = data?.version_1?.cost_total || 0;
+        const v1Margin = data?.version_1?.gross_margin || 0;
+
+        const priceChange = data?.summary_diff?.price_diff || 0;
+        const costChange = data?.summary_diff?.cost_diff || 0;
+        const marginChange = data?.summary_diff?.margin_diff || 0;
+
+        setComparison({
+          comparison: {
+            price_change: priceChange,
+            price_change_pct: v1Price ? priceChange / v1Price * 100 : 0,
+            cost_change: costChange,
+            cost_change_pct: v1Cost ? costChange / v1Cost * 100 : 0,
+            margin_change: marginChange,
+            margin_change_pct: v1Margin ? marginChange / v1Margin * 100 : 0,
+          },
+          breakdown_comparison: [],
+          item_diff: data?.item_diff || null,
+        });
+        return;
+      }
+
+      setComparison(data);
     } catch (error) {
       console.error("加载对比数据失败:", error);
+      // 兼容旧接口，避免页面空白
+      try {
+        const fallbackRes = await quoteApi.compareCosts(id, {
+          version_ids: `${selectedVersions[0].id},${selectedVersions[1].id}`,
+        });
+        setComparison(fallbackRes.data?.data || fallbackRes.data);
+      } catch (fallbackError) {
+        console.error("旧对比接口也失败:", fallbackError);
+      }
     }
   };
 
@@ -317,6 +356,48 @@ export default function QuoteCostAnalysis() {
                       </CardContent>
                     </Card>
                   </div>
+
+                  {/* 明细差异统计（新版版本对比接口） */}
+                  {comparison.item_diff &&
+                  <div className="grid grid-cols-3 gap-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-slate-400">
+                            新增明细
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-blue-400">
+                            {comparison.item_diff.added_count || 0}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-slate-400">
+                            删除明细
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-orange-400">
+                            {comparison.item_diff.removed_count || 0}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-slate-400">
+                            变更明细
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold text-purple-400">
+                            {comparison.item_diff.modified_count || 0}
+                          </div>
+                        </CardContent>
+                      </Card>
+                  </div>
+                  }
 
                   {/* Detailed Comparison Table */}
                   <Table>

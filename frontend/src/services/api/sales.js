@@ -28,6 +28,12 @@ export const opportunityApi = {
   get: (id) => api.get(`/sales/opportunities/${id}`),
   create: (data) => api.post("/sales/opportunities", data),
   update: (id, data) => api.put(`/sales/opportunities/${id}`, data),
+  delete: (id) => api.delete(`/sales/opportunities/${id}`),
+  // 商机阶段快速更新（用于看板拖拽/列表快捷切换）
+  updateStage: (id, stage) =>
+    api.put(`/sales/opportunities/${id}/stage`, null, {
+      params: { stage },
+    }),
   submitGate: (id, data, gateType) =>
     api.post(`/sales/opportunities/${id}/gate`, data, {
       params: { gate_type: gateType || "G2" },
@@ -44,6 +50,13 @@ export const quoteApi = {
   update: (id, data) => api.put(`/sales/quotes/${id}`, data),
   createVersion: (id, data) => api.post(`/sales/quotes/${id}/versions`, data),
   getVersions: (id) => api.get(`/sales/quotes/${id}/versions`),
+  compareVersions: (id, versionId1, versionId2) =>
+    api.get(`/sales/quotes/${id}/versions/compare`, {
+      params: {
+        version_id_1: versionId1,
+        version_id_2: versionId2,
+      },
+    }),
   approve: (id, data) => api.post(`/sales/quotes/${id}/approve`, data),
   // Approval Workflow APIs (Sprint 2)
   startApproval: (id) => api.post("/sales/quotes/approval/submit", { quote_ids: [id] }),
