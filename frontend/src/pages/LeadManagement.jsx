@@ -37,6 +37,7 @@ export default function LeadManagement({ embedded = false }) {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showFollowUpDialog, setShowFollowUpDialog] = useState(false);
   const [followUps, setFollowUps] = useState([]);
+  const [followUpSaving, setFollowUpSaving] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [sortBy, setSortBy] = useState("priority"); // priority, created_at, status
@@ -61,6 +62,15 @@ export default function LeadManagement({ embedded = false }) {
     next_action: "",
     next_action_at: "",
   });
+
+  const resetFollowUpData = (keepType = true) => {
+    setFollowUpData((prev) => ({
+      follow_up_type: keepType ? prev.follow_up_type || "CALL" : "CALL",
+      content: "",
+      next_action: "",
+      next_action_at: "",
+    }));
+  };
 
   // 加载线索列表
   const loadLeads = async () => {
@@ -304,28 +314,34 @@ export default function LeadManagement({ embedded = false }) {
   };
 
   // 添加跟进记录
-  const handleAddFollowUp = async () => {
-    if (!selectedLead) return;
+  const handleAddFollowUp = async ({ keepOpen = false } = {}) => {
+    if (!selectedLead || followUpSaving) return;
     try {
+      setFollowUpSaving(true);
       await leadApi.createFollowUp(selectedLead.id, followUpData);
-      setShowFollowUpDialog(false);
-      setFollowUpData({
-        follow_up_type: "CALL",
-        content: "",
-        next_action: "",
-        next_action_at: "",
-      });
+
       // 重新加载跟进记录
       const response = await leadApi.getFollowUps(selectedLead.id);
       if (response.data) {
         setFollowUps(response.data);
       }
+
       loadLeads(); // 刷新列表
+
+      if (keepOpen) {
+        // 连续录入场景：保留类型，其余清空
+        resetFollowUpData(true);
+      } else {
+        setShowFollowUpDialog(false);
+        resetFollowUpData(false);
+      }
     } catch (error) {
       console.error("添加跟进记录失败:", error);
       alert(
         "添加跟进记录失败: " + (error.response?.data?.detail || error.message),
       );
+    } finally {
+      setFollowUpSaving(false);
     }
   };
 
@@ -336,6 +352,7 @@ export default function LeadManagement({ embedded = false }) {
 
   const handleOpenFollowUpDialog = async (lead) => {
     setSelectedLead(lead);
+    resetFollowUpData(false);
     setShowFollowUpDialog(true);
 
     // 打开快捷跟进时也预加载历史，便于上下文判断
@@ -468,7 +485,10 @@ export default function LeadManagement({ embedded = false }) {
         lead={selectedLead}
         followUps={followUps}
         statusConfig={statusConfig}
-        onOpenFollowUp={() => setShowFollowUpDialog(true)}
+        onOpenFollowUp={() => {
+          resetFollowUpData(false);
+          setShowFollowUpDialog(true);
+        }}
       />
 
       {/* 添加跟进记录对话框 */}
@@ -478,6 +498,7 @@ export default function LeadManagement({ embedded = false }) {
         data={followUpData}
         setData={setFollowUpData}
         onSave={handleAddFollowUp}
+        saving={followUpSaving}
       />
     </div>
   );
