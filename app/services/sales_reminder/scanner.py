@@ -18,6 +18,7 @@ from app.services.sales_reminder.payment_reminders import (
 from app.services.sales_reminder.sales_flow_reminders import (
     notify_approval_pending,
     notify_gate_timeout,
+    notify_lead_weekly_summary,
     notify_quote_expiring,
 )
 
@@ -40,6 +41,7 @@ def scan_and_notify_all(db: Session) -> dict:
         "quote_expired": 0,
         "contract_expiring": 0,
         "approval_pending": 0,
+        "lead_weekly_summary": 0,
     }
 
     # 里程碑提醒（7天前）
@@ -75,6 +77,9 @@ def scan_and_notify_all(db: Session) -> dict:
     # 审批待处理提醒
     stats["approval_pending"] = notify_approval_pending(db, settings.SALES_APPROVAL_TIMEOUT_HOURS)
 
+    # 线索周汇总提醒（默认周一触发，非周一返回0）
+    stats["lead_weekly_summary"] = notify_lead_weekly_summary(db)
+
     db.commit()
 
     return stats
@@ -91,6 +96,7 @@ def scan_sales_reminders(db: Session) -> dict:
         "quote_expired": 0,
         "contract_expiring": 0,
         "approval_pending": 0,
+        "lead_weekly_summary": 0,
     }
 
     # 阶段门超时提醒
@@ -106,6 +112,9 @@ def scan_sales_reminders(db: Session) -> dict:
 
     # 审批待处理提醒
     stats["approval_pending"] = notify_approval_pending(db, settings.SALES_APPROVAL_TIMEOUT_HOURS)
+
+    # 线索周汇总提醒（默认周一触发，非周一返回0）
+    stats["lead_weekly_summary"] = notify_lead_weekly_summary(db)
 
     db.commit()
 

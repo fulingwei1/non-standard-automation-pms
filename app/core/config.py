@@ -183,6 +183,16 @@ class Settings(BaseSettings):
     SALES_GROSS_MARGIN_WARNING: float = 20.0  # 毛利率警告阈值（%），低于此值发出警告
     SALES_MIN_LEAD_TIME_DAYS: int = 30  # 最小交期（天），低于此值发出警告
 
+    # 销售评分阈值配置
+    SALES_TECH_SCORE_PASS: int = 60  # 技术可行性评分通过阈值
+    SALES_TECH_SCORE_LOW_RISK: int = 80  # 技术评分低风险阈值（>=80为低风险）
+    SALES_TECH_SCORE_MEDIUM_RISK: int = 60  # 技术评分中风险阈值（>=60为中风险）
+
+    # 应收账龄分类阈值（天）
+    SALES_AGING_BUCKET_1: int = 30  # 第一档：0-30天
+    SALES_AGING_BUCKET_2: int = 60  # 第二档：31-60天
+    SALES_AGING_BUCKET_3: int = 90  # 第三档：61-90天，超过为90+
+
     # 销售模块提醒配置
     SALES_GATE_TIMEOUT_DAYS: int = 3  # 阶段门超时提醒阈值（天），默认3天
     SALES_QUOTE_EXPIRE_REMINDER_DAYS: List[int] = [7, 3, 1]  # 报价过期提醒时间点（天）
@@ -192,6 +202,14 @@ class Settings(BaseSettings):
         7,
     ]  # 合同到期提醒时间点（天）
     SALES_APPROVAL_TIMEOUT_HOURS: int = 24  # 审批超时提醒阈值（小时），默认24小时
+
+    # 线索周汇总提醒（低打扰）
+    SALES_LEAD_WEEKLY_REMINDER_WEEKDAY: int = 0  # 周几提醒，0=周一
+    SALES_LEAD_OVERDUE_DAYS: int = 7  # next_action_at 逾期阈值（天）
+    SALES_LEAD_HIGH_PRIORITY_SCORE: int = 80  # 高优先级分数阈值
+    SALES_LEAD_HIGH_PRIORITY_STALE_DAYS: int = 3  # 高优先级未跟进阈值（天）
+    SALES_LEAD_REPEAT_REMINDER_DAYS: int = 14  # 同线索重复提醒冷却天数
+    SALES_LEAD_WEEKLY_SUMMARY_MAX_ITEMS: int = 20  # 单次汇总最多展示条数
 
     # Kimi AI 配置
     KIMI_API_KEY: Optional[str] = None  # Kimi API Key

@@ -36,6 +36,7 @@ class TestScanAndNotifyAll:
     @patch(f"{PATCH_PREFIX}.notify_gate_timeout", return_value=1)
     @patch(f"{PATCH_PREFIX}.notify_quote_expiring", return_value={"expiring": 2, "expired": 1})
     @patch(f"{PATCH_PREFIX}.notify_contract_expiring", return_value=4)
+    @patch(f"{PATCH_PREFIX}.notify_lead_weekly_summary", return_value=0)
     @patch(f"{PATCH_PREFIX}.notify_approval_pending", return_value=5)
     def test_returns_stats_dict(self, m1, m2, m3, m4, m5, m6, m7, m8, mock_db):
         stats = scan_and_notify_all(mock_db)
@@ -48,6 +49,7 @@ class TestScanAndNotifyAll:
     @patch(f"{PATCH_PREFIX}.notify_gate_timeout", return_value=1)
     @patch(f"{PATCH_PREFIX}.notify_quote_expiring", return_value={"expiring": 2, "expired": 1})
     @patch(f"{PATCH_PREFIX}.notify_contract_expiring", return_value=4)
+    @patch(f"{PATCH_PREFIX}.notify_lead_weekly_summary", return_value=0)
     @patch(f"{PATCH_PREFIX}.notify_approval_pending", return_value=5)
     def test_stats_keys_present(self, m1, m2, m3, m4, m5, m6, m7, m8, mock_db):
         stats = scan_and_notify_all(mock_db)
@@ -73,6 +75,7 @@ class TestScanAndNotifyAll:
     @patch(f"{PATCH_PREFIX}.notify_gate_timeout", return_value=0)
     @patch(f"{PATCH_PREFIX}.notify_quote_expiring", return_value={"expiring": 1, "expired": 0})
     @patch(f"{PATCH_PREFIX}.notify_contract_expiring", return_value=2)
+    @patch(f"{PATCH_PREFIX}.notify_lead_weekly_summary", return_value=0)
     @patch(f"{PATCH_PREFIX}.notify_approval_pending", return_value=3)
     def test_db_commit_called(self, m1, m2, m3, m4, m5, m6, m7, m8, mock_db):
         scan_and_notify_all(mock_db)
@@ -85,6 +88,7 @@ class TestScanAndNotifyAll:
     @patch(f"{PATCH_PREFIX}.notify_gate_timeout", return_value=2)
     @patch(f"{PATCH_PREFIX}.notify_quote_expiring", return_value={"expiring": 3, "expired": 1})
     @patch(f"{PATCH_PREFIX}.notify_contract_expiring", return_value=0)
+    @patch(f"{PATCH_PREFIX}.notify_lead_weekly_summary", return_value=0)
     @patch(f"{PATCH_PREFIX}.notify_approval_pending", return_value=1)
     def test_stats_values_from_functions(self, m1, m2, m3, m4, m5, m6, m7, m8, mock_db):
         stats = scan_and_notify_all(mock_db)
@@ -98,6 +102,7 @@ class TestScanSalesReminders:
     @patch(f"{PATCH_PREFIX}.notify_gate_timeout", return_value=1)
     @patch(f"{PATCH_PREFIX}.notify_quote_expiring", return_value={"expiring": 2, "expired": 0})
     @patch(f"{PATCH_PREFIX}.notify_contract_expiring", return_value=1)
+    @patch(f"{PATCH_PREFIX}.notify_lead_weekly_summary", return_value=0)
     @patch(f"{PATCH_PREFIX}.notify_approval_pending", return_value=0)
     def test_returns_sales_stats(self, m1, m2, m3, m4, mock_db):
         stats = scan_sales_reminders(mock_db)
@@ -109,6 +114,7 @@ class TestScanSalesReminders:
     @patch(f"{PATCH_PREFIX}.notify_gate_timeout", return_value=3)
     @patch(f"{PATCH_PREFIX}.notify_quote_expiring", return_value={"expiring": 1, "expired": 2})
     @patch(f"{PATCH_PREFIX}.notify_contract_expiring", return_value=5)
+    @patch(f"{PATCH_PREFIX}.notify_lead_weekly_summary", return_value=0)
     @patch(f"{PATCH_PREFIX}.notify_approval_pending", return_value=4)
     def test_db_commit_after_scan(self, m1, m2, m3, m4, mock_db):
         scan_sales_reminders(mock_db)

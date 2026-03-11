@@ -16,6 +16,7 @@ class TestScanAndNotifyAll:
     @patch("app.services.sales_reminder.scanner.notify_payment_plan_upcoming", return_value=1)
     @patch("app.services.sales_reminder.scanner.notify_milestone_overdue", return_value=0)
     @patch("app.services.sales_reminder.scanner.notify_milestone_upcoming", return_value=2)
+    @patch("app.services.sales_reminder.scanner.notify_lead_weekly_summary", return_value=0)
     @patch("app.services.sales_reminder.scanner.settings")
     def test_scan_and_notify_all(self, mock_settings, *mocks):
         mock_settings.SALES_GATE_TIMEOUT_DAYS = 7
@@ -38,6 +39,7 @@ class TestScanSalesReminders:
         return_value={"expiring": 0, "expired": 0},
     )
     @patch("app.services.sales_reminder.scanner.notify_gate_timeout", return_value=0)
+    @patch("app.services.sales_reminder.scanner.notify_lead_weekly_summary", return_value=0)
     @patch("app.services.sales_reminder.scanner.settings")
     def test_scan_sales_reminders(self, mock_settings, *mocks):
         mock_settings.SALES_GATE_TIMEOUT_DAYS = 7
