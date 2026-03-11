@@ -87,6 +87,7 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # 启动前端
+export VITE_BACKEND_PORT="${VITE_BACKEND_PORT:-8002}"
 npm run dev &
 FRONTEND_PID=$!
 echo -e "${GREEN}✅ 前端已启动 (PID: $FRONTEND_PID)${NC}"

@@ -3,6 +3,10 @@
  * 在浏览器控制台运行 diagnoseLogin() 来检查问题
  */
 
+const DEFAULT_BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || "8002";
+const DEFAULT_BACKEND_TARGET =
+  import.meta.env.VITE_BACKEND_URL || `127.0.0.1:${DEFAULT_BACKEND_PORT}`;
+
 export function diagnoseLogin() {
   console.log("🔍 开始诊断登录问题...\n");
 
@@ -10,7 +14,7 @@ export function diagnoseLogin() {
   const warnings = [];
   const info = [];
 
-  // 1. 通过前端代理检查后端服务（避免直接访问 8000 触发 CORS/跨域误判）
+  // 1. 通过前端代理检查后端服务，避免直连后端端口引发误判
   console.log("1️⃣ 检查后端服务（通过前端代理 /api）...");
   // 健康检查端点不在 /api/v1 前缀下，需要在 vite.config.js 中添加额外代理
   // 临时方案：直接检查 API 根路径
@@ -43,10 +47,12 @@ export function diagnoseLogin() {
     })
     .catch((err) => {
       console.error("❌ 后端服务无法连接（通过代理）:", err.message);
-      issues.push("后端服务未启动或前端代理无法连接后端 (/api -> 127.0.0.1:8000)");
+      issues.push(`后端服务未启动或前端代理无法连接后端 (/api -> ${DEFAULT_BACKEND_TARGET})`);
       console.log("\n💡 解决方案: 在项目根目录运行 ./start.sh");
-      console.log("   或手动启动后端: python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000");
-      console.log("   如果 8000 被占用或不可用，可改端口并设置：VITE_BACKEND_PORT=8001 pnpm dev");
+      console.log(
+        `   或手动启动后端: python3 -m uvicorn app.main:app --host 127.0.0.1 --port ${DEFAULT_BACKEND_PORT}`
+      );
+      console.log("   如果端口被占用，可改端口并设置：VITE_BACKEND_PORT=8001 pnpm dev");
     });
 
   // 2. 检查登录API端点（同样走代理）

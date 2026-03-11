@@ -210,8 +210,7 @@ export default function Documents() {
         window.open(document.download_url || document.file_url, "_blank");
       } else if (document.id) {
         // Try to construct download URL
-        const baseURL =
-        import.meta.env?.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+        const baseURL = import.meta.env?.VITE_API_BASE_URL || "";
         window.open(
           `${baseURL}/api/v1/documents/${document.id}/download`,
           "_blank"

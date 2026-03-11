@@ -21,11 +21,11 @@ if [ ! -f "data/app.db" ]; then
   echo ""
 fi
 
-echo "启动后端服务: http://127.0.0.1:8000"
-echo "API 文档: http://127.0.0.1:8000/docs"
+echo "启动后端服务: http://127.0.0.1:8002"
+echo "API 文档: http://127.0.0.1:8002/docs"
 echo "测试账号: admin / password123"
 echo ""
 echo "按 Ctrl+C 停止服务"
 echo ""
 
-python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8002 --reload

@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
 import {
   Select,
   SelectContent,
@@ -35,6 +34,8 @@ import {
 } from "../ui/select";
 import { fadeIn } from "../../lib/animations";
 import { marginPredictionApi } from "../../services/api/marginPrediction";
+
+const ALL_PRODUCT_CATEGORIES = "__all__";
 
 // 统计卡片组件
 // 统计卡片组件
@@ -256,12 +257,20 @@ export default function MarginAnalysis() {
             <CardContent className="space-y-3">
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">设备类型</label>
-                <Select value={form.product_category} onValueChange={(v) => setForm({ ...form, product_category: v })}>
+                <Select
+                  value={form.product_category || ALL_PRODUCT_CATEGORIES}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      product_category: value === ALL_PRODUCT_CATEGORIES ? "" : value,
+                    })
+                  }
+                >
                   <SelectTrigger className="bg-slate-800 border-white/10">
                     <SelectValue placeholder="不限" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-slate-700 text-white">
-                    <SelectItem value="">不限</SelectItem>
+                    <SelectItem value={ALL_PRODUCT_CATEGORIES}>不限</SelectItem>
                     <SelectItem value="ICT">ICT 在线测试</SelectItem>
                     <SelectItem value="FCT">FCT 功能测试</SelectItem>
                     <SelectItem value="EOL">EOL 终检设备</SelectItem>

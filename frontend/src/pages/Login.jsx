@@ -51,6 +51,10 @@ const features = [
   desc: "风险识别、提前预警"
 }];
 
+const DEFAULT_BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || "8002";
+const DEFAULT_BACKEND_TARGET =
+  import.meta.env.VITE_BACKEND_URL || `127.0.0.1:${DEFAULT_BACKEND_PORT}`;
+
 
 export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState("");
@@ -317,13 +321,13 @@ export default function Login({ onLoginSuccess }) {
         rawData.includes("ECONNREFUSED") ||
         rawData.includes("proxy") ||
         rawData.includes("connect") ||
-        rawData.includes("127.0.0.1:8000")) ||
+        rawData.includes(DEFAULT_BACKEND_TARGET)) ||
         typeof contentType === "string" && (
         contentType.includes("text/html") ||
         contentType.includes("text/plain"))))
         {
           errorMessage =
-          "无法连接到后端服务（127.0.0.1:8000），请确认后端已启动（运行 ./start.sh）";
+          `无法连接到后端服务（${DEFAULT_BACKEND_TARGET}），请确认后端已启动（运行 ./start.sh）`;
           setError(errorMessage);
           return;
         }
