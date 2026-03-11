@@ -334,6 +334,21 @@ export default function LeadManagement({ embedded = false }) {
     setShowConvertDialog(true);
   };
 
+  const handleOpenFollowUpDialog = async (lead) => {
+    setSelectedLead(lead);
+    setShowFollowUpDialog(true);
+
+    // 打开快捷跟进时也预加载历史，便于上下文判断
+    try {
+      const response = await leadApi.getFollowUps(lead.id);
+      if (response.data) {
+        setFollowUps(response.data);
+      }
+    } catch (error) {
+      console.error("加载跟进记录失败:", error);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       {!embedded ? (
@@ -386,6 +401,7 @@ export default function LeadManagement({ embedded = false }) {
         handleViewDetail={handleViewDetail}
         handleEdit={handleEdit}
         handleConvert={handleOpenConvertDialog}
+        handleFollowUp={handleOpenFollowUpDialog}
       />
 
       {/* 分页 */}

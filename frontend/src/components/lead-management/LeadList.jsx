@@ -18,6 +18,7 @@ import {
   Building2,
   Calendar,
   Clock,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { formatDate, formatDateTime } from "../../lib/formatters";
@@ -39,6 +40,7 @@ export default function LeadList({
   handleViewDetail,
   handleEdit,
   handleConvert,
+  handleFollowUp,
 }) {
   if (loading) {
     return <div className="text-center py-12 text-slate-400">加载中...</div>;
@@ -161,6 +163,15 @@ export default function LeadList({
                     <Edit className="mr-1.5 h-3.5 w-3.5" />
                     编辑
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleFollowUp && handleFollowUp(lead)}
+                    className="flex-1 h-8 text-amber-400 hover:text-amber-300"
+                  >
+                    <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+                    跟进
+                  </Button>
                   {lead.status !== "CONVERTED" && (
                     <Button
                       variant="ghost"
@@ -259,6 +270,14 @@ export default function LeadList({
                         className="h-8 w-8 p-0"
                       >
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleFollowUp && handleFollowUp(lead)}
+                        className="h-8 w-8 p-0 text-amber-400"
+                      >
+                        <MessageSquare className="h-4 w-4" />
                       </Button>
                       {lead.status !== "CONVERTED" && (
                         <Button
