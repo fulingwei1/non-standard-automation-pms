@@ -286,14 +286,15 @@ describe('Sales API', () => {
     });
 
     it('startApproval() - 应该启动审批流程', async () => {
-      mock.onPost('/api/v1/sales/quotes/1/approval/start').reply(200, {
+      mock.onPost('/api/v1/sales/quotes/approval/submit').reply(200, {
         success: true,
-        data: { approval_id: 1 },
+        data: { approval_id: 1, quote_ids: [1] },
       });
 
       const response = await quoteApi.startApproval(1);
 
       expect(response.status).toBe(200);
+      expect(mock.history.post[0].data).toBe('{"quote_ids":[1]}');
     });
   });
 
