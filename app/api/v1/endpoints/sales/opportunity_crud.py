@@ -6,12 +6,11 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter
 from app.core import security
 from app.models.project import Customer
 from app.models.sales import Opportunity, OpportunityRequirement
@@ -30,6 +29,15 @@ from .utils import (
     get_entity_creator_id,
 )
 
+
+# 商机查询配置
+OPPORTUNITY_QUERY_CONFIG = SalesQueryConfig(
+    keyword_fields=["opp_code", "opp_name"],
+    default_sort_field="priority_score",
+    default_sort_desc=True,
+    owner_field="owner_id",
+)
+
 router = APIRouter()
 
 
@@ -46,45 +54,12 @@ def read_opportunities(
     """
     获取商机列表
     Issue 7.1: 已集成数据权限过滤
+
+    使用 SalesQueryBuilder 统一处理查询逻辑
     """
-    query = db.query(Opportunity).options(joinedload(Opportunity.customer))
 
-    # Issue 7.1: 应用数据权限过滤
-    query = security.filter_sales_data_by_scope(query, current_user, db, Opportunity, "owner_id")
-
-    query = apply_keyword_filter(query, Opportunity, keyword, ["opp_code", "opp_name"])
-
-    if stage:
-        stage_values = [item.strip() for item in stage.split(",") if item.strip()]
-        if len(stage_values) == 1:
-            query = query.filter(Opportunity.stage == stage_values[0])
-        elif stage_values:
-            query = query.filter(Opportunity.stage.in_(stage_values))
-
-    if customer_id:
-        query = query.filter(Opportunity.customer_id == customer_id)
-
-    if owner_id:
-        query = query.filter(Opportunity.owner_id == owner_id)
-
-    total = query.count()
-    # 使用 eager loading 避免 N+1 查询
-    # 默认按优先级排序，如果没有优先级则按创建时间排序
-    opportunities = (
-        query.options(
-            joinedload(Opportunity.customer),
-            joinedload(Opportunity.owner),
-            joinedload(Opportunity.updater),
-            joinedload(Opportunity.requirements),
-        )
-        .order_by(desc(Opportunity.priority_score).nullslast(), desc(Opportunity.created_at))
-        .offset(pagination.offset)
-        .limit(pagination.limit)
-        .all()
-    )
-
-    opp_responses = []
-    for opp in opportunities:
+    def transform_opportunity(opp: Opportunity) -> OpportunityResponse:
+        """将 Opportunity 模型转换为响应对象"""
         # 获取第一个 requirement（如果存在）
         req = opp.requirements[0] if opp.requirements else None
         opp_dict = {
@@ -98,9 +73,29 @@ def read_opportunities(
             opp_dict["requirement"] = OpportunityRequirementResponse(
                 **{c.name: getattr(req, c.name) for c in req.__table__.columns}
             )
-        opp_responses.append(OpportunityResponse(**opp_dict))
+        return OpportunityResponse(**opp_dict)
 
-    return pagination.to_response(opp_responses, total)
+    # 使用 SalesQueryBuilder 链式构建查询
+    result = (
+        SalesQueryBuilder(db, Opportunity, OPPORTUNITY_QUERY_CONFIG)
+        .with_options(
+            joinedload(Opportunity.customer),
+            joinedload(Opportunity.owner),
+            joinedload(Opportunity.updater),
+            joinedload(Opportunity.requirements),
+        )
+        .with_scope_filter(current_user)
+        .with_keyword(keyword)
+        .with_status(stage, field_name="stage")
+        .with_customer(customer_id)
+        .with_owner(owner_id)
+        .with_sort(nulls_last=True)
+        .with_secondary_sort("created_at", is_desc=True)
+        .with_pagination(pagination)
+        .execute_with_transform(transform_opportunity)
+    )
+
+    return pagination.to_response(result.items, result.total)
 
 
 @router.post("/opportunities", response_model=OpportunityResponse, status_code=201)

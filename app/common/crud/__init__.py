@@ -15,6 +15,11 @@ from app.common.crud.exceptions import (
     raise_not_found,
 )
 from app.common.crud.filters import QueryBuilder
+from app.common.crud.sales_query_builder import (
+    SalesQueryBuilder,
+    SalesQueryConfig,
+    SalesQueryResult,
+)
 
 # 异步版本（用于未来迁移）
 from app.common.crud.repository import BaseRepository
@@ -33,6 +38,9 @@ __all__ = [
     "SyncBaseRepository",
     "SyncBaseService",
     "SyncQueryBuilder",
+    "SalesQueryBuilder",
+    "SalesQueryConfig",
+    "SalesQueryResult",
     "BaseCRUDService",
     "QueryParams",
     "PaginatedResult",

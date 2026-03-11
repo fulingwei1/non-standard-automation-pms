@@ -10,12 +10,11 @@ from typing import Any, List, Optional
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project import Customer
 from app.models.sales import Contract, ContractDeliverable, Opportunity
@@ -33,6 +32,15 @@ from ..utils import (
     generate_contract_code,
     get_entity_creator_id,
     validate_g3_quote_to_contract,
+)
+
+
+# 合同查询配置
+CONTRACT_QUERY_CONFIG = SalesQueryConfig(
+    keyword_fields=["contract_code"],
+    default_sort_field="created_at",
+    default_sort_desc=True,
+    owner_field="sales_owner_id",  # 合同使用 sales_owner_id 作为负责人字段
 )
 
 router = APIRouter()
@@ -106,48 +114,45 @@ def read_contracts(
     """
     获取合同列表
     Issue 7.1: 已集成数据权限过滤
+
+    使用 SalesQueryBuilder 统一处理查询逻辑
     """
-    query = db.query(Contract).options(
-        joinedload(Contract.customer),
-        joinedload(Contract.project),
-        joinedload(Contract.opportunity),
-        joinedload(Contract.sales_owner),
-        joinedload(Contract.contract_manager),
-    )
 
-    # Issue 7.1: 应用数据权限过滤
-    query = security.filter_sales_data_by_scope(query, current_user, db, Contract, "sales_owner_id")
-
-    query = apply_keyword_filter(query, Contract, keyword, "contract_code")
-
-    if status:
-        query = query.filter(Contract.status == status)
-
-    if customer_id:
-        query = query.filter(Contract.customer_id == customer_id)
-
-    total = query.count()
-    contracts = apply_pagination(
-        query.order_by(desc(Contract.created_at)), pagination.offset, pagination.limit
-    ).all()
-
-    contract_responses = []
-    for contract in contracts:
+    def transform_contract(contract: Contract) -> ContractResponse:
+        """将 Contract 模型转换为响应对象"""
+        # 加载交付物（由于不能在 transform 中修改查询，需要额外查询）
         deliverables = (
             db.query(ContractDeliverable)
             .filter(ContractDeliverable.contract_id == contract.id)
             .all()
         )
-        contract_responses.append(
-            ContractResponse(**_build_contract_response_dict(contract, deliverables))
+        return ContractResponse(**_build_contract_response_dict(contract, deliverables))
+
+    # 使用 SalesQueryBuilder 链式构建查询
+    result = (
+        SalesQueryBuilder(db, Contract, CONTRACT_QUERY_CONFIG)
+        .with_options(
+            joinedload(Contract.customer),
+            joinedload(Contract.project),
+            joinedload(Contract.opportunity),
+            joinedload(Contract.sales_owner),
+            joinedload(Contract.contract_manager),
         )
+        .with_scope_filter(current_user)
+        .with_keyword(keyword)
+        .with_status(status)
+        .with_customer(customer_id)
+        .with_sort()
+        .with_pagination(pagination)
+        .execute_with_transform(transform_contract)
+    )
 
     return PaginatedResponse(
-        items=contract_responses,
-        total=total,
+        items=result.items,
+        total=result.total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total),
+        pages=pagination.pages_for_total(result.total),
     )
 
 

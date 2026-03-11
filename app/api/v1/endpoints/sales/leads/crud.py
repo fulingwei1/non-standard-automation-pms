@@ -8,12 +8,11 @@ import json
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
-from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.advantage_product import AdvantageProduct
 from app.models.sales import Lead
@@ -30,6 +29,15 @@ from app.utils.json_helpers import safe_json_loads
 from ..utils import (
     generate_lead_code,
     get_entity_creator_id,
+)
+
+
+# 线索查询配置（模块级别定义，复用）
+LEAD_QUERY_CONFIG = SalesQueryConfig(
+    keyword_fields=["lead_code", "customer_name", "contact_name"],
+    default_sort_field="priority_score",
+    default_sort_desc=True,
+    owner_field="owner_id",
 )
 
 
@@ -82,49 +90,38 @@ def read_leads(
     """
     获取线索列表
     Issue 7.1: 已集成数据权限过滤
+
+    使用 SalesQueryBuilder 统一处理查询逻辑
     """
-    query = db.query(Lead)
 
-    # Issue 7.1: 应用数据权限过滤
-    query = security.filter_sales_data_by_scope(query, current_user, db, Lead, "owner_id")
-
-    query = apply_keyword_filter(
-        query, Lead, keyword, ["lead_code", "customer_name", "contact_name"]
-    )
-
-    if status:
-        query = query.filter(Lead.status == status)
-
-    if owner_id:
-        query = query.filter(Lead.owner_id == owner_id)
-
-    total = query.count()
-    # 默认按优先级排序，如果没有优先级则按创建时间排序
-    leads = apply_pagination(
-        query.order_by(desc(Lead.priority_score).nullslast(), desc(Lead.created_at)),
-        pagination.offset,
-        pagination.limit,
-    ).all()
-
-    # 填充负责人名称和优势产品信息
-    lead_responses = []
-    for lead in leads:
+    def transform_lead(lead: Lead) -> LeadResponse:
+        """将 Lead 模型转换为响应对象"""
         lead_dict = {
             **{c.name: getattr(lead, c.name) for c in lead.__table__.columns},
             "owner_name": lead.owner.real_name if lead.owner else None,
+            "advantage_products": _get_advantage_products_for_lead(db, lead),
         }
+        return LeadResponse(**lead_dict)
 
-        # 获取优势产品详情（使用 safe_json_loads 避免解析异常）
-        lead_dict["advantage_products"] = _get_advantage_products_for_lead(db, lead)
-
-        lead_responses.append(LeadResponse(**lead_dict))
+    # 使用 SalesQueryBuilder 链式构建查询
+    result = (
+        SalesQueryBuilder(db, Lead, LEAD_QUERY_CONFIG)
+        .with_scope_filter(current_user)
+        .with_keyword(keyword)
+        .with_status(status)
+        .with_owner(owner_id)
+        .with_sort(nulls_last=True)
+        .with_secondary_sort("created_at", is_desc=True)
+        .with_pagination(pagination)
+        .execute_with_transform(transform_lead)
+    )
 
     return PaginatedResponse(
-        items=lead_responses,
-        total=total,
+        items=result.items,
+        total=result.total,
         page=pagination.page,
         page_size=pagination.page_size,
-        pages=pagination.pages_for_total(total),
+        pages=pagination.pages_for_total(result.total),
     )
 
 
