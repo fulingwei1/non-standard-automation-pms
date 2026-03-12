@@ -21,7 +21,12 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
-from app.models.enums import QuoteStatusEnum
+from app.models.enums import (
+    ApprovalStatusEnum,
+    QuoteStatusEnum,
+    TemplateStatusEnum,
+    TemplateVersionStatusEnum,
+)
 
 
 class Quote(Base, TimestampMixin):
@@ -116,16 +121,55 @@ class Quote(Base, TimestampMixin):
 
 
 class QuoteVersion(Base, TimestampMixin):
-    """报价版本表"""
+    """报价版本表
+
+    【重构】2026-03-12：
+    - 新增 solution_version_id，绑定方案版本
+    - 新增 cost_estimation_id，绑定成本估算
+    - 新增绑定验证字段
+    - cost_total 从绑定的成本估算同步
+
+    绑定规则：
+    - QuoteVersion 必须绑定 CostEstimation
+    - CostEstimation 必须绑定 SolutionVersion
+    - cost_total 必须等于 CostEstimation.total_cost
+    """
 
     __tablename__ = "quote_versions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     quote_id = Column(Integer, ForeignKey("quotes.id"), nullable=False, comment="报价ID")
     version_no = Column(String(10), nullable=False, comment="版本号")
-    total_price = Column(Numeric(12, 2), comment="总价")
-    cost_total = Column(Numeric(12, 2), comment="成本总计")
+
+    # === 【新增】三位一体绑定 ===
+    solution_version_id = Column(
+        Integer,
+        ForeignKey("solution_versions.id", ondelete="SET NULL"),
+        nullable=True,  # 迁移期间允许为空
+        comment="方案版本ID",
+    )
+    cost_estimation_id = Column(
+        Integer,
+        ForeignKey("presale_ai_cost_estimation.id", ondelete="SET NULL"),
+        nullable=True,  # 迁移期间允许为空
+        comment="成本估算ID",
+    )
+
+    # 定价信息
+    total_price = Column(Numeric(12, 2), comment="报价总价")
+    cost_total = Column(Numeric(12, 2), comment="成本总计（从估算同步）")
     gross_margin = Column(Numeric(5, 2), comment="毛利率")
+
+    # === 【新增】绑定验证 ===
+    binding_status = Column(
+        String(20),
+        default="valid",
+        comment="绑定状态：valid/outdated/invalid",
+    )
+    binding_validated_at = Column(DateTime, comment="最后验证时间")
+    binding_warning = Column(Text, comment="绑定警告信息")
+
+    # 现有字段
     lead_time_days = Column(Integer, comment="交期(天)")
     risk_terms = Column(Text, comment="风险条款")
     delivery_date = Column(Date, comment="交付日期")
@@ -158,8 +202,36 @@ class QuoteVersion(Base, TimestampMixin):
         foreign_keys="QuoteCostHistory.quote_version_id",
     )
 
+    # === 【新增】绑定关系 ===
+    solution_version = relationship(
+        "SolutionVersion",
+        backref="quote_versions",
+        foreign_keys=[solution_version_id],
+    )
+    cost_estimation = relationship(
+        "PresaleAICostEstimation",
+        backref="quote_versions",
+        foreign_keys=[cost_estimation_id],
+    )
+
+    __table_args__ = (
+        Index("idx_qv_solution_version", "solution_version_id"),
+        Index("idx_qv_cost_estimation", "cost_estimation_id"),
+        Index("idx_qv_binding_status", "binding_status"),
+    )
+
     def __repr__(self):
         return f"<QuoteVersion {self.quote_id}-{self.version_no}>"
+
+    @property
+    def is_binding_valid(self) -> bool:
+        """绑定是否有效"""
+        return self.binding_status == "valid"
+
+    @property
+    def has_complete_binding(self) -> bool:
+        """是否有完整的三位一体绑定"""
+        return bool(self.solution_version_id and self.cost_estimation_id)
 
 
 class QuoteItem(Base):
@@ -249,7 +321,7 @@ class QuoteCostApproval(Base, TimestampMixin):
 
     # 审批信息
     approval_status = Column(
-        String(20), default="PENDING", comment="审批状态：PENDING/APPROVED/REJECTED"
+        String(20), default=ApprovalStatusEnum.PENDING.value, comment="审批状态：PENDING/APPROVED/REJECTED"
     )
     approval_level = Column(
         Integer, default=1, comment="审批层级（1=销售经理，2=销售总监，3=财务）"
@@ -485,7 +557,7 @@ class QuoteTemplate(Base, TimestampMixin):
     template_name = Column(String(200), nullable=False, comment="模板名称")
     category = Column(String(50), comment="模板分类")
     description = Column(Text, comment="描述")
-    status = Column(String(20), default="DRAFT", comment="状态")
+    status = Column(String(20), default=TemplateStatusEnum.DRAFT.value, comment="状态")
     visibility_scope = Column(String(30), default="TEAM", comment="可见范围")
     is_default = Column(Boolean, default=False, comment="是否默认模板")
     current_version_id = Column(
@@ -524,7 +596,7 @@ class QuoteTemplateVersion(Base, TimestampMixin):
         Integer, ForeignKey("quote_templates.id"), nullable=False, comment="模板ID"
     )
     version_no = Column(String(20), nullable=False, comment="版本号")
-    status = Column(String(20), default="DRAFT", comment="状态")
+    status = Column(String(20), default=TemplateVersionStatusEnum.DRAFT.value, comment="状态")
     sections = Column(JSON, comment="模板结构配置")
     pricing_rules = Column(JSON, comment="价格规则")
     config_schema = Column(JSON, comment="配置项定义")
