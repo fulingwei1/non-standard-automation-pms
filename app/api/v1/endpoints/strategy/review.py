@@ -26,7 +26,7 @@ from app.schemas.strategy import (
     StrategyReviewUpdate,
 )
 from app.services import strategy as strategy_service
-from app.services.strategy.review.strategy_reviews import _review_to_response, _safe_json_loads as _review_json
+from app.services.strategy.review.strategy_reviews import _review_to_response
 from app.services.strategy.review.calendar_events import _event_to_response
 
 router = APIRouter()
