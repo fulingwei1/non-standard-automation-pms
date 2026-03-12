@@ -12,8 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
 from app.models.strategy import (
-    CSF,
-    KPI,
     DepartmentObjective,
     PersonalKPI,
 )

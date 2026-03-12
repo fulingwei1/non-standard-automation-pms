@@ -5,7 +5,6 @@
 包含：统计概览、工程师设计问题分析、原因分析、快照
 """
 
-import json
 import logging
 from datetime import date, datetime
 from decimal import Decimal

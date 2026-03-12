@@ -16,7 +16,7 @@ from app.common.query_filters import build_like_conditions
 from app.models.project import Project
 from app.models.project.financial import ProjectMilestone
 from app.models.project.financial import ProjectPaymentPlan as PaymentPlan
-from app.models.sales.contracts import Contract, ContractDeliverable
+from app.models.sales.contracts import Contract
 from app.utils.json_helpers import safe_json_loads
 
 from ..utils.gate_validation import validate_g4_contract_to_project

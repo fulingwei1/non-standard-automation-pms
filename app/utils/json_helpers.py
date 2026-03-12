@@ -7,7 +7,7 @@ JSON 安全解析工具函数
 
 import json
 import logging
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
