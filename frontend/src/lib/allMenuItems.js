@@ -79,6 +79,12 @@ export const allMenuGroups = [
         icon: "LayoutDashboard",
       },
       {
+        id: "sales-workstation",
+        name: "销售员工作站",
+        path: "/sales/workstation",
+        icon: "Briefcase",
+      },
+      {
         id: "sales-director-dashboard",
         name: "销售总监工作台",
         path: "/sales-director-dashboard",

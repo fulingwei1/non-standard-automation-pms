@@ -200,3 +200,45 @@ router.include_router(
 from . import funnel
 
 router.include_router(funnel.router, tags=["sales-funnel-state-machine"])
+
+# 智能跟进提醒路由
+from . import follow_up_reminders
+
+router.include_router(
+    follow_up_reminders.router, prefix="/follow-up", tags=["sales-follow-up-reminders"]
+)
+
+# 催款优先级排序路由
+from . import collection_priority
+
+router.include_router(
+    collection_priority.router, prefix="/collection", tags=["sales-collection-priority"]
+)
+
+# 一键成本推荐路由
+from . import quick_cost_recommendation
+
+router.include_router(
+    quick_cost_recommendation.router, prefix="/quick-cost", tags=["sales-quick-cost"]
+)
+
+# 商机健康度评分路由
+from . import opportunity_health
+
+router.include_router(
+    opportunity_health.router, tags=["sales-opportunity-health"]
+)
+
+# 报价对比分析路由
+from . import quote_comparison
+
+router.include_router(
+    quote_comparison.router, tags=["sales-quote-comparison"]
+)
+
+# 合同里程碑提醒路由
+from . import contract_milestones
+
+router.include_router(
+    contract_milestones.router, prefix="/contracts", tags=["sales-contract-milestones"]
+)

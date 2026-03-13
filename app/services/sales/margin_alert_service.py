@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, desc, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales import (
     MarginAlertConfig,
@@ -158,8 +158,16 @@ class MarginAlertService:
         Returns:
             预警检查结果
         """
-        # 获取报价和版本
-        quote = self.db.query(Quote).filter(Quote.id == quote_id).first()
+        # 获取报价和版本 - 使用 eager loading 预加载关联对象
+        quote = (
+            self.db.query(Quote)
+            .options(
+                joinedload(Quote.current_version),
+                joinedload(Quote.customer),
+            )
+            .filter(Quote.id == quote_id)
+            .first()
+        )
         if not quote:
             raise ValueError(f"报价不存在: {quote_id}")
 

@@ -47,6 +47,19 @@ from ...sales import (
     SalesTarget,
     ScoringRule,
     TechnicalAssessment,
+    # 评估模板和工作流（2026-03-12 新增）
+    AssessmentTemplate,
+    AssessmentItem,
+    AssessmentRisk,
+    AssessmentVersion,
+    # 销售漏斗状态机（2026-03-12 新增）
+    SalesFunnelStage,
+    StageGateConfig,
+    StageGateResult,
+    StageDwellTimeConfig,
+    StageDwellTimeAlert,
+    FunnelTransitionLog,
+    FunnelSnapshot,
 )
 
 __all__ = [
@@ -93,4 +106,17 @@ __all__ = [
     # AI Solution Generation
     "PresaleAISolution",
     "PresaleAIGenerationLog",
+    # Assessment Template & Workflow
+    "AssessmentTemplate",
+    "AssessmentItem",
+    "AssessmentRisk",
+    "AssessmentVersion",
+    # Sales Funnel State Machine
+    "SalesFunnelStage",
+    "StageGateConfig",
+    "StageGateResult",
+    "StageDwellTimeConfig",
+    "StageDwellTimeAlert",
+    "FunnelTransitionLog",
+    "FunnelSnapshot",
 ]

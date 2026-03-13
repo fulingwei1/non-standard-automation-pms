@@ -136,6 +136,10 @@ INDEXES = [
     ("idx_opp_owner", "opportunities", ["owner_id"], False),
     ("idx_opp_stage", "opportunities", ["stage"], False),
     ("idx_opp_customer_stage", "opportunities", ["customer_id", "stage"], False),
+    # quotes 表 - 高优先级（新增）
+    ("idx_quotes_customer_status", "quotes", ["customer_id", "status"], False),
+    ("idx_quotes_opportunity", "quotes", ["opportunity_id"], False),
+    ("idx_quotes_created_at", "quotes", ["created_at"], True),
     # contracts 表 - 高优先级
     ("idx_contract_customer_status", "contracts", ["customer_id", "status"], False),
     ("idx_contract_opportunity", "contracts", ["opportunity_id"], False),

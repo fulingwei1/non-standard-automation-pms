@@ -122,6 +122,7 @@ export * from "./api/staffing.js";
 export * from "./api/substitution.js";
 export * from "./api/survey.js";
 export * from "./api/task.js";
+export * from "./api/technicalParameter.js";
 export * from "./api/workOrder.js";
 export * from "./api/worker.js";
 export * from "./api/workshop.js";

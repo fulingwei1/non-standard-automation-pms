@@ -132,6 +132,9 @@ class ContractApprovalService:
         approval.approval_opinion = opinion
         approval.approved_at = datetime.now()
 
+        # 先 flush 确保当前审批状态已更新
+        self.db.flush()
+
         # 检查是否所有审批都已完成
         contract = self.db.query(Contract).filter(Contract.id == contract_id).first()
         pending_count = (

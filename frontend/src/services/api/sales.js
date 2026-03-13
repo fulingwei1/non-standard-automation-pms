@@ -418,6 +418,84 @@ export const quoteDeliveryApi = {
   calendar: (params) => api.get("/sales/quotes/delivery/calendar", { params }),
 };
 
+// ========== P0/P1 新功能 API ==========
+
+// 智能跟进提醒 API
+export const followUpReminderApi = {
+  // 获取跟进提醒列表
+  list: (params) => api.get("/sales/follow-up/reminders", { params }),
+  // 获取汇总统计
+  getSummary: () => api.get("/sales/follow-up/reminders/summary"),
+  // 获取紧急提醒
+  getUrgent: () => api.get("/sales/follow-up/reminders/urgent"),
+};
+
+// 催款优先级排序 API
+export const collectionPriorityApi = {
+  // 获取催款优先级列表
+  list: (params) => api.get("/sales/collection/priority", { params }),
+  // 获取汇总统计
+  getSummary: () => api.get("/sales/collection/priority/summary"),
+  // 获取紧急催款项
+  getCritical: () => api.get("/sales/collection/priority/critical"),
+};
+
+// 一键成本推荐 API
+export const quickCostApi = {
+  // 商机成本推荐
+  getForOpportunity: (oppId) =>
+    api.get(`/sales/quick-cost/opportunities/${oppId}/quick-cost`),
+  // 报价成本推荐
+  getForQuote: (quoteId) =>
+    api.get(`/sales/quick-cost/quotes/${quoteId}/quick-cost`),
+};
+
+// 商机健康度评分 API
+export const opportunityHealthApi = {
+  // 获取单个商机健康度
+  get: (oppId) => api.get(`/sales/opportunities/${oppId}/health`),
+  // 获取用户所有商机健康度
+  list: (params) => api.get("/sales/opportunities/health", { params }),
+  // 获取健康度汇总
+  getSummary: () => api.get("/sales/opportunities/health/summary"),
+  // 获取问题商机
+  getCritical: () => api.get("/sales/opportunities/health/critical"),
+};
+
+// 报价对比分析 API
+export const quoteComparisonApi = {
+  // 对比多版本（支持2-4个版本）
+  compareVersions: (quoteId, versionIds) =>
+    api.get(`/sales/quotes/${quoteId}/versions/compare`, {
+      params: { version_ids: versionIds },
+    }),
+  // 对比同商机多报价
+  compareByOpportunity: (oppId) =>
+    api.get(`/sales/quotes/opportunity/${oppId}/compare`),
+  // 与竞品对比
+  compareWithCompetitor: (quoteId, competitorPrice, competitorName) =>
+    api.post("/sales/quotes/competitor-compare", null, {
+      params: {
+        quote_id: quoteId,
+        competitor_price: competitorPrice,
+        competitor_name: competitorName,
+      },
+    }),
+};
+
+// 合同里程碑提醒 API
+export const contractMilestoneApi = {
+  // 获取里程碑列表
+  list: (params) => api.get("/sales/contracts/milestones", { params }),
+  // 获取汇总统计
+  getSummary: () => api.get("/sales/contracts/milestones/summary"),
+  // 获取过期里程碑
+  getOverdue: () => api.get("/sales/contracts/milestones/overdue"),
+  // 获取付款节点
+  getPayments: (params) =>
+    api.get("/sales/contracts/milestones/payments", { params }),
+};
+
 // 销售漏斗优化 API（Issue 6.x）
 export const funnelOptimizationApi = {
   // 获取转化率分析数据
