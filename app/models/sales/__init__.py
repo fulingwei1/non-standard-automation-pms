@@ -112,6 +112,34 @@ from .technical_assessment import (
     TechnicalAssessment,
 )
 
+# 评估模板和工作流（2026-03-12 新增）
+from .assessment_template import (
+    AssessmentDimensionEnum,
+    AssessmentItem,
+    AssessmentRisk,
+    AssessmentTemplate,
+    AssessmentVersion,
+    RiskLevelEnum,
+    RiskStatusEnum,
+    TemplateCategoryEnum,
+)
+
+# 销售漏斗状态机（2026-03-12 新增）
+from .sales_funnel import (
+    AlertSeverityEnum,
+    AlertStatusEnum,
+    FunnelEntityTypeEnum,
+    FunnelSnapshot,
+    FunnelTransitionLog,
+    GateResultEnum,
+    GateTypeEnum,
+    SalesFunnelStage,
+    StageDwellTimeAlert,
+    StageDwellTimeConfig,
+    StageGateConfig,
+    StageGateResult,
+)
+
 # 线索需求详情 V2（拆分后的子表）
 from .lead_requirement_v2 import (
     LeadRequirementBasicV2,
@@ -231,4 +259,26 @@ __all__ = [
     "MarginAlertRecord",
     "MarginAlertLevelEnum",
     "MarginAlertStatusEnum",
+    # 评估模板和工作流
+    "AssessmentTemplate",
+    "AssessmentItem",
+    "AssessmentRisk",
+    "AssessmentVersion",
+    "AssessmentDimensionEnum",
+    "TemplateCategoryEnum",
+    "RiskLevelEnum",
+    "RiskStatusEnum",
+    # 销售漏斗状态机
+    "SalesFunnelStage",
+    "StageGateConfig",
+    "StageGateResult",
+    "StageDwellTimeConfig",
+    "StageDwellTimeAlert",
+    "FunnelTransitionLog",
+    "FunnelSnapshot",
+    "FunnelEntityTypeEnum",
+    "GateTypeEnum",
+    "GateResultEnum",
+    "AlertSeverityEnum",
+    "AlertStatusEnum",
 ]

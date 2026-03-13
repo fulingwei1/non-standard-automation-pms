@@ -17,6 +17,7 @@ from app.models.user import User
 from app.schemas.sales import (
     LeadRequirementDetailCreate,
     LeadRequirementDetailResponse,
+    LeadRequirementDetailUpdate,
 )
 from app.utils.db_helpers import get_or_404, save_obj
 
@@ -81,7 +82,7 @@ def create_lead_requirement_detail(
     if existing:
         raise HTTPException(status_code=400, detail="该线索已存在需求详情，请使用更新接口")
 
-    detail = LeadRequirementDetail(lead_id=lead_id, **detail_in.model_dump())
+    detail = LeadRequirementDetail(lead_id=lead_id, **detail_in.model_dump(exclude_none=True))
 
     save_obj(db, detail)
 
@@ -93,7 +94,7 @@ def update_lead_requirement_detail(
     *,
     db: Session = Depends(deps.get_db),
     lead_id: int,
-    detail_in: LeadRequirementDetailCreate,
+    detail_in: LeadRequirementDetailUpdate,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """

@@ -188,3 +188,15 @@ from app.api.v1.endpoints import sales_organization
 router.include_router(
     sales_organization.router, prefix="/organization", tags=["sales-organization"]
 )
+
+# 技术评估模板路由
+from . import assessment_templates
+
+router.include_router(
+    assessment_templates.router, tags=["sales-assessment-templates"]
+)
+
+# 销售漏斗状态机路由
+from . import funnel
+
+router.include_router(funnel.router, tags=["sales-funnel-state-machine"])

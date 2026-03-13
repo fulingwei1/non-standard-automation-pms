@@ -146,11 +146,37 @@ class PresaleSupportTicket(Base, TimestampMixin):
     pm_user_id = Column(Integer, ForeignKey("users.id"), comment="分配的PM用户ID")
     pm_assigned_at = Column(DateTime, comment="PM分配时间")
 
+    # 技术评估相关（2026-03-12新增）
+    assessment_required = Column(Boolean, default=True, comment="是否需要技术评估")
+    assessment_status = Column(
+        String(20),
+        default="PENDING",
+        comment="评估状态: PENDING/IN_PROGRESS/COMPLETED/SKIPPED"
+    )
+    assessment_priority = Column(
+        String(20),
+        default="NORMAL",
+        comment="评估优先级: LOW/NORMAL/HIGH/URGENT"
+    )
+    assessment_due_date = Column(DateTime, comment="评估截止日期")
+    current_assessment_id = Column(
+        Integer,
+        ForeignKey("technical_assessments.id"),
+        comment="当前评估ID"
+    )
+
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
 
     # 关系
     deliverables = relationship("PresaleTicketDeliverable", back_populates="ticket")
     progress_records = relationship("PresaleTicketProgress", back_populates="ticket")
+
+    # 当前评估关系
+    current_assessment = relationship(
+        "TechnicalAssessment",
+        foreign_keys=[current_assessment_id],
+        uselist=False
+    )
 
     __table_args__ = (
         Index("idx_presale_ticket_no", "ticket_no"),
@@ -158,6 +184,7 @@ class PresaleSupportTicket(Base, TimestampMixin):
         Index("idx_presale_ticket_applicant", "applicant_id"),
         Index("idx_presale_ticket_assignee", "assignee_id"),
         Index("idx_presale_ticket_customer", "customer_id"),
+        Index("idx_presale_ticket_assessment_status", "assessment_status"),
         {"comment": "售前支持工单表"},
     )
 

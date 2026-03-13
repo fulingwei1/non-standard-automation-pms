@@ -12,11 +12,23 @@ T = TypeVar("T")
 
 
 class ResponseModel(BaseModel, Generic[T]):
-    """通用响应模型"""
+    """
+    通用响应模型
 
+    与 app.core.schemas.response.BaseResponse 格式兼容。
+    success 字段根据 code 自动计算（code < 400 表示成功）。
+    """
+
+    success: bool = Field(default=True, description="操作是否成功")
     code: int = Field(default=200, description="响应代码")
     message: str = Field(default="success", description="响应消息")
     data: Optional[T] = Field(default=None, description="响应数据")
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # 自动根据 code 设置 success（如果未显式指定）
+        if "success" not in data:
+            object.__setattr__(self, "success", self.code < 400)
 
 
 class PaginatedResponse(BaseModel, Generic[T]):

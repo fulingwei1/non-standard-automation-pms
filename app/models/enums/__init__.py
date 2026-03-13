@@ -98,6 +98,7 @@ from .project import (
 
 # 销售相关
 from .sales import (
+    ApprovalStatusEnum,
     ContractStatusEnum,
     DisputeReasonCodeEnum,
     DisputeStatusEnum,
@@ -112,6 +113,8 @@ from .sales import (
     PresalesLeadStatusEnum,
     ProductMatchTypeEnum,
     QuoteStatusEnum,
+    TemplateStatusEnum,
+    TemplateVersionStatusEnum,
     WinProbabilityLevelEnum,
 )
 

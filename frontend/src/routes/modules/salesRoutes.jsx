@@ -55,6 +55,7 @@ import SalesFunnel from "../../pages/SalesFunnel";
 
 // 售前相关
 import PresalesTasks from "../../pages/PresalesTasks";
+import SalesPresaleWorkbench from "../../pages/SalesPresaleWorkbench";
 import TechnicalAssessment from "../../pages/TechnicalAssessment";
 import OpenItemsManagement from "../../pages/OpenItemsManagement";
 import RequirementFreezeManagement from "../../pages/RequirementFreezeManagement";
@@ -134,6 +135,8 @@ export function SalesRoutes() {
       <Route path="/sales/opportunities" element={<OpportunityManagement />} />
       <Route path="/sales/opportunities/:id" element={<OpportunityDetail />} />
       <Route path="/sales/presales-tasks" element={<PresalesTasks />} />
+      <Route path="/sales/presales-workbench" element={<Navigate to="/sales/presale-workbench" replace />} />
+      <Route path="/sales/presale-workbench" element={<SalesPresaleWorkbench />} />
       <Route
         path="/sales/assessments/:sourceType/:sourceId"
         element={<TechnicalAssessment />}

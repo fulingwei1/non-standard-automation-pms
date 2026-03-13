@@ -131,3 +131,29 @@ class ProductMatchTypeEnum(str, Enum):
     ADVANTAGE = "ADVANTAGE"
     NEW = "NEW"
     UNKNOWN = "UNKNOWN"
+
+
+class ApprovalStatusEnum(str, Enum):
+    """审批状态枚举"""
+
+    PENDING = "PENDING"  # 待审批
+    APPROVED = "APPROVED"  # 已批准
+    REJECTED = "REJECTED"  # 已拒绝
+    WITHDRAWN = "WITHDRAWN"  # 已撤回
+
+
+class TemplateStatusEnum(str, Enum):
+    """模板状态枚举"""
+
+    DRAFT = "DRAFT"  # 草稿
+    ACTIVE = "ACTIVE"  # 启用
+    INACTIVE = "INACTIVE"  # 停用
+    ARCHIVED = "ARCHIVED"  # 已归档
+
+
+class TemplateVersionStatusEnum(str, Enum):
+    """模板版本状态枚举"""
+
+    DRAFT = "DRAFT"  # 草稿
+    PUBLISHED = "PUBLISHED"  # 已发布
+    DEPRECATED = "DEPRECATED"  # 已废弃
