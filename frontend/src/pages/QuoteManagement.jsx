@@ -464,7 +464,8 @@ export default function QuoteManagement({ embedded = false } = {}) {
           } />
       )}
 
-      {/* Tab 切换：报价列表 / 毛利分析 */}
+      {/* Tab 切换：报价列表 / 毛利分析 (仅在非嵌入模式下显示) */}
+      {!embedded ? (
       <Tabs defaultValue="quotes" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
           <TabsTrigger value="quotes" className="flex items-center gap-2">
@@ -715,6 +716,44 @@ export default function QuoteManagement({ embedded = false } = {}) {
           <MarginAnalysis />
         </TabsContent>
       </Tabs>
+      ) : (
+        // embedded 模式：直接显示报价列表，毛利分析由父组件处理
+        <motion.div variants={fadeIn} className="space-y-6">
+          <QuoteStatsOverview
+            stats={stats}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onRefresh={handleRefresh}
+            loading={loading}
+            timeRange={timeRange}
+            onTimeRangeChange={setTimeRange}
+          />
+          <QuoteListManager
+            quotes={quotes}
+            opportunities={opportunities}
+            customers={customers}
+            viewMode={viewMode}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            selectedQuotes={selectedQuotes}
+            onSelectionChange={handleSelectionChange}
+            onQuoteView={handleQuoteView}
+            onQuoteEdit={handleQuoteEdit}
+            onQuoteCreate={handleQuoteCreate}
+            onQuoteCopy={handleQuoteCopy}
+            onQuoteSend={handleQuoteSend}
+            onQuoteApprove={handleQuoteApprove}
+            onQuoteReject={handleQuoteReject}
+            onExport={handleExport}
+            onImport={handleImport}
+            loading={loading}
+          />
+        </motion.div>
+      )}
 
       {/* 报价详情对话框 */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>

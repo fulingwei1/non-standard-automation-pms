@@ -40,6 +40,14 @@ export const defaultNavGroups = [
   {
     label: "销售管理",
     items: [
+      // 工作站入口
+      {
+        name: "销售工作站",
+        path: "/sales/workstation",
+        icon: "Monitor",
+        permissionAny: ["sales:opportunity:read", "sales:lead:read", "sales:funnel:read"],
+        permissionLabel: "销售工作站"
+      },
       // 战略层
       { name: "目标预测", path: "/sales/forecast-dashboard", icon: "BarChart3", permission: "sales:funnel:read", permissionLabel: "目标预测" },
       // 漏斗流程层 (L2C顺序)

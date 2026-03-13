@@ -4,13 +4,18 @@ import { PageHeader } from "../components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import QuoteManagement from "./QuoteManagement";
 import SalesTemplateCenter from "./SalesTemplateCenter";
+import { MarginAnalysis } from "../components/quote";
 
 const TAB_QUOTES = "quotes";
+const TAB_MARGIN = "margin";
 const TAB_TEMPLATES = "templates";
 
 function getTabFromPath(pathname) {
   if (pathname.includes("/templates")) {
     return TAB_TEMPLATES;
+  }
+  if (pathname.includes("/margin")) {
+    return TAB_MARGIN;
   }
   return TAB_QUOTES;
 }
@@ -35,6 +40,7 @@ export default function QuoteManagementCenter() {
   const tabs = useMemo(
     () => [
       { value: TAB_QUOTES, label: "报价管理", path: `${basePath}/quotes` },
+      { value: TAB_MARGIN, label: "毛利分析", path: `${basePath}/margin` },
       { value: TAB_TEMPLATES, label: "报价模板", path: `${basePath}/templates` }
     ],
     [basePath]
@@ -56,7 +62,7 @@ export default function QuoteManagementCenter() {
       />
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           {(tabs || []).map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
@@ -66,6 +72,10 @@ export default function QuoteManagementCenter() {
 
         <TabsContent value={TAB_QUOTES} className="space-y-6">
           <QuoteManagement embedded />
+        </TabsContent>
+
+        <TabsContent value={TAB_MARGIN} className="space-y-6">
+          <MarginAnalysis />
         </TabsContent>
 
         <TabsContent value={TAB_TEMPLATES} className="space-y-6">
