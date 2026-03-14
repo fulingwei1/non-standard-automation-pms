@@ -186,9 +186,24 @@ class TestCreateOpportunity:
 
         customer_mock = MagicMock(customer_name="比亚迪")
         opp_instance = _make_opp()
-        opp_instance.__table__.columns = []
+        # Setup columns for dict comprehension in create_opportunity
+        from unittest.mock import Mock
+        col_id = Mock()
+        col_id.name = "id"
+        col_code = Mock()
+        col_code.name = "opp_code"
+        col_name = Mock()
+        col_name.name = "opp_name"
+        col_customer_id = Mock()
+        col_customer_id.name = "customer_id"
+        col_owner_id = Mock()
+        col_owner_id.name = "owner_id"
+        col_stage = Mock()
+        col_stage.name = "stage"
+        opp_instance.__table__.columns = [col_id, col_code, col_name, col_customer_id, col_owner_id, col_stage]
 
-        db.query.return_value.filter.return_value.first.return_value = None  # no duplicate
+        # Note: Since opp_code is empty, duplicate check is skipped
+        # First query is for customer lookup
 
         with (
             patch(
@@ -200,9 +215,8 @@ class TestCreateOpportunity:
             patch("app.api.v1.endpoints.sales.opportunity_crud.OpportunityRequirementResponse"),
         ):
 
-            # customer lookup
+            # customer lookup returns customer_mock, requirement lookup returns None
             db.query.return_value.filter.return_value.first.side_effect = [
-                None,  # duplicate code check
                 customer_mock,  # customer lookup
                 None,  # requirement lookup at end
             ]

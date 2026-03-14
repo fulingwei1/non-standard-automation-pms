@@ -16,9 +16,140 @@ from app.models.enums import OpportunityStageEnum
 from app.models.project import Customer
 from app.models.sales import Opportunity
 from app.models.user import User
-from app.schemas.common import ResponseModel
+from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.sales import OpportunityResponse, OpportunityRequirementResponse
+from app.common.pagination import PaginationParams, get_pagination_query
 
 router = APIRouter()
+
+
+@router.get("/opportunities/my-opportunities", response_model=PaginatedResponse[OpportunityResponse])
+def get_my_opportunities(
+    db: Session = Depends(deps.get_db),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取我的商机列表
+    返回当前用户负责的商机
+    """
+    from sqlalchemy.orm import joinedload
+    
+    query = db.query(Opportunity).filter(Opportunity.owner_id == current_user.id)
+    
+    # 加载关联数据
+    query = query.options(
+        joinedload(Opportunity.customer),
+        joinedload(Opportunity.owner),
+        joinedload(Opportunity.updater),
+        joinedload(Opportunity.requirements),
+    )
+    
+    # 分页
+    total = query.count()
+    items = query.order_by(Opportunity.created_at.desc()).offset(pagination.offset).limit(pagination.limit).all()
+    
+    def transform_opportunity(opp: Opportunity) -> OpportunityResponse:
+        req = opp.requirements[0] if opp.requirements else None
+        opp_dict = {
+            **{c.name: getattr(opp, c.name) for c in opp.__table__.columns},
+            "customer_name": opp.customer.customer_name if opp.customer else None,
+            "owner_name": opp.owner.real_name if opp.owner else None,
+            "updated_by_name": opp.updater.real_name if opp.updater else None,
+            "requirement": None,
+        }
+        if req:
+            opp_dict["requirement"] = OpportunityRequirementResponse(
+                **{c.name: getattr(req, c.name) for c in req.__table__.columns}
+            )
+        return OpportunityResponse(**opp_dict)
+    
+    return pagination.to_response([transform_opportunity(opp) for opp in items], total)
+
+
+@router.get("/opportunities/statistics", response_model=ResponseModel)
+def get_opportunity_statistics(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取商机统计数据
+    包括总数、阶段分布、赢单率等
+    """
+    # 总数统计
+    total_count = db.query(Opportunity).filter(Opportunity.owner_id == current_user.id).count()
+    
+    # 按阶段统计
+    stages = db.query(
+        Opportunity.stage,
+        func.count(Opportunity.id).label("count"),
+        func.sum(Opportunity.est_amount).label("total_amount"),
+    ).filter(Opportunity.owner_id == current_user.id).group_by(Opportunity.stage).all()
+    
+    stage_stats = {
+        stage: {"count": count, "total_amount": float(total_amount or 0)}
+        for stage, count, total_amount in stages
+    }
+    
+    # 赢单统计
+    won_count = db.query(Opportunity).filter(
+        Opportunity.owner_id == current_user.id,
+        Opportunity.stage == "WON"
+    ).count()
+    
+    win_rate = (won_count / total_count * 100) if total_count > 0 else 0
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "total_count": total_count,
+            "stage_distribution": stage_stats,
+            "won_count": won_count,
+            "win_rate": round(win_rate, 2),
+        },
+    )
+
+
+@router.get("/opportunities/pipeline", response_model=ResponseModel)
+def get_opportunity_pipeline(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取商机管道分析
+    按阶段展示商机数量和金额，用于销售漏斗分析
+    """
+    stages_order = ["LEAD", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]
+    
+    pipeline_data = []
+    for stage in stages_order:
+        count = db.query(Opportunity).filter(
+            Opportunity.owner_id == current_user.id,
+            Opportunity.stage == stage
+        ).count()
+        
+        total_amount = db.query(func.sum(Opportunity.est_amount)).filter(
+            Opportunity.owner_id == current_user.id,
+            Opportunity.stage == stage
+        ).scalar() or 0
+        
+        pipeline_data.append({
+            "stage": stage,
+            "count": count,
+            "total_amount": float(total_amount),
+            "avg_amount": float(total_amount / count) if count > 0 else 0,
+        })
+    
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "pipeline": pipeline_data,
+            "total_opportunities": sum(item["count"] for item in pipeline_data),
+            "total_amount": sum(item["total_amount"] for item in pipeline_data),
+        },
+    )
 
 
 @router.get("/opportunities/funnel", response_model=ResponseModel)

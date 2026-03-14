@@ -30,6 +30,26 @@ from .utils import (
 )
 
 
+def apply_keyword_filter(query, keyword: Optional[str]) -> Any:
+    """
+    应用关键词过滤到查询
+    支持按商机编码、商机名称、客户名称搜索
+    """
+    if not keyword:
+        return query
+    
+    from sqlalchemy import or_
+    from app.models.project import Customer
+    
+    return query.filter(
+        or_(
+            Opportunity.opp_code.contains(keyword),
+            Opportunity.opp_name.contains(keyword),
+            Opportunity.customer.has(Customer.customer_name.contains(keyword)),
+        )
+    )
+
+
 # 商机查询配置
 OPPORTUNITY_QUERY_CONFIG = SalesQueryConfig(
     keyword_fields=["opp_code", "opp_name"],
