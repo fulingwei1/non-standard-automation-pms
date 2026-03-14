@@ -72,66 +72,31 @@ def release_bom(
 
         logging.warning(f"BOM发布后成本归集失败：{str(e)}")
 
-    # BOM审核通过后自动生成采购需求
+    # BOM审核通过后自动生成采购需求（复用统一预览/创建逻辑，避免重复生成）
     try:
         from app.api.v1.endpoints.purchase import generate_request_no
         from app.services.purchase_request_from_bom_service import (
-            build_request_items,
-            create_purchase_request,
-            get_purchase_items_from_bom,
-            group_items_by_supplier,
+            create_purchase_requests_from_bom,
+            preview_purchase_requests_from_bom,
         )
 
-        # 获取需要采购的物料
-        purchase_items = get_purchase_items_from_bom(bom)
-
-        if purchase_items:
-            # 按供应商分组
-            supplier_items = group_items_by_supplier(db, purchase_items, None)
-
-            created_requests = []
-            for supplier_id, items in supplier_items.items():
-                # 构建申请明细
-                request_items, total_amount = build_request_items(items)
-
-                if not request_items:
-                    continue
-
-                # 获取供应商名称
-                supplier_name = "未指定供应商"
-                if supplier_id and supplier_id != 0:
-                    supplier = (
-                        db.query(Vendor)
-                        .filter(Vendor.id == supplier_id, Vendor.vendor_type == "MATERIAL")
-                        .first()
-                    )
-                    if supplier:
-                        supplier_name = supplier.supplier_name
-
-                # 创建采购申请
-                pr = create_purchase_request(
-                    db=db,
-                    bom=bom,
-                    supplier_id=supplier_id,
-                    supplier_name=supplier_name,
-                    request_items=request_items,
-                    total_amount=total_amount,
-                    current_user_id=current_user.id,
-                    generate_request_no=generate_request_no,
-                )
-                created_requests.append(pr)
-
-            if created_requests:
-                import logging
-
+        preview = preview_purchase_requests_from_bom(db=db, bom=bom, supplier_id=None)
+        if preview["purchase_requests"]:
+            result = create_purchase_requests_from_bom(
+                db=db,
+                bom=bom,
+                current_user_id=current_user.id,
+                supplier_id=None,
+                generate_request_no=generate_request_no,
+            )
+            if result["created_requests"]:
                 logger.info(
-                    f"BOM审核通过，已自动创建 {len(created_requests)} 个采购需求。"
-                    f"BOM ID: {bom_id}"
+                    f"BOM审核通过，已自动创建 {len(result['created_requests'])} 个采购需求。BOM ID: {bom_id}"
                 )
+        else:
+            logger.info(f"BOM审核通过，但无剩余采购需求需要生成。BOM ID: {bom_id}")
     except Exception as e:
         # 自动生成采购需求失败不影响BOM发布，记录日志
-        import logging
-
         logging.warning(f"BOM审核通过后自动生成采购需求失败：{str(e)}")
 
     # BOM发布后自动触发阶段流转检查（S4→S5）
