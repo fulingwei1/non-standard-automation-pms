@@ -111,6 +111,31 @@ class LeadFollowUpCreate(BaseModel):
         return self
 
 
+class LeadFollowUpQuickCreate(BaseModel):
+    """快捷创建线索跟进
+
+    目标：降低录入摩擦。
+    - template_key：一键套用模板
+    - summary/content：最少填一句话也能提交
+    - notes：在模板内容后追加补充说明
+    """
+
+    template_key: Optional[str] = Field(default=None, description="快捷模板标识")
+    follow_up_type: Optional[str] = Field(default=None, description="覆盖模板的跟进类型")
+    summary: Optional[str] = Field(default=None, description="一句话摘要")
+    content: Optional[str] = Field(default=None, description="完整跟进内容")
+    notes: Optional[str] = Field(default=None, description="备注补充")
+    next_action: Optional[str] = Field(default=None, description="下一步行动")
+    next_action_at: Optional[datetime] = Field(default=None, description="下次行动时间")
+    attachments: Optional[str] = Field(default=None, description="附件JSON")
+
+    @model_validator(mode="after")
+    def validate_minimum_input(self):
+        if not (self.template_key or self.summary or self.content):
+            raise ValueError("template_key、summary、content 至少提供一个")
+        return self
+
+
 class LeadFollowUpResponse(TimestampSchema):
     """线索跟进响应"""
 

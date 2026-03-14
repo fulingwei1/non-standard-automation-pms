@@ -9,6 +9,7 @@ export const leadApi = {
   update: (id, data) => api.put(`/sales/leads/${id}`, data),
   getFollowUps: (id) => api.get(`/sales/leads/${id}/follow-ups`),
   createFollowUp: (id, data) => api.post(`/sales/leads/${id}/follow-ups`, data),
+  createQuickFollowUp: (id, data) => api.post(`/sales/leads/${id}/follow-ups/quick`, data),
   convert: (id, customerId, requirementData, skipValidation) =>
     api.post(`/sales/leads/${id}/convert`, requirementData, {
       params: {

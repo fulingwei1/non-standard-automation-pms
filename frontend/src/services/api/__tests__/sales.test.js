@@ -93,6 +93,19 @@ describe('Sales API', () => {
       expect(response.status).toBe(201);
     });
 
+    it('createQuickFollowUp() - 应该创建快捷跟进记录', async () => {
+      const payload = { template_key: 'contacted_waiting_quote' };
+      mock.onPost('/api/v1/sales/leads/1/follow-ups/quick').reply(201, {
+        success: true,
+        data: { id: 1, follow_up_type: 'CALL' },
+      });
+
+      const response = await leadApi.createQuickFollowUp(1, payload);
+
+      expect(response.status).toBe(201);
+      expect(JSON.parse(mock.history.post[0].data)).toEqual(payload);
+    });
+
     it('convert() - 应该转换线索为商机', async () => {
       const requirementData = { title: 'New Requirement' };
       mock.onPost('/api/v1/sales/leads/1/convert').reply(200, {

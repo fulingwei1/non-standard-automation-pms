@@ -11,21 +11,10 @@ import {
   Textarea,
   Badge,
 } from "../../components/ui";
-
-const QUICK_TEMPLATES = [
-  { label: "已联系，待报价", content: "已与客户联系，了解初步需求，待发送报价单。" },
-  { label: "已报价，待反馈", content: "报价单已发送，待客户反馈。" },
-  { label: "需技术支援", content: "客户提出技术疑问，需安排售前工程师支持。" },
-  { label: "待拜访", content: "客户邀请现场拜访，进一步了解需求。" },
-];
-
-const FOLLOWUP_TYPES = [
-  { value: "CALL", label: "电话" },
-  { value: "EMAIL", label: "邮件" },
-  { value: "VISIT", label: "拜访" },
-  { value: "MEETING", label: "会议" },
-  { value: "OTHER", label: "其他" },
-];
+import {
+  FOLLOW_UP_TYPES,
+  LEAD_QUICK_FOLLOW_UP_TEMPLATES,
+} from "@/lib/constants/leadFollowUp";
 
 export default function FollowUpDialog({
   open,
@@ -36,7 +25,12 @@ export default function FollowUpDialog({
   saving = false,
 }) {
   const applyTemplate = (template) => {
-    setData({ ...data, content: template.content });
+    setData({
+      ...data,
+      follow_up_type: template.follow_up_type || data.follow_up_type,
+      content: template.content,
+      next_action: template.next_action || data.next_action,
+    });
   };
 
   const setNextActionTomorrow = () => {
@@ -54,11 +48,10 @@ export default function FollowUpDialog({
           <DialogDescription>快捷记录线索跟进情况</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          {/* 跟进类型 - 用 Badge 按钮替代下拉框 */}
           <div>
             <Label>跟进类型 *</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {FOLLOWUP_TYPES.map((type) => (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {FOLLOW_UP_TYPES.map((type) => (
                 <Badge
                   key={type.value}
                   variant={data.follow_up_type === type.value ? "default" : "outline"}
@@ -71,13 +64,12 @@ export default function FollowUpDialog({
             </div>
           </div>
 
-          {/* 快捷模板 */}
           <div>
             <Label>快捷模板</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {QUICK_TEMPLATES.map((tpl, idx) => (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {LEAD_QUICK_FOLLOW_UP_TEMPLATES.map((tpl) => (
                 <Badge
-                  key={idx}
+                  key={tpl.key}
                   variant="secondary"
                   className="cursor-pointer px-3 py-1.5 text-sm hover:bg-slate-700"
                   onClick={() => applyTemplate(tpl)}
@@ -88,7 +80,6 @@ export default function FollowUpDialog({
             </div>
           </div>
 
-          {/* 跟进内容 */}
           <div>
             <Label>跟进内容 *</Label>
             <Textarea
@@ -100,7 +91,6 @@ export default function FollowUpDialog({
             />
           </div>
 
-          {/* 下次行动 */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>下次行动</Label>

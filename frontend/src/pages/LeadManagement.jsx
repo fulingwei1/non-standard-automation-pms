@@ -22,6 +22,8 @@ import {
 } from "../components/lead-management";
 
 import { confirmAction } from "@/lib/confirmAction";
+import { toast } from "sonner";
+
 export default function LeadManagement({ embedded = false }) {
   const [leads, setLeads] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -38,6 +40,7 @@ export default function LeadManagement({ embedded = false }) {
   const [showFollowUpDialog, setShowFollowUpDialog] = useState(false);
   const [followUps, setFollowUps] = useState([]);
   const [followUpSaving, setFollowUpSaving] = useState(false);
+  const [quickFollowUpSaving, setQuickFollowUpSaving] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [sortBy, setSortBy] = useState("priority"); // priority, created_at, status
@@ -113,6 +116,24 @@ export default function LeadManagement({ embedded = false }) {
   useEffect(() => {
     loadCustomers();
   }, []);
+
+  const loadFollowUps = async (leadId) => {
+    if (!leadId) {
+      setFollowUps([]);
+      return [];
+    }
+
+    try {
+      const response = await leadApi.getFollowUps(leadId);
+      const items = response.data || [];
+      setFollowUps(items);
+      return items;
+    } catch (error) {
+      console.error("加载跟进记录失败:", error);
+      setFollowUps([]);
+      return [];
+    }
+  };
 
   // 筛选线索
   // 计算优先级并排序
@@ -301,16 +322,7 @@ export default function LeadManagement({ embedded = false }) {
   const handleViewDetail = async (lead) => {
     setSelectedLead(lead);
     setShowDetailDialog(true);
-    // 加载跟进记录
-    try {
-      const response = await leadApi.getFollowUps(lead.id);
-      if (response.data) {
-        setFollowUps(response.data);
-      }
-    } catch (error) {
-      console.error("加载跟进记录失败:", error);
-      setFollowUps([]);
-    }
+    await loadFollowUps(lead.id);
   };
 
   // 添加跟进记录
@@ -320,13 +332,8 @@ export default function LeadManagement({ embedded = false }) {
       setFollowUpSaving(true);
       await leadApi.createFollowUp(selectedLead.id, followUpData);
 
-      // 重新加载跟进记录
-      const response = await leadApi.getFollowUps(selectedLead.id);
-      if (response.data) {
-        setFollowUps(response.data);
-      }
-
-      loadLeads(); // 刷新列表
+      await loadFollowUps(selectedLead.id);
+      await loadLeads(); // 刷新列表
 
       if (keepOpen) {
         // 连续录入场景：保留类型，其余清空
@@ -350,20 +357,36 @@ export default function LeadManagement({ embedded = false }) {
     setShowConvertDialog(true);
   };
 
+  const handleQuickFollowUp = async (lead, template) => {
+    const savingKey = `${lead.id}:${template.key}`;
+    setQuickFollowUpSaving(savingKey);
+
+    try {
+      await leadApi.createQuickFollowUp(lead.id, {
+        template_key: template.key,
+      });
+
+      if (selectedLead?.id === lead.id && showDetailDialog) {
+        await loadFollowUps(lead.id);
+      }
+
+      await loadLeads();
+      toast.success(`已记录：${template.label}`);
+    } catch (error) {
+      console.error("快捷记录跟进失败:", error);
+      toast.error(error?.response?.data?.detail || "快捷记录失败，请稍后重试");
+    } finally {
+      setQuickFollowUpSaving("");
+    }
+  };
+
   const handleOpenFollowUpDialog = async (lead) => {
     setSelectedLead(lead);
     resetFollowUpData(false);
     setShowFollowUpDialog(true);
 
     // 打开快捷跟进时也预加载历史，便于上下文判断
-    try {
-      const response = await leadApi.getFollowUps(lead.id);
-      if (response.data) {
-        setFollowUps(response.data);
-      }
-    } catch (error) {
-      console.error("加载跟进记录失败:", error);
-    }
+    await loadFollowUps(lead.id);
   };
 
   return (
@@ -419,6 +442,8 @@ export default function LeadManagement({ embedded = false }) {
         handleEdit={handleEdit}
         handleConvert={handleOpenConvertDialog}
         handleFollowUp={handleOpenFollowUpDialog}
+        handleQuickFollowUp={handleQuickFollowUp}
+        quickFollowUpSaving={quickFollowUpSaving}
       />
 
       {/* 分页 */}
