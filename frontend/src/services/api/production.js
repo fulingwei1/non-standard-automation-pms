@@ -2,6 +2,47 @@ import { api } from "./client.js";
 
 const pickFirstDefined = (...values) => values.find((value) => value !== undefined && value !== null && value !== "");
 
+// ============ 生产异常兼容层 ============
+const PRODUCTION_EXCEPTION_STATUS_MAP = {
+  REPORTED: "OPEN",
+  IN_PROGRESS: "IN_PROGRESS",
+  RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
+};
+
+const PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP = {
+  OPEN: "REPORTED",
+  IN_PROGRESS: "IN_PROGRESS",
+  RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
+};
+
+const unwrapProductionResponse = (response) => response?.data?.data ?? response?.data ?? response;
+
+const pickLatestActionContent = (actions = [], actionType) => {
+  const matched = [...actions].find((action) => action?.action_type === actionType);
+  return matched?.action_content || "";
+};
+
+const normalizeProductionException = (item = {}) => ({
+  ...item,
+  exception_no: item.exception_no || item.event_no,
+  title: item.title || item.event_title,
+  description: item.description || item.event_description,
+  exception_type: item.exception_type || item.event_type,
+  exception_level: item.exception_level || item.severity,
+  report_time: item.report_time || item.discovered_at,
+  reporter_name: item.reporter_name || item.discovered_by_name,
+  impact_hours: item.impact_hours ?? item.schedule_impact ?? 0,
+  impact_cost: item.impact_cost ?? item.cost_impact ?? 0,
+  handle_plan: item.handle_plan || item.solution || pickLatestActionContent(item.actions, "PLAN"),
+  handle_result:
+    item.handle_result ||
+    item.resolution_note ||
+    pickLatestActionContent(item.actions, "RESULT"),
+  status: PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP[item.status] || item.status,
+});
+
 const toIntegerOrNull = (value) => {
   if (value === undefined || value === null || value === "") {
     return null;

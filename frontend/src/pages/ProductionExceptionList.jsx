@@ -227,12 +227,12 @@ export default function ProductionExceptionList({ embedded = false }) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索异常编号、标题..."
-                value={searchKeyword || "unknown"}
+                value={searchKeyword || ""}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+            <Select value={filterProject || ""} onValueChange={setFilterProject}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -245,40 +245,40 @@ export default function ProductionExceptionList({ embedded = false }) {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType || ""} onValueChange={setFilterType}>
               <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key || ""}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterLevel || "unknown"} onValueChange={setFilterLevel}>
+            <Select value={filterLevel || ""} onValueChange={setFilterLevel}>
               <SelectTrigger>
                 <SelectValue placeholder="选择级别" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部级别</SelectItem>
                 {Object.entries(levelConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key || ""}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || ""} onValueChange={setFilterStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key || ""}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -443,7 +443,7 @@ export default function ProductionExceptionList({ embedded = false }) {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key || ""}>
                           {config.label}
                       </SelectItem>
                       )}
@@ -465,7 +465,7 @@ export default function ProductionExceptionList({ embedded = false }) {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(levelConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key || ""}>
                           {config.label}
                       </SelectItem>
                       )}
