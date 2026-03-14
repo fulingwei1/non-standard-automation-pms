@@ -168,7 +168,7 @@ export function ProjectRoutes() {
       <Route path="/projects/:projectId/schedule-optimization" element={<ScheduleOptimization />} />
       <Route path="/projects/:projectId/engineer-recommendation" element={<EngineerRecommendation />} />
       <Route path="/projects/:projectId/engineer-workload-board" element={<EngineerWorkloadBoard />} />
-      <Route path="/assembly-template-management" element={<AssemblyTemplateManagement />} />
+      {/* 已移至 productionRoutes: /assembly-template-management */}
       <Route path="/project-presales-tasks" element={<PresalesTasks />} />
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />
