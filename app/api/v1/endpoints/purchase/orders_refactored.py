@@ -17,12 +17,17 @@ from app.api.deps import get_current_active_user, get_db
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core.schemas import list_response, paginated_response, success_response
+from app.models.material import BomHeader
 from app.models.purchase import (
     PurchaseOrder,
     PurchaseOrderItem,
 )
 from app.models.user import User
 from app.models.vendor import Vendor
+from app.services.purchase_order_from_bom_service import (
+    create_purchase_orders_from_bom,
+    preview_purchase_orders_from_bom,
+)
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404, save_obj
@@ -189,6 +194,39 @@ def create_purchase_order(
     return success_response(
         data=serialize_purchase_order(order, include_items=True), message="采购订单创建成功"
     )
+
+
+@router.post("/from-bom")
+def create_purchase_orders_from_bom_route(
+    bom_id: int = Query(..., description="BOM ID"),
+    supplier_id: Optional[int] = Query(None, description="覆盖供应商ID"),
+    create_orders: bool = Query(False, description="false=预览，true=创建"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    BOM -> 采购订单统一入口：
+    - 若已有 BOM 采购需求，则优先基于采购需求生成订单（避免 PR/PO 双轨重复）
+    - 若还没有采购需求，则直接基于 BOM 剩余未下单数量生成订单
+    """
+    bom = get_or_404(db, BomHeader, bom_id, "BOM不存在")
+
+    preview = preview_purchase_orders_from_bom(db=db, bom=bom, supplier_id=supplier_id)
+    if not preview["preview"]:
+        raise HTTPException(status_code=400, detail="BOM中没有可生成的采购订单（可能已全部下单）")
+
+    if not create_orders:
+        return success_response(data=preview, message="采购订单预览成功")
+
+    result = create_purchase_orders_from_bom(
+        db=db,
+        bom=bom,
+        current_user_id=current_user.id,
+        supplier_id=supplier_id,
+        generate_order_no_func=lambda session: generate_order_no(session, "PO"),
+    )
+    db.commit()
+    return success_response(data=result, message="采购订单创建成功")
 
 
 @router.get("/{order_id}")

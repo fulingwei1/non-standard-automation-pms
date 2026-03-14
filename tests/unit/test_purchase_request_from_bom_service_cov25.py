@@ -192,6 +192,18 @@ class TestBuildRequestItems:
         assert len(items) == 1
         assert total == Decimal("0")
 
+    def test_subtracts_existing_request_and_direct_order_qty(self):
+        item = _make_bom_item(quantity=Decimal("10"), unit_price=Decimal("5"))
+        item.id = 101
+        items, total = build_request_items(
+            [item],
+            existing_requested_qty_by_bom_item={101: Decimal("3")},
+            existing_direct_order_qty_by_bom_item={101: Decimal("2")},
+        )
+        assert len(items) == 1
+        assert items[0]["quantity"] == Decimal("5")
+        assert total == Decimal("25")
+
 
 # ── format_request_items ──────────────────────────────────────────────────────
 

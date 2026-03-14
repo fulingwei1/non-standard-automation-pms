@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.models.material import BomHeader, BomItem, Material
 from app.models.project import Project
-from app.models.purchase import PurchaseOrder, PurchaseOrderItem
+from app.models.purchase import PurchaseOrder, PurchaseOrderItem, PurchaseRequest, PurchaseRequestItem
 from app.models.vendor import Vendor as Supplier
 from app.services.purchase_order_from_bom_service import (
     build_order_items,
@@ -28,6 +28,8 @@ from app.services.purchase_order_from_bom_service import (
     determine_supplier_for_item,
     get_purchase_items_from_bom,
     group_items_by_supplier,
+    preview_purchase_orders_from_bom,
+    sync_request_ordered_qty,
 )
 from tests.conftest import _ensure_login_user
 
@@ -404,3 +406,143 @@ class TestPurchaseOrderFromBomService:
         assert result["total_items"] == 0
         assert result["total_amount"] == 0
         assert result["total_amount_with_tax"] == 0
+
+    def test_preview_purchase_orders_from_bom_prefers_existing_requests(
+        self, db_session, test_bom, test_bom_item, test_supplier
+    ):
+        """已有BOM采购需求时，订单预览应优先挂到采购需求，避免双轨重复。"""
+        admin = _ensure_login_user(
+            db_session,
+            username="po_admin",
+            password="admin123",
+            real_name="采购管理员",
+            department="采购",
+            employee_role="ADMIN",
+            is_superuser=True,
+        )
+
+        purchase_request = PurchaseRequest(
+            request_no="PR-TEST-001",
+            project_id=test_bom.project_id,
+            machine_id=test_bom.machine_id,
+            supplier_id=test_supplier.id,
+            source_type="BOM",
+            source_id=test_bom.id,
+            status="DRAFT",
+            created_by=admin.id,
+            requested_by=admin.id,
+        )
+        db_session.add(purchase_request)
+        db_session.flush()
+
+        db_session.add(
+            PurchaseRequestItem(
+                request_id=purchase_request.id,
+                bom_item_id=test_bom_item.id,
+                material_id=test_bom_item.material_id,
+                material_code=test_bom_item.material_code,
+                material_name=test_bom_item.material_name,
+                specification=test_bom_item.specification,
+                unit=test_bom_item.unit,
+                quantity=Decimal("10.0"),
+                unit_price=Decimal("100.0"),
+                amount=Decimal("1000.0"),
+            )
+        )
+        db_session.commit()
+
+        result = preview_purchase_orders_from_bom(db_session, test_bom)
+
+        assert result["source_mode"] == "request"
+        assert len(result["preview"]) == 1
+        assert result["preview"][0]["source_request_id"] == purchase_request.id
+        assert Decimal(str(result["preview"][0]["items"][0]["quantity"])) == Decimal("10.0")
+
+    def test_sync_request_ordered_qty_marks_request_progress(
+        self, db_session, test_bom, test_bom_item, test_supplier
+    ):
+        """同步后应回写 ordered_qty，避免重复生成采购订单。"""
+        admin = _ensure_login_user(
+            db_session,
+            username="po_sync_admin",
+            password="admin123",
+            real_name="采购管理员",
+            department="采购",
+            employee_role="ADMIN",
+            is_superuser=True,
+        )
+
+        purchase_request = PurchaseRequest(
+            request_no="PR-TEST-002",
+            project_id=test_bom.project_id,
+            machine_id=test_bom.machine_id,
+            supplier_id=test_supplier.id,
+            source_type="BOM",
+            source_id=test_bom.id,
+            status="DRAFT",
+            created_by=admin.id,
+            requested_by=admin.id,
+        )
+        db_session.add(purchase_request)
+        db_session.flush()
+
+        request_item = PurchaseRequestItem(
+            request_id=purchase_request.id,
+            bom_item_id=test_bom_item.id,
+            material_id=test_bom_item.material_id,
+            material_code=test_bom_item.material_code,
+            material_name=test_bom_item.material_name,
+            specification=test_bom_item.specification,
+            unit=test_bom_item.unit,
+            quantity=Decimal("10.0"),
+            unit_price=Decimal("100.0"),
+            amount=Decimal("1000.0"),
+            ordered_qty=Decimal("0"),
+        )
+        db_session.add(request_item)
+        db_session.flush()
+
+        order = PurchaseOrder(
+            order_no="PO-TEST-001",
+            supplier_id=test_supplier.id,
+            project_id=test_bom.project_id,
+            order_type="NORMAL",
+            order_title="测试订单",
+            status="DRAFT",
+            total_amount=Decimal("1000.0"),
+            tax_amount=Decimal("130.0"),
+            amount_with_tax=Decimal("1130.0"),
+            created_by=admin.id,
+            source_request_id=purchase_request.id,
+        )
+        db_session.add(order)
+        db_session.flush()
+
+        db_session.add(
+            PurchaseOrderItem(
+                order_id=order.id,
+                item_no=1,
+                material_id=test_bom_item.material_id,
+                bom_item_id=test_bom_item.id,
+                material_code=test_bom_item.material_code,
+                material_name=test_bom_item.material_name,
+                specification=test_bom_item.specification,
+                unit=test_bom_item.unit,
+                quantity=Decimal("10.0"),
+                unit_price=Decimal("100.0"),
+                amount=Decimal("1000.0"),
+                tax_rate=Decimal("13.0"),
+                tax_amount=Decimal("130.0"),
+                amount_with_tax=Decimal("1130.0"),
+                status="PENDING",
+            )
+        )
+        db_session.commit()
+
+        sync_request_ordered_qty(db_session, purchase_request.id)
+        db_session.commit()
+        db_session.refresh(request_item)
+        db_session.refresh(purchase_request)
+
+        assert request_item.ordered_qty == Decimal("10.0")
+        assert purchase_request.auto_po_created is True

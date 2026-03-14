@@ -633,7 +633,6 @@ class TestGoodsReceipt:
 class TestPurchaseFromBOM:
     """从BOM生成采购订单测试"""
 
-    @pytest.mark.skip(reason="测试与实际API不匹配")
     def test_create_orders_from_bom_no_bom(self, client: TestClient, admin_token: str):
         """测试从不存在的BOM创建订单"""
         if not admin_token:
