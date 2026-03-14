@@ -11,7 +11,7 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 class ReminderType(str, Enum):
     """提醒类型"""
     OVERDUE_ACTION = "overdue_action"       # 行动已过期
+    UPCOMING_ACTION = "upcoming_action"     # 即将到期行动
     NO_RECENT_FOLLOW_UP = "no_follow_up"    # 长时间未跟进
     QUOTE_EXPIRING = "quote_expiring"       # 报价即将过期
     HIGH_VALUE_IDLE = "high_value_idle"     # 高价值客户闲置
@@ -188,6 +189,66 @@ class FollowUpReminderService:
                     message=f"线索【{display_name}】计划行动已过期 {days_overdue} 天",
                     suggestion=self._get_follow_up_suggestion("lead", lead.status),
                     days_overdue=days_overdue,
+                    last_follow_up_at=None,
+                    next_action_at=lead.next_action_at,
+                    est_amount=None,
+                )
+            )
+
+        return reminders
+
+    def _get_lead_upcoming_reminders(
+        self, user_id: int, window_days: int = 3
+    ) -> List[FollowUpReminder]:
+        """获取线索临近行动提醒"""
+        reminders = []
+        now = datetime.now()
+        window_end = now + timedelta(days=max(window_days, 0))
+
+        leads = (
+            self.db.query(Lead)
+            .options(joinedload(Lead.owner))
+            .filter(
+                Lead.owner_id == user_id,
+                Lead.status.in_(["NEW", "CONTACTED", "QUALIFIED"]),
+                Lead.next_action_at.isnot(None),
+                Lead.next_action_at >= now,
+                Lead.next_action_at <= window_end,
+            )
+            .order_by(Lead.next_action_at.asc())
+            .all()
+        )
+
+        for lead in leads:
+            remaining = lead.next_action_at - now
+            hours_until_due = max(remaining.total_seconds() / 3600, 0)
+            days_until_due = max((lead.next_action_at.date() - now.date()).days, 0)
+
+            if hours_until_due <= 24:
+                priority = ReminderPriority.HIGH
+                due_text = "今天内" if days_until_due == 0 else "1天内"
+            elif hours_until_due <= 72:
+                priority = ReminderPriority.MEDIUM
+                due_text = f"{days_until_due}天内"
+            else:
+                priority = ReminderPriority.LOW
+                due_text = f"{days_until_due}天内"
+
+            display_name = lead.customer_name or lead.lead_code
+            reminders.append(
+                FollowUpReminder(
+                    type=ReminderType.UPCOMING_ACTION,
+                    priority=priority,
+                    entity_type="lead",
+                    entity_id=lead.id,
+                    entity_code=lead.lead_code,
+                    entity_name=display_name,
+                    customer_name=lead.customer_name or "未知客户",
+                    owner_id=user_id,
+                    owner_name=lead.owner.real_name if lead.owner else "",
+                    message=f"线索【{display_name}】计划行动将在{due_text}到期",
+                    suggestion=self._get_follow_up_suggestion("lead", lead.status),
+                    days_overdue=-days_until_due,
                     last_follow_up_at=None,
                     next_action_at=lead.next_action_at,
                     est_amount=None,
@@ -460,6 +521,153 @@ class FollowUpReminderService:
 
         entity_suggestions = suggestions.get(entity_type, {})
         return entity_suggestions.get(status_or_stage, entity_suggestions.get("default", "请跟进客户"))
+
+    def get_due_action_digest(
+        self, user_id: int, window_days: int = 3, limit: int = 50
+    ) -> Dict[str, Any]:
+        """获取线索行动提醒看板（超期 + 临近）"""
+        overdue_items = self._get_lead_overdue_reminders(user_id)
+        upcoming_items = self._get_lead_upcoming_reminders(user_id, window_days=window_days)
+
+        priority_order = {
+            ReminderPriority.URGENT: 0,
+            ReminderPriority.HIGH: 1,
+            ReminderPriority.MEDIUM: 2,
+            ReminderPriority.LOW: 3,
+        }
+        overdue_items.sort(key=lambda r: (priority_order[r.priority], -r.days_overdue))
+        upcoming_items.sort(
+            key=lambda r: (
+                priority_order[r.priority],
+                r.next_action_at or datetime.max,
+            )
+        )
+
+        high_priority_count = sum(
+            1
+            for reminder in [*overdue_items, *upcoming_items]
+            if reminder.priority in {ReminderPriority.URGENT, ReminderPriority.HIGH}
+        )
+
+        return {
+            "generated_at": datetime.now().isoformat(),
+            "window_days": window_days,
+            "overdue_count": len(overdue_items),
+            "upcoming_count": len(upcoming_items),
+            "high_priority_count": high_priority_count,
+            "total": len(overdue_items) + len(upcoming_items),
+            "overdue": overdue_items[:limit],
+            "upcoming": upcoming_items[:limit],
+        }
+
+    def get_weekly_follow_up_report(
+        self,
+        user_id: int,
+        week_start: Optional[date] = None,
+        week_end: Optional[date] = None,
+    ) -> Dict[str, Any]:
+        """获取周维度跟进分析汇总"""
+        reference_day = week_start or date.today()
+        if week_start is None:
+            reference_day = reference_day - timedelta(days=reference_day.weekday())
+
+        period_start = week_start or reference_day
+        period_end = week_end or (period_start + timedelta(days=6))
+
+        start_dt = datetime.combine(period_start, time.min)
+        end_exclusive = datetime.combine(period_end + timedelta(days=1), time.min)
+        snapshot_at = min(end_exclusive, datetime.now())
+
+        follow_up_count = (
+            self.db.query(func.count(LeadFollowUp.id))
+            .join(Lead, Lead.id == LeadFollowUp.lead_id)
+            .filter(
+                Lead.owner_id == user_id,
+                LeadFollowUp.created_at >= start_dt,
+                LeadFollowUp.created_at < end_exclusive,
+            )
+            .scalar()
+            or 0
+        )
+
+        followed_lead_count = (
+            self.db.query(func.count(func.distinct(LeadFollowUp.lead_id)))
+            .join(Lead, Lead.id == LeadFollowUp.lead_id)
+            .filter(
+                Lead.owner_id == user_id,
+                LeadFollowUp.created_at >= start_dt,
+                LeadFollowUp.created_at < end_exclusive,
+            )
+            .scalar()
+            or 0
+        )
+
+        overdue_count = (
+            self.db.query(func.count(Lead.id))
+            .filter(
+                Lead.owner_id == user_id,
+                Lead.status.in_(["NEW", "CONTACTED", "QUALIFIED"]),
+                Lead.next_action_at.isnot(None),
+                Lead.next_action_at < snapshot_at,
+            )
+            .scalar()
+            or 0
+        )
+
+        converted_lead_count = (
+            self.db.query(func.count(Lead.id))
+            .filter(
+                Lead.owner_id == user_id,
+                Lead.status == "CONVERTED",
+                Lead.updated_at >= start_dt,
+                Lead.updated_at < end_exclusive,
+            )
+            .scalar()
+            or 0
+        )
+
+        conversion_rate = round(
+            ((converted_lead_count / followed_lead_count) * 100) if followed_lead_count else 0.0,
+            2,
+        )
+
+        daily_rows = (
+            self.db.query(
+                func.date(LeadFollowUp.created_at).label("follow_up_date"),
+                func.count(LeadFollowUp.id).label("follow_up_count"),
+            )
+            .join(Lead, Lead.id == LeadFollowUp.lead_id)
+            .filter(
+                Lead.owner_id == user_id,
+                LeadFollowUp.created_at >= start_dt,
+                LeadFollowUp.created_at < end_exclusive,
+            )
+            .group_by(func.date(LeadFollowUp.created_at))
+            .order_by(func.date(LeadFollowUp.created_at))
+            .all()
+        )
+
+        daily_breakdown = [
+            {
+                "date": row.follow_up_date,
+                "follow_up_count": row.follow_up_count,
+            }
+            for row in daily_rows
+        ]
+
+        return {
+            "period_start": period_start.isoformat(),
+            "period_end": period_end.isoformat(),
+            "snapshot_at": snapshot_at.isoformat(),
+            "metrics": {
+                "follow_up_count": int(follow_up_count),
+                "followed_lead_count": int(followed_lead_count),
+                "overdue_count": int(overdue_count),
+                "converted_lead_count": int(converted_lead_count),
+                "conversion_rate": conversion_rate,
+            },
+            "daily_breakdown": daily_breakdown,
+        }
 
     def get_summary(self, user_id: int) -> Dict[str, Any]:
         """

@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.user import User
+from app.services.sales.follow_up_reminder_service import FollowUpReminderService
 
 router = APIRouter()
 
@@ -29,63 +30,44 @@ def get_follow_up_reminders(
     """
     获取需要跟进的客户列表
 
-    自动识别X天未联系的客户
-    优先级：
-    - 高优先级：商机阶段靠后 + 长时间未联系
-    - 中优先级：普通客户 + 较长时间未联系
-    - 低优先级：新客户 + 短期未联系
+    现在优先返回真实的行动提醒数据：
+    - overdue: 已经超期的下次行动
+    - upcoming: 未来 N 天内即将到期的下次行动
     """
 
-    date.today() - timedelta(days=days)
+    service = FollowUpReminderService(db)
+    digest = service.get_due_action_digest(
+        user_id=current_user.id,
+        window_days=days,
+        limit=100,
+    )
 
-    # 模拟需要跟进的客户
     reminders = [
         {
-            "customer_id": 1,
-            "customer_name": "宁德时代",
-            "last_contact_date": "2025-02-15",
-            "days_since_contact": 14,
-            "priority": "HIGH",
-            "reason": "商机STAGE4价格谈判阶段，7天未联系",
-            "opportunity_id": 101,
-            "opportunity_name": "FCT测试线项目",
-            "suggested_action": "电话跟进价格反馈",
-        },
-        {
-            "customer_id": 2,
-            "customer_name": "比亚迪",
-            "last_contact_date": "2025-02-20",
-            "days_since_contact": 9,
-            "priority": "MEDIUM",
-            "reason": "方案已发送，待客户确认",
-            "opportunity_id": 102,
-            "opportunity_name": "EOL测试设备",
-            "suggested_action": "邮件询问方案反馈",
-        },
-        {
-            "customer_id": 3,
-            "customer_name": "中创新航",
-            "last_contact_date": "2025-02-22",
-            "days_since_contact": 7,
-            "priority": "LOW",
-            "reason": "初次接触阶段",
-            "opportunity_id": None,
-            "opportunity_name": None,
-            "suggested_action": "发送公司介绍资料",
-        },
+            "type": reminder.type.value,
+            "priority": reminder.priority.value.upper(),
+            "customer_name": reminder.customer_name,
+            "lead_id": reminder.entity_id,
+            "lead_code": reminder.entity_code,
+            "entity_name": reminder.entity_name,
+            "reason": reminder.message,
+            "suggested_action": reminder.suggestion,
+            "next_action_at": reminder.next_action_at.isoformat() if reminder.next_action_at else None,
+            "days_offset": reminder.days_overdue,
+        }
+        for reminder in [*digest["overdue"], *digest["upcoming"]]
     ]
-
-    # 过滤超过天数的
-    filtered = [r for r in reminders if r["days_since_contact"] >= days]
 
     return {
         "reminder_date": date.today().isoformat(),
         "days_threshold": days,
-        "total_reminders": len(filtered),
-        "high_priority": len([r for r in filtered if r["priority"] == "HIGH"]),
-        "medium_priority": len([r for r in filtered if r["priority"] == "MEDIUM"]),
-        "low_priority": len([r for r in filtered if r["priority"] == "LOW"]),
-        "reminders": filtered,
+        "total_reminders": digest["total"],
+        "overdue_count": digest["overdue_count"],
+        "upcoming_count": digest["upcoming_count"],
+        "high_priority": sum(1 for item in reminders if item["priority"] in {"URGENT", "HIGH"}),
+        "medium_priority": sum(1 for item in reminders if item["priority"] == "MEDIUM"),
+        "low_priority": sum(1 for item in reminders if item["priority"] == "LOW"),
+        "reminders": reminders,
     }
 
 
@@ -296,33 +278,40 @@ def generate_sales_report(
     - monthly: 月报（月度总结+分析）
     """
 
-    # 模拟报告数据
-    if report_type == "weekly":
-        report_data = {
-            "period": "2025年第9周",
-            "summary": {
-                "new_leads": 12,
-                "new_opportunities": 5,
-                "quotes_sent": 3,
-                "deals_won": 2,
-                "revenue": 5800000,
-                "target_completion": 45,
-            },
-            "highlights": [
-                "成功签约宁德时代FCT项目（320万）",
-                "新增比亚迪EOL商机（预估280万）",
-                "完成3个客户方案演示",
-            ],
-            "next_week_plan": [
-                "跟进比亚迪价格反馈",
-                "完成中创新航方案编写",
-                "拜访2个新客户",
-            ],
-            "alerts": [
-                "宁德时代项目需跟进合同签署",
-                "亿纬锂能商机已7天未更新",
-            ],
-        }
+    parsed_start_date = date.fromisoformat(start_date) if start_date else None
+    parsed_end_date = date.fromisoformat(end_date) if end_date else None
+    service = FollowUpReminderService(db)
+
+    # 模拟报告数据 + 真实跟进周报能力
+    if report_type in {"weekly", "weekly_follow_up", "follow_up_weekly"}:
+        follow_up_report = service.get_weekly_follow_up_report(
+            user_id=sales_id or current_user.id,
+            week_start=parsed_start_date,
+            week_end=parsed_end_date,
+        )
+
+        if report_type in {"weekly_follow_up", "follow_up_weekly"}:
+            report_data = follow_up_report
+        else:
+            report_data = {
+                "period": f"{follow_up_report['period_start']} ~ {follow_up_report['period_end']}",
+                "summary": {
+                    "follow_up_count": follow_up_report["metrics"]["follow_up_count"],
+                    "overdue_count": follow_up_report["metrics"]["overdue_count"],
+                    "conversion_rate": follow_up_report["metrics"]["conversion_rate"],
+                    "followed_lead_count": follow_up_report["metrics"]["followed_lead_count"],
+                    "converted_lead_count": follow_up_report["metrics"]["converted_lead_count"],
+                },
+                "daily_breakdown": follow_up_report["daily_breakdown"],
+                "highlights": [
+                    f"本周累计跟进 {follow_up_report['metrics']['follow_up_count']} 次",
+                    f"当前超期线索 {follow_up_report['metrics']['overdue_count']} 条",
+                    f"线索转化率 {follow_up_report['metrics']['conversion_rate']}%",
+                ],
+                "alerts": [
+                    "建议优先清理超期线索，再处理48小时内到期事项",
+                ],
+            }
     elif report_type == "daily":
         report_data = {
             "date": date.today().isoformat(),
