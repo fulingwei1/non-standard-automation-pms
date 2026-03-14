@@ -17,6 +17,7 @@ from app.schemas.presale import (
     DeliverableCreate,
     DeliverableResponse,
     TicketAcceptRequest,
+    TicketCompleteRequest,
     TicketProgressUpdate,
     TicketRatingRequest,
     TicketResponse,
@@ -137,18 +138,28 @@ def complete_ticket(
     *,
     db: Session = Depends(deps.get_db),
     ticket_id: int,
-    actual_hours: Optional[float] = Query(None, description="实际工时"),
+    complete_request: Optional[TicketCompleteRequest] = None,
+    actual_hours: Optional[float] = Query(None, description="实际工时（兼容旧查询参数）"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     完成工单
+
+    兼容两种调用方式：
+    - PUT /complete?actual_hours=8
+    - PUT /complete {"actual_hours": 8}
     """
     ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
 
     ticket.status = "COMPLETED"
     ticket.complete_time = datetime.now()
-    if actual_hours:
-        ticket.actual_hours = Decimal(str(actual_hours))
+
+    resolved_actual_hours = actual_hours
+    if complete_request and complete_request.actual_hours is not None:
+        resolved_actual_hours = complete_request.actual_hours
+
+    if resolved_actual_hours is not None:
+        ticket.actual_hours = Decimal(str(resolved_actual_hours))
 
     save_obj(db, ticket)
 
