@@ -215,19 +215,19 @@ export default function AcceptanceTemplateManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索模板名称、分类..."
-                value={searchKeyword || "unknown"}
+                value={searchKeyword || ""}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType || ""} onValueChange={setFilterType}>
               <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key || ""}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -358,7 +358,7 @@ export default function AcceptanceTemplateManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key || ""}>
                           {config.label}
                       </SelectItem>
                       )}

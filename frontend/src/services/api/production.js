@@ -1,5 +1,44 @@
 import { api } from "./client.js";
 
+const PRODUCTION_EXCEPTION_STATUS_MAP = {
+  REPORTED: "OPEN",
+  IN_PROGRESS: "IN_PROGRESS",
+  RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
+};
+
+const PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP = {
+  OPEN: "REPORTED",
+  IN_PROGRESS: "IN_PROGRESS",
+  RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
+};
+
+const unwrapProductionResponse = (response) => response?.data?.data ?? response?.data ?? response;
+
+const pickLatestActionContent = (actions = [], actionType) => {
+  const matched = [...actions].find((action) => action?.action_type === actionType);
+  return matched?.action_content || "";
+};
+
+const normalizeProductionException = (item = {}) => ({
+  ...item,
+  exception_no: item.exception_no || item.event_no,
+  title: item.title || item.event_title,
+  description: item.description || item.event_description,
+  exception_type: item.exception_type || item.event_type,
+  exception_level: item.exception_level || item.severity,
+  report_time: item.report_time || item.discovered_at,
+  reporter_name: item.reporter_name || item.discovered_by_name,
+  impact_hours: item.impact_hours ?? item.schedule_impact ?? 0,
+  impact_cost: item.impact_cost ?? item.cost_impact ?? 0,
+  handle_plan: item.handle_plan || item.solution || pickLatestActionContent(item.actions, "PLAN"),
+  handle_result:
+    item.handle_result ||
+    item.resolution_note ||
+    pickLatestActionContent(item.actions, "RESULT"),
+  status: PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP[item.status] || item.status,
+});
 
 
 export const shortageApi = {
@@ -159,11 +198,106 @@ export const productionApi = {
     issue: (id, data) => api.put(`/material-requisitions/${id}/issue`, data),
   },
   exceptions: {
-    list: (params) => api.get("/production-exceptions", { params }),
-    get: (id) => api.get(`/production-exceptions/${id}`),
-    create: (data) => api.post("/production-exceptions", data),
-    handle: (id, data) => api.put(`/production-exceptions/${id}/handle`, data),
-    close: (id) => api.put(`/production-exceptions/${id}/close`),
+    async list(params = {}) {
+      const response = await api.get("/exceptions", {
+        params: {
+          project_id:
+            params.project_id && params.project_id !== "all" ? params.project_id : undefined,
+          event_type:
+            params.event_type ||
+            (params.exception_type && params.exception_type !== "all"
+              ? params.exception_type
+              : undefined),
+          severity:
+            params.severity ||
+            (params.exception_level && params.exception_level !== "all"
+              ? params.exception_level
+              : undefined),
+          status:
+            params.status && params.status !== "all"
+              ? PRODUCTION_EXCEPTION_STATUS_MAP[params.status] || params.status
+              : undefined,
+          keyword: params.keyword || params.search || undefined,
+        },
+      });
+      const data = unwrapProductionResponse(response);
+      return {
+        ...response,
+        data: {
+          ...data,
+          items: (data?.items || []).map(normalizeProductionException),
+        },
+      };
+    },
+    async get(id) {
+      const response = await api.get(`/exceptions/${id}`);
+      return {
+        ...response,
+        data: normalizeProductionException(unwrapProductionResponse(response)),
+      };
+    },
+    async create(data) {
+      const response = await api.post("/exceptions", {
+        source_type: data.source_type || "PRODUCTION",
+        project_id: data.project_id || null,
+        machine_id: data.equipment_id || null,
+        event_type: data.exception_type || "OTHER",
+        severity: data.exception_level || "MINOR",
+        event_title: data.title,
+        event_description: data.description || data.remark || "",
+        impact_description: data.remark || null,
+        schedule_impact: Math.round(Number(data.impact_hours) || 0),
+        cost_impact: Number(data.impact_cost) || 0,
+        attachments: [],
+      });
+      return {
+        ...response,
+        data: normalizeProductionException(unwrapProductionResponse(response)),
+      };
+    },
+    async handle(id, data = {}) {
+      if (data.handle_plan) {
+        await api.post(`/exceptions/${id}/actions`, null, {
+          params: {
+            action_type: "PLAN",
+            action_content: data.handle_plan,
+          },
+        });
+      }
+      if (data.handle_result) {
+        await api.post(`/exceptions/${id}/actions`, null, {
+          params: {
+            action_type: "RESULT",
+            action_content: data.handle_result,
+          },
+        });
+      }
+      const nextStatus = data.handle_result ? "RESOLVED" : "IN_PROGRESS";
+      const response = await api.put(`/exceptions/${id}/status`, null, {
+        params: { status: nextStatus },
+      });
+      return {
+        ...response,
+        data: normalizeProductionException(unwrapProductionResponse(response)),
+      };
+    },
+    async close(id) {
+      const response = await api.put(`/exceptions/${id}/status`, null, {
+        params: { status: "CLOSED" },
+      });
+      return {
+        ...response,
+        data: normalizeProductionException(unwrapProductionResponse(response)),
+      };
+    },
+    statistics: (params) => api.get("/exceptions/statistics", { params }),
+  },
+  capacity: {
+    utilization: (params) => api.get("/production/capacity/utilization", { params }),
+    bottlenecks: (params) => api.get("/production/capacity/bottlenecks", { params }),
+    trend: (params) => api.get("/production/capacity/trend", { params }),
+    forecast: (params) => api.get("/production/capacity/forecast", { params }),
+    oee: (params) => api.get("/production/capacity/oee", { params }),
   },
   taskBoard: (workshopId) => api.get(`/production/workshops/${workshopId}/task-board`),
   reports: {

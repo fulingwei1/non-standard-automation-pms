@@ -48,6 +48,7 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui";
+import { assemblyKitApi } from "../services/api";
 
 // 预置装配阶段
 const ASSEMBLY_STAGES = [
@@ -73,24 +74,23 @@ export default function AssemblyTemplateManagement() {
   const [templates, setTemplates] = useState([]);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [formData, setFormData] = useState({
+    template_code: "",
+    template_name: "",
+    equipment_type: "",
+    description: "",
+  });
 
   // 加载模板列表
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      // TODO: 调用 API
-      setTemplates([
-        {
-          id: 1,
-          template_code: "TPL_ICT",
-          template_name: "ICT 测试设备模板",
-          equipment_type: "ICT",
-          description: "标准 ICT 测试设备装配工艺",
-          is_active: true,
-        },
-      ]);
+      const res = await assemblyKitApi.getTemplates();
+      const data = res?.data?.data ?? res?.data ?? [];
+      setTemplates(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("加载模板失败:", error);
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
@@ -102,14 +102,31 @@ export default function AssemblyTemplateManagement() {
 
   // 保存模板
   const handleSave = async () => {
+    if (!formData.template_name) {
+      alert("请填写模板名称");
+      return;
+    }
     setSaving(true);
     try {
-      // TODO: 调用 API 保存
-      alert("保存成功");
+      if (selectedTemplate) {
+        await assemblyKitApi.updateTemplate(selectedTemplate.id, {
+          template_name: formData.template_name,
+          equipment_type: formData.equipment_type || null,
+        });
+      } else {
+        await assemblyKitApi.createTemplate({
+          template_code: formData.template_code || `TPL_${Date.now().toString().slice(-6)}`,
+          template_name: formData.template_name,
+          equipment_type: formData.equipment_type || null,
+          stage_config: ASSEMBLY_STAGES.map((s) => ({ code: s.code, name: s.name, order: s.order })),
+        });
+      }
       setShowEditDialog(false);
+      setFormData({ template_code: "", template_name: "", equipment_type: "", description: "" });
+      setSelectedTemplate(null);
       loadTemplates();
     } catch (error) {
-      alert("保存失败：" + error.message);
+      alert("保存失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setSaving(false);
     }
@@ -118,6 +135,19 @@ export default function AssemblyTemplateManagement() {
   // 编辑模板
   const handleEdit = (template) => {
     setSelectedTemplate(template);
+    setFormData({
+      template_code: template.template_code || "",
+      template_name: template.template_name || "",
+      equipment_type: template.equipment_type || "",
+      description: template.description || "",
+    });
+    setShowEditDialog(true);
+  };
+
+  // 新建模板
+  const handleNew = () => {
+    setSelectedTemplate(null);
+    setFormData({ template_code: "", template_name: "", equipment_type: "", description: "" });
     setShowEditDialog(true);
   };
 
@@ -134,7 +164,7 @@ export default function AssemblyTemplateManagement() {
             title="装配工艺模板管理"
             description="配置装配工艺路线、物料分类映射、阻塞性物料规则"
             actions={
-              <Button onClick={() => setShowEditDialog(true)}>
+              <Button onClick={handleNew}>
                 <Plus className="w-4 h-4 mr-2" />
                 新建模板
               </Button>
@@ -187,8 +217,8 @@ export default function AssemblyTemplateManagement() {
                           <h3 className="font-semibold text-lg">
                             {template.template_name}
                           </h3>
-                          <Badge variant={template.is_active ? "default" : "secondary"}>
-                            {template.is_active ? "启用" : "停用"}
+                          <Badge variant={template.is_active !== false ? "default" : "secondary"}>
+                            {template.is_active !== false ? "启用" : "停用"}
                           </Badge>
                         </div>
                         <p className="text-sm text-slate-400">
@@ -198,7 +228,7 @@ export default function AssemblyTemplateManagement() {
 
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-500">类型:</span>
-                        <Badge variant="outline">{template.equipment_type}</Badge>
+                        <Badge variant="outline">{template.equipment_type || "-"}</Badge>
                       </div>
 
                       <div className="flex gap-2 pt-4 border-t">
@@ -235,11 +265,19 @@ export default function AssemblyTemplateManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>模板编码</Label>
-                    <Input placeholder="例如：TPL_ICT" />
+                    <Input
+                      placeholder="例如：TPL_ICT"
+                      value={formData.template_code}
+                      onChange={(e) => setFormData({ ...formData, template_code: e.target.value })}
+                      disabled={!!selectedTemplate}
+                    />
                   </div>
                   <div>
                     <Label>设备类型</Label>
-                    <Select>
+                    <Select
+                      value={formData.equipment_type}
+                      onValueChange={(val) => setFormData({ ...formData, equipment_type: val })}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="选择类型" />
                       </SelectTrigger>
@@ -253,11 +291,20 @@ export default function AssemblyTemplateManagement() {
                 </div>
                 <div>
                   <Label>模板名称</Label>
-                  <Input placeholder="例如：ICT 测试设备标准工艺" />
+                  <Input
+                    placeholder="例如：ICT 测试设备标准工艺"
+                    value={formData.template_name}
+                    onChange={(e) => setFormData({ ...formData, template_name: e.target.value })}
+                  />
                 </div>
                 <div>
                   <Label>描述</Label>
-                  <Textarea rows={3} placeholder="模板描述..." />
+                  <Textarea
+                    rows={3}
+                    placeholder="模板描述..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
                 </div>
 
                 {/* 物料分类映射 */}
