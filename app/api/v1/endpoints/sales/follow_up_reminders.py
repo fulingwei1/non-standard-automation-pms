@@ -6,6 +6,7 @@
 """
 
 import logging
+from datetime import date
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -16,6 +17,7 @@ from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.sales.follow_up_reminder_service import (
+    FollowUpReminder,
     FollowUpReminderService,
     ReminderPriority,
     ReminderType,
@@ -24,6 +26,26 @@ from app.services.sales.follow_up_reminder_service import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _serialize_reminder(reminder: FollowUpReminder) -> dict:
+    return {
+        "type": reminder.type.value,
+        "priority": reminder.priority.value,
+        "entity_type": reminder.entity_type,
+        "entity_id": reminder.entity_id,
+        "entity_code": reminder.entity_code,
+        "entity_name": reminder.entity_name,
+        "customer_name": reminder.customer_name,
+        "message": reminder.message,
+        "suggestion": reminder.suggestion,
+        "days_overdue": reminder.days_overdue,
+        "last_follow_up_at": reminder.last_follow_up_at.isoformat()
+        if reminder.last_follow_up_at
+        else None,
+        "next_action_at": reminder.next_action_at.isoformat() if reminder.next_action_at else None,
+        "est_amount": reminder.est_amount,
+    }
 
 
 @router.get("/reminders", response_model=ResponseModel)
@@ -51,13 +73,12 @@ def get_follow_up_reminders(
 
     返回按优先级排序的提醒列表，每条提醒包含具体的跟进建议。
     """
-    # 转换类型参数
     type_filters = None
     if types:
         type_filters = []
-        for t in types:
+        for reminder_type in types:
             try:
-                type_filters.append(ReminderType(t))
+                type_filters.append(ReminderType(reminder_type))
             except ValueError:
                 pass
 
@@ -68,32 +89,14 @@ def get_follow_up_reminders(
         limit=limit,
     )
 
-    # 按优先级过滤
     if priority:
         try:
             priority_filter = ReminderPriority(priority)
-            reminders = [r for r in reminders if r.priority == priority_filter]
+            reminders = [reminder for reminder in reminders if reminder.priority == priority_filter]
         except ValueError:
             pass
 
-    # 转换为字典格式
-    items = []
-    for r in reminders:
-        items.append({
-            "type": r.type.value,
-            "priority": r.priority.value,
-            "entity_type": r.entity_type,
-            "entity_id": r.entity_id,
-            "entity_code": r.entity_code,
-            "entity_name": r.entity_name,
-            "customer_name": r.customer_name,
-            "message": r.message,
-            "suggestion": r.suggestion,
-            "days_overdue": r.days_overdue,
-            "last_follow_up_at": r.last_follow_up_at.isoformat() if r.last_follow_up_at else None,
-            "next_action_at": r.next_action_at.isoformat() if r.next_action_at else None,
-            "est_amount": r.est_amount,
-        })
+    items = [_serialize_reminder(reminder) for reminder in reminders]
 
     return ResponseModel(
         code=200,
@@ -102,6 +105,57 @@ def get_follow_up_reminders(
             "items": items,
             "total": len(items),
         },
+    )
+
+
+@router.get("/reminders/action-board", response_model=ResponseModel)
+def get_follow_up_action_board(
+    db: Session = Depends(deps.get_db),
+    window_days: int = Query(3, ge=0, le=30, description="临近提醒窗口（天）"),
+    limit: int = Query(50, ge=1, le=200, description="每个分组返回数量限制"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取自动跟进行动看板（超期 + 临近）"""
+    service = FollowUpReminderService(db)
+    digest = service.get_due_action_digest(
+        user_id=current_user.id,
+        window_days=window_days,
+        limit=limit,
+    )
+
+    return ResponseModel(
+        code=200,
+        message="获取成功",
+        data={
+            "generated_at": digest["generated_at"],
+            "window_days": digest["window_days"],
+            "overdue_count": digest["overdue_count"],
+            "upcoming_count": digest["upcoming_count"],
+            "high_priority_count": digest["high_priority_count"],
+            "total": digest["total"],
+            "overdue": [_serialize_reminder(reminder) for reminder in digest["overdue"]],
+            "upcoming": [_serialize_reminder(reminder) for reminder in digest["upcoming"]],
+        },
+    )
+
+
+@router.get("/reports/weekly", response_model=ResponseModel)
+def get_weekly_follow_up_report(
+    db: Session = Depends(deps.get_db),
+    week_start: Optional[date] = Query(None, description="周起始日期，默认本周一"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取跟进周报汇总（跟进次数、超期数、转化率）"""
+    service = FollowUpReminderService(db)
+    report = service.get_weekly_follow_up_report(
+        user_id=current_user.id,
+        week_start=week_start,
+    )
+
+    return ResponseModel(
+        code=200,
+        message="获取成功",
+        data=report,
     )
 
 
@@ -142,21 +196,8 @@ def get_urgent_reminders(
         limit=20,
     )
 
-    urgent_reminders = [r for r in reminders if r.priority == ReminderPriority.URGENT]
-
-    items = []
-    for r in urgent_reminders:
-        items.append({
-            "type": r.type.value,
-            "entity_type": r.entity_type,
-            "entity_id": r.entity_id,
-            "entity_code": r.entity_code,
-            "entity_name": r.entity_name,
-            "customer_name": r.customer_name,
-            "message": r.message,
-            "suggestion": r.suggestion,
-            "est_amount": r.est_amount,
-        })
+    urgent_reminders = [reminder for reminder in reminders if reminder.priority == ReminderPriority.URGENT]
+    items = [_serialize_reminder(reminder) for reminder in urgent_reminders]
 
     return ResponseModel(
         code=200,
