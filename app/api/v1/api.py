@@ -610,7 +610,18 @@ def create_api_router() -> APIRouter:
     # ==================== 预售分析 ====================
     try:
         from app.api.v1.endpoints.presale_analytics import router as presale_analytics_router
-        api_router.include_router(presale_analytics_router, prefix="/presale-analytics", tags=["presale-analytics"])
+        api_router.include_router(
+            presale_analytics_router,
+            prefix="/presale-analytics",
+            tags=["presale-analytics"],
+        )
+        # 兼容旧前端/历史调用：/presales/*
+        api_router.include_router(
+            presale_analytics_router,
+            prefix="/presales",
+            tags=["presales-compat"],
+            include_in_schema=False,
+        )
         print("✓ 预售分析模块加载成功")
     except Exception as e:
         print(f"✗ 预售分析模块加载失败：{e}")
