@@ -23,7 +23,7 @@ class WorkReportStartRequest(BaseModel):
     """开工报告请求"""
 
     work_order_id: int = Field(description="工单ID")
-    worker_id: int = Field(description="工人ID")
+    worker_id: Optional[int] = Field(default=None, description="工人ID（兼容字段）")
     report_note: Optional[str] = Field(default=None, description="报工说明")
 
 
@@ -31,7 +31,7 @@ class WorkReportProgressRequest(BaseModel):
     """进度上报请求"""
 
     work_order_id: int = Field(description="工单ID")
-    worker_id: int = Field(description="工人ID")
+    worker_id: Optional[int] = Field(default=None, description="工人ID（兼容字段）")
     progress_percent: int = Field(ge=0, le=100, description="进度百分比")
     work_hours: Optional[Decimal] = Field(default=None, description="本次工时")
     report_note: Optional[str] = Field(default=None, description="报工说明")
@@ -41,7 +41,7 @@ class WorkReportCompleteRequest(BaseModel):
     """完工报告请求"""
 
     work_order_id: int = Field(description="工单ID")
-    worker_id: int = Field(description="工人ID")
+    worker_id: Optional[int] = Field(default=None, description="工人ID（兼容字段）")
     completed_qty: int = Field(description="完成数量")
     qualified_qty: int = Field(description="合格数量")
     defect_qty: Optional[int] = Field(default=0, description="不良数量")

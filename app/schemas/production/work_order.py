@@ -12,7 +12,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from ..common import PaginatedResponse, TimestampSchema
 
@@ -58,7 +58,11 @@ class WorkOrderUpdate(BaseModel):
 class WorkOrderAssignRequest(BaseModel):
     """工单派工请求"""
 
-    worker_id: Optional[int] = Field(default=None, description="指派给(工人ID)")
+    assigned_to: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("assigned_to", "worker_id"),
+        description="指派给(工人ID)",
+    )
     workstation_id: Optional[int] = Field(default=None, description="工位ID")
 
 
