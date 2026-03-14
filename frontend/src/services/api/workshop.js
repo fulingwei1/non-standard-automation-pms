@@ -1,6 +1,10 @@
-import { api } from "./client.js";
+import { productionApi } from "./production.js";
 
 export const workshopApi = {
-  list: (params) => api.get("/production/workshops", { params }),
-  create: (data) => api.post("/production/workshops", data),
+  list: productionApi.workshops.list,
+  get: productionApi.workshops.get,
+  create: productionApi.workshops.create,
+  update: productionApi.workshops.update,
+  getWorkstations: productionApi.workshops.getWorkstations,
+  addWorkstation: productionApi.workshops.addWorkstation,
 };

@@ -1,6 +1,40 @@
 import { api } from "./client.js";
 
+const pickFirstDefined = (...values) => values.find((value) => value !== undefined && value !== null && value !== "");
 
+const toIntegerOrNull = (value) => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const buildAssignPayload = (data = {}) => {
+  const workerId = toIntegerOrNull(
+    pickFirstDefined(data.worker_id, data.assigned_to, data.assigned_worker_id, data.workerId, data.assignedTo),
+  );
+  const workstationId = toIntegerOrNull(
+    pickFirstDefined(data.workstation_id, data.workstationId),
+  );
+
+  return {
+    ...(workerId !== null ? { worker_id: workerId, assigned_to: workerId } : {}),
+    ...(workstationId !== null ? { workstation_id: workstationId } : {}),
+    ...(data.remark ? { remark: data.remark } : {}),
+  };
+};
+
+const buildReportPayload = (data = {}) => {
+  const workerId = toIntegerOrNull(
+    pickFirstDefined(data.worker_id, data.assigned_to, data.assigned_worker_id, data.workerId, data.assignedTo, 0),
+  );
+
+  return {
+    ...data,
+    worker_id: workerId ?? 0,
+  };
+};
 
 export const shortageApi = {
   // 缺料上报 - /shortage/handling/reports
@@ -104,8 +138,8 @@ export const productionApi = {
       api.post(`/production/workshops/${id}/workstations`, data),
   },
   workstations: {
-    list: (params) => api.get("/production/workshops", { params }),
-    get: (id) => api.get(`/production/workshops/${id}`),
+    list: (workshopId) =>
+      api.get(`/production/workshops/${workshopId}/workstations`),
     getStatus: (id) => api.get(`/production/workstations/${id}/status`),
   },
   productionPlans: {
@@ -114,16 +148,19 @@ export const productionApi = {
     create: (data) => api.post("/production/production-plans", data),
     update: (id, data) => api.put(`/production/production-plans/${id}`, data),
     submit: (id) => api.put(`/production/production-plans/${id}/submit`),
-    approve: (id) => api.put(`/production/production-plans/${id}/approve`),
+    approve: (id, params = {}) =>
+      api.put(`/production/production-plans/${id}/approve`, null, {
+        params: { approved: true, ...params },
+      }),
     publish: (id) => api.put(`/production/production-plans/${id}/publish`),
-    calendar: (params) => api.get("/production/production-plans/calendar", { params }),
   },
   workOrders: {
     list: (params) => api.get("/production/work-orders", { params }),
     get: (id) => api.get(`/production/work-orders/${id}`),
     create: (data) => api.post("/production/work-orders", data),
     update: (id, data) => api.put(`/production/work-orders/${id}`, data),
-    assign: (id, data) => api.put(`/production/work-orders/${id}/assign`, data),
+    assign: (id, data) =>
+      api.put(`/production/work-orders/${id}/assign`, buildAssignPayload(data)),
     start: (id) => api.put(`/production/work-orders/${id}/start`),
     pause: (id) => api.put(`/production/work-orders/${id}/pause`),
     resume: (id) => api.put(`/production/work-orders/${id}/resume`),
@@ -144,10 +181,13 @@ export const productionApi = {
     list: (params) => api.get("/production/work-reports", { params }),
     get: (id) => api.get(`/production/work-reports/${id}`),
     create: (data) => api.post("/production/work-reports", data),
-    start: (data) => api.post("/production/work-reports/start", data),
-    progress: (data) => api.post("/production/work-reports/progress", data),
-    complete: (data) => api.post("/production/work-reports/complete", data),
-    approve: (id) => api.put(`/production/work-reports/${id}/approve`),
+    start: (data) => api.post("/production/work-reports/start", buildReportPayload(data)),
+    progress: (data) => api.post("/production/work-reports/progress", buildReportPayload(data)),
+    complete: (data) => api.post("/production/work-reports/complete", buildReportPayload(data)),
+    approve: (id, params = {}) =>
+      api.put(`/production/work-reports/${id}/approve`, null, {
+        params: { approved: true, ...params },
+      }),
     my: (params) => api.get("/production/work-reports/my", { params }),
   },
   materialRequisitions: {

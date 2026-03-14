@@ -5,6 +5,73 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
+import { getItemsCompat } from "../../utils/apiResponse";
+
+const formatDateKey = (date) => {
+  const value = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(value.getTime())) {
+    return "";
+  }
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+};
+
+const buildCalendarBuckets = ({ plans, workOrders, startDate, endDate }) => {
+  const startKey = formatDateKey(startDate);
+  const endKey = formatDateKey(endDate);
+  const bucketMap = new Map();
+
+  const ensureBucket = (dateKey) => {
+    if (!bucketMap.has(dateKey)) {
+      bucketMap.set(dateKey, { date: dateKey, plans: [], work_orders: [] });
+    }
+    return bucketMap.get(dateKey);
+  };
+
+  const addRange = (start, end, kind, payload) => {
+    const rangeStart = new Date(start || end);
+    const rangeEnd = new Date(end || start);
+    if (Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) {
+      return;
+    }
+
+    const cursor = new Date(rangeStart);
+    while (cursor <= rangeEnd) {
+      const dateKey = formatDateKey(cursor);
+      if (dateKey >= startKey && dateKey <= endKey) {
+        ensureBucket(dateKey)[kind].push(payload);
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  };
+
+  plans.forEach((plan) => {
+    addRange(
+      plan.plan_start_date || plan.start_date,
+      plan.plan_end_date || plan.end_date,
+      "plans",
+      {
+        ...plan,
+        plan_id: plan.plan_id || plan.id,
+        plan_name: plan.plan_name || plan.name,
+      },
+    );
+  });
+
+  workOrders.forEach((order) => {
+    addRange(
+      order.plan_start_date || order.planned_start_date,
+      order.plan_end_date || order.planned_end_date,
+      "work_orders",
+      {
+        ...order,
+        work_order_id: order.work_order_id || order.id,
+        order_no: order.work_order_no || order.order_no,
+      },
+    );
+  });
+
+  return Array.from(bucketMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+};
 
 export default function ScheduleCalendarView({ projects: _projects, onProjectClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -14,7 +81,6 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  // Fetch calendar data
   useEffect(() => {
     const fetchCalendarData = async () => {
       try {
@@ -22,13 +88,22 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
         const startDate = new Date(year, month, 1);
         const endDate = new Date(year, month + 1, 0);
 
-        const response = await productionApi.productionPlans.calendar({
-          start_date: startDate.toISOString().split("T")[0],
-          end_date: endDate.toISOString().split("T")[0]
-        });
+        const [planResult, orderResult] = await Promise.allSettled([
+          productionApi.productionPlans.list({ page_size: 1000 }),
+          productionApi.workOrders.list({ page_size: 1000 }),
+        ]);
 
-        const data = response.data || response;
-        setCalendarData(data.calendar || []);
+        const plans = planResult.status === "fulfilled" ? getItemsCompat(planResult.value) : [];
+        const workOrders = orderResult.status === "fulfilled" ? getItemsCompat(orderResult.value) : [];
+
+        setCalendarData(
+          buildCalendarBuckets({
+            plans,
+            workOrders,
+            startDate,
+            endDate,
+          }),
+        );
       } catch (err) {
         console.error("Failed to fetch calendar data:", err);
         setCalendarData([]);
@@ -36,20 +111,16 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
         setLoading(false);
       }
     };
+
     fetchCalendarData();
   }, [year, month]);
 
-  // Get days in month
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
+  const getDaysInMonth = (targetYear, targetMonth) => {
+    return new Date(targetYear, targetMonth + 1, 0).getDate();
   };
 
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const formatDateKey = (date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const getFirstDayOfMonth = (targetYear, targetMonth) => {
+    return new Date(targetYear, targetMonth, 1).getDay();
   };
 
   const isSameDay = (date1, date2) => {
@@ -61,50 +132,45 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
     );
   };
 
-  // Generate calendar days
   const calendarDays = useMemo(() => {
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
     const days = [];
 
-    // Previous month days
     const prevMonthDays = getDaysInMonth(year, month - 1);
     for (let i = firstDay - 1; i >= 0; i--) {
       days.push({
         date: new Date(year, month - 1, prevMonthDays - i),
-        isCurrentMonth: false
+        isCurrentMonth: false,
       });
     }
 
-    // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
       days.push({
         date: new Date(year, month, i),
-        isCurrentMonth: true
+        isCurrentMonth: true,
       });
     }
 
-    // Next month days
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
       days.push({
         date: new Date(year, month + 1, i),
-        isCurrentMonth: false
+        isCurrentMonth: false,
       });
     }
 
     return days;
   }, [year, month]);
 
-  // Get events for a date
   const getEventsForDate = (date) => {
     const dateKey = formatDateKey(date);
-    const dayData = (calendarData || []).find((d) => d.date === dateKey);
+    const dayData = (calendarData || []).find((item) => item.date === dateKey);
     if (!dayData) {return [];}
 
     return [
-      ...(dayData.plans || []).map((p) => ({ ...p, type: "plan" })),
-      ...(dayData.work_orders || []).map((w) => ({ ...w, type: "work_order" }))
+      ...(dayData.plans || []).map((plan) => ({ ...plan, type: "plan" })),
+      ...(dayData.work_orders || []).map((workOrder) => ({ ...workOrder, type: "work_order" })),
     ];
   };
 
@@ -153,7 +219,6 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
           </div>
         ) : (
           <>
-            {/* Days of Week Header */}
             <div className="grid grid-cols-7 bg-surface-2/30 border-b border-border">
               {["日", "一", "二", "三", "四", "五", "六"].map((day) => (
                 <div
@@ -165,13 +230,11 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
               ))}
             </div>
 
-            {/* Calendar Grid */}
             <div className="grid grid-cols-7">
               {(calendarDays || []).map((day) => {
                 const events = getEventsForDate(day.date);
                 const isToday = isSameDay(day.date, today);
-                const isWeekend =
-                  day.date.getDay() === 0 || day.date.getDay() === 6;
+                const isWeekend = day.date.getDay() === 0 || day.date.getDay() === 6;
 
                 return (
                   <div
@@ -180,7 +243,7 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
                       "min-h-[120px] border border-border/30 p-2 transition-colors",
                       !day.isCurrentMonth && "bg-surface-2/30",
                       isToday && "bg-primary/10 border-primary/30",
-                      isWeekend && day.isCurrentMonth && "bg-slate-800/30"
+                      isWeekend && day.isCurrentMonth && "bg-slate-800/30",
                     )}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -189,7 +252,7 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
                           "text-sm font-medium px-1.5 py-0.5 rounded",
                           isToday && "bg-primary text-white",
                           !day.isCurrentMonth && "text-slate-600",
-                          day.isCurrentMonth && !isToday && "text-slate-300"
+                          day.isCurrentMonth && !isToday && "text-slate-300",
                         )}
                       >
                         {day.date.getDate()}
@@ -205,18 +268,14 @@ export default function ScheduleCalendarView({ projects: _projects, onProjectCli
                       {events.slice(0, 3).map((event, idx) => (
                         <div
                           key={idx}
-                          onClick={() =>
-                            onProjectClick && onProjectClick(event)
-                          }
+                          onClick={() => onProjectClick && onProjectClick(event)}
                           className={cn(
                             "px-1.5 py-0.5 rounded text-xs truncate cursor-pointer transition-all",
                             event.type === "plan"
                               ? "bg-blue-500/20 text-blue-400 border-l-2 border-l-blue-400"
-                              : "bg-purple-500/20 text-purple-400 border-l-2 border-l-purple-400"
+                              : "bg-purple-500/20 text-purple-400 border-l-2 border-l-purple-400",
                           )}
-                          title={
-                            event.plan_name || event.task_name || event.order_no
-                          }
+                          title={event.plan_name || event.task_name || event.order_no}
                         >
                           {event.plan_name || event.task_name || event.order_no}
                         </div>
