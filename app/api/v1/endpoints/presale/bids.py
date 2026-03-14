@@ -31,6 +31,7 @@ from app.schemas.presale import (
     TenderCreate,
     TenderResponse,
     TenderResultUpdate,
+    TenderUpdate,
 )
 from app.utils.db_helpers import get_or_404, save_obj
 
@@ -42,6 +43,31 @@ generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
 
 router = APIRouter(tags=["bids"])
+
+
+def build_tender_response(tender: PresaleTenderRecord) -> TenderResponse:
+    return TenderResponse(
+        id=tender.id,
+        ticket_id=tender.ticket_id,
+        opportunity_id=tender.opportunity_id,
+        tender_no=tender.tender_no,
+        tender_name=tender.tender_name,
+        customer_name=tender.customer_name,
+        publish_date=tender.publish_date,
+        deadline=tender.deadline,
+        bid_opening_date=tender.bid_opening_date,
+        budget_amount=float(tender.budget_amount) if tender.budget_amount else None,
+        our_bid_amount=float(tender.our_bid_amount) if tender.our_bid_amount else None,
+        technical_score=float(tender.technical_score) if tender.technical_score else None,
+        commercial_score=float(tender.commercial_score) if tender.commercial_score else None,
+        total_score=float(tender.total_score) if tender.total_score else None,
+        result=tender.result,
+        result_reason=tender.result_reason,
+        leader_id=tender.leader_id,
+        created_at=tender.created_at,
+        updated_at=tender.updated_at,
+    )
+
 
 # 共 5 个路由
 
@@ -75,33 +101,7 @@ def read_tenders(
         query.order_by(desc(PresaleTenderRecord.created_at)), pagination.offset, pagination.limit
     ).all()
 
-    items = []
-    for tender in tenders:
-        items.append(
-            TenderResponse(
-                id=tender.id,
-                ticket_id=tender.ticket_id,
-                opportunity_id=tender.opportunity_id,
-                tender_no=tender.tender_no,
-                tender_name=tender.tender_name,
-                customer_name=tender.customer_name,
-                publish_date=tender.publish_date,
-                deadline=tender.deadline,
-                bid_opening_date=tender.bid_opening_date,
-                budget_amount=float(tender.budget_amount) if tender.budget_amount else None,
-                our_bid_amount=float(tender.our_bid_amount) if tender.our_bid_amount else None,
-                technical_score=float(tender.technical_score) if tender.technical_score else None,
-                commercial_score=(
-                    float(tender.commercial_score) if tender.commercial_score else None
-                ),
-                total_score=float(tender.total_score) if tender.total_score else None,
-                result=tender.result,
-                result_reason=tender.result_reason,
-                leader_id=tender.leader_id,
-                created_at=tender.created_at,
-                updated_at=tender.updated_at,
-            )
-        )
+    items = [build_tender_response(tender) for tender in tenders]
 
     return pagination.to_response(items, total)
 
@@ -137,27 +137,7 @@ def create_tender(
 
     save_obj(db, tender)
 
-    return TenderResponse(
-        id=tender.id,
-        ticket_id=tender.ticket_id,
-        opportunity_id=tender.opportunity_id,
-        tender_no=tender.tender_no,
-        tender_name=tender.tender_name,
-        customer_name=tender.customer_name,
-        publish_date=tender.publish_date,
-        deadline=tender.deadline,
-        bid_opening_date=tender.bid_opening_date,
-        budget_amount=float(tender.budget_amount) if tender.budget_amount else None,
-        our_bid_amount=float(tender.our_bid_amount) if tender.our_bid_amount else None,
-        technical_score=float(tender.technical_score) if tender.technical_score else None,
-        commercial_score=float(tender.commercial_score) if tender.commercial_score else None,
-        total_score=float(tender.total_score) if tender.total_score else None,
-        result=tender.result,
-        result_reason=tender.result_reason,
-        leader_id=tender.leader_id,
-        created_at=tender.created_at,
-        updated_at=tender.updated_at,
-    )
+    return build_tender_response(tender)
 
 
 @router.get("/tenders/{tender_id}", response_model=TenderResponse)
@@ -172,27 +152,31 @@ def read_tender(
     """
     tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
 
-    return TenderResponse(
-        id=tender.id,
-        ticket_id=tender.ticket_id,
-        opportunity_id=tender.opportunity_id,
-        tender_no=tender.tender_no,
-        tender_name=tender.tender_name,
-        customer_name=tender.customer_name,
-        publish_date=tender.publish_date,
-        deadline=tender.deadline,
-        bid_opening_date=tender.bid_opening_date,
-        budget_amount=float(tender.budget_amount) if tender.budget_amount else None,
-        our_bid_amount=float(tender.our_bid_amount) if tender.our_bid_amount else None,
-        technical_score=float(tender.technical_score) if tender.technical_score else None,
-        commercial_score=float(tender.commercial_score) if tender.commercial_score else None,
-        total_score=float(tender.total_score) if tender.total_score else None,
-        result=tender.result,
-        result_reason=tender.result_reason,
-        leader_id=tender.leader_id,
-        created_at=tender.created_at,
-        updated_at=tender.updated_at,
-    )
+    return build_tender_response(tender)
+
+
+@router.put("/tenders/{tender_id}", response_model=TenderResponse)
+def update_tender(
+    *,
+    db: Session = Depends(deps.get_db),
+    tender_id: int,
+    tender_in: TenderUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新投标记录基础信息
+
+    兼容前端 `presaleApi.tenders.update` 直接 PUT /presale/tenders/{id}。
+    """
+    tender = get_or_404(db, PresaleTenderRecord, tender_id, detail="投标记录不存在")
+
+    update_data = tender_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(tender, field, value)
+
+    save_obj(db, tender)
+
+    return build_tender_response(tender)
 
 
 @router.put("/tenders/{tender_id}/result", response_model=TenderResponse)
@@ -219,27 +203,7 @@ def update_tender_result(
 
     save_obj(db, tender)
 
-    return TenderResponse(
-        id=tender.id,
-        ticket_id=tender.ticket_id,
-        opportunity_id=tender.opportunity_id,
-        tender_no=tender.tender_no,
-        tender_name=tender.tender_name,
-        customer_name=tender.customer_name,
-        publish_date=tender.publish_date,
-        deadline=tender.deadline,
-        bid_opening_date=tender.bid_opening_date,
-        budget_amount=float(tender.budget_amount) if tender.budget_amount else None,
-        our_bid_amount=float(tender.our_bid_amount) if tender.our_bid_amount else None,
-        technical_score=float(tender.technical_score) if tender.technical_score else None,
-        commercial_score=float(tender.commercial_score) if tender.commercial_score else None,
-        total_score=float(tender.total_score) if tender.total_score else None,
-        result=tender.result,
-        result_reason=tender.result_reason,
-        leader_id=tender.leader_id,
-        created_at=tender.created_at,
-        updated_at=tender.updated_at,
-    )
+    return build_tender_response(tender)
 
 
 @router.get("/tenders/analysis", response_model=ResponseModel)
