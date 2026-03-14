@@ -59,7 +59,7 @@ def _make_plan(plan_id=1, status="DRAFT"):
     plan = MagicMock()
     plan.id = plan_id
     plan.plan_no = f"PP{plan_id:06d}"
-    plan.payment_name = "2026年Q1生产计划"
+    plan.plan_name = "2026年Q1生产计划"
     plan.plan_type = "MASTER"
     plan.project_id = 1
     plan.workshop_id = 1

@@ -59,6 +59,24 @@ def _get_work_report_response(db: Session, report: WorkReport) -> WorkReportResp
     )
 
 
+def _resolve_report_worker(
+    db: Session,
+    current_user: User,
+    work_order: WorkOrder,
+    request_worker_id: Optional[int],
+) -> Worker:
+    """兼容 worker_id / 当前用户映射 / 已派工工人 三种来源。"""
+    worker = db.query(Worker).filter(Worker.user_id == current_user.id).first()
+    if worker:
+        return worker
+
+    fallback_worker_id = work_order.assigned_to or request_worker_id
+    if fallback_worker_id:
+        return get_or_404(db, Worker, fallback_worker_id, "工人不存在")
+
+    raise HTTPException(status_code=400, detail="当前用户未关联工人信息，且工单未找到有效工人")
+
+
 # ==================== 报工系统 ====================
 
 @router.post("/work-reports/start", response_model=WorkReportResponse)
@@ -76,10 +94,7 @@ def start_work_report(
     if work_order.status != "ASSIGNED":
         raise HTTPException(status_code=400, detail="只有已派工的工单才能开工")
 
-    # 获取当前工人（从用户关联）
-    worker = db.query(Worker).filter(Worker.user_id == current_user.id).first()
-    if not worker:
-        raise HTTPException(status_code=400, detail="当前用户未关联工人信息")
+    worker = _resolve_report_worker(db, current_user, work_order, report_in.worker_id)
 
     # 生成报工单号
     report_no = generate_report_no(db)
@@ -130,10 +145,7 @@ def progress_work_report(
     if work_order.status not in ["STARTED", "PAUSED"]:
         raise HTTPException(status_code=400, detail="只有已开始或已暂停的工单才能上报进度")
 
-    # 获取当前工人
-    worker = db.query(Worker).filter(Worker.user_id == current_user.id).first()
-    if not worker:
-        raise HTTPException(status_code=400, detail="当前用户未关联工人信息")
+    worker = _resolve_report_worker(db, current_user, work_order, report_in.worker_id)
 
     # 生成报工单号
     report_no = generate_report_no(db)
@@ -184,10 +196,7 @@ def complete_work_report(
     if report_in.qualified_qty > report_in.completed_qty:
         raise HTTPException(status_code=400, detail="合格数量不能超过完成数量")
 
-    # 获取当前工人
-    worker = db.query(Worker).filter(Worker.user_id == current_user.id).first()
-    if not worker:
-        raise HTTPException(status_code=400, detail="当前用户未关联工人信息")
+    worker = _resolve_report_worker(db, current_user, work_order, report_in.worker_id)
 
     # 生成报工单号
     report_no = generate_report_no(db)

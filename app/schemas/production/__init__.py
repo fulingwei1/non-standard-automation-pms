@@ -33,6 +33,10 @@ from .production_exception import (
 
 # 生产计划
 from .production_plan import (
+    ProductionPlanCalendarDay,
+    ProductionPlanCalendarPlanItem,
+    ProductionPlanCalendarResponse,
+    ProductionPlanCalendarWorkOrderItem,
     ProductionPlanCreate,
     ProductionPlanListResponse,
     ProductionPlanResponse,
@@ -143,6 +147,10 @@ __all__ = [
     "ProductionPlanUpdate",
     "ProductionPlanResponse",
     "ProductionPlanListResponse",
+    "ProductionPlanCalendarPlanItem",
+    "ProductionPlanCalendarWorkOrderItem",
+    "ProductionPlanCalendarDay",
+    "ProductionPlanCalendarResponse",
     # 生产工单
     "WorkOrderCreate",
     "WorkOrderUpdate",

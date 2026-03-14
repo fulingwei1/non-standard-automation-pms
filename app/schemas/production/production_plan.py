@@ -67,3 +67,46 @@ class ProductionPlanListResponse(PaginatedResponse):
     """生产计划列表响应"""
 
     items: List[ProductionPlanResponse]
+
+
+class ProductionPlanCalendarPlanItem(BaseModel):
+    """日历视图中的计划项"""
+
+    id: int
+    plan_no: str
+    plan_name: str
+    plan_type: str
+    status: str
+    project_id: Optional[int] = None
+    project_name: Optional[str] = None
+    workshop_id: Optional[int] = None
+    workshop_name: Optional[str] = None
+
+
+class ProductionPlanCalendarWorkOrderItem(BaseModel):
+    """日历视图中的工单项"""
+
+    id: int
+    work_order_no: str
+    order_no: str
+    task_name: Optional[str] = None
+    status: str
+    project_id: Optional[int] = None
+    workshop_id: Optional[int] = None
+    workstation_id: Optional[int] = None
+    assigned_to: Optional[int] = None
+    progress: int = 0
+
+
+class ProductionPlanCalendarDay(BaseModel):
+    """生产计划日历某一天的数据"""
+
+    date: date
+    plans: List[ProductionPlanCalendarPlanItem] = Field(default_factory=list)
+    work_orders: List[ProductionPlanCalendarWorkOrderItem] = Field(default_factory=list)
+
+
+class ProductionPlanCalendarResponse(BaseModel):
+    """生产计划日历响应"""
+
+    calendar: List[ProductionPlanCalendarDay]

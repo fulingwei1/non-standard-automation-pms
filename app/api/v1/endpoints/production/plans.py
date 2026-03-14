@@ -4,6 +4,7 @@
 
 包含：计划CRUD、提交、审批、发布
 """
+from datetime import date
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -15,6 +16,7 @@ from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.production import (
+    ProductionPlanCalendarResponse,
     ProductionPlanCreate,
     ProductionPlanResponse,
     ProductionPlanUpdate,
@@ -62,6 +64,26 @@ def create_production_plan(
     """
     service = ProductionPlanService(db)
     return service.create_plan(plan_in, current_user_id=current_user.id)
+
+
+@router.get("/production-plans/calendar", response_model=ProductionPlanCalendarResponse)
+def read_production_plan_calendar(
+    *,
+    db: Session = Depends(deps.get_db),
+    start_date: date = Query(..., description="开始日期"),
+    end_date: date = Query(..., description="结束日期"),
+    project_id: Optional[int] = Query(None, description="项目ID筛选"),
+    workshop_id: Optional[int] = Query(None, description="车间ID筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取生产计划/工单日历视图。"""
+    service = ProductionPlanService(db)
+    return service.get_calendar(
+        start_date=start_date,
+        end_date=end_date,
+        project_id=project_id,
+        workshop_id=workshop_id,
+    )
 
 
 @router.get("/production-plans/{plan_id}", response_model=ProductionPlanResponse)
