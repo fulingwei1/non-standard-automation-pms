@@ -11,7 +11,13 @@ export const presaleApi = {
     accept: (id, data) => api.put(`/presale/tickets/${id}/accept`, data),
     updateProgress: (id, data) =>
       api.put(`/presale/tickets/${id}/progress`, data),
-    complete: (id, data) => api.put(`/presale/tickets/${id}/complete`, data),
+    complete: (id, data = {}) =>
+      api.put(`/presale/tickets/${id}/complete`, undefined, {
+        params:
+          data?.actual_hours != null || data?.actualHours != null
+            ? { actual_hours: data.actual_hours ?? data.actualHours }
+            : undefined,
+      }),
     rate: (id, data) => api.put(`/presale/tickets/${id}/rating`, data),
     getBoard: (params) => api.get("/presale/tickets/board", { params }),
   },
