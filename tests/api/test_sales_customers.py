@@ -434,8 +434,7 @@ class TestContactCRUD:
         headers = _auth_headers(admin_token)
 
         payload = {
-            "customer_id": customer_id,
-            "customer_name": "张三",
+            "name": "张三",
             "position": "采购经理",
             "department": "采购部",
             "mobile": "13800138000",
@@ -449,7 +448,7 @@ class TestContactCRUD:
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["customer_name"] == "张三"
+        assert data["name"] == "张三"
         assert data["customer_id"] == customer_id
 
     def test_create_contact_as_primary(self, client: TestClient, admin_token: str):
@@ -458,8 +457,7 @@ class TestContactCRUD:
         headers = _auth_headers(admin_token)
 
         payload = {
-            "customer_id": customer_id,
-            "customer_name": "李四",
+            "name": "李四",
             "position": "总经理",
             "is_primary": True,
         }
@@ -479,8 +477,7 @@ class TestContactCRUD:
 
         # 创建联系人
         create_payload = {
-            "customer_id": customer_id,
-            "customer_name": "王五",
+            "name": "王五",
             "mobile": "13900139000",
         }
         create_response = client.post(
@@ -497,7 +494,7 @@ class TestContactCRUD:
         )
         assert detail_response.status_code == 200
         data = detail_response.json()
-        assert data["customer_name"] == "王五"
+        assert data["name"] == "王五"
 
     def test_update_contact_success(self, client: TestClient, admin_token: str):
         """测试更新联系人"""
@@ -506,8 +503,7 @@ class TestContactCRUD:
 
         # 创建联系人
         create_payload = {
-            "customer_id": customer_id,
-            "customer_name": "赵六",
+            "name": "赵六",
             "mobile": "13700137000",
         }
         create_response = client.post(
@@ -539,8 +535,7 @@ class TestContactCRUD:
 
         # 创建联系人
         create_payload = {
-            "customer_id": customer_id,
-            "customer_name": "孙七",
+            "name": "孙七",
         }
         create_response = client.post(
             f"{settings.API_V1_PREFIX}/sales/customers/{customer_id}/contacts",
@@ -564,8 +559,7 @@ class TestContactCRUD:
         # 创建多个联系人
         for i in range(3):
             payload = {
-                "customer_id": customer_id,
-                "customer_name": f"联系人{i+1}",
+                "name": f"联系人{i+1}",
             }
             client.post(
                 f"{settings.API_V1_PREFIX}/sales/customers/{customer_id}/contacts",
@@ -587,8 +581,7 @@ class TestContactCRUD:
 
         # 创建两个联系人
         contact1_payload = {
-            "customer_id": customer_id,
-            "customer_name": "联系人1",
+            "name": "联系人1",
             "is_primary": True,
         }
         contact1_response = client.post(
@@ -598,7 +591,7 @@ class TestContactCRUD:
         )
         contact1_id = contact1_response.json()["id"]
 
-        contact2_payload = {"customer_id": customer_id, "customer_name": "联系人2"}
+        contact2_payload = {"name": "联系人2"}
         contact2_response = client.post(
             f"{settings.API_V1_PREFIX}/sales/customers/{customer_id}/contacts",
             json=contact2_payload,
@@ -621,8 +614,7 @@ class TestContactCRUD:
 
         unique_name = f"搜索测试-{uuid.uuid4().hex[:6]}"
         payload = {
-            "customer_id": customer_id,
-            "customer_name": unique_name,
+            "name": unique_name,
             "mobile": "13666666666",
         }
         client.post(
@@ -645,7 +637,7 @@ class TestContactCRUD:
         headers = _auth_headers(admin_token)
 
         # 创建普通联系人
-        payload1 = {"customer_id": customer_id, "customer_name": "普通联系人"}
+        payload1 = {"name": "普通联系人"}
         client.post(
             f"{settings.API_V1_PREFIX}/sales/customers/{customer_id}/contacts",
             json=payload1,
@@ -653,7 +645,7 @@ class TestContactCRUD:
         )
 
         # 创建主要联系人
-        payload2 = {"customer_id": customer_id, "customer_name": "主要联系人", "is_primary": True}
+        payload2 = {"name": "主要联系人", "is_primary": True}
         client.post(
             f"{settings.API_V1_PREFIX}/sales/customers/{customer_id}/contacts",
             json=payload2,

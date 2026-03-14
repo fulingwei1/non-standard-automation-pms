@@ -6,7 +6,7 @@
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..common import TimestampSchema
 
@@ -16,7 +16,7 @@ class ContactCreate(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    customer_id: int = Field(description="所属客户ID")
+    # customer_id 从路径参数获取，无需在 body 中提供
     name: str = Field(max_length=100, description="姓名")
     position: Optional[str] = Field(default=None, max_length=100, description="职位")
     department: Optional[str] = Field(default=None, max_length=100, description="部门")
@@ -24,7 +24,7 @@ class ContactCreate(BaseModel):
     # 联系方式
     mobile: Optional[str] = Field(default=None, max_length=20, description="手机号码")
     phone: Optional[str] = Field(default=None, max_length=20, description="座机")
-    email: Optional[EmailStr] = Field(default=None, description="电子邮箱")
+    email: Optional[str] = Field(default=None, max_length=100, description="电子邮箱")
     wechat: Optional[str] = Field(default=None, max_length=100, description="微信号")
 
     # 其他信息
@@ -44,7 +44,7 @@ class ContactUpdate(BaseModel):
     department: Optional[str] = Field(default=None, max_length=100, description="部门")
     mobile: Optional[str] = Field(default=None, max_length=20, description="手机号码")
     phone: Optional[str] = Field(default=None, max_length=20, description="座机")
-    email: Optional[EmailStr] = Field(default=None, description="电子邮箱")
+    email: Optional[str] = Field(default=None, max_length=100, description="电子邮箱")
     wechat: Optional[str] = Field(default=None, max_length=100, description="微信号")
     birthday: Optional[date] = Field(default=None, description="生日")
     hobbies: Optional[str] = Field(default=None, description="兴趣爱好")
@@ -55,8 +55,8 @@ class ContactUpdate(BaseModel):
 class ContactResponse(TimestampSchema):
     """联系人响应"""
 
-    id: int = Field(description="联系人ID")
-    customer_id: int = Field(description="所属客户ID")
+    id: int = Field(description="联系人 ID")
+    customer_id: int = Field(description="所属客户 ID")
     customer_name: Optional[str] = Field(default=None, description="客户名称")
     name: str = Field(description="姓名")
     position: Optional[str] = Field(default=None, description="职位")
@@ -86,4 +86,4 @@ class ContactListResponse(BaseModel):
 class SetPrimaryRequest(BaseModel):
     """设置主要联系人请求"""
 
-    contact_id: int = Field(description="要设置为主要联系人的ID")
+    contact_id: int = Field(description="要设置为主要联系人的 ID")
