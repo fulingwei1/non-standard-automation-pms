@@ -242,3 +242,10 @@ from . import contract_milestones
 router.include_router(
     contract_milestones.router, prefix="/contracts", tags=["sales-contract-milestones"]
 )
+
+# 数据质量审核路由
+from . import data_audit
+
+router.include_router(
+    data_audit.router, tags=["sales-data-audit"]
+)

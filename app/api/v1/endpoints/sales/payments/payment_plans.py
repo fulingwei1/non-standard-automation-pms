@@ -18,7 +18,7 @@ from app.common.query_filters import apply_pagination
 router = APIRouter()
 
 
-@router.get("/payment-plans", response_model=PaginatedResponse)
+@router.get("/payments/plans", response_model=PaginatedResponse)
 def get_payment_plans(
     *,
     db: Session = Depends(deps.get_db),
@@ -83,7 +83,7 @@ def get_payment_plans(
     )
 
 
-@router.post("/payment-plans/{plan_id}/adjust", response_model=ResponseModel)
+@router.post("/payments/plans/{plan_id}/adjust", response_model=ResponseModel)
 def adjust_payment_plan(
     *,
     db: Session = Depends(deps.get_db),
@@ -116,7 +116,7 @@ def adjust_payment_plan(
     )
 
 
-@router.get("/payment-plans/{plan_id}/adjustment-history", response_model=ResponseModel)
+@router.get("/payments/plans/{plan_id}/adjustment-history", response_model=ResponseModel)
 def get_payment_adjustment_history(
     *,
     db: Session = Depends(deps.get_db),

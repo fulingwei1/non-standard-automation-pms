@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.user import User
+from app.services.sales_forecast_service import SalesForecastService
 
 router = APIRouter()
 
@@ -41,8 +42,21 @@ def get_company_forecast(
     - 风险等级
     - 关键驱动因素
     """
+    service = SalesForecastService(db)
+    forecast = service.get_company_forecast(period=period)
+    return forecast
 
-    # 模拟预测数据
+
+# Legacy mock data endpoint for reference
+@router.get("/forecast/company-overview-legacy", summary="公司整体销售预测 (旧版)")
+def get_company_forecast_legacy(
+    period: str = Query("quarterly", description="周期：monthly/quarterly/yearly"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    【旧版】模拟数据，仅供参考
+    """
     forecast = {
         "period": "2026-Q1",
         "period_type": "quarterly",

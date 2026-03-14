@@ -213,6 +213,80 @@ def create_quote(
 # 已移除 POST /quotes/{quote_id}/versions —— 与 quote_versions.py 重复，保留 quote_versions.py 中更完整的实现
 
 
+@router.get("/quotes/statistics", response_model=ResponseModel, status_code=status.HTTP_200_OK)
+def get_quote_statistics(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    """
+    获取报价单统计数据
+    注意：此路由必须在 /quotes/{quote_id} 之前注册，避免路径冲突
+    """
+    from datetime import date as date_type
+    from datetime import timedelta
+
+    # 基础查询
+    base_query = db.query(Quote)
+
+    # 统计各状态数量
+    total = base_query.count()
+    draft = base_query.filter(Quote.status == "DRAFT").count()
+    in_review = base_query.filter(Quote.status == "IN_REVIEW").count()
+    approved = base_query.filter(Quote.status == "APPROVED").count()
+    sent = base_query.filter(Quote.status == "SENT").count()
+    expired = base_query.filter(Quote.status == "EXPIRED").count()
+    rejected = base_query.filter(Quote.status == "REJECTED").count()
+    accepted = base_query.filter(Quote.status == "ACCEPTED").count()
+    converted = base_query.filter(Quote.status == "CONVERTED").count()
+
+    # 金额统计 - 从当前版本获取总价和毛利率
+    all_quotes = base_query.all()
+    total_amount = 0
+    margins = []
+    for q in all_quotes:
+        if q.current_version:
+            if q.current_version.total_price:
+                total_amount += float(q.current_version.total_price)
+            if q.current_version.gross_margin:
+                margins.append(float(q.current_version.gross_margin))
+
+    avg_amount = total_amount / total if total > 0 else 0
+    avg_margin = sum(margins) / len(margins) if margins else 0
+
+    # 转化率
+    conversion_rate = round(converted / total * 100, 1) if total > 0 else 0
+
+    # 即将到期（7 天内）
+    today = date_type.today()
+    expiring_soon = base_query.filter(
+        Quote.valid_until is not None,
+        Quote.valid_until <= today + timedelta(days=7),
+        Quote.valid_until > today,
+        Quote.status.in_(["DRAFT", "IN_REVIEW", "APPROVED", "SENT"]),
+    ).count()
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "total": total,
+            "draft": draft,
+            "inReview": in_review,
+            "approved": approved,
+            "sent": sent,
+            "expired": expired,
+            "rejected": rejected,
+            "accepted": accepted,
+            "converted": converted,
+            "totalAmount": round(total_amount, 2),
+            "avgAmount": round(avg_amount, 2),
+            "avgMargin": round(avg_margin, 2),
+            "conversionRate": conversion_rate,
+            "expiringSoon": expiring_soon,
+        },
+    )
+
+
 @router.post("/quotes/{quote_id}/approve", response_model=ResponseModel, status_code=status.HTTP_200_OK)
 def approve_quote(
     quote_id: int,
