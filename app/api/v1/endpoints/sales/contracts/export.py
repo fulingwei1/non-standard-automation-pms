@@ -5,13 +5,13 @@
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -21,6 +21,65 @@ from app.models.user import User
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
+
+
+@router.get("/contracts/expiring")
+def get_expiring_contracts(
+    *,
+    db: Session = Depends(deps.get_db),
+    days: int = Query(30, ge=1, le=3650, description="未来多少天内到期"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取即将到期合同（兼容 /sales/contracts/expiring）。"""
+    threshold = datetime.now().date() + timedelta(days=days)
+
+    contracts = (
+        db.query(Contract)
+        .filter(Contract.expiry_date.isnot(None))
+        .filter(Contract.expiry_date <= threshold)
+        .order_by(Contract.expiry_date.asc())
+        .all()
+    )
+
+    return {
+        "items": [
+            {
+                "id": c.id,
+                "contract_code": c.contract_code,
+                "contract_name": c.contract_name,
+                "expiry_date": c.expiry_date,
+                "status": c.status,
+            }
+            for c in contracts
+        ],
+        "total": len(contracts),
+        "days": days,
+    }
+
+
+@router.get("/contracts/statistics")
+def get_contract_statistics(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取合同统计（兼容 /sales/contracts/statistics）。"""
+    total_contracts = db.query(func.count(Contract.id)).scalar() or 0
+    total_amount = db.query(func.coalesce(func.sum(Contract.total_amount), 0)).scalar() or 0
+
+    status_rows = (
+        db.query(Contract.status, func.count(Contract.id))
+        .group_by(Contract.status)
+        .all()
+    )
+
+    status_breakdown = {status or "unknown": count for status, count in status_rows}
+
+    return {
+        "total_contracts": int(total_contracts),
+        "total_amount": float(total_amount),
+        "status_breakdown": status_breakdown,
+    }
 
 
 @router.get("/contracts/export")

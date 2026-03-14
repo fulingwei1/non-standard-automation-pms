@@ -149,7 +149,15 @@ class ContractSignRequest(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    contract_id: int = Field(description="合同ID")
+    # 兼容 path 已提供 contract_id 的调用
+    contract_id: Optional[int] = Field(default=None, description="合同ID")
+    # 兼容测试 payload: sign_date
+    signed_date: Optional[date] = Field(
+        default=None, alias="sign_date", description="签订日期"
+    )
+    signed_by: Optional[str] = Field(default=None, description="我方签署人")
+    customer_signed_by: Optional[str] = Field(default=None, description="客户签署人")
+    auto_create_project: Optional[bool] = Field(default=True, description="是否自动创建项目")
     sign_location: Optional[str] = Field(default=None, description="签订地点")
     sign_witness: Optional[str] = Field(default=None, description="见证人")
     remark: Optional[str] = Field(default=None, description="备注")

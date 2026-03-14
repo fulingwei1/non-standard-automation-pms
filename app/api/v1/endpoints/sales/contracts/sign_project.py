@@ -53,7 +53,8 @@ def sign_contract(
     """
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
-    contract.signing_date = sign_request.signed_date
+    if sign_request.signed_date is not None:
+        contract.signing_date = sign_request.signed_date
     contract.status = "SIGNED"
 
     # Sprint 2.1 + Issue 1.2: 合同签订自动创建项目并触发阶段流转
