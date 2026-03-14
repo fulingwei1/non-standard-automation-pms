@@ -4,16 +4,23 @@
 
 处理生产计划的响应构建、工作流状态转换、CRUD 验证等业务逻辑。
 """
-from datetime import datetime
+from collections import defaultdict
+from datetime import date, datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_pagination
-from app.models.production import ProductionPlan, Workshop
+from app.models.production import ProductionPlan, WorkOrder, Workshop
 from app.models.project import Project
-from app.schemas.production import ProductionPlanResponse
+from app.schemas.production import (
+    ProductionPlanCalendarDay,
+    ProductionPlanCalendarPlanItem,
+    ProductionPlanCalendarResponse,
+    ProductionPlanCalendarWorkOrderItem,
+    ProductionPlanResponse,
+)
 from app.utils.db_helpers import get_or_404, save_obj
 
 
@@ -56,6 +63,119 @@ class ProductionPlanService:
             created_at=plan.created_at,
             updated_at=plan.updated_at,
         )
+
+    @staticmethod
+    def _daterange(start_date: date, end_date: date):
+        current = start_date
+        while current <= end_date:
+            yield current
+            current += timedelta(days=1)
+
+    def _build_calendar_response(
+        self,
+        plans: list[ProductionPlan],
+        work_orders: list[WorkOrder],
+        start_date: date,
+        end_date: date,
+    ) -> ProductionPlanCalendarResponse:
+        project_name_cache: dict[int, Optional[str]] = {}
+        workshop_name_cache: dict[int, Optional[str]] = {}
+        calendar_map = defaultdict(lambda: {"plans": [], "work_orders": []})
+
+        def get_project_name(project_id: Optional[int]) -> Optional[str]:
+            if not project_id:
+                return None
+            if project_id not in project_name_cache:
+                project = self.db.query(Project).filter(Project.id == project_id).first()
+                project_name_cache[project_id] = project.project_name if project else None
+            return project_name_cache[project_id]
+
+        def get_workshop_name(workshop_id: Optional[int]) -> Optional[str]:
+            if not workshop_id:
+                return None
+            if workshop_id not in workshop_name_cache:
+                workshop = self.db.query(Workshop).filter(Workshop.id == workshop_id).first()
+                workshop_name_cache[workshop_id] = workshop.workshop_name if workshop else None
+            return workshop_name_cache[workshop_id]
+
+        for plan in plans:
+            item = ProductionPlanCalendarPlanItem(
+                id=plan.id,
+                plan_no=plan.plan_no,
+                plan_name=plan.plan_name,
+                plan_type=plan.plan_type,
+                status=plan.status,
+                project_id=plan.project_id,
+                project_name=get_project_name(plan.project_id),
+                workshop_id=plan.workshop_id,
+                workshop_name=get_workshop_name(plan.workshop_id),
+            )
+            for day in self._daterange(
+                max(plan.plan_start_date, start_date),
+                min(plan.plan_end_date, end_date),
+            ):
+                calendar_map[day.isoformat()]["plans"].append(item)
+
+        for order in work_orders:
+            order_start = order.plan_start_date or start_date
+            order_end = order.plan_end_date or order_start
+            item = ProductionPlanCalendarWorkOrderItem(
+                id=order.id,
+                work_order_no=order.work_order_no,
+                order_no=order.work_order_no,
+                task_name=order.task_name,
+                status=order.status,
+                project_id=order.project_id,
+                workshop_id=order.workshop_id,
+                workstation_id=order.workstation_id,
+                assigned_to=order.assigned_to,
+                progress=order.progress or 0,
+            )
+            for day in self._daterange(max(order_start, start_date), min(order_end, end_date)):
+                calendar_map[day.isoformat()]["work_orders"].append(item)
+
+        days = [
+            ProductionPlanCalendarDay(
+                date=day,
+                plans=calendar_map[day.isoformat()]["plans"],
+                work_orders=calendar_map[day.isoformat()]["work_orders"],
+            )
+            for day in self._daterange(start_date, end_date)
+        ]
+        return ProductionPlanCalendarResponse(calendar=days)
+
+    def get_calendar(
+        self,
+        start_date: date,
+        end_date: date,
+        project_id: Optional[int] = None,
+        workshop_id: Optional[int] = None,
+    ) -> ProductionPlanCalendarResponse:
+        """获取生产计划日历视图，按日期展开计划与工单。"""
+        from fastapi import HTTPException
+
+        if start_date > end_date:
+            raise HTTPException(status_code=400, detail="开始日期不能晚于结束日期")
+
+        plans_query = self.db.query(ProductionPlan).filter(
+            ProductionPlan.plan_start_date <= end_date,
+            ProductionPlan.plan_end_date >= start_date,
+        )
+        orders_query = self.db.query(WorkOrder).filter(
+            or_(WorkOrder.plan_start_date.is_(None), WorkOrder.plan_start_date <= end_date),
+            or_(WorkOrder.plan_end_date.is_(None), WorkOrder.plan_end_date >= start_date),
+        )
+
+        if project_id:
+            plans_query = plans_query.filter(ProductionPlan.project_id == project_id)
+            orders_query = orders_query.filter(WorkOrder.project_id == project_id)
+        if workshop_id:
+            plans_query = plans_query.filter(ProductionPlan.workshop_id == workshop_id)
+            orders_query = orders_query.filter(WorkOrder.workshop_id == workshop_id)
+
+        plans = plans_query.order_by(ProductionPlan.plan_start_date, ProductionPlan.id).all()
+        work_orders = orders_query.order_by(WorkOrder.plan_start_date, WorkOrder.id).all()
+        return self._build_calendar_response(plans, work_orders, start_date, end_date)
 
     def list_plans(
         self,
