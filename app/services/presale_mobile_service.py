@@ -30,6 +30,14 @@ class PresaleMobileService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _elapsed_ms(self, start_time: float) -> int:
+        """返回至少 1ms 的耗时，避免极快调用被截断成 0。"""
+        return max(1, int((time.time() - start_time) * 1000))
+
+    def _format_optional_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        """安全格式化时间字段。"""
+        return value.isoformat() if value else None
+
     # ==================== AI问答服务 ====================
 
     async def chat(
@@ -63,7 +71,7 @@ class PresaleMobileService:
         answer = await self._call_ai_service(prompt, context)
 
         # 计算响应时间
-        response_time = int((time.time() - start_time) * 1000)
+        response_time = self._elapsed_ms(start_time)
 
         # 保存对话记录
         chat_record = PresaleMobileAssistantChat(
@@ -92,7 +100,8 @@ class PresaleMobileService:
 
         # 技术参数相关关键词
         if any(
-            kw in question_lower for kw in ["参数", "规格", "技术", "性能", "配置", "尺寸", "功率"]
+            kw in question_lower
+            for kw in ["参数", "规格", "技术", "性能", "配置", "尺寸", "功率", "负载", "精度", "速度"]
         ):
             return QuestionType.TECHNICAL
 
@@ -200,7 +209,7 @@ class PresaleMobileService:
         # 3. 文字转语音（TTS）
         audio_url = await self._text_to_speech(chat_result["answer"])
 
-        response_time = int((time.time() - start_time) * 1000)
+        response_time = self._elapsed_ms(start_time)
 
         return {
             "transcription": transcription,
@@ -507,7 +516,7 @@ class PresaleMobileService:
             "customer_feedback": record.customer_feedback,
             "next_steps": record.next_steps,
             "ai_generated_summary": record.ai_generated_summary,
-            "created_at": record.created_at.isoformat(),
+            "created_at": self._format_optional_datetime(record.created_at),
         }
 
     # ==================== 客户快照服务 ====================
