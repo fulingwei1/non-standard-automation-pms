@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.schemas.common import TimestampSchema
 
@@ -17,19 +17,32 @@ class InvoiceCreate(BaseModel):
 
     model_config = {"populate_by_name": True}
 
-    contract_id: int = Field(description="合同ID")
-    invoice_code: Optional[str] = Field(default=None, max_length=20, description="发票编码")
+    contract_id: int = Field(description="合同 ID")
+    invoice_code: Optional[str] = Field(default=None, max_length=20, description="发票编码", alias="invoice_no")
     invoice_type: Optional[str] = Field(default=None, description="发票类型")
-    invoice_amount: Decimal = Field(gt=0, description="发票金额")
+    invoice_amount: Optional[Decimal] = Field(default=None, gt=0, description="发票金额")
     tax_rate: Optional[Decimal] = Field(default=None, description="税率")
     tax_amount: Optional[Decimal] = Field(default=None, description="税额")
     total_amount: Optional[Decimal] = Field(default=None, description="总金额")
     invoice_date: Optional[date] = Field(default=None, description="开票日期")
     due_date: Optional[date] = Field(default=None, description="到期日期")
-    remark: Optional[str] = Field(default=None, description="备注")
-    amount: Optional[Decimal] = Field(default=None, description="金额（兼容字段）")
-    project_id: Optional[int] = Field(default=None, description="项目ID")
+    remark: Optional[str] = Field(default=None, description="备注", alias="remarks")
+    amount: Optional[Decimal] = Field(default=None, ge=0, description="金额（兼容字段）")
+    project_id: Optional[int] = Field(default=None, description="项目 ID")
     status: Optional[str] = Field(default="DRAFT", description="发票状态")
+
+    @model_validator(mode='after')
+    def validate_amount(self):
+        """确保 invoice_amount 或 amount 至少有一个且为正数"""
+        if self.invoice_amount is None and self.amount is None:
+            raise ValueError("必须提供 invoice_amount 或 amount")
+        if self.invoice_amount is None and self.amount is not None:
+            if self.amount <= 0:
+                raise ValueError("金额必须大于 0")
+            self.invoice_amount = self.amount
+        if self.invoice_amount is not None and self.invoice_amount <= 0:
+            raise ValueError("发票金额必须大于 0")
+        return self
 
 
 class InvoiceUpdate(BaseModel):
@@ -51,8 +64,8 @@ class InvoiceUpdate(BaseModel):
 class InvoiceResponse(TimestampSchema):
     """发票响应"""
 
-    id: int = Field(description="发票ID")
-    contract_id: int = Field(description="合同ID")
+    id: int = Field(description="发票 ID")
+    contract_id: int = Field(description="合同 ID")
     invoice_code: str = Field(description="发票编码")
     invoice_type: Optional[str] = Field(default=None, description="发票类型")
     # 兼容历史数据中的 NULL，避免列表接口因脏数据返回 500
@@ -64,7 +77,7 @@ class InvoiceResponse(TimestampSchema):
     due_date: Optional[date] = Field(default=None, description="到期日期")
     remark: Optional[str] = Field(default=None, description="备注")
     contract_code: Optional[str] = Field(default=None, description="合同编码")
-    project_id: Optional[int] = Field(default=None, description="项目ID")
+    project_id: Optional[int] = Field(default=None, description="项目 ID")
     project_code: Optional[str] = Field(default=None, description="项目编码")
     project_name: Optional[str] = Field(default=None, description="项目名称")
     customer_name: Optional[str] = Field(default=None, description="客户名称")
@@ -88,25 +101,25 @@ class ReceivableDisputeCreate(BaseModel):
 
     model_config = {"populate_by_name": True}
 
-    payment_id: int = Field(description="付款节点ID")
+    payment_id: int = Field(description="付款节点 ID")
     reason_code: Optional[str] = Field(default=None, max_length=30, description="原因代码")
     description: Optional[str] = Field(default=None, description="描述")
     status: Optional[str] = Field(default="OPEN", description="状态")
     responsible_dept: Optional[str] = Field(default=None, max_length=50, description="责任部门")
-    responsible_id: Optional[int] = Field(default=None, description="责任人ID")
+    responsible_id: Optional[int] = Field(default=None, description="责任人 ID")
     expect_resolve_date: Optional[date] = Field(default=None, description="预期解决日期")
 
 
 class ReceivableDisputeResponse(TimestampSchema):
     """回款争议响应"""
 
-    id: int = Field(description="争议ID")
-    payment_id: int = Field(description="付款节点ID")
+    id: int = Field(description="争议 ID")
+    payment_id: int = Field(description="付款节点 ID")
     reason_code: Optional[str] = Field(default=None, description="原因代码")
     description: Optional[str] = Field(default=None, description="描述")
     status: Optional[str] = Field(default="OPEN", description="状态")
     responsible_dept: Optional[str] = Field(default=None, description="责任部门")
-    responsible_id: Optional[int] = Field(default=None, description="责任人ID")
+    responsible_id: Optional[int] = Field(default=None, description="责任人 ID")
     responsible_name: Optional[str] = Field(default=None, description="责任人姓名")
     expect_resolve_date: Optional[date] = Field(default=None, description="预期解决日期")
 
@@ -120,21 +133,21 @@ class ReceivableDisputeResponse(TimestampSchema):
 class InvoiceApprovalCreate(BaseModel):
     """创建发票审批"""
 
-    invoice_id: int = Field(description="发票ID")
+    invoice_id: int = Field(description="发票 ID")
     approval_level: int = Field(description="审批层级")
     approval_role: str = Field(description="审批角色")
-    approver_id: Optional[int] = Field(default=None, description="审批人ID")
+    approver_id: Optional[int] = Field(default=None, description="审批人 ID")
     due_date: Optional[date] = Field(default=None, description="到期日期")
 
 
 class InvoiceApprovalResponse(TimestampSchema):
     """发票审批响应"""
 
-    id: int = Field(description="审批ID")
-    invoice_id: int = Field(description="发票ID")
+    id: int = Field(description="审批 ID")
+    invoice_id: int = Field(description="发票 ID")
     approval_level: int = Field(description="审批层级")
     approval_role: str = Field(description="审批角色")
-    approver_id: Optional[int] = Field(default=None, description="审批人ID")
+    approver_id: Optional[int] = Field(default=None, description="审批人 ID")
     approver_name: Optional[str] = Field(default=None, description="审批人姓名")
     approval_result: Optional[str] = Field(default=None, description="审批结果")
     approval_opinion: Optional[str] = Field(default=None, description="审批意见")

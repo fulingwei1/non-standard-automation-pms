@@ -23,6 +23,40 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+@router.get("/invoices/statistics")
+def get_invoice_statistics(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取发票统计数据
+    """
+    from sqlalchemy import func
+
+    # 统计发票总数
+    total_count = db.query(func.count(Invoice.id)).scalar()
+
+    # 按状态统计
+    status_stats = (
+        db.query(Invoice.status, func.count(Invoice.id))
+        .group_by(Invoice.status)
+        .all()
+    )
+
+    # 统计总金额
+    total_amount = db.query(func.sum(Invoice.amount)).scalar() or 0
+    total_paid = db.query(func.sum(Invoice.paid_amount)).scalar() or 0
+
+    return {
+        "total_count": total_count,
+        "total_amount": float(total_amount),
+        "total_paid": float(total_paid),
+        "total_unpaid": float(total_amount) - float(total_paid),
+        "by_status": {status: count for status, count in status_stats},
+    }
+
+
 @router.get("/invoices/export")
 def export_invoices(
     *,
