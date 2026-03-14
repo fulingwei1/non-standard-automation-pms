@@ -36,9 +36,9 @@ class ProductionExceptionCreate(BaseModel):
 
 
 class ProductionExceptionHandle(BaseModel):
-    """处理生产异常"""
+    """处理/解决生产异常"""
 
-    handle_plan: str = Field(description="处理方案")
+    handle_plan: Optional[str] = Field(default=None, description="处理方案")
     handle_result: Optional[str] = Field(default=None, description="处理结果")
 
 
