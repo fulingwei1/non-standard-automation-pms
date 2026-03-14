@@ -21,6 +21,7 @@ __all__ = [
     "check_sales_create_permission",
     "check_sales_edit_permission",
     "check_sales_delete_permission",
+    "check_sales_data_permission",
     "require_sales_create_permission",
     "require_sales_edit_permission",
     "require_sales_delete_permission",
@@ -360,6 +361,71 @@ def check_sales_delete_permission(
     if entity_created_by and entity_created_by == user.id:
         return True
 
+    return False
+
+
+def check_sales_data_permission(
+    record: Any,
+    user: User,
+    db: Session,
+    owner_field_name: str = "owner_id",
+) -> bool:
+    """
+    检查用户是否有权限访问特定销售数据记录
+
+    根据用户的数据权限范围，检查是否可以访问指定的记录。
+
+    Args:
+        record: 数据记录对象（包含 owner_field_name 属性）
+        user: 当前用户
+        db: 数据库会话
+        owner_field_name: 负责人字段名（默认 'owner_id'，对于客户是 'sales_owner_id'）
+
+    Returns:
+        bool: True 如果有权限访问，False 否则
+    """
+    if is_superuser(user):
+        return True
+
+    scope = get_sales_data_scope(user, db)
+
+    # ALL 可以访问所有数据
+    if scope == "ALL":
+        return True
+
+    # 获取记录的负责人 ID
+    owner_id = getattr(record, owner_field_name, None)
+
+    # DEPT: 同部门用户可以访问
+    if scope == "DEPT":
+        if user.department:
+            from ..models.organization import Department
+            from ..models.user import User as UserModel
+
+            dept_users = (
+                db.query(UserModel).filter(UserModel.department == user.department).all()
+            )
+            dept_user_ids = [u.id for u in dept_users]
+            return owner_id in dept_user_ids or owner_id == user.id
+        return owner_id == user.id
+
+    # TEAM: 团队（下属）可以访问
+    if scope == "TEAM":
+        from app.services.data_scope import DataScopeService
+
+        subordinate_ids = DataScopeService.get_subordinate_ids(db, user.id)
+        allowed_user_ids = subordinate_ids | {user.id}
+        return owner_id in allowed_user_ids
+
+    # PROJECT: 项目相关（销售数据降级为 OWN）
+    if scope == "PROJECT":
+        return owner_id == user.id
+
+    # OWN: 只能访问自己的数据
+    if scope in ["OWN", "FINANCE_ONLY"]:
+        return owner_id == user.id
+
+    # 无权限
     return False
 
 
