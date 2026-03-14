@@ -1,7 +1,15 @@
-import { api } from "./client.js";
+import { productionApi } from "./production.js";
 
 export const workOrderApi = {
-  list: (params) => api.get("/production/work-orders", { params }),
-  create: (data) => api.post("/production/work-orders", data),
-  updateStatus: (id, data) => api.put(`/production/work-orders/${id}/status`, data),
+  list: productionApi.workOrders.list,
+  get: productionApi.workOrders.get,
+  create: productionApi.workOrders.create,
+  update: productionApi.workOrders.update,
+  assign: productionApi.workOrders.assign,
+  start: productionApi.workOrders.start,
+  pause: productionApi.workOrders.pause,
+  resume: productionApi.workOrders.resume,
+  complete: productionApi.workOrders.complete,
+  getProgress: productionApi.workOrders.getProgress,
+  getReports: productionApi.workOrders.getReports,
 };

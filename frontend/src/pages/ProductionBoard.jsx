@@ -15,10 +15,31 @@ import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 
 const STATUS_CONFIG = {
-  _pending: { label: "待开始", color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: Clock },
+  pending: { label: "待开始", color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: Clock },
   in_progress: { label: "进行中", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Play },
   completed: { label: "已完成", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: CheckCircle2 },
   paused: { label: "已暂停", color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: AlertTriangle },
+  cancelled: { label: "已取消", color: "bg-rose-500/20 text-rose-400 border-rose-500/30", icon: AlertTriangle },
+};
+
+const PLAN_STATUS_CONFIG = {
+  DRAFT: { label: "草稿", color: "bg-slate-500/20 text-slate-400" },
+  SUBMITTED: { label: "已提交", color: "bg-blue-500/20 text-blue-400" },
+  APPROVED: { label: "已批准", color: "bg-cyan-500/20 text-cyan-400" },
+  PUBLISHED: { label: "已发布", color: "bg-indigo-500/20 text-indigo-400" },
+  EXECUTING: { label: "执行中", color: "bg-blue-500/20 text-blue-400" },
+  COMPLETED: { label: "已完成", color: "bg-emerald-500/20 text-emerald-400" },
+  CANCELLED: { label: "已取消", color: "bg-slate-500/20 text-slate-400" },
+};
+
+const normalizeWorkOrderStatus = (status) => {
+  const normalized = String(status || "").toUpperCase();
+  if (["PENDING", "ASSIGNED"].includes(normalized)) return "pending";
+  if (["STARTED", "IN_PROGRESS"].includes(normalized)) return "in_progress";
+  if (normalized === "COMPLETED") return "completed";
+  if (normalized === "PAUSED") return "paused";
+  if (normalized === "CANCELLED") return "cancelled";
+  return "pending";
 };
 
 const PRIORITY_CONFIG = {
@@ -78,15 +99,17 @@ export default function ProductionBoard() {
   // Stats
   const stats = useMemo(() => {
     const total = workOrders.length;
-    const _pending = workOrders.filter(w => w.status === "_pending").length;
-    const inProgress = workOrders.filter(w => w.status === "in_progress").length;
-    const completed = workOrders.filter(w => w.status === "completed").length;
-    const delayed = workOrders.filter(w => {
-      if (!w.planned_end_date) return false;
-      return new Date(w.planned_end_date) < new Date() && w.status !== "completed";
+    const pending = workOrders.filter((w) => normalizeWorkOrderStatus(w.status) === "pending").length;
+    const inProgress = workOrders.filter((w) => normalizeWorkOrderStatus(w.status) === "in_progress").length;
+    const completed = workOrders.filter((w) => normalizeWorkOrderStatus(w.status) === "completed").length;
+    const delayed = workOrders.filter((w) => {
+      const plannedEndDate = w.plan_end_date || w.planned_end_date;
+      if (!plannedEndDate) return false;
+      return new Date(plannedEndDate) < new Date() && normalizeWorkOrderStatus(w.status) !== "completed";
     }).length;
     return [
       { label: "工单总数", value: total, icon: ClipboardList, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+      { label: "待开始", value: pending, icon: Clock, color: "text-slate-400", bg: "bg-slate-500/10 border-slate-500/20" },
       { label: "进行中", value: inProgress, icon: Play, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
       { label: "已完成", value: completed, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
       { label: "逾期", value: delayed, icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
@@ -96,23 +119,23 @@ export default function ProductionBoard() {
   // Group work orders by status for kanban
   const kanbanColumns = useMemo(() => {
     const cols = {
-      _pending: { label: "待开始", items: [], color: "border-slate-500/30" },
+      pending: { label: "待开始", items: [], color: "border-slate-500/30" },
       in_progress: { label: "进行中", items: [], color: "border-blue-500/30" },
       completed: { label: "已完成", items: [], color: "border-emerald-500/30" },
+      paused: { label: "已暂停", items: [], color: "border-amber-500/30" },
     };
-    (workOrders || []).forEach(wo => {
-      const status = wo.status || "_pending";
-      if (cols[status]) cols[status].items.push(wo);
-      else if (status === "paused") cols._pending.items.push(wo);
+    (workOrders || []).forEach((wo) => {
+      const status = normalizeWorkOrderStatus(wo.status);
+      (cols[status] || cols.pending).items.push(wo);
     });
     return cols;
   }, [workOrders]);
 
   // Workshop load
   const workshopLoad = useMemo(() => {
-    return (workshops || []).map(ws => {
-      const wsOrders = (workOrders || []).filter(wo => wo.workshop_id === ws.id);
-      const activeOrders = wsOrders.filter(wo => wo.status === "in_progress").length;
+    return (workshops || []).map((ws) => {
+      const wsOrders = (workOrders || []).filter((wo) => wo.workshop_id === ws.id);
+      const activeOrders = wsOrders.filter((wo) => normalizeWorkOrderStatus(wo.status) === "in_progress").length;
       const totalOrders = wsOrders.length;
       return { ...ws, activeOrders, totalOrders };
     });
@@ -178,22 +201,18 @@ export default function ProductionBoard() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {plans.map(plan => {
-              const planOrders = (workOrders || []).filter(wo => wo.production_plan_id === plan.id);
-              const completedCount = planOrders.filter(wo => wo.status === "completed").length;
+              const planOrders = (workOrders || []).filter((wo) => wo.production_plan_id === plan.id);
+              const completedCount = planOrders.filter((wo) => normalizeWorkOrderStatus(wo.status) === "completed").length;
               const total = planOrders.length;
               const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+              const planStatusConfig = PLAN_STATUS_CONFIG[plan.status] || { label: plan.status, color: "bg-slate-500/20 text-slate-400" };
               return (
                 <Card key={plan.id} className="border border-border">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-foreground truncate">{plan.plan_name || plan.name || `计划#${plan.id}`}</h3>
-                      <Badge className={cn(
-                        "text-xs",
-                        plan.status === "completed" ? "bg-emerald-500/20 text-emerald-400" :
-                        plan.status === "in_progress" ? "bg-blue-500/20 text-blue-400" :
-                        "bg-slate-500/20 text-slate-400"
-                      )}>
-                        {plan.status === "completed" ? "已完成" : plan.status === "in_progress" ? "进行中" : "待开始"}
+                      <Badge className={cn("text-xs", planStatusConfig.color)}>
+                        {planStatusConfig.label}
                       </Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">
