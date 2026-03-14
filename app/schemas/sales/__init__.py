@@ -94,6 +94,7 @@ from .invoices import (
 from .leads import (
     LeadCreate,
     LeadFollowUpCreate,
+    LeadFollowUpQuickCreate,
     LeadFollowUpResponse,
     LeadResponse,
     LeadUpdate,
@@ -225,6 +226,7 @@ __all__ = [
     "LeadUpdate",
     "LeadResponse",
     "LeadFollowUpCreate",
+    "LeadFollowUpQuickCreate",
     "LeadFollowUpResponse",
     # 机会相关
     "OpportunityCreate",

@@ -303,7 +303,6 @@ class TestLeadFollowUps:
     ):
         """测试创建跟进记录"""
         lead_id = created_lead["id"]
-        # 注意：API 使用 follow_up_type 和 content，而不是 action_type 和 action_summary
         follow_up_data = {
             "lead_id": lead_id,
             "follow_up_type": "CALL",  # CALL/EMAIL/VISIT/MEETING/OTHER
@@ -316,8 +315,63 @@ class TestLeadFollowUps:
             json=follow_up_data,
             headers=auth_headers,
         )
-        # 可能因为 schema 和 API 字段名不一致而返回 422
-        assert response.status_code in [200, 201, 422]
+        assert response.status_code == 201
+        data = response.json()
+        assert data["follow_up_type"] == "CALL"
+        assert data["content"] == follow_up_data["content"]
+
+    def test_create_follow_up_supports_legacy_fields(
+        self, client: TestClient, auth_headers: dict, created_lead: dict
+    ):
+        """测试旧字段 action_type/action_summary 仍可创建跟进"""
+        lead_id = created_lead["id"]
+        response = client.post(
+            f"/api/v1/sales/leads/{lead_id}/follow-ups",
+            json={
+                "action_type": "EMAIL",
+                "action_summary": "已通过邮件发送公司介绍",
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["follow_up_type"] == "EMAIL"
+        assert data["content"] == "已通过邮件发送公司介绍"
+
+    def test_create_quick_follow_up_with_template(
+        self, client: TestClient, auth_headers: dict, created_lead: dict
+    ):
+        """测试通过模板一键创建快捷跟进"""
+        lead_id = created_lead["id"]
+        response = client.post(
+            f"/api/v1/sales/leads/{lead_id}/follow-ups/quick",
+            json={"template_key": "contacted_waiting_quote"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["follow_up_type"] == "CALL"
+        assert "待发送报价单" in data["content"]
+        assert data["next_action"] == "整理需求并发送报价单"
+        assert data["next_action_at"] is not None
+
+    def test_create_quick_follow_up_with_summary_only(
+        self, client: TestClient, auth_headers: dict, created_lead: dict
+    ):
+        """测试最少必填快捷录入"""
+        lead_id = created_lead["id"]
+        response = client.post(
+            f"/api/v1/sales/leads/{lead_id}/follow-ups/quick",
+            json={
+                "summary": "客户反馈方案基本认可，下周三复盘",
+                "follow_up_type": "CALL",
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["follow_up_type"] == "CALL"
+        assert data["content"] == "客户反馈方案基本认可，下周三复盘"
 
 
 class TestLeadDelete:

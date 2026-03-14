@@ -4,7 +4,11 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.sales.leads import LeadFollowUpCreate, LeadFollowUpResponse
+from app.schemas.sales.leads import (
+    LeadFollowUpCreate,
+    LeadFollowUpQuickCreate,
+    LeadFollowUpResponse,
+)
 
 
 def test_follow_up_create_accepts_new_fields():
@@ -31,6 +35,23 @@ def test_follow_up_create_accepts_legacy_fields_and_normalizes():
 def test_follow_up_create_requires_type_and_content():
     with pytest.raises(ValidationError):
         LeadFollowUpCreate(next_action="等待客户反馈")
+
+
+def test_follow_up_quick_create_accepts_template_only():
+    model = LeadFollowUpQuickCreate(template_key="contacted_waiting_quote")
+
+    assert model.template_key == "contacted_waiting_quote"
+
+
+def test_follow_up_quick_create_accepts_summary_only():
+    model = LeadFollowUpQuickCreate(summary="客户要求下周再沟通")
+
+    assert model.summary == "客户要求下周再沟通"
+
+
+def test_follow_up_quick_create_requires_template_or_summary_or_content():
+    with pytest.raises(ValidationError):
+        LeadFollowUpQuickCreate(next_action="明天回访")
 
 
 def test_follow_up_response_fills_compat_alias_fields():

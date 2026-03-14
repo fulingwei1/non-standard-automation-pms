@@ -6,6 +6,10 @@ import {
   CardTitle,
   Button,
   Badge,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
 } from "../../components/ui";
 import {
   User,
@@ -19,14 +23,14 @@ import {
   Calendar,
   Clock,
   MessageSquare,
+  Zap,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { formatDate, formatDateTime } from "../../lib/formatters";
 import { fadeIn } from "../../lib/animations";
 import { sourceOptions } from "@/lib/constants/leadManagement";
+import { LEAD_QUICK_FOLLOW_UP_TEMPLATES } from "@/lib/constants/leadFollowUp";
 
-
-// 获取来源标签
 const getSourceLabel = (sourceValue) => {
   const source = (sourceOptions || []).find((s) => s.value === sourceValue);
   return source ? source.label : sourceValue || "-";
@@ -41,9 +45,77 @@ export default function LeadList({
   handleEdit,
   handleConvert,
   handleFollowUp,
+  handleQuickFollowUp,
+  quickFollowUpSaving,
 }) {
+  const isQuickSaving = (leadId, templateKey) =>
+    quickFollowUpSaving === `${leadId}:${templateKey}`;
+
+  const renderQuickButtons = (lead) => {
+    if (lead.status === "CONVERTED" || !handleQuickFollowUp) {
+      return null;
+    }
+
+    return (
+      <div className="mt-3 border-t border-slate-800 pt-3">
+        <div className="mb-2 flex items-center gap-1 text-[11px] text-slate-500">
+          <Zap className="h-3 w-3" />
+          <span>快捷记录</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {LEAD_QUICK_FOLLOW_UP_TEMPLATES.slice(0, 3).map((template) => (
+            <Button
+              key={template.key}
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              disabled={!!quickFollowUpSaving}
+              onClick={() => handleQuickFollowUp(lead, template)}
+            >
+              {isQuickSaving(lead.id, template.key) ? "记录中..." : template.shortLabel}
+            </Button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderQuickMenu = (lead) => {
+    if (lead.status === "CONVERTED" || !handleQuickFollowUp) {
+      return null;
+    }
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-sky-400 hover:text-sky-300"
+            disabled={!!quickFollowUpSaving}
+          >
+            <Zap className="mr-1 h-4 w-4" />
+            快捷
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {LEAD_QUICK_FOLLOW_UP_TEMPLATES.map((template) => (
+            <DropdownMenuItem
+              key={template.key}
+              onClick={() => handleQuickFollowUp(lead, template)}
+              disabled={!!quickFollowUpSaving}
+            >
+              {isQuickSaving(lead.id, template.key) ? "记录中..." : template.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
   if (loading) {
-    return <div className="text-center py-12 text-slate-400">加载中...</div>;
+    return <div className="py-12 text-center text-slate-400">加载中...</div>;
   }
 
   if (leads.length === 0) {
@@ -58,7 +130,7 @@ export default function LeadList({
 
   if (viewMode === "grid") {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {(leads || []).map((lead) => (
           <motion.div
             key={lead.id}
@@ -66,20 +138,16 @@ export default function LeadList({
             whileHover={{ y: -4 }}
             className="cursor-pointer"
           >
-            <Card className="h-full hover:border-blue-500 transition-colors">
+            <Card className="h-full transition-colors hover:border-blue-500">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">
-                      {lead.customer_name}
-                    </CardTitle>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {lead.lead_code}
-                    </p>
+                    <CardTitle className="text-lg">{lead.customer_name}</CardTitle>
+                    <p className="mt-1 text-xs text-slate-500">{lead.lead_code}</p>
                   </div>
                   <div className="flex items-center gap-1.5">
                     {lead.is_key_lead && (
-                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
                     )}
                     <Badge className={cn(statusConfig[lead.status]?.color, "text-xs")}>
                       {statusConfig[lead.status]?.label}
@@ -95,7 +163,7 @@ export default function LeadList({
                       <span>{lead.contact_name || "-"}</span>
                     </div>
                     {lead.priority_score != null && (
-                      <Badge variant="outline" className="text-xs px-1.5 py-0">
+                      <Badge variant="outline" className="px-1.5 py-0 text-xs">
                         {lead.priority_score}分
                       </Badge>
                     )}
@@ -127,21 +195,24 @@ export default function LeadList({
                     </div>
                   )}
                   {lead.demand_summary && (
-                    <p className="text-slate-500 line-clamp-2 mt-2 text-xs">
+                    <p className="mt-2 line-clamp-2 text-xs text-slate-500">
                       {lead.demand_summary}
                     </p>
                   )}
-                  <div className="flex items-center gap-4 text-xs text-slate-500 pt-1">
+                  <div className="flex items-center gap-4 pt-1 text-xs text-slate-500">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       <span>{formatDate(lead.created_at)}</span>
                     </div>
                     {lead.latest_follow_up_at ? (
-                      <div className="flex items-center gap-1 text-blue-400" title={lead.latest_follow_up_content}>
+                      <div
+                        className="flex items-center gap-1 text-blue-400"
+                        title={lead.latest_follow_up_content}
+                      >
                         <MessageSquare className="h-3 w-3" />
                         <span>{formatDate(lead.latest_follow_up_at)}</span>
                         {lead.latest_follow_up_type && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0">
+                          <Badge variant="outline" className="px-1 py-0 text-[10px]">
                             {lead.latest_follow_up_type}
                           </Badge>
                         )}
@@ -157,12 +228,15 @@ export default function LeadList({
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2 mt-3 pt-3 border-t border-slate-800">
+
+                {renderQuickButtons(lead)}
+
+                <div className="mt-3 flex gap-2 border-t border-slate-800 pt-3">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleViewDetail(lead)}
-                    className="flex-1 h-8"
+                    className="h-8 flex-1"
                   >
                     <Eye className="mr-1.5 h-3.5 w-3.5" />
                     详情
@@ -171,7 +245,7 @@ export default function LeadList({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEdit(lead)}
-                    className="flex-1 h-8"
+                    className="h-8 flex-1"
                   >
                     <Edit className="mr-1.5 h-3.5 w-3.5" />
                     编辑
@@ -180,7 +254,7 @@ export default function LeadList({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleFollowUp && handleFollowUp(lead)}
-                    className="flex-1 h-8 text-amber-400 hover:text-amber-300"
+                    className="h-8 flex-1 text-amber-400 hover:text-amber-300"
                   >
                     <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
                     跟进
@@ -190,7 +264,7 @@ export default function LeadList({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleConvert(lead)}
-                      className="flex-1 h-8 text-emerald-400 hover:text-emerald-300"
+                      className="h-8 flex-1 text-emerald-400 hover:text-emerald-300"
                     >
                       <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
                       转商机
@@ -212,15 +286,15 @@ export default function LeadList({
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-800">
-                <th className="text-left p-4 text-slate-400 text-sm">客户名称</th>
-                <th className="text-left p-4 text-slate-400 text-sm">联系人</th>
-                <th className="text-left p-4 text-slate-400 text-sm">行业</th>
-                <th className="text-left p-4 text-slate-400 text-sm">来源</th>
-                <th className="text-left p-4 text-slate-400 text-sm">负责人</th>
-                <th className="text-left p-4 text-slate-400 text-sm">优先级</th>
-                <th className="text-left p-4 text-slate-400 text-sm">状态</th>
-                <th className="text-left p-4 text-slate-400 text-sm">创建时间</th>
-                <th className="text-left p-4 text-slate-400 text-sm">操作</th>
+                <th className="p-4 text-left text-sm text-slate-400">客户名称</th>
+                <th className="p-4 text-left text-sm text-slate-400">联系人</th>
+                <th className="p-4 text-left text-sm text-slate-400">行业</th>
+                <th className="p-4 text-left text-sm text-slate-400">来源</th>
+                <th className="p-4 text-left text-sm text-slate-400">负责人</th>
+                <th className="p-4 text-left text-sm text-slate-400">优先级</th>
+                <th className="p-4 text-left text-sm text-slate-400">状态</th>
+                <th className="p-4 text-left text-sm text-slate-400">创建时间</th>
+                <th className="p-4 text-left text-sm text-slate-400">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -231,7 +305,7 @@ export default function LeadList({
                 >
                   <td className="p-4">
                     <div>
-                      <div className="text-white font-medium">{lead.customer_name}</div>
+                      <div className="font-medium text-white">{lead.customer_name}</div>
                       <div className="text-xs text-slate-500">{lead.lead_code}</div>
                     </div>
                   </td>
@@ -247,14 +321,14 @@ export default function LeadList({
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       {lead.is_key_lead && (
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                        <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
                       )}
                       {lead.priority_score != null ? (
                         <Badge variant="outline" className="text-xs">
                           {lead.priority_score}分
                         </Badge>
                       ) : (
-                        <span className="text-slate-500 text-xs">-</span>
+                        <span className="text-xs text-slate-500">-</span>
                       )}
                     </div>
                   </td>
@@ -263,11 +337,12 @@ export default function LeadList({
                       {statusConfig[lead.status]?.label}
                     </Badge>
                   </td>
-                  <td className="p-4 text-slate-400 text-sm">
+                  <td className="p-4 text-sm text-slate-400">
                     {formatDateTime(lead.created_at)}
                   </td>
                   <td className="p-4">
                     <div className="flex gap-1">
+                      {renderQuickMenu(lead)}
                       <Button
                         variant="ghost"
                         size="sm"
