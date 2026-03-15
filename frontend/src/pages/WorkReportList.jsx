@@ -40,6 +40,7 @@ import {
 } from "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
+import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   PENDING: { label: "待审批", color: "bg-blue-500" },
@@ -72,8 +73,7 @@ export default function WorkReportList() {
       if (filterType) {params.report_type = filterType;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workReports.list(params);
-      const reportList = res.data?.items || res.data?.items || res.data || [];
-      setReports(reportList);
+      setReports(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch reports:", error);
     } finally {
@@ -83,7 +83,7 @@ export default function WorkReportList() {
   const handleViewDetail = async (reportId) => {
     try {
       const res = await productionApi.workReports.get(reportId);
-      setSelectedReport(res.data || res);
+      setSelectedReport(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
       console.error("Failed to fetch report detail:", error);
@@ -126,32 +126,32 @@ export default function WorkReportList() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索报工单号、工单号..."
-                value={searchKeyword || "unknown"}
+                value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(reportTypeConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key || "unknown"}>
+                  <SelectItem key={key} value={key}>
                     {config.label}
                   </SelectItem>
                 ))}

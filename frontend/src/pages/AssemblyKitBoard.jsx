@@ -59,6 +59,7 @@ import {
 import { Textarea } from "../components/ui/textarea";
 import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
+import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 import { assemblyKitApi } from "../services/api/production";
 
 // 阶段图标映射
@@ -124,7 +125,7 @@ export default function AssemblyKitBoard() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data?.items || res.data || []);
+      setProjects(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -138,7 +139,7 @@ export default function AssemblyKitBoard() {
         params.project_ids = filterProject;
       }
       const res = await assemblyKitApi.dashboard(params);
-      setDashboardData(res.data || res || null);
+      setDashboardData(getResponseData(res) || null);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
       setDashboardData(null);
@@ -170,7 +171,7 @@ export default function AssemblyKitBoard() {
         params.project_id = filterProject;
       }
       const res = await assemblyKitApi.getShortageAlerts(params);
-      setAlerts(res.data || res || null);
+      setAlerts(getResponseData(res) || null);
     } catch (error) {
       console.error("Failed to fetch alerts:", error);
     }
@@ -179,7 +180,7 @@ export default function AssemblyKitBoard() {
   const fetchAnalysisDetail = async (readinessId) => {
     try {
       const res = await assemblyKitApi.getAnalysisDetail(readinessId);
-      setAnalysisDetail(res.data || res);
+      setAnalysisDetail(getResponseData(res));
       setDetailDialogOpen(true);
     } catch (error) {
       console.error("获取详情失败:", error);
@@ -252,7 +253,7 @@ export default function AssemblyKitBoard() {
           description="基于装配工艺路径的智能齐套分析，实现能做到哪一步的精准判断" />
 
         <div className="flex items-center gap-4">
-          <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+          <Select value={filterProject || "all"} onValueChange={(value) => setFilterProject(value === "all" ? "" : value)}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="选择项目" />
             </SelectTrigger>
@@ -933,7 +934,7 @@ export default function AssemblyKitBoard() {
           </DialogHeader>
           <Textarea
             placeholder="请输入拒绝原因..."
-            value={rejectReason || "unknown"}
+            value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             rows={4} />
 

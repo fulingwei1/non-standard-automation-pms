@@ -47,6 +47,7 @@ import {
 "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
+import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   DRAFT: { label: "草稿", color: "bg-slate-500" },
@@ -96,7 +97,7 @@ export default function ProductionPlanList() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data?.items || res.data || []);
+      setProjects(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -104,7 +105,7 @@ export default function ProductionPlanList() {
   const fetchWorkshops = async () => {
     try {
       const res = await productionApi.workshops.list({ page_size: 1000 });
-      setWorkshops(res.data?.items || res.data?.items || res.data || []);
+      setWorkshops(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch workshops:", error);
     }
@@ -119,8 +120,7 @@ export default function ProductionPlanList() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.productionPlans.list(params);
-      const planList = res.data?.items || res.data?.items || res.data || [];
-      setPlans(planList);
+      setPlans(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch plans:", error);
     } finally {
@@ -158,7 +158,7 @@ export default function ProductionPlanList() {
   const handleViewDetail = async (planId) => {
     try {
       const res = await productionApi.productionPlans.get(planId);
-      setSelectedPlan(res.data || res);
+      setSelectedPlan(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
       console.error("Failed to fetch plan detail:", error);
@@ -203,25 +203,25 @@ export default function ProductionPlanList() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索计划编号、名称..."
-                value={searchKeyword || "unknown"}
+                value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+            <Select value={filterProject || "all"} onValueChange={(value) => setFilterProject(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -234,7 +234,7 @@ export default function ProductionPlanList() {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterWorkshop || "unknown"} onValueChange={setFilterWorkshop}>
+            <Select value={filterWorkshop || "all"} onValueChange={(value) => setFilterWorkshop(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择车间" />
               </SelectTrigger>
@@ -247,14 +247,14 @@ export default function ProductionPlanList() {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -412,7 +412,7 @@ export default function ProductionPlanList() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                       </SelectItem>
                       )}

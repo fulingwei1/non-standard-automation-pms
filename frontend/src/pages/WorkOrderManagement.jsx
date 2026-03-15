@@ -47,6 +47,7 @@ import {
 "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
+import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 const statusConfigs = {
   PENDING: { label: "待派工", color: "bg-slate-500" },
   ASSIGNED: { label: "已派工", color: "bg-blue-500" },
@@ -106,7 +107,7 @@ export default function WorkOrderManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data?.items || res.data || []);
+      setProjects(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -120,8 +121,7 @@ export default function WorkOrderManagement() {
       if (filterPriority) {params.priority = filterPriority;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workOrders.list(params);
-      const orderList = res.data?.items || res.data?.items || res.data || [];
-      setWorkOrders(orderList);
+      setWorkOrders(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch work orders:", error);
     } finally {
@@ -163,7 +163,7 @@ export default function WorkOrderManagement() {
   const handleViewDetail = async (orderId) => {
     try {
       const res = await productionApi.workOrders.get(orderId);
-      setSelectedOrder(res.data || res);
+      setSelectedOrder(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
       console.error("Failed to fetch work order detail:", error);
@@ -214,12 +214,12 @@ export default function WorkOrderManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索工单号、任务名称..."
-                value={searchKeyword || "unknown"}
+                value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterProject || "unknown"} onValueChange={setFilterProject}>
+            <Select value={filterProject || "all"} onValueChange={(value) => setFilterProject(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -232,27 +232,27 @@ export default function WorkOrderManagement() {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterPriority || "unknown"} onValueChange={setFilterPriority}>
+            <Select value={filterPriority || "all"} onValueChange={(value) => setFilterPriority(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择优先级" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部优先级</SelectItem>
                 {Object.entries(priorityConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -568,7 +568,7 @@ export default function WorkOrderManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(priorityConfigs).map(([key, config]) =>
-                    <SelectItem key={key} value={key || "unknown"}>
+                    <SelectItem key={key} value={key}>
                         {config.label}
                     </SelectItem>
                     )}

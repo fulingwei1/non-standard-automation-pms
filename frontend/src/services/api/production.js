@@ -253,6 +253,12 @@ export const productionApi = {
     workerRanking: (params) =>
       api.get("/production/reports/worker-ranking", { params }),
   },
+  capacity: {
+    oee: (params) => api.get("/production/capacity/oee", { params }),
+    bottlenecks: (params) => api.get("/production/capacity/bottlenecks", { params }),
+    trend: (params) => api.get("/production/capacity/trend", { params }),
+    forecast: (params) => api.get("/production/capacity/forecast", { params }),
+  },
 };
 
 export const materialApi = {
@@ -350,6 +356,12 @@ export const kitCheckApi = {
 };
 
 export const assemblyKitApi = {
+  // 兼容旧页面/Hook 的齐套列表与分析接口
+  listKits: (params) => api.get("/assembly/projects/readiness", { params }),
+  analyzeKit: (machineId) =>
+    api.post("/assembly/analysis", {
+      machine_id: machineId,
+    }),
   // 基于时间的齐套率预警
   getTimeBasedKitRate: (projectId, params) => api.get(`/assembly/kit-rate/project/${projectId}/time-based-kit-rate`, { params }),
   // 看板数据
