@@ -47,6 +47,12 @@ class WorkOrderUpdate(BaseModel):
     """更新工单"""
 
     task_name: Optional[str] = None
+    task_type: Optional[str] = None
+    workshop_id: Optional[int] = None
+    workstation_id: Optional[int] = None
+    assigned_to: Optional[int] = None
+    material_name: Optional[str] = None
+    specification: Optional[str] = None
     plan_qty: Optional[int] = None
     plan_start_date: Optional[date] = None
     plan_end_date: Optional[date] = None

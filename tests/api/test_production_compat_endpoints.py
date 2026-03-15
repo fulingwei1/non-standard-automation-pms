@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.models.production import WorkOrder, WorkReport, Workshop
+from app.models.production import WorkOrder, WorkReport, Worker, Workshop, Workstation
 from app.models.project import Project
 from app.models.user import User
 
@@ -203,3 +203,166 @@ class TestProductionCompatibilityEndpoints:
         )
         assert close_resp.status_code == 200, close_resp.text
         assert close_resp.json()["status"] == "CLOSED"
+
+    def test_work_order_update_compatibility_route(self, client: TestClient, admin_token: str, db):
+        headers = _auth_headers(admin_token)
+        suffix = uuid.uuid4().hex[:8]
+
+        workshop = Workshop(
+            workshop_code=f"WS-UPD-{suffix}",
+            workshop_name=f"更新车间-{suffix}",
+            workshop_type="ASSEMBLY",
+            is_active=True,
+        )
+        db.add(workshop)
+        db.commit()
+        db.refresh(workshop)
+
+        work_order = WorkOrder(
+            work_order_no=f"WO-UPD-{suffix}",
+            task_name="旧任务名",
+            task_type="ASSEMBLY",
+            workshop_id=workshop.id,
+            plan_qty=5,
+            priority="NORMAL",
+            status="PENDING",
+            remark="old",
+        )
+        db.add(work_order)
+        db.commit()
+        db.refresh(work_order)
+
+        update_resp = client.put(
+            f"{settings.API_V1_PREFIX}/production/work-orders/{work_order.id}",
+            json={
+                "task_name": "新任务名",
+                "plan_qty": 8,
+                "priority": "HIGH",
+                "remark": "updated",
+            },
+            headers=headers,
+        )
+        assert update_resp.status_code == 200, update_resp.text
+        updated = update_resp.json()
+        assert updated["task_name"] == "新任务名"
+        assert updated["plan_qty"] == 8
+        assert updated["priority"] == "HIGH"
+        assert updated["remark"] == "updated"
+
+    def test_work_report_generic_create_route(self, client: TestClient, admin_token: str, db):
+        headers = _auth_headers(admin_token)
+        suffix = uuid.uuid4().hex[:8]
+
+        workshop = Workshop(
+            workshop_code=f"WS-REP-{suffix}",
+            workshop_name=f"报工车间-{suffix}",
+            workshop_type="ASSEMBLY",
+            is_active=True,
+        )
+        db.add(workshop)
+        db.commit()
+        db.refresh(workshop)
+
+        worker = Worker(
+            worker_no=f"WK-REP-{suffix}",
+            worker_name="报工工人",
+            workshop_id=workshop.id,
+            skill_level="SENIOR",
+            status="ACTIVE",
+            is_active=True,
+        )
+        db.add(worker)
+        db.commit()
+        db.refresh(worker)
+
+        work_order = WorkOrder(
+            work_order_no=f"WO-REP-{suffix}",
+            task_name="兼容报工任务",
+            task_type="ASSEMBLY",
+            workshop_id=workshop.id,
+            assigned_to=worker.id,
+            status="ASSIGNED",
+            plan_qty=10,
+        )
+        db.add(work_order)
+        db.commit()
+        db.refresh(work_order)
+
+        create_resp = client.post(
+            f"{settings.API_V1_PREFIX}/production/work-reports",
+            json={
+                "work_order_id": work_order.id,
+                "report_note": "扫码开工",
+            },
+            headers=headers,
+        )
+        assert create_resp.status_code == 200, create_resp.text
+        created = create_resp.json()
+        assert created["report_type"] == "START"
+        assert created["work_order_id"] == work_order.id
+        assert created["worker_id"] == worker.id
+        db.refresh(work_order)
+        assert work_order.status == "STARTED"
+
+    def test_workshop_task_board_compatibility_route(self, client: TestClient, admin_token: str, db):
+        headers = _auth_headers(admin_token)
+        suffix = uuid.uuid4().hex[:8]
+
+        workshop = Workshop(
+            workshop_code=f"WS-BOARD-{suffix}",
+            workshop_name=f"看板车间-{suffix}",
+            workshop_type="ASSEMBLY",
+            is_active=True,
+        )
+        worker = Worker(
+            worker_no=f"WK-BOARD-{suffix}",
+            worker_name="看板工人",
+            skill_level="SENIOR",
+            status="ACTIVE",
+            is_active=True,
+        )
+        db.add(workshop)
+        db.add(worker)
+        db.commit()
+        worker.workshop_id = workshop.id
+        db.add(worker)
+        db.commit()
+        db.refresh(workshop)
+        db.refresh(worker)
+
+        work_order = WorkOrder(
+            work_order_no=f"WO-BOARD-{suffix}",
+            task_name="看板任务",
+            task_type="ASSEMBLY",
+            workshop_id=workshop.id,
+            assigned_to=worker.id,
+            status="STARTED",
+            plan_qty=20,
+            completed_qty=8,
+            progress=40,
+        )
+        db.add(work_order)
+        db.commit()
+        db.refresh(work_order)
+
+        workstation = Workstation(
+            workstation_code=f"ST-{suffix}",
+            workstation_name="装配工位A",
+            workshop_id=workshop.id,
+            status="WORKING",
+            current_worker_id=worker.id,
+            current_work_order_id=work_order.id,
+            is_active=True,
+        )
+        db.add(workstation)
+        db.commit()
+
+        board_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/workshops/{workshop.id}/task-board",
+            headers=headers,
+        )
+        assert board_resp.status_code == 200, board_resp.text
+        board = board_resp.json()
+        assert board["workshop_name"] == workshop.workshop_name
+        assert any(item["work_order_no"] == work_order.work_order_no for item in board["work_orders"])
+        assert any(item["current_worker_name"] == worker.worker_name for item in board["workstations"])

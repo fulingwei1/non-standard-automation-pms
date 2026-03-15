@@ -12,9 +12,10 @@ from sqlalchemy.orm import Session
 
 from app.common.date_range import get_month_range
 from app.common.query_filters import apply_pagination
-from app.models.production import ProductionDailyReport, WorkOrder, Worker, Workshop
+from app.models.production import ProductionDailyReport, WorkOrder, Worker, Workshop, Workstation
 from app.models.user import User
-from app.schemas.production import WorkshopResponse
+from app.schemas.production import WorkshopResponse, WorkshopTaskBoardResponse
+from app.services.production.work_order_service import WorkOrderService
 from app.utils.db_helpers import get_or_404, save_obj
 
 
@@ -110,6 +111,88 @@ class WorkshopService:
 
         save_obj(self.db, workshop)
         return self._build_workshop_response(workshop)
+
+    def get_task_board(self, workshop_id: int) -> WorkshopTaskBoardResponse:
+        """获取车间任务看板（兼容前端 /production/workshops/{id}/task-board）"""
+        workshop = get_or_404(self.db, Workshop, workshop_id, detail="车间不存在")
+        work_order_service = WorkOrderService(self.db)
+
+        workstations = (
+            self.db.query(Workstation)
+            .filter(Workstation.workshop_id == workshop_id)
+            .order_by(Workstation.workstation_code)
+            .all()
+        )
+        workers = (
+            self.db.query(Worker)
+            .filter(Worker.workshop_id == workshop_id)
+            .order_by(Worker.worker_no)
+            .all()
+        )
+        work_orders = (
+            self.db.query(WorkOrder)
+            .filter(WorkOrder.workshop_id == workshop_id)
+            .order_by(WorkOrder.created_at.desc())
+            .all()
+        )
+
+        workstation_items = []
+        for workstation in workstations:
+            current_worker_name = None
+            if workstation.current_worker_id:
+                current_worker = (
+                    self.db.query(Worker)
+                    .filter(Worker.id == workstation.current_worker_id)
+                    .first()
+                )
+                current_worker_name = current_worker.worker_name if current_worker else None
+
+            current_work_order_no = None
+            if workstation.current_work_order_id:
+                current_order = (
+                    self.db.query(WorkOrder)
+                    .filter(WorkOrder.id == workstation.current_work_order_id)
+                    .first()
+                )
+                current_work_order_no = current_order.work_order_no if current_order else None
+
+            workstation_items.append(
+                {
+                    "id": workstation.id,
+                    "workstation_code": workstation.workstation_code,
+                    "workstation_name": workstation.workstation_name,
+                    "status": workstation.status,
+                    "current_worker_id": workstation.current_worker_id,
+                    "current_worker_name": current_worker_name,
+                    "current_work_order_id": workstation.current_work_order_id,
+                    "current_work_order_no": current_work_order_no,
+                    "is_active": workstation.is_active,
+                }
+            )
+
+        worker_items = [
+            {
+                "id": worker.id,
+                "worker_code": worker.worker_no,
+                "worker_name": worker.worker_name,
+                "status": worker.status,
+                "skill_level": worker.skill_level,
+                "is_active": worker.is_active,
+            }
+            for worker in workers
+        ]
+
+        work_order_items = [
+            work_order_service.build_response(order).model_dump(mode="json") for order in work_orders
+        ]
+
+        return WorkshopTaskBoardResponse(
+            workshop_id=workshop.id,
+            workshop_name=workshop.workshop_name,
+            workstations=workstation_items,
+            work_orders=work_order_items,
+            workers=worker_items,
+        )
 
     def get_capacity(
         self,
