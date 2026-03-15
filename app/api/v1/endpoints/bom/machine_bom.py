@@ -208,10 +208,10 @@ def create_bom(
     db.refresh(bom)
 
     # 返回BOM详情
+    # 注意：BomHeader.items 为 dynamic relationship，不能使用 selectinload
     bom = (
         db.query(BomHeader)
         .options(
-            selectinload(BomHeader.items),
             joinedload(BomHeader.project),
             joinedload(BomHeader.machine),
         )
@@ -220,7 +220,7 @@ def create_bom(
     )
 
     items = []
-    for item in sorted(bom.items, key=lambda x: x.item_no or 0):
+    for item in sorted(bom.items.order_by(BomItem.item_no).all(), key=lambda x: x.item_no or 0):
         items.append(
             BomItemResponse(
                 id=item.id,

@@ -66,12 +66,14 @@ class TestBomCRUD:
         headers = _auth_headers(admin_token)
         machine_id = result["machine"]["id"]
 
+        # 修复：API 路径应为 /bom/machines/{machine_id}/ 而不是 /bom/machines/{machine_id}/bom
         response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         assert response.status_code == 200
         data = response.json()
+        # 修复：API 返回的是列表
         assert isinstance(data, list)
 
     def test_get_machine_bom_not_found(self, client: TestClient, admin_token: str):
@@ -80,8 +82,10 @@ class TestBomCRUD:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(f"{settings.API_V1_PREFIX}/bom/machines/99999/bom", headers=headers)
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
+        response = client.get(f"{settings.API_V1_PREFIX}/bom/machines/99999/", headers=headers)
 
+        # 修复：机台不存在时返回 404
         assert response.status_code == 404
 
     def test_create_bom(self, client: TestClient, admin_token: str):
@@ -98,27 +102,28 @@ class TestBomCRUD:
         project_id = result["project_id"]
 
         bom_data = {
-            "bom_name": f"测试BOM-{uuid.uuid4().hex[:4]}",
+            "bom_no": f"BOM-PJ000001-{uuid.uuid4().hex[:3]}",
+            "bom_name": f"测试 BOM-{uuid.uuid4().hex[:4]}",
             "project_id": project_id,
-            "version": "V1.0",
-            "remark": "测试用BOM",
+            "version": "1.0",
+            "remark": "测试用 BOM",
             "items": [
                 {
                     "material_code": f"MAT-{uuid.uuid4().hex[:6].upper()}",
-                    "material_name": "测试物料1",
-                    "specification": "规格1",
+                    "material_name": "测试物料 1",
+                    "specification": "规格 1",
                     "unit": "个",
-                    "quantity": 10,
+                    "quantity": 10.0,
                     "unit_price": 100.00,
                     "source_type": "PURCHASE",
                     "is_key_item": False,
                 },
                 {
                     "material_code": f"MAT-{uuid.uuid4().hex[:6].upper()}",
-                    "material_name": "测试物料2",
-                    "specification": "规格2",
+                    "material_name": "测试物料 2",
+                    "specification": "规格 2",
                     "unit": "件",
-                    "quantity": 5,
+                    "quantity": 5.0,
                     "unit_price": 200.00,
                     "source_type": "PURCHASE",
                     "is_key_item": True,
@@ -126,8 +131,9 @@ class TestBomCRUD:
             ],
         }
 
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         response = client.post(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/",
             json=bom_data,
             headers=headers,
         )
@@ -139,11 +145,12 @@ class TestBomCRUD:
 
         assert response.status_code in [200, 201], response.text
         data = response.json()
-        assert data["bom_name"] == bom_data["bom_name"]
-        assert data["project_id"] == project_id
-        assert data["machine_id"] == machine_id
-        assert data["status"] == "DRAFT"
-        assert data["total_items"] == 2
+        # 修复：使用 .get() 方法安全访问字段
+        assert data.get("bom_name") == bom_data["bom_name"]
+        assert data.get("project_id") == project_id
+        assert data.get("machine_id") == machine_id
+        assert data.get("status") == "DRAFT"
+        assert data.get("total_items") == 2
 
     def test_get_bom_by_id(self, client: TestClient, admin_token: str):
         """测试根据 ID 获取 BOM"""
@@ -158,14 +165,17 @@ class TestBomCRUD:
         machine_id = result["machine"]["id"]
 
         # 先获取机台的 BOM 列表
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No BOMs available for testing")
 
-        bom_id = list_response.json()[0]["id"]
+        boms = list_response.json()
+        # 修复：boms 是列表，直接索引
+        bom_id = boms[0]["id"]
 
         response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}", headers=headers)
 
@@ -196,8 +206,9 @@ class TestBomCRUD:
         machine_id = result["machine"]["id"]
 
         # 获取草稿状态的 BOM
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -207,7 +218,7 @@ class TestBomCRUD:
         boms = list_response.json()
         draft_bom = None
         for bom in boms:
-            if bom.get("status") == "DRAFT":
+            if isinstance(bom, dict) and bom.get("status") == "DRAFT":
                 draft_bom = bom
                 break
 
@@ -217,7 +228,7 @@ class TestBomCRUD:
         bom_id = draft_bom["id"]
 
         update_data = {
-            "bom_name": f"更新后BOM-{uuid.uuid4().hex[:4]}",
+            "bom_name": f"更新后 BOM-{uuid.uuid4().hex[:4]}",
             "remark": "更新后的备注",
         }
 
@@ -249,14 +260,16 @@ class TestBomItems:
         machine_id = result["machine"]["id"]
 
         # 获取 BOM 列表
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No BOMs available for testing")
 
-        bom_id = list_response.json()[0]["id"]
+        boms = list_response.json()
+        bom_id = boms[0]["id"]
 
         response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}/items", headers=headers)
 
@@ -277,8 +290,9 @@ class TestBomItems:
         machine_id = result["machine"]["id"]
 
         # 获取草稿状态的 BOM
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -288,7 +302,7 @@ class TestBomItems:
         boms = list_response.json()
         draft_bom = None
         for bom in boms:
-            if bom.get("status") == "DRAFT":
+            if isinstance(bom, dict) and bom.get("status") == "DRAFT":
                 draft_bom = bom
                 break
 
@@ -319,7 +333,7 @@ class TestBomItems:
 
         assert response.status_code in [200, 201], response.text
         data = response.json()
-        assert data["material_code"] == item_data["material_code"]
+        assert data.get("material_code") == item_data["material_code"]
 
     def test_update_bom_item(self, client: TestClient, admin_token: str):
         """测试更新 BOM 明细"""
@@ -334,8 +348,9 @@ class TestBomItems:
         machine_id = result["machine"]["id"]
 
         # 获取草稿状态的 BOM
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -345,13 +360,14 @@ class TestBomItems:
         boms = list_response.json()
         draft_bom = None
         for bom in boms:
-            if bom.get("status") == "DRAFT" and bom.get("items"):
+            if isinstance(bom, dict) and bom.get("status") == "DRAFT" and bom.get("items"):
                 draft_bom = bom
                 break
 
         if not draft_bom or not draft_bom.get("items"):
             pytest.skip("No draft BOM with items available for testing")
 
+        # 修复：items 是列表，直接索引
         item_id = draft_bom["items"][0]["id"]
 
         update_data = {
@@ -391,15 +407,16 @@ class TestBomItems:
 
         # 创建新的 BOM 用于测试删除
         bom_data = {
-            "bom_name": f"删除测试BOM-{uuid.uuid4().hex[:4]}",
+            "bom_no": f"BOM-PJ000001-{uuid.uuid4().hex[:3]}",
+            "bom_name": f"删除测试 BOM-{uuid.uuid4().hex[:4]}",
             "project_id": project_id,
-            "version": "V1.0",
+            "version": "1.0",
             "items": [
                 {
                     "material_code": f"MAT-DEL-{uuid.uuid4().hex[:6].upper()}",
                     "material_name": "待删除物料",
                     "unit": "个",
-                    "quantity": 1,
+                    "quantity": 1.0,
                     "unit_price": 10.00,
                     "source_type": "PURCHASE",
                     "is_key_item": False,
@@ -407,8 +424,9 @@ class TestBomItems:
             ],
         }
 
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/",
             json=bom_data,
             headers=headers,
         )
@@ -446,14 +464,16 @@ class TestBomVersions:
         machine_id = result["machine"]["id"]
 
         # 获取 BOM 列表
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No BOMs available for testing")
 
-        bom_id = list_response.json()[0]["id"]
+        boms = list_response.json()
+        bom_id = boms[0]["id"]
 
         response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}/versions", headers=headers)
 
@@ -474,14 +494,16 @@ class TestBomVersions:
         machine_id = result["machine"]["id"]
 
         # 获取 BOM 列表
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No BOMs available for testing")
 
-        bom_id = list_response.json()[0]["id"]
+        boms = list_response.json()
+        bom_id = boms[0]["id"]
 
         response = client.get(
             f"{settings.API_V1_PREFIX}/bom/{bom_id}/versions/compare", headers=headers
@@ -512,15 +534,16 @@ class TestBomRelease:
 
         # 创建新的 BOM 用于测试发布
         bom_data = {
-            "bom_name": f"发布测试BOM-{uuid.uuid4().hex[:4]}",
+            "bom_no": f"BOM-PJ000001-{uuid.uuid4().hex[:3]}",
+            "bom_name": f"发布测试 BOM-{uuid.uuid4().hex[:4]}",
             "project_id": project_id,
-            "version": "V1.0",
+            "version": "1.0",
             "items": [
                 {
                     "material_code": f"MAT-REL-{uuid.uuid4().hex[:6].upper()}",
                     "material_name": "发布测试物料",
                     "unit": "个",
-                    "quantity": 5,
+                    "quantity": 5.0,
                     "unit_price": 50.00,
                     "source_type": "PURCHASE",
                     "is_key_item": False,
@@ -528,8 +551,9 @@ class TestBomRelease:
             ],
         }
 
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/",
             json=bom_data,
             headers=headers,
         )
@@ -553,8 +577,8 @@ class TestBomRelease:
 
         assert response.status_code == 200, response.text
         data = response.json()
-        assert data["status"] == "RELEASED"
-        assert data["is_latest"] == True
+        assert data.get("status") == "RELEASED"
+        assert data.get("is_latest") == True
 
     def test_release_bom_without_items(self, client: TestClient, admin_token: str):
         """测试发布没有明细的 BOM（应该失败）"""
@@ -571,14 +595,16 @@ class TestBomRelease:
 
         # 创建没有明细的 BOM
         bom_data = {
-            "bom_name": f"空BOM测试-{uuid.uuid4().hex[:4]}",
+            "bom_no": f"BOM-PJ000001-{uuid.uuid4().hex[:3]}",
+            "bom_name": f"空 BOM 测试-{uuid.uuid4().hex[:4]}",
             "project_id": project_id,
-            "version": "V1.0",
+            "version": "1.0",
             "items": [],
         }
 
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         create_response = client.post(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom",
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/",
             json=bom_data,
             headers=headers,
         )
@@ -628,14 +654,16 @@ class TestBomExcelOperations:
         machine_id = result["machine"]["id"]
 
         # 获取 BOM 列表
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
             pytest.skip("No BOMs available for testing")
 
-        bom_id = list_response.json()[0]["id"]
+        boms = list_response.json()
+        bom_id = boms[0]["id"]
 
         response = client.get(f"{settings.API_V1_PREFIX}/bom/{bom_id}/export", headers=headers)
 
@@ -665,8 +693,9 @@ class TestBomPurchaseRequest:
         machine_id = result["machine"]["id"]
 
         # 获取已发布的 BOM
+        # 修复：API 路径应为 /bom/machines/{machine_id}/
         list_response = client.get(
-            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/bom", headers=headers
+            f"{settings.API_V1_PREFIX}/bom/machines/{machine_id}/", headers=headers
         )
 
         if list_response.status_code != 200 or not list_response.json():
@@ -676,7 +705,7 @@ class TestBomPurchaseRequest:
         boms = list_response.json()
         test_bom = None
         for bom in boms:
-            if bom.get("items"):
+            if isinstance(bom, dict) and bom.get("items"):
                 test_bom = bom
                 break
 
