@@ -47,6 +47,7 @@ import {
 "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { productionApi, projectApi } from "../services/api";
+import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 import { confirmAction } from "@/lib/confirmAction";
 const statusConfigs = {
   REPORTED: { label: "已上报", color: "bg-blue-500" },
@@ -107,7 +108,7 @@ export default function ProductionExceptionList({ embedded = false }) {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data?.items || res.data || []);
+      setProjects(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch projects:", error);
     }
@@ -122,8 +123,7 @@ export default function ProductionExceptionList({ embedded = false }) {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.exceptions.list(params);
-      const excList = res.data?.items || res.data?.items || res.data || [];
-      setExceptions(excList);
+      setExceptions(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch exceptions:", error);
     } finally {
@@ -160,7 +160,7 @@ export default function ProductionExceptionList({ embedded = false }) {
   const handleViewDetail = async (excId) => {
     try {
       const res = await productionApi.exceptions.get(excId);
-      setSelectedException(res.data || res);
+      setSelectedException(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
       console.error("Failed to fetch exception detail:", error);
@@ -227,12 +227,12 @@ export default function ProductionExceptionList({ embedded = false }) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索异常编号、标题..."
-                value={searchKeyword || ""}
+                value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterProject || ""} onValueChange={setFilterProject}>
+            <Select value={filterProject || "all"} onValueChange={(value) => setFilterProject(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -245,40 +245,40 @@ export default function ProductionExceptionList({ embedded = false }) {
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterType || ""} onValueChange={setFilterType}>
+            <Select value={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || ""}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterLevel || ""} onValueChange={setFilterLevel}>
+            <Select value={filterLevel || "all"} onValueChange={(value) => setFilterLevel(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择级别" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部级别</SelectItem>
                 {Object.entries(levelConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || ""}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterStatus || ""} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {Object.entries(statusConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || ""}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
@@ -443,7 +443,7 @@ export default function ProductionExceptionList({ embedded = false }) {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || ""}>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                       </SelectItem>
                       )}
@@ -465,7 +465,7 @@ export default function ProductionExceptionList({ embedded = false }) {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(levelConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || ""}>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                       </SelectItem>
                       )}

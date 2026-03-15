@@ -48,6 +48,7 @@ import {
   DialogFooter } from
 "../components/ui/dialog";
 import { productionApi, userApi } from "../services/api";
+import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 
 const typeConfigs = {
   MACHINING: { label: "机加车间", color: "bg-blue-500" },
@@ -89,7 +90,7 @@ export default function WorkshopManagement() {
   const fetchManagers = async () => {
     try {
       const res = await userApi.list({ page_size: 1000 });
-      setManagers(res.data?.items || res.data?.items || res.data || []);
+      setManagers(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch managers:", error);
     }
@@ -103,8 +104,7 @@ export default function WorkshopManagement() {
       if (filterActive !== "") {params.is_active = filterActive === "true";}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workshops.list(params);
-      const workshopList = res.data?.items || res.data?.items || res.data || [];
-      setWorkshops(workshopList);
+      setWorkshops(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch workshops:", error);
     } finally {
@@ -144,7 +144,7 @@ export default function WorkshopManagement() {
   const handleViewDetail = async (workshopId) => {
     try {
       const res = await productionApi.workshops.get(workshopId);
-      setSelectedWorkshop(res.data || res);
+      setSelectedWorkshop(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
       console.error("Failed to fetch workshop detail:", error);
@@ -207,25 +207,25 @@ export default function WorkshopManagement() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <Input
                 placeholder="搜索车间编码、名称..."
-                value={searchKeyword || "unknown"}
+                value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10" />
 
             </div>
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
                 {Object.entries(typeConfigs).map(([key, config]) =>
-                <SelectItem key={key} value={key || "unknown"}>
+                <SelectItem key={key} value={key}>
                     {config.label}
                 </SelectItem>
                 )}
               </SelectContent>
             </Select>
-            <Select value={filterActive || "unknown"} onValueChange={setFilterActive}>
+            <Select value={filterActive || "all"} onValueChange={(value) => setFilterActive(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
@@ -398,7 +398,7 @@ export default function WorkshopManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                       </SelectItem>
                       )}
@@ -546,7 +546,7 @@ export default function WorkshopManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(typeConfigs).map(([key, config]) =>
-                      <SelectItem key={key} value={key || "unknown"}>
+                      <SelectItem key={key} value={key}>
                           {config.label}
                       </SelectItem>
                       )}
