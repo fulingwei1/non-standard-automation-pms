@@ -24,7 +24,7 @@ class MilestoneCreate(BaseModel):
     stage_code: Optional[str] = None
     deliverables: Optional[str] = None
     owner_id: Optional[int] = None
-    description: Optional[str] = None
+    remark: Optional[str] = None
 
 
 class MilestoneUpdate(BaseModel):
@@ -36,7 +36,7 @@ class MilestoneUpdate(BaseModel):
     status: Optional[str] = None
     deliverables: Optional[str] = None
     owner_id: Optional[int] = None
-    description: Optional[str] = None
+    remark: Optional[str] = None
     completion_note: Optional[str] = None
 
 

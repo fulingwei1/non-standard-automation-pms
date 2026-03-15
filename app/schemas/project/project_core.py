@@ -196,6 +196,8 @@ class ProjectMemberCreate(BaseModel):
     allocation_pct: Decimal = Field(default=HUNDRED_DECIMAL, ge=0, le=100)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    commitment_level: Optional[str] = None
+    reporting_to_pm: bool = True
     remark: Optional[str] = None
 
 

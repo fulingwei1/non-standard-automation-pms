@@ -153,6 +153,8 @@ class TestProjectMembersAPI:
             "user_id": user_id,
             "role_code": "TEST",
             "allocation_pct": 50,
+            "commitment_level": "MEDIUM",
+            "reporting_to_pm": True,
         }
 
         response = client.post(
