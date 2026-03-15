@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.common.date_range import get_month_range
 from app.common.query_filters import apply_pagination
-from app.models.production import ProductionDailyReport, WorkOrder, Workshop
+from app.models.production import ProductionDailyReport, WorkOrder, Worker, Workshop
 from app.models.user import User
 from app.schemas.production import WorkshopResponse
 from app.utils.db_helpers import get_or_404, save_obj
@@ -126,7 +126,11 @@ class WorkshopService:
 
         # 基础产能信息
         capacity_hours = float(workshop.capacity_hours) if workshop.capacity_hours else 0.0
-        worker_count = workshop.worker_count or 0
+        worker_count = (
+            self.db.query(Worker)
+            .filter(Worker.workshop_id == workshop_id, Worker.is_active.is_(True))
+            .count()
+        )
 
         # 如果没有指定日期范围，使用当前月
         today = date.today()
