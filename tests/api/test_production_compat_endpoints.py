@@ -1,12 +1,19 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.models.production import WorkOrder, WorkReport, Worker, Workshop, Workstation
+from app.models.production import (
+    ProductionDailyReport,
+    WorkOrder,
+    WorkReport,
+    Worker,
+    Workshop,
+    Workstation,
+)
 from app.models.project import Project
 from app.models.user import User
 
@@ -366,3 +373,198 @@ class TestProductionCompatibilityEndpoints:
         assert board["workshop_name"] == workshop.workshop_name
         assert any(item["work_order_no"] == work_order.work_order_no for item in board["work_orders"])
         assert any(item["current_worker_name"] == worker.worker_name for item in board["workstations"])
+
+    def test_daily_report_compatibility_routes(self, client: TestClient, admin_token: str, db):
+        headers = _auth_headers(admin_token)
+        suffix = uuid.uuid4().hex[:8]
+        report_day = date(2026, 3, 15)
+
+        workshop = Workshop(
+            workshop_code=f"WS-DR-{suffix}",
+            workshop_name=f"日报车间-{suffix}",
+            workshop_type="ASSEMBLY",
+            is_active=True,
+        )
+        db.add(workshop)
+        db.commit()
+        db.refresh(workshop)
+
+        report = ProductionDailyReport(
+            report_date=report_day,
+            workshop_id=workshop.id,
+            plan_qty=20,
+            completed_qty=16,
+            plan_hours=Decimal("18.00"),
+            actual_hours=Decimal("15.50"),
+            overtime_hours=Decimal("1.00"),
+            should_attend=10,
+            actual_attend=9,
+            leave_count=1,
+            total_qty=16,
+            qualified_qty=15,
+            new_exception_count=2,
+            resolved_exception_count=1,
+            summary="日报兼容测试",
+        )
+        db.add(report)
+        db.commit()
+
+        list_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production-daily-reports",
+            params={"report_date": report_day.isoformat(), "page": 1, "page_size": 10},
+            headers=headers,
+        )
+        assert list_resp.status_code == 200, list_resp.text
+        list_data = list_resp.json()
+        assert list_data["total"] >= 1
+        assert list_data["items"][0]["workshop_name"] == workshop.workshop_name
+        assert list_data["items"][0]["completion_rate"] == 80.0
+        assert list_data["items"][0]["pass_rate"] == 93.75
+
+        latest_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production-daily-reports/latest",
+            params={"workshop_id": workshop.id},
+            headers=headers,
+        )
+        assert latest_resp.status_code == 200, latest_resp.text
+        latest = latest_resp.json()
+        assert latest["report_date"] == report_day.isoformat()
+        assert latest["workshop_name"] == workshop.workshop_name
+        assert latest["summary"] == "日报兼容测试"
+
+    def test_worker_report_compatibility_routes(self, client: TestClient, admin_token: str, db):
+        headers = _auth_headers(admin_token)
+        suffix = uuid.uuid4().hex[:8]
+
+        workshop = Workshop(
+            workshop_code=f"WS-RPT-{suffix}",
+            workshop_name=f"报表车间-{suffix}",
+            workshop_type="ASSEMBLY",
+            is_active=True,
+        )
+        db.add(workshop)
+        db.commit()
+        db.refresh(workshop)
+
+        worker_a = Worker(
+            worker_no=f"WK-RPT-A-{suffix}",
+            worker_name="报表工人A",
+            workshop_id=workshop.id,
+            skill_level="SENIOR",
+            status="ACTIVE",
+            is_active=True,
+        )
+        worker_b = Worker(
+            worker_no=f"WK-RPT-B-{suffix}",
+            worker_name="报表工人B",
+            workshop_id=workshop.id,
+            skill_level="INTERMEDIATE",
+            status="ACTIVE",
+            is_active=True,
+        )
+        db.add(worker_a)
+        db.add(worker_b)
+        db.commit()
+        db.refresh(worker_a)
+        db.refresh(worker_b)
+
+        work_order_a = WorkOrder(
+            work_order_no=f"WO-RPT-A-{suffix}",
+            task_name="绩效任务A",
+            task_type="ASSEMBLY",
+            workshop_id=workshop.id,
+            assigned_to=worker_a.id,
+            status="COMPLETED",
+            plan_qty=20,
+        )
+        work_order_b = WorkOrder(
+            work_order_no=f"WO-RPT-B-{suffix}",
+            task_name="绩效任务B",
+            task_type="ASSEMBLY",
+            workshop_id=workshop.id,
+            assigned_to=worker_b.id,
+            status="COMPLETED",
+            plan_qty=20,
+        )
+        db.add(work_order_a)
+        db.add(work_order_b)
+        db.commit()
+        db.refresh(work_order_a)
+        db.refresh(work_order_b)
+
+        db.add_all(
+            [
+                WorkReport(
+                    report_no=f"WR-RPT-A1-{suffix}",
+                    work_order_id=work_order_a.id,
+                    worker_id=worker_a.id,
+                    report_type="PROGRESS",
+                    report_time=datetime(2026, 3, 10, 9, 0, 0),
+                    work_hours=Decimal("4.00"),
+                    completed_qty=8,
+                    qualified_qty=7,
+                    defect_qty=1,
+                    status="APPROVED",
+                ),
+                WorkReport(
+                    report_no=f"WR-RPT-A2-{suffix}",
+                    work_order_id=work_order_a.id,
+                    worker_id=worker_a.id,
+                    report_type="COMPLETE",
+                    report_time=datetime(2026, 3, 11, 18, 0, 0),
+                    work_hours=Decimal("2.00"),
+                    completed_qty=4,
+                    qualified_qty=4,
+                    defect_qty=0,
+                    status="APPROVED",
+                ),
+                WorkReport(
+                    report_no=f"WR-RPT-B1-{suffix}",
+                    work_order_id=work_order_b.id,
+                    worker_id=worker_b.id,
+                    report_type="COMPLETE",
+                    report_time=datetime(2026, 3, 11, 18, 30, 0),
+                    work_hours=Decimal("3.00"),
+                    completed_qty=6,
+                    qualified_qty=6,
+                    defect_qty=0,
+                    status="APPROVED",
+                ),
+            ]
+        )
+        db.commit()
+
+        performance_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/reports/worker-performance",
+            params={
+                "workshop_id": workshop.id,
+                "period_start": "2026-03-01",
+                "period_end": "2026-03-31",
+            },
+            headers=headers,
+        )
+        assert performance_resp.status_code == 200, performance_resp.text
+        performance = performance_resp.json()
+        assert len(performance) == 2
+        worker_a_report = next(item for item in performance if item["worker_id"] == worker_a.id)
+        assert worker_a_report["total_reports"] == 2
+        assert worker_a_report["total_completed_qty"] == 12
+        assert worker_a_report["total_qualified_qty"] == 11
+        assert worker_a_report["average_efficiency"] == 1.83
+
+        ranking_resp = client.get(
+            f"{settings.API_V1_PREFIX}/production/reports/worker-ranking",
+            params={
+                "workshop_id": workshop.id,
+                "ranking_type": "output",
+                "period_start": "2026-03-01",
+                "period_end": "2026-03-31",
+            },
+            headers=headers,
+        )
+        assert ranking_resp.status_code == 200, ranking_resp.text
+        ranking = ranking_resp.json()
+        assert ranking[0]["worker_id"] == worker_a.id
+        assert ranking[0]["rank"] == 1
+        assert ranking[0]["output"] == 12
+        assert ranking[0]["quality_rate"] == 91.67
