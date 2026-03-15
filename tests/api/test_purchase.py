@@ -861,7 +861,6 @@ class TestPurchaseRequest:
 
         assert response.status_code == 200
 
-    @pytest.mark.skip(reason="删除操作触发 SQLAlchemy cascade 删除时的递归错误（RecursionError），需修复模型关系配置")
     def test_delete_draft_request(self, client: TestClient, admin_token: str, draft_purchase_request: PurchaseRequest):
         """测试删除草稿状态的采购申请"""
         if not admin_token:

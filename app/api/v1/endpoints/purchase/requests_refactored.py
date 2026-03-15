@@ -188,10 +188,24 @@ def delete_purchase_request(
     current_user: User = Depends(get_current_active_user),
 ):
     """删除采购申请"""
+    from sqlalchemy import text
+    
     request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
     if request.status != "DRAFT":
         raise HTTPException(status_code=400, detail="只有草稿状态可删除")
-    delete_obj(db, request)
+    
+    # 使用原始 SQL 删除以避免 SQLAlchemy cascade 删除时的递归错误
+    # 先删除所有明细项
+    db.execute(
+        text("DELETE FROM purchase_request_items WHERE request_id = :request_id"),
+        {"request_id": request.id}
+    )
+    # 再删除主表（使用原始 SQL 避免 ORM 层面的 cascade 处理）
+    db.execute(
+        text("DELETE FROM purchase_requests WHERE id = :request_id"),
+        {"request_id": request.id}
+    )
+    db.commit()
 
     # 使用统一响应格式
     return success_response(data=None, message="采购申请已删除")
