@@ -18,6 +18,7 @@ from app.schemas.common import PaginatedResponse
 from app.schemas.production import (
     WorkshopCreate,
     WorkshopResponse,
+    WorkshopTaskBoardResponse,
     WorkshopUpdate,
 )
 from app.services.production.workshop_service import WorkshopService
@@ -94,6 +95,20 @@ def get_workshop_capacity(
         start_date=start_date,
         end_date=end_date,
     )
+
+
+@router.get("/workshops/{workshop_id}/task-board", response_model=WorkshopTaskBoardResponse)
+def get_workshop_task_board(
+    *,
+    db: Session = Depends(deps.get_db),
+    workshop_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    车间任务看板
+    """
+    service = WorkshopService(db)
+    return service.get_task_board(workshop_id)
 
 
 @router.put("/workshops/{workshop_id}", response_model=WorkshopResponse)

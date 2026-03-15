@@ -7,7 +7,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
@@ -78,6 +78,44 @@ def _resolve_report_worker(
 
 
 # ==================== 报工系统 ====================
+
+@router.post("/work-reports", response_model=WorkReportResponse)
+def create_work_report(
+    *,
+    db: Session = Depends(deps.get_db),
+    payload: dict = Body(...),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    通用报工创建接口（兼容前端 POST /production/work-reports）
+
+    根据 payload 自动分发到 start/progress/complete。
+    """
+    report_type = str(payload.get("report_type") or "").upper()
+
+    if report_type == "COMPLETE" or payload.get("completed_qty") is not None:
+        return complete_work_report(
+            db=db,
+            report_in=WorkReportCompleteRequest(**payload),
+            current_user=current_user,
+        )
+
+    if report_type == "PROGRESS" or payload.get("progress_percent") is not None:
+        return progress_work_report(
+            db=db,
+            report_in=WorkReportProgressRequest(**payload),
+            current_user=current_user,
+        )
+
+    if report_type in {"", "START"}:
+        return start_work_report(
+            db=db,
+            report_in=WorkReportStartRequest(**payload),
+            current_user=current_user,
+        )
+
+    raise HTTPException(status_code=400, detail="不支持的报工类型")
+
 
 @router.post("/work-reports/start", response_model=WorkReportResponse)
 def start_work_report(

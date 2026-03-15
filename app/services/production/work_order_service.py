@@ -177,6 +177,32 @@ class WorkOrderService:
         order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
         return self.build_response(order)
 
+    def update_work_order(self, order_id: int, order_in) -> WorkOrderResponse:
+        """更新工单（兼容前端 PUT /production/work-orders/{id}）"""
+        order = get_or_404(self.db, WorkOrder, order_id, detail="工单不存在")
+
+        update_data = order_in.model_dump(exclude_unset=True)
+
+        if "workshop_id" in update_data and update_data["workshop_id"]:
+            get_or_404(self.db, Workshop, update_data["workshop_id"], "车间不存在")
+
+        if "assigned_to" in update_data and update_data["assigned_to"]:
+            get_or_404(self.db, Worker, update_data["assigned_to"], "工人不存在")
+
+        workstation_id = update_data.get("workstation_id")
+        if workstation_id:
+            workstation = get_or_404(self.db, Workstation, workstation_id, "工位不存在")
+            target_workshop_id = update_data.get("workshop_id", order.workshop_id)
+            if target_workshop_id and workstation.workshop_id != target_workshop_id:
+                raise HTTPException(status_code=400, detail="工位不属于该车间")
+
+        for field, value in update_data.items():
+            if hasattr(order, field):
+                setattr(order, field, value)
+
+        save_obj(self.db, order)
+        return self.build_response(order)
+
     def assign_work_order(
         self,
         order_id: int,
