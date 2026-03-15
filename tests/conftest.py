@@ -1,4 +1,6 @@
 import sys
+from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock
 
 # Mock redis module before importing app
@@ -1236,6 +1238,228 @@ def test_contract():
 def test_budget():
     """Create test budget"""
     return ProjectBudgetFactory()
+
+
+@pytest.fixture(scope="function")
+def draft_budget(db_session: Session, admin_token: str):
+    """
+    Create a draft budget for testing.
+    Ensures a DRAFT status budget exists with project and items.
+    """
+    from app.models.budget import ProjectBudget, ProjectBudgetItem
+    from app.models.project import Project
+    from app.models.user import User
+
+    # Get or create a project
+    project = db_session.query(Project).first()
+    if not project:
+        from app.models.project import Customer
+
+        customer = db_session.query(Customer).first()
+        if not customer:
+            customer = Customer(
+                customer_code=f"CUST-DRAFT-{date.today().strftime('%y%m%d')}",
+                customer_name="测试客户 - 预算",
+                contact_person="联系人",
+                contact_phone="13800000000",
+                status="ACTIVE",
+            )
+            db_session.add(customer)
+            db_session.flush()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        project = Project(
+            project_code=f"PJ-DRAFT-{date.today().strftime('%y%m%d')}",
+            project_name="测试项目 - 预算",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=admin_user.id if admin_user else 1,
+        )
+        db_session.add(project)
+        db_session.flush()
+
+    import uuid
+    # Create draft budget
+    admin_user = db_session.query(User).filter(User.username == "admin").first()
+    budget = ProjectBudget(
+        budget_no=f"BG-DRAFT-{uuid.uuid4().hex[:12].upper()}",
+        project_id=project.id,
+        budget_name="测试预算 - 草稿",
+        budget_type="INITIAL",
+        version="V1.0",
+        total_amount=Decimal("100000.00"),
+        status="DRAFT",
+        created_by=admin_user.id if admin_user else 1,
+    )
+    db_session.add(budget)
+    db_session.flush()
+
+    # Add budget items
+    item = ProjectBudgetItem(
+        budget_id=budget.id,
+        item_no=1,
+        cost_category="物料成本",
+        cost_item="原材料采购",
+        budget_amount=Decimal("60000.00"),
+    )
+    db_session.add(item)
+    db_session.commit()
+    db_session.refresh(budget)
+    return budget
+
+
+@pytest.fixture(scope="function")
+def submitted_budget(db_session: Session, admin_token: str):
+    """
+    Create a submitted budget for testing.
+    Ensures a SUBMITTED status budget exists.
+    """
+    from app.models.budget import ProjectBudget, ProjectBudgetItem
+    from app.models.project import Project
+    from app.models.user import User
+    from datetime import datetime
+
+    # Get or create a project
+    project = db_session.query(Project).first()
+    if not project:
+        from app.models.project import Customer
+
+        customer = db_session.query(Customer).first()
+        if not customer:
+            customer = Customer(
+                customer_code=f"CUST-SUBMITTED-{date.today().strftime('%y%m%d')}",
+                customer_name="测试客户 - 预算",
+                contact_person="联系人",
+                contact_phone="13800000000",
+                status="ACTIVE",
+            )
+            db_session.add(customer)
+            db_session.flush()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        project = Project(
+            project_code=f"PJ-SUBMITTED-{date.today().strftime('%y%m%d')}",
+            project_name="测试项目 - 预算",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=admin_user.id if admin_user else 1,
+        )
+        db_session.add(project)
+        db_session.flush()
+
+    import uuid
+    # Create submitted budget
+    admin_user = db_session.query(User).filter(User.username == "admin").first()
+    budget = ProjectBudget(
+        budget_no=f"BG-SUBMITTED-{uuid.uuid4().hex[:12].upper()}",
+        project_id=project.id,
+        budget_name="测试预算 - 已提交",
+        budget_type="INITIAL",
+        version="V1.0",
+        total_amount=Decimal("100000.00"),
+        status="SUBMITTED",
+        submitted_at=datetime.now(),
+        submitted_by=admin_user.id if admin_user else 1,
+        created_by=admin_user.id if admin_user else 1,
+    )
+    db_session.add(budget)
+    db_session.flush()
+
+    # Add budget items
+    item = ProjectBudgetItem(
+        budget_id=budget.id,
+        item_no=1,
+        cost_category="物料成本",
+        cost_item="原材料采购",
+        budget_amount=Decimal("60000.00"),
+    )
+    db_session.add(item)
+    db_session.commit()
+    db_session.refresh(budget)
+    return budget
+
+
+@pytest.fixture(scope="function")
+def approved_budget(db_session: Session, admin_token: str):
+    """
+    Create an approved budget for testing.
+    Ensures an APPROVED status budget exists.
+    """
+    from app.models.budget import ProjectBudget, ProjectBudgetItem
+    from app.models.project import Project
+    from app.models.user import User
+    from datetime import datetime
+
+    # Get or create a project
+    project = db_session.query(Project).first()
+    if not project:
+        from app.models.project import Customer
+
+        customer = db_session.query(Customer).first()
+        if not customer:
+            customer = Customer(
+                customer_code=f"CUST-APPROVED-{date.today().strftime('%y%m%d')}",
+                customer_name="测试客户 - 预算",
+                contact_person="联系人",
+                contact_phone="13800000000",
+                status="ACTIVE",
+            )
+            db_session.add(customer)
+            db_session.flush()
+
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        project = Project(
+            project_code=f"PJ-APPROVED-{date.today().strftime('%y%m%d')}",
+            project_name="测试项目 - 预算",
+            customer_id=customer.id,
+            customer_name=customer.customer_name,
+            stage="S1",
+            status="ST01",
+            health="H1",
+            created_by=admin_user.id if admin_user else 1,
+        )
+        db_session.add(project)
+        db_session.flush()
+
+    import uuid
+    # Create approved budget
+    admin_user = db_session.query(User).filter(User.username == "admin").first()
+    budget = ProjectBudget(
+        budget_no=f"BG-APPROVED-{uuid.uuid4().hex[:12].upper()}",
+        project_id=project.id,
+        budget_name="测试预算 - 已批准",
+        budget_type="INITIAL",
+        version="V1.0",
+        total_amount=Decimal("100000.00"),
+        status="APPROVED",
+        submitted_at=datetime.now(),
+        submitted_by=admin_user.id if admin_user else 1,
+        approved_at=datetime.now(),
+        approved_by=admin_user.id if admin_user else 1,
+        approval_note="测试审批通过",
+        created_by=admin_user.id if admin_user else 1,
+    )
+    db_session.add(budget)
+    db_session.flush()
+
+    # Add budget items
+    item = ProjectBudgetItem(
+        budget_id=budget.id,
+        item_no=1,
+        cost_category="物料成本",
+        cost_item="原材料采购",
+        budget_amount=Decimal("60000.00"),
+    )
+    db_session.add(item)
+    db_session.commit()
+    db_session.refresh(budget)
+    return budget
 
 
 @pytest.fixture(scope="function")
