@@ -224,6 +224,15 @@ class Settings(BaseSettings):
     RATE_LIMIT_DELETE: str = "20/minute"  # 删除操作限制
     RATE_LIMIT_BATCH: str = "10/minute"  # 批量操作限制
 
+    # ITR 流程性能优化配置
+    ITR_QUERY_LIMIT: int = 100  # 关联查询数量限制
+    ITR_QUERY_TIMEOUT_SECONDS: int = 30  # 查询超时时间（秒）
+    ITR_TIMELINE_ISSUE_LIMIT: int = 50  # 时间线问题数量限制
+    ITR_TIMELINE_ACCEPTANCE_LIMIT: int = 20  # 时间线验收单数量限制
+    ITR_RELATED_TICKET_LIMIT: int = 10  # 关联工单数量限制
+    ITR_RELATED_ACCEPTANCE_LIMIT: int = 5  # 关联验收单数量限制
+    ITR_RELATED_ISSUE_LIMIT: int = 20  # 关联问题数量限制
+
     @model_validator(mode="after")
     def validate_rate_limit_storage(self) -> "Settings":
         """验证速率限制存储配置"""
