@@ -133,7 +133,7 @@ def create_api_router() -> APIRouter:
     try:
         from app.api.v1.endpoints import materials, purchase, bom
         api_router.include_router(materials.router, prefix="/materials", tags=["materials"])
-        api_router.include_router(purchase.router, prefix="/purchase-orders", tags=["purchase"])
+        api_router.include_router(purchase.router, prefix="/purchase", tags=["purchase"])
         api_router.include_router(bom.router, prefix="/bom", tags=["bom"])
         print("✓ 物料采购模块加载成功")
     except Exception as e:
