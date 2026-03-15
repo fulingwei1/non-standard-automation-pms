@@ -67,6 +67,9 @@ def create_api_router() -> APIRouter:
         from app.api.v1.endpoints.production import router as production_router
         from app.api.v1.endpoints.production.exceptions import router as production_exceptions_router
         from app.api.v1.endpoints.production.workers import router as production_workers_router
+        from app.api.v1.endpoints.production_daily_reports import (
+            router as production_daily_reports_router,
+        )
 
         api_router.include_router(production_router, prefix="/production", tags=["production"])
         api_router.include_router(production_workers_router, prefix="/workers", tags=["workers"])
@@ -74,6 +77,11 @@ def create_api_router() -> APIRouter:
             production_exceptions_router,
             prefix="/production-exceptions",
             tags=["production-exceptions"],
+        )
+        api_router.include_router(
+            production_daily_reports_router,
+            prefix="/production-daily-reports",
+            tags=["production-daily-reports"],
         )
         print("✓ 生产管理模块加载成功")
     except Exception as e:

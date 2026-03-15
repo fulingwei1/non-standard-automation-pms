@@ -17,6 +17,7 @@ from . import (
     plans,
     progress,
     quality,
+    reports,
     schedule,
     work_orders,
     work_reports,
@@ -36,6 +37,7 @@ router.include_router(workers.router, prefix="/workers", tags=["production-worke
 router.include_router(plans.router, tags=["production-plans"])
 router.include_router(work_orders.router, tags=["production-work-orders"])
 router.include_router(work_reports.router, tags=["production-work-reports"])
+router.include_router(reports.router, tags=["production-reports"])
 router.include_router(exceptions.router, prefix="/exceptions", tags=["production-exceptions"])
 router.include_router(material_requisitions.router, tags=["production-material-requisitions"])
 router.include_router(
