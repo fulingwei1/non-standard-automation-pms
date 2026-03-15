@@ -21,6 +21,110 @@ from app.utils.permission_helpers import check_project_access_or_raise
 router = APIRouter()
 
 
+# ==================== 静态端点（必须在 /{milestone_id} 之前注册）====================
+
+@router.get("/statistics", response_model=dict)
+def get_milestone_statistics(
+    project_id: int = Path(..., description="项目 ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("milestone:read")),
+) -> Any:
+    """获取项目里程碑统计"""
+    check_project_access_or_raise(db, current_user, project_id)
+    
+    from sqlalchemy import func
+    from app.models.project import ProjectMilestone
+    
+    total = db.query(func.count(ProjectMilestone.id)).filter(
+        ProjectMilestone.project_id == project_id
+    ).scalar() or 0
+    
+    completed = db.query(func.count(ProjectMilestone.id)).filter(
+        ProjectMilestone.project_id == project_id,
+        ProjectMilestone.status == "COMPLETED"
+    ).scalar() or 0
+    
+    pending = db.query(func.count(ProjectMilestone.id)).filter(
+        ProjectMilestone.project_id == project_id,
+        ProjectMilestone.status == "PENDING"
+    ).scalar() or 0
+    
+    delayed = db.query(func.count(ProjectMilestone.id)).filter(
+        ProjectMilestone.project_id == project_id,
+        ProjectMilestone.status == "DELAYED"
+    ).scalar() or 0
+    
+    return {
+        "project_id": project_id,
+        "total": total,
+        "completed": completed,
+        "pending": pending,
+        "delayed": delayed,
+        "completion_rate": round(completed / total * 100, 2) if total > 0 else 0,
+    }
+
+
+@router.get("/summary", response_model=dict)
+def get_milestone_summary(
+    project_id: int = Path(..., description="项目 ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("milestone:read")),
+) -> Any:
+    """获取项目里程碑汇总"""
+    check_project_access_or_raise(db, current_user, project_id)
+    
+    from app.models.project import ProjectMilestone
+    
+    milestones = db.query(ProjectMilestone).filter(
+        ProjectMilestone.project_id == project_id
+    ).all()
+    
+    return {
+        "data": {
+            "project_id": project_id,
+            "total": len(milestones),
+            "completed": sum(1 for m in milestones if m.status == "COMPLETED"),
+            "pending": sum(1 for m in milestones if m.status == "PENDING"),
+            "overdue": 0,
+        }
+    }
+
+
+@router.get("/timeline", response_model=dict)
+def get_milestone_timeline(
+    project_id: int = Path(..., description="项目 ID"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("milestone:read")),
+) -> Any:
+    """获取项目里程碑时间线"""
+    check_project_access_or_raise(db, current_user, project_id)
+    
+    from app.models.project import ProjectMilestone
+    
+    milestones = db.query(ProjectMilestone).filter(
+        ProjectMilestone.project_id == project_id
+    ).order_by(ProjectMilestone.planned_date).all()
+    
+    return {
+        "project_id": project_id,
+        "timeline": [
+            {
+                "id": m.id,
+                "milestone_code": m.milestone_code,
+                "milestone_name": m.milestone_name,
+                "milestone_type": m.milestone_type,
+                "planned_date": m.planned_date.isoformat() if m.planned_date else None,
+                "actual_date": m.actual_date.isoformat() if m.actual_date else None,
+                "status": m.status,
+            }
+            for m in milestones
+        ],
+    }
+
+
+# ==================== CRUD 端点 ====================
+
+
 def _get_service(db: Session, project_id: int) -> ProjectMilestoneService:
     return ProjectMilestoneService(db=db, project_id=project_id)
 

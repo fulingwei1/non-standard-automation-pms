@@ -109,7 +109,7 @@ class TestCreateProject:
             "pm_id": 1,
         }
 
-        with patch("app.api.v1.endpoints.projects.project_crud.Project") as MockProject:
+        with patch("app.models.project.Project") as MockProject:
             mock_proj_instance = _make_project()
             MockProject.return_value = mock_proj_instance
 
@@ -159,7 +159,7 @@ class TestCreateProject:
             "pm_id": None,
         }
 
-        with patch("app.api.v1.endpoints.projects.project_crud.Project") as MockProject:
+        with patch("app.models.project.Project") as MockProject:
             mock_proj_instance = _make_project(2)
             mock_proj_instance.customer_id = None
             mock_proj_instance.pm_id = None
@@ -343,6 +343,7 @@ class TestReadProject:
     def test_read_project_success(self):
         """正常读取项目详情"""
         from app.api.v1.endpoints.projects.project_crud import read_project
+        from app.services.project_crud import ProjectCrudService
 
         db = _make_db()
         current_user = _make_user()
@@ -352,13 +353,14 @@ class TestReadProject:
         project.milestones = MagicMock()
         project.milestones.all = MagicMock(return_value=[])
 
-        db.query.return_value.options.return_value.filter.return_value.all.return_value = []
-        db.query.return_value.options.return_value.filter.return_value.first.return_value = project
-
         with (
-            patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=None),
-            patch("app.api.v1.endpoints.projects.project_crud.ProjectResponse") as MockPR,
-            patch("app.api.v1.endpoints.projects.project_crud.ProjectDetailResponse") as MockPD,
+            patch("app.utils.permission_helpers.check_project_access_or_raise", return_value=project),
+            patch.object(ProjectCrudService, 'get_project_by_id', return_value=project),
+            patch.object(ProjectCrudService, 'get_project_members', return_value=[]),
+            patch.object(ProjectCrudService, 'get_project_machines', return_value=[]),
+            patch.object(ProjectCrudService, 'get_project_milestones', return_value=[]),
+            patch("app.schemas.project.ProjectResponse") as MockPR,
+            patch("app.schemas.project.ProjectDetailResponse") as MockPD,
         ):
             mock_pr = MagicMock()
             mock_pr.model_dump.return_value = {"id": 1}

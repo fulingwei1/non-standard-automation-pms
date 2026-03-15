@@ -25,7 +25,7 @@ class ProjectCreate(BaseModel):
     """创建项目"""
 
     project_code: str = Field(max_length=50, description="项目编码")
-    project_name: str = Field(max_length=200, description="项目名称")
+    project_name: str = Field(min_length=1, max_length=200, description="项目名称")
     short_name: Optional[str] = Field(default=None, max_length=50)
     customer_id: Optional[int] = None
     contract_no: Optional[str] = None
@@ -190,12 +190,14 @@ class ProjectDetailResponse(ProjectResponse):
 class ProjectMemberCreate(BaseModel):
     """添加项目成员"""
 
-    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
+    project_id: Optional[int] = Field(None, description="项目 ID（可选，通常从路径中获取）")
     user_id: int
     role_code: str = Field(max_length=50)
     allocation_pct: Decimal = Field(default=HUNDRED_DECIMAL, ge=0, le=100)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    commitment_level: Optional[str] = None
+    reporting_to_pm: Optional[bool] = None
     remark: Optional[str] = None
 
 
@@ -287,4 +289,5 @@ class ProjectDocumentResponse(TimestampSchema):
     uploaded_by: Optional[int] = None
 
     class Config:
+        from_attributes = True
         from_attributes = True

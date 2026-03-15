@@ -530,7 +530,9 @@ def create_api_router() -> APIRouter:
     # ==================== 预算管理 ====================
     try:
         from app.api.v1.endpoints.budget import router as budget_router
+        # 注册 /budget 和 /budgets 两个前缀（兼容测试）
         api_router.include_router(budget_router, prefix="/budget", tags=["budget"])
+        api_router.include_router(budget_router, prefix="/budgets", tags=["budgets"])
         print("✓ 预算管理模块加载成功")
     except Exception as e:
         print(f"✗ 预算管理模块加载失败：{e}")
@@ -878,6 +880,13 @@ def create_api_router() -> APIRouter:
         print("✓ 报表模块加载成功")
     except Exception as e:
         print(f"✗ 报表模块加载失败：{e}")
+    # ==================== 成本管理（兼容旧版/costs/路径） ====================
+    try:
+        from app.api.v1.endpoints.costs import router as costs_router
+        api_router.include_router(costs_router, prefix="/costs", tags=["costs"])
+        print("✓ 成本管理模块加载成功（兼容旧版路径）")
+    except Exception as e:
+        print(f"✗ 成本管理模块加载失败：{e}")
 
     # ==================== Stub Endpoints (必须放最后作为fallback) ====================
     try:
