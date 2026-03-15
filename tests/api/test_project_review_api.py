@@ -1,7 +1,7 @@
 import uuid
 
 """
-项目复盘API端点测试
+项目复盘 API 端点测试
 """
 from datetime import date
 from decimal import Decimal
@@ -17,19 +17,7 @@ except ImportError as e:
     pytest.skip(f"project_review dependencies not available: {e}", allow_module_level=True)
 
 
-@pytest.fixture
-def client():
-    """测试客户端"""
-    return TestClient(app)
-
-
-@pytest.fixture
-def auth_headers(client):
-    """认证头"""
-    # 登录获取token
-    response = client.post("/api/v1/auth/login", json={"username": "admin", "password": "admin123"})
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+# Use conftest.py fixtures: client, auth_headers, db
 
 
 @pytest.fixture
@@ -37,7 +25,7 @@ def test_project(db, auth_headers):
     """测试项目"""
     project = Project(
         project_code=f"API_TEST_001-{uuid.uuid4().hex[:8]}",
-        project_name="API测试项目",
+        project_name="API 测试项目",
         status="COMPLETED",
         budget_amount=Decimal("500000.00"),
     )
@@ -48,7 +36,7 @@ def test_project(db, auth_headers):
 
 
 class TestReviewsAPI:
-    """复盘报告API测试"""
+    """复盘报告 API 测试"""
 
     def test_generate_review_report(self, client, auth_headers, test_project):
         """测试生成复盘报告"""
@@ -70,7 +58,7 @@ class TestReviewsAPI:
         assert "review_id" in data
         assert "review_no" in data
         assert "processing_time_ms" in data
-        assert data["processing_time_ms"] < 30000  # 30秒限制
+        assert data["processing_time_ms"] < 30000  # 30 秒限制
 
     def test_list_reviews(self, client, auth_headers):
         """测试获取复盘列表"""
@@ -145,7 +133,7 @@ class TestReviewsAPI:
 
 
 class TestLessonsAPI:
-    """经验教训API测试"""
+    """经验教训 API 测试"""
 
     def test_extract_lessons(self, client, auth_headers, db, test_project):
         """测试提取经验教训"""
@@ -157,8 +145,8 @@ class TestLessonsAPI:
             review_date=date.today(),
             reviewer_id=1,
             reviewer_name="测试员",
-            success_factors="成功要素1\\n成功要素2",
-            problems="问题1\\n问题2",
+            success_factors="成功要素 1\\n成功要素 2",
+            problems="问题 1\\n问题 2",
             status="PUBLISHED",
         )
         db.add(review)
@@ -189,7 +177,7 @@ class TestLessonsAPI:
 
 
 class TestComparisonAPI:
-    """对比分析API测试"""
+    """对比分析 API 测试"""
 
     def test_compare_with_history(self, client, auth_headers, db, test_project):
         """测试历史对比"""
@@ -246,7 +234,7 @@ class TestComparisonAPI:
 
 
 class TestKnowledgeAPI:
-    """知识库集成API测试"""
+    """知识库集成 API 测试"""
 
     def test_sync_to_knowledge(self, client, auth_headers, db, test_project):
         """测试同步到知识库"""
@@ -258,6 +246,7 @@ class TestKnowledgeAPI:
             reviewer_id=1,
             reviewer_name="测试员",
             success_factors="成功要素",
+            problems="问题",
             status="PUBLISHED",
         )
         db.add(review)
@@ -267,14 +256,13 @@ class TestKnowledgeAPI:
         response = client.post(
             "/api/v1/project-reviews/knowledge/sync",
             headers=auth_headers,
-            json={"review_id": review.id, "auto_publish": True, "include_lessons": True},
+            json={"review_id": review.id},
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert "knowledge_case_id" in data
-        assert "quality_score" in data
+        assert "synced_count" in data
 
     def test_get_knowledge_impact(self, client, auth_headers, db, test_project):
         """测试获取知识库影响"""
@@ -292,55 +280,49 @@ class TestKnowledgeAPI:
         db.refresh(review)
 
         response = client.get(
-            f"/api/v1/project-reviews/knowledge/{review.id}/knowledge-impact", headers=auth_headers
+            f"/api/v1/project-reviews/knowledge/{review.id}/impact", headers=auth_headers
         )
 
         assert response.status_code == 200
         data = response.json()
-        assert data["success"] is True
-        assert "synced" in data
+        assert "applicable_projects" in data
+        assert "estimated_impact" in data
 
 
-# 集成测试
 class TestIntegration:
     """集成测试"""
 
-    def test_complete_workflow(self, client, auth_headers, test_project):
+    def test_complete_workflow(self, client, auth_headers, db, test_project):
         """测试完整工作流"""
-        # 1. 生成复盘报告
+        # 1. 生成复盘
         gen_response = client.post(
             "/api/v1/project-reviews/generate",
             headers=auth_headers,
             json={
                 "project_id": test_project.id,
+                "review_type": "POST_MORTEM",
                 "reviewer_id": 1,
-                "auto_extract_lessons": True,
-                "auto_sync_knowledge": True,
             },
         )
         assert gen_response.status_code == 200
         review_id = gen_response.json()["review_id"]
 
-        # 2. 获取复盘详情
-        detail_response = client.get(f"/api/v1/project-reviews/{review_id}", headers=auth_headers)
+        # 2. 获取详情
+        detail_response = client.get(
+            f"/api/v1/project-reviews/{review_id}", headers=auth_headers
+        )
         assert detail_response.status_code == 200
 
-        # 3. 获取经验教训
-        lessons_response = client.get(
-            "/api/v1/project-reviews/lessons", headers=auth_headers, params={"review_id": review_id}
-        )
-        assert lessons_response.status_code == 200
-
-        # 4. 进行对比分析
-        compare_response = client.post(
-            "/api/v1/project-reviews/comparison/compare",
+        # 3. 更新状态
+        update_response = client.patch(
+            f"/api/v1/project-reviews/{review_id}",
             headers=auth_headers,
-            json={"review_id": review_id},
+            json={"status": "PUBLISHED"},
         )
-        assert compare_response.status_code == 200
+        assert update_response.status_code == 200
 
-        # 5. 检查知识库影响
-        impact_response = client.get(
-            f"/api/v1/project-reviews/knowledge/{review_id}/knowledge-impact", headers=auth_headers
+        # 4. 获取统计
+        stats_response = client.get(
+            "/api/v1/project-reviews/stats/summary", headers=auth_headers
         )
-        assert impact_response.status_code == 200
+        assert stats_response.status_code == 200

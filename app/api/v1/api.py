@@ -505,7 +505,7 @@ def create_api_router() -> APIRouter:
     # ==================== 预算管理 ====================
     try:
         from app.api.v1.endpoints.budget import router as budget_router
-        api_router.include_router(budget_router, prefix="/budget", tags=["budget"])
+        api_router.include_router(budget_router, prefix="/budgets", tags=["budget"])
         print("✓ 预算管理模块加载成功")
     except Exception as e:
         print(f"✗ 预算管理模块加载失败：{e}")
@@ -581,6 +581,14 @@ def create_api_router() -> APIRouter:
         print("✓ 我的模块加载成功")
     except Exception as e:
         print(f"✗ 我的模块加载失败：{e}")
+
+    # ==================== 分析 ====================
+    try:
+        from app.api.v1.endpoints.analytics import router as analytics_router
+        api_router.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+        print("✓ 分析模块加载成功")
+    except Exception as e:
+        print(f"✗ 分析模块加载失败：{e}")
 
     # ==================== 踩坑记录 ====================
     try:
