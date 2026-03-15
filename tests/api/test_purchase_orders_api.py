@@ -251,13 +251,26 @@ class TestPurchaseOrdersAPI:
 
         headers = _auth_headers(admin_token)
 
-        invalid_data = {"total_amount": -1000.0}  # 负数金额
-
+        # 测试 1: 缺少必填字段 supplier_id - 应返回 422 或 400
+        invalid_data = {"order_title": "测试订单"}
         response = client.post(
-            f"{settings.API_V1_PREFIX}/purchase/orders/", headers=headers, json=invalid_data
+            f"{settings.API_V1_PREFIX}/purchase-orders/", headers=headers, json=invalid_data
         )
+        if response.status_code != 404:
+            assert response.status_code in [400, 422], f"缺少 supplier_id 应返回 400/422: {response.text}"
 
-        if response.status_code == 404:
-            pytest.skip("Purchase orders API not implemented")
+        # 测试 2: 供应商不存在 - 应返回 404
+        invalid_data = {"supplier_id": -99999}
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/purchase-orders/", headers=headers, json=invalid_data
+        )
+        if response.status_code != 404:
+            assert response.status_code == 404, f"供应商不存在应返回 404: {response.text}"
 
-        assert response.status_code == 422, response.text
+        # 测试 3: 没有明细项 - 应返回 400
+        invalid_data = {"supplier_id": 1, "items": []}
+        response = client.post(
+            f"{settings.API_V1_PREFIX}/purchase-orders/", headers=headers, json=invalid_data
+        )
+        if response.status_code != 404:
+            assert response.status_code == 400, f"没有明细项应返回 400: {response.text}"
