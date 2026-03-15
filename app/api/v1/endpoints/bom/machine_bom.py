@@ -50,7 +50,7 @@ def get_machine_bom_list(
         items = []
         for item in bom.items.order_by(BomItem.item_no).all():
             items.append(
-                BomResponse(
+                BomItemResponse(
                     id=item.id,
                     item_no=item.item_no,
                     material_id=item.material_id,

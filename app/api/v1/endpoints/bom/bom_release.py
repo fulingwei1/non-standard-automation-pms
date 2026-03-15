@@ -167,20 +167,41 @@ def release_bom(
     db.commit()
     db.refresh(bom)
 
+    # 获取 BOM 明细
+    items = []
+    for item in bom.items.order_by(bom.items.column("item_no")).all():
+        items.append({
+            "id": item.id,
+            "item_no": item.item_no,
+            "material_id": item.material_id,
+            "material_code": item.material_code,
+            "material_name": item.material_name,
+            "specification": item.specification,
+            "unit": item.unit,
+            "quantity": item.quantity,
+            "unit_price": item.unit_price or 0,
+            "amount": item.amount or 0,
+            "source_type": item.source_type,
+            "required_date": item.required_date,
+            "purchased_qty": item.purchased_qty or 0,
+            "received_qty": item.received_qty or 0,
+            "is_key_item": item.is_key_item,
+        })
+
     return BomResponse(
         id=bom.id,
         bom_no=bom.bom_no,
         bom_name=bom.bom_name,
         project_id=bom.project_id,
-        project_name=bom.project_name if bom.project else None,
+        project_name=bom.project.project_name if bom.project else None,
         machine_id=bom.machine_id,
-        machine_name=bom.machine_name if bom.machine else None,
+        machine_name=bom.machine.machine_name if bom.machine else None,
         version=bom.version,
         is_latest=bom.is_latest,
         status=bom.status,
         total_items=bom.total_items,
         total_amount=bom.total_amount or 0,
-        items=bom.items or [],
+        items=items,
         created_at=bom.created_at,
         updated_at=bom.updated_at,
     )

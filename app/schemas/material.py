@@ -229,7 +229,7 @@ class SupplierResponse(TimestampSchema):
 # ==================== BOM ====================
 
 class BomItemCreate(BaseModel):
-    """BOM明细创建"""
+    """BOM 明细创建"""
     material_id: Optional[int] = None
     material_code: str = Field(max_length=50)
     material_name: str = Field(max_length=200)
@@ -246,7 +246,7 @@ class BomItemCreate(BaseModel):
 
 
 class BomCreate(BaseModel):
-    """创建BOM"""
+    """创建 BOM"""
     bom_no: str = Field(max_length=50)
     bom_name: str = Field(max_length=200)
     project_id: int
@@ -257,7 +257,7 @@ class BomCreate(BaseModel):
 
 
 class BomUpdate(BaseModel):
-    """更新BOM"""
+    """更新 BOM"""
     bom_name: Optional[str] = None
     version: Optional[str] = None
     status: Optional[str] = None
@@ -265,26 +265,33 @@ class BomUpdate(BaseModel):
 
 
 class BomItemResponse(BaseSchema):
-    """BOM明细响应"""
+    """BOM 明细响应"""
     id: int
+    bom_id: int
     item_no: int
+    parent_item_id: Optional[int] = None
     material_id: Optional[int] = None
     material_code: Optional[str] = None
     material_name: Optional[str] = None
     specification: Optional[str] = None
+    drawing_no: Optional[str] = None
     unit: Optional[str] = None
     quantity: Decimal
     unit_price: Optional[Decimal] = 0
     amount: Optional[Decimal] = 0
     source_type: Optional[str] = None
+    supplier_id: Optional[int] = None
     required_date: Optional[date] = None
     purchased_qty: Optional[Decimal] = 0
     received_qty: Optional[Decimal] = 0
+    level: Optional[int] = 1
+    sort_order: Optional[int] = 0
     is_key_item: Optional[bool] = False
+    remark: Optional[str] = None
 
 
 class BomResponse(TimestampSchema):
-    """BOM响应"""
+    """BOM 响应"""
     id: int
     bom_no: str
     bom_name: str
@@ -297,4 +304,8 @@ class BomResponse(TimestampSchema):
     status: Optional[str] = "DRAFT"
     total_items: Optional[int] = 0
     total_amount: Optional[Decimal] = 0
+    approved_by: Optional[int] = None
+    approved_at: Optional[str] = None
+    created_by: Optional[int] = None
+    remark: Optional[str] = None
     items: List[BomItemResponse] = []
