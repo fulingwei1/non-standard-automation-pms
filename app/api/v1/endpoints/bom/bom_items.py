@@ -81,6 +81,7 @@ def add_bom_item(
 
     return BomItemResponse(
         id=item.id,
+        bom_id=item.bom_id,
         item_no=item.item_no,
         material_id=item.material_id,
         material_code=item.material_code,
@@ -115,6 +116,7 @@ def get_bom_items(
         items.append(
             BomItemResponse(
                 id=item.id,
+                bom_id=item.bom_id,
                 item_no=item.item_no,
                 material_id=item.material_id,
                 material_code=item.material_code,
@@ -185,6 +187,7 @@ def update_bom_item(
 
     return BomItemResponse(
         id=item.id,
+        bom_id=item.bom_id,
         item_no=item.item_no,
         material_id=item.material_id,
         material_code=item.material_code,

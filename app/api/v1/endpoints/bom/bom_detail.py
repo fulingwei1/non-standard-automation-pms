@@ -10,7 +10,7 @@ from app.api import deps
 from app.core import security
 from app.models.material import BomHeader, BomItem, Material
 from app.models.user import User
-from app.schemas.material import BomResponse, BomUpdate
+from app.schemas.material import BomItemResponse, BomResponse, BomUpdate
 from app.utils.db_helpers import get_or_404, save_obj
 
 router = APIRouter()
@@ -70,25 +70,26 @@ def get_bom_detail(
     for item in bom.items.order_by(BomItem.item_no).all():
         material = item.material
         items.append(
-            {
-                "id": item.id,
-                "item_no": item.item_no,
-                "material_id": item.material_id,
-                "material_code": material.material_code if material else None,
-                "material_name": material.material_name if material else None,
-                "specification": material.specification if material else None,
-                "unit": material.unit if material else None,
-                "quantity": item.quantity,
-                "unit_price": float(item.unit_price) if item.unit_price else 0,
-                "amount": float(item.amount) if item.amount else 0,
-                "source_type": item.source_type,
-                "required_date": (
+            BomItemResponse(
+                id=item.id,
+                bom_id=item.bom_id,
+                item_no=item.item_no,
+                material_id=item.material_id,
+                material_code=material.material_code if material else None,
+                material_name=material.material_name if material else None,
+                specification=material.specification if material else None,
+                unit=material.unit if material else None,
+                quantity=item.quantity,
+                unit_price=float(item.unit_price) if item.unit_price else 0,
+                amount=float(item.amount) if item.amount else 0,
+                source_type=item.source_type,
+                required_date=(
                     item.required_date.strftime("%Y-%m-%d") if item.required_date else None
                 ),
-                "purchased_qty": item.purchased_qty or 0,
-                "received_qty": item.received_qty or 0,
-                "is_key_item": item.is_key_item,
-            }
+                purchased_qty=item.purchased_qty or 0,
+                received_qty=item.received_qty or 0,
+                is_key_item=item.is_key_item,
+            )
         )
 
     return BomResponse(
@@ -148,25 +149,26 @@ def update_bom(
     for item in bom.items.order_by(BomItem.item_no).all():
         material = item.material
         items.append(
-            {
-                "id": item.id,
-                "item_no": item.item_no,
-                "material_id": item.material_id,
-                "material_code": material.material_code if material else None,
-                "material_name": material.material_name if material else None,
-                "specification": material.specification if material else None,
-                "unit": material.unit if material else None,
-                "quantity": item.quantity,
-                "unit_price": float(item.unit_price) if item.unit_price else 0,
-                "amount": float(item.amount) if item.amount else 0,
-                "source_type": item.source_type,
-                "required_date": (
+            BomItemResponse(
+                id=item.id,
+                bom_id=item.bom_id,
+                item_no=item.item_no,
+                material_id=item.material_id,
+                material_code=material.material_code if material else None,
+                material_name=material.material_name if material else None,
+                specification=material.specification if material else None,
+                unit=material.unit if material else None,
+                quantity=item.quantity,
+                unit_price=float(item.unit_price) if item.unit_price else 0,
+                amount=float(item.amount) if item.amount else 0,
+                source_type=item.source_type,
+                required_date=(
                     item.required_date.strftime("%Y-%m-%d") if item.required_date else None
                 ),
-                "purchased_qty": item.purchased_qty or 0,
-                "received_qty": item.received_qty or 0,
-                "is_key_item": item.is_key_item,
-            }
+                purchased_qty=item.purchased_qty or 0,
+                received_qty=item.received_qty or 0,
+                is_key_item=item.is_key_item,
+            )
         )
 
     return BomResponse(

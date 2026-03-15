@@ -52,6 +52,7 @@ def get_machine_bom_list(
             items.append(
                 BomItemResponse(
                     id=item.id,
+                    bom_id=item.bom_id,
                     item_no=item.item_no,
                     material_id=item.material_id,
                     material_code=item.material_code,
@@ -224,6 +225,7 @@ def create_bom(
         items.append(
             BomItemResponse(
                 id=item.id,
+                bom_id=item.bom_id,
                 item_no=item.item_no,
                 material_id=item.material_id,
                 material_code=item.material_code,

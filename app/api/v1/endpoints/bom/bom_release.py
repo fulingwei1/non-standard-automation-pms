@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.material import BomHeader
+from app.models.material import BomHeader, BomItem
 from app.models.project import Project
 from app.models.user import User
 from app.models.vendor import Vendor
@@ -169,9 +169,10 @@ def release_bom(
 
     # 获取 BOM 明细
     items = []
-    for item in bom.items.order_by(bom.items.column("item_no")).all():
+    for item in bom.items.order_by(BomItem.item_no).all():
         items.append({
             "id": item.id,
+            "bom_id": item.bom_id,
             "item_no": item.item_no,
             "material_id": item.material_id,
             "material_code": item.material_code,
