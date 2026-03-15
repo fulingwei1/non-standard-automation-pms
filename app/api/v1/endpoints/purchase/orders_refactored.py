@@ -17,6 +17,7 @@ from app.api.deps import get_current_active_user, get_db
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core.schemas import list_response, paginated_response, success_response
+from app.models.material import BomHeader
 from app.models.purchase import (
     PurchaseOrder,
     PurchaseOrderItem,
@@ -25,6 +26,13 @@ from app.models.user import User
 from app.models.vendor import Vendor
 from app.services.data_scope.config import DataScopeConfig
 from app.services.data_scope_service import DataScopeService
+from app.services.purchase_order_from_bom_service import (
+    build_order_items,
+    create_order_preview,
+    create_purchase_order_from_preview,
+    get_purchase_items_from_bom,
+    group_items_by_supplier,
+)
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import (
@@ -297,3 +305,171 @@ def approve_purchase_order(
 
     # 使用统一响应格式
     return success_response(data=None, message="采购订单审批完成")
+
+
+@router.post("/from-bom/preview")
+def preview_purchase_orders_from_bom(
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    预览从 BOM 创建的采购订单
+    
+    根据 BOM 自动生成采购订单预览，按供应商分组
+    """
+    bom_id = payload.get("bom_id")
+    if not bom_id:
+        raise HTTPException(status_code=422, detail="bom_id 必填")
+    
+    # 获取 BOM
+    bom = get_or_404(db, BomHeader, bom_id, "BOM 不存在")
+    
+    # 获取需要采购的物料项
+    purchase_items = get_purchase_items_from_bom(db, bom)
+    if not purchase_items:
+        return success_response(
+            data={"orders": [], "summary": {"total_orders": 0, "total_items": 0, "total_amount": 0}},
+            message="BOM 中没有需要采购的物料"
+        )
+    
+    # 按供应商分组
+    default_supplier_id = payload.get("default_supplier_id")
+    supplier_groups = group_items_by_supplier(db, purchase_items, default_supplier_id)
+    
+    # 为每个供应商生成订单预览
+    target_project_id = payload.get("project_id") or bom.project_id
+    order_previews = []
+    
+    for supplier_id, items in supplier_groups.items():
+        if supplier_id == 0:
+            # 未指定供应商的物料，跳过或单独处理
+            continue
+        
+        supplier = db.query(Vendor).filter(
+            Vendor.id == supplier_id,
+            Vendor.vendor_type == "MATERIAL"
+        ).first()
+        
+        if not supplier:
+            continue
+        
+        # 构建订单明细
+        order_items, total_amount, total_tax_amount, total_amount_with_tax = build_order_items(items)
+        
+        if not order_items:
+            continue
+        
+        # 生成预览
+        preview = create_order_preview(
+            supplier=supplier,
+            supplier_id=supplier_id,
+            bom=bom,
+            target_project_id=target_project_id,
+            order_items=order_items,
+            total_amount=total_amount,
+            total_tax_amount=total_tax_amount,
+            total_amount_with_tax=total_amount_with_tax,
+        )
+        order_previews.append(preview)
+    
+    # 计算汇总
+    summary = {
+        "total_orders": len(order_previews),
+        "total_items": sum(len(order["items"]) for order in order_previews),
+        "total_amount": sum(order["total_amount"] for order in order_previews),
+        "total_amount_with_tax": sum(order["amount_with_tax"] for order in order_previews),
+    }
+    
+    return success_response(
+        data={"orders": order_previews, "summary": summary},
+        message="采购订单预览生成成功"
+    )
+
+
+@router.post("/from-bom")
+def create_purchase_orders_from_bom(
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    从 BOM 创建采购订单
+    
+    根据 BOM 自动创建采购订单，按供应商分组生成多个订单
+    """
+    bom_id = payload.get("bom_id")
+    if not bom_id:
+        raise HTTPException(status_code=422, detail="bom_id 必填")
+    
+    # 获取 BOM
+    bom = get_or_404(db, BomHeader, bom_id, "BOM 不存在")
+    
+    # 获取需要采购的物料项
+    purchase_items = get_purchase_items_from_bom(db, bom)
+    if not purchase_items:
+        raise HTTPException(status_code=400, detail="BOM 中没有需要采购的物料")
+    
+    # 按供应商分组
+    default_supplier_id = payload.get("default_supplier_id")
+    supplier_groups = group_items_by_supplier(db, purchase_items, default_supplier_id)
+    
+    # 为每个供应商创建订单
+    target_project_id = payload.get("project_id") or bom.project_id
+    created_orders = []
+    
+    for supplier_id, items in supplier_groups.items():
+        if supplier_id == 0:
+            # 未指定供应商的物料，跳过
+            continue
+        
+        supplier = db.query(Vendor).filter(
+            Vendor.id == supplier_id,
+            Vendor.vendor_type == "MATERIAL"
+        ).first()
+        
+        if not supplier:
+            continue
+        
+        # 构建订单明细
+        order_items, total_amount, total_tax_amount, total_amount_with_tax = build_order_items(items)
+        
+        if not order_items:
+            continue
+        
+        # 生成预览
+        order_preview = create_order_preview(
+            supplier=supplier,
+            supplier_id=supplier_id,
+            bom=bom,
+            target_project_id=target_project_id,
+            order_items=order_items,
+            total_amount=total_amount,
+            total_tax_amount=total_tax_amount,
+            total_amount_with_tax=total_amount_with_tax,
+        )
+        
+        # 创建实际订单
+        order, order_items_objs = create_purchase_order_from_preview(
+            db=db,
+            order_preview=order_preview,
+            bom=bom,
+            current_user_id=current_user.id,
+            generate_order_no_func=lambda db: generate_order_no(db, "PO"),
+        )
+        
+        db.commit()
+        
+        created_orders.append({
+            "order_id": order.id,
+            "order_no": order.order_no,
+            "supplier_id": supplier_id,
+            "supplier_name": supplier.supplier_name,
+            "item_count": len(order_items_objs),
+            "total_amount": float(order.total_amount),
+        })
+    
+    return success_response(
+        data={"orders": created_orders},
+        message=f"成功创建 {len(created_orders)} 个采购订单"
+    )
