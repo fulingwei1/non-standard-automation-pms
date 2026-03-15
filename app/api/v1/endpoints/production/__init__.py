@@ -12,6 +12,7 @@ from . import (
     dashboard,
     exception_enhancement,
     exceptions,
+    material_requisitions,
     material_tracking,
     plans,
     progress,
@@ -36,6 +37,7 @@ router.include_router(plans.router, tags=["production-plans"])
 router.include_router(work_orders.router, tags=["production-work-orders"])
 router.include_router(work_reports.router, tags=["production-work-reports"])
 router.include_router(exceptions.router, prefix="/exceptions", tags=["production-exceptions"])
+router.include_router(material_requisitions.router, tags=["production-material-requisitions"])
 router.include_router(
     material_tracking.router, prefix="/material", tags=["production-material-tracking"]
 )

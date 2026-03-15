@@ -29,6 +29,7 @@ router = APIRouter()
 # ==================== 生产计划管理 ====================
 
 
+@router.get("/plans", response_model=PaginatedResponse)
 @router.get("/production-plans", response_model=PaginatedResponse)
 def read_production_plans(
     db: Session = Depends(deps.get_db),
@@ -86,6 +87,7 @@ def read_production_plan_calendar(
     )
 
 
+@router.get("/plans/{plan_id}", response_model=ProductionPlanResponse)
 @router.get("/production-plans/{plan_id}", response_model=ProductionPlanResponse)
 def read_production_plan(
     plan_id: int,
