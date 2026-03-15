@@ -44,12 +44,14 @@ class TestProjectResourcePlanAPI:
         headers = _auth_headers(admin_token)
 
         plan_data = {
-            "resource_type": "employee",
-            "resource_id": 1,
-            "allocation_rate": 80.0,
-            "start_date": datetime.now().strftime("%Y-%m-%d"),
-            "end_date": (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d"),
-            "role": "developer",
+            "stage_code": "S1",
+            "role_code": "DEV",
+            "role_name": "开发工程师",
+            "headcount": 1,
+            "allocation_pct": 80.0,
+            "planned_start": datetime.now().strftime("%Y-%m-%d"),
+            "planned_end": (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d"),
+            "remark": "测试资源计划",
         }
 
         response = client.post(

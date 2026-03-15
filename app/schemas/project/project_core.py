@@ -190,12 +190,14 @@ class ProjectDetailResponse(ProjectResponse):
 class ProjectMemberCreate(BaseModel):
     """添加项目成员"""
 
-    project_id: Optional[int] = Field(None, description="项目ID（可选，通常从路径中获取）")
+    project_id: Optional[int] = Field(None, description="项目 ID（可选，通常从路径中获取）")
     user_id: int
     role_code: str = Field(max_length=50)
     allocation_pct: Decimal = Field(default=HUNDRED_DECIMAL, ge=0, le=100)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    commitment_level: Optional[str] = None
+    reporting_to_pm: Optional[bool] = None
     remark: Optional[str] = None
 
 

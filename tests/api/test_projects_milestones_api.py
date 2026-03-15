@@ -41,12 +41,10 @@ class TestProjectMilestonesAPI:
 
         # 创建里程碑
         milestone_data = {
-            "project_id": project_id,
-            "name": "需求分析完成",
-            "description": "完成需求文档编写和评审",
+            "milestone_name": "需求分析完成",
+            "milestone_code": "MS-REQ-001",
             "planned_date": (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d"),
             "milestone_type": "phase",
-            "weight": 15.0,
         }
 
         response = client.post(
@@ -61,7 +59,7 @@ class TestProjectMilestonesAPI:
 
         assert response.status_code in [200, 201], response.text
         data = response.json()
-        assert data["name"] == milestone_data["name"]
+        assert data["milestone_name"] == milestone_data["milestone_name"]
         assert data["project_id"] == project_id
 
     def test_list_milestones(self, client: TestClient, admin_token: str):
