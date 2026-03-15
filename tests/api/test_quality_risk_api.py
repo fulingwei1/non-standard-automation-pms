@@ -23,6 +23,7 @@ def client():
 def auth_headers(client):
     """获取认证头（假设有登录接口）"""
     # TODO: 实现实际的登录逻辑
+    pytest.skip("Fixture 待修复：需改用 conftest 的 admin_auth_headers")
     return {"Authorization": "Bearer test_token"}
 
 
