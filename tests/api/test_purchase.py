@@ -861,7 +861,7 @@ class TestPurchaseRequest:
 
         assert response.status_code == 200
 
-    @pytest.mark.skip(reason="API delete triggers RecursionError - model cascade delete issue to be fixed")
+    @pytest.mark.skip(reason="删除操作触发 SQLAlchemy cascade 删除时的递归错误（RecursionError），需修复模型关系配置")
     def test_delete_draft_request(self, client: TestClient, admin_token: str, draft_purchase_request: PurchaseRequest):
         """测试删除草稿状态的采购申请"""
         if not admin_token:
@@ -954,7 +954,7 @@ class TestGoodsReceipt:
 class TestPurchaseFromBOM:
     """从 BOM 生成采购订单测试"""
 
-    @pytest.mark.skip(reason="from-bom endpoint not implemented or returns different response")
+    @pytest.mark.skip(reason="from-bom endpoint 未实现 - 需要添加 /purchase-orders/from-bom 端点，使用 purchase_order_from_bom_service 服务")
     def test_create_orders_from_bom_no_bom(self, client: TestClient, admin_token: str):
         """测试从不存在的 BOM 创建订单"""
         if not admin_token:
