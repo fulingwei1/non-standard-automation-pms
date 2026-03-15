@@ -61,6 +61,101 @@ def get_project_revenue_detail(
     return ResponseModel(code=200, message="success", data=result)
 
 
+@router.get("/by-month", response_model=ResponseModel)
+def get_project_cost_by_month(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.require_permission("cost:read")),
+) -> Any:
+    """
+    按月汇总项目成本
+    """
+    from sqlalchemy import func
+
+    # 获取项目
+    from app.models.project import Project
+
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    # 按月份分组汇总成本
+    from app.models.project import ProjectCost
+
+    monthly_costs = (
+        db.query(
+            func.strftime("%Y-%m", ProjectCost.cost_date).label("month"),
+            func.coalesce(func.sum(ProjectCost.amount), 0).label("total_amount"),
+            func.count(ProjectCost.id).label("count"),
+        )
+        .filter(ProjectCost.project_id == project_id)
+        .group_by(func.strftime("%Y-%m", ProjectCost.cost_date))
+        .order_by(func.strftime("%Y-%m", ProjectCost.cost_date).desc())
+        .all()
+    )
+
+    items = [
+        {
+            "month": row.month,
+            "total_amount": float(row.total_amount or 0),
+            "count": row.count,
+        }
+        for row in monthly_costs
+    ]
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={"project_id": project_id, "items": items},
+    )
+
+
+@router.get("/budget-comparison", response_model=ResponseModel)
+def get_project_budget_comparison(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.require_permission("cost:read")),
+) -> Any:
+    """
+    项目成本预算对比分析
+    """
+    from app.models.project import Project
+
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    # 计算实际成本
+    from sqlalchemy import func
+    from app.models.project import ProjectCost
+
+    actual_cost = (
+        db.query(func.coalesce(func.sum(ProjectCost.amount), 0))
+        .filter(ProjectCost.project_id == project_id)
+        .scalar()
+    )
+
+    budget_amount = float(project.budget_amount or 0)
+    actual_cost_float = float(actual_cost or 0)
+    variance = round(budget_amount - actual_cost_float, 2)
+    variance_pct = round((variance / budget_amount * 100), 2) if budget_amount else 0
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "project_id": project_id,
+            "budget_amount": budget_amount,
+            "actual_cost": actual_cost_float,
+            "variance": variance,
+            "variance_pct": variance_pct,
+            "status": "under_budget" if variance > 0 else "over_budget" if variance < 0 else "on_budget",
+        },
+    )
+
+
 @router.get("/profit-analysis", response_model=ResponseModel)
 def get_project_profit_analysis(
     *,
