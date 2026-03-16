@@ -8,8 +8,9 @@
 from decimal import Decimal
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Path, Query, UploadFile
 from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -18,12 +19,36 @@ from app.core import security
 from app.models.project import Machine, Project, ProjectDocument
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.schemas.project import MachineResponse, ProjectDocumentResponse
+from app.schemas.project import MachineCreate, MachineResponse, ProjectDocumentResponse
 from app.services.machine_custom import MachineCustomService
+from app.services.project import ProjectMachineService
 from app.utils.db_helpers import get_or_404
 from app.utils.permission_helpers import check_project_access_or_raise
 
 router = APIRouter()
+
+
+class BatchCreateMachinesRequest(BaseModel):
+    """批量创建设备请求"""
+
+    machines: List[MachineCreate] = Field(..., min_length=1, description="机台列表")
+
+
+@router.post("/batch", response_model=ResponseModel, status_code=201)
+def batch_create_project_machines(
+    project_id: int = Path(..., description="项目ID"),
+    request: BatchCreateMachinesRequest = Body(..., description="批量创建数据"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("machine:create")),
+) -> Any:
+    """批量创建项目机台"""
+    check_project_access_or_raise(db, current_user, project_id, "您没有权限在该项目中创建机台")
+
+    project = get_or_404(db, Project, project_id, detail="项目不存在")
+    service = ProjectMachineService(db=db, project_id=project.id)
+    created = [service.create(machine_in) for machine_in in request.machines]
+
+    return ResponseModel(code=201, message="批量创建成功", data=created)
 
 
 @router.get("/summary")

@@ -28,6 +28,7 @@ class KnowledgeSyncResponse(BaseModel):
     sync_time: datetime
     is_new_case: bool
     updated_fields: List[str]
+    synced_count: int = 0
 
 
 class KnowledgeImpactResponse(BaseModel):
@@ -43,3 +44,5 @@ class KnowledgeImpactResponse(BaseModel):
     last_updated: Optional[datetime] = None
     potential_reuse_scenarios: Optional[List[str]] = None
     similar_cases_count: Optional[int] = None
+    applicable_projects: int = 0
+    estimated_impact: dict = Field(default_factory=dict)

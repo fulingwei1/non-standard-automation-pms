@@ -70,19 +70,36 @@ class ProjectMachineService(
     ) -> bool:
         machine = self._get_object_or_404(object_id)
         self._ensure_can_delete(machine.id)
-        return super().delete(object_id, soft_delete=soft_delete)
+
+        deleted = (
+            self.db.query(Machine)
+            .filter(
+                Machine.id == object_id,
+                Machine.project_id == self.project_id,
+            )
+            .delete(synchronize_session=False)
+        )
+        if not deleted:
+            raise_not_found(self.resource_name, object_id)
+
+        self.db.commit()
+        self._log_audit("DELETE", object_id=object_id)
+        self._after_delete(object_id)
+        return True
 
     def _before_create(self, obj_in: MachineCreate) -> MachineCreate:
         payload = obj_in.model_copy(update={"project_id": self.project_id})
+        machine_no_provided = "machine_no" in obj_in.model_fields_set
 
         if payload.machine_code:
             self._ensure_unique_code(payload.machine_code)
-            if not payload.machine_no:
+            if payload.machine_no is None:
                 payload.machine_no = 1
         else:
             machine_code, machine_no = self._machine_service.generate_machine_code(self.project_id)
             payload.machine_code = machine_code
-            payload.machine_no = payload.machine_no or machine_no
+            if not machine_no_provided or payload.machine_no is None:
+                payload.machine_no = machine_no
 
         self._validate_stage(getattr(payload, "stage", None))
         self._validate_health(getattr(payload, "health", None))
