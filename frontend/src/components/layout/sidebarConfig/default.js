@@ -215,23 +215,16 @@ export const defaultNavGroups = [
       { name: "发货管理", path: "/pmc/delivery-orders", icon: "Truck", permission: "delivery:order:read", permissionLabel: "发货管理" }
     ]
   },
-  // 10. 客服验收
+  // 10. 客服管理
   {
-    label: "客服验收",
+    label: "客服管理",
     items: [
       {
-        name: "服务中心",
-        path: "/service/center",
+        name: "客服管理中心",
+        path: "/customer-service/center",
         icon: "FileText",
-        permissionAny: ["service:read"],
-        permissionLabel: "服务中心"
-      },
-      {
-        name: "交付验收中心",
-        path: "/delivery/acceptance-center",
-        icon: "ClipboardList",
-        permissionAny: ["acceptance:read", "installation_dispatch:read"],
-        permissionLabel: "交付验收中心"
+        permissionAny: ["service:read", "acceptance:read", "installation_dispatch:read"],
+        permissionLabel: "客服管理中心"
       }
     ]
   },

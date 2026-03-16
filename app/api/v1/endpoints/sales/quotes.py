@@ -21,11 +21,13 @@ logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.models.sales import Opportunity, Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 
 # 导入重构后的服务
+from app.services.quote_approval import QuoteApprovalService
 from app.services.sales.quotes_service import QuotesService
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.utils.db_helpers import get_or_404
@@ -57,6 +59,13 @@ def _to_decimal(value) -> Decimal:
     except (InvalidOperation, ValueError, TypeError) as e:
         logger.warning(f"成本字段转换失败: value={value!r}, error={e}")
         return Decimal("0")
+
+
+def _to_optional_decimal(value) -> Optional[Decimal]:
+    """安全转换为可空 Decimal，缺失值保持 None。"""
+    if value in (None, ""):
+        return None
+    return _to_decimal(value)
 
 
 def _extract_item_meta(item: dict) -> dict:
@@ -151,9 +160,9 @@ def create_quote(
     version = QuoteVersion(
         quote_id=quote.id,
         version_no=version_payload.get("version_no") or "V1",
-        total_price=version_payload.get("total_price"),
-        cost_total=version_payload.get("cost_total"),
-        gross_margin=version_payload.get("gross_margin"),
+        total_price=_to_optional_decimal(version_payload.get("total_price")),
+        cost_total=_to_optional_decimal(version_payload.get("cost_total")),
+        gross_margin=_to_optional_decimal(version_payload.get("gross_margin")),
         lead_time_days=version_payload.get("lead_time_days"),
         risk_terms=version_payload.get("risk_terms"),
         created_by=current_user.id,
@@ -192,8 +201,10 @@ def create_quote(
         version.total_price = total_price_calc
     if not version.cost_total:
         version.cost_total = total_cost_calc
-    if version.total_price and version.total_price > 0:
-        version.gross_margin = ((version.total_price - (version.cost_total or Decimal("0"))) / version.total_price * Decimal("100")).quantize(Decimal("0.01"))
+    total_price = _to_decimal(version.total_price)
+    total_cost = _to_decimal(version.cost_total)
+    if total_price > 0:
+        version.gross_margin = ((total_price - total_cost) / total_price * Decimal("100")).quantize(Decimal("0.01"))
 
     quote.current_version_id = version.id
     db.commit()
@@ -292,20 +303,31 @@ def approve_quote(
     quote_id: int,
     payload: dict = Body(...),
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(security.require_permission("quote:approve")),
 ):
-    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    get_or_404(db, Quote, quote_id, detail="报价不存在")
 
-    # Minimal approval flow: mark current version approved when requested.
-    approved = bool(payload.get("approved", True))
-    remark = payload.get("remark")
-    if quote.current_version_id:
-        version = db.query(QuoteVersion).filter(QuoteVersion.id == quote.current_version_id).first()
-        if version and approved:
-            version.approved_by = current_user.id
-            version.approved_at = datetime.now()
-    quote.status = "APPROVED" if approved else "REJECTED"
-    db.commit()
-    return ResponseModel(code=200, message="报价审批完成", data={"status": quote.status, "remark": remark})
+    raw_action = payload.get("action")
+    if raw_action is None:
+        raw_action = "approve" if bool(payload.get("approved", True)) else "reject"
+    action = str(raw_action).strip().lower()
+    comment = payload.get("comment") or payload.get("remark")
+
+    service = QuoteApprovalService(db)
+    try:
+        result = service.perform_quote_action(
+            quote_id=quote_id,
+            action=action,
+            approver_id=current_user.id,
+            comment=comment,
+        )
+        db.commit()
+        return ResponseModel(code=200, message="报价审批完成", data=result)
+    except ValueError as exc:
+        db.rollback()
+        detail = str(exc)
+        if detail == "报价不存在":
+            raise HTTPException(status_code=404, detail=detail)
+        raise HTTPException(status_code=400, detail=detail)
 
 # 其他接口可按需补全...
