@@ -130,10 +130,10 @@ class ProjectKnowledgeSyncer:
         return f"""# 项目案例摘要生成任务
 
 ## 项目基本信息
-- 项目名称：{project.name}
-- 项目编号：{project.code}
-- 客户名称：{project.customer.name if hasattr(project, 'customer') and project.customer else '未知'}
-- 项目金额：¥{review.budget_amount:,.2f}
+- 项目名称：{project.project_name}
+- 项目编号：{project.project_code}
+- 客户名称：{project.customer.customer_name if getattr(project, 'customer', None) else (project.customer_name or '未知')}
+- 项目金额：¥{float(review.budget_amount or 0):,.2f}
 
 ## 复盘内容
 - 成功因素：{review.success_factors or '无'}

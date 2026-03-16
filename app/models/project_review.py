@@ -80,6 +80,11 @@ class ProjectReview(Base, TimestampMixin):
 
     # AI标记
     ai_generated = Column(Boolean, default=False, comment="是否AI生成")
+    ai_generated_at = Column(DateTime, comment="AI生成时间")
+    ai_summary = Column(Text, comment="AI摘要")
+    ai_insights = Column(JSON, comment="AI洞察")
+    ai_metadata = Column(JSON, comment="AI生成元数据")
+    quality_score = Column(Numeric(5, 2), comment="质量评分")
 
     # 关系
     project = relationship("Project", backref="reviews")
@@ -135,6 +140,7 @@ class ProjectLesson(Base, TimestampMixin):
     priority = Column(String(10), default="MEDIUM", comment="优先级：LOW/MEDIUM/HIGH")
 
     # AI分析
+    ai_extracted = Column(Boolean, default=False, comment="是否AI提取")
     ai_confidence = Column(Numeric(5, 4), comment="AI置信度(0-1)")
 
     # 状态

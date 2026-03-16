@@ -102,10 +102,12 @@ class ProjectReviewReportGenerator:
         return {
             "project": {
                 "id": project.id,
-                "code": project.code,
-                "name": project.name,
+                "code": project.project_code,
+                "name": project.project_name,
                 "description": project.description,
-                "customer_name": project.customer.name if hasattr(project, "customer") else None,
+                "customer_name": (
+                    project.customer.customer_name if getattr(project, "customer", None) else project.customer_name
+                ),
                 "status": project.status,
                 "type": project.project_type,
                 "planned_start": (
@@ -302,7 +304,7 @@ class ProjectReviewReportGenerator:
             "project_id": project_data["project"]["id"],
             "project_code": project_data["project"]["code"],
             "review_type": "POST_MORTEM",
-            "review_date": datetime.now().date().isoformat(),
+            "review_date": datetime.now().date(),
             # 周期数据
             "plan_duration": project_data["statistics"]["plan_duration"],
             "actual_duration": project_data["statistics"]["actual_duration"],
@@ -325,5 +327,5 @@ class ProjectReviewReportGenerator:
             "ai_insights": report_content.get("insights", {}),
             # AI标记
             "ai_generated": True,
-            "ai_generated_at": datetime.now().isoformat(),
+            "ai_generated_at": datetime.now(),
         }

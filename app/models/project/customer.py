@@ -76,6 +76,11 @@ class Customer(Base, TimestampMixin):
     # ========================================================================
 
     @property
+    def name(self) -> str:
+        """兼容旧代码：customer.name -> customer_name"""
+        return self.customer_name
+
+    @property
     def display_name(self) -> str:
         """获取客户显示名称（优先使用简称）"""
         return self.short_name or self.customer_name

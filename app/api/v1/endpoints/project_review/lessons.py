@@ -68,7 +68,8 @@ async def extract_lessons(
     )
 
 
-@router.get("/", response_model=List[ProjectLessonResponse])
+@router.get("", response_model=List[ProjectLessonResponse])
+@router.get("/", response_model=List[ProjectLessonResponse], include_in_schema=False)
 async def list_lessons(
     review_id: Optional[int] = None,
     project_id: Optional[int] = None,

@@ -38,7 +38,6 @@ async def sync_to_knowledge_base(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    # 如果包含经验教训，更新知识库案例
     updated_fields = []
     if request.include_lessons and result["success"]:
         lesson_result = syncer.update_case_from_lessons(
@@ -56,10 +55,12 @@ async def sync_to_knowledge_base(
         sync_time=result["sync_log"]["sync_time"],
         is_new_case=not bool(updated_fields),
         updated_fields=updated_fields,
+        synced_count=1 if result["success"] else 0,
     )
 
 
 @router.get("/{review_id}/knowledge-impact", response_model=KnowledgeImpactResponse)
+@router.get("/{review_id}/impact", response_model=KnowledgeImpactResponse)
 async def get_knowledge_impact(
     review_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
@@ -71,14 +72,11 @@ async def get_knowledge_impact(
     syncer = ProjectKnowledgeSyncer(db)
     sync_status = syncer.get_sync_status(review_id)
 
-    # 如果已同步，分析潜在复用场景
-    potential_scenarios = None
-    similar_cases_count = None
+    potential_scenarios = []
+    similar_cases_count = 0
 
     if sync_status.get("synced"):
-        # 简单分析：基于标签识别适用场景
-        tags = sync_status.get("tags", [])
-        potential_scenarios = []
+        tags = sync_status.get("tags", []) or []
 
         if "高满意度" in tags:
             potential_scenarios.append("客户关系良好的相似项目")
@@ -87,7 +85,6 @@ async def get_knowledge_impact(
         if "成本可控" in tags:
             potential_scenarios.append("预算受限的项目借鉴")
 
-        # 查询相似案例数量
         from app.models.presale_knowledge_case import PresaleKnowledgeCase
 
         similar_cases_count = (
@@ -101,6 +98,12 @@ async def get_knowledge_impact(
             else 0
         )
 
+    estimated_impact = {
+        "knowledge_reuse_score": round(min(1.0, similar_cases_count / 10), 2),
+        "scenario_count": len(potential_scenarios),
+        "synced": sync_status.get("synced", False),
+    }
+
     return KnowledgeImpactResponse(
         success=True,
         review_id=review_id,
@@ -112,6 +115,8 @@ async def get_knowledge_impact(
         last_updated=sync_status.get("last_updated"),
         potential_reuse_scenarios=potential_scenarios,
         similar_cases_count=similar_cases_count,
+        applicable_projects=similar_cases_count,
+        estimated_impact=estimated_impact,
     )
 
 

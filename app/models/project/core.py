@@ -224,6 +224,16 @@ class Project(Base, TimestampMixin):
     # ========================================================================
 
     @property
+    def code(self) -> str:
+        """兼容旧代码：project.code -> project_code"""
+        return self.project_code
+
+    @property
+    def name(self) -> str:
+        """兼容旧代码：project.name -> project_name"""
+        return self.project_name
+
+    @property
     def customer_info(self) -> dict:
         """
         获取客户完整信息（替代 customer_name, customer_contact, customer_phone 冗余字段）
