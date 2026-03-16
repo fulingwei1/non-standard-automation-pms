@@ -46,7 +46,7 @@ const roleActions = {
     { id: 'new-order', icon: Package, label: '新建采购单', path: '/purchases/new', color: 'bg-blue-500' },
     { id: 'suppliers', icon: Users, label: '供应商管理', path: '/suppliers', color: 'bg-green-500' },
     { id: 'materials', icon: Package, label: '物料查询', path: '/materials', color: 'bg-purple-500' },
-    { id: 'arrivals', icon: Package, label: '到货跟踪', path: '/arrivals', color: 'bg-orange-500' },
+    { id: 'arrivals', icon: Package, label: '到货跟踪', path: '/arrival-tracking', color: 'bg-orange-500' },
   ],
   production: [
     { id: 'work-orders', icon: FileText, label: '工单管理', path: '/work-orders', color: 'bg-blue-500' },

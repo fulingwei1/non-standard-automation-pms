@@ -277,8 +277,8 @@ export const allMenuGroups = [
         path: "/suppliers",
         icon: "Building2",
       },
-      { id: "shortage", name: "缺料管理", path: "/shortage", icon: "Package" },
-      { id: "arrivals", name: "到货跟踪", path: "/arrivals", icon: "Truck" },
+      { id: "shortage", name: "缺料看板", path: "/shortage/dashboard", icon: "Package" },
+      { id: "arrivals", name: "到货跟踪", path: "/arrival-tracking", icon: "Truck" },
     ],
   },
   {

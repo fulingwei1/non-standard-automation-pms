@@ -74,9 +74,10 @@ export function ProductionRoutes() {
         path="/acceptance-templates"
         element={<AcceptanceTemplateManagement />}
       />
+      <Route path="/shortage/dashboard" element={<ShortageManagementBoard />} />
       <Route
         path="/shortage-management-board"
-        element={<ShortageManagementBoard />}
+        element={<Navigate to="/shortage/dashboard" replace />}
       />
       <Route path="/shortage-reports" element={<ShortageReportList />} />
       <Route path="/arrival-tracking" element={<ArrivalTrackingList />} />

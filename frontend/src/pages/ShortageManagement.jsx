@@ -532,7 +532,7 @@ export default function ShortageManagement() {
                     <AlertTriangle className="h-4 w-4 mr-2" />
                     {arrivalFilters.is_delayed ? "全部" : "延迟预警"}
                   </Button>
-                  <Button onClick={() => navigate("/shortage/arrivals/new")}>
+                  <Button onClick={() => navigate("/arrival-tracking/new")}>
                     <Plus className="h-4 w-4 mr-2" />
                     新建跟踪
                   </Button>
@@ -586,7 +586,7 @@ export default function ShortageManagement() {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                    navigate(`/shortage/arrivals/${arrival.id}`)
+                    navigate(`/arrival-tracking/${arrival.id}`)
                     }>
 
                         <Eye className="h-4 w-4 mr-2" />

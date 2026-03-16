@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 import {
   ProcurementProtectedRoute,
   ProductionProtectedRoute
@@ -251,11 +251,7 @@ export function ProcurementRoutes() {
       />
       <Route
         path="/arrivals"
-        element={
-          <ProcurementProtectedRoute>
-            <ArrivalManagement />
-          </ProcurementProtectedRoute>
-        }
+        element={<Navigate to="/arrival-tracking" replace />}
       />
       <Route path="/suppliers" element={<SupplierManagement />} />
       <Route
@@ -299,6 +295,14 @@ export function ProcurementRoutes() {
         }
       />
       <Route
+        path="/arrival-tracking/:id"
+        element={
+          <ProcurementProtectedRoute>
+            <ArrivalDetail />
+          </ProcurementProtectedRoute>
+        }
+      />
+      <Route
         path="/shortage/substitutions/:id"
         element={
           <ProcurementProtectedRoute>
@@ -332,6 +336,14 @@ export function ProcurementRoutes() {
       />
       <Route
         path="/shortage/arrivals/new"
+        element={
+          <ProcurementProtectedRoute>
+            <ArrivalNew />
+          </ProcurementProtectedRoute>
+        }
+      />
+      <Route
+        path="/arrival-tracking/new"
         element={
           <ProcurementProtectedRoute>
             <ArrivalNew />

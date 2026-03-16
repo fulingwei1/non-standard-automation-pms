@@ -143,7 +143,8 @@ export const shortageApi = {
   },
   // 统计分析 - /shortage/analytics/...
   statistics: {
-    dashboard: () => api.get("/shortage/analytics/overview"),
+    dashboard: (params) => api.get("/shortage/analytics/dashboard", { params }),
+    overview: (params) => api.get("/shortage/analytics/overview", { params }),
     causeAnalysis: (params) =>
       api.get("/shortage/analytics/cause-analysis", { params }),
     kitRate: (params) =>
