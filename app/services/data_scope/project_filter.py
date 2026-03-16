@@ -14,6 +14,7 @@ from app.models.organization import Department
 from app.models.project import Project
 from app.models.user import User
 
+from .normalization import normalize_data_scope
 from .user_scope import UserScopeService
 
 
@@ -43,7 +44,7 @@ class ProjectFilterService:
             all_projects = db.query(Project.id).filter(Project.is_active).all()
             return {p[0] for p in all_projects}
 
-        data_scope = UserScopeService.get_user_data_scope(db, user)
+        data_scope = normalize_data_scope(UserScopeService.get_user_data_scope(db, user))
 
         if data_scope == DataScopeEnum.ALL.value:
             # 全部可见
@@ -174,7 +175,7 @@ class ProjectFilterService:
         if user.is_superuser:
             return query
 
-        data_scope = UserScopeService.get_user_data_scope(db, user)
+        data_scope = normalize_data_scope(UserScopeService.get_user_data_scope(db, user))
 
         if data_scope == DataScopeEnum.ALL.value:
             # 全部可见，无需过滤
@@ -237,7 +238,7 @@ class ProjectFilterService:
         if user.is_superuser:
             return True
 
-        data_scope = UserScopeService.get_user_data_scope(db, user)
+        data_scope = normalize_data_scope(UserScopeService.get_user_data_scope(db, user))
 
         if data_scope == DataScopeEnum.ALL.value:
             return True

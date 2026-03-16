@@ -14,10 +14,13 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
+from app.models.enums import IssueStatusEnum
 from app.models.issue import Issue
 from app.models.service import KnowledgeBase
+from app.models.service.enums import KnowledgeBaseStatusEnum
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.services.data_scope import DataScopeService
 
 router = APIRouter()
 
@@ -30,15 +33,17 @@ def get_knowledge_issues(
     category: Optional[str] = Query(None, description="问题分类筛选"),
     severity: Optional[str] = Query(None, description="严重程度筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("issue:read")),
 ) -> Any:
     """
     问题库列表
     从问题管理模块中提取已解决的问题，形成问题库
     """
     query = db.query(Issue).filter(
-        Issue.status.in_(["RESOLVED", "CLOSED"]), Issue.solution.isnot(None)  # 必须有解决方案
+        Issue.status.in_([IssueStatusEnum.RESOLVED.value, IssueStatusEnum.CLOSED.value]),
+        Issue.solution.isnot(None),  # 必须有解决方案
     )
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     if category:
         query = query.filter(Issue.category == category)
@@ -91,7 +96,7 @@ def get_knowledge_solutions(
     pagination: PaginationParams = Depends(get_pagination_query),
     category: Optional[str] = Query(None, description="分类筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     方案库列表
@@ -99,7 +104,7 @@ def get_knowledge_solutions(
     """
     # 从知识库中查找方案类文章
     query = db.query(KnowledgeBase).filter(
-        KnowledgeBase.status == "PUBLISHED",
+        KnowledgeBase.status == KnowledgeBaseStatusEnum.PUBLISHED.value,
         or_(
             KnowledgeBase.category == "SOLUTION",
             KnowledgeBase.category == "TROUBLESHOOTING",
@@ -156,7 +161,7 @@ def search_knowledge(
     search_type: Optional[str] = Query(
         "all", description="搜索类型：all/issues/solutions/articles"
     ),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     搜索知识库
@@ -166,7 +171,9 @@ def search_knowledge(
 
     if search_type in ["all", "articles"]:
         # 搜索知识库文章
-        article_query = db.query(KnowledgeBase).filter(KnowledgeBase.status == "PUBLISHED")
+        article_query = db.query(KnowledgeBase).filter(
+            KnowledgeBase.status == KnowledgeBaseStatusEnum.PUBLISHED.value
+        )
         article_query = apply_keyword_filter(
             article_query, KnowledgeBase, keyword, ["title", "content"], use_ilike=False
         )
@@ -184,12 +191,13 @@ def search_knowledge(
                 }
             )
 
-    if search_type in ["all", "issues"]:
+    if search_type in ["all", "issues"] and security.check_permission(current_user, "issue:read", db):
         # 搜索问题库
         issue_query = db.query(Issue).filter(
-            Issue.status.in_(["RESOLVED", "CLOSED"]),
+            Issue.status.in_([IssueStatusEnum.RESOLVED.value, IssueStatusEnum.CLOSED.value]),
             Issue.solution.isnot(None),
         )
+        issue_query = DataScopeService.filter_issues_by_scope(db, issue_query, current_user)
         issue_query = apply_keyword_filter(
             issue_query, Issue, keyword, ["title", "description", "solution"], use_ilike=False
         )
@@ -210,7 +218,7 @@ def search_knowledge(
     if search_type in ["all", "solutions"]:
         # 搜索方案库（从知识库中）
         solution_query = db.query(KnowledgeBase).filter(
-            KnowledgeBase.status == "PUBLISHED",
+            KnowledgeBase.status == KnowledgeBaseStatusEnum.PUBLISHED.value,
             KnowledgeBase.category.in_(["SOLUTION", "TROUBLESHOOTING"]),
         )
         solution_query = apply_keyword_filter(

@@ -13,6 +13,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.service import KnowledgeBase
+from app.models.service.enums import KnowledgeBaseStatusEnum, normalize_knowledge_base_status
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.schemas.service import (
@@ -22,6 +23,7 @@ from app.schemas.service import (
 )
 from app.utils.db_helpers import get_or_404, save_obj
 
+from ..access import ensure_author_or_superuser
 from ..number_utils import generate_article_no
 
 router = APIRouter()
@@ -37,7 +39,7 @@ def read_knowledge_base(
     is_faq: Optional[bool] = Query(None, description="是否FAQ筛选"),
     article_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取知识库文章列表
@@ -49,6 +51,7 @@ def read_knowledge_base(
     if is_faq is not None:
         query = query.filter(KnowledgeBase.is_faq == is_faq)
     if article_status:
+        article_status = normalize_knowledge_base_status(article_status)
         query = query.filter(KnowledgeBase.status == article_status)
 
     # 应用关键词过滤（文章编号/标题/内容）
@@ -83,7 +86,7 @@ def create_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),
     article_in: KnowledgeBaseCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:create")),
 ) -> Any:
     """
     创建知识库文章
@@ -96,7 +99,7 @@ def create_knowledge_base(
         tags=article_in.tags or [],
         is_faq=article_in.is_faq or False,
         is_featured=article_in.is_featured or False,
-        status=article_in.status or "DRAFT",
+        status=(article_in.status or KnowledgeBaseStatusEnum.DRAFT).value,
         author_id=current_user.id,
         author_name=current_user.real_name or current_user.username,
     )
@@ -108,7 +111,7 @@ def read_knowledge_base_article(
     *,
     db: Session = Depends(deps.get_db),
     article_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取知识库文章详情（增加浏览量）
@@ -126,12 +129,13 @@ def update_knowledge_base(
     db: Session = Depends(deps.get_db),
     article_id: int,
     article_in: KnowledgeBaseUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:update")),
 ) -> Any:
     """
     更新知识库文章
     """
     article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
+    ensure_author_or_superuser(current_user, article.author_id)
 
     if article_in.title is not None:
         article.title = article_in.title
@@ -156,12 +160,13 @@ def delete_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),
     article_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:delete")),
 ) -> Any:
     """
     删除知识库文章
     """
     article = get_or_404(db, KnowledgeBase, article_id, "文章不存在")
+    ensure_author_or_superuser(current_user, article.author_id)
 
     db.delete(article)
     db.commit()
@@ -178,7 +183,7 @@ def add_knowledge_entry(
     category: str = Body(..., description="分类"),
     tags: Optional[List[str]] = Body(None, description="标签列表"),
     entry_type: str = Body("article", description="条目类型：article/issue/solution"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:create")),
 ) -> Any:
     """
     快速添加知识条目（直接发布）
@@ -191,7 +196,7 @@ def add_knowledge_entry(
         tags=tags or [],
         is_faq=False,
         is_featured=False,
-        status="PUBLISHED",
+        status=KnowledgeBaseStatusEnum.PUBLISHED.value,
         author_id=current_user.id,
         author_name=current_user.real_name or current_user.username,
     )

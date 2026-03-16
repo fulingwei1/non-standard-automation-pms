@@ -48,6 +48,10 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
   const status = resolveConfigByKeyOrLabel(statusConfigs, ticket.status, "PENDING");
   const urgency = resolveConfigByKeyOrLabel(urgencyConfigs, ticket.urgency, "NORMAL");
   const problemType = resolveConfigByKeyOrLabel(problemTypeConfigs, ticket.problem_type, "其他");
+  const isPending = ["PENDING", "待分配"].includes(ticket.status);
+  const isPendingVerify = ["PENDING_VERIFY", "RESOLVED", "待验证"].includes(ticket.status);
+  const isInProgress = ["IN_PROGRESS", "ASSIGNED", "处理中"].includes(ticket.status);
+  const isClosed = ["CLOSED", "已关闭"].includes(ticket.status);
 
   const handleClose = async () => {
     if (!closeData.solution || !closeData.solution.trim()) {
@@ -234,18 +238,18 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
               <div className="border-t border-slate-700 pt-4">
                 <p className="text-sm text-slate-400 mb-2">操作提示</p>
                 <div className="text-xs text-slate-500 space-y-1">
-                  {ticket.status === "待分配" && (
+                  {isPending && (
                     <p>• 点击"分配工单"按钮，将此工单分配给负责的工程师</p>
                   )}
-                  {ticket.status === "待验证" && (
+                  {isPendingVerify && (
                     <p>
                       • 点击"关闭工单"按钮，填写解决方案和客户反馈后关闭工单
                     </p>
                   )}
-                  {ticket.status === "处理中" && (
+                  {isInProgress && (
                     <p>• 工单正在处理中，等待工程师完成处理</p>
                   )}
-                  {ticket.status === "已关闭" && (
+                  {isClosed && (
                     <p>• 工单已关闭，如需重新打开请联系管理员</p>
                   )}
                 </div>
@@ -258,7 +262,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
                 提示：按 ESC 键可关闭对话框
               </div>
               <div className="flex gap-2">
-                {ticket.status === "待分配" && (
+                {isPending && (
                   <Button
                     variant="outline"
                     onClick={() => setShowAssignDialog(true)}
@@ -267,7 +271,7 @@ export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTi
                     分配工单
                   </Button>
                 )}
-                {ticket.status === "待验证" && (
+                {isPendingVerify && (
                   <Button
                     onClick={() => setShowCloseDialog(true)}
                     disabled={submitting}

@@ -17,6 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
+from .enums import ServiceRecordStatusEnum
 
 
 class ServiceRecord(Base, TimestampMixin):
@@ -67,7 +68,12 @@ class ServiceRecord(Base, TimestampMixin):
     customer_signed = Column(Boolean, default=False, comment="客户是否签字")
 
     # 状态
-    status = Column(String(20), default="SCHEDULED", nullable=False, comment="状态")
+    status = Column(
+        String(20),
+        default=ServiceRecordStatusEnum.SCHEDULED.value,
+        nullable=False,
+        comment="状态",
+    )
 
     # 关系
     project = relationship("Project", foreign_keys=[project_id])

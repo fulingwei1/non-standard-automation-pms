@@ -3,7 +3,7 @@
  * 验收记录管理 - 检查清单 + 问题追踪 + 签收
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { motion } from "framer-motion";
 import {
@@ -57,11 +57,12 @@ import { cn } from "../lib/utils";
 import { PageHeader } from "../components/layout";
 
 import { acceptanceApi } from "../services/api/acceptance";
-import { projectApi } from "../services/api/projects";
+import { machineApi, projectApi } from "../services/api/projects";
 
 // 状态配置
 const STATUS_CONFIG = {
   draft: { label: "草稿", color: "bg-slate-500/20 text-slate-400 border-slate-500/30" },
+  pending: { label: "待验收", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
   in_progress: { label: "进行中", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   passed: { label: "通过", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
   failed: { label: "失败", color: "bg-red-500/20 text-red-400 border-red-500/30" },
@@ -72,6 +73,7 @@ const STATUS_CONFIG = {
 const TYPE_CONFIG = {
   FAT: { label: "FAT", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
   SAT: { label: "SAT", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+  FINAL: { label: "FINAL", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
 };
 
 // 结果配置
@@ -84,6 +86,7 @@ const RESULT_CONFIG = {
 const AcceptanceManagement = () => {
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
+  const [machines, setMachines] = useState([]);
   const [records, setRecords] = useState([]);
   const [stats, setStats] = useState({ total: 0, passed: 0, failed: 0, pending: 0 });
   const [searchText, setSearchText] = useState("");
@@ -105,12 +108,34 @@ const AcceptanceManagement = () => {
   const loadProjects = async () => {
     try {
       const res = await projectApi.list({ page: 1, page_size: 200 });
-      const items = res?.data?.items || res?.data || [];
+      const items = (res?.data?.items || res?.data || []).map((item) => ({
+        ...item,
+        project_name: item.project_name || item.name || "",
+        project_code: item.project_code || item.code || "",
+      }));
       setProjects(items);
     } catch (_err) {
       setProjects([]);
     }
   };
+
+  const loadProjectMachines = useCallback(async (projectId) => {
+    if (!projectId) {
+      setMachines([]);
+      return;
+    }
+
+    try {
+      const res = await machineApi.list(projectId, { page: 1, page_size: 200 });
+      const items = (res?.data?.items || res?.data || []).map((item) => ({
+        ...item,
+        machine_name: item.machine_name || item.machine_code || item.machine_no || `机台${item.id}`,
+      }));
+      setMachines(items);
+    } catch (_err) {
+      setMachines([]);
+    }
+  }, []);
 
   const loadRecords = async () => {
     setLoading(true);
@@ -127,7 +152,7 @@ const AcceptanceManagement = () => {
       const total = items.length;
       const passed = items.filter(r => r.status === "passed" || r.status === "signed").length;
       const failed = items.filter(r => r.status === "failed").length;
-      const pending = items.filter(r => r.status === "draft" || r.status === "in_progress").length;
+      const pending = items.filter(r => ["draft", "pending", "in_progress"].includes(r.status)).length;
 
       setStats({ total, passed, failed, pending });
     } catch (_err) {
@@ -151,7 +176,8 @@ const AcceptanceManagement = () => {
         (record.title || "").toLowerCase().includes(searchLower) ||
         (record.project_name || "").toLowerCase().includes(searchLower) ||
         (record.acceptance_code || "").toLowerCase().includes(searchLower) ||
-        (record.customer_representative || "").toLowerCase().includes(searchLower);
+        (record.customer_representative || "").toLowerCase().includes(searchLower) ||
+        (record.machine_name || "").toLowerCase().includes(searchLower);
 
       return matchesSearch;
     });
@@ -162,9 +188,14 @@ const AcceptanceManagement = () => {
       await acceptanceApi.create(formData);
       toast({ title: "成功", description: "创建成功" });
       setShowCreateDialog(false);
+      setMachines([]);
       loadRecords();
     } catch (_err) {
-      toast({ title: "错误", description: "创建失败", variant: "destructive" });
+      toast({
+        title: "错误",
+        description: _err?.response?.data?.detail || "创建失败",
+        variant: "destructive"
+      });
     }
   };
 
@@ -200,6 +231,7 @@ const AcceptanceManagement = () => {
   const CreateForm = () => {
     const [formData, setFormData] = useState({
       project_id: "",
+      machine_id: "",
       acceptance_type: "FAT",
       title: "",
       scheduled_date: "",
@@ -210,13 +242,21 @@ const AcceptanceManagement = () => {
     });
     const [submitting, setSubmitting] = useState(false);
 
+    useEffect(() => {
+      if (formData.project_id) {
+        loadProjectMachines(formData.project_id);
+      } else {
+        setMachines([]);
+      }
+    }, [formData.project_id, loadProjectMachines]);
+
     const handleSubmit = async () => {
       if (!formData.project_id) {
         toast({ title: "警告", description: "请选择项目", variant: "destructive" });
         return;
       }
-      if (!formData.title) {
-        toast({ title: "警告", description: "请填写验收标题", variant: "destructive" });
+      if (formData.acceptance_type !== "FINAL" && !formData.machine_id) {
+        toast({ title: "警告", description: "请选择验收机台", variant: "destructive" });
         return;
       }
 
@@ -230,7 +270,10 @@ const AcceptanceManagement = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-sm text-slate-400">选择项目 *</label>
-            <Select value={formData.project_id} onValueChange={(v) => setFormData({ ...formData, project_id: v })}>
+            <Select
+              value={formData.project_id}
+              onValueChange={(v) => setFormData({ ...formData, project_id: v, machine_id: "" })}
+            >
               <SelectTrigger className="bg-surface-100 border-white/10">
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
@@ -238,6 +281,26 @@ const AcceptanceManagement = () => {
                 {projects.map((p) => (
                   <SelectItem key={p.id} value={String(p.id)}>
                     {p.project_name || p.project_code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm text-slate-400">验收机台 *</label>
+            <Select
+              value={formData.machine_id}
+              onValueChange={(v) => setFormData({ ...formData, machine_id: v })}
+              disabled={!formData.project_id}
+            >
+              <SelectTrigger className="bg-surface-100 border-white/10">
+                <SelectValue placeholder={formData.project_id ? "选择机台" : "请先选择项目"} />
+              </SelectTrigger>
+              <SelectContent>
+                {(machines || []).map((machine) => (
+                  <SelectItem key={machine.id} value={String(machine.id)}>
+                    {machine.machine_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -258,11 +321,11 @@ const AcceptanceManagement = () => {
           </div>
 
           <div className="col-span-2 space-y-2">
-            <label className="text-sm text-slate-400">验收标题 *</label>
+            <label className="text-sm text-slate-400">验收标题</label>
             <Input
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="例如：XX 项目 FAT 验收"
+              placeholder="可选，页面会自动生成显示标题"
               className="bg-surface-100 border-white/10"
             />
           </div>
@@ -603,7 +666,7 @@ const AcceptanceManagement = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="搜索验收编号、项目名称、客户代表..."
-                value={searchText || "unknown"}
+                value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="pl-10 bg-surface-100 border-white/10"
               />
@@ -627,6 +690,7 @@ const AcceptanceManagement = () => {
               <SelectContent>
                 <SelectItem value="__all__">全部</SelectItem>
                 <SelectItem value="draft">草稿</SelectItem>
+                <SelectItem value="pending">待验收</SelectItem>
                 <SelectItem value="in_progress">进行中</SelectItem>
                 <SelectItem value="passed">通过</SelectItem>
                 <SelectItem value="failed">失败</SelectItem>
@@ -686,7 +750,7 @@ const AcceptanceManagement = () => {
                     <TableCell>
                       <div>
                         <p className="text-white">{record.project_name || "-"}</p>
-                        <p className="text-xs text-slate-400">{record.project_code}</p>
+                        <p className="text-xs text-slate-400">{record.machine_name || "-"}</p>
                       </div>
                     </TableCell>
                     <TableCell>{getTypeBadge(record.acceptance_type)}</TableCell>

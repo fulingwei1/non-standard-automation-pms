@@ -18,6 +18,8 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.utils.db_helpers import get_or_404
 
+from .access import filter_owned_service_query, get_owned_service_object_or_404
+
 router = APIRouter()
 
 
@@ -28,12 +30,15 @@ def list_satisfaction_templates(
     survey_type: Optional[str] = Query(None, description="调查类型筛选"),
     is_active: Optional[bool] = Query(True, description="是否启用"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取满意度调查模板列表
     """
     query = db.query(SatisfactionSurveyTemplate)
+    query = filter_owned_service_query(
+        db, query, SatisfactionSurveyTemplate, current_user, owner_field="created_by"
+    )
 
     if survey_type:
         query = query.filter(SatisfactionSurveyTemplate.survey_type == survey_type)
@@ -69,12 +74,19 @@ def get_satisfaction_template(
     *,
     db: Session = Depends(deps.get_db),
     template_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取满意度调查模板详情
     """
-    template = get_or_404(db, SatisfactionSurveyTemplate, template_id, "调查模板不存在")
+    template = get_owned_service_object_or_404(
+        db,
+        SatisfactionSurveyTemplate,
+        template_id,
+        current_user,
+        "调查模板不存在",
+        owner_field="created_by",
+    )
 
     return {
         "id": template.id,

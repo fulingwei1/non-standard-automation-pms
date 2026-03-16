@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.service import KnowledgeBase
+from app.models.service.enums import KnowledgeBaseStatusEnum
 from app.models.user import User
 from app.schemas.service import KnowledgeBaseResponse
 
@@ -38,7 +39,7 @@ async def upload_knowledge_document(
     tags: Optional[str] = Form(None, description="标签（逗号分隔）"),
     content: Optional[str] = Form(None, description="文档描述"),
     allow_download: bool = Form(True, description="是否允许他人下载"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:create")),
 ) -> Any:
     """
     上传知识库文档（支持文档、图片、视频，最大200MB，用户配额5GB）
@@ -101,7 +102,7 @@ async def upload_knowledge_document(
         tags=tag_list,
         is_faq=False,
         is_featured=False,
-        status="已发布",
+        status=KnowledgeBaseStatusEnum.PUBLISHED.value,
         author_id=current_user.id,
         author_name=current_user.real_name or current_user.username,
         file_path=relative_path,

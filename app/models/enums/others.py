@@ -211,8 +211,11 @@ class DataScopeEnum(str, Enum):
 
     ALL = "ALL"
     DEPT = "DEPT"
+    DEPARTMENT = "DEPT"  # 兼容新模型 ScopeType.DEPARTMENT
     SUBORDINATE = "SUBORDINATE"
     PROJECT = "PROJECT"
+    CUSTOMER = "CUSTOMER"
+    CUSTOM = "CUSTOM"
     OWN = "OWN"
 
 

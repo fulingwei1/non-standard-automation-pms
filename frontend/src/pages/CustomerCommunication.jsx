@@ -115,6 +115,38 @@ const satisfactionConfig = {
   [CUSTOMER_SATISFACTION.VERY_DISSATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.VERY_DISSATISFIED], color: "text-red-400", stars: 1 }
 };
 
+const normalizeCustomerOption = (customer = {}) => ({
+  ...customer,
+  name: customer.name || customer.customer_name || customer.full_name || `客户${customer.id}`,
+});
+
+const normalizeUserOption = (user = {}) => ({
+  ...user,
+  name: user.name || user.real_name || user.username || `用户${user.id}`,
+});
+
+const buildCommunicationPayload = (formData, customers) => {
+  const customer = (customers || []).find((item) => String(item.id) === String(formData.customer_id));
+  return {
+    customer_name: customer?.name,
+    customer_contact: customer?.contact_name || customer?.contact_person || null,
+    customer_phone: customer?.phone || customer?.contact_phone || null,
+    customer_email: customer?.email || customer?.contact_email || null,
+    communication_type: formData.communication_type,
+    topic: formData.topic,
+    priority: formData.priority,
+    subject: formData.subject,
+    content: formData.content,
+    communication_date: formData.communication_date,
+    duration_minutes: formData.duration_minutes ? Number(formData.duration_minutes) : null,
+    next_action: formData.next_action,
+    next_action_date: formData.next_action_date,
+    tags: formData.notes
+      ? formData.notes.split(/[，,]/).map((item) => item.trim()).filter(Boolean)
+      : [],
+  };
+};
+
 export default function CustomerCommunication() {
   const [loading, setLoading] = useState(true);
   const [communications, setCommunications] = useState([]);
@@ -185,14 +217,53 @@ export default function CustomerCommunication() {
       );
 
       const commData = commRes.data?.items || commRes.data?.items || commRes.data || [];
-      const customerData = customerRes.data?.items || customerRes.data?.items || customerRes.data || [];
-      const userData = userRes.data?.items || userRes.data?.items || userRes.data || [];
+      const customerData = (customerRes.data?.items || customerRes.data?.items || customerRes.data || []).map(
+        (customer) => normalizeCustomerOption(customer),
+      );
+      const userData = (userRes.data?.items || userRes.data?.items || userRes.data || []).map((user) =>
+        normalizeUserOption(user),
+      );
 
-      const transformedCommunications = (commData || []).map((comm) => ({
-        ...comm,
-        customer: (customerData || []).find((c) => c.id === comm.customer_id),
-        assigned_user: (userData || []).find((u) => u.id === comm.assigned_to)
-      }));
+      const transformedCommunications = (commData || [])
+        .map((comm) => {
+          const customer =
+            (customerData || []).find((c) => String(c.id) === String(comm.customer_id)) ||
+            (customerData || []).find((c) => c.name === comm.customer_name);
+          const assignedUser = (userData || []).find((u) => String(u.id) === String(comm.assigned_to));
+
+          return {
+            ...comm,
+            customer_id: comm.customer_id ? String(comm.customer_id) : customer?.id ? String(customer.id) : "",
+            assigned_to: comm.assigned_to ? String(comm.assigned_to) : "",
+            customer,
+            assigned_user: assignedUser,
+          };
+        })
+        .filter((comm) => {
+          const matchesSearch =
+            !searchQuery ||
+            [comm.subject, comm.content, comm.customer?.name, comm.customer_name]
+              .filter(Boolean)
+              .some((value) => String(value).toLowerCase().includes(searchQuery.toLowerCase()));
+          const matchesStatus = !filterStatus || comm.status === filterStatus;
+          const matchesCustomer =
+            !filterCustomer || String(comm.customer?.id || comm.customer_id) === String(filterCustomer);
+          const matchesPriority = !filterPriority || comm.priority === filterPriority;
+          const matchesType = !filterType || comm.communication_type === filterType;
+          const matchesTopic = !filterTopic || comm.topic === filterTopic;
+          const matchesDateStart = !dateFilter.start || new Date(comm.communication_date) >= new Date(`${dateFilter.start}T00:00:00`);
+          const matchesDateEnd = !dateFilter.end || new Date(comm.communication_date) <= new Date(`${dateFilter.end}T23:59:59`);
+          return (
+            matchesSearch &&
+            matchesStatus &&
+            matchesCustomer &&
+            matchesPriority &&
+            matchesType &&
+            matchesTopic &&
+            matchesDateStart &&
+            matchesDateEnd
+          );
+        });
 
       setCommunications(transformedCommunications);
       setCustomers(customerData);
@@ -222,7 +293,12 @@ export default function CustomerCommunication() {
     }
 
     try {
-      await customerCommunicationApi.create(formData);
+      const payload = buildCommunicationPayload(formData, customers);
+      if (!payload.customer_name) {
+        toast.error("请选择有效客户");
+        return;
+      }
+      await customerCommunicationApi.create(payload);
       toast.success("沟通记录创建成功");
       setShowCreateDialog(false);
       resetForm();
@@ -236,7 +312,7 @@ export default function CustomerCommunication() {
 
   const handleUpdate = async () => {
     try {
-      await customerCommunicationApi.update(selectedCommunication.id, formData);
+      await customerCommunicationApi.update(selectedCommunication.id, buildCommunicationPayload(formData, customers));
       toast.success("沟通记录更新成功");
       setShowEditDialog(false);
       resetForm();
@@ -285,7 +361,7 @@ export default function CustomerCommunication() {
   const openEditDialog = (communication) => {
     setSelectedCommunication(communication);
     setFormData({
-      customer_id: communication.customer_id,
+      customer_id: communication.customer_id ? String(communication.customer_id) : "",
       communication_type: communication.communication_type,
       topic: communication.topic,
       priority: communication.priority,
@@ -297,7 +373,7 @@ export default function CustomerCommunication() {
       satisfaction_rating: communication.satisfaction_rating,
       next_action: communication.next_action,
       next_action_date: communication.next_action_date,
-      assigned_to: communication.assigned_to,
+      assigned_to: communication.assigned_to ? String(communication.assigned_to) : "",
       notes: communication.notes
     });
     setShowEditDialog(true);
@@ -418,13 +494,13 @@ export default function CustomerCommunication() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="搜索沟通记录..."
-                value={searchQuery || "unknown"}
+                value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10" />
 
             </div>
             
-            <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
@@ -437,7 +513,7 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterPriority || "unknown"} onValueChange={setFilterPriority}>
+            <Select value={filterPriority || "all"} onValueChange={(value) => setFilterPriority(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
@@ -450,7 +526,7 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <Select value={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="沟通方式" />
               </SelectTrigger>
@@ -463,7 +539,7 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterTopic || "unknown"} onValueChange={setFilterTopic}>
+            <Select value={filterTopic || "all"} onValueChange={(value) => setFilterTopic(value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="主题" />
               </SelectTrigger>
@@ -476,14 +552,14 @@ export default function CustomerCommunication() {
               </SelectContent>
             </Select>
 
-            <Select value={filterCustomer || "unknown"} onValueChange={setFilterCustomer}>
+            <Select value={filterCustomer ? String(filterCustomer) : "__all__"} onValueChange={(value) => setFilterCustomer(value === "__all__" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="客户" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部客户</SelectItem>
                 {(customers || []).map((customer) =>
-                <SelectItem key={customer.id} value={customer.id}>
+                <SelectItem key={customer.id} value={String(customer.id)}>
                     {customer.name}
                 </SelectItem>
                 )}
@@ -523,7 +599,7 @@ export default function CustomerCommunication() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ?
+                        {loading ?
                 <TableRow>
                     <TableCell colSpan={9} className="text-center py-8">
                       加载中...
@@ -539,7 +615,7 @@ export default function CustomerCommunication() {
                 (communications || []).map((comm) =>
                 <TableRow key={comm.id}>
                       <TableCell className="font-medium">
-                        {comm.customer?.name || "未知客户"}
+                        {comm.customer?.name || comm.customer_name || "未知客户"}
                       </TableCell>
                       <TableCell>
                         <div className="max-w-xs truncate">{comm.subject}</div>
@@ -607,7 +683,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {(customers || []).map((customer) =>
-                  <SelectItem key={customer.id} value={customer.id} className="text-white">
+                  <SelectItem key={customer.id} value={String(customer.id)} className="text-white">
                       {customer.name}
                   </SelectItem>
                   )}
@@ -628,7 +704,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
-                  <SelectItem key={value} value={value || "unknown"} className="text-white">
+                  <SelectItem key={value} value={value} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
                   </SelectItem>
                   )}
@@ -649,7 +725,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_TOPIC).map(([_key, value]) =>
-                  <SelectItem key={value} value={value || "unknown"} className="text-white">
+                  <SelectItem key={value} value={value} className="text-white">
                       {COMMUNICATION_TOPIC_LABELS[value]}
                   </SelectItem>
                   )}
@@ -670,7 +746,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_PRIORITY).map(([_key, value]) =>
-                  <SelectItem key={value} value={value || "unknown"} className="text-white">
+                  <SelectItem key={value} value={value} className="text-white">
                       {COMMUNICATION_PRIORITY_LABELS[value]}
                   </SelectItem>
                   )}
@@ -741,7 +817,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {(users || []).map((user) =>
-                  <SelectItem key={user.id} value={user.id} className="text-white">
+                  <SelectItem key={user.id} value={String(user.id)} className="text-white">
                       {user.name}
                   </SelectItem>
                   )}
@@ -752,11 +828,11 @@ export default function CustomerCommunication() {
             <div>
               <label className="text-sm font-medium text-gray-200">满意度评分</label>
               <Select
-                value={formData.satisfaction_rating?.toString() || ""}
+                value={formData.satisfaction_rating?.toString() || "__none__"}
                 onValueChange={(value) =>
                 setFormData({
                   ...formData,
-                  satisfaction_rating: value ? parseInt(value) : null
+                  satisfaction_rating: value === "__none__" ? null : parseInt(value)
                 })
                 }>
 
@@ -766,7 +842,7 @@ export default function CustomerCommunication() {
                 <SelectContent className="bg-slate-800 border-slate-600">
                   <SelectItem value="__none__" className="text-white">未评分</SelectItem>
                   {Object.entries(CUSTOMER_SATISFACTION).map(([_key, value]) =>
-                  <SelectItem key={value} value={value?.toString() || "unknown"} className="text-white">
+                  <SelectItem key={value} value={value?.toString()} className="text-white">
                       {CUSTOMER_SATISFACTION_LABELS[value]}
                   </SelectItem>
                   )}
@@ -844,7 +920,7 @@ export default function CustomerCommunication() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-400">客户</label>
-                  <p className="mt-1 text-sm">{selectedCommunication.customer?.name}</p>
+                  <p className="mt-1 text-sm">{selectedCommunication.customer?.name || selectedCommunication.customer_name || "-"}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-400">沟通方式</label>
@@ -954,7 +1030,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {(customers || []).map((customer) =>
-                  <SelectItem key={customer.id} value={customer.id} className="text-white">
+                  <SelectItem key={customer.id} value={String(customer.id)} className="text-white">
                       {customer.name}
                   </SelectItem>
                   )}
@@ -975,7 +1051,7 @@ export default function CustomerCommunication() {
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
                   {Object.entries(COMMUNICATION_TYPE).map(([_key, value]) =>
-                  <SelectItem key={value} value={value || "unknown"} className="text-white">
+                  <SelectItem key={value} value={value} className="text-white">
                       {getCommunicationTypeIcon(value)} {COMMUNICATION_TYPE_LABELS[value]}
                   </SelectItem>
                   )}

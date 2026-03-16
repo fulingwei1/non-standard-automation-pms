@@ -2,7 +2,9 @@
 售前AI知识库服务
 """
 
+import json
 import logging
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -19,16 +21,33 @@ from app.schemas.presale_ai_knowledge import (
     KnowledgeExtractionRequest,
     SemanticSearchRequest,
 )
+from app.services.ai_client_service import AIClientService
+from app.services.ai_structured_output import extract_json_payload
 from app.utils.db_helpers import delete_obj, save_obj
 
 logger = logging.getLogger(__name__)
+
+try:
+    from sentence_transformers import SentenceTransformer
+
+    SEMANTIC_SEARCH_AVAILABLE = True
+except ImportError:
+    SentenceTransformer = None
+    SEMANTIC_SEARCH_AVAILABLE = False
 
 
 class PresaleAIKnowledgeService:
     """AI知识库服务"""
 
+    _embedding_model = None
+    _embedding_model_checked = False
+
     def __init__(self, db: Session):
         self.db = db
+        self.ai_client = AIClientService()
+        self.ai_model = self.ai_client.default_model
+        self.embedding_model = self._get_embedding_model()
+        self.use_semantic_search = self.embedding_model is not None
 
     # ============= 案例管理 =============
 
@@ -209,23 +228,46 @@ class PresaleAIKnowledgeService:
         """从项目数据中提取案例知识"""
         project_data = request.project_data
 
-        # 提取关键信息（模拟AI提取）
+        ai_extraction = self._extract_case_knowledge_with_ai(project_data)
+
         extracted_case = KnowledgeCaseCreate(
-            case_name=project_data.get("project_name", "未命名项目"),
-            industry=project_data.get("industry"),
-            equipment_type=project_data.get("equipment_type"),
-            customer_name=project_data.get("customer_name"),
-            project_amount=project_data.get("amount"),
-            project_summary=self._generate_summary(project_data),
-            technical_highlights=self._extract_highlights(project_data),
-            success_factors=self._extract_success_factors(project_data),
-            lessons_learned=self._extract_lessons(project_data),
-            tags=self._suggest_tags(project_data),
-            quality_score=self._assess_quality(project_data),
+            case_name=(
+                ai_extraction.get("case_name")
+                if ai_extraction and ai_extraction.get("case_name")
+                else project_data.get("project_name", "未命名项目")
+            ),
+            industry=project_data.get("industry") or (ai_extraction or {}).get("industry"),
+            equipment_type=project_data.get("equipment_type")
+            or (ai_extraction or {}).get("equipment_type"),
+            customer_name=project_data.get("customer_name")
+            or (ai_extraction or {}).get("customer_name"),
+            project_amount=project_data.get("amount") or (ai_extraction or {}).get("project_amount"),
+            project_summary=(
+                (ai_extraction or {}).get("project_summary")
+                or self._generate_summary(project_data)
+            ),
+            technical_highlights=(
+                (ai_extraction or {}).get("technical_highlights")
+                or self._extract_highlights(project_data)
+            ),
+            success_factors=(
+                (ai_extraction or {}).get("success_factors")
+                or self._extract_success_factors(project_data)
+            ),
+            lessons_learned=(
+                (ai_extraction or {}).get("lessons_learned")
+                or self._extract_lessons(project_data)
+            ),
+            tags=(ai_extraction or {}).get("tags") or self._suggest_tags(project_data),
+            quality_score=(
+                float((ai_extraction or {}).get("quality_score"))
+                if (ai_extraction or {}).get("quality_score") is not None
+                else self._assess_quality(project_data)
+            ),
         )
 
         # 计算提取置信度
-        extraction_confidence = self._calculate_extraction_confidence(project_data)
+        extraction_confidence = self._calculate_extraction_confidence(project_data, ai_extraction)
 
         # 如果设置了自动保存且置信度足够高，保存到知识库
         if request.auto_save and extraction_confidence >= 0.7:
@@ -379,15 +421,27 @@ class PresaleAIKnowledgeService:
     def _generate_embedding(self, text: str) -> np.ndarray:
         """
         生成文本嵌入向量
-        实际应用中应该调用OpenAI API或其他嵌入服务
-        这里使用简化的模拟实现
+        优先使用本地语义模型，未启用时回退到稳定的哈希向量。
         """
-        # 模拟: 使用简单的hash + 随机向量
-        # 实际应该调用: openai.Embedding.create(model="text-embedding-ada-002", input=text)
-        np.random.seed(hash(text) % (2**32))
-        embedding = np.random.randn(384)  # 384维向量
-        # 归一化
-        embedding = embedding / np.linalg.norm(embedding)
+        if not text:
+            return np.zeros(384, dtype=np.float32)
+
+        if self.use_semantic_search and self.embedding_model is not None:
+            try:
+                embedding = self.embedding_model.encode(text, convert_to_numpy=True)
+                norm = np.linalg.norm(embedding)
+                if norm > 0:
+                    embedding = embedding / norm
+                return embedding.astype(np.float32)
+            except Exception as exc:
+                logger.warning("语义模型编码失败，回退到哈希向量: %s", exc)
+
+        embedding = np.zeros(384, dtype=np.float32)
+        for token in self._tokenize_text(text):
+            embedding[hash(token) % embedding.size] += 1.0
+        norm = np.linalg.norm(embedding)
+        if norm > 0:
+            embedding = embedding / norm
         return embedding
 
     def _serialize_embedding(self, embedding: np.ndarray) -> bytes:
@@ -400,7 +454,10 @@ class PresaleAIKnowledgeService:
 
     def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
         """计算余弦相似度"""
-        return float(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
+        denom = np.linalg.norm(vec1) * np.linalg.norm(vec2)
+        if denom == 0:
+            return 0.0
+        return float(np.dot(vec1, vec2) / denom)
 
     def _keyword_similarity(self, query: str, case: PresaleKnowledgeCase) -> float:
         """关键词相似度（fallback）"""
@@ -528,7 +585,9 @@ class PresaleAIKnowledgeService:
 
         return min(score, 1.0)
 
-    def _calculate_extraction_confidence(self, project_data: Dict) -> float:
+    def _calculate_extraction_confidence(
+        self, project_data: Dict, ai_extraction: Optional[Dict[str, Any]] = None
+    ) -> float:
         """计算提取置信度"""
         confidence = 0.3  # 基础置信度
 
@@ -536,6 +595,17 @@ class PresaleAIKnowledgeService:
         for field in required_fields:
             if project_data.get(field):
                 confidence += 0.15
+
+        if ai_extraction:
+            ai_fields = [
+                "project_summary",
+                "technical_highlights",
+                "success_factors",
+                "lessons_learned",
+            ]
+            confidence += 0.05 * sum(1 for field in ai_fields if ai_extraction.get(field))
+            if ai_extraction.get("tags"):
+                confidence += 0.05
 
         return min(confidence, 1.0)
 
@@ -551,11 +621,14 @@ class PresaleAIKnowledgeService:
     def _generate_answer(
         self, question: str, cases: List[PresaleKnowledgeCase], context: Dict
     ) -> str:
-        """生成答案（模拟AI生成）"""
+        """生成答案，优先使用AI结合案例上下文。"""
         if not cases:
             return "抱歉，在知识库中未找到相关案例。建议您详细描述问题或联系技术专家。"
 
-        # 基于案例生成答案
+        ai_answer = self._generate_answer_with_ai(question, cases, context)
+        if ai_answer:
+            return ai_answer
+
         answer_parts = [f"根据知识库中的{len(cases)}个相关案例分析：\n"]
 
         for i, case in enumerate(cases[:3], 1):
@@ -580,3 +653,194 @@ class PresaleAIKnowledgeService:
 
         confidence = case_count_factor * 0.5 + avg_quality * 0.5
         return round(confidence, 2)
+
+    @classmethod
+    def _get_embedding_model(cls):
+        """缓存加载本地语义模型，避免重复初始化。"""
+        if cls._embedding_model_checked:
+            return cls._embedding_model
+
+        cls._embedding_model_checked = True
+        if not SEMANTIC_SEARCH_AVAILABLE:
+            return None
+
+        try:
+            cls._embedding_model = SentenceTransformer(
+                "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+            )
+            logger.info("售前知识库语义模型加载成功")
+        except Exception as exc:
+            logger.warning("售前知识库语义模型加载失败，使用哈希向量回退: %s", exc)
+            cls._embedding_model = None
+        return cls._embedding_model
+
+    def _tokenize_text(self, text: str) -> List[str]:
+        """简化分词，兼容英文词和中文单字。"""
+        return re.findall(r"[a-zA-Z0-9_]+|[\u4e00-\u9fff]", (text or "").lower())
+
+    def _has_live_ai(self) -> bool:
+        """检查是否具备真实AI调用能力。"""
+        openai_ready = bool(
+            self.ai_client.openai_client
+            and str(self.ai_client.openai_api_key).startswith(("sk-", "sk-proj-"))
+        )
+        return bool(openai_ready or self.ai_client.zhipu_client or self.ai_client.kimi_api_key)
+
+    def _generate_ai_content(
+        self, prompt: str, temperature: float = 0.3, max_tokens: int = 1800
+    ) -> Optional[str]:
+        """统一AI调用，失败或Mock时返回None。"""
+        if not self._has_live_ai():
+            return None
+
+        models = [self.ai_model]
+        if self.ai_client.default_model not in models:
+            models.append(self.ai_client.default_model)
+
+        for model in models:
+            try:
+                response = self.ai_client.generate_solution(
+                    prompt=prompt,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+            except Exception as exc:
+                logger.warning("售前知识库AI调用失败: %s", exc)
+                continue
+
+            content = (response or {}).get("content")
+            model_name = str((response or {}).get("model", ""))
+            if content and not model_name.endswith("-mock"):
+                return str(content).strip()
+
+        return None
+
+    def _extract_case_knowledge_with_ai(
+        self, project_data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """使用AI从原始项目数据中抽取结构化案例信息。"""
+        prompt = f"""你是一名非标自动化行业知识工程专家，请从以下项目资料中抽取可沉淀到知识库的案例信息。
+
+项目数据：
+{json.dumps(project_data, ensure_ascii=False, indent=2, default=str)}
+
+请只输出 JSON，对字段做专业补全，字段如下：
+{{
+  "case_name": "案例名称",
+  "industry": "行业",
+  "equipment_type": "设备类型",
+  "customer_name": "客户名称",
+  "project_amount": 0,
+  "project_summary": "120-220字项目摘要",
+  "technical_highlights": "技术亮点",
+  "success_factors": "成功要素",
+  "lessons_learned": "经验教训",
+  "tags": ["标签1", "标签2"],
+  "quality_score": 0.0
+}}
+
+要求：
+1. 输出必须是合法 JSON。
+2. quality_score 范围 0-1。
+3. 若信息不足，保守表述，不要编造具体客户承诺。"""
+
+        content = self._generate_ai_content(prompt, temperature=0.2, max_tokens=1600)
+        payload = extract_json_payload(content or "")
+        if not isinstance(payload, dict):
+            return None
+
+        tags = self._normalize_tags(payload.get("tags"))
+
+        return {
+            "case_name": payload.get("case_name"),
+            "industry": payload.get("industry"),
+            "equipment_type": payload.get("equipment_type"),
+            "customer_name": payload.get("customer_name"),
+            "project_amount": payload.get("project_amount"),
+            "project_summary": self._normalize_text(payload.get("project_summary")),
+            "technical_highlights": self._normalize_text(payload.get("technical_highlights")),
+            "success_factors": self._normalize_text(payload.get("success_factors")),
+            "lessons_learned": self._normalize_text(payload.get("lessons_learned")),
+            "tags": tags,
+            "quality_score": self._normalize_quality_score(payload.get("quality_score")),
+        }
+
+    def _generate_answer_with_ai(
+        self, question: str, cases: List[PresaleKnowledgeCase], context: Dict[str, Any]
+    ) -> Optional[str]:
+        """基于案例上下文生成AI答案。"""
+        case_context = []
+        for case in cases[:5]:
+            case_context.append(
+                {
+                    "id": case.id,
+                    "case_name": case.case_name,
+                    "industry": case.industry,
+                    "equipment_type": case.equipment_type,
+                    "customer_name": case.customer_name,
+                    "project_summary": case.project_summary,
+                    "technical_highlights": case.technical_highlights,
+                    "success_factors": case.success_factors,
+                    "lessons_learned": case.lessons_learned,
+                    "quality_score": float(case.quality_score or 0.5),
+                }
+            )
+
+        prompt = f"""你是一名非标自动化售前专家，请基于知识库案例回答问题。
+
+用户问题：
+{question}
+
+对话上下文：
+{json.dumps(context or {}, ensure_ascii=False, indent=2, default=str)}
+
+匹配案例：
+{json.dumps(case_context, ensure_ascii=False, indent=2, default=str)}
+
+请直接输出中文答案，要求：
+1. 先给明确结论，再给案例依据。
+2. 明确指出适用前提、关键风险和建议下一步。
+3. 只能基于提供案例作答，不要虚构未给出的参数。"""
+
+        return self._generate_ai_content(prompt, temperature=0.25, max_tokens=1200)
+
+    def _normalize_text(self, value: Any) -> Optional[str]:
+        """将AI输出归一化为文本。"""
+        if value is None:
+            return None
+        if isinstance(value, list):
+            return "\n".join(str(item).strip() for item in value if str(item).strip()) or None
+        text = str(value).strip()
+        return text or None
+
+    def _normalize_tags(self, value: Any) -> List[str]:
+        """归一化标签列表。"""
+        if isinstance(value, list):
+            tags = [str(item).strip() for item in value if str(item).strip()]
+        elif value:
+            tags = [
+                item.strip()
+                for item in re.split(r"[,\n，、;；]+", str(value))
+                if item.strip()
+            ]
+        else:
+            tags = []
+
+        deduplicated = []
+        seen = set()
+        for tag in tags:
+            if tag not in seen:
+                deduplicated.append(tag)
+                seen.add(tag)
+        return deduplicated
+
+    def _normalize_quality_score(self, value: Any) -> Optional[float]:
+        """归一化质量分。"""
+        if value is None or value == "":
+            return None
+        try:
+            score = float(value)
+        except (TypeError, ValueError):
+            return None
+        return min(max(score, 0.0), 1.0)

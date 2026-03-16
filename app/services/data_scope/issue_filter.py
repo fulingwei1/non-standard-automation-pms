@@ -15,6 +15,7 @@ from app.models.organization import Department
 from app.models.project import Project
 from app.models.user import User
 
+from .normalization import normalize_data_scope
 from .user_scope import UserScopeService
 
 
@@ -40,7 +41,7 @@ class IssueFilterService:
         if user.is_superuser:
             return query
 
-        data_scope = UserScopeService.get_user_data_scope(db, user)
+        data_scope = normalize_data_scope(UserScopeService.get_user_data_scope(db, user))
 
         participant_columns = [
             Issue.reporter_id,

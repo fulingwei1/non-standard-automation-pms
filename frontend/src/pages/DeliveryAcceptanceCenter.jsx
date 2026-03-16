@@ -16,13 +16,13 @@ export default function DeliveryAcceptanceCenter() {
       {
         value: "commissioning",
         label: "现场调试",
-        permission: "installation:read",
+        permission: "installation_dispatch:read",
         render: () => <FieldCommissioning />,
       },
       {
         value: "installation",
         label: "安装调试",
-        permission: "installation:read",
+        permission: "installation_dispatch:read",
         render: () => <InstallationDispatchManagement />,
       },
     ],

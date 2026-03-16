@@ -12,12 +12,17 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.common.context import get_audit_context
+from app.core.permission_codes import canonicalize_permission_code, get_equivalent_permission_codes
 from app.models.user import (
     ApiPermission,
     Role,
     RoleApiPermission,
     User,
 )
+from app.services.permission_audit_service import PermissionAuditService
+from app.services.permission_cache_service import get_permission_cache_service
+from app.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +32,16 @@ class PermissionManagementService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    def _permission_scope_filter(self, tenant_id: Optional[int]):
+        if tenant_id is None:
+            return True
+        return or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id)
+
+    def _role_scope_filter(self, tenant_id: Optional[int]):
+        if tenant_id is None:
+            return True
+        return or_(Role.tenant_id.is_(None), Role.tenant_id == tenant_id)
 
     # ============================================================
     # 权限 CRUD 业务逻辑
@@ -47,12 +62,9 @@ class PermissionManagementService:
 
         返回: {"items": [...], "total": int}
         """
-        query = self.db.query(ApiPermission).filter(
-            or_(
-                ApiPermission.tenant_id.is_(None),  # 系统级权限
-                ApiPermission.tenant_id == tenant_id,  # 租户级权限
-            )
-        )
+        query = self.db.query(ApiPermission)
+        if tenant_id is not None:
+            query = query.filter(self._permission_scope_filter(tenant_id))
 
         # 筛选条件
         if module:
@@ -90,7 +102,7 @@ class PermissionManagementService:
             self.db.query(ApiPermission.module)
             .filter(
                 ApiPermission.module.isnot(None),
-                or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
+                self._permission_scope_filter(tenant_id),
             )
             .distinct()
             .order_by(ApiPermission.module)
@@ -107,10 +119,7 @@ class PermissionManagementService:
         """获取权限详情"""
         return (
             self.db.query(ApiPermission)
-            .filter(
-                ApiPermission.id == permission_id,
-                or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
-            )
+            .filter(ApiPermission.id == permission_id, self._permission_scope_filter(tenant_id))
             .first()
         )
 
@@ -120,11 +129,13 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> bool:
         """检查权限编码是否已存在"""
+        normalized_perm_code = canonicalize_permission_code(perm_code)
+        equivalent_codes = get_equivalent_permission_codes(normalized_perm_code)
         existing = (
             self.db.query(ApiPermission)
             .filter(
-                ApiPermission.perm_code == perm_code,
-                or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
+                ApiPermission.perm_code.in_(equivalent_codes),
+                self._permission_scope_filter(tenant_id),
             )
             .first()
         )
@@ -143,9 +154,10 @@ class PermissionManagementService:
         permission_type: str = "API",
     ) -> ApiPermission:
         """创建权限（租户级）"""
+        normalized_perm_code = canonicalize_permission_code(perm_code)
         permission = ApiPermission(
             tenant_id=tenant_id,
-            perm_code=perm_code,
+            perm_code=normalized_perm_code,
             perm_name=perm_name,
             module=module,
             page_code=page_code,
@@ -159,6 +171,15 @@ class PermissionManagementService:
         self.db.add(permission)
         self.db.commit()
         self.db.refresh(permission)
+        self._log_permission_operation(
+            permission,
+            PermissionAuditService.ACTION_PERMISSION_CREATED,
+            changes={
+                "perm_code": permission.perm_code,
+                "perm_name": permission.perm_name,
+                "tenant_id": permission.tenant_id,
+            },
+        )
 
         return permission
 
@@ -188,6 +209,18 @@ class PermissionManagementService:
 
         self.db.commit()
         self.db.refresh(permission)
+        self._log_permission_operation(
+            permission,
+            PermissionAuditService.ACTION_PERMISSION_UPDATED,
+            changes={
+                "perm_name": perm_name,
+                "module": module,
+                "page_code": page_code,
+                "action": action,
+                "description": description,
+                "is_active": is_active,
+            },
+        )
 
         return permission
 
@@ -201,6 +234,11 @@ class PermissionManagementService:
 
     def delete_permission(self, permission: ApiPermission) -> None:
         """删除权限"""
+        self._log_permission_operation(
+            permission,
+            PermissionAuditService.ACTION_PERMISSION_DELETED,
+            changes={"perm_code": permission.perm_code, "tenant_id": permission.tenant_id},
+        )
         self.db.delete(permission)
         self.db.commit()
 
@@ -216,7 +254,7 @@ class PermissionManagementService:
         """获取角色（支持多租户隔离）"""
         return (
             self.db.query(Role)
-            .filter(Role.id == role_id, or_(Role.tenant_id.is_(None), Role.tenant_id == tenant_id))
+            .filter(Role.id == role_id, self._role_scope_filter(tenant_id))
             .first()
         )
 
@@ -252,7 +290,7 @@ class PermissionManagementService:
                 self.db.query(ApiPermission)
                 .filter(
                     ApiPermission.id == perm_id,
-                    or_(ApiPermission.tenant_id.is_(None), ApiPermission.tenant_id == tenant_id),
+                    self._permission_scope_filter(tenant_id),
                 )
                 .first()
             )
@@ -262,6 +300,7 @@ class PermissionManagementService:
                 valid_count += 1
 
         self.db.commit()
+        self._log_role_permission_assignment(role_id, permission_ids)
 
         return valid_count
 
@@ -272,8 +311,6 @@ class PermissionManagementService:
     ) -> None:
         """清除权限缓存"""
         try:
-            from app.services.permission_cache_service import get_permission_cache_service
-
             cache_service = get_permission_cache_service()
             cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)
         except Exception as e:
@@ -299,8 +336,6 @@ class PermissionManagementService:
         - 支持角色继承（如果启用）
         - 返回去重后的权限列表
         """
-        from app.services.permission_service import PermissionService
-
         permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
 
         # 获取权限详情
@@ -319,8 +354,51 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> bool:
         """检查用户是否有指定权限"""
-        from app.services.permission_service import PermissionService
-
         return PermissionService.check_permission(
             self.db, user_id, permission_code, user, tenant_id
         )
+
+    def _log_permission_operation(
+        self,
+        permission: ApiPermission,
+        action: str,
+        changes: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """记录权限相关审计日志。"""
+        ctx = get_audit_context()
+        operator_id = ctx.get("operator_id")
+        if not operator_id:
+            return
+
+        try:
+            PermissionAuditService.log_audit(
+                db=self.db,
+                operator_id=operator_id,
+                action=action,
+                target_type="permission",
+                target_id=permission.id,
+                detail={"changes": changes or {}, "perm_code": permission.perm_code},
+                ip_address=ctx.get("client_ip"),
+                user_agent=ctx.get("user_agent"),
+            )
+        except Exception as exc:
+            logger.warning(f"权限审计日志记录失败: {exc}")
+
+    def _log_role_permission_assignment(self, role_id: int, permission_ids: List[int]) -> None:
+        """记录角色权限分配审计日志。"""
+        ctx = get_audit_context()
+        operator_id = ctx.get("operator_id")
+        if not operator_id:
+            return
+
+        try:
+            PermissionAuditService.log_role_permission_assignment(
+                db=self.db,
+                operator_id=operator_id,
+                role_id=role_id,
+                permission_ids=permission_ids,
+                ip_address=ctx.get("client_ip"),
+                user_agent=ctx.get("user_agent"),
+            )
+        except Exception as exc:
+            logger.warning(f"角色权限分配审计日志记录失败: {exc}")

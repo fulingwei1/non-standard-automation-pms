@@ -6,6 +6,7 @@ from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Index, Integ
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
+from .enums import ServiceTicketStatusEnum
 
 
 class ServiceTicket(Base, TimestampMixin):
@@ -39,7 +40,12 @@ class ServiceTicket(Base, TimestampMixin):
     assigned_time = Column(DateTime, comment="分配时间")
 
     # 状态和时间
-    status = Column(String(20), default="PENDING", nullable=False, comment="状态")
+    status = Column(
+        String(20),
+        default=ServiceTicketStatusEnum.PENDING.value,
+        nullable=False,
+        comment="状态",
+    )
     response_time = Column(DateTime, comment="响应时间")
     resolved_time = Column(DateTime, comment="解决时间")
 

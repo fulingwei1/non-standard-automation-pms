@@ -20,6 +20,11 @@ from ..common.context import set_audit_context
 from ..models.user import User
 from ..utils.redis_client import get_redis_client
 from .config import settings
+from .permission_codes import (
+    canonicalize_permission_code,
+    canonicalize_permission_codes,
+    get_equivalent_permission_codes,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -669,9 +674,11 @@ def _load_user_permissions_from_db(
     # 避免 SQL 中 column = NULL 的问题（NULL 比较需要用 IS NULL）
     if tenant_id is not None:
         tenant_filter = "AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)"
+        role_tenant_filter = "AND (r.tenant_id IS NULL OR r.tenant_id = :tenant_id)"
         params = {"user_id": user_id, "tenant_id": tenant_id}
     else:
         tenant_filter = "AND ap.tenant_id IS NULL"
+        role_tenant_filter = "AND r.tenant_id IS NULL"
         params = {"user_id": user_id}
 
     sql = f"""
@@ -681,6 +688,8 @@ def _load_user_permissions_from_db(
             FROM roles r
             JOIN user_roles ur ON ur.role_id = r.id
             WHERE ur.user_id = :user_id
+            AND r.is_active = 1
+            {role_tenant_filter}
 
             UNION ALL
 
@@ -689,6 +698,8 @@ def _load_user_permissions_from_db(
             FROM roles r
             JOIN role_tree rt ON r.id = rt.parent_id
             WHERE rt.inherit_permissions = 1
+            AND r.is_active = 1
+            {role_tenant_filter}
         )
         SELECT DISTINCT ap.perm_code
         FROM role_tree rt
@@ -698,7 +709,7 @@ def _load_user_permissions_from_db(
         {tenant_filter}
     """
     result = db.execute(text(sql), params)
-    return {row[0] for row in result.fetchall()}
+    return canonicalize_permission_codes(row[0] for row in result.fetchall())
 
 
 def is_system_admin(user: User) -> bool:
@@ -752,6 +763,8 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
         logger.info(f"Permission GRANTED (superuser/admin): user_id={user.id}")
         return True
 
+    normalized_permission_code = canonicalize_permission_code(permission_code)
+
     # 获取租户ID用于缓存隔离
     tenant_id = getattr(user, "tenant_id", None)
 
@@ -767,17 +780,19 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
         if cached_permissions is not None:
             # 缓存命中
             logger.debug(f"Permission cache hit for user {user.id} (tenant={tenant_id})")
-            return permission_code in cached_permissions
+            return normalized_permission_code in canonicalize_permission_codes(cached_permissions)
 
         # 缓存未命中，从数据库加载
         if db is not None:
-            permissions = _load_user_permissions_from_db(user.id, db, tenant_id)
+            permissions = canonicalize_permission_codes(
+                _load_user_permissions_from_db(user.id, db, tenant_id)
+            )
             # 写入缓存（包含租户隔离）
             cache_service.set_user_permissions(user.id, permissions, tenant_id)
             logger.debug(
                 f"Permission cache miss for user {user.id} (tenant={tenant_id}), loaded {len(permissions)} permissions"
             )
-            return permission_code in permissions
+            return normalized_permission_code in permissions
     except Exception as e:
         logger.warning(f"Permission cache failed, fallback to DB: {e}")
 
@@ -789,40 +804,72 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
             # 如果没有提供db，尝试使用ORM（可能失败）
             for user_role in user.roles:
                 role = user_role.role
+                if not role or not getattr(role, "is_active", False):
+                    continue
+                if tenant_id is not None and getattr(role, "tenant_id", None) not in (None, tenant_id):
+                    continue
                 if hasattr(role, "api_permissions"):
                     for rap in role.api_permissions:
                         if (
                             rap.permission
-                            and rap.permission.perm_code == permission_code
+                            and rap.permission.is_active
+                            and (
+                                tenant_id is None
+                                or getattr(rap.permission, "tenant_id", None) in (None, tenant_id)
+                            )
+                            and canonicalize_permission_code(rap.permission.perm_code)
+                            == normalized_permission_code
                         ):
                             return True
             return False
         else:
             # 使用SQL查询（已迁移到新表）
             sql = """
-                SELECT COUNT(*)
+                SELECT DISTINCT ap.perm_code
                 FROM user_roles ur
+                JOIN roles r ON ur.role_id = r.id
                 JOIN role_api_permissions rap ON ur.role_id = rap.role_id
                 JOIN api_permissions ap ON rap.permission_id = ap.id
                 WHERE ur.user_id = :user_id
-                AND ap.perm_code = :permission_code
+                AND r.is_active = 1
                 AND ap.is_active = 1
             """
-            result = db.execute(
-                text(sql), {"user_id": user.id, "permission_code": permission_code}
-            ).scalar()
-            return result > 0
+            params = {"user_id": user.id}
+            tenant_filter = ""
+            if tenant_id is not None:
+                tenant_filter = """
+                AND (r.tenant_id IS NULL OR r.tenant_id = :tenant_id)
+                AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
+                """
+                params["tenant_id"] = tenant_id
+            sql += tenant_filter
+            rows = db.execute(text(sql), params).fetchall()
+            permissions = canonicalize_permission_codes(row[0] for row in rows)
+            equivalent_codes = canonicalize_permission_codes(
+                get_equivalent_permission_codes(permission_code)
+            )
+            return bool(permissions & equivalent_codes)
     except Exception as e:
         logger.warning(f"权限检查失败，使用ORM查询: {e}")
         # 降级到ORM查询
         try:
             for user_role in user.roles:
                 role = user_role.role
+                if not role or not getattr(role, "is_active", False):
+                    continue
+                if tenant_id is not None and getattr(role, "tenant_id", None) not in (None, tenant_id):
+                    continue
                 if hasattr(role, "api_permissions"):
                     for rap in role.api_permissions:
                         if (
                             rap.permission
-                            and rap.permission.perm_code == permission_code
+                            and rap.permission.is_active
+                            and (
+                                tenant_id is None
+                                or getattr(rap.permission, "tenant_id", None) in (None, tenant_id)
+                            )
+                            and canonicalize_permission_code(rap.permission.perm_code)
+                            == normalized_permission_code
                         ):
                             return True
         except Exception:

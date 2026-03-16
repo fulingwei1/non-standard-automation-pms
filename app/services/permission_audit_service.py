@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
+from app.common.context import get_audit_context
 from app.models.user import PermissionAudit
 from app.utils.db_helpers import save_obj
 
@@ -65,14 +66,20 @@ class PermissionAuditService:
         """
         import json
 
+        context = get_audit_context()
+        detail_payload = dict(detail or {})
+        tenant_id = context.get("tenant_id")
+        if tenant_id is not None and "tenant_id" not in detail_payload:
+            detail_payload["tenant_id"] = tenant_id
+
         audit = PermissionAudit(
             operator_id=operator_id,
             action=action,
             target_type=target_type,
             target_id=target_id,
-            detail=json.dumps(detail, ensure_ascii=False) if detail else None,
-            ip_address=ip_address,
-            user_agent=user_agent,
+            detail=json.dumps(detail_payload, ensure_ascii=False) if detail_payload else None,
+            ip_address=ip_address or context.get("client_ip"),
+            user_agent=user_agent or context.get("user_agent"),
         )
 
         save_obj(db, audit)

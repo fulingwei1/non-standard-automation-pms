@@ -3,10 +3,11 @@
 人员智能匹配服务 - 主匹配逻辑
 """
 
+import json
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -18,6 +19,8 @@ from app.models.staff_matching import (
     HrEmployeeProfile,
     MesProjectStaffingNeed,
 )
+from app.services.ai_client_service import AIClientService
+from app.services.ai_structured_output import extract_json_payload
 
 from .base import StaffMatchingBase
 from .score_calculators import (
@@ -32,6 +35,8 @@ from .score_calculators import (
 
 class MatchingEngine(StaffMatchingBase):
     """匹配引擎 - 执行主匹配算法"""
+
+    _ai_client: Optional[AIClientService] = None
 
     @classmethod
     def match_candidates(
@@ -145,6 +150,23 @@ class MatchingEngine(StaffMatchingBase):
                 }
             )
 
+        explanation_result = cls._generate_candidate_explanations(
+            project=project,
+            staffing_need=staffing_need,
+            candidates=result_candidates,
+        )
+        explanation_map = explanation_result.get("candidate_map", {})
+        for candidate in result_candidates:
+            explanation = explanation_map.get(candidate["employee_id"], {})
+            candidate["recommendation_reason"] = explanation.get(
+                "recommendation_reason",
+                cls._build_fallback_reason(candidate),
+            )
+            candidate["risk_notes"] = explanation.get(
+                "risk_notes",
+                cls._build_risk_notes(candidate),
+            )
+
         # 更新需求状态为匹配中
         staffing_need.status = "MATCHING"
         db.commit()
@@ -165,6 +187,10 @@ class MatchingEngine(StaffMatchingBase):
             "total_candidates": len(scored_candidates),
             "qualified_count": qualified_count,
             "matching_time": datetime.now().isoformat(),
+            "analysis_summary": explanation_result.get(
+                "analysis_summary",
+                cls._build_default_summary(result_candidates, qualified_count, threshold),
+            ),
         }
 
     @classmethod
@@ -256,3 +282,207 @@ class MatchingEngine(StaffMatchingBase):
         )
 
         return scores
+
+    @classmethod
+    def _get_ai_client(cls) -> AIClientService:
+        """懒加载AI客户端，避免在导入阶段初始化。"""
+        if cls._ai_client is None:
+            cls._ai_client = AIClientService()
+        return cls._ai_client
+
+    @classmethod
+    def _has_live_ai(cls) -> bool:
+        """检查是否可进行真实AI调用。"""
+        client = cls._get_ai_client()
+        openai_ready = bool(
+            client.openai_client and str(client.openai_api_key).startswith(("sk-", "sk-proj-"))
+        )
+        return bool(openai_ready or client.zhipu_client or client.kimi_api_key)
+
+    @classmethod
+    def _generate_ai_content(
+        cls, prompt: str, temperature: float = 0.2, max_tokens: int = 1600
+    ) -> Optional[str]:
+        """统一AI调用封装。"""
+        if not cls._has_live_ai():
+            return None
+
+        client = cls._get_ai_client()
+        models = [client.default_model]
+        for model in models:
+            try:
+                response = client.generate_solution(
+                    prompt=prompt,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+            except Exception:
+                continue
+
+            content = (response or {}).get("content")
+            model_name = str((response or {}).get("model", ""))
+            if content and not model_name.endswith("-mock"):
+                return str(content).strip()
+
+        return None
+
+    @classmethod
+    def _generate_candidate_explanations(
+        cls,
+        project: Optional[Project],
+        staffing_need: MesProjectStaffingNeed,
+        candidates: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """为候选人补充AI解释信息。"""
+        if not candidates:
+            return {"candidate_map": {}, "analysis_summary": "暂无候选人满足当前筛选条件。"}
+
+        ai_result = cls._generate_candidate_explanations_with_ai(project, staffing_need, candidates)
+        if ai_result:
+            return ai_result
+
+        candidate_map = {
+            candidate["employee_id"]: {
+                "recommendation_reason": cls._build_fallback_reason(candidate),
+                "risk_notes": cls._build_risk_notes(candidate),
+            }
+            for candidate in candidates
+        }
+        return {
+            "candidate_map": candidate_map,
+            "analysis_summary": cls._build_default_summary(
+                candidates,
+                sum(1 for candidate in candidates if candidate["recommendation_type"] != "WEAK"),
+                cls.get_priority_threshold(staffing_need.priority),
+            ),
+        }
+
+    @classmethod
+    def _generate_candidate_explanations_with_ai(
+        cls,
+        project: Optional[Project],
+        staffing_need: MesProjectStaffingNeed,
+        candidates: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """使用AI总结候选人推荐原因和风险。"""
+        payload = {
+            "project_name": project.name if project else None,
+            "role_code": staffing_need.role_code,
+            "role_name": staffing_need.role_name,
+            "priority": staffing_need.priority,
+            "required_skills": staffing_need.required_skills or [],
+            "preferred_skills": staffing_need.preferred_skills or [],
+            "required_domains": staffing_need.required_domains or [],
+            "required_attitudes": staffing_need.required_attitudes or [],
+            "candidates": candidates[:5],
+        }
+        prompt = f"""你是一名项目资源配置顾问，请根据以下人员匹配结果，给出每位候选人的推荐理由和风险提示。
+
+输入数据：
+{json.dumps(payload, ensure_ascii=False, indent=2, default=str)}
+
+请仅输出 JSON：
+{{
+  "analysis_summary": "整体推荐结论",
+  "candidates": [
+    {{
+      "employee_id": 1,
+      "recommendation_reason": "推荐原因",
+      "risk_notes": ["风险1", "风险2"]
+    }}
+  ]
+}}
+
+要求：
+1. 解释必须基于输入分数、技能和负载信息。
+2. risk_notes 最多 3 条。
+3. 只输出合法 JSON。"""
+
+        content = cls._generate_ai_content(prompt, temperature=0.2, max_tokens=1400)
+        parsed = extract_json_payload(content or "")
+        if not isinstance(parsed, dict):
+            return None
+
+        candidate_map = {}
+        for item in parsed.get("candidates", []):
+            if not isinstance(item, dict) or item.get("employee_id") is None:
+                continue
+            risk_notes = item.get("risk_notes")
+            if not isinstance(risk_notes, list):
+                risk_notes = []
+            candidate_map[int(item["employee_id"])] = {
+                "recommendation_reason": str(item.get("recommendation_reason") or "").strip(),
+                "risk_notes": [
+                    str(note).strip() for note in risk_notes if str(note).strip()
+                ][:3],
+            }
+
+        if not candidate_map:
+            return None
+
+        return {
+            "candidate_map": candidate_map,
+            "analysis_summary": str(parsed.get("analysis_summary") or "").strip() or None,
+        }
+
+    @classmethod
+    def _build_fallback_reason(cls, candidate: Dict[str, Any]) -> str:
+        """在无AI时生成稳定的推荐说明。"""
+        parts = []
+        matched_skills = candidate.get("matched_skills") or []
+        missing_skills = candidate.get("missing_skills") or []
+        workload = float(candidate.get("current_workload_pct") or 0)
+        total_score = float(candidate.get("total_score") or 0)
+
+        if matched_skills:
+            parts.append(f"核心匹配技能包括：{', '.join(matched_skills[:3])}")
+        if total_score >= 85:
+            parts.append("综合得分高，适合作为优先候选")
+        elif total_score >= 70:
+            parts.append("综合能力较均衡，可作为推荐人选")
+        else:
+            parts.append("具备一定匹配度，但需要结合项目优先级进一步评估")
+        if workload <= 60:
+            parts.append("当前负载相对可控，具备较好的投入空间")
+        elif workload <= 85:
+            parts.append("当前负载中等，安排时需协调资源窗口")
+        if missing_skills:
+            parts.append(f"仍需补位技能：{', '.join(missing_skills[:2])}")
+
+        return "；".join(parts)
+
+    @classmethod
+    def _build_risk_notes(cls, candidate: Dict[str, Any]) -> List[str]:
+        """生成风险提示。"""
+        risk_notes = []
+        workload = float(candidate.get("current_workload_pct") or 0)
+        missing_skills = candidate.get("missing_skills") or []
+        recommendation_type = candidate.get("recommendation_type")
+
+        if workload >= 85:
+            risk_notes.append("当前工作负载偏高，需确认是否具备及时投入能力。")
+        elif workload >= 70:
+            risk_notes.append("当前工作负载较高，建议预留缓冲时间。")
+
+        if missing_skills:
+            risk_notes.append(f"存在待补齐技能：{', '.join(missing_skills[:3])}。")
+
+        if recommendation_type == "WEAK":
+            risk_notes.append("综合得分低于推荐阈值，建议仅作为备选方案。")
+
+        return risk_notes[:3]
+
+    @classmethod
+    def _build_default_summary(
+        cls, candidates: List[Dict[str, Any]], qualified_count: int, threshold: int
+    ) -> str:
+        """生成整体分析摘要。"""
+        if not candidates:
+            return "暂无候选人满足当前筛选条件。"
+        top_candidate = candidates[0]
+        return (
+            f"本次共评估 {len(candidates)} 名候选人，其中 {qualified_count} 人达到阈值 "
+            f"{threshold} 分。当前首选为 {top_candidate['employee_name']}，综合得分 "
+            f"{top_candidate['total_score']} 分。"
+        )

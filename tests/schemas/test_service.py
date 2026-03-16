@@ -137,6 +137,19 @@ class TestServiceRecordCreate:
                 customer_satisfaction=6,
             )
 
+    def test_photos_accept_object_payload(self):
+        r = ServiceRecordCreate(
+            service_type="REPAIR",
+            project_id=1,
+            customer_id=1,
+            service_date=date(2024, 1, 1),
+            service_engineer_id=1,
+            service_content="现场维修",
+            photos=[{"url": "service_records/1/a.jpg", "filename": "a.jpg", "size": 123}],
+        )
+        assert r.photos[0].url == "service_records/1/a.jpg"
+        assert r.photos[0].filename == "a.jpg"
+
     def test_missing(self):
         with pytest.raises(ValidationError):
             ServiceRecordCreate()
@@ -236,6 +249,20 @@ class TestKnowledgeBaseResponse:
         assert k.download_count == 0
         assert k.adopt_count == 0
         assert k.allow_download is True
+
+    def test_legacy_published_status_is_normalized(self):
+        now = datetime.now()
+        k = KnowledgeBaseResponse(
+            id=1,
+            article_no="KB002",
+            title="T",
+            category="C",
+            status="已发布",
+            author_id=1,
+            created_at=now,
+            updated_at=now,
+        )
+        assert k.status == "PUBLISHED"
 
 
 class TestSatisfactionSurveyTemplateCreate:

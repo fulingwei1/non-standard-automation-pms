@@ -4,6 +4,7 @@
 支持数据权限规则、菜单权限、权限分组、角色管理
 """
 
+import json
 from datetime import datetime
 from enum import Enum
 
@@ -86,6 +87,21 @@ class DataScopeRule(Base, TimestampMixin):
         Index("idx_dsr_tenant", "tenant_id"),
         UniqueConstraint("tenant_id", "rule_code", name="uk_tenant_rule_code"),
     )
+
+    def get_scope_config_dict(self) -> dict:
+        """返回标准化后的 scope_config 字典。"""
+        if isinstance(self.scope_config, dict):
+            return self.scope_config
+
+        if isinstance(self.scope_config, str) and self.scope_config.strip():
+            try:
+                parsed = json.loads(self.scope_config)
+                if isinstance(parsed, dict):
+                    return parsed
+            except (TypeError, ValueError):
+                return {}
+
+        return {}
 
 
 class RoleDataScope(Base):

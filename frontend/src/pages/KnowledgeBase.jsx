@@ -32,7 +32,6 @@ import {
   Button,
   Input,
   Select,
-  DatePicker,
   Tabs,
   Modal,
   Space,
@@ -42,9 +41,10 @@ import {
   Avatar,
   Typography,
   Radio,
+  Form,
+  Checkbox,
   message,
   Spin,
-  Tree,
   Rate } from
 "antd";
 
@@ -69,15 +69,15 @@ import {
 // 导入API服务
 import { serviceApi } from '../services/api/service';
 
-const { Title, Text, Paragraph } = Typography;
-// TabPane is deprecated - using items prop instead
-const { RangePicker } = DatePicker;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { DirectoryTree } = Tree;
 
 const KnowledgeBase = () => {
+  const [createForm] = Form.useForm();
+
   // 状态管理
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -87,9 +87,8 @@ const KnowledgeBase = () => {
   const [searchText, setSearchText] = useState('');
   const [_expandedKeys, _setExpandedKeys] = useState(['0']);
   const [_selectedKeys, _setSelectedKeys] = useState([]);
-  const [_showUploadModal, setShowUploadModal] = useState(false);
-  const [_showCreateModal, setShowCreateModal] = useState(false);
-  const [_editingDocument, setEditingDocument] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingDocument, setEditingDocument] = useState(null);
 
   // 默认分类树（静态数据，可后续改为从API获取）
   const defaultCategories = [
@@ -123,6 +122,34 @@ const KnowledgeBase = () => {
     loadData();
   }, [activeTab, filters]);
 
+  const normalizeDocument = (item) => ({
+    id: item.id,
+    title: item.title,
+    type: item.is_faq ? 'faq' : item.file_path ? 'document' : 'article',
+    category: item.category || 'engineering',
+    status: item.status?.toLowerCase() || 'draft',
+    accessLevel: 'internal',
+    author: item.author_name || item.author || '未知',
+    createdAt: item.created_at?.split?.('T')?.[0] || item.createdAt || '',
+    updatedAt: item.updated_at?.split?.('T')?.[0] || item.updatedAt || '',
+    viewCount: item.view_count || item.viewCount || 0,
+    downloadCount: item.download_count || item.downloadCount || 0,
+    likeCount: item.like_count || item.likeCount || 0,
+    helpfulCount: item.helpful_count || item.helpfulCount || 0,
+    adoptCount: item.adopt_count || item.adoptCount || 0,
+    rating: item.rating || 0,
+    tags: item.tags || [],
+    description: item.content?.substring(0, 200) || item.description || '',
+    content: item.content || '',
+    fileUrl: item.file_path,
+    fileType: item.file_type || (item.file_path ? 'document' : 'text'),
+    fileName: item.file_name,
+    fileSize: item.file_size,
+    isFeatured: item.is_featured || item.isFeatured || false,
+    isFaq: item.is_faq || item.isFaq || false,
+    allowDownload: item.allow_download ?? item.allowDownload ?? true,
+  });
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -138,37 +165,7 @@ const KnowledgeBase = () => {
 
       const response = await serviceApi.knowledgeBase.list(params);
       const apiData = response.data || response;
-
-      // 映射API响应到组件期望的格式
-      const mappedDocuments = (apiData.items || []).map((item) => ({
-        id: item.id,
-        title: item.title,
-        type: item.is_faq ? 'faq' : item.file_path ? 'document' : 'article',
-        category: item.category || 'engineering',
-        status: item.status?.toLowerCase() || 'draft',
-        accessLevel: 'internal',
-        author: item.author_name || '未知',
-        createdAt: item.created_at?.split('T')[0] || '',
-        updatedAt: item.updated_at?.split('T')[0] || '',
-        viewCount: item.view_count || 0,
-        downloadCount: item.download_count || 0,
-        likeCount: item.like_count || 0,
-        helpfulCount: item.helpful_count || 0,
-        adoptCount: item.adopt_count || 0,
-        rating: item.rating || 0,
-        tags: item.tags || [],
-        description: item.content?.substring(0, 200) || '',
-        content: item.content,
-        fileUrl: item.file_path,
-        fileType: item.file_path ? 'document' : 'text',
-        fileName: item.file_name,
-        fileSize: item.file_size,
-        isFeatured: item.is_featured,
-        isFaq: item.is_faq,
-        allowDownload: item.allow_download
-      }));
-
-      setDocuments(mappedDocuments);
+      setDocuments((apiData.items || []).map(normalizeDocument));
       setCategories(defaultCategories);
     } catch (error) {
       console.error('加载知识库数据失败:', error);
@@ -198,16 +195,87 @@ const KnowledgeBase = () => {
 
   // 事件处理
   const _handleUploadDocument = () => {
-    setShowUploadModal(true);
+    message.info('当前页面暂未接入附件上传，请先使用“创建文档”录入文本内容。');
   };
 
   const handleCreateDocument = () => {
+    setEditingDocument(null);
+    createForm.setFieldsValue({
+      title: '',
+      category: Object.values(CATEGORIES)[0]?.value || 'engineering',
+      content: '',
+      tags: '',
+      is_faq: false,
+      is_featured: false,
+      allow_download: true,
+      status: STATUS_OPTIONS.PUBLISHED.value,
+    });
     setShowCreateModal(true);
   };
 
   const handleEditDocument = (doc) => {
     setEditingDocument(doc);
+    createForm.setFieldsValue({
+      title: doc.title || '',
+      category: doc.category || Object.values(CATEGORIES)[0]?.value || 'engineering',
+      content: doc.content || '',
+      tags: (doc.tags || []).join(', '),
+      is_faq: doc.isFaq || false,
+      is_featured: doc.isFeatured || false,
+      allow_download: doc.allowDownload ?? true,
+      status: doc.status || STATUS_OPTIONS.PUBLISHED.value,
+    });
     setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    setEditingDocument(null);
+    createForm.resetFields();
+  };
+
+  const handleSubmitDocument = async () => {
+    try {
+      const values = await createForm.validateFields();
+      const payload = {
+        title: values.title?.trim(),
+        category: values.category,
+        content: values.content?.trim() || '',
+        tags: (values.tags || '')
+          .split(/[,\n，]/)
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+        is_faq: values.is_faq || false,
+        is_featured: values.is_featured || false,
+        allow_download: values.allow_download ?? true,
+        status: values.status || STATUS_OPTIONS.PUBLISHED.value,
+      };
+
+      setSubmitting(true);
+
+      const response = editingDocument?.id
+        ? await serviceApi.knowledgeBase.update(editingDocument.id, payload)
+        : await serviceApi.knowledgeBase.create(payload);
+      const savedDocument = normalizeDocument(response?.data || response);
+
+      setDocuments((prev) => {
+        if (editingDocument?.id) {
+          return (prev || []).map((doc) => (doc.id === editingDocument.id ? savedDocument : doc));
+        }
+        return [savedDocument, ...(prev || [])];
+      });
+
+      message.success(editingDocument?.id ? '文档更新成功' : '文档创建成功');
+      handleCloseCreateModal();
+    } catch (error) {
+      if (error?.errorFields) {
+        return;
+      }
+      console.error('保存知识库文档失败:', error);
+      message.error(error?.response?.data?.detail || error?.message || '保存失败');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDeleteDocument = async (docId) => {
@@ -457,12 +525,12 @@ const KnowledgeBase = () => {
             </Button>
             <Button
               icon={<Upload size={16} />}
-              onClick={() => setShowUploadModal(true)}>
+              onClick={_handleUploadDocument}>
 
               上传文档
             </Button>
             <Radio.Group
-              value={viewLayout || "unknown"}
+              value={viewLayout}
               onChange={(e) => setViewLayout(e.target.value)}
               buttonStyle="solid">
 
@@ -480,7 +548,7 @@ const KnowledgeBase = () => {
             <Input
               placeholder="搜索文档标题、内容、标签..."
               prefix={<Search size={16} />}
-              value={searchText || "unknown"}
+              value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear />
 
@@ -551,6 +619,22 @@ const KnowledgeBase = () => {
             data={{ documents: filteredDocuments, categories }}
             loading={loading}
             onNavigate={(type, value) => {
+              if (type === 'create') {
+                handleCreateDocument();
+                return;
+              }
+              if (type === 'categories') {
+                setActiveTab('categories');
+                return;
+              }
+              if (type === 'export') {
+                message.info('批量导出功能开发中');
+                return;
+              }
+              if (type === 'favorites') {
+                setActiveTab('documents');
+                return;
+              }
               setActiveTab('documents');
               if (type === 'type') {setFilters({ ...filters, type: value });}
             }} />
@@ -629,6 +713,97 @@ const KnowledgeBase = () => {
           onClose={() => setSelectedDocument(null)} />
 
         }
+      </Modal>
+
+      <Modal
+        title={editingDocument ? '编辑文档' : '创建文档'}
+        open={showCreateModal}
+        onCancel={handleCloseCreateModal}
+        onOk={handleSubmitDocument}
+        confirmLoading={submitting}
+        destroyOnHidden
+        okText={editingDocument ? '保存' : '创建'}
+        cancelText="取消"
+        width={720}>
+
+        <Form
+          form={createForm}
+          layout="vertical"
+          initialValues={{
+            title: '',
+            category: Object.values(CATEGORIES)[0]?.value || 'engineering',
+            content: '',
+            tags: '',
+            is_faq: false,
+            is_featured: false,
+            allow_download: true,
+            status: STATUS_OPTIONS.PUBLISHED.value,
+          }}>
+
+          <Form.Item
+            label="文档标题"
+            name="title"
+            rules={[{ required: true, message: '请输入文档标题' }]}>
+
+            <Input placeholder="例如：设备调试 SOP / 客户常见问题说明" />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="分类"
+                name="category"
+                rules={[{ required: true, message: '请选择分类' }]}>
+
+                <Select
+                  options={Object.values(CATEGORIES).map((category) => ({
+                    value: category.value,
+                    label: category.label,
+                  }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="状态" name="status">
+                <Select
+                  options={Object.values(STATUS_OPTIONS).map((status) => ({
+                    value: status.value,
+                    label: status.label,
+                  }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item label="标签" name="tags">
+            <Input placeholder="多个标签请用逗号分隔，例如：调试, SOP, 电气" />
+          </Form.Item>
+
+          <Form.Item label="内容" name="content">
+            <TextArea
+              rows={10}
+              placeholder="输入文档正文内容，支持先以文本形式沉淀知识。"
+            />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <Form.Item name="is_faq" valuePropName="checked">
+                <Checkbox>标记为 FAQ</Checkbox>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item name="is_featured" valuePropName="checked">
+                <Checkbox>设为精选</Checkbox>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item name="allow_download" valuePropName="checked">
+                <Checkbox>允许下载</Checkbox>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
       </Modal>
     </motion.div>);
 

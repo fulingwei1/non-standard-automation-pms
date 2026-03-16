@@ -24,7 +24,7 @@ async def download_knowledge_document(
     *,
     db: Session = Depends(deps.get_db),
     article_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     下载知识库文档

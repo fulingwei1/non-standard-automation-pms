@@ -11,9 +11,12 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.service import ServiceTicket, ServiceTicketCcUser
+from app.models.service.enums import ServiceTicketStatusEnum
 from app.models.user import User
 from app.schemas.service import ServiceTicketAssign, ServiceTicketResponse
 from app.utils.db_helpers import get_or_404
+
+from ..access import ensure_project_ids_access_or_raise, ensure_service_ticket_access_or_raise
 
 router = APIRouter()
 
@@ -24,7 +27,7 @@ def get_project_members_for_ticket(
     db: Session = Depends(deps.get_db),
     project_ids: str = Query(..., description="项目ID列表，逗号分隔（如：1,2,3）"),
     include_roles: Optional[str] = Query(None, description="包含的角色，逗号分隔（可选）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取项目相关人员（用于工单分配）
@@ -40,6 +43,8 @@ def get_project_members_for_ticket(
 
     if not project_id_list:
         raise HTTPException(status_code=400, detail="至少需要一个项目ID")
+
+    ensure_project_ids_access_or_raise(db, current_user, project_id_list)
 
     # 解析角色列表（可选）
     role_list = None
@@ -69,13 +74,14 @@ def get_ticket_related_projects(
     *,
     db: Session = Depends(deps.get_db),
     ticket_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取工单关联的所有项目
     """
     from app.services.ticket_assignment_service import get_ticket_related_projects
 
+    ensure_service_ticket_access_or_raise(db, current_user, ticket_id)
     projects_data = get_ticket_related_projects(db, ticket_id)
 
     return projects_data
@@ -89,12 +95,12 @@ def assign_service_ticket(
     db: Session = Depends(deps.get_db),
     ticket_id: int,
     assign_in: ServiceTicketAssign,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:update")),
 ) -> Any:
     """
     分配服务工单（支持抄送人员）
     """
-    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
+    ticket = ensure_service_ticket_access_or_raise(db, current_user, ticket_id)
 
     assignee = db.query(User).filter(User.id == assign_in.assignee_id).first()
     if not assignee:
@@ -107,9 +113,9 @@ def assign_service_ticket(
                 raise HTTPException(status_code=404, detail=f"抄送人员不存在 (ID: {user_id})")
 
     ticket.assigned_to_id = assign_in.assignee_id
-    ticket.assigned_to_name = assignee.name or assignee.username
+    ticket.assigned_to_name = assignee.real_name or assignee.username
     ticket.assigned_time = datetime.now()
-    ticket.status = "IN_PROGRESS"
+    ticket.status = ServiceTicketStatusEnum.IN_PROGRESS.value
 
     # 记录响应时间（首次分配时）
     if not ticket.response_time:
@@ -123,7 +129,7 @@ def assign_service_ticket(
             "type": "ASSIGNED",
             "timestamp": datetime.now().isoformat(),
             "user": current_user.real_name or current_user.username,
-            "description": f"工单已分配给 {assignee.name or assignee.username}",
+            "description": f"工单已分配给 {assignee.real_name or assignee.username}",
         }
     )
 

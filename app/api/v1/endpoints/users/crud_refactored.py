@@ -23,6 +23,7 @@ from app.utils.db_helpers import get_or_404
 
 from .utils import (
     build_user_response,
+    ensure_user_access,
     ensure_employee_unbound,
     prepare_employee_for_new_user,
     replace_user_roles,
@@ -47,6 +48,9 @@ def read_users(
         from app.models.user import Role, UserRole
 
         query = db.query(User)
+
+        if not current_user.is_superuser:
+            query = query.filter(User.tenant_id == current_user.tenant_id)
 
         query = apply_keyword_filter(
             query, User, keyword, ["username", "real_name", "employee_no", "email"]
@@ -155,6 +159,12 @@ def create_user(
     if exist:
         raise HTTPException(status_code=400, detail="该用户名已存在")
 
+    if current_user.is_superuser and current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="系统管理员创建租户用户时需要显式指定租户，请使用专门的租户管理接口",
+        )
+
     employee = prepare_employee_for_new_user(db, user_in)
 
     # 创建用户时确保租户数据一致性
@@ -188,7 +198,7 @@ def create_user(
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
-    replace_user_roles(db, user.id, user_in.role_ids)
+    replace_user_roles(db, user.id, user_in.role_ids, acting_user=current_user)
     db.commit()
     db.refresh(user)
 
@@ -224,7 +234,8 @@ def read_user_by_id(
 ) -> Any:
     """获取指定用户"""
     user = get_or_404(db, User, user_id, "用户不存在")
-    if user.id != current_user.id and not security.check_permission(current_user, "user:read"):
+    ensure_user_access(current_user, user)
+    if user.id != current_user.id and not security.check_permission(current_user, "user:read", db):
         raise HTTPException(status_code=403, detail="权限不足")
 
     # 使用统一响应格式
@@ -242,6 +253,7 @@ def update_user(
 ) -> Any:
     """更新用户信息"""
     user = get_or_404(db, User, user_id, "用户不存在")
+    ensure_user_access(current_user, user)
 
     old_is_active = user.is_active
     old_data = {
@@ -272,7 +284,7 @@ def update_user(
             )
         setattr(user, field, value)
 
-    replace_user_roles(db, user.id, role_ids)
+    replace_user_roles(db, user.id, role_ids, acting_user=current_user)
 
     # 验证用户数据一致性
     try:
@@ -327,8 +339,9 @@ def assign_user_roles(
 ) -> Any:
     """分配用户角色"""
     user = get_or_404(db, User, user_id, "用户不存在")
+    ensure_user_access(current_user, user)
 
-    replace_user_roles(db, user.id, role_data.role_ids)
+    replace_user_roles(db, user.id, role_data.role_ids, acting_user=current_user)
     db.commit()
 
     try:
@@ -356,6 +369,7 @@ def delete_user(
 ) -> Any:
     """删除/禁用用户（软删除）"""
     user = get_or_404(db, User, user_id, "用户不存在")
+    ensure_user_access(current_user, user)
 
     if user.is_superuser:
         raise HTTPException(status_code=400, detail="不能删除超级管理员")

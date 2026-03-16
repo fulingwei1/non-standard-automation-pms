@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.permission_codes import canonicalize_permission_code
 from app.models.user import ApiPermission, Role, RoleApiPermission, User
 from app.schemas.common import ResponseModel
 
@@ -46,7 +47,7 @@ def get_permission_matrix(
         matrix[module][page].append(
             {
                 "id": perm.id,
-                "code": perm.perm_code,
+                "code": canonicalize_permission_code(perm.perm_code),
                 "name": perm.perm_name,
                 "action": action,
                 "description": perm.description,
@@ -147,7 +148,7 @@ def get_role_permissions(
         result.append(
             {
                 "id": perm.id,
-                "code": perm.perm_code,
+                "code": canonicalize_permission_code(perm.perm_code),
                 "name": perm.perm_name,
                 "module": perm.module,
                 "page_code": perm.page_code,
@@ -165,7 +166,7 @@ def get_role_permissions(
             result.append(
                 {
                     "id": perm.id,
-                    "code": perm.perm_code,
+                    "code": canonicalize_permission_code(perm.perm_code),
                     "name": perm.perm_name,
                     "module": perm.module,
                     "page_code": perm.page_code,

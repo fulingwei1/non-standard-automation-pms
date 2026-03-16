@@ -3,6 +3,7 @@
 移动端AI销售助手 - 核心服务
 """
 
+import asyncio
 import json
 import logging
 import time
@@ -19,6 +20,8 @@ from app.models.presale_mobile import (
     PresaleVisitRecord,
 )
 from app.schemas.presale_mobile import QuestionType, SyncStatus
+from app.services.ai_client_service import AIClientService
+from app.services.ai_structured_output import extract_json_payload
 from app.utils.db_helpers import save_obj
 
 logger = logging.getLogger(__name__)
@@ -29,6 +32,8 @@ class PresaleMobileService:
 
     def __init__(self, db: Session):
         self.db = db
+        self.ai_client = AIClientService()
+        self.ai_model = self.ai_client.default_model
 
     def _elapsed_ms(self, start_time: float) -> int:
         """返回至少 1ms 的耗时，避免极快调用被截断成 0。"""
@@ -173,8 +178,9 @@ class PresaleMobileService:
 
     async def _call_ai_service(self, prompt: str, context: Optional[Dict[str, Any]]) -> str:
         """调用AI服务"""
-        # TODO: 集成真实的AI服务（OpenAI GPT-4 / Kimi API）
-        # 这里返回模拟数据
+        content = await self._generate_ai_content(prompt, temperature=0.3, max_tokens=1200)
+        if content:
+            return content
         return f"这是针对您问题的专业回答。[模拟AI响应 - 生产环境需集成真实AI服务]\n\n提示词：{prompt[:100]}..."
 
     # ==================== 语音交互服务 ====================
@@ -477,7 +483,38 @@ class PresaleMobileService:
 
     async def _extract_visit_info(self, transcription: str) -> Dict[str, Any]:
         """从转录文本中提取拜访信息"""
-        # TODO: 使用AI提取结构化信息
+        prompt = f"""你是一名非标自动化行业销售运营助理，请从以下拜访纪要中提取结构化信息。
+
+拜访转录：
+{transcription}
+
+请仅输出 JSON，格式如下：
+{{
+  "attendees": [{{"name": "姓名", "title": "职位", "company": "公司"}}],
+  "discussion_points": "讨论要点",
+  "customer_feedback": "客户反馈",
+  "next_steps": "下一步行动",
+  "summary": "100字以内总结"
+}}
+
+要求：
+1. 如果没有明确参会人，可以输出空数组。
+2. 只输出合法 JSON。"""
+
+        content = await self._generate_ai_content(prompt, temperature=0.2, max_tokens=900)
+        payload = extract_json_payload(content or "")
+        if isinstance(payload, dict):
+            attendees = payload.get("attendees")
+            if not isinstance(attendees, list):
+                attendees = []
+            return {
+                "attendees": attendees,
+                "discussion_points": str(payload.get("discussion_points") or "").strip(),
+                "customer_feedback": str(payload.get("customer_feedback") or "").strip() or None,
+                "next_steps": str(payload.get("next_steps") or "").strip() or None,
+                "summary": str(payload.get("summary") or "").strip() or None,
+            }
+
         return {
             "attendees": [{"name": "张三", "title": "技术总监", "company": "客户公司"}],
             "discussion_points": "讨论了自动化改造方案的技术细节和实施计划",
@@ -638,6 +675,45 @@ class PresaleMobileService:
                 "synced_id": None,
                 "message": f"同步失败: {str(e)}",
             }
+
+    def _has_live_ai(self) -> bool:
+        """检查是否具备真实AI调用能力。"""
+        openai_ready = bool(
+            self.ai_client.openai_client
+            and str(self.ai_client.openai_api_key).startswith(("sk-", "sk-proj-"))
+        )
+        return bool(openai_ready or self.ai_client.zhipu_client or self.ai_client.kimi_api_key)
+
+    async def _generate_ai_content(
+        self, prompt: str, temperature: float = 0.3, max_tokens: int = 1200
+    ) -> Optional[str]:
+        """异步封装同步AI客户端，失败时返回None。"""
+        if not self._has_live_ai():
+            return None
+
+        models = [self.ai_model]
+        if self.ai_client.default_model not in models:
+            models.append(self.ai_client.default_model)
+
+        for model in models:
+            try:
+                response = await asyncio.to_thread(
+                    self.ai_client.generate_solution,
+                    prompt,
+                    model,
+                    temperature,
+                    max_tokens,
+                )
+            except Exception as exc:
+                logger.warning("移动端AI调用失败: %s", exc)
+                continue
+
+            content = (response or {}).get("content")
+            model_name = str((response or {}).get("model", ""))
+            if content and not model_name.endswith("-mock"):
+                return str(content).strip()
+
+        return None
 
     def _sync_chat_data(self, user_id: int, data: Dict[str, Any]) -> int:
         """同步对话数据"""

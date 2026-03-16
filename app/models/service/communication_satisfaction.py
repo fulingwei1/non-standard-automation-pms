@@ -18,6 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
+from .enums import SurveyStatusEnum
 
 
 class CustomerCommunication(Base, TimestampMixin):
@@ -107,7 +108,12 @@ class CustomerSatisfaction(Base, TimestampMixin):
     deadline = Column(Date, comment="截止日期")
 
     # 状态
-    status = Column(String(20), default="DRAFT", nullable=False, comment="状态")
+    status = Column(
+        String(20),
+        default=SurveyStatusEnum.DRAFT.value,
+        nullable=False,
+        comment="状态",
+    )
 
     # 回复信息
     response_date = Column(Date, comment="回复日期")

@@ -14,11 +14,18 @@ from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
 from app.models.project import Customer, Project
 from app.models.service import ServiceTicket
+from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_ticket_status
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceTicketCreate, ServiceTicketResponse
 from app.utils.db_helpers import get_or_404
+from app.utils.permission_helpers import check_project_access_or_raise
 
+from ..access import (
+    ensure_project_ids_access_or_raise,
+    ensure_service_ticket_access_or_raise,
+    filter_service_project_query,
+)
 from ..number_utils import generate_ticket_no
 
 router = APIRouter()
@@ -35,18 +42,21 @@ def read_service_tickets(
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索（工单号/问题描述）"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取服务工单列表
     """
     query = db.query(ServiceTicket)
+    query = filter_service_project_query(db, query, current_user, ServiceTicket.project_id)
 
     if ticket_status:
+        ticket_status = normalize_service_ticket_status(ticket_status)
         query = query.filter(ServiceTicket.status == ticket_status)
     if urgency:
         query = query.filter(ServiceTicket.urgency == urgency)
     if project_id:
+        check_project_access_or_raise(db, current_user, project_id, "您没有权限查看该项目的服务工单")
         query = query.filter(ServiceTicket.project_id == project_id)
     if customer_id:
         query = query.filter(ServiceTicket.customer_id == customer_id)
@@ -84,7 +94,7 @@ def create_service_ticket(
     *,
     db: Session = Depends(deps.get_db),
     ticket_in: ServiceTicketCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:create")),
 ) -> Any:
     """
     创建服务工单（支持多项目关联和直接分配）
@@ -107,6 +117,8 @@ def create_service_ticket(
         for project_id in all_project_ids:
             if not db.query(Project).filter(Project.id == project_id).first():
                 raise HTTPException(status_code=404, detail=f"关联项目不存在 (ID: {project_id})")
+
+    ensure_project_ids_access_or_raise(db, current_user, all_project_ids)
 
     # 验证客户是否存在
     customer = db.query(Customer).filter(Customer.id == ticket_in.customer_id).first()
@@ -137,10 +149,12 @@ def create_service_ticket(
         reported_by=ticket_in.reported_by,
         reported_time=ticket_in.reported_time,
         status=(
-            "PENDING" if not ticket_in.assignee_id else "IN_PROGRESS"
+            ServiceTicketStatusEnum.PENDING.value
+            if not ticket_in.assignee_id
+            else ServiceTicketStatusEnum.IN_PROGRESS.value
         ),  # 如果指定了处理人，直接变为处理中
         assigned_to_id=ticket_in.assignee_id,
-        assigned_to_name=(assignee.name or assignee.username) if assignee else None,
+        assigned_to_name=(assignee.real_name or assignee.username) if assignee else None,
         assigned_time=datetime.now() if ticket_in.assignee_id else None,
         response_time=datetime.now() if ticket_in.assignee_id else None,
         timeline=[
@@ -160,7 +174,7 @@ def create_service_ticket(
                 "type": "ASSIGNED",
                 "timestamp": datetime.now().isoformat(),
                 "user": current_user.real_name or current_user.username,
-                "description": f"工单已分配给 {assignee.name or assignee.username}",
+                "description": f"工单已分配给 {assignee.real_name or assignee.username}",
             }
         )
 
@@ -218,12 +232,12 @@ def read_service_ticket(
     *,
     db: Session = Depends(deps.get_db),
     ticket_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取服务工单详情
     """
-    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
+    ticket = ensure_service_ticket_access_or_raise(db, current_user, ticket_id)
 
     # 获取项目名称和客户名称
     if ticket.project_id:

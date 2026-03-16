@@ -223,14 +223,14 @@ export const defaultNavGroups = [
         name: "服务中心",
         path: "/service/center",
         icon: "FileText",
-        permissionAny: ["service:ticket:read", "customer:communication:read", "customer:satisfaction:read", "service:analytics:read"],
+        permissionAny: ["service:read"],
         permissionLabel: "服务中心"
       },
       {
         name: "交付验收中心",
         path: "/delivery/acceptance-center",
         icon: "ClipboardList",
-        permissionAny: ["acceptance:read", "installation:read"],
+        permissionAny: ["acceptance:read", "installation_dispatch:read"],
         permissionLabel: "交付验收中心"
       }
     ]

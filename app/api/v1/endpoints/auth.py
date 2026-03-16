@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.config import settings
+from app.core.permission_codes import canonicalize_permission_codes
 from app.core.rate_limit import limiter
 from app.models.user import (
     ApiPermission,
@@ -465,7 +466,7 @@ def get_me(
             .all()
         )
     permission_codes = sorted(
-        {row.perm_code for row in permission_rows if row.perm_code}
+        canonicalize_permission_codes(row.perm_code for row in permission_rows if row.perm_code)
     )
     user_data = {
         "id": db_user.id,

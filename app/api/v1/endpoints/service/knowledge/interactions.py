@@ -24,7 +24,7 @@ def like_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),
     article_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:update")),
 ) -> Any:
     """
     点赞知识库文章
@@ -42,7 +42,7 @@ def mark_knowledge_base_helpful(
     *,
     db: Session = Depends(deps.get_db),
     article_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:update")),
 ) -> Any:
     """
     标记知识库文章为有用
@@ -60,7 +60,7 @@ def adopt_knowledge_base(
     *,
     db: Session = Depends(deps.get_db),
     article_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:update")),
 ) -> Any:
     """
     标记采用知识库文章（表示该文档被实际应用到工作中）

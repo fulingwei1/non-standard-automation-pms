@@ -106,7 +106,21 @@ def prepare_employee_for_new_user(db: Session, user_in: UserCreate) -> Employee:
     return employee
 
 
-def replace_user_roles(db: Session, user_id: int, role_ids: Optional[List[int]]) -> None:
+def ensure_user_access(current_user: User, target_user: User) -> None:
+    """确保当前用户可以访问目标用户。"""
+    if current_user.is_superuser:
+        return
+
+    if current_user.tenant_id != target_user.tenant_id:
+        raise HTTPException(status_code=403, detail="无权访问其他租户的用户")
+
+
+def replace_user_roles(
+    db: Session,
+    user_id: int,
+    role_ids: Optional[List[int]],
+    acting_user: Optional[User] = None,
+) -> None:
     """
     替换用户角色
 
@@ -115,37 +129,85 @@ def replace_user_roles(db: Session, user_id: int, role_ids: Optional[List[int]])
     if role_ids is None:
         return
 
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    if acting_user:
+        ensure_user_access(acting_user, target_user)
+
     # 获取旧的角色 ID 列表（用于缓存失效）
     old_user_roles = db.query(UserRole).filter(UserRole.user_id == user_id).all()
     old_role_ids = [ur.role_id for ur in old_user_roles]
+
+    unique_ids = list(dict.fromkeys(role_ids))
+    roles = []
+    if unique_ids:
+        roles = db.query(Role).filter(Role.id.in_(unique_ids)).all()
+        if len(roles) != len(unique_ids):
+            raise HTTPException(status_code=400, detail="部分角色不存在")
+
+    if target_user.tenant_id is None and any(role.tenant_id is not None for role in roles):
+        raise HTTPException(status_code=400, detail="系统级用户不能分配租户专属角色")
+
+    if target_user.tenant_id is not None:
+        invalid_roles = [
+            role.role_code
+            for role in roles
+            if role.tenant_id not in (None, target_user.tenant_id)
+        ]
+        if invalid_roles:
+            raise HTTPException(status_code=403, detail="不能分配其他租户的角色")
+
+    if acting_user and not acting_user.is_superuser:
+        disallowed_system_roles = [
+            role.role_code
+            for role in roles
+            if role.tenant_id is None and getattr(role, "is_system", False)
+        ]
+        if disallowed_system_roles:
+            raise HTTPException(status_code=403, detail="无权分配系统预置角色")
+
+        invalid_roles = [
+            role.role_code
+            for role in roles
+            if role.tenant_id not in (None, acting_user.tenant_id)
+        ]
+        if invalid_roles:
+            raise HTTPException(status_code=403, detail="无权分配其他租户的角色")
 
     # 删除旧的角色关联
     db.query(UserRole).filter(UserRole.user_id == user_id).delete()
 
     if not role_ids:
         # 角色被清空，失效缓存
-        _invalidate_user_cache(user_id, old_role_ids, [])
+        _invalidate_user_cache(user_id, old_role_ids, [], target_user.tenant_id)
         return
-
-    unique_ids = list(dict.fromkeys(role_ids))
-    roles = db.query(Role).filter(Role.id.in_(unique_ids)).all()
-    if len(roles) != len(unique_ids):
-        raise HTTPException(status_code=400, detail="部分角色不存在")
 
     for role_id in unique_ids:
         db.add(UserRole(user_id=user_id, role_id=role_id))
 
     # 角色变更，使用户权限缓存失效
-    _invalidate_user_cache(user_id, old_role_ids, unique_ids)
+    _invalidate_user_cache(user_id, old_role_ids, unique_ids, target_user.tenant_id)
 
 
-def _invalidate_user_cache(user_id: int, old_role_ids: List[int], new_role_ids: List[int]) -> None:
+def _invalidate_user_cache(
+    user_id: int,
+    old_role_ids: List[int],
+    new_role_ids: List[int],
+    tenant_id: Optional[int],
+) -> None:
     """使用户权限缓存失效"""
     try:
         from app.services.permission_cache_service import get_permission_cache_service
 
         cache_service = get_permission_cache_service()
-        cache_service.invalidate_user_role_change(user_id, old_role_ids, new_role_ids)
+        cache_service.invalidate_user_role_change(
+            user_id,
+            old_role_ids,
+            new_role_ids,
+            tenant_id=tenant_id,
+        )
         logger.debug(f"User permission cache invalidated: user_id={user_id}")
     except Exception as e:
         logger.warning(f"Failed to invalidate user cache: {e}")

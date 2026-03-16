@@ -11,6 +11,8 @@ from sqlalchemy import or_, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.common.context import get_audit_context
+from app.core.permission_codes import canonicalize_permission_code
 from app.models.user import (
     ApiPermission,
     Role,
@@ -18,6 +20,7 @@ from app.models.user import (
     RoleTemplate,
     UserRole,
 )
+from app.services.permission_audit_service import PermissionAuditService
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +75,16 @@ class RoleManagementService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _role_scope_filter(self, tenant_id: Optional[int]):
+        if tenant_id is None:
+            return True
+        return or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None))
+
+    def _permission_scope_filter(self, tenant_id: Optional[int]):
+        if tenant_id is None:
+            return True
+        return or_(ApiPermission.tenant_id == tenant_id, ApiPermission.tenant_id.is_(None))
+
     def get_role_by_id(self, role_id: int, tenant_id: Optional[int] = None) -> Role:
         """
         根据ID获取角色
@@ -86,7 +99,10 @@ class RoleManagementService:
         Raises:
             HTTPException: 角色不存在时抛出404
         """
-        role = self.db.query(Role).filter(Role.id == role_id).first()
+        query = self.db.query(Role).filter(Role.id == role_id)
+        if tenant_id is not None:
+            query = query.filter(self._role_scope_filter(tenant_id))
+        role = query.first()
         if not role:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="角色不存在")
         return role
@@ -112,9 +128,9 @@ class RoleManagementService:
         Returns:
             包含角色列表和分页信息的字典
         """
-        query = self.db.query(Role).filter(
-            or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None))
-        )
+        query = self.db.query(Role)
+        if tenant_id is not None:
+            query = query.filter(self._role_scope_filter(tenant_id))
 
         if keyword:
             query = query.filter(
@@ -137,7 +153,11 @@ class RoleManagementService:
             "page_size": page_size,
         }
 
-    def get_permissions_list(self, module: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_permissions_list(
+        self,
+        module: Optional[str] = None,
+        tenant_id: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """
         获取权限列表
 
@@ -167,6 +187,9 @@ class RoleManagementService:
             ApiPermission.action.label("action"),
         ).filter(ApiPermission.is_active)
 
+        if tenant_id is not None:
+            query = query.filter(self._permission_scope_filter(tenant_id))
+
         if module:
             query = query.filter(ApiPermission.module == module)
 
@@ -183,7 +206,7 @@ class RoleManagementService:
         return [
             {
                 "id": p.id,
-                "permission_code": p.perm_code,
+                "permission_code": canonicalize_permission_code(p.perm_code),
                 "permission_name": p.perm_name,
                 "module": p.module,
                 "action": p.action,
@@ -227,15 +250,10 @@ class RoleManagementService:
         Returns:
             角色配置列表
         """
-        roles = (
-            self.db.query(Role)
-            .filter(
-                Role.is_active,
-                or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None)),
-            )
-            .order_by(Role.sort_order)
-            .all()
-        )
+        query = self.db.query(Role).filter(Role.is_active)
+        if tenant_id is not None:
+            query = query.filter(self._role_scope_filter(tenant_id))
+        roles = query.order_by(Role.sort_order).all()
 
         return [
             {
@@ -338,12 +356,23 @@ class RoleManagementService:
         self.db.add(role)
         self.db.commit()
         self.db.refresh(role)
+        self._log_role_operation(
+            role,
+            PermissionAuditService.ACTION_ROLE_CREATED,
+            changes={
+                "role_code": role.role_code,
+                "role_name": role.role_name,
+                "data_scope": role.data_scope,
+                "tenant_id": role.tenant_id,
+            },
+        )
 
         return role
 
     def update_role(
         self,
         role_id: int,
+        tenant_id: Optional[int] = None,
         role_code: Optional[str] = None,
         role_name: Optional[str] = None,
         description: Optional[str] = None,
@@ -367,7 +396,7 @@ class RoleManagementService:
         Raises:
             HTTPException: 角色不存在或系统角色不允许修改编码时抛出
         """
-        role = self.get_role_by_id(role_id)
+        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
 
         # 系统预置角色不允许修改编码
         if role.is_system and role_code and role_code != role.role_code:
@@ -388,10 +417,21 @@ class RoleManagementService:
 
         self.db.commit()
         self.db.refresh(role)
+        self._log_role_operation(
+            role,
+            PermissionAuditService.ACTION_ROLE_UPDATED,
+            changes={
+                "role_code": role_code,
+                "role_name": role_name,
+                "description": description,
+                "data_scope": data_scope,
+                "is_active": is_active,
+            },
+        )
 
         return role
 
-    def delete_role(self, role_id: int) -> None:
+    def delete_role(self, role_id: int, tenant_id: Optional[int] = None) -> None:
         """
         删除角色
 
@@ -401,7 +441,7 @@ class RoleManagementService:
         Raises:
             HTTPException: 角色不存在、系统角色或有用户使用时抛出
         """
-        role = self.get_role_by_id(role_id)
+        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
 
         if role.is_system:
             raise HTTPException(
@@ -416,6 +456,11 @@ class RoleManagementService:
                 detail=f"该角色下有 {user_count} 个用户，无法删除",
             )
 
+        self._log_role_operation(
+            role,
+            PermissionAuditService.ACTION_ROLE_DELETED,
+            changes={"role_code": role.role_code, "role_name": role.role_name},
+        )
         self.db.delete(role)
         self.db.commit()
 
@@ -436,23 +481,31 @@ class RoleManagementService:
         Raises:
             HTTPException: 角色不存在时抛出404
         """
-        self.get_role_by_id(role_id)
+        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
 
         # 删除现有权限
         self.db.query(RoleApiPermission).filter(RoleApiPermission.role_id == role_id).delete()
 
         # 添加新权限
         for perm_id in permission_ids:
-            perm = self.db.query(ApiPermission).filter(ApiPermission.id == perm_id).first()
+            perm_query = self.db.query(ApiPermission).filter(ApiPermission.id == perm_id)
+            if tenant_id is not None:
+                perm_query = perm_query.filter(self._permission_scope_filter(tenant_id))
+            perm = perm_query.first()
             if perm:
                 self.db.add(RoleApiPermission(role_id=role_id, permission_id=perm_id))
 
         self.db.commit()
+        self._log_role_permission_assignment(role, permission_ids)
 
         # 清除权限缓存
         self._invalidate_permission_cache(role_id, tenant_id)
 
-    def get_role_nav_groups(self, role_id: int) -> List[Dict[str, Any]]:
+    def get_role_nav_groups(
+        self,
+        role_id: int,
+        tenant_id: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """
         获取角色的导航组配置
 
@@ -462,10 +515,15 @@ class RoleManagementService:
         Returns:
             导航组列表
         """
-        role = self.get_role_by_id(role_id)
+        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
         return role.nav_groups or []
 
-    def update_role_nav_groups(self, role_id: int, nav_groups: List[Dict[str, Any]]) -> None:
+    def update_role_nav_groups(
+        self,
+        role_id: int,
+        nav_groups: List[Dict[str, Any]],
+        tenant_id: Optional[int] = None,
+    ) -> None:
         """
         更新角色的导航组配置
 
@@ -473,9 +531,14 @@ class RoleManagementService:
             role_id: 角色ID
             nav_groups: 导航组列表
         """
-        role = self.get_role_by_id(role_id)
+        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
         role.nav_groups = nav_groups
         self.db.commit()
+        self._log_role_operation(
+            role,
+            PermissionAuditService.ACTION_ROLE_UPDATED,
+            changes={"nav_groups": nav_groups},
+        )
 
     # ============================================================
     # 角色层级管理
@@ -491,15 +554,10 @@ class RoleManagementService:
         Returns:
             树形结构的角色列表
         """
-        roles = (
-            self.db.query(Role)
-            .filter(
-                Role.is_active,
-                or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None)),
-            )
-            .order_by(Role.sort_order)
-            .all()
-        )
+        query = self.db.query(Role).filter(Role.is_active)
+        if tenant_id is not None:
+            query = query.filter(self._role_scope_filter(tenant_id))
+        roles = query.order_by(Role.sort_order).all()
 
         # 构建树形结构
         role_map = {
@@ -524,7 +582,12 @@ class RoleManagementService:
 
         return tree
 
-    def update_role_parent(self, role_id: int, parent_id: Optional[int]) -> Role:
+    def update_role_parent(
+        self,
+        role_id: int,
+        parent_id: Optional[int],
+        tenant_id: Optional[int] = None,
+    ) -> Role:
         """
         更新角色的父角色
 
@@ -538,7 +601,7 @@ class RoleManagementService:
         Raises:
             HTTPException: 角色不存在、系统角色或形成循环引用时抛出
         """
-        role = self.get_role_by_id(role_id)
+        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
 
         if role.is_system:
             raise HTTPException(
@@ -547,9 +610,9 @@ class RoleManagementService:
 
         # 检查父角色是否存在
         if parent_id is not None:
-            parent_role = self.db.query(Role).filter(Role.id == parent_id).first()
-            if not parent_role:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="父角色不存在")
+            parent_role = self.get_role_by_id(parent_id, tenant_id=tenant_id)
+            if tenant_id is not None and parent_role.tenant_id not in (None, role.tenant_id):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="父角色不在可访问范围内")
 
             # 检查是否形成循环引用
             if self._would_create_cycle(role_id, parent_id):
@@ -561,10 +624,19 @@ class RoleManagementService:
         role.parent_id = parent_id
         self.db.commit()
         self.db.refresh(role)
+        self._log_role_operation(
+            role,
+            PermissionAuditService.ACTION_ROLE_UPDATED,
+            changes={"parent_id": parent_id},
+        )
 
         return role
 
-    def get_role_ancestors(self, role_id: int) -> List[Dict[str, Any]]:
+    def get_role_ancestors(
+        self,
+        role_id: int,
+        tenant_id: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """
         获取角色的所有祖先角色
 
@@ -574,13 +646,13 @@ class RoleManagementService:
         Returns:
             祖先角色列表
         """
-        role = self.get_role_by_id(role_id)
+        role = self.get_role_by_id(role_id, tenant_id=tenant_id)
 
         ancestors = []
         current = role
 
         while current.parent_id is not None:
-            parent = self.db.query(Role).filter(Role.id == current.parent_id).first()
+            parent = self.get_role_by_id(current.parent_id, tenant_id=tenant_id)
             if parent:
                 ancestors.append(
                     {
@@ -596,7 +668,11 @@ class RoleManagementService:
 
         return ancestors
 
-    def get_role_descendants(self, role_id: int) -> List[Dict[str, Any]]:
+    def get_role_descendants(
+        self,
+        role_id: int,
+        tenant_id: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
         """
         获取角色的所有子孙角色
 
@@ -606,10 +682,10 @@ class RoleManagementService:
         Returns:
             子孙角色列表
         """
-        self.get_role_by_id(role_id)
+        self.get_role_by_id(role_id, tenant_id=tenant_id)
 
         descendants = []
-        self._collect_descendants(role_id, descendants)
+        self._collect_descendants(role_id, descendants, tenant_id=tenant_id)
 
         return descendants
 
@@ -650,9 +726,17 @@ class RoleManagementService:
 
         return False
 
-    def _collect_descendants(self, parent_id: int, result: List[Dict[str, Any]]) -> None:
+    def _collect_descendants(
+        self,
+        parent_id: int,
+        result: List[Dict[str, Any]],
+        tenant_id: Optional[int] = None,
+    ) -> None:
         """递归收集所有子孙角色"""
-        children = self.db.query(Role).filter(Role.parent_id == parent_id, Role.is_active).all()
+        query = self.db.query(Role).filter(Role.parent_id == parent_id, Role.is_active)
+        if tenant_id is not None:
+            query = query.filter(self._role_scope_filter(tenant_id))
+        children = query.all()
         for child in children:
             result.append(
                 {
@@ -663,7 +747,7 @@ class RoleManagementService:
                     "data_scope": child.data_scope,
                 }
             )
-            self._collect_descendants(child.id, result)
+            self._collect_descendants(child.id, result, tenant_id=tenant_id)
 
     def _invalidate_permission_cache(self, role_id: int, tenant_id: Optional[int]) -> None:
         """清除角色权限缓存"""
@@ -674,3 +758,47 @@ class RoleManagementService:
             cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)
         except Exception as e:
             logger.warning(f"清除权限缓存失败: {e}")
+
+    def _log_role_operation(
+        self,
+        role: Role,
+        action: str,
+        changes: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """记录角色相关审计日志。"""
+        ctx = get_audit_context()
+        operator_id = ctx.get("operator_id")
+        if not operator_id:
+            return
+
+        try:
+            PermissionAuditService.log_role_operation(
+                db=self.db,
+                operator_id=operator_id,
+                role_id=role.id,
+                action=action,
+                changes=changes,
+                ip_address=ctx.get("client_ip"),
+                user_agent=ctx.get("user_agent"),
+            )
+        except Exception as exc:
+            logger.warning(f"角色审计日志记录失败: {exc}")
+
+    def _log_role_permission_assignment(self, role: Role, permission_ids: List[int]) -> None:
+        """记录角色权限分配审计日志。"""
+        ctx = get_audit_context()
+        operator_id = ctx.get("operator_id")
+        if not operator_id:
+            return
+
+        try:
+            PermissionAuditService.log_role_permission_assignment(
+                db=self.db,
+                operator_id=operator_id,
+                role_id=role.id,
+                permission_ids=permission_ids,
+                ip_address=ctx.get("client_ip"),
+                user_agent=ctx.get("user_agent"),
+            )
+        except Exception as exc:
+            logger.warning(f"角色权限审计日志记录失败: {exc}")

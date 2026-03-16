@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-服务工单管理服务
+服务工单兼容服务
+
+该模块保留给遗留调用方和历史测试使用：
+1. 对外维持旧方法签名
+2. 对内优先兼容当前 ServiceTicket 模型字段
+3. 集中收敛旧状态值（assigned/completed 等）与当前状态常量的漂移
 """
 import logging
 from datetime import date, datetime, timedelta
@@ -16,6 +21,7 @@ from app.models.service import (
     CustomerSatisfaction,
     ServiceTicket,
 )
+from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_ticket_status
 from app.models.user import User
 from app.schemas.service import (
     PaginatedResponse,
@@ -28,10 +34,60 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceTicketsService:
-    """服务工单管理服务"""
+    """服务工单兼容服务。"""
 
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _coerce_numeric(value, default=0):
+        return value if isinstance(value, (int, float)) else default
+
+    @staticmethod
+    def _resolved_at_value(ticket):
+        for field_name in ("resolved_time", "resolved_at"):
+            value = getattr(ticket, field_name, None)
+            if isinstance(value, datetime):
+                return value
+        return None
+
+    @staticmethod
+    def _status_candidates(raw_status: Optional[str]) -> list:
+        if not raw_status:
+            return []
+
+        normalized = normalize_service_ticket_status(raw_status)
+        candidates = {
+            str(raw_status),
+            str(raw_status).upper(),
+            str(raw_status).lower(),
+        }
+        if normalized:
+            normalized_value = (
+                normalized.value if isinstance(normalized, ServiceTicketStatusEnum) else str(normalized)
+            )
+            candidates.update({normalized_value, normalized_value.upper(), normalized_value.lower()})
+
+        if str(raw_status).lower() == "completed":
+            candidates.update({"COMPLETED", "completed", "CLOSED", "closed", "RESOLVED", "resolved"})
+        if str(raw_status).lower() == "assigned":
+            candidates.update({"assigned", "ASSIGNED", "IN_PROGRESS", "in_progress"})
+
+        return list(candidates)
+
+    @classmethod
+    def _completion_status_candidates(cls) -> list:
+        return cls._status_candidates("completed")
+
+    @classmethod
+    def _pending_status_candidates(cls) -> list:
+        return cls._status_candidates(ServiceTicketStatusEnum.PENDING.value)
+
+    @classmethod
+    def _in_progress_status_candidates(cls) -> list:
+        candidates = set(cls._status_candidates(ServiceTicketStatusEnum.IN_PROGRESS.value))
+        candidates.update({"assigned", "ASSIGNED"})
+        return list(candidates)
 
     def get_dashboard_statistics(self) -> ServiceDashboardStatistics:
         """获取服务工单仪表板统计
@@ -51,7 +107,9 @@ class ServiceTicketsService:
 
         # 待处理工单
         pending_tickets = (
-            self.db.query(ServiceTicket).filter(ServiceTicket.status == "PENDING").count()
+            self.db.query(ServiceTicket)
+            .filter(ServiceTicket.status.in_(self._pending_status_candidates()))
+            .count()
         )
 
         # 平均响应时间
@@ -64,7 +122,8 @@ class ServiceTicketsService:
         today_completed = (
             self.db.query(ServiceTicket)
             .filter(
-                ServiceTicket.status == "COMPLETED", func.date(ServiceTicket.updated_at) == today
+                ServiceTicket.status.in_(self._completion_status_candidates()),
+                func.date(ServiceTicket.updated_at) == today,
             )
             .count()
         )
@@ -118,10 +177,23 @@ class ServiceTicketsService:
         if not ticket:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工单不存在")
 
+        projects = getattr(ticket, "projects", None)
+        if projects is None:
+            projects = []
+            for relation in getattr(ticket, "related_projects", []) or []:
+                project = getattr(relation, "project", None)
+                if project is not None:
+                    projects.append(project)
+
         return {
             "projects": [
-                {"id": project.id, "name": project.name, "status": project.status}
-                for project in ticket.projects
+                {
+                    "id": project.id,
+                    "name": getattr(project, "name", None)
+                    or getattr(project, "project_name", None),
+                    "status": getattr(project, "status", None),
+                }
+                for project in projects
             ]
         }
 
@@ -143,7 +215,7 @@ class ServiceTicketsService:
             query = query.filter(ServiceTicket.created_at <= end_date)
 
         if status:
-            query = query.filter(ServiceTicket.status == status)
+            query = query.filter(ServiceTicket.status.in_(self._status_candidates(status)))
 
         if priority:
             query = query.filter(ServiceTicket.priority == priority)
@@ -152,7 +224,7 @@ class ServiceTicketsService:
             query = query.filter(ServiceTicket.assigned_to_id == assigned_to)
 
         # 基础统计
-        total_tickets = query.count()
+        total_tickets = self._coerce_numeric(query.count())
 
         # 状态分布
         status_stats = (
@@ -174,10 +246,10 @@ class ServiceTicketsService:
 
         # 处理时长统计
         processing_times = []
-        for ticket in query.filter(ServiceTicket.status == "COMPLETED").all():
-            resolved = getattr(ticket, "resolved_time", None) or getattr(
-                ticket, "resolved_at", None
-            )
+        for ticket in query.filter(
+            ServiceTicket.status.in_(self._completion_status_candidates())
+        ).all():
+            resolved = self._resolved_at_value(ticket)
             if resolved:
                 duration = (resolved - ticket.created_at).total_seconds() / 3600
                 processing_times.append(duration)
@@ -186,14 +258,20 @@ class ServiceTicketsService:
             sum(processing_times) / len(processing_times) if processing_times else 0
         )
 
+        completed_tickets = sum(
+            count
+            for status_key, count in status_distribution.items()
+            if status_key in self._completion_status_candidates()
+        )
+
         return {
             "total_tickets": total_tickets,
             "status_distribution": status_distribution,
             "priority_distribution": priority_distribution,
             "average_processing_time_hours": round(avg_processing_time, 2),
-            "completed_tickets": status_distribution.get("COMPLETED", 0),
+            "completed_tickets": completed_tickets,
             "completion_rate": (
-                (status_distribution.get("COMPLETED", 0) / total_tickets * 100)
+                (completed_tickets / total_tickets * 100)
                 if total_tickets > 0
                 else 0
             ),
@@ -226,7 +304,7 @@ class ServiceTicketsService:
 
         # 筛选条件
         if status:
-            query = query.filter(ServiceTicket.status == status)
+            query = query.filter(ServiceTicket.status.in_(self._status_candidates(status)))
 
         if priority:
             query = query.filter(ServiceTicket.priority == priority)
@@ -297,7 +375,7 @@ class ServiceTicketsService:
             reported_by=getattr(ticket_data, "reported_by", None)
             or (str(current_user.id) if current_user else ""),
             reported_time=getattr(ticket_data, "reported_time", None) or datetime.now(),
-            status="PENDING",
+            status=ServiceTicketStatusEnum.PENDING.value,
         )
 
         save_obj(self.db, service_ticket)
@@ -318,14 +396,15 @@ class ServiceTicketsService:
         if not service_ticket:
             return None
 
-        service_ticket.assigned_to = getattr(assign_data, "assigned_to", None) or getattr(
+        assignee_id = getattr(assign_data, "assigned_to", None) or getattr(
             assign_data, "assignee_id", None
         )
-        service_ticket.assigned_to_id = getattr(assign_data, "assigned_to", None) or getattr(
-            assign_data, "assignee_id", None
-        )
+        service_ticket.assigned_to = assignee_id
+        service_ticket.assigned_to_id = assignee_id
         service_ticket.status = "assigned"
         service_ticket.assigned_time = datetime.now()
+        if hasattr(service_ticket, "response_time") and not getattr(service_ticket, "response_time", None):
+            service_ticket.response_time = datetime.now()
 
         self.db.commit()
         self.db.refresh(service_ticket)
@@ -345,19 +424,25 @@ class ServiceTicketsService:
 
         old_status = service_ticket.status
         service_ticket.status = status
+        normalized_old_status = normalize_service_ticket_status(old_status)
+        normalized_new_status = normalize_service_ticket_status(status)
 
         # 设置解决时间
-        if status in ["completed", "COMPLETED"] and old_status not in ["completed", "COMPLETED"]:
+        if (
+            status in ["completed", "COMPLETED"]
+            or normalized_new_status in [ServiceTicketStatusEnum.RESOLVED, ServiceTicketStatusEnum.CLOSED]
+        ) and old_status not in ["completed", "COMPLETED"]:
             service_ticket.resolved_at = datetime.now()
             service_ticket.resolved_time = datetime.now()
 
         # 设置开始时间
-        if status in ["in_progress", "IN_PROGRESS"] and old_status in [
-            "pending",
-            "assigned",
-            "PENDING",
-            "ASSIGNED",
-        ]:
+        if (
+            status in ["in_progress", "IN_PROGRESS"]
+            or normalized_new_status == ServiceTicketStatusEnum.IN_PROGRESS
+        ) and (
+            old_status in ["pending", "assigned", "PENDING", "ASSIGNED"]
+            or normalized_old_status == ServiceTicketStatusEnum.PENDING
+        ):
             service_ticket.started_at = datetime.now()
 
         self.db.commit()
@@ -389,6 +474,8 @@ class ServiceTicketsService:
         service_ticket.customer_satisfaction = getattr(
             close_data, "customer_satisfaction", None
         ) or getattr(close_data, "satisfaction", None)
+        service_ticket.feedback = service_ticket.customer_feedback
+        service_ticket.satisfaction = service_ticket.customer_satisfaction
         service_ticket.resolved_at = datetime.now()
         service_ticket.resolved_time = datetime.now()
 
@@ -473,7 +560,9 @@ class ServiceTicketsService:
                     self.db.query(ServiceTicket)
                     .filter(
                         ServiceTicket.assigned_to_id == eng.id,
-                        ServiceTicket.status.in_(["PENDING", "assigned", "IN_PROGRESS"]),
+                        ServiceTicket.status.in_(
+                            self._pending_status_candidates() + self._in_progress_status_candidates()
+                        ),
                     )
                     .count()
                 )
@@ -486,6 +575,10 @@ class ServiceTicketsService:
                 service_ticket.assigned_to_id = best_engineer.id
                 service_ticket.status = "assigned"
                 service_ticket.assigned_time = datetime.now()
+                if hasattr(service_ticket, "response_time") and not getattr(
+                    service_ticket, "response_time", None
+                ):
+                    service_ticket.response_time = datetime.now()
                 self.db.commit()
                 self.db.refresh(service_ticket)
                 logger.info(
@@ -534,12 +627,13 @@ class ServiceTicketsService:
             for recipient_id in recipient_ids:
                 if not recipient_id:
                     continue
-                request = NotificationRequest()
-                request.recipient_id = recipient_id
-                request.notification_type = "service_ticket"
-                request.category = "service"
-                request.title = title
-                request.content = content
+                request = NotificationRequest(
+                    recipient_id=recipient_id,
+                    notification_type="service_ticket",
+                    category="service",
+                    title=title,
+                    content=content,
+                )
                 request.priority = (
                     "HIGH" if getattr(service_ticket, "urgency", "") == "URGENT" else "NORMAL"
                 )

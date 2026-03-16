@@ -9,9 +9,13 @@
 import logging
 from typing import Any, Dict, List, Optional, Set
 
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy.orm import Session
 
+from app.core.permission_codes import (
+    canonicalize_permission_code,
+    canonicalize_permission_codes,
+)
 from app.models.organization import (
     EmployeeOrgAssignment,
     PositionRole,
@@ -49,6 +53,8 @@ class PermissionService:
         """
         roles_set: Set[int] = set()
         roles: List[Role] = []
+        user = db.query(User).filter(User.id == user_id).first()
+        tenant_id = user.tenant_id if user else None
 
         try:
             # 1. 获取直接分配的角色
@@ -56,7 +62,12 @@ class PermissionService:
 
             for ur in user_roles:
                 if ur.role_id not in roles_set:
-                    role = db.query(Role).filter(Role.id == ur.role_id, Role.is_active).first()
+                    role_query = db.query(Role).filter(Role.id == ur.role_id, Role.is_active)
+                    if tenant_id is not None:
+                        role_query = role_query.filter(
+                            or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None))
+                        )
+                    role = role_query.first()
                     if role:
                         roles_set.add(role.id)
                         roles.append(role)
@@ -82,9 +93,12 @@ class PermissionService:
 
                     for pr in position_roles:
                         if pr.role_id not in roles_set:
-                            role = (
-                                db.query(Role).filter(Role.id == pr.role_id, Role.is_active).first()
-                            )
+                            role_query = db.query(Role).filter(Role.id == pr.role_id, Role.is_active)
+                            if tenant_id is not None:
+                                role_query = role_query.filter(
+                                    or_(Role.tenant_id == tenant_id, Role.tenant_id.is_(None))
+                                )
+                            role = role_query.first()
                             if role:
                                 roles_set.add(role.id)
                                 roles.append(role)
@@ -97,10 +111,12 @@ class PermissionService:
                     """
                     SELECT r.* FROM roles r
                     JOIN user_roles ur ON r.id = ur.role_id
-                    WHERE ur.user_id = :user_id AND r.is_active = 1
+                    WHERE ur.user_id = :user_id
+                    AND r.is_active = 1
+                    AND (:tenant_id IS NULL OR r.tenant_id IS NULL OR r.tenant_id = :tenant_id)
                 """
                 )
-                result = db.execute(sql, {"user_id": user_id})
+                result = db.execute(sql, {"user_id": user_id, "tenant_id": tenant_id})
                 for row in result:
                     role = Role()
                     role.id = row.id
@@ -146,10 +162,14 @@ class PermissionService:
         cache_service = get_permission_cache_service()
         cached_permissions = cache_service.get_user_permissions(user_id, tenant_id)
         if cached_permissions is not None:
+            normalized_cached_permissions = canonicalize_permission_codes(cached_permissions)
             logger.debug(
-                f"缓存命中: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(cached_permissions)}"
+                "缓存命中: user_id=%s, tenant_id=%s, permissions_count=%s",
+                user_id,
+                tenant_id,
+                len(normalized_cached_permissions),
             )
-            return list(cached_permissions)
+            return list(normalized_cached_permissions)
 
         # 2. 缓存未命中，从数据库查询
         logger.debug(f"缓存未命中，查询数据库: user_id={user_id}, tenant_id={tenant_id}")
@@ -165,6 +185,8 @@ class PermissionService:
                     FROM roles r
                     JOIN user_roles ur ON ur.role_id = r.id
                     WHERE ur.user_id = :user_id
+                    AND r.is_active = 1
+                    AND (:tenant_id IS NULL OR r.tenant_id IS NULL OR r.tenant_id = :tenant_id)
 
                     UNION ALL
 
@@ -173,19 +195,21 @@ class PermissionService:
                     FROM roles r
                     JOIN role_tree rt ON r.id = rt.parent_id
                     WHERE rt.inherit_permissions = 1
+                    AND r.is_active = 1
+                    AND (:tenant_id IS NULL OR r.tenant_id IS NULL OR r.tenant_id = :tenant_id)
                 )
                 SELECT DISTINCT ap.perm_code
                 FROM role_tree rt
                 JOIN role_api_permissions rap ON rt.id = rap.role_id
                 JOIN api_permissions ap ON rap.permission_id = ap.id
                 WHERE ap.is_active = 1
-                AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
+                AND (:tenant_id IS NULL OR ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
             """
             )
             result = db.execute(sql, {"user_id": user_id, "tenant_id": tenant_id})
             for row in result:
                 if row[0]:
-                    permissions_set.add(row[0])
+                    permissions_set.add(canonicalize_permission_code(row[0]))
 
         except Exception as e:
             logger.warning(f"获取用户权限失败（角色继承查询），回退到简单查询: {e}")
@@ -197,14 +221,18 @@ class PermissionService:
                     FROM api_permissions ap
                     JOIN role_api_permissions rap ON ap.id = rap.permission_id
                     JOIN user_roles ur ON rap.role_id = ur.role_id
-                    WHERE ur.user_id = :user_id AND ap.is_active = 1
-                    AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
+                    JOIN roles r ON ur.role_id = r.id
+                    WHERE ur.user_id = :user_id
+                    AND r.is_active = 1
+                    AND ap.is_active = 1
+                    AND (:tenant_id IS NULL OR r.tenant_id IS NULL OR r.tenant_id = :tenant_id)
+                    AND (:tenant_id IS NULL OR ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
                 """
                 )
                 result = db.execute(sql, {"user_id": user_id, "tenant_id": tenant_id})
                 for row in result:
                     if row[0]:
-                        permissions_set.add(row[0])
+                        permissions_set.add(canonicalize_permission_code(row[0]))
             except Exception as e2:
                 logger.error(f"SQL查询权限也失败: {e2}")
 
@@ -252,7 +280,9 @@ class PermissionService:
 
         # 检查权限（包含租户隔离）
         permissions = PermissionService.get_user_permissions(db, user_id, effective_tenant_id)
-        return permission_code in permissions
+        return canonicalize_permission_code(permission_code) in canonicalize_permission_codes(
+            permissions
+        )
 
     @staticmethod
     def check_any_permission(
@@ -280,7 +310,10 @@ class PermissionService:
 
         effective_tenant_id = tenant_id or (user.tenant_id if user else None)
         permissions = PermissionService.get_user_permissions(db, user_id, effective_tenant_id)
-        return any(code in permissions for code in permission_codes)
+        normalized_permissions = canonicalize_permission_codes(permissions)
+        return any(
+            canonicalize_permission_code(code) in normalized_permissions for code in permission_codes
+        )
 
     @staticmethod
     def check_all_permissions(
@@ -308,7 +341,10 @@ class PermissionService:
 
         effective_tenant_id = tenant_id or (user.tenant_id if user else None)
         permissions = PermissionService.get_user_permissions(db, user_id, effective_tenant_id)
-        return all(code in permissions for code in permission_codes)
+        normalized_permissions = canonicalize_permission_codes(permissions)
+        return all(
+            canonicalize_permission_code(code) in normalized_permissions for code in permission_codes
+        )
 
     @staticmethod
     def get_user_menus(
@@ -425,9 +461,12 @@ class PermissionService:
                 "ALL": 6,
                 "BUSINESS_UNIT": 5,
                 "DEPARTMENT": 4,
+                "DEPT": 4,
                 "TEAM": 3,
+                "SUBORDINATE": 3,
                 "PROJECT": 2,
                 "OWN": 1,
+                "CUSTOMER": 1,
                 "CUSTOM": 0,
             }
 

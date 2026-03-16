@@ -20,6 +20,7 @@ from app.models.organization import EmployeeOrgAssignment, OrganizationUnit
 from app.models.permission import ScopeType
 from app.models.user import User
 from app.services.data_scope.generic_filter import GenericFilterService
+from app.services.data_scope.normalization import normalize_data_scope
 from app.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
@@ -56,7 +57,8 @@ class DataScopeServiceEnhanced:
 
         将 ScopeType 转换为 DataScopeEnum 格式
         """
-        return SCOPE_TYPE_MAPPING.get(scope_type, scope_type)
+        mapped_scope = SCOPE_TYPE_MAPPING.get(scope_type, scope_type)
+        return normalize_data_scope(mapped_scope)
 
     @staticmethod
     def get_user_org_units(db: Session, user_id: int) -> List[int]:
@@ -129,7 +131,7 @@ class DataScopeServiceEnhanced:
                         DataScopeServiceEnhanced._get_subtree_ids_optimized(db, org_id)
                     )
 
-            elif scope_type == ScopeType.DEPARTMENT.value:
+            elif scope_type in {ScopeType.DEPARTMENT.value, DataScopeEnum.DEPT.value}:
                 dept = DataScopeServiceEnhanced._find_ancestor_by_type(db, org_unit, "DEPARTMENT")
                 if dept:
                     accessible_ids.update(
@@ -254,6 +256,7 @@ class DataScopeServiceEnhanced:
         try:
             scopes = PermissionService.get_user_data_scopes(db, user.id)
             scope_type = scopes.get(resource_type, ScopeType.OWN.value)
+            normalized_scope = DataScopeServiceEnhanced.normalize_scope_type(scope_type)
 
             logger.debug(
                 f"应用数据权限过滤: user={user.id}, resource={resource_type}, scope={scope_type}"
@@ -261,14 +264,14 @@ class DataScopeServiceEnhanced:
 
             model_class = query.column_descriptions[0]["entity"]
 
-            if scope_type == ScopeType.ALL.value:
+            if normalized_scope == DataScopeEnum.ALL.value:
                 return query
 
             elif scope_type in [
                 ScopeType.BUSINESS_UNIT.value,
                 ScopeType.DEPARTMENT.value,
                 ScopeType.TEAM.value,
-            ]:
+            ] or normalized_scope == DataScopeEnum.DEPT.value:
                 accessible_org_ids = DataScopeServiceEnhanced.get_accessible_org_units(
                     db, user.id, scope_type
                 )
@@ -286,7 +289,7 @@ class DataScopeServiceEnhanced:
                     logger.warning(f"模型 {model_class.__name__} 没有组织字段，跳过数据权限过滤")
                     return query
 
-            elif scope_type == ScopeType.PROJECT.value:
+            elif normalized_scope == DataScopeEnum.PROJECT.value:
                 filters = []
                 if hasattr(model_class, owner_field):
                     filters.append(getattr(model_class, owner_field) == user.id)
@@ -299,7 +302,10 @@ class DataScopeServiceEnhanced:
                     logger.warning(f"模型 {model_class.__name__} 没有项目相关字段，返回空结果")
                     return query.filter(False)
 
-            elif scope_type == ScopeType.OWN.value:
+            elif normalized_scope in {DataScopeEnum.CUSTOM.value, DataScopeEnum.CUSTOMER.value}:
+                return GenericFilterService.filter_by_scope(db, query, model_class, user)
+
+            elif normalized_scope == DataScopeEnum.OWN.value:
                 filters = []
                 if hasattr(model_class, owner_field):
                     filters.append(getattr(model_class, owner_field) == user.id)
@@ -345,15 +351,16 @@ class DataScopeServiceEnhanced:
         try:
             scopes = PermissionService.get_user_data_scopes(db, user.id)
             scope_type = scopes.get(resource_type, ScopeType.OWN.value)
+            normalized_scope = DataScopeServiceEnhanced.normalize_scope_type(scope_type)
 
-            if scope_type == ScopeType.ALL.value:
+            if normalized_scope == DataScopeEnum.ALL.value:
                 return True
 
             elif scope_type in [
                 ScopeType.BUSINESS_UNIT.value,
                 ScopeType.DEPARTMENT.value,
                 ScopeType.TEAM.value,
-            ]:
+            ] or normalized_scope == DataScopeEnum.DEPT.value:
                 data_org_id = getattr(data, org_field, None) or getattr(data, "department_id", None)
                 if not data_org_id:
                     logger.debug(f"数据没有组织字段，允许访问")
@@ -370,7 +377,7 @@ class DataScopeServiceEnhanced:
                 )
                 return has_access
 
-            elif scope_type == ScopeType.OWN.value:
+            elif normalized_scope == DataScopeEnum.OWN.value:
                 data_owner = getattr(data, owner_field, None)
                 data_owner2 = getattr(data, "owner_id", None)
                 data_pm = getattr(data, "pm_id", None)

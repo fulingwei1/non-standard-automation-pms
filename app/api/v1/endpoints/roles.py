@@ -51,7 +51,7 @@ def list_permissions(
 ):
     """获取权限列表（使用新的 ApiPermission 模型）"""
     service = RoleManagementService(db)
-    result = service.get_permissions_list(module=module)
+    result = service.get_permissions_list(module=module, tenant_id=current_user.tenant_id)
     return ResponseModel(code=200, message="获取成功", data=result)
 
 
@@ -139,7 +139,7 @@ def update_role(
     service = RoleManagementService(db)
     update_data = role_in.model_dump(exclude_unset=True)
 
-    role = service.update_role(role_id=role_id, **update_data)
+    role = service.update_role(role_id=role_id, tenant_id=current_user.tenant_id, **update_data)
 
     # 使用旧的 RoleService 格式化响应（保持兼容性）
     role_service = RoleService(db)
@@ -156,7 +156,7 @@ def delete_role(
 ):
     """删除角色"""
     service = RoleManagementService(db)
-    service.delete_role(role_id)
+    service.delete_role(role_id, tenant_id=current_user.tenant_id)
     return ResponseModel(code=200, message="删除成功")
 
 
@@ -183,7 +183,7 @@ def get_role_nav_groups(
 ):
     """获取角色的导航组配置"""
     service = RoleManagementService(db)
-    nav_groups = service.get_role_nav_groups(role_id)
+    nav_groups = service.get_role_nav_groups(role_id, tenant_id=current_user.tenant_id)
     return ResponseModel(code=200, message="获取成功", data={"nav_groups": nav_groups})
 
 
@@ -196,7 +196,7 @@ def update_role_nav_groups(
 ):
     """更新角色的导航组配置"""
     service = RoleManagementService(db)
-    service.update_role_nav_groups(role_id, nav_groups)
+    service.update_role_nav_groups(role_id, nav_groups, tenant_id=current_user.tenant_id)
     return ResponseModel(code=200, message="导航配置更新成功")
 
 
@@ -230,7 +230,7 @@ def update_role_parent(
     - 不允许形成循环引用
     """
     service = RoleManagementService(db)
-    role = service.update_role_parent(role_id, parent_id)
+    role = service.update_role_parent(role_id, parent_id, tenant_id=current_user.tenant_id)
 
     return ResponseModel(
         code=200,
@@ -252,10 +252,10 @@ def get_role_ancestors(
 ):
     """获取角色的所有祖先角色（继承链）"""
     service = RoleManagementService(db)
-    ancestors = service.get_role_ancestors(role_id)
+    ancestors = service.get_role_ancestors(role_id, tenant_id=current_user.tenant_id)
 
     # 获取角色信息
-    role = service.get_role_by_id(role_id)
+    role = service.get_role_by_id(role_id, tenant_id=current_user.tenant_id)
 
     return ResponseModel(
         code=200,
@@ -272,10 +272,10 @@ def get_role_descendants(
 ):
     """获取角色的所有子孙角色"""
     service = RoleManagementService(db)
-    descendants = service.get_role_descendants(role_id)
+    descendants = service.get_role_descendants(role_id, tenant_id=current_user.tenant_id)
 
     # 获取角色信息
-    role = service.get_role_by_id(role_id)
+    role = service.get_role_by_id(role_id, tenant_id=current_user.tenant_id)
 
     return ResponseModel(
         code=200,

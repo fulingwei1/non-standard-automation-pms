@@ -16,7 +16,10 @@ from app.models.issue import Issue
 from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.issue import IssueListResponse
+from app.services.data_scope import DataScopeService
 from app.utils.db_helpers import get_or_404
+
+from ..access import ensure_service_ticket_access_or_raise
 
 router = APIRouter()
 
@@ -30,7 +33,7 @@ def get_ticket_related_issues(
 ) -> Any:
     """获取工单关联的问题列表"""
     # 验证工单是否存在
-    get_or_404(db, ServiceTicket, ticket_id, "工单不存在")
+    ensure_service_ticket_access_or_raise(db, current_user, ticket_id, "您没有权限访问该工单关联的问题")
 
     # 查询关联的问题
     from app.api.v1.endpoints.issues.crud import build_issue_response
@@ -40,6 +43,7 @@ def get_ticket_related_issues(
         .options(joinedload(Issue.service_ticket))
         .filter(Issue.service_ticket_id == ticket_id, Issue.status != "DELETED")
     )
+    query = DataScopeService.filter_issues_by_scope(db, query, current_user)
 
     total = query.count()
     issues = apply_pagination(

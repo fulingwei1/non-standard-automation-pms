@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.common.query_filters import apply_keyword_filter
 from app.models.issue import SolutionTemplate
 from app.models.service import KnowledgeBase, ServiceTicket
+from app.models.service.enums import KnowledgeBaseStatusEnum, ServiceTicketStatusEnum
 from app.utils.db_helpers import save_obj
 from app.utils.number_generator import generate_sequential_no
 
@@ -30,7 +31,7 @@ def auto_extract_knowledge_from_ticket(
         创建的知识库文章，如果提取失败则返回None
     """
     # 检查工单是否已关闭且有解决方案
-    if ticket.status != "CLOSED" or not ticket.solution:
+    if ticket.status != ServiceTicketStatusEnum.CLOSED.value or not ticket.solution:
         return None
 
     # 必须有处理人才能提取知识（避免使用硬编码用户ID）
@@ -113,7 +114,11 @@ def auto_extract_knowledge_from_ticket(
         tags=tags,  # JSON字段会自动序列化
         is_faq=False,
         is_featured=False,
-        status="PUBLISHED" if auto_publish else "DRAFT",
+        status=(
+            KnowledgeBaseStatusEnum.PUBLISHED.value
+            if auto_publish
+            else KnowledgeBaseStatusEnum.DRAFT.value
+        ),
         author_id=ticket.assigned_to_id,
         author_name=ticket.assigned_to_name or "系统",
     )
@@ -200,7 +205,9 @@ def recommend_knowledge_for_ticket(db: Session, ticket: ServiceTicket, limit: in
     为工单推荐相关知识库文章
     """
     # 基于问题类型和紧急程度推荐
-    recommendations = db.query(KnowledgeBase).filter(KnowledgeBase.status == "PUBLISHED")
+    recommendations = db.query(KnowledgeBase).filter(
+        KnowledgeBase.status == KnowledgeBaseStatusEnum.PUBLISHED.value
+    )
 
     # 优先匹配问题类型
     if ticket.problem_type:

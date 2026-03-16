@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.service import KnowledgeBase
+from app.models.service.enums import KnowledgeBaseStatusEnum
 from app.models.user import User
 
 from .utils import USER_UPLOAD_QUOTA, get_user_total_upload_size
@@ -21,13 +22,17 @@ router = APIRouter()
 @router.get("/statistics", response_model=dict, status_code=status.HTTP_200_OK)
 def get_knowledge_base_statistics(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取知识库统计
     """
     total = db.query(KnowledgeBase).count()
-    published = db.query(KnowledgeBase).filter(KnowledgeBase.status == "已发布").count()
+    published = (
+        db.query(KnowledgeBase)
+        .filter(KnowledgeBase.status == KnowledgeBaseStatusEnum.PUBLISHED.value)
+        .count()
+    )
     faq = db.query(KnowledgeBase).filter(KnowledgeBase.is_faq).count()
     featured = db.query(KnowledgeBase).filter(KnowledgeBase.is_featured).count()
 
@@ -47,7 +52,7 @@ def get_knowledge_base_statistics(
 def get_upload_quota(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取当前用户的上传配额使用情况
@@ -67,7 +72,7 @@ def get_upload_quota(
 @router.get("/categories", response_model=list, status_code=status.HTTP_200_OK)
 def get_knowledge_base_categories(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
     """
     获取知识库分类列表（兼容前端下拉）
