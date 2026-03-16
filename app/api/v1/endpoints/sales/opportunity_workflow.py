@@ -20,8 +20,24 @@ from app.schemas.sales import OpportunityRequirementResponse, OpportunityRespons
 from app.utils.db_helpers import get_or_404
 
 from .utils import validate_g2_opportunity_to_quote
+from .utils import get_entity_creator_id
 
 router = APIRouter()
+
+
+def _ensure_opportunity_edit_permission(
+    opportunity: Opportunity,
+    current_user: User,
+    db: Session,
+) -> None:
+    """Reuse the same sales edit rule as the CRUD update endpoint."""
+    if not security.check_sales_edit_permission(
+        current_user,
+        db,
+        get_entity_creator_id(opportunity),
+        opportunity.owner_id,
+    ):
+        raise HTTPException(status_code=403, detail="您没有权限编辑此商机")
 
 
 class OpportunityGateSubmitRequest(BaseModel):
@@ -87,6 +103,7 @@ def update_opportunity_stage(
     更新商机阶段
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    _ensure_opportunity_edit_permission(opportunity, current_user, db)
 
     valid_stages = ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION", "WON", "LOST", "ON_HOLD"]
     if stage not in valid_stages:
@@ -133,6 +150,7 @@ def update_opportunity_score(
     评分范围：0-100分
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    _ensure_opportunity_edit_permission(opportunity, current_user, db)
 
     opportunity.score = score
 
@@ -179,6 +197,7 @@ def win_opportunity(
     赢单
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    _ensure_opportunity_edit_permission(opportunity, current_user, db)
 
     opportunity.stage = "WON"
     opportunity.gate_status = "PASS"
@@ -219,6 +238,7 @@ def lose_opportunity(
     输单
     """
     opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    _ensure_opportunity_edit_permission(opportunity, current_user, db)
 
     opportunity.stage = "LOST"
     if lose_reason:

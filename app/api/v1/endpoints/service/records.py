@@ -156,6 +156,7 @@ def read_service_records(
     record_status: Optional[str] = Query(None, alias="status", description="状态筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    service_engineer_id: Optional[int] = Query(None, description="服务工程师ID筛选"),
     date_from: Optional[date] = Query(None, description="开始日期"),
     date_to: Optional[date] = Query(None, description="结束日期"),
     keyword: Optional[str] = Query(None, description="关键词搜索"),
@@ -177,6 +178,8 @@ def read_service_records(
         query = query.filter(ServiceRecord.project_id == project_id)
     if customer_id:
         query = query.filter(ServiceRecord.customer_id == customer_id)
+    if service_engineer_id:
+        query = query.filter(ServiceRecord.service_engineer_id == service_engineer_id)
     if date_from:
         query = query.filter(ServiceRecord.service_date >= date_from)
     if date_to:

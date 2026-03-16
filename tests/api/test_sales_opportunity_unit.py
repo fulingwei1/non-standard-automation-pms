@@ -329,6 +329,29 @@ class TestReadOpportunity:
 
         assert exc_info.value.status_code == 404
 
+    def test_read_opportunity_no_permission(self):
+        """无数据权限时抛出403"""
+        from app.api.v1.endpoints.sales.opportunity_crud import read_opportunity
+
+        db = _make_db()
+        current_user = _make_user()
+        current_user.is_superuser = False
+        opp = _make_opp()
+
+        mock_query = MagicMock()
+        mock_query.options.return_value = mock_query
+        mock_query.filter.return_value = mock_query
+        mock_query.first.return_value = opp
+        db.query.return_value = mock_query
+
+        with patch("app.api.v1.endpoints.sales.opportunity_crud.security") as mock_sec:
+            mock_sec.check_sales_data_permission.return_value = False
+
+            with pytest.raises(HTTPException) as exc_info:
+                read_opportunity(db=db, opp_id=1, current_user=current_user)
+
+        assert exc_info.value.status_code == 403
+
 
 # ──────────────────────────────────────────────
 # Tests: update_opportunity
@@ -393,3 +416,44 @@ class TestUpdateOpportunity:
                 update_opportunity(db=db, opp_id=1, opp_in=opp_in, current_user=current_user)
 
         assert exc_info.value.status_code == 403
+
+
+# ──────────────────────────────────────────────
+# Tests: opportunity_workflow permissions
+# ──────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    ("func_name", "extra_kwargs"),
+    [
+        ("update_opportunity_stage", {"stage": "NEGOTIATION"}),
+        ("update_opportunity_score", {"score": 80, "score_remark": "准入评估"}),
+        ("win_opportunity", {}),
+        ("lose_opportunity", {"lose_reason": "价格原因"}),
+    ],
+)
+def test_opportunity_workflow_edit_permission_required(func_name, extra_kwargs):
+    """商机工作流接口应复用编辑权限检查"""
+    import app.api.v1.endpoints.sales.opportunity_workflow as workflow_module
+
+    db = _make_db()
+    current_user = _make_user()
+    current_user.is_superuser = False
+    opp = _make_opp()
+
+    endpoint = getattr(workflow_module, func_name)
+
+    with (
+        patch("app.api.v1.endpoints.sales.opportunity_workflow.get_or_404", return_value=opp),
+        patch("app.api.v1.endpoints.sales.opportunity_workflow.security") as mock_sec,
+        patch(
+            "app.api.v1.endpoints.sales.opportunity_workflow.get_entity_creator_id",
+            return_value=2,
+        ),
+    ):
+        mock_sec.check_sales_edit_permission.return_value = False
+
+        with pytest.raises(HTTPException) as exc_info:
+            endpoint(db=db, opp_id=1, current_user=current_user, **extra_kwargs)
+
+    assert exc_info.value.status_code == 403

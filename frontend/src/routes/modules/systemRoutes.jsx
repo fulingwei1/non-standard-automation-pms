@@ -56,8 +56,7 @@ import CustomerCommunication from "../../pages/CustomerCommunication";
 import CustomerSatisfaction from "../../pages/CustomerSatisfaction";
 import ServiceAnalytics from "../../pages/ServiceAnalytics";
 import ServiceKnowledgeBase from "../../pages/ServiceKnowledgeBase";
-import ServiceCenter from "../../pages/ServiceCenter";
-import DeliveryAcceptanceCenter from "../../pages/DeliveryAcceptanceCenter";
+import CustomerServiceCenter from "../../pages/CustomerServiceCenter";
 import RdProjectList from "../../pages/RdProjectList";
 import RdProjectDetail from "../../pages/RdProjectDetail";
 import RdProjectWorklogs from "../../pages/RdProjectWorklogs";
@@ -150,8 +149,15 @@ export function SystemRoutes() {
       <Route path="/spec-match-check" element={<SpecMatchCheck />} />
 
       {/* Customer Service */}
-      <Route path="/service/center" element={<ServiceCenter />} />
-      <Route path="/delivery/acceptance-center" element={<DeliveryAcceptanceCenter />} />
+      <Route path="/customer-service/center" element={<CustomerServiceCenter />} />
+      <Route
+        path="/service/center"
+        element={<Navigate to="/customer-service/center?tab=tickets" replace />}
+      />
+      <Route
+        path="/delivery/acceptance-center"
+        element={<Navigate to="/customer-service/center?tab=acceptance" replace />}
+      />
       <Route
         path="/customer-service-dashboard"
         element={<CustomerServiceDashboard />}
