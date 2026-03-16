@@ -258,6 +258,7 @@ def _init_test_database() -> None:
     from app.models.base import get_session, init_db
     from app.models.organization import Employee
     from app.models.project import Customer, Machine, Project, ProjectMember
+    from app.models.project.resource_plan import ProjectStageResourcePlan
     from app.models.task_center import TaskApprovalWorkflow, TaskUnified
     from app.models.user import ApiPermission, Role, RoleApiPermission, User, UserRole
     from app.models.vendor import Vendor
@@ -340,6 +341,39 @@ def _init_test_database() -> None:
             created_by=admin.id,
         )
         db.add(project)
+        db.flush()
+
+        db.add_all(
+            [
+                ProjectStageResourcePlan(
+                    project_id=project.id,
+                    stage_code="S1",
+                    role_code="PM",
+                    role_name="项目经理",
+                    headcount=1,
+                    allocation_pct=Decimal("100"),
+                    planned_start=date.today(),
+                    planned_end=date.today(),
+                    assignment_status="PENDING",
+                    created_by=admin.id,
+                    remark="测试种子：未分配资源计划",
+                ),
+                ProjectStageResourcePlan(
+                    project_id=project.id,
+                    stage_code="S2",
+                    role_code="SE",
+                    role_name="软件工程师",
+                    headcount=1,
+                    allocation_pct=Decimal("100"),
+                    assigned_employee_id=admin.id,
+                    assignment_status="ASSIGNED",
+                    planned_start=date.today(),
+                    planned_end=date.today(),
+                    created_by=admin.id,
+                    remark="测试种子：已分配资源计划",
+                ),
+            ]
+        )
         db.flush()
 
         machine = Machine(

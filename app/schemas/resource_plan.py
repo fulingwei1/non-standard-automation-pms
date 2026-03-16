@@ -6,7 +6,7 @@ from datetime import date
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # ==================== 基础 Schema ====================
 
@@ -27,7 +27,21 @@ class ResourcePlanBase(BaseModel):
 class ResourcePlanCreate(ResourcePlanBase):
     """创建资源计划"""
 
+    role_code: Optional[str] = Field(None, description="角色编码（兼容老请求，可仅传 role_name）")
     staffing_need_id: Optional[int] = Field(None, description="关联人员需求ID")
+
+    @model_validator(mode="after")
+    def ensure_role_code(self):
+        if self.role_code:
+            return self
+
+        if self.role_name:
+            normalized = "".join(ch if ch.isalnum() else "_" for ch in self.role_name.upper())
+            normalized = "_".join(filter(None, normalized.split("_")))
+            self.role_code = normalized[:50] or f"ROLE_{self.stage_code}"
+        else:
+            self.role_code = f"ROLE_{self.stage_code}"
+        return self
 
 
 class ResourcePlanUpdate(BaseModel):
@@ -58,8 +72,24 @@ class EmployeeBrief(BaseModel):
     name: str
     department: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_user_like_object(cls, value):
+        if isinstance(value, dict) or value is None:
+            return value
+
+        if hasattr(value, "id"):
+            return {
+                "id": getattr(value, "id"),
+                "name": getattr(value, "name", None)
+                or getattr(value, "real_name", None)
+                or getattr(value, "display_name", None)
+                or getattr(value, "username", None),
+                "department": getattr(value, "department", None),
+            }
+        return value
 
 
 # ==================== 响应 Schema ====================
@@ -75,8 +105,7 @@ class ResourcePlanResponse(ResourcePlanBase):
     assignment_status: str
     assigned_employee: Optional[EmployeeBrief] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class StageResourceSummary(BaseModel):
