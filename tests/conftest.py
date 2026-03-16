@@ -101,6 +101,57 @@ def _get_permission_cache_service():
     return get_permission_cache_service
 
 
+def _load_lazy_globals() -> None:
+    """Populate module globals that are lazily stubbed during import."""
+    global app, settings, get_password_hash, verify_password, SessionLocal, get_engine
+    global Employee, Customer, Machine, Project, ProjectMember
+    global TaskApprovalWorkflow, TaskUnified
+    global ApiPermission, Role, RoleApiPermission, User, UserRole
+    global get_permission_cache_service
+
+    from app.core.config import settings as _settings
+    from app.core.security import get_password_hash as _get_password_hash
+    from app.core.security import verify_password as _verify_password
+    from app.main import app as _app
+    from app.models.base import SessionLocal as _SessionLocal
+    from app.models.base import get_engine as _get_engine
+    from app.models.organization import Employee as _Employee
+    from app.models.project import Customer as _Customer
+    from app.models.project import Machine as _Machine
+    from app.models.project import Project as _Project
+    from app.models.project import ProjectMember as _ProjectMember
+    from app.models.task_center import TaskApprovalWorkflow as _TaskApprovalWorkflow
+    from app.models.task_center import TaskUnified as _TaskUnified
+    from app.models.user import ApiPermission as _ApiPermission
+    from app.models.user import Role as _Role
+    from app.models.user import RoleApiPermission as _RoleApiPermission
+    from app.models.user import User as _User
+    from app.models.user import UserRole as _UserRole
+    from app.services.permission_cache_service import (
+        get_permission_cache_service as _get_permission_cache_service,
+    )
+
+    app = _app
+    settings = _settings
+    get_password_hash = _get_password_hash
+    verify_password = _verify_password
+    SessionLocal = _SessionLocal
+    get_engine = _get_engine
+    Employee = _Employee
+    Customer = _Customer
+    Machine = _Machine
+    Project = _Project
+    ProjectMember = _ProjectMember
+    TaskApprovalWorkflow = _TaskApprovalWorkflow
+    TaskUnified = _TaskUnified
+    ApiPermission = _ApiPermission
+    Role = _Role
+    RoleApiPermission = _RoleApiPermission
+    User = _User
+    UserRole = _UserRole
+    get_permission_cache_service = _get_permission_cache_service
+
+
 # Keep these as module-level for code that reads them directly
 # but guard with a try to avoid breaking unit tests
 try:
@@ -191,6 +242,7 @@ def _init_test_database() -> None:
     """
     from datetime import date
 
+    _load_lazy_globals()
     import app.models  # noqa: F401  # register all models into Base.metadata
 
     # For file-based SQLite databases, remove the legacy file to avoid stale schemas.
