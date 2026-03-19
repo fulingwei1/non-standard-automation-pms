@@ -185,28 +185,6 @@ def create_ticket(
     return build_ticket_response(ticket)
 
 
-@router.put("/{ticket_id}", response_model=TicketResponse)
-def update_ticket(
-    *,
-    db: Session = Depends(deps.get_db),
-    ticket_id: int,
-    ticket_in: TicketUpdate,
-    current_user: User = Depends(security.get_current_active_user),
-) -> Any:
-    """
-    更新工单基础信息
-    """
-    ticket = get_or_404(db, PresaleSupportTicket, ticket_id, detail="工单不存在")
-
-    update_data = ticket_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(ticket, field, value)
-
-    save_obj(db, ticket)
-
-    return read_ticket(db=db, ticket_id=ticket_id, current_user=current_user)
-
-
 @router.get("/{ticket_id}", response_model=TicketResponse)
 def read_ticket(
     *,

@@ -613,14 +613,14 @@ Content-Type: application/json
 
 | 权限代码 | 说明 |
 |----------|------|
-| `sales_team:view` | 查看销售团队 |
+| `sales_team:read` | 查看销售团队 |
 | `sales_team:create` | 创建销售团队 |
 | `sales_team:update` | 更新销售团队 |
 | `sales_team:delete` | 删除销售团队 |
-| `sales_target:view` | 查看销售目标 |
+| `sales_target:read` | 查看销售目标 |
 | `sales_target:create` | 创建销售目标 |
 | `sales_target:update` | 更新销售目标 |
 | `sales_target:delete` | 删除销售目标 |
-| `sales_region:view` | 查看销售区域 |
+| `sales_region:read` | 查看销售区域 |
 | `sales_region:create` | 创建销售区域 |
 | `sales_region:update` | 更新销售区域 |

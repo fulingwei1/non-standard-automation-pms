@@ -37,7 +37,7 @@ def create_target(
 
 
 @router.get("", response_model=ResponseModel)
-@require_permission("sales_target:view")
+@require_permission("sales_target:read")
 def get_targets(
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
@@ -70,7 +70,7 @@ def get_targets(
 
 
 @router.get("/{target_id}", response_model=ResponseModel)
-@require_permission("sales_target:view")
+@require_permission("sales_target:read")
 def get_target(
     target_id: int,
     db: Session = Depends(deps.get_db),
@@ -156,7 +156,7 @@ def auto_breakdown_target(
 
 
 @router.get("/{target_id}/breakdown-tree", response_model=ResponseModel)
-@require_permission("sales_target:view")
+@require_permission("sales_target:read")
 def get_breakdown_tree(
     target_id: int,
     db: Session = Depends(deps.get_db),
@@ -171,7 +171,7 @@ def get_breakdown_tree(
 
 
 @router.get("/stats/team-ranking", response_model=ResponseModel)
-@require_permission("sales_target:view")
+@require_permission("sales_target:read")
 def get_team_ranking(
     target_year: int = Query(..., description="目标年份"),
     target_month: Optional[int] = Query(None, ge=1, le=12, description="目标月份"),
@@ -188,7 +188,7 @@ def get_team_ranking(
 
 
 @router.get("/stats/personal-ranking", response_model=ResponseModel)
-@require_permission("sales_target:view")
+@require_permission("sales_target:read")
 def get_personal_ranking(
     target_year: int = Query(..., description="目标年份"),
     target_month: Optional[int] = Query(None, ge=1, le=12, description="目标月份"),
@@ -205,7 +205,7 @@ def get_personal_ranking(
 
 
 @router.get("/stats/completion-trend", response_model=ResponseModel)
-@require_permission("sales_target:view")
+@require_permission("sales_target:read")
 def get_completion_trend(
     target_id: int = Query(..., description="目标ID"),
     db: Session = Depends(deps.get_db),
@@ -219,7 +219,7 @@ def get_completion_trend(
 
 
 @router.get("/stats/distribution", response_model=ResponseModel)
-@require_permission("sales_target:view")
+@require_permission("sales_target:read")
 def get_completion_distribution(
     target_year: int = Query(..., description="目标年份"),
     target_month: Optional[int] = Query(None, ge=1, le=12, description="目标月份"),

@@ -15,7 +15,7 @@
 
 ### 1. 访问仪表盘
 
-所有仪表盘API都需要 `dashboard:view` 权限：
+所有仪表盘API都需要 `dashboard:read` 权限：
 
 ```bash
 # 获取成本总览
@@ -269,8 +269,8 @@ GET /api/v1/dashboard/cost/chart-config/{config_id}
 
 | 操作 | 所需权限 |
 |------|----------|
-| 查看仪表盘 | `dashboard:view` |
-| 导出数据 | `dashboard:view` |
+| 查看仪表盘 | `dashboard:read` |
+| 导出数据 | `dashboard:read` |
 | 保存图表配置 | `dashboard:manage` |
 | 清除缓存 | `dashboard:manage` |
 

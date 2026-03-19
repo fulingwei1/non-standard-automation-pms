@@ -399,7 +399,6 @@ def check_sales_data_permission(
     # DEPT: 同部门用户可以访问
     if scope == "DEPT":
         if user.department:
-            from ..models.organization import Department
             from ..models.user import User as UserModel
 
             dept_users = (

@@ -133,15 +133,15 @@ def timesheet_anomaly_alert_task():
 |------|------|------|------|
 | /reminders/configure | POST | 配置提醒规则 | timesheet:reminder:config |
 | /reminders/configure/{id} | PUT | 更新提醒规则 | timesheet:reminder:config |
-| /reminders/configure | GET | 获取规则列表 | timesheet:reminder:view |
-| /reminders/pending | GET | 待处理提醒 | timesheet:reminder:view |
-| /reminders/history | GET | 提醒历史 | timesheet:reminder:view |
+| /reminders/configure | GET | 获取规则列表 | timesheet:reminder:read |
+| /reminders/pending | GET | 待处理提醒 | timesheet:reminder:read |
+| /reminders/history | GET | 提醒历史 | timesheet:reminder:read |
 | /reminders/{id}/dismiss | POST | 忽略提醒 | timesheet:reminder:dismiss |
-| /reminders/{id}/read | POST | 标记已读 | timesheet:reminder:view |
-| /reminders/anomalies | GET | 异常记录列表 | timesheet:reminder:view |
+| /reminders/{id}/read | POST | 标记已读 | timesheet:reminder:read |
+| /reminders/anomalies | GET | 异常记录列表 | timesheet:reminder:read |
 | /reminders/anomalies/{id}/resolve | POST | 解决异常 | timesheet:reminder:resolve |
-| /reminders/statistics | GET | 提醒统计 | timesheet:reminder:view |
-| /reminders/dashboard | GET | Dashboard | timesheet:reminder:view |
+| /reminders/statistics | GET | 提醒统计 | timesheet:reminder:read |
+| /reminders/dashboard | GET | Dashboard | timesheet:reminder:read |
 
 **特性**：
 - ✅ 完整的CRUD操作
@@ -414,7 +414,7 @@ python scripts/init_permissions.py --module timesheet_reminder
 
 权限列表：
 - `timesheet:reminder:config` - 配置提醒规则
-- `timesheet:reminder:view` - 查看提醒
+- `timesheet:reminder:read` - 查看提醒
 - `timesheet:reminder:dismiss` - 忽略提醒
 - `timesheet:reminder:resolve` - 解决异常
 

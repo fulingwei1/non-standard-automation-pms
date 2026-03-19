@@ -292,7 +292,7 @@ GET /api/v1/timesheet/reminders/dashboard
 | 权限代码 | 说明 |
 |---------|------|
 | timesheet:reminder:config | 配置提醒规则 |
-| timesheet:reminder:view | 查看提醒信息 |
+| timesheet:reminder:read | 查看提醒信息 |
 | timesheet:reminder:dismiss | 忽略提醒 |
 | timesheet:reminder:resolve | 解决异常 |
 

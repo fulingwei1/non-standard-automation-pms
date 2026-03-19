@@ -209,6 +209,53 @@ class QuoteApprovalService:
             "instance_status": result.status if hasattr(result, "status") else None,
         }
 
+    def perform_quote_action(
+        self,
+        quote_id: int,
+        action: str,
+        approver_id: int,
+        comment: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        对指定报价执行审批动作。
+
+        旧的 /sales/quotes/{quote_id}/approve 兼容入口也必须走统一审批任务，
+        避免直接改写报价状态绕过审批引擎。
+        """
+        quote = self.db.query(Quote).filter(Quote.id == quote_id).first()
+        if not quote:
+            raise ValueError("报价不存在")
+
+        pending_tasks = self.approval_engine.get_pending_tasks(
+            user_id=approver_id,
+            entity_type="QUOTE",
+        )
+        matched_task = next(
+            (
+                task
+                for task in pending_tasks
+                if getattr(getattr(task, "instance", None), "entity_id", None) == quote_id
+            ),
+            None,
+        )
+
+        if matched_task is None:
+            raise ValueError("当前用户没有该报价的待审批任务，请通过统一审批流程操作")
+
+        result = self.perform_action(
+            task_id=matched_task.id,
+            action=action,
+            approver_id=approver_id,
+            comment=comment,
+        )
+        result.update(
+            {
+                "quote_id": quote_id,
+                "quote_code": quote.quote_code,
+            }
+        )
+        return result
+
     def perform_batch_actions(
         self,
         task_ids: List[int],

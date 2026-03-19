@@ -136,7 +136,7 @@ from .sales.presale_ai_win_rate import (  # noqa: F401
 from .shortage.smart_alert import (
     MaterialDemandForecast,
 )
-from .shortage.smart_alert import (  # noqa: F401; Alias for consistency
+from .shortage.smart_alert import (  # noqa: F401
     ShortageAlert as ShortageAlertEnhanced,
 )
 from .shortage.smart_alert import (

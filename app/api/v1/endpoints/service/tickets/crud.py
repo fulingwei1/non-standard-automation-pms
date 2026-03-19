@@ -18,7 +18,6 @@ from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceTicketCreate, ServiceTicketResponse
-from app.utils.db_helpers import get_or_404
 from app.utils.permission_helpers import check_project_access_or_raise
 
 from ..access import (
@@ -41,6 +40,7 @@ def read_service_tickets(
     urgency: Optional[str] = Query(None, description="紧急程度筛选"),
     project_id: Optional[int] = Query(None, description="项目ID筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
+    assigned_to_id: Optional[int] = Query(None, description="处理人ID筛选"),
     keyword: Optional[str] = Query(None, description="关键词搜索（工单号/问题描述）"),
     current_user: User = Depends(security.require_permission("service:read")),
 ) -> Any:
@@ -60,6 +60,8 @@ def read_service_tickets(
         query = query.filter(ServiceTicket.project_id == project_id)
     if customer_id:
         query = query.filter(ServiceTicket.customer_id == customer_id)
+    if assigned_to_id:
+        query = query.filter(ServiceTicket.assigned_to_id == assigned_to_id)
 
     # 应用关键词过滤（工单号/问题描述）
     query = apply_keyword_filter(query, ServiceTicket, keyword, ["ticket_no", "problem_desc"])

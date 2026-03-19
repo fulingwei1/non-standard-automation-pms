@@ -330,7 +330,8 @@ def allocate_cost(
     current_user: User = Depends(security.require_permission("cost:read")),
 ) -> Any:
     """成本分摊"""
-    cost = get_or_404(db, ProjectCost, cost_id, "成本记录不存在")
+    # 验证成本记录存在（get_or_404 会在记录不存在时抛出 404）
+    get_or_404(db, ProjectCost, cost_id, "成本记录不存在")
 
     rule_id = allocation_request.get("rule_id")
     allocation_targets = allocation_request.get("allocation_targets")

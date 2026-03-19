@@ -199,6 +199,71 @@ class TestQuoteApprovalService(unittest.TestCase):
 
         self.assertIn("不支持的操作类型", str(context.exception))
 
+    def test_perform_quote_action_success(self):
+        """旧兼容入口也必须走统一审批任务"""
+        quote_mock = MagicMock()
+        quote_mock.id = 1
+        quote_mock.quote_code = "Q2024001"
+
+        task_mock = MagicMock()
+        task_mock.id = 88
+        task_mock.instance.entity_id = 1
+
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
+        self.service.approval_engine.get_pending_tasks = MagicMock(return_value=[task_mock])
+
+        with patch.object(
+            self.service,
+            "perform_action",
+            return_value={"task_id": 88, "action": "approve", "instance_status": "APPROVED"},
+        ) as mock_perform_action:
+            result = self.service.perform_quote_action(
+                quote_id=1,
+                action="approve",
+                approver_id=2,
+                comment="同意",
+            )
+
+        self.assertEqual(result["quote_id"], 1)
+        self.assertEqual(result["quote_code"], "Q2024001")
+        mock_perform_action.assert_called_once_with(
+            task_id=88,
+            action="approve",
+            approver_id=2,
+            comment="同意",
+        )
+
+    def test_perform_quote_action_quote_not_found(self):
+        """报价不存在时应抛出明确错误"""
+        self.db_mock.query.return_value.filter.return_value.first.return_value = None
+
+        with self.assertRaises(ValueError) as context:
+            self.service.perform_quote_action(
+                quote_id=999,
+                action="approve",
+                approver_id=2,
+            )
+
+        self.assertEqual(str(context.exception), "报价不存在")
+
+    def test_perform_quote_action_without_pending_task(self):
+        """没有待审批任务时不能绕过审批引擎直接改状态"""
+        quote_mock = MagicMock()
+        quote_mock.id = 1
+        quote_mock.quote_code = "Q2024001"
+
+        self.db_mock.query.return_value.filter.return_value.first.return_value = quote_mock
+        self.service.approval_engine.get_pending_tasks = MagicMock(return_value=[])
+
+        with self.assertRaises(ValueError) as context:
+            self.service.perform_quote_action(
+                quote_id=1,
+                action="approve",
+                approver_id=2,
+            )
+
+        self.assertIn("待审批任务", str(context.exception))
+
     def test_perform_batch_actions_success(self):
         """测试批量审批操作成功"""
         # 模拟审批引擎
@@ -236,11 +301,14 @@ class TestQuoteApprovalService(unittest.TestCase):
         quote_mock.quote_code = "Q2024001"
         quote_mock.status = "DRAFT"
 
+        quote_query = MagicMock()
+        quote_query.filter.return_value.first.return_value = quote_mock
+
+        instance_query = MagicMock()
+        instance_query.filter.return_value.order_by.return_value.first.return_value = None
+
         # 第一次查询返回报价，第二次查询返回None（无审批实例）
-        self.db_mock.query.return_value.filter.return_value.first.side_effect = [
-            quote_mock,
-            None,
-        ]
+        self.db_mock.query.side_effect = [quote_query, instance_query]
 
         # 执行测试
         result = self.service.get_quote_approval_status(quote_id=1)

@@ -17,13 +17,11 @@ from app.models.sales.quotes import Quote, QuoteVersion
 from app.models.sales.sales_funnel import (
     FunnelEntityTypeEnum,
     FunnelTransitionLog,
-    GateResultEnum,
     GateTypeEnum,
     SalesFunnelStage,
-    StageGateResult,
 )
 
-from .gate_validators import GateValidatorFactory, ValidationResult
+from .gate_validators import GateValidatorFactory
 
 logger = logging.getLogger(__name__)
 

@@ -260,6 +260,30 @@ class TestVisitPreparation:
         result = self.service.get_visit_preparation(ticket_id=100, user_id=1)
         assert len(result["technical_materials"]) > 0
 
+    def test_visit_preparation_prefers_ai_output(self):
+        """测试拜访准备优先采用AI生成内容"""
+        with patch.object(
+            self.service,
+            "_generate_ai_content_sync",
+            return_value="""{
+              "customer_background": "客户当前重点关注产线升级与ROI。",
+              "recommended_scripts": ["先确认当前节拍和瓶颈工序。"],
+              "attention_points": ["客户对投资回报周期敏感。"],
+              "technical_materials": [{"name": "节拍分析模板", "url": "/materials/cycle_time.xlsx"}],
+              "competitor_comparison": {
+                "main_competitors": ["竞品X"],
+                "our_advantages": ["交付经验更成熟"]
+              }
+            }""",
+        ):
+            result = self.service.get_visit_preparation(ticket_id=100, user_id=1)
+
+        assert result["customer_background"] == "客户当前重点关注产线升级与ROI。"
+        assert result["recommended_scripts"] == ["先确认当前节拍和瓶颈工序。"]
+        assert result["attention_points"] == ["客户对投资回报周期敏感。"]
+        assert result["technical_materials"][0]["name"] == "节拍分析模板"
+        assert result["competitor_comparison"]["main_competitors"] == ["竞品X"]
+
 
 class TestQuickEstimate:
     """测试快速估价服务"""
@@ -328,6 +352,44 @@ class TestQuickEstimate:
             cost = result["estimated_cost"]
             assert result["price_range_min"] == int(cost * 1.3)
             assert result["price_range_max"] == int(cost * 1.5)
+
+    @pytest.mark.asyncio
+    async def test_normalize_equipment_description_with_ai(self):
+        """测试AI归一化设备描述"""
+        with patch.object(
+            self.service,
+            "_generate_ai_content",
+            new=AsyncMock(return_value='{"equipment_name": "视觉检测设备", "confidence": 82}'),
+        ):
+            result = await self.service._normalize_equipment_description("用于外观缺陷识别的设备")
+
+        assert result == {"equipment_name": "视觉检测设备", "confidence": 82}
+
+    @pytest.mark.asyncio
+    async def test_estimate_bom_with_ai(self):
+        """测试AI生成BOM估价"""
+        ai_response = """{
+          "confidence": 88,
+          "bom_items": [
+            {"name": "工业相机", "quantity": 2, "unit_price": 4500, "amount": 9000},
+            {"name": "光源模组", "quantity": 2, "unit_price": 1800, "amount": 3600},
+            {"name": "控制工控机", "quantity": 1, "unit_price": 12000, "amount": 12000}
+          ]
+        }"""
+        with patch.object(
+            self.service,
+            "_generate_ai_content",
+            new=AsyncMock(return_value=ai_response),
+        ):
+            result = await self.service._estimate_bom_with_ai(
+                recognized_equipment="视觉检测设备",
+                equipment_description="用于外观检测",
+                fallback_bom_items=[],
+            )
+
+        assert result["confidence"] == 88
+        assert len(result["bom_items"]) == 3
+        assert result["estimated_cost"] == 24600
 
 
 class TestVisitRecords:

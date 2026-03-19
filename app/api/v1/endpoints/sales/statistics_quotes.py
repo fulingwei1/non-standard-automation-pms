@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-销售统计 - 报价统计
+"""销售统计 - 报价统计。"""
 
-包含报价统计数据
-"""
-
-from datetime import date as date_type
-from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -14,9 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.sales import Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.sales.quote_statistics_service import QuoteStatisticsService
 
 router = APIRouter()
 
@@ -30,98 +24,17 @@ def get_quote_stats(
     """
     获取报价统计数据
     """
-    # 计算时间范围
-    now = datetime.now()
-    if time_range == "week":
-        start_date = now - timedelta(days=7)
-    elif time_range == "month":
-        start_date = now - timedelta(days=30)
-    elif time_range == "quarter":
-        start_date = now - timedelta(days=90)
-    else:  # year
-        start_date = now - timedelta(days=365)
-
-    # 基础查询
-    base_query = db.query(Quote)
-    period_query = base_query.filter(Quote.created_at >= start_date)
-
-    # 统计各状态数量
-    total = base_query.count()
-    draft = base_query.filter(Quote.status == "DRAFT").count()
-    in_review = base_query.filter(Quote.status == "IN_REVIEW").count()
-    approved = base_query.filter(Quote.status == "APPROVED").count()
-    sent = base_query.filter(Quote.status == "SENT").count()
-    expired = base_query.filter(Quote.status == "EXPIRED").count()
-    rejected = base_query.filter(Quote.status == "REJECTED").count()
-    accepted = base_query.filter(Quote.status == "ACCEPTED").count()
-    converted = base_query.filter(Quote.status == "CONVERTED").count()
-
-    # 本期和上期统计
-    this_period = period_query.count()
-
-    # 上一个周期
-    if time_range == "week":
-        last_start = start_date - timedelta(days=7)
-    elif time_range == "month":
-        last_start = start_date - timedelta(days=30)
-    elif time_range == "quarter":
-        last_start = start_date - timedelta(days=90)
-    else:
-        last_start = start_date - timedelta(days=365)
-
-    last_period = base_query.filter(
-        Quote.created_at >= last_start, Quote.created_at < start_date
-    ).count()
-
-    # 增长率
-    growth = round((this_period - last_period) / last_period * 100, 1) if last_period > 0 else 0
-
-    # 金额统计 - 从当前版本获取总价和毛利率
-    all_quotes = base_query.all()
-    total_amount = 0
-    margins = []
-    for q in all_quotes:
-        if q.current_version:
-            if q.current_version.total_price:
-                total_amount += float(q.current_version.total_price)
-            if q.current_version.gross_margin:
-                margins.append(float(q.current_version.gross_margin))
-
-    avg_amount = total_amount / total if total > 0 else 0
-    avg_margin = sum(margins) / len(margins) if margins else 0
-
-    # 转化率
-    conversion_rate = round(converted / total * 100, 1) if total > 0 else 0
-
-    # 即将到期（7天内）
-    today = date_type.today()
-    expiring_soon = base_query.filter(
-        Quote.valid_until is not None,
-        Quote.valid_until <= today + timedelta(days=7),
-        Quote.valid_until > today,
-        Quote.status.in_(["DRAFT", "IN_REVIEW", "APPROVED", "SENT"]),
-    ).count()
+    data = QuoteStatisticsService(db).get_statistics(
+        current_user=current_user,
+        time_range=time_range,
+    )
 
     return ResponseModel(
         code=200,
         message="success",
         data={
-            "total": total,
-            "draft": draft,
-            "inReview": in_review,
-            "approved": approved,
-            "sent": sent,
-            "expired": expired,
-            "rejected": rejected,
-            "accepted": accepted,
-            "converted": converted,
-            "totalAmount": total_amount,
-            "avgAmount": round(avg_amount, 2),
-            "avgMargin": round(avg_margin, 2),
-            "conversionRate": conversion_rate,
-            "thisMonth": this_period,
-            "lastMonth": last_period,
-            "growth": growth,
-            "expiringSoon": expiring_soon,
+            **data,
+            "thisMonth": data.get("currentPeriod", 0),
+            "lastMonth": data.get("previousPeriod", 0),
         },
     )

@@ -510,6 +510,12 @@ export const allMenuGroups = [
     label: "客服管理",
     items: [
       {
+        id: "customer-service-center",
+        name: "客服管理中心",
+        path: "/customer-service/center",
+        icon: "Headphones",
+      },
+      {
         id: "cs-dashboard",
         name: "客服工作台",
         path: "/customer-service-dashboard",

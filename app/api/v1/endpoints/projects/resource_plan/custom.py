@@ -6,7 +6,7 @@
 注意：路由顺序很重要！静态路径（/summary, /conflicts 等）必须在动态路径（/{plan_id}）之前注册
 """
 
-from typing import Any, List
+from typing import Any
 
 from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session
@@ -19,7 +19,6 @@ from app.schemas.common import ResponseModel
 from app.schemas.resource_plan import (
     ProjectResourcePlanSummary,
     StageResourceSummary,
-    ResourceConflict,
 )
 from app.services.resource_plan_service import ResourcePlanService
 from app.utils.db_helpers import get_or_404

@@ -111,7 +111,7 @@ def update_reminder_rule(
     response_model=ReminderConfigListResponse,
     summary="获取提醒规则列表",
 )
-@require_permission("timesheet:reminder:view")
+@require_permission("timesheet:reminder:read")
 def list_reminder_configs(
     reminder_type: Optional[str] = Query(None, description="提醒类型"),
     is_active: Optional[bool] = Query(None, description="是否启用"),
@@ -123,7 +123,7 @@ def list_reminder_configs(
     """
     获取提醒规则配置列表
 
-    权限：timesheet:reminder:view
+    权限：timesheet:reminder:read
     """
     service = TimesheetReminderService(db)
 
@@ -147,7 +147,7 @@ def list_reminder_configs(
     response_model=ReminderRecordListResponse,
     summary="获取待处理提醒列表",
 )
-@require_permission("timesheet:reminder:view")
+@require_permission("timesheet:reminder:read")
 def list_pending_reminders(
     reminder_type: Optional[str] = Query(None, description="提醒类型"),
     priority: Optional[str] = Query(None, description="优先级"),
@@ -159,7 +159,7 @@ def list_pending_reminders(
     """
     获取待处理提醒列表
 
-    权限：timesheet:reminder:view
+    权限：timesheet:reminder:read
     """
     service = TimesheetReminderService(db)
 
@@ -187,7 +187,7 @@ def list_pending_reminders(
     response_model=ReminderRecordListResponse,
     summary="获取提醒历史",
 )
-@require_permission("timesheet:reminder:view")
+@require_permission("timesheet:reminder:read")
 def list_reminder_history(
     reminder_type: Optional[str] = Query(None, description="提醒类型"),
     status: Optional[str] = Query(None, description="状态"),
@@ -201,7 +201,7 @@ def list_reminder_history(
     """
     获取提醒历史记录
 
-    权限：timesheet:reminder:view
+    权限：timesheet:reminder:read
     """
     service = TimesheetReminderService(db)
 
@@ -263,7 +263,7 @@ def dismiss_reminder(
     response_model=ReminderRecordResponse,
     summary="标记提醒已读",
 )
-@require_permission("timesheet:reminder:view")
+@require_permission("timesheet:reminder:read")
 def mark_reminder_read(
     reminder_id: int,
     db: Session = Depends(get_db),
@@ -272,7 +272,7 @@ def mark_reminder_read(
     """
     标记提醒已读
 
-    权限：timesheet:reminder:view
+    权限：timesheet:reminder:read
     """
     service = TimesheetReminderService(db)
 
@@ -292,7 +292,7 @@ def mark_reminder_read(
     response_model=AnomalyRecordListResponse,
     summary="获取异常记录列表",
 )
-@require_permission("timesheet:reminder:view")
+@require_permission("timesheet:reminder:read")
 def list_anomalies(
     anomaly_type: Optional[str] = Query(None, description="异常类型"),
     is_resolved: Optional[bool] = Query(None, description="是否已解决"),
@@ -304,7 +304,7 @@ def list_anomalies(
     """
     获取异常记录列表
 
-    权限：timesheet:reminder:view
+    权限：timesheet:reminder:read
     """
     service = TimesheetReminderService(db)
 
@@ -366,7 +366,7 @@ def resolve_anomaly(
     response_model=ReminderStatistics,
     summary="获取提醒统计信息",
 )
-@require_permission("timesheet:reminder:view")
+@require_permission("timesheet:reminder:read")
 def get_reminder_statistics(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -374,7 +374,7 @@ def get_reminder_statistics(
     """
     获取提醒统计信息
 
-    权限：timesheet:reminder:view
+    权限：timesheet:reminder:read
     """
     service = TimesheetReminderService(db)
     return service.get_reminder_statistics(user_id=current_user.id)
@@ -385,7 +385,7 @@ def get_reminder_statistics(
     response_model=ReminderDashboard,
     summary="获取提醒Dashboard",
 )
-@require_permission("timesheet:reminder:view")
+@require_permission("timesheet:reminder:read")
 def get_reminder_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -393,7 +393,7 @@ def get_reminder_dashboard(
     """
     获取提醒Dashboard（包含提醒和异常统计）
 
-    权限：timesheet:reminder:view
+    权限：timesheet:reminder:read
     """
     service = TimesheetReminderService(db)
     return service.get_dashboard(user_id=current_user.id)
