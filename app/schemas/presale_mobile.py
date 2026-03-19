@@ -29,6 +29,9 @@ class VisitType(str, Enum):
     DEMO = "demo"
     NEGOTIATION = "negotiation"
     CLOSING = "closing"
+    # 历史兼容别名，避免旧端侧/测试仍使用旧命名时校验失败
+    PHONE = FOLLOW_UP
+    ON_SITE = DEMO
 
 
 class SyncStatus(str, Enum):

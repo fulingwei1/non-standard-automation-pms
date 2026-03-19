@@ -112,7 +112,6 @@ def get_payment_reconciliation(
     """
     获取付款对账数据（按合同汇总已开票、已收款、未收款）
     """
-    from app.models.sales import Contract as ContractModel
 
     query = db.query(Invoice).filter(Invoice.status == "ISSUED")
 

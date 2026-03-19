@@ -7,7 +7,7 @@
 
 import logging
 from datetime import date, timedelta
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session

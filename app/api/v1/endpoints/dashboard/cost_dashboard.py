@@ -41,7 +41,7 @@ def _get_cache_service():
 def get_cost_overview(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("dashboard:view")),
+    current_user: User = Depends(security.require_permission("dashboard:read")),
     force_refresh: bool = Query(False, description="强制刷新缓存"),
 ) -> Any:
     """
@@ -71,7 +71,7 @@ def get_cost_overview(
 def get_top_projects(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("dashboard:view")),
+    current_user: User = Depends(security.require_permission("dashboard:read")),
     limit: int = Query(10, ge=1, le=50, description="返回数量"),
     force_refresh: bool = Query(False, description="强制刷新缓存"),
 ) -> Any:
@@ -101,7 +101,7 @@ def get_top_projects(
 def get_cost_alerts(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(security.require_permission("dashboard:view")),
+    current_user: User = Depends(security.require_permission("dashboard:read")),
     force_refresh: bool = Query(False, description="强制刷新缓存"),
 ) -> Any:
     """
@@ -131,7 +131,7 @@ def get_project_cost_dashboard(
     *,
     db: Session = Depends(deps.get_db),
     project_id: int,
-    current_user: User = Depends(security.require_permission("dashboard:view")),
+    current_user: User = Depends(security.require_permission("dashboard:read")),
     force_refresh: bool = Query(False, description="强制刷新缓存"),
 ) -> Any:
     """
@@ -166,7 +166,7 @@ def export_dashboard_data(
     *,
     db: Session = Depends(deps.get_db),
     export_request: ExportDataSchema,
-    current_user: User = Depends(security.require_permission("dashboard:view")),
+    current_user: User = Depends(security.require_permission("dashboard:read")),
 ) -> Any:
     """
     导出图表数据
@@ -257,7 +257,7 @@ def get_chart_config(
     *,
     db: Session = Depends(deps.get_db),
     config_id: int,
-    current_user: User = Depends(security.require_permission("dashboard:view")),
+    current_user: User = Depends(security.require_permission("dashboard:read")),
 ) -> Any:
     """
     获取图表配置

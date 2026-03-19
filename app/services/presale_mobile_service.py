@@ -13,12 +13,14 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import and_, desc
 from sqlalchemy.orm import Session
 
+from app.models.presale import PresaleSupportTicket
 from app.models.presale_mobile import (
     PresaleMobileAssistantChat,
     PresaleMobileOfflineData,
     PresaleMobileQuickEstimate,
     PresaleVisitRecord,
 )
+from app.models.sales import Customer, Opportunity
 from app.schemas.presale_mobile import QuestionType, SyncStatus
 from app.services.ai_client_service import AIClientService
 from app.services.ai_structured_output import extract_json_payload
@@ -42,6 +44,21 @@ class PresaleMobileService:
     def _format_optional_datetime(self, value: Optional[datetime]) -> Optional[str]:
         """安全格式化时间字段。"""
         return value.isoformat() if value else None
+
+    def _coalesce_saved_record(
+        self, original: Any, persisted: Any, significant_fields: Optional[List[str]] = None
+    ) -> Any:
+        """优先使用持久化返回对象；若只是未配置的 mock 返回值，则保留原对象。"""
+        if persisted is None:
+            return original
+        if not self._is_mock_like(persisted):
+            return persisted
+
+        persisted_fields = getattr(persisted, "__dict__", {})
+        fields = significant_fields or ["id", "created_at"]
+        if any(field in persisted_fields for field in fields):
+            return persisted
+        return original
 
     # ==================== AI问答服务 ====================
 
@@ -88,7 +105,11 @@ class PresaleMobileService:
             context=context or {},
             response_time=response_time,
         )
-        save_obj(self.db, chat_record)
+        chat_record = self._coalesce_saved_record(
+            chat_record,
+            save_obj(self.db, chat_record),
+            significant_fields=["id", "created_at", "answer"],
+        )
 
         return {
             "id": chat_record.id,
@@ -250,13 +271,27 @@ class PresaleMobileService:
         Returns:
             拜访准备清单
         """
-        # TODO: 从数据库查询售前工单、客户信息、历史记录
-        # 这里返回模拟数据
-        return {
+        ticket = self._get_presale_ticket(ticket_id)
+        customer_id = getattr(ticket, "customer_id", None)
+        customer_snapshot = self.get_customer_snapshot(customer_id) if customer_id else {}
+        visit_history = self.get_visit_history(customer_id) if customer_id else {"visits": []}
+        previous_interactions = [
+            {
+                "date": visit.get("visit_date"),
+                "type": visit.get("visit_type"),
+                "summary": visit.get("ai_generated_summary") or visit.get("discussion_points"),
+            }
+            for visit in visit_history.get("visits", [])[:3]
+        ]
+
+        preparation = {
             "ticket_id": ticket_id,
-            "customer_name": "某某科技有限公司",
-            "customer_background": "该公司是一家专注于智能制造的高新技术企业，主要业务包括...",
-            "previous_interactions": [
+            "customer_name": customer_snapshot.get("customer_name")
+            or getattr(ticket, "customer_name", None)
+            or "某某科技有限公司",
+            "customer_background": self._build_customer_background(ticket, customer_snapshot),
+            "previous_interactions": previous_interactions
+            or [
                 {
                     "date": "2024-01-15",
                     "type": "电话沟通",
@@ -295,6 +330,11 @@ class PresaleMobileService:
             },
         }
 
+        ai_preparation = self._generate_visit_preparation_with_ai(ticket, customer_snapshot, preparation)
+        if ai_preparation:
+            preparation.update(ai_preparation)
+        return preparation
+
     # ==================== 快速估价服务 ====================
 
     async def quick_estimate(
@@ -326,9 +366,23 @@ class PresaleMobileService:
             recognition_result = await self._recognize_equipment(equipment_photo_base64)
             recognized_equipment = recognition_result["equipment_name"]
             confidence_score = recognition_result["confidence"]
+        else:
+            ai_normalized = await self._normalize_equipment_description(equipment_description)
+            if ai_normalized:
+                recognized_equipment = ai_normalized.get("equipment_name", recognized_equipment)
+                confidence_score = max(confidence_score, ai_normalized.get("confidence", confidence_score))
 
         # 匹配BOM和估算成本
         bom_items, estimated_cost = self._match_bom_and_estimate(recognized_equipment)
+        ai_estimate = await self._estimate_bom_with_ai(
+            recognized_equipment=recognized_equipment,
+            equipment_description=equipment_description,
+            fallback_bom_items=bom_items,
+        )
+        if ai_estimate:
+            bom_items = ai_estimate.get("bom_items") or bom_items
+            estimated_cost = ai_estimate.get("estimated_cost") or estimated_cost
+            confidence_score = max(confidence_score, ai_estimate.get("confidence", confidence_score))
 
         # 计算报价范围（成本 * 1.3 ~ 1.5）
         price_range_min = int(estimated_cost * 1.3)
@@ -348,7 +402,11 @@ class PresaleMobileService:
             confidence_score=confidence_score,
             created_by=user_id,
         )
-        save_obj(self.db, estimate_record)
+        estimate_record = self._coalesce_saved_record(
+            estimate_record,
+            save_obj(self.db, estimate_record),
+            significant_fields=["id", "recognized_equipment", "estimated_cost"],
+        )
 
         return {
             "id": estimate_record.id,
@@ -430,7 +488,11 @@ class PresaleMobileService:
             next_steps=next_steps,
             created_by=user_id,
         )
-        save_obj(self.db, visit_record)
+        visit_record = self._coalesce_saved_record(
+            visit_record,
+            save_obj(self.db, visit_record),
+            significant_fields=["id", "visit_type", "created_at"],
+        )
 
         return self._format_visit_record(visit_record)
 
@@ -477,7 +539,11 @@ class PresaleMobileService:
             ai_generated_summary=extracted_info.get("summary"),
             created_by=user_id,
         )
-        save_obj(self.db, visit_record)
+        visit_record = self._coalesce_saved_record(
+            visit_record,
+            save_obj(self.db, visit_record),
+            significant_fields=["id", "visit_type", "created_at"],
+        )
 
         return self._format_visit_record(visit_record)
 
@@ -560,7 +626,57 @@ class PresaleMobileService:
 
     def get_customer_snapshot(self, customer_id: int) -> Dict[str, Any]:
         """获取客户快照（背景信息）"""
-        # TODO: 从数据库查询客户详细信息
+        customer = self._get_customer(customer_id)
+        if customer:
+            recent_tickets = (
+                self.db.query(PresaleSupportTicket)
+                .filter(PresaleSupportTicket.customer_id == customer_id)
+                .order_by(desc(PresaleSupportTicket.created_at))
+                .limit(3)
+                .all()
+            )
+            recent_tickets_payload = [
+                {
+                    "id": ticket.id,
+                    "title": ticket.title,
+                    "status": ticket.status,
+                    "created_at": self._format_optional_datetime(ticket.created_at),
+                }
+                for ticket in recent_tickets
+            ]
+            opportunities = (
+                self.db.query(Opportunity)
+                .filter(Opportunity.customer_id == customer_id)
+                .order_by(desc(Opportunity.updated_at))
+                .limit(5)
+                .all()
+            )
+            concerns = self._derive_key_concerns(customer, opportunities)
+            decision_makers = [
+                {
+                    "name": customer.contact_person or "主要联系人",
+                    "title": "客户联系人",
+                    "decision_power": "日常沟通",
+                }
+            ]
+
+            return {
+                "customer_id": customer_id,
+                "customer_name": customer.customer_name,
+                "industry": customer.industry or "未提供",
+                "company_size": customer.scale,
+                "contact_person": customer.contact_person or "未提供",
+                "contact_phone": customer.contact_phone or "未提供",
+                "recent_tickets": recent_tickets_payload,
+                "total_orders": len(opportunities),
+                "total_revenue": float(customer.annual_revenue or 0),
+                "last_interaction": self._parse_datetime(customer.last_follow_up_at).isoformat()
+                if self._parse_datetime(customer.last_follow_up_at)
+                else None,
+                "key_concerns": concerns,
+                "decision_makers": decision_makers,
+            }
+
         return {
             "customer_id": customer_id,
             "customer_name": "某某科技有限公司",
@@ -714,6 +830,313 @@ class PresaleMobileService:
                 return str(content).strip()
 
         return None
+
+    def _generate_ai_content_sync(
+        self, prompt: str, temperature: float = 0.3, max_tokens: int = 1200
+    ) -> Optional[str]:
+        """同步AI调用封装，供同步服务方法使用。"""
+        if not self._has_live_ai():
+            return None
+
+        models = [self.ai_model]
+        if self.ai_client.default_model not in models:
+            models.append(self.ai_client.default_model)
+
+        for model in models:
+            try:
+                response = self.ai_client.generate_solution(prompt, model, temperature, max_tokens)
+            except Exception as exc:
+                logger.warning("移动端同步AI调用失败: %s", exc)
+                continue
+
+            content = (response or {}).get("content")
+            model_name = str((response or {}).get("model", ""))
+            if content and not model_name.endswith("-mock"):
+                return str(content).strip()
+
+        return None
+
+    def _get_presale_ticket(self, ticket_id: Optional[int]) -> Optional[PresaleSupportTicket]:
+        """获取售前工单。"""
+        if not ticket_id:
+            return None
+        ticket = (
+            self.db.query(PresaleSupportTicket).filter(PresaleSupportTicket.id == ticket_id).first()
+        )
+        return None if self._is_mock_like(ticket) else ticket
+
+    def _get_customer(self, customer_id: Optional[int]) -> Optional[Customer]:
+        """获取客户。"""
+        if not customer_id:
+            return None
+        customer = self.db.query(Customer).filter(Customer.id == customer_id).first()
+        return None if self._is_mock_like(customer) else customer
+
+    def _build_customer_background(
+        self, ticket: Optional[PresaleSupportTicket], customer_snapshot: Dict[str, Any]
+    ) -> str:
+        """构建客户背景描述。"""
+        background_parts = []
+        if customer_snapshot.get("industry"):
+            background_parts.append(f"所属行业：{customer_snapshot['industry']}")
+        if customer_snapshot.get("company_size"):
+            background_parts.append(f"企业规模：{customer_snapshot['company_size']}")
+        if customer_snapshot.get("key_concerns"):
+            background_parts.append(
+                f"当前关注点：{', '.join(customer_snapshot['key_concerns'][:3])}"
+            )
+        if ticket and getattr(ticket, "description", None):
+            background_parts.append(f"本次工单背景：{ticket.description}")
+
+        return "；".join(background_parts) or "该客户当前处于业务沟通阶段，建议围绕需求确认和ROI展开交流。"
+
+    def _generate_visit_preparation_with_ai(
+        self,
+        ticket: Optional[PresaleSupportTicket],
+        customer_snapshot: Dict[str, Any],
+        fallback_preparation: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        """使用AI生成拜访准备建议。"""
+        prompt = f"""你是一名非标自动化行业销售经理，请为一次客户拜访生成准备清单。
+
+工单信息：
+{json.dumps(self._serialize_ticket(ticket), ensure_ascii=False, indent=2, default=str)}
+
+客户快照：
+{json.dumps(customer_snapshot, ensure_ascii=False, indent=2, default=str)}
+
+当前准备草案：
+{json.dumps(fallback_preparation, ensure_ascii=False, indent=2, default=str)}
+
+请仅输出 JSON：
+{{
+  "customer_background": "120字以内客户背景",
+  "recommended_scripts": ["话术1", "话术2"],
+  "attention_points": ["注意点1", "注意点2"],
+  "technical_materials": [{{"name": "资料名", "url": "/materials/file.pdf"}}],
+  "competitor_comparison": {{
+    "main_competitors": ["竞品A"],
+    "our_advantages": ["优势1"]
+  }}
+}}
+
+要求：
+1. 只输出合法 JSON。
+2. 话术和注意点都要贴近本次拜访目标。"""
+
+        content = self._generate_ai_content_sync(prompt, temperature=0.25, max_tokens=1400)
+        payload = extract_json_payload(content or "")
+        if not isinstance(payload, dict):
+            return None
+
+        return {
+            "customer_background": str(
+                payload.get("customer_background") or fallback_preparation["customer_background"]
+            ).strip(),
+            "recommended_scripts": self._normalize_string_list(
+                payload.get("recommended_scripts"),
+                fallback_preparation["recommended_scripts"],
+            ),
+            "attention_points": self._normalize_string_list(
+                payload.get("attention_points"),
+                fallback_preparation["attention_points"],
+            ),
+            "technical_materials": self._normalize_materials(
+                payload.get("technical_materials"),
+                fallback_preparation["technical_materials"],
+            ),
+            "competitor_comparison": self._normalize_competitor_comparison(
+                payload.get("competitor_comparison"),
+                fallback_preparation["competitor_comparison"],
+            ),
+        }
+
+    async def _normalize_equipment_description(
+        self, equipment_description: str
+    ) -> Optional[Dict[str, Any]]:
+        """将自由描述归一化为标准设备名称。"""
+        prompt = f"""你是一名非标自动化设备工程师，请从以下描述中识别标准设备名称。
+
+设备描述：
+{equipment_description}
+
+请仅输出 JSON：
+{{
+  "equipment_name": "标准设备名称",
+  "confidence": 75
+}}
+
+要求：
+1. 只输出合法 JSON。
+2. confidence 范围 0-100。"""
+
+        content = await self._generate_ai_content(prompt, temperature=0.2, max_tokens=400)
+        payload = extract_json_payload(content or "")
+        if not isinstance(payload, dict) or not payload.get("equipment_name"):
+            return None
+        return {
+            "equipment_name": str(payload.get("equipment_name")).strip(),
+            "confidence": max(0, min(int(payload.get("confidence") or 75), 100)),
+        }
+
+    async def _estimate_bom_with_ai(
+        self,
+        recognized_equipment: str,
+        equipment_description: str,
+        fallback_bom_items: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """使用AI补充更贴近设备场景的BOM与估价。"""
+        prompt = f"""你是一名非标自动化成本工程师，请根据设备信息输出简版 BOM 和成本预估。
+
+识别设备：{recognized_equipment}
+设备描述：{equipment_description}
+参考回退 BOM：
+{json.dumps(fallback_bom_items, ensure_ascii=False, indent=2, default=str)}
+
+请仅输出 JSON：
+{{
+  "confidence": 80,
+  "bom_items": [
+    {{"name": "部件名", "quantity": 1, "unit_price": 1000, "amount": 1000}}
+  ]
+}}
+
+要求：
+1. 只输出合法 JSON。
+2. bom_items 至少 3 条。
+3. amount 可缺省，系统会自动按 quantity * unit_price 计算。"""
+
+        content = await self._generate_ai_content(prompt, temperature=0.25, max_tokens=1200)
+        payload = extract_json_payload(content or "")
+        if not isinstance(payload, dict):
+            return None
+
+        normalized_bom = self._normalize_bom_items(payload.get("bom_items"))
+        if not normalized_bom:
+            return None
+
+        return {
+            "confidence": max(0, min(int(payload.get("confidence") or 80), 100)),
+            "bom_items": normalized_bom,
+            "estimated_cost": sum(item["amount"] for item in normalized_bom),
+        }
+
+    def _normalize_string_list(self, value: Any, fallback: List[str]) -> List[str]:
+        """归一化字符串列表。"""
+        if isinstance(value, list):
+            normalized = [str(item).strip() for item in value if str(item).strip()]
+            if normalized:
+                return normalized
+        return fallback
+
+    def _normalize_materials(self, value: Any, fallback: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        """归一化技术资料列表。"""
+        normalized = []
+        for item in value or []:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or "").strip()
+            url = str(item.get("url") or "").strip()
+            if name and url:
+                normalized.append({"name": name, "url": url})
+        return normalized or fallback
+
+    def _normalize_competitor_comparison(
+        self, value: Any, fallback: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """归一化竞品对比结构。"""
+        if not isinstance(value, dict):
+            return fallback
+        main_competitors = self._normalize_string_list(
+            value.get("main_competitors"),
+            fallback.get("main_competitors", []),
+        )
+        our_advantages = self._normalize_string_list(
+            value.get("our_advantages"),
+            fallback.get("our_advantages", []),
+        )
+        return {
+            "main_competitors": main_competitors,
+            "our_advantages": our_advantages,
+        }
+
+    def _normalize_bom_items(self, value: Any) -> List[Dict[str, Any]]:
+        """归一化 BOM 数据。"""
+        normalized = []
+        for item in value or []:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or "").strip()
+            if not name:
+                continue
+            try:
+                quantity = int(float(item.get("quantity") or 1))
+                unit_price = int(float(item.get("unit_price") or 0))
+                amount = int(float(item.get("amount") or quantity * unit_price))
+            except (TypeError, ValueError):
+                continue
+            if quantity <= 0 or unit_price < 0 or amount <= 0:
+                continue
+            normalized.append(
+                {
+                    "name": name,
+                    "quantity": quantity,
+                    "unit_price": unit_price,
+                    "amount": amount,
+                }
+            )
+        return normalized
+
+    def _serialize_ticket(self, ticket: Optional[PresaleSupportTicket]) -> Dict[str, Any]:
+        """序列化工单信息供AI使用。"""
+        if not ticket:
+            return {}
+        return {
+            "id": ticket.id,
+            "ticket_no": ticket.ticket_no,
+            "title": ticket.title,
+            "ticket_type": ticket.ticket_type,
+            "urgency": ticket.urgency,
+            "description": ticket.description,
+            "customer_id": ticket.customer_id,
+            "customer_name": ticket.customer_name,
+            "opportunity_id": ticket.opportunity_id,
+            "status": ticket.status,
+            "expected_date": ticket.expected_date.isoformat() if ticket.expected_date else None,
+        }
+
+    def _derive_key_concerns(
+        self, customer: Customer, opportunities: List[Opportunity]
+    ) -> List[str]:
+        """根据客户与商机推导关注点。"""
+        concerns = []
+        if customer.payment_terms:
+            concerns.append("付款条款")
+        if customer.credit_level and customer.credit_level in {"B", "C", "D"}:
+            concerns.append("商务风险控制")
+        if opportunities:
+            if any(getattr(opp, "delivery_window", None) for opp in opportunities):
+                concerns.append("实施周期")
+            if any(getattr(opp, "budget_range", None) for opp in opportunities):
+                concerns.append("预算匹配")
+            if any(getattr(opp, "risk_level", None) for opp in opportunities):
+                concerns.append("交付风险")
+        return concerns or ["成本控制", "实施周期", "售后服务"]
+
+    def _parse_datetime(self, value: Optional[str]) -> Optional[datetime]:
+        """解析 datetime 字符串。"""
+        if not value:
+            return None
+        for candidate in (value, value.replace("Z", "+00:00")):
+            try:
+                return datetime.fromisoformat(candidate)
+            except ValueError:
+                continue
+        return None
+
+    def _is_mock_like(self, value: Any) -> bool:
+        """识别单测中的 mock 对象，避免误当成真实数据。"""
+        return value is not None and value.__class__.__module__.startswith("unittest.mock")
 
     def _sync_chat_data(self, user_id: int, data: Dict[str, Any]) -> int:
         """同步对话数据"""

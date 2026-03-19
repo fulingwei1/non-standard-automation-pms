@@ -36,7 +36,7 @@ def create_region(
 
 
 @router.get("", response_model=ResponseModel)
-@require_permission("sales_region:view")
+@require_permission("sales_region:read")
 def get_regions(
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
@@ -59,7 +59,7 @@ def get_regions(
 
 
 @router.get("/{region_id}", response_model=ResponseModel)
-@require_permission("sales_region:view")
+@require_permission("sales_region:read")
 def get_region(
     region_id: int,
     db: Session = Depends(deps.get_db),

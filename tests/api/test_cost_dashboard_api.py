@@ -29,7 +29,6 @@ def mock_user():
 class TestCostOverviewAPI:
     """测试成本总览 API"""
 
-    @pytest.mark.xfail(reason="Mock configuration needs update - endpoint implementation exists")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.deps.get_db")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_get_cost_overview_success(self, mock_auth, mock_db, mock_user, admin_token, client):
@@ -38,7 +37,7 @@ class TestCostOverviewAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_cost_overview.return_value = {
@@ -57,7 +56,10 @@ class TestCostOverviewAPI:
             }
             mock_service_class.return_value = mock_service
 
-            response = client.get(f"{settings.API_V1_PREFIX}/dashboard/cost/overview", headers=headers)
+            response = client.get(
+                f"{settings.API_V1_PREFIX}/dashboard/cost/overview?force_refresh=true",
+                headers=headers,
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -90,7 +92,7 @@ class TestTopProjectsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
@@ -101,6 +103,7 @@ class TestTopProjectsAPI:
                         "project_name": "项目 1",
                         "actual_cost": 100000,
                         "budget_amount": 120000,
+                        "contract_amount": 150000,
                         "cost_variance": -20000,
                         "cost_variance_pct": -16.67,
                         "profit": 50000,
@@ -113,14 +116,16 @@ class TestTopProjectsAPI:
             }
             mock_service_class.return_value = mock_service
 
-            response = client.get(f"{settings.API_V1_PREFIX}/dashboard/cost/top-projects?limit=10", headers=headers)
+            response = client.get(
+                f"{settings.API_V1_PREFIX}/dashboard/cost/top-projects?limit=10&force_refresh=true",
+                headers=headers,
+            )
 
             assert response.status_code == 200
             data = response.json()
             assert data["code"] == 200
             assert len(data["data"]["top_cost_projects"]) == 1
 
-    @pytest.mark.xfail(reason="Mock 配置问题 - 端点实现存在")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.deps.get_db")
     @patch("app.api.v1.endpoints.dashboard.cost_dashboard.security.require_permission")
     def test_get_top_projects_custom_limit(self, mock_auth, mock_db, mock_user, admin_token, client):
@@ -129,7 +134,7 @@ class TestTopProjectsAPI:
         headers = {"Authorization": f"Bearer {admin_token}"} if admin_token else {"Authorization": "Bearer test_token"}
 
         with patch(
-            "app.services.cost_dashboard_service.CostDashboardService"
+            "app.api.v1.endpoints.dashboard.cost_dashboard.CostDashboardService"
         ) as mock_service_class:
             mock_service = MagicMock()
             mock_service.get_top_projects.return_value = {
@@ -140,7 +145,10 @@ class TestTopProjectsAPI:
             }
             mock_service_class.return_value = mock_service
 
-            response = client.get(f"{settings.API_V1_PREFIX}/dashboard/cost/top-projects?limit=5", headers=headers)
+            response = client.get(
+                f"{settings.API_V1_PREFIX}/dashboard/cost/top-projects?limit=5&force_refresh=true",
+                headers=headers,
+            )
 
             assert response.status_code == 200
             mock_service.get_top_projects.assert_called_once_with(limit=5)

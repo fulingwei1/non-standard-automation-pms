@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.user import User
+from app.services.sales.forecast_dashboard_service import SalesForecastDashboardService
 from app.services.sales_forecast_service import SalesForecastService
 
 router = APIRouter()
@@ -227,78 +228,7 @@ def get_team_forecast(
     - 风险团队标识
     """
 
-    teams = [
-        {
-            "team_id": 1,
-            "team_name": "华南大区",
-            "manager": "王五",
-            "members_count": 8,
-            "quarterly_target": 18000000,
-            "actual_revenue": 10800000,
-            "completion_rate": 60.0,
-            "predicted_revenue": 19500000,
-            "predicted_completion": 108.3,
-            "confidence": 88,
-            "risk_level": "LOW",
-            "trend": "up",
-            "rank": 1,
-            "rank_change": 0,
-            "key_opportunities": [
-                {"name": "宁德时代 FCT", "amount": 3500000, "stage": "STAGE4"},
-                {"name": "亿纬锂能 EOL", "amount": 2800000, "stage": "STAGE3"},
-            ],
-        },
-        {
-            "team_id": 2,
-            "team_name": "华东大区",
-            "manager": "李四",
-            "members_count": 7,
-            "quarterly_target": 16000000,
-            "actual_revenue": 9200000,
-            "completion_rate": 57.5,
-            "predicted_revenue": 17200000,
-            "predicted_completion": 107.5,
-            "confidence": 82,
-            "risk_level": "MEDIUM",
-            "trend": "stable",
-            "rank": 2,
-            "rank_change": 0,
-            "key_opportunities": [
-                {"name": "中创新航 ICT", "amount": 2500000, "stage": "STAGE3"},
-            ],
-        },
-        {
-            "team_id": 3,
-            "team_name": "华北大区",
-            "manager": "赵六",
-            "members_count": 6,
-            "quarterly_target": 16000000,
-            "actual_revenue": 8500000,
-            "completion_rate": 53.1,
-            "predicted_revenue": 15800000,
-            "predicted_completion": 98.8,
-            "confidence": 75,
-            "risk_level": "HIGH",
-            "trend": "down",
-            "rank": 3,
-            "rank_change": -1,
-            "key_opportunities": [
-                {"name": "欣旺达 FCT", "amount": 3200000, "stage": "STAGE2"},
-            ],
-            "alerts": [
-                "完成率落后时间进度 13.6%",
-                "需要加速 STAGE2→STAGE3 转化",
-            ],
-        },
-    ]
-
-    return {
-        "period": "2026-Q1",
-        "total_teams": len(teams),
-        "teams_on_track": len([t for t in teams if t["predicted_completion"] >= 100]),
-        "teams_at_risk": len([t for t in teams if t["risk_level"] == "HIGH"]),
-        "teams": sorted(teams, key=lambda x: x["predicted_completion"], reverse=True),
-    }
+    return SalesForecastDashboardService(db).get_team_breakdown(period=period)
 
 
 # ========== 3. 个人销售预测 ==========
@@ -320,75 +250,10 @@ def get_sales_rep_forecast(
     - 关键商机
     """
 
-    sales_reps = [
-        {
-            "sales_id": 101,
-            "sales_name": "张三",
-            "team": "华南大区",
-            "quarterly_target": 10000000,
-            "actual_revenue": 6500000,
-            "completion_rate": 65.0,
-            "predicted_revenue": 11200000,
-            "predicted_completion": 112.0,
-            "confidence": 90,
-            "rank": 1,
-            "pipeline_value": 8500000,
-            "weighted_pipeline": 5200000,
-            "key_deals": [
-                {"customer": "宁德时代", "amount": 3500000, "probability": 85},
-                {"customer": "比亚迪", "amount": 2800000, "probability": 70},
-            ],
-            "performance_trend": "excellent",
-        },
-        {
-            "sales_id": 102,
-            "sales_name": "李四",
-            "team": "华东大区",
-            "quarterly_target": 10000000,
-            "actual_revenue": 5800000,
-            "completion_rate": 58.0,
-            "predicted_revenue": 10500000,
-            "predicted_completion": 105.0,
-            "confidence": 82,
-            "rank": 2,
-            "pipeline_value": 7200000,
-            "weighted_pipeline": 4500000,
-            "key_deals": [
-                {"customer": "中创新航", "amount": 2500000, "probability": 65},
-            ],
-            "performance_trend": "good",
-        },
-        {
-            "sales_id": 103,
-            "sales_name": "王五",
-            "team": "华南大区",
-            "quarterly_target": 10000000,
-            "actual_revenue": 5200000,
-            "completion_rate": 52.0,
-            "predicted_revenue": 9200000,
-            "predicted_completion": 92.0,
-            "confidence": 75,
-            "rank": 3,
-            "pipeline_value": 6500000,
-            "weighted_pipeline": 3800000,
-            "key_deals": [
-                {"customer": "亿纬锂能", "amount": 2200000, "probability": 60},
-            ],
-            "performance_trend": "at_risk",
-            "alerts": ["需要加速商机推进"],
-        },
-    ]
-
-    if team_id:
-        sales_reps = [s for s in sales_reps if s["team_id"] == team_id]
-
-    return {
-        "period": "2026-Q1",
-        "total_reps": len(sales_reps),
-        "on_track_count": len([s for s in sales_reps if s["predicted_completion"] >= 100]),
-        "at_risk_count": len([s for s in sales_reps if s["predicted_completion"] < 100]),
-        "sales_reps": sorted(sales_reps, key=lambda x: x["predicted_completion"], reverse=True),
-    }
+    return SalesForecastDashboardService(db).get_sales_rep_breakdown(
+        team_id=team_id,
+        period=period,
+    )
 
 
 # ========== 4. 预测准确性追踪 ==========
@@ -408,65 +273,7 @@ def get_forecast_accuracy(
     - 持续改进预测算法
     """
 
-    accuracy_history = [
-        {
-            "period": "2025-09",
-            "predicted": 42000000,
-            "actual": 41500000,
-            "variance": -1.2,
-            "accuracy": 98.8,
-        },
-        {
-            "period": "2025-10",
-            "predicted": 45000000,
-            "actual": 46200000,
-            "variance": 2.7,
-            "accuracy": 97.3,
-        },
-        {
-            "period": "2025-11",
-            "predicted": 48000000,
-            "actual": 47500000,
-            "variance": -1.0,
-            "accuracy": 99.0,
-        },
-        {
-            "period": "2025-12",
-            "predicted": 51000000,
-            "actual": 51200000,
-            "variance": 0.4,
-            "accuracy": 99.6,
-        },
-        {
-            "period": "2026-01",
-            "predicted": 38000000,
-            "actual": 39200000,
-            "variance": 3.2,
-            "accuracy": 96.8,
-        },
-        {
-            "period": "2026-02",
-            "predicted": 42000000,
-            "actual": 44500000,
-            "variance": 6.0,
-            "accuracy": 94.0,
-        },
-    ]
-
-    avg_accuracy = sum(h["accuracy"] for h in accuracy_history) / len(accuracy_history)
-
-    return {
-        "tracking_period": f"最近{months}个月",
-        "average_accuracy": round(avg_accuracy, 1),
-        "trend": "stable",
-        "confidence_assessment": "高" if avg_accuracy > 95 else "中" if avg_accuracy > 90 else "低",
-        "history": accuracy_history,
-        "model_insights": [
-            "预测模型平均准确率 97.6%",
-            "最大偏差 6.0%（2026-02，春节因素影响）",
-            "建议：季节性因素权重可调整",
-        ],
-    }
+    return SalesForecastDashboardService(db).get_accuracy_tracking(months=months)
 
 
 # ========== 5. 领导驾驶舱汇总 ==========
@@ -483,90 +290,4 @@ def get_executive_dashboard(
     专为 CEO/销售副总设计
     """
 
-    return {
-        "dashboard_date": date.today().isoformat(),
-        "period": "2026-Q1",
-        # 核心指标
-        "kpi_summary": {
-            "revenue": {
-                "target": 50000000,
-                "actual": 28500000,
-                "predicted": 52800000,
-                "completion_rate": 57.0,
-                "predicted_completion": 105.6,
-                "status": "on_track",
-            },
-            "new_customers": {
-                "target": 30,
-                "actual": 18,
-                "predicted": 32,
-                "completion_rate": 60.0,
-                "predicted_completion": 106.7,
-                "status": "on_track",
-            },
-            "avg_deal_size": {
-                "target": 1500000,
-                "actual": 1580000,
-                "trend": "up",
-                "change_percentage": 5.3,
-            },
-        },
-        # 红绿灯预警
-        "traffic_lights": {
-            "overall": "GREEN",
-            "by_team": [
-                {"team": "华南大区", "light": "GREEN", "completion": 108.3},
-                {"team": "华东大区", "light": "GREEN", "completion": 107.5},
-                {"team": "华北大区", "light": "RED", "completion": 98.8},
-            ],
-        },
-        # 关键风险
-        "top_risks": [
-            {
-                "risk": "华北大区完成率落后",
-                "impact": "影响整体 2-3%",
-                "action": "已安排区域经理专项跟进",
-            },
-            {
-                "risk": "STAGE4 转化率偏低",
-                "impact": "可能损失 300 万",
-                "action": "加强价格谈判支持",
-            },
-        ],
-        # 关键机会
-        "top_opportunities": [
-            {
-                "customer": "欣旺达",
-                "amount": 3200000,
-                "probability": 70,
-                "expected_close": "3 月 20 日",
-            },
-            {
-                "customer": "中创新航",
-                "amount": 2500000,
-                "probability": 65,
-                "expected_close": "3 月 15 日",
-            },
-        ],
-        # 需要领导关注的事项
-        "executive_actions": [
-            {
-                "priority": 1,
-                "action": "拜访欣旺达高层",
-                "reason": "320 万项目，决策阶段",
-                "deadline": "3 月 10 日前",
-            },
-            {
-                "priority": 2,
-                "action": "审批华北大区特殊折扣政策",
-                "reason": "帮助追赶进度",
-                "deadline": "3 月 5 日前",
-            },
-        ],
-        # 预测趋势图数据
-        "trend_data": [
-            {"month": "1 月", "target": 15000000, "actual": 13500000, "predicted": 14200000},
-            {"month": "2 月", "target": 15000000, "actual": 15000000, "predicted": 15800000},
-            {"month": "3 月", "target": 20000000, "actual": 0, "predicted": 22800000},
-        ],
-    }
+    return SalesForecastDashboardService(db).get_executive_dashboard()

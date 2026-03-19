@@ -477,13 +477,13 @@ Authorization: Bearer <your_jwt_token>
 
 | API | 所需权限 |
 |-----|----------|
-| 成本总览 | dashboard:view |
-| TOP项目 | dashboard:view |
-| 成本预警 | dashboard:view |
-| 项目仪表盘 | dashboard:view |
-| 导出数据 | dashboard:view |
+| 成本总览 | dashboard:read |
+| TOP项目 | dashboard:read |
+| 成本预警 | dashboard:read |
+| 项目仪表盘 | dashboard:read |
+| 导出数据 | dashboard:read |
 | 保存图表配置 | dashboard:manage |
-| 获取图表配置 | dashboard:view |
+| 获取图表配置 | dashboard:read |
 | 清除缓存 | dashboard:manage |
 
 ---

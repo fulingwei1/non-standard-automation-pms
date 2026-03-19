@@ -18,6 +18,7 @@ from app.models.sales import SalesTarget
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import SalesTargetCreate, SalesTargetResponse, SalesTargetUpdate
+from app.services.sales.target_performance_service import SalesTargetPerformanceService
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import get_user_role_code
@@ -58,21 +59,29 @@ def get_sales_targets(
         pass
     elif user_role_code == "SALES_MANAGER":
         # 销售经理可以看到自己部门的目标
-        # 注意：User表没有department_id字段，需要根据department字符串匹配
-        dept_name = getattr(current_user, "department", None)
-        if dept_name:
-            # 查找对应的部门ID
-            dept = db.query(Department).filter(Department.dept_name == dept_name).first()
-            if dept:
-                query = query.filter(
-                    or_(
-                        SalesTarget.department_id == dept.id, SalesTarget.user_id == current_user.id
-                    )
+        dept_id = getattr(current_user, "department_id", None)
+        if dept_id:
+            query = query.filter(
+                or_(
+                    SalesTarget.department_id == dept_id,
+                    SalesTarget.user_id == current_user.id,
                 )
+            )
+        else:
+            dept_name = getattr(current_user, "department", None)
+            if dept_name:
+                dept = db.query(Department).filter(Department.dept_name == dept_name).first()
+                if dept:
+                    query = query.filter(
+                        or_(
+                            SalesTarget.department_id == dept.id,
+                            SalesTarget.user_id == current_user.id,
+                        )
+                    )
+                else:
+                    query = query.filter(SalesTarget.user_id == current_user.id)
             else:
                 query = query.filter(SalesTarget.user_id == current_user.id)
-        else:
-            query = query.filter(SalesTarget.user_id == current_user.id)
     else:
         # 其他角色只能看到自己的目标
         query = query.filter(SalesTarget.user_id == current_user.id)
@@ -98,23 +107,24 @@ def get_sales_targets(
         query.order_by(desc(SalesTarget.created_at)), pagination.offset, pagination.limit
     ).all()
 
-    # 计算实际完成值和完成率
+    performance_service = SalesTargetPerformanceService(db)
+    user_ids = {target.user_id for target in targets if target.user_id}
+    department_ids = {target.department_id for target in targets if target.department_id}
+
+    users = db.query(User).filter(User.id.in_(user_ids)).all() if user_ids else []
+    departments = (
+        db.query(Department).filter(Department.id.in_(department_ids)).all()
+        if department_ids
+        else []
+    )
+    user_name_map = {user.id: (user.real_name or user.username) for user in users}
+    department_name_map = {dept.id: dept.dept_name for dept in departments}
+
     items = []
     for target in targets:
-        # TODO: 实现目标绩效计算逻辑
-        actual_value = getattr(target, "actual_value", 0) or 0
-        completion_rate = (actual_value / target.target_value * 100) if target.target_value else 0
-
-        # 获取用户/部门名称
-        user_name = None
-        if target.user_id:
-            user = db.query(User).filter(User.id == target.user_id).first()
-            user_name = user.real_name or user.username if user else None
-
-        department_name = None
-        if target.department_id:
-            dept = db.query(Department).filter(Department.id == target.department_id).first()
-            department_name = dept.dept_name if dept else None
+        performance = performance_service.calculate_target(target)
+        actual_value = performance["actual_value"]
+        completion_rate = performance["completion_rate"]
 
         items.append(
             {
@@ -132,8 +142,8 @@ def get_sales_targets(
                 "created_by": target.created_by,
                 "actual_value": float(actual_value),
                 "completion_rate": completion_rate,
-                "user_name": user_name,
-                "department_name": department_name,
+                "user_name": user_name_map.get(target.user_id),
+                "department_name": department_name_map.get(target.department_id),
                 "created_at": target.created_at,
                 "updated_at": target.updated_at,
             }
@@ -181,7 +191,8 @@ def create_sales_target(
 
     save_obj(db, target)
 
-    # 获取用户/部门名称
+    performance = SalesTargetPerformanceService(db).calculate_target(target)
+
     user_name = None
     if target.user_id:
         user = db.query(User).filter(User.id == target.user_id).first()
@@ -205,8 +216,8 @@ def create_sales_target(
         description=target.description,
         status=target.status,
         created_by=target.created_by,
-        actual_value=None,
-        completion_rate=None,
+        actual_value=performance["actual_value"],
+        completion_rate=performance["completion_rate"],
         user_name=user_name,
         department_name=department_name,
         created_at=target.created_at,
@@ -231,14 +242,18 @@ def update_sales_target(
     if target.created_by != current_user.id:
         user_role_code = get_user_role_code(db, current_user)
         if user_role_code != "SALES_DIR":
-            # User表没有department_id，需要通过department字符串匹配
-            dept_name = getattr(current_user, "department", None)
-            if dept_name:
-                dept = db.query(Department).filter(Department.dept_name == dept_name).first()
-                if dept and target.department_id != dept.id:
+            dept_id = getattr(current_user, "department_id", None)
+            if dept_id:
+                if target.department_id != dept_id:
                     raise HTTPException(status_code=403, detail="无权修改此目标")
             else:
-                raise HTTPException(status_code=403, detail="无权修改此目标")
+                dept_name = getattr(current_user, "department", None)
+                if dept_name:
+                    dept = db.query(Department).filter(Department.dept_name == dept_name).first()
+                    if dept and target.department_id != dept.id:
+                        raise HTTPException(status_code=403, detail="无权修改此目标")
+                else:
+                    raise HTTPException(status_code=403, detail="无权修改此目标")
 
     # 更新字段
     if target_data.target_value is not None:
@@ -250,6 +265,7 @@ def update_sales_target(
 
     db.commit()
     db.refresh(target)
+    performance = SalesTargetPerformanceService(db).calculate_target(target)
 
     # 获取用户/部门名称
     user_name = None
@@ -275,8 +291,8 @@ def update_sales_target(
         description=target.description,
         status=target.status,
         created_by=target.created_by,
-        actual_value=None,
-        completion_rate=None,
+        actual_value=performance["actual_value"],
+        completion_rate=performance["completion_rate"],
         user_name=user_name,
         department_name=department_name,
         created_at=target.created_at,

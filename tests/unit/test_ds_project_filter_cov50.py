@@ -2,7 +2,6 @@
 """
 Unit tests for app/services/data_scope/project_filter.py
 批次: cov50
-注意: data_scope 模块有已知 bug (DataScopeEnum.CUSTOMER)，遇到跳过相关测试
 """
 
 from unittest.mock import MagicMock, patch

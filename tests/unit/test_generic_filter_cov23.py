@@ -119,26 +119,20 @@ class TestCheckCustomerAccess:
         assert result is True
 
     def test_else_scope_no_projects_no_access(self):
-        """非ALL/CUSTOMER权限且没有项目时无访问权限（需要 patch DataScopeEnum）"""
+        """非 ALL/CUSTOMER 权限且没有项目时无访问权限"""
         db = _mock_db()
         user = _mock_user(is_superuser=False)
         q = MagicMock()
         q.filter.return_value = q
         q.first.return_value = None
         db.query.return_value = q
-        # 补丁 DataScopeEnum，添加 CUSTOMER 属性
-        from app.models.enums import DataScopeEnum
-
-        with patch.object(
-            DataScopeEnum, "CUSTOMER", create=True, new=MagicMock(value="CUSTOMER_PORTAL")
+        with patch(
+            "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
+            return_value="SUBORDINATE",
         ):
             with patch(
-                "app.services.data_scope.generic_filter.UserScopeService.get_user_data_scope",
-                return_value="SUBORDINATE",
+                "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
+                return_value=set(),
             ):
-                with patch(
-                    "app.services.data_scope.generic_filter.UserScopeService.get_user_project_ids",
-                    return_value=set(),
-                ):
-                    result = GenericFilterService.check_customer_access(db, user, 99)
+                result = GenericFilterService.check_customer_access(db, user, 99)
         assert result is False

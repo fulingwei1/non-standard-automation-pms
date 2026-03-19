@@ -37,7 +37,7 @@ def create_team(
 
 
 @router.get("", response_model=ResponseModel)
-@require_permission("sales_team:view")
+@require_permission("sales_team:read")
 def get_teams(
     db: Session = Depends(deps.get_db),
     skip: int = Query(0, ge=0),
@@ -64,7 +64,7 @@ def get_teams(
 
 
 @router.get("/tree", response_model=ResponseModel)
-@require_permission("sales_team:view")
+@require_permission("sales_team:read")
 def get_team_tree(
     db: Session = Depends(deps.get_db),
     current_user = Depends(deps.get_current_user),
@@ -75,7 +75,7 @@ def get_team_tree(
 
 
 @router.get("/{team_id:int}", response_model=ResponseModel)
-@require_permission("sales_team:view")
+@require_permission("sales_team:read")
 def get_team(
     team_id: int,
     db: Session = Depends(deps.get_db),
@@ -129,7 +129,7 @@ def add_member(
 
 
 @router.get("/{team_id:int}/members", response_model=ResponseModel)
-@require_permission("sales_team:view")
+@require_permission("sales_team:read")
 def get_team_members(
     team_id: int,
     db: Session = Depends(deps.get_db),

@@ -152,3 +152,38 @@ class TestApproveQuote:
         assert exc_info.value.status_code == 404
         assert exc_info.value.detail == "报价不存在"
         db.rollback.assert_called_once()
+
+
+class TestQuoteStatistics:
+
+    def test_get_quote_statistics_uses_statistics_service(self):
+        from app.api.v1.endpoints.sales.quotes import get_quote_statistics
+
+        db = _make_db()
+        current_user = _make_user()
+
+        statistics_payload = {
+            "total": 4,
+            "draft": 1,
+            "inReview": 1,
+            "approved": 1,
+            "sent": 0,
+            "expired": 0,
+            "rejected": 0,
+            "accepted": 0,
+            "converted": 1,
+            "totalAmount": 2000000.0,
+            "avgAmount": 500000.0,
+            "avgMargin": 22.5,
+            "conversionRate": 25.0,
+            "expiringSoon": 1,
+        }
+
+        with patch("app.api.v1.endpoints.sales.quotes.QuoteStatisticsService") as MockService:
+            MockService.return_value.get_statistics.return_value = statistics_payload
+
+            result = get_quote_statistics(db=db, current_user=current_user)
+
+        MockService.return_value.get_statistics.assert_called_once_with(current_user=current_user)
+        assert result.code == 200
+        assert result.data == statistics_payload
