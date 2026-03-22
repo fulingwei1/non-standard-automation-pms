@@ -87,7 +87,6 @@ export default function PurchaseRequestNew() {
         const res = await projectApi.list({ page_size: 1000 });
         setProjects(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
-        console.error("Failed to load projects:", err);
       }
     };
     loadProjects();
@@ -115,7 +114,6 @@ export default function PurchaseRequestNew() {
           }))
         );
       } catch (err) {
-        console.error("Failed to load machines:", err);
         setMachines([]);
       }
     };
@@ -129,7 +127,6 @@ export default function PurchaseRequestNew() {
         const res = await materialApi.list({ page_size: 1000 });
         setMaterials(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
-        console.error("Failed to load materials:", err);
       }
     };
     loadMaterials();
@@ -142,7 +139,6 @@ export default function PurchaseRequestNew() {
         const res = await supplierApi.list({ page: 1, page_size: 1000 });
         setSuppliers(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
-        console.error("Failed to load suppliers:", err);
       }
     };
     loadSuppliers();
@@ -167,7 +163,6 @@ export default function PurchaseRequestNew() {
             items: data.items || []
           });
         } catch (err) {
-          console.error("Failed to load request:", err);
           setError(err.response?.data?.detail || "加载失败");
         } finally {
           setLoading(false);
@@ -308,7 +303,6 @@ export default function PurchaseRequestNew() {
         navigate("/purchase-requests");
       }
     } catch (err) {
-      console.error("Failed to save request:", err);
       toast.error(err.response?.data?.detail || "保存失败");
     } finally {
       setSaving(false);
@@ -332,7 +326,6 @@ export default function PurchaseRequestNew() {
         toast.success("采购申请已提交");
         navigate("/purchase-requests");
       } catch (err) {
-        console.error("Failed to submit request:", err);
         toast.error(err.response?.data?.detail || "提交失败");
       }
     }

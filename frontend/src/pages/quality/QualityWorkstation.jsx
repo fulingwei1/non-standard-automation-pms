@@ -338,7 +338,6 @@ export default function QualityWorkstation() {
         // acceptanceTasks - use inspection list with acceptance type if available
         setAcceptanceTasks([]);
       } catch (err) {
-        console.error('Failed to load quality workstation data:', err);
       } finally {
         setLoading(false);
       }

@@ -308,7 +308,6 @@ export default function PresaleTicketBoard() {
 
       setTickets(normalizedList);
     } catch (error) {
-      console.error("加载售前工单失败:", error);
       setTickets(MOCK_TICKETS.map((ticket) => toTicketModel(ticket)));
       setUsingMockData(true);
       toast.warning("接口暂不可用，当前展示演示数据");
@@ -476,7 +475,6 @@ export default function PresaleTicketBoard() {
       await presaleApi.tickets.update(ticket.id, { urgency: nextPriority });
       toast.success(`工单 ${ticket.ticketNo} 优先级已更新`);
     } catch (error) {
-      console.error("更新优先级失败:", error);
       setTickets((prevTickets) =>
         prevTickets.map((item) =>
           item.id === ticket.id ? { ...item, priority: previousPriority } : item,
@@ -530,7 +528,6 @@ export default function PresaleTicketBoard() {
       toast.success(`工单 ${ticket.ticketNo} 已推进到 ${STATUS_CONFIG[nextStatus].label}`);
       await loadTickets();
     } catch (error) {
-      console.error("工单流转失败:", error);
       toast.error(error.response?.data?.detail || "工单流转失败");
     } finally {
       setFlowUpdatingId(null);

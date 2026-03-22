@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { useToast } from '../../../hooks/use-toast';
+import axios from 'axios';
 import purchaseService from '../../../services/purchase/purchaseService';
 import type { QuotationCompareResponse } from '../../../types/purchase';
 import CompareTable from './components/CompareTable';
@@ -34,10 +35,14 @@ const QuotationCompare: React.FC = () => {
         material_id: parseInt(materialId),
       });
       setCompareData(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '比价失败',
-        description: error.response?.data?.detail || '无法获取报价比较',
+        description: detail || '无法获取报价比较',
         variant: 'destructive',
       });
     } finally {

@@ -134,7 +134,6 @@ export function usePurchaseOrders() {
 
             setOrders(transformedOrders);
         } catch (err) {
-            console.error("Failed to load purchase orders:", err);
             setError(err);
             setOrders([]);
         } finally {
@@ -157,7 +156,6 @@ export function usePurchaseOrders() {
                 setSuppliers(suppliersData);
                 setProjects(projectsData);
             } catch (err) {
-                console.error("Failed to load dropdown data:", err);
                 setSuppliers([]);
                 setProjects([]);
             }
@@ -205,7 +203,6 @@ export function usePurchaseOrders() {
             });
             loadOrders();
         } catch (err) {
-            console.error("Failed to create order:", err);
             toast.error("创建采购订单失败");
         }
     };
@@ -228,7 +225,6 @@ export function usePurchaseOrders() {
             setShowEditModal(false);
             loadOrders();
         } catch (err) {
-            console.error("Failed to update order:", err);
             toast.error("更新采购订单失败");
         }
     };
@@ -241,7 +237,6 @@ export function usePurchaseOrders() {
             setSelectedOrder(null);
             loadOrders();
         } catch (err) {
-            console.error("Failed to delete order:", err);
             toast.error("删除采购订单失败");
         }
     };
@@ -254,7 +249,6 @@ export function usePurchaseOrders() {
             setSelectedOrder(null);
             loadOrders();
         } catch (err) {
-            console.error("Failed to submit approval:", err);
             toast.error("提交审批失败");
         }
     };
@@ -272,7 +266,6 @@ export function usePurchaseOrders() {
             });
             loadOrders();
         } catch (err) {
-            console.error("Failed to receive goods:", err);
             toast.error("收货确认失败");
         }
     };

@@ -21,7 +21,6 @@ const EvaluationTaskList = () => {
       try {
         return JSON.parse(userStr);
       } catch (_e) {
-        console.error("解析用户信息失败:", _e);
       }
     }
     return {

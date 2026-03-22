@@ -318,7 +318,6 @@ export default function ResourceOverview() {
       const res = await resourceOverviewApi.list(params);
       setData(res.data || res);
     } catch (err) {
-      console.error("Failed to load resource overview:", err);
     } finally {
       setLoading(false);
     }

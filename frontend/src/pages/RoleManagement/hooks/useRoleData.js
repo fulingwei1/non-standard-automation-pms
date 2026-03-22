@@ -34,7 +34,6 @@ export function useRoleData() {
             const items = listData?.items || listData;
             setRoles(Array.isArray(items) ? items : []);
         } catch (error) {
-            console.error('Failed to load roles:', error);
             setRoles([]);
         } finally {
             setLoading(false);
@@ -50,7 +49,6 @@ export function useRoleData() {
             const items = listData?.items || listData;
             setPermissions(Array.isArray(items) ? items : []);
         } catch (error) {
-            console.error('Failed to load permissions:', error);
             setPermissions([]);
         }
     }, []);
@@ -62,7 +60,6 @@ export function useRoleData() {
             const data = response.data || response;
             setPermissionMatrix(data.data || data);
         } catch (error) {
-            console.error('Failed to load permission matrix:', error);
         }
     }, []);
 
@@ -73,7 +70,6 @@ export function useRoleData() {
             const data = response.data || response;
             setInheritanceTree(data.data?.tree || []);
         } catch (error) {
-            console.error('Failed to load inheritance tree:', error);
         }
     }, []);
 
@@ -86,7 +82,6 @@ export function useRoleData() {
             const items = listData?.items || listData;
             setTemplates(Array.isArray(items) ? items : []);
         } catch (error) {
-            console.error('Failed to load templates:', error);
             setTemplates([]);
         }
     }, []);
@@ -143,7 +138,6 @@ export function useRoleData() {
             const data = response.data || response;
             return data.data || data;
         } catch (error) {
-            console.error('Failed to get role detail:', error);
             throw error;
         }
     }, []);
@@ -154,7 +148,6 @@ export function useRoleData() {
             const response = await roleApi.get(id);
             return response.data || response;
         } catch (error) {
-            console.error('Failed to get role:', error);
             throw error;
         }
     }, []);

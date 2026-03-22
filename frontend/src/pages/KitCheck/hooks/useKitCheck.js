@@ -11,7 +11,7 @@ export function useKitCheck() {
             setLoading(true);
             const response = await kitApi.list(filters);
             setKits(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
         finally { setLoading(false); }
     }, [filters]);
 

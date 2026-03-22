@@ -41,7 +41,6 @@ export function useUnifiedDashboard(roleCode) {
       const payload = response.data;
       setWidgetData(payload?.data ?? payload ?? {});
     } catch (err) {
-      console.warn('Dashboard API not available, using default data:', err.message);
       // API 不可用时使用空数据，组件自行加载
       setWidgetData({});
     } finally {
@@ -137,7 +136,6 @@ export function useUserRoles() {
           setRoles(userRoles);
         }
       } catch (err) {
-        console.error('Failed to load user roles:', err);
         setRoles([]);
       } finally {
         setLoading(false);

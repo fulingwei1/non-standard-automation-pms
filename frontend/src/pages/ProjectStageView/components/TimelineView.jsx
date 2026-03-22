@@ -398,11 +398,9 @@ export default function TimelineView({ data, loading, stageActions, onRefresh })
           success = await stageActions?.skipNode(nodeId);
           break;
         default:
-          console.warn("未知节点操作:", action);
           break;
       }
     } catch (err) {
-      console.error("节点操作失败:", err);
     }
     if (success) {
       onRefresh?.();

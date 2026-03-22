@@ -92,20 +92,6 @@ const ContractManagement = () => {
       const items = data?.items || data?.data?.items || data;
       const contractsData = Array.isArray(items) ? items : [];
       
-      // 调试：打印第一个合同的原始数据
-      if (contractsData.length > 0) {
-        const first = contractsData[0];
-        console.log('[合同数据] 第一个合同原始数据:', {
-          id: first.id,
-          contract_code: first.contract_code,
-          total_amount: first.total_amount,
-          contract_amount: first.contract_amount,
-          amount: first.amount,
-          status: first.status,
-          allKeys: Object.keys(first).filter(k => k.includes('amount') || k.includes('total'))
-        });
-      }
-      
       // 转换后端数据格式为前端期望的格式
       const transformedContracts = contractsData.map((c) => {
         // 金额字段：后端可能返回 total_amount 或 contract_amount
@@ -156,7 +142,6 @@ const ContractManagement = () => {
       
       setLoading(false);
     } catch (_error) {
-      console.error('加载合同数据失败:', _error);
       message.error('加载合同数据失败');
       setContracts([]);
       setLoading(false);

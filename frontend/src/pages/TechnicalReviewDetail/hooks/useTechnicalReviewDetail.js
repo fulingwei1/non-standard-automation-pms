@@ -22,7 +22,7 @@ export function useTechnicalReviewDetail(reviewId) {
         try {
             const response = await technicalReviewApi.getComments(reviewId);
             setComments(response.data || response || []);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
     }, [reviewId]);
 
     const submitDecision = useCallback(async (decision, comment) => {

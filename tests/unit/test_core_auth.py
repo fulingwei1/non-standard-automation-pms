@@ -310,13 +310,6 @@ class TestAuthModule:
         assert hasattr(auth, "oauth2_scheme")
         assert auth.oauth2_scheme is not None
 
-    def test_pwd_context_exists(self):
-        """测试密码加密上下文存在"""
-        from app.core import auth
-
-        assert hasattr(auth, "pwd_context")
-        assert auth.pwd_context is not None
-
     def test_module_exports(self):
         """测试模块导出"""
         from app.core import auth

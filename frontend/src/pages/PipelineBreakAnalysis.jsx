@@ -63,7 +63,6 @@ export default function PipelineBreakAnalysis() {
       if (warningsRes.data?.data?.warnings)
       {setWarnings(warningsRes.data.data.warnings);}
     } catch (error) {
-      console.error("加载断链分析失败:", error);
     } finally {
       setLoading(false);
     }

@@ -31,7 +31,6 @@ export function useCustomerCommunication() {
             const response = await customerApi.list({ page_size: 100 });
             setCustomers(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
-            console.error('Failed to load customers:', err);
         }
     }, []);
 

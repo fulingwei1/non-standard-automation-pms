@@ -61,7 +61,6 @@ const DemandForecast = () => {
         description: `预测需求: ${parseFloat(response.data.forecasted_demand).toFixed(2)}`,
       });
     } catch (error) {
-      console.error('Forecast failed:', error);
       toast({
         title: '预测失败',
         description: error.message || '请稍后重试',

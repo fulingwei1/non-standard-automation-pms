@@ -19,7 +19,6 @@ export function useLeaveManagement() {
                     setLeaveApplications(res.data);
                 }
             } catch (err) {
-                console.log("Leave API unavailable", err);
             } finally {
                 setLoading(false);
             }

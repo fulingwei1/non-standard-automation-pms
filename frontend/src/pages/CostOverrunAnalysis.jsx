@@ -51,7 +51,6 @@ export default function CostOverrunAnalysis() {
         setReasonsData(response.data.data);
       }
     } catch (error) {
-      console.error("加载成本超支原因失败:", error);
     } finally {
       setLoading(false);
     }
@@ -69,7 +68,6 @@ export default function CostOverrunAnalysis() {
         setAccountabilityData(response.data.data);
       }
     } catch (error) {
-      console.error("加载成本超支归责失败:", error);
     } finally {
       setLoading(false);
     }
@@ -87,7 +85,6 @@ export default function CostOverrunAnalysis() {
         setImpactData(response.data.data);
       }
     } catch (error) {
-      console.error("加载成本超支影响失败:", error);
     } finally {
       setLoading(false);
     }

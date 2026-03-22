@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 export interface PaginationParams {
   page: number;
   pageSize: number;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   keyword?: string;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
@@ -26,7 +26,7 @@ export interface PaginatedResponse<T> {
 export interface UsePaginatedDataOptions {
   initialPage?: number;
   initialPageSize?: number;
-  initialFilters?: Record<string, any>;
+  initialFilters?: Record<string, unknown>;
   initialKeyword?: string;
   enabled?: boolean;
 }
@@ -71,7 +71,7 @@ export function usePaginatedData<T>(
     pageSize: initialPageSize,
   });
 
-  const [filters, setFilters] = useState<Record<string, any>>(initialFilters);
+  const [filters, setFilters] = useState<Record<string, unknown>>(initialFilters);
   const [keyword, setKeyword] = useState(initialKeyword);
   const [orderBy, setOrderBy] = useState<string | undefined>();
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
@@ -104,7 +104,7 @@ export function usePaginatedData<T>(
   }, []);
 
   // 筛选变更处理
-  const handleFilterChange = useCallback((newFilters: Record<string, any>) => {
+  const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
     setFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 })); // 重置到第一页
   }, []);

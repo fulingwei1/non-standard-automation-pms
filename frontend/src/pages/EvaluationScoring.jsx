@@ -91,7 +91,6 @@ const EvaluationScoring = () => {
         setIsDraft(false);
       }
     } catch (err) {
-      console.error("加载评价详情失败:", err);
       setError(err.response?.data?.detail || "加载失败");
       // 如果加载失败且没有传递数据，保持mock数据
     } finally {
@@ -131,7 +130,6 @@ const EvaluationScoring = () => {
       setIsDraft(false);
       alert("草稿已保存到本地");
     } catch (err) {
-      console.error("保存草稿失败:", err);
       alert("保存草稿失败: " + (err.response?.data?.detail || "请稍后重试"));
     } finally {
       setIsSaving(false);
@@ -166,7 +164,6 @@ const EvaluationScoring = () => {
       alert("评价提交成功！");
       navigate("/evaluation-tasks");
     } catch (err) {
-      console.error("提交评价失败:", err);
       setError(err.response?.data?.detail || "提交失败");
       alert("提交失败: " + (err.response?.data?.detail || "请稍后重试"));
     } finally {

@@ -197,7 +197,6 @@ export default function ServiceRecord() {
 
       setRecords(transformedRecords);
     } catch (err) {
-      console.error("Failed to load records:", err);
       setError(err.response?.data?.detail || err.message || "加载服务记录失败");
       setRecords([]);
     } finally {
@@ -230,7 +229,6 @@ export default function ServiceRecord() {
         )
       });
     } catch (err) {
-      console.error("Failed to load statistics:", err);
     }
   }, [records]);
 
@@ -260,7 +258,6 @@ export default function ServiceRecord() {
       await loadRecords();
       toast.success("服务记录创建成功");
     } catch (error) {
-      console.error("Failed to create record:", error);
       toast.error("创建失败: " + (error.response?.data?.detail || error.message));
     }
   };

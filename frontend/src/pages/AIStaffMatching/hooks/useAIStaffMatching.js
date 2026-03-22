@@ -17,7 +17,6 @@ export function useAIStaffMatching() {
             const response = await projectApi.list({ status: 'active', page_size: 50 });
             setProjects(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
-            console.error('Failed to load projects:', err);
         }
     }, []);
 
@@ -26,7 +25,6 @@ export function useAIStaffMatching() {
             const response = await staffApi.list({ page_size: 100, available: true });
             setStaff(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
-            console.error('Failed to load staff:', err);
         }
     }, []);
 

@@ -11,9 +11,10 @@ export interface CommonFormProps<T> extends Omit<FormProps, 'onFinish'> {
   /** 初始值 */
   initialValues?: Partial<T>;
   /** 提交函数 */
-  onSubmit: (values: T) => Promise<any>;
+  // 提交后返回的数据类型不固定，使用 unknown
+  onSubmit: (values: T) => Promise<unknown>;
   /** 提交成功回调 */
-  onSuccess?: (data: any, values: T) => void;
+  onSuccess?: (data: unknown, values: T) => void;
   /** 提交失败回调 */
   onError?: (error: Error, values: T) => void;
   /** 验证函数 */

@@ -52,7 +52,6 @@ export function AddEntryDialog({
                 [];
             setTasks(items);
         } catch (error) {
-            console.error("加载任务失败:", error);
             setTasks([]);
         } finally {
             setLoadingTasks(false);

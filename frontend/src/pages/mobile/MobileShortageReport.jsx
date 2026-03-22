@@ -71,7 +71,6 @@ export default function MobileShortageReport() {
         machine_id: order.machine_id
       }));
     } catch (error) {
-      console.error("Failed to fetch work order:", error);
     }
   };
 
@@ -81,7 +80,6 @@ export default function MobileShortageReport() {
       const materialsList = res.data?.items || res.data?.items || res.data || [];
       setMaterials(materialsList);
     } catch (error) {
-      console.error("Failed to fetch materials:", error);
     }
   };
 
@@ -144,7 +142,6 @@ export default function MobileShortageReport() {
         navigate("/mobile/my-shortage-reports");
       }, 1500);
     } catch (error) {
-      console.error("Failed to create shortage report:", error);
       setError(
         "缺料上报失败: " + (error.response?.data?.detail || error.message)
       );

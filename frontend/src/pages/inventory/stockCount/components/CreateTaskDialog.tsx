@@ -52,8 +52,10 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setFormData({ task_type: CountTaskType.FULL });
       onSuccess?.();
       alert('盘点任务创建成功！');
-    } catch (error: any) {
-      alert(`创建失败: ${error.message}`);
+    } catch (error: unknown) {
+      // 安全地提取错误信息，因为 catch 中 error 类型不确定
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`创建失败: ${message}`);
     } finally {
       setLoading(false);
     }

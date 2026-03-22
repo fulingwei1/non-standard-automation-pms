@@ -98,7 +98,6 @@ export default function AcceptanceTemplateManagement() {
       const templateList = res.data?.items || res.data?.items || res.data || [];
       setTemplates(templateList);
     } catch (error) {
-      console.error("Failed to fetch templates:", error);
     } finally {
       setLoading(false);
     }
@@ -110,7 +109,6 @@ export default function AcceptanceTemplateManagement() {
       const items = res.data || res || [];
       setTemplateItems(items);
     } catch (error) {
-      console.error("Failed to fetch template items:", error);
     }
   };
 
@@ -125,7 +123,6 @@ export default function AcceptanceTemplateManagement() {
       resetForm();
       fetchTemplates();
     } catch (error) {
-      console.error("Failed to create template:", error);
       alert("创建模板失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -137,7 +134,6 @@ export default function AcceptanceTemplateManagement() {
       await fetchTemplateItems(templateId);
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch template detail:", error);
     }
   };
 
@@ -170,7 +166,6 @@ export default function AcceptanceTemplateManagement() {
       });
       await fetchTemplateItems(selectedTemplate.id);
     } catch (error) {
-      console.error("Failed to add item:", error);
       alert(
         "添加检查项失败: " + (error.response?.data?.detail || error.message)
       );

@@ -82,7 +82,6 @@ export default function ProductionBoard() {
         setWorkshops(extract(results[2].value));
       }
     } catch (e) {
-      console.error("Failed to fetch production data:", e);
     } finally {
       setLoading(false);
       setRefreshing(false);

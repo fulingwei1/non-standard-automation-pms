@@ -60,7 +60,6 @@ export default function FixedAssetsManagement() {
           setAssets(res.data);
         }
       } catch (_err) {
-        console.log("Assets API unavailable");
         setError("加载固定资产数据失败");
       }
       setLoading(false);

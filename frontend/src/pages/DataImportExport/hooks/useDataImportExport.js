@@ -28,7 +28,6 @@ export function useDataImportExport() {
             const data = response.data?.data || response.data || response;
             setTemplateTypes(data.types || []);
         } catch (err) {
-            console.error("Failed to load template types:", err);
         }
     };
 
@@ -53,7 +52,6 @@ export function useDataImportExport() {
 
             setSuccess("模板下载成功");
         } catch (err) {
-            console.error("Failed to download template:", err);
             setError(err.response?.data?.detail || err.message || "下载模板失败");
         } finally {
             setLoading(false);
@@ -86,7 +84,6 @@ export function useDataImportExport() {
                 );
             }
         } catch (err) {
-            console.error("Failed to preview import:", err);
             setError(err.response?.data?.detail || err.message || "预览失败");
             setPreviewData(null);
         } finally {
@@ -120,7 +117,6 @@ export function useDataImportExport() {
             setImportFile(null);
             setPreviewData(null);
         } catch (err) {
-            console.error("Failed to upload import:", err);
             setError(err.response?.data?.detail || err.message || "导入失败");
         } finally {
             setLoading(false);
@@ -182,7 +178,6 @@ export function useDataImportExport() {
 
             setSuccess("导出成功");
         } catch (err) {
-            console.error("Failed to export:", err);
             setError(err.response?.data?.detail || err.message || "导出失败");
         } finally {
             setLoading(false);

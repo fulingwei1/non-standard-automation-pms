@@ -11,7 +11,7 @@ export function useQuoteCostAnalysis(quoteId) {
             setLoading(true);
             const response = await quoteApi.getCostAnalysis(quoteId);
             setAnalysis(response.data || response);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
         finally { setLoading(false); }
     }, [quoteId]);
 

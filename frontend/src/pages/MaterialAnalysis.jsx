@@ -120,7 +120,6 @@ export default function MaterialAnalysis() {
 
       setProjectMaterials(projectMaterialsData);
     } catch (err) {
-      console.error("Failed to load project materials:", err);
       const status = err.response?.status;
       const detail = err.response?.data?.detail;
       const message = err.response?.data?.message;

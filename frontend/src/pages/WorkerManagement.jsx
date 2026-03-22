@@ -81,7 +81,6 @@ export default function WorkerManagement() {
       const res = await productionApi.workers.list(params);
       setWorkers(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch workers:", error);
     } finally {
       setLoading(false);
     }
@@ -98,7 +97,6 @@ export default function WorkerManagement() {
       resetForm();
       fetchWorkers();
     } catch (error) {
-      console.error("Failed to create worker:", error);
       alert("创建工人失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -111,7 +109,6 @@ export default function WorkerManagement() {
       resetForm();
       fetchWorkers();
     } catch (error) {
-      console.error("Failed to update worker:", error);
       alert("更新工人失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -122,7 +119,6 @@ export default function WorkerManagement() {
       setSelectedWorker(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch worker detail:", error);
     }
   };
 

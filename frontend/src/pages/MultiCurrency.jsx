@@ -121,7 +121,6 @@ function ConverterCard({ rates: _rates }) {
       });
       setResult(res.data || res);
     } catch (err) {
-      console.error("Conversion failed:", err);
     } finally {
       setConverting(false);
     }
@@ -271,7 +270,6 @@ function UpdateRateForm({ currency, currentRate, onClose, onSuccess }) {
       });
       onSuccess();
     } catch (err) {
-      console.error("Update failed:", err);
       alert("更新失败：" + (err.response?.data?.detail || err.message));
     } finally {
       setUpdating(false);
@@ -412,7 +410,6 @@ export default function MultiCurrency() {
       const res = await multiCurrencyApi.getRates();
       setRates(res.data || res);
     } catch (err) {
-      console.error("Failed to load rates:", err);
     }
   }, []);
 
@@ -421,7 +418,6 @@ export default function MultiCurrency() {
       const res = await multiCurrencyApi.getHistory({ limit: 20 });
       setHistory(res.data || res);
     } catch (err) {
-      console.error("Failed to load history:", err);
     }
   }, []);
 
@@ -431,7 +427,6 @@ export default function MultiCurrency() {
         setLoading(true);
         await Promise.all([loadRates(), loadHistory()]);
       } catch (err) {
-        console.error("Failed to load data:", err);
       } finally {
         setLoading(false);
       }

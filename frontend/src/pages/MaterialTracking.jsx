@@ -307,7 +307,6 @@ export default function MaterialTracking() {
           const items = itemsResponse.data?.items || itemsResponse.data || [];
           allPurchaseItems.push(...items);
         } catch (err) {
-          console.error(`Failed to load items for order ${order.id}:`, err);
         }
       }
 
@@ -364,7 +363,6 @@ export default function MaterialTracking() {
 
       setMaterials(transformedMaterials);
     } catch (err) {
-      console.error("Failed to load materials:", err);
       setError(err.response?.data?.detail || err.message || "加载物料列表失败");
       setMaterials([]); // 不再使用mock数据，显示空列表
     } finally {
@@ -384,7 +382,6 @@ export default function MaterialTracking() {
         const res = await materialApi.categories.list();
         setCategories(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
-        console.error("Failed to load categories:", err);
       }
     };
     loadCategories();
@@ -696,7 +693,6 @@ function CreateMaterialDialog({ categories, onClose, onSuccess }) {
       await materialApi.create(submitData);
       onSuccess();
     } catch (error) {
-      console.error("Failed to create material:", error);
       toast.error(
         "创建失败: " + (error.response?.data?.detail || error.message)
       );

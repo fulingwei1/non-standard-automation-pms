@@ -96,7 +96,6 @@ export default function Decomposition() {
         setSelectedStrategyId(arr[0].id);
       }
     } catch (error) {
-      console.error("获取战略列表失败:", error);
       setStrategies([]);
     } finally {
       setLoading(false);
@@ -110,7 +109,6 @@ export default function Decomposition() {
       const { data } = await decompositionApi.getTree(selectedStrategyId);
       setTreeData(data ?? null);
     } catch (error) {
-      console.error("获取分解树失败:", error);
       setTreeData(null);
     } finally {
       setLoading(false);
@@ -163,7 +161,6 @@ export default function Decomposition() {
       setIsRatingModalOpen(false);
       await fetchTree();
     } catch (error) {
-      console.error("提交评分失败:", error);
     }
   };
 

@@ -250,7 +250,6 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
       onUpdate?.();
       onClose();
     } catch (err) {
-      console.error("Failed to accept ticket:", err);
       alert(
         "接单失败：" + (
         err.response?.data?.detail || err.message || "未知错误")
@@ -272,7 +271,6 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
       onUpdate?.();
       setProgressNote("");
     } catch (err) {
-      console.error("Failed to update progress:", err);
       alert(
         "更新失败：" + (
         err.response?.data?.detail || err.message || "未知错误")
@@ -298,7 +296,6 @@ function TaskDetailPanel({ task, onClose, onUpdate }) {
       onUpdate?.();
       onClose();
     } catch (err) {
-      console.error("Failed to complete ticket:", err);
       alert(
         "完成失败：" + (
         err.response?.data?.detail || err.message || "未知错误")
@@ -658,7 +655,6 @@ export default function PresalesTasks({ embedded = false } = {}) {
 
       setTasks(transformedTasks);
     } catch (err) {
-      console.error("Failed to load tasks:", err);
       setError(err.response?.data?.detail || err.message || "加载任务失败");
       setTasks([]);
     } finally {

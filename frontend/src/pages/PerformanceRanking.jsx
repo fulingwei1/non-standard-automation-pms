@@ -49,7 +49,6 @@ export default function PerformanceRanking() {
           setDepartmentRanking(myPerfRes.data.department_ranking || []);
         }
       } catch (err) {
-        console.error("Failed to load performance ranking:", err);
         setError("加载绩效排名失败");
       } finally {
         setLoading(false);

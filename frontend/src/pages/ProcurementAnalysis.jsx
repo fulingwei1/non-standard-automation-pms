@@ -116,7 +116,6 @@ export default function ProcurementAnalysis() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('导出失败:', error);
       alert('导出失败: ' + error.message);
     }
   };

@@ -70,7 +70,6 @@ export default function ECNDetail() {
       const response = await ecnApi.getDetail(id);
       setEcn(response.data);
     } catch (error) {
-      console.error("Failed to load ECN:", error);
       toast.error("加载ECN详情失败: " + (error.message || "请稍后重试"));
     } finally {
       setLoading(false);
@@ -109,7 +108,6 @@ export default function ECNDetail() {
       setIntegrations(integrationResponse.data?.items || []);
 
     } catch (error) {
-      console.error("Failed to load related data:", error);
     }
   };
 
@@ -149,7 +147,6 @@ export default function ECNDetail() {
       setBomImpactSummary(response.data);
       toast.success("BOM影响分析完成");
     } catch (error) {
-      console.error("BOM analysis failed:", error);
       toast.error("BOM影响分析失败");
     } finally {
       setAnalyzingBom(false);
@@ -162,7 +159,6 @@ export default function ECNDetail() {
       setObsoleteRisks(response.data?.risks || []);
       toast.success("呆滞料风险分析完成");
     } catch (error) {
-      console.error("Risk analysis failed:", error);
       toast.error("风险分析失败");
     }
   };
@@ -196,7 +192,6 @@ export default function ECNDetail() {
         toast.success("ECN已批准");
       }
     } catch (error) {
-      console.error("Approval failed:", error);
       toast.error("审批失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -214,7 +209,6 @@ export default function ECNDetail() {
         toast.success("ECN已驳回");
       }
     } catch (error) {
-      console.error("Rejection failed:", error);
       toast.error("驳回失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -224,7 +218,6 @@ export default function ECNDetail() {
       const approvalResponse = await ecnApi.getApprovals(id);
       setApprovals(approvalResponse.data?.items || []);
     } catch (error) {
-      console.error("Failed to refresh approvals:", error);
     }
   };
 

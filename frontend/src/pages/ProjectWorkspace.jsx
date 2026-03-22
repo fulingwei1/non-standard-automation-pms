@@ -50,7 +50,6 @@ export default function ProjectWorkspace() {
       const response = await projectWorkspaceApi.getWorkspace(id);
       setWorkspaceData(response.data);
     } catch (error) {
-      console.error("Failed to load workspace data:", error);
     } finally {
       setLoading(false);
     }

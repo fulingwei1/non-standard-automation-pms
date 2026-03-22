@@ -104,7 +104,6 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
       setContractTemplates(Array.isArray(contractItems) ? contractItems : []);
       setRuleSets(Array.isArray(ruleItems) ? ruleItems : []);
     } catch (error) {
-      console.error("加载模板数据失败", error);
     } finally {
       setLoading(false);
     }

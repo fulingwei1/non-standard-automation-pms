@@ -11,7 +11,7 @@ export function useSubstitutionDetail(substitutionId) {
             setLoading(true);
             const response = await substitutionApi.get(substitutionId);
             setSubstitution(response.data || response);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
         finally { setLoading(false); }
     }, [substitutionId]);
 

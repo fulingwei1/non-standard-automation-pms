@@ -74,7 +74,6 @@ export default function OutsourcingOrderDetail() {
       const res = await outsourcingApi.orders.get(id);
       setOrder(res.data || res);
     } catch (error) {
-      console.error("Failed to fetch order detail:", error);
     } finally {
       setLoading(false);
     }
@@ -85,7 +84,6 @@ export default function OutsourcingOrderDetail() {
       const deliveryList = res.data?.items || res.data?.items || res.data || [];
       setDeliveries(deliveryList);
     } catch (error) {
-      console.error("Failed to fetch deliveries:", error);
     }
   };
   const fetchInspections = async () => {
@@ -94,7 +92,6 @@ export default function OutsourcingOrderDetail() {
       const inspectionList = res.data?.items || res.data?.items || res.data || [];
       setInspections(inspectionList);
     } catch (error) {
-      console.error("Failed to fetch inspections:", error);
     }
   };
   const fetchProgressLogs = async () => {
@@ -103,7 +100,6 @@ export default function OutsourcingOrderDetail() {
       const progressList = res.data || res || [];
       setProgressLogs(progressList);
     } catch (error) {
-      console.error("Failed to fetch progress logs:", error);
     }
   };
   if (loading) {

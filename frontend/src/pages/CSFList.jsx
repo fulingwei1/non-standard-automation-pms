@@ -267,7 +267,6 @@ export default function CSFList() {
         setActiveStrategy(null);
         return;
       }
-      console.error("加载战略失败:", error);
     } finally {
       setLoading(false);
     }
@@ -283,7 +282,6 @@ export default function CSFList() {
       });
       setCsfs(res.data || []);
     } catch (error) {
-      console.error("加载 CSF 失败:", error);
     }
   };
 
@@ -304,7 +302,6 @@ export default function CSFList() {
       await csfApi.delete(csf.id);
       loadCSFs();
     } catch (error) {
-      console.error("删除 CSF 失败:", error);
       alert("删除失败，请重试");
     }
   };
@@ -326,7 +323,6 @@ export default function CSFList() {
       setDialogOpen(false);
       loadCSFs();
     } catch (error) {
-      console.error("保存 CSF 失败:", error);
       alert("保存失败，请重试");
     } finally {
       setSaving(false);

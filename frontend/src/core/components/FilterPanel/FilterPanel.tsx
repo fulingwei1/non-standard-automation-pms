@@ -14,18 +14,19 @@ export interface FilterConfig {
   key: string;
   label: string;
   type: 'select' | 'input' | 'date' | 'dateRange' | 'number' | 'numberRange';
-  options?: Array<{ label: string; value: any }>;
+  // 选项值可以是字符串或数字
+  options?: Array<{ label: string; value: string | number }>;
   placeholder?: string;
-  defaultValue?: any;
+  defaultValue?: string | number | boolean;
 }
 
 export interface FilterPanelProps {
   /** 筛选配置 */
   filters: FilterConfig[];
   /** 当前筛选值 */
-  values: Record<string, any>;
+  values: Record<string, unknown>;
   /** 筛选变更回调 */
-  onChange: (values: Record<string, any>) => void;
+  onChange: (values: Record<string, unknown>) => void;
   /** 是否显示清除按钮 */
   showClear?: boolean;
   /** 布局方式 */
@@ -62,9 +63,10 @@ export function FilterPanel({
   }, [form, values]);
 
   // 处理筛选变更
-  const handleValuesChange = (changedValues: any, allValues: any) => {
+  // Ant Design Form 的 onValuesChange 回调参数类型
+  const handleValuesChange = (_changedValues: Record<string, unknown>, allValues: Record<string, unknown>) => {
     // 处理日期范围
-    const processedValues: Record<string, any> = {};
+    const processedValues: Record<string, unknown> = {};
     
     for (const [key, value] of Object.entries(allValues)) {
       if (value === undefined || value === null) {

@@ -80,7 +80,6 @@ export default function TimesheetDashboard() {
         setProjectStats(summaryRes.data.data.projects.slice(0, 10));
       }
     } catch (error) {
-      console.error("加载仪表板数据失败:", error);
     } finally {
       setLoading(false);
     }
@@ -122,7 +121,6 @@ export default function TimesheetDashboard() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("导出报表失败:", error);
       alert("导出报表失败，请稍后重试");
     }
   };
@@ -137,7 +135,6 @@ export default function TimesheetDashboard() {
       alert("数据同步成功！");
       loadDashboardData();
     } catch (error) {
-      console.error("数据同步失败:", error);
       alert("数据同步失败，请稍后重试");
     }
   };

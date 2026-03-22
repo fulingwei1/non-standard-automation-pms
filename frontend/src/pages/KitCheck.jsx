@@ -114,7 +114,6 @@ export default function KitCheck() {
         setTotal(res.data.data.pagination?.total || 0);
       }
     } catch (error) {
-      console.error("加载工单列表失败", error);
     } finally {
       setLoading(false);
     }
@@ -128,7 +127,6 @@ export default function KitCheck() {
         setDetailData(res.data.data);
       }
     } catch (error) {
-      console.error("加载工单详情失败", error);
     } finally {
       setDetailLoading(false);
     }
@@ -150,7 +148,6 @@ export default function KitCheck() {
       }
       await loadWorkOrders();
     } catch (error) {
-      console.error("执行齐套检查失败", error);
       alert("检查失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setActionLoading(false);
@@ -170,7 +167,6 @@ export default function KitCheck() {
       setShowDetailDialog(false);
       await loadWorkOrders();
     } catch (error) {
-      console.error("确认开工失败", error);
       alert("确认失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setActionLoading(false);

@@ -111,7 +111,6 @@ export default function TechnicalReviewDetail() {
       const data = response.data || response;
       setProjects(data.items || []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
 
@@ -121,7 +120,6 @@ export default function TechnicalReviewDetail() {
       const data = response.data || response;
       setUsers(data.items || []);
     } catch (error) {
-      console.error("Failed to fetch users:", error);
     }
   };
 
@@ -148,7 +146,6 @@ export default function TechnicalReviewDetail() {
       setChecklistRecords(data.checklist_records || []);
       setIssues(data.issues || []);
     } catch (error) {
-      console.error("Failed to fetch review:", error);
       alert("加载失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -166,7 +163,6 @@ export default function TechnicalReviewDetail() {
         await fetchReview();
       }
     } catch (error) {
-      console.error("Failed to save:", error);
       alert("保存失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setSaving(false);

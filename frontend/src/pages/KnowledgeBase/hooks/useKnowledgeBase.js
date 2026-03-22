@@ -24,7 +24,7 @@ export function useKnowledgeBase() {
         try {
             const response = await knowledgeBaseApi.getCategories();
             setCategories(response.data || response || []);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
     }, []);
 
     useEffect(() => { loadCategories(); loadArticles(); }, [loadCategories, loadArticles]);

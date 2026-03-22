@@ -114,7 +114,6 @@ export default function SalesPresaleWorkbench() {
         if (cancelled) {
           return;
         }
-        console.error("加载售前工作台总览失败:", loadError);
         setError(loadError.response?.data?.detail || loadError.message || "加载失败");
       } finally {
         if (!cancelled) {

@@ -11,8 +11,8 @@ from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+import jwt
+from jwt.exceptions import PyJWTError as JWTError
 from sqlalchemy.orm import Session
 
 from ..dependencies import get_db  # Moved to break circular import
@@ -28,9 +28,6 @@ from .permission_codes import (
 
 logger = logging.getLogger(__name__)
 
-# 密码加密上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # OAuth2配置
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login")
 
@@ -39,7 +36,6 @@ _token_blacklist = set()  # 内存黑名单（降级方案）
 _token_blacklist_lock = Lock()
 
 __all__ = [
-    "pwd_context",
     "oauth2_scheme",
     "verify_password",
     "get_password_hash",
@@ -125,14 +121,14 @@ def validate_user_tenant_consistency(user: User) -> None:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """验证密码 (直接使用 bcrypt，绕过 passlib 兼容性问题)"""
+    """验证密码 (直接使用 bcrypt)"""
     import bcrypt
     password_bytes = plain_password.encode('utf-8')[:72]
     return bcrypt.checkpw(password_bytes, hashed_password.encode('utf-8'))
 
 
 def get_password_hash(password: str) -> str:
-    """生成密码哈希 (直接使用 bcrypt，绕过 passlib 兼容性问题)"""
+    """生成密码哈希 (直接使用 bcrypt)"""
     import bcrypt
     password_bytes = password.encode('utf-8')[:72]
     return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode('utf-8')

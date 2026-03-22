@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { useToast } from '../../../hooks/use-toast';
+import axios from 'axios';
 import purchaseService from '../../../services/purchase/purchaseService';
 import type { SupplierPerformance } from '../../../types/purchase';
 import PerformanceScoreCard from './components/PerformanceScoreCard';
@@ -28,10 +29,14 @@ const PerformanceManagement: React.FC = () => {
         evaluation_period: period,
       });
       setPerformances(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '加载失败',
-        description: error.response?.data?.detail || '无法加载绩效数据',
+        description: detail || '无法加载绩效数据',
         variant: 'destructive',
       });
     } finally {
@@ -55,10 +60,14 @@ const PerformanceManagement: React.FC = () => {
         description: '供应商绩效评估已完成',
       });
       loadPerformances();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '评估失败',
-        description: error.response?.data?.detail || '无法触发评估',
+        description: detail || '无法触发评估',
         variant: 'destructive',
       });
     } finally {

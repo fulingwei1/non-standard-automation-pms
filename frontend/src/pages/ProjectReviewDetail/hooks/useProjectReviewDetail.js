@@ -29,7 +29,6 @@ export function useProjectReviewDetail(reviewId) {
             const response = await projectReviewApi.getComments(reviewId);
             setComments(response.data || response || []);
         } catch (err) {
-            console.error('Failed to load comments:', err);
         }
     }, [reviewId]);
 

@@ -14,7 +14,7 @@ export default function QuoteActualCompare() {
       try {
         const res = await quoteCompareApi.list();
         setData(res.data || res);
-      } catch (e) { console.error(e); }
+      } catch (e) { }
       finally { setLoading(false); }
     })();
   }, []);

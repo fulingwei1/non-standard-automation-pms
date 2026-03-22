@@ -148,7 +148,6 @@ export default function TemplateConfigEditor() {
       const res = await templateConfigApi.get(id);
       setConfig(res.data || res);
     } catch (error) {
-      console.error("加载配置失败:", error);
     } finally {
       setLoading(false);
     }

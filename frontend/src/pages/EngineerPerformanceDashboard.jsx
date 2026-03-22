@@ -23,7 +23,6 @@ const EngineerPerformanceDashboard = () => {
         setCurrentPeriod(response.data.data.period_name);
       }
     } catch (error) {
-      console.error('获取公司概况失败:', error);
     } finally {
       setLoading(false);
     }
@@ -39,7 +38,6 @@ const EngineerPerformanceDashboard = () => {
         setTopEngineers(response.data.data);
       }
     } catch (error) {
-      console.error('获取 Top 工程师失败:', error);
     }
   };
 

@@ -153,7 +153,6 @@ export default function LessonsLearned() {
       setLessons(response.data.items || []);
       setTotal(response.data.total || 0);
     } catch (error) {
-      console.error("Failed to load lessons:", error);
     } finally {
       setLoading(false);
     }
@@ -164,7 +163,6 @@ export default function LessonsLearned() {
       const response = await lessonsApi.stats();
       setStats(response.data);
     } catch (error) {
-      console.error("Failed to load stats:", error);
     }
   };
 
@@ -226,7 +224,6 @@ export default function LessonsLearned() {
       fetchLessons();
       fetchStats();
     } catch (error) {
-      console.error("Failed to save lesson:", error);
       alert("保存失败，请重试");
     }
   };

@@ -94,7 +94,6 @@ export default function ReceivableManagement() {
         setTotal(response.data.total || 0);
       }
     } catch (error) {
-      console.error("加载应收账款列表失败:", error);
     } finally {
       setLoading(false);
     }
@@ -110,7 +109,6 @@ export default function ReceivableManagement() {
         setAgingData(response.data);
       }
     } catch (error) {
-      console.error("加载账龄分析失败:", error);
     }
   };
 
@@ -146,7 +144,6 @@ export default function ReceivableManagement() {
       loadReceivables();
       loadAging();
     } catch (error) {
-      console.error("记录收款失败:", error);
       alert("记录收款失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -171,7 +168,6 @@ export default function ReceivableManagement() {
         setSummary(response.data);
       }
     } catch (error) {
-      console.error("加载应收账款统计失败:", error);
     }
   };
 
@@ -222,7 +218,6 @@ export default function ReceivableManagement() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("导出失败:", error);
       alert("导出失败: " + error.message);
     }
   };

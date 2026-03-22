@@ -13,6 +13,8 @@
 - 劳动时间异常监控规定（HR 制度 §2.4）
 """
 
+from __future__ import annotations  # Python 3.9 兼容：允许 X | Y 类型注解语法
+
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal

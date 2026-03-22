@@ -79,7 +79,6 @@ export default function FieldCommissioning() {
       const response = await fieldCommissioningApi.list(params);
       setTasks(response.data || []);
     } catch (error) {
-      console.error("Failed to load tasks:", error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +89,6 @@ export default function FieldCommissioning() {
       const response = await fieldCommissioningApi.dashboard();
       setStats(response.data);
     } catch (error) {
-      console.error("Failed to load stats:", error);
     }
   };
 
@@ -102,7 +100,6 @@ export default function FieldCommissioning() {
       fetchStats();
       alert("签到成功！");
     } catch (error) {
-      console.error("Checkin failed:", error);
       alert("签到失败，请重试");
     }
   };
@@ -117,7 +114,6 @@ export default function FieldCommissioning() {
       fetchTasks();
       alert("进度更新成功！");
     } catch (error) {
-      console.error("Update progress failed:", error);
       alert("更新失败，请重试");
     }
   };
@@ -129,7 +125,6 @@ export default function FieldCommissioning() {
       fetchStats();
       alert("问题报告成功！");
     } catch (error) {
-      console.error("Report issue failed:", error);
       alert("报告失败，请重试");
     }
   };
@@ -142,7 +137,6 @@ export default function FieldCommissioning() {
       fetchStats();
       alert("任务完成确认成功！");
     } catch (error) {
-      console.error("Complete failed:", error);
       alert("确认失败，请重试");
     }
   };

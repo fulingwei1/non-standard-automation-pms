@@ -70,7 +70,6 @@ export default function SubstitutionDetail() {
       const res = await shortageApi.substitutions.get(id);
       setSubstitution(res.data);
     } catch (error) {
-      console.error("加载物料替代详情失败", error);
     } finally {
       setLoading(false);
     }
@@ -88,7 +87,6 @@ export default function SubstitutionDetail() {
       setApprovalData({ approved: true, approval_note: "" });
       await loadSubstitution();
     } catch (error) {
-      console.error("技术审批失败", error);
       alert("技术审批失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setActionLoading(false);
@@ -107,7 +105,6 @@ export default function SubstitutionDetail() {
       setApprovalData({ approved: true, approval_note: "" });
       await loadSubstitution();
     } catch (error) {
-      console.error("生产审批失败", error);
       alert("生产审批失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setActionLoading(false);
@@ -122,7 +119,6 @@ export default function SubstitutionDetail() {
       setExecutionNote("");
       await loadSubstitution();
     } catch (error) {
-      console.error("执行替代失败", error);
       alert("执行替代失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setActionLoading(false);

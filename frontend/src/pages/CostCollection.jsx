@@ -79,7 +79,6 @@ export default function CostCollection() {
       setStatus(s.data || s);
       setProjects((p.data || p).projects || []);
     } catch (err) {
-      console.error("Load failed:", err);
     } finally {
       setLoading(false);
     }
@@ -95,7 +94,6 @@ export default function CostCollection() {
       setResult(res.data || res);
       await loadData(); // Refresh
     } catch (err) {
-      console.error("Collection failed:", err);
       setResult({ error: err.message });
     } finally {
       setCollecting(false);

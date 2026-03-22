@@ -82,7 +82,6 @@ export default function HRManagement() {
       const data = response.data?.data || response.data || response;
       setDashboardData(data);
     } catch (err) {
-      console.error("Failed to load dashboard:", err);
     }
   };
 
@@ -96,7 +95,6 @@ export default function HRManagement() {
       const data = response.data?.data || response.data || response;
       setTransactions(data.items || []);
     } catch (err) {
-      console.error("Failed to load transactions:", err);
     } finally {
       setLoading(false);
     }
@@ -111,7 +109,6 @@ export default function HRManagement() {
       const data = response.data?.data || response.data || response;
       setContracts(data.items || []);
     } catch (err) {
-      console.error("Failed to load contracts:", err);
     }
   };
 
@@ -121,7 +118,6 @@ export default function HRManagement() {
       const data = response.data?.data || response.data || response;
       setExpiringContracts(data);
     } catch (err) {
-      console.error("Failed to load expiring contracts:", err);
     }
   };
 
@@ -144,7 +140,6 @@ export default function HRManagement() {
       loadTransactions();
       loadDashboard();
     } catch (err) {
-      console.error("Failed to create transaction:", err);
       setError(err.response?.data?.detail || err.message || "创建失败");
     } finally {
       setLoading(false);
@@ -158,7 +153,6 @@ export default function HRManagement() {
       loadTransactions();
       loadDashboard();
     } catch (err) {
-      console.error("Failed to approve transaction:", err);
       setError(err.response?.data?.detail || err.message || "审批失败");
     } finally {
       setLoading(false);
@@ -185,7 +179,6 @@ export default function HRManagement() {
       loadContracts();
       loadExpiringContracts();
     } catch (err) {
-      console.error("Failed to create contract:", err);
       setError(err.response?.data?.detail || err.message || "创建失败");
     } finally {
       setLoading(false);

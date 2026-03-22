@@ -234,7 +234,6 @@ export default function CapacityAnalysis() {
         });
         setUtilizationLossData(lossReasons.slice(0, 4));
       } catch (error) {
-        console.error("加载产能数据失败:", error);
       } finally {
         setLoading(false);
       }

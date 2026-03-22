@@ -88,7 +88,6 @@ export default function YearComparison() {
       setYoyReport(reportRes.data);
       setKpiAchievement(kpiRes.data);
     } catch (error) {
-      console.error("获取对比数据失败:", error);
     } finally {
       setLoading(false);
     }

@@ -249,7 +249,6 @@ export default function ProjectListWithCost() {
       const projectList = data.items || data || [];
       setProjects(projectList);
     } catch (err) {
-      console.error("Failed to fetch projects:", err);
       toast.error("获取项目列表失败: " + (err.response?.data?.detail || err.message));
       setProjects([]);
     } finally {
@@ -270,7 +269,6 @@ export default function ProjectListWithCost() {
           });
           setRecommendedTemplates(response.data?.recommendations || []);
         } catch (err) {
-          console.error("Failed to load recommended templates:", err);
           setRecommendedTemplates([]);
         }
       };
@@ -341,7 +339,6 @@ export default function ProjectListWithCost() {
 
       toast.success("导出成功！");
     } catch (err) {
-      console.error("Export failed:", err);
       toast.error("导出失败: " + err.message);
     }
   };

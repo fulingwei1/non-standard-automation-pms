@@ -273,7 +273,6 @@ export default function WarehouseWorkstation() {
         const alertItems = alertsRes.data?.items || alertsRes.data?.items || alertsRes.data || [];
         setStockAlerts(Array.isArray(alertItems) ? alertItems : []);
       } catch (err) {
-        console.error('Failed to load warehouse workstation data:', err);
       } finally {
         setLoading(false);
       }

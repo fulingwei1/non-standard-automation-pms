@@ -68,7 +68,6 @@ export default function ArrivalTrackingList() {
       const data = extractApiData(res);
       setSuppliers(data?.items || (Array.isArray(data) ? data : []));
     } catch (error) {
-      console.error("Failed to fetch suppliers:", error);
       setSuppliers([]);
     }
   };
@@ -93,7 +92,6 @@ export default function ArrivalTrackingList() {
       const data = extractApiData(res);
       setArrivals(data?.items || (Array.isArray(data) ? data : []));
     } catch (error) {
-      console.error("Failed to fetch arrivals:", error);
       setArrivals([]);
     } finally {
       setLoading(false);

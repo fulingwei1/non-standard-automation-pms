@@ -100,7 +100,6 @@ export default function CostTemplateManagement() {
       const items = res.data?.data?.items || res.data?.items || [];
       setTemplates(items);
     } catch (error) {
-      console.error("加载模板列表失败:", error);
     } finally {
       setLoading(false);
     }
@@ -185,7 +184,6 @@ export default function CostTemplateManagement() {
       setShowEditDialog(false);
       setSelectedTemplate(null);
     } catch (error) {
-      console.error("保存模板失败:", error);
       alert("保存模板失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -200,7 +198,6 @@ export default function CostTemplateManagement() {
       setShowDeleteDialog(false);
       setSelectedTemplate(null);
     } catch (error) {
-      console.error("删除模板失败:", error);
       alert("删除模板失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -222,20 +219,28 @@ export default function CostTemplateManagement() {
     });
   };
 
+  // 不可变更新：为目标分类创建新对象，避免直接修改原数组元素
   const addItem = (categoryIndex) => {
-    const categories = [...(formData.cost_structure?.categories || [])];
-    categories[categoryIndex].items = [
-    ...(categories[categoryIndex].items || []),
-    {
-      item_name: "",
-      specification: "",
-      unit: "",
-      default_qty: 1,
-      default_unit_price: 0,
-      default_cost: 0,
-      lead_time_days: 0
-    }];
-
+    const categories = (formData.cost_structure?.categories || []).map(
+      (cat, i) =>
+        i === categoryIndex
+          ? {
+              ...cat,
+              items: [
+                ...(cat.items || []),
+                {
+                  item_name: "",
+                  specification: "",
+                  unit: "",
+                  default_qty: 1,
+                  default_unit_price: 0,
+                  default_cost: 0,
+                  lead_time_days: 0
+                }
+              ]
+            }
+          : cat
+    );
     setFormData({
       ...formData,
       cost_structure: {
@@ -244,9 +249,11 @@ export default function CostTemplateManagement() {
     });
   };
 
+  // 不可变更新：创建新分类对象替代直接修改属性
   const updateCategory = (index, field, value) => {
-    const categories = [...(formData.cost_structure?.categories || [])];
-    categories[index][field] = value;
+    const categories = (formData.cost_structure?.categories || []).map(
+      (cat, i) => i === index ? { ...cat, [field]: value } : cat
+    );
     setFormData({
       ...formData,
       cost_structure: {
@@ -255,9 +262,19 @@ export default function CostTemplateManagement() {
     });
   };
 
+  // 不可变更新：深层嵌套对象也需创建新引用
   const updateItem = (categoryIndex, itemIndex, field, value) => {
-    const categories = [...(formData.cost_structure?.categories || [])];
-    categories[categoryIndex].items[itemIndex][field] = value;
+    const categories = (formData.cost_structure?.categories || []).map(
+      (cat, ci) =>
+        ci === categoryIndex
+          ? {
+              ...cat,
+              items: (cat.items || []).map((item, ii) =>
+                ii === itemIndex ? { ...item, [field]: value } : item
+              )
+            }
+          : cat
+    );
     setFormData({
       ...formData,
       cost_structure: {
@@ -266,9 +283,11 @@ export default function CostTemplateManagement() {
     });
   };
 
+  // 不可变删除：用 filter 替代 splice
   const removeCategory = (index) => {
-    const categories = [...(formData.cost_structure?.categories || [])];
-    categories.splice(index, 1);
+    const categories = (formData.cost_structure?.categories || []).filter(
+      (_, i) => i !== index
+    );
     setFormData({
       ...formData,
       cost_structure: {
@@ -277,9 +296,14 @@ export default function CostTemplateManagement() {
     });
   };
 
+  // 不可变删除：为目标分类创建新 items 数组
   const removeItem = (categoryIndex, itemIndex) => {
-    const categories = [...(formData.cost_structure?.categories || [])];
-    categories[categoryIndex].items.splice(itemIndex, 1);
+    const categories = (formData.cost_structure?.categories || []).map(
+      (cat, ci) =>
+        ci === categoryIndex
+          ? { ...cat, items: (cat.items || []).filter((_, ii) => ii !== itemIndex) }
+          : cat
+    );
     setFormData({
       ...formData,
       cost_structure: {

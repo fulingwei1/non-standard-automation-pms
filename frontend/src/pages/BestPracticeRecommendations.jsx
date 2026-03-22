@@ -99,7 +99,6 @@ export default function BestPracticeRecommendations() {
       setProjectType(data.project_type || "");
       setCurrentStage(data.stage || "");
     } catch (err) {
-      console.error("Failed to fetch project:", err);
     }
   };
 
@@ -114,7 +113,6 @@ export default function BestPracticeRecommendations() {
       const data = res.data || res;
       setRecommendations(data.recommendations || []);
     } catch (err) {
-      console.error("Failed to fetch recommendations:", err);
       setRecommendations([]);
     } finally {
       setLoading(false);
@@ -133,7 +131,6 @@ export default function BestPracticeRecommendations() {
       const data = res.data || res;
       setRecommendations(data.recommendations || []);
     } catch (err) {
-      console.error("Failed to fetch recommendations:", err);
       setRecommendations([]);
     } finally {
       setLoading(false);
@@ -149,7 +146,6 @@ export default function BestPracticeRecommendations() {
       const data = res.data || res;
       setPopularPractices(data.items || data || []);
     } catch (err) {
-      console.error("Failed to fetch popular practices:", err);
       setPopularPractices([]);
     }
   };
@@ -165,7 +161,6 @@ export default function BestPracticeRecommendations() {
       fetchRecommendations();
       fetchPopularPractices();
     } catch (err) {
-      console.error("Failed to apply practice:", err);
       alert("应用失败: " + (err.response?.data?.detail || err.message));
     }
   };

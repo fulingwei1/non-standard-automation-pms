@@ -610,7 +610,6 @@ export default function ForecastDashboard() {
           })));
         }
       } catch (err) {
-        console.error("Failed to load targets:", err);
       }
     };
     loadTargets();

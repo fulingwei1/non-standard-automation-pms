@@ -159,7 +159,6 @@ def setup_logging() -> None:
     logging.getLogger("uvicorn").setLevel(logging.INFO if settings.DEBUG else logging.WARNING)
     logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("passlib").setLevel(logging.WARNING)
     logging.getLogger("jose").setLevel(logging.WARNING)
 
 

@@ -8,8 +8,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export interface UseFormOptions<T> {
   initialValues?: Partial<T>;
-  onSubmit: (values: T) => Promise<any>;
-  onSuccess?: (data: any, values: T) => void;
+  // 提交后返回的数据类型不固定，使用 unknown
+  onSubmit: (values: T) => Promise<unknown>;
+  onSuccess?: (data: unknown, values: T) => void;
   onError?: (error: Error, values: T) => void;
   validate?: (values: Partial<T>) => Record<string, string>;
   resetOnSuccess?: boolean;
@@ -72,10 +73,10 @@ export function useForm<T extends Record<string, any>>(
     },
   });
 
-  // 字段变更处理
+  // 字段变更处理，value 类型为 T 中对应字段的值类型
   const handleChange = useCallback((
     name: keyof T,
-    value: any
+    value: T[keyof T]
   ) => {
     setValues(prev => ({ ...prev, [name]: value }));
     setTouched(prev => ({ ...prev, [name]: true }));
@@ -131,7 +132,7 @@ export function useForm<T extends Record<string, any>>(
   }, []);
 
   // 设置字段值
-  const setFieldValue = useCallback((name: keyof T, value: any) => {
+  const setFieldValue = useCallback((name: keyof T, value: T[keyof T]) => {
     handleChange(name, value);
   }, [handleChange]);
 

@@ -78,7 +78,6 @@ export default function ChairmanWorkstation() {
             setProjectHealthDistribution(healthRes.data);
           }
         } catch (err) {
-          console.error("Failed to load health distribution:", err);
         }
 
         // 获取风险墙数据
@@ -88,7 +87,6 @@ export default function ChairmanWorkstation() {
             setRiskProjects(riskWallRes.data.projects);
           }
         } catch (err) {
-          console.error("Failed to load risk wall:", err);
         }
 
         // 获取月度营收数据（从销售统计 API）
@@ -104,7 +102,6 @@ export default function ChairmanWorkstation() {
             setMonthlyRevenue(salesRes.data.monthly_data);
           }
         } catch (err) {
-          console.error("Failed to load monthly revenue:", err);
         }
 
         // 获取部门绩效数据（从 PMO dashboard）
@@ -112,7 +109,6 @@ export default function ChairmanWorkstation() {
           setDepartmentPerformance(dashboardRes.data.departments);
         }
       } catch (err) {
-        console.error("Failed to load chairman dashboard:", err);
         setError(err);
         setCompanyStats(null);
         setKeyProjects([]);

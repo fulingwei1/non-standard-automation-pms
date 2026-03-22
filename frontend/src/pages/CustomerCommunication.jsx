@@ -269,7 +269,6 @@ export default function CustomerCommunication() {
       setCustomers(customerData);
       setUsers(userData);
     } catch (error) {
-      console.error("Failed to fetch data:", error);
       toast.error("加载数据失败");
     } finally {
       setLoading(false);
@@ -281,7 +280,6 @@ export default function CustomerCommunication() {
       const res = await customerCommunicationApi.statistics();
       setStats(res.data || {});
     } catch (error) {
-      console.error("Failed to fetch stats:", error);
     }
   };
 
@@ -305,7 +303,6 @@ export default function CustomerCommunication() {
       fetchData();
       fetchStats();
     } catch (error) {
-      console.error("Failed to create communication:", error);
       toast.error("创建沟通记录失败");
     }
   };
@@ -319,7 +316,6 @@ export default function CustomerCommunication() {
       fetchData();
       fetchStats();
     } catch (error) {
-      console.error("Failed to update communication:", error);
       toast.error("更新沟通记录失败");
     }
   };
@@ -333,7 +329,6 @@ export default function CustomerCommunication() {
       fetchData();
       fetchStats();
     } catch (error) {
-      console.error("Failed to delete communication:", error);
       toast.error("删除沟通记录失败");
     }
   };

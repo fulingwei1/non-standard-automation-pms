@@ -17,7 +17,7 @@ export interface DataTableProps<T> extends Omit<TableProps<T>, 'dataSource' | 'l
   queryFn: (params: {
     page: number;
     pageSize: number;
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
     keyword?: string;
     orderBy?: string;
     orderDirection?: 'asc' | 'desc';
@@ -35,13 +35,14 @@ export interface DataTableProps<T> extends Omit<TableProps<T>, 'dataSource' | 'l
     key: string;
     label: string;
     type: 'select' | 'input' | 'date' | 'dateRange' | 'number' | 'numberRange';
-    options?: Array<{ label: string; value: any }>;
+    // 选项值可以是字符串或数字
+    options?: Array<{ label: string; value: string | number }>;
     placeholder?: string;
   }>;
   /** 关键词搜索字段 */
   keywordFields?: string[];
   /** 初始筛选条件 */
-  initialFilters?: Record<string, any>;
+  initialFilters?: Record<string, unknown>;
   /** 初始关键词 */
   initialKeyword?: string;
   /** 每页默认数量 */
@@ -73,7 +74,7 @@ export interface DataTableProps<T> extends Omit<TableProps<T>, 'dataSource' | 'l
  * />
  * ```
  */
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   queryKey,
   queryFn,
   columns,

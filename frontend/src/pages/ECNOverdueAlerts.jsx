@@ -84,7 +84,6 @@ export default function ECNOverdueAlerts() {
       setAlerts(alertsList);
       setLastRefresh(new Date());
     } catch (error) {
-      console.error("Failed to fetch overdue alerts:", error);
       alert(
         "获取超时提醒失败: " + (error.response?.data?.detail || error.message)
       );
@@ -195,7 +194,6 @@ export default function ECNOverdueAlerts() {
       setSelectedAlerts(new Set());
       fetchAlerts();
     } catch (error) {
-      console.error("批量处理失败:", error);
       const errorMsg =
       error.response?.data?.detail || error.message || "批量处理失败";
       if (window.toast) {

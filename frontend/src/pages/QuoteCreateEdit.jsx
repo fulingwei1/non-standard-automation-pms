@@ -70,7 +70,6 @@ export default function QuoteCreateEdit() {
       });
       setOpportunities(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch opportunities:", error);
     }
   };
 
@@ -141,7 +140,6 @@ export default function QuoteCreateEdit() {
         );
       }
     } catch (error) {
-      console.error("Failed to fetch quote detail:", error);
     } finally {
       setLoading(false);
     }
@@ -278,7 +276,6 @@ export default function QuoteCreateEdit() {
       alert(isEdit ? "保存成功" : "创建成功");
       navigate("/sales/quotes");
     } catch (error) {
-      console.error("Failed to save quote:", error);
       alert("保存失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -303,7 +300,6 @@ export default function QuoteCreateEdit() {
       }));
       alert("成本重算完成");
     } catch (error) {
-      console.error("Failed to recalculate quote cost:", error);
       alert("重算失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

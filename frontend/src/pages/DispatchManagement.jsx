@@ -72,7 +72,6 @@ export default function DispatchManagement() {
       const res = await productionApi.workshops.list({ page_size: 1000 });
       setWorkshops(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch workshops:", error);
     }
   };
   const fetchWorkers = async () => {
@@ -80,7 +79,6 @@ export default function DispatchManagement() {
       const res = await productionApi.workers.list({ page_size: 1000 });
       setWorkers(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch workers:", error);
       setWorkers([]);
     }
   };
@@ -93,7 +91,6 @@ export default function DispatchManagement() {
       const orderList = res.data?.items || res.data?.items || res.data || [];
       setWorkOrders(orderList);
     } catch (error) {
-      console.error("Failed to fetch work orders:", error);
     } finally {
       setLoading(false);
     }
@@ -142,7 +139,6 @@ export default function DispatchManagement() {
       fetchWorkOrders();
       alert(`成功派工 ${orderIds.length} 个工单`);
     } catch (error) {
-      console.error("Failed to assign work orders:", error);
       alert("派工失败: " + (error.response?.data?.detail || error.message));
     }
   };

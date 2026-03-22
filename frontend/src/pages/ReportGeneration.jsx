@@ -26,7 +26,6 @@ export default function ReportGeneration() {
       const data = response.data;
       setTemplates(data?.items || data || []);
     } catch (error) {
-      console.error('获取模板列表失败:', error);
     }
   };
 
@@ -46,7 +45,6 @@ export default function ReportGeneration() {
       const data = response.data;
       setPreview(data);
     } catch (error) {
-      console.error('预览失败:', error);
     } finally {
       setLoading(false);
     }
@@ -66,7 +64,6 @@ export default function ReportGeneration() {
       });
       alert('报表生成成功！');
     } catch (error) {
-      console.error('生成失败:', error);
       alert('生成失败: ' + (error.response?.data?.detail || '请稍后重试'));
     } finally {
       setLoading(false);

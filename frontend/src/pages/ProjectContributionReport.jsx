@@ -32,7 +32,6 @@ export default function ProjectContributionReport() {
       const response = await projectContributionApi.getReport(id, { period });
       setReport(response.data);
     } catch (error) {
-      console.error("Failed to load contribution report:", error);
     } finally {
       setLoading(false);
     }

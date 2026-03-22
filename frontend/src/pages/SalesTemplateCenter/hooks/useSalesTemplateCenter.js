@@ -32,7 +32,6 @@ export function useSalesTemplateCenter() {
             const response = await salesTemplateApi.getCategories();
             setCategories(response.data || response || []);
         } catch (err) {
-            console.error('Failed to load categories:', err);
         }
     }, []);
 

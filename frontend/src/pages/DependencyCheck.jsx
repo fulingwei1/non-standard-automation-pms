@@ -56,9 +56,7 @@ export default function DependencyCheck({ projectId }) {
 
   // 初始化加载数据
   useEffect(() => {
-    console.log("[DependencyCheck] useEffect triggered - id:", id, "projectId:", projectId, "routeId:", routeId);
     if (!id) {
-      console.error("[DependencyCheck] No project ID available");
       setErrorMessage("项目ID不可用");
       setLoading(false);
       return;
@@ -72,7 +70,6 @@ export default function DependencyCheck({ projectId }) {
       const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
       setProject(res.data?.data || res.data);
     } catch (error) {
-      console.error("Failed to fetch project:", error);
     }
   };
 
@@ -80,25 +77,16 @@ export default function DependencyCheck({ projectId }) {
     try {
       setLoading(true);
       setErrorMessage("");
-      console.log("[DependencyCheck] Fetching dependency check for project:", id);
       const res = await progressApi.analytics.checkDependencies(id);
-      console.log("[DependencyCheck] API response:", res);
-      console.log("[DependencyCheck] Response data:", res.data);
-      console.log("[DependencyCheck] Response data?.data:", res.data?.data);
 
       const data = res.data?.data || res.data;
-      console.log("[DependencyCheck] Final data to set:", data);
 
       if (!data) {
         throw new Error("API returned no data");
       }
 
       setDependencyData(data);
-      console.log("[DependencyCheck] Dependency data set successfully");
     } catch (error) {
-      console.error("[DependencyCheck] Failed to fetch dependency data:", error);
-      console.error("[DependencyCheck] Error message:", error.message);
-      console.error("[DependencyCheck] Error response:", error.response?.data);
       setErrorMessage("依赖检查数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);
@@ -140,7 +128,6 @@ export default function DependencyCheck({ projectId }) {
       setPreviewData(preview);
       setShowPreviewDialog(true);
     } catch (error) {
-      console.error("Failed to preview dependency check:", error);
       setErrorMessage("预览失败，请稍后重试。");
     } finally {
       setProcessing(false);
@@ -171,7 +158,6 @@ export default function DependencyCheck({ projectId }) {
         setErrorMessage("修复依赖问题失败：" + (res.data?.error || "未知错误"));
       }
     } catch (error) {
-      console.error("Failed to fix dependencies:", error);
       setErrorMessage("修复依赖问题失败：" + (error.message || "未知错误"));
     } finally {
       setProcessing(false);

@@ -36,7 +36,7 @@ export default function LocationManagement() {
       if (keyword) params.keyword = keyword;
       const res = await warehouseApi.locations.list(params);
       setData(res.data || res);
-    } catch (_e) { console.error(_e); } finally { setLoading(false); }
+    } catch (_e) { } finally { setLoading(false); }
   }, [page, whFilter, keyword]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

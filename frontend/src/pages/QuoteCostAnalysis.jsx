@@ -94,7 +94,6 @@ export default function QuoteCostAnalysis() {
           );
           setCostStructure(structureRes.data?.data || structureRes.data);
         } catch (_e) {
-          console.log("Cost structure not available:", _e);
         }
       }
 
@@ -103,10 +102,8 @@ export default function QuoteCostAnalysis() {
         const trendRes = await quoteApi.getCostTrend(id, {});
         setCostTrend(trendRes.data?.data || trendRes.data);
       } catch (_e) {
-        console.log("Cost trend not available:", _e);
       }
     } catch (error) {
-      console.error("加载数据失败:", error);
     } finally {
       setLoading(false);
     }
@@ -149,7 +146,6 @@ export default function QuoteCostAnalysis() {
 
       setComparison(data);
     } catch (error) {
-      console.error("加载对比数据失败:", error);
       // 兼容旧接口，避免页面空白
       try {
         const fallbackRes = await quoteApi.compareCosts(id, {
@@ -157,7 +153,6 @@ export default function QuoteCostAnalysis() {
         });
         setComparison(fallbackRes.data?.data || fallbackRes.data);
       } catch (fallbackError) {
-        console.error("旧对比接口也失败:", fallbackError);
       }
     }
   };

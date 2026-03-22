@@ -52,7 +52,6 @@ export default function DelayAnalysis() {
         setRootCauseData(response.data.data);
       }
     } catch (error) {
-      console.error("加载延期根因分析失败:", error);
     } finally {
       setLoading(false);
     }
@@ -70,7 +69,6 @@ export default function DelayAnalysis() {
         setImpactData(response.data.data);
       }
     } catch (error) {
-      console.error("加载延期影响分析失败:", error);
     } finally {
       setLoading(false);
     }
@@ -84,7 +82,6 @@ export default function DelayAnalysis() {
         setTrendsData(response.data.data);
       }
     } catch (error) {
-      console.error("加载延期趋势分析失败:", error);
     } finally {
       setLoading(false);
     }

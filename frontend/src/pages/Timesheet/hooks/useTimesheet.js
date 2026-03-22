@@ -64,7 +64,6 @@ export function useTimesheet() {
             setEntries(Object.values(grouped));
             setWeekData(data);
         } catch (error) {
-            console.error("加载周工时数据失败:", error);
             setEntries([]);
         } finally {
             setLoading(false);
@@ -78,7 +77,6 @@ export function useTimesheet() {
             const items = response.data?.items || response.data?.data?.items || [];
             setProjects(items);
         } catch (error) {
-            console.error("加载项目列表失败:", error);
             setProjects([]);
         }
     }, []);
@@ -137,7 +135,6 @@ export function useTimesheet() {
                 }
             }
         } catch (error) {
-            console.error("创建工时记录失败:", error);
             alert("创建工时记录失败，请稍后重试");
         } finally {
             setSaving(false);
@@ -197,7 +194,6 @@ export function useTimesheet() {
 
                 await loadWeekTimesheet();
             } catch (error) {
-                console.error("更新工时记录失败:", error);
                 await loadWeekTimesheet();
                 alert("更新工时记录失败，请稍后重试");
             }
@@ -217,7 +213,6 @@ export function useTimesheet() {
             }
             await loadWeekTimesheet();
         } catch (error) {
-            console.error("删除工时记录失败:", error);
             alert("删除工时记录失败，请稍后重试");
         }
     };
@@ -251,7 +246,6 @@ export function useTimesheet() {
                 throw new Error(response.data?.message || "提交失败");
             }
         } catch (error) {
-            console.error("提交工时记录失败:", error);
             alert(error.response?.data?.detail || error.message || "提交工时记录失败，请稍后重试");
         } finally {
             setSaving(false);
@@ -323,7 +317,6 @@ export function useTimesheet() {
                 alert("本周已有对应日期的工时记录，无需复制");
             }
         } catch (error) {
-            console.error("复制上周工时记录失败:", error);
             alert("复制上周工时记录失败，请稍后重试");
         } finally {
             setSaving(false);

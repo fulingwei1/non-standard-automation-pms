@@ -99,7 +99,6 @@ export default function ProductionPlanList() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchWorkshops = async () => {
@@ -107,7 +106,6 @@ export default function ProductionPlanList() {
       const res = await productionApi.workshops.list({ page_size: 1000 });
       setWorkshops(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch workshops:", error);
     }
   };
   const fetchPlans = async () => {
@@ -122,7 +120,6 @@ export default function ProductionPlanList() {
       const res = await productionApi.productionPlans.list(params);
       setPlans(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch plans:", error);
     } finally {
       setLoading(false);
     }
@@ -151,7 +148,6 @@ export default function ProductionPlanList() {
       });
       fetchPlans();
     } catch (error) {
-      console.error("Failed to create plan:", error);
       alert("创建计划失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -161,7 +157,6 @@ export default function ProductionPlanList() {
       setSelectedPlan(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch plan detail:", error);
     }
   };
   const handlePublish = async (planId) => {
@@ -173,7 +168,6 @@ export default function ProductionPlanList() {
         handleViewDetail(planId);
       }
     } catch (error) {
-      console.error("Failed to publish plan:", error);
       alert("发布失败: " + (error.response?.data?.detail || error.message));
     }
   };

@@ -36,7 +36,7 @@ export default function StockCount() {
       if (statusFilter && statusFilter !== "all") params.status = statusFilter;
       const res = await warehouseApi.stockCount.list(params);
       setData(res.data || res);
-    } catch (_e) { console.error(_e); } finally { setLoading(false); }
+    } catch (_e) { } finally { setLoading(false); }
   }, [page, statusFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -50,7 +50,7 @@ export default function StockCount() {
   };
 
   const viewDetail = async (order) => {
-    try { const r = await warehouseApi.stockCount.get(order.id); setSelectedOrder(r.data || r); setShowDetail(true); } catch (_e) { console.error(_e); }
+    try { const r = await warehouseApi.stockCount.get(order.id); setSelectedOrder(r.data || r); setShowDetail(true); } catch (_e) { }
   };
 
   const changeStatus = async (id, status) => {

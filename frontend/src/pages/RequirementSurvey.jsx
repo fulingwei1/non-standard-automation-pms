@@ -604,7 +604,6 @@ export default function RequirementSurvey({ embedded = false }) {
 
       setSurveys(transformedSurveys);
     } catch (err) {
-      console.error("Failed to load surveys:", err);
       setError(err.response?.data?.detail || err.message || "加载调研记录失败");
       setSurveys([]);
     } finally {

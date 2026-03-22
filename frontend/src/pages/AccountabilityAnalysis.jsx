@@ -57,7 +57,6 @@ export default function AccountabilityAnalysis() {
       if (deptRes.data?.data) {setByDepartmentData(deptRes.data.data);}
       if (costRes.data?.data) {setCostImpactData(costRes.data.data);}
     } catch (error) {
-      console.error("加载归责分析失败:", error);
     } finally {
       setLoading(false);
     }

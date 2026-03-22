@@ -32,7 +32,6 @@ export function useKnowledgeBase() {
             const response = await knowledgeApi.getCategories();
             setCategories(response.data || response || []);
         } catch (err) {
-            console.error('Failed to load categories:', err);
         }
     }, []);
 

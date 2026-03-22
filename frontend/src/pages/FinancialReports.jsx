@@ -99,7 +99,6 @@ export default function FinancialReports() {
           setCashFlowData(Array.isArray(data) ? data : []);
         }
       } catch (err) {
-        console.error("Failed to load financial reports:", err);
         setError("加载财务报表失败");
       } finally {
         setLoading(false);

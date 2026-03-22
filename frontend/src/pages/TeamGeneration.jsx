@@ -77,7 +77,6 @@ export default function TeamGeneration() {
         }))
       );
     } catch (error) {
-      console.error("生成失败:", error);
       alert("生成失败：" + error.message);
     } finally {
       setLoading(false);

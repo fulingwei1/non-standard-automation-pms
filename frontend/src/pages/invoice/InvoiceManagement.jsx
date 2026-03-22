@@ -117,7 +117,6 @@ export default function InvoiceManagement() {
   setTotal(response.data.total || 0);
   }
  } catch (error) {
-  console.error("加载发票列表失败:", error);
  setError(
  error.response?.data?.detail || error.message || "加载发票列表失败"
  );
@@ -134,7 +133,6 @@ export default function InvoiceManagement() {
   setContracts(response.data.items);
  }
   } catch (error) {
-   console.error("加载合同列表失败:", error);
  }
  };
 
@@ -153,7 +151,6 @@ export default function InvoiceManagement() {
  resetForm();
   loadInvoices();
   } catch (error) {
-  console.error("创建发票失败:", error);
   alert("创建发票失败: " + (error.response?.data?.detail || error.message));
  }
  };
@@ -166,7 +163,6 @@ export default function InvoiceManagement() {
  setSelectedInvoice(null);
   loadInvoices();
  } catch (error) {
- console.error("开票失败:", error);
  alert("开票失败: " + (error.response?.data?.detail || error.message));
  }
  };
@@ -180,7 +176,6 @@ export default function InvoiceManagement() {
  setPaymentData(defaultPaymentData);
   loadInvoices();
  } catch (error) {
- console.error("记录收款失败:", error);
   alert("记录收款失败: " + (error.response?.data?.detail || error.message));
  }
  };
@@ -203,7 +198,6 @@ export default function InvoiceManagement() {
    setShowEditDialog(true);
  }
  } catch (error) {
- console.error("加载发票详情失败:", error);
   alert("加载发票详情失败");
  }
  };
@@ -217,7 +211,6 @@ export default function InvoiceManagement() {
  resetForm();
   loadInvoices();
   } catch (error) {
- console.error("更新发票失败:", error);
   alert("更新发票失败: " + (error.response?.data?.detail || error.message));
  }
  };
@@ -235,7 +228,6 @@ export default function InvoiceManagement() {
   loadInvoices();
   alert("发票已删除");
  } catch (error) {
-  console.error("删除发票失败:", error);
   alert("删除发票失败: " + (error.response?.data?.detail || error.message));
   }
  };

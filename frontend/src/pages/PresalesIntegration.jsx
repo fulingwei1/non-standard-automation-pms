@@ -45,7 +45,6 @@ export default function PresalesIntegration() {
       const data = response.data?.data || response.data || response;
       setDashboardData(data);
     } catch (err) {
-      console.error("Failed to load dashboard:", err);
       setError(err.response?.data?.detail || err.message || "加载数据失败");
     } finally {
       setLoading(false);
@@ -65,7 +64,6 @@ export default function PresalesIntegration() {
       const data = response.data?.data || response.data || response;
       setResourceWaste(data);
     } catch (err) {
-      console.error("Failed to load resource waste:", err);
       setError(err.response?.data?.detail || err.message || "加载数据失败");
     } finally {
       setLoading(false);

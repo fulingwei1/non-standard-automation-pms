@@ -103,7 +103,6 @@ export default function QualificationAssessmentList() {
         }));
       }
     } catch (error) {
-      console.error("加载评估记录失败:", error);
       toast.error("加载评估记录失败");
     } finally {
       setLoading(false);
@@ -150,7 +149,6 @@ export default function QualificationAssessmentList() {
       document.body.removeChild(link);
       toast.success("导出成功");
     } catch (error) {
-      console.error("导出失败:", error);
       toast.error("导出失败");
     }
   };

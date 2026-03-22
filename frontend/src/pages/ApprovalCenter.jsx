@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "../components/ui/toast";
 import {
   Clock,
   CheckCircle2,
@@ -185,7 +186,7 @@ const ApprovalCenter = () => {
     if (result.success) {
       closeQuickApproval();
     } else {
-      // TODO: 显示错误提示
+      toast.error(result.message || "审批操作失败，请重试");
       setQuickApprovalDialog((prev) => ({ ...prev, submitting: false }));
     }
   };

@@ -35,7 +35,6 @@ export default function TemplateConfigList() {
       const data = res.data || res;
       setConfigs(data.items || []);
     } catch (error) {
-      console.error("加载配置列表失败:", error);
     } finally {
       setLoading(false);
     }

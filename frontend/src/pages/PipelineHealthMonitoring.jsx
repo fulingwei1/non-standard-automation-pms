@@ -41,7 +41,6 @@ export default function PipelineHealthMonitoring() {
         setWarnings(response.data.data.warnings);
       }
     } catch (error) {
-      console.error("加载健康度预警失败:", error);
     } finally {
       setLoading(false);
     }
@@ -99,7 +98,6 @@ export default function PipelineHealthMonitoring() {
         );
       }
     } catch (error) {
-      console.error("计算健康度失败:", error);
       alert("计算健康度失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

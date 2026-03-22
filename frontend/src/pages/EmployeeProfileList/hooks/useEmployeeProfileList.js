@@ -37,7 +37,6 @@ export function useEmployeeProfileList() {
                 params.employment_type = "intern";
             }
 
-            console.log("[员工档案] 发起API请求, 参数:", params);
             const response = await staffMatchingApi.getProfiles(params);
 
             const data = response.data || response;
@@ -46,10 +45,8 @@ export function useEmployeeProfileList() {
             } else if (data?.items) {
                 setProfiles(data.items);
             } else {
-                console.warn("[员工档案] 数据格式不正确:", data);
             }
         } catch (error) {
-            console.error("[员工档案] 加载失败:", error);
         } finally {
             setLoading(false);
         }
@@ -113,7 +110,6 @@ export function useEmployeeProfileList() {
                 }, 1000);
             }
         } catch (error) {
-            console.error("上传失败:", error);
             setUploadResult({
                 success: false,
                 message:

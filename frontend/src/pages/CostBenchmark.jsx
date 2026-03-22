@@ -77,7 +77,6 @@ export default function CostBenchmark() {
       const res = await costBenchmarkApi.findSimilarProjects(projectId, { top_k: 10 });
       setSimilarProjects(res.data || res || []);
     } catch (err) {
-      console.error("Failed to find similar projects:", err);
       alert("查找失败: " + err.message);
     } finally {
       setLoading(false);
@@ -92,7 +91,6 @@ export default function CostBenchmark() {
       const res = await costBenchmarkApi.getBenchmarks(projectId);
       setBenchmarks(res.data || res || []);
     } catch (err) {
-      console.error("Failed to load benchmarks:", err);
     } finally {
       setLoading(false);
     }
@@ -120,7 +118,6 @@ export default function CostBenchmark() {
       const res = await costBenchmarkApi.getLaborCosts(projectId);
       setLaborCosts(res.data || res || []);
     } catch (err) {
-      console.error("Failed to load labor costs:", err);
     } finally {
       setLoading(false);
     }

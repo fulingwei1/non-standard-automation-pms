@@ -61,7 +61,6 @@ function HistoricalPrices() {
       const res = await intelligentQuoteApi.getHistoricalPrices(productCategory);
       setData(res);
     } catch (error) {
-      console.error("获取历史价格失败:", error);
     }
   };
 

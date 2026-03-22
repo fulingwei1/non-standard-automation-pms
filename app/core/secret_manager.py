@@ -12,13 +12,8 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-try:
-    # 优先使用 PyJWT
-    import jwt
-    from jwt.exceptions import JWTError
-except ImportError:
-    # 回退到 python-jose
-    from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError as JWTError
 
 logger = logging.getLogger(__name__)
 

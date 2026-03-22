@@ -270,7 +270,6 @@ export default function PresaleProposals() {
         setSelectedSolutionId((previous) => previous || String(filteredList[0].id));
       }
     } catch (requestError) {
-      console.error("加载方案失败:", requestError);
       setError(requestError?.response?.data?.detail || requestError?.message || "方案加载失败");
     } finally {
       setLoading(false);
@@ -299,7 +298,6 @@ export default function PresaleProposals() {
         setSelectedVersionId("");
       }
     } catch (requestError) {
-      console.error("加载版本失败:", requestError);
       setVersions([]);
       setSelectedVersionId("");
       setVersionsError(requestError?.response?.data?.detail || requestError?.message || "版本加载失败");
@@ -404,7 +402,6 @@ export default function PresaleProposals() {
       setSelectedSolutionId(String(created.id));
       setActiveTab("list");
     } catch (requestError) {
-      console.error("生成方案失败:", requestError);
       setGenerationError(requestError?.response?.data?.detail || requestError?.message || "方案生成失败");
     } finally {
       setGenerating(false);
@@ -426,7 +423,6 @@ export default function PresaleProposals() {
         await loadVersions(selectedSolutionId || solutionId);
       }
     } catch (requestError) {
-      console.error("方案评审失败:", requestError);
       setError(requestError?.response?.data?.detail || requestError?.message || "方案评审失败");
     } finally {
       setReviewActionLoadingId(null);

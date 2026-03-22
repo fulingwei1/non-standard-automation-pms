@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations  # Python 3.9 兼容：允许 X | Y 类型注解语法
+
 """
 数值计算工具模块 - 精确计算与业务规则
 

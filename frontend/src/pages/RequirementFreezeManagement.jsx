@@ -66,7 +66,6 @@ export default function RequirementFreezeManagement() {
       );
       setFreezes(response.data?.items || response.data || []);
     } catch (error) {
-      console.error("加载冻结记录失败:", error);
     } finally {
       setLoading(false);
     }
@@ -89,7 +88,6 @@ export default function RequirementFreezeManagement() {
       await loadFreezes();
       alert("需求冻结记录已创建");
     } catch (error) {
-      console.error("创建冻结记录失败:", error);
       alert("创建失败: " + (error.response?.data?.detail || error.message));
     }
   };

@@ -78,7 +78,6 @@ export default function CpqConfigurator() {
       setRuleSets(ruleRes.data?.items || ruleRes.items || []);
       setTemplates(templateRes.data?.items || templateRes.items || []);
     } catch (err) {
-      console.error("Failed to load rule sets and templates:", err);
       toast.error("加载配置数据失败");
     } finally {
       setLoading(false);
@@ -151,7 +150,6 @@ export default function CpqConfigurator() {
       ...prev.slice(0, 9)]
       ); // Keep last 10 entries
     } catch (err) {
-      console.error("Failed to preview price:", err);
       toast.error("价格预览失败");
     } finally {
       setPreviewLoading(false);
@@ -198,7 +196,6 @@ export default function CpqConfigurator() {
       setQuoteDraft(res.data || res);
       toast.success("已保存为报价草稿");
     } catch (err) {
-      console.error("Failed to save draft:", err);
       toast.error(err.response?.data?.message || "保存草稿失败");
     }
   };

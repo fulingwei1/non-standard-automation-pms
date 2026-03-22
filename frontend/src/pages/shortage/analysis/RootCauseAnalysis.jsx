@@ -23,7 +23,6 @@ const RootCauseAnalysis = () => {
         const response = await getRootCauseAnalysis();
         setData(response.data);
       } catch (error) {
-        console.error('Failed to load root cause data:', error);
         toast({
           title: '加载失败',
           description: error.message,

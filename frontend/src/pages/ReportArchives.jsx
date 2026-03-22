@@ -30,7 +30,6 @@ export default function ReportArchives() {
       const data = response.data;
       setArchives(data?.items || data || []);
     } catch (error) {
-      console.error('获取归档列表失败:', error);
     } finally {
       setLoading(false);
     }
@@ -47,7 +46,6 @@ export default function ReportArchives() {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('下载失败:', error);
     }
   };
 

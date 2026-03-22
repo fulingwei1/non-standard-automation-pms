@@ -105,7 +105,6 @@ export default function TimeBasedKitRateBoard() {
       const res = await assemblyKitApi.getTimeBasedKitRate(projectId, params);
       setData(res.data || res);
     } catch (error) {
-      console.error("加载失败:", error);
     } finally {
       setLoading(false);
     }

@@ -61,7 +61,6 @@ export default function AlertSubscription() {
         // ignore
       }
     } catch (error) {
-      console.error("Failed to load subscriptions:", error);
       // fallback: empty list, UI still usable
       setSubscriptions([]);
     }
@@ -114,7 +113,6 @@ export default function AlertSubscription() {
       }
       toast.success("订阅配置已保存");
     } catch (error) {
-      console.error("Failed to save subscriptions:", error);
       toast.error("保存失败，请稍后重试");
     }
   };

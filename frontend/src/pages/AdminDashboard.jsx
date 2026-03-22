@@ -102,11 +102,9 @@ export default function AdminDashboard() {
           setStats(response.data.data);
           setError(null); // 成功时清除错误
         } else {
-          console.warn("API 返回数据格式异常:", response.data);
           setError(new Error("API 返回数据格式异常"));
         }
       } catch (err) {
-        console.error("获取统计数据失败:", err);
         setError(err);
         setStats(defaultStats);
       } finally {

@@ -168,7 +168,6 @@ const KnowledgeBase = () => {
       setDocuments((apiData.items || []).map(normalizeDocument));
       setCategories(defaultCategories);
     } catch (error) {
-      console.error('加载知识库数据失败:', error);
       message.error('加载数据失败');
     } finally {
       setLoading(false);
@@ -271,7 +270,6 @@ const KnowledgeBase = () => {
       if (error?.errorFields) {
         return;
       }
-      console.error('保存知识库文档失败:', error);
       message.error(error?.response?.data?.detail || error?.message || '保存失败');
     } finally {
       setSubmitting(false);
@@ -286,7 +284,6 @@ const KnowledgeBase = () => {
       setDocuments((documents || []).filter((d) => d.id !== docId));
       message.success('删除成功');
     } catch (error) {
-      console.error('删除文档失败:', error);
       message.error('删除失败');
     } finally {
       setLoading(false);

@@ -22,7 +22,6 @@ const EngineerCollaboration = () => {
         setPendingList(response.data.data);
       }
     } catch (error) {
-      console.error('获取待评价列表失败:', error);
     }
   };
 
@@ -36,7 +35,6 @@ const EngineerCollaboration = () => {
         setReceivedRatings(response.data.data.items);
       }
     } catch (error) {
-      console.error('获取收到的评价失败:', error);
     } finally {
       setLoading(false);
     }
@@ -52,7 +50,6 @@ const EngineerCollaboration = () => {
         setGivenRatings(response.data.data.items);
       }
     } catch (error) {
-      console.error('获取给出的评价失败:', error);
     } finally {
       setLoading(false);
     }
@@ -66,7 +63,6 @@ const EngineerCollaboration = () => {
         setCollaborationMatrix(response.data.data);
       }
     } catch (error) {
-      console.error('获取协作矩阵失败:', error);
     }
   };
 

@@ -117,7 +117,6 @@ export default function MaterialReadiness() {
       setProjects(projectsRes.data?.items || projectsRes.data || []);
       setSuppliers(suppliersRes.data?.items || suppliersRes.data || []);
     } catch (error) {
-      console.error("Failed to fetch data:", error);
       toast.error("加载数据失败");
     } finally {
       setLoading(false);

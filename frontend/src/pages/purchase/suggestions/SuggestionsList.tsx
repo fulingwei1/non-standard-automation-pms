@@ -27,8 +27,9 @@ import {
   TableRow,
 } from '../../../components/ui/table';
 import { useToast } from '../../../hooks/use-toast';
+import axios from 'axios';
 import purchaseService from '../../../services/purchase/purchaseService';
-import type { PurchaseSuggestion, SuggestionStatus, UrgencyLevel } from '../../../types/purchase';
+import type { PurchaseSuggestion, SuggestionFilters, SuggestionStatus, UrgencyLevel } from '../../../types/purchase';
 import ApprovalDialog from './components/ApprovalDialog';
 
 /**
@@ -74,9 +75,10 @@ const SuggestionsList: React.FC = () => {
   const loadSuggestions = async () => {
     setLoading(true);
     try {
-      const params: any = {};
-      if (filters.status && filters.status !== '__all__') params.status = filters.status;
-      if (filters.urgency_level && filters.urgency_level !== '__all__') params.urgency_level = filters.urgency_level;
+      // 构建筛选参数，仅传入有效的筛选条件
+      const params: SuggestionFilters = {};
+      if (filters.status && filters.status !== '__all__') params.status = filters.status as SuggestionStatus;
+      if (filters.urgency_level && filters.urgency_level !== '__all__') params.urgency_level = filters.urgency_level as UrgencyLevel;
       
       const data = await purchaseService.getSuggestions(params);
       
@@ -94,10 +96,14 @@ const SuggestionsList: React.FC = () => {
       }
       
       setSuggestions(filtered);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '加载失败',
-        description: error.response?.data?.detail || '无法加载采购建议列表',
+        description: detail || '无法加载采购建议列表',
         variant: 'destructive',
       });
     } finally {
@@ -144,10 +150,14 @@ const SuggestionsList: React.FC = () => {
       });
 
       loadSuggestions();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '操作失败',
-        description: error.response?.data?.detail || '无法拒绝采购建议',
+        description: detail || '无法拒绝采购建议',
         variant: 'destructive',
       });
     }
@@ -177,10 +187,14 @@ const SuggestionsList: React.FC = () => {
       });
 
       loadSuggestions();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '创建失败',
-        description: error.response?.data?.detail || '无法创建采购订单',
+        description: detail || '无法创建采购订单',
         variant: 'destructive',
       });
     }

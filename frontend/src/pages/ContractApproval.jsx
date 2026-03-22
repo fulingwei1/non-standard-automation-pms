@@ -104,7 +104,6 @@ export default function ContractApproval() {
         const historyData = historyRes.data?.items || historyRes.data?.items || historyRes.data || [];
         setApprovalHistory(Array.isArray(historyData) ? historyData : []);
       } catch (err) {
-        console.error("Failed to load contract approvals:", err);
         setError("加载合同审批数据失败");
       } finally {
         setLoading(false);
@@ -178,7 +177,6 @@ export default function ContractApproval() {
       setShowDetailDialog(false);
       setApprovalComments("");
     } catch (err) {
-      console.error("Failed to approve contract:", err);
       setError("审批通过失败");
       setActionError("审批通过失败，请稍后重试");
     } finally {
@@ -200,7 +198,6 @@ export default function ContractApproval() {
       setShowDetailDialog(false);
       setApprovalComments("");
     } catch (err) {
-      console.error("Failed to reject contract:", err);
       setError("审批驳回失败");
       setActionError("审批驳回失败，请稍后重试");
     } finally {

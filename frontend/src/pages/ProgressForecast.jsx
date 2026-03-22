@@ -59,9 +59,7 @@ export default function ProgressForecast({ projectId }) {
 
   // 初始化加载数据
   useEffect(() => {
-    console.log("[ProgressForecast] useEffect triggered - id:", id, "projectId:", projectId, "routeId:", routeId);
     if (!id) {
-      console.error("[ProgressForecast] No project ID available");
       setErrorMessage("项目ID不可用");
       setLoading(false);
       return;
@@ -75,7 +73,6 @@ export default function ProgressForecast({ projectId }) {
       const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
       setProject(res.data?.data || res.data);
     } catch (error) {
-      console.error("Failed to fetch project:", error);
     }
   };
 
@@ -83,25 +80,16 @@ export default function ProgressForecast({ projectId }) {
     try {
       setLoading(true);
       setErrorMessage("");
-      console.log("[ProgressForecast] Fetching forecast for project:", id);
       const res = await progressApi.analytics.getForecast(id);
-      console.log("[ProgressForecast] API response:", res);
-      console.log("[ProgressForecast] Response data:", res.data);
-      console.log("[ProgressForecast] Response data?.data:", res.data?.data);
 
       const data = res.data?.data || res.data;
-      console.log("[ProgressForecast] Final data to set:", data);
 
       if (!data) {
         throw new Error("API returned no data");
       }
 
       setForecastData(data);
-      console.log("[ProgressForecast] Forecast data set successfully");
     } catch (error) {
-      console.error("[ProgressForecast] Failed to fetch forecast data:", error);
-      console.error("[ProgressForecast] Error message:", error.message);
-      console.error("[ProgressForecast] Error response:", error.response?.data);
       setErrorMessage("进度预测数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);
@@ -118,7 +106,6 @@ export default function ProgressForecast({ projectId }) {
       setPreviewData(res.data?.data || res.data);
       setShowPreviewDialog(true);
     } catch (error) {
-      console.error("Failed to preview auto process:", error);
       setErrorMessage("预览失败，请稍后重试。");
     } finally {
       setProcessing(false);
@@ -145,7 +132,6 @@ export default function ProgressForecast({ projectId }) {
       // 3秒后清除成功消息
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error("Failed to apply forecast:", error);
       setErrorMessage("应用进度预测失败：" + (error.message || "未知错误"));
     } finally {
       setProcessing(false);
@@ -181,7 +167,6 @@ export default function ProgressForecast({ projectId }) {
         setErrorMessage("自动处理流程执行失败：" + (res.data?.error || "未知错误"));
       }
     } catch (error) {
-      console.error("Failed to run complete process:", error);
       setErrorMessage("执行自动处理流程失败：" + (error.message || "未知错误"));
     } finally {
       setProcessing(false);

@@ -222,7 +222,6 @@ export default function PurchaseRequestList() {
         const res = await projectApi.list({ page_size: 1000 });
         setProjects(res.data?.items || res.data?.items || res.data || []);
       } catch (err) {
-        console.error("Failed to load projects:", err);
       }
     };
     loadProjects();
@@ -262,7 +261,6 @@ export default function PurchaseRequestList() {
         setRequests([]);
       }
     } catch (err) {
-      console.error("Failed to load purchase requests:", err);
       setError(err.response?.data?.detail || err.message || "加载采购申请失败");
     } finally {
       setLoading(false);
@@ -327,7 +325,6 @@ export default function PurchaseRequestList() {
       toast.success("采购申请已删除");
       loadRequests();
     } catch (err) {
-      console.error("Failed to delete request:", err);
       toast.error(err.response?.data?.detail || "删除失败");
     }
   };
@@ -343,7 +340,6 @@ export default function PurchaseRequestList() {
       toast.success("采购申请已提交，等待审批");
       loadRequests();
     } catch (err) {
-      console.error("Failed to submit request:", err);
       toast.error(err.response?.data?.detail || "提交失败");
     }
   };
@@ -363,7 +359,6 @@ export default function PurchaseRequestList() {
       loadRequests();
       setShowApproveDialog(false);
     } catch (err) {
-      console.error("Failed to approve request:", err);
       toast.error(err.response?.data?.detail || "审批失败");
     }
   };

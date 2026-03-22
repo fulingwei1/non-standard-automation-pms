@@ -78,7 +78,6 @@ export default function DwellTimeAlerts({ onAlertClick }) {
       setAlerts(alertItems);
       setStats(statsRes.formatted || statsRes.data || null);
     } catch (err) {
-      console.error("加载滞留预警失败:", err);
       setAlerts(defaultAlerts);
     } finally {
       setLoading(false);
@@ -106,7 +105,6 @@ export default function DwellTimeAlerts({ onAlertClick }) {
         prev.map((a) => (a.id === alertId ? { ...a, status: "ACKNOWLEDGED" } : a))
       );
     } catch (err) {
-      console.error("确认预警失败:", err);
     }
   };
 
@@ -118,7 +116,6 @@ export default function DwellTimeAlerts({ onAlertClick }) {
       // 从列表中移除
       setAlerts((prev) => prev.filter((a) => a.id !== alertId));
     } catch (err) {
-      console.error("解决预警失败:", err);
     }
   };
 

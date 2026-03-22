@@ -115,7 +115,6 @@ export function useExecutiveDashboard() {
             setDeliveryData([]);
           }
         } catch (err) {
-          console.error("Failed to load delivery rate data:", err);
         }
 
         try {
@@ -138,16 +137,13 @@ export function useExecutiveDashboard() {
             setUtilizationData([]);
           }
         } catch (err) {
-          console.error("Failed to load utilization data:", err);
         }
 
         try {
           await reportCenterApi.getHealthDistribution();
         } catch (err) {
-          console.error("Failed to load health distribution:", err);
         }
       } catch (err) {
-        console.error("Failed to load executive dashboard:", err);
         setError(err);
       } finally {
         setLoading(false);
@@ -252,7 +248,6 @@ export function useExecutiveDashboard() {
         setUtilizationData([]);
       }
     } catch (err) {
-      console.error("Failed to refresh:", err);
       setError(err);
     } finally {
       setRefreshing(false);
@@ -298,7 +293,6 @@ export function useExecutiveDashboard() {
         }
       }
     } catch (err) {
-      console.error("Failed to export:", err);
       alert("导出失败，请稍后重试");
     } finally {
       setExporting(false);

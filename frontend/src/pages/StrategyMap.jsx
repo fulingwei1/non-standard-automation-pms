@@ -257,7 +257,6 @@ export default function StrategyMap() {
           LEARNING: [],
         });
       } else {
-        console.error("加载战略地图失败:", error);
       }
     } finally {
       setLoading(false);

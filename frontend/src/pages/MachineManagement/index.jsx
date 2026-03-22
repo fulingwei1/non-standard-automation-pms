@@ -97,7 +97,6 @@ export default function MachineManagement() {
             setShowDetailDialog(true);
             documentData.fetchDocuments(machineId);
         } catch (error) {
-            console.error('Failed to fetch machine detail:', error);
         }
     };
 

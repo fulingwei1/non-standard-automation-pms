@@ -18,11 +18,9 @@ export function useCostAccounting() {
                 setCosts(response.data?.items || response.data?.items || response.data || []);
             } else {
                 // 如果没有指定项目ID，返回空数组或提示用户选择项目
-                console.warn('成本查询需要指定项目ID，请先选择项目');
                 setCosts([]);
             }
         } catch (err) { 
-            console.error('加载成本数据失败:', err);
             setCosts([]);
         }
         finally { setLoading(false); }

@@ -12,7 +12,6 @@ export function useWorkerManagement() {
       const response = await workerApi.list({ page_size: 100 });
       setWorkers(getItemsCompat(response));
     } catch (err) {
-      console.error(err);
       setWorkers([]);
     } finally {
       setLoading(false);

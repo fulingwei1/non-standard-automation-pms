@@ -40,7 +40,6 @@ export function usePurchaseOrderData() {
                 setPagination(prev => ({ ...prev, total: data.total }));
             }
         } catch (err) {
-            console.error('Failed to load purchase orders:', err);
             setError(err.message);
         } finally {
             setLoading(false);

@@ -63,7 +63,6 @@ export default function TimesheetBatchOperations() {
       });
       setTimesheets(response.data?.items || response.data?.data?.items || []);
     } catch (error) {
-      console.error("加载工时记录失败:", error);
     } finally {
       setLoading(false);
     }
@@ -105,7 +104,6 @@ export default function TimesheetBatchOperations() {
       setSelectedIds(new Set());
       loadTimesheets();
     } catch (error) {
-      console.error("批量审批失败:", error);
       alert("批量审批失败，请稍后重试");
     } finally {
       setLoading(false);
@@ -168,14 +166,12 @@ export default function TimesheetBatchOperations() {
             window.URL.revokeObjectURL(url);
           }
         } catch (error) {
-          console.error(`导出项目${projectId}报表失败:`, error);
         }
       }
 
       alert(`成功导出 ${selectedIds.size} 条记录`);
       setShowExportDialog(false);
     } catch (error) {
-      console.error("批量导出失败:", error);
       alert("批量导出失败，请稍后重试");
     } finally {
       setLoading(false);
@@ -227,7 +223,6 @@ export default function TimesheetBatchOperations() {
           });
           successCount += projectTimesheets.length;
         } catch (error) {
-          console.error(`同步项目${projectId}失败:`, error);
           failCount += projectTimesheets.length;
         }
       }
@@ -236,7 +231,6 @@ export default function TimesheetBatchOperations() {
       setShowSyncDialog(false);
       loadTimesheets();
     } catch (error) {
-      console.error("批量同步失败:", error);
       alert("批量同步失败，请稍后重试");
     } finally {
       setLoading(false);

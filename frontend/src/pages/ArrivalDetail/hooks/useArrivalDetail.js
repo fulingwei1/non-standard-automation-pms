@@ -11,7 +11,7 @@ export function useArrivalDetail(arrivalId) {
             setLoading(true);
             const response = await arrivalApi.get(arrivalId);
             setArrival(response.data || response);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
         finally { setLoading(false); }
     }, [arrivalId]);
 

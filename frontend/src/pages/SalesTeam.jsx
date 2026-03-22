@@ -497,7 +497,6 @@ export default function SalesTeam({ embedded = false }) {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("导出销售团队数据失败:", err);
     } finally {
       setExporting(false);
     }

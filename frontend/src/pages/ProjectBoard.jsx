@@ -46,7 +46,6 @@ const getStoredUser = () => {
       return JSON.parse(storedUser);
     }
   } catch (_e) {
-    console.error("Failed to parse user from localStorage:", _e);
   }
   // 默认用户数据
   return {
@@ -119,7 +118,6 @@ export default function ProjectBoard() {
       const items = response.data?.items || response.data?.items || response.data || [];
       setProjects(Array.isArray(items) ? items : []);
     } catch (err) {
-      console.error("Failed to fetch projects:", err);
       setError(err);
       setProjects([]);
     } finally {
@@ -139,7 +137,6 @@ export default function ProjectBoard() {
           const response = await projectApi.recommendTemplates({ limit: 5 });
           setRecommendedTemplates(response.data?.recommendations || []);
         } catch (err) {
-          console.error("Failed to load recommended templates:", err);
           setRecommendedTemplates([]);
         }
       };
@@ -156,7 +153,6 @@ export default function ProjectBoard() {
       const list = res?.data?.items ?? res?.data ?? res ?? [];
       setMilestones(Array.isArray(list) ? list : []);
     } catch (err) {
-      console.error("Failed to load milestones:", err);
       setMilestones([]);
     } finally {
       setMilestonesLoading(false);

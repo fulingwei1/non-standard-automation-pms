@@ -21,7 +21,6 @@ export default function ReportTemplates() {
       const data = response.data;
       setTemplates(data?.items || data || []);
     } catch (error) {
-      console.error('获取模板列表失败:', error);
     } finally {
       setLoading(false);
     }
@@ -32,7 +31,6 @@ export default function ReportTemplates() {
       await reportCenterApi.toggleTemplate(templateId);
       fetchTemplates();
     } catch (error) {
-      console.error('切换模板状态失败:', error);
     }
   };
 
@@ -43,7 +41,6 @@ export default function ReportTemplates() {
       await reportCenterApi.deleteTemplate(templateId);
       fetchTemplates();
     } catch (error) {
-      console.error('删除模板失败:', error);
     }
   };
 

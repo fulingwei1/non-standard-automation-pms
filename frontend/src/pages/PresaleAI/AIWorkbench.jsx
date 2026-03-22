@@ -65,7 +65,6 @@ const AIWorkbench = () => {
       }));
       setTickets(mapped);
     } catch (error) {
-      console.error('Failed to load tickets:', error);
       toast.error('加载工单失败');
     } finally {
       setLoading(false);
@@ -78,7 +77,6 @@ const AIWorkbench = () => {
       toast.success('AI工作流已启动');
       loadTickets();
     } catch (error) {
-      console.error('Failed to start workflow:', error);
       toast.error('启动工作流失败');
     }
   };

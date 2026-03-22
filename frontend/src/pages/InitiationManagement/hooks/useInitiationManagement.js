@@ -60,7 +60,6 @@ export function useInitiationManagement() {
             fetchData();
             return true;
         } catch (err) {
-            console.error("Failed to create initiation:", err);
             alert("创建失败: " + (err.response?.data?.detail || err.message));
             return false;
         }
@@ -72,7 +71,6 @@ export function useInitiationManagement() {
             fetchData();
             return true;
         } catch (err) {
-            console.error("Failed to submit initiation:", err);
             alert("提交失败: " + (err.response?.data?.detail || err.message));
             return false;
         }

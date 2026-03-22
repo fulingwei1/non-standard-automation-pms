@@ -89,7 +89,6 @@ export default function AssemblyTemplateManagement() {
       const data = res?.data?.data ?? res?.data ?? [];
       setTemplates(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("加载模板失败:", error);
       setTemplates([]);
     } finally {
       setLoading(false);

@@ -108,7 +108,6 @@ export default function IssueManagement({ embedded = false }) {
       setIssues(issuesData);
       setFilteredIssues(issuesData);
     } catch (error) {
-      console.error('Failed to fetch issues:', error);
       const status = error.response?.status;
       const detail = error.response?.data?.detail;
       const message = error.response?.data?.message;
@@ -150,7 +149,6 @@ export default function IssueManagement({ embedded = false }) {
         slaCompliance: apiStats.sla_compliance || apiStats.slaCompliance || 0
       });
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
       const status = error.response?.status;
       const detail = error.response?.data?.detail;
       const message = error.response?.data?.message;
@@ -208,7 +206,6 @@ export default function IssueManagement({ embedded = false }) {
       fetchIssues();
       fetchStats();
     } catch (error) {
-      console.error("Failed to create issue:", error);
       alert("创建问题失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setCreating(false);
@@ -228,13 +225,11 @@ export default function IssueManagement({ embedded = false }) {
   // 处理导出
   const handleExport = useCallback(() => {
     // 导出逻辑
-    console.log('Exporting issues:', selectedIssues.length);
   }, [selectedIssues]);
 
   // 处理导入
   const handleImport = useCallback(() => {
     // 导入逻辑
-    console.log('Import dialog opened');
   }, []);
 
   // 初始化数据

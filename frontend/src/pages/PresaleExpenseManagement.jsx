@@ -67,7 +67,6 @@ export default function PresaleExpenseManagement() {
         setTotal(response.data.data.total || 0);
       }
     } catch (error) {
-      console.error("加载费用列表失败:", error);
       alert("加载费用列表失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -85,7 +84,6 @@ export default function PresaleExpenseManagement() {
         setStatistics(response.data.data);
       }
     } catch (error) {
-      console.error("加载统计数据失败:", error);
     }
   };
 
@@ -105,7 +103,6 @@ export default function PresaleExpenseManagement() {
         loadStatistics();
       }
     } catch (error) {
-      console.error("费用化失败:", error);
       alert("费用化失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

@@ -110,7 +110,6 @@ export default function ProductionExceptionList({ embedded = false }) {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchExceptions = async () => {
@@ -125,7 +124,6 @@ export default function ProductionExceptionList({ embedded = false }) {
       const res = await productionApi.exceptions.list(params);
       setExceptions(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch exceptions:", error);
     } finally {
       setLoading(false);
     }
@@ -153,7 +151,6 @@ export default function ProductionExceptionList({ embedded = false }) {
       });
       fetchExceptions();
     } catch (error) {
-      console.error("Failed to create exception:", error);
       alert("上报异常失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -163,7 +160,6 @@ export default function ProductionExceptionList({ embedded = false }) {
       setSelectedException(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch exception detail:", error);
     }
   };
   const handleException = async () => {
@@ -180,7 +176,6 @@ export default function ProductionExceptionList({ embedded = false }) {
         handleViewDetail(selectedException.id);
       }
     } catch (error) {
-      console.error("Failed to handle exception:", error);
       alert("处理异常失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -193,7 +188,6 @@ export default function ProductionExceptionList({ embedded = false }) {
         handleViewDetail(excId);
       }
     } catch (error) {
-      console.error("Failed to close exception:", error);
       alert("关闭异常失败: " + (error.response?.data?.detail || error.message));
     }
   };

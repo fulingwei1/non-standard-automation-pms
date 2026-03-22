@@ -166,7 +166,6 @@ export default function SalesProjectTrack() {
         const data = res.data?.items || res.data?.items || res.data || [];
         setProjects(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to load sales projects:", err);
         setError("加载项目数据失败");
       } finally {
         setLoading(false);

@@ -40,7 +40,6 @@ export function useProjectClosureManagement() {
             const data = res.data || res;
             setProject(data);
         } catch (err) {
-            console.error("Failed to fetch project:", err);
         }
     }, [selectedProjectId]);
 
@@ -55,7 +54,6 @@ export function useProjectClosureManagement() {
             if (err.response?.status === 404) {
                 setClosure(null);
             } else {
-                console.error("Failed to fetch closure:", err);
             }
         } finally {
             setLoading(false);
@@ -72,7 +70,6 @@ export function useProjectClosureManagement() {
             const data = res.data || res;
             setProjectList(data.items || data || []);
         } catch (err) {
-            console.error("Failed to fetch projects:", err);
             setProjectList([]);
         }
     }, [projectSearch]);
@@ -102,7 +99,6 @@ export function useProjectClosureManagement() {
             setCreateDialogOpen(false);
             fetchClosure();
         } catch (err) {
-            console.error("Failed to create closure:", err);
             alert("创建失败: " + (err.response?.data?.detail || err.message));
         }
     };
@@ -113,7 +109,6 @@ export function useProjectClosureManagement() {
             setReviewDialog({ open: false, closureId: null });
             fetchClosure();
         } catch (err) {
-            console.error("Failed to review closure:", err);
             alert("评审失败: " + (err.response?.data?.detail || err.message));
         }
     };
@@ -124,7 +119,6 @@ export function useProjectClosureManagement() {
             setLessonsDialog({ open: false, closureId: null });
             fetchClosure();
         } catch (err) {
-            console.error("Failed to update lessons:", err);
             alert("更新失败: " + (err.response?.data?.detail || err.message));
         }
     };

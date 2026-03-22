@@ -78,7 +78,6 @@ export function useApprovalCenter() {
         total: data.total || 0,
       });
     } catch (err) {
-      console.error('加载统计数据失败:', err);
     }
   }, []);
 
@@ -131,7 +130,6 @@ export function useApprovalCenter() {
       });
 
     } catch (err) {
-      console.error('加载审批列表失败:', err);
       setError(err.response?.data?.detail || err.message || '加载失败');
       setItems([]);
     } finally {

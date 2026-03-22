@@ -307,7 +307,6 @@ function KPICard({ kpi, onUpdate, onCollect, color }) {
       const res = await kpiApi.getHistory(kpi.id, 6);
       setHistory(res.data || []);
     } catch (error) {
-      console.error("加载历史数据失败:", error);
     } finally {
       setLoadingHistory(false);
     }
@@ -520,7 +519,6 @@ export default function KPIList() {
         setKpis([]);
         return;
       }
-      console.error("加载数据失败:", error);
     } finally {
       setLoading(false);
     }
@@ -546,7 +544,6 @@ export default function KPIList() {
       loadData();
       alert("数据采集成功");
     } catch (error) {
-      console.error("数据采集失败:", error);
       alert("采集失败，请重试");
     } finally {
       setCollecting(false);
@@ -568,7 +565,6 @@ export default function KPIList() {
       setDialogOpen(false);
       loadData();
     } catch (error) {
-      console.error("保存 KPI 失败:", error);
       alert("保存失败，请重试");
     } finally {
       setSaving(false);
@@ -584,7 +580,6 @@ export default function KPIList() {
       setUpdateDialogOpen(false);
       loadData();
     } catch (error) {
-      console.error("更新 KPI 值失败:", error);
       alert("更新失败，请重试");
     } finally {
       setSaving(false);

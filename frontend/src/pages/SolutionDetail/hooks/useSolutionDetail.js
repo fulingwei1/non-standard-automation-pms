@@ -67,7 +67,6 @@ export function useSolutionDetail() {
             setSolution(transformedSolution);
             setCostEstimate(costData);
         } catch (err) {
-            console.error("Failed to load solution:", err);
             setError(err.response?.data?.detail || err.message || "加载方案详情失败");
         } finally {
             setLoading(false);

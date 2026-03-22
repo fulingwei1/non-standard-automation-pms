@@ -321,7 +321,6 @@ export default function SupplierManagement() {
         const data = response.data?.items || response.data?.items || response.data || [];
         setSuppliers(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to load suppliers:", err);
         setError("加载供应商数据失败");
         setSuppliers([]);
       } finally {
@@ -600,7 +599,6 @@ function CreateSupplierDialog({ onClose, onSuccess }) {
       await supplierApi.create(formData);
       onSuccess();
     } catch (error) {
-      console.error("Failed to create supplier:", error);
       toast.error(
         "创建失败: " + (error.response?.data?.detail || error.message)
       );

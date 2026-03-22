@@ -105,7 +105,6 @@ export default function AnnualWorkList() {
         setSelectedStrategyId(arr[0].id);
       }
     } catch (error) {
-      console.error("获取战略列表失败:", error);
       setStrategies([]);
     } finally {
       setLoading(false);
@@ -118,7 +117,6 @@ export default function AnnualWorkList() {
       const { data } = await annualWorkApi.list({ strategy_id: selectedStrategyId });
       setWorks(data.items || data || []);
     } catch (error) {
-      console.error("获取重点工作失败:", error);
     } finally {
       setLoading(false);
     }
@@ -186,7 +184,6 @@ export default function AnnualWorkList() {
       setIsModalOpen(false);
       await fetchWorks();
     } catch (error) {
-      console.error("保存失败:", error);
     }
   };
 
@@ -198,7 +195,6 @@ export default function AnnualWorkList() {
       setIsProgressModalOpen(false);
       await fetchWorks();
     } catch (error) {
-      console.error("更新进度失败:", error);
     }
   };
 
@@ -208,7 +204,6 @@ export default function AnnualWorkList() {
       await annualWorkApi.delete(id);
       await fetchWorks();
     } catch (error) {
-      console.error("删除失败:", error);
     }
   };
 

@@ -68,7 +68,6 @@ export default function ScheduleGeneration() {
       const res = await scheduleGenerationApi.generateBothModes(projectId);
       setSchedules(res.data || res);
     } catch (error) {
-      console.error("生成失败:", error);
       alert("生成失败：" + error.message);
     } finally {
       setLoading(false);

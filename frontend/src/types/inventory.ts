@@ -354,7 +354,7 @@ export interface PaginatedResponse<T> {
 }
 
 /** API 响应 */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number;
   message: string;
   data: T;

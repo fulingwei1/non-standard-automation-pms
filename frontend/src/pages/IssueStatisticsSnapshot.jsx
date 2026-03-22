@@ -86,7 +86,6 @@ export default function IssueStatisticsSnapshot() {
         setTotal(0);
       }
     } catch (error) {
-      console.error("Failed to load snapshots:", error);
       setSnapshots([]);
     } finally {
       setLoading(false);
@@ -99,7 +98,6 @@ export default function IssueStatisticsSnapshot() {
       setSelectedSnapshot(res.data || res);
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to load snapshot detail:", error);
     }
   };
 

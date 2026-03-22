@@ -96,7 +96,6 @@ export default function PerformanceResults() {
           }
         }
       } catch (err) {
-        console.error("Failed to load performance results:", err);
         setError("加载绩效结果失败");
       } finally {
         setLoading(false);

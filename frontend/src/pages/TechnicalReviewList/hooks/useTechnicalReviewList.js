@@ -29,7 +29,6 @@ export function useTechnicalReviewList() {
             const projects = response.data?.items || response.items || [];
             setProjectList(projects);
         } catch (error) {
-            console.error("Failed to fetch projects:", error);
         }
     }, []);
 
@@ -50,7 +49,6 @@ export function useTechnicalReviewList() {
             setReviews(data.items || []);
             setTotal(data.total || 0);
         } catch (error) {
-            console.error("Failed to fetch reviews:", error);
             setReviews([]);
         } finally {
             setLoading(false);
@@ -69,7 +67,6 @@ export function useTechnicalReviewList() {
             setDeleteDialog({ open: false, review: null });
             fetchReviews();
         } catch (error) {
-            console.error("Failed to delete review:", error);
             alert("删除失败：" + (error.response?.data?.detail || error.message));
         }
     };

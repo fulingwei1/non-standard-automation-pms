@@ -97,7 +97,6 @@ export default function AIStaffMatching() {
         setStaffingNeeds(response.data.items);
       }
     } catch (error) {
-      console.error("加载人员需求失败:", error);
     } finally {
       setLoading(false);
     }
@@ -114,7 +113,6 @@ export default function AIStaffMatching() {
         setMatchingHistory(response.data.items);
       }
     } catch (error) {
-      console.error("加载匹配历史失败:", error);
     } finally {
       setHistoryLoading(false);
     }
@@ -150,7 +148,6 @@ export default function AIStaffMatching() {
         });
       }
     } catch (error) {
-      console.error("匹配失败:", error);
       alert("匹配失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setMatching(false);
@@ -181,7 +178,6 @@ export default function AIStaffMatching() {
         )
       }));
     } catch (error) {
-      console.error("采纳失败:", error);
       // 演示模式下也移除候选人
       setMatchingResult((prev) => ({
         ...prev,
@@ -209,7 +205,6 @@ export default function AIStaffMatching() {
       });
       loadMatchingHistory();
     } catch (error) {
-      console.error("拒绝失败:", error);
     }
     setShowRejectDialog(false);
   };

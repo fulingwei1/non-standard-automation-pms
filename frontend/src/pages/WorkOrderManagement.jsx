@@ -109,7 +109,6 @@ export default function WorkOrderManagement() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchWorkOrders = async () => {
@@ -123,7 +122,6 @@ export default function WorkOrderManagement() {
       const res = await productionApi.workOrders.list(params);
       setWorkOrders(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch work orders:", error);
     } finally {
       setLoading(false);
     }
@@ -156,7 +154,6 @@ export default function WorkOrderManagement() {
       });
       fetchWorkOrders();
     } catch (error) {
-      console.error("Failed to create work order:", error);
       alert("创建工单失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -166,7 +163,6 @@ export default function WorkOrderManagement() {
       setSelectedOrder(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch work order detail:", error);
     }
   };
   const handleAssign = async () => {
@@ -183,7 +179,6 @@ export default function WorkOrderManagement() {
         handleViewDetail(selectedOrder.id);
       }
     } catch (error) {
-      console.error("Failed to assign work order:", error);
       alert("派工失败: " + (error.response?.data?.detail || error.message));
     }
   };

@@ -63,7 +63,6 @@ export default function ProjectTimelineView() {
         setProjects(projectsWithDetails);
       }
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
       toast.error("加载项目数据失败");
     } finally {
       setLoading(false);
@@ -97,7 +96,6 @@ export default function ProjectTimelineView() {
         )
       );
     } catch (error) {
-      console.error("Failed to update project:", error);
       toast.error("更新项目日期失败");
     }
   };
@@ -132,7 +130,6 @@ export default function ProjectTimelineView() {
         )
       );
     } catch (error) {
-      console.error("Failed to update stage:", error);
       toast.error("更新阶段日期失败");
     }
   };

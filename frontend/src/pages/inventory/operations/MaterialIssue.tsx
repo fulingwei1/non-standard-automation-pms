@@ -21,9 +21,11 @@ const MaterialIssue: React.FC = () => {
       await InventoryAPI.issueMaterial(data);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 安全地提取错误信息，因为 catch 中 error 类型不确定
+      const message = error instanceof Error ? error.message : String(error);
       console.error('领料失败:', error);
-      alert(`领料失败: ${error.message}`);
+      alert(`领料失败: ${message}`);
     } finally {
       setLoading(false);
     }

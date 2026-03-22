@@ -132,7 +132,6 @@ export default function InstallationDispatchManagement() {
       const data = res.data || res;
       setUsers(data.items || data || []);
     } catch (error) {
-      console.error("Failed to fetch users:", error);
       toast.error("获取用户列表失败");
     }
   };
@@ -142,7 +141,6 @@ export default function InstallationDispatchManagement() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
       toast.error("获取项目列表失败");
     }
   };
@@ -154,7 +152,6 @@ export default function InstallationDispatchManagement() {
       });
       setMachines(res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch machines:", error);
       toast.error("获取设备列表失败");
     }
   };
@@ -175,7 +172,6 @@ export default function InstallationDispatchManagement() {
       const res = await installationDispatchApi.orders.list(params);
       setOrders(res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch orders:", error);
       toast.error("获取派工单列表失败");
     } finally {
       setLoading(false);
@@ -187,7 +183,6 @@ export default function InstallationDispatchManagement() {
       const res = await installationDispatchApi.statistics();
       setStats(res.data || {});
     } catch (error) {
-      console.error("Failed to fetch statistics:", error);
     }
   };
 
@@ -222,7 +217,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders();
       fetchStatistics();
     } catch (error) {
-      console.error("Failed to create order:", error);
       toast.error("创建派工单失败");
     }
   };
@@ -236,7 +230,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders();
       fetchStatistics();
     } catch (error) {
-      console.error("Failed to assign order:", error);
       toast.error("派工失败");
     }
   };
@@ -252,7 +245,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders();
       fetchStatistics();
     } catch (error) {
-      console.error("Failed to update progress:", error);
       toast.error("更新进度失败");
     }
   };
@@ -272,7 +264,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders();
       fetchStatistics();
     } catch (error) {
-      console.error("Failed to complete order:", error);
       toast.error("完成派工单失败");
     }
   };
@@ -300,7 +291,6 @@ export default function InstallationDispatchManagement() {
       fetchOrders();
       fetchStatistics();
     } catch (error) {
-      console.error("Failed to batch assign:", error);
       toast.error("批量派工失败");
     }
   };

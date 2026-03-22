@@ -195,7 +195,6 @@ export default function TimeCostMarginFlow({ embedded = false }) {
           setSelectedProjectId(items[0].id);
         }
       } catch (error) {
-        console.error("Failed to load projects:", error);
       }
     };
     loadProjects();
@@ -215,7 +214,6 @@ export default function TimeCostMarginFlow({ embedded = false }) {
       try {
         timesheetRes = await projectApi.getTimesheetSummary(selectedProjectId, {});
       } catch (e) {
-        console.warn("工时汇总 API 调用失败:", e);
       }
 
       // 解析工时数据
@@ -284,7 +282,6 @@ export default function TimeCostMarginFlow({ embedded = false }) {
         });
       }
     } catch (error) {
-      console.error("Failed to fetch node data:", error);
     } finally {
       setLoading(false);
     }

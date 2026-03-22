@@ -81,7 +81,6 @@ export default function StrategicMeetingManagement() {
         setTotal(data?.length);
       }
     } catch (err) {
-      console.error("Failed to fetch meetings:", err);
       setMeetings([]);
     } finally {
       setLoading(false);
@@ -98,7 +97,6 @@ export default function StrategicMeetingManagement() {
         setProjects(data);
       }
     } catch (err) {
-      console.error("Failed to fetch projects:", err);
     }
   };
 

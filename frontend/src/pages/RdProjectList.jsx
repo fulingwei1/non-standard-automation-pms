@@ -251,7 +251,6 @@ function RdProjectFormDialog({
       });
       onOpenChange(false);
     } catch (err) {
-      console.error("Failed to create project:", err);
     } finally {
       setLoading(false);
     }
@@ -501,7 +500,6 @@ export default function RdProjectList() {
       const data = response.data?.data || response.data?.items || response.data || [];
       setCategories(data);
     } catch (err) {
-      console.error("Failed to fetch categories:", err);
     }
   };
 
@@ -534,7 +532,6 @@ export default function RdProjectList() {
         setProjects(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      console.error("Failed to fetch projects:", err);
       setProjects([]);
     } finally {
       setLoading(false);

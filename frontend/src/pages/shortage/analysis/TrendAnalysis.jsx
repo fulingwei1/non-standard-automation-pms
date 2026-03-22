@@ -30,7 +30,6 @@ const TrendAnalysis = () => {
       const response = await getTrendAnalysis(dateRange);
       setData(response.data);
     } catch (error) {
-      console.error('Failed to load trend data:', error);
       toast({
         title: '加载失败',
         description: error.message,

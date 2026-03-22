@@ -95,7 +95,6 @@ export default function MilestoneManagement() {
       const list = res?.data?.items ?? res?.items ?? res?.data ?? res ?? [];
       setProjects(Array.isArray(list) ? list : []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchProject = async () => {
@@ -103,7 +102,6 @@ export default function MilestoneManagement() {
       const res = await projectApi.get(id);
       setProject(res.data || res);
     } catch (error) {
-      console.error("Failed to fetch project:", error);
     }
   };
   // 获取所有里程碑（全局模式）
@@ -118,7 +116,6 @@ export default function MilestoneManagement() {
       const milestoneList = res?.data?.items ?? res?.data ?? res ?? [];
       setMilestones(Array.isArray(milestoneList) ? milestoneList : []);
     } catch (error) {
-      console.error("Failed to fetch all milestones:", error);
       setMilestones([]);
     } finally {
       setLoading(false);
@@ -133,7 +130,6 @@ export default function MilestoneManagement() {
       const milestoneList = res.data || res || [];
       setMilestones(milestoneList);
     } catch (error) {
-      console.error("Failed to fetch milestones:", error);
     } finally {
       setLoading(false);
     }
@@ -178,7 +174,6 @@ export default function MilestoneManagement() {
         fetchMilestones();
       }
     } catch (error) {
-      console.error("Failed to create milestone:", error);
       alert(
         "创建里程碑失败: " + (error.response?.data?.detail || error.message)
       );
@@ -194,7 +189,6 @@ export default function MilestoneManagement() {
         fetchMilestones();
       }
     } catch (error) {
-      console.error("Failed to complete milestone:", error);
       alert(
         "完成里程碑失败: " + (error.response?.data?.detail || error.message)
       );
@@ -206,7 +200,6 @@ export default function MilestoneManagement() {
       setSelectedMilestone(res.data || res);
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch milestone detail:", error);
     }
   };
   const getStatusIcon = (status) => {

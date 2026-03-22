@@ -70,7 +70,6 @@ export default function OfficeSuppliesManagement() {
           setSupplies(res.data);
         }
       } catch (_err) {
-        console.log("Office supplies API unavailable, using mock data");
       }
       setLoading(false);
     };

@@ -91,7 +91,6 @@ export default function ShortageAlert() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchAlerts = async () => {
@@ -108,7 +107,6 @@ export default function ShortageAlert() {
       const alertList = res.data?.items || res.data?.items || res.data || [];
       setAlerts(alertList);
     } catch (error) {
-      console.error("Failed to fetch alerts:", error);
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -119,7 +117,6 @@ export default function ShortageAlert() {
       const res = await shortageAlertApi.getSummary();
       setSummary(res.data || res);
     } catch (error) {
-      console.error("Failed to fetch summary:", error);
       setSummary({
         pending_count: 0,
         processing_count: 0,
@@ -134,7 +131,6 @@ export default function ShortageAlert() {
       setSelectedAlert(res.data || res);
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch alert detail:", error);
     }
   };
   const handleAcknowledge = async (alertId) => {
@@ -144,7 +140,6 @@ export default function ShortageAlert() {
       fetchAlerts();
       fetchSummary();
     } catch (error) {
-      console.error("Failed to acknowledge alert:", error);
       const errorMessage =
         error.response?.data?.detail || error.message || "确认失败，请稍后重试";
       alert(errorMessage);
@@ -166,7 +161,6 @@ export default function ShortageAlert() {
         handleViewDetail(selectedAlert.id);
       }
     } catch (error) {
-      console.error("Failed to resolve alert:", error);
       const errorMessage =
         error.response?.data?.detail || error.message || "处理失败，请稍后重试";
       alert(errorMessage);

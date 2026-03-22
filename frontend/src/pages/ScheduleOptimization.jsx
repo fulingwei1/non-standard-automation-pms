@@ -62,7 +62,6 @@ export default function ScheduleOptimization() {
       const res = await scheduleOptimizationApi.analyzeOptimization(projectId);
       setAnalysis(res.data || res);
     } catch (error) {
-      console.error("分析失败:", error);
       alert("分析失败：" + error.message);
     } finally {
       setLoading(false);

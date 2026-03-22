@@ -86,7 +86,6 @@ export default function AuditLogs() {
         setTotal(0);
       }
     } catch (err) {
-      console.error("Failed to load audits:", err);
       setError(err.response?.data?.detail || err.message || "加载审计日志失败");
       setAudits([]);
       setTotal(0);
@@ -115,7 +114,6 @@ export default function AuditLogs() {
       setSelectedAudit(data);
       setDetailDialogOpen(true);
     } catch (err) {
-      console.error("Failed to load audit detail:", err);
       setError(err.response?.data?.detail || err.message || "加载审计详情失败");
     }
   };

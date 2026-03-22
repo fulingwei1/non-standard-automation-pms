@@ -35,7 +35,6 @@ export default function TimesheetSummary({ data: _data }) {
         );
         setWeeklyHours(Math.round(total * 10) / 10);
       } catch (error) {
-        console.error('加载本周工时失败:', error);
         if (!cancelled) setWeeklyHours(0);
       } finally {
         if (!cancelled) setLoading(false);

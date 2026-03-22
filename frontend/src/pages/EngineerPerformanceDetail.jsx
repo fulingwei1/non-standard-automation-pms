@@ -21,7 +21,6 @@ const EngineerPerformanceDetail = () => {
         setPerformance(response.data.data);
       }
     } catch (error) {
-      console.error('获取绩效详情失败:', error);
     } finally {
       setLoading(false);
     }
@@ -35,7 +34,6 @@ const EngineerPerformanceDetail = () => {
         setTrend(response.data.data.trends);
       }
     } catch (error) {
-      console.error('获取趋势失败:', error);
     }
   };
 
@@ -47,7 +45,6 @@ const EngineerPerformanceDetail = () => {
         setComparison(response.data.data);
       }
     } catch (error) {
-      console.error('获取对比数据失败:', error);
     }
   };
 

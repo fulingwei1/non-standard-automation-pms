@@ -29,7 +29,6 @@ export function usePurchaseOrderFromBOM() {
                 const data = res.data?.data || res.data;
                 setBoms(data?.items || data || []);
             } catch (err) {
-                console.error("Failed to load BOMs:", err);
             }
         };
         loadBOMs();
@@ -41,7 +40,6 @@ export function usePurchaseOrderFromBOM() {
                 const res = await supplierApi.list({ page_size: 1000 });
                 setSuppliers(res.data?.items || res.data?.items || res.data || []);
             } catch (err) {
-                console.error("Failed to load suppliers:", err);
             }
         };
         loadSuppliers();
@@ -70,7 +68,6 @@ export function usePurchaseOrderFromBOM() {
             setSelectedBom(boms.find((b) => b.id === parseInt(selectedBomId)));
             setStep(2);
         } catch (err) {
-            console.error("Failed to generate preview:", err);
             setError(err.response?.data?.detail || "生成预览失败");
             toast.error(err.response?.data?.detail || "生成预览失败");
         } finally {
@@ -115,7 +112,6 @@ export function usePurchaseOrderFromBOM() {
             setStep(3);
             toast.success(`已创建${data.created_orders?.length || 0}个采购订单`);
         } catch (err) {
-            console.error("Failed to create orders:", err);
             setError(err.response?.data?.detail || "创建订单失败");
             toast.error(err.response?.data?.detail || "创建订单失败");
         } finally {

@@ -107,7 +107,6 @@ export default function StageTemplateManagement() {
       const data = response.data;
       setTemplates(Array.isArray(data) ? data : (data.items || []));
     } catch (error) {
-      console.error("加载模板列表失败:", error);
       // Mock data for demo
       setTemplates([
         {
@@ -218,7 +217,6 @@ export default function StageTemplateManagement() {
       resetForm();
       loadTemplates();
     } catch (error) {
-      console.error("创建模板失败:", error);
       alert("创建失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -231,7 +229,6 @@ export default function StageTemplateManagement() {
       resetForm();
       loadTemplates();
     } catch (error) {
-      console.error("更新模板失败:", error);
       alert("更新失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -247,7 +244,6 @@ export default function StageTemplateManagement() {
       resetForm();
       loadTemplates();
     } catch (error) {
-      console.error("复制模板失败:", error);
       alert("复制失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -259,7 +255,6 @@ export default function StageTemplateManagement() {
       setSelectedTemplate(null);
       loadTemplates();
     } catch (error) {
-      console.error("删除模板失败:", error);
       alert("删除失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -271,7 +266,6 @@ export default function StageTemplateManagement() {
       });
       loadTemplates();
     } catch (error) {
-      console.error("切换状态失败:", error);
       // Update locally for demo
       setTemplates((prev) =>
         (prev || []).map((t) =>
@@ -286,7 +280,6 @@ export default function StageTemplateManagement() {
       await stageTemplateApi.setDefault(template.id);
       loadTemplates();
     } catch (error) {
-      console.error("设置默认模板失败:", error);
       alert("设置失败: " + (error.response?.data?.detail || error.message));
     }
   };

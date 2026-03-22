@@ -74,7 +74,6 @@ export default function DelayReasonsReport() {
         const items = res.data?.items || res.data?.items || res.data || [];
         setProjects(Array.isArray(items) ? items : []);
       } catch (error) {
-        console.warn("Failed to load projects:", error);
         setProjects([]);
       }
     };
@@ -94,7 +93,6 @@ export default function DelayReasonsReport() {
       const res = await projectApi.get(selectedProjectId);
       setProject(res.data || res);
     } catch (error) {
-      console.error("Failed to fetch project:", error);
     }
   };
 
@@ -145,7 +143,6 @@ export default function DelayReasonsReport() {
         setPersonData(null);
       }
     } catch (error) {
-      console.error("Failed to fetch delay reasons data:", error);
     } finally {
       setLoading(false);
     }

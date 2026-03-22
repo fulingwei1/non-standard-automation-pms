@@ -82,7 +82,6 @@ export default function ProjectSettlement() {
         const data = res.data?.items || res.data?.items || res.data || [];
         setSettlements(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to load settlements:", err);
         setError("加载结算数据失败");
       } finally {
         setLoading(false);

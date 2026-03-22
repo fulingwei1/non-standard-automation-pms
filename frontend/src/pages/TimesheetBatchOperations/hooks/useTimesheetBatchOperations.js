@@ -11,7 +11,7 @@ export function useTimesheetBatchOperations() {
             setLoading(true);
             const response = await timesheetApi.listPending();
             setTimesheets(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
         finally { setLoading(false); }
     }, []);
 

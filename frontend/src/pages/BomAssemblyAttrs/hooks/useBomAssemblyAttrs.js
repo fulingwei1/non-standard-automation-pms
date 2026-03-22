@@ -29,7 +29,6 @@ export function useBomAssemblyAttrs() {
             const response = await bomApi.getAttributes(bomId);
             setAttributes(response.data || response || []);
         } catch (err) {
-            console.error('Failed to load attributes:', err);
         }
     }, []);
 

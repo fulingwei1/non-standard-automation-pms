@@ -140,7 +140,6 @@ export default function ProjectHealthMonitor({ embedded = false }) {
         calculateMargins(items);
       }
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
       toast.error("加载项目列表失败");
     } finally {
       setLoading(false);
@@ -154,7 +153,6 @@ export default function ProjectHealthMonitor({ embedded = false }) {
       const data = res.data || res || {};
       setKitRates(data.kit_rates || {});
     } catch (error) {
-      console.warn("Failed to fetch kit rates:", error);
       // 降级：为每个项目设置默认值
       const defaultRates = {};
       projectIds.forEach(id => {

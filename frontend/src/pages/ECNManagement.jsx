@@ -123,7 +123,6 @@ export default function ECNManagement({ embedded = false }) {
       setEcns(response.data.items || []);
       setTotal(response.data.total || 0);
     } catch (error) {
-      console.error("Failed to load ECNs:", error);
     } finally {
       setLoading(false);
     }
@@ -172,7 +171,6 @@ export default function ECNManagement({ embedded = false }) {
       setShowCreateDialog(false);
       fetchEcns();
     } catch (error) {
-      console.error("Failed to create ECN:", error);
       alert("创建失败，请重试");
     }
   };
@@ -184,7 +182,6 @@ export default function ECNManagement({ embedded = false }) {
       setImpactData(response.data);
       setShowImpactDialog(true);
     } catch (error) {
-      console.error("Failed to load impact:", error);
       alert("加载影响分析失败");
     }
   };
@@ -199,7 +196,6 @@ export default function ECNManagement({ embedded = false }) {
       alert("成功应用到 BOM");
       fetchEcns();
     } catch (error) {
-      console.error("Failed to apply to BOM:", error);
       alert("应用失败：" + (error.response?.data?.detail || error.message));
     }
   };

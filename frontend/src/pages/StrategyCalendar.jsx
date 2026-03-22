@@ -99,7 +99,6 @@ export default function StrategyCalendar() {
         setSelectedStrategyId(arr[0].id);
       }
     } catch (error) {
-      console.error("获取战略列表失败:", error);
       setStrategies([]);
     } finally {
       setLoading(false);
@@ -120,7 +119,6 @@ export default function StrategyCalendar() {
       const list = data?.items ?? data ?? [];
       setEvents(Array.isArray(list) ? list : []);
     } catch (error) {
-      console.error("获取日历事件失败:", error);
       setEvents([]);
     } finally {
       setLoading(false);

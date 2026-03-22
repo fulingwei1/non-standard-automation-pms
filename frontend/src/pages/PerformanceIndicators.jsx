@@ -69,7 +69,6 @@ export default function PerformanceIndicators() {
         const indicatorData = weightRes.data?.indicators || [];
         setIndicators(Array.isArray(indicatorData) ? indicatorData : []);
       } catch (err) {
-        console.error("Failed to load performance indicators:", err);
         setError("加载绩效指标失败");
         setIndicators([]);
       } finally {

@@ -456,18 +456,19 @@ def admin_token(client: TestClient) -> str:
     finally:
         db.close()
 
+    # 登录获取 token，失败时直接报错而非返回 None
+    # 返回 None 会导致依赖此 fixture 的 ~967 个测试静默跳过
     login_data = {
         "username": "admin",
-        "password": "admin123",  # 假设默认密码
+        "password": "admin123",
     }
     r = client.post("/api/v1/auth/login", data=login_data)
-    if r.status_code == 200:
-        return r.json()["access_token"]
-    else:
-        # 如果登录失败，可能是因为数据库没有初始化或者密码不对
-        # 这里我们可以选择跳过或者抛出错误
-        # 为了健壮性，这里先返回 None，测试用例中再处理
-        return None
+    assert r.status_code == 200, (
+        f"admin_token fixture: 登录失败 status={r.status_code}, body={r.text[:300]}"
+    )
+    token = r.json()["access_token"]
+    assert token, "admin_token fixture: 登录成功但 access_token 为空"
+    return token
 
 
 @pytest.fixture(scope="module")
@@ -491,13 +492,15 @@ def normal_user_token(client: TestClient) -> str:
 
     login_data = {
         "username": "user",
-        "password": "user123",  # 假设默认密码
+        "password": "user123",
     }
     r = client.post("/api/v1/auth/login", data=login_data)
-    if r.status_code == 200:
-        return r.json()["access_token"]
-    else:
-        return None
+    assert r.status_code == 200, (
+        f"normal_user_token fixture: 登录失败 status={r.status_code}, body={r.text[:300]}"
+    )
+    token = r.json()["access_token"]
+    assert token, "normal_user_token fixture: 登录成功但 access_token 为空"
+    return token
 
 
 @pytest.fixture(scope="module")
@@ -523,13 +526,15 @@ def sales_user_token(client: TestClient) -> str:
 
     login_data = {
         "username": "sales",
-        "password": "sales123",  # 假设默认密码
+        "password": "sales123",
     }
     r = client.post("/api/v1/auth/login", data=login_data)
-    if r.status_code == 200:
-        return r.json()["access_token"]
-    else:
-        return None
+    assert r.status_code == 200, (
+        f"sales_user_token fixture: 登录失败 status={r.status_code}, body={r.text[:300]}"
+    )
+    token = r.json()["access_token"]
+    assert token, "sales_user_token fixture: 登录成功但 access_token 为空"
+    return token
 
 
 @pytest.fixture(scope="module")
@@ -553,13 +558,15 @@ def finance_user_token(client: TestClient) -> str:
 
     login_data = {
         "username": "finance",
-        "password": "finance123",  # 假设默认密码
+        "password": "finance123",
     }
     r = client.post("/api/v1/auth/login", data=login_data)
-    if r.status_code == 200:
-        return r.json()["access_token"]
-    else:
-        return None
+    assert r.status_code == 200, (
+        f"finance_user_token fixture: 登录失败 status={r.status_code}, body={r.text[:300]}"
+    )
+    token = r.json()["access_token"]
+    assert token, "finance_user_token fixture: 登录成功但 access_token 为空"
+    return token
 
 
 @pytest.fixture(scope="function")

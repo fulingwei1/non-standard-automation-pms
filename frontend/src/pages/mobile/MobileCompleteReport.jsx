@@ -53,7 +53,6 @@ export default function MobileCompleteReport() {
         report_note: ""
       });
     } catch (error) {
-      console.error("Failed to fetch work order:", error);
       setError("获取工单信息失败");
     }
   };
@@ -130,7 +129,6 @@ export default function MobileCompleteReport() {
         navigate("/mobile/tasks");
       }, 1500);
     } catch (error) {
-      console.error("Failed to complete work:", error);
       setError(
         "完工报工失败: " + (error.response?.data?.detail || error.message)
       );

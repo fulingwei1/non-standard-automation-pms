@@ -23,7 +23,13 @@ import { Stock, StockStatus } from '@/types/inventory';
 const StockList: React.FC = () => {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState<any>({});
+  // 库存筛选条件，与 StockFilterBar 组件的 filters prop 类型一致
+  const [filters, setFilters] = useState<{
+    material_code?: string;
+    location?: string;
+    batch_number?: string;
+    status?: StockStatus;
+  }>({});
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 20,

@@ -32,13 +32,15 @@ export interface DashboardProps {
       key: string;
       title: string;
       type: 'line' | 'bar' | 'pie';
-      data: any;
+      // 图表数据结构因图表类型而异，使用 Record 表示
+      data: Record<string, unknown>;
     }>;
   }>;
   /** 统计卡片列数 */
   statsCols?: number;
   /** 自定义渲染 */
-  renderCustom?: (data: any) => React.ReactNode;
+  /** 自定义渲染函数，data 为 queryFn 的返回值 */
+  renderCustom?: (data: { stats: StatCard[]; charts?: Array<{ key: string; title: string; type: 'line' | 'bar' | 'pie'; data: Record<string, unknown> }> } | undefined) => React.ReactNode;
 }
 
 /**

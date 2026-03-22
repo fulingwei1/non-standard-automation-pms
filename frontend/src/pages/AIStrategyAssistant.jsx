@@ -134,7 +134,6 @@ export default function AIStrategyAssistant() {
       const res = await aiStrategyApi.analyze(analysisInput);
       setAnalysisResult(res);
     } catch (error) {
-      console.error("战略分析失败:", error);
       alert("战略分析失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -149,7 +148,6 @@ export default function AIStrategyAssistant() {
       const res = await aiStrategyApi.decompose(decomposeInput);
       setDecomposeResult(res);
     } catch (error) {
-      console.error("战略分解失败:", error);
       alert("战略分解失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -164,7 +162,6 @@ export default function AIStrategyAssistant() {
       const res = await aiStrategyApi.annualPlan(annualPlanInput);
       setAnnualPlanResult(res);
     } catch (error) {
-      console.error("年度计划生成失败:", error);
       alert("年度计划生成失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -179,7 +176,6 @@ export default function AIStrategyAssistant() {
       const res = await aiStrategyApi.deptObjectives(deptObjectivesInput);
       setDeptObjectivesResult(res);
     } catch (error) {
-      console.error("部门目标生成失败:", error);
       alert("部门目标生成失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -198,7 +194,6 @@ export default function AIStrategyAssistant() {
       await aiStrategyApi.apply("csf", decomposeResult, null);
       alert("战略分解已成功导入系统！");
     } catch (error) {
-      console.error("导入失败:", error);
       alert("导入失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -212,7 +207,6 @@ export default function AIStrategyAssistant() {
       await aiStrategyApi.apply("annual_work", annualPlanResult, null);
       alert("重点工作已成功导入系统！");
     } catch (error) {
-      console.error("导入失败:", error);
       alert("导入失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -229,7 +223,6 @@ export default function AIStrategyAssistant() {
       }, null);
       alert("部门 OKR 已成功导入系统！");
     } catch (error) {
-      console.error("导入失败:", error);
       alert("导入失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

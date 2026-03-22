@@ -75,7 +75,6 @@ export default function WorkReportList() {
       const res = await productionApi.workReports.list(params);
       setReports(getItemsCompat(res));
     } catch (error) {
-      console.error("Failed to fetch reports:", error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +85,6 @@ export default function WorkReportList() {
       setSelectedReport(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch report detail:", error);
     }
   };
   const handleApprove = async (reportId) => {
@@ -98,7 +96,6 @@ export default function WorkReportList() {
         handleViewDetail(reportId);
       }
     } catch (error) {
-      console.error("Failed to approve report:", error);
       alert("审批失败: " + (error.response?.data?.detail || error.message));
     }
   };

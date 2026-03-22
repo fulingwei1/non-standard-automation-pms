@@ -64,7 +64,8 @@ const BatchTraceDialog: React.FC<BatchTraceDialogProps> = ({
   };
 
   const getTransactionTypeBadge = (type: string) => {
-    const variants: Record<string, any> = {
+    // 不同事务类型对应的 Badge 样式配置
+    const variants: Record<string, { variant: string; className: string }> = {
       PURCHASE_IN: { variant: 'default', className: 'bg-green-100 text-green-800' },
       RETURN_IN: { variant: 'default', className: 'bg-blue-100 text-blue-800' },
       TRANSFER_IN: { variant: 'default', className: 'bg-purple-100 text-purple-800' },
@@ -73,7 +74,7 @@ const BatchTraceDialog: React.FC<BatchTraceDialogProps> = ({
       TRANSFER_OUT: { variant: 'default', className: 'bg-orange-100 text-orange-800' },
       ADJUSTMENT: { variant: 'default', className: 'bg-yellow-100 text-yellow-800' },
     };
-    return variants[type] || { variant: 'secondary' };
+    return variants[type] || { variant: 'secondary', className: '' };
   };
 
   return (

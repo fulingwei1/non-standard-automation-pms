@@ -173,7 +173,6 @@ export default function SalesStatistics() {
           });
         }
       } catch (summaryError) {
-        console.error("加载汇总统计失败:", summaryError);
         // Fallback to funnel data
         if (funnelResponse.data && funnelResponse.data.data) {
           const funnel = funnelResponse.data.data;
@@ -190,7 +189,6 @@ export default function SalesStatistics() {
         }
       }
     } catch (error) {
-      console.error("加载统计数据失败:", error);
     } finally {
       setLoading(false);
     }
@@ -260,7 +258,6 @@ export default function SalesStatistics() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("导出失败:", error);
       alert("导出失败: " + error.message);
     }
   };

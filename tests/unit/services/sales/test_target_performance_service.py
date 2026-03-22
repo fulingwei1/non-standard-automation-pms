@@ -3,6 +3,8 @@
 sales target performance service 单元测试
 """
 
+from __future__ import annotations  # Python 3.9 兼容：允许 X | Y 类型注解语法
+
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import uuid4

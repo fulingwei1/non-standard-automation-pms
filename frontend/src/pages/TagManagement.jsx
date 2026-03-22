@@ -85,7 +85,6 @@ export default function TagManagement() {
         setTags(grouped);
       }
     } catch (error) {
-      console.error("加载标签失败:", error);
     } finally {
       setLoading(false);
     }
@@ -139,7 +138,6 @@ export default function TagManagement() {
       setShowDialog(false);
       loadTags();
     } catch (error) {
-      console.error("保存失败:", error);
       const newTag = editingTag
         ? { ...editingTag, ...formData }
         : { id: Date.now(), ...formData, is_active: true };
@@ -162,7 +160,6 @@ export default function TagManagement() {
       await staffMatchingApi.deleteTag(tag.id);
       loadTags();
     } catch (error) {
-      console.error("删除失败:", error);
       setTags((prev) => ({
         ...prev,
         [activeType]: prev[activeType].filter((t) => t.id !== tag.id),

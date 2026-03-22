@@ -10,6 +10,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Badge } from '../../../components/ui/badge';
 import { useToast } from '../../../hooks/use-toast';
+import axios from 'axios';
 import purchaseService from '../../../services/purchase/purchaseService';
 import type { SupplierRankingResponse } from '../../../types/purchase';
 import RankingTable from './components/RankingTable';
@@ -27,10 +28,14 @@ const SupplierRanking: React.FC = () => {
         evaluation_period: period,
       });
       setRankingData(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '加载失败',
-        description: error.response?.data?.detail || '无法加载排名数据',
+        description: detail || '无法加载排名数据',
         variant: 'destructive',
       });
     } finally {

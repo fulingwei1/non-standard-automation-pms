@@ -252,7 +252,6 @@ export default function PresalesManagerWorkstation() {
         solutions = extractItems(solutionsResponse);
       } catch (apiErr) {
         // API 不可用，使用演示数据
-        console.warn("售前方案 API 不可用，使用演示数据:", apiErr.message);
         const mockData = getMockData();
         setOverallStats(mockData.stats);
         setTeamPerformance(mockData.teamPerformance);
@@ -374,7 +373,6 @@ export default function PresalesManagerWorkstation() {
           teamSize = usersResponse.data.total;
         }
       } catch (err) {
-        console.error("Failed to get team size:", err);
       }
 
       // Get response time stats (for avgSolutionTime)
@@ -394,7 +392,6 @@ export default function PresalesManagerWorkstation() {
           );
         }
       } catch (err) {
-        console.error("Failed to get response time stats:", err);
       }
 
       // Calculate solution quality from solutions
@@ -423,7 +420,6 @@ export default function PresalesManagerWorkstation() {
           }
         }
       } catch (err) {
-        console.error("Failed to calculate solution quality:", err);
       }
 
       // Load team performance
@@ -454,7 +450,6 @@ export default function PresalesManagerWorkstation() {
           );
         }
       } catch (err) {
-        console.error("Failed to load team performance:", err);
       }
 
       setOverallStats({
@@ -474,7 +469,6 @@ export default function PresalesManagerWorkstation() {
         teamPerformanceData.length > 0 ? teamPerformanceData : []
       );
     } catch (err) {
-      console.error("Failed to load dashboard:", err);
       setError(
         err.response?.data?.detail || err.message || "加载工作台数据失败"
       );

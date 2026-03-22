@@ -96,7 +96,6 @@ export default function ServiceTicketManagement() {
       const ticketList = response.data?.items || response.data?.items || response.data || [];
       setTickets(ticketList);
     } catch (error) {
-      console.error("Failed to load tickets:", error);
       toast.error("加载工单列表失败: " + (error.message || "请稍后重试"));
       setTickets([]);
     } finally {
@@ -116,7 +115,6 @@ export default function ServiceTicketManagement() {
         overdue: 0
       });
     } catch (error) {
-      console.error("Failed to load statistics:", error);
     }
   }, []);
 
@@ -207,7 +205,6 @@ export default function ServiceTicketManagement() {
       await loadTickets();
       await loadStatistics();
     } catch (error) {
-      console.error("Failed to create ticket:", error);
       toast.error("创建失败: " + (error.response?.data?.detail || error.message || "请稍后重试"));
     }
   };
@@ -219,7 +216,6 @@ export default function ServiceTicketManagement() {
       await loadTickets();
       await loadStatistics();
     } catch (error) {
-      console.error("Failed to assign ticket:", error);
       toast.error("分配失败: " + (error.response?.data?.detail || error.message || "请稍后重试"));
     }
   };
@@ -232,7 +228,6 @@ export default function ServiceTicketManagement() {
       await loadTickets();
       await loadStatistics();
     } catch (error) {
-      console.error("Failed to close ticket:", error);
       toast.error("关闭失败: " + (error.response?.data?.detail || error.message || "请稍后重试"));
     }
   };
@@ -244,7 +239,6 @@ export default function ServiceTicketManagement() {
       await loadTickets();
       await loadStatistics();
     } catch (error) {
-      console.error("Failed to batch assign:", error);
       toast.error("批量分配失败: " + (error.response?.data?.detail || error.message || "请稍后重试"));
     }
   };
@@ -256,7 +250,6 @@ export default function ServiceTicketManagement() {
       await loadTickets();
       await loadStatistics();
     } catch (error) {
-      console.error("Failed to batch delete:", error);
       toast.error("批量删除失败: " + (error.response?.data?.detail || error.message || "请稍后重试"));
     }
   };
@@ -306,7 +299,6 @@ export default function ServiceTicketManagement() {
 
       toast.success(`成功导出 ${ticketsToExport.length} 条工单记录`);
     } catch (error) {
-      console.error("Failed to export tickets:", error);
       toast.error("导出失败: " + (error.response?.data?.detail || error.message || "请稍后重试"));
     }
   };

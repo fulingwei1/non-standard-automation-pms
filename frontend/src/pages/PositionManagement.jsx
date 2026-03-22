@@ -104,7 +104,6 @@ export default function PositionManagement() {
       setPositions(Array.isArray(posItems) ? posItems : []);
       setTotal(data.total || 0);
     } catch (error) {
-      console.error("加载岗位列表失败:", error);
       // 使用模拟数据作为降级
       setPositions([]);
     } finally {
@@ -121,7 +120,6 @@ export default function PositionManagement() {
       const roleItems = listData?.items || listData;
       setRoles(Array.isArray(roleItems) ? roleItems : []);
     } catch (error) {
-      console.error("加载角色列表失败:", error);
     }
   }, []);
 
@@ -134,7 +132,6 @@ export default function PositionManagement() {
       const orgItems = listData?.items || listData;
       setOrgUnits(Array.isArray(orgItems) ? orgItems : []);
     } catch (error) {
-      console.error("加载组织单元失败:", error);
     }
   }, []);
 
@@ -203,7 +200,6 @@ export default function PositionManagement() {
       const response = await organizationApi.getPositionRoles(position.id);
       setSelectedRoleIds(response.data?.role_ids || response.data?.items || response.data || []);
     } catch (error) {
-      console.error("获取岗位角色失败:", error);
       setSelectedRoleIds([]);
     }
     setShowRoleDialog(true);

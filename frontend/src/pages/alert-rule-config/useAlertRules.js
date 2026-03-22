@@ -54,7 +54,6 @@ export function useAlertRules() {
         setTotal(0);
       }
     } catch (err) {
-      console.error("Failed to load rules:", err);
       setError(err.response?.data?.detail || err.message || "加载规则列表失败");
       setRules([]);
       setTotal(0);
@@ -69,7 +68,6 @@ export function useAlertRules() {
       const data = response.data || response;
       setTemplates(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to load templates:", err);
     }
   }, []);
 

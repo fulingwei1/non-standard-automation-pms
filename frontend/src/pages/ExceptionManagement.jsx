@@ -112,7 +112,6 @@ export default function ExceptionManagement() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchExceptions = async () => {
@@ -128,7 +127,6 @@ export default function ExceptionManagement() {
       const exceptionList = res.data?.items || res.data?.items || res.data || [];
       setExceptions(exceptionList);
     } catch (error) {
-      console.error("Failed to fetch exceptions:", error);
       setExceptions([]);
     } finally {
       setLoading(false);
@@ -157,7 +155,6 @@ export default function ExceptionManagement() {
       });
       fetchExceptions();
     } catch (error) {
-      console.error("Failed to create exception:", error);
       const errorMessage =
       error.response?.data?.detail ||
       error.message ||
@@ -171,7 +168,6 @@ export default function ExceptionManagement() {
       setSelectedException(res.data || res);
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch exception detail:", error);
     }
   };
   const handleException = async () => {
@@ -194,7 +190,6 @@ export default function ExceptionManagement() {
         handleViewDetail(selectedException.id);
       }
     } catch (error) {
-      console.error("Failed to handle exception:", error);
       const errorMessage =
       error.response?.data?.detail ||
       error.message ||

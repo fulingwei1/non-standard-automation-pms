@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { useToast } from '../../../hooks/use-toast';
+import axios from 'axios';
 import purchaseService from '../../../services/purchase/purchaseService';
 import type { PurchaseSuggestion } from '../../../types/purchase';
 import SupplierRecommendation from './components/SupplierRecommendation';
@@ -35,10 +36,14 @@ const SuggestionDetail: React.FC = () => {
     try {
       const data = await purchaseService.getSuggestionById(parseInt(id));
       setSuggestion(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '加载失败',
-        description: error.response?.data?.detail || '无法加载采购建议详情',
+        description: detail || '无法加载采购建议详情',
         variant: 'destructive',
       });
     } finally {
@@ -69,10 +74,14 @@ const SuggestionDetail: React.FC = () => {
       });
 
       navigate('/purchase/orders');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '创建失败',
-        description: error.response?.data?.detail || '无法创建采购订单',
+        description: detail || '无法创建采购订单',
         variant: 'destructive',
       });
     }

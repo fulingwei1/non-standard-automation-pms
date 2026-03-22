@@ -71,7 +71,6 @@ export default function CompetencyModelForm() {
         setLevels(response.data.data?.items || []);
       }
     } catch (error) {
-      console.error("加载等级列表失败:", error);
     }
   };
 
@@ -92,7 +91,6 @@ export default function CompetencyModelForm() {
         }
       }
     } catch (error) {
-      console.error("加载能力模型失败:", error);
       toast.error("加载能力模型失败");
     }
   };
@@ -146,7 +144,6 @@ export default function CompetencyModelForm() {
       }
       navigate("/qualifications");
     } catch (error) {
-      console.error("保存失败:", error);
       toast.error(error.response?.data?.detail || "保存失败");
     } finally {
       setLoading(false);

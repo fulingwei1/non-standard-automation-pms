@@ -371,7 +371,6 @@ export default function ServiceAnalytics() {
 
       setAnalytics(analyticsData);
     } catch (err) {
-      console.error("Failed to load analytics:", err);
       setError(err.response?.data?.detail || err.message || "加载分析数据失败");
     } finally {
       setLoading(false);
@@ -521,7 +520,6 @@ export default function ServiceAnalytics() {
         toast.success("CSV报表导出成功");
       }
     } catch (error) {
-      console.error("导出失败:", error);
       toast.error("导出失败: " + (error.message || "未知错误"));
     }
   };

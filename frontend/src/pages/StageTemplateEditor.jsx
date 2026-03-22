@@ -111,7 +111,6 @@ export default function StageTemplateEditor() {
       // 默认展开所有阶段
       setExpandedStages(new Set((response.data.stage_definitions || []).map((s) => s.id)));
     } catch (error) {
-      console.error("加载模板详情失败:", error);
       // Mock data
       setTemplate({
         id: parseInt(templateId),
@@ -241,7 +240,6 @@ export default function StageTemplateEditor() {
       await stageTemplateApi.stages.delete(stage.id);
       loadTemplate();
     } catch (error) {
-      console.error("删除阶段失败:", error);
       // Optimistic update for demo
       setStages((prev) => (prev || []).filter((s) => s.id !== stage.id));
     }
@@ -260,7 +258,6 @@ export default function StageTemplateEditor() {
       setShowStageDialog(false);
       loadTemplate();
     } catch (error) {
-      console.error("保存阶段失败:", error);
       alert("保存失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -314,7 +311,6 @@ export default function StageTemplateEditor() {
       await stageTemplateApi.nodes.delete(node.id);
       loadTemplate();
     } catch (error) {
-      console.error("删除节点失败:", error);
       // Optimistic update for demo
       setStages((prev) =>
         (prev || []).map((s) => {
@@ -344,7 +340,6 @@ export default function StageTemplateEditor() {
       setShowNodeDialog(false);
       loadTemplate();
     } catch (error) {
-      console.error("保存节点失败:", error);
       alert("保存失败: " + (error.response?.data?.detail || error.message));
     }
   };

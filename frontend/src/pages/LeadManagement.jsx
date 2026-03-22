@@ -91,7 +91,6 @@ export default function LeadManagement({ embedded = false }) {
         setTotal(response.data.total || 0);
       }
     } catch (error) {
-      console.error("加载线索列表失败:", error);
     } finally {
       setLoading(false);
     }
@@ -105,7 +104,6 @@ export default function LeadManagement({ embedded = false }) {
         setCustomers(response.data.items);
       }
     } catch (error) {
-      console.error("加载客户列表失败:", error);
     }
   };
 
@@ -129,7 +127,6 @@ export default function LeadManagement({ embedded = false }) {
       setFollowUps(items);
       return items;
     } catch (error) {
-      console.error("加载跟进记录失败:", error);
       setFollowUps([]);
       return [];
     }
@@ -269,7 +266,6 @@ export default function LeadManagement({ embedded = false }) {
       setSelectedCustomerId("");
       loadLeads();
     } catch (error) {
-      console.error("创建线索失败:", error);
       alert("创建线索失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -283,7 +279,6 @@ export default function LeadManagement({ embedded = false }) {
       setSelectedLead(null);
       loadLeads();
     } catch (error) {
-      console.error("更新线索失败:", error);
       alert("更新线索失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -313,7 +308,6 @@ export default function LeadManagement({ embedded = false }) {
       loadLeads();
       alert("线索已成功转为商机");
     } catch (error) {
-      console.error("转商机失败:", error);
       alert("转商机失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -343,7 +337,6 @@ export default function LeadManagement({ embedded = false }) {
         resetFollowUpData(false);
       }
     } catch (error) {
-      console.error("添加跟进记录失败:", error);
       alert(
         "添加跟进记录失败: " + (error.response?.data?.detail || error.message),
       );
@@ -373,7 +366,6 @@ export default function LeadManagement({ embedded = false }) {
       await loadLeads();
       toast.success(`已记录：${template.label}`);
     } catch (error) {
-      console.error("快捷记录跟进失败:", error);
       toast.error(error?.response?.data?.detail || "快捷记录失败，请稍后重试");
     } finally {
       setQuickFollowUpSaving("");

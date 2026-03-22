@@ -67,8 +67,10 @@ const CountDetailsPage: React.FC = () => {
       await InventoryAPI.updateCountDetail(detailId, { actual_quantity: actualQty });
       setEditingId(null);
       loadTaskDetails();
-    } catch (error: any) {
-      alert(`保存失败: ${error.message}`);
+    } catch (error: unknown) {
+      // 安全地提取错误信息，因为 catch 中 error 类型不确定
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`保存失败: ${message}`);
     }
   };
 
@@ -78,8 +80,10 @@ const CountDetailsPage: React.FC = () => {
       await InventoryAPI.approveCountTask(Number(taskId));
       alert('盘点任务已批准，库存已调整');
       navigate('/inventory/stockCount/tasks');
-    } catch (error: any) {
-      alert(`批准失败: ${error.message}`);
+    } catch (error: unknown) {
+      // 安全地提取错误信息，因为 catch 中 error 类型不确定
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`批准失败: ${message}`);
     }
   };
 

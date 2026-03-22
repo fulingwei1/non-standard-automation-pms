@@ -91,7 +91,6 @@ export default function GoodsReceiptDetail() {
       setReceipt(receiptRes.data || receiptRes);
       setItems(itemsRes.data || itemsRes || []);
     } catch (err) {
-      console.error("Failed to load receipt:", err);
       setError(err.response?.data?.detail || "加载收货单失败");
     } finally {
       setLoading(false);
@@ -140,7 +139,6 @@ export default function GoodsReceiptDetail() {
       setShowInspectDialog(false);
       setInspectingItem(null);
     } catch (err) {
-      console.error("Failed to update inspect:", err);
       toast.error(err.response?.data?.detail || "更新质检结果失败");
     } finally {
       setLoading(false);
@@ -155,7 +153,6 @@ export default function GoodsReceiptDetail() {
       toast.success("状态已更新");
       loadReceipt();
     } catch (err) {
-      console.error("Failed to update status:", err);
       toast.error(err.response?.data?.detail || "更新状态失败");
     } finally {
       setLoading(false);

@@ -28,9 +28,7 @@ export function OverviewTab({ healthData, deliveryData, trendData, costData }) {
               chartType="donut"
               height={280}
               title=""
-              onHealthClick={(health) =>
-                console.log("Health clicked:", health)
-              }
+              onHealthClick={() => {}}
             />
           </CardContent>
         </Card>
@@ -109,9 +107,7 @@ export function OverviewTab({ healthData, deliveryData, trendData, costData }) {
                 chartType="structure"
                 height={280}
                 title=""
-                onCategoryClick={(cat) =>
-                  console.log("Category clicked:", cat)
-                }
+                onCategoryClick={() => {}}
               />
             ) : (
               <div className="text-center py-16 text-slate-500">

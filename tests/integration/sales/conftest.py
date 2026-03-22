@@ -12,9 +12,7 @@ from sqlalchemy.orm import Session
 
 @pytest.fixture(scope="module")
 def auth_headers(client: TestClient, admin_token: str) -> dict:
-    """获取认证请求头"""
-    if not admin_token:
-        pytest.skip("无法获取管理员 token")
+    """获取认证请求头 - admin_token fixture 保证非空"""
     return {"Authorization": f"Bearer {admin_token}"}
 
 

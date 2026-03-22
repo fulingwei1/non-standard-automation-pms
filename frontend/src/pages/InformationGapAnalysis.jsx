@@ -44,7 +44,6 @@ export default function InformationGapAnalysis() {
         setMissingData(response.data.data);
       }
     } catch (error) {
-      console.error("加载信息缺失分析失败:", error);
     } finally {
       setLoading(false);
     }
@@ -62,7 +61,6 @@ export default function InformationGapAnalysis() {
         setImpactData(response.data.data);
       }
     } catch (error) {
-      console.error("加载信息影响分析失败:", error);
     } finally {
       setLoading(false);
     }
@@ -80,7 +78,6 @@ export default function InformationGapAnalysis() {
         setQualityScore(response.data.data);
       }
     } catch (error) {
-      console.error("加载质量评分失败:", error);
     } finally {
       setLoading(false);
     }

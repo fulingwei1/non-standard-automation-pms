@@ -50,7 +50,6 @@ export default function InventoryAnalysis() {
       const response = await api.get("/inventory-analysis/turnover-rate");
       setTurnoverData(response.data?.data || response.data);
     } catch (error) {
-      console.error("Failed to load turnover rate:", error);
     } finally {
       setLoading(false);
     }
@@ -65,7 +64,6 @@ export default function InventoryAnalysis() {
       });
       setStaleMaterialsData(response.data?.data || response.data);
     } catch (error) {
-      console.error("Failed to load stale materials:", error);
     } finally {
       setLoading(false);
     }
@@ -78,7 +76,6 @@ export default function InventoryAnalysis() {
       const response = await api.get("/inventory-analysis/safety-stock-compliance");
       setSafetyStockData(response.data?.data || response.data);
     } catch (error) {
-      console.error("Failed to load safety stock:", error);
     } finally {
       setLoading(false);
     }
@@ -91,7 +88,6 @@ export default function InventoryAnalysis() {
       const response = await api.get("/inventory-analysis/abc-analysis");
       setAbcAnalysisData(response.data?.data || response.data);
     } catch (error) {
-      console.error("Failed to load ABC analysis:", error);
     } finally {
       setLoading(false);
     }
@@ -104,7 +100,6 @@ export default function InventoryAnalysis() {
       const response = await api.get("/inventory-analysis/cost-occupancy");
       setCostOccupancyData(response.data?.data || response.data);
     } catch (error) {
-      console.error("Failed to load cost occupancy:", error);
     } finally {
       setLoading(false);
     }
@@ -222,7 +217,6 @@ export default function InventoryAnalysis() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("导出失败:", error);
       alert("导出失败: " + error.message);
     }
   };

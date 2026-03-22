@@ -77,7 +77,6 @@ export default function MaterialDemandSummary() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchDemands = async () => {
@@ -105,7 +104,6 @@ export default function MaterialDemandSummary() {
         total_projects: totalProjects
       });
     } catch (error) {
-      console.error("Failed to fetch demands:", error);
     } finally {
       setLoading(false);
     }
@@ -117,7 +115,6 @@ export default function MaterialDemandSummary() {
       setVsStockData(res.data || res);
       setShowVsStockDialog(true);
     } catch (error) {
-      console.error("Failed to fetch vs stock data:", error);
     }
   };
   const handleGeneratePR = async () => {
@@ -136,7 +133,6 @@ export default function MaterialDemandSummary() {
       setShowGenerateDialog(false);
       alert("采购需求生成成功");
     } catch (error) {
-      console.error("Failed to generate PR:", error);
       alert(
         "生成采购需求失败: " + (error.response?.data?.detail || error.message)
       );

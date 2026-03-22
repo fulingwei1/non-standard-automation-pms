@@ -20,9 +20,7 @@ export function ResourcesTab({ utilizationData }) {
                   data={utilizationData}
                   chartType="bar"
                   height={350}
-                  onPersonClick={(person) =>
-                    console.log("Person clicked:", person)
-                  }
+                  onPersonClick={() => {}}
                 />
               ) : (
                 <div className="text-center py-16 text-slate-500">

@@ -74,7 +74,6 @@ export default function SupplierPriceTrend() {
       setComparisonData(unwrapApiData(comparisonRes) || []);
       setVolatilityData(unwrapApiData(volatilityRes) || []);
     } catch (loadError) {
-      console.error("加载供应商价格趋势失败:", loadError);
       setError("供应商价格趋势数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);

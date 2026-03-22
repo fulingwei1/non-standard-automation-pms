@@ -68,7 +68,6 @@ export default function WorkOrderDetail() {
       const res = await productionApi.workOrders.get(id);
       setWorkOrder(res.data || res);
     } catch (error) {
-      console.error("Failed to fetch work order detail:", error);
     } finally {
       setLoading(false);
     }
@@ -79,7 +78,6 @@ export default function WorkOrderDetail() {
       const reportList = res.data?.items || res.data?.reports || res.data?.items || res.data || [];
       setWorkReports(reportList);
     } catch (error) {
-      console.error("Failed to fetch work reports:", error);
     }
   };
   if (loading) {

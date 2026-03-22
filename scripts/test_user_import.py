@@ -4,6 +4,7 @@
 用户批量导入功能集成测试脚本
 """
 
+import os
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -14,10 +15,10 @@ import requests
 # 项目根目录
 ROOT_DIR = Path(__file__).parent.parent
 
-# API 配置
-API_BASE_URL = "http://localhost:8000"
-USERNAME = "admin"
-PASSWORD = "admin123"
+# API 配置 — 从环境变量读取，避免硬编码凭据
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
+USERNAME = os.environ.get("TEST_USERNAME", "admin")
+PASSWORD = os.environ.get("TEST_PASSWORD", "changeme")
 
 
 class Colors:

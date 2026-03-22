@@ -84,7 +84,6 @@ export default function EngineerRecommendation() {
       }
       setRecommendations(recs);
     } catch (error) {
-      console.error("加载失败:", error);
     } finally {
       setLoading(false);
     }

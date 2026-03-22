@@ -22,7 +22,6 @@ export function useMachineData(projectId) {
             const res = await projectApi.get(projectId);
             setProject(res.data || res);
         } catch (error) {
-            console.error('Failed to fetch project:', error);
         }
     }, [projectId]);
 
@@ -45,7 +44,6 @@ export function useMachineData(projectId) {
             const machineList = res.data?.items || res.data?.items || res.data || [];
             setMachines(machineList);
         } catch (error) {
-            console.error('Failed to fetch machines:', error);
         } finally {
             setLoading(false);
         }
@@ -58,7 +56,6 @@ export function useMachineData(projectId) {
             await fetchMachines();
             return { success: true };
         } catch (error) {
-            console.error('Failed to create machine:', error);
             return {
                 success: false,
                 error: error.response?.data?.detail || error.message
@@ -72,7 +69,6 @@ export function useMachineData(projectId) {
             const res = await machineApi.get(projectId, machineId);
             return res.data || res;
         } catch (error) {
-            console.error('Failed to fetch machine detail:', error);
             throw error;
         }
     }, [projectId]);

@@ -235,7 +235,6 @@ export default function NotificationCenter() {
       setNotifications(formattedNotifications);
       setTotal(data.total || formattedNotifications.length);
     } catch (err) {
-      console.error("Failed to load notifications:", err);
       setError(err);
       setNotifications([]);
       setTotal(0);
@@ -251,7 +250,6 @@ export default function NotificationCenter() {
       const data = response.data || response;
       setUnreadCount(data.unread_count || 0);
     } catch (err) {
-      console.error("Failed to load unread count:", err);
     }
   }, []);
 
@@ -272,7 +270,6 @@ export default function NotificationCenter() {
       await loadNotifications();
       await loadUnreadCount();
     } catch (err) {
-      console.error("Failed to mark notification as read:", err);
     }
   };
 
@@ -282,7 +279,6 @@ export default function NotificationCenter() {
       await loadNotifications();
       await loadUnreadCount();
     } catch (err) {
-      console.error("Failed to mark all as read:", err);
     }
   };
 
@@ -292,7 +288,6 @@ export default function NotificationCenter() {
       await loadNotifications();
       await loadUnreadCount();
     } catch (err) {
-      console.error("Failed to delete notification:", err);
     }
   };
 
@@ -306,7 +301,6 @@ export default function NotificationCenter() {
       await loadNotifications();
       await loadUnreadCount();
     } catch (err) {
-      console.error("Failed to clear all notifications:", err);
     }
   };
 

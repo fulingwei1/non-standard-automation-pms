@@ -68,7 +68,6 @@ export default function AssemblerTaskCenter() {
       const data = res.data;
       setTasks(data?.items || data || []);
     } catch (_err) {
-      console.error("Failed to fetch assembly tasks:", _err);
     } finally {
       setLoading(false);
     }

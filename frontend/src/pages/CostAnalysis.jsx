@@ -79,7 +79,6 @@ export default function CostAnalysis() {
         });
         orders = ordersRes.data?.items || ordersRes.data?.items || ordersRes.data || [];
       } catch (error) {
-        console.error("获取采购订单失败:", error);
         // 如果获取采购订单失败，使用空数组继续执行，不影响其他数据的展示
         // 用户可以通过刷新页面重试
         orders = [];
@@ -178,7 +177,6 @@ export default function CostAnalysis() {
         savingsRate: Math.max(0, savingsRate)
       });
     } catch (error) {
-      console.error("Failed to load cost analysis:", error);
       // 设置空数据，避免页面崩溃
       setAnalysisData({
         totalPurchaseCost: 0,

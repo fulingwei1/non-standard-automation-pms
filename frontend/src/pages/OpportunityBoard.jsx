@@ -178,7 +178,6 @@ export default function OpportunityBoard() {
       setOpportunities(transformedOpps);
       setOwners(uniqueOwners);
     } catch (err) {
-      console.error("Failed to load opportunities:", err);
       setOpportunities([]);
       setOwners([]);
     } finally {
@@ -192,7 +191,6 @@ export default function OpportunityBoard() {
       const response = await salesStatisticsApi.getPipelineStats();
       setStatistics(response.data);
     } catch (err) {
-      console.error("Failed to load statistics:", err);
       setStatistics(null);
     }
   };
@@ -279,7 +277,6 @@ export default function OpportunityBoard() {
       });
       loadOpportunities();
     } catch (err) {
-      console.error("Failed to create opportunity:", err);
       alert("创建销售机会失败");
     }
   };
@@ -291,7 +288,6 @@ export default function OpportunityBoard() {
       setSelectedOpportunity(null);
       loadOpportunities();
     } catch (err) {
-      console.error("Failed to update opportunity:", err);
       alert("更新销售机会失败");
     }
   };
@@ -305,7 +301,6 @@ export default function OpportunityBoard() {
       setSelectedOpportunity(null);
       loadOpportunities();
     } catch (err) {
-      console.error("Failed to delete opportunity:", err);
       alert("删除销售机会失败");
     }
   };
@@ -315,7 +310,6 @@ export default function OpportunityBoard() {
       await opportunityApi.updateStage(opportunity.id, newStage);
       loadOpportunities();
     } catch (err) {
-      console.error("Failed to update stage:", err);
       alert("更新销售阶段失败");
     }
   };

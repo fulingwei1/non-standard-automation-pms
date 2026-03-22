@@ -142,7 +142,6 @@ export default function QuoteCostManagement() {
         const checkRes = await quoteApi.checkCost(id);
         setCostCheck(checkRes.data?.data || checkRes.data);
       } catch (_e) {
-        console.log("Cost check not available:", _e);
       }
 
       // Load approval history
@@ -150,7 +149,6 @@ export default function QuoteCostManagement() {
         const historyRes = await quoteApi.getCostApprovalHistory(id);
         setApprovalHistory(historyRes.data?.data || historyRes.data?.items || historyRes.data || []);
       } catch (_e) {
-        console.log("Approval history not available:", _e);
       }
 
       // Load cost templates
@@ -164,10 +162,8 @@ export default function QuoteCostManagement() {
           templatesRes.data?.data?.items || templatesRes.data?.items || [];
         setCostTemplates(templates);
       } catch (_e) {
-        console.log("Cost templates not available:", _e);
       }
     } catch (error) {
-      console.error("加载数据失败:", error);
     } finally {
       setLoading(false);
     }
@@ -190,7 +186,6 @@ export default function QuoteCostManagement() {
       setShowTemplateDialog(false);
       setSelectedTemplate(null);
     } catch (error) {
-      console.error("应用模板失败:", error);
       alert("应用模板失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -203,7 +198,6 @@ export default function QuoteCostManagement() {
       await quoteApi.calculateCost(id, version?.id);
       await loadData();
     } catch (error) {
-      console.error("计算成本失败:", error);
       alert("计算成本失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -216,7 +210,6 @@ export default function QuoteCostManagement() {
       const res = await quoteApi.checkCost(id, version?.id);
       setCostCheck(res.data?.data || res.data);
     } catch (error) {
-      console.error("成本检查失败:", error);
       alert("成本检查失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -234,7 +227,6 @@ export default function QuoteCostManagement() {
       setShowApprovalDialog(false);
       setApprovalData({ approval_level: 1, comment: "" });
     } catch (error) {
-      console.error("提交审批失败:", error);
       alert("提交审批失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -277,7 +269,6 @@ export default function QuoteCostManagement() {
         setShowSuggestionsDialog(true);
       }
     } catch (error) {
-      console.error("获取成本建议失败:", error);
       alert(
         "获取成本建议失败: " + (error.response?.data?.detail || error.message)
       );
@@ -326,7 +317,6 @@ export default function QuoteCostManagement() {
 
       alert("成本建议已应用！");
     } catch (error) {
-      console.error("应用成本建议失败:", error);
       alert(
         "应用成本建议失败: " + (error.response?.data?.detail || error.message)
       );
@@ -391,7 +381,6 @@ export default function QuoteCostManagement() {
 
       alert("保存成功！");
     } catch (error) {
-      console.error("保存成本明细失败:", error);
       alert("保存失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

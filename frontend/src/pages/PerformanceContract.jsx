@@ -128,7 +128,6 @@ export default function PerformanceContract() {
       const { data } = await performanceContractApi.getDashboard({});
       setDashboard(data);
     } catch (error) {
-      console.error("获取总览数据失败:", error);
     }
   };
 
@@ -143,7 +142,6 @@ export default function PerformanceContract() {
       const { data } = await performanceContractApi.list(params);
       setContracts(data.data?.items || data.items || []);
     } catch (error) {
-      console.error("获取合约列表失败:", error);
     } finally {
       setLoading(false);
     }

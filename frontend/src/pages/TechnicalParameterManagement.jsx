@@ -87,7 +87,6 @@ export default function TechnicalParameterManagement() {
         });
         setTemplates(res.data || res.items || []);
       } catch (err) {
-        console.error("Failed to load templates:", err);
       } finally {
         setLoading(false);
       }

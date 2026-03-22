@@ -111,7 +111,6 @@ export default function MarginPrediction() {
         setHistorical(h.data || h);
         setVariance(v.data || v);
       } catch (err) {
-        console.error("Failed to load margin data:", err);
       } finally {
         setLoading(false);
       }
@@ -132,7 +131,6 @@ export default function MarginPrediction() {
       const res = await marginPredictionApi.predict(params);
       setPrediction(res.data || res);
     } catch (err) {
-      console.error("Prediction failed:", err);
     } finally {
       setPredicting(false);
     }

@@ -70,7 +70,6 @@ export function usePaymentManagement() {
             setPayments(transformedPayments);
             setTotal(data.total || 0);
         } catch (error) {
-            console.error("加载回款列表失败:", error);
             setPayments([]);
             setTotal(0);
         } finally {
@@ -89,7 +88,6 @@ export function usePaymentManagement() {
                 days_over_90: { count: 0, amount: 0 }
             });
         } catch (error) {
-            console.error("加载账龄数据失败:", error);
         }
     }, []);
 
@@ -98,7 +96,6 @@ export function usePaymentManagement() {
             const response = await paymentApi.getReminders({ page: 1, page_size: 50 });
             setReminders(response.data?.items || []);
         } catch (error) {
-            console.error("加载回款提醒失败:", error);
             setReminders([]);
         }
     }, []);
@@ -108,7 +105,6 @@ export function usePaymentManagement() {
             const response = await paymentApi.getStatistics({});
             setStatistics(response.data || { total_receivables: 0, overdue_amount: 0, collection_rate: 0, dso: 0 });
         } catch (error) {
-            console.error("加载统计数据失败:", error);
             setStatistics({ total_receivables: 0, overdue_amount: 0, collection_rate: 0, dso: 0 });
         }
     }, []);

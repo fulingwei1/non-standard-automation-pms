@@ -63,7 +63,6 @@ export default function WorkloadBoard() {
       const res = await workloadApi.dashboard(params);
       setDashboardData(res.data || res);
     } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
     }
   };
   const fetchTeamWorkload = async () => {
@@ -77,7 +76,6 @@ export default function WorkloadBoard() {
       const teamList = res.data?.items || res.data?.items || res.data || [];
       setTeamWorkload(teamList);
     } catch (error) {
-      console.error("Failed to fetch team workload:", error);
     } finally {
       setLoading(false);
     }

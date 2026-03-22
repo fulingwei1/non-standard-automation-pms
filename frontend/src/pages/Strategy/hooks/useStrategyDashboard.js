@@ -38,7 +38,6 @@ export function useStrategyDashboard() {
       const response = await strategyApi.list({ limit: 10 });
       setStrategies(response.formatted?.items || response.data?.items || []);
     } catch (error) {
-      console.error("加载战略列表失败:", error);
     }
   }, []);
 
@@ -57,7 +56,6 @@ export function useStrategyDashboard() {
         setSelectedStrategyId(null);
         return null;
       }
-      console.error("加载生效战略失败:", error);
       return null;
     }
   }, []);
@@ -69,7 +67,6 @@ export function useStrategyDashboard() {
       const response = await dashboardApi.getOverview(strategyId);
       setOverview(response.data);
     } catch (error) {
-      console.error("加载战略概览失败:", error);
     }
   }, []);
 
@@ -80,7 +77,6 @@ export function useStrategyDashboard() {
       const response = await reviewApi.getHealth(strategyId);
       setHealth(response.data);
     } catch (error) {
-      console.error("加载健康度失败:", error);
     }
   }, []);
 
@@ -91,7 +87,6 @@ export function useStrategyDashboard() {
       const response = await dashboardApi.getExecutionStatus(strategyId);
       setExecutionStatus(response.data);
     } catch (error) {
-      console.error("加载执行状态失败:", error);
     }
   }, []);
 
@@ -101,7 +96,6 @@ export function useStrategyDashboard() {
       const response = await dashboardApi.getMyStrategy();
       setMyStrategy(response.data);
     } catch (error) {
-      console.error("加载我的战略失败:", error);
     }
   }, []);
 
@@ -111,7 +105,6 @@ export function useStrategyDashboard() {
       const response = await dashboardApi.getQuickStats();
       setQuickStats(response.data);
     } catch (error) {
-      console.error("加载快速统计失败:", error);
     }
   }, []);
 
@@ -121,7 +114,6 @@ export function useStrategyDashboard() {
       const response = await comparisonApi.getMultiYearTrend(3);
       setMultiYearTrend(response.data);
     } catch (error) {
-      console.error("加载多年趋势失败:", error);
     }
   }, []);
 
@@ -145,7 +137,6 @@ export function useStrategyDashboard() {
         ]);
       }
     } catch (error) {
-      console.error("加载数据失败:", error);
       message.error("加载数据失败");
     } finally {
       setLoading(false);

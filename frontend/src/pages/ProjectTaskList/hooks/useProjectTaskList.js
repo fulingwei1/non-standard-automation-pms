@@ -60,7 +60,6 @@ export function useProjectTaskList(projectId) {
             setTasks(tasksRes.data?.items || tasksRes.data?.items || tasksRes.data || []);
 
         } catch (error) {
-            console.error("Failed to load project data:", error);
         } finally {
             setLoading(false);
         }
@@ -95,7 +94,6 @@ export function useProjectTaskList(projectId) {
             setSelectedTask(res.data || res);
             setDialogs(prev => ({ ...prev, detail: true }));
         } catch (error) {
-            console.error("Failed to fetch task detail:", error);
         }
     }, []);
 

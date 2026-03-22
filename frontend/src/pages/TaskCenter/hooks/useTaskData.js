@@ -47,7 +47,6 @@ export function useTaskData(filters = {}) {
             const transformedTasks = tasksData.map(transformTask);
             setTasks(transformedTasks);
         } catch (err) {
-            console.error('Failed to load tasks:', err);
             setError(err.response?.data?.detail || err.message || '加载任务失败');
             setTasks([]);
         } finally {
@@ -103,7 +102,6 @@ export function useTaskData(filters = {}) {
             // 刷新任务列表
             await loadTasks();
         } catch (err) {
-            console.error('Failed to update task status:', err);
             throw new Error(err.response?.data?.detail || err.message || '更新任务状态失败', { cause: err });
         }
     }, [loadTasks]);
@@ -138,7 +136,6 @@ export function useTaskData(filters = {}) {
                 })
             );
         } catch (err) {
-            console.error('Failed to update task step:', err);
             throw new Error(err.response?.data?.detail || err.message || '更新任务步骤失败', { cause: err });
         }
     }, [tasks]);

@@ -52,7 +52,6 @@ export default function MobileScanShortage() {
       // 跳转到上报表单页，带上工单ID
       navigate(`/mobile/shortage-report?workOrderId=${order.id}`);
     } catch (error) {
-      console.error("Failed to scan work order:", error);
       setError(
         "查找工单失败: " + (error.response?.data?.detail || error.message)
       );
@@ -81,7 +80,6 @@ export default function MobileScanShortage() {
       setScanInput(rawValue);
       await handleScan(rawValue);
     } catch (error) {
-      console.error("Camera scan failed:", error);
       setError("扫码失败，请手动输入工单号");
     }
   };

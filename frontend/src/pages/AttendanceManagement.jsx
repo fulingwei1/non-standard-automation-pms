@@ -53,7 +53,6 @@ export default function AttendanceManagement() {
           setAttendanceStats(res.data);
         }
       } catch (_err) {
-        console.log("Attendance API unavailable, using mock data");
       }
       setLoading(false);
     };

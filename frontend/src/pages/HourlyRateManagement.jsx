@@ -98,7 +98,6 @@ export default function HourlyRateManagement() {
         setTotal(0);
       }
     } catch (err) {
-      console.error("Failed to load configs:", err);
       setError(err.response?.data?.detail || err.message || "加载配置失败");
       setConfigs([]);
       setTotal(0);
@@ -163,7 +162,6 @@ export default function HourlyRateManagement() {
       setDialogOpen(false);
       loadConfigs();
     } catch (err) {
-      console.error("Failed to save config:", err);
       setError(err.response?.data?.detail || err.message || "保存失败");
     } finally {
       setLoading(false);
@@ -180,7 +178,6 @@ export default function HourlyRateManagement() {
       await hourlyRateApi.delete(id);
       loadConfigs();
     } catch (err) {
-      console.error("Failed to delete config:", err);
       setError(err.response?.data?.detail || err.message || "删除失败");
     } finally {
       setLoading(false);

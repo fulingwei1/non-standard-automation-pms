@@ -126,7 +126,6 @@ export default function GanttDependency() {
         setSelectedProjectId(String(list[0].id));
       }
     } catch (err) {
-      console.error("加载项目列表失败:", err);
       setError("加载项目列表失败，请稍后重试。");
     }
   }, [selectedProjectId]);
@@ -159,7 +158,6 @@ export default function GanttDependency() {
         depends_on_task_id: prev.depends_on_task_id || "",
       }));
     } catch (err) {
-      console.error("加载甘特图数据失败:", err);
       setError("加载甘特图数据失败，请检查网络或稍后重试。");
       setTasks([]);
       setDependencies([]);
@@ -404,7 +402,6 @@ export default function GanttDependency() {
       setNotice("依赖关系创建成功。");
       await loadProjectData(selectedProjectId);
     } catch (err) {
-      console.error("创建依赖失败:", err);
       setError(err?.response?.data?.detail || "创建依赖失败，请重试。");
     } finally {
       setSubmitting(false);
@@ -419,7 +416,6 @@ export default function GanttDependency() {
       setNotice("依赖关系已删除。");
       await loadProjectData(selectedProjectId);
     } catch (err) {
-      console.error("删除依赖失败:", err);
       setError(err?.response?.data?.detail || "删除依赖失败，请重试。");
     }
   };

@@ -197,7 +197,6 @@ export default function ContractDetail() {
           setContract({ ...emptyContract, ...res.data });
         }
       } catch (err) {
-        console.error("Contract detail API error:", err);
         setError("加载合同详情失败");
       } finally {
         setLoading(false);

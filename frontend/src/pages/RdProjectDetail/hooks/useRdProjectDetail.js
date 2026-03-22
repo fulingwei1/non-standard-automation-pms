@@ -29,7 +29,6 @@ export function useRdProjectDetail(projectId) {
             const response = await rdProjectApi.getTasks(projectId);
             setTasks(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
-            console.error('Failed to load tasks:', err);
         }
     }, [projectId]);
 

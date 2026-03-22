@@ -46,7 +46,6 @@ export function PermissionProvider({ children }) {
     // 检查是否有token
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('[PermissionContext] 未找到token，跳过权限加载');
       setIsLoading(false);
       return;
     }
@@ -89,17 +88,13 @@ export function PermissionProvider({ children }) {
       }
 
     } catch (err) {
-      console.error('加载权限数据失败:', err);
-
       // 检查是否是认证错误（401）
       if (err.response?.status === 401) {
-        console.log('[PermissionContext] Token无效或已过期，清除本地数据');
         // Token无效，清除本地存储
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setError('登录已过期，请重新登录');
       } else if (err.response?.status === 500) {
-        console.error('[PermissionContext] 服务器错误，尝试从本地恢复');
         setError('服务器暂时不可用，使用缓存数据');
 
         // 尝试从 localStorage 恢复
@@ -110,8 +105,8 @@ export function PermissionProvider({ children }) {
             setUser(parsedUser);
             setIsSuperuser(parsedUser.is_superuser || parsedUser.isSuperuser || false);
             setPermissions(parsedUser.permissions || []);
-          } catch (parseError) {
-            console.error('解析本地用户数据失败:', parseError);
+          } catch (_parseError) {
+            // localStorage 数据损坏，忽略
           }
         }
       } else {

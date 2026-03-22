@@ -92,7 +92,6 @@ export default function TransferDetail() {
         }));
       }
     } catch (error) {
-      console.error("加载物料调拨详情失败", error);
     } finally {
       setLoading(false);
     }
@@ -110,7 +109,6 @@ export default function TransferDetail() {
       setApprovalData({ approved: true, approval_note: "" });
       await loadTransfer();
     } catch (error) {
-      console.error("审批失败", error);
       alert("审批失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setActionLoading(false);
@@ -136,7 +134,6 @@ export default function TransferDetail() {
       setExecutionData({ actual_qty: "", execution_note: "" });
       await loadTransfer();
     } catch (error) {
-      console.error("执行调拨失败", error);
       alert("执行调拨失败：" + (error.response?.data?.detail || error.message));
     } finally {
       setActionLoading(false);

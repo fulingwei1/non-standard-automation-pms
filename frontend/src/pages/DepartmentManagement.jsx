@@ -132,7 +132,6 @@ export default function DepartmentManagement() {
       const listData = response.formatted || response.data;
       setDepartments(listData?.items || listData || []);
     } catch (error) {
-      console.error("加载部门列表失败:", error);
       alert(
         "加载部门列表失败: " + (error.response?.data?.detail || error.message),
       );
@@ -150,7 +149,6 @@ export default function DepartmentManagement() {
       const listData = response.formatted || response.data;
       setDepartmentTree(listData?.items || listData || []);
     } catch (error) {
-      console.error("加载部门树失败:", error);
       alert(
         "加载部门树失败: " + (error.response?.data?.detail || error.message),
       );

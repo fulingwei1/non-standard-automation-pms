@@ -299,7 +299,6 @@ export default function PresalesWorkstation() {
         tickets = extractItems(ticketsResponse);
       } catch (apiErr) {
         // API 调用失败，使用演示数据
-        console.warn("售前工单 API 不可用，使用演示数据:", apiErr.message);
         const { mockTasks, mockSolutions, mockTenders, mockOpportunities } = getMockData();
         setTodoTasks(mockTasks);
         setOngoingSolutions(mockSolutions);
@@ -493,7 +492,6 @@ export default function PresalesWorkstation() {
       }]
       );
     } catch (err) {
-      console.error("Failed to load presales data:", err);
       setError(err.response?.data?.detail || err.message || "加载数据失败");
       setTodoTasks([]);
       setOngoingSolutions([]);
@@ -573,7 +571,6 @@ export default function PresalesWorkstation() {
       setShowCostForm(false);
       setSelectedCostTask(null);
     } catch (err) {
-      console.error("Failed to save cost estimation:", err);
       alert(
         "保存失败：" + (
         err.response?.data?.detail || err.message || "未知错误")
@@ -603,7 +600,6 @@ export default function PresalesWorkstation() {
       setShowFeasibilityForm(false);
       setSelectedFeasibilityTask(null);
     } catch (err) {
-      console.error("Failed to save feasibility assessment:", err);
       alert(
         "保存失败：" + (
         err.response?.data?.detail || err.message || "未知错误")

@@ -80,7 +80,6 @@ export default function MaterialRequisitionDetail() {
       const res = await productionApi.materialRequisitions.get(id);
       setRequisition(res.data || res);
     } catch (error) {
-      console.error("Failed to fetch requisition:", error);
     } finally {
       setLoading(false);
     }
@@ -93,7 +92,6 @@ export default function MaterialRequisitionDetail() {
         setItems(requisition.items);
       }
     } catch (error) {
-      console.error("Failed to fetch items:", error);
     }
   };
 
@@ -111,7 +109,6 @@ export default function MaterialRequisitionDetail() {
       });
       fetchRequisition();
     } catch (error) {
-      console.error("Failed to approve requisition:", error);
       alert("审批失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -127,7 +124,6 @@ export default function MaterialRequisitionDetail() {
       });
       fetchRequisition();
     } catch (error) {
-      console.error("Failed to issue requisition:", error);
       alert("发料失败: " + (error.response?.data?.detail || error.message));
     }
   };

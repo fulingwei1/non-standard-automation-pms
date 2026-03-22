@@ -255,7 +255,6 @@ export default function RoleManagement() {
             setSelectedRole(role);
             setShowDetailDialog(true);
         } catch (error) {
-            console.error('Failed to load role detail:', error);
         }
     };
 
@@ -279,7 +278,6 @@ export default function RoleManagement() {
             setActiveEditTab('basic');
             setShowEditDialog(true);
         } catch (error) {
-            console.error('Failed to load role for edit:', error);
         }
     };
 

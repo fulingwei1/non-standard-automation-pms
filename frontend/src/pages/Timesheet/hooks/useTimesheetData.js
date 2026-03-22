@@ -24,7 +24,6 @@ export function useTimesheetData() {
             const data = response.data || response;
             setTimesheets(data.items || data || []);
         } catch (err) {
-            console.error('Failed to load timesheets:', err);
             setError(err.message);
         } finally {
             setLoading(false);

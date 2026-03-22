@@ -36,7 +36,6 @@ const EngineerPerformanceRanking = () => {
         setTotal(response.data.data.total);
       }
     } catch (error) {
-      console.error('获取排名失败:', error);
     } finally {
       setLoading(false);
     }

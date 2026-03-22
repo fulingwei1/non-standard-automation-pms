@@ -18,6 +18,7 @@ import { Button } from '../../../../components/ui/button';
 import { Textarea } from '../../../../components/ui/textarea';
 import { Label } from '../../../../components/ui/label';
 import { useToast } from '../../../../hooks/use-toast';
+import axios from 'axios';
 import purchaseService from '../../../../services/purchase/purchaseService';
 import type { PurchaseSuggestion } from '../../../../types/purchase';
 
@@ -55,10 +56,14 @@ const ApprovalDialog: React.FC<ApprovalDialogProps> = ({
       });
 
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '操作失败',
-        description: error.response?.data?.detail || '无法批准采购建议',
+        description: detail || '无法批准采购建议',
         variant: 'destructive',
       });
     } finally {

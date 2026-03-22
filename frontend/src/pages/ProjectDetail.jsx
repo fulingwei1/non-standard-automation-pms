@@ -136,7 +136,6 @@ export default function ProjectDetail() {
           }
           return data || defaultValue;
         }
-        console.warn('API call failed:', result.reason?.message || result.reason);
         return defaultValue;
       };
 
@@ -144,7 +143,6 @@ export default function ProjectDetail() {
       if (projectRes.status === 'fulfilled' && projectRes.value?.data) {
         setProject(projectRes.value.data);
       } else {
-        console.error("Failed to fetch project:", projectRes.reason);
         setProject(null);
       }
 
@@ -155,7 +153,6 @@ export default function ProjectDetail() {
       setCosts(getResultData(costsRes, []));
       setDocuments(getResultData(documentsRes, []));
     } catch (error) {
-      console.error("Failed to fetch project data:", error);
       setProject(null);
     } finally {
       setLoading(false);
@@ -171,7 +168,6 @@ export default function ProjectDetail() {
       const memberIds = new Set((members || []).map(m => m.user_id));
       setAvailableUsers(users.filter(u => !memberIds.has(u.id)));
     } catch (error) {
-      console.error("加载用户列表失败:", error);
     } finally {
       setLoadingUsers(false);
     }
@@ -200,7 +196,6 @@ export default function ProjectDetail() {
       fetchProjectData();
       alert("成员添加成功");
     } catch (error) {
-      console.error("添加成员失败:", error);
       alert("添加失败：" + (error.response?.data?.message || error.message));
     } finally {
       setAddingMember(false);

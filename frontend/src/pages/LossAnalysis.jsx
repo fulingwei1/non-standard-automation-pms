@@ -52,7 +52,6 @@ export default function LossAnalysis() {
         setAnalysisData(response.data.data);
       }
     } catch (error) {
-      console.error("加载分析数据失败:", error);
       alert("加载分析数据失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

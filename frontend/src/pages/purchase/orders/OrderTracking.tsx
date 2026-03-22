@@ -9,6 +9,7 @@ import { Package, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { useToast } from '../../../hooks/use-toast';
+import axios from 'axios';
 import purchaseService from '../../../services/purchase/purchaseService';
 import type { OrderTrackingEvent } from '../../../types/purchase';
 import TrackingTimeline from './components/TrackingTimeline';
@@ -26,10 +27,14 @@ const OrderTracking: React.FC = () => {
     try {
       const data = await purchaseService.getOrderTracking(parseInt(orderId));
       setEvents(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '加载失败',
-        description: error.response?.data?.detail || '无法加载订单跟踪',
+        description: detail || '无法加载订单跟踪',
         variant: 'destructive',
       });
     } finally {
@@ -58,10 +63,14 @@ const OrderTracking: React.FC = () => {
       });
 
       loadTracking();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // 从 Axios 错误中提取后端返回的详细信息
+      const detail = axios.isAxiosError(error)
+        ? error.response?.data?.detail
+        : undefined;
       toast({
         title: '收货失败',
-        description: error.response?.data?.detail || '无法确认收货',
+        description: detail || '无法确认收货',
         variant: 'destructive',
       });
     }

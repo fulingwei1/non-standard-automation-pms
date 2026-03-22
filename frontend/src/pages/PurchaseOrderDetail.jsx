@@ -229,7 +229,6 @@ export default function PurchaseOrderDetail() {
         });
         receipts = receiptsResponse.data?.items || receiptsResponse.data?.items || receiptsResponse.data || [];
       } catch (err) {
-        console.error("Failed to load receipts:", err);
       }
 
       // Transform backend data to frontend format
@@ -363,7 +362,6 @@ export default function PurchaseOrderDetail() {
 
       setPo(transformedPO);
     } catch (err) {
-      console.error("Failed to load purchase order:", err);
       setError(err.response?.data?.detail || err.message || "加载采购订单失败");
       setPo(null);
     } finally {

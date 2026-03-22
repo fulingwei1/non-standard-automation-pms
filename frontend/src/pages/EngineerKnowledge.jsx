@@ -37,7 +37,6 @@ const EngineerKnowledge = () => {
         setTotal(response.data.data.total);
       }
     } catch (error) {
-      console.error('获取知识贡献列表失败:', error);
     } finally {
       setLoading(false);
     }
@@ -53,7 +52,6 @@ const EngineerKnowledge = () => {
         setRankings(response.data.data);
       }
     } catch (error) {
-      console.error('获取排行榜失败:', error);
     }
   };
 
@@ -65,7 +63,6 @@ const EngineerKnowledge = () => {
         setMyStats(response.data.data);
       }
     } catch (error) {
-      console.error('获取我的统计失败:', error);
     }
   };
 

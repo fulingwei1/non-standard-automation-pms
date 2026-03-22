@@ -85,7 +85,6 @@ export default function EmployeeQualificationForm() {
         setLevels(response.data.data?.items || []);
       }
     } catch (error) {
-      console.error("加载等级列表失败:", error);
     }
   };
 
@@ -101,7 +100,6 @@ export default function EmployeeQualificationForm() {
         );
       }
     } catch (error) {
-      console.error("加载员工列表失败:", error);
       setEmployees([]);
     }
   };
@@ -120,7 +118,6 @@ export default function EmployeeQualificationForm() {
         setValue("valid_until", qualData.valid_until || "");
       }
     } catch (error) {
-      console.error("加载任职资格失败:", error);
     }
   };
 
@@ -131,7 +128,6 @@ export default function EmployeeQualificationForm() {
         setAssessments(response.data.data?.items || []);
       }
     } catch (error) {
-      console.error("加载评估历史失败:", error);
     }
   };
 
@@ -161,7 +157,6 @@ export default function EmployeeQualificationForm() {
         navigate("/qualifications");
       }
     } catch (error) {
-      console.error("保存失败:", error);
       toast.error(error.response?.data?.detail || "保存失败");
     } finally {
       setLoading(false);
@@ -187,7 +182,6 @@ export default function EmployeeQualificationForm() {
         setCompetencyModel(response.data.data);
       }
     } catch (error) {
-      console.error("加载能力模型失败:", error);
     }
   };
 

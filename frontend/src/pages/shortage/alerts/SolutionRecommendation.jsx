@@ -38,7 +38,6 @@ const SolutionRecommendation = () => {
         
         setSolutions(sorted);
       } catch (error) {
-        console.error('Failed to load solutions:', error);
         toast({
           title: '加载失败',
           description: error.message,

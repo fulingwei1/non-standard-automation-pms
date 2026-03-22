@@ -91,7 +91,6 @@ export default function ProjectRoles() {
       const data = response.data?.data || response.data || response;
       setUsers(data.items || []);
     } catch (err) {
-      console.error("Failed to load users:", err);
     }
   };
 
@@ -103,7 +102,6 @@ export default function ProjectRoles() {
       const data = response.data?.data || response.data || response;
       setRoleOverview(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to load role overview:", err);
       setError(err.response?.data?.detail || err.message || "加载数据失败");
     } finally {
       setLoading(false);
@@ -117,7 +115,6 @@ export default function ProjectRoles() {
       const data = response.data?.data || response.data || response;
       setRoleConfigs(data.items || []);
     } catch (err) {
-      console.error("Failed to load role configs:", err);
     }
   };
 
@@ -128,7 +125,6 @@ export default function ProjectRoles() {
       const data = response.data?.data || response.data || response;
       setLeads(data.items || []);
     } catch (err) {
-      console.error("Failed to load leads:", err);
     }
   };
 
@@ -140,7 +136,6 @@ export default function ProjectRoles() {
       loadRoleConfigs();
       loadRoleOverview();
     } catch (err) {
-      console.error("Failed to init configs:", err);
       setError(err.response?.data?.detail || err.message || "初始化失败");
     } finally {
       setLoading(false);
@@ -167,7 +162,6 @@ export default function ProjectRoles() {
       loadLeads();
       loadRoleOverview();
     } catch (err) {
-      console.error("Failed to create lead:", err);
       setError(err.response?.data?.detail || err.message || "创建失败");
     } finally {
       setLoading(false);
@@ -197,7 +191,6 @@ export default function ProjectRoles() {
       loadLeads();
       loadRoleOverview();
     } catch (err) {
-      console.error("Failed to add team member:", err);
       setError(err.response?.data?.detail || err.message || "添加失败");
     } finally {
       setLoading(false);
@@ -215,7 +208,6 @@ export default function ProjectRoles() {
       loadLeads();
       loadRoleOverview();
     } catch (err) {
-      console.error("Failed to remove lead:", err);
       setError(err.response?.data?.detail || err.message || "移除失败");
     } finally {
       setLoading(false);

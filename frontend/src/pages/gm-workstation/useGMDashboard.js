@@ -66,7 +66,6 @@ export default function useGMDashboard() {
         });
         monthlyRevenue = salesResponse.data?.total_contract_amount || 0;
       } catch (err) {
-        console.error("Failed to load sales stats:", err);
       }
 
       try {
@@ -80,7 +79,6 @@ export default function useGMDashboard() {
           (c) => c.status === "SIGNED" || c.status === "EXECUTING"
         ).length;
       } catch (err) {
-        console.error("Failed to load contracts:", err);
       }
 
       let productionCapacity = 0;
@@ -92,7 +90,6 @@ export default function useGMDashboard() {
         productionCapacity = productionData.capacity_utilization || 0;
         qualityPassRate = productionData.pass_rate || 0;
       } catch (err) {
-        console.error("Failed to load production stats:", err);
       }
 
       const yearTarget = 150000000;
@@ -189,7 +186,6 @@ export default function useGMDashboard() {
           });
         });
       } catch (err) {
-        console.error("Failed to load ECN approvals:", err);
       }
 
       try {
@@ -222,7 +218,6 @@ export default function useGMDashboard() {
           });
         });
       } catch (err) {
-        console.error("Failed to load purchase request approvals:", err);
       }
 
       try {
@@ -255,7 +250,6 @@ export default function useGMDashboard() {
           });
         });
       } catch (err) {
-        console.error("Failed to load PMO initiation approvals:", err);
       }
 
       try {
@@ -291,7 +285,6 @@ export default function useGMDashboard() {
           });
         });
       } catch (err) {
-        console.error("Failed to load contract approvals:", err);
       }
 
       allApprovals.sort((a, b) => {
@@ -337,7 +330,6 @@ export default function useGMDashboard() {
           setDepartmentStatus(transformedDepts);
         }
       } catch (err) {
-        console.error("Failed to load department statistics:", err);
       }
 
       const metrics = [];
@@ -396,7 +388,6 @@ export default function useGMDashboard() {
       );
       setKeyMetrics(metrics);
     } catch (err) {
-      console.error("Failed to load dashboard:", err);
       setError(err);
       setBusinessStats(null);
       setPendingApprovals([]);

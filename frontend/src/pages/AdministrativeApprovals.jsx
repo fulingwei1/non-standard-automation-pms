@@ -60,7 +60,6 @@ export default function AdministrativeApprovals() {
           setApprovals(res.data.items);
         }
       } catch (_err) {
-        console.error("Failed to fetch pending approvals");
       }
 
       try {
@@ -71,7 +70,6 @@ export default function AdministrativeApprovals() {
           setApprovedList(approvedRes.data.items);
         }
       } catch (_err) {
-        console.error("Failed to fetch approved list");
       }
 
       try {
@@ -82,7 +80,6 @@ export default function AdministrativeApprovals() {
           setRejectedList(rejectedRes.data.items);
         }
       } catch (_err) {
-        console.error("Failed to fetch rejected list");
       }
 
       setLoading(false);
@@ -118,7 +115,6 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.approve(id, { comment: "同意" });
       setApprovals((prev) => (prev || []).filter((a) => a.id !== id));
     } catch (_err) {
-      console.error("Failed to approve request");
     }
   };
 
@@ -127,7 +123,6 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.reject(id, { reason: "不符合要求" });
       setApprovals((prev) => (prev || []).filter((a) => a.id !== id));
     } catch (_err) {
-      console.error("Failed to reject request");
     }
   };
 

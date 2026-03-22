@@ -46,7 +46,6 @@ export default function LeadPriorityManagement() {
         setLeadRankings(response.data.data.rankings || []);
       }
     } catch (error) {
-      console.error("加载线索排名失败:", error);
       alert("加载线索排名失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -61,7 +60,6 @@ export default function LeadPriorityManagement() {
         setOpportunityRankings(response.data.data.rankings || []);
       }
     } catch (error) {
-      console.error("加载商机排名失败:", error);
       alert("加载商机排名失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -75,7 +73,6 @@ export default function LeadPriorityManagement() {
         setKeyLeads(response.data.data.key_leads || []);
       }
     } catch (error) {
-      console.error("加载关键线索失败:", error);
     }
   };
 
@@ -86,7 +83,6 @@ export default function LeadPriorityManagement() {
         setKeyOpportunities(response.data.data.key_opportunities || []);
       }
     } catch (error) {
-      console.error("加载关键商机失败:", error);
     }
   };
 
@@ -101,7 +97,6 @@ export default function LeadPriorityManagement() {
           try {
             await priorityApi.calculateLeadPriority(lead.id);
           } catch (_e) {
-            console.warn(`计算线索 ${lead.id} 优先级失败:`, _e);
           }
         }
       }
@@ -114,7 +109,6 @@ export default function LeadPriorityManagement() {
           try {
             await priorityApi.calculateOpportunityPriority(opp.id);
           } catch (_e) {
-            console.warn(`计算商机 ${opp.id} 优先级失败:`, _e);
           }
         }
       }
@@ -125,7 +119,6 @@ export default function LeadPriorityManagement() {
       loadKeyLeads();
       loadKeyOpportunities();
     } catch (error) {
-      console.error("批量计算优先级失败:", error);
       alert("批量计算优先级失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

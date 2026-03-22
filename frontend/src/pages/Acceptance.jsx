@@ -514,7 +514,6 @@ export default function Acceptance() {
             const issuesResponse = await acceptanceApi.issues.list(order.id);
             issues = issuesResponse.data?.items || issuesResponse.data || [];
           } catch (err) {
-            console.error(`Failed to load issues for order ${order.id}:`, err);
           }
 
           // Load items for this order
@@ -545,7 +544,6 @@ export default function Acceptance() {
             });
             checklistCategories = Object.values(categoryMap);
           } catch (err) {
-            console.error(`Failed to load items for order ${order.id}:`, err);
           }
 
           return {
@@ -585,7 +583,6 @@ export default function Acceptance() {
 
       setAcceptances(transformedAcceptances);
     } catch (err) {
-      console.error("Failed to load acceptances:", err);
       let errorMessage = "加载验收单失败";
       if (err.response) {
         errorMessage =
@@ -610,7 +607,6 @@ export default function Acceptance() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   }, []);
 
@@ -639,7 +635,6 @@ export default function Acceptance() {
       });
       loadAcceptances();
     } catch (error) {
-      console.error("Failed to create order:", error);
       alert(
         "创建验收单失败: " + (error.response?.data?.detail || error.message),
       );
@@ -700,7 +695,6 @@ export default function Acceptance() {
 
         setSelectedAcceptance(updatedAcceptance);
       } catch (err) {
-        console.error("Failed to load acceptance details:", err);
         setSelectedAcceptance(acceptance);
       }
     } else {

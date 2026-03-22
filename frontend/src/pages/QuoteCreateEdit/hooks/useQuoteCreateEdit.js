@@ -13,7 +13,7 @@ export function useQuoteCreateEdit(quoteId) {
             setLoading(true);
             const response = await quoteApi.get(quoteId);
             setQuote(response.data || response);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
         finally { setLoading(false); }
     }, [quoteId]);
 
@@ -21,7 +21,7 @@ export function useQuoteCreateEdit(quoteId) {
         try {
             const response = await customerApi.list({ page_size: 100 });
             setCustomers(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) { console.error(err); }
+        } catch (err) { }
     }, []);
 
     const saveQuote = useCallback(async (data) => {

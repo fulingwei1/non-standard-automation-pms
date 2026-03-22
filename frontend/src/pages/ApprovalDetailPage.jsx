@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "../components/ui/toast";
 import {
   ArrowLeft,
   FileText,
@@ -96,7 +97,6 @@ const ApprovalDetailPage = () => {
       const response = await api.get(`/approvals/instances/${id}`);
       setInstance(response.data);
     } catch (err) {
-      console.error("加载审批详情失败:", err);
       setError(err.response?.data?.detail || "加载失败，请稍后重试");
     } finally {
       setLoading(false);
@@ -163,7 +163,6 @@ const ApprovalDetailPage = () => {
       await loadInstance();
       setComment("");
     } catch (err) {
-      console.error("操作失败:", err);
       setError(err.response?.data?.detail || "操作失败，请稍后重试");
     } finally {
       setSubmitting(false);
@@ -177,9 +176,9 @@ const ApprovalDetailPage = () => {
   const handleUrge = async () => {
     try {
       await api.post(`/approvals/instances/${id}/urge`);
-      // TODO: 显示成功提示
+      toast.success("催办通知已发送");
     } catch (err) {
-      console.error("催办失败:", err);
+      toast.error("催办失败，请稍后重试");
     }
   };
 

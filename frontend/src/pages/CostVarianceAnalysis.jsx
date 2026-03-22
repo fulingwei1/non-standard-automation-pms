@@ -16,7 +16,7 @@ export default function CostVarianceAnalysis() {
         const [s, p] = await Promise.all([costVarianceApi.summary(), costVarianceApi.patterns()]);
         setSummary(s.data || s);
         setPatterns(p.data || p);
-      } catch (e) { console.error(e); }
+      } catch (e) { }
       finally { setLoading(false); }
     })();
   }, []);

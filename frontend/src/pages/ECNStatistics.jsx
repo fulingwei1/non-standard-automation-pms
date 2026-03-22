@@ -110,7 +110,6 @@ export default function ECNStatistics({ embedded = false }) {
       const res = await ecnApi.getStatistics(params);
       setStatistics(res.data || res || {});
     } catch (error) {
-      console.error("Failed to fetch ECN statistics:", error);
       alert(
         "获取统计信息失败: " + (error.response?.data?.detail || error.message)
       );
@@ -253,7 +252,6 @@ export default function ECNStatistics({ embedded = false }) {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("导出失败:", error);
       alert("导出失败: " + error.message);
     }
   };

@@ -52,7 +52,6 @@ export function useCustomerManagement() {
             });
             setIndustries(Array.from(industrySet).sort());
         } catch (error) {
-            console.error("加载客户列表失败:", error);
             alert("加载客户列表失败: " + (error.response?.data?.detail || error.message));
         } finally {
             setLoading(false);
@@ -111,7 +110,6 @@ export function useCustomerManagement() {
             setCustomer360(response.data || response);
             setShow360Dialog(true);
         } catch (error) {
-            console.error("加载客户360失败", error);
             alert("加载客户360失败: " + (error.response?.data?.detail || error.message));
         } finally {
             setLoading360(false);

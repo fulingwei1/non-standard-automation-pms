@@ -86,7 +86,6 @@ export default function ECNTypeManagement({ embedded = false }) {
       const res = await ecnApi.getEcnTypes({ is_active: null });
       setEcnTypes(res.data || res || []);
     } catch (error) {
-      console.error("Failed to fetch ECN types:", error);
     } finally {
       setLoading(false);
     }
@@ -146,7 +145,6 @@ export default function ECNTypeManagement({ embedded = false }) {
       setShowEditDialog(false);
       fetchECNTypes();
     } catch (error) {
-      console.error("Failed to save ECN type:", error);
       alert("保存失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -158,7 +156,6 @@ export default function ECNTypeManagement({ embedded = false }) {
       setDeleteDialog({ open: false, type: null });
       fetchECNTypes();
     } catch (error) {
-      console.error("Failed to delete ECN type:", error);
       alert("删除失败: " + (error.response?.data?.detail || error.message));
     }
   };

@@ -101,7 +101,6 @@ export default function AlertCenter() {
 
       setProjects(transformedProjects);
     } catch (error) {
-      console.error("Failed to load projects:", error);
       const mockProjects = [
       { id: 1, name: "测试项目A" },
       { id: 2, name: "测试项目B" },
@@ -148,7 +147,6 @@ export default function AlertCenter() {
       setAlerts(data.items || data || []);
       setTotal(data.total || data?.length || 0);
     } catch (error) {
-      console.error("Failed to load alerts:", error);
       setError(error.response?.data?.detail || error.message || "加载预警失败");
       setAlerts([]);
     } finally {
@@ -172,7 +170,6 @@ export default function AlertCenter() {
         warning: data.warning || 0
       });
     } catch (error) {
-      console.error("Failed to load statistics:", error);
     }
   }, []);
 
@@ -201,7 +198,6 @@ export default function AlertCenter() {
       setSelectedAlerts(new Set());
       toast.success(`已批量确认 ${count} 条预警`);
     } catch (error) {
-      console.error("Failed to batch acknowledge:", error);
       toast.error("批量确认失败，请稍后重试");
     }
   }, [selectedAlerts, loadAlerts, loadStatistics]);
@@ -221,7 +217,6 @@ export default function AlertCenter() {
       setSelectedAlerts(new Set());
       toast.success(`已批量解决 ${count} 条预警`);
     } catch (error) {
-      console.error("Failed to batch resolve:", error);
       toast.error("批量解决失败，请稍后重试");
     }
   }, [selectedAlerts, loadAlerts, loadStatistics]);
@@ -254,7 +249,6 @@ export default function AlertCenter() {
       window.URL.revokeObjectURL(url);
       toast.success("Excel导出成功");
     } catch (error) {
-      console.error("Failed to export Excel:", error);
       toast.error("导出失败，请稍后重试");
     }
   }, [selectedProject, selectedLevel, selectedStatus, dateRange]);
@@ -285,7 +279,6 @@ export default function AlertCenter() {
       window.URL.revokeObjectURL(url);
       toast.success("PDF导出成功");
     } catch (error) {
-      console.error("Failed to export PDF:", error);
       toast.error("导出失败，请稍后重试");
     }
   }, [selectedProject, selectedLevel, selectedStatus, dateRange]);
@@ -304,7 +297,6 @@ export default function AlertCenter() {
       await loadStatistics();
       toast.success("预警确认成功");
     } catch (error) {
-      console.error("Failed to acknowledge:", error);
       toast.error("确认失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);
@@ -322,7 +314,6 @@ export default function AlertCenter() {
       await loadStatistics();
       toast.success("预警解决成功");
     } catch (error) {
-      console.error("Failed to resolve:", error);
       toast.error("解决失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);
@@ -339,7 +330,6 @@ export default function AlertCenter() {
       await loadStatistics();
       toast.success("预警关闭成功");
     } catch (error) {
-      console.error("Failed to close:", error);
       toast.error("关闭失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);

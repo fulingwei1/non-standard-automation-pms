@@ -16,14 +16,18 @@ import {
 import { Search, RefreshCw, Download } from 'lucide-react';
 import { StockStatus } from '@/types/inventory';
 
+/** 库存筛选条件 */
+interface StockFilters {
+  material_code?: string;
+  location?: string;
+  batch_number?: string;
+  status?: StockStatus;
+}
+
 interface StockFilterBarProps {
-  filters: {
-    material_code?: string;
-    location?: string;
-    batch_number?: string;
-    status?: StockStatus;
-  };
-  onFilterChange: (filters: any) => void;
+  filters: StockFilters;
+  // 筛选值变更回调，参数结构与 filters 一致
+  onFilterChange: (filters: StockFilters) => void;
   onSearch: () => void;
   onReset: () => void;
   onExport?: () => void;

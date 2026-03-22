@@ -23,7 +23,6 @@ const ProjectImpactAnalysis = () => {
         const response = await getProjectImpactAnalysis();
         setProjects(response.data.projects || []);
       } catch (error) {
-        console.error('Failed to load project impact data:', error);
         toast({
           title: '加载失败',
           description: error.message,

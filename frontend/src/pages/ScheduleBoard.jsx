@@ -73,10 +73,6 @@ export default function ScheduleBoard() {
                     : "pending"
               }));
             } catch (err) {
-              console.error(
-                `Failed to load milestones for project ${projectId}:`,
-                err
-              );
             }
 
             // Load resources/workload for this project
@@ -92,10 +88,6 @@ export default function ScheduleBoard() {
                 resources = [];
               }
             } catch (err) {
-              console.error(
-                `Failed to load resources for project ${projectId}:`,
-                err
-              );
             }
 
             return {
@@ -122,7 +114,6 @@ export default function ScheduleBoard() {
 
         setProjects(transformedProjects);
       } catch (err) {
-        console.error("Failed to fetch projects:", err);
         setProjects([]);
       } finally {
         setLoading(false);
@@ -195,7 +186,6 @@ export default function ScheduleBoard() {
             onProjectClick={(event) => {
               if (event.plan_id) {
                 // Navigate to production plan or project
-                console.log("Clicked plan:", event);
               }
             }}
           />

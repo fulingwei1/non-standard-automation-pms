@@ -87,10 +87,6 @@ export default function BudgetManagement({ embedded = false }) {
               end_date: project.planned_end_date
             };
           } catch (err) {
-            console.error(
-              `Failed to load budget for project ${project.id}:`,
-              err
-            );
             return null;
           }
         })
@@ -98,7 +94,6 @@ export default function BudgetManagement({ embedded = false }) {
 
       setBudgets((budgetsData || []).filter(Boolean));
     } catch (error) {
-      console.error("Failed to load budgets:", error);
       setBudgets([]);
     } finally {
       setLoading(false);

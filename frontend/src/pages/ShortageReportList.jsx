@@ -82,7 +82,6 @@ export default function ShortageReportList() {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (error) {
-      console.error("Failed to fetch projects:", error);
     }
   };
   const fetchReports = async () => {
@@ -97,7 +96,6 @@ export default function ShortageReportList() {
       const reportList = res.data?.items || res.data?.items || res.data || [];
       setReports(reportList);
     } catch (error) {
-      console.error("Failed to fetch reports:", error);
     } finally {
       setLoading(false);
     }
@@ -108,7 +106,6 @@ export default function ShortageReportList() {
       setSelectedReport(res.data || res);
       setShowDetailDialog(true);
     } catch (error) {
-      console.error("Failed to fetch report detail:", error);
     }
   };
   const handleConfirm = async (reportId) => {
@@ -120,7 +117,6 @@ export default function ShortageReportList() {
         handleViewDetail(reportId);
       }
     } catch (error) {
-      console.error("Failed to confirm report:", error);
       alert("确认失败: " + (error.response?.data?.detail || error.message));
     }
   };

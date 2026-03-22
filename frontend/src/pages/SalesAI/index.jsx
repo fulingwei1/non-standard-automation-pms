@@ -72,7 +72,6 @@ function ScriptRecommendation() {
       const res = await aiSalesApi.recommendScripts(customerId, null, scenario);
       setScripts(res.recommended_scripts || []);
     } catch (error) {
-      console.error("获取话术失败:", error);
     } finally {
       setLoading(false);
     }
@@ -146,7 +145,6 @@ function ProposalGeneration() {
       const res = await aiSalesApi.generateProposal(opportunityId, proposalType);
       setProposal(res);
     } catch (error) {
-      console.error("生成方案失败:", error);
     } finally {
       setLoading(false);
     }
@@ -215,7 +213,6 @@ function CompetitorAnalysis() {
       const res = await aiSalesApi.analyzeCompetitor(competitorName);
       setAnalysis(res);
     } catch (error) {
-      console.error("分析失败:", error);
     }
   };
 
@@ -317,7 +314,6 @@ function ChurnRisk() {
       const res = await aiSalesApi.getChurnRiskList();
       setRiskList(res.risk_list || []);
     } catch (error) {
-      console.error("获取风险列表失败:", error);
     } finally {
       setLoading(false);
     }

@@ -88,7 +88,6 @@ export default function MarginAlertManagement() {
         setHistoryAlerts(history.data || history.items || []);
         setConfigs(configList.data || configList.items || []);
       } catch (err) {
-        console.error("Failed to load margin alerts:", err);
       } finally {
         setLoading(false);
       }

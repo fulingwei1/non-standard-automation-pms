@@ -20,7 +20,6 @@ export function useMachineDocuments(projectId) {
             const data = res.data?.data || res.data || {};
             setDocuments(data);
         } catch (error) {
-            console.error('Failed to fetch machine documents:', error);
             setDocuments(null);
         } finally {
             setLoading(false);
@@ -51,7 +50,6 @@ export function useMachineDocuments(projectId) {
             await fetchDocuments(machineId);
             return { success: true };
         } catch (error) {
-            console.error('Failed to upload document:', error);
             const errorMessage = error.response?.data?.detail || error.message || '上传失败';
             const isPermissionError = error.response?.status === 403;
             return {
@@ -76,7 +74,6 @@ export function useMachineDocuments(projectId) {
             window.URL.revokeObjectURL(url);
             return { success: true };
         } catch (error) {
-            console.error('Failed to download document:', error);
             const errorMessage = error.response?.data?.detail || error.message || '下载失败';
             const isPermissionError = error.response?.status === 403;
             return {

@@ -31,7 +31,6 @@ export function useProcurementWorkstation() {
             const paginatedData = response.formatted || response.data;
             setSuppliers(paginatedData?.items || paginatedData || []);
         } catch (err) {
-            console.error('Failed to load suppliers:', err);
         }
     }, []);
 

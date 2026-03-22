@@ -61,7 +61,8 @@ type OperationType = 'issue' | 'return' | 'transfer';
 
 interface OperationFormProps {
   type: OperationType;
-  onSubmit: (data: any) => Promise<void>;
+  // 根据 OperationType 不同，data 可能是 issue/return/transfer 的 schema 数据
+  onSubmit: (data: z.infer<typeof issueSchema> | z.infer<typeof returnSchema> | z.infer<typeof transferSchema>) => Promise<void>;
   loading?: boolean;
 }
 

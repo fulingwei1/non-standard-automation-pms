@@ -83,7 +83,6 @@ export default function EngineerWorkloadBoard() {
       const warningsRes = await engineerSchedulingApi.generateWarnings({ project_id: projectId });
       setWarnings(warningsRes.data?.warnings || []);
     } catch (error) {
-      console.error("加载失败:", error);
     } finally {
       setLoading(false);
     }

@@ -213,7 +213,6 @@ export default function OrganizationManagement() {
       const listData = response.formatted || response.data;
       setOrgTree(listData?.items || listData || []);
     } catch (error) {
-      console.error("加载组织树失败:", error);
       // 如果新 API 不可用，尝试使用旧的部门树 API
       try {
         const { orgApi } = await import("../services/api");
@@ -241,7 +240,6 @@ export default function OrganizationManagement() {
         }));
         setOrgTree(convertedData);
       } catch (fallbackError) {
-        console.error("降级加载也失败:", fallbackError);
       }
     } finally {
       setLoading(false);
@@ -261,7 +259,6 @@ export default function OrganizationManagement() {
       const listData = response.formatted || response.data;
       setOrgList(listData?.items || listData || []);
     } catch (error) {
-      console.error("加载组织列表失败:", error);
     } finally {
       setLoading(false);
     }

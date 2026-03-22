@@ -154,7 +154,6 @@ export default function ProjectList() {
       const projectList = data.items || data || [];
       setProjects(projectList);
     } catch (err) {
-      console.error("Failed to fetch projects:", err);
       setProjects([]);
     } finally {
       setLoading(false);
@@ -175,7 +174,6 @@ export default function ProjectList() {
           });
           setRecommendedTemplates(response.data?.recommendations || []);
         } catch (err) {
-          console.error("Failed to load recommended templates:", err);
           setRecommendedTemplates([]);
         }
       };

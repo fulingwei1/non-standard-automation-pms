@@ -69,7 +69,6 @@ export default function RdProjectWorklogs() {
       const projectData = response.data?.data || response.data || response;
       setProject(projectData);
     } catch (err) {
-      console.error("Failed to fetch project:", err);
     } finally {
       setLoading(false);
     }
@@ -95,7 +94,6 @@ export default function RdProjectWorklogs() {
         setWorklogs(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      console.error("Failed to fetch worklogs:", err);
       setWorklogs([]);
     }
   };

@@ -114,7 +114,6 @@ export default function PurchaseMaterialCostManagement() {
         setShowReminderDialog(true);
       }
     } catch (error) {
-      console.error("加载提醒信息失败:", error);
     }
   };
 
@@ -124,7 +123,6 @@ export default function PurchaseMaterialCostManagement() {
       await loadReminder();
       setShowReminderDialog(false);
     } catch (error) {
-      console.error("确认提醒失败:", error);
       alert("确认提醒失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -143,7 +141,6 @@ export default function PurchaseMaterialCostManagement() {
       const items = res.data?.data?.items || res.data?.items || [];
       setCosts(items);
     } catch (error) {
-      console.error("加载成本清单失败:", error);
     } finally {
       setLoading(false);
     }
@@ -155,7 +152,6 @@ export default function PurchaseMaterialCostManagement() {
       const items = res.data?.data?.items || res.data?.items || [];
       setSuppliers(items);
     } catch (error) {
-      console.error("加载供应商列表失败:", error);
     }
   };
 
@@ -277,7 +273,6 @@ export default function PurchaseMaterialCostManagement() {
       setShowEditDialog(false);
       setSelectedCost(null);
     } catch (error) {
-      console.error("保存失败:", error);
       alert("保存失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
@@ -292,7 +287,6 @@ export default function PurchaseMaterialCostManagement() {
       setShowDeleteDialog(false);
       setSelectedCost(null);
     } catch (error) {
-      console.error("删除失败:", error);
       alert("删除失败: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);

@@ -237,26 +237,22 @@ export default function QuoteManagement({ embedded = false } = {}) {
   // 处理复制报价
   const handleQuoteCopy = useCallback((quote) => {
     // 复制报价逻辑
-    console.log('Copying quote:', quote.id);
     // 可以创建新的报价并填充相同内容
   }, []);
 
   // 处理发送报价
   const handleQuoteSend = useCallback((quote) => {
     // 发送报价逻辑
-    console.log('Sending quote:', quote.id);
   }, []);
 
   // 处理审批报价
   const handleQuoteApprove = useCallback((quote) => {
     // 审批报价逻辑
-    console.log('Approving quote:', quote.id);
   }, []);
 
   // 处理拒绝报价
   const handleQuoteReject = useCallback((quote) => {
     // 拒绝报价逻辑
-    console.log('Rejecting quote:', quote.id);
   }, []);
 
   // 处理创建报价
@@ -397,13 +393,11 @@ export default function QuoteManagement({ embedded = false } = {}) {
   // 处理导出
   const handleExport = useCallback(() => {
     // 导出逻辑
-    console.log('Exporting quotes:', selectedQuotes.length);
   }, [selectedQuotes]);
 
   // 处理导入
   const handleImport = useCallback(() => {
     // 导入逻辑
-    console.log('Import dialog opened');
   }, []);
 
   // 初始化数据

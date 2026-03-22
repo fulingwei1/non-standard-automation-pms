@@ -92,7 +92,6 @@ export default function GoodsReceiptNew() {
       setOrder(orderRes.data || orderRes);
       setOrderItems(itemsRes.data || itemsRes || []);
     } catch (err) {
-      console.error("Failed to load order:", err);
       setError(err.response?.data?.detail || "加载采购订单失败");
     } finally {
       setLoading(false);
@@ -135,9 +134,9 @@ export default function GoodsReceiptNew() {
     setSelectedItems((selectedItems || []).filter((_, i) => i !== index));
   };
 
+  // 不可变更新：创建新对象替代直接修改引用
   const handleUpdateItem = (index, field, value) => {
-    const newItems = [...selectedItems];
-    const item = newItems[index];
+    const item = selectedItems[index];
 
     if (field === "delivery_qty") {
       const qty = parseFloat(value) || 0;
@@ -145,20 +144,20 @@ export default function GoodsReceiptNew() {
         toast.error(`送货数量不能超过剩余数量 ${item.remaining_qty}`);
         return;
       }
-      item.delivery_qty = qty;
-      item.received_qty_input = qty;
+      const updated = { ...item, delivery_qty: qty, received_qty_input: qty };
+      setSelectedItems(selectedItems.map((it, i) => i === index ? updated : it));
     } else if (field === "received_qty_input") {
       const qty = parseFloat(value) || 0;
       if (qty > item.delivery_qty) {
         toast.error(`实收数量不能超过送货数量 ${item.delivery_qty}`);
         return;
       }
-      item.received_qty_input = qty;
+      const updated = { ...item, received_qty_input: qty };
+      setSelectedItems(selectedItems.map((it, i) => i === index ? updated : it));
     } else {
-      item[field] = value;
+      const updated = { ...item, [field]: value };
+      setSelectedItems(selectedItems.map((it, i) => i === index ? updated : it));
     }
-
-    setSelectedItems(newItems);
   };
 
   const handleSubmit = async () => {
@@ -196,7 +195,6 @@ export default function GoodsReceiptNew() {
       toast.success("收货单创建成功");
       navigate(`/purchases/receipts/${res.data?.id || res.id}`);
     } catch (err) {
-      console.error("Failed to create receipt:", err);
       setError(err.response?.data?.detail || "创建收货单失败");
       toast.error(err.response?.data?.detail || "创建收货单失败");
     } finally {
@@ -580,7 +578,6 @@ function OrderSelectionForm({ onSelect }) {
         const data = res.data?.items || res.data?.items || res.data || [];
         setOrders(data);
       } catch (err) {
-        console.error("Failed to load orders:", err);
       } finally {
         setLoading(false);
       }

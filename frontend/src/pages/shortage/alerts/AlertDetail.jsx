@@ -29,7 +29,6 @@ const AlertDetail = () => {
         const response = await getAlertDetail(id);
         setAlert(response.data);
       } catch (error) {
-        console.error('Failed to load alert detail:', error);
         toast({
           title: '加载失败',
           description: error.message,

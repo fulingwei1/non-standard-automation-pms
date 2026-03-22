@@ -119,7 +119,6 @@ export default function ProjectReviewDetail() {
       const response = await projectReviewApi.get(reviewId);
       setReview(response.data);
     } catch (err) {
-      console.error("Failed to fetch review:", err);
       setError("加载评审详情失败");
     } finally {
       setLoading(false);
@@ -134,7 +133,6 @@ export default function ProjectReviewDetail() {
       });
       setLessons(response.data?.results || response.data?.items || response.data || []);
     } catch (err) {
-      console.error("Failed to fetch lessons:", err);
     }
   };
 
@@ -146,7 +144,6 @@ export default function ProjectReviewDetail() {
       });
       setBestPractices(response.data?.results || response.data?.items || response.data || []);
     } catch (err) {
-      console.error("Failed to fetch best practices:", err);
     }
   };
 
@@ -159,7 +156,6 @@ export default function ProjectReviewDetail() {
       await projectReviewApi.update(reviewId, { status: "PUBLISHED" });
       setReview({ ...review, status: "PUBLISHED" });
     } catch (err) {
-      console.error("Failed to publish review:", err);
       alert("发布失败: " + (err.response?.data?.detail || err.message));
     } finally {
       setSaving(false);
@@ -175,7 +171,6 @@ export default function ProjectReviewDetail() {
       await projectReviewApi.update(reviewId, { status: "ARCHIVED" });
       setReview({ ...review, status: "ARCHIVED" });
     } catch (err) {
-      console.error("Failed to archive review:", err);
       alert("归档失败: " + (err.response?.data?.detail || err.message));
     } finally {
       setSaving(false);
@@ -189,7 +184,6 @@ export default function ProjectReviewDetail() {
       await projectReviewApi.delete(reviewId);
       navigate("/projects/reviews");
     } catch (err) {
-      console.error("Failed to delete review:", err);
       alert("删除失败: " + (err.response?.data?.detail || err.message));
       setDeleteDialog(false);
     } finally {
@@ -224,7 +218,6 @@ export default function ProjectReviewDetail() {
       });
       fetchLessons();
     } catch (err) {
-      console.error("Failed to save lesson:", err);
       alert("保存失败: " + (err.response?.data?.detail || err.message));
     } finally {
       setSaving(false);
@@ -262,7 +255,6 @@ export default function ProjectReviewDetail() {
       });
       fetchBestPractices();
     } catch (err) {
-      console.error("Failed to save practice:", err);
       alert("保存失败: " + (err.response?.data?.detail || err.message));
     } finally {
       setSaving(false);
@@ -277,7 +269,6 @@ export default function ProjectReviewDetail() {
       setDeleteLessonDialog({ open: false, lessonId: null });
       fetchLessons();
     } catch (err) {
-      console.error("Failed to delete lesson:", err);
       alert("删除失败: " + (err.response?.data?.detail || err.message));
     } finally {
       setSaving(false);
@@ -292,7 +283,6 @@ export default function ProjectReviewDetail() {
       setDeletePracticeDialog({ open: false, practiceId: null });
       fetchBestPractices();
     } catch (err) {
-      console.error("Failed to delete practice:", err);
       alert("删除失败: " + (err.response?.data?.detail || err.message));
     } finally {
       setSaving(false);

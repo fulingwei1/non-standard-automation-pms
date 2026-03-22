@@ -102,7 +102,6 @@ export default function FinancialCostUpload() {
       const items = res.data?.data?.items || res.data?.items || [];
       setCosts(items);
     } catch (error) {
-      console.error("加载成本记录失败:", error);
     } finally {
       setLoading(false);
     }
@@ -139,7 +138,6 @@ export default function FinancialCostUpload() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("下载模板失败:", error);
       alert("下载模板失败: " + (error.response?.data?.detail || error.message));
     }
   };
@@ -172,7 +170,6 @@ export default function FinancialCostUpload() {
         fileInputRef.current.value = "";
       }
     } catch (error) {
-      console.error("上传失败:", error);
       const errorDetail = error.response?.data?.detail || error.message;
       alert("上传失败: " + errorDetail);
     } finally {
@@ -189,7 +186,6 @@ export default function FinancialCostUpload() {
       await financialCostApi.deleteCost(costId);
       await loadCosts();
     } catch (error) {
-      console.error("删除失败:", error);
       alert("删除失败: " + (error.response?.data?.detail || error.message));
     }
   };
