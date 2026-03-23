@@ -67,7 +67,8 @@ export function useAlertRules() {
       const response = await alertApi.templates();
       const data = response.data || response;
       setTemplates(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

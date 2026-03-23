@@ -1,9 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { PageHeader } from "../../components/layout/PageHeader";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui";
 import { useLessonsLearnedLibrary } from "./hooks";
-import { LessonFilters, LessonList, LessonStatistics } from "./components";
 
 const staggerContainer = {
     hidden: { opacity: 0 },

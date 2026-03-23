@@ -1,42 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Edit3,
-  Trash2,
-  Eye,
-  Briefcase,
-  Shield,
-  Link2,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "../components/ui/dialog";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui";
-import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+
+
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { organizationApi, roleApi } from "../services/api";
@@ -119,7 +89,8 @@ export default function PositionManagement() {
       const listData = response.formatted || response.data;
       const roleItems = listData?.items || listData;
       setRoles(Array.isArray(roleItems) ? roleItems : []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 
@@ -131,7 +102,8 @@ export default function PositionManagement() {
       const listData = response.formatted || response.data;
       const orgItems = listData?.items || listData;
       setOrgUnits(Array.isArray(orgItems) ? orgItems : []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

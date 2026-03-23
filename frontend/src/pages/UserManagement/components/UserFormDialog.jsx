@@ -2,17 +2,8 @@
  * 用户表单对话框（创建/编辑复用）
  */
 
-import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogBody, DialogFooter,
-} from "../../../components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "../../../components/ui/select";
+
+
 import {
   USER_STATUS, USER_STATUS_LABELS,
   USER_ROLE, USER_ROLE_LABELS,

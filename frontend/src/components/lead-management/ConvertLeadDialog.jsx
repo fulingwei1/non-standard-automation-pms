@@ -1,13 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Label,
-} from "../../components/ui";
+
+
 
 export default function ConvertLeadDialog({
   open,

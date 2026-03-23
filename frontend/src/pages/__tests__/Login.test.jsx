@@ -5,7 +5,6 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Login from '../Login';
 import { authApi } from '../../services/api';
 
 // Mock authApi

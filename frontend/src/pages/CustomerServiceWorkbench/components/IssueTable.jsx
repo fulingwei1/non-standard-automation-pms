@@ -2,18 +2,10 @@
  * 客服工作台 - 项目问题列表
  */
 
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
-import {
-  Badge,
-  EmptyState,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../components/ui";
+
+
 import {
   getIssueStatusLabel,
   getStatusBadgeVariant,

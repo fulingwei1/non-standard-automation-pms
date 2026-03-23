@@ -4,46 +4,16 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Clock,
-  RefreshCw,
-  Plus,
-  ArrowRight,
-  AlertTriangle } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
 
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { leadApi, customerApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
@@ -96,7 +66,8 @@ export default function LeadDetail() {
       setLoading(true);
       const res = await leadApi.get(id);
       setLead(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -106,14 +77,16 @@ export default function LeadDetail() {
       const res = await leadApi.getFollowUps(id);
       const followUpList = res.data || res || [];
       setFollowUps(followUpList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchCustomers = async () => {
     try {
       const res = await customerApi.list({ page_size: 1000 });
       setCustomers(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const handleCreateFollowUp = async () => {

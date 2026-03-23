@@ -1,15 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  FileText,
-  Wrench,
-  MessageSquare,
-  Star,
-  Clock,
-  TrendingDown,
-  CheckCircle2,
-  TrendingUp
-} from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 

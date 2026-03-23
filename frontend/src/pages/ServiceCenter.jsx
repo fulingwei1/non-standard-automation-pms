@@ -1,9 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import ServiceTicketManagement from "./ServiceTicketManagement";
-import CustomerCommunication from "./CustomerCommunication";
-import CustomerSatisfaction from "./CustomerSatisfaction";
-import ServiceAnalytics from "./ServiceAnalytics";
 
 export default function ServiceCenter() {
   const tabs = useMemo(

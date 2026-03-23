@@ -30,7 +30,8 @@ export function useCustomerCommunication() {
         try {
             const response = await customerApi.list({ page_size: 100 });
             setCustomers(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

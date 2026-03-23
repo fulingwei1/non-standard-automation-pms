@@ -1,13 +1,7 @@
 import { useMemo } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../ui';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+
+
 import { formatCurrency, formatPercent, generateCostChartData, getCostStatus } from '../../lib/utils/cost';
-import { TrendingUp, TrendingDown, AlertCircle, DollarSign } from 'lucide-react';
 
 /**
  * 项目成本明细弹窗

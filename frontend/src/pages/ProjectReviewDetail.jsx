@@ -4,44 +4,15 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectReviewApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  SkeletonCard,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
-import { Input, Textarea } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  CheckCircle2,
-  Archive,
-  Plus,
-  FileText,
-  BookOpen } from
-"lucide-react";
+
+
+
+
 
 // 导入重构的组件
 import {
-  ProjectReviewOverview,
   getReviewStatus,
   getReviewType,
   getLessonType } from
@@ -132,7 +103,8 @@ export default function ProjectReviewDetail() {
         review: reviewId
       });
       setLessons(response.data?.results || response.data?.items || response.data || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -143,7 +115,8 @@ export default function ProjectReviewDetail() {
         review: reviewId
       });
       setBestPractices(response.data?.results || response.data?.items || response.data || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

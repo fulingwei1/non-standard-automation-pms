@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui";
-import { BarChart, AreaChart, GaugeChart } from "../../../components/charts";
 import { fadeIn } from "../../../lib/animations";
 
 export function ProjectsTab({ milestoneData }) {

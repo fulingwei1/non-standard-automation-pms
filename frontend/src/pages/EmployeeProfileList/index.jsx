@@ -1,13 +1,6 @@
-import { Upload } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { useEmployeeProfileList } from "./hooks";
-import {
-    EmployeeUploadModal,
-    EmployeeStatsCards,
-    EmployeeList,
-    EmployeeStatusTabs
-} from "./components";
+
+
 
 export default function EmployeeProfileList() {
     const {

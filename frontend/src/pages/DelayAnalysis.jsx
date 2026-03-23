@@ -6,25 +6,8 @@
 import { useState, useEffect } from "react";
 
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { delayAnalysisApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 
@@ -51,7 +34,8 @@ export default function DelayAnalysis() {
       if (response.data?.data) {
         setRootCauseData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -68,7 +52,8 @@ export default function DelayAnalysis() {
       if (response.data?.data) {
         setImpactData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -81,7 +66,8 @@ export default function DelayAnalysis() {
       if (response.data?.data) {
         setTrendsData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

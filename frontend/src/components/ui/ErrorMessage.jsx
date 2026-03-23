@@ -1,7 +1,3 @@
-import { AlertCircle, RefreshCw, XCircle } from "lucide-react";
-import { Card, CardContent } from "./card";
-import { Button } from "./button";
-import { Badge } from "./badge";
 import { cn } from "../../lib/utils";
 
 export function ErrorMessage({

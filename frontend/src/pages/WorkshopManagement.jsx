@@ -4,49 +4,16 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Eye,
-  Edit,
-  Wrench,
-  CheckCircle2,
-  XCircle } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
+
+
+
+
+
+
 import { productionApi, userApi } from "../services/api";
 import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 
@@ -91,7 +58,8 @@ export default function WorkshopManagement() {
     try {
       const res = await userApi.list({ page_size: 1000 });
       setManagers(getItemsCompat(res));
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -104,7 +72,8 @@ export default function WorkshopManagement() {
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workshops.list(params);
       setWorkshops(getItemsCompat(res));
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -142,7 +111,8 @@ export default function WorkshopManagement() {
       const res = await productionApi.workshops.get(workshopId);
       setSelectedWorkshop(getResponseData(res));
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

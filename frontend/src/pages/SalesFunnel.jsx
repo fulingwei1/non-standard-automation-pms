@@ -8,44 +8,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Activity,
-  AlertTriangle,
-  ArrowRight,
-  BarChart3,
-  Gauge,
   RefreshCw,
-  Target,
-  TrendingDown,
-  TrendingUp,
   Workflow,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui";
+
+
 import { funnelApi } from "../services/api";
-import DwellTimeAlerts from "./UnifiedDashboard/widgets/sales/DwellTimeAlerts";
 
 const HEALTH_LEVEL_META = {
   EXCELLENT: {

@@ -5,49 +5,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate, useParams, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Truck,
-  Calendar,
-  Search,
-  Plus,
-  PackageCheck,
-  RefreshCw,
-  Download,
-  ChevronRight,
-  X
-} from "lucide-react";
+
+
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  Progress,
   toast
 } from "../components/ui";
 // import { fadeIn, staggerContainer } from "../lib/animations";
@@ -56,18 +17,11 @@ import { businessSupportApi } from "../services/api";
 import { getItemsCompat } from "../utils/apiResponse";
 
 // 导入拆分后的组件
-import {
-  DeliveryOverview,
-  DeliveryPlan,
-  DeliveryTracking
-} from '../components/delivery-management';
 
-import {
-  DELIVERY_STATUS,
-  DELIVERY_PRIORITY,
-  SHIPPING_METHODS,
-  PACKAGE_TYPES
-} from "@/lib/constants/service";
+
+
+
+
 
 // TabPane removed - using items prop instead
 

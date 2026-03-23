@@ -5,33 +5,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Save,
-  X,
-  TrendingUp } from
+  ArrowLeft } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import { Badge } from "../components/ui/badge";
-import { CompetencyRadarChart } from "../components/qualification/CompetencyRadarChart";
-import { QualificationTrendChart } from "../components/qualification/QualificationTrendChart";
+
+
+
+
 import { qualificationApi, employeeApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { fadeIn } from "../lib/animations";
@@ -84,7 +64,8 @@ export default function EmployeeQualificationForm() {
       if (response.data?.code === 200) {
         setLevels(response.data.data?.items || []);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -117,7 +98,8 @@ export default function EmployeeQualificationForm() {
         setValue("certified_date", qualData.certified_date || "");
         setValue("valid_until", qualData.valid_until || "");
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -127,7 +109,8 @@ export default function EmployeeQualificationForm() {
       if (response.data?.code === 200) {
         setAssessments(response.data.data?.items || []);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -181,7 +164,8 @@ export default function EmployeeQualificationForm() {
       if (response.data?.code === 200) {
         setCompetencyModel(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

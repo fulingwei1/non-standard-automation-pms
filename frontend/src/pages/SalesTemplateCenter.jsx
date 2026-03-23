@@ -1,35 +1,14 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import {
   Layers,
   ClipboardList,
-  PenTool,
-  FileText,
-  Sparkles,
-  CheckCircle2,
-  UploadCloud } from
+  Sparkles } from
 "lucide-react";
 import { resolveIcon } from "@/utils/iconMap";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Input } from "../components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter } from
-"../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
-import { Label } from "../components/ui/label";
+
+
+
+
 import { staggerContainer } from "../lib/animations";
 import { cn } from "../lib/utils";
 import { salesTemplateApi } from "../services/api";
@@ -103,7 +82,8 @@ export default function SalesTemplateCenter({ embedded = false } = {}) {
       setQuoteTemplates(Array.isArray(quoteItems) ? quoteItems : []);
       setContractTemplates(Array.isArray(contractItems) ? contractItems : []);
       setRuleSets(Array.isArray(ruleItems) ? ruleItems : []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

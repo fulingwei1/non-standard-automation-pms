@@ -5,17 +5,13 @@
  * Tab 2: 项目复盘 - 复盘报告（事后/中期/季度）
  * Tab 3: 经验教训 - 知识库（按分类浏览、添加经验）
  */
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   FileCheck,
   ClipboardList,
-  Lightbulb,
-  Loader2
+  Lightbulb
 } from "lucide-react";
-import { PageHeader } from "../components/layout/PageHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { staggerContainer } from "../lib/animations";
 
 // 懒加载各子模块内容组件

@@ -1,11 +1,5 @@
-import { motion } from "framer-motion";
-import { BarChart3 } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent
-} from "../../components/ui/card";
+
+
 import { fadeIn } from "../../lib/animations";
 
 export function ServiceTrends({ analytics }) {

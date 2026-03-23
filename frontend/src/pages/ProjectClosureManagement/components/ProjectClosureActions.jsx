@@ -1,5 +1,3 @@
-import { CheckCircle2, Eye } from 'lucide-react';
-import { Card, CardContent, Button } from '../../../components/ui';
 
 export function ProjectClosureActions({ closure, onReview, onViewDetail }) {
     if (closure.status === "REVIEWED") return null;

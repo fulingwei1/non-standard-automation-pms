@@ -1,13 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import CustomerServiceWorkbench from "./CustomerServiceWorkbench";
-import ServiceTicketManagement from "./ServiceTicketManagement";
-import CustomerCommunication from "./CustomerCommunication";
-import CustomerSatisfaction from "./CustomerSatisfaction";
-import ServiceAnalytics from "./ServiceAnalytics";
-import AcceptanceManagement from "./AcceptanceManagement";
-import FieldCommissioning from "./FieldCommissioning";
-import InstallationDispatchManagement from "./InstallationDispatchManagement";
 
 export default function CustomerServiceCenter() {
   const tabs = useMemo(

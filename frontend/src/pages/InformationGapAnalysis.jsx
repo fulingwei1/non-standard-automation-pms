@@ -6,20 +6,8 @@
 import { useState, useEffect } from "react";
 
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { informationGapApi } from "../services/api";
 
 export default function InformationGapAnalysis() {
@@ -43,7 +31,8 @@ export default function InformationGapAnalysis() {
       if (response.data?.data) {
         setMissingData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -60,7 +49,8 @@ export default function InformationGapAnalysis() {
       if (response.data?.data) {
         setImpactData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -77,7 +67,8 @@ export default function InformationGapAnalysis() {
       if (response.data?.data) {
         setQualityScore(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

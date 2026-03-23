@@ -28,7 +28,8 @@ export function useProjectReviewDetail(reviewId) {
         try {
             const response = await projectReviewApi.getComments(reviewId);
             setComments(response.data || response || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, [reviewId]);
 

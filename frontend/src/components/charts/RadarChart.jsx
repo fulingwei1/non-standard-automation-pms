@@ -8,7 +8,6 @@
  * This component is a general-purpose radar chart wrapper around @ant-design/plots.
  */
 
-import { Radar } from "@ant-design/plots";
 import { useMemo } from "react";
 
 /**

@@ -3,8 +3,7 @@
  * 展示活跃商机列表和合同管理
  */
 
-import { Card, Table, Tag, Progress, Typography, Space, Button } from "antd";
-import { FileText, DollarSign, Calendar, TrendingUp, Eye } from "lucide-react";
+import { Typography } from "antd";
 
 const { Text } = Typography;
 

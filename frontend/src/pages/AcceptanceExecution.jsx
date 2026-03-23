@@ -4,42 +4,16 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  ClipboardCheck,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Plus,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
 
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { acceptanceApi } from "../services/api";
 const resultStatusConfigs = {
@@ -95,7 +69,8 @@ export default function AcceptanceExecution() {
     try {
       const res = await acceptanceApi.orders.get(id);
       setOrder(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchItems = async () => {
@@ -103,7 +78,8 @@ export default function AcceptanceExecution() {
       const res = await acceptanceApi.orders.getItems(id);
       const itemList = res.data || res || [];
       setItems(itemList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -113,7 +89,8 @@ export default function AcceptanceExecution() {
       const res = await acceptanceApi.issues.list(id);
       const issueList = res.data || res || [];
       setIssues(issueList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const handleUpdateItem = async () => {

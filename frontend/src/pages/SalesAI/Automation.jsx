@@ -9,42 +9,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Zap,
-  Bell,
-  Mail,
-  CheckSquare,
-  FileText,
-  Play,
-  Pause,
-  Settings,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  ChevronRight,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui";
+
+
+
+
 
 // 跟进提醒
 function FollowUpReminders() {

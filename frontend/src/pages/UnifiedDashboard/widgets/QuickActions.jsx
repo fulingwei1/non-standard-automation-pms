@@ -5,7 +5,6 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   Plus,
   FileText,
@@ -16,8 +15,6 @@ import {
   Users,
   Package,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
 
 // 默认快捷操作

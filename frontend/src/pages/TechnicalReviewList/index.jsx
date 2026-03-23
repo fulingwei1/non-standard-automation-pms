@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "../../components/layout/PageHeader";
 import { useTechnicalReviewList } from "./hooks";
-import { TechnicalReviewFilter, TechnicalReviewCards, TechnicalReviewDeleteDialog } from "./components";
 
 export default function TechnicalReviewList() {
     const navigate = useNavigate();

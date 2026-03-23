@@ -3,53 +3,14 @@
  * 向导式页面：战略分析 → 战略分解 → 年度经营计划 → 部门工作分解
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Target,
-  TrendingUp,
   Calendar,
   Users,
-  ChevronRight,
-  Check,
-  Sparkles,
   Brain,
-  Building2,
-  DollarSign,
-  Globe,
-  AlertTriangle,
-  Edit2,
-  Trash2,
-  Save,
-  Upload,
-  Plus,
-  X,
-  ArrowRight,
-  ArrowLeft,
-  Loader2,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Textarea,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-} from "@/components/ui";
+
+
 import { staggerContainer } from "@/lib/animations";
 import { aiStrategyApi, getDimensionLabel, getDimensionColor, getPriorityLabel, getPriorityColor } from "@/services/api/aiStrategy";
 

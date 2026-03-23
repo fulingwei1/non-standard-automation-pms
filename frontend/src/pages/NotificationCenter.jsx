@@ -1,32 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
-  Check,
-  CheckCheck,
   AlertTriangle,
   Info,
   Calendar,
   Package,
   FileText,
-  Users,
-  Clock,
-  Trash2,
-  Filter,
-  Search } from
+  Users } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { notificationApi } from "../services/api";
-import { ApiIntegrationError } from "../components/ui";
 
 // Mock notification data - 已移除，使用真实API
 
@@ -249,7 +235,8 @@ export default function NotificationCenter() {
       const response = await notificationApi.getUnreadCount();
       const data = response.data || response;
       setUnreadCount(data.unread_count || 0);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 
@@ -269,7 +256,8 @@ export default function NotificationCenter() {
       await notificationApi.markRead(id);
       await loadNotifications();
       await loadUnreadCount();
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -278,7 +266,8 @@ export default function NotificationCenter() {
       await notificationApi.readAll();
       await loadNotifications();
       await loadUnreadCount();
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -287,7 +276,8 @@ export default function NotificationCenter() {
       await notificationApi.delete(id);
       await loadNotifications();
       await loadUnreadCount();
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -300,7 +290,8 @@ export default function NotificationCenter() {
       await Promise.all((notifications || []).map((n) => notificationApi.delete(n.id)));
       await loadNotifications();
       await loadUnreadCount();
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

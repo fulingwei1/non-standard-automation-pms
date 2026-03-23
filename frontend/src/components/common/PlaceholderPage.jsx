@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 
 /**
  * 占位页面组件（用于开发中的功能）

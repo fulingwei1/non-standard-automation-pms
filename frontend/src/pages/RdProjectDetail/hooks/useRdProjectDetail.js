@@ -28,7 +28,8 @@ export function useRdProjectDetail(projectId) {
         try {
             const response = await rdProjectApi.getTasks(projectId);
             setTasks(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, [projectId]);
 

@@ -6,35 +6,19 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
+
+
+
 import {
-  Button,
-} from "../ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../ui";
-import {
-  ChevronRight,
-  ChevronLeft,
-  Check,
   Building2,
   DollarSign,
   Calendar,
   FileText,
-  Loader2,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { projectApi, customerApi, orgApi, stageViewsApi } from "../../services/api";
 import { toast } from "../ui/toast";
-import { BasicInfoStep } from "./steps/BasicInfoStep";
-import { CustomerInfoStep } from "./steps/CustomerInfoStep";
-import { FinanceInfoStep } from "./steps/FinanceInfoStep";
-import { ScheduleInfoStep } from "./steps/ScheduleInfoStep";
 
 // 步骤配置
 const STEPS = [

@@ -2,9 +2,6 @@
  * BSC 维度卡片组件
  * 展示单个 BSC 维度的健康度和 KPI 状态
  */
-import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import { Card, CardContent, Badge, Progress } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { getStrategyHealthConfig } from "../../../lib/constants/strategy";

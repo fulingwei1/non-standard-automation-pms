@@ -1,45 +1,15 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
-import {
-  Plus,
-  Trash2,
-  Users,
-  Briefcase,
-  Settings,
-  UserPlus } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
-import { Label } from "../components/ui/label";
+
+
+
+
+
+
+
+
+
+
 import { projectRoleApi, userApi } from "../services/api";
 import { fadeIn } from "../lib/animations";
 
@@ -90,7 +60,8 @@ export default function ProjectRoles() {
       });
       const data = response.data?.data || response.data || response;
       setUsers(data.items || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -114,7 +85,8 @@ export default function ProjectRoles() {
       const response = await projectRoleApi.configs.get(projectId);
       const data = response.data?.data || response.data || response;
       setRoleConfigs(data.items || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -124,7 +96,8 @@ export default function ProjectRoles() {
       const response = await projectRoleApi.leads.list(projectId, false);
       const data = response.data?.data || response.data || response;
       setLeads(data.items || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

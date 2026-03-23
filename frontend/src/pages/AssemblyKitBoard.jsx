@@ -5,58 +5,20 @@
 import { useState, useEffect } from "react";
 import {
   Package,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  BarChart3,
-  PlayCircle,
   Wrench,
   Zap,
   Cable,
   Bug,
-  Palette,
-  ThumbsUp,
-  ThumbsDown,
-  Calendar,
-  TrendingUp,
-  Eye } from
+  Palette } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
+
+
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import { getItemsCompat, getResponseData } from "../utils/apiResponse";
@@ -126,7 +88,8 @@ export default function AssemblyKitBoard() {
     try {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(getItemsCompat(res));
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   };
 
@@ -154,7 +117,8 @@ export default function AssemblyKitBoard() {
         alert(`已生成 ${res.data.suggestions?.length} 条排产建议`);
         fetchDashboardData();
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -168,7 +132,8 @@ export default function AssemblyKitBoard() {
       }
       const res = await assemblyKitApi.getShortageAlerts(params);
       setAlerts(getResponseData(res) || null);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   };
 
@@ -177,7 +142,8 @@ export default function AssemblyKitBoard() {
       const res = await assemblyKitApi.getAnalysisDetail(readinessId);
       setAnalysisDetail(getResponseData(res));
       setDetailDialogOpen(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   };
 
@@ -185,7 +151,8 @@ export default function AssemblyKitBoard() {
     try {
       await assemblyKitApi.acceptSuggestion(suggestionId, {});
       fetchDashboardData();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -201,7 +168,8 @@ export default function AssemblyKitBoard() {
       setRejectReason("");
       setSelectedSuggestion(null);
       fetchDashboardData();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

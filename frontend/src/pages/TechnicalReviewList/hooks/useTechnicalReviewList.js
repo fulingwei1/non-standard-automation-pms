@@ -28,7 +28,8 @@ export function useTechnicalReviewList() {
             const response = await projectApi.list({ page: 1, page_size: 100 });
             const projects = response.data?.items || response.items || [];
             setProjectList(projects);
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

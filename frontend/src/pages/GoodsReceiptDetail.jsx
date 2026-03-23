@@ -1,47 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, XCircle, ClipboardCheck } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { purchaseApi } from "../services/api";
 import { toast } from "../components/ui/toast";
-import { LoadingCard } from "../components/common";
-import { ErrorMessage } from "../components/common";
 
 const statusConfigs = {
   PENDING: { label: "待收货", color: "bg-slate-500" },

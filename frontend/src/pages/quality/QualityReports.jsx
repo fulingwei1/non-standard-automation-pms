@@ -3,13 +3,8 @@
  * 调用 GET /production/quality/trend, /production/quality/statistics, /production/quality/pareto
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingUp, RefreshCw, BarChart3,
-  PieChart, AlertTriangle, CheckCircle, Target,
+import { BarChart3, AlertTriangle, CheckCircle, Target,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { qualityApi } from "../../services/api/quality";
 
 function StatCard({ title, value, subtitle, icon: Icon, color, bgColor }) {

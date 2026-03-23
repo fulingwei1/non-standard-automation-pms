@@ -87,7 +87,8 @@ export default function MarginAlertManagement() {
         setPendingAlerts(pending.data || pending.items || []);
         setHistoryAlerts(history.data || history.items || []);
         setConfigs(configList.data || configList.items || []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

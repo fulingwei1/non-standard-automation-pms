@@ -37,7 +37,8 @@ export function useStrategyDashboard() {
     try {
       const response = await strategyApi.list({ limit: 10 });
       setStrategies(response.formatted?.items || response.data?.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 
@@ -66,7 +67,8 @@ export function useStrategyDashboard() {
     try {
       const response = await dashboardApi.getOverview(strategyId);
       setOverview(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 
@@ -76,7 +78,8 @@ export function useStrategyDashboard() {
     try {
       const response = await reviewApi.getHealth(strategyId);
       setHealth(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 
@@ -86,7 +89,8 @@ export function useStrategyDashboard() {
     try {
       const response = await dashboardApi.getExecutionStatus(strategyId);
       setExecutionStatus(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 
@@ -95,7 +99,8 @@ export function useStrategyDashboard() {
     try {
       const response = await dashboardApi.getMyStrategy();
       setMyStrategy(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 
@@ -104,7 +109,8 @@ export function useStrategyDashboard() {
     try {
       const response = await dashboardApi.getQuickStats();
       setQuickStats(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 
@@ -113,7 +119,8 @@ export function useStrategyDashboard() {
     try {
       const response = await comparisonApi.getMultiYearTrend(3);
       setMultiYearTrend(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   }, []);
 

@@ -4,24 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Package,
-  Camera,
-  X,
-  CheckCircle2,
-  AlertCircle } from
-"lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Card, CardContent } from "../../components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui/select";
+
+
+
+
 import { productionApi, shortageApi, materialApi } from "../../services/api";
 
 const urgentLevels = [
@@ -70,7 +56,8 @@ export default function MobileShortageReport() {
         project_id: order.project_id,
         machine_id: order.machine_id
       }));
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -79,7 +66,8 @@ export default function MobileShortageReport() {
       const res = await materialApi.list({ page: 1, page_size: 100 });
       const materialsList = res.data?.items || res.data?.items || res.data || [];
       setMaterials(materialsList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

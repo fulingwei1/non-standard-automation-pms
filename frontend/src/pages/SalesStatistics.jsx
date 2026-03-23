@@ -4,30 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  DollarSign,
-  Target,
-  Users,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  Download } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger } from
-"../components/ui";
+
+
+
+
 import { staggerContainer } from "../lib/animations";
 import { salesStatisticsApi } from "../services/api";
 
@@ -188,7 +168,8 @@ export default function SalesStatistics() {
           });
         }
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

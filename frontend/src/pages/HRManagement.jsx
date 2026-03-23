@@ -1,43 +1,14 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Users,
-  FileText,
-  Calendar,
-  AlertCircle,
-  Plus } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../components/ui/dialog";
-import { Label } from "../components/ui/label";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
+
+
+
+
+
+
+
+
+
+
 import { hrManagementApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
@@ -81,7 +52,8 @@ export default function HRManagement() {
       const response = await hrManagementApi.dashboard.getOverview();
       const data = response.data?.data || response.data || response;
       setDashboardData(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -94,7 +66,8 @@ export default function HRManagement() {
       });
       const data = response.data?.data || response.data || response;
       setTransactions(data.items || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -108,7 +81,8 @@ export default function HRManagement() {
       });
       const data = response.data?.data || response.data || response;
       setContracts(data.items || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -117,7 +91,8 @@ export default function HRManagement() {
       const response = await hrManagementApi.contracts.getExpiring(60);
       const data = response.data?.data || response.data || response;
       setExpiringContracts(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

@@ -4,28 +4,16 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  Award,
   CheckCircle2,
   Clock,
   AlertCircle,
-  Download,
-  RefreshCw,
   FileText,
   Receipt,
   BarChart3 } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
+
+
 import { toast } from "../components/ui/toast";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
@@ -131,7 +119,8 @@ export default function MyBonus() {
         end_date: endDate
       });
       setStatistics(response.data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

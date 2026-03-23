@@ -2,9 +2,6 @@
  * HRRelationsTab Component
  * 员工关系 Tab 组件
  */
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../ui";
-import { AlertTriangle, CheckCircle2, Heart } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
 // 状态标签映射

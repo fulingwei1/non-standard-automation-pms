@@ -6,25 +6,8 @@
 import { useState, useEffect } from "react";
 
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { costOverrunApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 
@@ -50,7 +33,8 @@ export default function CostOverrunAnalysis() {
       if (response.data?.data) {
         setReasonsData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -67,7 +51,8 @@ export default function CostOverrunAnalysis() {
       if (response.data?.data) {
         setAccountabilityData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -84,7 +69,8 @@ export default function CostOverrunAnalysis() {
       if (response.data?.data) {
         setImpactData(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

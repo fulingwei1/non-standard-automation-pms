@@ -1,30 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { pmoApi, projectApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
+
+
 import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-} from "../components/ui";
-import {
-  Plus,
   Search,
-  ArrowRight,
-  XCircle,
 } from "lucide-react";
 import { staggerContainer } from "../lib/animations";
-import {
-  RiskList,
-  CreateRiskDialog,
-  AssessRiskDialog,
-  ResponseRiskDialog,
-  StatusRiskDialog,
-  CloseRiskDialog,
-  RiskDetailDialog
-} from "../components/risk-management";
+
+
 
 export default function RiskManagement() {
   const { projectId } = useParams();

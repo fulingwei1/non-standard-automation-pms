@@ -2,29 +2,10 @@
  * 工作台上下文标签页 - 需求包、模板与方案、风险与版本、阶段门与漏斗
  */
 
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  FileJson,
-  GitBranch,
-  Layers3,
-  Save,
-  Target,
-  Workflow,
-} from "lucide-react";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui";
+
+
+
+
 import { formatDate, getRiskLevelBadge } from "../constants";
 
 export function WorkbenchContextTabs({

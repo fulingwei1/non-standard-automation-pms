@@ -2,10 +2,7 @@
  * 趋势折线图组件
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ALERT_COLORS } from '../../constants';
-import { TrendingUp } from 'lucide-react';
 
 const TrendLineChart = ({ data = [] }) => {
   if (data?.length === 0) {

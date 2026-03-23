@@ -22,7 +22,7 @@ export function useTechnicalReviewDetail(reviewId) {
         try {
             const response = await technicalReviewApi.getComments(reviewId);
             setComments(response.data || response || []);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
     }, [reviewId]);
 
     const submitDecision = useCallback(async (decision, comment) => {

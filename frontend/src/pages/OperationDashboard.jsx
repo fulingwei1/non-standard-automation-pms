@@ -1,30 +1,12 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import {
-  BarChart3,
   Users,
   Package,
   DollarSign,
   Clock,
-  AlertTriangle,
-  CheckCircle2,
-  Target,
-  Activity,
-  Zap,
-  ArrowUpRight,
-  ArrowDownRight,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import api, { alertApi, projectApi } from "../services/api";

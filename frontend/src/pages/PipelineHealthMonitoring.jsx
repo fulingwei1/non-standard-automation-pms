@@ -4,25 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  XCircle } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { healthApi } from "../services/api";
 
 export default function PipelineHealthMonitoring() {
@@ -40,7 +25,8 @@ export default function PipelineHealthMonitoring() {
       if (response.data?.data?.warnings) {
         setWarnings(response.data.data.warnings);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

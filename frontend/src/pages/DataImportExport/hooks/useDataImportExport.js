@@ -27,7 +27,8 @@ export function useDataImportExport() {
             const response = await dataImportExportApi.getTemplateTypes();
             const data = response.data?.data || response.data || response;
             setTemplateTypes(data.types || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     };
 

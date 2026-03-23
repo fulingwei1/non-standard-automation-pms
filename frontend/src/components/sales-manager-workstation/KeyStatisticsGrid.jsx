@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   DollarSign,
   Target,
@@ -9,7 +8,6 @@ import {
 } from "lucide-react";
 import { staggerContainer } from "../../lib/animations";
 import { formatCurrency } from "../../lib/utils";
-import StatCard from "../common/StatCard";
 
 export function KeyStatisticsGrid({ deptStats }) {
   if (!deptStats) return null;

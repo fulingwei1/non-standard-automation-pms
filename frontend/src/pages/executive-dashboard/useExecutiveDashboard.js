@@ -114,7 +114,8 @@ export function useExecutiveDashboard() {
           } else {
             setDeliveryData([]);
           }
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
 
         try {
@@ -136,12 +137,14 @@ export function useExecutiveDashboard() {
           } else {
             setUtilizationData([]);
           }
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
 
         try {
           await reportCenterApi.getHealthDistribution();
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
       } catch (err) {
         setError(err);

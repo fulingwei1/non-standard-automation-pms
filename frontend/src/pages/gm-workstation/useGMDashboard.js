@@ -65,7 +65,8 @@ export default function useGMDashboard() {
           end_date: endDate
         });
         monthlyRevenue = salesResponse.data?.total_contract_amount || 0;
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       try {
@@ -78,7 +79,8 @@ export default function useGMDashboard() {
         activeContracts = contractsData.filter(
           (c) => c.status === "SIGNED" || c.status === "EXECUTING"
         ).length;
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       let productionCapacity = 0;
@@ -89,7 +91,8 @@ export default function useGMDashboard() {
           productionResponse.data || productionResponse || {};
         productionCapacity = productionData.capacity_utilization || 0;
         qualityPassRate = productionData.pass_rate || 0;
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       const yearTarget = 150000000;
@@ -185,7 +188,8 @@ export default function useGMDashboard() {
             status: "pending"
           });
         });
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       try {
@@ -217,7 +221,8 @@ export default function useGMDashboard() {
             status: "pending"
           });
         });
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       try {
@@ -249,7 +254,8 @@ export default function useGMDashboard() {
             status: "pending"
           });
         });
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       try {
@@ -284,7 +290,8 @@ export default function useGMDashboard() {
             status: "pending"
           });
         });
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       allApprovals.sort((a, b) => {
@@ -329,7 +336,8 @@ export default function useGMDashboard() {
           }));
           setDepartmentStatus(transformedDepts);
         }
-      } catch (err) {
+      } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       const metrics = [];

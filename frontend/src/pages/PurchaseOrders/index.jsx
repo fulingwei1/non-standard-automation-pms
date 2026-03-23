@@ -1,18 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Package, Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { fadeIn } from "../../lib/animations";
-import { ApiIntegrationError } from "../../components/ui";
-import { PurchaseOrdersOverview, PAYMENT_TERMS, SHIPPING_METHODS } from "../../components/purchase-orders";
-import {
-    CreateEditOrderDialog,
-    OrderDetailDialog,
-    ReceiveGoodsDialog,
-    DeleteConfirmDialog as PurchaseOrderDeleteConfirmDialog
-} from "../../components/purchase/orders";
+import { PAYMENT_TERMS, SHIPPING_METHODS } from "../../components/purchase-orders";
+
+
 import { usePurchaseOrders } from "./hooks";
-import { OrderCard, OrdersControls } from "./components";
 
 export default function PurchaseOrders() {
     const {

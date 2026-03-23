@@ -4,37 +4,14 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   Receipt,
-  Search,
-  Plus,
-  Download,
   CheckCircle2,
   Clock,
-  DollarSign,
-  FileText,
-  CreditCard,
-  TrendingUp,
-  TrendingDown } from
+  FileText } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Progress,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter } from
-"../components/ui";
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { settlementApi } from "../services/api";

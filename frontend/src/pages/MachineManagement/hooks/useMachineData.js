@@ -21,7 +21,8 @@ export function useMachineData(projectId) {
         try {
             const res = await projectApi.get(projectId);
             setProject(res.data || res);
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         }
     }, [projectId]);
 
@@ -43,7 +44,8 @@ export function useMachineData(projectId) {
             const res = await machineApi.list(projectId, params);
             const machineList = res.data?.items || res.data?.items || res.data || [];
             setMachines(machineList);
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         } finally {
             setLoading(false);
         }

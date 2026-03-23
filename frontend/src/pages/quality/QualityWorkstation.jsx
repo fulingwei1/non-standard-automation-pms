@@ -4,16 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { qualityApi } from "../../services/api/quality";
-import { motion } from "framer-motion";
 import {
   AlertCircle,
   FileCheck,
   TrendingUp,
-  Shield,
   Award,
   AlertTriangle,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
 import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片
@@ -337,7 +334,8 @@ export default function QualityWorkstation() {
         setQualityIssues(Array.isArray(alertItems) ? alertItems : []);
         // acceptanceTasks - use inspection list with acceptance type if available
         setAcceptanceTasks([]);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

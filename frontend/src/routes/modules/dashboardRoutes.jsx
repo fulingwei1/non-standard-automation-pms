@@ -1,26 +1,28 @@
+import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 import { AppProtectedRoute } from "../../components/common/AppProtectedRoute";
 
-import UnifiedDashboard from "../../pages/UnifiedDashboard";
-import AdminDashboard from "../../pages/AdminDashboard";
-import OperationDashboard from "../../pages/OperationDashboard";
-import KeyDecisions from "../../pages/KeyDecisions";
-import ManagementRhythmDashboard from "../../pages/ManagementRhythmDashboard";
-import MeetingMap from "../../pages/MeetingMap";
-import StrategicMeetingManagement from "../../pages/StrategicMeetingManagement";
-import StrategicMeetingDetail from "../../pages/StrategicMeetingDetail";
-import MeetingReports from "../../pages/MeetingReports";
-import CultureWall from "../../pages/CultureWall";
-import Shipments from "../../pages/Shipments";
-import DeliveryManagement from "../../pages/DeliveryManagement";
-import Documents from "../../pages/Documents";
-import ProductionBoard from "../../pages/ProductionBoard";
-import ChairmanWorkstation from "../../pages/ChairmanWorkstation";
-import AdministrativeApprovals from "../../pages/AdministrativeApprovals";
-import AdministrativeExpenses from "../../pages/AdministrativeExpenses";
-import OfficeSuppliesManagement from "../../pages/OfficeSuppliesManagement";
-import VehicleManagement from "../../pages/VehicleManagement";
-import FixedAssetsManagement from "../../pages/FixedAssetsManagement";
+// ---- 懒加载页面组件（按需加载，减少初始 bundle 体积） ----
+const UnifiedDashboard = lazy(() => import("../../pages/UnifiedDashboard"));
+const ProductionBoard = lazy(() => import("../../pages/ProductionBoard"));
+const AdminDashboard = lazy(() => import("../../pages/AdminDashboard"));
+const ChairmanWorkstation = lazy(() => import("../../pages/ChairmanWorkstation"));
+const AdministrativeApprovals = lazy(() => import("../../pages/AdministrativeApprovals"));
+const AdministrativeExpenses = lazy(() => import("../../pages/AdministrativeExpenses"));
+const OfficeSuppliesManagement = lazy(() => import("../../pages/OfficeSuppliesManagement"));
+const VehicleManagement = lazy(() => import("../../pages/VehicleManagement"));
+const FixedAssetsManagement = lazy(() => import("../../pages/FixedAssetsManagement"));
+const OperationDashboard = lazy(() => import("../../pages/OperationDashboard"));
+const KeyDecisions = lazy(() => import("../../pages/KeyDecisions"));
+const ManagementRhythmDashboard = lazy(() => import("../../pages/ManagementRhythmDashboard"));
+const MeetingMap = lazy(() => import("../../pages/MeetingMap"));
+const StrategicMeetingManagement = lazy(() => import("../../pages/StrategicMeetingManagement"));
+const StrategicMeetingDetail = lazy(() => import("../../pages/StrategicMeetingDetail"));
+const MeetingReports = lazy(() => import("../../pages/MeetingReports"));
+const CultureWall = lazy(() => import("../../pages/CultureWall"));
+const Shipments = lazy(() => import("../../pages/Shipments"));
+const DeliveryManagement = lazy(() => import("../../pages/DeliveryManagement"));
+const Documents = lazy(() => import("../../pages/Documents"));
 
 export function DashboardRoutes() {
   return (

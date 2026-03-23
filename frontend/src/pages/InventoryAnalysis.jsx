@@ -3,30 +3,10 @@
  * Features: 库存周转率、呆滞物料预警、安全库存达标率、ABC分类、库存成本占用
  */
 import { useState, useEffect, useCallback } from "react";
-import {
-  TrendingUp,
-  TrendingDown,
-  Package,
-  AlertTriangle,
-  Shield,
-  BarChart3,
-  PieChart,
-  Download,
-  Warehouse,
-  Activity,
-  DollarSign,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+
+
+
+
 import { api } from "../services/api";
 
 export default function InventoryAnalysis() {
@@ -49,7 +29,8 @@ export default function InventoryAnalysis() {
       setLoading(true);
       const response = await api.get("/inventory-analysis/turnover-rate");
       setTurnoverData(response.data?.data || response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -63,7 +44,8 @@ export default function InventoryAnalysis() {
         params: { threshold_days: staleThreshold }
       });
       setStaleMaterialsData(response.data?.data || response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -75,7 +57,8 @@ export default function InventoryAnalysis() {
       setLoading(true);
       const response = await api.get("/inventory-analysis/safety-stock-compliance");
       setSafetyStockData(response.data?.data || response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -87,7 +70,8 @@ export default function InventoryAnalysis() {
       setLoading(true);
       const response = await api.get("/inventory-analysis/abc-analysis");
       setAbcAnalysisData(response.data?.data || response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -99,7 +83,8 @@ export default function InventoryAnalysis() {
       setLoading(true);
       const response = await api.get("/inventory-analysis/cost-occupancy");
       setCostOccupancyData(response.data?.data || response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }

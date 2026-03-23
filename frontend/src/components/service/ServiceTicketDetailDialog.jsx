@@ -4,23 +4,11 @@
  */
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import { Textarea } from "../../components/ui/textarea";
+
+
 import { toast } from "../../components/ui/toast";
-import { Star, Phone, Calendar, User, CheckCircle2 } from "lucide-react";
 import { statusConfigs, urgencyConfigs, problemTypeConfigs } from "@/lib/constants/service";
 import { cn, formatDate } from "../../lib/utils";
-import { ServiceTicketAssignDialog } from "./ServiceTicketAssignDialog";
 
 export function ServiceTicketDetailDialog({ ticket, onClose, onAssign, onCloseTicket }) {
   const [showAssignDialog, setShowAssignDialog] = useState(false);

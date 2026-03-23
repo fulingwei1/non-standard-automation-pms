@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   CheckCircle2,
@@ -13,40 +12,22 @@ import {
   PlayCircle,
   PauseCircle,
   AlertTriangle,
-  Search,
-  ChevronRight,
-  Flag,
-  Folder,
-  Timer,
   BarChart3,
   CalendarDays,
   List,
   Briefcase,
   FileText,
-  Upload,
-  Send,
   ClipboardCheck,
   Box,
   Layers } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  Badge,
-  Progress } from
-"../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { taskCenterApi } from "../services/api";
 
 // Import engineer components
-import GanttChart from "../components/engineer/GanttChart";
-import CalendarView from "../components/engineer/CalendarView";
-import TaskDetailPanel from "../components/engineer/TaskDetailPanel";
-import { ApiIntegrationError } from "../components/ui";
 
 // Mock task data for mechanical engineer - 已移除，使用真实API
 // const mockEngineerTasks = [

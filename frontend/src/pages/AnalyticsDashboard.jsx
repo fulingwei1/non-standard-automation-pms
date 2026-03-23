@@ -12,19 +12,12 @@
  */
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+
+
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, AreaChart, Area 
-} from 'recharts';
-import { 
-  Activity, CheckCircle, AlertCircle, Folder, 
-  Zap, Clock, RefreshCw, TrendingUp,
-  ArrowUpRight
+  Activity, CheckCircle, AlertCircle, Folder
 } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle, DashboardStatCard } from '@/components/ui/card';
-import LineChart from '@/components/charts/LineChart';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 const ICON_MAP = {

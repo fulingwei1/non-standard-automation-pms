@@ -1,6 +1,4 @@
-import { AlertCircle, RefreshCw, Inbox } from "lucide-react";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
+import { Inbox } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export function ErrorMessage({

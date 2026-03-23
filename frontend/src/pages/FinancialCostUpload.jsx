@@ -5,44 +5,10 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Upload,
-  Download,
-  FileSpreadsheet,
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  Search } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { financialCostApi } from "../services/api";
@@ -101,7 +67,8 @@ export default function FinancialCostUpload() {
       });
       const items = res.data?.data?.items || res.data?.items || [];
       setCosts(items);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

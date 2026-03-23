@@ -59,7 +59,8 @@ export function useRoleData() {
             const response = await permissionApi.getMatrix();
             const data = response.data || response;
             setPermissionMatrix(data.data || data);
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 
@@ -69,7 +70,8 @@ export function useRoleData() {
             const response = await roleApi.getInheritanceTree();
             const data = response.data || response;
             setInheritanceTree(data.data?.tree || []);
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

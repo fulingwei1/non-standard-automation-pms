@@ -11,7 +11,7 @@ export function useQuoteCostAnalysis(quoteId) {
             setLoading(true);
             const response = await quoteApi.getCostAnalysis(quoteId);
             setAnalysis(response.data || response);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
         finally { setLoading(false); }
     }, [quoteId]);
 

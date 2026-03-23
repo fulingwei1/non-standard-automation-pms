@@ -1,12 +1,5 @@
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
-import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Info,
-} from "lucide-react";
+
+
 
 /**
  * 中标概率等级配置

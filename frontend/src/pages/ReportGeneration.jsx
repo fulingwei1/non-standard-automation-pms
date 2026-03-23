@@ -2,7 +2,6 @@
  * 报表生成页面
  */
 import { useState, useEffect } from 'react';
-import { FileText, Download } from 'lucide-react';
 import { reportCenterApi } from '../services/api';
 
 export default function ReportGeneration() {
@@ -25,7 +24,8 @@ export default function ReportGeneration() {
       const response = await reportCenterApi.getTemplates({ enabled: true });
       const data = response.data;
       setTemplates(data?.items || data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -44,7 +44,8 @@ export default function ReportGeneration() {
       });
       const data = response.data;
       setPreview(data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

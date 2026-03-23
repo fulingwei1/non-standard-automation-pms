@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import {
   DashboardRoutes,
@@ -14,7 +15,9 @@ import {
   WarehouseRoutes,
   QualityRoutes
 } from "./modules";
-import SalesFunnel from "../pages/SalesFunnel";
+
+// 销售漏斗：在 routeConfig 层显式声明确保优先匹配
+const SalesFunnel = lazy(() => import("../pages/SalesFunnel"));
 
 export function AppRoutes() {
   return (

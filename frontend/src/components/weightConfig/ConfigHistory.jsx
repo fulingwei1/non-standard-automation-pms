@@ -1,6 +1,4 @@
-import { History, Users, Briefcase } from "lucide-react";
 import { fadeIn } from "../../utils/weightConfigUtils";
-import { motion } from "framer-motion";
 
 /**
  * 配置历史记录组件

@@ -1,8 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { GitBranch, RefreshCw, Trash2, Link2, Route, AlertTriangle, Eye, EyeOff } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { formatDate } from "../lib/utils";
 import { ganttDependencyApi, projectApi } from "../services/api";

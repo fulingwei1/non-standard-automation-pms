@@ -3,7 +3,6 @@
  * 展示项目健康度分布：H1正常、H2有风险、H3阻塞、H4已完结
  */
 
-import { Pie, Column } from "@ant-design/plots";
 import { useMemo, useState } from "react";
 
 const HEALTH_CONFIG = {

@@ -2,10 +2,6 @@
  * 置信区间和准确率指标组件
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Target, TrendingUp, AlertCircle } from 'lucide-react';
 
 const ConfidenceInterval = ({ forecast }) => {
   if (!forecast) return null;

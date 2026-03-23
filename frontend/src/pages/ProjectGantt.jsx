@@ -4,24 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Users,
-  AlertTriangle,
-  RefreshCw } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 export default function ProjectGantt() {
@@ -40,7 +26,8 @@ export default function ProjectGantt() {
     try {
       const res = await projectApi.get(id);
       setProject(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchGanttData = async () => {
@@ -49,7 +36,8 @@ export default function ProjectGantt() {
       const res = await progressApi.reports.getGantt(id);
       const data = res.data || res || [];
       setGanttData(data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

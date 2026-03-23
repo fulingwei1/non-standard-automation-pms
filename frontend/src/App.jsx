@@ -1,21 +1,30 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
-  useLocation } from
-"react-router-dom";
+  useLocation,
+} from "react-router-dom";
 import { ConfigProvider, theme } from "antd";
 import zhCN from "antd/locale/zh_CN";
-import ErrorBoundary from "./components/common/ErrorBoundary";
-import { MainLayout } from "./components/layout/MainLayout";
-import { AppRoutes } from "./routes/routeConfig";
-import { PermissionProvider } from "./context/PermissionContext";
-import { AuthProvider } from "./context/AuthContext";
 
-// Pages
+// 核心组件（非懒加载：布局、认证、错误边界等高频使用组件）
 import Login from "./pages/Login";
+import { MainLayout } from "./components/layout/MainLayout";
+import { AuthProvider } from "./context/AuthContext";
+import { PermissionProvider } from "./context/PermissionContext";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import { AppRoutes } from "./routes/routeConfig";
+
+// 懒加载页面的全局 loading 状态（匹配深色主题）
+function PageLoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <div className="text-slate-400">加载中...</div>
+    </div>
+  );
+}
 
 // Ant Design 深色主题配置 - 匹配项目设计系统
 const antdDarkTheme = {
@@ -162,42 +171,42 @@ function App() {
       <ConfigProvider theme={antdDarkTheme} locale={zhCN}>
         <Router>
           <Routes>
-            {/* 登录路由 */}
+            {/* 登录路由（eager import，首屏页面） */}
             <Route
               path="/login"
               element={
-              <LoginRoute
-                onLoginSuccess={handleLoginSuccess}
-                isAuthenticated={isAuthenticated} />
-
-              } />
+                <LoginRoute
+                  onLoginSuccess={handleLoginSuccess}
+                  isAuthenticated={isAuthenticated}
+                />
+              }
+            />
 
             {/* 未认证时，所有其他路径都重定向到登录页 */}
-            {!isAuthenticated ?
-            <Route path="*" element={<Navigate to="/login" replace />} /> : (
-
-            /* 已认证时，显示主应用 */
-            <>
+            {!isAuthenticated ? (
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            ) : (
+              /* 已认证时，显示主应用（Suspense 包裹懒加载路由） */
               <Route
                 path="*"
                 element={
-                <AuthProvider>
-                  <PermissionProvider>
-                    <MainLayout onLogout={handleLogout}>
-                        <AppRoutes />
-                    </MainLayout>
-                  </PermissionProvider>
-                </AuthProvider>
+                  <AuthProvider>
+                    <PermissionProvider>
+                      <MainLayout onLogout={handleLogout}>
+                        <Suspense fallback={<PageLoadingFallback />}>
+                          <AppRoutes />
+                        </Suspense>
+                      </MainLayout>
+                    </PermissionProvider>
+                  </AuthProvider>
                 }
               />
-            </>)
-
-            }
+            )}
           </Routes>
         </Router>
       </ConfigProvider>
-    </ErrorBoundary>);
-
+    </ErrorBoundary>
+  );
 }
 
 export default App;

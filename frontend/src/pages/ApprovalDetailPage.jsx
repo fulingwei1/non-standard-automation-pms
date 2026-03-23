@@ -7,31 +7,17 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "../components/ui/toast";
 import {
-  ArrowLeft,
   FileText,
-  User,
-  Calendar,
-  AlertTriangle,
   Clock,
   CheckCircle2,
   XCircle,
   Undo2,
-  Bell,
-  ExternalLink,
-  Loader2,
 } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Textarea } from "../components/ui/textarea";
 import { cn } from "../lib/utils";
-import ApprovalTimeline from "../components/approval/ApprovalTimeline";
 import { api } from "../services/api/client";
 import { formatDateTime } from "@/lib/formatters";
 

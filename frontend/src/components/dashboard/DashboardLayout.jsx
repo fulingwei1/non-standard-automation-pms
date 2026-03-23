@@ -9,8 +9,6 @@
  * @param {React.ReactNode} props.children - 子内容
  * @param {boolean} props.loading - 加载状态
  */
-import { motion } from "framer-motion";
-import { PageHeader } from "../layout/PageHeader";
 
 // Stagger animation variants
 const staggerContainer = {

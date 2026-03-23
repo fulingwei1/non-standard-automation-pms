@@ -2,11 +2,7 @@
  * 方案对比表格组件
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SOLUTION_TYPES, getScoreColor } from '../../constants';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { BarChart } from 'lucide-react';
 
 const SolutionCompare = ({ solutions = [] }) => {
   if (solutions.length === 0) return null;

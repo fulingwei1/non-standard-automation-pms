@@ -2,7 +2,6 @@
  * 支付列表网格组件
  * 显示支付记录的网格视图
  */
-import PaymentCard from './PaymentCard';
 
 /**
  * 支付网格组件

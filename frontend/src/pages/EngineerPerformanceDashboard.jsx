@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Tabs, Select, DatePicker } from 'antd';
-import { TrophyOutlined, RiseOutlined, TeamOutlined, BulbOutlined, FireOutlined } from '@ant-design/icons';
+import { Select, DatePicker } from 'antd';
 import api from '../services/api';
 
 const { Option } = Select;
@@ -22,7 +21,8 @@ const EngineerPerformanceDashboard = () => {
         setCompanySummary(response.data.data);
         setCurrentPeriod(response.data.data.period_name);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,8 @@ const EngineerPerformanceDashboard = () => {
       if (response.data.code === 200) {
         setTopEngineers(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

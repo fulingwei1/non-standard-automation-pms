@@ -2,23 +2,8 @@
  * AI统计图表组件
  * Team 10: 售前AI系统集成与前端UI
  */
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+
+
 
 const AIStatsChart = ({
   data,

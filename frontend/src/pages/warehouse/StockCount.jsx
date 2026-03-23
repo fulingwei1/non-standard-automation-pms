@@ -1,13 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { ClipboardCheck, Plus, Eye, RefreshCw, Play } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Badge } from "../../components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
 import { warehouseApi } from "../../services/api";
 import { formatDate } from "../../lib/utils";
 import { toast } from "../../components/ui/toast";
@@ -36,7 +27,7 @@ export default function StockCount() {
       if (statusFilter && statusFilter !== "all") params.status = statusFilter;
       const res = await warehouseApi.stockCount.list(params);
       setData(res.data || res);
-    } catch (_e) { } finally { setLoading(false); }
+    } catch (_e) { /* 非关键操作失败时静默降级 */ } finally { setLoading(false); }
   }, [page, statusFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -50,7 +41,7 @@ export default function StockCount() {
   };
 
   const viewDetail = async (order) => {
-    try { const r = await warehouseApi.stockCount.get(order.id); setSelectedOrder(r.data || r); setShowDetail(true); } catch (_e) { }
+    try { const r = await warehouseApi.stockCount.get(order.id); setSelectedOrder(r.data || r); setShowDetail(true); } catch (_e) { /* 非关键操作失败时静默降级 */ }
   };
 
   const changeStatus = async (id, status) => {

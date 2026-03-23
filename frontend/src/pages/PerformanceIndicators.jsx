@@ -3,32 +3,10 @@
  * Features: 指标模板管理、指标分类、权重配置、计算规则
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Target,
-  Plus,
-  Edit2,
-  Trash2,
-  Copy,
-  Search,
-  Download,
-  Upload,
-  AlertCircle,
-  TrendingUp,
-  Percent,
-  Settings,
-  Loader2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Input } from "../components/ui/input";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { performanceApi } from "../services/api";

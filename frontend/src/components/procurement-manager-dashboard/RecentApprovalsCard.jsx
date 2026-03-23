@@ -1,13 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Button,
-  Badge,
-} from "../../components/ui";
-import { FileCheck } from "lucide-react";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
 import { getPriorityColor } from "./utils";
 

@@ -3,16 +3,10 @@
  * Used in BusinessSupportWorkstation and contract listings
  */
 
-import { motion } from "framer-motion";
 import {
-  Briefcase,
-  Download,
-  Eye,
-  Edit,
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
-import { Badge, Button, Progress } from "../ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

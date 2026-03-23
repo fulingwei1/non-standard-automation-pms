@@ -1,7 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Tag, Progress, Tabs, Empty, Spin, Space } from 'antd';
-import { TrophyOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
-import { Radar, Line } from '@ant-design/plots';
 import api from '../services/api';
 import { useParams } from 'react-router-dom';
 
@@ -20,7 +17,8 @@ const EngineerPerformanceDetail = () => {
       if (response.data.code === 200) {
         setPerformance(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -33,7 +31,8 @@ const EngineerPerformanceDetail = () => {
       if (response.data.code === 200) {
         setTrend(response.data.data.trends);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -44,7 +43,8 @@ const EngineerPerformanceDetail = () => {
       if (response.data.code === 200) {
         setComparison(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

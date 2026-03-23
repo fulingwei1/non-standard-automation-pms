@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { pmoApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
-import { Card, CardContent, Badge, SkeletonCard } from "../components/ui";
-import {
-  AlertTriangle,
-  Building2,
-  Target,
-  ArrowRight,
-} from "lucide-react";
+
+
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -74,7 +66,8 @@ export default function RiskWall() {
       const res = await pmoApi.riskWall();
       const data = res.data || res;
       setRiskData(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

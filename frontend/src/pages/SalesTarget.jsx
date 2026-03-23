@@ -4,39 +4,13 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
-  Target,
-  Plus,
-  Edit,
   Users,
   Building2,
   User,
-  Search,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Label,
-} from "../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { salesTargetApi, salesTeamApi } from "../services/api";
@@ -140,7 +114,8 @@ export default function SalesTarget() {
         if (res.data?.team_members) {
           setTeamMembers(res.data.team_members);
         }
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
     };
     loadTeamMembers();

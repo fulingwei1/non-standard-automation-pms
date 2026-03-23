@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import IssueManagement from "./IssueManagement";
-import ProductionExceptionList from "./ProductionExceptionList";
 
 export default function ExceptionCenter() {
   const tabs = useMemo(

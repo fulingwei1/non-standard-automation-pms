@@ -6,10 +6,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   TrendingUp,
-  TrendingDown,
   Briefcase,
   Users,
   DollarSign,
@@ -19,7 +17,6 @@ import {
   Package,
   FileText,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import api from '../../../services/api';
 import { cn } from '../../../lib/utils';
 

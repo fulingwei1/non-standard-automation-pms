@@ -7,47 +7,11 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import {
-  Save,
-  Plus,
-  Trash2,
-  Edit2,
-  Settings,
-  Layers,
-  AlertTriangle,
-  CheckCircle,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
+
+
 import { staggerContainer } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Label,
-  Switch,
-  Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Textarea,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui";
+
+
 import { assemblyKitApi } from "../services/api";
 
 // 预置装配阶段

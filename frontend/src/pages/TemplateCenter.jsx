@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import StageTemplateManagement from "./StageTemplateManagement";
-import TemplateConfigList from "./TemplateConfigList";
 
 export default function TemplateCenter() {
   const tabs = useMemo(

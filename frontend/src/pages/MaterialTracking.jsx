@@ -4,42 +4,15 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Package,
   AlertTriangle,
   CheckCircle2,
-  Search,
   Plus,
   Truck,
-  Eye,
-  AlertCircle,
   Zap } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Progress,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea } from
-"../components/ui";
+
+
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { materialApi, purchaseApi } from "../services/api";
@@ -306,7 +279,8 @@ export default function MaterialTracking() {
           const itemsResponse = await purchaseApi.orders.getItems(order.id);
           const items = itemsResponse.data?.items || itemsResponse.data || [];
           allPurchaseItems.push(...items);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
       }
 
@@ -381,7 +355,8 @@ export default function MaterialTracking() {
       try {
         const res = await materialApi.categories.list();
         setCategories(res.data?.items || res.data?.items || res.data || []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
     };
     loadCategories();

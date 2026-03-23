@@ -2,9 +2,6 @@
  * 多年趋势图组件
  * 展示战略执行的多年趋势分析
  */
-import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus, BarChart3, Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
 import { CHART_COLORS } from "../../../lib/constants/strategy";

@@ -15,52 +15,25 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Plus,
-  Search,
-  Eye,
-  Edit,
   FileText,
-  Calendar,
-  MapPin,
-  User,
-  Clock,
-  Camera,
-  Download,
   RefreshCw,
   Wrench,
   Users,
   AlertTriangle,
-  Star,
-  Upload,
-  FileCheck,
-  X } from
+  Star } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
-import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
+
+
+
+
 import { toast } from "../components/ui/toast";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { serviceApi } from "../services/api";
 
 // 导入重构后的组件
 import {
-  ServiceRecordOverview,
   SERVICE_STATUS,
   SERVICE_TYPES,
   getServiceStatusConfig,
@@ -228,7 +201,8 @@ export default function ServiceRecord() {
           0
         )
       });
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   }, [records]);
 

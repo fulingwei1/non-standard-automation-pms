@@ -3,8 +3,6 @@
  * 显示单个成员的完整信息，包括基本信息、跟进统计、业绩进度等
  */
 
-import { Users, TrendingUp, BarChart3, MoreHorizontal, Mail, Phone, Edit } from "lucide-react";
-import { Badge, Progress, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../../../ui";
 import { cn } from "../../../../lib/utils";
 import { statusConfig, formatCurrency, formatFollowUpType, formatTimeAgo } from "@/lib/constants/salesTeam";
 

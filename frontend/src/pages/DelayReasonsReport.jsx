@@ -3,46 +3,16 @@
  * Features: 显示任务延期原因统计（Top N），支持按原因/负责人分组
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  AlertTriangle,
-  BarChart3,
-  FileText,
-  User,
-  Users,
-  TrendingDown,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
+
+
+
+
+
+
+
+
 import { progressApi, projectApi } from "../services/api";
 import { cn } from "../lib/utils";
 
@@ -92,7 +62,8 @@ export default function DelayReasonsReport() {
     try {
       const res = await projectApi.get(selectedProjectId);
       setProject(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -142,7 +113,8 @@ export default function DelayReasonsReport() {
         // 如果没有详细任务数据，使用模拟数据结构
         setPersonData(null);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

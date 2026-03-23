@@ -4,35 +4,10 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  User,
-  Building,
-  Phone,
-  Mail,
-  Calendar,
-  DollarSign,
-  MapPin,
-  Tag,
-  TrendingUp,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Star,
-  Clock } from
-"lucide-react";
-import { Card, CardContent, CardHeader } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import { Progress } from "../../components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger } from
-"../../components/ui/dropdown-menu";
+
+
+
+
 import { cn } from "../../lib/utils";
 import {
   LEAD_SOURCES,

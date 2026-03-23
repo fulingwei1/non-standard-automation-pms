@@ -9,42 +9,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   AlertTriangle,
-  AlertCircle,
   CheckCircle,
-  Users,
   Clock,
-  TrendingUp,
   AlertOctagon,
-  RefreshCw,
-  BarChart3,
-  Calendar,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Progress,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui";
+
+
 import { engineerSchedulingApi } from "../services/api";
 
 // 预警级别配置
@@ -82,7 +55,8 @@ export default function EngineerWorkloadBoard() {
       // 获取预警
       const warningsRes = await engineerSchedulingApi.generateWarnings({ project_id: projectId });
       setWarnings(warningsRes.data?.warnings || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

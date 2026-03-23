@@ -3,8 +3,7 @@
  * 流程管理组件（简化占位版）
  */
 
-import { Card, List, Space, Tag, Typography } from "antd";
-import { Wrench } from "lucide-react";
+import { Typography } from "antd";
 
 import { WORKFLOW_STEPS, APPROVAL_RULES } from "@/lib/constants/approval";
 

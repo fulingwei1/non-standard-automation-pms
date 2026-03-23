@@ -1,6 +1,5 @@
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
-import { CheckCircle2, Circle } from "lucide-react";
 
 export default function StageGantt({ stages }) {
   if (!stages || stages.length === 0) {

@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import OrganizationManagement from "./OrganizationManagement";
-import PositionManagement from "./PositionManagement";
 
 export default function OrganizationCenter() {
   const tabs = useMemo(

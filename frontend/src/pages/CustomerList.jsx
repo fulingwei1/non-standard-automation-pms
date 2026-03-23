@@ -4,55 +4,12 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
-import {
-  Building2,
-  Search,
-  Plus,
-  LayoutGrid,
-  List,
-  ChevronRight,
-  MapPin,
-  Phone,
-  Mail,
-  Calendar,
-  Star,
-  TrendingUp,
-  AlertTriangle,
-  Download,
-  Upload,
-  Tag,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  UserPlus,
-  Target,
-  DollarSign,
-  History,
-  MessageSquare,
-} from "lucide-react"
-import { PageHeader } from "../components/layout"
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "../components/ui"
+
+
+
+
 import { cn } from "../lib/utils"
 import { fadeIn, staggerContainer } from "../lib/animations"
-import { CustomerCard } from "../components/sales"
 import { useCustomerList } from "./CustomerList/hooks"
 import { customerApi } from "../services/api"
 import { toast } from "sonner"

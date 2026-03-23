@@ -1,7 +1,4 @@
-import { motion } from "framer-motion";
-import { Search, ArrowRight } from "lucide-react";
-import { PageHeader } from "../../../components/layout/PageHeader";
-import { Card, CardContent, Input } from "../../../components/ui";
+import { Search } from "lucide-react";
 import { staggerContainer } from "../../../lib/animations";
 
 export function ProjectSelectionView({

@@ -4,29 +4,10 @@
  */
 
 import { useState } from "react";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator } from
-"../../components/ui/dropdown-menu";
-import {
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  FileText,
-  Calendar,
-  DollarSign,
-  User,
-  AlertTriangle,
-  CheckCircle2,
-  Clock } from
-"lucide-react";
+
+
+
+
 import {
   getStatusConfig,
   getTypeConfig,

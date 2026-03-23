@@ -1,4 +1,3 @@
-import { ClipboardList, Clock, CheckCircle2, Users, Award } from "lucide-react";
 
 /**
  * 任务统计卡片组件

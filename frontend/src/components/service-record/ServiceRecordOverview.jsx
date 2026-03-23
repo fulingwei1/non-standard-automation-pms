@@ -3,20 +3,8 @@
  * 显示服务记录的关键指标和快速操作入口
  */
 import { useMemo } from "react";
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle2, 
-  Calendar,
-  TrendingUp,
-  AlertTriangle,
-  Star,
-  Users
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Progress } from "../ui/progress";
+
+
 import { 
   SERVICE_STATUS, 
   SERVICE_TYPES,

@@ -1,10 +1,4 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from "../ui/card";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { History, FileText } from 'lucide-react';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

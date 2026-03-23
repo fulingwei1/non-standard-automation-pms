@@ -5,39 +5,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AlertTriangle,
   Clock,
   FileText,
-  CheckCircle2,
-  ExternalLink,
-  RefreshCw } from
+  CheckCircle2 } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import { Checkbox } from "../components/ui/checkbox";
+
+
+
+
+
+
 import { ecnApi } from "../services/api";
 
 import { confirmAction } from "@/lib/confirmAction";

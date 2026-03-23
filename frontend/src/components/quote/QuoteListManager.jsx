@@ -4,24 +4,10 @@
  */
 
 import { useMemo, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
-  Search,
-  Plus,
-  Eye,
-  Edit,
-  Copy,
-  User,
   AlertTriangle,
-  XCircle,
-  Download,
-  Upload } from
+  XCircle } from
 "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Input } from "../../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { cn } from "../../lib/utils";
 import { resolveIcon } from "@/utils/iconMap";
 import {

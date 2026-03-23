@@ -4,48 +4,16 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Eye,
-  Play,
-  Edit,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { acceptanceApi, projectApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
@@ -96,7 +64,8 @@ export default function AcceptanceOrderList() {
     try {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchOrders = async () => {
@@ -110,7 +79,8 @@ export default function AcceptanceOrderList() {
       const res = await acceptanceApi.orders.list(params);
       const orderList = res.data?.items || res.data?.items || res.data || [];
       setOrders(orderList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -143,7 +113,8 @@ export default function AcceptanceOrderList() {
       const res = await acceptanceApi.orders.get(orderId);
       setSelectedOrder(res.data || res);
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const handleStart = async (orderId) => {

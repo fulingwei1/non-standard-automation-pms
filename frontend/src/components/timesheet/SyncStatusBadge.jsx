@@ -1,5 +1,3 @@
-import { CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react";
-import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 
 /**

@@ -4,30 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  BarChart3,
-  DollarSign,
-  Target,
-  Download,
-  Filter,
-  PieChart,
-  LineChart,
-  Activity,
-  Building2,
-  ArrowUpRight,
-  ArrowDownRight } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Progress,
-  ApiIntegrationError } from
-"../components/ui";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { salesStatisticsApi } from "../services/api";

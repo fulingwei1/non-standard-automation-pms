@@ -6,33 +6,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { technicalReviewApi, projectApi, userApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Select,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  SkeletonCard } from
-"../components/ui";
 
 
-import {
-  ArrowLeft,
-  Save,
-  Plus,
-  Trash2,
-  Upload,
-  FileText,
-  User } from
-"lucide-react";
+
+
+
+
 
 import { confirmAction } from "@/lib/confirmAction";
 const getStatusBadge = (status) => {
@@ -110,7 +89,8 @@ export default function TechnicalReviewDetail() {
       const response = await projectApi.list({ page: 1, page_size: 100 });
       const data = response.data || response;
       setProjects(data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -119,7 +99,8 @@ export default function TechnicalReviewDetail() {
       const response = await userApi.list({ page: 1, page_size: 100 });
       const data = response.data || response;
       setUsers(data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

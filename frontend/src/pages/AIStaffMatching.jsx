@@ -6,38 +6,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Zap,
-  Users,
-  Target,
   Check,
-  X,
-  RefreshCw,
-  Clock,
   TrendingUp,
   AlertCircle,
-  ChevronRight,
-  Rocket,
-  History,
   Star } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
 import { cn } from "../lib/utils";
 import { staffMatchingApi } from "../services/api";
 
@@ -96,7 +74,8 @@ export default function AIStaffMatching() {
       if (response.data?.items) {
         setStaffingNeeds(response.data.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -112,7 +91,8 @@ export default function AIStaffMatching() {
       if (response.data?.items) {
         setMatchingHistory(response.data.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setHistoryLoading(false);
     }
@@ -204,7 +184,8 @@ export default function AIStaffMatching() {
         reject_reason: rejectReason
       });
       loadMatchingHistory();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
     setShowRejectDialog(false);
   };

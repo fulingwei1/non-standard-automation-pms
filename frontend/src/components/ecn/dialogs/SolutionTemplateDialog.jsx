@@ -2,17 +2,8 @@
  * SolutionTemplateDialog Component
  * 创建解决方案模板对话框
  */
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  DialogDescription,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
+
+
 
 export default function SolutionTemplateDialog({
   open,

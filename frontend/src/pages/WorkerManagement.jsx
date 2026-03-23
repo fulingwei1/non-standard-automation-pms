@@ -3,46 +3,16 @@
  * Features: 工人列表、创建、编辑、技能管理
  */
 import { useState, useEffect, useMemo } from "react";
-import {
-  Plus,
-  Search,
-  Eye,
-  Edit,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 import { getItemsCompat, getResponseData } from "../utils/apiResponse";
@@ -80,7 +50,8 @@ export default function WorkerManagement() {
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workers.list(params);
       setWorkers(getItemsCompat(res));
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -118,7 +89,8 @@ export default function WorkerManagement() {
       const res = await productionApi.workers.get(workerId);
       setSelectedWorker(getResponseData(res));
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

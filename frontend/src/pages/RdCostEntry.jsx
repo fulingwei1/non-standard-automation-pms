@@ -1,34 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
-import {
-  ArrowLeft,
-  Plus,
-  Save,
-  Calculator,
-  FileText,
-  AlertCircle } from
-"lucide-react";
+
+
+
+
 
 const _costTypeMap = {
   LABOR: { label: "人工费用", color: "primary" },
@@ -71,7 +48,8 @@ export default function RdCostEntry() {
       const response = await rdProjectApi.get(id);
       const projectData = response.data?.data || response.data || response;
       setProject(projectData);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

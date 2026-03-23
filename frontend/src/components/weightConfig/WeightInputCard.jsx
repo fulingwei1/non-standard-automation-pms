@@ -1,4 +1,3 @@
-import { Percent } from "lucide-react";
 
 /**
  * 权重输入卡片组件

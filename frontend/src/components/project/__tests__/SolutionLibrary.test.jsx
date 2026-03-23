@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import SolutionLibrary from '../SolutionLibrary';
 import { issueTemplateApi } from '../../../services/api';
 
 vi.mock('../../../services/api', async (importOriginal) => {

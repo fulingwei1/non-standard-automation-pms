@@ -1,10 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowUpFromLine, ArrowLeft, XCircle, Play, AlertTriangle } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { warehouseApi } from "../../services/api";
 import { formatDate } from "../../lib/utils";
 import { toast } from "../../components/ui/toast";

@@ -3,33 +3,17 @@
  * 1,346 行单体拆分为: constants + hook + 3 个对话框组件
  */
 
-import { motion } from "framer-motion";
-import {
-  Plus, Search, Edit3, Trash2, Key,
-  ToggleLeft, ToggleRight, RefreshCw,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "../../components/ui/table";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "../../components/ui/select";
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import {
-  UserManagementOverview,
   USER_STATUS, USER_DEPARTMENT_LABELS,
   USER_STATUS_FILTER_OPTIONS, ROLE_FILTER_OPTIONS, DEPARTMENT_FILTER_OPTIONS,
 } from "../../components/user-management";
 import { statusConfig, roleConfig } from "./constants";
 import { useUserManagement } from "./hooks/useUserManagement";
-import { UserFormDialog } from "./components/UserFormDialog";
-import { PermissionDialog } from "./components/PermissionDialog";
 
 // Badge 渲染辅助
 function StatusBadge({ status }) {

@@ -4,46 +4,16 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Eye,
-  CheckCircle2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { shortageApi, projectApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
@@ -81,7 +51,8 @@ export default function ShortageReportList() {
     try {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchReports = async () => {
@@ -95,7 +66,8 @@ export default function ShortageReportList() {
       const res = await shortageApi.reports.list(params);
       const reportList = res.data?.items || res.data?.items || res.data || [];
       setReports(reportList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -105,7 +77,8 @@ export default function ShortageReportList() {
       const res = await shortageApi.reports.get(reportId);
       setSelectedReport(res.data || res);
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const handleConfirm = async (reportId) => {

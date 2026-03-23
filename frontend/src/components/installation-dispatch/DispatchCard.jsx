@@ -4,41 +4,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Badge,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  Textarea,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui";
-import {
-  Clock,
-  CheckCircle2,
-  User,
-  Calendar,
-  MapPin,
-  Phone,
-  Mail,
-  Edit,
-  Play,
-  Pause,
-  Square,
-  Trash2 } from
-"lucide-react";
+
+
+
+
 import { cn } from "../../lib/utils";
 import {
   taskStatusConfigs,

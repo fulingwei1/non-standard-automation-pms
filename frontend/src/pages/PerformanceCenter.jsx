@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import PerformanceManagement from "./PerformanceManagement";
-import PerformanceContract from "./PerformanceContract";
-import EvaluationWeightConfig from "./EvaluationWeightConfig";
 
 export default function PerformanceCenter() {
   const tabs = useMemo(

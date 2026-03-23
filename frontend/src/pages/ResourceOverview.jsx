@@ -7,21 +7,12 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   AlertTriangle,
-  Filter,
-  ChevronDown,
-  ChevronRight,
-  Calendar,
   Activity,
-  TrendingUp,
   Flame,
-  Shield,
-  X,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { resourceOverviewApi } from "../services/api/resourceOverview";
 // ============================================================================
@@ -317,7 +308,8 @@ export default function ResourceOverview() {
       if (onlyConflicts) params.only_conflicts = true;
       const res = await resourceOverviewApi.list(params);
       setData(res.data || res);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

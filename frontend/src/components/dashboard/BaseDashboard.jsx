@@ -26,11 +26,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import { RefreshCw, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { PageHeader } from '../layout/PageHeader';
-import { Button } from '../ui/button';
-import { SkeletonCard } from '../ui/skeleton';
 import { useDashboardData } from './useDashboardData';
 import { cn } from '../../lib/utils';
 

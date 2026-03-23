@@ -14,7 +14,7 @@ export function useEngineerKnowledge() {
             if (filters.tag) params.tag = filters.tag;
             const response = await engineerKnowledgeApi.list(params);
             setArticles(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
         finally { setLoading(false); }
     }, [filters]);
 

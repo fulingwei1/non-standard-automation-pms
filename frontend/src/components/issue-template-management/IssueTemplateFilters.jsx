@@ -1,13 +1,5 @@
-import { Search } from "lucide-react";
-import { Input } from "../ui/input";
-import { Card, CardContent } from "../ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+
+
 
 export default function IssueTemplateFilters({
   searchKeyword,

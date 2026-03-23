@@ -3,43 +3,10 @@
  * 战略 CSF → 部门目标 (OKR) → 个人 KPI 三层树形结构
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  ChevronRight,
-  ChevronDown,
-  Target,
-  Users,
-  User,
-  TrendingUp,
-  Award,
-  Star,
-  RefreshCw,
-  Plus,
-  Edit2,
-} from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-  Input,
-  Textarea,
-} from "@/components/ui";
+
+
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { decompositionApi, strategyApi } from "@/services/api/strategy";
 
@@ -160,7 +127,8 @@ export default function Decomposition() {
       }
       setIsRatingModalOpen(false);
       await fetchTree();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

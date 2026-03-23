@@ -1,15 +1,6 @@
-import {
-  Target,
-  Edit3,
-  Lightbulb,
-  AlertCircle,
-  TrendingUp,
-  Sparkles,
-  Save,
-  Send,
-} from "lucide-react";
+
+
 import { fadeIn } from "../../utils/monthlySummaryUtils";
-import { motion } from "framer-motion";
 
 /**
  * 月度总结表单组件

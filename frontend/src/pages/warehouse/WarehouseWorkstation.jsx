@@ -4,16 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { warehouseApi } from "../../services/api/warehouse";
-import { motion } from "framer-motion";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
   AlertTriangle,
   ClipboardCheck,
   Search,
-  Warehouse,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
 import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片
@@ -272,7 +269,8 @@ export default function WarehouseWorkstation() {
         setOutboundTasks(Array.isArray(outboundItems) ? outboundItems : []);
         const alertItems = alertsRes.data?.items || alertsRes.data?.items || alertsRes.data || [];
         setStockAlerts(Array.isArray(alertItems) ? alertItems : []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

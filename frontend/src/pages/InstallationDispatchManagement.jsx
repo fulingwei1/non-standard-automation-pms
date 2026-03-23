@@ -5,16 +5,8 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
+
+
 import { toast } from "../components/ui/toast";
 import {
   installationDispatchApi,
@@ -23,15 +15,6 @@ import {
   machineApi,
 } from "../services/api";
 import {
-  InstallationDispatchOverview,
-  DispatchList,
-  DispatchFilters,
-  DispatchBatchActions,
-  CreateDispatchDialog,
-  AssignDispatchDialog,
-  DispatchDetailDialog,
-  UpdateProgressDialog,
-  CompleteDispatchDialog,
   DISPATCH_STATUS,
   DISPATCH_PRIORITY,
   INSTALLATION_TYPE,
@@ -182,7 +165,8 @@ export default function InstallationDispatchManagement() {
     try {
       const res = await installationDispatchApi.statistics();
       setStats(res.data || {});
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

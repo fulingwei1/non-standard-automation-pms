@@ -9,47 +9,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Users,
-  Sparkles,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  RefreshCw,
-  Save,
-  Send,
-  Edit2,
-  Trash2,
-  Plus,
-  UserPlus,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
+
+
 import { staggerContainer } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Textarea,
-  Input,
-  Label,
-} from "../components/ui";
+
+
 import { teamGenerationApi } from "../services/api";
 
 export default function TeamGeneration() {

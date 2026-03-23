@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { PageHeader } from "../components/layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import RequirementSurvey from "./RequirementSurvey";
-import SolutionList from "./SolutionList";
-import PresalesTasks from "./PresalesTasks";
 
 const TAB_SURVEYS = "surveys";
 const TAB_SOLUTIONS = "solutions";

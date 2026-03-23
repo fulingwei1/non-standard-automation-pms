@@ -4,60 +4,20 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Search,
-  Plus,
-  LayoutGrid,
-  List as ListIcon,
-  Calendar,
-  Building2,
-  Phone,
-  Mail,
-  CheckCircle2,
-  XCircle,
-  Eye,
-  Edit,
-  FileText,
-  Target,
-  MessageSquare,
-  Users,
-  Award,
-  BarChart3,
-  Settings,
-  Download,
-  Upload } from
-"lucide-react";
+
+
 
 import {
-  Card,
-  Button,
   Input,
-  Select,
   DatePicker,
-  Modal,
-  Space,
-  Tag,
-  Row,
-  Col,
   Typography,
-  Dropdown,
-  Menu,
-  Radio,
   message,
-  Tabs,
-  Progress,
   Steps } from
 "antd";
 
 // 导入拆分后的组件
-import {
-  LeadOverview,
-  LeadList,
-  AssessmentForm,
-  ScoringEngine,
-  FollowUpManager } from
-'../components/lead-assessment';
+
+
 
 import { leadApi } from '../services/api/sales';
 

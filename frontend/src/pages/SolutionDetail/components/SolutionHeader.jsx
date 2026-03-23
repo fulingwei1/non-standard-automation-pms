@@ -1,8 +1,3 @@
-import { motion } from "framer-motion";
-import { ArrowLeft, Share2, Download, Edit, MoreHorizontal, Copy, Send, Archive, Trash2 } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "../../../components/ui/dropdown-menu";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { getStatusStyle } from "../constants";

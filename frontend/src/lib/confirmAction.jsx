@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import ConfirmDialog from "../components/common/ConfirmDialog";
 
 const DESTRUCTIVE_KEYWORDS = ["删除", "移除", "清空", "不可撤销", "撤销", "注销", "禁用"];
 

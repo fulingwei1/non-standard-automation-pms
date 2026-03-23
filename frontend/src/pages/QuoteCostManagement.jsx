@@ -1,33 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Calculator,
-  CheckCircle2,
-  Layers,
-  Search
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "../components/ui";
+
+
+
+
 import { staggerContainer } from "../lib/animations";
 import { quoteApi, salesTemplateApi } from "../services/api";
 
-import {
-  CostOverview,
-  CostBreakdown,
-  CostCheck,
-  CostApproval,
-  ApplyTemplateDialog,
-  SubmitApprovalDialog,
-  CostSuggestionsDialog
-} from "../components/quote-cost-management";
+
+
 
 export default function QuoteCostManagement() {
   const [costSuggestions, setCostSuggestions] = useState(null);
@@ -142,6 +123,7 @@ export default function QuoteCostManagement() {
         const checkRes = await quoteApi.checkCost(id);
         setCostCheck(checkRes.data?.data || checkRes.data);
       } catch (_e) {
+        // 非关键操作失败时静默降级
       }
 
       // Load approval history
@@ -149,6 +131,7 @@ export default function QuoteCostManagement() {
         const historyRes = await quoteApi.getCostApprovalHistory(id);
         setApprovalHistory(historyRes.data?.data || historyRes.data?.items || historyRes.data || []);
       } catch (_e) {
+        // 非关键操作失败时静默降级
       }
 
       // Load cost templates
@@ -162,8 +145,10 @@ export default function QuoteCostManagement() {
           templatesRes.data?.data?.items || templatesRes.data?.items || [];
         setCostTemplates(templates);
       } catch (_e) {
+        // 非关键操作失败时静默降级
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

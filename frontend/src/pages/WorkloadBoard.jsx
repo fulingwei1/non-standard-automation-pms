@@ -3,38 +3,14 @@
  * Features: 团队负荷统计、负荷热力图、可用资源查询
  */
 import { useState, useEffect } from "react";
-import {
-  Users,
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-  BarChart3,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
+
+
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { workloadApi } from "../services/api";
 export default function WorkloadBoard() {
@@ -62,7 +38,8 @@ export default function WorkloadBoard() {
       if (dateRange.end) {params.end_date = dateRange.end;}
       const res = await workloadApi.dashboard(params);
       setDashboardData(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchTeamWorkload = async () => {
@@ -75,7 +52,8 @@ export default function WorkloadBoard() {
       const res = await workloadApi.team(params);
       const teamList = res.data?.items || res.data?.items || res.data || [];
       setTeamWorkload(teamList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

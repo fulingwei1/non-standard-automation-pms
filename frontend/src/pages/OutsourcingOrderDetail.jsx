@@ -4,37 +4,14 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Package,
-  CheckCircle2,
-  RefreshCw,
-  Factory,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
+
+
+
+
+
+
+
+
 import { cn, formatDate, formatCurrency } from "../lib/utils";
 import { outsourcingApi } from "../services/api";
 const statusConfigs = {
@@ -73,7 +50,8 @@ export default function OutsourcingOrderDetail() {
       setLoading(true);
       const res = await outsourcingApi.orders.get(id);
       setOrder(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -83,7 +61,8 @@ export default function OutsourcingOrderDetail() {
       const res = await outsourcingApi.orders.getDeliveries(id);
       const deliveryList = res.data?.items || res.data?.items || res.data || [];
       setDeliveries(deliveryList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchInspections = async () => {
@@ -91,7 +70,8 @@ export default function OutsourcingOrderDetail() {
       const res = await outsourcingApi.orders.getInspections(id);
       const inspectionList = res.data?.items || res.data?.items || res.data || [];
       setInspections(inspectionList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchProgressLogs = async () => {
@@ -99,7 +79,8 @@ export default function OutsourcingOrderDetail() {
       const res = await outsourcingApi.orders.getProgress(id);
       const progressList = res.data || res || [];
       setProgressLogs(progressList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   if (loading) {

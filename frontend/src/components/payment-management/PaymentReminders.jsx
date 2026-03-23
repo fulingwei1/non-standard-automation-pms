@@ -2,9 +2,6 @@
  * 回款提醒组件
  * 显示需要催收的付款记录提醒
  */
-import { motion } from 'framer-motion';
-import { Bell } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '../ui';
 import { cn } from '../../lib/utils';
 import { fadeIn } from '../../lib/animations';
 

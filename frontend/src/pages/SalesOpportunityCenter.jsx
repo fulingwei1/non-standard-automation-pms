@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import LeadManagement from "./LeadManagement";
-import OpportunityManagement from "./OpportunityManagement";
 
 export default function SalesOpportunityCenter() {
   const tabs = useMemo(

@@ -4,23 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  AlertTriangle,
-  Camera,
-  X,
-  CheckCircle2 } from
-"lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Card, CardContent } from "../../components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui/select";
+
+
+
+
 import { productionApi } from "../../services/api";
 
 const exceptionTypes = [
@@ -66,7 +53,8 @@ export default function MobileExceptionReport() {
     try {
       const res = await productionApi.workOrders.get(workOrderId);
       setWorkOrder(res.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

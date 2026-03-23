@@ -2,10 +2,6 @@
  * VirtualizedProjectList - 虚拟滚动的项目列表组件
  * 用于优化长项目列表的渲染性能
  */
-import { Link } from "react-router-dom";
-import { VirtualizedList } from "./VirtualizedList";
-import { Progress, HealthBadge } from "../ui";
-import { Briefcase, ArrowRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export function VirtualizedProjectList({ projects, itemHeight = 80 }) {

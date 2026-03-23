@@ -4,59 +4,21 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  Award,
-  Users,
-  FileText,
-  TrendingUp,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Clock,
-  Search,
-  UserCheck,
-  Download } from
+  Award } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import { Input } from "../components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { qualificationApi } from "../services/api";
 import { toast } from "../components/ui/toast";
-import { CompetencyRadarChart } from "../components/qualification/CompetencyRadarChart";
-import { Checkbox } from "../components/ui/checkbox";
 import { confirmAction } from "@/lib/confirmAction";
 export default function QualificationManagement() {
   const [pagination, setPagination] = useState({
@@ -138,7 +100,8 @@ export default function QualificationManagement() {
       if (response.data?.code === 200) {
         setLevels(response.data.data?.items || []);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -160,7 +123,8 @@ export default function QualificationManagement() {
           total: response.data.data?.total || 0
         }));
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -182,7 +146,8 @@ export default function QualificationManagement() {
           total: response.data.data?.total || 0
         }));
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -205,7 +170,8 @@ export default function QualificationManagement() {
         total_qualifications: qualificationsRes.data?.data?.total || 0,
         pending_certifications: qualificationsRes.data?.data?.total || 0
       });
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

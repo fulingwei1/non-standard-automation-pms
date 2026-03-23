@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import WorkshopManagement from "./WorkshopManagement";
-import WorkerManagement from "./WorkerManagement";
 
 export default function FieldResourceCenter() {
   const tabs = useMemo(

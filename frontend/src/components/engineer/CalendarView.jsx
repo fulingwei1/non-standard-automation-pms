@@ -4,18 +4,12 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
   Circle,
   CheckCircle2,
   PlayCircle,
   PauseCircle,
-  AlertTriangle,
 } from "lucide-react";
-import { Button, Badge } from "../ui";
 import { cn } from "../../lib/utils";
 
 // View modes

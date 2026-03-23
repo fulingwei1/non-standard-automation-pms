@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Button,
-  Input } from
-"../ui";
-import { BookOpen, Search, Plus, Copy } from "lucide-react";
+
+
 import { issueTemplateApi } from "../../services/api";
 
 export default function SolutionLibrary({ projectId, onApplyTemplate }) {

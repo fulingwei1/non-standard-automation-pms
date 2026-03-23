@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 
@@ -12,33 +11,10 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
 };
+
+
 import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem } from
-"../components/ui";
-import {
-  ArrowLeft,
-  Plus,
-  Upload,
   FileText,
-  Download,
-  Calendar,
-  AlertCircle,
-  File,
   FileImage,
   FileVideo,
   FileCode,
@@ -116,7 +92,8 @@ export default function RdProjectDocuments() {
       const response = await rdProjectApi.get(id);
       const projectData = response.data?.data || response.data || response;
       setProject(projectData);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

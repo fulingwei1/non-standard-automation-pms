@@ -2,9 +2,7 @@
  * 健康度评分卡组件
  * 展示战略整体健康度评分和等级
  */
-import { motion } from "framer-motion";
-import { Activity, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Progress } from "../../../components/ui";
+import { Activity } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { getStrategyHealthConfig, HEALTH_LEVELS } from "../../../lib/constants/strategy";

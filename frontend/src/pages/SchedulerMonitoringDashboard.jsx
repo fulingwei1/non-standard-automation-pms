@@ -5,43 +5,10 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Activity,
-  CheckCircle2,
-  RefreshCw,
-  Download,
-  Server,
-  Timer,
-  XCircle,
-  Search,
-  Bell } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  LoadingCard,
-  ErrorMessage,
-  EmptyState } from
-"../components/ui";
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { schedulerApi } from "../services/api";

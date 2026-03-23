@@ -1,14 +1,5 @@
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "../../components/ui";
-import { Search, Filter, Star, LayoutGrid, List } from "lucide-react";
+
+
 
 export default function LeadFilters({
   searchTerm,

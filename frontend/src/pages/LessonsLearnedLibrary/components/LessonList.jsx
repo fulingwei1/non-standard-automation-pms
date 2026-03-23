@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Eye } from "lucide-react";
-import { Button, Card, CardContent, SkeletonCard, Badge } from "../../../components/ui";
 import { cn, formatDate } from "../../../lib/utils";
 import { getLessonTypeBadge, getStatusBadge, getPriorityBadge } from '../constants';
 

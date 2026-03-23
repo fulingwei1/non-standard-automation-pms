@@ -3,37 +3,14 @@
  * 月历网格布局，显示战略相关事件
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  ChevronLeft,
-  ChevronRight,
   Calendar as CalendarIcon,
   Target,
   Award,
   Briefcase,
-  Clock,
-  X,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui";
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { reviewApi, strategyApi } from "@/services/api/strategy";
 

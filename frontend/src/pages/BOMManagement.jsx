@@ -4,54 +4,18 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Download,
-  Upload,
-  Eye,
-  CheckCircle2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
+
+
+
+
+
+
+
+
+
+
+
+
 import { formatCurrency, formatDate } from "../lib/utils";
 import { bomApi, projectApi, machineApi } from "../services/api";
 const statusConfigs = {
@@ -106,14 +70,16 @@ export default function BOMManagement() {
     try {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchMachines = async (projId) => {
     try {
       const res = await machineApi.list(projId);
       setMachines(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchBOMs = async () => {
@@ -127,7 +93,8 @@ export default function BOMManagement() {
       const res = await bomApi.list(params);
       const bomList = res.data?.items || res.data?.items || res.data || [];
       setBoms(bomList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -143,7 +110,8 @@ export default function BOMManagement() {
       setBomItems(itemsRes.data || itemsRes || []);
       setVersions(versionsRes.data || versionsRes || []);
       setShowBomDetail(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const handleCreateBOM = async () => {

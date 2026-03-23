@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import BOMManagement from "./BOMManagement";
-import MaterialList from "./MaterialList";
-import MaterialDemandSummary from "./MaterialDemandSummary";
 
 export default function MaterialCenter() {
   const tabs = useMemo(

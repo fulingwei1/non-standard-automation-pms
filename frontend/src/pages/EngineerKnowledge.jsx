@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Modal, Form, Input, Select, Tag, Space, message, Tabs, Statistic, Row, Col, Rate } from 'antd';
-import { BulbOutlined, FileTextOutlined, CodeOutlined, PlusOutlined, CheckOutlined, CloseOutlined, StarOutlined } from '@ant-design/icons';
+import { Form, Input, Select, message } from 'antd';
 import api from '../services/api';
 
 const { TextArea } = Input;
@@ -36,7 +35,8 @@ const EngineerKnowledge = () => {
         setContributions(response.data.data.items);
         setTotal(response.data.data.total);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,8 @@ const EngineerKnowledge = () => {
       if (response.data.code === 200) {
         setRankings(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -62,7 +63,8 @@ const EngineerKnowledge = () => {
       if (response.data.code === 200) {
         setMyStats(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

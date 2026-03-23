@@ -1,91 +1,117 @@
+import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 
-import NotificationCenter from "../../pages/NotificationCenter";
-import StageTemplateManagement from "../../pages/StageTemplateManagement";
-import StageTemplateEditor from "../../pages/StageTemplateEditor";
-import Timesheet from "../../pages/Timesheet";
-import TimesheetDashboard from "../../pages/TimesheetDashboard";
-import TimesheetBatchOperations from "../../pages/TimesheetBatchOperations";
-import Settings from "../../pages/Settings";
-import UserManagement from "../../pages/UserManagement";
-import RoleManagement from "../../pages/RoleManagement";
-import PermissionManagement from "../../pages/PermissionManagement";
-import SchedulerMonitoringDashboard from "../../pages/SchedulerMonitoringDashboard";
-import SchedulerConfigManagement from "../../pages/SchedulerConfigManagement";
-import AuditLogs from "../../pages/AuditLogs";
-import DataImportExport from "../../pages/DataImportExport";
-import HourlyRateManagement from "../../pages/HourlyRateManagement";
-import HRManagement from "../../pages/HRManagement";
-import PresalesIntegration from "../../pages/PresalesIntegration";
-import ProjectRoles from "../../pages/ProjectRoles";
-import CustomerManagement from "../../pages/CustomerManagement";
-import Customer360 from "../../pages/Customer360";
-import SupplierManagementData from "../../pages/SupplierManagementData";
-import DepartmentManagement from "../../pages/DepartmentManagement";
-import OrganizationManagement from "../../pages/OrganizationManagement";
-import PositionManagement from "../../pages/PositionManagement";
-import PermissionDebug from "../../pages/PermissionDebug";
-import AlertCenter from "../../pages/AlertCenter";
-import AlertDetail from "../../pages/AlertDetail";
-import AlertRuleConfig from "../../pages/alert-rule-config";
-import AlertStatistics from "../../pages/AlertStatistics";
-import AlertSubscription from "../../pages/AlertSubscription";
-import AlertSubscriptionSettings from "../../pages/AlertSubscriptionSettings";
-import Acceptance from "../../pages/Acceptance";
-import ApprovalCenter from "../../pages/ApprovalCenter";
-import ApprovalDetailPage from "../../pages/ApprovalDetailPage";
-import IssueManagement from "../../pages/IssueManagement";
-import IssueTemplateManagement from "../../pages/IssueTemplateManagement";
-import IssueStatisticsSnapshot from "../../pages/IssueStatisticsSnapshot";
-import ExceptionManagement from "../../pages/ExceptionManagement";
-import ShortageAlert from "../../pages/ShortageAlert";
-import ECNManagement from "../../pages/ECNManagement";
-import ECNDetail from "../../pages/ECNDetail";
-import ECNTypeManagement from "../../pages/ECNTypeManagement";
-import ECNOverdueAlerts from "../../pages/ECNOverdueAlerts";
-import ECNStatistics from "../../pages/ECNStatistics";
-import ECNCenter from "../../pages/ECNCenter";
-import TechnicalSpecManagement from "../../pages/TechnicalSpecManagement";
-import TechnicalReviewList from "../../pages/TechnicalReviewList";
-import TechnicalReviewDetail from "../../pages/TechnicalReviewDetail";
-import SpecMatchCheck from "../../pages/SpecMatchCheck";
-import CustomerServiceDashboard from "../../pages/CustomerServiceDashboard";
-import ServiceTicketManagement from "../../pages/ServiceTicketManagement";
-import ServiceRecord from "../../pages/ServiceRecord";
-import CustomerCommunication from "../../pages/CustomerCommunication";
-import CustomerSatisfaction from "../../pages/CustomerSatisfaction";
-import ServiceAnalytics from "../../pages/ServiceAnalytics";
-import ServiceKnowledgeBase from "../../pages/ServiceKnowledgeBase";
-import CustomerServiceCenter from "../../pages/CustomerServiceCenter";
-import RdProjectList from "../../pages/RdProjectList";
-import RdProjectDetail from "../../pages/RdProjectDetail";
-import RdProjectWorklogs from "../../pages/RdProjectWorklogs";
-import RdProjectDocuments from "../../pages/RdProjectDocuments";
-import RdCostEntry from "../../pages/RdCostEntry";
-import RdCostSummary from "../../pages/RdCostSummary";
-import RdCostReports from "../../pages/RdCostReports";
-import TagManagement from "../../pages/TagManagement";
-import EmployeeProfileList from "../../pages/EmployeeProfileList";
-import EmployeeProfileDetail from "../../pages/EmployeeProfileDetail";
-import ProjectStaffingNeed from "../../pages/ProjectStaffingNeed";
-import AIStaffMatching from "../../pages/AIStaffMatching";
-import MobileWorkerTaskList from "../../pages/mobile/MobileWorkerTaskList";
-import MobileScanStart from "../../pages/mobile/MobileScanStart";
-import MobileProgressReport from "../../pages/mobile/MobileProgressReport";
-import MobileCompleteReport from "../../pages/mobile/MobileCompleteReport";
-import MobileExceptionReport from "../../pages/mobile/MobileExceptionReport";
-import MobileMaterialRequisition from "../../pages/mobile/MobileMaterialRequisition";
-import MobileScanShortage from "../../pages/mobile/MobileScanShortage";
-import MobileShortageReport from "../../pages/mobile/MobileShortageReport";
-import MobileMyShortageReports from "../../pages/mobile/MobileMyShortageReports";
-import ReportGeneration from "../../pages/ReportGeneration";
-import ReportTemplates from "../../pages/ReportTemplates";
-import ReportArchives from "../../pages/ReportArchives";
-import TemplateConfigList from "../../pages/TemplateConfigList";
-import TemplateConfigEditor from "../../pages/TemplateConfigEditor";
-import TemplateCenter from "../../pages/TemplateCenter";
-import AccountPermissionCenter from "../../pages/AccountPermissionCenter";
-import OrganizationCenter from "../../pages/OrganizationCenter";
+// ---- 懒加载页面组件（系统管理模块） ----
+
+// 告警中心
+const AlertCenter = lazy(() => import("../../pages/AlertCenter"));
+const AlertDetail = lazy(() => import("../../pages/AlertDetail"));
+const AlertRuleConfig = lazy(() => import("../../pages/alert-rule-config"));
+const AlertStatistics = lazy(() => import("../../pages/AlertStatistics"));
+const AlertSubscription = lazy(() => import("../../pages/AlertSubscription"));
+const AlertSubscriptionSettings = lazy(() => import("../../pages/AlertSubscriptionSettings"));
+
+// ECN 变更管理
+const ECNCenter = lazy(() => import("../../pages/ECNCenter"));
+const ECNDetail = lazy(() => import("../../pages/ECNDetail"));
+const ECNManagement = lazy(() => import("../../pages/ECNManagement"));
+const ECNOverdueAlerts = lazy(() => import("../../pages/ECNOverdueAlerts"));
+const ECNStatistics = lazy(() => import("../../pages/ECNStatistics"));
+const ECNTypeManagement = lazy(() => import("../../pages/ECNTypeManagement"));
+const ExceptionManagement = lazy(() => import("../../pages/ExceptionManagement"));
+const ShortageAlert = lazy(() => import("../../pages/ShortageAlert"));
+
+// 质量与验收
+const Acceptance = lazy(() => import("../../pages/Acceptance"));
+const ApprovalCenter = lazy(() => import("../../pages/ApprovalCenter"));
+const ApprovalDetailPage = lazy(() => import("../../pages/ApprovalDetailPage"));
+const IssueManagement = lazy(() => import("../../pages/IssueManagement"));
+const IssueTemplateManagement = lazy(() => import("../../pages/IssueTemplateManagement"));
+const IssueStatisticsSnapshot = lazy(() => import("../../pages/IssueStatisticsSnapshot"));
+
+// 技术规格管理
+const TechnicalSpecManagement = lazy(() => import("../../pages/TechnicalSpecManagement"));
+const TechnicalReviewList = lazy(() => import("../../pages/TechnicalReviewList"));
+const TechnicalReviewDetail = lazy(() => import("../../pages/TechnicalReviewDetail"));
+const SpecMatchCheck = lazy(() => import("../../pages/SpecMatchCheck"));
+
+// 客户服务
+const CustomerServiceCenter = lazy(() => import("../../pages/CustomerServiceCenter"));
+const CustomerServiceDashboard = lazy(() => import("../../pages/CustomerServiceDashboard"));
+const ServiceTicketManagement = lazy(() => import("../../pages/ServiceTicketManagement"));
+const ServiceRecord = lazy(() => import("../../pages/ServiceRecord"));
+const CustomerCommunication = lazy(() => import("../../pages/CustomerCommunication"));
+const CustomerSatisfaction = lazy(() => import("../../pages/CustomerSatisfaction"));
+const ServiceAnalytics = lazy(() => import("../../pages/ServiceAnalytics"));
+const ServiceKnowledgeBase = lazy(() => import("../../pages/ServiceKnowledgeBase"));
+
+// 研发项目管理
+const RdProjectList = lazy(() => import("../../pages/RdProjectList"));
+const RdProjectDetail = lazy(() => import("../../pages/RdProjectDetail"));
+const RdProjectWorklogs = lazy(() => import("../../pages/RdProjectWorklogs"));
+const RdProjectDocuments = lazy(() => import("../../pages/RdProjectDocuments"));
+const RdCostEntry = lazy(() => import("../../pages/RdCostEntry"));
+const RdCostSummary = lazy(() => import("../../pages/RdCostSummary"));
+const RdCostReports = lazy(() => import("../../pages/RdCostReports"));
+
+// AI 人员匹配
+const TagManagement = lazy(() => import("../../pages/TagManagement"));
+const EmployeeProfileList = lazy(() => import("../../pages/EmployeeProfileList"));
+const EmployeeProfileDetail = lazy(() => import("../../pages/EmployeeProfileDetail"));
+const ProjectStaffingNeed = lazy(() => import("../../pages/ProjectStaffingNeed"));
+const AIStaffMatching = lazy(() => import("../../pages/AIStaffMatching"));
+
+// 个人中心
+const NotificationCenter = lazy(() => import("../../pages/NotificationCenter"));
+const Timesheet = lazy(() => import("../../pages/Timesheet"));
+const TimesheetDashboard = lazy(() => import("../../pages/TimesheetDashboard"));
+const TimesheetBatchOperations = lazy(() => import("../../pages/TimesheetBatchOperations"));
+const Settings = lazy(() => import("../../pages/Settings"));
+
+// 系统管理
+const TemplateCenter = lazy(() => import("../../pages/TemplateCenter"));
+const AccountPermissionCenter = lazy(() => import("../../pages/AccountPermissionCenter"));
+const OrganizationCenter = lazy(() => import("../../pages/OrganizationCenter"));
+const StageTemplateManagement = lazy(() => import("../../pages/StageTemplateManagement"));
+const StageTemplateEditor = lazy(() => import("../../pages/StageTemplateEditor"));
+const ReportGeneration = lazy(() => import("../../pages/ReportGeneration"));
+const ReportTemplates = lazy(() => import("../../pages/ReportTemplates"));
+const ReportArchives = lazy(() => import("../../pages/ReportArchives"));
+const TemplateConfigList = lazy(() => import("../../pages/TemplateConfigList"));
+const TemplateConfigEditor = lazy(() => import("../../pages/TemplateConfigEditor"));
+const UserManagement = lazy(() => import("../../pages/UserManagement"));
+const RoleManagement = lazy(() => import("../../pages/RoleManagement"));
+const PermissionManagement = lazy(() => import("../../pages/PermissionManagement"));
+const SchedulerMonitoringDashboard = lazy(() => import("../../pages/SchedulerMonitoringDashboard"));
+const SchedulerConfigManagement = lazy(() => import("../../pages/SchedulerConfigManagement"));
+const AuditLogs = lazy(() => import("../../pages/AuditLogs"));
+const DataImportExport = lazy(() => import("../../pages/DataImportExport"));
+const HourlyRateManagement = lazy(() => import("../../pages/HourlyRateManagement"));
+const HRManagement = lazy(() => import("../../pages/HRManagement"));
+const PresalesIntegration = lazy(() => import("../../pages/PresalesIntegration"));
+const ProjectRoles = lazy(() => import("../../pages/ProjectRoles"));
+
+// 主数据管理
+const CustomerManagement = lazy(() => import("../../pages/CustomerManagement"));
+const Customer360 = lazy(() => import("../../pages/SalesAI/Customer360"));
+const SupplierManagementData = lazy(() => import("../../pages/SupplierManagementData"));
+const DepartmentManagement = lazy(() => import("../../pages/DepartmentManagement"));
+const OrganizationManagement = lazy(() => import("../../pages/OrganizationManagement"));
+const PositionManagement = lazy(() => import("../../pages/PositionManagement"));
+
+// 移动端页面
+const MobileWorkerTaskList = lazy(() => import("../../pages/mobile/MobileWorkerTaskList"));
+const MobileScanStart = lazy(() => import("../../pages/mobile/MobileScanStart"));
+const MobileProgressReport = lazy(() => import("../../pages/mobile/MobileProgressReport"));
+const MobileCompleteReport = lazy(() => import("../../pages/mobile/MobileCompleteReport"));
+const MobileExceptionReport = lazy(() => import("../../pages/mobile/MobileExceptionReport"));
+const MobileMaterialRequisition = lazy(() => import("../../pages/mobile/MobileMaterialRequisition"));
+const MobileScanShortage = lazy(() => import("../../pages/mobile/MobileScanShortage"));
+const MobileShortageReport = lazy(() => import("../../pages/mobile/MobileShortageReport"));
+const MobileMyShortageReports = lazy(() => import("../../pages/mobile/MobileMyShortageReports"));
+
+// 调试
+const PermissionDebug = lazy(() => import("../../pages/PermissionDebug"));
 
 export function SystemRoutes() {
   return (

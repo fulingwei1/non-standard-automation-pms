@@ -11,23 +11,11 @@ import {
   eachDayOfInterval,
 } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  Calendar,
-  ChevronDown,
-} from "lucide-react";
+
+
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { DraggableTimelineBar } from "./DraggableTimelineBar";
+
+
 
 /**
  * 项目时间轴组件

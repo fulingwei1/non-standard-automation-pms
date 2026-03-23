@@ -1,18 +1,20 @@
+import { lazy } from "react";
 import { Route } from "react-router-dom";
 import { WarehouseProtectedRoute } from "../../components/common/ProtectedRoute";
 
-import WarehouseWorkstation from "../../pages/warehouse/WarehouseWorkstation";
-import InboundList from "../../pages/warehouse/InboundList";
-import InboundDetail from "../../pages/warehouse/InboundDetail";
-import InboundNew from "../../pages/warehouse/InboundNew";
-import OutboundList from "../../pages/warehouse/OutboundList";
-import OutboundDetail from "../../pages/warehouse/OutboundDetail";
-import OutboundNew from "../../pages/warehouse/OutboundNew";
-import InventoryList from "../../pages/warehouse/InventoryList";
-import StockAlerts from "../../pages/warehouse/StockAlerts";
-import StockCount from "../../pages/warehouse/StockCount";
-import LocationManagement from "../../pages/warehouse/LocationManagement";
-import TimeBasedKitRateBoard from "../../pages/TimeBasedKitRateBoard";
+// ---- 懒加载页面组件（仓储模块） ----
+const WarehouseWorkstation = lazy(() => import("../../pages/warehouse/WarehouseWorkstation"));
+const InboundList = lazy(() => import("../../pages/warehouse/InboundList"));
+const InboundNew = lazy(() => import("../../pages/warehouse/InboundNew"));
+const InboundDetail = lazy(() => import("../../pages/warehouse/InboundDetail"));
+const OutboundList = lazy(() => import("../../pages/warehouse/OutboundList"));
+const OutboundNew = lazy(() => import("../../pages/warehouse/OutboundNew"));
+const OutboundDetail = lazy(() => import("../../pages/warehouse/OutboundDetail"));
+const InventoryList = lazy(() => import("../../pages/warehouse/InventoryList"));
+const StockAlerts = lazy(() => import("../../pages/warehouse/StockAlerts"));
+const StockCount = lazy(() => import("../../pages/warehouse/StockCount"));
+const LocationManagement = lazy(() => import("../../pages/warehouse/LocationManagement"));
+const TimeBasedKitRateBoard = lazy(() => import("../../pages/TimeBasedKitRateBoard"));
 
 export function WarehouseRoutes() {
   return (

@@ -5,8 +5,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import PaymentManagement from '../PaymentManagement/index';
 import api from '../../services/api';
 
 // Mock API

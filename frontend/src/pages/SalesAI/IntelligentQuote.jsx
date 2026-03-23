@@ -10,45 +10,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  DollarSign,
-  Target,
-  Percent,
-  Award,
-  BarChart3,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-  AlertDescription,
-} from "../../components/ui";
+
+
+
+
 import { intelligentQuoteApi } from "../../services/api";
 
 // 历史价格参考
@@ -60,7 +25,8 @@ function HistoricalPrices() {
     try {
       const res = await intelligentQuoteApi.getHistoricalPrices(productCategory);
       setData(res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

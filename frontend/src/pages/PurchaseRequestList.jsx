@@ -1,53 +1,23 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   FileText,
-  Plus,
   Search,
-  Eye,
-  Edit3,
-  Trash2,
   CheckCircle2,
   Clock,
   XCircle,
-  Send,
-  Calendar,
-  DollarSign,
   Package } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody } from
-"../components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import { Textarea } from "../components/ui/textarea";
-import { Label } from "../components/ui/label";
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { purchaseApi, projectApi } from "../services/api";
 import { toast } from "../components/ui/toast";
-import { LoadingCard } from "../components/common";
-import { EmptyState } from "../components/common";
-import { ErrorMessage } from "../components/common";
 
 // 状态配置
 import { confirmAction } from "@/lib/confirmAction";
@@ -221,7 +191,8 @@ export default function PurchaseRequestList() {
       try {
         const res = await projectApi.list({ page_size: 1000 });
         setProjects(res.data?.items || res.data?.items || res.data || []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
     };
     loadProjects();

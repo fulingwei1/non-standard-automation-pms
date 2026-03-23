@@ -4,13 +4,9 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Award, ArrowLeft, RefreshCw, Clock, CheckCircle, Play,
+import { Clock, CheckCircle, Play,
   AlertTriangle, User, Calendar, FileText, Clipboard,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { acceptanceApi } from "../../services/api/acceptance";
 
 function StatusBadge({ status }) {

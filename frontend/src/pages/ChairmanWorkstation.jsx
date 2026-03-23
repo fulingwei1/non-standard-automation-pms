@@ -5,10 +5,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Eye } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button, ApiIntegrationError } from "../components/ui";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import {
   pmoApi,
@@ -16,19 +12,7 @@ import {
   projectApi,
   reportCenterApi
 } from "../services/api";
-import CultureWallCarousel from "../components/culture/CultureWallCarousel";
 import {
-  FinancialMetricsGrid,
-  StrategicTargetCard,
-  OperatingTargetCard,
-  RevenueTrendCard,
-  ProjectHealthCard,
-  RiskProjectsCard,
-  DepartmentPerformanceCard,
-  KeyDecisionsCard,
-  PendingApprovalsCard,
-  RecentProjectsCard,
-  OperationalOverviewCard,
   formatCurrency
 } from "../components/chairman-workstation";
 
@@ -77,7 +61,8 @@ export default function ChairmanWorkstation() {
           if (healthRes.data) {
             setProjectHealthDistribution(healthRes.data);
           }
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
 
         // 获取风险墙数据
@@ -86,7 +71,8 @@ export default function ChairmanWorkstation() {
           if (riskWallRes.data?.projects) {
             setRiskProjects(riskWallRes.data.projects);
           }
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
 
         // 获取月度营收数据（从销售统计 API）
@@ -101,7 +87,8 @@ export default function ChairmanWorkstation() {
           if (salesRes.data?.monthly_data) {
             setMonthlyRevenue(salesRes.data.monthly_data);
           }
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
 
         // 获取部门绩效数据（从 PMO dashboard）

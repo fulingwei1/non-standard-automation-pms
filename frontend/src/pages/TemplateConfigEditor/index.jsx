@@ -9,41 +9,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, Reorder } from "framer-motion";
-import {
-  Save,
-  Plus,
-  Trash2,
-  Edit2,
-  ChevronDown,
-  ChevronRight,
-  GripVertical,
-  CheckCircle,
-  XCircle,
-  Copy,
-  Info,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
+
+
 import { staggerContainer } from "../../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Input,
-  Label,
-  Switch,
-  Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Textarea,
-  Tooltip,
-} from "../../components/ui";
+
+
 import { templateConfigApi } from "../../services/api/templateConfig";
 
 // 预置模板选项
@@ -147,7 +117,8 @@ export default function TemplateConfigEditor() {
     try {
       const res = await templateConfigApi.get(id);
       setConfig(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

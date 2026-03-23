@@ -32,7 +32,8 @@ export function usePurchaseMaterialCost() {
         try {
             const response = await purchaseApi.listSuppliers({ page_size: 100 });
             setSuppliers(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

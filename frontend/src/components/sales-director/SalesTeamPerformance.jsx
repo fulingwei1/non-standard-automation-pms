@@ -4,21 +4,8 @@
  */
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Users,
-  Trophy,
-  Target,
-  Award,
-  Search,
-  Settings,
-  BarChart3 } from
-'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
-import { Button } from '../../components/ui';
-import { Badge } from '../../components/ui';
-import { Input } from '../../components/ui';
-import { Progress } from '../../components/ui';
+
+
 import { cn } from '../../lib/utils';
 import {
   RANKING_METRIC_LIBRARY,

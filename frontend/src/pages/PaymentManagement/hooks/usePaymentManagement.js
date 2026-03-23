@@ -87,7 +87,8 @@ export function usePaymentManagement() {
                 days_61_90: { count: 0, amount: 0 },
                 days_over_90: { count: 0, amount: 0 }
             });
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

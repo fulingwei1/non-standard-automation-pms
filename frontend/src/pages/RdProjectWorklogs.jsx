@@ -1,31 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
-import {
-  ArrowLeft,
-  Plus,
-  Clock,
-  Calendar,
-  FileText,
-  AlertCircle,
-  Edit2,
-  Trash2 } from
-"lucide-react";
+
+
+
+
 
 const statusMap = {
   DRAFT: { label: "草稿", color: "secondary" },
@@ -68,7 +48,8 @@ export default function RdProjectWorklogs() {
       const response = await rdProjectApi.get(id);
       const projectData = response.data?.data || response.data || response;
       setProject(projectData);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

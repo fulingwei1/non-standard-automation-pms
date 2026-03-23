@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Crown } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 
 export const KeyDecisionsCard = () => {

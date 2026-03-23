@@ -1,6 +1,4 @@
-import { TrendingUp, Info } from "lucide-react";
 import { fadeIn } from "../../utils/weightConfigUtils";
-import { motion } from "framer-motion";
 
 /**
  * 影响范围统计组件

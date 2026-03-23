@@ -1,14 +1,9 @@
-import { motion } from 'framer-motion';
-import { PageHeader } from '../../components/layout';
-import { ApiIntegrationError } from '../../components/ui';
 import { staggerContainer } from '../../lib/animations';
 
 // Hooks
 import { useTaskData, useTaskFilters } from './hooks';
 
 // Components
-import { TaskStats, TaskFilters } from './components';
-import { AssemblyTaskCard, TaskCard } from '../../components/task-center';
 
 /**
  * 任务中心主页面（重构版本）

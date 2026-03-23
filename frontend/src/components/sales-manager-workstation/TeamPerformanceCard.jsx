@@ -1,14 +1,5 @@
-import { motion } from "framer-motion";
-import { Users, ChevronRight } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress
-} from "../../components/ui";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

@@ -5,36 +5,12 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  Target,
-  Plus,
-  Edit,
   Users,
   Building2,
   User,
-  Search,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-  Badge,
-  Progress,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Label,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../ui";
+
+
 import { cn } from "../../lib/utils";
 import { salesTargetApi, salesTeamApi } from "../../services/api";
 import { toast } from "sonner";

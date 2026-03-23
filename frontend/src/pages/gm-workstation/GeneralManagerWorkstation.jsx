@@ -1,25 +1,13 @@
-import { motion } from "framer-motion";
 import {
   DollarSign,
   TrendingUp,
   Briefcase,
   ClipboardCheck,
   CheckCircle2,
-  Award,
-  BarChart3
+  Award
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Card, CardContent, Button } from "../../components/ui";
 import { fadeIn, staggerContainer } from "../../lib/animations";
-import { ApiIntegrationError } from "../../components/ui";
-import CultureWallCarousel from "../../components/culture/CultureWallCarousel";
 
-import StatCard from "../../components/common/StatCard";
-import YearProgressCard from "./YearProgressCard";
-import KeyMetricsCard from "./KeyMetricsCard";
-import ProjectHealthCard from "./ProjectHealthCard";
-import PendingApprovalsCard from "./PendingApprovalsCard";
-import DepartmentStatusCard from "./DepartmentStatusCard";
 import { formatCurrency } from "./formatCurrency";
 import useGMDashboard from "./useGMDashboard";
 

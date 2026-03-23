@@ -3,18 +3,8 @@
  * 显示成员的完整详细信息
  */
 
-import { Users, TrendingUp } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Button,
-  Progress,
-  Badge,
-} from "../../../ui";
+
+
 import { formatCurrency, formatFollowUpType, formatDateTime } from "@/lib/constants/salesTeam";
 
 export default function TeamMemberDetailDialog({

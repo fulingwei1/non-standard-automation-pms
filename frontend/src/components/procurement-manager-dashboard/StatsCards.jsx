@@ -1,16 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-} from "../../components/ui";
-import {
-  AlertTriangle,
-  FileCheck,
-  Truck,
-  TrendingUp,
-  TrendingDown,
-  Building2,
-} from "lucide-react";
+
+
+
+
 
 export default function StatsCards({ stats }) {
   return (

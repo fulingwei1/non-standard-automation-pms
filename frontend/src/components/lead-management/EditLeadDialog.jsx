@@ -1,15 +1,5 @@
-import {
-  Button,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Label,
-  Textarea,
-} from "../../components/ui";
+
+
 
 export default function EditLeadDialog({
   open,

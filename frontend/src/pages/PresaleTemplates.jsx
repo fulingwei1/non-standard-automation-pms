@@ -1,35 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import {
-  Calendar,
-  CheckCircle2,
-  Eye,
-  FileText,
-  Layers,
-  Loader2,
   Search,
-  Sparkles,
-  Star,
-  Wand2,
 } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
 import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
   toast,
 } from "../components/ui";
 import { fadeIn, staggerContainer } from "../lib/animations";

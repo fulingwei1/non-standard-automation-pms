@@ -4,13 +4,9 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  FileCheck, ArrowLeft, RefreshCw, CheckCircle, XCircle,
+import { CheckCircle, XCircle,
   Clock, AlertTriangle, Package, Clipboard, Calendar,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { qualityApi } from "../../services/api/quality";
 
 function ResultBadge({ result }) {

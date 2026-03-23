@@ -4,30 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  Star,
-  Target,
-  RefreshCw } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { priorityApi } from "../services/api";
 
 export default function LeadPriorityManagement() {
@@ -72,7 +52,8 @@ export default function LeadPriorityManagement() {
       if (response.data && response.data.data) {
         setKeyLeads(response.data.data.key_leads || []);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -82,7 +63,8 @@ export default function LeadPriorityManagement() {
       if (response.data && response.data.data) {
         setKeyOpportunities(response.data.data.key_opportunities || []);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -97,6 +79,7 @@ export default function LeadPriorityManagement() {
           try {
             await priorityApi.calculateLeadPriority(lead.id);
           } catch (_e) {
+            // 非关键操作失败时静默降级
           }
         }
       }
@@ -109,6 +92,7 @@ export default function LeadPriorityManagement() {
           try {
             await priorityApi.calculateOpportunityPriority(opp.id);
           } catch (_e) {
+            // 非关键操作失败时静默降级
           }
         }
       }

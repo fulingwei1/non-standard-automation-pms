@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import ConfirmDialog from '../ConfirmDialog';
 import { AlertCircle } from 'lucide-react';
 
 describe('ConfirmDialog', () => {

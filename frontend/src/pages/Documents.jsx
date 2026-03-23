@@ -3,49 +3,24 @@
  * Features: Document list, upload, download, delete, filter by project
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   Archive,
   FileText,
-  Upload,
-  Search,
-  Folder,
-  Download,
   FileImage,
   FileVideo,
   FileCode,
-  FileSpreadsheet,
-  Calendar,
-  User } from
+  FileSpreadsheet } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { documentApi, projectApi } from "../services/api";
 import { toast } from "../components/ui/toast";
-import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
 
 // File type icons mapping
 const getFileIcon = (fileName) => {
@@ -94,7 +69,8 @@ export default function Documents() {
       const data = response.data || response;
       const projectList = data.items || data || [];
       setProjects(projectList);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

@@ -2,8 +2,6 @@
  * AI工作流进度组件
  * Team 10: 售前AI系统集成与前端UI
  */
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle,
   Circle,

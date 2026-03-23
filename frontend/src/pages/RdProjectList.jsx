@@ -1,46 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { rdProjectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  SkeletonCard,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "../components/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui";
-import {
-  Plus,
-  Search,
-  Grid3X3,
-  List,
-  ArrowRight,
-  FlaskConical,
-  Calendar,
-  Users,
-  DollarSign,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  FileText,
-} from "lucide-react";
+
+
+
+
+
+
 
 // Stagger animation
 const staggerContainer = {
@@ -250,7 +218,8 @@ function RdProjectFormDialog({
         remark: "",
       });
       onOpenChange(false);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -499,7 +468,8 @@ export default function RdProjectList() {
       const response = await rdProjectApi.getCategories();
       const data = response.data?.data || response.data?.items || response.data || [];
       setCategories(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

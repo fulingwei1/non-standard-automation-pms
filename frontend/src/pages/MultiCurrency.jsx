@@ -8,25 +8,12 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  RefreshCw,
   DollarSign,
   Euro,
   PoundSterling,
   Wallet,
-  History,
-  Calculator,
-  Edit3,
-  Check,
-  X,
-  Globe,
-  ArrowRightLeft,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { multiCurrencyApi } from "../services/api/multiCurrency";
 
@@ -120,7 +107,8 @@ function ConverterCard({ rates: _rates }) {
         amount: amount,
       });
       setResult(res.data || res);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setConverting(false);
     }
@@ -409,7 +397,8 @@ export default function MultiCurrency() {
     try {
       const res = await multiCurrencyApi.getRates();
       setRates(res.data || res);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 
@@ -417,7 +406,8 @@ export default function MultiCurrency() {
     try {
       const res = await multiCurrencyApi.getHistory({ limit: 20 });
       setHistory(res.data || res);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 
@@ -426,7 +416,8 @@ export default function MultiCurrency() {
       try {
         setLoading(true);
         await Promise.all([loadRates(), loadHistory()]);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

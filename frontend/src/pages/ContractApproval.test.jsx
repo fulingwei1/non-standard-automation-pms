@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 
 vi.mock("../services/api", () => ({
   contractApi: {
@@ -10,7 +9,6 @@ vi.mock("../services/api", () => ({
   },
 }));
 
-import ContractApproval from "./ContractApproval.jsx";
 import { contractApi } from "../services/api";
 
 function renderPage() {

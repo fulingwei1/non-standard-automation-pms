@@ -1,12 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  Calendar,
-  Clock,
-  CheckCircle2,
-  Target,
-  TrendingUp,
-  ArrowRight,
-} from "lucide-react";
+
+
 import { cn } from "../../lib/utils";
 import {
   getStatusBadge,

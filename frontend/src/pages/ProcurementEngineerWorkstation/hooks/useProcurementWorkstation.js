@@ -30,7 +30,8 @@ export function useProcurementWorkstation() {
             // 使用统一响应格式处理
             const paginatedData = response.formatted || response.data;
             setSuppliers(paginatedData?.items || paginatedData || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

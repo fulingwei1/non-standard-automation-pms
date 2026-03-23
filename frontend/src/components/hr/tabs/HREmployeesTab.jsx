@@ -2,20 +2,9 @@
  * HREmployeesTab Component
  * 员工管理 Tab 组件
  */
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  LoadingCard,
-  ErrorMessage,
-  EmptyState,
-} from "../../ui";
-import { Users, UserPlus, FileText, Eye, Edit } from "lucide-react";
+
+
+import { Users } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { employeeApi } from "../../../services/api";
 

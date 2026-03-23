@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import UserManagement from "./UserManagement";
-import RoleManagement from "./RoleManagement";
-import PermissionManagement from "./PermissionManagement";
 
 export default function AccountPermissionCenter() {
   const tabs = useMemo(

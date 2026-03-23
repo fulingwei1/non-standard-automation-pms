@@ -4,36 +4,10 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Search,
-  Filter,
-  DollarSign,
-  AlertTriangle,
-  Clock,
-  FileText,
-  CreditCard,
-  BarChart3,
-  Download,
-  Eye } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import { PaymentDialog } from "../components/invoice-management/dialogs";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Label,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Progress } from
-"../components/ui";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { receivableApi, paymentApi } from "../services/api";
@@ -93,7 +67,8 @@ export default function ReceivableManagement() {
         setReceivables(response.data.items);
         setTotal(response.data.total || 0);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -108,7 +83,8 @@ export default function ReceivableManagement() {
         // 兼容直接返回数据的情况
         setAgingData(response.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -167,7 +143,8 @@ export default function ReceivableManagement() {
       } else if (response.data) {
         setSummary(response.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

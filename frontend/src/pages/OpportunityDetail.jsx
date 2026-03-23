@@ -4,40 +4,16 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  CheckCircle2,
-  AlertTriangle
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter
-} from "../components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "../components/ui/select";
+
+
+
+
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { opportunityApi } from "../services/api";
-import WinRateAnalysisCard from "../components/opportunity/WinRateAnalysisCard";
 
 const stageConfigs = {
   DISCOVERY: { label: "发现", color: "bg-blue-500", order: 1 },
@@ -74,7 +50,8 @@ export default function OpportunityDetail() {
       setLoading(true);
       const res = await opportunityApi.get(id);
       setOpportunity(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

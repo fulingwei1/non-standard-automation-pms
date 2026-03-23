@@ -3,8 +3,7 @@
  * 线索列表组件：用于展示线索列表、操作入口
  */
 
-import { Card, Space, Table, Tag, Typography, Button } from "antd";
-import { Eye, Edit, Trash2, Target } from "lucide-react";
+import { Typography } from "antd";
 
 import { LEAD_SOURCES, LEAD_STATUS, QUALIFICATION_LEVELS, TABLE_CONFIG } from "@/lib/constants/leadAssessment";
 

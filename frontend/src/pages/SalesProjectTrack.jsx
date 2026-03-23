@@ -4,37 +4,10 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FolderKanban,
-  Search,
-  Calendar,
-  DollarSign,
-  Building2,
-  User,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  ChevronRight,
-  X,
-  FileText,
-  Eye,
-  Flag,
-  Target,
-  Truck,
-  ClipboardCheck,
-  Phone,
-  MessageSquare } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Progress } from
-"../components/ui";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { projectApi } from "../services/api";

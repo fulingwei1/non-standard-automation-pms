@@ -4,39 +4,14 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Package,
-  CheckCircle2,
-  RefreshCw,
-  FileText,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 
@@ -79,7 +54,8 @@ export default function MaterialRequisitionDetail() {
       setLoading(true);
       const res = await productionApi.materialRequisitions.get(id);
       setRequisition(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -91,7 +67,8 @@ export default function MaterialRequisitionDetail() {
       if (requisition && requisition.items) {
         setItems(requisition.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

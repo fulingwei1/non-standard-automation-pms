@@ -3,24 +3,15 @@
  * 展示四个维度的 CSF 和 KPI 层级关系
  */
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
   Users,
   Activity,
   BookOpen,
-  ChevronDown,
-  ChevronRight,
-  Target,
-  Layers,
-  MapIcon,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Skeleton } from "@/components/ui";
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { strategyApi, csfApi } from "@/services/api/strategy";
 import { BSC_DIMENSIONS } from "@/lib/constants/strategy";
-import { Link } from "react-router-dom";
 
 // 维度配置（使用任务指定的颜色）
 const DIMENSION_CONFIG = {
@@ -257,6 +248,7 @@ export default function StrategyMap() {
           LEARNING: [],
         });
       } else {
+        // 其他错误静默处理
       }
     } finally {
       setLoading(false);

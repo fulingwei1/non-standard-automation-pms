@@ -4,14 +4,8 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
-import {
-  ChevronRight,
-  ArrowLeft,
-  Home,
-  Maximize2,
-  Minimize2 } from
-"lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
+
 import { cn } from "../../lib/utils";
 
 /**

@@ -1,11 +1,6 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, AlertCircle } from "lucide-react";
 import { useEvaluationTasks } from "../hooks/useEvaluationTasks";
-import { TaskStatistics } from "../components/evaluation/TaskStatistics";
-import { TaskFilters } from "../components/evaluation/TaskFilters";
-import { TaskItem } from "../components/evaluation/TaskItem";
 
 const EvaluationTaskList = () => {
   const navigate = useNavigate();
@@ -21,6 +16,7 @@ const EvaluationTaskList = () => {
       try {
         return JSON.parse(userStr);
       } catch (_e) {
+        // 非关键操作失败时静默降级
       }
     }
     return {

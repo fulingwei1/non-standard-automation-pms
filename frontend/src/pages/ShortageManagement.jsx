@@ -4,43 +4,18 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  Package,
-  AlertTriangle,
-  Truck,
   RefreshCw,
-  Plus,
-  Search,
-  Eye,
   CheckCircle2,
   Clock } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { shortageApi } from "../services/api";
@@ -117,7 +92,8 @@ export default function ShortageManagement() {
     try {
       const res = await shortageApi.statistics.dashboard();
       setDashboardData(res.data.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     }
   };
 
@@ -133,7 +109,8 @@ export default function ShortageManagement() {
       const res = await shortageApi.reports.list(params);
       setReports(res.data.items || []);
       setTotal(res.data.total || 0);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -150,7 +127,8 @@ export default function ShortageManagement() {
       };
       const res = await shortageApi.arrivals.list(params);
       setArrivals(res.data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -164,7 +142,8 @@ export default function ShortageManagement() {
         page_size: 20
       });
       setSubstitutions(res.data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -175,7 +154,8 @@ export default function ShortageManagement() {
     try {
       const res = await shortageApi.transfers.list({ page: 1, page_size: 20 });
       setTransfers(res.data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }

@@ -28,7 +28,8 @@ export function useBomAssemblyAttrs() {
         try {
             const response = await bomApi.getAttributes(bomId);
             setAttributes(response.data || response || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

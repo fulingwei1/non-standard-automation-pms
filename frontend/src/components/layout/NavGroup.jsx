@@ -4,10 +4,7 @@
  * 支持权限检查：无权限的菜单项显示为禁用状态
  */
 import { memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import NavItem from "./NavItem";
 
 const NavGroup = memo(function NavGroup({
   group,

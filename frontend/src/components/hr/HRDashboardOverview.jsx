@@ -2,10 +2,8 @@
  * HR仪表盘概览组件
  * 用途：展示HR核心统计数据和概览信息
  */
-import { motion } from 'framer-motion';
 import { Users, UserPlus, Award, Building2 } from 'lucide-react';
 import { staggerContainer } from '../../lib/animations';
-import StatCard from '../common/StatCard';
 
 export const HRDashboardOverview = ({ statistics }) => {
   const stats = [

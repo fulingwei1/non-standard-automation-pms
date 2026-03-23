@@ -2,10 +2,7 @@
  * 方案卡片组件
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { SOLUTION_TYPES, getScoreColor } from '../../constants';
-import { Trophy, ThumbsUp, ThumbsDown, AlertTriangle } from 'lucide-react';
 
 const SolutionCard = ({ solution, onClick }) => {
   const solutionType = SOLUTION_TYPES[solution.solution_type] || {};

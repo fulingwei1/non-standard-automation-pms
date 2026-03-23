@@ -15,7 +15,8 @@ export function usePurchaseRequestNew() {
             setLoading(true);
             const response = await projectApi.list({ status: 'active', page_size: 100 });
             setProjects(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         } finally {
             setLoading(false);
         }
@@ -27,7 +28,8 @@ export function usePurchaseRequestNew() {
             setLoading(true);
             const response = await purchaseRequestApi.getMaterials(projectId);
             setMaterials(response.data || response || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         } finally {
             setLoading(false);
         }

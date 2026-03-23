@@ -11,7 +11,7 @@ export function useCpqConfigurator() {
         try {
             const response = await cpqApi.getRules();
             setRules(response.data || response || []);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
     }, []);
 
     const calculatePrice = useCallback(async (config) => {
@@ -19,7 +19,7 @@ export function useCpqConfigurator() {
             setLoading(true);
             const response = await cpqApi.calculatePrice(config);
             setPrice(response.data?.price || response.price || 0);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
         finally { setLoading(false); }
     }, []);
 

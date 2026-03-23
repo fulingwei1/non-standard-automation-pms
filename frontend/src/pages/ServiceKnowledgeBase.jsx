@@ -12,41 +12,13 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus,
-  Search,
-  Eye,
-  Edit,
-  Trash2,
-  BookOpen,
-  HelpCircle,
-  Tag,
-  Star,
-  RefreshCw,
-  XCircle,
-  Save,
-  ThumbsUp } from
+  BookOpen } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogBody } from
-"../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
-import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
+
+
+
+
 import { toast } from "../components/ui/toast";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";

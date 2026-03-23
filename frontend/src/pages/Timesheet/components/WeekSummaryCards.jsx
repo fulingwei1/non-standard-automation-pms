@@ -1,6 +1,4 @@
-import { motion } from "framer-motion";
 import { Clock, Timer, Briefcase, Coffee } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui/card";
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 

@@ -3,9 +3,6 @@
  * Features: 问题模板列表、创建、编辑、删除、从模板创建问题
  */
 import { useState, useEffect, useMemo } from "react";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
 import { formatDate } from "../lib/utils";
 import {
   issueTemplateApi,
@@ -13,12 +10,6 @@ import {
   machineApi,
 } from "../services/api";
 import {
-  IssueTemplateFilters,
-  IssueTemplateList,
-  TemplateFormDialog,
-  TemplateDetailDialog,
-  DeleteTemplateDialog,
-  CreateIssueFromTemplateDialog,
   categoryConfigs,
   issueTypeConfigs,
   severityConfigs,
@@ -117,7 +108,8 @@ export default function IssueTemplateManagement() {
       const res = await projectApi.list({ page_size: 1000 });
       const items = res.data?.items || res.data?.data?.items || res.data?.items || res.data || [];
       setProjects(items);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -197,7 +189,8 @@ export default function IssueTemplateManagement() {
       const res = await issueTemplateApi.get(templateId);
       setSelectedTemplate(res.data || res);
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

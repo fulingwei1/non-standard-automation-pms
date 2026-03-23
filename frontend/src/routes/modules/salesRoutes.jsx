@@ -1,93 +1,95 @@
+import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 
+// ---- 懒加载页面组件（销售模块） ----
+
 // 客户管理
-import CustomerList from "../../pages/CustomerList";
-import CustomerDetail from "../../pages/CustomerManagement/CustomerDetail";
-import Customer360 from "../../pages/Customer360";
+const CustomerList = lazy(() => import("../../pages/CustomerList"));
+const CustomerDetail = lazy(() => import("../../pages/CustomerManagement/CustomerDetail"));
 
 // 线索管理
-import LeadManagement from "../../pages/LeadManagement";
-import LeadDetail from "../../pages/LeadDetail";
-import LeadAssessment from "../../pages/LeadAssessment";
-import LeadRequirementDetail from "../../pages/LeadRequirementDetail";
-import LeadPriorityManagement from "../../pages/LeadPriorityManagement";
+const LeadManagement = lazy(() => import("../../pages/LeadManagement"));
+const LeadDetail = lazy(() => import("../../pages/LeadDetail"));
+const LeadAssessment = lazy(() => import("../../pages/LeadAssessment"));
+const LeadRequirementDetail = lazy(() => import("../../pages/LeadRequirementDetail"));
+const LeadPriorityManagement = lazy(() => import("../../pages/LeadPriorityManagement"));
 
 // 商机管理
-import OpportunityBoard from "../../pages/OpportunityBoard";
-import OpportunityManagement from "../../pages/OpportunityManagement";
-import OpportunityDetail from "../../pages/OpportunityDetail";
+const OpportunityBoard = lazy(() => import("../../pages/OpportunityBoard"));
+const OpportunityDetail = lazy(() => import("../../pages/OpportunityDetail"));
+const OpportunityManagement = lazy(() => import("../../pages/OpportunityManagement"));
 
 // 报价管理
-import QuotationList from "../../pages/QuotationList";
-import QuoteManagementCenter from "../../pages/QuoteManagementCenter";
-import QuoteManagement from "../../pages/QuoteManagement";
-import QuoteCreateEdit from "../../pages/QuoteCreateEdit";
-import QuoteCostManagement from "../../pages/QuoteCostManagement";
-import QuoteCostAnalysis from "../../pages/QuoteCostAnalysis";
-import CostTemplateManagement from "../../pages/CostTemplateManagement";
-import PurchaseMaterialCostManagement from "../../pages/PurchaseMaterialCostManagement";
-import FinancialCostUpload from "../../pages/FinancialCostUpload";
-import CpqConfigurator from "../../pages/CpqConfigurator";
+const QuotationList = lazy(() => import("../../pages/QuotationList"));
+const QuoteManagementCenter = lazy(() => import("../../pages/QuoteManagementCenter"));
+const QuoteManagement = lazy(() => import("../../pages/QuoteManagement"));
+const QuoteCreateEdit = lazy(() => import("../../pages/QuoteCreateEdit"));
+const QuoteCostManagement = lazy(() => import("../../pages/QuoteCostManagement"));
+const QuoteCostAnalysis = lazy(() => import("../../pages/QuoteCostAnalysis"));
+const CostTemplateManagement = lazy(() => import("../../pages/CostTemplateManagement"));
+const PurchaseMaterialCostManagement = lazy(() => import("../../pages/PurchaseMaterialCostManagement"));
+const FinancialCostUpload = lazy(() => import("../../pages/FinancialCostUpload"));
+const CpqConfigurator = lazy(() => import("../../pages/CpqConfigurator"));
 
 // 合同管理
-import ContractList from "../../pages/ContractList";
-import ContractDetail from "../../pages/ContractDetail";
-import ContractManagement from "../../pages/ContractManagement";
-import ContractApproval from "../../pages/ContractApproval";
+const ContractList = lazy(() => import("../../pages/ContractList"));
+const ContractDetail = lazy(() => import("../../pages/ContractDetail"));
+const ContractApproval = lazy(() => import("../../pages/ContractApproval"));
+const ContractManagement = lazy(() => import("../../pages/ContractManagement"));
 
 // 财务相关
-import PaymentManagement from "../../pages/PaymentManagement";
-import InvoiceManagement from "../../pages/invoice/InvoiceManagement";
-import ReceivableManagement from "../../pages/ReceivableManagement";
+const PaymentManagement = lazy(() => import("../../pages/PaymentManagement"));
+const InvoiceManagement = lazy(() => import("../../pages/invoice"));
+const ReceivableManagement = lazy(() => import("../../pages/ReceivableManagement"));
+const PresaleExpenseManagement = lazy(() => import("../../pages/PresaleExpenseManagement"));
 
 // 销售团队
-import SalesTeam from "../../pages/SalesTeam";
-import SalesTeamCenter from "../../pages/SalesTeamCenter";
-import SalesTarget from "../../pages/SalesTarget";
-import SalesReports from "../../pages/SalesReports";
-import SalesStatistics from "../../pages/SalesStatistics";
-import SalesOrganization from "../../pages/SalesAI/SalesOrganization";
-import SalesOpportunityCenter from "../../pages/SalesOpportunityCenter";
+const SalesTeam = lazy(() => import("../../pages/SalesTeam"));
+const SalesTeamCenter = lazy(() => import("../../pages/SalesTeamCenter"));
 
 // 销售漏斗
-import SalesFunnel from "../../pages/SalesFunnel";
+const SalesFunnel = lazy(() => import("../../pages/SalesFunnel"));
 
 // 售前相关
-import PresalesTasks from "../../pages/PresalesTasks";
-import SalesPresaleWorkbench from "../../pages/SalesPresaleWorkbench";
-import TechnicalAssessment from "../../pages/TechnicalAssessment";
-import OpenItemsManagement from "../../pages/OpenItemsManagement";
-import RequirementFreezeManagement from "../../pages/RequirementFreezeManagement";
-import AIClarificationChat from "../../pages/AIClarificationChat";
-import PresaleExpenseManagement from "../../pages/PresaleExpenseManagement";
-import BiddingDetail from "../../pages/BiddingDetail";
-import SalesProjectTrack from "../../pages/SalesProjectTrack";
-import SalesTemplateCenter from "../../pages/SalesTemplateCenter";
+const PresalesTasks = lazy(() => import("../../pages/PresalesTasks"));
+const SalesPresaleWorkbench = lazy(() => import("../../pages/SalesPresaleWorkbench"));
+const TechnicalAssessment = lazy(() => import("../../pages/TechnicalAssessment"));
+const OpenItemsManagement = lazy(() => import("../../pages/OpenItemsManagement"));
+const RequirementFreezeManagement = lazy(() => import("../../pages/RequirementFreezeManagement"));
+const AIClarificationChat = lazy(() => import("../../pages/AIClarificationChat"));
 
 // AI 销售助手
-import IntelligentQuote from "../../pages/SalesAI/IntelligentQuote";
-import SalesAutomation from "../../pages/SalesAI/Automation";
-import ForecastDashboard from "../../pages/SalesAI/ForecastDashboard";
-import PerformanceIncentive from "../../pages/SalesAI/PerformanceIncentive";
-import Collaboration from "../../pages/SalesAI/Collaboration";
-import RelationshipMaturity from "../../pages/SalesAI/RelationshipMaturity";
-import WinRatePrediction from "../../pages/SalesAI/WinRatePrediction";
-import CompetitorAnalysis from "../../pages/SalesAI/CompetitorAnalysis";
-import DataQuality from "../../pages/SalesAI/DataQuality";
-import RoleBasedView from "../../pages/SalesAI/RoleBasedView";
+const IntelligentQuote = lazy(() => import("../../pages/SalesAI/IntelligentQuote"));
+const SalesAutomation = lazy(() => import("../../pages/SalesAI/Automation"));
+const ForecastDashboard = lazy(() => import("../../pages/SalesAI/ForecastDashboard"));
+const Customer360 = lazy(() => import("../../pages/SalesAI/Customer360"));
+const PerformanceIncentive = lazy(() => import("../../pages/SalesAI/PerformanceIncentive"));
+const Collaboration = lazy(() => import("../../pages/SalesAI/Collaboration"));
+const RelationshipMaturity = lazy(() => import("../../pages/SalesAI/RelationshipMaturity"));
+const WinRatePrediction = lazy(() => import("../../pages/SalesAI/WinRatePrediction"));
+const CompetitorAnalysis = lazy(() => import("../../pages/SalesAI/CompetitorAnalysis"));
+const SalesOrganization = lazy(() => import("../../pages/SalesAI/SalesOrganization"));
+const DataQuality = lazy(() => import("../../pages/SalesAI/DataQuality"));
+const RoleBasedView = lazy(() => import("../../pages/SalesAI/RoleBasedView"));
 
 // 分析相关
-import LossAnalysis from "../../pages/LossAnalysis";
-import PipelineBreakAnalysis from "../../pages/PipelineBreakAnalysis";
-import AccountabilityAnalysis from "../../pages/AccountabilityAnalysis";
-import PipelineHealthMonitoring from "../../pages/PipelineHealthMonitoring";
-import DelayAnalysis from "../../pages/DelayAnalysis";
-import CostOverrunAnalysis from "../../pages/CostOverrunAnalysis";
-import InformationGapAnalysis from "../../pages/InformationGapAnalysis";
+const SalesReports = lazy(() => import("../../pages/SalesReports"));
+const SalesOpportunityCenter = lazy(() => import("../../pages/SalesOpportunityCenter"));
+const SalesStatistics = lazy(() => import("../../pages/SalesStatistics"));
+const SalesProjectTrack = lazy(() => import("../../pages/SalesProjectTrack"));
+const BiddingDetail = lazy(() => import("../../pages/BiddingDetail"));
+const SalesTemplateCenter = lazy(() => import("../../pages/SalesTemplateCenter"));
+const LossAnalysis = lazy(() => import("../../pages/LossAnalysis"));
+const PipelineBreakAnalysis = lazy(() => import("../../pages/PipelineBreakAnalysis"));
+const AccountabilityAnalysis = lazy(() => import("../../pages/AccountabilityAnalysis"));
+const PipelineHealthMonitoring = lazy(() => import("../../pages/PipelineHealthMonitoring"));
+const DelayAnalysis = lazy(() => import("../../pages/DelayAnalysis"));
+const CostOverrunAnalysis = lazy(() => import("../../pages/CostOverrunAnalysis"));
+const InformationGapAnalysis = lazy(() => import("../../pages/InformationGapAnalysis"));
 
 // 销售工作站
-import SalesWorkstation from "../../pages/SalesWorkstation";
+const SalesWorkstation = lazy(() => import("../../pages/SalesWorkstation"));
 
 export function SalesRoutes() {
   return (

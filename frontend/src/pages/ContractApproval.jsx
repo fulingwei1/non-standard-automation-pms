@@ -4,44 +4,13 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   FileCheck,
-  Search,
-  Filter,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Eye,
   FileText,
-  Building2,
-  DollarSign,
-  Calendar,
-  User,
-  Download,
-  History,
-  Loader2 } from
+  DollarSign } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Textarea } from
-"../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { contractApi } from "../services/api";

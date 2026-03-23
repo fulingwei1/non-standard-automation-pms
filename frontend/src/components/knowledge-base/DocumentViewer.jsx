@@ -3,8 +3,7 @@
  * 文档查看器组件（占位实现，保证页面可运行）
  */
 
-import { Card, Descriptions, Tag, Space, Button, Typography } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
+import { Typography } from 'antd';
 import { KNOWLEDGE_TYPES, FILE_TYPES, CATEGORIES, ACCESS_LEVELS, STATUS_OPTIONS } from '@/lib/constants/knowledge';
 
 const { Paragraph, Link, Text } = Typography;

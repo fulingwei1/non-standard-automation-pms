@@ -4,47 +4,16 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import {
-  AlertTriangle,
   Search,
-  Eye,
-  CheckCircle2,
-  Package,
-  BarChart3,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { shortageAlertApi, projectApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
@@ -90,7 +59,8 @@ export default function ShortageAlert() {
     try {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchAlerts = async () => {
@@ -130,7 +100,8 @@ export default function ShortageAlert() {
       const res = await shortageAlertApi.get(alertId);
       setSelectedAlert(res.data || res);
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const handleAcknowledge = async (alertId) => {

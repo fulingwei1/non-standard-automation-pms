@@ -9,39 +9,10 @@
  */
 
 import { useState } from "react";
-import {
-  Trophy,
-  Medal,
-  TrendingUp,
-  Award,
-  Zap,
-  DollarSign,
-  Users,
-  Crown,
-  Gift,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-} from "../../components/ui";
+
+
+
+
 
 // 业绩排行榜
 function Leaderboard() {

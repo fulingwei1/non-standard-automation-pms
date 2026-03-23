@@ -2,9 +2,6 @@
  * HRAttendanceTab Component
  * 考勤管理 Tab 组件
  */
-import { Card, CardContent } from "../../ui";
-import { Progress } from "../../ui";
-import { Clock, AlertTriangle } from "lucide-react";
 
 export default function HRAttendanceTab({ mockHRStats }) {
   return (

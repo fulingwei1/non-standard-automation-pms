@@ -1,12 +1,3 @@
-import { FileText } from "lucide-react";
-import { Card, CardContent, Button, SkeletonCard } from "../../../components/ui";
-import { ProjectClosureStatusCard } from "./ProjectClosureStatusCard";
-import { ProjectClosureStats } from "./ProjectClosureStats";
-import { ProjectClosureInfo } from "./ProjectClosureInfo";
-import { ProjectClosureLessons } from "./ProjectClosureLessons";
-import { ProjectClosureQuality } from "./ProjectClosureQuality";
-import { ProjectClosureReview } from "./ProjectClosureReview";
-import { ProjectClosureActions } from "./ProjectClosureActions";
 
 export function ProjectClosureContent({
     loading,

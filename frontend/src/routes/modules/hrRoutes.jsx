@@ -1,29 +1,31 @@
+import { lazy } from "react";
 import { Route } from "react-router-dom";
 
-import PerformanceManagement from "../../pages/PerformanceManagement";
-import PerformanceRanking from "../../pages/PerformanceRanking";
-import PerformanceIndicators from "../../pages/PerformanceIndicators";
-import PerformanceResults from "../../pages/PerformanceResults";
-import MonthlySummary from "../../pages/MonthlySummary";
-import MyPerformance from "../../pages/MyPerformance";
-import MyBonus from "../../pages/MyBonus";
-import EvaluationTaskList from "../../pages/EvaluationTaskList";
-import EvaluationScoring from "../../pages/EvaluationScoring";
-import EvaluationWeightConfig from "../../pages/EvaluationWeightConfig";
-import QualificationManagement from "../../pages/QualificationManagement";
-import QualificationLevelForm from "../../pages/QualificationLevelForm";
-import CompetencyModelForm from "../../pages/CompetencyModelForm";
-import EmployeeQualificationForm from "../../pages/EmployeeQualificationForm";
-import QualificationAssessmentList from "../../pages/QualificationAssessmentList";
-import AttendanceManagement from "../../pages/AttendanceManagement";
-import EngineerPerformanceDashboard from "../../pages/EngineerPerformanceDashboard";
-import EngineerPerformanceRanking from "../../pages/EngineerPerformanceRanking";
-import EngineerPerformanceDetail from "../../pages/EngineerPerformanceDetail";
-import PerformanceContract from "../../pages/PerformanceContract";
-import EngineerCollaboration from "../../pages/EngineerCollaboration";
-import EngineerKnowledge from "../../pages/EngineerKnowledge";
-import PerformanceCenter from "../../pages/PerformanceCenter";
-import TalentMatchingCenter from "../../pages/TalentMatchingCenter";
+// ---- 懒加载页面组件（人力资源模块） ----
+const PerformanceCenter = lazy(() => import("../../pages/PerformanceCenter"));
+const TalentMatchingCenter = lazy(() => import("../../pages/TalentMatchingCenter"));
+const PerformanceManagement = lazy(() => import("../../pages/PerformanceManagement"));
+const PerformanceRanking = lazy(() => import("../../pages/PerformanceRanking"));
+const PerformanceContract = lazy(() => import("../../pages/PerformanceContract"));
+const PerformanceIndicators = lazy(() => import("../../pages/PerformanceIndicators"));
+const PerformanceResults = lazy(() => import("../../pages/PerformanceResults"));
+const MonthlySummary = lazy(() => import("../../pages/MonthlySummary"));
+const MyPerformance = lazy(() => import("../../pages/MyPerformance"));
+const MyBonus = lazy(() => import("../../pages/MyBonus"));
+const EvaluationTaskList = lazy(() => import("../../pages/EvaluationTaskList"));
+const EvaluationScoring = lazy(() => import("../../pages/EvaluationScoring"));
+const EvaluationWeightConfig = lazy(() => import("../../pages/EvaluationWeightConfig"));
+const QualificationManagement = lazy(() => import("../../pages/QualificationManagement"));
+const QualificationLevelForm = lazy(() => import("../../pages/QualificationLevelForm"));
+const CompetencyModelForm = lazy(() => import("../../pages/CompetencyModelForm"));
+const EmployeeQualificationForm = lazy(() => import("../../pages/EmployeeQualificationForm"));
+const QualificationAssessmentList = lazy(() => import("../../pages/QualificationAssessmentList"));
+const AttendanceManagement = lazy(() => import("../../pages/AttendanceManagement"));
+const EngineerPerformanceDashboard = lazy(() => import("../../pages/EngineerPerformanceDashboard"));
+const EngineerPerformanceRanking = lazy(() => import("../../pages/EngineerPerformanceRanking"));
+const EngineerPerformanceDetail = lazy(() => import("../../pages/EngineerPerformanceDetail"));
+const EngineerCollaboration = lazy(() => import("../../pages/EngineerCollaboration"));
+const EngineerKnowledge = lazy(() => import("../../pages/EngineerKnowledge"));
 
 export function HRRoutes() {
   return (

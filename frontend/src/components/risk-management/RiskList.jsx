@@ -1,20 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  AlertTriangle,
-  Target,
-  FileText,
-  Clock,
-  CheckCircle2,
-  Eye,
-  XCircle
-} from "lucide-react";
-import {
-  Card,
-  CardContent
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { SkeletonCard } from "../../components/ui/skeleton";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
 import { fadeInUp } from "../../lib/animations";

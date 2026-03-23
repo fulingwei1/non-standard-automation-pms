@@ -8,46 +8,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Sparkles,
-  TrendingDown,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Zap,
-  Copy,
-  RefreshCw,
-  ArrowRight,
-  Package,
-  FileText,
-  ShoppingCart,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
+
+
 import { staggerContainer } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from "../components/ui";
+
+
 import { scheduleOptimizationApi } from "../services/api";
 
 export default function ScheduleOptimization() {

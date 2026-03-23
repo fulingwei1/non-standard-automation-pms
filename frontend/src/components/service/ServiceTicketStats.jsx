@@ -2,7 +2,6 @@
  * Service Ticket Stats Component
  * 服务工单统计卡片组件
  */
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { 
   Clock,
   CheckCircle2,

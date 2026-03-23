@@ -45,8 +45,10 @@ export function useEmployeeProfileList() {
             } else if (data?.items) {
                 setProfiles(data.items);
             } else {
+              // 未知数据格式，忽略
             }
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         } finally {
             setLoading(false);
         }

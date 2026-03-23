@@ -24,7 +24,7 @@ export function useKnowledgeBase() {
         try {
             const response = await knowledgeBaseApi.getCategories();
             setCategories(response.data || response || []);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
     }, []);
 
     useEffect(() => { loadCategories(); loadArticles(); }, [loadCategories, loadArticles]);

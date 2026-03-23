@@ -5,28 +5,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Save,
-  Lock } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Label,
-  Textarea,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { technicalAssessmentApi } from "../services/api";
-import { Badge } from "../components/ui";
 
 export default function LeadRequirementDetail() {
   const { leadId } = useParams();
@@ -85,7 +68,9 @@ export default function LeadRequirementDetail() {
     } catch (error) {
       if (error.response?.status === 404) {
         // 需求详情不存在，使用默认值
+        // 非关键路径，静默处理
       } else {
+        // 其他错误静默处理
       }
     } finally {
       setLoading(false);

@@ -4,50 +4,10 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Upload,
-  Download,
-  CheckCircle2,
-  Bell,
-  AlertTriangle,
-  Settings } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Input,
-  Label,
-  Textarea,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui";
+
+
+
+
 import { formatCurrency, formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { salesTemplateApi, supplierApi } from "../services/api";
@@ -113,7 +73,8 @@ export default function PurchaseMaterialCostManagement() {
       if (reminderData?.is_due) {
         setShowReminderDialog(true);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -140,7 +101,8 @@ export default function PurchaseMaterialCostManagement() {
       });
       const items = res.data?.data?.items || res.data?.items || [];
       setCosts(items);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -151,7 +113,8 @@ export default function PurchaseMaterialCostManagement() {
       const res = await supplierApi.list({ page: 1, page_size: 1000 });
       const items = res.data?.data?.items || res.data?.items || [];
       setSuppliers(items);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

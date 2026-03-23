@@ -3,14 +3,7 @@
  * Features: 采购成本趋势、物料价格波动、供应商交期准时率、采购申请处理时效、物料质量合格率
  */
 import { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import {
-  ProcurementHeader,
-  CostTrendTab,
-  PriceFluctuationTab,
-  DeliveryPerformanceTab,
-  RequestEfficiencyTab,
-  QualityRateTab,
   useProcurementData,
   TIME_RANGE_LABELS } from
 '../components/procurement-analysis';

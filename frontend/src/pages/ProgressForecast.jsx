@@ -1,37 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  ShieldAlert,
-  Zap,
-  Eye,
-  Play,
-  AlertCircle } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody } from
-"../components/ui/dialog";
-import { Switch } from "../components/ui/switch";
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { progressApi } from "../services/api";
 
@@ -72,7 +46,8 @@ export default function ProgressForecast({ projectId }) {
     try {
       const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
       setProject(res.data?.data || res.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

@@ -1,9 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import TagManagement from "./TagManagement";
-import EmployeeProfileList from "./EmployeeProfileList";
-import ProjectStaffingNeed from "./ProjectStaffingNeed";
-import AIStaffMatching from "./AIStaffMatching";
 
 export default function TalentMatchingCenter() {
   const tabs = useMemo(

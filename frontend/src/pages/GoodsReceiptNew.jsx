@@ -1,49 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Package,
-  Plus,
-  X,
-  Search,
-  ChevronRight } from
+  Package } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
-import { EmptyState } from "../components/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import { Badge } from "../components/ui/badge";
+
+
+
+
+
+
 import { formatCurrency } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { purchaseApi } from "../services/api";
 import { toast } from "../components/ui/toast";
-import { LoadingCard } from "../components/common";
-import { ErrorMessage } from "../components/common";
 
 export default function GoodsReceiptNew() {
   const navigate = useNavigate();
@@ -577,7 +546,8 @@ function OrderSelectionForm({ onSelect }) {
         });
         const data = res.data?.items || res.data?.items || res.data || [];
         setOrders(data);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

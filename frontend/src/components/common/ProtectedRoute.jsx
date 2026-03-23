@@ -3,8 +3,6 @@
  * Provides role-based access control for routes
  */
 
-import { Navigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   hasProcurementAccess,
   hasFinanceAccess,
@@ -16,7 +14,6 @@ import {
   hasPermission,
   hasAnyPurchasePermission,
 } from "../../lib/permissionUtils";
-import { Button } from "../ui/button";
 
 /**
  * Permission check function type

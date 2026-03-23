@@ -5,52 +5,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Eye,
-  Layers,
-  FileText,
-  Calendar } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Input,
-  Label,
-  Textarea,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui";
+
+
+
+
 import { formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { salesTemplateApi } from "../services/api";
-import { DollarSign } from "lucide-react";
 
 export default function CostTemplateManagement() {
   const _navigate = useNavigate();
@@ -99,7 +60,8 @@ export default function CostTemplateManagement() {
       });
       const items = res.data?.data?.items || res.data?.items || [];
       setTemplates(items);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

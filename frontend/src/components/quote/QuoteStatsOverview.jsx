@@ -4,25 +4,16 @@
  */
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   FileText,
   Clock,
   CheckCircle2,
   Send,
-  TrendingUp,
-  TrendingDown,
   DollarSign,
   Target,
-  Calendar,
-  Eye,
   BarChart3,
-  Users,
   Percent } from
 "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Progress } from "../../components/ui/progress";
-import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import { resolveIcon } from "@/utils/iconMap";
 import {
@@ -31,10 +22,8 @@ import {
   formatCurrency,
   QUOTE_VIEW_MODES } from
 "@/lib/constants/quote";
-import {
-  SimpleLineChart,
-  SimplePieChart } from
-"../administrative/StatisticsCharts";
+
+
 
 export const QuoteStatsOverview = ({
   stats = DEFAULT_QUOTE_STATS,

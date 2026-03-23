@@ -1,4 +1,3 @@
-import { Search } from "lucide-react";
 
 /**
  * 任务筛选器组件

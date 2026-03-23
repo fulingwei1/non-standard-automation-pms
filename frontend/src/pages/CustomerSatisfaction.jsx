@@ -4,83 +4,23 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Plus,
-  Eye,
-  XCircle,
-  RefreshCw,
-  Download,
-  BarChart3,
-  PieChart,
-  FileText,
-  Settings,
-  MessageSquare,
-  ThumbsUp,
-  ThumbsDown,
-  MoreHorizontal,
-  ChevronDown,
-} from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Progress,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "../components/ui";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 
 // 导入拆分后的组件
-import {
-  CustomerSatisfactionOverview,
-  SurveyManager,
-  SatisfactionAnalytics,
-  FeedbackManager,
-  SurveyTemplates,
-} from "../components/customer-satisfaction";
+
+
 
 import {
   SURVEY_STATUS,
   SURVEY_TYPES,
   EXPORT_FORMATS,
   DEFAULT_FILTERS,
-  TABLE_CONFIG,
 } from "@/lib/constants/customer";
 
 import { serviceApi } from "@/services/api/service";

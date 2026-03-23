@@ -1,7 +1,6 @@
 /**
  * 用户统计组件 (User Stats)
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 
 export default function UserStats({ data: _data }) {
   return (

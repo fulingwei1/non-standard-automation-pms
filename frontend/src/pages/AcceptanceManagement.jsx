@@ -5,56 +5,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { motion } from "framer-motion";
 import {
-  ClipboardCheck,
-  Plus,
-  Search,
-  Filter,
-  RefreshCw,
-  Eye,
-  Edit,
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  Clock,
-  FileText,
-  TrendingUp,
-  Calendar,
-  MapPin,
-  Users,
-  ClipboardList
+  ClipboardCheck
 } from "lucide-react";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
   toast
 } from "../components/ui";
 import { cn } from "../lib/utils";
-import { PageHeader } from "../components/layout";
 
 import { acceptanceApi } from "../services/api/acceptance";
 import { machineApi, projectApi } from "../services/api/projects";

@@ -1,29 +1,12 @@
 import { useState, useEffect } from "react";
 import {
-  Activity,
   AlertTriangle,
-  BarChart3,
-  CalendarDays,
   Factory,
   Gauge,
   TrendingUp,
-  Wrench,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { productionApi } from "../services/api";
 
@@ -233,7 +216,8 @@ export default function CapacityAnalysis() {
           detail: "平均每班损失 0.8h",
         });
         setUtilizationLossData(lossReasons.slice(0, 4));
-      } catch (error) {
+      } catch (_error) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

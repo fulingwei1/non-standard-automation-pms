@@ -1,8 +1,6 @@
-import { Calendar, Clock, CheckCircle2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { getStatusBadge } from "../../utils/monthlySummaryUtils";
 import { fadeIn } from "../../utils/monthlySummaryUtils";
-import { motion } from "framer-motion";
 
 /**
  * 当前周期信息卡片组件

@@ -1,17 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Download,
-  RefreshCw
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
-import { LoadingCard, ErrorMessage } from "../components/common";
+
+
 import { toast } from "../components/ui/toast";
 import { serviceApi } from "../services/api";
-import { ServiceOverview } from "../components/service-analytics/ServiceOverview";
-import { ServiceCharts } from "../components/service-analytics/ServiceCharts";
-import { ServicePerformance } from "../components/service-analytics/ServicePerformance";
-import { ServiceTrends } from "../components/service-analytics/ServiceTrends";
 
 // Empty fallback data (no mock)
 const emptyFallback = {

@@ -4,17 +4,8 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, Avatar, Button, Flex } from 'antd';
-import {
-  BookOpen,
-  Users,
-  Download,
-  Eye,
-  Star,
-  TrendingUp,
-  FolderOpen,
-  Clock } from
-'lucide-react';
+
+
 import {
   KNOWLEDGE_TYPES,
   FILE_TYPES } from

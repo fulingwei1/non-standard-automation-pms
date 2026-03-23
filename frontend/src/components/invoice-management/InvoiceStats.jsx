@@ -7,8 +7,6 @@
  * The pages/invoice/InvoiceStats.jsx re-exports this component.
  */
 
-import { motion } from "framer-motion";
-import { Card, CardContent } from "../ui";
 import { formatCurrency } from "../../lib/utils";
 import { staggerContainer } from "../../lib/animations";
 

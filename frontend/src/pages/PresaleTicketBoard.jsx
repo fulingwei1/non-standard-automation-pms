@@ -1,44 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  Filter,
-  Gauge,
-  KanbanSquare,
-  ListFilter,
   RefreshCw,
-  Search,
-  Ticket,
-  Timer,
-  TrendingUp,
-  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "../components/layout";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-  Progress,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { presaleApi } from "../services/api";
 

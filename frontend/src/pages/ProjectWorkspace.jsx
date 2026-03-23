@@ -2,36 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { projectWorkspaceApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  HealthBadge,
-  Progress,
-  Skeleton,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
   toast } from
 "../components/ui";
-import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
-import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
-import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
-import SolutionLibrary from "../components/project/SolutionLibrary";
-import {
-  ArrowLeft,
-  Briefcase,
-  Users,
-  DollarSign,
-  FileText,
-  TrendingUp,
-  Activity } from
-"lucide-react";
+
+
 
 export default function ProjectWorkspace() {
   const { id } = useParams();
@@ -49,7 +24,8 @@ export default function ProjectWorkspace() {
       setLoading(true);
       const response = await projectWorkspaceApi.getWorkspace(id);
       setWorkspaceData(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

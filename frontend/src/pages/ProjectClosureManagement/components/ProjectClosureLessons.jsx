@@ -1,5 +1,3 @@
-import { Edit } from 'lucide-react';
-import { Card, CardContent, Button } from '../../../components/ui';
 
 export function ProjectClosureLessons({ closure, onEdit }) {
     return (

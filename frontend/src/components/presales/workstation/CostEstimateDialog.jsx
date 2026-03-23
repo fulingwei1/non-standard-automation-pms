@@ -1,7 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Calculator, X } from "lucide-react";
-import { Button } from "../../ui/button";
-import CostEstimateForm from "../CostEstimateForm";
 
 export default function CostEstimateDialog({
   isOpen,

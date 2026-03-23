@@ -3,59 +3,14 @@
  * 支持 L1/L2/L3 三种合约类型的管理
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  Plus,
   FileText,
-  CheckCircle,
-  Clock,
-  TrendingUp,
   Users,
-  Briefcase,
   User,
-  Edit2,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-  X,
-  Save,
-  Send,
-  PenTool,
-  Calculator,
-  Filter,
-  RefreshCw,
   Target,
-  Award,
-  Calendar,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-  Textarea,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress,
-} from "@/components/ui";
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import {
   performanceContractApi,
@@ -127,7 +82,8 @@ export default function PerformanceContract() {
     try {
       const { data } = await performanceContractApi.getDashboard({});
       setDashboard(data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -141,7 +97,8 @@ export default function PerformanceContract() {
       }
       const { data } = await performanceContractApi.list(params);
       setContracts(data.data?.items || data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

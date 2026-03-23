@@ -1,13 +1,5 @@
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
-import {
-  AlertTriangle,
-  Users,
-  BarChart2,
-  PieChart,
-  Info } from
-"lucide-react";
+
+
 
 /**
  * 丢标原因配置

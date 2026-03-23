@@ -1,27 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   AlertTriangle,
   CheckCircle2,
   Clock,
   XCircle,
-  MessageSquare,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { alertApi } from "../services/api";
-import { LoadingPage, ErrorMessage, EmptyState } from "../components/common";
 import { toast } from "../components/ui/toast";
 
 const alertLevelConfig = {

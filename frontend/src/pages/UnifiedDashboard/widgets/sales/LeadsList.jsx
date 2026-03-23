@@ -2,7 +2,6 @@
  * 线索列表组件 (Leads List)
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { leadApi } from '../../../../services/api/sales';
 
 const statusColors = {

@@ -3,7 +3,6 @@
  * 用于转化率分析、销售漏斗
  */
 
-import { Funnel } from "@ant-design/plots";
 import { useMemo } from "react";
 
 /**

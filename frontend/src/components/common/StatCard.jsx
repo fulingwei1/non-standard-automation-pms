@@ -1,5 +1,3 @@
-import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

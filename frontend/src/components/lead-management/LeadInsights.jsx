@@ -1,12 +1,6 @@
 import { useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Button,
-} from "../../components/ui";
+
+
 import {
   Globe,
   Users,
@@ -14,13 +8,7 @@ import {
   Building2,
   Megaphone,
   Handshake,
-  MapPin,
   MoreHorizontal,
-  Flame,
-  Calendar,
-  Clock,
-  ChevronRight,
-  Star,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { sourceOptions } from "@/lib/constants/leadManagement";

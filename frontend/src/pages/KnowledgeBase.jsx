@@ -4,57 +4,19 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  BookOpen,
-  Search,
-  Filter,
-  Plus,
-  Eye,
-  Download,
-  Star,
-  StarOff,
-  Folder,
-  FileText,
-  Clock,
-  Users,
-  Upload,
-  Edit,
-  Trash2,
-  Grid,
-  List,
-  TrendingUp } from
-"lucide-react";
+
+
 
 import {
-  Card,
-  Table,
-  Button,
   Input,
-  Select,
-  Tabs,
-  Modal,
-  Space,
-  Tag,
-  Row,
-  Col,
-  Avatar,
   Typography,
-  Radio,
   Form,
-  Checkbox,
-  message,
-  Spin,
-  Rate } from
+  message } from
 "antd";
 
 // 导入拆分后的组件
-import {
-  KnowledgeBaseOverview,
-  CategoryManager,
-  SearchAndFilter,
-  DocumentViewer } from
-'../components/knowledge-base';
+
+
 
 import {
   KNOWLEDGE_TYPES,

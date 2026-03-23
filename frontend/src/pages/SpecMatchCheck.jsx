@@ -1,25 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  AlertTriangle,
-  RefreshCw,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+
+
+
+
+
+
 import api from "../services/api";
 
 export default function SpecMatchCheck() {
@@ -46,7 +31,8 @@ export default function SpecMatchCheck() {
         params,
       });
       setMatchRecords(response.data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

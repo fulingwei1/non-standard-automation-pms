@@ -1,10 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import CostAccounting from "./CostAccounting";
-import CostCollection from "./CostCollection";
-import QuoteActualCompare from "./QuoteActualCompare";
-import CostVarianceAnalysis from "./CostVarianceAnalysis";
-import LaborCostDetail from "./LaborCostDetail";
 
 export default function FinanceCostCenter() {
   const tabs = useMemo(

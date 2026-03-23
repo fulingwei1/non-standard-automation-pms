@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
-import {
-  BarChart3,
-  TrendingUp,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
+
+
 import { itrApi } from "../../services/api";
-import {
-  SimpleBarChart,
-  SimpleLineChart,
-} from "../administrative/StatisticsCharts";
+
+
 
 export default function ITREfficiencyAnalysis() {
   const [loading, setLoading] = useState(false);

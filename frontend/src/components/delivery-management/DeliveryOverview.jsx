@@ -5,10 +5,8 @@
  */
 
 import { useMemo } from "react";
-import { Card, CardContent, Badge, Progress, EmptyState } from "../ui";
-import { PackageCheck, Truck, Clock, AlertCircle, BarChart3, AlertTriangle, Percent } from "lucide-react";
+import { PackageCheck, Truck, Clock, BarChart3, Percent } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { MonthlyTrendChart } from "../administrative/StatisticsCharts";
 
 import { DELIVERY_STATUS, DELIVERY_PRIORITY, SHIPPING_METHODS } from "@/lib/constants/service";
 

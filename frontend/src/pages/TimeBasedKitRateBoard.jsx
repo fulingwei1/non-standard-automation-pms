@@ -9,38 +9,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   AlertTriangle,
   AlertCircle,
   AlertOctagon,
   CheckCircle,
-  Clock,
-  Calendar,
-  Truck,
-  Package,
-  RefreshCw,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Input,
-  Label,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Progress,
-} from "../components/ui";
+
+
 import { assemblyKitApi } from "../services/api/production";
 
 // 预警级别配置
@@ -104,7 +81,8 @@ export default function TimeBasedKitRateBoard() {
       
       const res = await assemblyKitApi.getTimeBasedKitRate(projectId, params);
       setData(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

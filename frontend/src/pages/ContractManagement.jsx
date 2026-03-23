@@ -4,52 +4,19 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Search,
-  Plus,
-  FileCheck,
-  DollarSign,
-  Calendar,
-  XCircle,
-  Clock,
-  Edit,
-  Eye,
-  FileText,
-  Layers,
-  Download,
-  Upload,
-  AlertTriangle,
-  MoreHorizontal,
-  TrendingUp } from
-"lucide-react";
+
+
 
 import {
-  Card,
-  Button,
   Input,
-  Select,
   DatePicker,
-  Modal,
-  Space,
-  Tag,
-  Row,
-  Col,
   Typography,
-  Dropdown,
-  Menu,
-  message,
-  Tabs } from
+  message } from
 "antd";
 
 // 导入拆分后的组件
-import {
-  ContractOverview,
-  ContractList,
-  ContractEditor,
-  SignatureManager,
-  PaymentTracker } from
-'../components/contract-management';
+
+
 
 import {
   CONTRACT_TYPES,

@@ -2,7 +2,6 @@
  * 工单列表组件
  * 显示工单的网格或列表视图
  */
-import WorkOrderCard from './WorkOrderCard';
 
 /**
  * 工单列表组件

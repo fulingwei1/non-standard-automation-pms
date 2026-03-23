@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { Sidebar } from "./Sidebar";
-import { Header } from "./Header";
-import { ToastContainer, useToast } from "../ui";
+import { useToast } from "../ui";
 
 /**
  * 主布局组件

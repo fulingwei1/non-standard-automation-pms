@@ -2,11 +2,7 @@
  * 新建商机对话框
  */
 
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
-  Button, Input, Label, Textarea,
-} from "../../../components/ui";
+
 import { stageConfig } from "../constants";
 
 export function CreateDialog({

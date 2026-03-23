@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../tabs';
 
 describe('Tabs Component', () => {
   const TabsExample = ({ onValueChange: externalOnChange, defaultValue = 'tab1' }) => {

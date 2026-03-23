@@ -1,19 +1,21 @@
+import { lazy } from "react";
 import { Route } from "react-router-dom";
 import { QualityProtectedRoute } from "../../components/common/ProtectedRoute";
 
-import QualityWorkstation from "../../pages/quality/QualityWorkstation";
-import InspectionList from "../../pages/quality/InspectionList";
-import InspectionDetail from "../../pages/quality/InspectionDetail";
-import InspectionNew from "../../pages/quality/InspectionNew";
-import QualityIssues from "../../pages/quality/QualityIssues";
-import IssueDetail from "../../pages/quality/IssueDetail";
-import AcceptanceList from "../../pages/quality/AcceptanceList";
-import AcceptanceDetail from "../../pages/quality/AcceptanceDetail";
-import QualityReports from "../../pages/quality/QualityReports";
-import NCManagement from "../../pages/quality/NCManagement";
-import ReportTemplates from "../../pages/ReportTemplates";
-import ReportGeneration from "../../pages/ReportGeneration";
-import ReportArchives from "../../pages/ReportArchives";
+// ---- 懒加载页面组件（质量模块） ----
+const QualityWorkstation = lazy(() => import("../../pages/quality/QualityWorkstation"));
+const InspectionList = lazy(() => import("../../pages/quality/InspectionList"));
+const InspectionNew = lazy(() => import("../../pages/quality/InspectionNew"));
+const InspectionDetail = lazy(() => import("../../pages/quality/InspectionDetail"));
+const QualityIssues = lazy(() => import("../../pages/quality/QualityIssues"));
+const IssueDetail = lazy(() => import("../../pages/quality/IssueDetail"));
+const AcceptanceList = lazy(() => import("../../pages/quality/AcceptanceList"));
+const AcceptanceDetail = lazy(() => import("../../pages/quality/AcceptanceDetail"));
+const QualityReports = lazy(() => import("../../pages/quality/QualityReports"));
+const ReportTemplates = lazy(() => import("../../pages/ReportTemplates"));
+const ReportGeneration = lazy(() => import("../../pages/ReportGeneration"));
+const ReportArchives = lazy(() => import("../../pages/ReportArchives"));
+const NCManagement = lazy(() => import("../../pages/quality/NCManagement"));
 
 export function QualityRoutes() {
   return (

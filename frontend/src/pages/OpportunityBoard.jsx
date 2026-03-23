@@ -4,46 +4,20 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  Search,
-  Plus,
   LayoutGrid,
   List,
-  AlertTriangle,
-  Flame,
   TrendingUp,
-  BarChart3,
-  Trash2 } from
+  BarChart3 } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
-import { OpportunityCard, SalesFunnel } from "../components/sales";
 import { opportunityApi, salesStatisticsApi } from "../services/api";
 
 // 导入重构后的组件
 import {
-  OpportunityBoardOverview,
   OPPORTUNITY_STAGES,
   OPPORTUNITY_STAGE_CONFIGS,
   OPPORTUNITY_PRIORITY,
@@ -57,7 +31,6 @@ import {
 
 // 阶段映射函数
 import { confirmAction } from "@/lib/confirmAction";
-import { Eye } from "lucide-react";
 const mapStageToFrontend = (backendStage) => {
   const config = OpportunityUtils.getStageConfig(backendStage);
   return config?.frontendKey || "lead";

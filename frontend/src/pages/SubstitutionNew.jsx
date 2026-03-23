@@ -5,31 +5,10 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Save,
-  X,
-  AlertTriangle,
-  CheckCircle2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea } from
-"../components/ui";
+
+
+
+
 import { fadeIn } from "../lib/animations";
 import { shortageApi, projectApi, materialApi } from "../services/api";
 
@@ -64,7 +43,8 @@ export default function SubstitutionNew() {
     try {
       const res = await projectApi.list({ page: 1, page_size: 100 });
       setProjects(res.data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -76,7 +56,8 @@ export default function SubstitutionNew() {
         is_active: true
       });
       setMaterials(res.data.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

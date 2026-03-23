@@ -2,11 +2,7 @@
  * 阶段门审核对话框
  */
 
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
-  Button, Label, Textarea,
-} from "../../../components/ui";
+
 
 export function GateDialog({
   open, onOpenChange,

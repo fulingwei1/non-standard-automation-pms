@@ -3,49 +3,16 @@
  * Features: ECN类型列表、创建、编辑、删除、审批矩阵配置
  */
 import { useState, useEffect } from "react";
-import {
-  Plus,
-  Search,
-  FileEdit,
-  X,
-  CheckCircle2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
+
+
+
+
+
+
+
+
+
+
 import { ecnApi } from "../services/api";
 
 const deptOptions = [
@@ -85,7 +52,8 @@ export default function ECNTypeManagement({ embedded = false }) {
       setLoading(true);
       const res = await ecnApi.getEcnTypes({ is_active: null });
       setEcnTypes(res.data || res || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

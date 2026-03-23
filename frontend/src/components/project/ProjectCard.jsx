@@ -2,22 +2,12 @@
  * ProjectCard - 项目卡片组件
  * 从 ProjectList 提取，用于多处复用
  */
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
-import {
-  Card,
-  CardContent,
-  Badge,
-  HealthBadge,
-  Progress,
-} from "../ui";
-import {
-  ArrowRight,
-  Briefcase,
-  Calendar,
-  Users,
-} from "lucide-react";
+
+
+
+
 
 const staggerChild = {
   hidden: { opacity: 0, y: 20 },

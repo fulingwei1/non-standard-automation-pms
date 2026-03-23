@@ -2,9 +2,7 @@
  * Service Statistics Card Component
  * 客户服务统计卡片组件
  */
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
-  Activity,
   Clock,
   CheckCircle2,
   AlertTriangle,

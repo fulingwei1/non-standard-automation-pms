@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Select, Input, Tag, Space, Button, Tabs } from 'antd';
-import { SearchOutlined, FilterOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Select } from 'antd';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,7 +34,8 @@ const EngineerPerformanceRanking = () => {
         setRankings(response.data.data.items);
         setTotal(response.data.data.total);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

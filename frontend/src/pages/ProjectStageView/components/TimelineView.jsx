@@ -4,33 +4,10 @@
  * 显示单项目的阶段和节点时间线（甘特图样式）
  */
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronRight,
-  Play,
-  CheckCircle2,
-  SkipForward,
-  AlertTriangle,
-  Clock,
-  User,
-  Calendar,
-  Star,
-  Zap,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
-  Skeleton,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../../components/ui";
+
+
+
+
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import {
@@ -400,7 +377,8 @@ export default function TimelineView({ data, loading, stageActions, onRefresh })
         default:
           break;
       }
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
     if (success) {
       onRefresh?.();

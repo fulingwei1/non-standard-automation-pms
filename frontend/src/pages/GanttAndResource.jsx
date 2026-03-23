@@ -4,16 +4,12 @@
  * Tab 1: 任务甘特 - 依赖关系与关键路径
  * Tab 2: 资源甘特 - 人员负载时间线
  */
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   GitBranch,
-  Users,
-  Loader2
+  Users
 } from "lucide-react";
-import { PageHeader } from "../components/layout/PageHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { staggerContainer } from "../lib/animations";
 
 // 懒加载子模块

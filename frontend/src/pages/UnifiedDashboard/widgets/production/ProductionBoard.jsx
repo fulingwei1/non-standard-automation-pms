@@ -2,7 +2,6 @@
  * 生产看板组件 (Production Board)
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { productionApi } from '../../../../services/api/production';
 
 const statusColors = {

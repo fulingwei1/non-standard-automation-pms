@@ -39,7 +39,8 @@ export function useProjectClosureManagement() {
             const res = await projectApi.get(selectedProjectId);
             const data = res.data || res;
             setProject(data);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, [selectedProjectId]);
 
@@ -54,6 +55,7 @@ export function useProjectClosureManagement() {
             if (err.response?.status === 404) {
                 setClosure(null);
             } else {
+              // 其他错误静默处理
             }
         } finally {
             setLoading(false);

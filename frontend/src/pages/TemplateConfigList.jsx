@@ -4,21 +4,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Plus, Edit2, Trash2, Copy, CheckCircle, XCircle } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui";
+
+
 import { templateConfigApi } from "../services/api/templateConfig";
 
 export default function TemplateConfigList() {
@@ -34,7 +22,8 @@ export default function TemplateConfigList() {
       const res = await templateConfigApi.list({ page: 1, page_size: 100 });
       const data = res.data || res;
       setConfigs(data.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

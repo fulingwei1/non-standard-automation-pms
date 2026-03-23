@@ -90,7 +90,8 @@ export default function CostBenchmark() {
       setLoading(true);
       const res = await costBenchmarkApi.getBenchmarks(projectId);
       setBenchmarks(res.data || res || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -117,7 +118,8 @@ export default function CostBenchmark() {
       setLoading(true);
       const res = await costBenchmarkApi.getLaborCosts(projectId);
       setLaborCosts(res.data || res || []);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

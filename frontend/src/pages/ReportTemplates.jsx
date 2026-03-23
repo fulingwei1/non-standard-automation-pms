@@ -2,7 +2,6 @@
  * 报表模板管理页面
  */
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { reportCenterApi } from '../services/api';
 
 export default function ReportTemplates() {
@@ -20,7 +19,8 @@ export default function ReportTemplates() {
       const response = await reportCenterApi.getTemplates();
       const data = response.data;
       setTemplates(data?.items || data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -30,7 +30,8 @@ export default function ReportTemplates() {
     try {
       await reportCenterApi.toggleTemplate(templateId);
       fetchTemplates();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -40,7 +41,8 @@ export default function ReportTemplates() {
     try {
       await reportCenterApi.deleteTemplate(templateId);
       fetchTemplates();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

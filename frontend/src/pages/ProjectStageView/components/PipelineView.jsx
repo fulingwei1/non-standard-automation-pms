@@ -4,30 +4,10 @@
  * 显示多项目阶段全景，类似看板/甘特图的横向布局
  */
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  ChevronRight,
-  Eye,
-  Calendar,
-  GitBranch,
-  Star,
-  MoreHorizontal,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-  Skeleton,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../../components/ui";
+
+
+
+
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import {

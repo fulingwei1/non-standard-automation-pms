@@ -3,7 +3,6 @@
  * 用于占比分析、构成展示
  */
 
-import { Pie } from "@ant-design/plots";
 import { useMemo } from "react";
 
 /**

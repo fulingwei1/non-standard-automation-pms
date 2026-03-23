@@ -1,42 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  Plus,
-  Trash2,
-  Search,
-  Save,
-  Send,
-  ArrowLeft,
-  Package,
-  AlertCircle } from
+  Search } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody } from
-"../components/ui/dialog";
+
+
+
+
+
+
 import { fadeIn } from "../lib/animations";
 import {
   purchaseApi,
@@ -46,8 +18,6 @@ import {
   supplierApi } from
 "../services/api";
 import { toast } from "../components/ui/toast";
-import { LoadingCard } from "../components/common";
-import { ErrorMessage } from "../components/common";
 
 export default function PurchaseRequestNew() {
   const navigate = useNavigate();
@@ -86,7 +56,8 @@ export default function PurchaseRequestNew() {
       try {
         const res = await projectApi.list({ page_size: 1000 });
         setProjects(res.data?.items || res.data?.items || res.data || []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
     };
     loadProjects();
@@ -126,7 +97,8 @@ export default function PurchaseRequestNew() {
       try {
         const res = await materialApi.list({ page_size: 1000 });
         setMaterials(res.data?.items || res.data?.items || res.data || []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
     };
     loadMaterials();
@@ -138,7 +110,8 @@ export default function PurchaseRequestNew() {
       try {
         const res = await supplierApi.list({ page: 1, page_size: 1000 });
         setSuppliers(res.data?.items || res.data?.items || res.data || []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
     };
     loadSuppliers();

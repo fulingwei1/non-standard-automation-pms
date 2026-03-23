@@ -2,7 +2,6 @@
  * 客户列表组件 (Customer List)
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { customerApi } from '../../../../services/api/crm';
 
 const statusMap = {

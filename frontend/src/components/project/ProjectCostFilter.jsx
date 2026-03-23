@@ -1,24 +1,9 @@
 import { useState } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
-import { Button, Badge } from '../ui';
-import { Switch } from '../ui/switch';
-import { 
-  Filter, 
-  Download, 
-  AlertCircle, 
-  TrendingUp, 
-  TrendingDown,
-  DollarSign,
-  X
-} from 'lucide-react';
+
+
+
+
 import { cn } from '../../lib/utils';
-import { Calendar } from "lucide-react";
 
 /**
  * 项目成本筛选器

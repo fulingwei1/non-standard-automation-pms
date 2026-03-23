@@ -4,8 +4,6 @@
  */
 
 import { useMemo } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag } from 'antd';
-import { DollarSign } from 'lucide-react';
 import { CONTRACT_STATUS, CHART_COLORS } from '@/lib/constants/contractManagement';
 
 const PaymentTracker = ({ contracts = [], loading = false }) => {

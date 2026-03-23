@@ -3,22 +3,15 @@
  * Team 10: 售前AI系统集成与前端UI
  */
 import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+
+
 import {
   Brain,
   CheckCircle,
   Clock,
-  Activity,
   Users,
 } from 'lucide-react';
 import { presaleAIService } from '@/services/presaleAIService';
-import AIStatsChart from '@/components/PresaleAI/AIStatsChart';
 import { toast } from 'sonner';
 
 const AIDashboard = () => {

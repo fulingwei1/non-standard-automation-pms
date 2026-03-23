@@ -4,10 +4,6 @@
  * 展示如何使用BaseDashboard组件创建Dashboard页面
  */
 
-import { BaseDashboard } from './BaseDashboard';
-import { DashboardStatCard } from '../ui/card';
-import { LineChart } from '../ui/charts';
-import { DataTable } from '../ui/data-table';
 import { api } from '../../services/api';
 import { Activity, BarChart3, CheckCircle2, Clock, RefreshCw } from 'lucide-react';
 
@@ -141,8 +137,6 @@ export function ListDashboard() {
 
 // ========== 示例4：带自定义操作的Dashboard ==========
 
-import { Button } from '../ui/button';
-import { Plus, Download } from 'lucide-react';
 
 export function CustomActionsDashboard() {
   return (

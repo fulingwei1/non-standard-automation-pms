@@ -86,7 +86,8 @@ export default function TechnicalParameterManagement() {
           test_type: filterTestType,
         });
         setTemplates(res.data || res.items || []);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

@@ -3,44 +3,18 @@
  * Features: 快照列表、历史趋势对比、快照详情、数据导出
  */
 import { useState, useEffect, useMemo } from "react";
-import {
-  Download,
-  TrendingUp,
-  TrendingDown,
-  Eye,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { issueApi } from "../services/api";
-import {
-  SimpleLineChart,
-  SimpleBarChart,
-  SimplePieChart,
-} from "../components/administrative/StatisticsCharts";
+
+
 import { cn } from "../lib/utils";
 
 export default function IssueStatisticsSnapshot() {
@@ -97,7 +71,8 @@ export default function IssueStatisticsSnapshot() {
       const res = await issueApi.getSnapshot(snapshotId);
       setSelectedSnapshot(res.data || res);
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

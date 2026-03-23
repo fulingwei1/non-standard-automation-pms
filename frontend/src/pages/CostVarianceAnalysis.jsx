@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { AlertTriangle, TrendingUp, DollarSign, Lightbulb, BarChart3 } from "lucide-react";
-import { PageHeader } from "../components/layout";
+import { AlertTriangle, TrendingUp, DollarSign, BarChart3 } from "lucide-react";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { costVarianceApi } from "../services/api/costVariance";
 
@@ -16,7 +14,7 @@ export default function CostVarianceAnalysis() {
         const [s, p] = await Promise.all([costVarianceApi.summary(), costVarianceApi.patterns()]);
         setSummary(s.data || s);
         setPatterns(p.data || p);
-      } catch (e) { }
+      } catch (_e) { /* 非关键操作失败时静默降级 */ }
       finally { setLoading(false); }
     })();
   }, []);

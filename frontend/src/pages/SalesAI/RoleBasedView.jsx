@@ -5,41 +5,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  User,
-  Users,
-  Briefcase,
-  Eye,
-  Target,
-  TrendingUp,
-  DollarSign,
-  CheckCircle,
-  AlertCircle,
-  BarChart3,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Alert,
-} from "../../components/ui";
+
+
+
+
 
 // 销售角色视图
 function SalesRepView() {

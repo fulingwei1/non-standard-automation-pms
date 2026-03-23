@@ -9,44 +9,10 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  TrendingDown,
-  Target,
-  DollarSign,
-  Users,
-  Award,
-  AlertTriangle,
-  ArrowUpRight,
-  Activity,
-  BarChart3,
-  Eye,
-  Settings,
-  Plus,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-} from "../../components/ui";
-import TargetSettingModal from "../../components/sales/TargetSettingModal";
+
+
+
+
 import { salesTargetApi } from "../../services/api";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 
@@ -609,7 +575,8 @@ export default function ForecastDashboard() {
             actual_value: Number(t.actual_value || 0),
           })));
         }
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
     };
     loadTargets();

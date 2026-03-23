@@ -3,8 +3,6 @@
  */
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Loader2, Scan } from 'lucide-react';
 import { triggerScan } from '@/services/api/shortage';
 import { toast } from '@/hooks/use-toast';
 

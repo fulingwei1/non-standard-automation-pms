@@ -3,7 +3,6 @@
  * 用于不同量纲数据对比（如金额+百分比）
  */
 
-import { DualAxes } from "@ant-design/plots";
 import { useMemo } from "react";
 
 /**

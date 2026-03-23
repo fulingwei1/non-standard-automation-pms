@@ -8,31 +8,19 @@
  * 5. 任务完成确认（含工时填报）
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
-  Wrench,
   AlertTriangle,
-  FileWarning,
   CheckCircle2,
   Circle,
   PlayCircle,
   PauseCircle,
 } from "lucide-react";
 import { taskCenterApi } from "../services/api";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-} from "../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 
-import MaterialShortageDialog from "../components/production/assembler/MaterialShortageDialog";
-import QualityFeedbackDialog from "../components/production/assembler/QualityFeedbackDialog";
-import DrawingViewerDialog from "../components/production/assembler/DrawingViewerDialog";
-import TaskCompleteDialog from "../components/production/assembler/TaskCompleteDialog";
-import AssemblyTaskCard from "../components/production/assembler/AssemblyTaskCard";
 
 export default function AssemblerTaskCenter() {
   const [tasks, setTasks] = useState([]);
@@ -68,6 +56,7 @@ export default function AssemblerTaskCenter() {
       const data = res.data;
       setTasks(data?.items || data || []);
     } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

@@ -3,17 +3,8 @@
  * Team 10: 售前AI系统集成与前端UI
  */
 import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Star } from 'lucide-react';
+
+
 import { presaleAIService } from '@/services/presaleAIService';
 import { toast } from 'sonner';
 

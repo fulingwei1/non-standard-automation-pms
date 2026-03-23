@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { projectContributionApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Skeleton } from
-"../components/ui";
-import ContributionChart from "../components/project/ContributionChart";
+
+
 import { formatCurrency } from "../lib/utils";
-import { Award } from "lucide-react";
 
 export default function ProjectContributionReport() {
   const { id } = useParams();
@@ -31,7 +23,8 @@ export default function ProjectContributionReport() {
       setLoading(true);
       const response = await projectContributionApi.getReport(id, { period });
       setReport(response.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

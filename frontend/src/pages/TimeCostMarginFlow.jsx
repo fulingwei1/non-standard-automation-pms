@@ -5,42 +5,16 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Clock,
   DollarSign,
   TrendingUp,
-  ArrowRight,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
-  Activity,
-  Calendar,
-  Users,
-  BarChart3,
-  ChevronRight,
-  ExternalLink,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { Skeleton } from "../components/ui/skeleton";
+
+
+
+
 import { projectApi } from "../services/api";
-import SyncStatus from "../components/timesheet/SyncStatus";
 import { formatDate, formatCurrency, cn } from "../lib/utils";
 
 // 流程节点配置
@@ -194,7 +168,8 @@ export default function TimeCostMarginFlow({ embedded = false }) {
         if (!selectedProjectId && items.length > 0) {
           setSelectedProjectId(items[0].id);
         }
-      } catch (error) {
+      } catch (_error) {
+        // 非关键操作失败时静默降级
       }
     };
     loadProjects();
@@ -213,7 +188,8 @@ export default function TimeCostMarginFlow({ embedded = false }) {
       let timesheetRes = null;
       try {
         timesheetRes = await projectApi.getTimesheetSummary(selectedProjectId, {});
-      } catch (e) {
+      } catch (_e) {
+        // 非关键操作失败时静默降级
       }
 
       // 解析工时数据
@@ -281,7 +257,8 @@ export default function TimeCostMarginFlow({ embedded = false }) {
           status: "error",
         });
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

@@ -4,24 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  Package,
-  Filter,
-  Clock,
-  AlertCircle,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent } from "../../components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
+
+
+
 import { cn, formatDate } from "../../lib/utils";
 import { shortageApi } from "../../services/api";
 
@@ -62,7 +48,8 @@ export default function MobileMyShortageReports() {
 
       // 这里应该根据当前登录用户筛选，暂时显示所有
       setReports(allReports);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

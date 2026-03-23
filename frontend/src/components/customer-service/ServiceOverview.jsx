@@ -4,19 +4,8 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, List, Timeline, Alert } from 'antd';
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Wrench,
-  Phone,
-  Star,
-  Trophy,
-  Calendar,
-  MessageSquare } from
-'lucide-react';
-import { Button } from "../ui";
+
+
 import {
   TICKET_STATUS,
   PRIORITY_LEVELS,

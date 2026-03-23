@@ -4,40 +4,20 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   BarChart3,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
   FileText,
-  Download,
-  Filter,
   Receipt,
   Wallet,
   Target } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Button,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { financialReportApi } from "../services/api";
-import {
-  BarChart as BarChartComponent,
-  PieChart as PieChartComponent,
-  AreaChart as AreaChartComponent,
-  DualAxesChart } from
-"../components/charts";
+
+
 
 // Mock financial data
 // Mock data - 已移除，使用真实API

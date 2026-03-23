@@ -1,7 +1,5 @@
-import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 import { stageColors } from "./scheduleConfig";
-import ProjectCard from "./ProjectCard";
 
 export default function StageColumn({ stage, stageName, projects }) {
   const stageProjects = (projects || []).filter((p) => p.stage === stage);

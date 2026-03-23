@@ -1,5 +1,3 @@
-import { Card, CardHeader, CardTitle, CardContent, Progress } from "../../components/ui";
-import { Users } from "lucide-react";
 
 export default function TeamOverviewCard({ stats }) {
   return (

@@ -4,8 +4,6 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { MainLayout } from '../MainLayout';
 
 // Mock子组件
 vi.mock('../Sidebar', () => ({

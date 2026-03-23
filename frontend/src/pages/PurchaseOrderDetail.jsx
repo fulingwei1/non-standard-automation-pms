@@ -5,38 +5,16 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Package,
   Truck,
   CheckCircle2,
   FileText,
-  Download,
-  Eye,
   Edit,
-  Send,
-  Calendar,
-  Building2,
-  MapPin,
-  Phone,
-  Mail,
-  Info,
-  Zap } from
+  Send } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { purchaseApi } from "../services/api";
@@ -228,7 +206,8 @@ export default function PurchaseOrderDetail() {
           purchase_order_id: orderId
         });
         receipts = receiptsResponse.data?.items || receiptsResponse.data?.items || receiptsResponse.data || [];
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       // Transform backend data to frontend format

@@ -4,21 +4,14 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import {
   TrendingUp,
   DollarSign,
   Users,
   Target,
   Briefcase,
-  BarChart3,
-  Activity,
-  CheckCircle2,
-  AlertTriangle } from
+  BarChart3 } from
 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
-import { Progress } from '../../components/ui';
-import StatCard from "../common/StatCard";
 import { cn } from '../../lib/utils';
 import {
   DEFAULT_STATS,

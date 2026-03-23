@@ -1,15 +1,5 @@
-import { Eye, Edit, Copy, Trash2 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+
+
 
 export default function IssueTemplateList({
   loading,

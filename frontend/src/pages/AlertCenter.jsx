@@ -13,38 +13,20 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   AlertTriangle,
-  Search,
-  Eye,
-  Settings,
-  Download,
-  ArrowUpDown } from
+  Settings } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
+
+
 import { toast } from "../components/ui/toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { alertApi, projectApi } from "../services/api";
 
 // 导入重构后的组件
 import {
-  AlertCenterOverview,
   ALERT_LEVELS,
   ALERT_STATUS,
   getAlertLevelConfig,
@@ -169,7 +151,8 @@ export default function AlertCenter() {
         urgent: data.urgent || 0,
         warning: data.warning || 0
       });
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

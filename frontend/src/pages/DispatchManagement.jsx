@@ -4,45 +4,16 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Users,
-  CheckSquare,
-  Square } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
+
+
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 export default function DispatchManagement() {
@@ -71,7 +42,8 @@ export default function DispatchManagement() {
     try {
       const res = await productionApi.workshops.list({ page_size: 1000 });
       setWorkshops(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchWorkers = async () => {
@@ -90,7 +62,8 @@ export default function DispatchManagement() {
       const res = await productionApi.workOrders.list(params);
       const orderList = res.data?.items || res.data?.items || res.data || [];
       setWorkOrders(orderList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,3 @@
-import { motion } from "framer-motion";
-import { Building2, Briefcase, DollarSign, Calendar } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui/card";
-import { Progress } from "../../../components/ui/progress";
 import { fadeIn } from "../../../lib/animations";
 
 export function SolutionStatsCards({ solution }) {

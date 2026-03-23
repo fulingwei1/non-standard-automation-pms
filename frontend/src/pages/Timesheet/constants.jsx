@@ -1,5 +1,4 @@
 import { Edit3, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
-import { Badge } from "../../components/ui";
 
 export const DAY_NAMES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 

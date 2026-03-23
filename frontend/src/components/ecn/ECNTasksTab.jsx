@@ -2,13 +2,8 @@
  * ECNTasksTab Component
  * ECN 执行任务 Tab 组件（看板视图）
  */
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Plus } from "lucide-react";
 import { formatDate } from "../../lib/utils";
 import { useECNTasks } from "./hooks/useECNTasks";
-import TaskDialog from "./dialogs/TaskDialog";
 
 const taskStatusConfigs = {
   PENDING: { label: "待开始", color: "bg-slate-500" },

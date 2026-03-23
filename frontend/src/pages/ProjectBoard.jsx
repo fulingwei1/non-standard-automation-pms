@@ -1,36 +1,18 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { PROJECT_STAGES, HEALTH_CONFIG } from "../lib/constants";
 import { useRoleFilter } from "../hooks/useRoleFilter";
 import { projectApi, milestoneApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import { BoardColumn, BoardFilters } from "../components/board";
-import { ProjectCard, ProjectFormStepper } from "../components/project";
-import { Button } from "../components/ui/button";
-import { ApiIntegrationError, Badge, Card, CardContent, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui";
 import {
-  Layers,
-  ChevronLeft,
-  ChevronRight,
-  ArrowLeft,
-  RefreshCw,
-  Calendar,
-  GitBranch,
-  Plus,
-  Target,
   CheckCircle2,
   Clock,
   AlertTriangle,
 } from "lucide-react";
 
 // 导入阶段视图组件
-import {
-  PipelineView,
-  TimelineView,
-  TreeView,
-} from "../pages/ProjectStageView/components";
+
+
 
 // 导入阶段视图常量和hooks
 import {
@@ -46,6 +28,7 @@ const getStoredUser = () => {
       return JSON.parse(storedUser);
     }
   } catch (_e) {
+    // 非关键操作失败时静默降级
   }
   // 默认用户数据
   return {

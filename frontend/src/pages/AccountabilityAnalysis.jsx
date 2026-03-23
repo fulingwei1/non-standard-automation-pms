@@ -6,25 +6,8 @@
 import { useState, useEffect } from "react";
 
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { accountabilityApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 
@@ -56,7 +39,8 @@ export default function AccountabilityAnalysis() {
       if (personRes.data?.data) {setByPersonData(personRes.data.data);}
       if (deptRes.data?.data) {setByDepartmentData(deptRes.data.data);}
       if (costRes.data?.data) {setCostImpactData(costRes.data.data);}
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

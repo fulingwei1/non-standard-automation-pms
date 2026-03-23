@@ -1,19 +1,9 @@
-import { motion } from "framer-motion";
-import { ArrowLeft, FileText } from "lucide-react";
-import { PageHeader } from "../../components/layout/PageHeader";
-import { Button } from "../../components/ui";
 import { staggerContainer } from "../../lib/animations";
 import { useProjectClosureManagement } from "./hooks";
-import {
-    ProjectSelectionView,
-    ProjectClosureContent
-} from "./components";
-import {
-    CreateClosureDialog,
-    ReviewClosureDialog,
-    LessonsClosureDialog,
-    ClosureDetailDialog
-} from "../../components/project-closure";
+
+
+
+
 
 export default function ProjectClosureManagement() {
     const {

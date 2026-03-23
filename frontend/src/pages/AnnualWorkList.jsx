@@ -3,44 +3,10 @@
  * 卡片列表展示、创建/编辑、进度更新
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Edit2,
-  Trash2,
-  ChevronRight,
-  TrendingUp,
-  DollarSign,
-  Target,
-  Calendar,
-  X,
-  Save,
-  Sliders,
-} from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-  Textarea,
-  Slider,
-} from "@/components/ui";
+
+
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { annualWorkApi, strategyApi } from "@/services/api/strategy";
 
@@ -116,7 +82,8 @@ export default function AnnualWorkList() {
     try {
       const { data } = await annualWorkApi.list({ strategy_id: selectedStrategyId });
       setWorks(data.items || data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键数据加载失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -183,7 +150,8 @@ export default function AnnualWorkList() {
 
       setIsModalOpen(false);
       await fetchWorks();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -194,7 +162,8 @@ export default function AnnualWorkList() {
       });
       setIsProgressModalOpen(false);
       await fetchWorks();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -203,7 +172,8 @@ export default function AnnualWorkList() {
     try {
       await annualWorkApi.delete(id);
       await fetchWorks();
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

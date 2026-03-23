@@ -1,46 +1,16 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { PageHeader } from "../components/layout/PageHeader";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { ecnBomApi } from "../services/api/ecnBom";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../components/ui/dialog";
-import { Label } from "../components/ui/label";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+
+
+
+
+
+
 import {
   FileText,
-  Plus,
-  Search,
-  Filter,
-  TrendingUp,
-  AlertCircle,
   CheckCircle,
   Clock,
-  X,
-  BarChart3,
-  Layers,
-  DollarSign,
-  Package,
 } from "lucide-react";
 
 // 变更类型配置
@@ -122,7 +92,8 @@ export default function ECNManagement({ embedded = false }) {
       const response = await ecnBomApi.list(params);
       setEcns(response.data.items || []);
       setTotal(response.data.total || 0);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

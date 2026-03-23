@@ -59,7 +59,8 @@ export function useProjectTaskList(projectId) {
             const tasksRes = await progressApi.tasks.list(params);
             setTasks(tasksRes.data?.items || tasksRes.data?.items || tasksRes.data || []);
 
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         } finally {
             setLoading(false);
         }
@@ -93,7 +94,8 @@ export function useProjectTaskList(projectId) {
             const res = await progressApi.tasks.get(taskId);
             setSelectedTask(res.data || res);
             setDialogs(prev => ({ ...prev, detail: true }));
-        } catch (error) {
+        } catch (_error) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

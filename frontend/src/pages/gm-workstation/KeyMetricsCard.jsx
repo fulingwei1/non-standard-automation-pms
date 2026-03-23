@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Target, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Progress } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

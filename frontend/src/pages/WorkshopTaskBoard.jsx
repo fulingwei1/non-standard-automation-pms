@@ -4,26 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  Wrench,
-  CheckCircle2,
-  Clock,
-  User,
-  Package,
-  TrendingUp,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 const workstationStatusConfigs = {
@@ -51,7 +35,8 @@ export default function WorkshopTaskBoard() {
       if (!workshopId) {return;}
       const res = await productionApi.taskBoard(workshopId);
       setBoardData(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

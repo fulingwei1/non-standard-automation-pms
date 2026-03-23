@@ -5,44 +5,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Plus,
   Search,
-  Eye,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { formatDate, formatCurrency } from "../lib/utils";
 import { purchaseApi } from "../services/api";
 const statusConfigs = {
@@ -87,7 +59,8 @@ export default function ArrivalManagement() {
       const res = await purchaseApi.receipts.list(params);
       const receiptList = res.data?.items || res.data?.items || res.data || [];
       setReceipts(receiptList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -101,7 +74,8 @@ export default function ArrivalManagement() {
       setSelectedReceipt(receiptRes.data || receiptRes);
       setReceiptItems(itemsRes.data || itemsRes || []);
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const handleReceive = async () => {

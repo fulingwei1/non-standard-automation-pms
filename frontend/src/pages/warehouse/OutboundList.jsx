@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowUpFromLine, Plus, Search, Eye, RefreshCw, AlertTriangle } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { warehouseApi } from "../../services/api";
 import { formatDate } from "../../lib/utils";
 
@@ -34,7 +27,7 @@ export default function OutboundList() {
       if (keyword) params.keyword = keyword;
       const res = await warehouseApi.outbound.list(params);
       setData(res.data || res);
-    } catch (_e) { } finally { setLoading(false); }
+    } catch (_e) { /* 非关键操作失败时静默降级 */ } finally { setLoading(false); }
   }, [page, statusFilter, keyword]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

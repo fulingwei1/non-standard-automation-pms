@@ -3,25 +3,10 @@
  * 仅在评估状态为 COMPLETED 时渲染
  */
 
-import {
-  AlertTriangle,
-  Target,
-} from "lucide-react";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui";
-import { ComparisonChart } from "../../../components/assessment/ComparisonChart";
-import { RadarChart } from "../../../components/assessment/RadarChart";
-import { TrendChart } from "../../../components/assessment/TrendChart";
+
+
+
+
 import {
   dimensionLabels,
   formatDate,

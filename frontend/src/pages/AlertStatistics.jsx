@@ -4,49 +4,20 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  BarChart3,
-  TrendingUp,
-  AlertTriangle,
-  Calendar,
-  Download,
-  Filter,
-  FileText,
-  RefreshCw,
-  Shield,
-  Activity,
-  Eye,
-  Edit } from
-"lucide-react";
+
+
 
 import {
-  Card,
-  Button,
-  Input,
-  Select,
   DatePicker,
-  Space,
-  Tag,
-  Row,
-  Col,
   Typography,
-  Tabs,
-  Modal,
   Form,
   message } from
 "antd";
 
 // 导入拆分后的组件
-import {
-  AlertOverview,
-  AlertTrendAnalysis,
-  AlertDistribution,
-  AlertPerformance,
-  AlertDetails } from
-'../components/alert-statistics';
 
-import { CheckCircle } from "lucide-react";
+
+
 import {
   ALERT_TYPES,
   ALERT_LEVELS,

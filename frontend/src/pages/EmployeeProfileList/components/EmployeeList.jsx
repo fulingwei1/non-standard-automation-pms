@@ -1,11 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Eye, RefreshCw, Search } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Badge } from "../../../components/ui/badge";
-import { Progress } from "../../../components/ui/progress";
 import { cn } from "../../../lib/utils";
 import { getEmployeeStatusBadge, getWorkloadColor } from '../constants';
 

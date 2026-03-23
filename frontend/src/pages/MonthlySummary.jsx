@@ -1,13 +1,7 @@
 import { useEffect } from "react";
-import { motion } from "framer-motion";
-import { FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMonthlySummary } from "../hooks/useMonthlySummary";
 import { fadeIn } from "../utils/monthlySummaryUtils";
-import { PeriodInfoCard } from "../components/monthlySummary/PeriodInfoCard";
-import { SummaryForm } from "../components/monthlySummary/SummaryForm";
-import { HistoryList } from "../components/monthlySummary/HistoryList";
-import { TipsCard } from "../components/monthlySummary/TipsCard";
 
 const MonthlySummary = () => {
   const navigate = useNavigate();

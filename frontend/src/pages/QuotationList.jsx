@@ -4,44 +4,10 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FileText,
-  Search,
-  Plus,
-  List,
-  LayoutGrid,
-  Calendar,
-  Building2,
-  User,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Send,
-  Copy,
-  Edit,
-  Eye,
-  Download,
-  X,
-  History,
-  Percent,
-  Target } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter } from
-"../components/ui";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 

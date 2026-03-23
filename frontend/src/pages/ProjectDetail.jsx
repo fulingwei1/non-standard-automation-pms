@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../lib/utils";
 import {
   projectApi,
@@ -13,43 +12,9 @@ import {
   documentApi } from
 "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
+
+
 import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Progress,
-  Skeleton,
-  UserAvatar,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter } from
-"../components/ui";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import QuickActionPanel from "../components/project/QuickActionPanel";
-import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
-import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
-import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
-import SolutionLibrary from "../components/project/SolutionLibrary";
-import StageGantt from "../components/project/StageGantt";
-import {
-  ArrowLeft,
-  Edit2,
-  DollarSign,
-  FileText,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Target,
-  Activity,
-  Download,
-  Share,
-  Plus,
   LayoutDashboard,
   ListTodo,
   Flag,
@@ -167,7 +132,8 @@ export default function ProjectDetail() {
       // 过滤掉已在项目中的成员
       const memberIds = new Set((members || []).map(m => m.user_id));
       setAvailableUsers(users.filter(u => !memberIds.has(u.id)));
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoadingUsers(false);
     }

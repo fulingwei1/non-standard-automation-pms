@@ -2,7 +2,6 @@
  * 报表归档查询页面
  */
 import { useState, useEffect } from 'react';
-import { Download, Search } from 'lucide-react';
 import { reportCenterApi } from '../services/api';
 
 export default function ReportArchives() {
@@ -29,7 +28,8 @@ export default function ReportArchives() {
       const response = await reportCenterApi.getArchives(params);
       const data = response.data;
       setArchives(data?.items || data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -45,7 +45,8 @@ export default function ReportArchives() {
       a.download = `report_${archiveId}.xlsx`;
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

@@ -9,7 +9,6 @@ import {
   Wrench,
 } from "lucide-react";
 
-import { DashboardStatCard } from "../../../components/ui";
 
 export function ScopeSummary({ title, description, stats }) {
   return (

@@ -1,35 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
-  Network,
-  AlertCircle,
-  Wrench,
-  Eye,
-  AlertOctagon,
-  GitBranch,
-  Link2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody } from
-"../components/ui/dialog";
+
+
+
+
+
+
 import { progressApi } from "../services/api";
 
 export default function DependencyCheck({ projectId }) {
@@ -69,7 +45,8 @@ export default function DependencyCheck({ projectId }) {
     try {
       const res = await fetch(`/api/v1/projects/${id}`).then((r) => r.json());
       setProject(res.data?.data || res.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

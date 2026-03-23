@@ -1,5 +1,4 @@
 import { Search } from "lucide-react";
-import { Card, CardContent, Input } from "../../../components/ui";
 
 export function LessonFilters({
     keyword, setKeyword,

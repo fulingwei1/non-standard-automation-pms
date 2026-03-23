@@ -8,43 +8,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Target,
   Users,
   CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  RefreshCw,
   Zap,
   Award,
-  Clock,
-  MapPin,
-  Star,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui";
+
+
 import { requirementExtractionApi } from "../services/api/requirementExtraction";
 
 // 匹配度等级
@@ -83,7 +56,8 @@ export default function EngineerRecommendation() {
         }
       }
       setRecommendations(recs);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

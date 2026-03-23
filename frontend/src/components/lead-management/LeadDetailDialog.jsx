@@ -1,17 +1,5 @@
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Label,
-  Badge,
-  Card,
-  CardContent,
-} from "../../components/ui";
-import { Plus } from "lucide-react";
+
+
 import { cn } from "../../lib/utils";
 
 export default function LeadDetailDialog({

@@ -13,7 +13,7 @@ export function useQuoteCreateEdit(quoteId) {
             setLoading(true);
             const response = await quoteApi.get(quoteId);
             setQuote(response.data || response);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
         finally { setLoading(false); }
     }, [quoteId]);
 
@@ -21,7 +21,7 @@ export function useQuoteCreateEdit(quoteId) {
         try {
             const response = await customerApi.list({ page_size: 100 });
             setCustomers(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
     }, []);
 
     const saveQuote = useCallback(async (data) => {

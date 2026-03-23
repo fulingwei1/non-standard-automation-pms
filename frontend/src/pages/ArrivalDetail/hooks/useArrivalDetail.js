@@ -11,7 +11,7 @@ export function useArrivalDetail(arrivalId) {
             setLoading(true);
             const response = await arrivalApi.get(arrivalId);
             setArrival(response.data || response);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
         finally { setLoading(false); }
     }, [arrivalId]);
 

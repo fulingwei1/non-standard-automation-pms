@@ -1,11 +1,6 @@
 import { useMemo } from "react";
-import {
-  BarChart3,
-  TrendingUp,
-  PieChart as PieChartIcon,
-  Calendar } from
-"lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+
+
 
 /**
  * 工时数据可视化组件集合

@@ -2,9 +2,6 @@
  * 支付卡片组件
  * 显示单个支付记录的详细信息
  */
-import { motion } from 'framer-motion';
-import { DollarSign, FileText, Eye } from 'lucide-react';
-import { Button, Badge } from '../ui';
 import { cn } from '../../lib/utils';
 import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constants/finance';
 import { getIcon } from '@/utils/iconMap';

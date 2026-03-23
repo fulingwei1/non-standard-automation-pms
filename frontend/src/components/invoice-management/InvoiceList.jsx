@@ -8,11 +8,7 @@
  * inlines similar markup, but could be refactored to use this component.
  */
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardHeader, CardTitle, CardContent, Button } from "../ui";
-import { Send, Download, X } from "lucide-react";
 import { staggerContainer } from "../../lib/animations";
-import InvoiceRow from "./InvoiceRow";
 
 const InvoiceList = ({
  invoices,

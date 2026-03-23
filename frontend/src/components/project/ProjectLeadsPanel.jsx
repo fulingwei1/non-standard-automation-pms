@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus,
   Users,
-  UserPlus,
   Settings,
   ClipboardList,
   Wrench,
@@ -13,35 +10,11 @@ import {
   Headphones,
   ClipboardCheck,
   UserCog,
-  Calendar,
-  Percent,
-  ChevronDown,
-  ChevronUp,
-  X,
-  AlertCircle,
 } from "lucide-react";
-import { Card, CardContent } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody,
-} from "../ui/dialog";
-import { Label } from "../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Switch } from "../ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { projectRoleApi, userApi } from "../../services/api";
 

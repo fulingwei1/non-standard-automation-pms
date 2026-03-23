@@ -1,8 +1,6 @@
 /**
  * 齐套状态组件 (Kit Status)
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
 
 const defaultKitData = [
   { project: 'PJ250101-001', status: 'ready', rate: 100 },

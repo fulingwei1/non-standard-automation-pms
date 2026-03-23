@@ -4,13 +4,8 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  AlertCircle, Search, ChevronLeft, ChevronRight, Plus,
-  RefreshCw, AlertTriangle, Clock, CheckCircle,
+import { AlertTriangle, Clock, CheckCircle,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { issueApi } from "../../services/api/issues";
 
 const SEVERITY_OPTIONS = [

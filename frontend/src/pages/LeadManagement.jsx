@@ -4,20 +4,8 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui";
 import { leadApi, customerApi } from "../services/api";
 import {
-  LeadStatsCards,
-  LeadFilters,
-  LeadList,
-  LeadInsights,
-  CreateLeadDialog,
-  EditLeadDialog,
-  ConvertLeadDialog,
-  LeadDetailDialog,
-  FollowUpDialog,
   statusConfig,
 } from "../components/lead-management";
 
@@ -90,7 +78,8 @@ export default function LeadManagement({ embedded = false }) {
         setLeads(response.data.items);
         setTotal(response.data.total || 0);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -103,7 +92,8 @@ export default function LeadManagement({ embedded = false }) {
       if (response.data && response.data.items) {
         setCustomers(response.data.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

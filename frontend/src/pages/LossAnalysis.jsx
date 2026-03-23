@@ -4,29 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingDown,
-  DollarSign,
-  Clock,
-  AlertTriangle } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui";
+
+
+
+
 import { staggerContainer } from "../lib/animations";
 import { lossAnalysisApi } from "../services/api";
 import { formatAmount } from "../lib/utils";

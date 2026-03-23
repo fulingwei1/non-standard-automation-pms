@@ -2,21 +2,10 @@
  * 客服工作台 - 项目列表
  */
 
-import { Link } from "react-router-dom";
 import { Briefcase } from "lucide-react";
 
-import {
-  Badge,
-  Button,
-  EmptyState,
-  HealthBadge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../components/ui";
+
+
 import { formatPercent, getStageName } from "../../../lib/utils";
 
 export function ProjectTable({ projects }) {

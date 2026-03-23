@@ -4,20 +4,8 @@
  */
 
 import { useEffect } from "react";
-import { CheckCircle2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody } from
-"../../ui/dialog";
-import { Button } from "../../ui/button";
-import { Label } from "../../ui/label";
-import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
-import { Badge } from "../../ui/badge";
+
+
 import { cn } from "../../../lib/utils";
 
 export default function ReceiveGoodsDialog({

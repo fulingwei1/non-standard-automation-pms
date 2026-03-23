@@ -1,6 +1,4 @@
-import { Edit3 } from "lucide-react";
 import { fadeIn } from "../../utils/weightConfigUtils";
-import { motion } from "framer-motion";
 
 /**
  * 计算示例组件

@@ -4,24 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Package,
-  Plus,
-  X,
-  CheckCircle2,
-  AlertCircle } from
-"lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Card, CardContent } from "../../components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui/select";
+
+
+
+
 import { productionApi, materialApi } from "../../services/api";
 
 export default function MobileMaterialRequisition() {
@@ -49,7 +35,8 @@ export default function MobileMaterialRequisition() {
     try {
       const res = await productionApi.workOrders.get(workOrderId);
       setWorkOrder(res.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -58,7 +45,8 @@ export default function MobileMaterialRequisition() {
       const res = await materialApi.list({ page: 1, page_size: 100 });
       const materialsList = res.data?.items || res.data?.items || res.data || [];
       setMaterials(materialsList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

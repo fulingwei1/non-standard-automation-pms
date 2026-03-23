@@ -5,35 +5,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft, Building2, Users, Activity, Target, TrendingUp,
-  Clock, Phone, Mail, MapPin, RefreshCw, AlertTriangle,
-  CheckCircle, MessageSquare, Calendar,
-  Video, Star, ArrowRight,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  LoadingSpinner,
-  EmptyState,
-} from "../../components/ui";
+
+
+
+
 import { cn } from "../../lib/utils";
 import api from "../../services/api";
 import { toast } from "sonner";

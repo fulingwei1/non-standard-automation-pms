@@ -1,22 +1,8 @@
 import { memo } from "react";
 import { cn } from "../../lib/utils";
 import { HEALTH_CONFIG } from "../../lib/constants";
-import { Input, Button } from "../ui";
-import {
-  Search,
-  LayoutGrid,
-  List,
-  Table2,
-  X,
-  User,
-  Users,
-  RefreshCw,
-  Layers,
-  Calendar,
-  GitBranch,
-  Copy,
-  Grid3X3,
-} from "lucide-react";
+
+
 /**
  * 看板筛选器组件
  */

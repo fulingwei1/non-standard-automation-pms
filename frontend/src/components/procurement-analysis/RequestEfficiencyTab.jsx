@@ -2,9 +2,6 @@
  * 采购申请处理时效分析 Tab 组件
  * 显示采购申请处理统计和时效详情
  */
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Badge } from '../ui/badge';
-import ProcurementStatsCard from './ProcurementStatsCard';
 import { STATS_CARD_CONFIGS } from '@/lib/constants/procurementAnalysis';
 
 /**

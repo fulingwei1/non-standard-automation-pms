@@ -1,22 +1,9 @@
 import { useMemo } from "react";
 import { cn } from "../../lib/utils";
-import {
-  Search,
-  Bell,
-  ChevronDown,
-  Settings,
-  User,
-  LogOut,
-  Command,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+
+
+
+
 import { getRoleInfo } from "../../lib/roleConfig";
 
 export function Header({ sidebarCollapsed = false, user, onLogout }) {

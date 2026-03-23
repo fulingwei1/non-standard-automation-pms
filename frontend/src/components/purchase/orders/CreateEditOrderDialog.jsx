@@ -3,24 +3,10 @@
  * 支持创建新订单和编辑现有订单
  */
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody } from
-"../../ui/dialog";
-import { Button } from "../../ui/button";
-import { Label } from "../../ui/label";
-import { Textarea } from "../../ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../ui/select";
+
+
+
+
 import { PAYMENT_TERMS, PAYMENT_TERMS_CONFIGS, SHIPPING_METHODS } from "@/lib/constants/procurement";
 
 export default function CreateEditOrderDialog({

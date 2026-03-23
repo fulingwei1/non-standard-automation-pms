@@ -6,22 +6,13 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   TrendingUp,
-  Calculator,
   AlertTriangle,
   BarChart3,
   DollarSign,
-  Target,
   Percent,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-  Zap,
-  RefreshCw,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { marginPredictionApi } from "../services/api/marginPrediction";
 
@@ -110,7 +101,8 @@ export default function MarginPrediction() {
         ]);
         setHistorical(h.data || h);
         setVariance(v.data || v);
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }
@@ -130,7 +122,8 @@ export default function MarginPrediction() {
       if (form.industry) params.industry = form.industry;
       const res = await marginPredictionApi.predict(params);
       setPrediction(res.data || res);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setPredicting(false);
     }

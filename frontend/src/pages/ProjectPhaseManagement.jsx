@@ -1,36 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { pmoApi, projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
+
+
+
+
 import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Progress,
-  Input,
-  SkeletonCard } from
-"../components/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
-import {
-  ArrowLeft,
-  Search,
-  CheckCircle2,
-  XCircle,
-  Target,
-  FileCheck,
-  ArrowRight,
-  Play,
-  Eye } from
+  Search } from
 "lucide-react";
 
 const staggerContainer = {

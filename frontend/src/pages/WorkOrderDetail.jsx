@@ -4,36 +4,14 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Clock,
-  Calendar,
-  RefreshCw } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
 const statusConfigs = {
@@ -67,7 +45,8 @@ export default function WorkOrderDetail() {
       setLoading(true);
       const res = await productionApi.workOrders.get(id);
       setWorkOrder(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -77,7 +56,8 @@ export default function WorkOrderDetail() {
       const res = await productionApi.workOrders.getReports(id);
       const reportList = res.data?.items || res.data?.reports || res.data?.items || res.data || [];
       setWorkReports(reportList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   if (loading) {

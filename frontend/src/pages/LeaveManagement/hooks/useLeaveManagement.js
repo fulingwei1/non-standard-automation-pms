@@ -18,7 +18,8 @@ export function useLeaveManagement() {
                 } else if (Array.isArray(res.data)) {
                     setLeaveApplications(res.data);
                 }
-            } catch (err) {
+            } catch (_err) {
+              // 非关键操作失败时静默降级
             } finally {
                 setLoading(false);
             }

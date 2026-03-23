@@ -3,40 +3,14 @@
  * 当年 vs 去年健康度对比、BSC 维度雷达图、KPI 完成率对比
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   TrendingUp,
-  TrendingDown,
-  Minus,
   Target,
   Award,
   Briefcase,
-  Lightbulb,
-  AlertTriangle,
-  CheckCircle,
-  RefreshCw,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui";
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { comparisonApi } from "@/services/api/strategy";
 
@@ -87,7 +61,8 @@ export default function YearComparison() {
 
       setYoyReport(reportRes.data);
       setKpiAchievement(kpiRes.data);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

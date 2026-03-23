@@ -1,7 +1,3 @@
-import { motion } from "framer-motion";
-import { BarChart3 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../components/ui";
-import { SalesFunnel } from "../../components/sales";
 import { fadeIn } from "../../lib/animations";
 
 export function SalesFunnelCard({ deptStats, salesFunnel }) {

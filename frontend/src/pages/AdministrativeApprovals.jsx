@@ -4,42 +4,20 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   ClipboardCheck,
   Package,
   Car,
   Building2,
   Calendar,
-  User,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Eye,
-  Download } from
+  User } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import {
-  MonthlyTrendChart,
-  SimplePieChart,
-  TrendComparisonCard } from
-"../components/administrative/StatisticsCharts";
+
+
 import { adminApi } from "../services/api";
 
 export default function AdministrativeApprovals() {
@@ -60,6 +38,7 @@ export default function AdministrativeApprovals() {
           setApprovals(res.data.items);
         }
       } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       try {
@@ -70,6 +49,7 @@ export default function AdministrativeApprovals() {
           setApprovedList(approvedRes.data.items);
         }
       } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       try {
@@ -80,6 +60,7 @@ export default function AdministrativeApprovals() {
           setRejectedList(rejectedRes.data.items);
         }
       } catch (_err) {
+        // 非关键数据加载失败时静默降级
       }
 
       setLoading(false);
@@ -115,6 +96,7 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.approve(id, { comment: "同意" });
       setApprovals((prev) => (prev || []).filter((a) => a.id !== id));
     } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -123,6 +105,7 @@ export default function AdministrativeApprovals() {
       await adminApi.approvals.reject(id, { reason: "不符合要求" });
       setApprovals((prev) => (prev || []).filter((a) => a.id !== id));
     } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

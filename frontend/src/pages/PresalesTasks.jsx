@@ -3,49 +3,20 @@
  * 管理技术支持请求、方案设计、投标任务等
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import {
   ListTodo,
-  Search,
-  Plus,
-  Calendar,
-  Clock,
-  Users,
-  Building2,
   FileText,
   Target,
   ClipboardList,
   MessageSquare,
-  CheckCircle,
-  MoreHorizontal,
   Eye,
-  Edit,
-  Trash2,
-  List,
-  Kanban,
-  Briefcase,
-  User,
-  X,
   DollarSign } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger } from
-"../components/ui/dropdown-menu";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi } from "../services/api";

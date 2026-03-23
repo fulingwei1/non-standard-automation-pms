@@ -1,14 +1,5 @@
-import { motion } from "framer-motion";
-import { Trash2 } from "lucide-react";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
+
+
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { DAY_NAMES, getStatusBadge } from "../constants";

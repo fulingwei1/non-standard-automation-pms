@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { BarChart3 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Progress } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 
 export const OperationalOverviewCard = ({ companyStats }) => {

@@ -3,14 +3,10 @@
  * 汇总工单状态、生产进度、车间负荷
  */
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
-  Factory, ClipboardList, Play, CheckCircle2, AlertTriangle,
-  RefreshCw, Clock, Users, Wrench, BarChart3, Calendar
+  Factory, ClipboardList, Play, CheckCircle2, AlertTriangle, Clock
 } from "lucide-react";
 import { productionApi } from "../services/api";
-import { PageHeader } from "../components/layout";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../components/ui";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 
@@ -81,7 +77,8 @@ export default function ProductionBoard() {
       if (results[2].status === "fulfilled") {
         setWorkshops(extract(results[2].value));
       }
-    } catch (e) {
+    } catch (_e) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
       setRefreshing(false);

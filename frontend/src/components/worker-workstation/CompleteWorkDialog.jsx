@@ -1,11 +1,6 @@
 /**
  * 完工报工对话框组件
  */
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
 import { QUICK_QUANTITY_OPTIONS } from '@/lib/constants/workerWorkstation';
 
 /**

@@ -1,45 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   ClipboardList,
-  Camera,
   FileText,
-  Calendar,
-  Building2,
   AlertCircle,
   CheckCircle2,
   XCircle,
   Clock,
-  Plus,
-  Search,
-  Download,
-  Eye,
-  Edit3,
-  Image,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody,
-} from "../components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { acceptanceApi, projectApi } from "../services/api";
@@ -513,7 +486,8 @@ export default function Acceptance() {
           try {
             const issuesResponse = await acceptanceApi.issues.list(order.id);
             issues = issuesResponse.data?.items || issuesResponse.data || [];
-          } catch (err) {
+          } catch (_err) {
+            // 非关键操作失败时静默降级
           }
 
           // Load items for this order
@@ -543,7 +517,8 @@ export default function Acceptance() {
               }
             });
             checklistCategories = Object.values(categoryMap);
-          } catch (err) {
+          } catch (_err) {
+            // 非关键操作失败时静默降级
           }
 
           return {
@@ -606,7 +581,8 @@ export default function Acceptance() {
     try {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

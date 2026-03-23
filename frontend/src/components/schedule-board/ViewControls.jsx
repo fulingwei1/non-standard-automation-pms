@@ -1,7 +1,3 @@
-import { Filter, Users } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { motion } from "framer-motion";
 import { fadeIn } from "../../lib/animations";
 
 export default function ViewControls({ viewMode, setViewMode }) {

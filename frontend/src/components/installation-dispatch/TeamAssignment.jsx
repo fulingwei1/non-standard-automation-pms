@@ -4,41 +4,10 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui";
-import {
-  Plus,
-  Search,
-  User,
-  MapPin,
-  Phone,
-  Mail,
-  UserCheck,
-  UserX,
-  Briefcase,
-  Award,
-  Star,
-  ChevronDown } from
-"lucide-react";
+
+
+
+
 import { cn } from "../../lib/utils";
 import {
   formatDate,

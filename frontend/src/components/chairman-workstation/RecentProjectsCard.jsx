@@ -1,7 +1,3 @@
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Briefcase, ChevronRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Progress } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 import { cn } from "../../lib/utils";
 

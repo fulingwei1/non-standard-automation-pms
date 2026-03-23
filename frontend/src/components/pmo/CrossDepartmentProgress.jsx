@@ -3,14 +3,8 @@
  * 用于展示项目的跨部门进度数据
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, Progress, Badge } from "../ui";
-import {
-  Users,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-} from "lucide-react";
+
+
 import { engineersApi } from "../../services/api";
 import { cn } from "../../lib/utils";
 

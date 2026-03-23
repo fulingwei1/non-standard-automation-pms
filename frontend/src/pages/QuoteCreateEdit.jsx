@@ -4,17 +4,8 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Save, RefreshCw, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { cn, formatCurrency } from "../lib/utils";
 import { quoteApi, opportunityApi } from "../services/api";
-import IntelligentQuoteSidebar from "../components/quote/IntelligentQuoteSidebar";
 
 export default function QuoteCreateEdit() {
   const { id } = useParams();
@@ -69,7 +60,8 @@ export default function QuoteCreateEdit() {
         stage: "PROPOSING",
       });
       setOpportunities(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -139,7 +131,8 @@ export default function QuoteCreateEdit() {
           }),
         );
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

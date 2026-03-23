@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown } from "lucide-react";
-import { Card, CardContent } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { colorMap, iconColorMap } from "./constants";

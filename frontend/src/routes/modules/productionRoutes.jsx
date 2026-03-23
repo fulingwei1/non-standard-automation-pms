@@ -1,34 +1,36 @@
+import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
-import CapacityAnalysis from "../../pages/CapacityAnalysis";
 
-import WorkOrderManagement from "../../pages/WorkOrderManagement";
-import WorkOrderDetail from "../../pages/WorkOrderDetail";
-import DispatchManagement from "../../pages/DispatchManagement";
-import InstallationDispatchManagement from "../../pages/InstallationDispatchManagement";
-import ProductionPlanList from "../../pages/ProductionPlanList";
-import ProductionBoard from "../../pages/ProductionBoard";
-import WorkReportList from "../../pages/WorkReportList";
-import MaterialRequisitionList from "../../pages/MaterialRequisitionList";
-import MaterialRequisitionDetail from "../../pages/MaterialRequisitionDetail";
-import ProductionExceptionList from "../../pages/ProductionExceptionList";
-import WorkshopManagement from "../../pages/WorkshopManagement";
-import WorkerManagement from "../../pages/WorkerManagement";
-import OutsourcingOrderList from "../../pages/OutsourcingOrderList";
-import OutsourcingOrderDetail from "../../pages/OutsourcingOrderDetail";
-import AcceptanceOrderList from "../../pages/AcceptanceOrderList";
-import AcceptanceExecution from "../../pages/AcceptanceExecution";
-import AcceptanceTemplateManagement from "../../pages/AcceptanceTemplateManagement";
-import ShortageManagementBoard from "../../pages/ShortageManagementBoard";
-import ShortageReportList from "../../pages/ShortageReportList";
-import ArrivalTrackingList from "../../pages/ArrivalTrackingList";
-import WorkloadBoard from "../../pages/WorkloadBoard";
-import WorkshopTaskBoard from "../../pages/WorkshopTaskBoard";
-import AssemblyTemplateManagement from "../../pages/AssemblyTemplateManagement";
-import ScheduleOptimization from "../../pages/ScheduleOptimization";
-import ExceptionCenter from "../../pages/ExceptionCenter";
-import ProductionExecutionCenter from "../../pages/ProductionExecutionCenter";
-import AssemblyCenter from "../../pages/AssemblyCenter";
-import FieldResourceCenter from "../../pages/FieldResourceCenter";
+// ---- 懒加载页面组件（生产模块） ----
+const ExceptionCenter = lazy(() => import("../../pages/ExceptionCenter"));
+const ProductionExecutionCenter = lazy(() => import("../../pages/ProductionExecutionCenter"));
+const AssemblyCenter = lazy(() => import("../../pages/AssemblyCenter"));
+const FieldResourceCenter = lazy(() => import("../../pages/FieldResourceCenter"));
+const WorkOrderManagement = lazy(() => import("../../pages/WorkOrderManagement"));
+const WorkOrderDetail = lazy(() => import("../../pages/WorkOrderDetail"));
+const DispatchManagement = lazy(() => import("../../pages/DispatchManagement"));
+const InstallationDispatchManagement = lazy(() => import("../../pages/InstallationDispatchManagement"));
+const ProductionPlanList = lazy(() => import("../../pages/ProductionPlanList"));
+const WorkReportList = lazy(() => import("../../pages/WorkReportList"));
+const MaterialRequisitionList = lazy(() => import("../../pages/MaterialRequisitionList"));
+const MaterialRequisitionDetail = lazy(() => import("../../pages/MaterialRequisitionDetail"));
+const ProductionExceptionList = lazy(() => import("../../pages/ProductionExceptionList"));
+const WorkshopManagement = lazy(() => import("../../pages/WorkshopManagement"));
+const WorkerManagement = lazy(() => import("../../pages/WorkerManagement"));
+const OutsourcingOrderList = lazy(() => import("../../pages/OutsourcingOrderList"));
+const OutsourcingOrderDetail = lazy(() => import("../../pages/OutsourcingOrderDetail"));
+const AcceptanceOrderList = lazy(() => import("../../pages/AcceptanceOrderList"));
+const AcceptanceExecution = lazy(() => import("../../pages/AcceptanceExecution"));
+const AcceptanceTemplateManagement = lazy(() => import("../../pages/AcceptanceTemplateManagement"));
+const ShortageManagementBoard = lazy(() => import("../../pages/ShortageManagementBoard"));
+const ShortageReportList = lazy(() => import("../../pages/ShortageReportList"));
+const ArrivalTrackingList = lazy(() => import("../../pages/ArrivalTrackingList"));
+const WorkloadBoard = lazy(() => import("../../pages/WorkloadBoard"));
+const WorkshopTaskBoard = lazy(() => import("../../pages/WorkshopTaskBoard"));
+const ProductionBoard = lazy(() => import("../../pages/ProductionBoard"));
+const AssemblyTemplateManagement = lazy(() => import("../../pages/AssemblyTemplateManagement"));
+const ScheduleOptimization = lazy(() => import("../../pages/ScheduleOptimization"));
+const CapacityAnalysis = lazy(() => import("../../pages/CapacityAnalysis"));
 
 export function ProductionRoutes() {
   return (

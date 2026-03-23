@@ -2,9 +2,7 @@
  * LazyChart - 懒加载图表组件包装器
  * 使用 React.lazy 和 Suspense 实现图表组件的按需加载
  */
-import { Suspense, lazy } from "react";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
-import { Card, CardContent } from "../ui/card";
+import { lazy } from "react";
 
 /**
  * 创建懒加载的图表组件

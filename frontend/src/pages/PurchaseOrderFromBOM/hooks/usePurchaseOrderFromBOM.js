@@ -28,7 +28,8 @@ export function usePurchaseOrderFromBOM() {
                 const res = await bomApi.list({ status: "RELEASED", page_size: 1000 });
                 const data = res.data?.data || res.data;
                 setBoms(data?.items || data || []);
-            } catch (err) {
+            } catch (_err) {
+              // 非关键操作失败时静默降级
             }
         };
         loadBOMs();
@@ -39,7 +40,8 @@ export function usePurchaseOrderFromBOM() {
             try {
                 const res = await supplierApi.list({ page_size: 1000 });
                 setSuppliers(res.data?.items || res.data?.items || res.data || []);
-            } catch (err) {
+            } catch (_err) {
+              // 非关键操作失败时静默降级
             }
         };
         loadSuppliers();

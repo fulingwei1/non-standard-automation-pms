@@ -8,36 +8,11 @@
  * - 合同里程碑提醒
  */
 
-import React, { useState } from "react";
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Tag,
-  Progress,
-  Tabs,
-  Badge,
-  Alert,
-  Spin,
-  Empty,
   Typography,
-  Space,
-  Button,
-  Tooltip,
 } from "antd";
-import {
-  BellOutlined,
-  DollarOutlined,
-  HeartOutlined,
-  CalendarOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+
+
 import {
   useSalesWorkstationData,
   useFollowUpReminders,

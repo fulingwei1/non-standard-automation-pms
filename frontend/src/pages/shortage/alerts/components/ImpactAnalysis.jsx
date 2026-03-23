@@ -2,10 +2,6 @@
  * 影响分析组件
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Clock, DollarSign, Folder } from 'lucide-react';
 import { getRiskScoreColor } from '../../constants';
 
 const ImpactAnalysis = ({ alert }) => {

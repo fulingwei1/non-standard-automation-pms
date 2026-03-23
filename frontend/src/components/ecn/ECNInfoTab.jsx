@@ -2,15 +2,12 @@
  * ECN Info Tab Component
  * ECN 基本信息标签页
  */
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
 import { formatDate } from "../../lib/utils";
 import { getStatusBadge, getTypeBadge, getPriorityBadge } from "@/lib/constants/ecn";
 import { 
   FileText, 
   Users, 
   Calendar, 
-  DollarSign, 
   Layers,
   AlertTriangle 
 } from "lucide-react";

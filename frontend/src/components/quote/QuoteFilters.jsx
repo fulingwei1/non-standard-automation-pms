@@ -2,10 +2,6 @@
  * 报价筛选器组件
  * 提供搜索和多维度筛选功能
  */
-import { Search, SlidersHorizontal } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 /**
  * 报价筛选器组件

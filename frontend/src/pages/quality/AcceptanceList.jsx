@@ -4,13 +4,8 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Award, Search, ChevronLeft, ChevronRight, Plus,
-  RefreshCw, Clock, CheckCircle, Play, AlertTriangle,
+import { Clock, CheckCircle, Play, AlertTriangle,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { acceptanceApi } from "../../services/api/acceptance";
 
 const STATUS_OPTIONS = [

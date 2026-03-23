@@ -16,7 +16,8 @@ export function useAIStaffMatching() {
         try {
             const response = await projectApi.list({ status: 'active', page_size: 50 });
             setProjects(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 
@@ -24,7 +25,8 @@ export function useAIStaffMatching() {
         try {
             const response = await staffApi.list({ page_size: 100, available: true });
             setStaff(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

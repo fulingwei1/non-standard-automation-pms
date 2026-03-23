@@ -3,39 +3,14 @@
  * 按 BSC 维度分 Tab 显示，支持创建/编辑/删除
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
-  Plus,
-  Edit2,
-  Trash2,
-  Search,
   TrendingUp,
   Users,
   Activity,
   BookOpen,
-  Target,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogBody,
-  Skeleton,
-} from "@/components/ui";
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { strategyApi, csfApi } from "@/services/api/strategy";
 import { BSC_DIMENSIONS } from "@/lib/constants/strategy";
@@ -281,7 +256,8 @@ export default function CSFList() {
         dimension: activeTab,
       });
       setCsfs(res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { formatDate } from "@/lib/formatters";
 import { managementRhythmApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import { Card, CardContent, Badge, Button } from "../components/ui";
 import {
-  Calendar,
-  Filter,
   Target,
   TrendingUp,
   Settings,
   CheckCircle2,
-  Clock,
 } from "lucide-react";
 
 const rhythmLevelConfig = {

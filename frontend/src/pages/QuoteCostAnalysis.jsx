@@ -5,41 +5,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Download } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { quoteApi } from "../services/api";
-import { CostTrendChart } from "../components/cost/CostTrendChart";
-import { CostStructureChart } from "../components/cost/CostStructureChart";
 
 export default function QuoteCostAnalysis() {
   const { id } = useParams();
@@ -94,6 +66,7 @@ export default function QuoteCostAnalysis() {
           );
           setCostStructure(structureRes.data?.data || structureRes.data);
         } catch (_e) {
+          // 非关键操作失败时静默降级
         }
       }
 
@@ -102,8 +75,10 @@ export default function QuoteCostAnalysis() {
         const trendRes = await quoteApi.getCostTrend(id, {});
         setCostTrend(trendRes.data?.data || trendRes.data);
       } catch (_e) {
+        // 非关键操作失败时静默降级
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -152,7 +127,8 @@ export default function QuoteCostAnalysis() {
           version_ids: `${selectedVersions[0].id},${selectedVersions[1].id}`,
         });
         setComparison(fallbackRes.data?.data || fallbackRes.data);
-      } catch (fallbackError) {
+      } catch (_fallbackError) {
+        // 非关键操作失败时静默降级
       }
     }
   };

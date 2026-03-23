@@ -1,11 +1,9 @@
-import { Calendar, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { cn } from "../../lib/utils";
 import {
   getStatusBadge,
   getLevelColor,
   fadeIn,
 } from "../../utils/monthlySummaryUtils";
-import { motion } from "framer-motion";
 
 /**
  * 历史记录列表组件

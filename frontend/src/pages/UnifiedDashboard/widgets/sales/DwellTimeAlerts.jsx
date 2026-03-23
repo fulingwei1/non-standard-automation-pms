@@ -6,22 +6,14 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../../components/ui/card";
-import { Button } from "../../../../components/ui/button";
-import { Badge } from "../../../../components/ui/badge";
+
+
 import { funnelApi } from "../../../../services/api/funnel";
 import { cn } from "../../../../lib/utils";
 import {
   AlertTriangle,
-  CheckCircle,
   Clock,
   Eye,
-  RefreshCw,
 } from "lucide-react";
 
 // 实体类型中文映射
@@ -104,7 +96,8 @@ export default function DwellTimeAlerts({ onAlertClick }) {
       setAlerts((prev) =>
         prev.map((a) => (a.id === alertId ? { ...a, status: "ACKNOWLEDGED" } : a))
       );
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -115,7 +108,8 @@ export default function DwellTimeAlerts({ onAlertClick }) {
       await funnelApi.resolveAlert(alertId, "已处理");
       // 从列表中移除
       setAlerts((prev) => prev.filter((a) => a.id !== alertId));
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

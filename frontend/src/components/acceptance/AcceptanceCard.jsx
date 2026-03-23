@@ -2,21 +2,12 @@
  * 验收卡片组件
  */
 
-import { motion } from "framer-motion";
 import {
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Calendar,
-  Eye
+  Clock
 } from "lucide-react";
 
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Progress } from "../ui/progress";
 import { cn } from "../../lib/utils";
 import { typeConfigs, statusConfigs } from "./acceptanceConfig";
-import { Edit3 } from "lucide-react";
 
 export default function AcceptanceCard({ acceptance, onView }) {
   const type = typeConfigs[acceptance.type] || {

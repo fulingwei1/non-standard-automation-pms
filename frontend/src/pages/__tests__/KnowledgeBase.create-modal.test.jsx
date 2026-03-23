@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 
 const { knowledgeBaseApi, serviceApiMock } = vi.hoisted(() => {
   const knowledgeBaseApi = {
@@ -54,7 +53,6 @@ vi.mock("framer-motion", () => ({
   ),
 }));
 
-import KnowledgeBase from "../KnowledgeBase";
 
 describe("KnowledgeBase create modal", () => {
   let originalGetComputedStyle;

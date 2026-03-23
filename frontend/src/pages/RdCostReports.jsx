@@ -1,24 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { rdProjectApi, rdReportApi } from "../services/api";
 import { formatCurrency } from "../lib/utils";
+
+
 import {
-  Card,
-  CardContent,
-  Button,
-  Input } from
-"../components/ui";
-import {
-  ArrowLeft,
-  Download,
   FileText,
   Calculator,
   TrendingUp,
   BarChart3,
-  Users,
-  Search } from
+  Users } from
 "lucide-react";
 
 const reportTypes = [
@@ -98,7 +90,8 @@ export default function RdCostReports() {
       const response = await rdProjectApi.get(id);
       const projectData = response.data?.data || response.data || response;
       setProject(projectData);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

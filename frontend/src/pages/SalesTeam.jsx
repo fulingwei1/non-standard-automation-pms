@@ -9,41 +9,10 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Users,
-  User,
-  UserPlus,
-  TrendingUp,
-  BarChart3,
-  Download,
-  Building2,
-  ChevronRight,
-  ChevronDown,
-  Briefcase,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Badge,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui";
+
+
+
+
 import { salesTeamApi } from "../services/api";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { toast } from "sonner";
@@ -51,13 +20,8 @@ import { getDefaultDateRange } from "@/lib/constants/salesTeam";
 import { useSalesTeamFilters } from "../components/sales/team/hooks/useSalesTeamFilters";
 import { useSalesTeamData } from "../components/sales/team/hooks/useSalesTeamData";
 import { useSalesTeamRanking } from "../components/sales/team/hooks/useSalesTeamRanking";
-import {
-  TeamStatsCards,
-  TeamFilters,
-  TeamRankingBoard,
-  TeamMemberList,
-  TeamMemberDetailDialog,
-} from "../components/sales/team";
+
+
 
 // ============================================
 // 组织架构组件 (来自 SalesOrganization.jsx)
@@ -496,7 +460,8 @@ export default function SalesTeam({ embedded = false }) {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setExporting(false);
     }

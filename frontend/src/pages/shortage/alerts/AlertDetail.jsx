@@ -5,13 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { getAlertDetail, resolveAlert } from '@/services/api/shortage';
 import { ALERT_LEVELS, ALERT_STATUS } from '../constants';
-import ImpactAnalysis from './components/ImpactAnalysis';
-import { ArrowLeft, Lightbulb, CheckCircle, Package, Calendar, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const AlertDetail = () => {

@@ -3,17 +3,8 @@
  * 显示工人的关键指标和快速操作入口
  */
 import { useMemo } from "react";
-import { 
-  Wrench, 
-  TrendingUp,
-  Target,
-  Award,
-  AlertTriangle
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Progress } from "../ui/progress";
+
+
 import { 
   WORK_ORDER_STATUS, 
   SKILL_LEVELS,

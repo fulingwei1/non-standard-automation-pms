@@ -1,12 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Calculator, Lightbulb } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
 import { toast } from "../components/ui/toast";
-import CostEstimateForm from "../components/presales/CostEstimateForm";
 
 function parseAmount(value) {
   const amount = Number(value);

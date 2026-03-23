@@ -3,37 +3,19 @@
  * 核心功能：团队管理、方案审核、投标支持、团队绩效监控
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import {
   Users,
   FileText,
   Target,
-  Calendar,
-  ChevronRight,
-  BarChart3,
   Award,
-  FileCheck,
-  Building2,
-  DollarSign,
-  Timer,
-  Activity } from
+  DollarSign } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi, userApi } from "../services/api";
 import { formatCurrencyCompact as formatCurrency } from "../lib/formatters";
-import StatCard from "../components/common/StatCard";
 
 const SOLUTION_CENTER_PATH = "/presales/solutions";
 
@@ -372,7 +354,8 @@ export default function PresalesManagerWorkstation() {
         if (usersResponse?.data?.total) {
           teamSize = usersResponse.data.total;
         }
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       // Get response time stats (for avgSolutionTime)
@@ -391,7 +374,8 @@ export default function PresalesManagerWorkstation() {
             )
           );
         }
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       // Calculate solution quality from solutions
@@ -419,7 +403,8 @@ export default function PresalesManagerWorkstation() {
             );
           }
         }
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       // Load team performance
@@ -449,7 +434,8 @@ export default function PresalesManagerWorkstation() {
             })
           );
         }
-      } catch (err) {
+      } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       setOverallStats({

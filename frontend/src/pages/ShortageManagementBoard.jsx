@@ -6,43 +6,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
-  ArrowRight,
   BarChart3,
-  Clock,
-  FileText,
   FolderKanban,
   Package,
-  RefreshCw,
   ShieldAlert,
   Truck,
-  TrendingUp,
-  XCircle,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  DashboardStatCard,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { shortageApi } from "../services/api";
 

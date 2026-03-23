@@ -6,30 +6,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { DollarSign, PieChart, TrendingDown, TrendingUp, FileText, BarChart3 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "../components/ui/select";
+import { DollarSign, PieChart, TrendingDown, TrendingUp } from "lucide-react";
+
+
 import { formatCurrency, formatPercent } from "../lib/utils";
 import { handleApiError } from "../utils/apiErrorHandler";
 
 // Import refactored components
 import {
-  QuoteStatsOverview,
-  QuoteListManager,
-  DEFAULT_QUOTE_STATS,
-  MarginAnalysis
+  DEFAULT_QUOTE_STATS
 } from "../components/quote";
 
 // Import services

@@ -3,20 +3,10 @@
  */
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
-import {
-  ChevronDown,
-  ChevronRight,
-  Plus,
-  Search,
-  BookOpen,
-  ChevronUp } from
-"lucide-react";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { TrendingUp } from "lucide-react";
+
+
 import {
   generateCategoryTree,
   getPopularCategories,

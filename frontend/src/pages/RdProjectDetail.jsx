@@ -1,36 +1,18 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { rdProjectApi, projectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
+
+
 import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Progress,
-  Skeleton,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "../components/ui";
-import {
-  ArrowLeft,
-  Edit2,
-  FlaskConical,
   Users,
   DollarSign,
   FileText,
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  TrendingUp,
   Activity,
-  Target,
-  BookOpen,
   Calculator,
   BarChart3,
   FileCheck,
@@ -105,10 +87,12 @@ export default function RdProjectDetail() {
         try {
           const linkedRes = await projectApi.get(projectData.linked_project_id);
           setLinkedProject(linkedRes.data?.data || linkedRes.data || linkedRes);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
       }
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -132,7 +116,8 @@ export default function RdProjectDetail() {
       const response = await rdProjectApi.getCostSummary(id);
       const data = response.data?.data || response.data || response;
       setCostSummary(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -141,7 +126,8 @@ export default function RdProjectDetail() {
       const response = await rdProjectApi.getTimesheetSummary(id);
       const data = response.data?.data || response.data || response;
       setTimesheetSummary(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

@@ -4,33 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  DollarSign,
-  Clock } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Label } from
-"../components/ui";
+
+
+
+
 import { presaleExpenseApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 
@@ -83,7 +60,8 @@ export default function PresaleExpenseManagement() {
       if (response.data && response.data.data) {
         setStatistics(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

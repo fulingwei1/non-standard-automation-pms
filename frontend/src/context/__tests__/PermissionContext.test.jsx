@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { PermissionProvider, usePermissionContext, withPermission, PermissionLoading } from '../PermissionContext';
+import { usePermissionContext, withPermission } from '../PermissionContext';
 import { authApi } from '../../services/api';
 
 // Mock authApi

@@ -1,11 +1,6 @@
 /**
  * 开工报工对话框组件
  */
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Checkbox } from '../ui/checkbox';
 
 /**
  * 开工报工对话框

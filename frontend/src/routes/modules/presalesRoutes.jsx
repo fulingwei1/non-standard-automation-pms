@@ -1,19 +1,20 @@
+import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 
-import PresalesWorkstation from "../../pages/PresalesWorkstation";
-import PresaleAnalytics from "../../pages/PresaleAnalytics";
-import PresalesManagerWorkstation from "../../pages/PresalesManagerWorkstation";
-import PresalesWorkbenchRedirect from "../../pages/PresalesWorkbenchRedirect";
-import PresalesCostEstimation from "../../pages/PresalesCostEstimation";
-import PresalesReviewCenter from "../../pages/PresalesReviewCenter";
-import PresaleProposals from "../../pages/PresaleProposals";
-import SolutionDetail from "../../pages/SolutionDetail";
-import RequirementSurvey from "../../pages/RequirementSurvey";
-import BiddingCenter from "../../pages/BiddingCenter";
-import PresaleBids from "../../pages/PresaleBids";
-import KnowledgeBase from "../../pages/KnowledgeBase";
-import PresaleTemplates from "../../pages/PresaleTemplates";
-import PresaleTicketBoard from "../../pages/PresaleTicketBoard";
+// ---- 懒加载页面组件（售前模块） ----
+const PresalesWorkbenchRedirect = lazy(() => import("../../pages/PresalesWorkbenchRedirect"));
+const PresalesWorkstation = lazy(() => import("../../pages/PresalesWorkstation"));
+const PresalesManagerWorkstation = lazy(() => import("../../pages/PresalesManagerWorkstation"));
+const PresalesReviewCenter = lazy(() => import("../../pages/PresalesReviewCenter"));
+const PresalesCostEstimation = lazy(() => import("../../pages/PresalesCostEstimation"));
+const PresaleAnalytics = lazy(() => import("../../pages/PresaleAnalytics"));
+const PresaleProposals = lazy(() => import("../../pages/PresaleProposals"));
+const SolutionDetail = lazy(() => import("../../pages/SolutionDetail"));
+const BiddingCenter = lazy(() => import("../../pages/BiddingCenter"));
+const PresaleBids = lazy(() => import("../../pages/PresaleBids"));
+const KnowledgeBase = lazy(() => import("../../pages/KnowledgeBase"));
+const PresaleTemplates = lazy(() => import("../../pages/PresaleTemplates"));
+const PresaleTicketBoard = lazy(() => import("../../pages/PresaleTicketBoard"));
 
 export function PresalesRoutes() {
   return (

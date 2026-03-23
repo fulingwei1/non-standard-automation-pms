@@ -11,7 +11,7 @@ export function useKitCheck() {
             setLoading(true);
             const response = await kitApi.list(filters);
             setKits(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) { }
+        } catch (_err) { /* 非关键操作失败时静默降级 */ }
         finally { setLoading(false); }
     }, [filters]);
 

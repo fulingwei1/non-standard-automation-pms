@@ -10,62 +10,24 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { toast } from "../components/ui/toast";
 import {
   Clock,
-  CheckCircle2,
-  Search,
-  FileText,
-  Eye,
-  Check,
-  X,
-  RefreshCw,
   Send,
   Mail,
-  MailOpen,
-  Loader2,
   AlertTriangle,
 } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-} from "../components/ui/card";
-import StatCard from "../components/common/StatCard";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
+
+
+
+
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 
 import { useApprovalCenter, APPROVAL_TABS } from "./ApprovalCenter/hooks/useApprovalCenter";

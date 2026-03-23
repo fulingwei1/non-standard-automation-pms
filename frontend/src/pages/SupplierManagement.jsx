@@ -4,42 +4,11 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Building2,
-  Phone,
-  Mail,
-  MapPin,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Search,
-  Plus,
-  Eye,
-  Edit,
-  Award,
-  AlertTriangle,
-  Users } from
+  Plus } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Progress,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  Label,
-  Textarea } from
-"../components/ui";
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { supplierApi } from "../services/api";

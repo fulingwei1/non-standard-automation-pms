@@ -4,23 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  Clock,
-  PlayCircle,
-  Filter } from
-"lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui/select";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { productionApi } from "../../services/api";
 
@@ -68,7 +55,8 @@ export default function MobileWorkerTaskList() {
       } else {
         setTasks(myTasks);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

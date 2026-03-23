@@ -2,7 +2,6 @@
  * 客服工作台 - 加载骨架屏
  */
 
-import { Skeleton } from "../../../components/ui";
 
 export function WorkbenchLoading() {
   return (

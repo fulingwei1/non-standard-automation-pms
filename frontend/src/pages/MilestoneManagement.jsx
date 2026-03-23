@@ -5,43 +5,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
-  Plus,
-  Calendar,
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Target,
-  TrendingUp,
-  Eye,
-  Search,
-  Filter } from
+  TrendingUp } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { milestoneApi, projectApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";
@@ -94,14 +68,16 @@ export default function MilestoneManagement() {
       const res = await projectApi.list({ page_size: 200 });
       const list = res?.data?.items ?? res?.items ?? res?.data ?? res ?? [];
       setProjects(Array.isArray(list) ? list : []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const fetchProject = async () => {
     try {
       const res = await projectApi.get(id);
       setProject(res.data || res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   // 获取所有里程碑（全局模式）
@@ -129,7 +105,8 @@ export default function MilestoneManagement() {
       const res = await milestoneApi.list(id);
       const milestoneList = res.data || res || [];
       setMilestones(milestoneList);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -199,7 +176,8 @@ export default function MilestoneManagement() {
       const res = await milestoneApi.get(milestoneId);
       setSelectedMilestone(res.data || res);
       setShowDetailDialog(true);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
   const getStatusIcon = (status) => {

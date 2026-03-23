@@ -3,29 +3,12 @@
  * Features: 员工排名、部门排名、历史趋势
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Award,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Building2,
-  Medal,
-  Loader2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { performanceApi } from "../services/api";

@@ -11,8 +11,6 @@
  * - onSearchChange / onStatusChange / onPaymentChange (callback-style)
  */
 
-import { Search } from "lucide-react";
-import { Card, CardContent, Input, Button } from "../ui";
 import { cn } from "../../lib/utils";
 import { statusConfig, paymentStatusConfig } from "../../lib/constants/finance";
 

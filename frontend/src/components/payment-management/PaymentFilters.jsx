@@ -2,8 +2,6 @@
  * 支付管理筛选组件
  * 提供搜索和多维度筛选功能
  */
-import { Search, List, LayoutGrid } from 'lucide-react';
-import { Card, CardContent, Input, Button } from '../ui';
 import { PAYMENT_TYPES, PAYMENT_STATUS } from '@/lib/constants/finance';
 
 /**

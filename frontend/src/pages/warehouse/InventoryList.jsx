@@ -1,11 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Package, Search, RefreshCw, AlertTriangle } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { warehouseApi } from "../../services/api";
 
 export default function InventoryList() {
@@ -28,7 +21,7 @@ export default function InventoryList() {
       if (lowStockOnly) params.low_stock = true;
       const res = await warehouseApi.inventory.list(params);
       setData(res.data || res);
-    } catch (_e) { } finally { setLoading(false); }
+    } catch (_e) { /* 非关键操作失败时静默降级 */ } finally { setLoading(false); }
   }, [page, warehouseId, keyword, lowStockOnly]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

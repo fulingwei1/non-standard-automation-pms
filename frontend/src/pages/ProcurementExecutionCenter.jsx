@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import PurchaseOrders from "./PurchaseOrders";
-import PurchaseRequestList from "./PurchaseRequestList";
-import ArrivalManagement from "./ArrivalManagement";
 
 export default function ProcurementExecutionCenter() {
   const tabs = useMemo(

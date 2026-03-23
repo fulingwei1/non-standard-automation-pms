@@ -3,52 +3,15 @@
  * 管理客户需求调研记录、现场勘察、问题跟踪
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  ClipboardList,
-  Search,
-  Plus,
-  Calendar,
-  Users,
-  Building2,
   MapPin,
   Phone,
   Video,
-  Eye,
-  Edit,
-  Trash2,
-  MoreHorizontal,
-  FileText,
-  Image,
-  CheckCircle,
-  AlertTriangle,
-  Paperclip,
-  X,
-  User,
-  Target,
-  Package,
-  Settings,
-  Ruler,
-  Thermometer,
-  Zap,
-  DollarSign,
-  HelpCircle,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi } from "../services/api";

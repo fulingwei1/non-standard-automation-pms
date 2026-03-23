@@ -77,7 +77,8 @@ export function useApprovalCenter() {
         urgent: data.urgent || 0,
         total: data.total || 0,
       });
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

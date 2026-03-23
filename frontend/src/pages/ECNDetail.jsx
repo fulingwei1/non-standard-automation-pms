@@ -7,22 +7,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Skeleton } from "../components/ui/skeleton";
 
 // Import ECN components
 import {
-  ECNBasicInfo,
-  ECNEvaluationManager,
-  ECNApprovalFlow,
-  ECNTaskBoard,
-  ECNImpactAnalysis,
-  ECNChangeLog,
   tabConfigs,
   getStatusConfig,
   formatDate } from
@@ -107,7 +96,8 @@ export default function ECNDetail() {
       const integrationResponse = await ecnApi.getIntegrations(id);
       setIntegrations(integrationResponse.data?.items || []);
 
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -217,7 +207,8 @@ export default function ECNDetail() {
     try {
       const approvalResponse = await ecnApi.getApprovals(id);
       setApprovals(approvalResponse.data?.items || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

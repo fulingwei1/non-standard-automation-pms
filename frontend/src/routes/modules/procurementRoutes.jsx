@@ -1,47 +1,49 @@
-import { Navigate, Route } from "react-router-dom";
+import { lazy } from "react";
+import { Route, Navigate } from "react-router-dom";
 import {
   ProcurementProtectedRoute,
-  ProductionProtectedRoute
+  ProductionProtectedRoute,
 } from "../../components/common/ProtectedRoute";
 
-import PurchaseOrders from "../../pages/PurchaseOrders";
-import PurchaseOrderDetail from "../../pages/PurchaseOrderDetail";
-import PurchaseRequestList from "../../pages/PurchaseRequestList";
-import PurchaseRequestNew from "../../pages/PurchaseRequestNew";
-import PurchaseRequestDetail from "../../pages/PurchaseRequestDetail";
-import PurchaseOrderFromBOM from "../../pages/PurchaseOrderFromBOM";
-import GoodsReceiptNew from "../../pages/GoodsReceiptNew";
-import GoodsReceiptDetail from "../../pages/GoodsReceiptDetail";
-import MaterialList from "../../pages/MaterialList";
-import MaterialTracking from "../../pages/MaterialTracking";
-import MaterialReadiness from "../../pages/MaterialReadiness";
-import ProcurementAnalysis from "../../pages/ProcurementAnalysis";
-import InventoryAnalysis from "../../pages/InventoryAnalysis";
-import BudgetManagement from "../../pages/BudgetManagement";
-import CostAnalysis from "../../pages/CostAnalysis";
-import MaterialDemandSummary from "../../pages/MaterialDemandSummary";
-import BOMManagement from "../../pages/BOMManagement";
-import KitRateBoard from "../../pages/KitRateBoard";
-import KitCheck from "../../pages/KitCheck";
-import MaterialAnalysis from "../../pages/MaterialAnalysis";
-import AssemblyKitBoard from "../../pages/AssemblyKitBoard";
-import BomAssemblyAttrs from "../../pages/BomAssemblyAttrs";
-import ArrivalManagement from "../../pages/ArrivalManagement";
-import SupplierManagement from "../../pages/SupplierManagement";
-import ShortageManagement from "../../pages/ShortageManagement";
-import ShortageReportNew from "../../pages/ShortageReportNew";
-import ShortageReportDetail from "../../pages/ShortageReportDetail";
-import ArrivalDetail from "../../pages/ArrivalDetail";
-import SubstitutionDetail from "../../pages/SubstitutionDetail";
-import TransferDetail from "../../pages/TransferDetail";
-import SubstitutionNew from "../../pages/SubstitutionNew";
-import TransferNew from "../../pages/TransferNew";
-import ArrivalNew from "../../pages/ArrivalNew";
-import SupplierPriceTrend from "../../pages/SupplierPriceTrend";
-import TimeBasedKitRateBoard from "../../pages/TimeBasedKitRateBoard";
-import ProcurementExecutionCenter from "../../pages/ProcurementExecutionCenter";
-import MaterialCenter from "../../pages/MaterialCenter";
-import ProcurementAnalysisCenter from "../../pages/ProcurementAnalysisCenter";
+// ---- 懒加载页面组件（采购模块） ----
+const ProcurementExecutionCenter = lazy(() => import("../../pages/ProcurementExecutionCenter"));
+const MaterialCenter = lazy(() => import("../../pages/MaterialCenter"));
+const ProcurementAnalysisCenter = lazy(() => import("../../pages/ProcurementAnalysisCenter"));
+const PurchaseOrders = lazy(() => import("../../pages/PurchaseOrders"));
+const PurchaseOrderDetail = lazy(() => import("../../pages/PurchaseOrderDetail"));
+const PurchaseRequestList = lazy(() => import("../../pages/PurchaseRequestList"));
+const PurchaseRequestNew = lazy(() => import("../../pages/PurchaseRequestNew"));
+const PurchaseRequestDetail = lazy(() => import("../../pages/PurchaseRequestDetail"));
+const PurchaseOrderFromBOM = lazy(() => import("../../pages/PurchaseOrderFromBOM"));
+const ArrivalManagement = lazy(() => import("../../pages/ArrivalManagement"));
+const GoodsReceiptNew = lazy(() => import("../../pages/GoodsReceiptNew"));
+const GoodsReceiptDetail = lazy(() => import("../../pages/GoodsReceiptDetail"));
+const MaterialList = lazy(() => import("../../pages/MaterialList"));
+const MaterialTracking = lazy(() => import("../../pages/MaterialTracking"));
+const MaterialReadiness = lazy(() => import("../../pages/MaterialReadiness"));
+const ProcurementAnalysis = lazy(() => import("../../pages/ProcurementAnalysis"));
+const InventoryAnalysis = lazy(() => import("../../pages/InventoryAnalysis"));
+const BudgetManagement = lazy(() => import("../../pages/BudgetManagement"));
+const CostAnalysis = lazy(() => import("../../pages/CostAnalysis"));
+const MaterialDemandSummary = lazy(() => import("../../pages/MaterialDemandSummary"));
+const BOMManagement = lazy(() => import("../../pages/BOMManagement"));
+const KitRateBoard = lazy(() => import("../../pages/KitRateBoard"));
+const TimeBasedKitRateBoard = lazy(() => import("../../pages/TimeBasedKitRateBoard"));
+const KitCheck = lazy(() => import("../../pages/KitCheck"));
+const MaterialAnalysis = lazy(() => import("../../pages/MaterialAnalysis"));
+const AssemblyKitBoard = lazy(() => import("../../pages/AssemblyKitBoard"));
+const BomAssemblyAttrs = lazy(() => import("../../pages/BomAssemblyAttrs"));
+const SupplierManagement = lazy(() => import("../../pages/SupplierManagement"));
+const SupplierPriceTrend = lazy(() => import("../../pages/SupplierPriceTrend"));
+const ShortageManagement = lazy(() => import("../../pages/ShortageManagement"));
+const ShortageReportNew = lazy(() => import("../../pages/ShortageReportNew"));
+const ShortageReportDetail = lazy(() => import("../../pages/ShortageReportDetail"));
+const ArrivalDetail = lazy(() => import("../../pages/ArrivalDetail"));
+const SubstitutionDetail = lazy(() => import("../../pages/SubstitutionDetail"));
+const TransferDetail = lazy(() => import("../../pages/TransferDetail"));
+const SubstitutionNew = lazy(() => import("../../pages/SubstitutionNew"));
+const TransferNew = lazy(() => import("../../pages/TransferNew"));
+const ArrivalNew = lazy(() => import("../../pages/ArrivalNew"));
 
 export function ProcurementRoutes() {
   return (

@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PageHeader } from "./PageHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { usePermission } from "../../hooks/usePermission";
 
 function getValidTab(tabs, tabValue) {

@@ -1,5 +1,3 @@
-import { TrendingUp, TrendingDown, CheckCircle2, BarChart3 } from "lucide-react";
-import { Card, CardContent, SkeletonCard, Badge } from "../../../components/ui";
 
 export function LessonStatistics({ statistics }) {
     if (!statistics) {

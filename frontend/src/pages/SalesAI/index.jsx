@@ -10,44 +10,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Sparkles,
-  MessageSquare,
-  FileText,
-  Target,
-  AlertTriangle,
-  TrendingUp,
-  Copy,
-  RefreshCw,
-  ChevronRight,
-  Users,
-  Lightbulb,
-  ShieldAlert,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Alert,
-  AlertTitle,
-  AlertDescription,
-  Progress,
-} from "../../components/ui";
+
+
+
+
 import { aiSalesApi } from "../../services/api";
 
 // 话术推荐组件
@@ -71,7 +37,8 @@ function ScriptRecommendation() {
     try {
       const res = await aiSalesApi.recommendScripts(customerId, null, scenario);
       setScripts(res.recommended_scripts || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -144,7 +111,8 @@ function ProposalGeneration() {
     try {
       const res = await aiSalesApi.generateProposal(opportunityId, proposalType);
       setProposal(res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -212,7 +180,8 @@ function CompetitorAnalysis() {
     try {
       const res = await aiSalesApi.analyzeCompetitor(competitorName);
       setAnalysis(res);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -313,7 +282,8 @@ function ChurnRisk() {
     try {
       const res = await aiSalesApi.getChurnRiskList();
       setRiskList(res.risk_list || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

@@ -6,13 +6,8 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, List, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
-import { PageHeader } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ProjectTimeline } from "@/components/project/timeline";
 import { projectApi, stageApi } from "@/services/api";
 
 export default function ProjectTimelineView() {

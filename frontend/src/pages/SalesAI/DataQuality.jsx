@@ -8,43 +8,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  CheckCircle,
-  AlertCircle,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Award,
-  Target,
-  FileText,
-  Phone,
-  Users,
-  MapPin,
-  Star,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-} from "../../components/ui";
+
+
+
+
 
 // 数据质量排名
 function QualityRanking() {

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import { customerApi, orgApi } from "../services/api";
 
 const ProjectForm = ({ isOpen, onClose, onSubmit, initialData = {} }) => {

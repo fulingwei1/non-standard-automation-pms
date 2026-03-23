@@ -8,16 +8,8 @@
  * Constants are imported from the shared lib/constants/finance.js.
  */
 
-import { motion } from "framer-motion";
-import {
- FileText,
- Edit,
- X,
- Send,
- DollarSign,
- Download
-} from "lucide-react";
-import { Button, Badge } from "../../components/ui";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { statusConfig, paymentStatusConfig } from "../../lib/constants/finance";

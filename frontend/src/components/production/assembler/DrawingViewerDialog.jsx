@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
-import { FileImage, ZoomOut, ZoomIn, RotateCw, Download } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Button,
-} from "../../ui";
+
+
 import { cn } from "../../../lib/utils";
 
 export default function DrawingViewerDialog({ open, onClose, task }) {

@@ -5,25 +5,10 @@
  */
 
 import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  Button } from
-"../ui";
-import {
-  MoreHorizontal,
-  ArrowRight,
-  RefreshCw,
-  CheckCircle2,
-  FileText,
-  Download,
-  Settings,
-  Loader2 } from
-"lucide-react";
+
+
+
+
 import { projectApi } from "../../services/api";
 import { toast } from "../ui/toast";
 import { useNavigate } from "react-router-dom";

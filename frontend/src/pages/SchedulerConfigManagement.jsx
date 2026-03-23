@@ -6,49 +6,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  Settings,
-  RefreshCw,
-  Save,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Search,
-  Filter,
-  Info } from
+  Settings } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Switch,
-  LoadingCard,
-  EmptyState,
-  ApiIntegrationError } from
-"../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { schedulerApi } from "../services/api";
 import { toast } from "../components/ui/toast";

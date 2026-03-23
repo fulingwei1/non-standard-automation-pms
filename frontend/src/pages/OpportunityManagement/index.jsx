@@ -3,26 +3,13 @@
  * 1,735 行单体拆分为: constants + hook + 4 个对话框组件
  */
 
-import { motion } from "framer-motion";
-import {
-  Search, Filter, Plus, Target, DollarSign,
-  User, Building2, CheckCircle2, Clock, Edit,
-  Eye, FileText, LayoutGrid, List,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Button, Badge, Input,
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "../../components/ui";
+
+
+
 import { cn } from "../../lib/utils";
 import { formatDateTime } from "@/lib/formatters";
 import { stageConfig, isGatePassed, PAGE_SIZE } from "./constants";
 import { useOpportunityManagement } from "./hooks/useOpportunityManagement";
-import { CreateDialog } from "./components/CreateDialog";
-import { GateDialog } from "./components/GateDialog";
-import { DetailDialog } from "./components/DetailDialog";
-import { ReviewDialog } from "./components/ReviewDialog";
 
 export default function OpportunityManagement({ embedded = false }) {
   const ctx = useOpportunityManagement();

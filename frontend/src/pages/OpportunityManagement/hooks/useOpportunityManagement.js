@@ -73,7 +73,8 @@ export function useOpportunityManagement() {
         setOpportunities(response.data.items);
         setTotal(response.data.total || 0);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       if (!silent) setLoading(false);
     }
@@ -85,7 +86,8 @@ export function useOpportunityManagement() {
       if (response.data?.items) {
         setCustomers(response.data.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 
@@ -96,7 +98,8 @@ export function useOpportunityManagement() {
       if (paginatedData?.items) {
         setOwners(paginatedData.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

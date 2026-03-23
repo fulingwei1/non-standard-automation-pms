@@ -1,5 +1,3 @@
-import { Input, FormSelect } from "../../ui";
-import { Info } from "lucide-react";
 
 /**
  * 财务信息步骤组件

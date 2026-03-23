@@ -4,22 +4,13 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
   Circle,
   CheckCircle2,
   PlayCircle,
   PauseCircle,
-  AlertTriangle,
-  MapPin,
-  Users,
-  Clock,
-  Plus } from
+  AlertTriangle } from
 "lucide-react";
-import { Button, Badge } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import {
   isTaskOverdue } from

@@ -1,20 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import {
   projectApi,
   milestoneApi,
   progressApi
 } from "../services/api";
-import {
-  StatsCards,
-  ViewControls,
-  StageColumn,
-  ScheduleGanttView,
-  ScheduleCalendarView,
-  ResourceHeatMap
-} from "../components/schedule-board";
+
+
 
 export default function ScheduleBoard() {
   const [viewMode, setViewMode] = useState("kanban"); // kanban | gantt | calendar
@@ -72,7 +64,8 @@ export default function ScheduleBoard() {
                     ? "in_progress"
                     : "pending"
               }));
-            } catch (err) {
+            } catch (_err) {
+              // 非关键操作失败时静默降级
             }
 
             // Load resources/workload for this project
@@ -87,7 +80,8 @@ export default function ScheduleBoard() {
                 // This is a placeholder - adjust based on actual API response structure
                 resources = [];
               }
-            } catch (err) {
+            } catch (_err) {
+              // 非关键操作失败时静默降级
             }
 
             return {

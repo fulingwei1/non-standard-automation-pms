@@ -1,13 +1,5 @@
-import { motion } from "framer-motion";
-import { Award, ChevronRight } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button
-} from "../../components/ui";
-import { CustomerCard } from "../../components/sales";
+
+
 import { fadeIn } from "../../lib/animations";
 
 export function TopCustomersCard({ topCustomers }) {

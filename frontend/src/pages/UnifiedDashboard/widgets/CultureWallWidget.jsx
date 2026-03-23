@@ -4,8 +4,7 @@
  * 放置于工作台首页高流量位置，确保每位员工都能看到
  */
 import { useState, useEffect } from 'react';
-import { Award, Megaphone, Users, Heart, Star, ChevronRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Award, Users, Heart, Star } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 
 // 模拟数据（后续可接入真实 API）

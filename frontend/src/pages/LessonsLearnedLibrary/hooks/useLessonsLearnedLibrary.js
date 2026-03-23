@@ -50,7 +50,8 @@ export function useLessonsLearnedLibrary() {
             const res = await projectReviewApi.getLessonsStatistics(params);
             const data = res.data || res;
             setStatistics(data);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, [projectId]);
 
@@ -59,7 +60,8 @@ export function useLessonsLearnedLibrary() {
             const res = await projectReviewApi.getLessonCategories();
             const data = res.data || res;
             setCategories(data.categories || []);
-        } catch (err) {
+        } catch (_err) {
+          // 非关键操作失败时静默降级
         }
     }, []);
 

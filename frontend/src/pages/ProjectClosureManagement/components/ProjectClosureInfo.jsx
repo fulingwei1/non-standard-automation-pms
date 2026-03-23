@@ -1,4 +1,3 @@
-import { Card, CardContent } from '../../../components/ui';
 import { formatDate } from '../../../lib/utils';
 
 export function ProjectClosureInfo({ closure }) {

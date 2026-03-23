@@ -2,19 +2,9 @@
  * Customer Card Component - Displays customer information in a card format
  */
 
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import {
-  Building2,
-  MapPin,
-  Phone,
-  Calendar,
-  AlertTriangle,
-  ChevronRight,
-  MoreHorizontal,
-} from "lucide-react";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+
+
 
 const gradeColors = {
   A: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",

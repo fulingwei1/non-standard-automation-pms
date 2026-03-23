@@ -1,23 +1,13 @@
 import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/formatters";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { managementRhythmApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  DashboardStatCard,
-  Badge,
-} from "../components/ui";
+
+
 import {
   Target,
   TrendingUp,
   Settings,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Calendar,
   Activity,
 } from "lucide-react";
 
@@ -82,7 +72,8 @@ export default function ManagementRhythmDashboard() {
         operation: data.operation || null,
         task: data.task || null,
       });
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }

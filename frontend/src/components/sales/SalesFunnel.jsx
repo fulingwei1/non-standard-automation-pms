@@ -2,10 +2,8 @@
  * Sales Funnel Component - Visualizes sales pipeline stages
  */
 
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const funnelStages = [
   { key: "lead", label: "潜在客户", color: "from-violet-500 to-purple-600" },

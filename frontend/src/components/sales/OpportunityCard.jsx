@@ -2,21 +2,10 @@
  * Opportunity Card Component - Displays sales opportunity information
  */
 
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
-import {
-  Building2,
-  Calendar,
-  DollarSign,
-  User,
-  ChevronRight,
-  Clock,
-  AlertTriangle,
-  Flame,
-} from "lucide-react";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
+
+
 
 const stageConfig = {
   lead: { label: "潜在", color: "bg-violet-500", progress: 10 },

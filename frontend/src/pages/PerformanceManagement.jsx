@@ -4,32 +4,14 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Award,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  Users,
   Target,
   BarChart3,
-  Clock,
-  AlertCircle,
-  CheckCircle2,
-  ArrowRight,
-  Loader2 } from
+  CheckCircle2 } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import StatCard from "../components/common/StatCard";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
 
 
 import { cn, formatDate } from "../lib/utils";
@@ -90,6 +72,7 @@ export default function PerformanceManagement() {
           }
         }
       } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       try {
@@ -109,6 +92,7 @@ export default function PerformanceManagement() {
           setPendingTasks(tasks);
         }
       } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       try {
@@ -124,6 +108,7 @@ export default function PerformanceManagement() {
           }
         }
       } catch (_err) {
+        // 非关键操作失败时静默降级
       }
 
       setLoading(false);

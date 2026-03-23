@@ -3,8 +3,6 @@
  * ECN 基本信息展示组件
  */
 
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { cn, formatDate } from "../../lib/utils";
 import {
   getStatusConfig,

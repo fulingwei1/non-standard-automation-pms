@@ -1,16 +1,18 @@
+import { lazy } from "react";
 import { Route, Navigate } from "react-router-dom";
 
-import CostAccounting from "../../pages/CostAccounting";
-import PaymentApproval from "../../pages/PaymentApproval";
-import ProjectSettlement from "../../pages/ProjectSettlement";
-import FinancialReports from "../../pages/FinancialReports";
-import CostCollection from "../../pages/CostCollection";
-import QuoteActualCompare from "../../pages/QuoteActualCompare";
-import CostVarianceAnalysis from "../../pages/CostVarianceAnalysis";
-import LaborCostDetail from "../../pages/LaborCostDetail";
-import MultiCurrency from "../../pages/MultiCurrency";
-import AnalyticsDashboard from "../../pages/AnalyticsDashboard";
-import FinanceCostCenter from "../../pages/FinanceCostCenter";
+// ---- 懒加载页面组件（财务模块） ----
+const FinanceCostCenter = lazy(() => import("../../pages/FinanceCostCenter"));
+const CostAccounting = lazy(() => import("../../pages/CostAccounting"));
+const PaymentApproval = lazy(() => import("../../pages/PaymentApproval"));
+const ProjectSettlement = lazy(() => import("../../pages/ProjectSettlement"));
+const FinancialReports = lazy(() => import("../../pages/FinancialReports"));
+const CostCollection = lazy(() => import("../../pages/CostCollection"));
+const QuoteActualCompare = lazy(() => import("../../pages/QuoteActualCompare"));
+const CostVarianceAnalysis = lazy(() => import("../../pages/CostVarianceAnalysis"));
+const LaborCostDetail = lazy(() => import("../../pages/LaborCostDetail"));
+const MultiCurrency = lazy(() => import("../../pages/MultiCurrency"));
+const AnalyticsDashboard = lazy(() => import("../../pages/AnalyticsDashboard"));
 
 export function FinanceRoutes() {
   return (

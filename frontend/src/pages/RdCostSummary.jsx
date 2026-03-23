@@ -1,28 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi } from "../services/api";
 import { formatCurrency } from "../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Progress,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent } from
-"../components/ui";
-import {
-  ArrowLeft,
-  DollarSign,
-  TrendingUp,
-  BarChart3,
-  Download,
-  Users,
-  Clock } from
-"lucide-react";
+
+
+
+
 
 export default function RdCostSummary() {
   const { id } = useParams();
@@ -47,7 +30,8 @@ export default function RdCostSummary() {
       const response = await rdProjectApi.get(id);
       const projectData = response.data?.data || response.data || response;
       setProject(projectData);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -58,7 +42,8 @@ export default function RdCostSummary() {
       const response = await rdProjectApi.getCostSummary(id);
       const data = response.data?.data || response.data || response;
       setCostSummary(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -67,7 +52,8 @@ export default function RdCostSummary() {
       const response = await rdProjectApi.getTimesheetSummary(id);
       const data = response.data?.data || response.data || response;
       setTimesheetSummary(data);
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

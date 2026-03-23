@@ -3,42 +3,14 @@
  * 展示 KPI 卡片、进度条、健康状态、历史趋势、数据采集
  */
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus,
-  Edit2,
-  Trash2,
-  Search,
-  RefreshCw,
-  TrendingUp,
-  Activity,
   Calendar,
-  ChevronDown,
-  ChevronRight,
-  Target,
   AlertCircle,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogBody,
-  Progress,
-  Skeleton,
-} from "@/components/ui";
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { strategyApi, kpiApi } from "@/services/api/strategy";
 import { BSC_DIMENSIONS } from "@/lib/constants/strategy";
@@ -306,7 +278,8 @@ function KPICard({ kpi, onUpdate, onCollect, color }) {
       setLoadingHistory(true);
       const res = await kpiApi.getHistory(kpi.id, 6);
       setHistory(res.data || []);
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoadingHistory(false);
     }

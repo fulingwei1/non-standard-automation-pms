@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PageHeader } from "../components/layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import QuoteManagement from "./QuoteManagement";
-import SalesTemplateCenter from "./SalesTemplateCenter";
-import { MarginAnalysis } from "../components/quote";
 
 const TAB_QUOTES = "quotes";
 const TAB_MARGIN = "margin";

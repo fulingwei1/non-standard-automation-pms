@@ -3,35 +3,14 @@
  * Features: ECN统计概览、成本影响统计、工期影响统计、类型分布、趋势分析
  */
 import { useState, useEffect } from "react";
-import {
-  TrendingUp,
-  DollarSign,
-  Clock,
-  FileText,
-  Download } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  SimpleLineChart,
-  SimplePieChart,
-  MonthlyTrendChart } from
-"../components/administrative/StatisticsCharts";
+
+
+
+
+
+
+
+
 import { ecnApi } from "../services/api";
 
 const statusConfigs = {

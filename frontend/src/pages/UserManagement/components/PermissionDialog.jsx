@@ -2,13 +2,7 @@
  * 权限管理对话框（单用户 & 批量共用）
  */
 
-import { Shield, Info } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Label } from "../../../components/ui/label";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogBody, DialogFooter,
-} from "../../../components/ui/dialog";
+
 import { cn } from "../../../lib/utils";
 import { ROLE_TEMPLATES } from "../constants";
 

@@ -2,7 +2,6 @@
  * 工单列表组件 (Work Order List)
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { productionApi } from '../../../../services/api/production';
 
 const statusColors = {

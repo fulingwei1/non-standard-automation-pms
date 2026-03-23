@@ -5,25 +5,15 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   Briefcase,
   Star,
   Target,
   Heart,
   Zap } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
 import { cn } from "../lib/utils";
 import { staffMatchingApi } from "../services/api";
 
@@ -56,7 +46,8 @@ export default function EmployeeProfileDetail() {
         if (profileRes.data) {setProfile(profileRes.data);}
         if (evalRes.data?.items) {setEvaluations(evalRes.data.items);}
         if (perfRes.data?.items) {setPerformance(perfRes.data.items);}
-      } catch (error) {
+      } catch (_error) {
+        // 非关键操作失败时静默降级
       } finally {
         setLoading(false);
       }

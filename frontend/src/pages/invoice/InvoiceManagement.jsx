@@ -18,23 +18,12 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Send, Download, X } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
- Card,
-  CardContent,
-  CardHeader,
- CardTitle,
- Button
-} from "../../components/ui";
+
+
 import { staggerContainer } from "../../lib/animations";
 import { invoiceApi, contractApi } from "../../services/api";
 
 // 从 components/invoice-management/ 导入可复用 UI 组件
-import InvoiceRow from "../../components/invoice-management/InvoiceRow";
-import InvoiceStats from "../../components/invoice-management/InvoiceStats";
-import InvoiceFilters from "../../components/invoice-management/InvoiceFilters";
 // 从共享常量导入（单一数据源：lib/constants/finance.js）
 import {
  statusMap,
@@ -44,13 +33,8 @@ import {
  defaultPaymentData
 } from "../../lib/constants/finance";
 // 对话框组件（统一从 components/invoice-management/dialogs/ 导入）
-import {
- CreateInvoiceDialog,
-  EditInvoiceDialog,
-  IssueInvoiceDialog,
- PaymentDialog,
- DeleteConfirmDialog
-} from "../../components/invoice-management/dialogs";
+
+
 
 export default function InvoiceManagement() {
   const [invoices, setInvoices] = useState([]);
@@ -132,7 +116,8 @@ export default function InvoiceManagement() {
   if (response.data && response.data.items) {
   setContracts(response.data.items);
  }
-  } catch (error) {
+  } catch (_error) {
+   // 非关键操作失败时静默降级
  }
  };
 

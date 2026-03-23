@@ -2,29 +2,10 @@
  * 方案卡片组件
  * 用于在列表和网格视图中展示技术方案摘要
  */
-import { motion } from "framer-motion";
-import {
-  Calendar,
-  Users,
-  Building2,
-  Briefcase,
-  Eye,
-  Edit,
-  Copy,
-  Archive,
-  Trash2,
-  MoreHorizontal,
-} from "lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

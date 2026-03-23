@@ -3,19 +3,9 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
-import {
-  Search,
-  Filter,
-  X,
-  RotateCcw,
-  SortAsc,
-  SortDesc } from
-"lucide-react";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+
+
 import {
   searchConfigs,
   viewConfigs } from

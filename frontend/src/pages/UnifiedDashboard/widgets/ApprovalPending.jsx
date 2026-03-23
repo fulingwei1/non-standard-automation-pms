@@ -6,18 +6,12 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
-  ClipboardCheck,
-  ChevronRight,
   FileText,
   DollarSign,
   Users,
   Package,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
 import api from '../../../services/api';
 import { cn } from '../../../lib/utils';
 

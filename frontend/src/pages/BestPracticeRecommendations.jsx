@@ -4,31 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectReviewApi, projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  SkeletonCard,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "../components/ui";
-import {
-  Sparkles,
-  TrendingUp,
-  Star,
-  ArrowRight,
-  Eye,
-  Target,
-} from "lucide-react";
+
+
+
+
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -98,7 +80,8 @@ export default function BestPracticeRecommendations() {
       setProject(data);
       setProjectType(data.project_type || "");
       setCurrentStage(data.stage || "");
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   };
 

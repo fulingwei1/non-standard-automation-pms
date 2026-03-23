@@ -5,9 +5,6 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, ChevronRight, Loader2 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Card, CardContent, Button } from "../components/ui";
 import { projectApi } from "../services/api";
 
 export default function ScheduleGenerationEntry() {

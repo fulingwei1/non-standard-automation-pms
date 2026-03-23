@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Modal, Form, Rate, Input, Select, Tag, Space, message, Tabs } from 'antd';
-import { TeamOutlined, StarOutlined, CommentOutlined } from '@ant-design/icons';
+import { Form, Input, Select, message } from 'antd';
 import api from '../services/api';
 
 const { TextArea } = Input;
@@ -21,7 +20,8 @@ const EngineerCollaboration = () => {
       if (response.data.code === 200) {
         setPendingList(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 
@@ -34,7 +34,8 @@ const EngineerCollaboration = () => {
       if (response.data.code === 200) {
         setReceivedRatings(response.data.data.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -49,7 +50,8 @@ const EngineerCollaboration = () => {
       if (response.data.code === 200) {
         setGivenRatings(response.data.data.items);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,8 @@ const EngineerCollaboration = () => {
       if (response.data.code === 200) {
         setCollaborationMatrix(response.data.data);
       }
-    } catch (error) {
+    } catch (_error) {
+      // 非关键操作失败时静默降级
     }
   };
 

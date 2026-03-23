@@ -4,45 +4,14 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Package,
-  AlertTriangle,
-  ShoppingCart,
-  Edit,
-  Eye,
-  Download,
-  Upload,
-  BarChart3 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogBody } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import {
-  MonthlyTrendChart,
-  CategoryBreakdownCard } from
-"../components/administrative/StatisticsCharts";
+
+
 import { adminApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API
@@ -70,6 +39,7 @@ export default function OfficeSuppliesManagement() {
           setSupplies(res.data);
         }
       } catch (_err) {
+        // 非关键操作失败时静默降级
       }
       setLoading(false);
     };

@@ -1,13 +1,6 @@
-import { motion } from "framer-motion";
-import { Settings, Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
+import { Settings } from "lucide-react";
 import { staggerContainer } from "../../lib/animations";
-import { LoadingCard, ErrorMessage, EmptyState } from "../../components/common";
 import { useAlertRules } from "./useAlertRules";
-import { RuleFilters } from "./RuleFilters";
-import { RuleCard } from "./RuleCard";
-import { RuleFormDialog } from "./RuleFormDialog";
 
 export default function AlertRuleConfig() {
   const {

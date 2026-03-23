@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { PermissionGuard, useHasPermission } from '../PermissionGuard';
+import { useHasPermission } from '../PermissionGuard';
 
 // Mock the usePermission hook
 vi.mock('../../../hooks/usePermission', () => ({

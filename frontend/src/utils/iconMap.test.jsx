@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render } from "@testing-library/react";
-import { iconMap, DynamicIcon, getIcon } from "./iconMap";
+import { iconMap, getIcon } from "./iconMap";
 import {
   CheckCircle2,
   FileText,

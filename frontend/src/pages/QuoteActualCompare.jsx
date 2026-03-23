@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeftRight, TrendingUp, TrendingDown, DollarSign, BarChart3, AlertTriangle } from "lucide-react";
-import { PageHeader } from "../components/layout";
+import { TrendingUp, DollarSign, BarChart3, AlertTriangle } from "lucide-react";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { quoteCompareApi } from "../services/api/quoteCompare";
 
@@ -14,7 +12,7 @@ export default function QuoteActualCompare() {
       try {
         const res = await quoteCompareApi.list();
         setData(res.data || res);
-      } catch (e) { }
+      } catch (_e) { /* 非关键操作失败时静默降级 */ }
       finally { setLoading(false); }
     })();
   }, []);

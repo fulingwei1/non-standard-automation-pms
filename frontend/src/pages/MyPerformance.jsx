@@ -1,17 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Award,
   Calendar,
-  MessageSquare,
-  Download,
-  AlertCircle } from
+  MessageSquare } from
 "lucide-react";
 import { cn } from "../lib/utils";
 import { usePerformanceData } from "../hooks/usePerformanceData";
-import { OverviewTab } from "../components/performance/OverviewTab";
-import { HistoryTab } from "../components/performance/HistoryTab";
-import { DetailsTab } from "../components/performance/DetailsTab";
 
 // Fallback mock data
 const mockMonthlyHistory = [];

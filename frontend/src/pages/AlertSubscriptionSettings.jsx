@@ -1,44 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   Bell,
-  Plus,
-  Edit,
-  Trash2,
-  Power,
-  PowerOff,
-  RefreshCw,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { LoadingCard, ErrorMessage, EmptyState } from "../components/common";
+
+
 import { toast } from "../components/ui/toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody,
-  DialogDescription,
-} from "../components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { Label } from "../components/ui/label";
-import { Checkbox } from "../components/ui/checkbox";
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { alertApi, projectApi } from "../services/api";
@@ -137,7 +107,8 @@ export default function AlertSubscriptionSettings() {
       } else if (Array.isArray(data)) {
         setProjects(data);
       }
-    } catch (err) {
+    } catch (_err) {
+      // 非关键操作失败时静默降级
     }
   }, []);
 

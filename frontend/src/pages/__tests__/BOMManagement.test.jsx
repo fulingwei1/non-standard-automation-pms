@@ -5,9 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import BOMManagement from '../BOMManagement';
-import _api, { bomApi, projectApi, machineApi as _machineApi } from '../../services/api';
+import { bomApi, projectApi } from '../../services/api';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({

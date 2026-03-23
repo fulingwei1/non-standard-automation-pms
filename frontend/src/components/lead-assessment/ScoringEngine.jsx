@@ -3,8 +3,7 @@
  * 评分引擎组件：对线索进行批量重新评分（简化版）
  */
 
-import { Card, Space, Table, Button, Progress, Typography, Alert } from "antd";
-import { RefreshCw } from "lucide-react";
+import { Typography } from "antd";
 
 const { Text } = Typography;
 
