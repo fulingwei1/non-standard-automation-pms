@@ -14,15 +14,6 @@ vi.mock('../../../../services/api', () => ({
       query: vi.fn(),
       aiMatch: vi.fn(),
   },
-  purchaseApi: {
-      list: vi.fn(),
-      get: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      query: vi.fn(),
-      aiMatch: vi.fn(),
-  },
   default: {
     get: vi.fn(),
     post: vi.fn(),

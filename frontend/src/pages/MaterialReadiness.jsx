@@ -77,9 +77,15 @@ export default function MaterialReadiness() {
       supplierApi.list({ page_size: 1000 })]
       );
 
-      setMaterials(materialsRes.data?.items || materialsRes.data || []);
-      setProjects(projectsRes.data?.items || projectsRes.data || []);
-      setSuppliers(suppliersRes.data?.items || suppliersRes.data || []);
+      // 防御性处理：API 响应可能是数组、对象或 {items: [...]}
+      const extractArray = (data) => {
+        if (Array.isArray(data?.items)) return data.items;
+        if (Array.isArray(data)) return data;
+        return [];
+      };
+      setMaterials(extractArray(materialsRes.data));
+      setProjects(extractArray(projectsRes.data));
+      setSuppliers(extractArray(suppliersRes.data));
     } catch (_error) {
       toast.error("加载数据失败");
     } finally {

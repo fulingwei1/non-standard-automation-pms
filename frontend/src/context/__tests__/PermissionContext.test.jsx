@@ -254,6 +254,7 @@ describe('PermissionContext', () => {
       localStorage.setItem('user', JSON.stringify(mockUser));
 
       authApi.me.mockResolvedValue({ data: mockUser });
+      const savedGetPermissions = authApi.getPermissions;
       authApi.getPermissions = undefined; // API不存在
 
       let permData;
@@ -273,6 +274,9 @@ describe('PermissionContext', () => {
       });
 
       expect(permData.permissions).toEqual(['project:view']);
+
+      // 恢复 getPermissions mock，避免影响后续测试
+      authApi.getPermissions = savedGetPermissions;
     });
   });
 

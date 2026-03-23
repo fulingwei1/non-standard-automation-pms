@@ -9,7 +9,9 @@ import {
   Zap,
   Cable,
   Bug,
-  Palette } from
+  Palette,
+  ThumbsUp,
+  ThumbsDown } from
 "lucide-react";
 
 

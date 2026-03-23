@@ -16,6 +16,8 @@
  * @param {string} props.iconBg - 图标背景
  */
 import { memo } from "react";
+import { motion } from "framer-motion";
+import { DashboardStatCard as UiStatCard } from "../ui/card";
 
 const DashboardStatCard = memo(function DashboardStatCard({
   icon: Icon,

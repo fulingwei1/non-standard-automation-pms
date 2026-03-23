@@ -79,7 +79,7 @@ export default function ContractList() {
     const matchesSearch =
       !searchTerm ||
       (contract.name || "").toLowerCase().includes(searchLower) ||
-      (contract.id || "").toLowerCase().includes(searchLower) ||
+      String(contract.id || "").toLowerCase().includes(searchLower) ||
       (contract.customerShort || "").toLowerCase().includes(searchLower);
 
       const matchesStatus =

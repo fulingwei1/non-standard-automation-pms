@@ -14,7 +14,9 @@ export function useMaterialReadiness() {
             if (filters.project_id) params.project_id = filters.project_id;
             if (filters.status && filters.status !== 'all') params.status = filters.status;
             const response = await materialReadinessApi.list(params);
-            setMaterials(response.data?.items || response.data?.items || response.data || []);
+            // 防御性处理：API 响应可能是数组、对象或 {items: [...]}
+            const data = response.data;
+            setMaterials(Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []);
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
     }, [filters]);

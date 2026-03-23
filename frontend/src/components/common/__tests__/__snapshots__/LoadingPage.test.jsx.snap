@@ -6,9 +6,25 @@ exports[`LoadingPage > Snapshot Tests > matches snapshot for default loading pag
     class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center"
   >
     <div
-      data-testid="loadingspinner"
-      text="加载中..."
-    />
+      class="flex flex-col items-center justify-center gap-3"
+    >
+      <div>
+        <svg
+          class="text-primary w-16 h-16"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+        />
+      </div>
+      <p
+        class="text-sm text-slate-400"
+      >
+        加载中...
+      </p>
+    </div>
   </div>
 </div>
 `;
@@ -19,9 +35,25 @@ exports[`LoadingPage > Snapshot Tests > matches snapshot with custom className 1
     class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center"
   >
     <div
-      data-testid="loadingspinner"
-      text="加载中..."
-    />
+      class="flex flex-col items-center justify-center gap-3"
+    >
+      <div>
+        <svg
+          class="text-primary w-16 h-16"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+        />
+      </div>
+      <p
+        class="text-sm text-slate-400"
+      >
+        加载中...
+      </p>
+    </div>
   </div>
 </div>
 `;
@@ -32,9 +64,25 @@ exports[`LoadingPage > Snapshot Tests > matches snapshot with custom text 1`] = 
     class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center"
   >
     <div
-      data-testid="loadingspinner"
-      text="加载中..."
-    />
+      class="flex flex-col items-center justify-center gap-3"
+    >
+      <div>
+        <svg
+          class="text-primary w-16 h-16"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+        />
+      </div>
+      <p
+        class="text-sm text-slate-400"
+      >
+        加载中...
+      </p>
+    </div>
   </div>
 </div>
 `;

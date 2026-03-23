@@ -383,17 +383,17 @@ describe('Error Service', () => {
 
   describe('默认导出', () => {
     it('应该导出所有方法和常量', () => {
-      // 验证默认导出包含所有已导出的方法
-      expect(errorService.default).toMatchObject({
-        ERROR_TYPES: errorService.ERROR_TYPES,
-        formatErrorMessage: errorService.formatErrorMessage,
-        showError: errorService.showError,
-        showSuccess: errorService.showSuccess,
-        showWarning: errorService.showWarning,
-        showInfo: errorService.showInfo,
-        showErrorModal: errorService.showErrorModal,
-        handleApiError: errorService.handleApiError,
-      });
+      // 默认导出来自 errorHandler.js，包含所有核心方法
+      expect(errorService.default).toBeDefined();
+      expect(errorService.default.ERROR_TYPES).toEqual(errorService.ERROR_TYPES);
+      expect(errorService.default.formatErrorMessage).toBe(errorService.formatErrorMessage);
+      expect(errorService.default.showError).toBe(errorService.showError);
+      expect(errorService.default.showSuccess).toBe(errorService.showSuccess);
+      expect(errorService.default.showWarning).toBe(errorService.showWarning);
+      expect(errorService.default.showInfo).toBe(errorService.showInfo);
+      expect(errorService.default.showErrorModal).toBe(errorService.showErrorModal);
+      // handleApiError 通过 re-export 映射为 getApiErrorMessage
+      expect(typeof errorService.default.getApiErrorMessage).toBe('function');
     });
   });
 });

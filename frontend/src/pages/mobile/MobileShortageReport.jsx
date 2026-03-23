@@ -64,7 +64,8 @@ export default function MobileShortageReport() {
   const fetchMaterials = async () => {
     try {
       const res = await materialApi.list({ page: 1, page_size: 100 });
-      const materialsList = res.data?.items || res.data?.items || res.data || [];
+      // 防御性处理：确保 materialsList 始终为数组
+      const materialsList = Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : [];
       setMaterials(materialsList);
     } catch (_error) {
       // 非关键操作失败时静默降级

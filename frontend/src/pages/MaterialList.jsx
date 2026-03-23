@@ -60,11 +60,12 @@ export default function MaterialList() {
       const res = await materialApi.list(params);
       // 使用统一响应格式处理
       const paginatedData = res.formatted || res.data;
-      const materialList = paginatedData?.items || paginatedData || [];
+      // 防御性处理：确保 materials 始终为数组
+      const materialList = Array.isArray(paginatedData?.items) ? paginatedData.items : Array.isArray(paginatedData) ? paginatedData : [];
       setMaterials(materialList);
     } catch (error) {
       setError(error);
-      setMaterials(null); // 清空数据
+      setMaterials([]); // 清空数据
     } finally {
       setLoading(false);
     }

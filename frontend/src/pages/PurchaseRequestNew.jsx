@@ -55,7 +55,8 @@ export default function PurchaseRequestNew() {
     const loadProjects = async () => {
       try {
         const res = await projectApi.list({ page_size: 1000 });
-        setProjects(res.data?.items || res.data?.items || res.data || []);
+        // 防御性处理：确保 projects 始终为数组
+        setProjects(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
       } catch (_err) {
         // 非关键操作失败时静默降级
       }
@@ -76,7 +77,8 @@ export default function PurchaseRequestNew() {
           page: 1,
           page_size: 100
         });
-        const machineList = response.data?.items || response.data?.items || response.data || [];
+        // 防御性处理：确保 machineList 始终为数组
+        const machineList = Array.isArray(response.data?.items) ? response.data.items : Array.isArray(response.data) ? response.data : [];
         setMachines(
           (machineList || []).map((m) => ({
             id: m.id,
@@ -96,7 +98,8 @@ export default function PurchaseRequestNew() {
     const loadMaterials = async () => {
       try {
         const res = await materialApi.list({ page_size: 1000 });
-        setMaterials(res.data?.items || res.data?.items || res.data || []);
+        // 防御性处理：确保 materials 始终为数组
+        setMaterials(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
       } catch (_err) {
         // 非关键操作失败时静默降级
       }
@@ -109,7 +112,8 @@ export default function PurchaseRequestNew() {
     const loadSuppliers = async () => {
       try {
         const res = await supplierApi.list({ page: 1, page_size: 1000 });
-        setSuppliers(res.data?.items || res.data?.items || res.data || []);
+        // 防御性处理：确保 suppliers 始终为数组
+        setSuppliers(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
       } catch (_err) {
         // 非关键操作失败时静默降级
       }

@@ -15,7 +15,8 @@ export function useBomAssemblyAttrs() {
         try {
             setLoading(true);
             const response = await bomApi.list({ page_size: 100 });
-            setBoms(response.data?.items || response.data?.items || response.data || []);
+            // 防御性处理：确保 boms 始终为数组
+            setBoms(Array.isArray(response.data?.items) ? response.data.items : Array.isArray(response.data) ? response.data : []);
         } catch (err) {
             setError(err.message);
         } finally {

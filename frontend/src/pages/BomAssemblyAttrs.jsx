@@ -88,7 +88,8 @@ export default function BomAssemblyAttrs() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      setProjects(res.data?.items || res.data?.items || res.data || []);
+      // 防御性处理：确保 projects 始终为数组
+      setProjects(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
     } catch (_error) {
       // 非关键数据加载失败时静默降级
     }
@@ -100,7 +101,8 @@ export default function BomAssemblyAttrs() {
         project_id: selectedProject,
         page_size: 100
       });
-      setBoms(res.data?.items || res.data?.items || res.data || []);
+      // 防御性处理：确保 boms 始终为数组
+      setBoms(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
     } catch (_error) {
       setBoms([]);
     }
