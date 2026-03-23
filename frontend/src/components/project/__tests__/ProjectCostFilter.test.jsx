@@ -1,20 +1,40 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import ProjectCostFilter from '../ProjectCostFilter';
 
 describe('ProjectCostFilter', () => {
   const mockOnFilterChange = vi.fn();
   const mockOnExport = vi.fn();
-  
+
   const defaultFilters = {
     includeCost: false,
     overrunOnly: false,
     sort: 'created_at_desc',
   };
 
+  // 保存原始 Switch 全局 fallback
+  let origSwitch;
+
   beforeEach(() => {
     mockOnFilterChange.mockClear();
     mockOnExport.mockClear();
+
+    // 保存并覆盖全局 Switch，使其具有 role="switch" 和 onClick 调用 onCheckedChange
+    origSwitch = globalThis.Switch;
+    globalThis.Switch = ({ checked, onCheckedChange, className, ...props }) => (
+      React.createElement('button', {
+        role: 'switch',
+        'aria-checked': String(!!checked),
+        className,
+        onClick: () => onCheckedChange && onCheckedChange(!checked),
+        ...props,
+      })
+    );
+  });
+
+  afterEach(() => {
+    globalThis.Switch = origSwitch;
   });
 
   describe('Basic Rendering', () => {
@@ -70,7 +90,7 @@ describe('ProjectCostFilter', () => {
 
   describe('Filter Interactions', () => {
     it('toggles cost display', () => {
-      const { container } = render(
+      render(
         <ProjectCostFilter
           filters={defaultFilters}
           onFilterChange={mockOnFilterChange}
@@ -78,10 +98,10 @@ describe('ProjectCostFilter', () => {
           showCost={false}
         />
       );
-      
-      const switches = container.querySelectorAll('button[role="switch"]');
+
+      const switches = screen.getAllByRole('switch');
       fireEvent.click(switches[0]);
-      
+
       expect(mockOnFilterChange).toHaveBeenCalledWith({
         ...defaultFilters,
         includeCost: true,
@@ -89,7 +109,7 @@ describe('ProjectCostFilter', () => {
     });
 
     it('toggles overrun filter', () => {
-      const { container } = render(
+      render(
         <ProjectCostFilter
           filters={{ ...defaultFilters, includeCost: true }}
           onFilterChange={mockOnFilterChange}
@@ -97,10 +117,10 @@ describe('ProjectCostFilter', () => {
           showCost={true}
         />
       );
-      
-      const switches = container.querySelectorAll('button[role="switch"]');
+
+      const switches = screen.getAllByRole('switch');
       fireEvent.click(switches[1]);
-      
+
       expect(mockOnFilterChange).toHaveBeenCalledWith({
         ...defaultFilters,
         includeCost: true,
@@ -111,14 +131,15 @@ describe('ProjectCostFilter', () => {
     it('handles export action', () => {
       render(
         <ProjectCostFilter
-          filters={defaultFilters}
+          filters={{ ...defaultFilters, includeCost: true }}
           onFilterChange={mockOnFilterChange}
           onExport={mockOnExport}
-          showCost={false}
+          showCost={true}
         />
       );
-      
-      const exportButton = screen.queryByRole('button', { name: /导出|export/i });
+
+      // 导出按钮仅在 showCost 为 true 时显示
+      const exportButton = screen.getByText('导出Excel').closest('button');
       if (exportButton) {
         fireEvent.click(exportButton);
         expect(mockOnExport).toHaveBeenCalled();
@@ -127,7 +148,7 @@ describe('ProjectCostFilter', () => {
   });
 
   describe('Active Filters State', () => {
-    it('shows active filters when includeCost is true', () => {
+    it('shows active filters badge when includeCost is true', () => {
       render(
         <ProjectCostFilter
           filters={{ ...defaultFilters, includeCost: true }}
@@ -136,7 +157,9 @@ describe('ProjectCostFilter', () => {
           showCost={true}
         />
       );
-      expect(screen.getByText('显示成本')).toBeInTheDocument();
+      // "显示成本" 同时出现在 switch label 和 badge 中
+      const elements = screen.getAllByText('显示成本');
+      expect(elements.length).toBeGreaterThanOrEqual(2);
     });
 
     it('shows active filters when overrunOnly is true', () => {
@@ -148,11 +171,13 @@ describe('ProjectCostFilter', () => {
           showCost={true}
         />
       );
-      expect(screen.getByText('仅超支项目')).toBeInTheDocument();
+      // "仅超支项目" 同时在 switch 和 badge 中
+      const elements = screen.getAllByText('仅超支项目');
+      expect(elements.length).toBeGreaterThanOrEqual(2);
     });
 
     it('handles filter clear action', () => {
-      const { container } = render(
+      render(
         <ProjectCostFilter
           filters={{ ...defaultFilters, includeCost: true, overrunOnly: true }}
           onFilterChange={mockOnFilterChange}
@@ -160,8 +185,8 @@ describe('ProjectCostFilter', () => {
           showCost={true}
         />
       );
-      
-      const clearButton = screen.queryByRole('button', { name: /清除|clear/i });
+
+      const clearButton = screen.getByText('清除筛选').closest('button');
       if (clearButton) {
         fireEvent.click(clearButton);
         expect(mockOnFilterChange).toHaveBeenCalledWith({

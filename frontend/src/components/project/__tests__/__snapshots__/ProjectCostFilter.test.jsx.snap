@@ -24,8 +24,9 @@ exports[`ProjectCostFilter > Snapshot > matches snapshot with all filters active
       >
         显示成本
       </span>
-      <div
-        data-testid="switch"
+      <button
+        aria-checked="true"
+        role="switch"
       />
     </div>
     <div
@@ -45,9 +46,10 @@ exports[`ProjectCostFilter > Snapshot > matches snapshot with all filters active
       >
         仅超支项目
       </span>
-      <div
+      <button
+        aria-checked="true"
         class="bg-red-500"
-        data-testid="switch"
+        role="switch"
       />
     </div>
     <div
@@ -247,8 +249,9 @@ exports[`ProjectCostFilter > Snapshot > matches snapshot with default props 1`] 
       >
         显示成本
       </span>
-      <div
-        data-testid="switch"
+      <button
+        aria-checked="false"
+        role="switch"
       />
     </div>
     <button

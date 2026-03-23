@@ -1,37 +1,22 @@
 /**
  * MainLayout 组件测试
+ *
+ * MainLayout 使用全局变量（Sidebar, Header, ToastContainer, AnimatePresence）
+ * 这些在 setupTests.js 中定义为 fallback，不渲染 children。
+ * 此处在 beforeEach 中覆盖全局变量，使其按预期渲染。
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { MainLayout } from '../MainLayout';
 
-// Mock子组件
-vi.mock('../Sidebar', () => ({
-  Sidebar: ({ collapsed, onToggle, onLogout }) => (
-    <div data-testid="sidebar">
-      <div>Sidebar Collapsed: {String(collapsed)}</div>
-      <button onClick={onToggle}>Toggle Sidebar</button>
-      <button onClick={onLogout}>Logout</button>
-    </div>
-  ),
-}));
-
-vi.mock('../Header', () => ({
-  Header: ({ sidebarCollapsed, user, onLogout }) => (
-    <div data-testid="header">
-      <div>Header Collapsed: {String(sidebarCollapsed)}</div>
-      <div>User: {user?.username || 'none'}</div>
-      <button onClick={onLogout}>Logout Header</button>
-    </div>
-  ),
-}));
-
+// Mock useToast（来自 ../ui，是真实的 import）
 vi.mock('../../ui', () => ({
   ToastContainer: ({ toasts, onClose }) => (
     <div data-testid="toast-container">
-      {toasts.map((toast, i) => (
+      {(toasts || []).map((toast, i) => (
         <div key={i} data-testid={`toast-${i}`}>
           {toast.message}
           <button onClick={() => onClose(toast.id)}>Close</button>
@@ -48,13 +33,66 @@ vi.mock('../../ui', () => ({
 describe('MainLayout 组件', () => {
   const mockOnLogout = vi.fn();
 
+  // 保存原始全局值
+  let origSidebar;
+  let origHeader;
+  let origToastContainer;
+  let origAnimatePresence;
+
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+
+    // 保存原始全局 fallback
+    origSidebar = globalThis.Sidebar;
+    origHeader = globalThis.Header;
+    origToastContainer = globalThis.ToastContainer;
+    origAnimatePresence = globalThis.AnimatePresence;
+
+    // 覆盖全局 Sidebar：渲染含交互按钮的 mock
+    globalThis.Sidebar = ({ collapsed, onToggle, onLogout }) => (
+      React.createElement('div', { 'data-testid': 'sidebar' },
+        React.createElement('div', null, `Sidebar Collapsed: ${String(collapsed)}`),
+        React.createElement('button', { onClick: onToggle }, 'Toggle Sidebar'),
+        React.createElement('button', { onClick: onLogout }, 'Logout')
+      )
+    );
+
+    // 覆盖全局 Header：渲染用户信息和登出按钮
+    globalThis.Header = ({ sidebarCollapsed, user, onLogout }) => (
+      React.createElement('div', { 'data-testid': 'header' },
+        React.createElement('div', null, `Header Collapsed: ${String(sidebarCollapsed)}`),
+        React.createElement('div', null, `User: ${user?.username || 'none'}`),
+        React.createElement('button', { onClick: onLogout }, 'Logout Header')
+      )
+    );
+
+    // 覆盖全局 ToastContainer：渲染 toast 列表
+    globalThis.ToastContainer = ({ toasts, onClose }) => (
+      React.createElement('div', { 'data-testid': 'toast-container' },
+        (toasts || []).map((toast, i) =>
+          React.createElement('div', { key: i, 'data-testid': `toast-${i}` },
+            toast.message,
+            React.createElement('button', { onClick: () => onClose(toast.id) }, 'Close')
+          )
+        )
+      )
+    );
+
+    // AnimatePresence 只渲染 children
+    globalThis.AnimatePresence = ({ children }) => React.createElement(React.Fragment, null, children);
+  });
+
+  afterEach(() => {
+    // 恢复原始全局值
+    globalThis.Sidebar = origSidebar;
+    globalThis.Header = origHeader;
+    globalThis.ToastContainer = origToastContainer;
+    globalThis.AnimatePresence = origAnimatePresence;
   });
 
   const renderWithRouter = (ui) => {
-    return render(<BrowserRouter>{ui}</BrowserRouter>);
+    return render(React.createElement(BrowserRouter, null, ui));
   };
 
   describe('渲染测试', () => {
@@ -95,7 +133,7 @@ describe('MainLayout 组件', () => {
       renderWithRouter(<MainLayout onLogout={mockOnLogout}>Content</MainLayout>);
 
       const toggleButton = screen.getByText('Toggle Sidebar');
-      
+
       expect(screen.getByText('Sidebar Collapsed: false')).toBeInTheDocument();
 
       fireEvent.click(toggleButton);
@@ -114,7 +152,6 @@ describe('MainLayout 组件', () => {
       const toggleButton = screen.getByText('Toggle Sidebar');
       fireEvent.click(toggleButton);
 
-      // 两个组件的状态应该一致
       expect(screen.getByText('Sidebar Collapsed: true')).toBeInTheDocument();
       expect(screen.getByText('Header Collapsed: true')).toBeInTheDocument();
     });
@@ -159,17 +196,14 @@ describe('MainLayout 组件', () => {
         expect(screen.getByText('User: none')).toBeInTheDocument();
       });
 
-      // 模拟其他标签页更新localStorage
       const mockUser = {
         id: 1,
         username: 'newuser',
         real_name: '新用户',
       };
-      
+
       act(() => {
         localStorage.setItem('user', JSON.stringify(mockUser));
-        
-        // 触发storage事件
         window.dispatchEvent(new StorageEvent('storage', {
           key: 'user',
           newValue: JSON.stringify(mockUser),
@@ -187,7 +221,7 @@ describe('MainLayout 组件', () => {
         id: 1,
         username: 'testuser',
       };
-      
+
       act(() => {
         localStorage.setItem('user', JSON.stringify(mockUser));
       });
@@ -198,10 +232,8 @@ describe('MainLayout 组件', () => {
         expect(screen.getByText('User: testuser')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // 清除用户
       act(() => {
         localStorage.removeItem('user');
-        
         window.dispatchEvent(new StorageEvent('storage', {
           key: 'user',
           newValue: null,
@@ -252,7 +284,7 @@ describe('MainLayout 组件', () => {
 
       const mainElement = container.querySelector('main');
       expect(mainElement).toHaveClass('pt-16');
-      expect(mainElement).toHaveClass('pl-60'); // sidebar展开时
+      expect(mainElement).toHaveClass('pl-60');
     });
 
     it('sidebar折叠时main应该调整padding', () => {
@@ -264,20 +296,19 @@ describe('MainLayout 组件', () => {
       fireEvent.click(toggleButton);
 
       const mainElement = container.querySelector('main');
-      expect(mainElement).toHaveClass('pl-[72px]'); // sidebar收起时
+      expect(mainElement).toHaveClass('pl-[72px]');
     });
   });
 
   describe('动画效果', () => {
     it('应该包含AnimatePresence用于内容切换', () => {
-      const { container } = renderWithRouter(
+      renderWithRouter(
         <MainLayout onLogout={mockOnLogout}>
           <div>Animated Content</div>
         </MainLayout>
       );
 
       expect(screen.getByText('Animated Content')).toBeInTheDocument();
-      // AnimatePresence 被正确使用
     });
   });
 });
