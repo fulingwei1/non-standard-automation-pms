@@ -12,7 +12,7 @@ import { cn } from "../../lib/utils";
  * @param {Function} onOpenChange - 状态变更回调
  */
 const Collapsible = React.forwardRef(
-  ({ className, open, onOpenChange, children, ...props }, ref) => (
+  ({ className, open, _onOpenChange, children, ...props }, ref) => (
     <div ref={ref} className={cn(className)} data-state={open ? "open" : "closed"} {...props}>
       {/* 通过 React context 向子组件传递 open 状态 */}
       {React.Children.map(children, (child) => {

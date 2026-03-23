@@ -136,7 +136,7 @@ export default function ECNDetail() {
       const response = await ecnApi.analyzeBomImpact(ecn.id);
       setBomImpactSummary(response.data);
       toast.success("BOM影响分析完成");
-    } catch (error) {
+    } catch (_error) {
       toast.error("BOM影响分析失败");
     } finally {
       setAnalyzingBom(false);
@@ -148,7 +148,7 @@ export default function ECNDetail() {
       const response = await ecnApi.checkObsoleteRisk(ecn.id);
       setObsoleteRisks(response.data?.risks || []);
       toast.success("呆滞料风险分析完成");
-    } catch (error) {
+    } catch (_error) {
       toast.error("风险分析失败");
     }
   };

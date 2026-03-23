@@ -62,7 +62,7 @@ export default function ContractList() {
         const res = await contractApi.list();
         const data = res.data?.items || res.data?.items || res.data || [];
         setContracts(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch (_err) {
         setError("加载合同数据失败，请稍后重试");
         setContracts([]);
       } finally {

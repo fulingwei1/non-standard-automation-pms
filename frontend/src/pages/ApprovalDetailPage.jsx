@@ -163,7 +163,7 @@ const ApprovalDetailPage = () => {
     try {
       await api.post(`/approvals/instances/${id}/urge`);
       toast.success("催办通知已发送");
-    } catch (err) {
+    } catch (_err) {
       toast.error("催办失败，请稍后重试");
     }
   };

@@ -52,7 +52,7 @@ export default function CpqConfigurator() {
       );
       setRuleSets(ruleRes.data?.items || ruleRes.items || []);
       setTemplates(templateRes.data?.items || templateRes.items || []);
-    } catch (err) {
+    } catch (_err) {
       toast.error("加载配置数据失败");
     } finally {
       setLoading(false);
@@ -124,7 +124,7 @@ export default function CpqConfigurator() {
       },
       ...prev.slice(0, 9)]
       ); // Keep last 10 entries
-    } catch (err) {
+    } catch (_err) {
       toast.error("价格预览失败");
     } finally {
       setPreviewLoading(false);

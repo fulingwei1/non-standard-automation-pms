@@ -73,7 +73,7 @@ export default function PositionManagement() {
       const posItems = data?.items || data;
       setPositions(Array.isArray(posItems) ? posItems : []);
       setTotal(data.total || 0);
-    } catch (error) {
+    } catch (_error) {
       // 使用模拟数据作为降级
       setPositions([]);
     } finally {
@@ -171,7 +171,7 @@ export default function PositionManagement() {
     try {
       const response = await organizationApi.getPositionRoles(position.id);
       setSelectedRoleIds(response.data?.role_ids || response.data?.items || response.data || []);
-    } catch (error) {
+    } catch (_error) {
       setSelectedRoleIds([]);
     }
     setShowRoleDialog(true);

@@ -45,7 +45,7 @@ export default function MobileProgressReport() {
         work_hours: autoHours,
         report_note: "",
       });
-    } catch (error) {
+    } catch (_error) {
       setError("获取工单信息失败");
     }
   };

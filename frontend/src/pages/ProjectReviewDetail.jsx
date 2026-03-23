@@ -89,7 +89,7 @@ export default function ProjectReviewDetail() {
       setLoading(true);
       const response = await projectReviewApi.get(reviewId);
       setReview(response.data);
-    } catch (err) {
+    } catch (_err) {
       setError("加载评审详情失败");
     } finally {
       setLoading(false);

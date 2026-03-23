@@ -116,7 +116,7 @@ export default function TagManagement() {
       }
       setShowDialog(false);
       loadTags();
-    } catch (error) {
+    } catch (_error) {
       const newTag = editingTag
         ? { ...editingTag, ...formData }
         : { id: Date.now(), ...formData, is_active: true };
@@ -138,7 +138,7 @@ export default function TagManagement() {
     try {
       await staffMatchingApi.deleteTag(tag.id);
       loadTags();
-    } catch (error) {
+    } catch (_error) {
       setTags((prev) => ({
         ...prev,
         [activeType]: prev[activeType].filter((t) => t.id !== tag.id),

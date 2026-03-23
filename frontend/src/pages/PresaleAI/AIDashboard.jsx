@@ -28,7 +28,7 @@ const AIDashboard = () => {
       setLoading(true);
       const data = await presaleAIService.getDashboardStats(days);
       setStats(data);
-    } catch (error) {
+    } catch (_error) {
       toast.error('加载统计数据失败');
     } finally {
       setLoading(false);

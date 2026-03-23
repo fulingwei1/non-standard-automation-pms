@@ -67,7 +67,7 @@ export default function KitRateBoard() {
       }
 
       setDashboardData(data);
-    } catch (error) {
+    } catch (_error) {
       setDashboardData(null); // 不再使用mock数据，显示空状态
     } finally {
       setLoading(false);

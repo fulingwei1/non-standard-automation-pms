@@ -77,7 +77,7 @@ export default function CompetencyModelForm() {
           );
         }
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载能力模型失败");
     }
   };

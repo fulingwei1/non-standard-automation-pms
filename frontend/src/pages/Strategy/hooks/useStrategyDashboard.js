@@ -143,7 +143,7 @@ export function useStrategyDashboard() {
           loadExecutionStatus(strategy.id),
         ]);
       }
-    } catch (error) {
+    } catch (_error) {
       message.error("加载数据失败");
     } finally {
       setLoading(false);

@@ -107,7 +107,7 @@ export default function RiskManagement() {
       } else {
         setProjectList([]);
       }
-    } catch (err) {
+    } catch (_err) {
       setProjectList([]);
     }
   };

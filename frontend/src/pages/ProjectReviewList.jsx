@@ -140,7 +140,7 @@ export default function ProjectReviewList() {
       const res = await projectApi.list({ page: 1, page_size: 100 });
       const data = res.data || res;
       setProjectList(data.items || data || []);
-    } catch (err) {
+    } catch (_err) {
       // API 失败时使用 mock 数据
       setProjectList(mockProjectList);
     }
@@ -162,7 +162,7 @@ export default function ProjectReviewList() {
       const data = res.data || res;
       setReviews(data.items || data || []);
       setTotal(data.total || data?.length || 0);
-    } catch (err) {
+    } catch (_err) {
       // API 调用失败时，使用 mock 数据让用户仍能看到界面
       setReviews(mockReviews);
       setTotal(mockReviews.length);

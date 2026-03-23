@@ -115,7 +115,7 @@ export default function MobileScanStart() {
       }
       setScanInput(rawValue);
       await handleScan(rawValue);
-    } catch (error) {
+    } catch (_error) {
       setError("扫码失败，请手动输入工单号");
     }
   };

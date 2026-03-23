@@ -84,7 +84,7 @@ export default function PurchaseRequestNew() {
             machine_name: m.machine_name || m.machine_code || `机台${m.id}`
           }))
         );
-      } catch (err) {
+      } catch (_err) {
         setMachines([]);
       }
     };

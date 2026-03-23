@@ -107,7 +107,7 @@ export default function ScheduleBoard() {
         );
 
         setProjects(transformedProjects);
-      } catch (err) {
+      } catch (_err) {
         setProjects([]);
       } finally {
         setLoading(false);

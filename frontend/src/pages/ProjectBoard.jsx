@@ -119,7 +119,7 @@ export default function ProjectBoard() {
         try {
           const response = await projectApi.recommendTemplates({ limit: 5 });
           setRecommendedTemplates(response.data?.recommendations || []);
-        } catch (err) {
+        } catch (_err) {
           setRecommendedTemplates([]);
         }
       };
@@ -135,7 +135,7 @@ export default function ProjectBoard() {
       const res = await milestoneApi.list({ project_id: projectId });
       const list = res?.data?.items ?? res?.data ?? res ?? [];
       setMilestones(Array.isArray(list) ? list : []);
-    } catch (err) {
+    } catch (_err) {
       setMilestones([]);
     } finally {
       setMilestonesLoading(false);

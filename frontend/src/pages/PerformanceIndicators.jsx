@@ -46,7 +46,7 @@ export default function PerformanceIndicators() {
         const weightRes = await performanceApi.getWeightConfig();
         const indicatorData = weightRes.data?.indicators || [];
         setIndicators(Array.isArray(indicatorData) ? indicatorData : []);
-      } catch (err) {
+      } catch (_err) {
         setError("加载绩效指标失败");
         setIndicators([]);
       } finally {

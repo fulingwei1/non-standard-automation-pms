@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DollarSign } from 'lucide-react';
+import { StatCard } from '../StatCard';
 
 describe('StatCard', () => {
   describe('Basic Rendering', () => {

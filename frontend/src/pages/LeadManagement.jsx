@@ -116,7 +116,7 @@ export default function LeadManagement({ embedded = false }) {
       const items = response.data || [];
       setFollowUps(items);
       return items;
-    } catch (error) {
+    } catch (_error) {
       setFollowUps([]);
       return [];
     }

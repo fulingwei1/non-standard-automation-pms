@@ -220,23 +220,23 @@ export default function QuoteManagement({ embedded = false } = {}) {
   }, [navigate]);
 
   // 处理复制报价
-  const handleQuoteCopy = useCallback((quote) => {
+  const handleQuoteCopy = useCallback((_quote) => {
     // 复制报价逻辑
     // 可以创建新的报价并填充相同内容
   }, []);
 
   // 处理发送报价
-  const handleQuoteSend = useCallback((quote) => {
+  const handleQuoteSend = useCallback((_quote) => {
     // 发送报价逻辑
   }, []);
 
   // 处理审批报价
-  const handleQuoteApprove = useCallback((quote) => {
+  const handleQuoteApprove = useCallback((_quote) => {
     // 审批报价逻辑
   }, []);
 
   // 处理拒绝报价
-  const handleQuoteReject = useCallback((quote) => {
+  const handleQuoteReject = useCallback((_quote) => {
     // 拒绝报价逻辑
   }, []);
 

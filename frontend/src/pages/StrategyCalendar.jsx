@@ -75,7 +75,7 @@ export default function StrategyCalendar() {
       if (arr.length > 0 && selectedStrategyId == null) {
         setSelectedStrategyId(arr[0].id);
       }
-    } catch (error) {
+    } catch (_error) {
       setStrategies([]);
     } finally {
       setLoading(false);
@@ -95,7 +95,7 @@ export default function StrategyCalendar() {
       });
       const list = data?.items ?? data ?? [];
       setEvents(Array.isArray(list) ? list : []);
-    } catch (error) {
+    } catch (_error) {
       setEvents([]);
     } finally {
       setLoading(false);

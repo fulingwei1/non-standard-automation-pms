@@ -63,7 +63,7 @@ export default function DependencyCheck({ projectId }) {
       }
 
       setDependencyData(data);
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage("依赖检查数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);
@@ -104,7 +104,7 @@ export default function DependencyCheck({ projectId }) {
 
       setPreviewData(preview);
       setShowPreviewDialog(true);
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage("预览失败，请稍后重试。");
     } finally {
       setProcessing(false);

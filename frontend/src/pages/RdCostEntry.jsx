@@ -60,7 +60,7 @@ export default function RdCostEntry() {
       const response = await rdProjectApi.getCostTypes();
       const data = response.data?.data || response.data || response;
       setCostTypes(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch (_err) {
       setCostTypes([]);
     }
   };
@@ -73,7 +73,7 @@ export default function RdCostEntry() {
       });
       const data = response.data || response;
       setCosts(data.items || data || []);
-    } catch (err) {
+    } catch (_err) {
       setCosts([]);
     }
   };

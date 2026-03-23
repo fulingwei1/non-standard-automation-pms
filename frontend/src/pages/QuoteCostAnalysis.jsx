@@ -120,7 +120,7 @@ export default function QuoteCostAnalysis() {
       }
 
       setComparison(data);
-    } catch (error) {
+    } catch (_error) {
       // 兼容旧接口，避免页面空白
       try {
         const fallbackRes = await quoteApi.compareCosts(id, {

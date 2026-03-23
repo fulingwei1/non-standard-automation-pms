@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { useAuth, withAuth } from '../AuthContext';
+import { useAuth, withAuth, AuthProvider } from '../AuthContext';
 
 describe('AuthContext', () => {
   beforeEach(() => {

@@ -57,7 +57,7 @@ export default function ProjectTimelineView() {
 
         setProjects(projectsWithDetails);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载项目数据失败");
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ export default function ProjectTimelineView() {
             : p
         )
       );
-    } catch (error) {
+    } catch (_error) {
       toast.error("更新项目日期失败");
     }
   };
@@ -124,7 +124,7 @@ export default function ProjectTimelineView() {
             : p
         )
       );
-    } catch (error) {
+    } catch (_error) {
       toast.error("更新阶段日期失败");
     }
   };

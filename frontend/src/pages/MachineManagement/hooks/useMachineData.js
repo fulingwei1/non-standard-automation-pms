@@ -67,12 +67,8 @@ export function useMachineData(projectId) {
 
     // 获取机台详情
     const getMachineDetail = useCallback(async (machineId) => {
-        try {
-            const res = await machineApi.get(projectId, machineId);
-            return res.data || res;
-        } catch (error) {
-            throw error;
-        }
+        const res = await machineApi.get(projectId, machineId);
+        return res.data || res;
     }, [projectId]);
 
     // 初始加载

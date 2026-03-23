@@ -141,7 +141,7 @@ export default function ECNManagement({ embedded = false }) {
       await ecnBomApi.create(formData);
       setShowCreateDialog(false);
       fetchEcns();
-    } catch (error) {
+    } catch (_error) {
       alert("创建失败，请重试");
     }
   };
@@ -152,7 +152,7 @@ export default function ECNManagement({ embedded = false }) {
       const response = await ecnBomApi.getImpact(ecn.id);
       setImpactData(response.data);
       setShowImpactDialog(true);
-    } catch (error) {
+    } catch (_error) {
       alert("加载影响分析失败");
     }
   };

@@ -49,7 +49,7 @@ export function useTechnicalReviewList() {
             const data = response.data || response;
             setReviews(data.items || []);
             setTotal(data.total || 0);
-        } catch (error) {
+        } catch (_error) {
             setReviews([]);
         } finally {
             setLoading(false);

@@ -182,7 +182,7 @@ export default function InvoiceManagement() {
    });
    setShowEditDialog(true);
  }
- } catch (error) {
+ } catch (_error) {
   alert("加载发票详情失败");
  }
  };

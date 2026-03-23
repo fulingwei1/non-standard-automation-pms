@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Database } from 'lucide-react';
+import { ErrorMessage, EmptyState } from '../ErrorMessage';
 
 describe('ErrorMessage', () => {
   describe('Basic Rendering', () => {

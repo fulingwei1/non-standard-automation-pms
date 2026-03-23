@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { VirtualizedList } from '../VirtualizedList';
 
 describe('VirtualizedList', () => {
   const mockItems = Array.from({ length: 100 }, (_, i) => ({

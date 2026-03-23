@@ -69,7 +69,7 @@ export default function StageTemplateManagement() {
       const response = await stageTemplateApi.list(params);
       const data = response.data;
       setTemplates(Array.isArray(data) ? data : (data.items || []));
-    } catch (error) {
+    } catch (_error) {
       // Mock data for demo
       setTemplates([
         {
@@ -228,7 +228,7 @@ export default function StageTemplateManagement() {
         is_active: !template.is_active,
       });
       loadTemplates();
-    } catch (error) {
+    } catch (_error) {
       // Update locally for demo
       setTemplates((prev) =>
         (prev || []).map((t) =>

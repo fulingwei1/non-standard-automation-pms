@@ -5,24 +5,28 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { usePermissionContext, withPermission } from '../PermissionContext';
+import { usePermissionContext, withPermission, PermissionProvider, PermissionLoading } from '../PermissionContext';
 import { authApi } from '../../services/api';
 
 // Mock authApi
-vi.mock('../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
-  };
-});
+vi.mock('../../services/api', () => ({
+  authApi: {
+    login: vi.fn(),
+    me: vi.fn(),
+    refresh: vi.fn(),
+    logout: vi.fn(),
+    changePassword: vi.fn(),
+    getPermissions: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
 
 describe('PermissionContext', () => {
   beforeEach(() => {

@@ -153,7 +153,7 @@ export default function ServiceKnowledgeBase() {
         featured: statsData.featured || 0,
         totalViews: statsData.total_views || 0
       });
-    } catch (err) {
+    } catch (_err) {
       // Calculate from local articles as fallback
       setStats({
         total: articles.length,
@@ -227,7 +227,7 @@ export default function ServiceKnowledgeBase() {
       setShowDetailDialog(false);
       await loadArticles();
       await loadStatistics();
-    } catch (error) {
+    } catch (_error) {
       toast.error("更新失败，请稍后重试");
     }
   };
@@ -239,7 +239,7 @@ export default function ServiceKnowledgeBase() {
       toast.success("文章删除成功");
       await loadArticles();
       await loadStatistics();
-    } catch (error) {
+    } catch (_error) {
       toast.error("删除失败，请稍后重试");
     }
   };

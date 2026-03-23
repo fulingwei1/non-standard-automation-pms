@@ -121,7 +121,7 @@ export default function RdProjectDocuments() {
       } else {
         setDocuments(Array.isArray(data) ? data : []);
       }
-    } catch (err) {
+    } catch (_err) {
       setDocuments([]);
     }
   };

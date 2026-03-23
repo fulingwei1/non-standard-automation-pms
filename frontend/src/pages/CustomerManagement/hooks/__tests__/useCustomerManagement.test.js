@@ -3,20 +3,24 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCustomerManagement } from '../useCustomerManagement';
 import { customerApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
-  };
-});
+vi.mock('../../../../services/api', () => ({
+  customerApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    query: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
 
 describe('useCustomerManagement Hook', () => {
     const mockCustomers = [

@@ -81,7 +81,7 @@ export default function TimesheetBatchOperations() {
       setApproveComment("");
       setSelectedIds(new Set());
       loadTimesheets();
-    } catch (error) {
+    } catch (_error) {
       alert("批量审批失败，请稍后重试");
     } finally {
       setLoading(false);
@@ -150,7 +150,7 @@ export default function TimesheetBatchOperations() {
 
       alert(`成功导出 ${selectedIds.size} 条记录`);
       setShowExportDialog(false);
-    } catch (error) {
+    } catch (_error) {
       alert("批量导出失败，请稍后重试");
     } finally {
       setLoading(false);
@@ -201,7 +201,7 @@ export default function TimesheetBatchOperations() {
             sync_target: syncTarget
           });
           successCount += projectTimesheets.length;
-        } catch (error) {
+        } catch (_error) {
           failCount += projectTimesheets.length;
         }
       }
@@ -209,7 +209,7 @@ export default function TimesheetBatchOperations() {
       alert(`同步完成：成功 ${successCount} 条，失败 ${failCount} 条`);
       setShowSyncDialog(false);
       loadTimesheets();
-    } catch (error) {
+    } catch (_error) {
       alert("批量同步失败，请稍后重试");
     } finally {
       setLoading(false);

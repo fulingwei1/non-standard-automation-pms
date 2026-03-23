@@ -8,6 +8,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { BrowserRouter } from 'react-router-dom';
+import SalesOpportunityCenter from './SalesOpportunityCenter';
 
 // Mock 子组件
 vi.mock("./LeadManagement", () => ({

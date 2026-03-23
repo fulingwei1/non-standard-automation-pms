@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Search } from 'lucide-react';
+import { Input } from '../input';
 
 describe('Input', () => {
   describe('Basic Rendering', () => {

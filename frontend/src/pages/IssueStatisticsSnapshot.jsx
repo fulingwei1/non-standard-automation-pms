@@ -59,7 +59,7 @@ export default function IssueStatisticsSnapshot() {
         setSnapshots([]);
         setTotal(0);
       }
-    } catch (error) {
+    } catch (_error) {
       setSnapshots([]);
     } finally {
       setLoading(false);

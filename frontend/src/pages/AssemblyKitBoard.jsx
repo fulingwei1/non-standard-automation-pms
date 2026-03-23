@@ -102,7 +102,7 @@ export default function AssemblyKitBoard() {
       }
       const res = await assemblyKitApi.dashboard(params);
       setDashboardData(getResponseData(res) || null);
-    } catch (error) {
+    } catch (_error) {
       setDashboardData(null);
     } finally {
       setLoading(false);

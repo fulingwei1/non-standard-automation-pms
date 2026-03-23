@@ -52,7 +52,7 @@ export default function AssemblyTemplateManagement() {
       const res = await assemblyKitApi.getTemplates();
       const data = res?.data?.data ?? res?.data ?? [];
       setTemplates(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (_error) {
       setTemplates([]);
     } finally {
       setLoading(false);

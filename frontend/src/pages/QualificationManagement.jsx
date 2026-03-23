@@ -83,7 +83,7 @@ export default function QualificationManagement() {
         await loadQualifications();
       }
       await loadStats();
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载数据失败，请稍后重试");
     } finally {
       setLoading(false);
@@ -246,7 +246,7 @@ export default function QualificationManagement() {
       link.click();
       document.body.removeChild(link);
       toast.success("导出成功");
-    } catch (error) {
+    } catch (_error) {
       toast.error("导出失败");
     }
   };

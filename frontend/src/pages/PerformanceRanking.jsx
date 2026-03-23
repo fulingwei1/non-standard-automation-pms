@@ -31,7 +31,7 @@ export default function PerformanceRanking() {
           setEmployeeRanking(myPerfRes.data.employee_ranking || []);
           setDepartmentRanking(myPerfRes.data.department_ranking || []);
         }
-      } catch (err) {
+      } catch (_err) {
         setError("加载绩效排名失败");
       } finally {
         setLoading(false);

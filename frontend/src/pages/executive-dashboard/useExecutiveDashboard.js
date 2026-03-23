@@ -295,7 +295,7 @@ export function useExecutiveDashboard() {
           URL.revokeObjectURL(url);
         }
       }
-    } catch (err) {
+    } catch (_err) {
       alert("导出失败，请稍后重试");
     } finally {
       setExporting(false);

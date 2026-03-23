@@ -74,7 +74,7 @@ export default function RdProjectWorklogs() {
       } else {
         setWorklogs(Array.isArray(data) ? data : []);
       }
-    } catch (err) {
+    } catch (_err) {
       setWorklogs([]);
     }
   };

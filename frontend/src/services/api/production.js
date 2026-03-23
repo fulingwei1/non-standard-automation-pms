@@ -17,14 +17,14 @@ const PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP = {
   CLOSED: "CLOSED",
 };
 
-const unwrapProductionResponse = (response) => response?.data?.data ?? response?.data ?? response;
+const _unwrapProductionResponse = (response) => response?.data?.data ?? response?.data ?? response;
 
 const pickLatestActionContent = (actions = [], actionType) => {
   const matched = [...actions].find((action) => action?.action_type === actionType);
   return matched?.action_content || "";
 };
 
-const normalizeProductionException = (item = {}) => ({
+const _normalizeProductionException = (item = {}) => ({
   ...item,
   exception_no: item.exception_no || item.event_no,
   title: item.title || item.event_title,

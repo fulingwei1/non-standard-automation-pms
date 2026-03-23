@@ -32,7 +32,7 @@ export default function TimesheetSummary({ data: _data }) {
           0
         );
         setWeeklyHours(Math.round(total * 10) / 10);
-      } catch (error) {
+      } catch (_error) {
         if (!cancelled) setWeeklyHours(0);
       } finally {
         if (!cancelled) setLoading(false);

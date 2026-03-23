@@ -138,7 +138,7 @@ export default function SalesProjectTrack() {
         const res = await projectApi.list();
         const data = res.data?.items || res.data?.items || res.data || [];
         setProjects(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch (_err) {
         setError("加载项目数据失败");
       } finally {
         setLoading(false);

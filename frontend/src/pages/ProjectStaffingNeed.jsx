@@ -196,7 +196,7 @@ export default function ProjectStaffingNeed() {
       }
       setShowDialog(false);
       loadNeeds();
-    } catch (error) {
+    } catch (_error) {
       // 本地更新用于演示
       const newNeed = editingNeed
         ? {
@@ -242,7 +242,7 @@ export default function ProjectStaffingNeed() {
     try {
       await staffMatchingApi.cancelStaffingNeed(need.id);
       loadNeeds();
-    } catch (error) {
+    } catch (_error) {
       setNeeds((prev) =>
         (prev || []).map((n) => (n.id === need.id ? { ...n, status: "CANCELLED" } : n)),
       );

@@ -152,7 +152,7 @@ export default function SalesStatistics() {
             win_rate: 0
           });
         }
-      } catch (summaryError) {
+      } catch (_summaryError) {
         // Fallback to funnel data
         if (funnelResponse.data && funnelResponse.data.data) {
           const funnel = funnelResponse.data.data;

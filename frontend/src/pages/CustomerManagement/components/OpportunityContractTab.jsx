@@ -108,7 +108,7 @@ const OpportunityContractTab = ({ customer, loading }) => {
     {
       title: "操作",
       key: "action",
-      render: (_, record) => (
+      render: (_, _record) => (
         <Button size="small" icon={<Eye size={14} />}>
           查看详情
         </Button>
@@ -165,7 +165,7 @@ const OpportunityContractTab = ({ customer, loading }) => {
     {
       title: "操作",
       key: "action",
-      render: (_, record) => (
+      render: (_, _record) => (
         <Space>
           <Button size="small" icon={<Eye size={14} />}>
             查看

@@ -96,7 +96,7 @@ export default function IssueTemplateManagement() {
       const res = await issueTemplateApi.list(params);
       const items = res.data?.items || res.data?.data?.items || res.data?.items || res.data || [];
       setTemplates(items);
-    } catch (error) {
+    } catch (_error) {
       setTemplates([]);
     } finally {
       setLoading(false);
@@ -120,7 +120,7 @@ export default function IssueTemplateManagement() {
       });
       const items = res.data?.items || res.data?.data?.items || res.data?.items || res.data || [];
       setMachines(items);
-    } catch (error) {
+    } catch (_error) {
       setMachines([]);
     }
   };

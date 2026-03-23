@@ -20,7 +20,7 @@ export function useCostAccounting() {
                 // 如果没有指定项目ID，返回空数组或提示用户选择项目
                 setCosts([]);
             }
-        } catch (err) { 
+        } catch (_err) { 
             setCosts([]);
         }
         finally { setLoading(false); }

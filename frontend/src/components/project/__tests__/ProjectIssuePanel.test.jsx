@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { projectWorkspaceApi } from '../../../services/api';
+import { BrowserRouter } from 'react-router-dom';
+import ProjectIssuePanel from '../ProjectIssuePanel';
 
 vi.mock('../../../services/api', async (importOriginal) => {
   const actual = await importOriginal();

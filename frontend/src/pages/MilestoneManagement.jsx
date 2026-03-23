@@ -91,7 +91,7 @@ export default function MilestoneManagement() {
       const res = await milestoneApi.listAll ? milestoneApi.listAll(params) : milestoneApi.list(null, params);
       const milestoneList = res?.data?.items ?? res?.data ?? res ?? [];
       setMilestones(Array.isArray(milestoneList) ? milestoneList : []);
-    } catch (error) {
+    } catch (_error) {
       setMilestones([]);
     } finally {
       setLoading(false);

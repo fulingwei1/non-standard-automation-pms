@@ -58,7 +58,7 @@ export default function SupplierPriceTrend() {
       setTrendData(unwrapApiData(trendRes) || { periods: [], series: [] });
       setComparisonData(unwrapApiData(comparisonRes) || []);
       setVolatilityData(unwrapApiData(volatilityRes) || []);
-    } catch (loadError) {
+    } catch (_loadError) {
       setError("供应商价格趋势数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);

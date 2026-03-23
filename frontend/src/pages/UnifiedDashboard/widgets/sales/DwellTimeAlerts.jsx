@@ -69,7 +69,7 @@ export default function DwellTimeAlerts({ onAlertClick }) {
       const alertItems = alertsRes.formatted?.items || alertsRes.data?.items || [];
       setAlerts(alertItems);
       setStats(statsRes.formatted || statsRes.data || null);
-    } catch (err) {
+    } catch (_err) {
       setAlerts(defaultAlerts);
     } finally {
       setLoading(false);

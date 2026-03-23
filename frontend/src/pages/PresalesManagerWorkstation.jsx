@@ -232,7 +232,7 @@ export default function PresalesManagerWorkstation() {
           page_size: 100
         });
         solutions = extractItems(solutionsResponse);
-      } catch (apiErr) {
+      } catch (_apiErr) {
         // API 不可用，使用演示数据
         const mockData = getMockData();
         setOverallStats(mockData.stats);

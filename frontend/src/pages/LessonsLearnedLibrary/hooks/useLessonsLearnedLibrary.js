@@ -36,7 +36,7 @@ export function useLessonsLearnedLibrary() {
             const data = res.data || res;
             setLessons(data.items || data || []);
             setTotal(data.total || data.length || 0);
-        } catch (err) {
+        } catch (_err) {
             setLessons([]);
             setTotal(0);
         } finally {

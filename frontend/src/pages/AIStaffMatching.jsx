@@ -157,7 +157,7 @@ export default function AIStaffMatching() {
           (c) => c.employee_id !== candidate.employee_id
         )
       }));
-    } catch (error) {
+    } catch (_error) {
       // 演示模式下也移除候选人
       setMatchingResult((prev) => ({
         ...prev,

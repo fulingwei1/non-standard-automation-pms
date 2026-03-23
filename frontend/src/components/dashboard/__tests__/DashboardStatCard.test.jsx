@@ -1,5 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+
+// DashboardStatCard 使用 motion 但未导入，在测试中 mock framer-motion
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }) => {
+      const { whileHover, whileTap, initial, animate, transition, ...validProps } = props;
+      return <div {...validProps}>{children}</div>;
+    },
+  },
+}));
+
 import DashboardStatCard from '../DashboardStatCard';
 import { TrendingUp } from 'lucide-react';
 

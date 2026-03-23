@@ -670,7 +670,7 @@ export default function Acceptance() {
         };
 
         setSelectedAcceptance(updatedAcceptance);
-      } catch (err) {
+      } catch (_err) {
         setSelectedAcceptance(acceptance);
       }
     } else {

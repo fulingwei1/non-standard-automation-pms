@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
+import { Star, User, CheckCircle2 } from "lucide-react";
 
 
 

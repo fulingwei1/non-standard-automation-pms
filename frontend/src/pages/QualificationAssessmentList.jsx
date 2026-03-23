@@ -78,7 +78,7 @@ export default function QualificationAssessmentList() {
           total: allAssessments.length
         }));
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载评估记录失败");
     } finally {
       setLoading(false);
@@ -124,7 +124,7 @@ export default function QualificationAssessmentList() {
       link.click();
       document.body.removeChild(link);
       toast.success("导出成功");
-    } catch (error) {
+    } catch (_error) {
       toast.error("导出失败");
     }
   };

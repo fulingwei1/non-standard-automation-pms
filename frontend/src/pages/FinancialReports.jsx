@@ -78,7 +78,7 @@ export default function FinancialReports() {
           const data = cashFlowRes.value.data;
           setCashFlowData(Array.isArray(data) ? data : []);
         }
-      } catch (err) {
+      } catch (_err) {
         setError("加载财务报表失败");
       } finally {
         setLoading(false);

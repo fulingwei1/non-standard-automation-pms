@@ -70,7 +70,7 @@ export default function PerformanceResults() {
             setHistoryResults(perfData.history);
           }
         }
-      } catch (err) {
+      } catch (_err) {
         setError("加载绩效结果失败");
       } finally {
         setLoading(false);

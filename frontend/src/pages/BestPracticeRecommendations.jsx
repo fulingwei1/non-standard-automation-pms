@@ -95,7 +95,7 @@ export default function BestPracticeRecommendations() {
       );
       const data = res.data || res;
       setRecommendations(data.recommendations || []);
-    } catch (err) {
+    } catch (_err) {
       setRecommendations([]);
     } finally {
       setLoading(false);
@@ -113,7 +113,7 @@ export default function BestPracticeRecommendations() {
       });
       const data = res.data || res;
       setRecommendations(data.recommendations || []);
-    } catch (err) {
+    } catch (_err) {
       setRecommendations([]);
     } finally {
       setLoading(false);
@@ -128,7 +128,7 @@ export default function BestPracticeRecommendations() {
       });
       const data = res.data || res;
       setPopularPractices(data.items || data || []);
-    } catch (err) {
+    } catch (_err) {
       setPopularPractices([]);
     }
   };

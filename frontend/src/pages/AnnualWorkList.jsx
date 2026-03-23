@@ -70,7 +70,7 @@ export default function AnnualWorkList() {
       if (arr.length > 0 && !selectedStrategyId) {
         setSelectedStrategyId(arr[0].id);
       }
-    } catch (error) {
+    } catch (_error) {
       setStrategies([]);
     } finally {
       setLoading(false);

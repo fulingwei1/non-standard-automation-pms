@@ -81,7 +81,7 @@ export default function ShortageReportNew() {
       }
 
       setMaterials(filteredMaterials);
-    } catch (error) {
+    } catch (_error) {
       setMaterials([]);
     }
   };

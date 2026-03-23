@@ -96,7 +96,7 @@ export default function ExceptionManagement() {
       const res = await exceptionApi.list(params);
       const exceptionList = res.data?.items || res.data?.items || res.data || [];
       setExceptions(exceptionList);
-    } catch (error) {
+    } catch (_error) {
       setExceptions([]);
     } finally {
       setLoading(false);

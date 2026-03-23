@@ -501,7 +501,7 @@ export default function RdProjectList() {
         // Array format
         setProjects(Array.isArray(data) ? data : []);
       }
-    } catch (err) {
+    } catch (_err) {
       setProjects([]);
     } finally {
       setLoading(false);

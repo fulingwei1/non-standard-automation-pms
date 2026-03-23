@@ -11,6 +11,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { BrowserRouter } from 'react-router-dom';
+import SalesFunnel from './SalesFunnel';
 
 // Mock API modules
 vi.mock("../services/api/sales", () => ({
@@ -133,6 +135,19 @@ vi.mock("../services/api/auth", () => ({
 const renderWithRouter = (ui) => {
   return render(<BrowserRouter>{ui}</BrowserRouter>);
 };
+
+
+// 全局定义缺失的组件（源文件中使用但未导入）
+globalThis.PageHeader = ({ title, children, extra, ...props }) => (
+  <div data-testid="page-header" {...props}>
+    {title && <h1>{title}</h1>}
+    {extra && <div>{extra}</div>}
+    {children}
+  </div>
+);
+globalThis.Tag = ({ children, color, ...props }) => (
+  <span data-testid="tag" style={{ color }} {...props}>{children}</span>
+);
 
 describe("SalesFunnel 组件", () => {
   beforeEach(() => {

@@ -516,7 +516,7 @@ export default function KPIList() {
       await kpiApi.collect(kpi.id);
       loadData();
       alert("数据采集成功");
-    } catch (error) {
+    } catch (_error) {
       alert("采集失败，请重试");
     } finally {
       setCollecting(false);
@@ -537,7 +537,7 @@ export default function KPIList() {
       }
       setDialogOpen(false);
       loadData();
-    } catch (error) {
+    } catch (_error) {
       alert("保存失败，请重试");
     } finally {
       setSaving(false);
@@ -552,7 +552,7 @@ export default function KPIList() {
       await kpiApi.updateValue(updatingKpi.id, data);
       setUpdateDialogOpen(false);
       loadData();
-    } catch (error) {
+    } catch (_error) {
       alert("更新失败，请重试");
     } finally {
       setSaving(false);

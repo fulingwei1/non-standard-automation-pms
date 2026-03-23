@@ -36,6 +36,8 @@ export default defineConfig([
       },
     },
     rules: {
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-uses-react': 'error',
       'no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [

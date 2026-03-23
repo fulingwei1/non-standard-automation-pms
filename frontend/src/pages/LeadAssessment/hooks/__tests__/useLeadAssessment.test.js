@@ -4,20 +4,25 @@ import { useLeadAssessment } from '../useLeadAssessment';
 import { technicalAssessmentApi as leadAssessmentApi } from '../../../../services/api';
 
 // Mock API
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
+vi.mock('../../../../services/api', () => ({
+  technicalAssessmentApi: {
+      list: vi.fn(),
       get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
-  };
-});
+      query: vi.fn(),
+      aiMatch: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
 
 describe('useLeadAssessment Hook', () => {
   // Setup common mock data

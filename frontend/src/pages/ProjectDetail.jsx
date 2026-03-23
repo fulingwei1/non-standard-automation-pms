@@ -117,7 +117,7 @@ export default function ProjectDetail() {
       setMembers(getResultData(membersRes, []));
       setCosts(getResultData(costsRes, []));
       setDocuments(getResultData(documentsRes, []));
-    } catch (error) {
+    } catch (_error) {
       setProject(null);
     } finally {
       setLoading(false);

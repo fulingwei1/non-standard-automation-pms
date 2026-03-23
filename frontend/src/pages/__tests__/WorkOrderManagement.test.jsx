@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { productionApi, projectApi } from "../../services/api";
+import { MemoryRouter } from 'react-router-dom';
+import WorkOrderManagement from '../WorkOrderManagement';
 
 const mockNavigate = vi.fn();
 
@@ -32,6 +34,19 @@ vi.mock("react-router-dom", async () => {
     useNavigate: () => mockNavigate,
   };
 });
+
+
+// 全局定义缺失的组件（源文件中使用但未导入）
+globalThis.PageHeader = ({ title, children, extra, ...props }) => (
+  <div data-testid="page-header" {...props}>
+    {title && <h1>{title}</h1>}
+    {extra && <div>{extra}</div>}
+    {children}
+  </div>
+);
+globalThis.Tag = ({ children, color, ...props }) => (
+  <span data-testid="tag" style={{ color }} {...props}>{children}</span>
+);
 
 describe("WorkOrderManagement", () => {
   beforeEach(() => {

@@ -62,7 +62,7 @@ export default function Decomposition() {
       if (arr.length > 0 && selectedStrategyId == null) {
         setSelectedStrategyId(arr[0].id);
       }
-    } catch (error) {
+    } catch (_error) {
       setStrategies([]);
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ export default function Decomposition() {
     try {
       const { data } = await decompositionApi.getTree(selectedStrategyId);
       setTreeData(data ?? null);
-    } catch (error) {
+    } catch (_error) {
       setTreeData(null);
     } finally {
       setLoading(false);

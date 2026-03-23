@@ -9,6 +9,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, waitFor } from "@testing-library/react";
+import { BrowserRouter } from 'react-router-dom';
+import SalesStatistics from './SalesStatistics';
 
 // Mock API - 组件从 ../services/api 导入，使用实际方法名
 vi.mock("../services/api", () => ({

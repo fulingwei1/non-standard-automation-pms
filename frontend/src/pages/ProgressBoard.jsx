@@ -44,19 +44,19 @@ export default function ProgressBoard() {
       progressApi.analytics.
       getForecast(id).
       then((response) => response.data?.data || response.data || response).
-      catch((err) => {
+      catch((_err) => {
         return null;
       }),
       progressApi.analytics.
       checkDependencies(id).
       then((response) => response.data?.data || response.data || response).
-      catch((err) => {
+      catch((_err) => {
         return null;
       })]
       );
       setForecastData(forecastRes);
       setDependencyData(dependencyRes);
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage("看板数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);

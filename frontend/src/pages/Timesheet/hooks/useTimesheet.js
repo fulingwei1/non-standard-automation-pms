@@ -63,7 +63,7 @@ export function useTimesheet() {
 
             setEntries(Object.values(grouped));
             setWeekData(data);
-        } catch (error) {
+        } catch (_error) {
             setEntries([]);
         } finally {
             setLoading(false);
@@ -76,7 +76,7 @@ export function useTimesheet() {
             const response = await projectApi.myProjects({ page_size: 100, is_active: true });
             const items = response.data?.items || response.data?.data?.items || [];
             setProjects(items);
-        } catch (error) {
+        } catch (_error) {
             setProjects([]);
         }
     }, []);
@@ -134,7 +134,7 @@ export function useTimesheet() {
                     throw new Error(response.data?.message || response.data?.detail || "创建失败");
                 }
             }
-        } catch (error) {
+        } catch (_error) {
             alert("创建工时记录失败，请稍后重试");
         } finally {
             setSaving(false);
@@ -193,7 +193,7 @@ export function useTimesheet() {
                 }
 
                 await loadWeekTimesheet();
-            } catch (error) {
+            } catch (_error) {
                 await loadWeekTimesheet();
                 alert("更新工时记录失败，请稍后重试");
             }
@@ -212,7 +212,7 @@ export function useTimesheet() {
                 }
             }
             await loadWeekTimesheet();
-        } catch (error) {
+        } catch (_error) {
             alert("删除工时记录失败，请稍后重试");
         }
     };
@@ -316,7 +316,7 @@ export function useTimesheet() {
             } else {
                 alert("本周已有对应日期的工时记录，无需复制");
             }
-        } catch (error) {
+        } catch (_error) {
             alert("复制上周工时记录失败，请稍后重试");
         } finally {
             setSaving(false);

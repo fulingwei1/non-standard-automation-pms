@@ -204,7 +204,7 @@ export function useOpportunityManagement() {
         setSelectedOpp(response.data);
         setShowDetailDialog(true);
       }
-    } catch (error) {
+    } catch (_error) {
       setSelectedOpp(opp);
       setShowDetailDialog(true);
     }

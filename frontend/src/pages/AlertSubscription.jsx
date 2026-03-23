@@ -51,7 +51,7 @@ export default function AlertSubscription() {
       } catch {
         // ignore
       }
-    } catch (error) {
+    } catch (_error) {
       // fallback: empty list, UI still usable
       setSubscriptions([]);
     }
@@ -103,7 +103,7 @@ export default function AlertSubscription() {
         // ignore
       }
       toast.success("订阅配置已保存");
-    } catch (error) {
+    } catch (_error) {
       toast.error("保存失败，请稍后重试");
     }
   };

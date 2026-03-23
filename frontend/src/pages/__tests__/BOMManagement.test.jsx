@@ -6,6 +6,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { bomApi, projectApi } from '../../services/api';
+import { MemoryRouter } from 'react-router-dom';
+import BOMManagement from '../BOMManagement';
 
 // Mock dependencies
 vi.mock('../../services/api', () => ({
@@ -91,6 +93,19 @@ vi.mock('react-router-dom', async (importOriginal) => {
     useNavigate: () => mockNavigate,
   };
 });
+
+
+// 全局定义缺失的组件（源文件中使用但未导入）
+globalThis.PageHeader = ({ title, children, extra, ...props }) => (
+  <div data-testid="page-header" {...props}>
+    {title && <h1>{title}</h1>}
+    {extra && <div>{extra}</div>}
+    {children}
+  </div>
+);
+globalThis.Tag = ({ children, color, ...props }) => (
+  <span data-testid="tag" style={{ color }} {...props}>{children}</span>
+);
 
 describe('BOMManagement', () => {
   const mockBOMs = {

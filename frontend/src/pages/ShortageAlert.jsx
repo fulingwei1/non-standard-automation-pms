@@ -76,7 +76,7 @@ export default function ShortageAlert() {
       const res = await shortageAlertApi.list(params);
       const alertList = res.data?.items || res.data?.items || res.data || [];
       setAlerts(alertList);
-    } catch (error) {
+    } catch (_error) {
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -86,7 +86,7 @@ export default function ShortageAlert() {
     try {
       const res = await shortageAlertApi.getSummary();
       setSummary(res.data || res);
-    } catch (error) {
+    } catch (_error) {
       setSummary({
         pending_count: 0,
         processing_count: 0,

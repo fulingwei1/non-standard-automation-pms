@@ -178,7 +178,7 @@ export default function OrganizationManagement() {
       // 使用统一响应格式处理
       const listData = response.formatted || response.data;
       setOrgTree(listData?.items || listData || []);
-    } catch (error) {
+    } catch (_error) {
       // 如果新 API 不可用，尝试使用旧的部门树 API
       try {
         const { orgApi } = await import("../services/api");

@@ -9,7 +9,7 @@ import { Typography } from "antd";
 
 const { Title, Text, Paragraph } = Typography;
 
-const RelationshipMaturityTab = ({ healthScore, customerId, loading }) => {
+const RelationshipMaturityTab = ({ healthScore, _customerId, loading }) => {
   if (!healthScore && !loading) {
     return (
       <div style={{ textAlign: "center", padding: "40px" }}>

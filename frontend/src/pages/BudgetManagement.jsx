@@ -57,14 +57,14 @@ export default function BudgetManagement({ embedded = false }) {
               start_date: project.planned_start_date,
               end_date: project.planned_end_date
             };
-          } catch (err) {
+          } catch (_err) {
             return null;
           }
         })
       );
 
       setBudgets((budgetsData || []).filter(Boolean));
-    } catch (error) {
+    } catch (_error) {
       setBudgets([]);
     } finally {
       setLoading(false);

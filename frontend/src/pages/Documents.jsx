@@ -191,7 +191,7 @@ export default function Documents() {
       } else {
         toast.error("无法获取下载链接");
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error("下载失败，请稍后重试");
     }
   };

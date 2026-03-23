@@ -177,7 +177,7 @@ export default function ContractDetail() {
         if (res.data) {
           setContract({ ...emptyContract, ...res.data });
         }
-      } catch (err) {
+      } catch (_err) {
         setError("加载合同详情失败");
       } finally {
         setLoading(false);

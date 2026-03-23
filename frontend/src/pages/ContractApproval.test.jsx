@@ -10,6 +10,8 @@ vi.mock("../services/api", () => ({
 }));
 
 import { contractApi } from "../services/api";
+import { MemoryRouter } from 'react-router-dom';
+import ContractApproval from './ContractApproval';
 
 function renderPage() {
   return render(

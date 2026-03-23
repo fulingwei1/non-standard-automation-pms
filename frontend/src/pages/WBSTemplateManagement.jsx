@@ -53,7 +53,7 @@ export default function WBSTemplateManagement() {
       if (searchKeyword) {params.keyword = searchKeyword;}
       const res = await progressApi.wbsTemplates.list(params);
       setTemplates(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
       setTemplates([]); // 不再使用mock数据，显示空列表
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ export default function WBSTemplateManagement() {
     try {
       const res = await progressApi.wbsTemplates.getTasks(templateId);
       setTemplateTasks(res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
       setTemplateTasks([]); // 不再使用mock数据，显示空列表
     }
   };

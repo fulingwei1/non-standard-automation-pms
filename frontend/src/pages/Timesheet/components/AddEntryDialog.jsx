@@ -44,7 +44,7 @@ export function AddEntryDialog({
                 response.items ||
                 [];
             setTasks(items);
-        } catch (error) {
+        } catch (_error) {
             setTasks([]);
         } finally {
             setLoadingTasks(false);

@@ -284,7 +284,7 @@ export default function PresalesWorkstation() {
           status: "PENDING,ACCEPTED,PROCESSING,REVIEW,IN_PROGRESS"
         });
         tickets = extractItems(ticketsResponse);
-      } catch (apiErr) {
+      } catch (_apiErr) {
         // API 调用失败，使用演示数据
         const { mockTasks, mockSolutions, mockTenders, mockOpportunities } = getMockData();
         setTodoTasks(mockTasks);

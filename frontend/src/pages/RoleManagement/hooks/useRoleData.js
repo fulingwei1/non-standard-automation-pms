@@ -33,7 +33,7 @@ export function useRoleData() {
             const listData = response.formatted || response.data;
             const items = listData?.items || listData;
             setRoles(Array.isArray(items) ? items : []);
-        } catch (error) {
+        } catch (_error) {
             setRoles([]);
         } finally {
             setLoading(false);
@@ -48,7 +48,7 @@ export function useRoleData() {
             const listData = response.formatted || response.data;
             const items = listData?.items || listData;
             setPermissions(Array.isArray(items) ? items : []);
-        } catch (error) {
+        } catch (_error) {
             setPermissions([]);
         }
     }, []);
@@ -83,7 +83,7 @@ export function useRoleData() {
             const listData = response.formatted || response.data;
             const items = listData?.items || listData;
             setTemplates(Array.isArray(items) ? items : []);
-        } catch (error) {
+        } catch (_error) {
             setTemplates([]);
         }
     }, []);
@@ -135,23 +135,15 @@ export function useRoleData() {
 
     // 获取角色详情（含继承权限）
     const getRoleDetail = useCallback(async (id) => {
-        try {
-            const response = await roleApi.getDetail(id);
-            const data = response.data || response;
-            return data.data || data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await roleApi.getDetail(id);
+        const data = response.data || response;
+        return data.data || data;
     }, []);
 
     // 获取简单角色信息
     const getRole = useCallback(async (id) => {
-        try {
-            const response = await roleApi.get(id);
-            return response.data || response;
-        } catch (error) {
-            throw error;
-        }
+        const response = await roleApi.get(id);
+        return response.data || response;
     }, []);
 
     // 分配权限

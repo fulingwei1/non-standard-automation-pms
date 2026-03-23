@@ -50,7 +50,7 @@ export function useStageViews(initialView = VIEW_TYPES.PIPELINE) {
       };
       const response = await stageViewsApi.pipeline.get(params);
       setPipelineData(response.data);
-    } catch (err) {
+    } catch (_err) {
       setError("加载流水线数据失败");
     } finally {
       setLoading(false);
@@ -69,7 +69,7 @@ export function useStageViews(initialView = VIEW_TYPES.PIPELINE) {
         include_nodes: true,
       });
       setTimelineData(response.data);
-    } catch (err) {
+    } catch (_err) {
       setError("加载时间轴数据失败");
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ export function useStageViews(initialView = VIEW_TYPES.PIPELINE) {
         include_tasks: true,
       });
       setTreeData(response.data);
-    } catch (err) {
+    } catch (_err) {
       setError("加载分解树数据失败");
     } finally {
       setLoading(false);
@@ -198,7 +198,7 @@ export function useStageActions(projectId) {
     try {
       await stageViewsApi.stages.updateStatus(projectId, stageInstanceId, { status, remark });
       return true;
-    } catch (err) {
+    } catch (_err) {
       setActionError("更新阶段状态失败");
       return false;
     } finally {
@@ -215,7 +215,7 @@ export function useStageActions(projectId) {
     try {
       await stageViewsApi.stages.start(projectId, stageInstanceId, actualStartDate);
       return true;
-    } catch (err) {
+    } catch (_err) {
       setActionError("开始阶段失败");
       return false;
     } finally {
@@ -232,7 +232,7 @@ export function useStageActions(projectId) {
     try {
       await stageViewsApi.stages.complete(projectId, stageInstanceId, actualEndDate, autoStartNext);
       return true;
-    } catch (err) {
+    } catch (_err) {
       setActionError("完成阶段失败");
       return false;
     } finally {
@@ -252,7 +252,7 @@ export function useStageActions(projectId) {
         review_notes: reviewNotes,
       });
       return true;
-    } catch (err) {
+    } catch (_err) {
       setActionError("提交评审失败");
       return false;
     } finally {
@@ -271,7 +271,7 @@ export function useStageActions(projectId) {
     try {
       await stageViewsApi.nodes.start(projectId, nodeInstanceId);
       return true;
-    } catch (err) {
+    } catch (_err) {
       setActionError("开始节点失败");
       return false;
     } finally {
@@ -288,7 +288,7 @@ export function useStageActions(projectId) {
     try {
       await stageViewsApi.nodes.complete(projectId, nodeInstanceId, data);
       return true;
-    } catch (err) {
+    } catch (_err) {
       setActionError("完成节点失败");
       return false;
     } finally {
@@ -305,7 +305,7 @@ export function useStageActions(projectId) {
     try {
       await stageViewsApi.nodes.skip(projectId, nodeInstanceId, reason);
       return true;
-    } catch (err) {
+    } catch (_err) {
       setActionError("跳过节点失败");
       return false;
     } finally {

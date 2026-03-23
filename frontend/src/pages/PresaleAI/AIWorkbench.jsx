@@ -45,7 +45,7 @@ const AIWorkbench = () => {
         lastUpdated: t.updated_at ? t.updated_at.split('T')[0] : '',
       }));
       setTickets(mapped);
-    } catch (error) {
+    } catch (_error) {
       toast.error('加载工单失败');
     } finally {
       setLoading(false);
@@ -57,7 +57,7 @@ const AIWorkbench = () => {
       await presaleAIService.startWorkflow(ticketId, {}, true);
       toast.success('AI工作流已启动');
       loadTickets();
-    } catch (error) {
+    } catch (_error) {
       toast.error('启动工作流失败');
     }
   };

@@ -114,7 +114,7 @@ export default function InstallationDispatchManagement() {
       const res = await userApi.list({ page_size: 1000 });
       const data = res.data || res;
       setUsers(data.items || data || []);
-    } catch (error) {
+    } catch (_error) {
       toast.error("获取用户列表失败");
     }
   };
@@ -123,7 +123,7 @@ export default function InstallationDispatchManagement() {
     try {
       const res = await projectApi.list({ page_size: 1000 });
       setProjects(res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
       toast.error("获取项目列表失败");
     }
   };
@@ -134,7 +134,7 @@ export default function InstallationDispatchManagement() {
         page_size: 1000,
       });
       setMachines(res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
       toast.error("获取设备列表失败");
     }
   };
@@ -154,7 +154,7 @@ export default function InstallationDispatchManagement() {
 
       const res = await installationDispatchApi.orders.list(params);
       setOrders(res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
       toast.error("获取派工单列表失败");
     } finally {
       setLoading(false);
@@ -200,7 +200,7 @@ export default function InstallationDispatchManagement() {
       });
       fetchOrders();
       fetchStatistics();
-    } catch (error) {
+    } catch (_error) {
       toast.error("创建派工单失败");
     }
   };
@@ -213,7 +213,7 @@ export default function InstallationDispatchManagement() {
       setAssignData({ assigned_to_id: null, remark: "" });
       fetchOrders();
       fetchStatistics();
-    } catch (error) {
+    } catch (_error) {
       toast.error("派工失败");
     }
   };
@@ -228,7 +228,7 @@ export default function InstallationDispatchManagement() {
       setShowProgressDialog(false);
       fetchOrders();
       fetchStatistics();
-    } catch (error) {
+    } catch (_error) {
       toast.error("更新进度失败");
     }
   };
@@ -247,7 +247,7 @@ export default function InstallationDispatchManagement() {
       });
       fetchOrders();
       fetchStatistics();
-    } catch (error) {
+    } catch (_error) {
       toast.error("完成派工单失败");
     }
   };
@@ -274,7 +274,7 @@ export default function InstallationDispatchManagement() {
       setAssignData({ assigned_to_id: null, remark: "" });
       fetchOrders();
       fetchStatistics();
-    } catch (error) {
+    } catch (_error) {
       toast.error("批量派工失败");
     }
   };

@@ -50,7 +50,7 @@ export default function DispatchManagement() {
     try {
       const res = await productionApi.workers.list({ page_size: 1000 });
       setWorkers(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
       setWorkers([]);
     }
   };

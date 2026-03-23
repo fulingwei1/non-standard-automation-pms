@@ -69,7 +69,7 @@ export default function FieldCommissioning() {
       fetchTasks();
       fetchStats();
       alert("签到成功！");
-    } catch (error) {
+    } catch (_error) {
       alert("签到失败，请重试");
     }
   };
@@ -83,7 +83,7 @@ export default function FieldCommissioning() {
       setShowProgressDialog(false);
       fetchTasks();
       alert("进度更新成功！");
-    } catch (error) {
+    } catch (_error) {
       alert("更新失败，请重试");
     }
   };
@@ -94,7 +94,7 @@ export default function FieldCommissioning() {
       setShowIssueDialog(false);
       fetchStats();
       alert("问题报告成功！");
-    } catch (error) {
+    } catch (_error) {
       alert("报告失败，请重试");
     }
   };
@@ -106,7 +106,7 @@ export default function FieldCommissioning() {
       fetchTasks();
       fetchStats();
       alert("任务完成确认成功！");
-    } catch (error) {
+    } catch (_error) {
       alert("确认失败，请重试");
     }
   };

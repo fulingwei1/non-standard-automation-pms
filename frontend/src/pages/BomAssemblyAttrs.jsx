@@ -101,7 +101,7 @@ export default function BomAssemblyAttrs() {
         page_size: 100
       });
       setBoms(res.data?.items || res.data?.items || res.data || []);
-    } catch (error) {
+    } catch (_error) {
       setBoms([]);
     }
   };
@@ -138,7 +138,7 @@ export default function BomAssemblyAttrs() {
       });
       setEditedAttrs(initialEdits);
       setHasChanges(false);
-    } catch (error) {
+    } catch (_error) {
       setAssemblyAttrs([]);
     } finally {
       setLoading(false);
@@ -182,7 +182,7 @@ export default function BomAssemblyAttrs() {
   const handleAutoAssign = async () => {
     try {
       setLoading(true);
-      const res = await assemblyKitApi.autoAssignAttrs(selectedBom, {
+      const _res = await assemblyKitApi.autoAssignAttrs(selectedBom, {
         bom_id: parseInt(selectedBom),
         overwrite
       });
@@ -244,7 +244,7 @@ export default function BomAssemblyAttrs() {
     }
     try {
       setLoading(true);
-      const res = await assemblyKitApi.applyTemplate(selectedBom, {
+      const _res = await assemblyKitApi.applyTemplate(selectedBom, {
         bom_id: parseInt(selectedBom),
         template_id: parseInt(selectedTemplate),
         overwrite

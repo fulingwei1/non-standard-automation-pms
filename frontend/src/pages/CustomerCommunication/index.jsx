@@ -23,15 +23,12 @@ import {
   COMMUNICATION_PRIORITY_LABELS,
   COMMUNICATION_STATUS,
   COMMUNICATION_STATUS_LABELS,
-  COMMUNICATION_TOPIC,
-  COMMUNICATION_TOPIC_LABELS,
   CUSTOMER_SATISFACTION,
   CUSTOMER_SATISFACTION_LABELS,
   COMMUNICATION_FILTER_OPTIONS,
   PRIORITY_FILTER_OPTIONS,
   TYPE_FILTER_OPTIONS,
   TOPIC_FILTER_OPTIONS,
-  getCommunicationTypeIcon,
 } from "../../components/customer-communication";
 import { useCustomerCommunicationPage } from './hooks';
 import CommunicationFormFields from './components/CommunicationFormFields';

@@ -277,7 +277,7 @@ export default function CSFList() {
     try {
       await csfApi.delete(csf.id);
       loadCSFs();
-    } catch (error) {
+    } catch (_error) {
       alert("删除失败，请重试");
     }
   };
@@ -298,7 +298,7 @@ export default function CSFList() {
       }
       setDialogOpen(false);
       loadCSFs();
-    } catch (error) {
+    } catch (_error) {
       alert("保存失败，请重试");
     } finally {
       setSaving(false);

@@ -71,7 +71,7 @@ export function useProjectClosureManagement() {
             });
             const data = res.data || res;
             setProjectList(data.items || data || []);
-        } catch (err) {
+        } catch (_err) {
             setProjectList([]);
         }
     }, [projectSearch]);

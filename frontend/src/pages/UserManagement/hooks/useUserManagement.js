@@ -61,7 +61,7 @@ export function useUserManagement() {
       const paginatedData = response.formatted || response.data;
       setUsers(paginatedData?.items || paginatedData || []);
       setTotalUsers(paginatedData?.total || 0);
-    } catch (error) {
+    } catch (_error) {
       toast.error("获取用户列表失败");
     } finally {
       setLoading(false);
@@ -73,7 +73,7 @@ export function useUserManagement() {
       const response = await roleApi.list({ page: 1, page_size: 100 });
       const listData = response.formatted || response.data;
       setRoles(listData?.items || listData || []);
-    } catch (error) {
+    } catch (_error) {
       toast.error("获取角色列表失败");
     }
   }, []);
@@ -97,7 +97,7 @@ export function useUserManagement() {
       setShowCreateDialog(false);
       setNewUser(INITIAL_NEW_USER);
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error("创建用户失败");
     }
   }, [newUser, fetchUsers]);
@@ -109,7 +109,7 @@ export function useUserManagement() {
       setShowEditDialog(false);
       setSelectedUser(null);
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error("更新用户失败");
     }
   }, [selectedUser, fetchUsers]);
@@ -120,7 +120,7 @@ export function useUserManagement() {
       await userApi.delete(userId);
       toast.success("用户删除成功");
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error("删除用户失败");
     }
   }, [fetchUsers]);
@@ -133,7 +133,7 @@ export function useUserManagement() {
       await userApi.update(user.id, { ...user, status: newStatus });
       toast.success(`用户状态已${newStatus === USER_STATUS.ACTIVE ? "激活" : "停用"}`);
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error("更改用户状态失败");
     }
   }, [fetchUsers]);
@@ -154,7 +154,7 @@ export function useUserManagement() {
         `同步成功，创建了 ${response.data.created} 个用户，更新了 ${response.data.updated} 个用户`
       );
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error("同步员工失败");
     }
   }, [fetchUsers]);
@@ -182,7 +182,7 @@ export function useUserManagement() {
       const userData = userResponse.formatted || userResponse.data;
       const userRoles = userData?.roles || [];
       setSelectedRoles((userRoles || []).map((r) => r.id));
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载角色列表失败");
     }
     setShowPermissionDialog(true);
@@ -201,7 +201,7 @@ export function useUserManagement() {
       toast.success("用户权限已更新");
       setShowPermissionDialog(false);
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error("更新用户权限失败");
     }
   }, [selectedUser, selectedRoles, fetchUsers]);
@@ -233,7 +233,7 @@ export function useUserManagement() {
       setAvailableRoles(allRoles);
       setBulkSelectedRoles([]);
       setShowBulkDialog(true);
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载角色列表失败");
     }
   }, [selectedUserIds]);
@@ -255,7 +255,7 @@ export function useUserManagement() {
       setShowBulkDialog(false);
       setSelectedUserIds([]);
       fetchUsers();
-    } catch (error) {
+    } catch (_error) {
       toast.error("批量更新权限失败");
     }
   }, [selectedUserIds, bulkSelectedRoles, fetchUsers]);

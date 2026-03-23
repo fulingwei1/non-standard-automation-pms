@@ -149,7 +149,7 @@ export function useCustomerCommunicationPage() {
       setCommunications(transformedCommunications);
       setCustomers(customerData);
       setUsers(userData);
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载数据失败");
     } finally {
       setLoading(false);
@@ -175,7 +175,7 @@ export function useCustomerCommunicationPage() {
       resetForm();
       fetchData();
       fetchStats();
-    } catch (error) { toast.error("创建沟通记录失败"); }
+    } catch (_error) { toast.error("创建沟通记录失败"); }
   };
 
   const handleUpdate = async () => {
@@ -186,7 +186,7 @@ export function useCustomerCommunicationPage() {
       resetForm();
       fetchData();
       fetchStats();
-    } catch (error) { toast.error("更新沟通记录失败"); }
+    } catch (_error) { toast.error("更新沟通记录失败"); }
   };
 
   const handleDelete = async (id) => {
@@ -196,7 +196,7 @@ export function useCustomerCommunicationPage() {
       toast.success("沟通记录删除成功");
       fetchData();
       fetchStats();
-    } catch (error) { toast.error("删除沟通记录失败"); }
+    } catch (_error) { toast.error("删除沟通记录失败"); }
   };
 
   const resetForm = () => {

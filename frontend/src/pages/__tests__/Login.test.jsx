@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { authApi } from '../../services/api';
+import Login from '../Login';
 
 // Mock authApi
 vi.mock('../../services/api', () => ({

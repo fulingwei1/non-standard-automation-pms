@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { ProtectedRoute, ProcurementProtectedRoute, FinanceProtectedRoute } from '../ProtectedRoute';
 
 
 

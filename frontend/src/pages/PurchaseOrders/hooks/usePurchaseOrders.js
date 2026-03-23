@@ -155,7 +155,7 @@ export function usePurchaseOrders() {
 
                 setSuppliers(suppliersData);
                 setProjects(projectsData);
-            } catch (err) {
+            } catch (_err) {
                 setSuppliers([]);
                 setProjects([]);
             }
@@ -202,7 +202,7 @@ export function usePurchaseOrders() {
                 urgency: ORDER_URGENCY.NORMAL
             });
             loadOrders();
-        } catch (err) {
+        } catch (_err) {
             toast.error("创建采购订单失败");
         }
     };
@@ -224,7 +224,7 @@ export function usePurchaseOrders() {
             toast.success("采购订单更新成功");
             setShowEditModal(false);
             loadOrders();
-        } catch (err) {
+        } catch (_err) {
             toast.error("更新采购订单失败");
         }
     };
@@ -236,7 +236,7 @@ export function usePurchaseOrders() {
             setShowDeleteModal(false);
             setSelectedOrder(null);
             loadOrders();
-        } catch (err) {
+        } catch (_err) {
             toast.error("删除采购订单失败");
         }
     };
@@ -248,7 +248,7 @@ export function usePurchaseOrders() {
             setShowDetailModal(false);
             setSelectedOrder(null);
             loadOrders();
-        } catch (err) {
+        } catch (_err) {
             toast.error("提交审批失败");
         }
     };
@@ -265,7 +265,7 @@ export function usePurchaseOrders() {
                 received_date: new Date().toISOString().split('T')[0]
             });
             loadOrders();
-        } catch (err) {
+        } catch (_err) {
             toast.error("收货确认失败");
         }
     };

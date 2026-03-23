@@ -209,7 +209,7 @@ function SummaryCards({ data, loading }) {
  * 跟进提醒列表
  */
 function FollowUpList() {
-  const { data, loading, error, refetch } = useFollowUpReminders();
+  const { data, loading, error, _refetch } = useFollowUpReminders();
 
   const columns = [
     {
@@ -299,7 +299,7 @@ function FollowUpList() {
  * 催款优先级列表
  */
 function CollectionList() {
-  const { data, loading, error, refetch } = useCollectionPriority();
+  const { data, loading, error, _refetch } = useCollectionPriority();
 
   const columns = [
     {
@@ -397,7 +397,7 @@ function CollectionList() {
  * 商机健康度列表
  */
 function HealthList() {
-  const { data, loading, error, refetch } = useOpportunityHealthList();
+  const { data, loading, error, _refetch } = useOpportunityHealthList();
 
   const columns = [
     {
@@ -498,7 +498,7 @@ function HealthList() {
  * 合同里程碑列表
  */
 function MilestoneList() {
-  const { data, loading, error, refetch } = useContractMilestones();
+  const { data, loading, error, _refetch } = useContractMilestones();
 
   const columns = [
     {

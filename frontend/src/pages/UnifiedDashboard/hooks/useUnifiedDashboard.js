@@ -40,7 +40,7 @@ export function useUnifiedDashboard(roleCode) {
       const response = await api.get(`/dashboard/unified/${encodeURIComponent(roleCode)}`);
       const payload = response.data;
       setWidgetData(payload?.data ?? payload ?? {});
-    } catch (err) {
+    } catch (_err) {
       // API 不可用时使用空数据，组件自行加载
       setWidgetData({});
     } finally {
@@ -135,7 +135,7 @@ export function useUserRoles() {
 
           setRoles(userRoles);
         }
-      } catch (err) {
+      } catch (_err) {
         setRoles([]);
       } finally {
         setLoading(false);

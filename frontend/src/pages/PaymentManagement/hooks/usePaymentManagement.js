@@ -69,7 +69,7 @@ export function usePaymentManagement() {
 
             setPayments(transformedPayments);
             setTotal(data.total || 0);
-        } catch (error) {
+        } catch (_error) {
             setPayments([]);
             setTotal(0);
         } finally {
@@ -96,7 +96,7 @@ export function usePaymentManagement() {
         try {
             const response = await paymentApi.getReminders({ page: 1, page_size: 50 });
             setReminders(response.data?.items || []);
-        } catch (error) {
+        } catch (_error) {
             setReminders([]);
         }
     }, []);
@@ -105,7 +105,7 @@ export function usePaymentManagement() {
         try {
             const response = await paymentApi.getStatistics({});
             setStatistics(response.data || { total_receivables: 0, overdue_amount: 0, collection_rate: 0, dso: 0 });
-        } catch (error) {
+        } catch (_error) {
             setStatistics({ total_receivables: 0, overdue_amount: 0, collection_rate: 0, dso: 0 });
         }
     }, []);

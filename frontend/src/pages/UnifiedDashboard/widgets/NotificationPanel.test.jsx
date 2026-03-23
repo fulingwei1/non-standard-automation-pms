@@ -8,6 +8,8 @@ vi.mock("../../../services/api", () => ({
 }));
 
 import { notificationApi } from "../../../services/api";
+import { MemoryRouter } from 'react-router-dom';
+import NotificationPanel from './NotificationPanel';
 
 function renderPanel(props = {}) {
   return render(

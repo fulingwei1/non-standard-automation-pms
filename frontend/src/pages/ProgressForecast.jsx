@@ -64,7 +64,7 @@ export default function ProgressForecast({ projectId }) {
       }
 
       setForecastData(data);
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage("进度预测数据加载失败，请稍后重试。");
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export default function ProgressForecast({ projectId }) {
       });
       setPreviewData(res.data?.data || res.data);
       setShowPreviewDialog(true);
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage("预览失败，请稍后重试。");
     } finally {
       setProcessing(false);

@@ -19,7 +19,7 @@ export function useMachineDocuments(projectId) {
             });
             const data = res.data?.data || res.data || {};
             setDocuments(data);
-        } catch (error) {
+        } catch (_error) {
             setDocuments(null);
         } finally {
             setLoading(false);

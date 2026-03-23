@@ -102,7 +102,7 @@ export default function ProjectHealthMonitor({ embedded = false }) {
         // 直接从项目数据计算毛利率，无需调用 API
         calculateMargins(items);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载项目列表失败");
     } finally {
       setLoading(false);
@@ -115,7 +115,7 @@ export default function ProjectHealthMonitor({ embedded = false }) {
       const res = await materialReadinessApi.getBatchKitRate(projectIds);
       const data = res.data || res || {};
       setKitRates(data.kit_rates || {});
-    } catch (error) {
+    } catch (_error) {
       // 降级：为每个项目设置默认值
       const defaultRates = {};
       projectIds.forEach(id => {

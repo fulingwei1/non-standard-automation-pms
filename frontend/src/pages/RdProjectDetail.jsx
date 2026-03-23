@@ -106,7 +106,7 @@ export default function RdProjectDetail() {
       });
       const data = response.data || response;
       setCosts(data.items || data || []);
-    } catch (err) {
+    } catch (_err) {
       setCosts([]);
     }
   };

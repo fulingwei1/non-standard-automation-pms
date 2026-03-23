@@ -139,7 +139,7 @@ export default function ProjectPhaseManagement() {
       } else {
         setProjectList([]);
       }
-    } catch (err) {
+    } catch (_err) {
       setProjectList([]);
     }
   };

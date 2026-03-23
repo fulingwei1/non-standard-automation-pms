@@ -184,7 +184,7 @@ export default function PaymentApproval() {
       } else {
         setPendingPayments(allPayments);
       }
-    } catch (error) {
+    } catch (_error) {
       // Use mock data as fallback
       setPendingPayments([]);
     } finally {

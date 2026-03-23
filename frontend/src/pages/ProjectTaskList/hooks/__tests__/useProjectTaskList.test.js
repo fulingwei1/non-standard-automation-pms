@@ -4,20 +4,34 @@ import { useProjectTaskList } from '../useProjectTaskList';
 import { progressApi, projectApi } from '../../../../services/api';
 
 // Mock the API module
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
+vi.mock('../../../../services/api', () => ({
+  progressApi: {
+      list: vi.fn(),
       get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
-  };
-});
+      query: vi.fn(),
+      getSummary: vi.fn(),
+  },
+  projectApi: {
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      query: vi.fn(),
+      getSummary: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
 
 describe('useProjectTaskList Hook', () => {
     const projectId = '123';

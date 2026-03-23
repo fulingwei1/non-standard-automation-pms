@@ -46,7 +46,7 @@ export default function ArrivalTrackingList() {
       const res = await supplierApi.list({ page_size: 1000 });
       const data = extractApiData(res);
       setSuppliers(data?.items || (Array.isArray(data) ? data : []));
-    } catch (error) {
+    } catch (_error) {
       setSuppliers([]);
     }
   };
@@ -70,7 +70,7 @@ export default function ArrivalTrackingList() {
       const res = await shortageApi.arrivals.list(params);
       const data = extractApiData(res);
       setArrivals(data?.items || (Array.isArray(data) ? data : []));
-    } catch (error) {
+    } catch (_error) {
       setArrivals([]);
     } finally {
       setLoading(false);

@@ -247,7 +247,7 @@ export default function ProjectListWithCost() {
             limit: 5,
           });
           setRecommendedTemplates(response.data?.recommendations || []);
-        } catch (err) {
+        } catch (_err) {
           setRecommendedTemplates([]);
         }
       };

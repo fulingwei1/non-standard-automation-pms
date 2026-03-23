@@ -289,7 +289,7 @@ export default function SupplierManagement() {
         const response = await supplierApi.list();
         const data = response.data?.items || response.data?.items || response.data || [];
         setSuppliers(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch (_err) {
         setError("加载供应商数据失败");
         setSuppliers([]);
       } finally {

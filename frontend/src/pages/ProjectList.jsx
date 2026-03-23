@@ -133,7 +133,7 @@ export default function ProjectList() {
       const data = response.data || response;
       const projectList = data.items || data || [];
       setProjects(projectList);
-    } catch (err) {
+    } catch (_err) {
       setProjects([]);
     } finally {
       setLoading(false);
@@ -153,7 +153,7 @@ export default function ProjectList() {
             limit: 5,
           });
           setRecommendedTemplates(response.data?.recommendations || []);
-        } catch (err) {
+        } catch (_err) {
           setRecommendedTemplates([]);
         }
       };

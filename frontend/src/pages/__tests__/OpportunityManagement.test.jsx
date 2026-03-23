@@ -6,6 +6,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { opportunityApi, customerApi, userApi } from '../../services/api';
+import { MemoryRouter } from 'react-router-dom';
+import OpportunityManagement from '../OpportunityManagement';
 
 // Mock dependencies
 vi.mock('framer-motion', () => ({

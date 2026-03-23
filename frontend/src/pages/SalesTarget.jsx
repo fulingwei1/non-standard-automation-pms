@@ -98,7 +98,7 @@ export default function SalesTarget() {
       if (res.data?.items) {
         setTargets(res.data.items);
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error("加载目标列表失败");
     } finally {
       setLoading(false);

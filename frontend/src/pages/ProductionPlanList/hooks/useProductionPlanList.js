@@ -16,7 +16,7 @@ export function useProductionPlanList() {
       }
       const response = await productionApi.productionPlans.list(params);
       setPlans(getItemsCompat(response));
-    } catch (err) {
+    } catch (_err) {
       setPlans([]);
     } finally {
       setLoading(false);

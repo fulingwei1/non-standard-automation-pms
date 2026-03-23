@@ -199,7 +199,7 @@ export default function LessonsLearned() {
       setShowEditDialog(false);
       fetchLessons();
       fetchStats();
-    } catch (error) {
+    } catch (_error) {
       alert("保存失败，请重试");
     }
   };

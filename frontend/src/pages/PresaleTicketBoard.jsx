@@ -273,7 +273,7 @@ export default function PresaleTicketBoard() {
         : [];
 
       setTickets(normalizedList);
-    } catch (error) {
+    } catch (_error) {
       setTickets(MOCK_TICKETS.map((ticket) => toTicketModel(ticket)));
       setUsingMockData(true);
       toast.warning("接口暂不可用，当前展示演示数据");

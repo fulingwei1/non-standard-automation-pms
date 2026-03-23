@@ -43,7 +43,7 @@ export default function DelayReasonsReport() {
         const res = await projectApi.list({ page: 1, page_size: 100 });
         const items = res.data?.items || res.data?.items || res.data || [];
         setProjects(Array.isArray(items) ? items : []);
-      } catch (error) {
+      } catch (_error) {
         setProjects([]);
       }
     };

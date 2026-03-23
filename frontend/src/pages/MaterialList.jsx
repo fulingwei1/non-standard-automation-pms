@@ -75,7 +75,7 @@ export default function MaterialList() {
       // 使用统一响应格式处理
       const listData = res.formatted || res.data;
       setCategories(listData?.items || listData || []);
-    } catch (error) {
+    } catch (_error) {
       // 分类失败不影响主数据加载，只记录错误
       setCategories([]);
     }
@@ -86,7 +86,7 @@ export default function MaterialList() {
       // 使用统一响应格式处理
       const paginatedData = res.formatted || res.data;
       setSuppliers(paginatedData?.items || paginatedData || []);
-    } catch (error) {
+    } catch (_error) {
       // 供应商失败不影响主数据加载，只记录错误
       setSuppliers([]);
     }

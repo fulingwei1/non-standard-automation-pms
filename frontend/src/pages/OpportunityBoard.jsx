@@ -150,7 +150,7 @@ export default function OpportunityBoard() {
 
       setOpportunities(transformedOpps);
       setOwners(uniqueOwners);
-    } catch (err) {
+    } catch (_err) {
       setOpportunities([]);
       setOwners([]);
     } finally {
@@ -163,7 +163,7 @@ export default function OpportunityBoard() {
     try {
       const response = await salesStatisticsApi.getPipelineStats();
       setStatistics(response.data);
-    } catch (err) {
+    } catch (_err) {
       setStatistics(null);
     }
   };
@@ -249,7 +249,7 @@ export default function OpportunityBoard() {
         ownerId: ""
       });
       loadOpportunities();
-    } catch (err) {
+    } catch (_err) {
       alert("创建销售机会失败");
     }
   };
@@ -260,7 +260,7 @@ export default function OpportunityBoard() {
       setShowDetailDialog(false);
       setSelectedOpportunity(null);
       loadOpportunities();
-    } catch (err) {
+    } catch (_err) {
       alert("更新销售机会失败");
     }
   };
@@ -273,7 +273,7 @@ export default function OpportunityBoard() {
       setShowDetailDialog(false);
       setSelectedOpportunity(null);
       loadOpportunities();
-    } catch (err) {
+    } catch (_err) {
       alert("删除销售机会失败");
     }
   };
@@ -282,7 +282,7 @@ export default function OpportunityBoard() {
     try {
       await opportunityApi.updateStage(opportunity.id, newStage);
       loadOpportunities();
-    } catch (err) {
+    } catch (_err) {
       alert("更新销售阶段失败");
     }
   };

@@ -121,7 +121,7 @@ export default function GanttDependency() {
       if (!selectedProjectId && list.length > 0) {
         setSelectedProjectId(String(list[0].id));
       }
-    } catch (err) {
+    } catch (_err) {
       setError("加载项目列表失败，请稍后重试。");
     }
   }, [selectedProjectId]);
@@ -153,7 +153,7 @@ export default function GanttDependency() {
         task_id: prev.task_id || String(ganttPayload?.tasks?.[0]?.id || ""),
         depends_on_task_id: prev.depends_on_task_id || "",
       }));
-    } catch (err) {
+    } catch (_err) {
       setError("加载甘特图数据失败，请检查网络或稍后重试。");
       setTasks([]);
       setDependencies([]);

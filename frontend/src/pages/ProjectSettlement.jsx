@@ -58,7 +58,7 @@ export default function ProjectSettlement() {
         const res = await settlementApi.list();
         const data = res.data?.items || res.data?.items || res.data || [];
         setSettlements(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch (_err) {
         setError("加载结算数据失败");
       } finally {
         setLoading(false);

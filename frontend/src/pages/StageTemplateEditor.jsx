@@ -80,7 +80,7 @@ export default function StageTemplateEditor() {
       setStages(response.data.stage_definitions || []);
       // 默认展开所有阶段
       setExpandedStages(new Set((response.data.stage_definitions || []).map((s) => s.id)));
-    } catch (error) {
+    } catch (_error) {
       // Mock data
       setTemplate({
         id: parseInt(templateId),
@@ -209,7 +209,7 @@ export default function StageTemplateEditor() {
     try {
       await stageTemplateApi.stages.delete(stage.id);
       loadTemplate();
-    } catch (error) {
+    } catch (_error) {
       // Optimistic update for demo
       setStages((prev) => (prev || []).filter((s) => s.id !== stage.id));
     }
@@ -280,7 +280,7 @@ export default function StageTemplateEditor() {
     try {
       await stageTemplateApi.nodes.delete(node.id);
       loadTemplate();
-    } catch (error) {
+    } catch (_error) {
       // Optimistic update for demo
       setStages((prev) =>
         (prev || []).map((s) => {

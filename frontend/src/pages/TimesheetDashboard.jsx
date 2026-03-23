@@ -98,7 +98,7 @@ export default function TimesheetDashboard() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (_error) {
       alert("导出报表失败，请稍后重试");
     }
   };
@@ -112,7 +112,7 @@ export default function TimesheetDashboard() {
       });
       alert("数据同步成功！");
       loadDashboardData();
-    } catch (error) {
+    } catch (_error) {
       alert("数据同步失败，请稍后重试");
     }
   };

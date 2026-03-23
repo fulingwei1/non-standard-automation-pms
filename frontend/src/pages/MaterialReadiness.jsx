@@ -80,7 +80,7 @@ export default function MaterialReadiness() {
       setMaterials(materialsRes.data?.items || materialsRes.data || []);
       setProjects(projectsRes.data?.items || projectsRes.data || []);
       setSuppliers(suppliersRes.data?.items || suppliersRes.data || []);
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载数据失败");
     } finally {
       setLoading(false);

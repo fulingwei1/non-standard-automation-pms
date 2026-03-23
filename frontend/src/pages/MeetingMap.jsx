@@ -50,7 +50,7 @@ export default function MeetingMap() {
       setMeetings(data.items || []);
       setByLevel(data.by_level || {});
       setByCycle(data.by_cycle || {});
-    } catch (err) {
+    } catch (_err) {
       setMeetings([]);
     } finally {
       setLoading(false);

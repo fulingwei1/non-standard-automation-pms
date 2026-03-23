@@ -479,7 +479,7 @@ const CustomerDetail = () => {
       setHealthScore(healthRes.data);
       setTimeline(timelineRes.data);
       setBuyingPreferences(prefRes.data);
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载客户数据失败");
     } finally {
       setLoading(false);

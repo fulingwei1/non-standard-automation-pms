@@ -72,7 +72,7 @@ export default function ContractApproval() {
         const historyRes = await contractApi.list({ approval_status: "completed" });
         const historyData = historyRes.data?.items || historyRes.data?.items || historyRes.data || [];
         setApprovalHistory(Array.isArray(historyData) ? historyData : []);
-      } catch (err) {
+      } catch (_err) {
         setError("加载合同审批数据失败");
       } finally {
         setLoading(false);
@@ -145,7 +145,7 @@ export default function ContractApproval() {
       moveSelectedToHistory("approved");
       setShowDetailDialog(false);
       setApprovalComments("");
-    } catch (err) {
+    } catch (_err) {
       setError("审批通过失败");
       setActionError("审批通过失败，请稍后重试");
     } finally {
@@ -166,7 +166,7 @@ export default function ContractApproval() {
       moveSelectedToHistory("rejected");
       setShowDetailDialog(false);
       setApprovalComments("");
-    } catch (err) {
+    } catch (_err) {
       setError("审批驳回失败");
       setActionError("审批驳回失败，请稍后重试");
     } finally {

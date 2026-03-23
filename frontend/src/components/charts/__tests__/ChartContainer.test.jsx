@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
 import { useChartData } from '../ChartContainer';
+import ChartContainer from '../ChartContainer';
 
 describe('ChartContainer', () => {
   describe('Basic Rendering', () => {

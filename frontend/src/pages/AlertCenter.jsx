@@ -82,7 +82,7 @@ export default function AlertCenter() {
       }));
 
       setProjects(transformedProjects);
-    } catch (error) {
+    } catch (_error) {
       const mockProjects = [
       { id: 1, name: "测试项目A" },
       { id: 2, name: "测试项目B" },
@@ -180,7 +180,7 @@ export default function AlertCenter() {
       const count = selectedAlerts.size;
       setSelectedAlerts(new Set());
       toast.success(`已批量确认 ${count} 条预警`);
-    } catch (error) {
+    } catch (_error) {
       toast.error("批量确认失败，请稍后重试");
     }
   }, [selectedAlerts, loadAlerts, loadStatistics]);
@@ -199,7 +199,7 @@ export default function AlertCenter() {
       const count = selectedAlerts.size;
       setSelectedAlerts(new Set());
       toast.success(`已批量解决 ${count} 条预警`);
-    } catch (error) {
+    } catch (_error) {
       toast.error("批量解决失败，请稍后重试");
     }
   }, [selectedAlerts, loadAlerts, loadStatistics]);
@@ -231,7 +231,7 @@ export default function AlertCenter() {
       link.remove();
       window.URL.revokeObjectURL(url);
       toast.success("Excel导出成功");
-    } catch (error) {
+    } catch (_error) {
       toast.error("导出失败，请稍后重试");
     }
   }, [selectedProject, selectedLevel, selectedStatus, dateRange]);
@@ -261,7 +261,7 @@ export default function AlertCenter() {
       link.remove();
       window.URL.revokeObjectURL(url);
       toast.success("PDF导出成功");
-    } catch (error) {
+    } catch (_error) {
       toast.error("导出失败，请稍后重试");
     }
   }, [selectedProject, selectedLevel, selectedStatus, dateRange]);
@@ -279,7 +279,7 @@ export default function AlertCenter() {
       await loadAlerts();
       await loadStatistics();
       toast.success("预警确认成功");
-    } catch (error) {
+    } catch (_error) {
       toast.error("确认失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);
@@ -296,7 +296,7 @@ export default function AlertCenter() {
       await loadAlerts();
       await loadStatistics();
       toast.success("预警解决成功");
-    } catch (error) {
+    } catch (_error) {
       toast.error("解决失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);
@@ -312,7 +312,7 @@ export default function AlertCenter() {
       await loadAlerts();
       await loadStatistics();
       toast.success("预警关闭成功");
-    } catch (error) {
+    } catch (_error) {
       toast.error("关闭失败，请稍后重试");
     }
   }, [loadAlerts, loadStatistics]);

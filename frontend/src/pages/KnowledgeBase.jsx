@@ -129,7 +129,7 @@ const KnowledgeBase = () => {
       const apiData = response.data || response;
       setDocuments((apiData.items || []).map(normalizeDocument));
       setCategories(defaultCategories);
-    } catch (error) {
+    } catch (_error) {
       message.error('加载数据失败');
     } finally {
       setLoading(false);
@@ -245,7 +245,7 @@ const KnowledgeBase = () => {
       await serviceApi.knowledgeBase.delete(docId);
       setDocuments((documents || []).filter((d) => d.id !== docId));
       message.success('删除成功');
-    } catch (error) {
+    } catch (_error) {
       message.error('删除失败');
     } finally {
       setLoading(false);

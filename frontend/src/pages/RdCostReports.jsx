@@ -128,7 +128,7 @@ export default function RdCostReports() {
 
       const data = response.data?.data || response.data || response;
       setReportData(data);
-    } catch (err) {
+    } catch (_err) {
       setReportData(null);
     } finally {
       setLoading(false);

@@ -58,7 +58,7 @@ function CompanyOverview({ targets }) {
     };
   }, [targets]);
 
-  const [forecast, setForecast] = useState({
+  const [forecast, _setForecast] = useState({
     prediction: {
       predicted_revenue: 52800000,
       predicted_completion_rate: 105.6,
@@ -81,10 +81,10 @@ function CompanyOverview({ targets }) {
   }, [targetSummary, forecast]);
 
   // 计算差距
-  const gap = targetSummary.quarterly_target - targetSummary.actual_revenue;
+  const _gap = targetSummary.quarterly_target - targetSummary.actual_revenue;
   const predictedGap = forecast.prediction.predicted_revenue - targetSummary.quarterly_target;
 
-  const getRiskColor = (level) => {
+  const _getRiskColor = (level) => {
     switch (level) {
       case "LOW": return "text-green-500 bg-green-500/10";
       case "MEDIUM": return "text-orange-500 bg-orange-500/10";

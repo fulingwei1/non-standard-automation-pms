@@ -5,6 +5,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Box, Home, Settings } from 'lucide-react';
+import { BrowserRouter } from 'react-router-dom';
+import NavItem from '../NavItem';
 
 const mockIconMap = {
   box: Box,

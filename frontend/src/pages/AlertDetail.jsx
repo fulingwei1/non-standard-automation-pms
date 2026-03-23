@@ -88,7 +88,7 @@ export default function AlertDetail() {
       await alertApi.acknowledge(id);
       await loadAlert();
       toast.success("预警已确认");
-    } catch (error) {
+    } catch (_error) {
       toast.error("确认失败，请稍后重试");
     }
   };
@@ -98,7 +98,7 @@ export default function AlertDetail() {
       await alertApi.resolve(id, { resolution: "问题已解决" });
       await loadAlert();
       toast.success("预警已标记为已解决");
-    } catch (error) {
+    } catch (_error) {
       toast.error("操作失败，请稍后重试");
     }
   };
@@ -108,7 +108,7 @@ export default function AlertDetail() {
       await alertApi.close(id, { close_reason: "RESOLVED" });
       toast.success("预警已关闭");
       navigate("/alerts");
-    } catch (error) {
+    } catch (_error) {
       toast.error("关闭失败，请稍后重试");
     }
   };

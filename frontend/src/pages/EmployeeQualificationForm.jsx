@@ -80,7 +80,7 @@ export default function EmployeeQualificationForm() {
           Array.isArray(response.data.data) ? response.data.data : []
         );
       }
-    } catch (error) {
+    } catch (_error) {
       setEmployees([]);
     }
   };

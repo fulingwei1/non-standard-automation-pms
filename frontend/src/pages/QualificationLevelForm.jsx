@@ -57,7 +57,7 @@ export default function QualificationLevelForm() {
         setValue("description", levelData.description || "");
         setValue("is_active", levelData.is_active);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("加载等级信息失败");
     }
   };

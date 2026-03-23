@@ -64,7 +64,7 @@ export default function StrategicMeetingManagement() {
         setMeetings(data);
         setTotal(data?.length);
       }
-    } catch (err) {
+    } catch (_err) {
       setMeetings([]);
     } finally {
       setLoading(false);
