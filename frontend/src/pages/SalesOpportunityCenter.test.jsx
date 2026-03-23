@@ -11,32 +11,27 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from 'react-router-dom';
 import SalesOpportunityCenter from './SalesOpportunityCenter';
 
-// Mock 子组件
-vi.mock("./LeadManagement", () => ({
-  default: () => <div data-testid="lead-management">线索管理组件</div>,
-}));
+// 覆盖全局子组件（源码中未显式 import，作为全局组件使用）
+globalThis.LeadManagement = ({ embedded }) => <div data-testid="lead-management">线索管理组件</div>;
+globalThis.OpportunityManagement = ({ embedded }) => <div data-testid="opportunity-management">商机管理组件</div>;
 
-vi.mock("./OpportunityManagement", () => ({
-  default: () => <div data-testid="opportunity-management">商机管理组件</div>,
-}));
-
-// Mock TabbedCenterPage 组件
-vi.mock("../components/layout/TabbedCenterPage", () => ({
-  default: ({ title, description, tabs }) => (
-    <div data-testid="tabbed-center-page">
-      <h1>{title}</h1>
-      <p>{description}</p>
-      <div role="tablist">
-        {tabs.map((tab) => (
-          <button key={tab.value} role="tab">
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      <div>{tabs[0]?.render()}</div>
+// 覆盖全局 TabbedCenterPage 桩组件，使其渲染 title/tabs 内容
+// 源码中 TabbedCenterPage 作为全局组件使用（未显式 import）
+const OrigTabbedCenterPage = globalThis.TabbedCenterPage;
+globalThis.TabbedCenterPage = ({ title, description, tabs }) => (
+  <div data-testid="tabbed-center-page">
+    <h1>{title}</h1>
+    <p>{description}</p>
+    <div role="tablist">
+      {(tabs || []).map((tab) => (
+        <button key={tab.value} role="tab">
+          {tab.label}
+        </button>
+      ))}
     </div>
-  ),
-}));
+    <div>{tabs?.[0]?.render()}</div>
+  </div>
+);
 
 // 测试包装器
 const renderWithRouter = (ui) => {

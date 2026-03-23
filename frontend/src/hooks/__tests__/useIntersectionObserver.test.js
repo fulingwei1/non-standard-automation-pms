@@ -71,11 +71,15 @@ describe('useIntersectionObserver', () => {
   });
 
   it('should not create observer when disabled', () => {
-    const { result } = renderHook(() => 
+    // 记录 disabled 之前的 observer 实例数
+    const countBefore = observerInstances.length;
+
+    const { result } = renderHook(() =>
       useIntersectionObserver({ enabled: false })
     );
 
-    expect(global.IntersectionObserver).not.toHaveBeenCalled();
+    // enabled=false 时不应创建新的 observer 实例
+    expect(observerInstances.length).toBe(countBefore);
     expect(result.current.isIntersecting).toBe(false);
   });
 

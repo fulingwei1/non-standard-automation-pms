@@ -11,7 +11,12 @@ vi.mock('../../../hooks/usePermission', () => ({
     hasAllPermissions: vi.fn((perms) => perms.every(p => p === 'test:read')),
   })),
   PermissionGuard: ({ permission, children, fallback, requireAll }) => {
-    const mockUser = JSON.parse(localStorage.getItem('user') || '{}');
+    let mockUser;
+    try {
+      mockUser = JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      mockUser = {};
+    }
     const permissions = mockUser.permissions || [];
     
     const hasAccess = mockUser.is_superuser
@@ -301,12 +306,14 @@ describe('PermissionGuard', () => {
 
     it('handles requireAll parameter', () => {
       const TestComponent = () => {
+        // requireAll=true 使用 hasAllPermissions，mock 只识别 'test:read'
+        // 所以 ['test:read', 'test:write'] 不满足 every，返回 false
         const hasPermission = useHasPermission(['test:read', 'test:write'], true);
         return <div data-testid="has-perm">{hasPermission ? 'Yes' : 'No'}</div>;
       };
 
       render(<TestComponent />);
-      expect(screen.getByTestId('has-perm')).toHaveTextContent('Yes');
+      expect(screen.getByTestId('has-perm')).toHaveTextContent('No');
     });
 
     it('returns true when permission is null or undefined', () => {

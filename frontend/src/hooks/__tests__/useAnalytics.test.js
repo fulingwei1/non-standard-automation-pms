@@ -4,6 +4,57 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
+
+// Mock 源码依赖的 API 模块
+vi.mock('../../services/api/analytics', () => ({
+  workloadAnalyticsApi: {
+    overview: vi.fn().mockResolvedValue({
+      data: {
+        average_utilization: 85,
+        utilization_change: '+5%',
+        department_stats: [],
+      },
+    }),
+    bottlenecks: vi.fn().mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 1,
+            severity: 'HIGH',
+            employee_name: '张工',
+            conflict_type: '超负荷',
+            created_at: '2026-03-01T10:00:00',
+          },
+        ],
+      },
+    }),
+  },
+}));
+
+vi.mock('../../services/api/projects', () => ({
+  projectApi: {
+    getStats: vi.fn().mockResolvedValue({
+      data: {
+        active_count: 12,
+        active_change: '+2',
+        completed_this_month: 5,
+        completed_change: '+1',
+        pending_tickets: 8,
+        tickets_change: '-3',
+        monthly_trend: [
+          { month: '2026-01', completed: 3, active: 10 },
+          { month: '2026-02', completed: 5, active: 12 },
+        ],
+        stage_distribution: [
+          { name: '需求', count: 4 },
+          { name: '设计', count: 3 },
+          { name: '实施', count: 5 },
+        ],
+      },
+    }),
+  },
+}));
+
 import { useAnalytics } from '../useAnalytics';
 
 describe('useAnalytics', () => {

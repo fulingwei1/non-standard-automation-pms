@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTimesheet } from '../useTimesheet';
 import { timesheetApi, projectApi } from '../../../../services/api';
 
+// 源码中使用 projectApi.myProjects 而非 projectApi.list
 vi.mock('../../../../services/api', () => ({
   timesheetApi: {
       list: vi.fn(),
@@ -21,6 +22,7 @@ vi.mock('../../../../services/api', () => ({
       delete: vi.fn(),
       query: vi.fn(),
       getWeek: vi.fn(),
+      myProjects: vi.fn(),
   },
   default: {
     get: vi.fn(),
@@ -53,7 +55,8 @@ describe('useTimesheet Hook', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        projectApi.list.mockResolvedValue({
+        // 源码调用 projectApi.myProjects 而非 projectApi.list
+        projectApi.myProjects.mockResolvedValue({
             data: { items: mockProjects },
         });
         timesheetApi.getWeek.mockResolvedValue({
@@ -68,7 +71,7 @@ describe('useTimesheet Hook', () => {
             expect(result.current.loading).toBe(false);
         });
 
-        expect(projectApi.list).toHaveBeenCalled();
+        expect(projectApi.myProjects).toHaveBeenCalled();
         expect(result.current.projects).toHaveLength(2);
     });
 

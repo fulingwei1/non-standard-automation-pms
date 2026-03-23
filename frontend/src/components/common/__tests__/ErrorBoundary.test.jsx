@@ -131,22 +131,27 @@ describe('ErrorBoundary', () => {
 
   describe('Reset Functionality', () => {
     it('resets error state on retry click', () => {
-      const { rerender } = render(
+      // 使用可控的 throw 标志，避免 retry 后重新抛出
+      let shouldThrowRef = true;
+      const ConditionalThrow = () => {
+        if (shouldThrowRef) {
+          throw new Error('Test error');
+        }
+        return <div data-testid="child-component">Child Component</div>;
+      };
+
+      render(
         <ErrorBoundary>
-          <ThrowError shouldThrow={true} />
+          <ConditionalThrow />
         </ErrorBoundary>
       );
 
       expect(screen.getByText('出现错误')).toBeInTheDocument();
 
+      // 先关闭 throw，再点击重试
+      shouldThrowRef = false;
       const retryButton = screen.getByText('重试');
       fireEvent.click(retryButton);
-
-      rerender(
-        <ErrorBoundary>
-          <ThrowError shouldThrow={false} />
-        </ErrorBoundary>
-      );
 
       expect(screen.queryByText('出现错误')).not.toBeInTheDocument();
     });

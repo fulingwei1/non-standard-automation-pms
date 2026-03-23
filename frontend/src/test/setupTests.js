@@ -214,6 +214,7 @@ const missingGlobals = [
   'UiStatCard', 'DwellTimeAlerts', 'TabbedCenterPage',
   'MachineFilters', 'ServiceRecordOverview', 'Space',
   'Header', 'LayoutGrid', 'FileSignature', 'ThumbsUp',
+  'KnowledgeBaseOverview', 'CategoryManager', 'SearchAndFilter', 'DocumentViewer',
 ];
 for (const name of missingGlobals) {
   if (typeof globalThis[name] === 'undefined') {
@@ -305,6 +306,7 @@ const iconNames = [
   'PackageCheck', 'PackagePlus', 'PackageMinus', 'PackageX', 'PackageOpen',
   'FileWarning', 'FileClock', 'FileEdit', 'FileSearch', 'FileQuestion',
   'BellRing', 'BellOff', 'BellPlus', 'BellMinus',
+  'ThumbsDown',
   'MailCheck', 'MailPlus', 'MailMinus', 'MailX', 'MailOpen',
   'MessageCircle', 'MessageSquarePlus',
   'CalendarPlus', 'CalendarMinus', 'CalendarX', 'CalendarRange',
@@ -421,6 +423,118 @@ globalThis.Input = InputFallback;
 // Navigate from react-router-dom
 if (typeof globalThis.Navigate === 'undefined') {
   globalThis.Navigate = ({ to }) => React.createElement('div', { 'data-testid': 'navigate', 'data-to': to });
+}
+
+// Ant Design 组件 fallback（源文件使用但未 import）
+const antdComponentFallback = (name, tag = 'div') => {
+  const comp = ({ children, ...props }) => {
+    // 过滤 React 不识别的 antd 专有 props
+    const filteredProps = Object.fromEntries(
+      Object.entries(props).filter(([key]) =>
+        !['gutter', 'span', 'xs', 'sm', 'md', 'lg', 'xl', 'xxl',
+          'hoverable', 'cover', 'actions', 'bordered', 'dataSource',
+          'columns', 'rowKey', 'pagination', 'scroll', 'loading',
+          'disabled', 'allowClear', 'placeholder', 'prefix', 'suffix',
+          'activeKey', 'defaultActiveKey', 'type', 'items', 'buttonStyle',
+          'valuePropName', 'rules', 'label', 'name', 'initialValues',
+          'form', 'layout', 'destroyOnHidden', 'confirmLoading',
+          'okText', 'cancelText', 'width', 'footer', 'onOk', 'onCancel',
+          'open', 'size', 'color', 'value', 'onChange',
+        ].includes(key)
+      )
+    );
+    return React.createElement(tag, { 'data-testid': `antd-${name.toLowerCase()}`, ...filteredProps }, children);
+  };
+  comp.displayName = name;
+  return comp;
+};
+
+// Radio 组件需要特殊处理（支持 Radio.Group / Radio.Button）
+if (typeof globalThis.Radio === 'undefined') {
+  const RadioComp = antdComponentFallback('Radio', 'span');
+  RadioComp.Group = ({ children, value, onChange, buttonStyle, ...props }) =>
+    React.createElement('div', { 'data-testid': 'antd-radio-group', ...props }, children);
+  RadioComp.Button = ({ children, value, ...props }) =>
+    React.createElement('label', { 'data-testid': 'antd-radio-button', ...props }, children);
+  globalThis.Radio = RadioComp;
+}
+
+// Checkbox 组件
+if (typeof globalThis.Checkbox === 'undefined') {
+  globalThis.Checkbox = ({ children, checked, onChange, ...props }) =>
+    React.createElement('label', { 'data-testid': 'antd-checkbox' },
+      React.createElement('input', { type: 'checkbox', checked, onChange }),
+      children
+    );
+}
+
+// Modal 组件（支持 open 属性控制显隐）
+if (typeof globalThis.Modal === 'undefined') {
+  globalThis.Modal = ({ children, open, title, onCancel, onOk, footer, confirmLoading, okText, cancelText, width, destroyOnHidden, ...props }) => {
+    if (!open) return null;
+    return React.createElement('div', { role: 'dialog', 'aria-label': title || '', 'data-testid': 'antd-modal' },
+      title ? React.createElement('div', { 'data-testid': 'antd-modal-title' }, title) : null,
+      children,
+      footer !== null ? React.createElement('div', { 'data-testid': 'antd-modal-footer' },
+        React.createElement('button', { onClick: onCancel }, cancelText || '取消'),
+        React.createElement('button', { onClick: onOk, disabled: confirmLoading }, okText || '确定')
+      ) : null
+    );
+  };
+}
+
+// Spin 组件
+if (typeof globalThis.Spin === 'undefined') {
+  globalThis.Spin = ({ children, spinning, size, ...props }) =>
+    React.createElement('div', { 'data-testid': 'antd-spin', ...props }, children);
+}
+
+// Rate 组件
+if (typeof globalThis.Rate === 'undefined') {
+  globalThis.Rate = ({ value, disabled, ...props }) =>
+    React.createElement('span', { 'data-testid': 'antd-rate' }, `${value || 0}星`);
+}
+
+// Avatar 组件
+if (typeof globalThis.Avatar === 'undefined') {
+  globalThis.Avatar = ({ children, icon, size, ...props }) =>
+    React.createElement('span', { 'data-testid': 'antd-avatar' }, children);
+}
+
+// Row / Col 布局组件
+if (typeof globalThis.Row === 'undefined') {
+  globalThis.Row = ({ children, gutter, ...props }) =>
+    React.createElement('div', { 'data-testid': 'antd-row', ...props }, children);
+}
+if (typeof globalThis.Col === 'undefined') {
+  globalThis.Col = ({ children, span, xs, sm, md, lg, xl, ...props }) =>
+    React.createElement('div', { 'data-testid': 'antd-col' }, children);
+}
+
+// Select 组件（antd 版本，需要 Select.Option）
+if (typeof globalThis.Select === 'undefined' || !globalThis.Select.Option) {
+  const AntSelect = ({ children, placeholder, value, onChange, style, allowClear, options, ...props }) =>
+    React.createElement('select', { value, onChange: (e) => onChange?.(e.target.value), 'data-testid': 'antd-select' }, children);
+  AntSelect.Option = ({ children, value, ...props }) =>
+    React.createElement('option', { value }, children);
+  // 只在全局没有 Select 或不支持 Select.Option 时设置
+  if (typeof globalThis.Select === 'undefined') {
+    globalThis.Select = AntSelect;
+  }
+}
+
+// Card.Meta 支持（antd Card 组件的子组件）
+if (globalThis.Card && !globalThis.Card.Meta) {
+  globalThis.Card.Meta = ({ title, description, ...props }) =>
+    React.createElement('div', { 'data-testid': 'antd-card-meta', ...props },
+      title ? React.createElement('div', null, title) : null,
+      description ? React.createElement('div', null, description) : null
+    );
+}
+
+// StarOff 图标（lucide-react 中使用但未导入）
+if (typeof globalThis.StarOff === 'undefined') {
+  globalThis.StarOff = iconFallback;
 }
 
 // 抑制 console 警告（可选）

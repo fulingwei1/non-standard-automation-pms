@@ -11,7 +11,8 @@ describe('LoadingPage', () => {
 
     it('displays loading indicator', () => {
       const { container } = render(<LoadingPage />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
+      // LoadingSpinner 在 mock 环境中渲染为 div[data-testid="loadingspinner"]，无 svg
+      expect(screen.getByTestId('loadingspinner')).toBeInTheDocument();
     });
 
     it('has fullscreen layout', () => {
@@ -23,12 +24,15 @@ describe('LoadingPage', () => {
   describe('Loading Text', () => {
     it('displays default loading text', () => {
       render(<LoadingPage />);
-      expect(screen.getByText('加载中...')).toBeInTheDocument();
+      // LoadingSpinner mock 将 text 作为 HTML 属性传递，非文本子节点
+      const spinner = screen.getByTestId('loadingspinner');
+      expect(spinner).toHaveAttribute('text', '加载中...');
     });
 
     it('displays custom loading text', () => {
       render(<LoadingPage message="正在初始化系统..." />);
-      expect(screen.getByText('正在初始化系统...')).toBeInTheDocument();
+      const spinner = screen.getByTestId('loadingspinner');
+      expect(spinner).toHaveAttribute('text', '正在初始化系统...');
     });
 
     it('hides text when text prop is empty', () => {

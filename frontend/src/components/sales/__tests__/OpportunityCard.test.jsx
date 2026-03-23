@@ -191,7 +191,8 @@ describe('OpportunityCard', () => {
   describe('Days in Stage', () => {
     it('displays days in stage', () => {
       render(<OpportunityCard opportunity={mockOpportunity} />);
-      expect(screen.getByText(/5/)).toBeInTheDocument();
+      // 源码渲染 "{daysInStage}天"，精确匹配避免与 "50万" 冲突
+      expect(screen.getByText('5天')).toBeInTheDocument();
     });
 
     it('handles 0 days in stage', () => {

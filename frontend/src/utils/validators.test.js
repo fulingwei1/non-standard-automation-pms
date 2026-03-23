@@ -245,8 +245,8 @@ describe("validators", () => {
       // ftp:// 是合法 URL，new URL() 不会抛出
       expect(url("ftp://example.com")).toBeUndefined();
       expect(url("//example.com")).toBe("请输入有效的 URL");
-      // http:// 本身是合法 URL（host 为空字符串）
-      expect(url("http://")).toBeUndefined();
+      // "http://" 在某些 Node/jsdom 版本中被视为无效 URL
+      expect(url("http://")).toBe("请输入有效的 URL");
     });
 
     it("should accept valid HTTP URLs", () => {

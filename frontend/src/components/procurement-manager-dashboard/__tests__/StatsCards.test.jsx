@@ -6,7 +6,8 @@ describe('StatsCards', () => {
   const mockStats = {
     pendingApprovals: 12,
     inTransitOrders: 8,
-    lowStockWarnings: 5,
+    // 源码使用 shortageAlerts 而非 lowStockWarnings
+    shortageAlerts: 5,
     activeSuppliers: 48,
   };
 
@@ -16,7 +17,8 @@ describe('StatsCards', () => {
       expect(screen.getByText('待审批订单')).toBeInTheDocument();
       expect(screen.getByText('在途订单')).toBeInTheDocument();
       expect(screen.getByText('缺料预警')).toBeInTheDocument();
-      expect(screen.getByText('活跃供应商')).toBeInTheDocument();
+      // 源码使用 "在用供应商" 而非 "活跃供应商"
+      expect(screen.getByText('在用供应商')).toBeInTheDocument();
     });
 
     it('displays correct stat values', () => {

@@ -11,6 +11,14 @@ import { DataTable } from '../../components/DataTable/DataTable';
 import { FilterPanel } from '../../components/FilterPanel/FilterPanel';
 import type { ColumnType } from 'antd/es/table';
 
+// 覆盖 ResizeObserver mock 为真正的 class（Ant Design 组件需要）
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.ResizeObserver = MockResizeObserver;
+
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {

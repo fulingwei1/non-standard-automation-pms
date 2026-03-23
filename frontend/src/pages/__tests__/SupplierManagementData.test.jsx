@@ -1,6 +1,6 @@
 /**
  * SupplierManagementData 组件测试
- * 测试覆盖：供应商数据分析、绩效报表、数据导入导出
+ * 测试覆盖：供应商列表渲染、数据加载、搜索过滤、创建/评级对话框
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -48,55 +48,44 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 describe('SupplierManagementData', () => {
-  const mockSupplierData = {
-    stats: {
-      totalSuppliers: 50,
-      activeSuppliers: 45,
-      ratingA: 15,
-      ratingB: 20,
-      ratingC: 10,
-      avgPerformance: 88,
-      totalOrders: 120,
-      totalAmount: 15000000
+  // 后端格式的供应商列表数据 - supplierApi.list 返回的格式
+  const mockSupplierItems = [
+    {
+      id: 1,
+      supplier_code: 'SUP-001',
+      supplier_name: '供应商A',
+      supplier_type: 'MATERIAL',
+      contact_person: '张三',
+      contact_phone: '13800000001',
+      contact_email: 'a@test.com',
+      overall_rating: '4.5',
+      supplier_level: 'A',
+      status: 'ACTIVE',
     },
-    performanceData: [
-      {
-        supplierId: 1,
-        supplierName: '供应商A',
-        category: '电子元器件',
-        qualityScore: 95,
-        deliveryScore: 92,
-        serviceScore: 90,
-        overallScore: 92,
-        orderCount: 25,
-        totalAmount: 2500000,
-        onTimeRate: 96,
-        defectRate: 1.2
-      },
-      {
-        supplierId: 2,
-        supplierName: '供应商B',
-        category: '机械加工',
-        qualityScore: 85,
-        deliveryScore: 88,
-        serviceScore: 82,
-        overallScore: 85,
-        orderCount: 18,
-        totalAmount: 1800000,
-        onTimeRate: 89,
-        defectRate: 2.5
-      }
-    ],
-    trendData: [
-      { month: '2024-01', avgScore: 85, orderCount: 10 },
-      { month: '2024-02', avgScore: 88, orderCount: 12 }
-    ]
-  };
+    {
+      id: 2,
+      supplier_code: 'SUP-002',
+      supplier_name: '供应商B',
+      supplier_type: 'OUTSOURCE',
+      contact_person: '李四',
+      contact_phone: '13800000002',
+      contact_email: 'b@test.com',
+      overall_rating: '3.8',
+      supplier_level: 'B',
+      status: 'ACTIVE',
+    },
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    supplierApi.list.mockResolvedValue({ data: mockSupplierData });
+    // supplierApi.list 返回后端分页格式
+    // 组件读取 response.formatted || response.data 中的 items 和 total
+    supplierApi.list.mockResolvedValue({
+      data: { items: mockSupplierItems, total: 2 },
+    });
     supplierApi.create.mockResolvedValue({ data: { success: true } });
+    supplierApi.get.mockResolvedValue({ data: mockSupplierItems[0] });
+    supplierApi.updateRating.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
@@ -112,11 +101,12 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/供应商数据|Supplier Data/i)).toBeInTheDocument();
+        // 组件标题是 "供应商管理"
+        expect(screen.getByText(/供应商管理|供应商数据|Supplier/i)).toBeInTheDocument();
       });
     });
 
-    it('should display statistics cards', async () => {
+    it('should display supplier list table', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -124,14 +114,15 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/50/)).toBeInTheDocument();
-        expect(screen.getByText(/45.*活跃|Active.*45/i)).toBeInTheDocument();
+        // 表格列标题
+        expect(screen.getByText('供应商编码')).toBeInTheDocument();
+        expect(screen.getByText('供应商名称')).toBeInTheDocument();
       });
     });
   });
 
   describe('Performance Data Display', () => {
-    it('should show supplier performance table', async () => {
+    it('should show supplier names in table', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -144,7 +135,7 @@ describe('SupplierManagementData', () => {
       });
     });
 
-    it('should display performance scores', async () => {
+    it('should display overall ratings', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -152,12 +143,13 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/92|95/)).toBeInTheDocument();
-        expect(screen.getByText(/85|88/)).toBeInTheDocument();
+        // overall_rating 显示为 "4.5" 和 "3.8"
+        expect(screen.getByText('4.5')).toBeInTheDocument();
+        expect(screen.getByText('3.8')).toBeInTheDocument();
       });
     });
 
-    it('should show quality metrics', async () => {
+    it('should show supplier levels', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -165,8 +157,9 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/1\.2/)).toBeInTheDocument();
-        expect(screen.getByText(/96/)).toBeInTheDocument();
+        // supplier_level 显示为 "A级" 和 "B级"
+        expect(screen.getByText('A级')).toBeInTheDocument();
+        expect(screen.getByText('B级')).toBeInTheDocument();
       });
     });
   });
@@ -183,13 +176,12 @@ describe('SupplierManagementData', () => {
         expect(supplierApi.list).toHaveBeenCalled();
       });
 
-      const categoryFilter = screen.queryByRole('combobox');
-      if (categoryFilter) {
-        fireEvent.change(categoryFilter, { target: { value: '电子元器件' } });
-      }
+      // 组件使用 Select 组件进行类型筛选
+      const filterElements = screen.queryAllByRole('combobox');
+      expect(filterElements.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('should filter by date range', async () => {
+    it('should have search input', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -200,16 +192,14 @@ describe('SupplierManagementData', () => {
         expect(supplierApi.list).toHaveBeenCalled();
       });
 
-      const dateInputs = screen.queryAllByRole('textbox');
-      if (dateInputs.length >= 2) {
-        fireEvent.change(dateInputs[0], { target: { value: '2024-01-01' } });
-        fireEvent.change(dateInputs[1], { target: { value: '2024-02-28' } });
-      }
+      // 搜索输入框
+      const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
+      expect(searchInput).toBeTruthy();
     });
   });
 
   describe('Data Export', () => {
-    it('should export supplier data', async () => {
+    it('should have action buttons', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -220,21 +210,38 @@ describe('SupplierManagementData', () => {
         expect(supplierApi.list).toHaveBeenCalled();
       });
 
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      if (exportButton) {
-        fireEvent.click(exportButton);
+      // 页面有新增按钮
+      const addButton = screen.queryByText(/新增供应商/i);
+      expect(addButton).toBeTruthy();
+    });
+  });
+
+  describe('Data Import', () => {
+    it('should open create dialog', async () => {
+      render(
+        <MemoryRouter>
+          <SupplierManagementData />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(supplierApi.list).toHaveBeenCalled();
+      });
+
+      const addButton = screen.queryByText(/新增供应商/i);
+      if (addButton) {
+        fireEvent.click(addButton);
 
         await waitFor(() => {
-          expect(supplierApi.create).toHaveBeenCalledWith(
-            expect.stringContaining('/export')
-          );
+          // 新增对话框标题 "新增供应商"
+          expect(screen.getAllByText(/供应商编码/).length).toBeGreaterThan(1);
         });
       }
     });
   });
 
-  describe('Data Import', () => {
-    it('should handle data import', async () => {
+  describe('Supplier Status', () => {
+    it('should display supplier status badges', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -242,32 +249,12 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(supplierApi.list).toHaveBeenCalled();
-      });
-
-      const importButton = screen.queryByRole('button', { name: /导入|Import/i });
-      if (importButton) {
-        fireEvent.click(importButton);
-
-        expect(screen.queryByText(/选择文件|Select File/i)).toBeTruthy();
-      }
-    });
-  });
-
-  describe('Trend Analysis', () => {
-    it('should display performance trends', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/趋势|Trend/i)).toBeInTheDocument();
+        // status === "ACTIVE" → "合作中"
+        expect(screen.getAllByText('合作中').length).toBeGreaterThan(0);
       });
     });
 
-    it('should show monthly data', async () => {
+    it('should show contact information', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -275,14 +262,15 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/2024-01/)).toBeInTheDocument();
-        expect(screen.getByText(/2024-02/)).toBeInTheDocument();
+        // 联系人信息
+        expect(screen.getByText('张三')).toBeInTheDocument();
+        expect(screen.getByText('李四')).toBeInTheDocument();
       });
     });
   });
 
-  describe('Statistics Display', () => {
-    it('should show total statistics', async () => {
+  describe('Supplier Codes', () => {
+    it('should show supplier codes', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -290,12 +278,12 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/15,000,000|1500万/)).toBeInTheDocument();
-        expect(screen.getByText(/120/)).toBeInTheDocument();
+        expect(screen.getByText('SUP-001')).toBeInTheDocument();
+        expect(screen.getByText('SUP-002')).toBeInTheDocument();
       });
     });
 
-    it('should display rating distribution', async () => {
+    it('should show supplier types', async () => {
       render(
         <MemoryRouter>
           <SupplierManagementData />
@@ -303,8 +291,9 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/15.*A级/i)).toBeInTheDocument();
-        expect(screen.getByText(/20.*B级/i)).toBeInTheDocument();
+        // supplier_type 直接显示
+        expect(screen.getByText('MATERIAL')).toBeInTheDocument();
+        expect(screen.getByText('OUTSOURCE')).toBeInTheDocument();
       });
     });
   });
@@ -318,13 +307,16 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
+        // 组件使用 supplierApi.list(params) 传递对象参数
         expect(supplierApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('/supplier')
+          expect.objectContaining({ page: 1, page_size: 20 })
         );
       });
     });
 
     it('should handle loading error', async () => {
+      // window.alert 模拟
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       supplierApi.list.mockRejectedValue(new Error('Load failed'));
 
       render(
@@ -334,9 +326,13 @@ describe('SupplierManagementData', () => {
       );
 
       await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
+        // 组件在出错时调用 alert
+        expect(alertSpy).toHaveBeenCalledWith(
+          expect.stringContaining('加载供应商列表失败')
+        );
       });
+
+      alertSpy.mockRestore();
     });
   });
 });

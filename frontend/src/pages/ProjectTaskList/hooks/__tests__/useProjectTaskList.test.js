@@ -4,6 +4,7 @@ import { useProjectTaskList } from '../useProjectTaskList';
 import { progressApi, projectApi } from '../../../../services/api';
 
 // Mock the API module
+// 源码中使用 progressApi.tasks.list / .create / .get 和 progressApi.reports.getSummary
 vi.mock('../../../../services/api', () => ({
   progressApi: {
       list: vi.fn(),
@@ -18,6 +19,13 @@ vi.mock('../../../../services/api', () => ({
         get: vi.fn(),
         getSummary: vi.fn(),
         create: vi.fn(),
+      },
+      tasks: {
+        list: vi.fn(),
+        get: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
       },
   },
   projectApi: {

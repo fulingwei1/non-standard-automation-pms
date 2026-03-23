@@ -8,6 +8,14 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { FilterPanel } from '../FilterPanel';
 import dayjs from 'dayjs';
 
+// 覆盖 ResizeObserver mock 为真正的 class（Ant Design RangePicker 需要）
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.ResizeObserver = MockResizeObserver;
+
 describe('FilterPanel', () => {
   const mockOnChange = vi.fn();
 

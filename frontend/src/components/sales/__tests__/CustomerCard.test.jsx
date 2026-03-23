@@ -58,7 +58,8 @@ describe('CustomerCard', () => {
     it('renders contact information', () => {
       render(<CustomerCard customer={mockCustomer} />);
       expect(screen.getByText('张三')).toBeInTheDocument();
-      expect(screen.getByText('138****1234')).toBeInTheDocument();
+      // 电话号码前有 "· " 分隔符，用正则匹配
+      expect(screen.getByText(/138\*{4}1234/)).toBeInTheDocument();
     });
   });
 
@@ -143,7 +144,8 @@ describe('CustomerCard', () => {
   describe('Statistics Display', () => {
     it('displays project count', () => {
       render(<CustomerCard customer={mockCustomer} />);
-      expect(screen.getByText(/8/)).toBeInTheDocument();
+      // 源码渲染 projectCount 为纯文本 "8"
+      expect(screen.getByText('8')).toBeInTheDocument();
     });
 
     it('displays opportunity count', () => {
@@ -226,7 +228,8 @@ describe('CustomerCard', () => {
         name: '测试公司',
       };
       render(<CustomerCard customer={minimalCustomer} />);
-      expect(screen.getByText('测试公司')).toBeInTheDocument();
+      // 源码渲染 name 两次（h3 和 p），用 getAllByText
+      expect(screen.getAllByText('测试公司').length).toBeGreaterThanOrEqual(1);
     });
 
     it('uses shortName when provided, falls back to name', () => {
@@ -243,7 +246,8 @@ describe('CustomerCard', () => {
         name: '某某科技有限公司',
       };
       render(<CustomerCard customer={customerWithoutShortName} />);
-      expect(screen.getByText('某某科技有限公司')).toBeInTheDocument();
+      // 无 shortName 时 name 同时出现在 h3 和 p 中，用 getAllByText
+      expect(screen.getAllByText('某某科技有限公司').length).toBeGreaterThanOrEqual(1);
     });
 
     it('handles very long customer names', () => {
