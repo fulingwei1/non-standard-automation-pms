@@ -69,8 +69,7 @@ export default function BOMManagement() {
   const fetchProjects = async () => {
     try {
       const res = await projectApi.list({ page_size: 1000 });
-      // 防御性处理：确保 projects 始终为数组
-      setProjects(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
+      setProjects(res.data?.items || res.data?.items || res.data || []);
     } catch (_error) {
       // 非关键操作失败时静默降级
     }
@@ -78,8 +77,7 @@ export default function BOMManagement() {
   const fetchMachines = async (projId) => {
     try {
       const res = await machineApi.list(projId);
-      // 防御性处理：确保 machines 始终为数组
-      setMachines(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
+      setMachines(res.data?.items || res.data?.items || res.data || []);
     } catch (_error) {
       // 非关键操作失败时静默降级
     }
@@ -93,9 +91,7 @@ export default function BOMManagement() {
       if (filterStatus) {params.status = filterStatus;}
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await bomApi.list(params);
-      // 防御性处理：确保 boms 始终为数组
-      const rawData = res.data;
-      const bomList = Array.isArray(rawData?.items) ? rawData.items : Array.isArray(rawData) ? rawData : [];
+      const bomList = res.data?.items || res.data?.items || res.data || [];
       setBoms(bomList);
     } catch (_error) {
       // 非关键操作失败时静默降级

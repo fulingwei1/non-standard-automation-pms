@@ -173,22 +173,19 @@ export const getPriorityColor = (priority) => {
 
 // 计算齐套率
 export const calculateReadinessRate = (materials) => {
-  // 防御性处理：materials 可能为 undefined/非数组
-  const safeList = Array.isArray(materials) ? materials : [];
-  if (safeList.length === 0) {return 0;}
-
-  const availableMaterials = safeList.filter(material =>
+  if (!materials || materials.length === 0) {return 0;}
+  
+  const availableMaterials = materials.filter(material => 
     material.status === MATERIAL_STATUS.AVAILABLE
   ).length;
-
-  return Math.round((availableMaterials / safeList.length) * 100);
+  
+  return Math.round((availableMaterials / materials.length) * 100);
 };
 
-// 计算物料状态统计（防御性处理：materials 可能为 undefined/非数组）
+// 计算物料状态统计
 export const getMaterialStatusStats = (materials) => {
-  const safeList = Array.isArray(materials) ? materials : [];
   const stats = {
-    total: safeList.length,
+    total: materials.length,
     available: 0,
     outOfStock: 0,
     onOrder: 0,
@@ -199,7 +196,7 @@ export const getMaterialStatusStats = (materials) => {
     qualityHold: 0
   };
 
-  safeList.forEach(material => {
+  materials.forEach(material => {
     switch (material.status) {
       case MATERIAL_STATUS.AVAILABLE:
         stats.available++;
@@ -231,11 +228,10 @@ export const getMaterialStatusStats = (materials) => {
   return stats;
 };
 
-// 计算关键缺料（防御性处理：materials 可能为 undefined/非数组）
+// 计算关键缺料
 export const getCriticalShortages = (materials) => {
-  const safeList = Array.isArray(materials) ? materials : [];
-  return safeList.filter(material =>
-    material.status === MATERIAL_STATUS.OUT_OF_STOCK &&
+  return materials.filter(material => 
+    material.status === MATERIAL_STATUS.OUT_OF_STOCK && 
     material.priority === PRIORITY_LEVEL.URGENT
   );
 };

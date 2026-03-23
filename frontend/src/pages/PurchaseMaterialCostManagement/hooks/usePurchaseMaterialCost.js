@@ -20,9 +20,7 @@ export function usePurchaseMaterialCost() {
             if (filters.supplier_id) params.supplier_id = filters.supplier_id;
 
             const response = await materialApi.listWithCost(params);
-            // 防御性处理：API 响应可能是数组、对象或 {items: [...]}
-            const data = response.data;
-            setMaterials(Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []);
+            setMaterials(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -33,8 +31,7 @@ export function usePurchaseMaterialCost() {
     const loadSuppliers = useCallback(async () => {
         try {
             const response = await purchaseApi.listSuppliers({ page_size: 100 });
-            const sData = response.data;
-            setSuppliers(Array.isArray(sData?.items) ? sData.items : Array.isArray(sData) ? sData : []);
+            setSuppliers(response.data?.items || response.data?.items || response.data || []);
         } catch (_err) {
           // 非关键操作失败时静默降级
         }

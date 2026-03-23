@@ -2,7 +2,11 @@
  * 商机详情对话框（含编辑模式）
  */
 
-
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+  Button, Input, Label, Textarea, Badge,
+} from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { stageConfig, buildDetailForm } from "../constants";
 

@@ -131,11 +131,8 @@ describe('ErrorBoundary', () => {
 
   describe('Reset Functionality', () => {
     it('resets error state on retry click', () => {
-      // 点击重试后 ErrorBoundary 重置 state，但旧 children 仍会 throw
-      // 因此只验证 handleReset 被调用（即 state 重置逻辑执行）
-      const mockOnReset = vi.fn();
-      render(
-        <ErrorBoundary onReset={mockOnReset}>
+      const { rerender } = render(
+        <ErrorBoundary>
           <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       );
@@ -145,8 +142,13 @@ describe('ErrorBoundary', () => {
       const retryButton = screen.getByText('重试');
       fireEvent.click(retryButton);
 
-      // 验证重置逻辑执行
-      expect(mockOnReset).toHaveBeenCalledTimes(1);
+      rerender(
+        <ErrorBoundary>
+          <ThrowError shouldThrow={false} />
+        </ErrorBoundary>
+      );
+
+      expect(screen.queryByText('出现错误')).not.toBeInTheDocument();
     });
 
     it('calls onReset callback when provided', () => {

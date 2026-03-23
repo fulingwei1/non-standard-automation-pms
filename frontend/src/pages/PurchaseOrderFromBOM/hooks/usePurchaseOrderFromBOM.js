@@ -27,8 +27,7 @@ export function usePurchaseOrderFromBOM() {
             try {
                 const res = await bomApi.list({ status: "RELEASED", page_size: 1000 });
                 const data = res.data?.data || res.data;
-                // 防御性处理：确保 boms 始终为数组
-                setBoms(Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []);
+                setBoms(data?.items || data || []);
             } catch (_err) {
               // 非关键操作失败时静默降级
             }
@@ -40,8 +39,7 @@ export function usePurchaseOrderFromBOM() {
         const loadSuppliers = async () => {
             try {
                 const res = await supplierApi.list({ page_size: 1000 });
-                // 防御性处理：确保 suppliers 始终为数组
-                setSuppliers(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
+                setSuppliers(res.data?.items || res.data?.items || res.data || []);
             } catch (_err) {
               // 非关键操作失败时静默降级
             }
@@ -69,7 +67,7 @@ export function usePurchaseOrderFromBOM() {
             const res = await purchaseApi.orders.createFromBOM(params);
             const data = res.data?.data || res.data;
             setPreview(data);
-            setSelectedBom((boms || []).find((b) => b.id === parseInt(selectedBomId)));
+            setSelectedBom(boms.find((b) => b.id === parseInt(selectedBomId)));
             setStep(2);
         } catch (err) {
             setError(err.response?.data?.detail || "生成预览失败");

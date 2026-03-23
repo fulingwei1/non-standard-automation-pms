@@ -12,6 +12,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMachineData, useMachineDocuments } from './hooks';
 
 // Components
+import { MachineFilters, MachineTable, CreateMachineDialog, MachineDetailDialog } from './components';
 
 // Constants
 import { initialMachineForm } from './constants';

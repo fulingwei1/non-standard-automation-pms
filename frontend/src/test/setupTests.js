@@ -50,28 +50,6 @@ global.sessionStorage = sessionStorageMock;
 // Mock scrollTo
 window.scrollTo = vi.fn();
 
-// Mock window.getComputedStyle（jsdom 未完整实现，@rc-component/util 需要）
-// 保留原始实现的引用，在其基础上提供默认值
-const _originalGetComputedStyle = window.getComputedStyle;
-window.getComputedStyle = vi.fn().mockImplementation((elt) => {
-  // 尝试调用 jsdom 原始实现以获取 inline styles
-  try {
-    const original = _originalGetComputedStyle(elt);
-    return original;
-  } catch {
-    // jsdom 原始实现失败时使用兜底
-    return {
-      getPropertyValue: () => '',
-      overflow: 'visible',
-      overflowX: 'visible',
-      overflowY: 'visible',
-      display: 'block',
-      position: 'static',
-      visibility: 'visible',
-    };
-  }
-});
-
 // Mock window.alert / window.confirm / window.prompt (jsdom 不实现这些)
 window.alert = vi.fn();
 window.confirm = vi.fn(() => true);
@@ -210,7 +188,7 @@ vi.mock('framer-motion', () => {
   // 创建代理，将 motion.xxx 转为普通 HTML 元素
   const motionProxy = new Proxy({}, {
     get: (_, tag) => {
-      return React.forwardRef(({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileHover: _whileHover, whileTap: _whileTap, whileInView: _whileInView, variants: _variants, layout: _layout, ...props }, ref) => {
+      return React.forwardRef(({ children, initial, animate, exit, transition, whileHover, whileTap, whileInView, variants, layout, ...props }, ref) => {
         return React.createElement(tag, { ...props, ref }, children);
       });
     },
@@ -235,8 +213,7 @@ const React = require('react');
 const missingGlobals = [
   'UiStatCard', 'DwellTimeAlerts', 'TabbedCenterPage',
   'MachineFilters', 'ServiceRecordOverview', 'Space',
-  'Header', 'LayoutGrid', 'FileSignature', 'ThumbsUp', 'ThumbsDown',
-  'LeadManagement', 'OpportunityManagement',
+  'Header', 'LayoutGrid', 'FileSignature', 'ThumbsUp',
 ];
 for (const name of missingGlobals) {
   if (typeof globalThis[name] === 'undefined') {
@@ -267,7 +244,7 @@ for (const name of rechartsComponentNames) {
 // 多个源文件使用 motion.div 等但未 import
 const motionGlobalProxy = new Proxy({}, {
   get: (_, tag) => {
-    return React.forwardRef(({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileHover: _whileHover, whileTap: _whileTap, whileInView: _whileInView, variants: _variants, layout: _layout, ...props }, ref) => {
+    return React.forwardRef(({ children, initial, animate, exit, transition, whileHover, whileTap, whileInView, variants, layout, ...props }, ref) => {
       return React.createElement(String(tag), { ...props, ref }, children);
     });
   },
@@ -423,38 +400,10 @@ for (const name of uiComponents) {
   }
 }
 
-// 特殊处理 Dialog：需要根据 open prop 决定是否渲染 children
-const DialogFallback = ({ children, open, onOpenChange, ...props }) => {
-  if (open === false) return null;
-  return React.createElement('div', { 'data-testid': 'dialog', role: 'dialog', ...props }, children);
-};
-DialogFallback.displayName = 'Dialog';
-globalThis.Dialog = DialogFallback;
-
-// 特殊处理 TabbedCenterPage：渲染 title/description/tabs 为可见文本
-const TabbedCenterPageFallback = ({ title, description, tabs = [], children, ...props }) => {
-  return React.createElement('div', { 'data-testid': 'tabbed-center-page', ...props },
-    title ? React.createElement('h1', null, title) : null,
-    description ? React.createElement('p', null, description) : null,
-    tabs.length > 0 ? React.createElement('div', { role: 'tablist' },
-      tabs.map((tab, idx) =>
-        React.createElement('button', { key: tab.value || idx, role: 'tab' }, tab.label)
-      )
-    ) : null,
-    // 默认渲染第一个 tab 的 render 结果
-    tabs.length > 0 && tabs[0].render
-      ? React.createElement('div', null, tabs[0].render())
-      : null,
-    children
-  );
-};
-TabbedCenterPageFallback.displayName = 'TabbedCenterPage';
-globalThis.TabbedCenterPage = TabbedCenterPageFallback;
-
 // 特殊处理 Button（支持 onClick）
 if (!globalThis.Button._isPatched) {
   const OrigButton = globalThis.Button;
-  const ButtonWithClick = React.forwardRef(({ children, onClick, disabled, type, className, variant: _variant, size: _size, asChild: _asChild, ...props }, ref) =>
+  const ButtonWithClick = React.forwardRef(({ children, onClick, disabled, type, className, variant, size, asChild, ...props }, ref) =>
     React.createElement('button', { ref, onClick, disabled, type: type || 'button', className, ...props }, children)
   );
   ButtonWithClick.displayName = 'Button';

@@ -71,20 +71,11 @@ describe('useIntersectionObserver', () => {
   });
 
   it('should not create observer when disabled', () => {
-    // 用 vi.fn() 替代 class mock 以支持 toHaveBeenCalled 断言
-    const observeSpy = vi.fn();
-    global.IntersectionObserver = vi.fn(() => ({
-      observe: observeSpy,
-      unobserve: vi.fn(),
-      disconnect: vi.fn(),
-    }));
-
-    const { result } = renderHook(() =>
+    const { result } = renderHook(() => 
       useIntersectionObserver({ enabled: false })
     );
 
-    // enabled=false 且 ref 未挂载元素，不应创建 observer
-    expect(observeSpy).not.toHaveBeenCalled();
+    expect(global.IntersectionObserver).not.toHaveBeenCalled();
     expect(result.current.isIntersecting).toBe(false);
   });
 

@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }) => {
-      const { whileHover: _whileHover, whileTap: _whileTap, initial: _initial, animate: _animate, transition: _transition, ...validProps } = props;
+      const { whileHover, whileTap, initial, animate, transition, ...validProps } = props;
       return <div {...validProps}>{children}</div>;
     },
   },
@@ -79,8 +79,7 @@ describe('DashboardStatCard', () => {
           trend="up"
         />
       );
-      // 趋势文本包含箭头前缀 "↑+10%"
-      expect(screen.getByText(/\+10%/)).toBeInTheDocument();
+      expect(screen.getByText('+10%')).toBeInTheDocument();
     });
 
     it('displays negative trend', () => {
@@ -93,8 +92,7 @@ describe('DashboardStatCard', () => {
           trend="down"
         />
       );
-      // 趋势文本包含箭头前缀 "↓-5%"
-      expect(screen.getByText(/-5%/)).toBeInTheDocument();
+      expect(screen.getByText('-5%')).toBeInTheDocument();
     });
 
     it('displays neutral trend', () => {
@@ -150,7 +148,7 @@ describe('DashboardStatCard', () => {
 
   describe('Loading State', () => {
     it('displays loading state', () => {
-      const { container } = render(
+      render(
         <DashboardStatCard
           icon={TrendingUp}
           label="加载中"
@@ -158,8 +156,7 @@ describe('DashboardStatCard', () => {
           loading={true}
         />
       );
-      // loading 状态下渲染骨架屏（animate-pulse），不渲染 label/value
-      expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+      expect(screen.getByText('加载中')).toBeInTheDocument();
     });
 
     it('displays normal state when not loading', () => {
@@ -288,7 +285,6 @@ describe('DashboardStatCard', () => {
 
   describe('Edge Cases', () => {
     it('handles zero value', () => {
-      // 注意：wrapper 层 value={value || "unknown"} 导致 0 → "unknown"
       render(
         <DashboardStatCard
           icon={TrendingUp}
@@ -296,7 +292,7 @@ describe('DashboardStatCard', () => {
           value={0}
         />
       );
-      expect(screen.getByText('unknown')).toBeInTheDocument();
+      expect(screen.getByText('0')).toBeInTheDocument();
     });
 
     it('handles negative value', () => {

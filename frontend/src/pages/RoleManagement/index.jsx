@@ -10,6 +10,12 @@
  * - 角色模板快速创建
  */
 
+import { motion } from 'framer-motion';
+import { Plus, Search, GitBranch, FileText } from 'lucide-react';
+import { PageHeader } from '../../components/layout';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 import { fadeIn, staggerContainer } from '../../lib/animations';
 import { useRoleManagement } from './hooks';
 import {

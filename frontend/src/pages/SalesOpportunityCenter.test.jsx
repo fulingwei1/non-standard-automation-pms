@@ -78,8 +78,8 @@ describe("SalesOpportunityCenter 组件", () => {
       renderWithRouter(<SalesOpportunityCenter />);
 
       await waitFor(() => {
-        // 默认显示第一个 Tab 的内容（LeadManagement 全局 fallback testid 为 lowercase）
-        expect(screen.getByTestId("leadmanagement")).toBeInTheDocument();
+        // 默认显示第一个 Tab 的内容
+        expect(screen.getByTestId("lead-management")).toBeInTheDocument();
       });
     });
   });

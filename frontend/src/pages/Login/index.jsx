@@ -3,6 +3,8 @@
  * 项目进度管理系统入口，支持快捷登录
  */
 
+import { motion } from 'framer-motion';
+import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useLogin } from './hooks/useLogin';
 import { FEATURES, DEMO_ACCOUNTS } from './constants';

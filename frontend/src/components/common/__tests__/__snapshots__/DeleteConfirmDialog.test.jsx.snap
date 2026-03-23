@@ -4,7 +4,7 @@ exports[`DeleteConfirmDialog > Snapshot Tests > matches snapshot for default sta
 <div>
   <div
     data-testid="dialog"
-    role="dialog"
+    open=""
   >
     <div
       data-testid="dialogcontent"
@@ -58,7 +58,7 @@ exports[`DeleteConfirmDialog > Snapshot Tests > matches snapshot with custom con
 <div>
   <div
     data-testid="dialog"
-    role="dialog"
+    open=""
   >
     <div
       data-testid="dialogcontent"
@@ -126,7 +126,7 @@ exports[`DeleteConfirmDialog > Snapshot Tests > matches snapshot with disabled s
 <div>
   <div
     data-testid="dialog"
-    role="dialog"
+    open=""
   >
     <div
       data-testid="dialogcontent"

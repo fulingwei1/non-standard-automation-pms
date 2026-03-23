@@ -4,40 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
-
-// Mock API 模块：提供 useAnalytics 所需的数据结构
-vi.mock('../../services/api/projects', () => ({
-  projectApi: {
-    getStats: vi.fn().mockResolvedValue({
-      data: {
-        active_count: 5,
-        completed_this_month: 3,
-        pending_tickets: 2,
-        utilization: '85%',
-        monthly_trend: [
-          { month: '2025-01', completed: 4, active: 6 },
-          { month: '2025-02', completed: 5, active: 7 },
-        ],
-        stage_distribution: [
-          { name: '需求', count: 10, color: '#8b5cf6' },
-          { name: '设计', count: 8, color: '#3b82f6' },
-        ],
-      },
-    }),
-  },
-}));
-
-vi.mock('../../services/api/analytics', () => ({
-  workloadAnalyticsApi: {
-    overview: vi.fn().mockResolvedValue({
-      data: { average_utilization: 85 },
-    }),
-    bottlenecks: vi.fn().mockResolvedValue({
-      data: { items: [] },
-    }),
-  },
-}));
-
 import { useAnalytics } from '../useAnalytics';
 
 describe('useAnalytics', () => {

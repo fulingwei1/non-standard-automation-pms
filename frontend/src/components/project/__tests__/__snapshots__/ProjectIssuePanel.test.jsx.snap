@@ -1,0 +1,403 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ProjectIssuePanel > Snapshot > matches snapshot in loading state 1`] = `
+<div
+  data-testid="card"
+>
+  <div
+    class="p-6"
+    data-testid="cardcontent"
+  >
+    <div
+      class="text-center text-gray-500"
+    >
+      加载中...
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ProjectIssuePanel > Snapshot > matches snapshot with issues loaded 1`] = `
+<div
+  class="space-y-6"
+>
+  <div
+    class="grid grid-cols-1 md:grid-cols-4 gap-4"
+  >
+    <div
+      data-testid="card"
+    >
+      <div
+        class="p-4"
+        data-testid="cardcontent"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          问题总数
+        </p>
+        <p
+          class="text-2xl font-bold"
+        >
+          3
+        </p>
+      </div>
+    </div>
+    <div
+      data-testid="card"
+    >
+      <div
+        class="p-4"
+        data-testid="cardcontent"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          待处理
+        </p>
+        <p
+          class="text-2xl font-bold text-orange-600"
+        >
+          2
+        </p>
+      </div>
+    </div>
+    <div
+      data-testid="card"
+    >
+      <div
+        class="p-4"
+        data-testid="cardcontent"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          已解决
+        </p>
+        <p
+          class="text-2xl font-bold text-green-600"
+        >
+          1
+        </p>
+      </div>
+    </div>
+    <div
+      data-testid="card"
+    >
+      <div
+        class="p-4"
+        data-testid="cardcontent"
+      >
+        <p
+          class="text-sm text-gray-500"
+        >
+          解决率
+        </p>
+        <p
+          class="text-2xl font-bold"
+        >
+          33.3
+          %
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    data-testid="card"
+  >
+    <div
+      data-testid="cardheader"
+    >
+      <div
+        class="flex items-center gap-2"
+        data-testid="cardtitle"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+        />
+        项目问题
+      </div>
+    </div>
+    <div
+      data-testid="cardcontent"
+    >
+      <div
+        data-testid="tabs"
+        value="all"
+      >
+        <div
+          class="grid w-full grid-cols-4"
+          data-testid="tabslist"
+        >
+          <div
+            data-testid="tabstrigger"
+            value="all"
+          >
+            全部
+          </div>
+          <div
+            data-testid="tabstrigger"
+            value="open"
+          >
+            待处理
+          </div>
+          <div
+            data-testid="tabstrigger"
+            value="resolved"
+          >
+            已解决
+          </div>
+          <div
+            data-testid="tabstrigger"
+            value="with-solution"
+          >
+            有解决方案
+          </div>
+        </div>
+        <div
+          class="mt-4"
+          data-testid="tabscontent"
+          value="all"
+        >
+          <div
+            class="space-y-2"
+          >
+            <div
+              class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <div
+                  class="flex-1"
+                >
+                  <div
+                    class="flex items-center gap-2 mb-1"
+                  >
+                    <p
+                      class="font-medium"
+                    >
+                      测试问题1
+                    </p>
+                    <div
+                      class="text-xs"
+                      data-testid="badge"
+                    />
+                  </div>
+                  <div
+                    class="flex items-center gap-2"
+                  >
+                    <div
+                      data-testid="badge"
+                    />
+                    <div
+                      data-testid="badge"
+                    >
+                      HIGH
+                    </div>
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                    <span
+                      class="text-sm text-gray-500"
+                    >
+                      -
+                    </span>
+                  </div>
+                </div>
+                <div
+                  data-testid="badge"
+                >
+                  OPEN
+                </div>
+              </div>
+            </div>
+            <div
+              class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <div
+                  class="flex-1"
+                >
+                  <div
+                    class="flex items-center gap-2 mb-1"
+                  >
+                    <p
+                      class="font-medium"
+                    >
+                      测试问题2
+                    </p>
+                    <div
+                      class="text-xs"
+                      data-testid="badge"
+                    />
+                  </div>
+                  <div
+                    class="flex items-center gap-2"
+                  >
+                    <div
+                      data-testid="badge"
+                    />
+                    <div
+                      data-testid="badge"
+                    >
+                      MEDIUM
+                    </div>
+                    <div
+                      data-testid="badge"
+                    >
+                      <svg
+                        class="h-3 w-3 mr-1"
+                        fill="none"
+                        height="24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        width="24"
+                      />
+                      已解决
+                    </div>
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                    <span
+                      class="text-sm text-gray-500"
+                    >
+                      -
+                    </span>
+                  </div>
+                </div>
+                <div
+                  data-testid="badge"
+                >
+                  RESOLVED
+                </div>
+              </div>
+            </div>
+            <div
+              class="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <div
+                class="flex items-center justify-between"
+              >
+                <div
+                  class="flex-1"
+                >
+                  <div
+                    class="flex items-center gap-2 mb-1"
+                  >
+                    <p
+                      class="font-medium"
+                    >
+                      测试问题3
+                    </p>
+                    <div
+                      class="text-xs"
+                      data-testid="badge"
+                    />
+                  </div>
+                  <div
+                    class="flex items-center gap-2"
+                  >
+                    <div
+                      data-testid="badge"
+                    />
+                    <div
+                      data-testid="badge"
+                    >
+                      LOW
+                    </div>
+                    <span
+                      class="text-sm text-gray-500"
+                    />
+                    <span
+                      class="text-sm text-gray-500"
+                    >
+                      -
+                    </span>
+                  </div>
+                </div>
+                <div
+                  data-testid="badge"
+                >
+                  IN_PROGRESS
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    data-testid="card"
+  >
+    <div
+      data-testid="cardheader"
+    >
+      <div
+        class="flex items-center gap-2"
+        data-testid="cardtitle"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+        />
+        解决方案库
+      </div>
+    </div>
+    <div
+      data-testid="cardcontent"
+    >
+      <div
+        class="space-y-2"
+      >
+        <div
+          class="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <div
+            class="flex items-center justify-between mb-2"
+          >
+            <div>
+              <p
+                class="font-medium"
+              />
+              <div
+                class="flex items-center gap-2 mt-1"
+              >
+                <div
+                  data-testid="badge"
+                />
+                <div
+                  data-testid="badge"
+                />
+                <span
+                  class="text-sm text-gray-500"
+                >
+                  -
+                </span>
+                <span
+                  class="text-sm text-gray-500"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

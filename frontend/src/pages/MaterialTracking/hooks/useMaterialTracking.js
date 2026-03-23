@@ -19,9 +19,7 @@ export function useMaterialTracking() {
             if (filters.keyword) params.keyword = filters.keyword;
 
             const response = await materialApi.listTracking(params);
-            // 防御性处理：API 响应可能是数组、对象或 {items: [...]}
-            const data = response.data;
-            setMaterials(Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []);
+            setMaterials(response.data?.items || response.data?.items || response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {

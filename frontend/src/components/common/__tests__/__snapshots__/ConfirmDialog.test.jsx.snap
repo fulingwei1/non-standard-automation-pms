@@ -4,7 +4,7 @@ exports[`ConfirmDialog > Snapshot Tests > matches snapshot for default variant 1
 <div>
   <div
     data-testid="dialog"
-    role="dialog"
+    open=""
   >
     <div
       data-testid="dialogcontent"
@@ -73,7 +73,7 @@ exports[`ConfirmDialog > Snapshot Tests > matches snapshot for destructive varia
 <div>
   <div
     data-testid="dialog"
-    role="dialog"
+    open=""
   >
     <div
       data-testid="dialogcontent"
@@ -140,7 +140,7 @@ exports[`ConfirmDialog > Snapshot Tests > matches snapshot with children 1`] = `
 <div>
   <div
     data-testid="dialog"
-    role="dialog"
+    open=""
   >
     <div
       data-testid="dialogcontent"

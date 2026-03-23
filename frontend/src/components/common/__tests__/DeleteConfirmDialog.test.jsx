@@ -221,9 +221,10 @@ describe('DeleteConfirmDialog', () => {
         />
       );
 
-      // 标题区域包含 "确认删除" 文本，DialogTitle 在 fallback 中渲染为 div
+      // Title is the heading element with 确认删除
       const titles = screen.getAllByText('确认删除');
-      expect(titles.length).toBeGreaterThan(0);
+      const heading = titles.find(el => el.tagName === 'H2');
+      expect(heading).toBeTruthy();
     });
 
     it('applies custom description className', () => {

@@ -7,6 +7,7 @@ import ProjectIssuePanel from '../ProjectIssuePanel';
 vi.mock('../../../services/api', () => ({
   projectWorkspaceApi: {
     getIssues: vi.fn(),
+    getSolutions: vi.fn(),
     createIssue: vi.fn(),
     updateIssue: vi.fn(),
     deleteIssue: vi.fn(),

@@ -14,8 +14,7 @@ export function usePurchaseRequestNew() {
         try {
             setLoading(true);
             const response = await projectApi.list({ status: 'active', page_size: 100 });
-            // 防御性处理：确保 projects 始终为数组
-            setProjects(Array.isArray(response.data?.items) ? response.data.items : Array.isArray(response.data) ? response.data : []);
+            setProjects(response.data?.items || response.data?.items || response.data || []);
         } catch (_err) {
           // 非关键操作失败时静默降级
         } finally {
@@ -28,8 +27,7 @@ export function usePurchaseRequestNew() {
         try {
             setLoading(true);
             const response = await purchaseRequestApi.getMaterials(projectId);
-            // 防御性处理：确保 materials 始终为数组
-            setMaterials(Array.isArray(response.data?.items) ? response.data.items : Array.isArray(response.data) ? response.data : []);
+            setMaterials(response.data || response || []);
         } catch (_err) {
           // 非关键操作失败时静默降级
         } finally {

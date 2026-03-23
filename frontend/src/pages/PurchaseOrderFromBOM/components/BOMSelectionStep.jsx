@@ -21,7 +21,7 @@ export function BOMSelectionStep({
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {(boms || []).length === 0 ? (
+                    {boms.length === 0 ? (
                         <EmptyState
                             icon={Package}
                             title="暂无已发布的BOM"

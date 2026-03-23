@@ -4,7 +4,19 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { FileText, ClipboardCheck, CheckCircle2, Layers } from "lucide-react";
+import {
+  Sparkles, FileText, ClipboardCheck, GitBranch,
+  Search, RefreshCw, PlusCircle, CheckCircle2, XCircle,
+  ArrowRight, CalendarClock, Coins, Layers, MessageSquareText,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { PageHeader } from "../../components/layout";
+import {
+  Alert, AlertDescription, AlertTitle,
+  Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle,
+  Input, Progress, Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Tabs, TabsContent, TabsList, TabsTrigger, Textarea,
+} from "../../components/ui";
 import { usePresaleProposals } from './hooks/usePresaleProposals';
 import {
   STATUS_CONFIG,

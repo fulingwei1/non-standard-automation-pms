@@ -354,8 +354,7 @@ export default function MaterialTracking() {
     const loadCategories = async () => {
       try {
         const res = await materialApi.categories.list();
-        // 防御性处理：确保 categories 始终为数组
-        setCategories(Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : []);
+        setCategories(res.data?.items || res.data?.items || res.data || []);
       } catch (_err) {
         // 非关键操作失败时静默降级
       }

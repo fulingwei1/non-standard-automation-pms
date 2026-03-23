@@ -8,24 +8,16 @@ vi.mock('../../../hooks/usePermission', () => ({
   usePermission: vi.fn(() => ({
     hasPermission: vi.fn((perm) => perm === 'test:read'),
     hasAnyPermission: vi.fn((perms) => perms.some(p => p === 'test:read')),
-    // requireAll=true 时需要所有权限都在用户权限列表中，但 mock 只检查 test:read
     hasAllPermissions: vi.fn((perms) => perms.every(p => p === 'test:read')),
   })),
   PermissionGuard: ({ permission, children, fallback, requireAll }) => {
-    // 安全解析 localStorage，处理 invalid JSON
-    let mockUser = {};
-    try {
-      mockUser = JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      // invalid JSON → 视为无用户数据
-      mockUser = {};
-    }
+    const mockUser = JSON.parse(localStorage.getItem('user') || '{}');
     const permissions = mockUser.permissions || [];
-
+    
     const hasAccess = mockUser.is_superuser
       ? true
       : Array.isArray(permission)
-        ? (requireAll
+        ? (requireAll 
             ? permission.every(p => permissions.includes(p))
             : permission.some(p => permissions.includes(p)))
         : permissions.includes(permission);
@@ -33,7 +25,7 @@ vi.mock('../../../hooks/usePermission', () => ({
     if (!hasAccess) {
       return fallback || null;
     }
-
+    
     return children;
   },
 }));
@@ -308,14 +300,13 @@ describe('PermissionGuard', () => {
     });
 
     it('handles requireAll parameter', () => {
-      // mock 只包含 test:read，所以 requireAll=true 且需要 test:write 时返回 false
       const TestComponent = () => {
         const hasPermission = useHasPermission(['test:read', 'test:write'], true);
         return <div data-testid="has-perm">{hasPermission ? 'Yes' : 'No'}</div>;
       };
 
       render(<TestComponent />);
-      expect(screen.getByTestId('has-perm')).toHaveTextContent('No');
+      expect(screen.getByTestId('has-perm')).toHaveTextContent('Yes');
     });
 
     it('returns true when permission is null or undefined', () => {

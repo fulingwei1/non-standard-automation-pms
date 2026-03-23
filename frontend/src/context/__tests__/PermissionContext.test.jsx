@@ -254,8 +254,9 @@ describe('PermissionContext', () => {
       localStorage.setItem('user', JSON.stringify(mockUser));
 
       authApi.me.mockResolvedValue({ data: mockUser });
-      const savedGetPermissions = authApi.getPermissions;
-      authApi.getPermissions = undefined; // API不存在
+      // 模拟getPermissions API不存在：让它抛出错误而不是设为undefined
+      // 这样不会破坏后续测试的mock函数
+      authApi.getPermissions.mockRejectedValue(new Error('Not Found'));
 
       let permData;
       const TestComponent = () => {
@@ -274,9 +275,6 @@ describe('PermissionContext', () => {
       });
 
       expect(permData.permissions).toEqual(['project:view']);
-
-      // 恢复 getPermissions mock，避免影响后续测试
-      authApi.getPermissions = savedGetPermissions;
     });
   });
 

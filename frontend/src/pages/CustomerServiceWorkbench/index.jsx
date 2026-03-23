@@ -5,10 +5,30 @@
 
 import { RefreshCw, UserRound } from "lucide-react";
 
-
-
+import { PageHeader } from "../../components/layout/PageHeader";
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  ErrorMessage,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui";
 import { TEAM_OVERVIEW_KEY } from "./constants";
 import { useCustomerServiceWorkbench } from "./hooks/useCustomerServiceWorkbench";
+import { WorkbenchLoading } from "./components/WorkbenchLoading";
+import { ScopeSummary } from "./components/ScopeSummary";
+import { EngineerRoster } from "./components/EngineerRoster";
+import { ProjectTable } from "./components/ProjectTable";
+import { TicketTable } from "./components/TicketTable";
+import { IssueTable } from "./components/IssueTable";
+import { FieldTaskTables } from "./components/FieldTaskTables";
 
 export default function CustomerServiceWorkbench() {
   const ctx = useCustomerServiceWorkbench();

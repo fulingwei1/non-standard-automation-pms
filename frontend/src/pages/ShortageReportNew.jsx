@@ -67,8 +67,7 @@ export default function ShortageReportNew() {
         // params.keyword = searchKeyword
       }
       const res = await materialApi.list(params);
-      // 防御性处理：确保 materialList 始终为数组
-      const materialList = Array.isArray(res.data?.items) ? res.data.items : Array.isArray(res.data) ? res.data : [];
+      const materialList = res.data?.items || res.data?.items || res.data || [];
 
       // 如果有搜索关键词，前端过滤
       let filteredMaterials = materialList;

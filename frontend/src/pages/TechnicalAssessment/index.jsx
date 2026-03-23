@@ -3,9 +3,23 @@
  * 1,348 行单体拆分为: constants + hook + 2 个标签页组件
  */
 
-
-
-
+import {
+  Clock3,
+  Download,
+  GitBranch,
+  Layers3,
+  ShieldAlert,
+} from "lucide-react";
+import { PageHeader } from "../../components/layout";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Progress,
+} from "../../components/ui";
 
 import {
   dimensionLabels,
@@ -16,6 +30,8 @@ import {
   getStatusMeta,
 } from "./constants";
 import { useTechnicalAssessment } from "./hooks/useTechnicalAssessment";
+import { AssessmentResultTabs } from "./components/AssessmentResultTabs";
+import { WorkbenchContextTabs } from "./components/WorkbenchContextTabs";
 
 export default function TechnicalAssessment() {
   const ctx = useTechnicalAssessment();
