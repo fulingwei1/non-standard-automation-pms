@@ -9,6 +9,38 @@ import { acceptanceApi } from '../../services/api';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import AcceptanceExecution from '../AcceptanceExecution';
 
+// Mock API - 提供 acceptanceApi 的完整嵌套结构
+vi.mock('../../services/api', () => ({
+  acceptanceApi: {
+    orders: {
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      getItems: vi.fn(),
+      updateItem: vi.fn(),
+      complete: vi.fn(),
+    },
+    issues: {
+      list: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    templates: {
+      list: vi.fn(),
+      get: vi.fn(),
+    },
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
+
 // Mock dependencies
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {

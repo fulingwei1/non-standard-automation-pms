@@ -44,9 +44,7 @@ describe('useIntersectionObserver', () => {
   beforeEach(() => {
     observerInstances = [];
     _observerCallback = null;
-    global.IntersectionObserver = vi.fn((callback, options) => {
-      return new MockIntersectionObserver(callback, options);
-    });
+    global.IntersectionObserver = MockIntersectionObserver;
   });
 
   it('should initialize with default values', () => {
@@ -128,9 +126,7 @@ describe('useIntersectionObserver', () => {
 
 describe('useInfiniteScroll', () => {
   beforeEach(() => {
-    global.IntersectionObserver = vi.fn((callback, options) => {
-      return new MockIntersectionObserver(callback, options);
-    });
+    global.IntersectionObserver = MockIntersectionObserver;
   });
 
   it('should use threshold 0.1', () => {
@@ -160,9 +156,7 @@ describe('useInfiniteScroll', () => {
 
 describe('usePreload', () => {
   beforeEach(() => {
-    global.IntersectionObserver = vi.fn((callback, options) => {
-      return new MockIntersectionObserver(callback, options);
-    });
+    global.IntersectionObserver = MockIntersectionObserver;
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 

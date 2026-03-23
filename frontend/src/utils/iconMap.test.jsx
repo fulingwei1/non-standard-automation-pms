@@ -198,7 +198,8 @@ describe("iconMap", () => {
 
     it("should return a React component", () => {
       const IconComponent = getIcon("Clock");
-      expect(typeof IconComponent).toBe("function");
+      // lucide-react icons 使用 forwardRef，类型为 object
+      expect(IconComponent).toBeTruthy();
       // It should be renderable
       const { container } = render(<IconComponent />);
       expect(container.querySelector("svg")).toBeInTheDocument();

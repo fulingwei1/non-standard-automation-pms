@@ -28,12 +28,13 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// Mock localStorage
+// Mock localStorage - 使用真实的存储以支持 get/set
+const localStorageStore = {};
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: vi.fn((key) => localStorageStore[key] ?? null),
+  setItem: vi.fn((key, value) => { localStorageStore[key] = String(value); }),
+  removeItem: vi.fn((key) => { delete localStorageStore[key]; }),
+  clear: vi.fn(() => { Object.keys(localStorageStore).forEach(k => delete localStorageStore[k]); }),
 };
 global.localStorage = localStorageMock;
 
@@ -49,6 +50,11 @@ global.sessionStorage = sessionStorageMock;
 // Mock scrollTo
 window.scrollTo = vi.fn();
 
+// Mock window.alert / window.confirm / window.prompt (jsdom 不实现这些)
+window.alert = vi.fn();
+window.confirm = vi.fn(() => true);
+window.prompt = vi.fn(() => '');
+
 // Mock react-router-dom (for useParams, useNavigate等)
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
@@ -63,7 +69,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 // Mock API client globally with proper response structure
 vi.mock('../services/api/client', () => {
-  const mockResponse = (data = {}) => ({
+  const mockResponse = (data = []) => ({
     data: {
       success: true,
       data,
@@ -74,6 +80,8 @@ vi.mock('../services/api/client', () => {
       unread_cc: 0,
       urgent: 0,
     },
+    formatted: data,
+    status: 200,
   });
 
   const apiMock = {
@@ -200,6 +208,37 @@ vi.mock('framer-motion', () => {
 // 全局定义缺失的组件
 // 许多源文件使用这些组件但 import 被误删，在测试环境中提供 fallback
 const React = require('react');
+
+// 源文件中使用但未 import 的组件 fallback
+const missingGlobals = [
+  'UiStatCard', 'DwellTimeAlerts', 'TabbedCenterPage',
+  'MachineFilters', 'ServiceRecordOverview', 'Space',
+  'Header', 'LayoutGrid', 'FileSignature', 'ThumbsUp',
+];
+for (const name of missingGlobals) {
+  if (typeof globalThis[name] === 'undefined') {
+    const comp = React.forwardRef(({ children, className, ...props }, ref) =>
+      React.createElement('div', { ref, className, 'data-testid': name.toLowerCase(), ...props }, children)
+    );
+    comp.displayName = name;
+    globalThis[name] = comp;
+  }
+}
+
+// recharts 组件 fallback（源文件使用但未导入）
+const rechartsComponentNames = [
+  'CartesianGrid', 'XAxis', 'YAxis', 'Tooltip', 'Legend',
+  'Line', 'Bar', 'Area', 'Pie', 'Cell',
+  'LineChart', 'BarChart', 'AreaChart', 'PieChart',
+  'ResponsiveContainer',
+];
+for (const name of rechartsComponentNames) {
+  if (typeof globalThis[name] === 'undefined') {
+    const comp = ({ children }) => React.createElement('div', { 'data-testid': `recharts-${name}` }, children);
+    comp.displayName = name;
+    globalThis[name] = comp;
+  }
+}
 
 // framer-motion: motion 对象作为全局变量
 // 多个源文件使用 motion.div 等但未 import

@@ -9,6 +9,35 @@ import { opportunityApi, customerApi, userApi } from '../../services/api';
 import { MemoryRouter } from 'react-router-dom';
 import OpportunityManagement from '../OpportunityManagement';
 
+// Mock API - 提供完整的 API 结构
+vi.mock('../../services/api', () => ({
+  opportunityApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    updateStage: vi.fn(),
+  },
+  customerApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+  },
+  userApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
+
 // Mock dependencies
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {

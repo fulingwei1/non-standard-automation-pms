@@ -260,7 +260,7 @@ describe("apiErrorHandler", () => {
       logApiError(error, "测试");
       expect(consoleInfoSpy).toHaveBeenCalledWith(
         "[API] 测试:",
-        "测试失败,请稍后重试"
+        "测试失败，请稍后重试"
       );
     });
 

@@ -44,7 +44,8 @@ describe('Customer Service', () => {
 
       expect(result).toEqual(mockData);
       expect(mock.history.get).toHaveLength(1);
-      expect(mock.history.get[0].url).toBe('/api/v1/customer/1');
+      // MockAdapter 记录的是相对路径（不含 baseURL）
+      expect(mock.history.get[0].url).toBe('/customer/1');
     });
 
     it('应该处理客户不存在的情况', async () => {

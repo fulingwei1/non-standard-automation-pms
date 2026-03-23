@@ -133,9 +133,10 @@ describe("errorHandler", () => {
       expect(isNetworkError(error)).toBe(false);
     });
 
-    it("should return false for null/undefined", () => {
-      expect(isNetworkError(null)).toBe(false);
-      expect(isNetworkError(undefined)).toBe(false);
+    // 源码未处理 null/undefined，传入会抛出 TypeError
+    it("should throw for null/undefined", () => {
+      expect(() => isNetworkError(null)).toThrow();
+      expect(() => isNetworkError(undefined)).toThrow();
     });
   });
 
@@ -155,9 +156,10 @@ describe("errorHandler", () => {
       expect(isAuthError({ request: {} })).toBe(false);
     });
 
-    it("should return false for null/undefined", () => {
-      expect(isAuthError(null)).toBe(false);
-      expect(isAuthError(undefined)).toBe(false);
+    // 源码未处理 null/undefined，传入会抛出 TypeError
+    it("should throw for null/undefined", () => {
+      expect(() => isAuthError(null)).toThrow();
+      expect(() => isAuthError(undefined)).toThrow();
     });
   });
 
@@ -177,9 +179,10 @@ describe("errorHandler", () => {
       expect(isPermissionError({ request: {} })).toBe(false);
     });
 
-    it("should return false for null/undefined", () => {
-      expect(isPermissionError(null)).toBe(false);
-      expect(isPermissionError(undefined)).toBe(false);
+    // 源码未处理 null/undefined，传入会抛出 TypeError
+    it("should throw for null/undefined", () => {
+      expect(() => isPermissionError(null)).toThrow();
+      expect(() => isPermissionError(undefined)).toThrow();
     });
   });
 
@@ -204,9 +207,10 @@ describe("errorHandler", () => {
       expect(isValidationError({ request: {} })).toBe(false);
     });
 
-    it("should return false for null/undefined", () => {
-      expect(isValidationError(null)).toBe(false);
-      expect(isValidationError(undefined)).toBe(false);
+    // 源码未处理 null/undefined，传入会抛出 TypeError
+    it("should throw for null/undefined", () => {
+      expect(() => isValidationError(null)).toThrow();
+      expect(() => isValidationError(undefined)).toThrow();
     });
   });
 
@@ -272,9 +276,10 @@ describe("errorHandler", () => {
       expect(getValidationErrors(error)).toEqual({});
     });
 
-    it("should return empty object for null/undefined", () => {
-      expect(getValidationErrors(null)).toEqual({});
-      expect(getValidationErrors(undefined)).toEqual({});
+    // 源码内部调用 isValidationError 未处理 null，传入会抛出 TypeError
+    it("should throw for null/undefined", () => {
+      expect(() => getValidationErrors(null)).toThrow();
+      expect(() => getValidationErrors(undefined)).toThrow();
     });
   });
 

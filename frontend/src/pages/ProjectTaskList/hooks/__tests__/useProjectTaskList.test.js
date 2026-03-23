@@ -13,6 +13,12 @@ vi.mock('../../../../services/api', () => ({
       delete: vi.fn(),
       query: vi.fn(),
       getSummary: vi.fn(),
+      reports: {
+        list: vi.fn(),
+        get: vi.fn(),
+        getSummary: vi.fn(),
+        create: vi.fn(),
+      },
   },
   projectApi: {
       list: vi.fn(),

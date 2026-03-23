@@ -1,22 +1,213 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`ConfirmDialog > Snapshot Tests > matches snapshot for default variant 1`] = `
-<div
-  aria-hidden="true"
-  data-aria-hidden="true"
-/>
+<div>
+  <div
+    data-testid="dialog"
+    open=""
+  >
+    <div
+      data-testid="dialogcontent"
+    >
+      <div
+        data-testid="dialogheader"
+      >
+        <div
+          class="flex items-center gap-2"
+          data-testid="dialogtitle"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-circle-question-mark h-5 w-5 text-slate-400"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+            />
+            <path
+              d="M12 17h.01"
+            />
+          </svg>
+          确认操作
+        </div>
+        <div
+          data-testid="dialogdescription"
+        >
+          您确定要执行此操作吗？
+        </div>
+      </div>
+      <div
+        class="gap-2"
+        data-testid="dialogfooter"
+      >
+        <button
+          type="button"
+        >
+          取消
+        </button>
+        <button
+          type="button"
+        >
+          确认
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 `;
 
 exports[`ConfirmDialog > Snapshot Tests > matches snapshot for destructive variant 1`] = `
-<div
-  aria-hidden="true"
-  data-aria-hidden="true"
-/>
+<div>
+  <div
+    data-testid="dialog"
+    open=""
+  >
+    <div
+      data-testid="dialogcontent"
+    >
+      <div
+        data-testid="dialogheader"
+      >
+        <div
+          class="flex items-center gap-2"
+          data-testid="dialogtitle"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-triangle-alert h-5 w-5 text-red-400"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+            />
+            <path
+              d="M12 9v4"
+            />
+            <path
+              d="M12 17h.01"
+            />
+          </svg>
+          危险操作
+        </div>
+        <div
+          data-testid="dialogdescription"
+        >
+          此操作不可撤销
+        </div>
+      </div>
+      <div
+        class="gap-2"
+        data-testid="dialogfooter"
+      >
+        <button
+          type="button"
+        >
+          取消
+        </button>
+        <button
+          type="button"
+        >
+          确认
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 `;
 
 exports[`ConfirmDialog > Snapshot Tests > matches snapshot with children 1`] = `
-<div
-  aria-hidden="true"
-  data-aria-hidden="true"
-/>
+<div>
+  <div
+    data-testid="dialog"
+    open=""
+  >
+    <div
+      data-testid="dialogcontent"
+    >
+      <div
+        data-testid="dialogheader"
+      >
+        <div
+          class="flex items-center gap-2"
+          data-testid="dialogtitle"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-circle-question-mark h-5 w-5 text-slate-400"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+            />
+            <path
+              d="M12 17h.01"
+            />
+          </svg>
+          确认提交
+        </div>
+        <div
+          data-testid="dialogdescription"
+        >
+          请确认以下信息
+        </div>
+      </div>
+      <div
+        class="py-4"
+      >
+        <div>
+          额外信息内容
+        </div>
+      </div>
+      <div
+        class="gap-2"
+        data-testid="dialogfooter"
+      >
+        <button
+          type="button"
+        >
+          取消
+        </button>
+        <button
+          type="button"
+        >
+          确认
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 `;

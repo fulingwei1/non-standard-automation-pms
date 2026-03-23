@@ -9,6 +9,28 @@ import { contractApi } from '../../services/api';
 import { MemoryRouter } from 'react-router-dom';
 import ContractList from '../ContractList';
 
+// Mock API - 提供 contractApi 的完整结构
+vi.mock('../../services/api', () => ({
+  contractApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    getMilestones: vi.fn(),
+    approve: vi.fn(),
+    reject: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
+
 // Mock dependencies
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {

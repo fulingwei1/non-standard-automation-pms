@@ -7,7 +7,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { usePerformanceData } from '../usePerformanceData';
 import { performanceApi } from '../../services/api';
 
-// Mock API
+// Mock API - 包含 performanceApi 中实际使用的方法
 vi.mock('../../services/api', () => ({
   performanceApi: {
     list: vi.fn(),
@@ -16,6 +16,17 @@ vi.mock('../../services/api', () => ({
     update: vi.fn(),
     delete: vi.fn(),
     query: vi.fn(),
+    getEvaluationTasks: vi.fn(),
+    getMyPerformance: vi.fn(),
+    submitEvaluation: vi.fn(),
+    getWeightConfig: vi.fn(),
+    calculateIntegratedPerformance: vi.fn(),
+    createMonthlySummary: vi.fn(),
+    getMonthlySummaryHistory: vi.fn(),
+    saveMonthlySummaryDraft: vi.fn(),
+    getEvaluationDetail: vi.fn(),
+    updateWeightConfig: vi.fn(),
+    getIntegratedPerformance: vi.fn(),
   },
   default: {
     get: vi.fn(),

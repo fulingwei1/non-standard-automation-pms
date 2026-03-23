@@ -3,20 +3,23 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { issueTemplateApi } from '../../../services/api';
 import SolutionLibrary from '../SolutionLibrary';
 
-vi.mock('../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
-  };
-});
+vi.mock('../../../services/api', () => ({
+  issueTemplateApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
 
 describe('SolutionLibrary', () => {
   const mockTemplates = [

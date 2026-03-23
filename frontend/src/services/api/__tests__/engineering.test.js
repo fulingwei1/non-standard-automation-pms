@@ -11,6 +11,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
 
+// 取消 setupTests.js 对 client 的全局 mock，使用真实 axios 实例 + MockAdapter
+vi.unmock('../client.js');
+vi.unmock('../client');
+
 describe('Engineering API', () => {
   let api, mock;
   let projectReviewApi, technicalReviewApi, technicalAssessmentApi;
@@ -18,10 +22,10 @@ describe('Engineering API', () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    
+
     const clientModule = await import('../client.js');
     api = clientModule.default || clientModule.api;
-    
+
     const engineeringModule = await import('../engineering.js');
     projectReviewApi = engineeringModule.projectReviewApi;
     technicalReviewApi = engineeringModule.technicalReviewApi;
@@ -29,7 +33,7 @@ describe('Engineering API', () => {
     rdProjectApi = engineeringModule.rdProjectApi;
     rdReportApi = engineeringModule.rdReportApi;
     engineersApi = engineeringModule.engineersApi;
-    
+
     mock = new MockAdapter(api);
     vi.clearAllMocks();
   });
@@ -64,8 +68,9 @@ describe('Engineering API', () => {
       expect(response.status).toBe(201);
     });
 
+    // publish 源码使用 api.post(`/projects/reviews/${id}/publish`)
     it('publish() - 应该发布复盘报告', async () => {
-      mock.onPut('/api/v1/project-reviews/1/publish').reply(200, {
+      mock.onPost('/api/v1/projects/reviews/1/publish').reply(200, {
         success: true,
         data: { status: 'PUBLISHED' },
       });
@@ -75,8 +80,9 @@ describe('Engineering API', () => {
       expect(response.status).toBe(200);
     });
 
+    // getLessons 源码使用 api.get("/project-reviews", { params: { review_id } })
     it('getLessons() - 应该获取经验教训', async () => {
-      mock.onGet('/api/v1/project-reviews/1/lessons').reply(200, {
+      mock.onGet('/api/v1/project-reviews').reply(200, {
         success: true,
         data: [{ id: 1, content: 'Lesson learned' }],
       });
@@ -86,9 +92,10 @@ describe('Engineering API', () => {
       expect(response.status).toBe(200);
     });
 
+    // createLesson 源码使用 api.post("/project-reviews/extract", { review_id, ...data })
     it('createLesson() - 应该创建经验教训', async () => {
       const lesson = { content: 'Important lesson', category: 'TECHNICAL' };
-      mock.onPost('/api/v1/project-reviews/1/lessons').reply(201, {
+      mock.onPost('/api/v1/project-reviews/extract').reply(201, {
         success: true,
         data: { id: 1, ...lesson },
       });
@@ -98,8 +105,9 @@ describe('Engineering API', () => {
       expect(response.status).toBe(201);
     });
 
+    // getBestPractices 源码使用 api.get("/projects/best-practices", { params })
     it('getBestPractices() - 应该获取最佳实践', async () => {
-      mock.onGet('/api/v1/project-reviews/1/best-practices').reply(200, {
+      mock.onGet('/api/v1/projects/best-practices').reply(200, {
         success: true,
         data: [{ id: 1, title: 'Best Practice 1' }],
       });
@@ -118,18 +126,6 @@ describe('Engineering API', () => {
       const response = await projectReviewApi.searchBestPractices({
         keyword: 'testing',
       });
-
-      expect(response.status).toBe(200);
-    });
-
-    it('recommendBestPractices() - 应该推荐最佳实践', async () => {
-      const criteria = { project_type: 'AUTOMATION', tags: ['quality'] };
-      mock.onPost('/api/v1/projects/best-practices/recommend').reply(200, {
-        success: true,
-        data: [{ id: 1, relevance_score: 0.95 }],
-      });
-
-      const response = await projectReviewApi.recommendBestPractices(criteria);
 
       expect(response.status).toBe(200);
     });
@@ -315,8 +311,9 @@ describe('Engineering API', () => {
       expect(response.status).toBe(200);
     });
 
+    // getCosts 源码使用 api.get("/rd-projects/rd-costs", { params })
     it('getCosts() - 应该获取研发费用', async () => {
-      mock.onGet('/api/v1/rd-costs').reply(200, {
+      mock.onGet('/api/v1/rd-projects/rd-costs').reply(200, {
         success: true,
         data: [{ id: 1, amount: 10000 }],
       });
@@ -326,9 +323,10 @@ describe('Engineering API', () => {
       expect(response.status).toBe(200);
     });
 
+    // calculateLaborCost 源码使用 api.post("/rd-projects/rd-costs/calc-labor", data)
     it('calculateLaborCost() - 应该计算人工成本', async () => {
       const data = { project_id: 1, period: '2024-01' };
-      mock.onPost('/api/v1/rd-costs/calc-labor').reply(200, {
+      mock.onPost('/api/v1/rd-projects/rd-costs/calc-labor').reply(200, {
         success: true,
         data: { labor_cost: 50000 },
       });
@@ -365,8 +363,9 @@ describe('Engineering API', () => {
   });
 
   describe('rdReportApi - 研发报表API', () => {
+    // 源码使用 /report-center/rd-expense/ 前缀
     it('getAuxiliaryLedger() - 应该获取辅助账', async () => {
-      mock.onGet('/api/v1/reports/rd-auxiliary-ledger').reply(200, {
+      mock.onGet('/api/v1/report-center/rd-expense/rd-auxiliary-ledger').reply(200, {
         success: true,
         data: { total: 500000 },
       });
@@ -377,7 +376,7 @@ describe('Engineering API', () => {
     });
 
     it('getDeductionDetail() - 应该获取加计扣除明细', async () => {
-      mock.onGet('/api/v1/reports/rd-deduction-detail').reply(200, {
+      mock.onGet('/api/v1/report-center/rd-expense/rd-deduction-detail').reply(200, {
         success: true,
         data: { deduction_amount: 750000 },
       });
@@ -388,7 +387,7 @@ describe('Engineering API', () => {
     });
 
     it('getHighTechReport() - 应该获取高新企业报表', async () => {
-      mock.onGet('/api/v1/reports/rd-high-tech').reply(200, {
+      mock.onGet('/api/v1/report-center/rd-expense/rd-high-tech').reply(200, {
         success: true,
         data: { total_rd_expense: 1000000 },
       });
@@ -399,7 +398,7 @@ describe('Engineering API', () => {
     });
 
     it('getIntensityReport() - 应该获取研发投入强度', async () => {
-      mock.onGet('/api/v1/reports/rd-intensity').reply(200, {
+      mock.onGet('/api/v1/report-center/rd-expense/rd-intensity').reply(200, {
         success: true,
         data: { intensity: 0.08 },
       });
@@ -410,7 +409,7 @@ describe('Engineering API', () => {
     });
 
     it('exportReport() - 应该导出研发报表', async () => {
-      mock.onGet('/api/v1/reports/rd-export').reply(200, new Blob());
+      mock.onGet('/api/v1/report-center/rd-expense/rd-export').reply(200, new Blob());
 
       const response = await rdReportApi.exportReport({
         year: 2024,

@@ -233,7 +233,7 @@ describe("performanceUtils", () => {
 
       const result = calculateQuarterComparison(quarterlyTrend);
 
-      expect(result.percentChange).toBe("6.2"); // (5/80)*100 = 6.25 -> "6.2"
+      expect(result.percentChange).toBe("6.3"); // (5/80)*100 = 6.25 -> toFixed(1) -> "6.3"
     });
 
     it("should return null for null/undefined input", () => {

@@ -9,6 +9,27 @@ import { roleApi } from '../../services/api';
 import { MemoryRouter } from 'react-router-dom';
 import PermissionManagement from '../PermissionManagement';
 
+// Mock API - 提供 roleApi 的完整结构
+vi.mock('../../services/api', () => ({
+  roleApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    permissions: vi.fn(),
+    assignPermissions: vi.fn(),
+  },
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+}));
+
 // Mock dependencies
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {

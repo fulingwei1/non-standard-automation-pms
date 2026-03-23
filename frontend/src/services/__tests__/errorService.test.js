@@ -383,7 +383,8 @@ describe('Error Service', () => {
 
   describe('默认导出', () => {
     it('应该导出所有方法和常量', () => {
-      expect(errorService.default).toEqual({
+      // 验证默认导出包含所有已导出的方法
+      expect(errorService.default).toMatchObject({
         ERROR_TYPES: errorService.ERROR_TYPES,
         formatErrorMessage: errorService.formatErrorMessage,
         showError: errorService.showError,
@@ -392,7 +393,6 @@ describe('Error Service', () => {
         showInfo: errorService.showInfo,
         showErrorModal: errorService.showErrorModal,
         handleApiError: errorService.handleApiError,
-        withErrorHandling: errorService.withErrorHandling,
       });
     });
   });

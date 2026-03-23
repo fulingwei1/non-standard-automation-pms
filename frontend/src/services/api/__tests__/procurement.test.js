@@ -9,6 +9,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
 
+// 取消 setupTests.js 对 client 的全局 mock，使用真实 axios 实例 + MockAdapter
+vi.unmock('../client.js');
+vi.unmock('../client');
+
 describe('Procurement API', () => {
   let api, mock;
   let purchaseApi, outsourcingApi, procurementAnalysisApi;
@@ -64,7 +68,7 @@ describe('Procurement API', () => {
         project_id: 1,
         items: [{ material: 'Steel', quantity: 100 }],
       };
-      mock.onPost('/api/v1/purchase-orders').reply(201, {
+      mock.onPost('/api/v1/purchase-orders/').reply(201, {
         success: true,
         data: { id: 1, ...order },
       });
@@ -309,11 +313,12 @@ describe('Procurement API', () => {
       expect(response.status).toBe(200);
     });
 
+    // 源码: api.post("/outsourcing-deliveries", { ...data, order_id: orderId })
     it('deliveries.create() - 应该创建交付记录', async () => {
-      const delivery = { order_id: 1, items: [] };
-      mock.onPost('/api/v1/outsourcing-orders/1/deliveries').reply(201, {
+      const delivery = { items: [] };
+      mock.onPost('/api/v1/outsourcing-deliveries').reply(201, {
         success: true,
-        data: { id: 1, ...delivery },
+        data: { id: 1, order_id: 1, ...delivery },
       });
 
       const response = await outsourcingApi.deliveries.create(1, delivery);
@@ -321,11 +326,12 @@ describe('Procurement API', () => {
       expect(response.status).toBe(201);
     });
 
+    // 源码: api.post("/outsourcing-inspections", { ...data, order_id: orderId })
     it('inspections.create() - 应该创建质检记录', async () => {
-      const inspection = { order_id: 1, result: 'PASSED' };
-      mock.onPost('/api/v1/outsourcing-orders/1/inspections').reply(201, {
+      const inspection = { result: 'PASSED' };
+      mock.onPost('/api/v1/outsourcing-inspections').reply(201, {
         success: true,
-        data: { id: 1, ...inspection },
+        data: { id: 1, order_id: 1, ...inspection },
       });
 
       const response = await outsourcingApi.inspections.create(1, inspection);
@@ -466,7 +472,7 @@ describe('Procurement API', () => {
     });
 
     it('应该处理422验证错误', async () => {
-      mock.onPost('/api/v1/purchase-orders').reply(422, {
+      mock.onPost('/api/v1/purchase-orders/').reply(422, {
         success: false,
         message: 'Validation failed',
         errors: {
