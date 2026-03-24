@@ -125,7 +125,6 @@
 
 ## 详细文档
 
-- [技术架构图](docs/technical/ARCHITECTURE_DIAGRAM.md) — 详细技术架构
 - [数据字典](docs/technical/数据字典.md) — 数据库表结构
 - [多租户架构设计](docs/architecture/多租户架构设计.md)
 - [API 快速参考](docs/api/API_QUICK_REFERENCE.md)

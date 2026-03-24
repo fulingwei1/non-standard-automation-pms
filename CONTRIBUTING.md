@@ -21,10 +21,10 @@ pip install -r requirements-dev.txt
 # 数据文件位于 data/app.db
 
 # 4. 启动开发服务器
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8002
 
 # 5. 访问 API 文档（DEBUG=true 时可用）
-# http://localhost:8000/docs
+# http://localhost:8002/docs
 ```
 
 ### 前端启动

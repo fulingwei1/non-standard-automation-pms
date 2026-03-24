@@ -15,7 +15,7 @@
 ```bash
 # 后端
 pip install -r requirements-dev.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8002
 
 # 前端
 cd frontend && pnpm install && pnpm dev
@@ -98,7 +98,7 @@ migrations/                  # Alembic 数据库迁移
 ## 详细文档
 
 - [文档索引](docs/INDEX.md) — 全部文档入口
-- [技术架构](docs/technical/ARCHITECTURE_DIAGRAM.md)
+- [数据字典](docs/technical/数据字典.md)
 - [API 快速参考](docs/api/API_QUICK_REFERENCE.md)
 - [多租户开发指南](docs/development/多租户开发指南.md)
 - [安全指南](docs/SECURITY.md)
