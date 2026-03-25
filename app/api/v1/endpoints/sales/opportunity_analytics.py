@@ -6,7 +6,7 @@
 from datetime import date, datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,7 @@ from app.models.project import Customer
 from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
 
@@ -34,6 +35,9 @@ def get_opportunity_funnel(
     按阶段统计商机数量和金额，计算转化率
     """
     query = db.query(Opportunity)
+
+    # 数据权限过滤 —— 漏斗统计只能看到权限范围内的商机
+    query = security.filter_sales_data_by_scope(query, current_user, db, Opportunity, "owner_id")
 
     if start_date:
         query = query.filter(
@@ -55,6 +59,9 @@ def get_opportunity_funnel(
         stage_query = query.filter(Opportunity.stage == stage)
         count = stage_query.count()
         amount_query = db.query(func.sum(Opportunity.est_amount)).filter(Opportunity.stage == stage)
+        amount_query = security.filter_sales_data_by_scope(
+            amount_query, current_user, db, Opportunity, "owner_id"
+        )
         if start_date:
             amount_query = amount_query.filter(
                 Opportunity.created_at >= datetime.combine(start_date, datetime.min.time())
@@ -111,6 +118,10 @@ def get_opportunity_win_probability(
     """
     from app.services.sales_prediction_service import SalesPredictionService
 
+    opp = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+    if not security.check_sales_data_permission(opp, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该商机")
+
     service = SalesPredictionService(db)
     probability = service.predict_win_probability(opportunity_id=opp_id)
 
@@ -136,6 +147,10 @@ def export_opportunities(
     )
 
     query = db.query(Opportunity)
+
+    # 数据权限过滤 —— 导出只能导出权限范围内的商机
+    query = security.filter_sales_data_by_scope(query, current_user, db, Opportunity, "owner_id")
+
     if keyword:
         query = query.filter(
             or_(

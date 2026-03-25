@@ -54,24 +54,26 @@
 
 ---
 
-### P1 — 高（数据泄露，缺少 scope 过滤但影响范围较窄）
+### ~~P1 — 高（数据泄露，缺少 scope 过滤但影响范围较窄）~~ ✅ 已修复 (Sprint 5)
 
-| Endpoint | 文件 | 问题 | 风险 |
-|----------|------|------|------|
-| `GET /opportunities/funnel` | opportunity_analytics.py:24 | 统计查询无 scope 过滤，任意用户可看到全公司商机漏斗 | 统计数据泄露 |
-| `GET /opportunities/export` | opportunity_analytics.py:120 | 导出无 scope 过滤，可导出全部商机 | 批量数据泄露 |
-| `GET /opportunities/{id}/win-probability` | opportunity_analytics.py:101 | 无 scope 检查 | 单条数据泄露 |
-| `GET /quotes/{id}/versions` | quote_versions.py:22 | 无 scope 检查，通过 quote_id 可遍历他人报价版本 | 报价版本泄露 |
-| `GET /quotes/{id}/versions/{vid}` | quote_versions.py:70 | 无 scope 检查 | 报价版本详情泄露 |
-| `POST /quotes/{id}/versions` | quote_versions.py:139 | 无 scope 检查，可为他人报价创建版本 | 越权写入 |
-| `GET /quotes/{id}/versions/compare` | quote_versions.py:250 | 无 scope 检查 | 版本对比数据泄露 |
-| `GET /quotes/{vid}/items` | quote_items.py:23 | 无 scope 检查 | 报价明细泄露 |
-| `POST /quotes/{vid}/items` | quote_items.py:84 | 无 scope 检查 | 越权写入 |
-| `PUT /quotes/items/{id}` | quote_items.py:134 | 无 scope 检查 | 越权修改 |
-| `DELETE /quotes/items/{id}` | quote_items.py:181 | 无 scope 检查 | 越权删除 |
-| `GET /contracts/{id}/deliverables` | contracts/deliverables.py:32 | 仅 action 权限，无 scope 过滤 | 交付物数据泄露 |
-| `GET /contracts/{id}/amendments` | contracts/deliverables.py:55 | 仅 action 权限，无 scope 过滤 | 变更记录泄露 |
-| `POST /contracts/{id}/amendments` | contracts/deliverables.py:110 | 仅 action 权限，无 scope 检查 | 越权创建变更 |
+| Endpoint | 文件 | 修复方式 | 状态 |
+|----------|------|----------|------|
+| `GET /opportunities/funnel` | opportunity_analytics.py | `filter_sales_data_by_scope()` 应用于主查询和金额聚合查询 | ✅ 已修复 |
+| `GET /opportunities/export` | opportunity_analytics.py | `filter_sales_data_by_scope()` 应用于导出查询 | ✅ 已修复 |
+| `GET /opportunities/{id}/win-probability` | opportunity_analytics.py | `check_sales_data_permission()` 检查商机所有权 | ✅ 已修复 |
+| `GET /quotes/{id}/versions` | quote_versions.py | `_check_quote_scope()` 通过父 Quote 检查 | ✅ 已修复 |
+| `GET /quotes/{id}/versions/{vid}` | quote_versions.py | `_check_quote_scope()` 通过父 Quote 检查 | ✅ 已修复 |
+| `POST /quotes/{id}/versions` | quote_versions.py | `_check_quote_scope()` 通过父 Quote 检查 | ✅ 已修复 |
+| `GET /quotes/{id}/versions/compare` | quote_versions.py | `_check_quote_scope()` 通过父 Quote 检查 | ✅ 已修复 |
+| `GET /quotes/{vid}/items` | quote_items.py | `_check_version_scope()` 通过 Version→Quote 检查 | ✅ 已修复 |
+| `POST /quotes/{vid}/items` | quote_items.py | `_check_version_scope()` 通过 Version→Quote 检查 | ✅ 已修复 |
+| `PUT /quotes/items/{id}` | quote_items.py | `_check_item_scope()` 通过 Item→Version→Quote 检查 | ✅ 已修复 |
+| `DELETE /quotes/items/{id}` | quote_items.py | `_check_item_scope()` 通过 Item→Version→Quote 检查 | ✅ 已修复 |
+| `GET /contracts/{id}/deliverables` | contracts/deliverables.py | `_check_contract_scope()` 通过父 Contract 检查 | ✅ 已修复 |
+| `GET /contracts/{id}/amendments` | contracts/deliverables.py | `_check_contract_scope()` 通过父 Contract 检查 | ✅ 已修复 |
+| `POST /contracts/{id}/amendments` | contracts/deliverables.py | `_check_contract_scope()` 通过父 Contract 检查 | ✅ 已修复 |
+| `GET /contracts/export` | contracts/export.py | `filter_sales_data_by_scope()` 应用于导出查询 | ✅ 已修复 |
+| `GET /contracts/{id}/pdf` | contracts/export.py | `check_sales_data_permission()` 检查合同所有权 | ✅ 已修复 |
 
 ---
 
@@ -129,13 +131,18 @@
 3. **合同详情 scope 检查** — `GET /contracts/{id}` 加入 `check_sales_data_permission()`
 4. **报价 CRUD scope 检查** — `GET/PUT/DELETE /quotes/{id}` 加入权限检查
 
-### 必须等 sales_scope 核心成型后再做
+### ✅ Sprint 5 已完成
 
-1. **报价子资源全面 scope** — versions、items 需要通过 quote → owner_id 链路回溯检查，需要统一的 "资源链 scope 检查" 模式
-2. **商机分析接口 scope** — funnel/export 需要在聚合查询中集成 `SalesQueryBuilder`
-3. **合同子资源 scope** — deliverables、amendments 需要通过 contract → sales_owner_id 回溯
-4. **联系人全局列表 scope 升级** — 从硬编码 `sales_owner_id == current_user.id` 迁移到 `filter_sales_data_by_scope()` 体系
-5. **商机工作流 scope** — stage/score/win/lose 需要统一的 `can_manage_sales_opportunity()` 守卫
+1. ~~**报价子资源全面 scope**~~ — ✅ 通过 `_check_quote_scope()` / `_check_version_scope()` / `_check_item_scope()` 链路回溯
+2. ~~**商机分析接口 scope**~~ — ✅ funnel/export 已集成 `filter_sales_data_by_scope()`
+3. ~~**合同子资源 scope**~~ — ✅ 通过 `_check_contract_scope()` 回溯到 `sales_owner_id`
+4. ~~**合同导出 scope**~~ — ✅ export 已集成 `filter_sales_data_by_scope()`，PDF 已加 `check_sales_data_permission()`
+
+### 剩余高风险（P1-workflow，下一批修复）
+
+1. **联系人全局列表 scope 升级** — 从硬编码 `sales_owner_id == current_user.id` 迁移到 `filter_sales_data_by_scope()` 体系
+2. **商机工作流 scope** — stage/score/win/lose 需要统一的 `can_manage_sales_opportunity()` 守卫
+3. **报价审批 scope** — `POST /quotes/{id}/approve` 无审批权限检查
 
 ---
 
@@ -145,7 +152,7 @@
 |--------|------|------|
 | P0 (崩溃) | ~14 endpoint | `check_sales_data_permission` 未定义导致 500 |
 | P0 (越权) | 5 endpoint | 详情/修改/删除完全无 scope 检查 |
-| P1 | ~15 endpoint | 缺少 scope 过滤，有数据泄露/越权风险 |
+| ~~P1~~ | ~~16 endpoint~~ | ✅ Sprint 5 已全部修复 |
 | P2 | ~5 endpoint | 有部分保护，scope 不完整 |
 | 安全 | ~8 endpoint | 已正确集成 scope |
 

@@ -12,10 +12,28 @@ from app.api.deps import get_db
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
-from app.models.sales import QuoteItem, QuoteVersion
+from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
+
+
+def _check_version_scope(db: Session, quote_version_id: int, current_user: User) -> QuoteVersion:
+    """加载报价版本，通过父 Quote 检查数据权限"""
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == quote_version_id).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="报价版本不存在")
+    quote = get_or_404(db, Quote, version.quote_id, detail="报价不存在")
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该报价")
+    return version
+
+
+def _check_item_scope(db: Session, item_id: int, current_user: User) -> QuoteItem:
+    """加载报价明细，通过 QuoteVersion -> Quote 检查数据权限"""
+    item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
+    _check_version_scope(db, item.quote_version_id, current_user)
+    return item
 
 router = APIRouter()
 
@@ -41,10 +59,8 @@ def get_quote_items(
         ResponseModel: 报价明细列表
     """
     try:
-        # 验证报价版本存在
-        quote_version = db.query(QuoteVersion).filter(QuoteVersion.id == quote_version_id).first()
-        if not quote_version:
-            raise HTTPException(status_code=404, detail="报价版本不存在")
+        # 验证报价版本存在 + 数据权限
+        _check_version_scope(db, quote_version_id, current_user)
 
         # 查询明细列表
         items = (
@@ -101,10 +117,8 @@ def create_quote_item(
         ResponseModel: 创建结果
     """
     try:
-        # 验证报价版本存在
-        quote_version = db.query(QuoteVersion).filter(QuoteVersion.id == quote_version_id).first()
-        if not quote_version:
-            raise HTTPException(status_code=404, detail="报价版本不存在")
+        # 验证报价版本存在 + 数据权限
+        _check_version_scope(db, quote_version_id, current_user)
 
         # 创建明细
         item = QuoteItem(
@@ -151,7 +165,7 @@ def update_quote_item(
         ResponseModel: 更新结果
     """
     try:
-        item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
+        item = _check_item_scope(db, item_id, current_user)
 
         # 更新字段
         for field in [
@@ -196,7 +210,7 @@ def delete_quote_item(
         ResponseModel: 删除结果
     """
     try:
-        item = get_or_404(db, QuoteItem, item_id, detail="报价明细不存在")
+        item = _check_item_scope(db, item_id, current_user)
 
         delete_obj(db, item)
         return ResponseModel(code=200, message="报价明细删除成功")

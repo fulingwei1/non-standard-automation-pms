@@ -9,7 +9,7 @@ from typing import Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
@@ -29,6 +29,14 @@ from ..utils import generate_amendment_no
 router = APIRouter()
 
 
+def _check_contract_scope(db: Session, contract_id: int, current_user: User) -> Contract:
+    """加载合同并检查数据权限，返回 Contract 或抛 403"""
+    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+    if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同")
+    return contract
+
+
 @router.get(
     "/contracts/{contract_id}/deliverables", response_model=List[ContractDeliverableResponse]
 )
@@ -41,7 +49,7 @@ def get_contract_deliverables(
     """
     获取合同交付物清单
     """
-    get_or_404(db, Contract, contract_id, detail="合同不存在")
+    _check_contract_scope(db, contract_id, current_user)
 
     deliverables = (
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()
@@ -63,7 +71,7 @@ def get_contract_amendments(
     """
     获取合同变更记录列表
     """
-    get_or_404(db, Contract, contract_id, detail="合同不存在")
+    _check_contract_scope(db, contract_id, current_user)
 
     query = db.query(ContractAmendment).filter(ContractAmendment.contract_id == contract_id)
 
@@ -120,7 +128,7 @@ def create_contract_amendment(
     """
     创建合同变更记录
     """
-    contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+    contract = _check_contract_scope(db, contract_id, current_user)
 
     # 生成变更编号
     amendment_no = generate_amendment_no(db, contract.contract_code)

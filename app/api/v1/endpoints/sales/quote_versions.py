@@ -16,6 +16,14 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
 
+
+def _check_quote_scope(db: Session, quote_id: int, current_user: User) -> Quote:
+    """加载报价并检查数据权限，返回 Quote 或抛 403"""
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该报价")
+    return quote
+
 router = APIRouter()
 
 
@@ -36,7 +44,7 @@ def get_quote_versions(
     Returns:
         ResponseModel: 版本列表
     """
-    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    quote = _check_quote_scope(db, quote_id, current_user)
 
     versions = (
         db.query(QuoteVersion)
@@ -86,6 +94,8 @@ def get_quote_version_detail(
     Returns:
         ResponseModel: 版本详情
     """
+    _check_quote_scope(db, quote_id, current_user)
+
     version = (
         db.query(QuoteVersion)
         .options(
@@ -155,7 +165,7 @@ def create_quote_version(
     Returns:
         ResponseModel: 创建结果
     """
-    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    quote = _check_quote_scope(db, quote_id, current_user)
 
     # 生成版本号
     existing_count = db.query(QuoteVersion).filter(QuoteVersion.quote_id == quote_id).count()
@@ -271,6 +281,8 @@ def compare_versions(
         - summary_diff: 总价/成本/毛利率差异
         - item_diff: 明细项差异（新增/删除/变更）
     """
+    _check_quote_scope(db, quote_id, current_user)
+
     # 加载两个版本及其明细项
     v1 = (
         db.query(QuoteVersion)
