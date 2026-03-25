@@ -117,16 +117,10 @@ class PermissionService:
         db: Session, user_id: int, tenant_id: Optional[int] = None
     ) -> List[str]:
         """
-        获取用户的所有权限编码列表（支持多租户隔离 + 角色继承 + 缓存）
+        获取用户的所有权限编码列表 — 委托给统一权限引擎。
 
-        性能优化：
-        - 首先从缓存读取（TTL: 10分钟）
-        - 缓存未命中时查询数据库
-        - 自动写入缓存供后续请求使用
-
-        多租户权限规则：
-        - 系统级权限（tenant_id=NULL）：所有租户可用
-        - 租户级权限（tenant_id=N）：仅该租户可用
+        保持原有签名和返回值类型（List[str]）不变，
+        所有调用方无需修改。
 
         Args:
             db: 数据库会话
@@ -136,86 +130,15 @@ class PermissionService:
         Returns:
             权限编码列表
         """
+        from app.core.permission_engine import load_permissions
+
         # 如果未提供 tenant_id，尝试从用户获取
         if tenant_id is None:
             user = db.query(User).filter(User.id == user_id).first()
             if user:
                 tenant_id = user.tenant_id
 
-        # 1. 尝试从缓存读取
-        cache_service = get_permission_cache_service()
-        cached_permissions = cache_service.get_user_permissions(user_id, tenant_id)
-        if cached_permissions is not None:
-            logger.debug(
-                f"缓存命中: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(cached_permissions)}"
-            )
-            return list(cached_permissions)
-
-        # 2. 缓存未命中，从数据库查询
-        logger.debug(f"缓存未命中，查询数据库: user_id={user_id}, tenant_id={tenant_id}")
-        permissions_set: Set[str] = set()
-
-        try:
-            # 使用递归 SQL 查询（支持角色继承 + 租户隔离）
-            sql = text(
-                """
-                WITH RECURSIVE role_tree AS (
-                    -- 用户直接拥有的角色
-                    SELECT r.id, r.parent_id, r.inherit_permissions
-                    FROM roles r
-                    JOIN user_roles ur ON ur.role_id = r.id
-                    WHERE ur.user_id = :user_id
-
-                    UNION ALL
-
-                    -- 递归获取父角色（仅当 inherit_permissions=1 时）
-                    SELECT r.id, r.parent_id, r.inherit_permissions
-                    FROM roles r
-                    JOIN role_tree rt ON r.id = rt.parent_id
-                    WHERE rt.inherit_permissions = 1
-                )
-                SELECT DISTINCT ap.perm_code
-                FROM role_tree rt
-                JOIN role_api_permissions rap ON rt.id = rap.role_id
-                JOIN api_permissions ap ON rap.permission_id = ap.id
-                WHERE ap.is_active = 1
-                AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
-            """
-            )
-            result = db.execute(sql, {"user_id": user_id, "tenant_id": tenant_id})
-            for row in result:
-                if row[0]:
-                    permissions_set.add(row[0])
-
-        except Exception as e:
-            logger.warning(f"获取用户权限失败（角色继承查询），回退到简单查询: {e}")
-            try:
-                # 回退到简单查询（不含角色继承）
-                sql = text(
-                    """
-                    SELECT DISTINCT ap.perm_code
-                    FROM api_permissions ap
-                    JOIN role_api_permissions rap ON ap.id = rap.permission_id
-                    JOIN user_roles ur ON rap.role_id = ur.role_id
-                    WHERE ur.user_id = :user_id AND ap.is_active = 1
-                    AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)
-                """
-                )
-                result = db.execute(sql, {"user_id": user_id, "tenant_id": tenant_id})
-                for row in result:
-                    if row[0]:
-                        permissions_set.add(row[0])
-            except Exception as e2:
-                logger.error(f"SQL查询权限也失败: {e2}")
-
-        # 3. 写入缓存
-        permissions_list = list(permissions_set)
-        cache_service.set_user_permissions(user_id, permissions_set, tenant_id)
-        logger.debug(
-            f"权限已缓存: user_id={user_id}, tenant_id={tenant_id}, permissions_count={len(permissions_list)}"
-        )
-
-        return permissions_list
+        return list(load_permissions(user_id, db, tenant_id))
 
     @staticmethod
     def check_permission(
@@ -228,15 +151,8 @@ class PermissionService:
         """
         检查用户是否有指定权限（支持多租户隔离）
 
-        Args:
-            db: 数据库会话
-            user_id: 用户ID
-            permission_code: 权限编码
-            user: 用户对象（可选，用于检查超级管理员）
-            tenant_id: 租户ID（可选，用于权限隔离）
-
-        Returns:
-            是否有权限
+        快速放行：超级管理员直接通过。
+        普通用户：委托给统一权限引擎（缓存 + DB）。
         """
         # 超级管理员拥有所有权限
         if user and user.is_superuser:
@@ -247,10 +163,8 @@ class PermissionService:
             if user and user.is_superuser:
                 return True
 
-        # 获取租户ID（优先使用传入的，否则从用户获取）
         effective_tenant_id = tenant_id or (user.tenant_id if user else None)
 
-        # 检查权限（包含租户隔离）
         permissions = PermissionService.get_user_permissions(db, user_id, effective_tenant_id)
         return permission_code in permissions
 
@@ -264,16 +178,6 @@ class PermissionService:
     ) -> bool:
         """
         检查用户是否有任一权限（支持多租户隔离）
-
-        Args:
-            db: 数据库会话
-            user_id: 用户ID
-            permission_codes: 权限编码列表
-            user: 用户对象（可选）
-            tenant_id: 租户ID（可选）
-
-        Returns:
-            是否有任一权限
         """
         if user and user.is_superuser:
             return True
@@ -292,16 +196,6 @@ class PermissionService:
     ) -> bool:
         """
         检查用户是否有所有权限（支持多租户隔离）
-
-        Args:
-            db: 数据库会话
-            user_id: 用户ID
-            permission_codes: 权限编码列表
-            user: 用户对象（可选）
-            tenant_id: 租户ID（可选）
-
-        Returns:
-            是否有所有权限
         """
         if user and user.is_superuser:
             return True
@@ -483,14 +377,6 @@ class PermissionService:
 def check_permission_compat(user: User, permission_code: str, db: Session) -> bool:
     """
     兼容层：检查权限（保持与旧代码兼容，自动获取租户ID）
-
-    Args:
-        user: 用户对象
-        permission_code: 权限编码
-        db: 数据库会话
-
-    Returns:
-        是否有权限
     """
     tenant_id = getattr(user, "tenant_id", None)
     return PermissionService.check_permission(db, user.id, permission_code, user, tenant_id)

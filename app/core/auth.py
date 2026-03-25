@@ -647,58 +647,13 @@ async def get_current_active_superuser(
 def _load_user_permissions_from_db(
     user_id: int, db: Session, tenant_id: Optional[int] = None
 ) -> set:
-    """从数据库加载用户权限（含角色继承 + 多租户隔离）
+    """从数据库加载用户权限 — 委托给统一权限引擎。
 
-    多租户权限规则：
-    - 系统级权限（tenant_id=NULL）：所有租户可用
-    - 租户级权限（tenant_id=N）：仅该租户可用
-
-    Args:
-        user_id: 用户ID
-        db: 数据库会话
-        tenant_id: 租户ID（用于过滤租户专属权限）
-
-    Returns:
-        权限编码集合
+    保留此函数签名以兼容可能的直接调用方，但实现已收敛到
+    permission_engine._load_permissions_from_db。
     """
-    from sqlalchemy import text
-
-    # 查询用户直接拥有的权限 + 通过角色继承链获得的权限
-    # 权限过滤：系统级权限(tenant_id IS NULL) + 当前租户权限
-    # 根据 tenant_id 是否为 None 使用不同的 SQL 条件
-    # 避免 SQL 中 column = NULL 的问题（NULL 比较需要用 IS NULL）
-    if tenant_id is not None:
-        tenant_filter = "AND (ap.tenant_id IS NULL OR ap.tenant_id = :tenant_id)"
-        params = {"user_id": user_id, "tenant_id": tenant_id}
-    else:
-        tenant_filter = "AND ap.tenant_id IS NULL"
-        params = {"user_id": user_id}
-
-    sql = f"""
-        WITH RECURSIVE role_tree AS (
-            -- 用户直接拥有的角色
-            SELECT r.id, r.parent_id, r.inherit_permissions
-            FROM roles r
-            JOIN user_roles ur ON ur.role_id = r.id
-            WHERE ur.user_id = :user_id
-
-            UNION ALL
-
-            -- 递归获取父角色（仅当 inherit_permissions=1 时）
-            SELECT r.id, r.parent_id, r.inherit_permissions
-            FROM roles r
-            JOIN role_tree rt ON r.id = rt.parent_id
-            WHERE rt.inherit_permissions = 1
-        )
-        SELECT DISTINCT ap.perm_code
-        FROM role_tree rt
-        JOIN role_api_permissions rap ON rt.id = rap.role_id
-        JOIN api_permissions ap ON rap.permission_id = ap.id
-        WHERE ap.is_active = 1
-        {tenant_filter}
-    """
-    result = db.execute(text(sql), params)
-    return {row[0] for row in result.fetchall()}
+    from .permission_engine import _load_permissions_from_db
+    return _load_permissions_from_db(user_id, db, tenant_id)
 
 
 def is_system_admin(user: User) -> bool:
@@ -742,8 +697,8 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
     """
     检查用户权限（带缓存，支持多租户隔离）
 
-    优先从缓存获取用户权限列表，缓存不存在时从数据库加载并缓存。
-    缓存使用 tenant_id 进行隔离，防止跨租户数据泄露。
+    快速放行：超管 / 系统管理员直接通过。
+    普通用户：委托给统一权限引擎（缓存 + DB）。
     """
     logger.info(
         f"Checking permission: user_id={user.id}, username={user.username}, code={permission_code}, is_superuser={user.is_superuser}"
@@ -752,82 +707,15 @@ def check_permission(user: User, permission_code: str, db: Session = None) -> bo
         logger.info(f"Permission GRANTED (superuser/admin): user_id={user.id}")
         return True
 
-    # 获取租户ID用于缓存隔离
+    if db is None:
+        logger.warning("check_permission: no db session for user=%s", user.id)
+        return False
+
     tenant_id = getattr(user, "tenant_id", None)
 
-    # 尝试使用缓存
-    try:
-        from ..services.permission_cache_service import get_permission_cache_service
-
-        cache_service = get_permission_cache_service()
-
-        # 从缓存获取用户权限（包含租户隔离）
-        cached_permissions = cache_service.get_user_permissions(user.id, tenant_id)
-
-        if cached_permissions is not None:
-            # 缓存命中
-            logger.debug(f"Permission cache hit for user {user.id} (tenant={tenant_id})")
-            return permission_code in cached_permissions
-
-        # 缓存未命中，从数据库加载
-        if db is not None:
-            permissions = _load_user_permissions_from_db(user.id, db, tenant_id)
-            # 写入缓存（包含租户隔离）
-            cache_service.set_user_permissions(user.id, permissions, tenant_id)
-            logger.debug(
-                f"Permission cache miss for user {user.id} (tenant={tenant_id}), loaded {len(permissions)} permissions"
-            )
-            return permission_code in permissions
-    except Exception as e:
-        logger.warning(f"Permission cache failed, fallback to DB: {e}")
-
-    # 降级：直接查询数据库（使用新的 api_permissions 表）
-    try:
-        from sqlalchemy import text
-
-        if db is None:
-            # 如果没有提供db，尝试使用ORM（可能失败）
-            for user_role in user.roles:
-                role = user_role.role
-                if hasattr(role, "api_permissions"):
-                    for rap in role.api_permissions:
-                        if (
-                            rap.permission
-                            and rap.permission.perm_code == permission_code
-                        ):
-                            return True
-            return False
-        else:
-            # 使用SQL查询（已迁移到新表）
-            sql = """
-                SELECT COUNT(*)
-                FROM user_roles ur
-                JOIN role_api_permissions rap ON ur.role_id = rap.role_id
-                JOIN api_permissions ap ON rap.permission_id = ap.id
-                WHERE ur.user_id = :user_id
-                AND ap.perm_code = :permission_code
-                AND ap.is_active = 1
-            """
-            result = db.execute(
-                text(sql), {"user_id": user.id, "permission_code": permission_code}
-            ).scalar()
-            return result > 0
-    except Exception as e:
-        logger.warning(f"权限检查失败，使用ORM查询: {e}")
-        # 降级到ORM查询
-        try:
-            for user_role in user.roles:
-                role = user_role.role
-                if hasattr(role, "api_permissions"):
-                    for rap in role.api_permissions:
-                        if (
-                            rap.permission
-                            and rap.permission.perm_code == permission_code
-                        ):
-                            return True
-        except Exception:
-            logger.debug("权限检查 ORM 降级查询失败", exc_info=True)
-        return False
+    from .permission_engine import load_permissions
+    permissions = load_permissions(user.id, db, tenant_id)
+    return permission_code in permissions
 
 
 def require_permission(permission_code: str):
