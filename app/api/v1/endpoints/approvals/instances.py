@@ -24,6 +24,12 @@ from app.schemas.approval.instance import (
     ApprovalTaskBrief,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.services.approval_engine.visibility import (
+    ParticipantRole,
+    check_can_operate_instance,
+    check_instance_visible,
+    filter_visible_instances,
+)
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -96,8 +102,11 @@ def list_instances(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取审批实例列表"""
+    """获取审批实例列表（按参与关系过滤可见性）"""
     query = db.query(ApprovalInstance)
+
+    # 参与者可见性过滤（fail-closed）
+    query = filter_visible_instances(query, db, current_user)
 
     if status:
         query = query.filter(ApprovalInstance.status == status)
@@ -131,8 +140,11 @@ def get_instance(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取审批实例详情"""
+    """获取审批实例详情（需参与关系）"""
     instance = get_or_404(db, ApprovalInstance, instance_id, "审批实例不存在")
+
+    if not check_instance_visible(db, instance_id, current_user):
+        raise HTTPException(status_code=403, detail="无权查看此审批实例")
 
     # 获取任务列表
     tasks = (
@@ -235,7 +247,15 @@ def terminate_instance(
 ):
     """
     终止审批（管理员操作）
+
+    仅审批管理员（approval:admin / superuser）可执行。
     """
+    if not check_can_operate_instance(
+        db, instance_id, current_user,
+        allowed_roles=(ParticipantRole.ADMIN,),
+    ):
+        raise HTTPException(status_code=403, detail="仅管理员可终止审批")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -257,11 +277,14 @@ def get_instances_by_entity(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """根据业务实体获取审批实例列表"""
+    """根据业务实体获取审批实例列表（按参与关系过滤可见性）"""
     query = db.query(ApprovalInstance).filter(
         ApprovalInstance.entity_type == entity_type,
         ApprovalInstance.entity_id == entity_id,
     )
+
+    # 参与者可见性过滤（fail-closed）
+    query = filter_visible_instances(query, db, current_user)
 
     total = query.count()
     items = (

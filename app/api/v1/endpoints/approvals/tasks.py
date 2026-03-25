@@ -23,6 +23,12 @@ from app.schemas.approval.task import (
     TransferRequest,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.services.approval_engine.visibility import (
+    check_can_operate_instance,
+    check_can_remind,
+    check_instance_visible,
+    check_task_visible,
+)
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -34,8 +40,11 @@ def get_task(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取审批任务详情"""
+    """获取审批任务详情（需参与关系）"""
     task = get_or_404(db, ApprovalTask, task_id, "任务不存在")
+
+    if not check_task_visible(db, task, current_user):
+        raise HTTPException(status_code=403, detail="无权查看此审批任务")
 
     result = ApprovalTaskResponse.model_validate(task)
 
@@ -211,8 +220,12 @@ def remind_task(
     """
     催办
 
-    向审批人发送催办通知
+    向审批人发送催办通知。仅发起人、同实例审批人及管理员可催办。
     """
+    task = get_or_404(db, ApprovalTask, task_id, "任务不存在")
+    if not check_can_remind(db, task, current_user):
+        raise HTTPException(status_code=403, detail="无权催办此任务")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -235,7 +248,10 @@ def add_cc(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """加抄送"""
+    """加抄送（仅发起人、审批人及管理员可操作）"""
+    if not check_can_operate_instance(db, instance_id, current_user):
+        raise HTTPException(status_code=403, detail="无权为此审批加抄送")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -262,7 +278,10 @@ def add_comment(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """添加评论"""
+    """添加评论（仅参与者可评论）"""
+    if not check_instance_visible(db, instance_id, current_user):
+        raise HTTPException(status_code=403, detail="无权评论此审批")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -286,7 +305,10 @@ def list_comments(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取评论列表"""
+    """获取评论列表（仅参与者可查看）"""
+    if not check_instance_visible(db, instance_id, current_user):
+        raise HTTPException(status_code=403, detail="无权查看此审批评论")
+
     comments = (
         db.query(ApprovalComment)
         .filter(
