@@ -11,12 +11,14 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
+from app.core import security
 from app.models.approval import (
     ApprovalFlowDefinition,
     ApprovalNodeDefinition,
     ApprovalRoutingRule,
     ApprovalTemplate,
 )
+from app.models.user import User
 from app.schemas.approval.flow import (
     ApprovalFlowCreate,
     ApprovalFlowResponse,
@@ -48,6 +50,7 @@ def list_templates(
     is_active: Optional[bool] = None,
     keyword: Optional[str] = None,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:view")),
 ):
     """获取审批模板列表"""
     query = db.query(ApprovalTemplate)
@@ -77,6 +80,7 @@ def list_templates(
 def get_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:view")),
 ):
     """获取审批模板详情"""
     template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
@@ -87,6 +91,7 @@ def get_template(
 def create_template(
     data: ApprovalTemplateCreate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """创建审批模板"""
     # 检查编码唯一性
@@ -109,6 +114,7 @@ def update_template(
     template_id: int,
     data: ApprovalTemplateUpdate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """更新审批模板"""
     template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
@@ -127,6 +133,7 @@ def update_template(
 def delete_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """删除审批模板（软删除）"""
     template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
@@ -141,6 +148,7 @@ def delete_template(
 def publish_template(
     template_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """发布审批模板"""
     template = get_or_404(db, ApprovalTemplate, template_id, "模板不存在")
@@ -173,6 +181,7 @@ def publish_template(
 def list_flows(
     template_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:view")),
 ):
     """获取模板的流程列表"""
     flows = (
@@ -208,6 +217,7 @@ def create_flow(
     template_id: int,
     data: ApprovalFlowCreate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """创建审批流程"""
     # 检查模板是否存在
@@ -255,6 +265,7 @@ def update_flow(
     flow_id: int,
     data: ApprovalFlowUpdate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """更新审批流程"""
     flow = get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
@@ -281,6 +292,7 @@ def update_flow(
 def delete_flow(
     flow_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """删除审批流程（软删除）"""
     flow = get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
@@ -299,6 +311,7 @@ def create_node(
     flow_id: int,
     data: ApprovalNodeCreate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """创建审批节点"""
     get_or_404(db, ApprovalFlowDefinition, flow_id, "流程不存在")
@@ -317,6 +330,7 @@ def update_node(
     node_id: int,
     data: ApprovalNodeUpdate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """更新审批节点"""
     node = get_or_404(db, ApprovalNodeDefinition, node_id, "节点不存在")
@@ -335,6 +349,7 @@ def update_node(
 def delete_node(
     node_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """删除审批节点（软删除）"""
     node = get_or_404(db, ApprovalNodeDefinition, node_id, "节点不存在")
@@ -352,6 +367,7 @@ def delete_node(
 def list_routing_rules(
     template_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:view")),
 ):
     """获取模板的路由规则列表"""
     rules = (
@@ -372,6 +388,7 @@ def create_routing_rule(
     template_id: int,
     data: ApprovalRoutingRuleCreate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """创建路由规则"""
     rule = ApprovalRoutingRule(
@@ -387,6 +404,7 @@ def create_routing_rule(
 def delete_routing_rule(
     rule_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:template:manage")),
 ):
     """删除路由规则（软删除）"""
     rule = get_or_404(db, ApprovalRoutingRule, rule_id, "规则不存在")

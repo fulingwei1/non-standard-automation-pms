@@ -130,6 +130,22 @@ API_PERMISSIONS = [
         "module": "FINANCE",
         "action": "DELETE",
     },
+    # 审批管理权限
+    {"perm_code": "approval:view", "perm_name": "查看审批", "module": "APPROVAL", "action": "VIEW"},
+    {"perm_code": "approval:create", "perm_name": "发起审批", "module": "APPROVAL", "action": "CREATE"},
+    {"perm_code": "approval:approve", "perm_name": "审批操作", "module": "APPROVAL", "action": "APPROVE"},
+    {
+        "perm_code": "approval:template:view",
+        "perm_name": "查看审批模板",
+        "module": "APPROVAL",
+        "action": "VIEW",
+    },
+    {
+        "perm_code": "approval:template:manage",
+        "perm_name": "管理审批模板",
+        "module": "APPROVAL",
+        "action": "EDIT",
+    },
 ]
 
 # 定义角色权限映射（角色代码 -> 权限代码列表）
@@ -148,6 +164,11 @@ ROLE_PERMISSIONS_MAPPING = {
         "contract:update",
         "task:view",
         "finance:view",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
+        "approval:template:view",
+        "approval:template:manage",
     ],
     # 项目经理 - 项目相关全权限
     "PM": [
@@ -160,6 +181,10 @@ ROLE_PERMISSIONS_MAPPING = {
         "task:update",
         "task:delete",
         "contract:view",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
+        "approval:template:view",
     ],
     # 销售总监 - 销售相关全权限
     "SALES_DIR": [
@@ -171,6 +196,10 @@ ROLE_PERMISSIONS_MAPPING = {
         "contract:create",
         "contract:update",
         "finance:view",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
+        "approval:template:view",
     ],
     # 销售专员 - 销售相关基础权限
     "SALES": [
@@ -178,30 +207,45 @@ ROLE_PERMISSIONS_MAPPING = {
         "opportunity:create",
         "opportunity:update",
         "contract:view",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 工程师 - 项目和任务查看权限
     "ENGINEER": [
         "project:view",
         "task:view",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 机械工程师
     "ME": [
         "project:view",
         "task:view",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 电气工程师
     "EE": [
         "project:view",
         "task:view",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 软件工程师
     "SW": [
         "project:view",
         "task:view",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
 }
 

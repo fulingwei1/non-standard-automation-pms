@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.models.base import get_db
+from app.models.user import User
 from app.models.warehouse import Warehouse, WarehouseLocation
 
 router = APIRouter()
@@ -65,6 +67,7 @@ def list_locations(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=10000),
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:view")),
 ):
     q = db.query(WarehouseLocation)
     if warehouse_id:
@@ -101,7 +104,11 @@ def list_locations(
 
 
 @router.post("/locations", response_model=LocationOut)
-def create_location(data: LocationCreate, db: Session = Depends(get_db)):
+def create_location(
+    data: LocationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:create")),
+):
     loc = WarehouseLocation(**data.model_dump())
     db.add(loc)
     db.commit()
@@ -110,7 +117,12 @@ def create_location(data: LocationCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/locations/{location_id}", response_model=LocationOut)
-def update_location(location_id: int, data: LocationUpdate, db: Session = Depends(get_db)):
+def update_location(
+    location_id: int,
+    data: LocationUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:update")),
+):
     loc = db.query(WarehouseLocation).filter(WarehouseLocation.id == location_id).first()
     if not loc:
         raise HTTPException(404, "库位不存在")
@@ -122,7 +134,11 @@ def update_location(location_id: int, data: LocationUpdate, db: Session = Depend
 
 
 @router.delete("/locations/{location_id}")
-def delete_location(location_id: int, db: Session = Depends(get_db)):
+def delete_location(
+    location_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:delete")),
+):
     loc = db.query(WarehouseLocation).filter(WarehouseLocation.id == location_id).first()
     if not loc:
         raise HTTPException(404, "库位不存在")

@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
+from app.core import security
 from app.models.approval import ApprovalActionLog, ApprovalInstance, ApprovalTask
+from app.models.user import User
 from app.schemas.approval.instance import (
     ApprovalInstanceCreate,
     ApprovalInstanceDetail,
@@ -31,7 +33,7 @@ router = APIRouter()
 def submit_approval(
     data: ApprovalInstanceCreate,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:create")),
 ):
     """
     提交审批
@@ -64,7 +66,7 @@ def submit_approval(
 def save_draft(
     data: ApprovalInstanceSaveDraft,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:create")),
 ):
     """保存审批草稿"""
     engine = ApprovalEngineService(db)
@@ -92,6 +94,7 @@ def list_instances(
     entity_id: Optional[int] = None,
     keyword: Optional[str] = None,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """获取审批实例列表"""
     query = db.query(ApprovalInstance)
@@ -126,6 +129,7 @@ def list_instances(
 def get_instance(
     instance_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """获取审批实例详情"""
     instance = get_or_404(db, ApprovalInstance, instance_id, "审批实例不存在")
@@ -202,7 +206,7 @@ def withdraw_instance(
     instance_id: int,
     comment: Optional[str] = None,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:create")),
 ):
     """
     撤回审批
@@ -227,7 +231,7 @@ def terminate_instance(
     instance_id: int,
     comment: str,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     终止审批（管理员操作）
@@ -251,6 +255,7 @@ def get_instances_by_entity(
     entity_id: int,
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """根据业务实体获取审批实例列表"""
     query = db.query(ApprovalInstance).filter(

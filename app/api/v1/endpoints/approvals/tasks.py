@@ -7,7 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.models.approval import ApprovalComment, ApprovalTask
+from app.models.user import User
 from app.schemas.approval.task import (
     AddApproverRequest,
     AddCCRequest,
@@ -30,6 +32,7 @@ router = APIRouter()
 def get_task(
     task_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """获取审批任务详情"""
     task = get_or_404(db, ApprovalTask, task_id, "任务不存在")
@@ -52,7 +55,7 @@ def approve_task(
     task_id: int,
     data: ApproveRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     审批通过
@@ -84,7 +87,7 @@ def reject_task(
     task_id: int,
     data: RejectRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     审批驳回
@@ -118,7 +121,7 @@ def return_task(
     task_id: int,
     data: ReturnRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """退回到指定节点"""
     engine = ApprovalEngineService(db)
@@ -143,7 +146,7 @@ def transfer_task(
     task_id: int,
     data: TransferRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     转审
@@ -172,7 +175,7 @@ def add_approver(
     task_id: int,
     data: AddApproverRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     加签
@@ -203,7 +206,7 @@ def remind_task(
     task_id: int,
     data: RemindRequest = None,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """
     催办
@@ -230,7 +233,7 @@ def add_cc(
     instance_id: int,
     data: AddCCRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """加抄送"""
     engine = ApprovalEngineService(db)
@@ -257,7 +260,7 @@ def add_comment(
     instance_id: int,
     data: CommentRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """添加评论"""
     engine = ApprovalEngineService(db)
@@ -281,6 +284,7 @@ def add_comment(
 def list_comments(
     instance_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """获取评论列表"""
     comments = (
@@ -300,7 +304,7 @@ def list_comments(
 def delete_comment(
     comment_id: int,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """删除评论（软删除）"""
     from datetime import datetime

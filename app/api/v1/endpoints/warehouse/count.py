@@ -8,7 +8,9 @@ from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.models.base import get_db
+from app.models.user import User
 from app.models.warehouse import StockCountItem, StockCountOrder
 
 router = APIRouter()
@@ -86,6 +88,7 @@ def list_count_orders(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:view")),
 ):
     q = db.query(StockCountOrder)
     if status:
@@ -106,7 +109,11 @@ def list_count_orders(
 
 
 @router.get("/stock-count/{order_id}", response_model=CountOrderOut)
-def get_count_order(order_id: int, db: Session = Depends(get_db)):
+def get_count_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:view")),
+):
     o = db.query(StockCountOrder).filter(StockCountOrder.id == order_id).first()
     if not o:
         raise HTTPException(404, "盘点单不存在")
@@ -114,7 +121,11 @@ def get_count_order(order_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/stock-count", response_model=CountOrderOut)
-def create_count_order(data: CountOrderCreate, db: Session = Depends(get_db)):
+def create_count_order(
+    data: CountOrderCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:count")),
+):
     no = _gen_count_no(db)
     o = StockCountOrder(
         count_no=no,
@@ -136,7 +147,11 @@ def create_count_order(data: CountOrderCreate, db: Session = Depends(get_db)):
 
 @router.put("/stock-count/{order_id}/items/{item_id}", response_model=CountItemOut)
 def update_count_item(
-    order_id: int, item_id: int, data: CountItemUpdate, db: Session = Depends(get_db)
+    order_id: int,
+    item_id: int,
+    data: CountItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:count")),
 ):
     item = (
         db.query(StockCountItem)
@@ -154,7 +169,12 @@ def update_count_item(
 
 
 @router.put("/stock-count/{order_id}/status")
-def update_count_status(order_id: int, status: str = Query(...), db: Session = Depends(get_db)):
+def update_count_status(
+    order_id: int,
+    status: str = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:count")),
+):
     o = db.query(StockCountOrder).filter(StockCountOrder.id == order_id).first()
     if not o:
         raise HTTPException(404, "盘点单不存在")
