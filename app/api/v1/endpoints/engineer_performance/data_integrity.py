@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.data_integrity import DataIntegrityService
@@ -22,7 +23,7 @@ async def check_data_completeness(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """检查工程师的数据完整性"""
     service = DataIntegrityService(db)
@@ -37,7 +38,7 @@ async def generate_data_quality_report(
     period_id: int,
     department_id: Optional[int] = Query(None, description="部门ID（可选）"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """生成数据质量报告"""
     service = DataIntegrityService(db)
@@ -49,7 +50,9 @@ async def generate_data_quality_report(
 
 @router.get("/reminders", summary="获取数据缺失提醒")
 async def get_missing_data_reminders(
-    period_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    period_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取数据缺失提醒列表"""
     service = DataIntegrityService(db)
@@ -64,7 +67,7 @@ async def get_auto_fix_suggestions(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取自动修复建议"""
     service = DataIntegrityService(db)
@@ -86,7 +89,7 @@ class AutoFixRequest(BaseModel):
 async def auto_fix_data_issues(
     request: AutoFixRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """自动修复数据问题"""
     service = DataIntegrityService(db)
@@ -107,7 +110,7 @@ async def send_data_missing_reminders(
     period_id: int = Body(..., description="考核周期ID"),
     reminder_types: Optional[List[str]] = Body(None, description="提醒类型列表"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """发送数据缺失提醒（批量）"""
     service = DataIntegrityService(db)
@@ -127,7 +130,7 @@ async def export_data_quality_report(
     department_id: Optional[int] = Query(None, description="部门ID（可选）"),
     format: str = Query("json", description="导出格式（json/excel/pdf）"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """导出数据质量报告"""
     service = DataIntegrityService(db)

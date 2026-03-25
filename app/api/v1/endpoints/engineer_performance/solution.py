@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
@@ -23,7 +24,7 @@ async def get_solution_score_details(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取方案工程师六维得分详情"""
     service = SolutionEngineerBonusService(db)
@@ -46,7 +47,7 @@ async def get_solution_bonus_details(
     high_quality_compensation: Optional[float] = Query(300.0, description="高质量方案补偿"),
     success_rate_bonus: Optional[float] = Query(2000.0, description="成功率奖励"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取方案工程师奖金计算详情"""
     service = SolutionEngineerBonusService(db)
@@ -82,7 +83,7 @@ class CalculateBonusRequest(BaseModel):
 async def calculate_solution_bonus(
     request: CalculateBonusRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """计算方案工程师奖金（方案完成奖金+中标奖金+高质量方案补偿+成功率奖励）"""
     service = SolutionEngineerBonusService(db)

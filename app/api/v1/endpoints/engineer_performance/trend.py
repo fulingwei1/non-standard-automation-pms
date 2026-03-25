@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.performance_trend_service import PerformanceTrendService
@@ -22,7 +23,7 @@ async def get_engineer_trend(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师历史6个周期的得分趋势"""
     service = PerformanceTrendService(db)
@@ -37,7 +38,7 @@ async def identify_ability_changes(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """识别工程师能力变化（提升/下降/稳定）"""
     service = PerformanceTrendService(db)
@@ -52,7 +53,7 @@ async def get_department_trend(
     department_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取部门整体趋势"""
     service = PerformanceTrendService(db)
@@ -73,7 +74,7 @@ class CompareDepartmentsRequest(BaseModel):
 async def compare_departments(
     request: CompareDepartmentsRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """对比多个部门的趋势"""
     service = PerformanceTrendService(db)

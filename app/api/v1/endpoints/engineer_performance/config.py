@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.engineer_performance import (
@@ -27,7 +28,7 @@ async def list_dimension_configs(
     job_type: Optional[str] = Query(None, description="岗位类型"),
     include_expired: bool = Query(False, description="是否包含已过期配置"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
     """获取五维权重配置列表"""
     service = EngineerPerformanceService(db)
@@ -64,7 +65,7 @@ async def get_dimension_config(
     job_type: str,
     job_level: Optional[str] = Query(None, description="职级"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
     """获取指定岗位类型的权重配置"""
     if job_type not in ["mechanical", "test", "electrical"]:
@@ -103,7 +104,7 @@ async def create_dimension_config(
     data: DimensionConfigCreate,
     require_approval: bool = True,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:config:write")),
 ):
     """
     创建新的五维权重配置
@@ -150,7 +151,8 @@ async def create_dimension_config(
 
 @router.get("/grades", summary="获取等级规则")
 async def get_grade_rules(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
     """获取绩效等级划分规则"""
     return ResponseModel(
@@ -200,7 +202,8 @@ async def get_grade_rules(
 
 @router.get("/job-types", summary="获取岗位类型列表")
 async def get_job_types(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
     """获取支持的岗位类型列表"""
     service = EngineerPerformanceService(db)
@@ -219,7 +222,8 @@ async def get_job_types(
 
 @router.get("/job-levels", summary="获取职级列表")
 async def get_job_levels(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
     """获取支持的职级列表"""
     return ResponseModel(
@@ -236,7 +240,8 @@ async def get_job_levels(
 
 @router.get("/department-configs", summary="获取部门评价指标配置")
 async def get_department_configs(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:config:read")),
 ):
     """部门经理获取管理的部门的评价指标配置"""
     service = EngineerPerformanceService(db)
@@ -252,7 +257,7 @@ async def get_department_configs(
 async def create_department_config(
     data: DimensionConfigCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:config:write")),
 ):
     """
     部门经理为部门创建评价指标配置
@@ -291,7 +296,8 @@ async def create_department_config(
 
 @router.get("/pending-approvals", summary="获取待审批配置列表")
 async def get_pending_approvals(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """获取待审批的部门级别配置（管理员功能）"""
     if not current_user.is_superuser:
@@ -343,7 +349,7 @@ async def approve_dimension_config(
     config_id: int,
     request: ApproveConfigRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """审批部门级别配置（管理员功能）"""
     if not current_user.is_superuser:

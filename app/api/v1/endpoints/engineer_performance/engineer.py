@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod, PerformanceResult
 from app.models.user import User
@@ -26,7 +27,8 @@ router = APIRouter(prefix="/engineer", tags=["个人绩效"])
 
 @router.get("/profile", summary="获取当前用户工程师档案")
 async def get_my_profile(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取当前登录用户的工程师档案"""
     service = EngineerPerformanceService(db)
@@ -59,7 +61,7 @@ async def get_my_profile(
 async def create_profile(
     data: EngineerProfileCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:write")),
 ):
     """创建工程师档案（管理员操作）"""
     service = EngineerPerformanceService(db)
@@ -79,7 +81,7 @@ async def update_profile(
     user_id: int,
     data: EngineerProfileUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:write")),
 ):
     """更新工程师档案"""
     service = EngineerPerformanceService(db)
@@ -96,7 +98,7 @@ async def get_engineer_performance(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取指定工程师的绩效详情"""
     service = EngineerPerformanceService(db)
@@ -158,7 +160,7 @@ async def get_engineer_trend(
     user_id: int,
     periods: int = Query(6, ge=1, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师历史绩效趋势"""
     service = EngineerPerformanceService(db)
@@ -172,7 +174,7 @@ async def get_engineer_comparison(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师与同岗位/同级别的对比"""
     service = EngineerPerformanceService(db)
@@ -247,7 +249,7 @@ async def list_engineers(
     department_id: Optional[int] = Query(None, description="部门ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师列表"""
     service = EngineerPerformanceService(db)

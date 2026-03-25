@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/summary", tags=["绩效总览"])
 async def get_company_summary(
     period_id: Optional[int] = Query(None, description="考核周期ID，不传则使用当前周期"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取公司工程师绩效整体概况"""
     service = EngineerPerformanceService(db)
@@ -52,7 +53,7 @@ async def get_job_type_summary(
     job_type: str,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取指定岗位类型的绩效概况"""
     if job_type not in ["mechanical", "test", "electrical"]:

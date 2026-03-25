@@ -9,6 +9,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod
 from app.models.user import User
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/collaboration", tags=["跨部门协作"])
 async def get_collaboration_matrix(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取跨部门协作评价矩阵"""
     service = CollaborationService(db)
@@ -45,7 +46,7 @@ async def get_collaboration_matrix(
 async def create_collaboration_rating(
     data: CollaborationRatingCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """提交跨部门协作评价"""
     service = CollaborationService(db)
@@ -69,7 +70,7 @@ async def get_ratings_received(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取指定用户收到的评价"""
     service = CollaborationService(db)
@@ -106,7 +107,7 @@ async def get_ratings_given(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取指定用户给出的评价"""
     service = CollaborationService(db)
@@ -137,7 +138,7 @@ async def get_ratings_given(
 async def get_pending_ratings(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """获取当前用户待评价的工程师列表"""
     service = CollaborationService(db)
@@ -160,7 +161,7 @@ async def get_collaboration_stats(
     user_id: int,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取用户的协作统计"""
     service = CollaborationService(db)
@@ -175,7 +176,7 @@ async def auto_select_collaborators(
     period_id: int,
     target_count: int = 5,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """自动匿名抽取5个合作人员进行评价"""
     from app.services.collaboration_rating import CollaborationRatingService
@@ -209,7 +210,7 @@ async def submit_rating(
     comment: Optional[str] = Body(None, description="评价备注"),
     project_id: Optional[int] = Body(None, description="关联项目ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """提交跨部门协作评价"""
     from app.services.collaboration_rating import CollaborationRatingService
@@ -241,7 +242,7 @@ async def submit_rating(
 async def get_pending_ratings_new(
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """获取当前用户待评价的列表"""
     from app.services.collaboration_rating import CollaborationRatingService
@@ -275,7 +276,9 @@ async def get_pending_ratings_new(
 
 @router.get("/statistics/{period_id}", summary="获取评价统计信息")
 async def get_rating_statistics(
-    period_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    period_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取指定周期的评价统计信息"""
     from app.services.collaboration_rating import CollaborationRatingService
@@ -294,7 +297,7 @@ async def get_collaboration_trend(
     engineer_id: int,
     periods: int = Query(6, ge=1, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师的跨部门协作趋势"""
     from app.services.collaboration_rating import CollaborationRatingService
@@ -310,7 +313,9 @@ async def get_collaboration_trend(
 
 @router.get("/quality-analysis/{period_id}", summary="分析评价质量")
 async def analyze_rating_quality(
-    period_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    period_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """分析指定周期的评价质量"""
     from app.services.collaboration_rating import CollaborationRatingService
@@ -329,7 +334,7 @@ async def auto_complete_missing_ratings(
     period_id: int,
     default_score: float = 75.0,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """自动完成缺失的评价（使用默认值）"""
     from decimal import Decimal

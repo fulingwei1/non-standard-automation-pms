@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod
 from app.models.user import User
@@ -28,7 +29,7 @@ async def get_ranking(
     department_id: Optional[int] = Query(None, description="部门ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师绩效排名"""
     service = EngineerPerformanceService(db)
@@ -86,7 +87,7 @@ async def get_ranking_by_department(
     department_id: int = Query(..., description="部门ID"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取部门内排名"""
     service = EngineerPerformanceService(db)
@@ -130,7 +131,7 @@ async def get_ranking_by_job_type(
     job_type: str = Query(..., description="岗位类型"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取岗位类型内排名"""
     if job_type not in ["mechanical", "test", "electrical"]:
@@ -172,7 +173,7 @@ async def get_top_engineers(
     n: int = Query(10, ge=1, le=50, description="返回数量"),
     job_type: Optional[str] = Query(None, description="岗位类型"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取 Top N 工程师"""
     service = EngineerPerformanceService(db)

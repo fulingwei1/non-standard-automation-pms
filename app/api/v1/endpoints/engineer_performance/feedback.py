@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.performance_feedback_service import PerformanceFeedbackService
@@ -20,7 +21,7 @@ async def get_engineer_feedback(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师的绩效反馈"""
     service = PerformanceFeedbackService(db)
@@ -35,7 +36,7 @@ async def generate_feedback_message(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """生成绩效反馈消息（用于通知）"""
     service = PerformanceFeedbackService(db)
@@ -50,7 +51,7 @@ async def get_dimension_trend(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师五维得分趋势"""
     service = PerformanceFeedbackService(db)
@@ -65,7 +66,7 @@ async def identify_ability_changes(
     engineer_id: int,
     periods: int = Query(6, ge=2, le=12, description="历史周期数"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """识别工程师能力变化"""
     service = PerformanceFeedbackService(db)

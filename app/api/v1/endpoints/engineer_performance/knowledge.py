@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -72,7 +73,7 @@ async def list_contributions(
     status: Optional[str] = Query(None, description="状态"),
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """获取知识贡献列表"""
     service = KnowledgeContributionService(db)
@@ -102,7 +103,7 @@ async def list_contributions(
 async def create_contribution(
     data: KnowledgeContributionCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """创建知识贡献"""
     service = KnowledgeContributionService(db)
@@ -124,7 +125,7 @@ async def list_contributions_compat(
     limit: int = Query(20, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """兼容前端 /knowledge/contributions 调用"""
     service = KnowledgeContributionService(db)
@@ -148,7 +149,7 @@ async def list_contributions_compat(
 async def create_contribution_compat(
     payload: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """兼容前端 /knowledge/contributions 创建调用"""
     try:
@@ -186,7 +187,7 @@ async def approve_contribution_compat(
     contribution_id: int,
     payload: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:approve")),
 ):
     """兼容前端 PUT /knowledge/contributions/{id}/approve"""
     approve_value = payload.get("approve", True)
@@ -208,7 +209,7 @@ async def approve_contribution_compat(
 async def record_reuse_compat(
     payload: dict,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """兼容前端 POST /knowledge/reuse"""
     try:
@@ -247,7 +248,7 @@ async def get_contribution_rankings_compat(
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
     limit: int = Query(20, ge=1, le=50),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """兼容前端 /knowledge/rankings 调用"""
     service = KnowledgeContributionService(db)
@@ -282,7 +283,7 @@ async def get_contribution_rankings_compat(
 async def get_contributor_stats_compat(
     contributor_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """兼容前端 /knowledge/contributor/{id}/stats 调用"""
     target_user_id = current_user.id
@@ -316,7 +317,7 @@ async def get_contributor_stats_compat(
 async def get_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """获取知识贡献详情"""
     service = KnowledgeContributionService(db)
@@ -356,7 +357,7 @@ async def update_contribution(
     contribution_id: int,
     data: KnowledgeContributionUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """更新知识贡献"""
     service = KnowledgeContributionService(db)
@@ -378,7 +379,7 @@ async def update_contribution(
 async def submit_for_review(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """提交知识贡献进行审核"""
     service = KnowledgeContributionService(db)
@@ -400,7 +401,7 @@ async def submit_for_review(
 async def approve_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:approve")),
 ):
     """审核通过知识贡献"""
     service = KnowledgeContributionService(db)
@@ -420,7 +421,7 @@ async def approve_contribution(
 async def reject_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:approve")),
 ):
     """拒绝知识贡献"""
     service = KnowledgeContributionService(db)
@@ -441,7 +442,7 @@ async def record_reuse(
     contribution_id: int,
     data: KnowledgeReuseCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """记录知识复用"""
     service = KnowledgeContributionService(db)
@@ -464,7 +465,7 @@ async def record_reuse(
 async def delete_contribution(
     contribution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:write")),
 ):
     """删除知识贡献"""
     service = KnowledgeContributionService(db)
@@ -490,7 +491,7 @@ async def get_contribution_ranking(
     contribution_type: Optional[str] = Query(None, description="贡献类型"),
     limit: int = Query(20, ge=1, le=50),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """获取知识贡献排行榜"""
     service = KnowledgeContributionService(db)
@@ -511,7 +512,7 @@ async def get_contribution_ranking(
 @router.get("/stats/me", summary="获取我的贡献统计")
 async def get_my_contribution_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """获取当前用户的贡献统计"""
     service = KnowledgeContributionService(db)

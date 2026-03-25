@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.manager_evaluation_service import ManagerEvaluationService
@@ -41,7 +42,7 @@ class SubmitEvaluationRequest(BaseModel):
 async def adjust_performance(
     request: AdjustPerformanceRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """部门经理调整工程师的绩效得分和排名"""
     service = ManagerEvaluationService(db)
@@ -89,7 +90,7 @@ async def get_adjustment_history(
 async def get_evaluation_tasks(
     period_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """获取部门经理需要评价的任务列表"""
     service = ManagerEvaluationService(db)
@@ -118,7 +119,7 @@ async def get_evaluation_tasks(
 async def submit_evaluation(
     request: SubmitEvaluationRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """部门经理提交评价（不调整得分和排名）"""
     service = ManagerEvaluationService(db)
@@ -141,7 +142,7 @@ async def submit_evaluation(
 async def get_engineers_for_evaluation(
     period_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:evaluate")),
 ):
     """获取部门经理可评价的工程师列表"""
     service = ManagerEvaluationService(db)
