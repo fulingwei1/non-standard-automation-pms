@@ -16,6 +16,10 @@ from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.engineer_performance import CollaborationRatingCreate
 from app.services.collaboration_service import CollaborationService
+from app.services.engineer_performance.engperf_scope import (
+    can_view_engineer,
+    resolve_engperf_scope,
+)
 
 router = APIRouter(prefix="/collaboration", tags=["跨部门协作"])
 
@@ -26,7 +30,13 @@ async def get_collaboration_matrix(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
-    """获取跨部门协作评价矩阵"""
+    """获取跨部门协作评价矩阵（仅 ALL scope 可查看全局矩阵）"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    # 协作矩阵是全局聚合视图，仅 ALL scope 可查看
+    if scope.scope_type != "ALL":
+        raise HTTPException(status_code=403, detail="仅管理员可查看全局协作评价矩阵")
+
     service = CollaborationService(db)
 
     if not period_id:
@@ -73,6 +83,14 @@ async def get_ratings_received(
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取指定用户收到的评价"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    target_user = db.query(User).filter(User.id == user_id).first()
+    target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+
+    if not can_view_engineer(scope, user_id, target_dept_id):
+        raise HTTPException(status_code=403, detail="无权查看该用户的协作评价")
+
     service = CollaborationService(db)
 
     ratings, total = service.get_ratings_received(
@@ -110,6 +128,14 @@ async def get_ratings_given(
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取指定用户给出的评价"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    target_user = db.query(User).filter(User.id == user_id).first()
+    target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+
+    if not can_view_engineer(scope, user_id, target_dept_id):
+        raise HTTPException(status_code=403, detail="无权查看该用户的协作评价")
+
     service = CollaborationService(db)
 
     ratings, total = service.get_ratings_given(
@@ -164,6 +190,14 @@ async def get_collaboration_stats(
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取用户的协作统计"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    target_user = db.query(User).filter(User.id == user_id).first()
+    target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+
+    if not can_view_engineer(scope, user_id, target_dept_id):
+        raise HTTPException(status_code=403, detail="无权查看该用户的协作统计")
+
     service = CollaborationService(db)
     stats = service.get_collaboration_stats(user_id, period_id)
 
@@ -280,7 +314,12 @@ async def get_rating_statistics(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
-    """获取指定周期的评价统计信息"""
+    """获取指定周期的评价统计信息（仅 ALL scope 可查看全局统计）"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    if scope.scope_type != "ALL":
+        raise HTTPException(status_code=403, detail="仅管理员可查看全局评价统计")
+
     from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)
@@ -300,6 +339,14 @@ async def get_collaboration_trend(
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师的跨部门协作趋势"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    target_user = db.query(User).filter(User.id == engineer_id).first()
+    target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+
+    if not can_view_engineer(scope, engineer_id, target_dept_id):
+        raise HTTPException(status_code=403, detail="无权查看该工程师的协作趋势")
+
     from app.services.collaboration_rating import CollaborationRatingService
 
     service = CollaborationRatingService(db)

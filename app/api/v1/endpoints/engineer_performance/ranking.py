@@ -14,6 +14,10 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.engineer_performance.engperf_scope import (
+    check_department_accessible,
+    resolve_engperf_scope,
+)
 from app.services.engineer_performance.engineer_performance_service import (
     EngineerPerformanceService,
 )
@@ -32,6 +36,12 @@ async def get_ranking(
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师绩效排名"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    # 如果前端传了 department_id，校验是否在 scope 内
+    if department_id is not None and not check_department_accessible(scope, department_id):
+        raise HTTPException(status_code=403, detail="无权查看该部门数据")
+
     service = EngineerPerformanceService(db)
 
     # 获取周期
@@ -50,6 +60,7 @@ async def get_ranking(
         department_id=department_id,
         limit=pagination.limit,
         offset=pagination.offset,
+        scope=scope,
     )
 
     items = []
@@ -90,6 +101,12 @@ async def get_ranking_by_department(
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取部门内排名"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    # 校验目标部门是否在用户 scope 内
+    if not check_department_accessible(scope, department_id):
+        raise HTTPException(status_code=403, detail="无权查看该部门数据")
+
     service = EngineerPerformanceService(db)
 
     if not period_id:
@@ -102,6 +119,7 @@ async def get_ranking_by_department(
         department_id=department_id,
         limit=pagination.limit,
         offset=pagination.offset,
+        scope=scope,
     )
 
     items = []
@@ -137,6 +155,7 @@ async def get_ranking_by_job_type(
     if job_type not in ["mechanical", "test", "electrical"]:
         raise HTTPException(status_code=400, detail="无效的岗位类型")
 
+    scope = resolve_engperf_scope(db, current_user)
     service = EngineerPerformanceService(db)
 
     if not period_id:
@@ -145,7 +164,11 @@ async def get_ranking_by_job_type(
             period_id = period.id
 
     results, total = service.get_ranking(
-        period_id=period_id, job_type=job_type, limit=pagination.limit, offset=pagination.offset
+        period_id=period_id,
+        job_type=job_type,
+        limit=pagination.limit,
+        offset=pagination.offset,
+        scope=scope,
     )
 
     items = []
@@ -176,6 +199,7 @@ async def get_top_engineers(
     current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取 Top N 工程师"""
+    scope = resolve_engperf_scope(db, current_user)
     service = EngineerPerformanceService(db)
 
     if not period_id:
@@ -183,7 +207,9 @@ async def get_top_engineers(
         if period:
             period_id = period.id
 
-    results, _ = service.get_ranking(period_id=period_id, job_type=job_type, limit=n)
+    results, _ = service.get_ranking(
+        period_id=period_id, job_type=job_type, limit=n, scope=scope
+    )
 
     items = []
     for i, r in enumerate(results, 1):

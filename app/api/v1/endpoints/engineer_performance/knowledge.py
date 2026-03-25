@@ -19,6 +19,10 @@ from app.schemas.engineer_performance import (
     KnowledgeContributionUpdate,
     KnowledgeReuseCreate,
 )
+from app.services.engineer_performance.engperf_scope import (
+    can_view_engineer,
+    resolve_engperf_scope,
+)
 from app.services.knowledge_contribution_service import KnowledgeContributionService
 
 router = APIRouter(prefix="/knowledge", tags=["知识贡献"])
@@ -76,16 +80,43 @@ async def list_contributions(
     current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """获取知识贡献列表"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    # 如果指定了 contributor_id，校验是否有权查看
+    if contributor_id is not None:
+        target_user = db.query(User).filter(User.id == contributor_id).first()
+        target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+        if not can_view_engineer(scope, contributor_id, target_dept_id):
+            raise HTTPException(status_code=403, detail="无权查看该用户的知识贡献")
+
+    # OWN scope 强制只看自己
+    effective_contributor_id = contributor_id
+    if scope.scope_type == "OWN" and contributor_id is None:
+        effective_contributor_id = current_user.id
+
     service = KnowledgeContributionService(db)
 
     contributions, total = service.list_contributions(
-        contributor_id=contributor_id,
+        contributor_id=effective_contributor_id,
         job_type=job_type,
         contribution_type=contribution_type,
         status=status,
         limit=pagination.limit,
         offset=pagination.offset
     )
+
+    # 对 TEAM/DEPARTMENT scope 进行后过滤（KnowledgeContribution 无 department_id）
+    if scope.scope_type == "TEAM" and scope.accessible_user_ids and contributor_id is None:
+        contributions = [c for c in contributions if c.contributor_id in scope.accessible_user_ids]
+        total = len(contributions)
+    elif scope.scope_type in ("DEPARTMENT", "BUSINESS_UNIT") and scope.accessible_dept_ids and contributor_id is None:
+        filtered = []
+        for c in contributions:
+            u = db.query(User).filter(User.id == c.contributor_id).first()
+            if u and getattr(u, "department_id", None) in scope.accessible_dept_ids:
+                filtered.append(c)
+        contributions = filtered
+        total = len(contributions)
 
     items = [_serialize_contribution(db, contribution) for contribution in contributions]
 
@@ -128,15 +159,40 @@ async def list_contributions_compat(
     current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """兼容前端 /knowledge/contributions 调用"""
+    scope = resolve_engperf_scope(db, current_user)
+
+    if contributor_id is not None:
+        target_user = db.query(User).filter(User.id == contributor_id).first()
+        target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+        if not can_view_engineer(scope, contributor_id, target_dept_id):
+            raise HTTPException(status_code=403, detail="无权查看该用户的知识贡献")
+
+    effective_contributor_id = contributor_id
+    if scope.scope_type == "OWN" and contributor_id is None:
+        effective_contributor_id = current_user.id
+
     service = KnowledgeContributionService(db)
     contributions, total = service.list_contributions(
-        contributor_id=contributor_id,
+        contributor_id=effective_contributor_id,
         job_type=job_type,
         contribution_type=contribution_type,
         status=status,
         limit=limit,
         offset=offset
     )
+
+    if scope.scope_type == "TEAM" and scope.accessible_user_ids and contributor_id is None:
+        contributions = [c for c in contributions if c.contributor_id in scope.accessible_user_ids]
+        total = len(contributions)
+    elif scope.scope_type in ("DEPARTMENT", "BUSINESS_UNIT") and scope.accessible_dept_ids and contributor_id is None:
+        filtered = []
+        for c in contributions:
+            u = db.query(User).filter(User.id == c.contributor_id).first()
+            if u and getattr(u, "department_id", None) in scope.accessible_dept_ids:
+                filtered.append(c)
+        contributions = filtered
+        total = len(contributions)
+
     items = [_serialize_contribution(db, contribution) for contribution in contributions]
     return ResponseModel(
         code=200,
@@ -251,6 +307,7 @@ async def get_contribution_rankings_compat(
     current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """兼容前端 /knowledge/rankings 调用"""
+    scope = resolve_engperf_scope(db, current_user)
     service = KnowledgeContributionService(db)
     ranking = service.get_contribution_ranking(
         job_type=job_type,
@@ -258,12 +315,19 @@ async def get_contribution_rankings_compat(
         limit=limit
     )
 
+    # 按 scope 过滤排行结果
     items = []
     for row in ranking:
         contributor_id = row.get("contributor_id")
+        if contributor_id:
+            target_user = db.query(User).filter(User.id == contributor_id).first()
+            target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+            if not can_view_engineer(scope, contributor_id, target_dept_id):
+                continue
+
         stats = service.get_contributor_stats(contributor_id) if contributor_id else {}
         items.append({
-            "rank": row.get("rank"),
+            "rank": len(items) + 1,  # 重新编排 scope 内排名
             "user_id": contributor_id,
             "user_name": row.get("contributor_name"),
             "job_type": row.get("job_type"),
@@ -286,9 +350,18 @@ async def get_contributor_stats_compat(
     current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """兼容前端 /knowledge/contributor/{id}/stats 调用"""
+    scope = resolve_engperf_scope(db, current_user)
+
     target_user_id = current_user.id
     if contributor_id.isdigit():
         target_user_id = int(contributor_id)
+
+    # scope 校验
+    target_user = db.query(User).filter(User.id == target_user_id).first()
+    target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+
+    if not can_view_engineer(scope, target_user_id, target_dept_id):
+        raise HTTPException(status_code=403, detail="无权查看该贡献者的统计数据")
 
     service = KnowledgeContributionService(db)
     stats = service.get_contributor_stats(target_user_id)
@@ -326,7 +399,13 @@ async def get_contribution(
     if not contribution:
         raise HTTPException(status_code=404, detail="贡献不存在")
 
+    # scope 校验：检查是否有权查看该贡献者的数据
+    scope = resolve_engperf_scope(db, current_user)
     contributor = db.query(User).filter(User.id == contribution.contributor_id).first()
+    target_dept_id = getattr(contributor, "department_id", None) if contributor else None
+
+    if not can_view_engineer(scope, contribution.contributor_id, target_dept_id):
+        raise HTTPException(status_code=403, detail="无权查看该知识贡献")
 
     return ResponseModel(
         code=200,
@@ -494,6 +573,7 @@ async def get_contribution_ranking(
     current_user: User = Depends(security.require_permission("knowledge:read")),
 ):
     """获取知识贡献排行榜"""
+    scope = resolve_engperf_scope(db, current_user)
     service = KnowledgeContributionService(db)
 
     ranking = service.get_contribution_ranking(
@@ -502,10 +582,22 @@ async def get_contribution_ranking(
         limit=limit
     )
 
+    # 按 scope 过滤
+    filtered = []
+    for row in ranking:
+        contributor_id = row.get("contributor_id")
+        if contributor_id:
+            target_user = db.query(User).filter(User.id == contributor_id).first()
+            target_dept_id = getattr(target_user, "department_id", None) if target_user else None
+            if not can_view_engineer(scope, contributor_id, target_dept_id):
+                continue
+        row["rank"] = len(filtered) + 1
+        filtered.append(row)
+
     return ResponseModel(
         code=200,
         message="success",
-        data=ranking
+        data=filtered
     )
 
 
