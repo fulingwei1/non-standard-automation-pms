@@ -281,6 +281,10 @@ def read_contract(
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
 
+    # 数据权限检查
+    if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同")
+
     deliverables = (
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract.id).all()
     )

@@ -191,6 +191,10 @@ def read_opportunity(
     if not opportunity:
         raise HTTPException(status_code=404, detail="商机不存在")
 
+    # 数据权限检查
+    if not security.check_sales_data_permission(opportunity, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该商机")
+
     req = opportunity.requirements[0] if opportunity.requirements else None
     opp_dict = {
         **{c.name: getattr(opportunity, c.name) for c in opportunity.__table__.columns},

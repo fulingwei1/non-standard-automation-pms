@@ -18,6 +18,7 @@ __all__ = [
     "get_sales_data_scope",
     "filter_sales_data_by_scope",
     "filter_sales_finance_data_by_scope",
+    "check_sales_data_permission",
     "check_sales_create_permission",
     "check_sales_edit_permission",
     "check_sales_delete_permission",
@@ -285,6 +286,57 @@ def can_set_opportunity_gate(db: Session, user: User, opportunity) -> bool:
         return can_manage_sales_opportunity(db, user, opportunity)
 
     # 其他权限范围不能设置商机阶段门
+    return False
+
+
+def check_sales_data_permission(
+    entity,
+    user: User,
+    db: Session,
+    owner_field_name: str = "owner_id",
+) -> bool:
+    """
+    检查用户是否有权访问指定的销售数据实体（单条记录级别）
+
+    用于 detail/update/delete 接口，判断当前用户是否有权操作该记录。
+    复用 get_sales_data_scope() 的范围逻辑。
+
+    Args:
+        entity: 数据实体对象（Customer/Contact/Opportunity 等）
+        user: 当前用户
+        db: 数据库会话
+        owner_field_name: 负责人字段名（默认 'owner_id'）
+
+    Returns:
+        bool: 是否有权访问
+    """
+    if is_superuser(user):
+        return True
+
+    scope = get_sales_data_scope(user, db)
+
+    if scope == "ALL":
+        return True
+
+    owner_id = getattr(entity, owner_field_name, None)
+
+    if scope == "DEPT":
+        if not user.department:
+            return owner_id == user.id
+        owner_user = db.query(User).filter(User.id == owner_id).first() if owner_id else None
+        return owner_user is not None and owner_user.department == user.department
+
+    if scope == "TEAM":
+        from app.services.data_scope import DataScopeService
+
+        subordinate_ids = DataScopeService.get_subordinate_ids(db, user.id)
+        allowed_ids = subordinate_ids | {user.id}
+        return owner_id in allowed_ids
+
+    if scope in ("PROJECT", "OWN"):
+        return owner_id == user.id
+
+    # FINANCE_ONLY, NONE
     return False
 
 

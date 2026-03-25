@@ -72,6 +72,10 @@ def get_quote_detail(
     if not quote:
         raise HTTPException(status_code=404, detail="报价不存在")
 
+    # 数据权限检查
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该报价")
+
     # 构建响应数据
     current_version = quote.current_version
     items_data = []
@@ -155,6 +159,10 @@ def update_quote(
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
 
+    # 数据权限检查
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权修改该报价")
+
     # 可更新字段
     updatable_fields = ["valid_until", "owner_id"]
     for field in updatable_fields:
@@ -187,6 +195,10 @@ def delete_quote(
         ResponseModel: 删除结果
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+
+    # 数据权限检查
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权删除该报价")
 
     # 检查状态，已审批的不允许删除
     if quote.status in ["APPROVED", "CONTRACTED"]:
