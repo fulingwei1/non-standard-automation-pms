@@ -8,11 +8,19 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import { PermissionProvider, usePermissionContext, withPermission, PermissionLoading } from '../PermissionContext';
 import { authApi } from '../../services/api';
 
-// Mock authApi
+// Mock authApi — must mock the named export with spy methods
 vi.mock('../../services/api', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
+    authApi: {
+      me: vi.fn(),
+      getPermissions: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      refresh: vi.fn(),
+      changePassword: vi.fn(),
+    },
     default: {
       get: vi.fn(),
       post: vi.fn(),
@@ -24,10 +32,19 @@ vi.mock('../../services/api', async (importOriginal) => {
   };
 });
 
+// Helper: configure the global localStorage mock to use a real backing store
+function setupLocalStorageMock() {
+  const store = {};
+  localStorage.getItem.mockImplementation((key) => store[key] ?? null);
+  localStorage.setItem.mockImplementation((key, value) => { store[key] = String(value); });
+  localStorage.removeItem.mockImplementation((key) => { delete store[key]; });
+  localStorage.clear.mockImplementation(() => { Object.keys(store).forEach((k) => delete store[k]); });
+}
+
 describe('PermissionContext', () => {
   beforeEach(() => {
-    localStorage.clear();
     vi.clearAllMocks();
+    setupLocalStorageMock();
   });
 
   afterEach(() => {
@@ -140,7 +157,7 @@ describe('PermissionContext', () => {
       expect(localStorage.getItem('user')).toBeNull();
     });
 
-    it('应该处理服务器错误（500）并从localStorage恢复', async () => {
+    it('应该处理服务器错误（500）- fail-closed 不从localStorage恢复', async () => {
       const mockUser = {
         id: 1,
         username: 'test',
@@ -171,9 +188,10 @@ describe('PermissionContext', () => {
         expect(permData.isLoading).toBe(false);
       });
 
-      expect(permData.error).toBe('服务器暂时不可用，使用缓存数据');
-      expect(permData.user).toEqual(mockUser);
-      expect(permData.permissions).toEqual(['project:view']);
+      // fail-closed: 服务器错误时不恢复缓存权限
+      expect(permData.error).toBe('服务器暂时不可用，请稍后重试');
+      expect(permData.user).toBeNull();
+      expect(permData.permissions).toEqual([]);
     });
 
     it('应该处理超级管理员', async () => {
@@ -250,6 +268,8 @@ describe('PermissionContext', () => {
       localStorage.setItem('user', JSON.stringify(mockUser));
 
       authApi.me.mockResolvedValue({ data: mockUser });
+      // Simulate getPermissions API not existing: optional chaining handles undefined
+      const savedGetPermissions = authApi.getPermissions;
       authApi.getPermissions = undefined; // API不存在
 
       let permData;
@@ -269,6 +289,9 @@ describe('PermissionContext', () => {
       });
 
       expect(permData.permissions).toEqual(['project:view']);
+
+      // Restore getPermissions for subsequent tests
+      authApi.getPermissions = savedGetPermissions;
     });
   });
 

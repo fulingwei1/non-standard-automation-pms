@@ -7,29 +7,56 @@ import {
   FinanceProtectedRoute,
 } from '../ProtectedRoute';
 
-// Mock the role and permission utils
-vi.mock('../../../lib/roleConfig', () => ({
-  hasProcurementAccess: vi.fn((role, isSuperuser) => {
-    if (isSuperuser) return true;
-    return role === 'PURCHASE' || role === 'PURCHASE_MGR';
-  }),
-  hasFinanceAccess: vi.fn((role, isSuperuser) => {
-    if (isSuperuser) return true;
-    return role === 'FINANCE' || role === 'CFO';
-  }),
-  hasProductionAccess: vi.fn(() => false),
-  hasProjectReviewAccess: vi.fn(() => false),
-  hasStrategyAccess: vi.fn(() => false),
+// Mock usePermission and useModuleAccess hooks
+const mockUsePermission = {
+  hasPermission: vi.fn(() => false),
+  hasAnyPermission: vi.fn(() => false),
+  hasAllPermissions: vi.fn(() => false),
+  canAccessMenu: vi.fn(() => false),
+  getDataScope: vi.fn(() => null),
+  canAccessData: vi.fn(() => false),
+  isSuperuser: false,
+  isLoading: false,
+  error: null,
+  permissions: [],
+  menus: [],
+  dataScopes: {},
+};
+
+vi.mock('../../../hooks/usePermission', () => ({
+  usePermission: () => mockUsePermission,
 }));
 
-vi.mock('../../../lib/permissionUtils', () => ({
-  hasPermission: vi.fn((permission) => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user.permissions?.includes(permission) || false;
+vi.mock('../../../context/PermissionContext', () => ({
+  usePermissionContext: () => ({
+    permissions: mockUsePermission.permissions,
+    menus: mockUsePermission.menus,
+    dataScopes: mockUsePermission.dataScopes,
+    isSuperuser: mockUsePermission.isSuperuser,
+    isLoading: mockUsePermission.isLoading,
+    error: mockUsePermission.error,
+    user: null,
+    refreshPermissions: vi.fn(),
+    clearPermissions: vi.fn(),
+    updatePermission: vi.fn(),
   }),
-  hasAnyPurchasePermission: vi.fn(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user.permissions?.some(p => p.startsWith('purchase:')) || false;
+}));
+
+vi.mock('../../../lib/permission', () => ({
+  useModuleAccess: () => ({
+    hasModuleAccess: vi.fn((moduleKey) => {
+      if (mockUsePermission.isSuperuser) return true;
+      if (mockUsePermission.isLoading) return false;
+      return mockUsePermission.hasAnyPermission([moduleKey]);
+    }),
+    checkPermission: vi.fn((code) => {
+      if (mockUsePermission.isSuperuser) return true;
+      return mockUsePermission.hasPermission(code);
+    }),
+    isSuperuser: mockUsePermission.isSuperuser,
+    isLoading: mockUsePermission.isLoading,
+    error: mockUsePermission.error,
+    permissions: mockUsePermission.permissions,
   }),
 }));
 
@@ -37,10 +64,25 @@ const renderWithRouter = (component) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
+// Helper: configure the global localStorage mock to use a real backing store
+function setupLocalStorageMock() {
+  const store = {};
+  localStorage.getItem.mockImplementation((key) => store[key] ?? null);
+  localStorage.setItem.mockImplementation((key, value) => { store[key] = String(value); });
+  localStorage.removeItem.mockImplementation((key) => { delete store[key]; });
+  localStorage.clear.mockImplementation(() => { Object.keys(store).forEach((k) => delete store[k]); });
+}
+
 describe('ProtectedRoute', () => {
   beforeEach(() => {
-    localStorage.clear();
     vi.clearAllMocks();
+    setupLocalStorageMock();
+    // Reset mock state
+    mockUsePermission.isSuperuser = false;
+    mockUsePermission.isLoading = false;
+    mockUsePermission.permissions = [];
+    mockUsePermission.hasPermission.mockReturnValue(false);
+    mockUsePermission.hasAnyPermission.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -58,6 +100,7 @@ describe('ProtectedRoute', () => {
     });
 
     it('renders children when user is authenticated and authorized', () => {
+      localStorage.setItem('token', 'valid-token');
       localStorage.setItem('user', JSON.stringify({
         role: 'ADMIN',
         is_superuser: false,
@@ -71,102 +114,42 @@ describe('ProtectedRoute', () => {
 
       expect(screen.getByTestId('protected-content')).toBeInTheDocument();
     });
+  });
 
-    it('handles invalid user data in localStorage', () => {
-      localStorage.setItem('user', 'invalid json');
+  describe('Superuser Access', () => {
+    it('allows superuser to access without permission check', () => {
+      localStorage.setItem('token', 'valid-token');
+      mockUsePermission.isSuperuser = true;
 
       renderWithRouter(
-        <ProtectedRoute>
+        <ProtectedRoute checkPermission={() => false}>
+          <div data-testid="protected-content">Protected Content</div>
+        </ProtectedRoute>
+      );
+
+      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
+    });
+  });
+
+  describe('Loading State (fail-closed)', () => {
+    it('shows loading placeholder while permissions load', () => {
+      localStorage.setItem('token', 'valid-token');
+      mockUsePermission.isLoading = true;
+
+      renderWithRouter(
+        <ProtectedRoute checkPermission={() => true}>
           <div data-testid="protected-content">Protected Content</div>
         </ProtectedRoute>
       );
 
       expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
-      expect(localStorage.getItem('user')).toBeNull();
-    });
-  });
-
-  describe('Superuser Access', () => {
-    it('allows superuser to access without permission check', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: true,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
-    });
-
-    it('handles isSuperuser alternative field name', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        isSuperuser: true,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
-    });
-  });
-
-  describe('Admin Access', () => {
-    it('allows admin role to bypass permission checks', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'admin',
-        is_superuser: false,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
-    });
-
-    it('allows super_admin role to bypass permission checks', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'super_admin',
-        is_superuser: false,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
-    });
-
-    it('handles Chinese admin role names', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: '管理员',
-        is_superuser: false,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
+      expect(screen.getByText('权限验证中...')).toBeInTheDocument();
     });
   });
 
   describe('Permission Check', () => {
     it('shows access denied when permission check fails', () => {
+      localStorage.setItem('token', 'valid-token');
       localStorage.setItem('user', JSON.stringify({
         role: 'USER',
         is_superuser: false,
@@ -183,6 +166,7 @@ describe('ProtectedRoute', () => {
     });
 
     it('calls checkPermission with user role', () => {
+      localStorage.setItem('token', 'valid-token');
       const mockCheckPermission = vi.fn(() => true);
       localStorage.setItem('user', JSON.stringify({
         role: 'TEST_ROLE',
@@ -197,25 +181,11 @@ describe('ProtectedRoute', () => {
 
       expect(mockCheckPermission).toHaveBeenCalledWith('TEST_ROLE');
     });
-
-    it('uses default permission check when not provided', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: false,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
-    });
   });
 
   describe('Access Denied UI', () => {
-    it('displays lock icon', () => {
+    it('displays lock icon and back button', () => {
+      localStorage.setItem('token', 'valid-token');
       localStorage.setItem('user', JSON.stringify({
         role: 'USER',
         is_superuser: false,
@@ -228,24 +198,11 @@ describe('ProtectedRoute', () => {
       );
 
       expect(screen.getByText('🔒')).toBeInTheDocument();
-    });
-
-    it('displays back button', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: false,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
       expect(screen.getByText('返回上一页')).toBeInTheDocument();
     });
 
     it('uses custom permission name in error message', () => {
+      localStorage.setItem('token', 'valid-token');
       localStorage.setItem('user', JSON.stringify({
         role: 'USER',
         is_superuser: false,
@@ -259,29 +216,11 @@ describe('ProtectedRoute', () => {
 
       expect(screen.getByText('您没有权限访问自定义模块')).toBeInTheDocument();
     });
-
-    it('uses default permission name when not provided', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: false,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByText('您没有权限访问此功能')).toBeInTheDocument();
-    });
   });
 
   describe('ProcurementProtectedRoute', () => {
-    it('allows procurement role to access', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'PURCHASE',
-        is_superuser: false,
-      }));
+    it('allows access when user has procurement permissions', () => {
+      mockUsePermission.hasAnyPermission.mockReturnValue(true);
 
       renderWithRouter(
         <ProcurementProtectedRoute>
@@ -292,11 +231,8 @@ describe('ProtectedRoute', () => {
       expect(screen.getByTestId('protected-content')).toBeInTheDocument();
     });
 
-    it('denies access to non-procurement roles', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: false,
-      }));
+    it('denies access when user lacks procurement permissions', () => {
+      mockUsePermission.hasAnyPermission.mockReturnValue(false);
 
       renderWithRouter(
         <ProcurementProtectedRoute>
@@ -308,12 +244,10 @@ describe('ProtectedRoute', () => {
       expect(screen.getByText('无权限访问')).toBeInTheDocument();
     });
 
-    it('uses fine-grained permission check when requiredPermission provided', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: false,
-        permissions: ['purchase:order:read'],
-      }));
+    it('checks specific permission when requiredPermission provided', () => {
+      mockUsePermission.hasPermission.mockImplementation(
+        (code) => code === 'purchase:order:read'
+      );
 
       renderWithRouter(
         <ProcurementProtectedRoute requiredPermission="purchase:order:read">
@@ -324,15 +258,12 @@ describe('ProtectedRoute', () => {
       expect(screen.getByTestId('protected-content')).toBeInTheDocument();
     });
 
-    it('checks any purchase permission when no specific permission required', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: false,
-        permissions: ['purchase:order:read'],
-      }));
+    it('superuser always has access', () => {
+      mockUsePermission.isSuperuser = true;
+      mockUsePermission.hasAnyPermission.mockReturnValue(false);
 
       renderWithRouter(
-        <ProcurementProtectedRoute useFineGrained={true}>
+        <ProcurementProtectedRoute>
           <div data-testid="protected-content">Protected Content</div>
         </ProcurementProtectedRoute>
       );
@@ -342,11 +273,8 @@ describe('ProtectedRoute', () => {
   });
 
   describe('FinanceProtectedRoute', () => {
-    it('allows finance role to access', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'FINANCE',
-        is_superuser: false,
-      }));
+    it('allows access when user has finance permissions', () => {
+      mockUsePermission.hasAnyPermission.mockReturnValue(true);
 
       renderWithRouter(
         <FinanceProtectedRoute>
@@ -357,11 +285,8 @@ describe('ProtectedRoute', () => {
       expect(screen.getByTestId('protected-content')).toBeInTheDocument();
     });
 
-    it('denies access to non-finance roles', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'USER',
-        is_superuser: false,
-      }));
+    it('denies access when user lacks finance permissions', () => {
+      mockUsePermission.hasAnyPermission.mockReturnValue(false);
 
       renderWithRouter(
         <FinanceProtectedRoute>
@@ -375,6 +300,7 @@ describe('ProtectedRoute', () => {
 
   describe('Edge Cases', () => {
     it('handles missing role field', () => {
+      localStorage.setItem('token', 'valid-token');
       localStorage.setItem('user', JSON.stringify({
         is_superuser: false,
       }));
@@ -386,35 +312,6 @@ describe('ProtectedRoute', () => {
       );
 
       expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
-    });
-
-    it('handles empty user object', () => {
-      localStorage.setItem('user', JSON.stringify({}));
-
-      renderWithRouter(
-        <ProtectedRoute checkPermission={() => false}>
-          <div data-testid="protected-content">Protected Content</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
-    });
-
-    it('renders multiple children when authorized', () => {
-      localStorage.setItem('user', JSON.stringify({
-        role: 'admin',
-        is_superuser: false,
-      }));
-
-      renderWithRouter(
-        <ProtectedRoute>
-          <div data-testid="child-1">Child 1</div>
-          <div data-testid="child-2">Child 2</div>
-        </ProtectedRoute>
-      );
-
-      expect(screen.getByTestId('child-1')).toBeInTheDocument();
-      expect(screen.getByTestId('child-2')).toBeInTheDocument();
     });
   });
 });

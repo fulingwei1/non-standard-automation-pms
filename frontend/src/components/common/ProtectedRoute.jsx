@@ -1,35 +1,67 @@
 /**
- * Generic Protected Route Component
- * Provides role-based access control for routes
+ * Protected Route Components
+ *
+ * 重构后：所有路由守卫通过 PermissionContext 检查权限，
+ * 不再直接读取 localStorage。
+ *
+ * 新代码推荐直接使用 ModuleProtectedRoute：
+ *   import { ModuleProtectedRoute } from '../../lib/permission';
+ *   <ModuleProtectedRoute module="procurement">...</ModuleProtectedRoute>
+ *
+ * 本文件保留旧的 export 签名，内部已迁移到新权限体系。
  */
 
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  hasProcurementAccess,
-  hasFinanceAccess,
-  hasProductionAccess,
-  hasProjectReviewAccess,
-  hasStrategyAccess,
-} from "../../lib/roleConfig";
-import {
-  hasPermission,
-  hasAnyPurchasePermission,
-} from "../../lib/permissionUtils";
 import { Button } from "../ui/button";
+import { usePermission } from "../../hooks/usePermission";
+import { useModuleAccess } from "../../lib/permission";
 
-/**
- * Permission check function type
- * @typedef {(role: string) => boolean} PermissionChecker
- */
+// ─── 共享 UI ────────────────────────────────────────────
+
+function AccessDenied({ permissionName = "此功能" }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center h-[60vh] text-center"
+    >
+      <div className="text-6xl mb-4">🔒</div>
+      <h1 className="text-2xl font-semibold text-white mb-2">无权限访问</h1>
+      <p className="text-slate-400 mb-4">您没有权限访问{permissionName}</p>
+      <Button
+        onClick={() => window.history.back()}
+        variant="default"
+        className="mt-4"
+      >
+        返回上一页
+      </Button>
+    </motion.div>
+  );
+}
+
+function PermissionLoadingPlaceholder() {
+  return (
+    <div className="flex items-center justify-center h-[60vh]">
+      <div className="text-slate-400">权限验证中...</div>
+    </div>
+  );
+}
+
+// ─── 基础 ProtectedRoute ────────────────────────────────
 
 /**
  * Generic route protection component
+ *
+ * 已重构：使用 PermissionContext 代替 localStorage。
+ * checkPermission 回调仍然接收 role 参数以保持向后兼容，
+ * 但推荐迁移到 ModuleProtectedRoute。
+ *
  * @param {Object} props
- * @param {React.ReactNode} props.children - Child components to render if authorized
- * @param {PermissionChecker} props.checkPermission - Function to check if user has permission
- * @param {string} props.permissionName - Name of the permission (for error message)
- * @param {string} props.redirectTo - Path to redirect if not authenticated (default: '/')
+ * @param {React.ReactNode} props.children
+ * @param {(role: string) => boolean} [props.checkPermission] - 旧式角色检查回调
+ * @param {string} [props.permissionName] - 模块名称（用于提示）
+ * @param {string} [props.redirectTo] - 未登录时重定向路径
  */
 export function ProtectedRoute({
   children,
@@ -37,360 +69,165 @@ export function ProtectedRoute({
   permissionName = "此功能",
   redirectTo = "/",
 }) {
-  const userStr = localStorage.getItem("user");
+  const { isSuperuser, isLoading, permissions } = usePermission();
 
-  if (!userStr) {
-    console.warn(
-      "ProtectedRoute: No user in localStorage, redirecting to",
-      redirectTo,
-    );
+  // 未登录 → 重定向
+  const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+  if (!token && !isLoading) {
     return <Navigate to={redirectTo} replace />;
   }
 
-  let user;
-  let role;
-  let isSuperuser;
-
-  try {
-    user = JSON.parse(userStr);
-    role = user.role;
-    isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-    console.log(
-      "ProtectedRoute: User role =",
-      role,
-      ", isSuperuser =",
-      isSuperuser,
-      ", permissionName =",
-      permissionName,
-    );
-  } catch (e) {
-    console.warn("Invalid user data in localStorage:", e);
-    localStorage.removeItem("user");
-    return <Navigate to={redirectTo} replace />;
+  // 权限加载中 → 显示 loading（fail-closed）
+  if (isLoading) {
+    return <PermissionLoadingPlaceholder />;
   }
 
-  // 超级管理员绕过所有权限检查
+  // 超级管理员直接放行
   if (isSuperuser) {
-    console.log("ProtectedRoute: Superuser bypass, rendering children");
     return children;
   }
 
-  // 管理员角色也应该绕过权限检查
-  if (
-    role === "admin" ||
-    role === "super_admin" ||
-    role === "管理员" ||
-    role === "系统管理员"
-  ) {
-    console.log("ProtectedRoute: Admin role bypass, rendering children");
+  // 兼容旧的 checkPermission(role) 回调
+  // 从 PermissionContext 中的 user 获取 role（而非直接读 localStorage）
+  if (checkPermission) {
+    // 从 localStorage 读 role 仅用于传递给旧回调（过渡期）
+    let role = null;
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        role = user.role;
+      }
+    } catch {
+      // ignore
+    }
+
+    const hasAccess = checkPermission(role);
+    if (!role || !hasAccess) {
+      return <AccessDenied permissionName={permissionName} />;
+    }
     return children;
   }
 
-  const hasPermission = checkPermission ? checkPermission(role) : true;
-  console.log("ProtectedRoute: checkPermission result =", hasPermission);
-  console.log("ProtectedRoute: role =", role, ", role type =", typeof role);
-  console.log("ProtectedRoute: permissionName =", permissionName);
+  // 无 checkPermission 回调 → 只检查是否已登录
+  if (!permissions || permissions.length === 0) {
+    return <AccessDenied permissionName={permissionName} />;
+  }
 
-  if (!role || !hasPermission) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center h-[60vh] text-center"
-      >
-        <div className="text-6xl mb-4">🔒</div>
-        <h1 className="text-2xl font-semibold text-white mb-2">无权限访问</h1>
-        <p className="text-slate-400 mb-4">您没有权限访问{permissionName}</p>
-        <Button
-          onClick={() => window.history.back()}
-          variant="default"
-          className="mt-4"
-        >
-          返回上一页
-        </Button>
-      </motion.div>
-    );
+  return children;
+}
+
+// ─── 模块级路由守卫（新版：通过权限码检查） ──────────────
+
+/**
+ * @deprecated 推荐使用 ModuleProtectedRoute module="procurement"
+ */
+export function ProcurementProtectedRoute({
+  children,
+  requiredPermission = null,
+}) {
+  const { hasModuleAccess, checkPermission, isSuperuser, isLoading } = useModuleAccess();
+
+  if (isLoading) return <PermissionLoadingPlaceholder />;
+  if (isSuperuser) return children;
+
+  let hasAccess = false;
+  if (requiredPermission) {
+    hasAccess = checkPermission(requiredPermission);
+  } else {
+    hasAccess = hasModuleAccess('procurement');
+  }
+
+  if (!hasAccess) {
+    const msg = requiredPermission
+      ? `此功能（需要权限：${requiredPermission}）`
+      : "采购和物料管理模块";
+    return <AccessDenied permissionName={msg} />;
   }
 
   return children;
 }
 
 /**
- * Procurement-specific protected route
- * Wrapper for ProtectedRoute with procurement permission check
- *
- * 支持两种模式：
- * 1. 粗粒度检查（默认）：使用角色代码检查（向后兼容）
- * 2. 细粒度检查：使用权限编码检查（推荐）
- *
- * @param {Object} props
- * @param {React.ReactNode} props.children - Child components
- * @param {string} props.requiredPermission - 细粒度权限编码（可选），如 'purchase:order:read'
- * @param {boolean} props.useFineGrained - 是否使用细粒度权限检查（默认：true，如果提供了requiredPermission）
- */
-export function ProcurementProtectedRoute({
-  children,
-  requiredPermission = null,
-  useFineGrained = null,
-}) {
-  const userStr = localStorage.getItem("user");
-  let isSuperuser = false;
-
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-    } catch {
-      // ignore
-    }
-  }
-
-  // 决定使用哪种检查方式
-  const shouldUseFineGrained =
-    useFineGrained !== null ? useFineGrained : requiredPermission !== null;
-
-  // 细粒度权限检查
-  if (shouldUseFineGrained) {
-    // 如果指定了具体权限，检查该权限；否则检查是否有任何purchase权限
-    const hasAccess = requiredPermission
-      ? hasPermission(requiredPermission)
-      : hasAnyPurchasePermission();
-
-    if (!hasAccess && !isSuperuser) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center h-[60vh] text-center"
-        >
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-semibold text-white mb-2">无权限访问</h1>
-          <p className="text-slate-400 mb-4">
-            您没有权限访问
-            {requiredPermission
-              ? `此功能（需要权限：${requiredPermission}）`
-              : "采购和物料管理模块"}
-          </p>
-          <Button
-            onClick={() => window.history.back()}
-            variant="default"
-            className="mt-4"
-          >
-            返回上一页
-          </Button>
-        </motion.div>
-      );
-    }
-
-    return children;
-  }
-
-  // 粗粒度权限检查（向后兼容）
-  return (
-    <ProtectedRoute
-      checkPermission={(role) => hasProcurementAccess(role, isSuperuser)}
-      permissionName="采购和物料管理模块"
-    >
-      {children}
-    </ProtectedRoute>
-  );
-}
-
-/**
- * Finance-specific protected route
- * Wrapper for ProtectedRoute with finance permission check
+ * @deprecated 推荐使用 ModuleProtectedRoute module="finance"
  */
 export function FinanceProtectedRoute({ children }) {
-  const userStr = localStorage.getItem("user");
-  let isSuperuser = false;
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-    } catch {
-      // ignore
-    }
-  }
+  const { hasModuleAccess, isSuperuser, isLoading } = useModuleAccess();
 
-  return (
-    <ProtectedRoute
-      checkPermission={(role) => hasFinanceAccess(role, isSuperuser)}
-      permissionName="财务管理模块"
-    >
-      {children}
-    </ProtectedRoute>
-  );
+  if (isLoading) return <PermissionLoadingPlaceholder />;
+  if (isSuperuser) return children;
+  if (!hasModuleAccess('finance')) {
+    return <AccessDenied permissionName="财务管理模块" />;
+  }
+  return children;
 }
 
 /**
- * Production-specific protected route
- * Wrapper for ProtectedRoute with production permission check
+ * @deprecated 推荐使用 ModuleProtectedRoute module="production"
  */
 export function ProductionProtectedRoute({ children }) {
-  const userStr = localStorage.getItem("user");
-  let isSuperuser = false;
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-    } catch {
-      // ignore
-    }
-  }
+  const { hasModuleAccess, isSuperuser, isLoading } = useModuleAccess();
 
-  return (
-    <ProtectedRoute
-      checkPermission={(role) => hasProductionAccess(role, isSuperuser)}
-      permissionName="生产管理模块"
-    >
-      {children}
-    </ProtectedRoute>
-  );
+  if (isLoading) return <PermissionLoadingPlaceholder />;
+  if (isSuperuser) return children;
+  if (!hasModuleAccess('production')) {
+    return <AccessDenied permissionName="生产管理模块" />;
+  }
+  return children;
 }
 
 /**
- * Project Review-specific protected route
- * Wrapper for ProtectedRoute with project review permission check
- *
- * 使用动态权限检查：优先检查用户的 permissions 数组中是否包含项目复盘相关权限
+ * @deprecated 推荐使用 ModuleProtectedRoute module="project_review"
  */
 export function ProjectReviewProtectedRoute({ children }) {
-  const userStr = localStorage.getItem("user");
-  let isSuperuser = false;
-  let permissions = [];
+  const { hasModuleAccess, isSuperuser, isLoading } = useModuleAccess();
 
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-      permissions = user.permissions || [];
-    } catch {
-      // ignore
-    }
+  if (isLoading) return <PermissionLoadingPlaceholder />;
+  if (isSuperuser) return children;
+  if (!hasModuleAccess('project_review')) {
+    return <AccessDenied permissionName="项目复盘模块" />;
   }
-
-  // 使用权限代码检查（动态从数据库获取）
-  const checkPermission = (userRole) => hasProjectReviewAccess(userRole, isSuperuser, permissions);
-
-  return (
-    <ProtectedRoute
-      checkPermission={checkPermission}
-      permissionName="项目复盘模块"
-    >
-      {children}
-    </ProtectedRoute>
-  );
+  return children;
 }
 
 /**
- * Strategy-specific protected route
- * Wrapper for ProtectedRoute with strategy module permission check
- *
- * 战略管理模块访问控制：
- * - 高管层：完整访问（战略全景、目标分解、执行追踪等）
- * - 部门经理：部门访问（查看部门目标和KPI）
- * - 普通员工：暂不开放（后续可开放个人KPI查看）
+ * @deprecated 推荐使用 ModuleProtectedRoute module="strategy"
  */
 export function StrategyProtectedRoute({ children }) {
-  const userStr = localStorage.getItem("user");
-  let isSuperuser = false;
-  let permissions = [];
+  const { hasModuleAccess, isSuperuser, isLoading } = useModuleAccess();
 
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-      permissions = user.permissions || [];
-    } catch {
-      // ignore
-    }
+  if (isLoading) return <PermissionLoadingPlaceholder />;
+  if (isSuperuser) return children;
+  if (!hasModuleAccess('strategy')) {
+    return <AccessDenied permissionName="战略管理模块" />;
   }
-
-  // 使用权限代码检查（动态从数据库获取）
-  const checkPermission = (userRole) => hasStrategyAccess(userRole, isSuperuser, permissions);
-
-  return (
-    <ProtectedRoute
-      checkPermission={checkPermission}
-      permissionName="战略管理模块"
-    >
-      {children}
-    </ProtectedRoute>
-  );
+  return children;
 }
 
 /**
- * Warehouse-specific protected route
- * Wrapper for ProtectedRoute with warehouse permission check
- *
- * 仓储模块访问控制：
- * - 仓储管理员/仓储经理：完整访问
- * - 超级管理员/系统管理员：完整访问
+ * @deprecated 推荐使用 ModuleProtectedRoute module="warehouse"
  */
 export function WarehouseProtectedRoute({ children }) {
-  const userStr = localStorage.getItem("user");
-  let isSuperuser = false;
+  const { hasModuleAccess, isSuperuser, isLoading } = useModuleAccess();
 
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-    } catch {
-      // ignore
-    }
+  if (isLoading) return <PermissionLoadingPlaceholder />;
+  if (isSuperuser) return children;
+  if (!hasModuleAccess('warehouse')) {
+    return <AccessDenied permissionName="仓储管理模块" />;
   }
-
-  // 仓储角色权限检查
-  const warehouseRoles = ['WAREHOUSE', 'WAREHOUSE_MGR', 'WAREHOUSE', 'WAREHOUSE_MGR'];
-  const hasWarehouseAccess = (userRole) => {
-    const upperRole = userRole?.toUpperCase();
-    return warehouseRoles.includes(upperRole) || isSuperuser;
-  };
-
-  return (
-    <ProtectedRoute
-      checkPermission={(userRole) => hasWarehouseAccess({ role: userRole })}
-      permissionName="仓储管理模块"
-    >
-      {children}
-    </ProtectedRoute>
-  );
+  return children;
 }
 
 /**
- * Quality-specific protected route
- * Wrapper for ProtectedRoute with quality permission check
- *
- * 质量模块访问控制：
- * - 质量工程师/质量主管：完整访问
- * - 超级管理员/系统管理员：完整访问
+ * @deprecated 推荐使用 ModuleProtectedRoute module="quality"
  */
 export function QualityProtectedRoute({ children }) {
-  const userStr = localStorage.getItem("user");
-  let isSuperuser = false;
+  const { hasModuleAccess, isSuperuser, isLoading } = useModuleAccess();
 
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      isSuperuser = user.is_superuser === true || user.isSuperuser === true;
-    } catch {
-      // ignore
-    }
+  if (isLoading) return <PermissionLoadingPlaceholder />;
+  if (isSuperuser) return children;
+  if (!hasModuleAccess('quality')) {
+    return <AccessDenied permissionName="质量管理模块" />;
   }
-
-  // 质量角色权限检查
-  const qualityRoles = ['QA', 'QA_MGR'];
-  const hasQualityAccess = (userRole) => {
-    const upperRole = userRole?.toUpperCase();
-    return qualityRoles.includes(upperRole) || isSuperuser;
-  };
-
-  return (
-    <ProtectedRoute
-      checkPermission={(userRole) => hasQualityAccess({ role: userRole })}
-      permissionName="质量管理模块"
-    >
-      {children}
-    </ProtectedRoute>
-  );
+  return children;
 }

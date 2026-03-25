@@ -10,7 +10,11 @@ import { defaultNavGroups } from "./sidebarConfig";
 
 /**
  * 过滤导航组（保留组级别的 roles 过滤）
+ *
  * 注意：菜单项级别的权限在 NavGroup 组件中通过 checkPermission 处理
+ *
+ * @deprecated 组级别的 roles 字段应迁移为 permission 字段，
+ *   由 NavGroup 统一通过 PermissionContext 检查。
  */
 export function filterNavItemsByRole(navGroups, role, isSuperuser = false) {
   // 超级管理员可以看到所有菜单
@@ -22,19 +26,20 @@ export function filterNavItemsByRole(navGroups, role, isSuperuser = false) {
     .map((group) => {
       // 检查组级别的角色限制（如系统管理模块）
       if (group.roles && group.roles.length > 0) {
-        const roleMatches = group.roles.some((allowedRole) => {
-          if (role === allowedRole) return true;
-          if (role === "super_admin" && allowedRole === "admin") return true;
-          if (role === "管理员" && (allowedRole === "admin" || allowedRole === "super_admin")) return true;
-          if ((role === "admin" || role === "super_admin") && allowedRole === "admin") return true;
-          return false;
-        });
+        // 使用 permission 字段优先（新方式），role 匹配作为兜底
+        if (group.permission) {
+          // 新方式：由调用方通过 PermissionContext 检查
+          // 此处仅做标记，实际检查在 NavGroup 组件中
+          return group;
+        }
+        // 旧方式：角色字符串匹配（过渡期保留）
+        const roleMatches = group.roles.includes(role);
         if (!roleMatches) {
-          return null; // 过滤掉整个组
+          return null;
         }
       }
 
-      // 过滤空的 items（如财务管理目前是空的）
+      // 过滤空的 items
       if (!group.items || group.items.length === 0) {
         return null;
       }
@@ -50,7 +55,5 @@ export function filterNavItemsByRole(navGroups, role, isSuperuser = false) {
  * 所有角色使用相同的菜单结构，权限由 NavGroup/NavItem 组件根据 permission 字段控制
  */
 export function getNavGroupsForRole(role, _isSuperuser = false) {
-  // 所有角色都使用统一的菜单结构
-  // 权限控制在组件层面通过 checkPermission 实现
   return defaultNavGroups;
 }
