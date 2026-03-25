@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +30,19 @@ class PipelineBreakAnalysisService:
         "INVOICE_TO_PAYMENT": 30,  # 发票→回款：30天（发票到期后）
     }
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, current_user: Optional[User] = None):
         self.db = db
+        self._current_user = current_user
+
+    def _apply_scope(self, query, model_class, owner_field: str = "owner_id"):
+        """对查询应用销售数据权限过滤"""
+        if self._current_user is None:
+            return query
+        from app.core.sales_permissions import filter_sales_data_by_scope
+
+        return filter_sales_data_by_scope(
+            query, self._current_user, self.db, model_class, owner_field
+        )
 
     def analyze_pipeline_breaks(
         self,
@@ -95,9 +107,10 @@ class PipelineBreakAnalysisService:
         threshold = self.DEFAULT_BREAK_THRESHOLDS["LEAD_TO_OPP"]
         cutoff_date = date.today() - timedelta(days=threshold)
 
-        # 查询在时间范围内的线索
+        # 查询在时间范围内的线索（已集成数据权限过滤）
+        query = self._apply_scope(self.db.query(Lead), Lead, "owner_id")
         leads = (
-            self.db.query(Lead)
+            query
             .filter(
                 Lead.created_at >= datetime.combine(start_date, datetime.min.time()),
                 Lead.created_at <= datetime.combine(end_date, datetime.max.time()),
@@ -142,8 +155,9 @@ class PipelineBreakAnalysisService:
         threshold = self.DEFAULT_BREAK_THRESHOLDS["OPP_TO_QUOTE"]
         cutoff_date = date.today() - timedelta(days=threshold)
 
+        query = self._apply_scope(self.db.query(Opportunity), Opportunity, "owner_id")
         opportunities = (
-            self.db.query(Opportunity)
+            query
             .filter(
                 Opportunity.created_at >= datetime.combine(start_date, datetime.min.time()),
                 Opportunity.created_at <= datetime.combine(end_date, datetime.max.time()),
@@ -186,8 +200,9 @@ class PipelineBreakAnalysisService:
         threshold = self.DEFAULT_BREAK_THRESHOLDS["QUOTE_TO_CONTRACT"]
         cutoff_date = date.today() - timedelta(days=threshold)
 
+        query = self._apply_scope(self.db.query(Quote), Quote, "owner_id")
         quotes = (
-            self.db.query(Quote)
+            query
             .filter(
                 Quote.created_at >= datetime.combine(start_date, datetime.min.time()),
                 Quote.created_at <= datetime.combine(end_date, datetime.max.time()),
@@ -242,8 +257,9 @@ class PipelineBreakAnalysisService:
         threshold = self.DEFAULT_BREAK_THRESHOLDS["CONTRACT_TO_PROJECT"]
         cutoff_date = date.today() - timedelta(days=threshold)
 
+        query = self._apply_scope(self.db.query(Contract), Contract, "sales_owner_id")
         contracts = (
-            self.db.query(Contract)
+            query
             .filter(
                 Contract.signing_date >= start_date,
                 Contract.signing_date <= end_date,
@@ -292,24 +308,32 @@ class PipelineBreakAnalysisService:
         threshold = self.DEFAULT_BREAK_THRESHOLDS["PROJECT_TO_INVOICE"]
         cutoff_date = date.today() - timedelta(days=threshold)
 
-        # 查询已完成里程碑但未开票的项目
+        # 查询已完成里程碑但未开票的项目（通过合同scope间接过滤）
         from app.models.project import ProjectMilestone
 
-        milestones = (
-            self.db.query(ProjectMilestone)
-            .filter(
-                ProjectMilestone.status == "COMPLETED",
-                ProjectMilestone.actual_date >= start_date,
-                ProjectMilestone.actual_date <= end_date,
-            )
-            .all()
+        # 先获取用户可访问的合同ID，用于间接过滤里程碑
+        contract_query = self._apply_scope(
+            self.db.query(Contract), Contract, "sales_owner_id"
         )
+        accessible_contract_ids = [c.id for c in contract_query.all()]
+
+        milestones_query = self.db.query(ProjectMilestone).filter(
+            ProjectMilestone.status == "COMPLETED",
+            ProjectMilestone.actual_date >= start_date,
+            ProjectMilestone.actual_date <= end_date,
+        )
+        milestones = milestones_query.all()
 
         break_records = []
         for milestone in milestones:
             project = milestone.project
             if not project:
                 continue
+
+            # 数据权限过滤：跳过用户无权访问的合同关联项目
+            if self._current_user is not None and accessible_contract_ids is not None:
+                if project.contract and project.contract.id not in accessible_contract_ids:
+                    continue
 
             # 检查该里程碑是否已开票
             # 通过检查是否有对应的发票记录（简化处理）
@@ -351,8 +375,15 @@ class PipelineBreakAnalysisService:
         threshold = self.DEFAULT_BREAK_THRESHOLDS["INVOICE_TO_PAYMENT"]
         cutoff_date = date.today() - timedelta(days=threshold)
 
+        query = self.db.query(Invoice)
+        if self._current_user is not None:
+            from app.core.sales_permissions import filter_sales_finance_data_by_scope
+
+            query = filter_sales_finance_data_by_scope(
+                query, self._current_user, self.db, Invoice, "created_by"
+            )
         invoices = (
-            self.db.query(Invoice)
+            query
             .filter(
                 Invoice.issue_date >= start_date,
                 Invoice.issue_date <= end_date,
@@ -460,11 +491,12 @@ class PipelineBreakAnalysisService:
         # 检查各环节即将断链的情况
         today = date.today()
 
-        # 线索即将断链
+        # 线索即将断链（已集成数据权限过滤）
         lead_threshold = self.DEFAULT_BREAK_THRESHOLDS["LEAD_TO_OPP"] - days_ahead
         cutoff_date = today - timedelta(days=lead_threshold)
+        query = self._apply_scope(self.db.query(Lead), Lead, "owner_id")
         leads = (
-            self.db.query(Lead)
+            query
             .filter(
                 Lead.created_at <= datetime.combine(cutoff_date, datetime.min.time()),
                 Lead.status.notin_(["CONVERTED", "INVALID"]),

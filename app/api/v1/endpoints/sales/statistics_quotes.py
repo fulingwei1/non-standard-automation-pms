@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import filter_sales_data_by_scope
 from app.models.sales import Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -28,7 +29,7 @@ def get_quote_stats(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取报价统计数据
+    获取报价统计数据（已集成数据权限过滤）
     """
     # 计算时间范围
     now = datetime.now()
@@ -41,8 +42,10 @@ def get_quote_stats(
     else:  # year
         start_date = now - timedelta(days=365)
 
-    # 基础查询
-    base_query = db.query(Quote)
+    # 基础查询（已集成数据权限过滤）
+    base_query = filter_sales_data_by_scope(
+        db.query(Quote), current_user, db, Quote, "owner_id"
+    )
     period_query = base_query.filter(Quote.created_at >= start_date)
 
     # 统计各状态数量

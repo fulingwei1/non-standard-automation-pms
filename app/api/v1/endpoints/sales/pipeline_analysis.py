@@ -28,8 +28,8 @@ def get_pipeline_breaks(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
-    """获取断链分析"""
-    service = PipelineBreakAnalysisService(db)
+    """获取断链分析（已集成数据权限过滤）"""
+    service = PipelineBreakAnalysisService(db, current_user=current_user)
     result = service.analyze_pipeline_breaks(
         start_date=start_date, end_date=end_date, pipeline_type=pipeline_type
     )
@@ -44,8 +44,8 @@ def get_break_reasons(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
-    """获取断链原因统计"""
-    service = PipelineBreakAnalysisService(db)
+    """获取断链原因统计（已集成数据权限过滤）"""
+    service = PipelineBreakAnalysisService(db, current_user=current_user)
     result = service.get_break_reasons(
         break_stage=break_stage, start_date=start_date, end_date=end_date
     )
@@ -59,8 +59,8 @@ def get_break_patterns(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
-    """获取断链模式分析"""
-    service = PipelineBreakAnalysisService(db)
+    """获取断链模式分析（已集成数据权限过滤）"""
+    service = PipelineBreakAnalysisService(db, current_user=current_user)
     result = service.get_break_patterns(start_date=start_date, end_date=end_date)
     return ResponseModel(code=200, message="分析成功", data=result)
 
@@ -71,7 +71,7 @@ def get_pipeline_break_warnings(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
-    """获取断链预警列表"""
-    service = PipelineBreakAnalysisService(db)
+    """获取断链预警列表（已集成数据权限过滤）"""
+    service = PipelineBreakAnalysisService(db, current_user=current_user)
     warnings = service.get_break_warnings(days_ahead=days_ahead)
     return ResponseModel(code=200, message="查询成功", data={"warnings": warnings})

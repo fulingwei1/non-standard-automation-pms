@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.date_range import get_month_range
 from app.core import security
+from app.core.sales_permissions import filter_sales_data_by_scope
 from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -29,12 +30,17 @@ def get_revenue_forecast(
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    收入预测（基于已签订合同和进行中的商机）
+    收入预测（基于已签订合同和进行中的商机，已集成数据权限过滤）
     """
     from datetime import timedelta
 
     today = date.today()
     forecast = []
+
+    # 应用数据权限过滤
+    base_query = filter_sales_data_by_scope(
+        db.query(Opportunity), current_user, db, Opportunity, "owner_id"
+    )
 
     for i in range(months):
         forecast_date = today + timedelta(days=30 * (i + 1))
@@ -42,7 +48,7 @@ def get_revenue_forecast(
 
         # 统计该月预计签约的合同金额（基于商机预计金额）
         opps_in_month = (
-            db.query(Opportunity).filter(Opportunity.stage.in_(["PROPOSAL", "NEGOTIATION"])).all()
+            base_query.filter(Opportunity.stage.in_(["PROPOSAL", "NEGOTIATION"])).all()
         )
 
         # 简化处理：假设进行中的商机在接下来几个月平均分布
