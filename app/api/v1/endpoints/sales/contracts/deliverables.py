@@ -36,7 +36,7 @@ def get_contract_deliverables(
     *,
     db: Session = Depends(deps.get_db),
     contract_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ) -> Any:
     """
     获取合同交付物清单
@@ -58,7 +58,7 @@ def get_contract_amendments(
     db: Session = Depends(deps.get_db),
     contract_id: int,
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ) -> Any:
     """
     获取合同变更记录列表
@@ -115,7 +115,7 @@ def create_contract_amendment(
     db: Session = Depends(deps.get_db),
     contract_id: int,
     amendment_in: ContractAmendmentCreate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ) -> Any:
     """
     创建合同变更记录

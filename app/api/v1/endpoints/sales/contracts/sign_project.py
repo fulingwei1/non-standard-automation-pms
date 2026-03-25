@@ -46,7 +46,7 @@ def sign_contract(
     contract_id: int,
     sign_request: ContractSignRequest,
     auto_generate_payment_plans: bool = Query(True, description="自动生成收款计划"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:sign")),
 ) -> Any:
     """
     合同签订（自动生成收款计划）
@@ -126,7 +126,7 @@ def create_contract_project(
     contract_id: int,
     project_request: ContractProjectCreateRequest,
     skip_g4_validation: bool = Query(False, description="跳过G4验证"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:create")),
 ) -> Any:
     """
     合同生成项目（G4阶段门验证）

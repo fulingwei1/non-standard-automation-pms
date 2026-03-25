@@ -30,7 +30,7 @@ def get_contract_payment_plans(
     *,
     db: Session = Depends(deps.get_db),
     contract_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ) -> Any:
     """
     获取合同的收款计划列表

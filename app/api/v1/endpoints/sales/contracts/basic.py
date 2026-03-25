@@ -109,7 +109,7 @@ def read_contracts(
     keyword: Optional[str] = Query(None, description="关键词搜索"),
     status: Optional[str] = Query(None, description="状态筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ) -> Any:
     """
     获取合同列表
@@ -162,7 +162,7 @@ def create_contract(
     db: Session = Depends(deps.get_db),
     contract_in: ContractCreate,
     skip_g3_validation: bool = Query(False, description="跳过G3验证"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:create")),
 ) -> Any:
     """
     创建合同（G3阶段门验证）
@@ -262,7 +262,7 @@ def read_contract(
     *,
     db: Session = Depends(deps.get_db),
     contract_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ) -> Any:
     """
     获取合同详情
@@ -293,7 +293,7 @@ def update_contract(
     db: Session = Depends(deps.get_db),
     contract_id: int,
     contract_in: ContractUpdate,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ) -> Any:
     """
     更新合同

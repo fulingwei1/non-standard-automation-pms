@@ -31,7 +31,7 @@ def export_contracts(
     status: Optional[str] = Query(None, description="状态筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:export")),
 ) -> Any:
     """
     Issue 4.3: 导出合同列表（Excel）
@@ -120,7 +120,7 @@ def export_contract_pdf(
     *,
     db: Session = Depends(deps.get_db),
     contract_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:export")),
 ) -> Any:
     """
     Issue 4.5: 导出合同 PDF
