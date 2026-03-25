@@ -204,3 +204,4 @@ class ResourceType:
     PRODUCTION = "production"  # 生产
     SERVICE = "service"  # 服务
     FINANCE = "finance"  # 财务
+    ENGINEER_PERFORMANCE = "engineer_performance"  # 工程师绩效
