@@ -201,11 +201,33 @@ def check_can_remind(
     """
     检查用户是否可催办指定任务。
 
-    允许：发起人、同实例审批人、管理员。
+    允许：发起人、管理员（与 approval_scope.REMINDABLE_ROLES 对齐）。
     """
     return check_can_operate_instance(
         db,
         task.instance_id,
+        user,
+        allowed_roles=(
+            ParticipantRole.INITIATOR,
+            ParticipantRole.ADMIN,
+        ),
+    )
+
+
+def check_can_comment(
+    db: Session,
+    instance_id: int,
+    user: User,
+) -> bool:
+    """
+    检查用户是否可在指定审批实例上评论。
+
+    允许：发起人、审批人、管理员。抄送人仅可查看，不可评论。
+    与 approval_scope.COMMENTABLE_ROLES 对齐。
+    """
+    return check_can_operate_instance(
+        db,
+        instance_id,
         user,
         allowed_roles=(
             ParticipantRole.INITIATOR,

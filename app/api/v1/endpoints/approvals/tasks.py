@@ -24,6 +24,7 @@ from app.schemas.approval.task import (
 )
 from app.services.approval_engine import ApprovalEngineService
 from app.services.approval_engine.visibility import (
+    check_can_comment,
     check_can_operate_instance,
     check_can_remind,
     check_instance_visible,
@@ -278,8 +279,8 @@ def add_comment(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """添加评论（仅参与者可评论）"""
-    if not check_instance_visible(db, instance_id, current_user):
+    """添加评论（发起人、审批人、管理员可评论；抄送人仅可查看）"""
+    if not check_can_comment(db, instance_id, current_user):
         raise HTTPException(status_code=403, detail="无权评论此审批")
 
     engine = ApprovalEngineService(db)
@@ -313,7 +314,7 @@ def list_comments(
         db.query(ApprovalComment)
         .filter(
             ApprovalComment.instance_id == instance_id,
-            not ApprovalComment.is_deleted,
+            ApprovalComment.is_deleted == False,  # noqa: E712
         )
         .order_by(ApprovalComment.created_at)
         .all()

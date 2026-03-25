@@ -276,7 +276,7 @@ def get_pending_counts(
         db.query(ApprovalCarbonCopy)
         .filter(
             ApprovalCarbonCopy.cc_user_id == current_user.id,
-            not ApprovalCarbonCopy.is_read,
+            ApprovalCarbonCopy.is_read == False,  # noqa: E712
         )
         .count()
     )

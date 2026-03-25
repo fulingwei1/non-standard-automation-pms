@@ -446,3 +446,87 @@ class TestApprovalVisibilityScenarios:
         db = _mock_db_for_role(is_initiator=True)
         initiator = _make_user(user_id=1)
         assert check_can_operate_instance(db, 100, initiator) is True
+
+
+# ===========================================================================
+# 九、评论权限测试
+# ===========================================================================
+
+class TestCanComment:
+    """测试评论权限控制（与 approval_scope.COMMENTABLE_ROLES 对齐）"""
+
+    @patch("app.services.approval_engine.visibility.check_can_operate_instance")
+    def test_initiator_can_comment(self, mock_check):
+        """发起人可评论"""
+        from app.services.approval_engine.visibility import check_can_comment
+
+        mock_check.return_value = True
+        assert check_can_comment(MagicMock(), 100, _make_user()) is True
+
+    @patch("app.services.approval_engine.visibility.check_can_operate_instance")
+    def test_approver_can_comment(self, mock_check):
+        """审批人可评论"""
+        from app.services.approval_engine.visibility import check_can_comment
+
+        mock_check.return_value = True
+        assert check_can_comment(MagicMock(), 100, _make_user()) is True
+
+    @patch("app.services.approval_engine.visibility.resolve_participant_role")
+    def test_cc_cannot_comment(self, mock_resolve):
+        """抄送人不可评论（fail-closed：CC 不在 COMMENTABLE_ROLES）"""
+        from app.services.approval_engine.visibility import check_can_comment, ParticipantRole
+
+        mock_resolve.return_value = ParticipantRole.CC
+        assert check_can_comment(MagicMock(), 100, _make_user()) is False
+
+    @patch("app.services.approval_engine.visibility.resolve_participant_role")
+    def test_none_cannot_comment(self, mock_resolve):
+        """非参与者不可评论"""
+        from app.services.approval_engine.visibility import check_can_comment, ParticipantRole
+
+        mock_resolve.return_value = ParticipantRole.NONE
+        assert check_can_comment(MagicMock(), 100, _make_user()) is False
+
+
+# ===========================================================================
+# 十、催办权限对齐测试（REMINDABLE_ROLES = INITIATOR + ADMIN）
+# ===========================================================================
+
+class TestCanRemindAligned:
+    """催办权限应与 approval_scope.REMINDABLE_ROLES 对齐"""
+
+    @patch("app.services.approval_engine.visibility.resolve_participant_role")
+    def test_initiator_can_remind(self, mock_resolve):
+        """发起人可催办"""
+        from app.services.approval_engine.visibility import check_can_remind, ParticipantRole
+
+        mock_resolve.return_value = ParticipantRole.INITIATOR
+        task = _make_task()
+        assert check_can_remind(MagicMock(), task, _make_user()) is True
+
+    @patch("app.services.approval_engine.visibility.resolve_participant_role")
+    def test_admin_can_remind(self, mock_resolve):
+        """管理员可催办"""
+        from app.services.approval_engine.visibility import check_can_remind, ParticipantRole
+
+        mock_resolve.return_value = ParticipantRole.ADMIN
+        task = _make_task()
+        assert check_can_remind(MagicMock(), task, _make_user()) is True
+
+    @patch("app.services.approval_engine.visibility.resolve_participant_role")
+    def test_approver_cannot_remind(self, mock_resolve):
+        """审批人不可催办（与 REMINDABLE_ROLES 对齐，仅发起人+管理员）"""
+        from app.services.approval_engine.visibility import check_can_remind, ParticipantRole
+
+        mock_resolve.return_value = ParticipantRole.APPROVER
+        task = _make_task()
+        assert check_can_remind(MagicMock(), task, _make_user()) is False
+
+    @patch("app.services.approval_engine.visibility.resolve_participant_role")
+    def test_cc_cannot_remind(self, mock_resolve):
+        """抄送人不可催办"""
+        from app.services.approval_engine.visibility import check_can_remind, ParticipantRole
+
+        mock_resolve.return_value = ParticipantRole.CC
+        task = _make_task()
+        assert check_can_remind(MagicMock(), task, _make_user()) is False
