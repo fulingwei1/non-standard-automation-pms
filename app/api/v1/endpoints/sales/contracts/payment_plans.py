@@ -9,11 +9,12 @@ from typing import Any, List
 
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import check_sales_data_permission
 from app.models.project import ProjectPaymentPlan
 from app.models.sales import Contract
 from app.models.user import User
@@ -37,6 +38,10 @@ def get_contract_payment_plans(
     """
 
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+
+    # 数据权限：校验当前用户是否有权访问该合同
+    if not check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同的收款计划")
 
     # 查询收款计划
     payment_plans = (

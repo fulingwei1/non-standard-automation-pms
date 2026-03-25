@@ -7,12 +7,13 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
+from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -38,7 +39,9 @@ def get_cost_analysis(
     Returns:
         ResponseModel: 成本分析结果
     """
-    get_or_404(db, Quote, quote_id, detail="报价不存在")
+    quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    if not check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该报价的成本分析")
 
     versions = (
         db.query(QuoteVersion)
@@ -138,8 +141,17 @@ def get_cost_benchmark(
     Returns:
         ResponseModel: 基准数据
     """
-    # 基础查询：近90天的报价
+    # 基础查询：近90天的报价，受数据权限过滤
     ninety_days_ago = date.today() - timedelta(days=90)
+
+    base_query = filter_sales_data_by_scope(
+        db.query(Quote), current_user, db, Quote, "owner_id"
+    ).filter(Quote.created_at >= ninety_days_ago)
+
+    # 取出有权访问的报价 ID 子查询
+    from sqlalchemy import select
+
+    scoped_ids = base_query.with_entities(Quote.id).subquery()
 
     result = (
         db.query(
@@ -149,7 +161,7 @@ def get_cost_benchmark(
             func.max(QuoteVersion.gross_margin).label("max_margin"),
         )
         .join(QuoteVersion, Quote.current_version_id == QuoteVersion.id)
-        .filter(Quote.created_at >= ninety_days_ago)
+        .filter(Quote.id.in_(select(scoped_ids.c.id)))
         .first()
     )
 
@@ -165,7 +177,7 @@ def get_cost_benchmark(
     distribution = (
         db.query(margin_range, func.count(Quote.id).label("count"))
         .join(QuoteVersion, Quote.current_version_id == QuoteVersion.id)
-        .filter(Quote.created_at >= ninety_days_ago)
+        .filter(Quote.id.in_(select(scoped_ids.c.id)))
         .group_by(margin_range)
         .all()
     )

@@ -15,10 +15,17 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
+from app.core.sales_permissions import check_sales_data_permission
 from app.models.sales import Quote, QuoteVersion, QuoteItem
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
+
+
+def _check_quote_scope(quote: Quote, current_user: User, db: Session) -> None:
+    """校验当前用户是否有权访问该报价，无权则抛 403"""
+    if not check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该报价的成本数据")
 from app.utils.json_helpers import safe_json_loads
 
 router = APIRouter()
@@ -93,6 +100,7 @@ def get_cost_breakdown(
         ResponseModel: 成本明细
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    _check_quote_scope(quote, current_user, db)
 
     vid = version_id or quote.current_version_id
     if not vid:
@@ -200,6 +208,13 @@ def update_cost_item(
     """
     item = get_or_404(db, QuoteItem, item_id, detail="明细项不存在")
 
+    # 数据权限：通过明细项的版本 → 报价链路校验
+    version = db.query(QuoteVersion).filter(QuoteVersion.id == item.quote_version_id).first()
+    if version:
+        quote = db.query(Quote).filter(Quote.id == version.quote_id).first()
+        if quote:
+            _check_quote_scope(quote, current_user, db)
+
     # 可更新字段
     updatable = ["cost", "cost_category", "cost_source", "unit_price", "qty", "remark"]
     for field in updatable:
@@ -231,6 +246,7 @@ def recalculate_cost(
         ResponseModel: 计算结果
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    _check_quote_scope(quote, current_user, db)
 
     vid = version_id or quote.current_version_id
     version = get_or_404(db, QuoteVersion, vid, detail="版本不存在")

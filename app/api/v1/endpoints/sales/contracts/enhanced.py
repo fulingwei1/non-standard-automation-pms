@@ -26,6 +26,8 @@ from app.schemas.sales.contract_enhanced import (
     ContractTermUpdate,
     ContractUpdate,
 )
+from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
+from app.models.sales import Contract
 from app.services.sales.contract_enhanced import ContractEnhancedService
 
 router = APIRouter()
@@ -81,7 +83,7 @@ def get_contracts(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("contract:view")),
 ):
-    """合同列表（支持搜索/筛选）"""
+    """合同列表（支持搜索/筛选，受数据权限过滤）"""
     contracts, total = ContractEnhancedService.get_contracts(
         db,
         skip=skip,
@@ -92,11 +94,17 @@ def get_contracts(
         keyword=keyword,
     )
 
-    serialized_items = [_serialize_contract_list_item(contract) for contract in contracts]
+    # 数据权限：二次过滤（service 层未集成 scope 时的兜底）
+    filtered = [
+        c for c in contracts
+        if check_sales_data_permission(c, current_user, db, "sales_owner_id")
+    ]
+
+    serialized_items = [_serialize_contract_list_item(contract) for contract in filtered]
 
     return {
         "items": serialized_items,
-        "total": total,
+        "total": len(filtered),
         "skip": skip,
         "limit": limit,
     }
@@ -112,6 +120,8 @@ def get_contract(
     contract = ContractEnhancedService.get_contract(db, contract_id)
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
+    if not check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同")
     return contract
 
 
@@ -397,6 +407,36 @@ def get_contract_statistics(
     db: Session = Depends(get_db),
     current_user: User = Depends(security.require_permission("contract:view")),
 ):
-    """合同统计"""
-    stats = ContractEnhancedService.get_contract_stats(db)
-    return stats
+    """合同统计（受数据权限过滤）"""
+    from decimal import Decimal
+    from sqlalchemy import func
+
+    # 数据权限：只统计用户有权访问的合同
+    base = filter_sales_data_by_scope(
+        db.query(Contract), current_user, db, Contract, "sales_owner_id"
+    )
+
+    total_count = base.count()
+    draft_count = base.filter(Contract.status == "draft").count()
+    approving_count = base.filter(Contract.status == "approving").count()
+    signed_count = base.filter(Contract.status == "signed").count()
+    executing_count = base.filter(Contract.status == "executing").count()
+    completed_count = base.filter(Contract.status == "completed").count()
+    voided_count = base.filter(Contract.status == "voided").count()
+
+    total_amount = base.with_entities(func.sum(Contract.total_amount)).scalar() or Decimal(0)
+    received_amount = base.with_entities(func.sum(Contract.received_amount)).scalar() or Decimal(0)
+    unreceived_amount = base.with_entities(func.sum(Contract.unreceived_amount)).scalar() or Decimal(0)
+
+    return ContractStats(
+        total_count=total_count,
+        draft_count=draft_count,
+        approving_count=approving_count,
+        signed_count=signed_count,
+        executing_count=executing_count,
+        completed_count=completed_count,
+        voided_count=voided_count,
+        total_amount=total_amount,
+        received_amount=received_amount,
+        unreceived_amount=unreceived_amount,
+    )

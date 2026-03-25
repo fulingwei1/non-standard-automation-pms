@@ -12,10 +12,17 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core import security
+from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
 from app.models.sales import Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
+
+
+def _check_quote_scope(quote: Quote, current_user: User, db: Session) -> None:
+    """校验当前用户是否有权访问该报价，无权则抛 403"""
+    if not check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该报价的成本数据")
 
 router = APIRouter()
 
@@ -54,6 +61,7 @@ def get_cost_calculations(
         ResponseModel: 成本计算结果
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    _check_quote_scope(quote, current_user, db)
 
     vid = version_id or quote.current_version_id
     if not vid:
@@ -260,6 +268,7 @@ def batch_update_prices(
         ResponseModel: 更新结果
     """
     quote = get_or_404(db, Quote, quote_id, detail="报价不存在")
+    _check_quote_scope(quote, current_user, db)
 
     version_id = update_data.get("version_id") or quote.current_version_id
     if not version_id:
@@ -317,9 +326,16 @@ def get_margin_analysis(
     Returns:
         ResponseModel: 分析结果
     """
+    # 数据权限：只统计用户有权访问的报价
+    scoped_quotes = filter_sales_data_by_scope(
+        db.query(Quote), current_user, db, Quote, "owner_id"
+    )
+    scoped_quote_ids = [q.id for q in scoped_quotes.with_entities(Quote.id).all()]
+
     versions = (
         db.query(QuoteVersion)
         .filter(
+            QuoteVersion.quote_id.in_(scoped_quote_ids) if scoped_quote_ids else False,
             QuoteVersion.gross_margin is not None,
             QuoteVersion.gross_margin >= min_margin,
             QuoteVersion.gross_margin <= max_margin,
