@@ -27,8 +27,8 @@ from app.services.approval_engine import ApprovalEngineService
 from app.services.approval_engine.visibility import (
     ParticipantRole,
     check_can_operate_instance,
-    check_instance_visible,
     filter_visible_instances,
+    resolve_participant_role,
 )
 from app.utils.db_helpers import get_or_404
 
@@ -140,11 +140,15 @@ def get_instance(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取审批实例详情（需参与关系）"""
+    """获取审批实例详情（需参与关系；抄送人仅看摘要）"""
     instance = get_or_404(db, ApprovalInstance, instance_id, "审批实例不存在")
 
-    if not check_instance_visible(db, instance_id, current_user):
+    role = resolve_participant_role(db, instance_id, current_user)
+    if role == ParticipantRole.NONE:
         raise HTTPException(status_code=403, detail="无权查看此审批实例")
+
+    # CC 用户仅看摘要，不看 form_data / 详细日志
+    is_summary_only = role == ParticipantRole.CC
 
     # 获取任务列表
     tasks = (
@@ -164,6 +168,10 @@ def get_instance(
 
     result = ApprovalInstanceDetail.model_validate(instance)
 
+    # 抄送人不可见 form_data
+    if is_summary_only:
+        result.form_data = None
+
     # 获取模板名称
     if instance.template:
         result.template_name = instance.template.template_name
@@ -180,35 +188,41 @@ def get_instance(
         if current_node:
             result.current_node_name = current_node.node_name
 
-    # 转换任务列表
-    result.tasks = []
-    for task in tasks:
-        task_brief = ApprovalTaskBrief(
-            id=task.id,
-            node_id=task.node_id,
-            node_name=task.node.node_name if task.node else None,
-            assignee_id=task.assignee_id,
-            assignee_name=task.assignee_name,
-            status=task.status,
-            action=task.action,
-            comment=task.comment,
-            completed_at=task.completed_at,
-            created_at=task.created_at,
-        )
-        result.tasks.append(task_brief)
+    # 转换任务列表（抄送人不可见任务详情）
+    if is_summary_only:
+        result.tasks = []
+    else:
+        result.tasks = []
+        for task in tasks:
+            task_brief = ApprovalTaskBrief(
+                id=task.id,
+                node_id=task.node_id,
+                node_name=task.node.node_name if task.node else None,
+                assignee_id=task.assignee_id,
+                assignee_name=task.assignee_name,
+                status=task.status,
+                action=task.action,
+                comment=task.comment,
+                completed_at=task.completed_at,
+                created_at=task.created_at,
+            )
+            result.tasks.append(task_brief)
 
-    # 转换日志列表
-    result.logs = [
-        ApprovalLogBrief(
-            id=log.id,
-            operator_id=log.operator_id,
-            operator_name=log.operator_name,
-            action=log.action,
-            comment=log.comment,
-            action_at=log.action_at,
-        )
-        for log in logs
-    ]
+    # 转换日志列表（抄送人不可见操作日志）
+    if is_summary_only:
+        result.logs = []
+    else:
+        result.logs = [
+            ApprovalLogBrief(
+                id=log.id,
+                operator_id=log.operator_id,
+                operator_name=log.operator_name,
+                action=log.action,
+                comment=log.comment,
+                action_at=log.action_at,
+            )
+            for log in logs
+        ]
 
     return result
 

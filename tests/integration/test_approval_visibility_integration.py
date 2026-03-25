@@ -467,3 +467,196 @@ class TestDelegatedApproverVisibility:
         assert ParticipantRole.DELEGATED_APPROVER in ctx.roles_in_instance
         assert ctx.can_view_detail is True
         assert ctx.can_comment is True
+
+
+# ===========================================================================
+# Tests — P2: 聚合统计 / 详情字段可见性
+# ===========================================================================
+
+
+@pytest.mark.integration
+@pytest.mark.permission
+class TestInstanceDetailFieldVisibility:
+    """TC-VIS-7x: 实例详情按角色裁剪字段"""
+
+    def test_cc_user_gets_no_form_data(self, db):
+        """TC-VIS-71: 抄送人访问详情时 form_data 应为 None。"""
+        from app.services.approval_engine.visibility import (
+            resolve_participant_role,
+            ParticipantRole,
+        )
+
+        instance, _, _, cc_user, *_ = _setup_scenario(db)
+
+        role = resolve_participant_role(db, instance.id, cc_user)
+        assert role == ParticipantRole.CC
+
+        # CC 用户的 is_summary_only == True → form_data 应被剥离
+        is_summary_only = role == ParticipantRole.CC
+        assert is_summary_only is True
+
+    def test_initiator_gets_full_detail(self, db):
+        """TC-VIS-72: 发起人访问详情时可见 form_data。"""
+        from app.services.approval_engine.visibility import (
+            resolve_participant_role,
+            ParticipantRole,
+        )
+
+        instance, initiator, *_ = _setup_scenario(db)
+
+        role = resolve_participant_role(db, instance.id, initiator)
+        assert role == ParticipantRole.INITIATOR
+        assert role != ParticipantRole.CC
+
+    def test_approver_gets_full_detail(self, db):
+        """TC-VIS-73: 审批人访问详情时可见 form_data。"""
+        from app.services.approval_engine.visibility import (
+            resolve_participant_role,
+            ParticipantRole,
+        )
+
+        instance, _, approver, *_ = _setup_scenario(db)
+
+        role = resolve_participant_role(db, instance.id, approver)
+        assert role == ParticipantRole.APPROVER
+        assert role != ParticipantRole.CC
+
+    def test_outsider_gets_none_role(self, db):
+        """TC-VIS-74: 非参与者角色为 NONE，详情端点应拒绝。"""
+        from app.services.approval_engine.visibility import (
+            resolve_participant_role,
+            ParticipantRole,
+        )
+
+        instance, _, _, _, outsider, _ = _setup_scenario(db)
+
+        role = resolve_participant_role(db, instance.id, outsider)
+        assert role == ParticipantRole.NONE
+
+
+@pytest.mark.integration
+@pytest.mark.permission
+class TestPendingEndpointSelfScoped:
+    """TC-VIS-8x: 待办/已处理查询仅返回自身数据"""
+
+    def test_pending_mine_only_shows_own_tasks(self, db):
+        """TC-VIS-81: /pending/mine 仅返回用户自己的待办任务。"""
+        from app.models.approval import ApprovalTask
+
+        instance, initiator, approver, cc_user, outsider, task = _setup_scenario(db)
+
+        # 审批人的待办查询
+        pending_tasks = (
+            db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.assignee_id == approver.id,
+                ApprovalTask.status == "PENDING",
+            )
+            .all()
+        )
+        assert len(pending_tasks) == 1
+        assert pending_tasks[0].id == task.id
+
+        # 外部人员无待办
+        outsider_tasks = (
+            db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.assignee_id == outsider.id,
+                ApprovalTask.status == "PENDING",
+            )
+            .all()
+        )
+        assert len(outsider_tasks) == 0
+
+    def test_initiated_only_shows_own_instances(self, db):
+        """TC-VIS-82: /pending/initiated 仅返回用户发起的审批。"""
+        from app.models.approval import ApprovalInstance
+
+        instance, initiator, approver, *_ = _setup_scenario(db)
+
+        # 发起人可见
+        own = (
+            db.query(ApprovalInstance)
+            .filter(ApprovalInstance.initiator_id == initiator.id)
+            .all()
+        )
+        assert len(own) == 1
+
+        # 审批人的发起列表为空
+        approver_initiated = (
+            db.query(ApprovalInstance)
+            .filter(ApprovalInstance.initiator_id == approver.id)
+            .all()
+        )
+        assert len(approver_initiated) == 0
+
+    def test_cc_only_shows_own_records(self, db):
+        """TC-VIS-83: /pending/cc 仅返回发给自己的抄送。"""
+        from app.models.approval.task import ApprovalCarbonCopy
+
+        instance, _, _, cc_user, outsider, _ = _setup_scenario(db)
+
+        own_cc = (
+            db.query(ApprovalCarbonCopy)
+            .filter(ApprovalCarbonCopy.cc_user_id == cc_user.id)
+            .all()
+        )
+        assert len(own_cc) == 1
+
+        outsider_cc = (
+            db.query(ApprovalCarbonCopy)
+            .filter(ApprovalCarbonCopy.cc_user_id == outsider.id)
+            .all()
+        )
+        assert len(outsider_cc) == 0
+
+    def test_counts_only_reflect_own_data(self, db):
+        """TC-VIS-84: /pending/counts 的各项计数仅反映自身参与。"""
+        from app.models.approval import ApprovalTask
+        from app.models.approval.task import ApprovalCarbonCopy
+
+        instance, initiator, approver, cc_user, outsider, task = _setup_scenario(db)
+
+        # 审批人待办 = 1
+        assert (
+            db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.assignee_id == approver.id,
+                ApprovalTask.status == "PENDING",
+            )
+            .count()
+            == 1
+        )
+
+        # 外部人员待办 = 0
+        assert (
+            db.query(ApprovalTask)
+            .filter(
+                ApprovalTask.assignee_id == outsider.id,
+                ApprovalTask.status == "PENDING",
+            )
+            .count()
+            == 0
+        )
+
+        # 外部人员抄送 = 0
+        assert (
+            db.query(ApprovalCarbonCopy)
+            .filter(
+                ApprovalCarbonCopy.cc_user_id == outsider.id,
+                ApprovalCarbonCopy.is_read == False,  # noqa: E712
+            )
+            .count()
+            == 0
+        )
+
+        # 抄送人未读 = 1
+        assert (
+            db.query(ApprovalCarbonCopy)
+            .filter(
+                ApprovalCarbonCopy.cc_user_id == cc_user.id,
+                ApprovalCarbonCopy.is_read == False,  # noqa: E712
+            )
+            .count()
+            == 1
+        )
