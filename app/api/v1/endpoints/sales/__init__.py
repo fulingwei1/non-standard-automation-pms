@@ -18,6 +18,7 @@ from . import (
     cross_analysis,
     customer_tags,
     customers,
+    dashboard,
     delay_analysis,
     disputes,
     expenses,
@@ -57,6 +58,7 @@ router = APIRouter()
 
 # 注意：优先级路由需要在leads之前注册，避免路径冲突
 # /sales/leads/priority-ranking 需要在 /sales/leads/{lead_id} 之前匹配
+router.include_router(dashboard.router, tags=["sales-dashboard"])
 router.include_router(customers.router, tags=["sales-customers"])
 router.include_router(contacts.router, tags=["sales-contacts"])
 router.include_router(customer_tags.router, tags=["sales-customer-tags"])
