@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.inventory_tracking import MaterialStock, MaterialTransaction
 from app.models.kitting_optimization import ExpediteRecord, MaterialAlternative
 from app.models.material import (
+    BomHeader,
     BomItem,
     Material,
     MaterialCategory,
@@ -1031,4 +1032,373 @@ class KittingOptimizationService:
             "gap": gap,
             "key_actions": key_actions,
             "estimated_timeline": timeline,
+        }
+
+    # ==================== 5. 齐套率定时同步 ====================
+
+    def sync_project_kitting_rate(self, project_id: int) -> Dict[str, Any]:
+        """
+        计算并同步单个项目的齐套率到 projects.kitting_rate 字段。
+        返回 {project_id, old_rate, new_rate, changed, shortage_count}
+        """
+        from app.models.project.core import Project
+
+        project = self.db.query(Project).get(project_id)
+        if not project:
+            return {"project_id": project_id, "error": "项目不存在"}
+
+        # 查找项目所有 BOM 的物料行
+        bom_items = (
+            self.db.query(BomItem)
+            .join(BomHeader, BomItem.bom_id == BomHeader.id)
+            .filter(
+                BomHeader.project_id == project_id,
+                BomHeader.is_latest == True,
+                BomItem.material_id.isnot(None),
+            )
+            .all()
+        )
+
+        total_items = len(bom_items)
+        if total_items == 0:
+            return {
+                "project_id": project_id,
+                "project_code": project.project_code,
+                "old_rate": float(project.kitting_rate or 0),
+                "new_rate": 0,
+                "changed": False,
+                "shortage_count": 0,
+            }
+
+        # 计算齐套项：已到货数量 >= 需求数量
+        fulfilled = 0
+        shortage_count = 0
+        for item in bom_items:
+            required = float(item.quantity or 0)
+            received = float(item.received_qty or 0)
+            if required > 0 and received >= required:
+                fulfilled += 1
+            elif required > 0 and received < required:
+                shortage_count += 1
+
+        new_rate = round(fulfilled / total_items * 100, 1) if total_items > 0 else 0
+        old_rate = float(project.kitting_rate or 0)
+        changed = abs(new_rate - old_rate) >= 0.1
+
+        # 更新项目字段
+        project.kitting_rate = new_rate
+        project.shortage_items_count = shortage_count
+
+        # 更新物料状态
+        if new_rate >= 100:
+            project.material_status = "齐套"
+        elif new_rate >= 80:
+            project.material_status = "部分到货"
+        elif shortage_count > 0:
+            project.material_status = "缺料"
+        else:
+            project.material_status = "采购中"
+
+        return {
+            "project_id": project_id,
+            "project_code": project.project_code,
+            "old_rate": old_rate,
+            "new_rate": new_rate,
+            "changed": changed,
+            "change_delta": round(new_rate - old_rate, 1),
+            "shortage_count": shortage_count,
+            "total_items": total_items,
+            "fulfilled_items": fulfilled,
+        }
+
+    def sync_all_projects_kitting_rate(
+        self, threshold: float = 5.0
+    ) -> Dict[str, Any]:
+        """
+        同步所有活跃项目的齐套率。
+        threshold: 变化超过此阈值的项目会被标记为 significant_changes。
+        """
+        from app.models.project.core import Project
+
+        projects = (
+            self.db.query(Project)
+            .filter(
+                Project.is_active == True,
+                Project.is_archived == False,
+            )
+            .all()
+        )
+
+        results = []
+        significant_changes = []
+        errors = []
+
+        for project in projects:
+            try:
+                result = self.sync_project_kitting_rate(project.id)
+                results.append(result)
+                if result.get("changed") and abs(result.get("change_delta", 0)) >= threshold:
+                    significant_changes.append(result)
+            except Exception as e:
+                errors.append({
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "error": str(e),
+                })
+
+        self.db.commit()
+
+        # 自动更新健康度：齐套率低于 50% 的项目标记为 H3（红灯）
+        for result in results:
+            if result.get("new_rate", 100) < 50:
+                proj = self.db.query(Project).get(result["project_id"])
+                if proj and proj.health != "H3":
+                    proj.health = "H3"
+            elif result.get("new_rate", 0) < 70:
+                proj = self.db.query(Project).get(result["project_id"])
+                if proj and proj.health == "H1":
+                    proj.health = "H2"
+        self.db.commit()
+
+        return {
+            "total_synced": len(results),
+            "significant_changes": significant_changes,
+            "significant_count": len(significant_changes),
+            "errors": errors,
+            "error_count": len(errors),
+            "threshold": threshold,
+        }
+
+    # ==================== 6. 缺料影响交付日期预测 ====================
+
+    def forecast_material_delay(self, project_id: int) -> Dict[str, Any]:
+        """
+        基于缺料和供应商交期预测项目延期天数。
+        识别关键路径物料，给出缓解建议。
+        """
+        from app.models.project.core import Project
+
+        project = self.db.query(Project).get(project_id)
+        if not project:
+            return {"error": "项目不存在"}
+
+        today = date.today()
+        planned_end = project.planned_end_date
+
+        # 查找该项目所有缺料 BOM 行
+        shortage_items = (
+            self.db.query(BomItem)
+            .join(BomHeader, BomItem.bom_id == BomHeader.id)
+            .filter(
+                BomHeader.project_id == project_id,
+                BomHeader.is_latest == True,
+                BomItem.material_id.isnot(None),
+            )
+            .all()
+        )
+
+        critical_materials = []
+        max_delay_days = 0
+
+        for item in shortage_items:
+            required = float(item.quantity or 0)
+            received = float(item.received_qty or 0)
+            if required <= 0 or received >= required:
+                continue  # 已齐套，跳过
+
+            shortage_qty = required - received
+
+            # 查找该物料的在途采购订单
+            po_items = (
+                self.db.query(PurchaseOrderItem)
+                .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
+                .filter(
+                    PurchaseOrderItem.material_id == item.material_id,
+                    PurchaseOrder.status.in_(["APPROVED", "ORDERED", "PARTIAL_RECEIVED"]),
+                )
+                .all()
+            )
+
+            # 找最早的预计到货日期（使用承诺交期 promised_date）
+            earliest_arrival = None
+            in_transit_qty = Decimal(0)
+            for po_item in po_items:
+                po = self.db.query(PurchaseOrder).get(po_item.order_id)
+                arrival = po.promised_date or po.required_date if po else None
+                if arrival:
+                    in_transit_qty += (po_item.quantity or 0) - (po_item.received_qty or 0)
+                    if earliest_arrival is None or arrival < earliest_arrival:
+                        earliest_arrival = arrival
+
+            # 如果在途数量不足以覆盖缺口，查看物料交期
+            material = self.db.query(Material).get(item.material_id)
+            lead_time_days = material.lead_time_days if material and material.lead_time_days else 30
+
+            if float(in_transit_qty) < shortage_qty:
+                # 需要新采购，延期 = 采购周期
+                estimated_arrival = today + timedelta(days=lead_time_days)
+            elif earliest_arrival:
+                estimated_arrival = earliest_arrival
+            else:
+                estimated_arrival = today + timedelta(days=lead_time_days)
+
+            # 计算该物料导致的延期
+            required_date = item.required_date or planned_end or today
+            delay_days = max((estimated_arrival - required_date).days, 0)
+
+            if delay_days > 0:
+                # 缓解建议
+                suggestions = []
+                # 检查是否有替代料
+                alt_count = (
+                    self.db.query(func.count(MaterialAlternative.id))
+                    .filter(
+                        MaterialAlternative.original_material_id == item.material_id,
+                        MaterialAlternative.is_active == True,
+                    )
+                    .scalar()
+                )
+                if alt_count > 0:
+                    suggestions.append(f"有{alt_count}种替代料可用，建议评估替换")
+                if float(in_transit_qty) > 0:
+                    suggestions.append("有在途订单，建议催货加急")
+                if delay_days > 14:
+                    suggestions.append("延期较长，建议调整项目计划")
+                if not suggestions:
+                    suggestions.append("建议立即下单采购并加急")
+
+                critical_materials.append({
+                    "material_id": item.material_id,
+                    "material_code": item.material_code,
+                    "material_name": item.material_name,
+                    "is_key_item": item.is_key_item or False,
+                    "shortage_qty": shortage_qty,
+                    "in_transit_qty": float(in_transit_qty),
+                    "required_date": str(required_date),
+                    "estimated_arrival": str(estimated_arrival),
+                    "delay_days": delay_days,
+                    "lead_time_days": lead_time_days,
+                    "suggestions": suggestions,
+                })
+
+                if delay_days > max_delay_days:
+                    max_delay_days = delay_days
+
+        # 按延期天数排序，关键物料优先
+        critical_materials.sort(
+            key=lambda x: (-int(x["is_key_item"]), -x["delay_days"])
+        )
+
+        # 项目级预测
+        predicted_end_date = None
+        if planned_end:
+            predicted_end_date = str(planned_end + timedelta(days=max_delay_days))
+
+        # 总体缓解建议
+        overall_suggestions = []
+        if max_delay_days == 0:
+            overall_suggestions.append("当前无缺料延期风险")
+        else:
+            if max_delay_days <= 7:
+                overall_suggestions.append("轻微延期风险，建议加强催货跟踪")
+            elif max_delay_days <= 30:
+                overall_suggestions.append("中度延期风险，建议启动缺料应急方案")
+            else:
+                overall_suggestions.append("严重延期风险，建议调整项目计划并升级处理")
+            key_count = sum(1 for m in critical_materials if m["is_key_item"])
+            if key_count > 0:
+                overall_suggestions.append(f"{key_count}项关键物料缺料，需优先处理")
+
+        return {
+            "project_id": project_id,
+            "project_code": project.project_code,
+            "project_name": project.project_name,
+            "planned_end_date": str(planned_end) if planned_end else None,
+            "predicted_end_date": predicted_end_date,
+            "max_delay_days": max_delay_days,
+            "critical_material_count": len(critical_materials),
+            "critical_materials": critical_materials[:20],  # 最多返回20条
+            "overall_suggestions": overall_suggestions,
+            "risk_level": (
+                "LOW" if max_delay_days == 0
+                else "MEDIUM" if max_delay_days <= 14
+                else "HIGH" if max_delay_days <= 30
+                else "CRITICAL"
+            ),
+        }
+
+    # ==================== 7. 项目优先级自动调整 ====================
+
+    def auto_adjust_project_priority(self) -> Dict[str, Any]:
+        """
+        根据齐套率自动调整项目优先级。
+        - 齐套率 < 70% → 降低优先级（HIGH→NORMAL, NORMAL→LOW）
+        - 齐套率 > 95% → 提高优先级（LOW→NORMAL, NORMAL→HIGH）
+        - 考虑战略客户/大金额项目的保护（不降级）
+        """
+        from app.models.project.core import Project
+
+        projects = (
+            self.db.query(Project)
+            .filter(
+                Project.is_active == True,
+                Project.is_archived == False,
+            )
+            .all()
+        )
+
+        adjustments = []
+        protected_count = 0
+        priority_order = ["LOW", "NORMAL", "HIGH", "URGENT"]
+
+        for project in projects:
+            kit_rate = float(project.kitting_rate or 0)
+            old_priority = project.priority or "NORMAL"
+            new_priority = old_priority
+
+            # 判断是否为受保护项目（大金额或战略客户）
+            is_protected = False
+            contract_amount = float(project.contract_amount or 0)
+            if contract_amount >= 1000000:  # 合同金额 >= 100万
+                is_protected = True
+            if old_priority == "URGENT":  # URGENT 级别不自动调整
+                is_protected = True
+
+            if kit_rate < 70:
+                if is_protected:
+                    protected_count += 1
+                    continue
+                # 降低优先级
+                idx = priority_order.index(old_priority) if old_priority in priority_order else 1
+                if idx > 0:
+                    new_priority = priority_order[idx - 1]
+            elif kit_rate > 95:
+                # 提高优先级（不超过 HIGH，URGENT 需要手动设置）
+                idx = priority_order.index(old_priority) if old_priority in priority_order else 1
+                if idx < 2:  # 最高自动升到 HIGH
+                    new_priority = priority_order[idx + 1]
+
+            if new_priority != old_priority:
+                project.priority = new_priority
+                adjustments.append({
+                    "project_id": project.id,
+                    "project_code": project.project_code,
+                    "project_name": project.project_name,
+                    "kitting_rate": kit_rate,
+                    "old_priority": old_priority,
+                    "new_priority": new_priority,
+                    "reason": (
+                        f"齐套率{kit_rate}%低于70%，自动降低优先级"
+                        if kit_rate < 70
+                        else f"齐套率{kit_rate}%高于95%，自动提高优先级"
+                    ),
+                })
+
+        self.db.commit()
+
+        return {
+            "total_adjusted": len(adjustments),
+            "protected_count": protected_count,
+            "adjustments": adjustments,
+            "timestamp": datetime.now().isoformat(),
         }
