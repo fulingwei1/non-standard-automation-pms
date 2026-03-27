@@ -10,6 +10,7 @@ from .evaluation_approval import EcnApproval, EcnEvaluation
 from .execution import EcnTask
 from .impact import EcnAffectedMaterial, EcnAffectedOrder, EcnBomImpact
 from .log import EcnLog
+from .material_impact import EcnExecutionProgress, EcnMaterialDisposition, EcnStakeholder
 from .responsibility_template import EcnResponsibility, EcnSolutionTemplate
 
 __all__ = [
@@ -25,4 +26,7 @@ __all__ = [
     "EcnResponsibility",
     "EcnSolutionTemplate",
     "EcnLog",
+    "EcnMaterialDisposition",
+    "EcnExecutionProgress",
+    "EcnStakeholder",
 ]
