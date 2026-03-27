@@ -80,6 +80,16 @@ repos:
         pass_filenames: false
         always_run: true
 
+  # Commitlint (commit message 规范校验，与 .commitlintrc.json 配合)
+  - repo: local
+    hooks:
+      - id: commitlint
+        name: commitlint 提交信息规范检查
+        entry: npx commitlint --edit
+        language: system
+        stages: [commit-msg]
+        always_run: true
+
   # JavaScript/TypeScript (前端)
   - repo: local
     hooks:

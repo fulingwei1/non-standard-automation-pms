@@ -2,9 +2,25 @@
 
 # Commit message validation hook
 # Enforces conventional commit message format
+# Bypasses validation for merge, revert, fixup, and squash commits
 
-commit_msg_file=$1
-commit_msg=$(cat "$commit_msg_file")
+commit_msg_file="$1"
+# 只读取第一行用于验证（多行消息只校验 subject line）
+first_line="$(head -n 1 "$commit_msg_file")"
+
+# --- 跳过不需要验证的特殊提交 ---
+# Merge commits (git merge 自动生成)
+if echo "$first_line" | grep -qE "^Merge "; then
+    exit 0
+fi
+# Revert commits (git revert 自动生成)
+if echo "$first_line" | grep -qE "^Revert "; then
+    exit 0
+fi
+# fixup!/squash! commits (git commit --fixup/--squash 生成，rebase 时合并)
+if echo "$first_line" | grep -qE "^(fixup|squash)! "; then
+    exit 0
+fi
 
 # Define allowed commit types based on project git-workflow.md
 allowed_types="feat|fix|refactor|docs|test|chore|perf|ci"
@@ -13,12 +29,12 @@ allowed_types="feat|fix|refactor|docs|test|chore|perf|ci"
 # Optional scope: <type>(scope): <description>
 pattern="^($allowed_types)(\(.+\))?: .{1,}"
 
-# Check if commit message matches pattern
-if ! echo "$commit_msg" | grep -qE "$pattern"; then
-    echo "❌ Commit message validation failed!"
+# Check if first line matches pattern
+if ! echo "$first_line" | grep -qE "$pattern"; then
+    echo "Commit message validation failed!"
     echo ""
     echo "Your commit message:"
-    echo "  $commit_msg"
+    echo "  $first_line"
     echo ""
     echo "Expected format:"
     echo "  <type>: <description>"
@@ -38,27 +54,27 @@ if ! echo "$commit_msg" | grep -qE "$pattern"; then
 fi
 
 # Additional validation: check description length
-description=$(echo "$commit_msg" | head -n 1 | sed -E "s/^($allowed_types)(\(.+\))?: //")
-description_length=${#description}
+description="$(echo "$first_line" | sed -E "s/^($allowed_types)(\(.+\))?: //")"
+description_length="${#description}"
 
-if [ $description_length -lt 10 ]; then
-    echo "❌ Commit message description too short (minimum 10 characters)"
+if [ "$description_length" -lt 10 ]; then
+    echo "Commit message description too short (minimum 10 characters)"
     echo "Current length: $description_length"
     echo "Description: $description"
     exit 1
 fi
 
-if [ $description_length -gt 100 ]; then
-    echo "⚠️  Warning: Commit message description is quite long ($description_length characters)"
+if [ "$description_length" -gt 100 ]; then
+    echo "Warning: Commit message description is quite long ($description_length characters)"
     echo "Consider keeping the subject line under 72 characters for better readability."
     echo ""
 fi
 
 # Check for trailing period (should not end with period)
-if echo "$commit_msg" | head -n 1 | grep -qE "\.$"; then
-    echo "⚠️  Warning: Commit message should not end with a period"
+if echo "$first_line" | grep -qE "\.$"; then
+    echo "Warning: Commit message should not end with a period"
     echo ""
 fi
 
-echo "✅ Commit message format validated successfully"
+echo "Commit message format validated successfully"
 exit 0
