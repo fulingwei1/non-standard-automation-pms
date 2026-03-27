@@ -899,6 +899,20 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 报表模块加载失败：{e}")
 
+    # ==================== 行业最佳实践 P0 优化 ====================
+    try:
+        from app.api.v1.endpoints.best_practice import (
+            material_router as bp_material_router,
+            supplier_router as bp_supplier_router,
+            project_router as bp_project_router,
+        )
+        api_router.include_router(bp_material_router, prefix="/material", tags=["best-practice"])
+        api_router.include_router(bp_supplier_router, prefix="/suppliers", tags=["best-practice"])
+        api_router.include_router(bp_project_router, prefix="/projects", tags=["best-practice"])
+        print("✓ 行业最佳实践模块加载成功（ABC分级/供应商升降级/缺料升级/齐套率）")
+    except Exception as e:
+        print(f"✗ 行业最佳实践模块加载失败: {e}")
+
     # ==================== Stub Endpoints (必须放最后作为fallback) ====================
     try:
         from app.api.v1.endpoints.stub_endpoints import router as stub_router
