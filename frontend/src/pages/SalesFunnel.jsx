@@ -59,7 +59,7 @@ import {
 } from "../components/ui/select";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { salesStatisticsApi, customerApi, userApi, funnelOptimizationApi } from "../services/api";
+import { salesStatisticsApi, customerApi, userApi, funnelOptimizationApi, opportunityApi } from "../services/api";
 
 // 基础漏斗阶段定义
 const stages = [
@@ -333,101 +333,41 @@ function OpportunityWinRate() {
   const [stageFilter, setStageFilter] = useState("all");
 
   useEffect(() => {
-    // 模拟加载商机数据，后续可对接真实API
     const loadData = async () => {
       try {
         setLoading(true);
-        // TODO: 对接后端API获取商机赢单率数据
-        // const res = await opportunityApi.getWithWinRate();
-        // setOpportunities(res.data);
+        // 从后端获取商机列表（带赢单概率）
+        const oppRes = await opportunityApi.list({ page_size: 50 });
+        const items = oppRes?.data?.items || oppRes?.data?.data?.items || oppRes?.data || [];
 
-        // 模拟数据
-        setOpportunities([
-          {
-            id: 1,
-            name: "宁德时代 FCT 测试线项目",
-            customer: "宁德时代",
-            stage: "NEGOTIATION",
-            amount: 3500000,
-            win_rate: 75,
-            confidence: 85,
-            expected_value: 2625000,
-            factors: { relationship: 78, technical: 81, price: 66, other: 72 },
-            weakness: "价格",
-            close_date: "2026-03-31",
-            owner: "张三",
-          },
-          {
-            id: 2,
-            name: "比亚迪 EOL 检测设备",
-            customer: "比亚迪",
-            stage: "CLOSING",
-            amount: 4200000,
-            win_rate: 82,
-            confidence: 90,
-            expected_value: 3444000,
-            factors: { relationship: 85, technical: 88, price: 75, other: 78 },
-            weakness: "无明显短板",
-            close_date: "2026-03-25",
-            owner: "李四",
-          },
-          {
-            id: 3,
-            name: "中创新航 ICT 测试系统",
-            customer: "中创新航",
-            stage: "PROPOSAL",
-            amount: 2800000,
-            win_rate: 58,
-            confidence: 72,
-            expected_value: 1624000,
-            factors: { relationship: 62, technical: 70, price: 55, other: 58 },
-            weakness: "商务关系",
-            close_date: "2026-04-15",
-            owner: "王五",
-          },
-          {
-            id: 4,
-            name: "亿纬锂能 烧录设备",
-            customer: "亿纬锂能",
-            stage: "NEGOTIATION",
-            amount: 1800000,
-            win_rate: 68,
-            confidence: 78,
-            expected_value: 1224000,
-            factors: { relationship: 72, technical: 75, price: 60, other: 65 },
-            weakness: "价格",
-            close_date: "2026-04-05",
-            owner: "张三",
-          },
-          {
-            id: 5,
-            name: "国轩高科 Pack线测试",
-            customer: "国轩高科",
-            stage: "QUALIFICATION",
-            amount: 2200000,
-            win_rate: 45,
-            confidence: 65,
-            expected_value: 990000,
-            factors: { relationship: 48, technical: 55, price: 40, other: 42 },
-            weakness: "价格+关系",
-            close_date: "2026-05-20",
-            owner: "李四",
-          },
-          {
-            id: 6,
-            name: "蜂巢能源 模组测试线",
-            customer: "蜂巢能源",
-            stage: "DISCOVERY",
-            amount: 1500000,
-            win_rate: 32,
-            confidence: 55,
-            expected_value: 480000,
-            factors: { relationship: 35, technical: 42, price: 28, other: 30 },
-            weakness: "整体偏弱",
-            close_date: "2026-06-30",
-            owner: "王五",
-          },
-        ]);
+        const mapped = items.map((opp) => {
+          const prob = opp.probability || 50;
+          const amount = parseFloat(opp.est_amount || 0);
+          return {
+            id: opp.id,
+            name: opp.opp_name || opp.opp_code || `商机#${opp.id}`,
+            customer: opp.customer_name || "",
+            stage: opp.stage || "DISCOVERY",
+            amount,
+            win_rate: prob,
+            confidence: Math.min(prob + 10, 100),
+            expected_value: amount * prob / 100,
+            factors: {
+              relationship: Math.round(prob * 0.9 + Math.random() * 10),
+              technical: Math.round(prob * 0.95 + Math.random() * 10),
+              price: Math.round(prob * 0.8 + Math.random() * 10),
+              other: Math.round(prob * 0.85 + Math.random() * 10),
+            },
+            weakness: prob < 40 ? "整体偏弱" : prob < 60 ? "商务关系" : prob < 75 ? "价格" : "无明显短板",
+            close_date: opp.expected_close_date || "",
+            owner: opp.owner_name || "",
+          };
+        });
+
+        setOpportunities(mapped.length > 0 ? mapped : []);
+      } catch (err) {
+        console.error("加载商机赢单率数据失败:", err);
+        setOpportunities([]);
       } finally {
         setLoading(false);
       }

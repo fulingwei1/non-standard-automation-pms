@@ -7,7 +7,7 @@
 
 from fastapi import APIRouter
 
-from . import crud, members, pk, ranking, statistics, teams_ranking
+from . import crud, members, org, pk, ranking, statistics, teams_ranking
 
 # 创建主路由
 router = APIRouter()
@@ -15,6 +15,7 @@ router = APIRouter()
 # 聚合所有子模块路由
 router.include_router(ranking.router, tags=["sales-team-ranking"])
 router.include_router(statistics.router, tags=["sales-team-statistics"])
+router.include_router(org.router, tags=["sales-team-org"])
 router.include_router(crud.router, tags=["sales-team-crud"])
 router.include_router(members.router, tags=["sales-team-members"])
 router.include_router(pk.router, tags=["sales-team-pk"])

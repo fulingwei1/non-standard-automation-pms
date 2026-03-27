@@ -129,6 +129,13 @@ router.include_router(
     sales_funnel_optimization.router, prefix="/funnel", tags=["sales-funnel-optimization"]
 )
 
+# 销售漏斗综合数据路由
+from app.api.v1.endpoints import sales_funnel_overview
+
+router.include_router(
+    sales_funnel_overview.router, tags=["sales-funnel-overview"]
+)
+
 # 客户 360°画像路由
 from app.api.v1.endpoints import customer_360
 

@@ -248,6 +248,8 @@ export const disputeApi = {
 export const salesTeamApi = {
   // 获取销售团队成员统计视图
   getTeam: (params) => api.get("/sales/team", { params }),
+  // 获取销售团队组织架构树
+  getOrg: (params) => api.get("/sales/team/org", { params }),
   // 获取销售团队实体列表
   listTeams: (params) => api.get("/sales/sales-teams", { params }),
   // 创建销售团队实体
@@ -297,8 +299,10 @@ export const salesStatisticsApi = {
 };
 
 export const salesApi = {
-  // 销售漏斗
-  getFunnel: (params) => api.get("/sales/statistics/funnel", { params }),
+  // 销售漏斗（综合版）
+  getFunnel: (params) => api.get("/sales/funnel", { params }),
+  // 销售漏斗（旧版统计）
+  getFunnelLegacy: (params) => api.get("/sales/statistics/funnel", { params }),
   // 待审批合同（使用合同列表筛选）
   getPendingApprovals: (params) =>
     api.get("/sales/contracts", {

@@ -15,7 +15,7 @@ const funnelStages = [
   { key: "won", label: "签约赢单", color: "from-emerald-500 to-green-500" },
 ];
 
-export default function SalesFunnel({ data = {}, trends = {}, onStageClick }) {
+export default function SalesFunnel({ data = {}, trends = {}, avgCycleDays, onStageClick }) {
   // 使用传入的数据，无数据时显示 0
   const funnelData = {
     lead: data.lead ?? 0,
@@ -106,7 +106,7 @@ export default function SalesFunnel({ data = {}, trends = {}, onStageClick }) {
         </div>
         <div className="flex justify-between text-xs text-slate-400 mt-1">
           <span>平均成交周期</span>
-          <span className="text-white font-medium">32 天</span>
+          <span className="text-white font-medium">{avgCycleDays ?? 32} 天</span>
         </div>
       </div>
     </motion.div>

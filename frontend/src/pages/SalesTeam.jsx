@@ -145,117 +145,46 @@ function OrgNode({ node, level, onSelect, selectedId }) {
 // 组织树视图
 function OrganizationTree() {
   const [selectedNode, setSelectedNode] = useState(null);
+  const [orgTree, setOrgTree] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock组织架构数据（后续可对接真实API）
-  const orgTree = {
-    id: 1,
-    name: "销售总部",
-    level: "GM",
-    person: { id: 1, name: "陈总", title: "销售总经理" },
-    metrics: { quota_annual: 800000000, achieved_ytd: 512000000, achievement_rate: 64.0, team_size: 28 },
-    children: [
-      {
-        id: 2,
-        name: "深圳分公司",
-        level: "Director",
-        person: { id: 2, name: "张总监", title: "销售总监" },
-        metrics: { quota_annual: 300000000, achieved_ytd: 198000000, achievement_rate: 66.0, team_size: 10 },
-        children: [
-          {
-            id: 5,
-            name: "华南一区",
-            level: "Manager",
-            person: { id: 5, name: "张三", title: "销售经理" },
-            metrics: { quota_annual: 100000000, achieved_ytd: 68000000, achievement_rate: 68.0, team_size: 4 },
-            children: [
-              { id: 11, name: "张三", level: "Sales", role: "销售工程师", metrics: { rate: 64.0 } },
-              { id: 12, name: "李小妹", level: "Sales", role: "销售工程师", metrics: { rate: 73.3 } },
-              { id: 13, name: "王小助", level: "Sales", role: "销售助理", metrics: { rate: 70.0 } },
-            ],
-          },
-          {
-            id: 6,
-            name: "华南二区",
-            level: "Manager",
-            person: { id: 6, name: "李四", title: "销售经理" },
-            metrics: { quota_annual: 100000000, achieved_ytd: 65000000, achievement_rate: 65.0, team_size: 3 },
-            children: [
-              { id: 14, name: "赵六", level: "Sales", role: "销售工程师", metrics: { rate: 62.0 } },
-              { id: 15, name: "钱七", level: "Sales", role: "销售工程师", metrics: { rate: 60.0 } },
-              { id: 16, name: "孙八", level: "Sales", role: "销售助理", metrics: { rate: 60.0 } },
-            ],
-          },
-          {
-            id: 7,
-            name: "华南三区",
-            level: "Manager",
-            person: { id: 7, name: "王五", title: "销售经理" },
-            metrics: { quota_annual: 100000000, achieved_ytd: 65000000, achievement_rate: 65.0, team_size: 3 },
-            children: [
-              { id: 17, name: "周九", level: "Sales", metrics: { rate: 68.0 } },
-              { id: 18, name: "吴十", level: "Sales", metrics: { rate: 63.0 } },
-              { id: 19, name: "郑十一", level: "Sales", metrics: { rate: 64.0 } },
-            ],
-          },
-        ],
-      },
-      {
-        id: 3,
-        name: "苏州分公司",
-        level: "Director",
-        person: { id: 3, name: "李总监", title: "销售总监" },
-        metrics: { quota_annual: 280000000, achieved_ytd: 175000000, achievement_rate: 62.5, team_size: 10 },
-        children: [
-          {
-            id: 8,
-            name: "华东一区",
-            level: "Manager",
-            person: { id: 8, name: "赵经理", title: "销售经理" },
-            metrics: { quota_annual: 100000000, achieved_ytd: 62000000, achievement_rate: 62.0, team_size: 4 },
-            children: [
-              { id: 20, name: "队员 A", level: "Sales", metrics: { rate: 65.0 } },
-              { id: 21, name: "队员 B", level: "Sales", metrics: { rate: 61.0 } },
-              { id: 22, name: "队员 C", level: "Sales", metrics: { rate: 60.0 } },
-              { id: 23, name: "队员 D", level: "Sales", metrics: { rate: 62.0 } },
-            ],
-          },
-          {
-            id: 9,
-            name: "华东二区",
-            level: "Manager",
-            person: { id: 9, name: "钱经理", title: "销售经理" },
-            metrics: { quota_annual: 80000000, achieved_ytd: 48000000, achievement_rate: 60.0, team_size: 3 },
-            children: [
-              { id: 24, name: "队员 E", level: "Sales", metrics: { rate: 62.0 } },
-              { id: 25, name: "队员 F", level: "Sales", metrics: { rate: 59.0 } },
-              { id: 26, name: "队员 G", level: "Sales", metrics: { rate: 59.0 } },
-            ],
-          },
-        ],
-      },
-      {
-        id: 4,
-        name: "合肥分公司",
-        level: "Director",
-        person: { id: 4, name: "王总监", title: "销售总监" },
-        metrics: { quota_annual: 220000000, achieved_ytd: 139000000, achievement_rate: 63.2, team_size: 8 },
-        children: [
-          {
-            id: 10,
-            name: "华北一区",
-            level: "Manager",
-            person: { id: 10, name: "孙经理", title: "销售经理" },
-            metrics: { quota_annual: 80000000, achieved_ytd: 47000000, achievement_rate: 58.8, team_size: 3 },
-            children: [
-              { id: 27, name: "队员 H", level: "Sales", metrics: { rate: 60.0 } },
-              { id: 28, name: "队员 I", level: "Sales", metrics: { rate: 58.0 } },
-              { id: 29, name: "队员 J", level: "Sales", metrics: { rate: 58.5 } },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+  useEffect(() => {
+    const loadOrg = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await salesTeamApi.getOrg();
+        const data = res.formatted || res.data?.data || res.data || {};
+        setOrgTree(data.organization_tree || null);
+      } catch (err) {
+        console.error("加载组织架构失败:", err);
+        setError("加载组织架构数据失败，请稍后重试");
+        setOrgTree(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadOrg();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="pt-6 text-center text-slate-400">加载组织架构中...</CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !orgTree) {
+    return (
+      <Card>
+        <CardContent className="pt-6 text-center text-slate-400">
+          {error || "暂无组织架构数据，请先创建销售团队"}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
