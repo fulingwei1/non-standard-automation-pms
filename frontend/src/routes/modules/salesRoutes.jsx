@@ -53,6 +53,9 @@ import SalesOpportunityCenter from "../../pages/SalesOpportunityCenter";
 // 销售漏斗
 import SalesFunnel from "../../pages/SalesFunnel";
 
+// 销售仪表盘
+import SalesDashboard from "../../pages/SalesDashboard";
+
 // 售前相关
 import PresalesTasks from "../../pages/PresalesTasks";
 import TechnicalAssessment from "../../pages/TechnicalAssessment";
@@ -88,6 +91,9 @@ import InformationGapAnalysis from "../../pages/InformationGapAnalysis";
 export function SalesRoutes() {
   return (
     <>
+      {/* 销售仪表盘 */}
+      <Route path="/sales/dashboard" element={<SalesDashboard />} />
+
       {/* 销售漏斗（固定路径，放在最前避免被 /sales/:param 抢匹配） */}
       <Route path="/sales-funnel" element={<Navigate to="/sales/funnel" replace />} />
       <Route path="/sales/funnel" element={<SalesFunnel />} />
