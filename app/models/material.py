@@ -212,6 +212,14 @@ class BomItem(Base, TimestampMixin):
     purchased_qty = Column(Numeric(10, 4), default=0, comment="已采购数量")
     received_qty = Column(Numeric(10, 4), default=0, comment="已到货数量")
 
+    # 物料融合 - 齐套跟踪
+    kitting_status = Column(
+        String(20), default="PENDING",
+        comment="齐套状态：PENDING/IN_PROGRESS/COMPLETE/SHORTAGE",
+    )
+    expected_arrival_date = Column(Date, comment="预计到货日期")
+    actual_arrival_date = Column(Date, comment="实际到货日期")
+
     # 层级
     level = Column(Integer, default=1, comment="BOM层级")
     sort_order = Column(Integer, default=0, comment="排序")
