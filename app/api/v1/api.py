@@ -422,6 +422,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 采购分析模块加载失败：{e}")
 
+    # ==================== 采购管理优化（供应商/价格分析/齐套率） ====================
+    try:
+        from app.api.v1.endpoints.procurement import router as procurement_opt_router
+        api_router.include_router(procurement_opt_router, prefix="/procurement", tags=["采购管理优化"])
+        print("✓ 采购管理优化模块加载成功")
+    except Exception as e:
+        print(f"✗ 采购管理优化模块加载失败：{e}")
+
     # ==================== 战略管理 ====================
     try:
         from app.api.v1.endpoints.strategy import router as strategy_router
