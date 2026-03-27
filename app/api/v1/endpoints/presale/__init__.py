@@ -5,6 +5,7 @@
 
 from fastapi import APIRouter
 
+from .analytics import router as analytics_router
 from .bids import router as bids_router
 from .proposals import router as proposals_router
 from .statistics import router as statistics_router
@@ -20,5 +21,6 @@ router.include_router(proposals_router)
 router.include_router(templates_router)
 router.include_router(bids_router, tags=["presale-bids"])  # 移除/presale前缀
 router.include_router(statistics_router)
+router.include_router(analytics_router)
 
 __all__ = ["router"]
