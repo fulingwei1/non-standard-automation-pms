@@ -54,6 +54,7 @@ from .kitting_optimization import ExpediteRecord, MaterialAlternative  # noqa: F
 
 # Material Shortage (from material.py)
 from .material import MaterialShortage  # noqa: F401
+from .material_progress_subscription import MaterialProgressSubscription  # noqa: F401
 from .presale_ai import (  # noqa: F401
     PresaleAIAuditLog,
     PresaleAIConfig,
@@ -205,6 +206,7 @@ __all__ = [
     "BomHeader",
     "BomItem",
     "MaterialShortage",
+    "MaterialProgressSubscription",
     # Shortage
     "ShortageReport",
     "MaterialArrival",

@@ -55,6 +55,7 @@ from .work_logs import router as work_logs_router
 from .workload import router as workload_router
 from .approvals import router as approvals_router
 from .change_requests import router as change_requests_router
+from .material_progress import router as material_progress_router
 from .schedule_prediction import router as schedule_prediction_router
 
 # Export gate check functions for use by stage_advance_service
@@ -207,6 +208,13 @@ router.include_router(risks.router, tags=["projects-risks-v2"])
 
 # 项目审批路由（已废弃，迁移到统一审批）
 router.include_router(approvals_router, tags=["projects-approvals"])
+
+# 物料进度可视化路由（项目内操作）
+router.include_router(
+    material_progress_router,
+    prefix="/{project_id}",
+    tags=["projects-material-progress"],
+)
 
 # 变更管理路由（项目内操作）
 # Note: project_id is handled as query parameter in change_requests endpoints
