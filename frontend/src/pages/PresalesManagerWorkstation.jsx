@@ -203,65 +203,18 @@ export default function PresalesManagerWorkstation() {
   const [ongoingSolutions, setOngoingSolutions] = useState([]);
   const [biddingProjects, setBiddingProjects] = useState([]);
 
-  // 演示数据 - 当 API 不可用时使用
-  const getMockData = () => ({
-    stats: {
-      teamSize: 8,
-      activeSolutions: 12,
-      pendingReview: 3,
-      activeBids: 5,
-      urgentBids: 2,
-      monthlyOutput: 15800000,
-      monthlyTarget: 20000000,
-      achievementRate: 79,
-      avgSolutionTime: 4.5,
-      solutionQuality: 92
-    },
-    teamPerformance: [
-      { id: 1, name: "张工程师", avatar: "", activeTasks: 4, completedThisMonth: 8, avgResponseTime: 2.1, qualityScore: 95 },
-      { id: 2, name: "李工程师", avatar: "", activeTasks: 3, completedThisMonth: 6, avgResponseTime: 2.8, qualityScore: 88 },
-      { id: 3, name: "王工程师", avatar: "", activeTasks: 5, completedThisMonth: 10, avgResponseTime: 1.9, qualityScore: 92 },
-    ],
-    pendingReviews: [
-      { id: 1, title: "新能源电池EOL测试系统", customer: "宁德时代", author: "张工程师", version: "V2.1", submitTimeLabel: "03/08 10:30", amount: 3800000, priority: "high", daysWaiting: 1 },
-      { id: 2, title: "BMS功能测试方案", customer: "比亚迪", author: "李工程师", version: "V1.0", submitTimeLabel: "03/07 15:20", amount: 2500000, priority: "medium", daysWaiting: 2 },
-    ],
-    ongoingSolutions: [
-      { id: 1, name: "动力电池测试系统", customer: "宁德时代", author: "张工程师", version: "V2.1", status: "评审中", statusColor: "bg-amber-500", progress: 85, amount: 3800000, deadline: "7 天" },
-      { id: 2, name: "充电桩测试设备", customer: "阳光电源", author: "李工程师", version: "V1.0", status: "设计中", statusColor: "bg-blue-500", progress: 55, amount: 1500000, deadline: "12 天" },
-    ],
-    biddingProjects: [
-      { id: 1, name: "新能源汽车测试设备采购", customer: "广汽埃安", daysLeft: 11, status: "准备中", statusColor: "bg-amber-500", amount: 5000000, responsible: "张工程师", progress: 60 },
-      { id: 2, name: "储能系统检测项目", customer: "阳光电源", daysLeft: 16, status: "准备中", statusColor: "bg-amber-500", amount: 8000000, responsible: "李工程师", progress: 60 },
-    ]
-  });
-
   // Load dashboard data
   const loadDashboard = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      let solutions = [];
-      try {
-        // Load solutions
-        const solutionsResponse = await presaleApi.solutions.list({
-          page: 1,
-          page_size: 100
-        });
-        solutions = extractItems(solutionsResponse);
-      } catch (apiErr) {
-        // API 不可用，使用演示数据
-        console.warn("售前方案 API 不可用，使用演示数据:", apiErr.message);
-        const mockData = getMockData();
-        setOverallStats(mockData.stats);
-        setTeamPerformance(mockData.teamPerformance);
-        setPendingReviews(mockData.pendingReviews);
-        setOngoingSolutions(mockData.ongoingSolutions);
-        setBiddingProjects(mockData.biddingProjects);
-        setLoading(false);
-        return;
-      }
+      // Load solutions
+      const solutionsResponse = await presaleApi.solutions.list({
+        page: 1,
+        page_size: 100
+      });
+      const solutions = extractItems(solutionsResponse);
       const ongoingSolutionsData = (solutions || [])
         .map((solution) => {
           const normalizedStatus = normalizeSolutionStatus(
@@ -617,6 +570,9 @@ export default function PresalesManagerWorkstation() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {(!teamPerformance || teamPerformance.length === 0) && (
+                    <div className="py-8 text-center text-sm text-slate-500">暂无团队绩效数据</div>
+                  )}
                   {(teamPerformance || []).map((member, index) =>
                   <div
                     key={member.id}
@@ -718,6 +674,9 @@ export default function PresalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                {(!ongoingSolutions || ongoingSolutions.length === 0) && (
+                  <div className="py-8 text-center text-sm text-slate-500">暂无进行中方案</div>
+                )}
                 {(ongoingSolutions || []).map((solution, _index) =>
                 <div
                   key={solution.id}
@@ -795,6 +754,9 @@ export default function PresalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                {(!pendingReviews || pendingReviews.length === 0) && (
+                  <div className="py-6 text-center text-sm text-slate-500">暂无待审核方案</div>
+                )}
                 {(pendingReviews || []).map((item) =>
                 <div
                   key={item.id}
@@ -862,6 +824,9 @@ export default function PresalesManagerWorkstation() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                {(!biddingProjects || biddingProjects.length === 0) && (
+                  <div className="py-6 text-center text-sm text-slate-500">暂无投标项目</div>
+                )}
                 {(biddingProjects || []).map((bid) =>
                 <div
                   key={bid.id}

@@ -100,76 +100,6 @@ const TYPE_LABELS = {
   FEASIBILITY_ASSESSMENT: "可行性评估",
 };
 
-const MOCK_TICKETS = [
-  {
-    id: "mock-1",
-    ticket_no: "PS-2026-0098",
-    title: "新能源产线扩容方案澄清",
-    ticket_type: "TECHNICAL_EXCHANGE",
-    urgency: "URGENT",
-    status: "IN_PROGRESS",
-    customer_name: "宁德时代",
-    applicant_name: "张可",
-    assignee_name: "李海峰",
-    apply_time: "2026-02-23T09:20:00",
-    accept_time: "2026-02-23T11:45:00",
-    deadline: "2026-03-03T23:59:59",
-    description: "客户要求 3 天内补齐双工位节拍、能耗和防呆逻辑。",
-    expected_date: "2026-03-03",
-    complete_time: null,
-  },
-  {
-    id: "mock-2",
-    ticket_no: "PS-2026-0101",
-    title: "海外项目报价风险复核",
-    ticket_type: "COST_ESTIMATE",
-    urgency: "HIGH",
-    status: "PENDING",
-    customer_name: "海外渠道项目",
-    applicant_name: "王晨",
-    assignee_name: "",
-    apply_time: "2026-02-27T15:10:00",
-    accept_time: null,
-    deadline: "2026-03-05T18:00:00",
-    description: "需核对汇率波动、物流税费及海外安装成本风险。",
-    expected_date: "2026-03-05",
-    complete_time: null,
-  },
-  {
-    id: "mock-3",
-    ticket_no: "PS-2026-0093",
-    title: "储能模组工艺评审支持",
-    ticket_type: "SOLUTION_REVIEW",
-    urgency: "NORMAL",
-    status: "ACCEPTED",
-    customer_name: "比亚迪",
-    applicant_name: "周宁",
-    assignee_name: "赵文博",
-    apply_time: "2026-02-20T08:30:00",
-    accept_time: "2026-02-20T10:10:00",
-    deadline: "2026-03-02T17:30:00",
-    description: "完成工艺风险清单与关键工位节拍论证。",
-    expected_date: "2026-03-02",
-    complete_time: null,
-  },
-  {
-    id: "mock-4",
-    ticket_no: "PS-2026-0086",
-    title: "试制线 PoC 方案交付",
-    ticket_type: "SOLUTION_DESIGN",
-    urgency: "LOW",
-    status: "COMPLETED",
-    customer_name: "欣旺达",
-    applicant_name: "陈锐",
-    assignee_name: "黄雅婷",
-    apply_time: "2026-02-12T09:00:00",
-    accept_time: "2026-02-12T09:30:00",
-    deadline: "2026-02-24T18:00:00",
-    description: "已完成 PoC 报告、3D 布局和成本测算，待商务转入报价。",
-    expected_date: "2026-02-24",
-    complete_time: "2026-02-23T16:45:00",
-  },
-];
 
 function extractApiPayload(response) {
   if (response?.formatted !== undefined) {
@@ -273,7 +203,7 @@ function toTicketModel(ticket, forcedStatus = null) {
 export default function PresaleTicketBoard() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -283,7 +213,7 @@ export default function PresaleTicketBoard() {
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
-    setUsingMockData(false);
+    setLoadError(null);
 
     try {
       const boardResponse = await presaleApi.tickets.getBoard();
@@ -309,9 +239,9 @@ export default function PresaleTicketBoard() {
       setTickets(normalizedList);
     } catch (error) {
       console.error("加载售前工单失败:", error);
-      setTickets(MOCK_TICKETS.map((ticket) => toTicketModel(ticket)));
-      setUsingMockData(true);
-      toast.warning("接口暂不可用，当前展示演示数据");
+      setTickets([]);
+      setLoadError(error.response?.data?.detail || error.message || "加载工单数据失败");
+      toast.error("工单数据加载失败，请稍后重试");
     } finally {
       setLoading(false);
     }
@@ -466,11 +396,6 @@ export default function PresaleTicketBoard() {
       ),
     );
 
-    if (String(ticket.id).startsWith("mock-")) {
-      toast.success(`工单 ${ticket.ticketNo} 优先级已更新为 ${PRIORITY_CONFIG[nextPriority].label}`);
-      return;
-    }
-
     try {
       setPriorityUpdatingId(ticket.id);
       await presaleApi.tickets.update(ticket.id, { urgency: nextPriority });
@@ -498,16 +423,6 @@ export default function PresaleTicketBoard() {
 
     const nextStatus = nextStatusMap[ticket.status];
     if (!nextStatus) {
-      return;
-    }
-
-    if (String(ticket.id).startsWith("mock-")) {
-      setTickets((prevTickets) =>
-        prevTickets.map((item) =>
-          item.id === ticket.id ? { ...item, status: nextStatus } : item,
-        ),
-      );
-      toast.success(`工单 ${ticket.ticketNo} 已流转到 ${STATUS_CONFIG[nextStatus].label}`);
       return;
     }
 
@@ -566,12 +481,12 @@ export default function PresaleTicketBoard() {
         ]}
       />
 
-      {usingMockData && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+      {loadError && (
+        <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="pt-4">
-            <div className="flex items-center gap-2 text-sm text-amber-200">
+            <div className="flex items-center gap-2 text-sm text-red-200">
               <AlertTriangle className="h-4 w-4" />
-              当前为演示数据，接口恢复后将自动显示真实工单。
+              数据加载失败：{loadError}，请点击"刷新数据"重试。
             </div>
           </CardContent>
         </Card>

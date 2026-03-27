@@ -36,117 +36,6 @@ import { fadeIn, staggerContainer } from "../lib/animations";
 import { cn, formatDate } from "../lib/utils";
 import { presaleApi } from "../services/api";
 
-const MOCK_TEMPLATES = [
-  {
-    id: "tmpl-discovery-001",
-    name: "工业自动化需求调研模板",
-    category: "需求调研",
-    description:
-      "用于制造业客户首次交流，覆盖业务痛点、产线节拍、关键约束与预算窗口。",
-    tags: ["首访", "痛点梳理", "需求访谈"],
-    scenarios: ["首次商机沟通", "售前立项会", "客户需求澄清"],
-    outline: [
-      {
-        title: "业务背景与目标",
-        bullets: ["客户现状", "核心改造目标", "期望收益"],
-      },
-      {
-        title: "技术与现场约束",
-        bullets: ["设备接口", "空间条件", "交付周期"],
-      },
-      {
-        title: "风险与下一步",
-        bullets: ["高风险项", "关键决策点", "后续行动计划"],
-      },
-    ],
-    deliverables: ["需求调研报告", "问题清单", "优先级矩阵"],
-    rating: 4.7,
-    ratingCount: 28,
-    applyCount: 92,
-    owner: "解决方案部",
-    updatedAt: "2026-02-20",
-  },
-  {
-    id: "tmpl-solution-002",
-    name: "标准产线方案设计模板",
-    category: "方案设计",
-    description:
-      "适用于中大型产线升级项目，包含系统架构、实施边界、交付范围与验收策略。",
-    tags: ["系统架构", "交付边界", "实施方案"],
-    scenarios: ["方案设计阶段", "技术评审前准备"],
-    outline: [
-      { title: "总体架构", bullets: ["系统拓扑", "软硬件清单", "集成策略"] },
-      { title: "实施计划", bullets: ["里程碑", "资源配置", "风险应对"] },
-      { title: "价值测算", bullets: ["ROI模型", "成本收益", "回收周期"] },
-    ],
-    deliverables: ["方案说明书", "实施计划", "投资回报测算表"],
-    rating: 4.5,
-    ratingCount: 41,
-    applyCount: 134,
-    owner: "售前架构组",
-    updatedAt: "2026-02-16",
-  },
-  {
-    id: "tmpl-bid-003",
-    name: "投标应答与条款映射模板",
-    category: "投标支持",
-    description:
-      "聚焦招标文件快速拆解，支持技术应答、偏离表、风险条款识别与应对建议。",
-    tags: ["技术应答", "偏离项", "条款映射"],
-    scenarios: ["投标文件编制", "技术偏离评审"],
-    outline: [
-      { title: "招标要求解析", bullets: ["关键条款", "合规性检查", "评分点映射"] },
-      { title: "应答矩阵", bullets: ["逐条应答", "证明材料", "责任人"] },
-      { title: "风险闭环", bullets: ["风险等级", "规避动作", "审批意见"] },
-    ],
-    deliverables: ["应答矩阵", "偏离说明", "风险清单"],
-    rating: 4.8,
-    ratingCount: 19,
-    applyCount: 67,
-    owner: "投标中心组",
-    updatedAt: "2026-02-10",
-  },
-  {
-    id: "tmpl-cost-004",
-    name: "售前成本估算模板",
-    category: "成本估算",
-    description:
-      "通过标准BOM、工时与服务项结构快速估算项目成本，支持多版本报价场景。",
-    tags: ["BOM", "工时估算", "报价支持"],
-    scenarios: ["售前报价", "方案比选", "毛利预测"],
-    outline: [
-      { title: "成本分层", bullets: ["材料", "人工", "外协与运维"] },
-      { title: "参数假设", bullets: ["数量假设", "汇率假设", "折扣规则"] },
-      { title: "结果输出", bullets: ["成本汇总", "毛利测算", "敏感度分析"] },
-    ],
-    deliverables: ["成本测算表", "毛利分析", "假设说明"],
-    rating: 4.3,
-    ratingCount: 36,
-    applyCount: 116,
-    owner: "商务成本组",
-    updatedAt: "2026-01-28",
-  },
-  {
-    id: "tmpl-demo-005",
-    name: "客户答辩演示模板",
-    category: "答辩演示",
-    description:
-      "支持客户高层汇报与技术答辩，强调价值主张、成功案例与落地保障机制。",
-    tags: ["客户答辩", "价值呈现", "案例沉淀"],
-    scenarios: ["方案答辩会", "高层汇报", "竞争性演示"],
-    outline: [
-      { title: "价值主张", bullets: ["业务价值", "成本价值", "组织价值"] },
-      { title: "能力证明", bullets: ["案例数据", "交付资质", "团队能力"] },
-      { title: "落地保障", bullets: ["治理机制", "里程碑控制", "服务承诺"] },
-    ],
-    deliverables: ["演示PPT", "答辩话术", "Q&A清单"],
-    rating: 4.6,
-    ratingCount: 22,
-    applyCount: 74,
-    owner: "行业方案组",
-    updatedAt: "2026-02-14",
-  },
-];
 
 const CATEGORY_STYLE_MAP = {
   需求调研: "bg-blue-500/10 text-blue-300 border-blue-500/30",
@@ -290,7 +179,7 @@ function RatingStars({ value }) {
 
 export default function PresaleTemplates() {
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [templates, setTemplates] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -316,15 +205,13 @@ export default function PresaleTemplates() {
 
         if (Array.isArray(items) && items.length > 0) {
           setTemplates(items.map((item, index) => normalizeTemplate(item, index)));
-          setUsingMockData(false);
-          return;
+        } else {
+          setTemplates([]);
         }
-
-        setTemplates(MOCK_TEMPLATES);
-        setUsingMockData(true);
+        setLoadError(null);
       } catch (_error) {
-        setTemplates(MOCK_TEMPLATES);
-        setUsingMockData(true);
+        setTemplates([]);
+        setLoadError(_error.response?.data?.detail || _error.message || "加载模板数据失败");
       } finally {
         setLoading(false);
       }
@@ -491,10 +378,10 @@ export default function PresaleTemplates() {
         description="统一管理模板分类、快速预览、模板应用和团队评分反馈。"
       />
 
-      {usingMockData && (
+      {loadError && (
         <motion.div variants={fadeIn}>
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-            当前展示内置模板数据，接口连通后会自动切换为真实模板库。
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            模板数据加载失败：{loadError}，请刷新页面重试。
           </div>
         </motion.div>
       )}
