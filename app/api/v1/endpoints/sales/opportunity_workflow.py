@@ -3,16 +3,18 @@
 商机管理 - 工作流操作（阶段门、阶段、评分、赢单、输单）
 """
 
+import logging
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
 from app.core.sales_permissions import can_set_opportunity_gate
+from app.models.enums import OpportunityStageEnum
 from app.models.sales import Opportunity, OpportunityRequirement
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -20,6 +22,8 @@ from app.schemas.sales import OpportunityRequirementResponse, OpportunityRespons
 from app.utils.db_helpers import get_or_404
 
 from .utils import validate_g2_opportunity_to_quote
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -228,6 +232,44 @@ def lose_opportunity(
     db.commit()
     db.refresh(opportunity)
 
+    return _build_opportunity_response(db, opportunity)
+
+
+# ==================== 新增高频 API ====================
+
+# 阶段推进顺序
+STAGE_ORDER = [
+    OpportunityStageEnum.DISCOVERY.value,
+    OpportunityStageEnum.QUALIFICATION.value,
+    OpportunityStageEnum.PROPOSAL.value,
+    OpportunityStageEnum.NEGOTIATION.value,
+    OpportunityStageEnum.CLOSING.value,
+]
+
+
+class OpportunityAdvanceRequest(BaseModel):
+    """商机阶段推进请求"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    target_stage: Optional[str] = Field(
+        default=None, description="目标阶段（留空自动推进到下一阶段）"
+    )
+    remark: Optional[str] = Field(default=None, description="推进备注")
+
+
+class OpportunityLossRequest(BaseModel):
+    """商机输单请求"""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    loss_reason: str = Field(..., min_length=1, description="输单原因（必填）")
+    competitor: Optional[str] = Field(default=None, description="竞争对手")
+    remark: Optional[str] = Field(default=None, description="备注")
+
+
+def _build_opportunity_response(db: Session, opportunity: Opportunity) -> OpportunityResponse:
+    """构建商机响应对象"""
     req = (
         db.query(OpportunityRequirement)
         .filter(OpportunityRequirement.opportunity_id == opportunity.id)
@@ -244,5 +286,161 @@ def lose_opportunity(
         opp_dict["requirement"] = OpportunityRequirementResponse(
             **{c.name: getattr(req, c.name) for c in req.__table__.columns}
         )
-
     return OpportunityResponse(**opp_dict)
+
+
+@router.post("/opportunities/{opp_id}/advance", response_model=ResponseModel)
+def advance_opportunity(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    request: OpportunityAdvanceRequest = Body(default=OpportunityAdvanceRequest()),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    推进商机阶段
+
+    自动推进到下一阶段，或指定目标阶段。
+    不能从 WON/LOST 推进，也不能跳过阶段倒退。
+    """
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+
+    # 数据权限检查
+    if not security.check_sales_data_permission(opportunity, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权操作该商机")
+
+    current_stage = opportunity.stage
+    if current_stage in ("WON", "LOST"):
+        raise HTTPException(status_code=400, detail=f"商机已{('赢单' if current_stage == 'WON' else '输单')}，无法继续推进")
+
+    if request.target_stage:
+        target = request.target_stage
+        # 验证目标阶段有效
+        valid_targets = STAGE_ORDER + ["WON"]
+        if target not in valid_targets:
+            raise HTTPException(
+                status_code=400, detail=f"无效的目标阶段，可选: {', '.join(valid_targets)}"
+            )
+        # 不能倒退
+        if current_stage in STAGE_ORDER and target in STAGE_ORDER:
+            if STAGE_ORDER.index(target) <= STAGE_ORDER.index(current_stage):
+                raise HTTPException(status_code=400, detail="不能倒退阶段")
+    else:
+        # 自动推进到下一阶段
+        if current_stage not in STAGE_ORDER:
+            raise HTTPException(
+                status_code=400, detail=f"当前阶段 {current_stage} 不支持自动推进"
+            )
+        idx = STAGE_ORDER.index(current_stage)
+        if idx >= len(STAGE_ORDER) - 1:
+            # CLOSING 之后需要明确 win 或 loss
+            raise HTTPException(
+                status_code=400,
+                detail="已在最后阶段(CLOSING)，请使用赢单或输单接口",
+            )
+        target = STAGE_ORDER[idx + 1]
+
+    old_stage = opportunity.stage
+    opportunity.stage = target
+    opportunity.updated_by = current_user.id
+    db.commit()
+    db.refresh(opportunity)
+
+    logger.info(f"商机 {opp_id} 阶段推进: {old_stage} → {target}, 操作人: {current_user.id}")
+
+    return ResponseModel(
+        code=200,
+        message=f"商机阶段已从 {old_stage} 推进到 {target}",
+        data={
+            "opportunity_id": opp_id,
+            "old_stage": old_stage,
+            "new_stage": target,
+        },
+    )
+
+
+@router.post("/opportunities/{opp_id}/win", response_model=ResponseModel)
+def win_opportunity_post(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    remark: Optional[str] = Body(default=None, embed=True),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    标记赢单
+    """
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+
+    if not security.check_sales_data_permission(opportunity, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权操作该商机")
+
+    if opportunity.stage == "WON":
+        raise HTTPException(status_code=400, detail="商机已是赢单状态")
+    if opportunity.stage == "LOST":
+        raise HTTPException(status_code=400, detail="商机已输单，无法标记赢单")
+
+    old_stage = opportunity.stage
+    opportunity.stage = "WON"
+    opportunity.gate_status = "PASS"
+    opportunity.gate_passed_at = datetime.now()
+    opportunity.updated_by = current_user.id
+    db.commit()
+    db.refresh(opportunity)
+
+    logger.info(f"商机 {opp_id} 赢单: {old_stage} → WON, 操作人: {current_user.id}")
+
+    return ResponseModel(
+        code=200,
+        message="商机已标记为赢单",
+        data={
+            "opportunity_id": opp_id,
+            "old_stage": old_stage,
+            "new_stage": "WON",
+        },
+    )
+
+
+@router.post("/opportunities/{opp_id}/loss", response_model=ResponseModel)
+def loss_opportunity_post(
+    *,
+    db: Session = Depends(deps.get_db),
+    opp_id: int,
+    request: OpportunityLossRequest,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    标记输单（需填写原因）
+    """
+    opportunity = get_or_404(db, Opportunity, opp_id, detail="商机不存在")
+
+    if not security.check_sales_data_permission(opportunity, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权操作该商机")
+
+    if opportunity.stage == "LOST":
+        raise HTTPException(status_code=400, detail="商机已是输单状态")
+    if opportunity.stage == "WON":
+        raise HTTPException(status_code=400, detail="商机已赢单，无法标记输单")
+
+    old_stage = opportunity.stage
+    opportunity.stage = "LOST"
+    opportunity.lose_reason = request.loss_reason
+    opportunity.lost_at = datetime.now()
+    opportunity.updated_by = current_user.id
+    db.commit()
+    db.refresh(opportunity)
+
+    logger.info(
+        f"商机 {opp_id} 输单: {old_stage} → LOST, 原因: {request.loss_reason}, 操作人: {current_user.id}"
+    )
+
+    return ResponseModel(
+        code=200,
+        message="商机已标记为输单",
+        data={
+            "opportunity_id": opp_id,
+            "old_stage": old_stage,
+            "new_stage": "LOST",
+            "loss_reason": request.loss_reason,
+        },
+    )

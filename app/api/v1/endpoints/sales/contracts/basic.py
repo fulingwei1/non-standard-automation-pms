@@ -9,7 +9,8 @@ from typing import Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
@@ -17,7 +18,7 @@ from app.common.crud import SalesQueryBuilder, SalesQueryConfig
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.project import Customer
-from app.models.sales import Contract, ContractDeliverable, Opportunity
+from app.models.sales import Contract, ContractDeliverable, Opportunity, Quote, QuoteItem, QuoteVersion
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.sales import (
@@ -167,8 +168,6 @@ def create_contract(
     """
     创建合同（G3阶段门验证）
     """
-    from app.models.sales import Quote, QuoteItem, QuoteVersion
-
     contract_payload = contract_in.model_dump(exclude={"deliverables"})
     contract_data = _map_contract_payload_to_model(contract_payload, is_create=True)
 
@@ -253,6 +252,144 @@ def create_contract(
 
     deliverables = (
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract.id).all()
+    )
+    return ContractResponse(**_build_contract_response_dict(contract, deliverables))
+
+
+class ContractFromQuoteRequest(BaseModel):
+    """从报价创建合同请求"""
+
+    quote_id: int = Field(..., description="报价ID")
+    quote_version_id: Optional[int] = Field(
+        default=None, description="报价版本ID（留空使用当前版本）"
+    )
+    contract_code: Optional[str] = Field(default=None, description="合同编码（留空自动生成）")
+    contract_name: Optional[str] = Field(default=None, description="合同名称")
+    payment_terms: Optional[str] = Field(default=None, description="付款条款")
+    remark: Optional[str] = Field(default=None, description="备注")
+
+
+@router.post("/contracts/from-quote", response_model=ContractResponse, status_code=201)
+def create_contract_from_quote(
+    *,
+    db: Session = Depends(deps.get_db),
+    request: ContractFromQuoteRequest,
+    skip_g3_validation: bool = Query(False, description="跳过G3验证"),
+    current_user: User = Depends(security.require_permission("contract:create")),
+) -> Any:
+    """
+    从报价创建合同
+
+    自动从报价中提取客户、商机、金额等信息创建合同。
+    执行 G3 阶段门验证（可跳过）。
+    """
+    # 查找报价
+    quote = db.query(Quote).filter(Quote.id == request.quote_id).first()
+    if not quote:
+        raise HTTPException(status_code=404, detail="报价不存在")
+
+    # 验证报价状态
+    if quote.status not in ("APPROVED", "ACCEPTED"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"报价状态为 {quote.status}，只有已审批通过(APPROVED)或已接受(ACCEPTED)的报价才能创建合同",
+        )
+
+    # 确定版本
+    if request.quote_version_id:
+        version = (
+            db.query(QuoteVersion)
+            .filter(QuoteVersion.id == request.quote_version_id)
+            .first()
+        )
+        if not version:
+            raise HTTPException(status_code=404, detail="报价版本不存在")
+    elif quote.current_version_id:
+        version = (
+            db.query(QuoteVersion)
+            .filter(QuoteVersion.id == quote.current_version_id)
+            .first()
+        )
+        if not version:
+            raise HTTPException(status_code=404, detail="报价当前版本不存在")
+    else:
+        # 取最新版本
+        version = (
+            db.query(QuoteVersion)
+            .filter(QuoteVersion.quote_id == quote.id)
+            .order_by(QuoteVersion.created_at.desc())
+            .first()
+        )
+        if not version:
+            raise HTTPException(status_code=404, detail="报价无任何版本")
+
+    # G3 验证
+    items = db.query(QuoteItem).filter(QuoteItem.quote_version_id == version.id).all()
+    if not skip_g3_validation:
+        is_valid, errors, warning = validate_g3_quote_to_contract(quote, version, items, db)
+        if not is_valid:
+            raise HTTPException(
+                status_code=400, detail=f"G3阶段门验证失败: {', '.join(errors)}"
+            )
+
+    # 检查商机
+    if not quote.opportunity_id:
+        raise HTTPException(status_code=400, detail="报价未关联商机")
+
+    opportunity = db.query(Opportunity).filter(Opportunity.id == quote.opportunity_id).first()
+    if not opportunity:
+        raise HTTPException(status_code=404, detail="关联的商机不存在")
+
+    # 检查客户
+    customer = db.query(Customer).filter(Customer.id == quote.customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="关联的客户不存在")
+
+    # 生成合同编码
+    if request.contract_code:
+        existing = (
+            db.query(Contract)
+            .filter(Contract.contract_code == request.contract_code)
+            .first()
+        )
+        if existing:
+            raise HTTPException(status_code=400, detail="合同编码已存在")
+        contract_code = request.contract_code
+    else:
+        contract_code = generate_contract_code(db)
+
+    # 创建合同
+    contract_name = (
+        request.contract_name
+        or f"{customer.customer_name}-{quote.quote_code}"
+    )
+
+    contract = Contract(
+        contract_code=contract_code,
+        contract_name=contract_name,
+        contract_type="sales",
+        opportunity_id=quote.opportunity_id,
+        quote_id=version.id,
+        customer_id=quote.customer_id,
+        total_amount=version.total_price or 0,
+        status="draft",
+        sales_owner_id=quote.owner_id or current_user.id,
+        payment_terms=request.payment_terms,
+    )
+    db.add(contract)
+    db.flush()
+
+    db.commit()
+    db.refresh(contract)
+
+    logger.info(
+        f"从报价 {quote.quote_code} 创建合同 {contract_code}, 操作人: {current_user.id}"
+    )
+
+    deliverables = (
+        db.query(ContractDeliverable)
+        .filter(ContractDeliverable.contract_id == contract.id)
+        .all()
     )
     return ContractResponse(**_build_contract_response_dict(contract, deliverables))
 

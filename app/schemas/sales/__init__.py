@@ -75,7 +75,10 @@ from .customer_tags import (
     PredefinedTagsResponse,
 )
 from .customers import (
+    ContactBriefResponse,
     CustomerCreate,
+    CustomerDetailResponse,
+    CustomerInteractionItem,
     CustomerListResponse,
     CustomerResponse,
     CustomerStatsResponse,
@@ -195,6 +198,9 @@ __all__ = [
     "CustomerCreate",
     "CustomerUpdate",
     "CustomerResponse",
+    "CustomerDetailResponse",
+    "CustomerInteractionItem",
+    "ContactBriefResponse",
     "CustomerListResponse",
     "CustomerStatsResponse",
     # 联系人相关

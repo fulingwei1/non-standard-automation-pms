@@ -141,6 +141,40 @@ class CustomerListResponse(BaseModel):
     items: List[CustomerResponse] = Field(description="客户列表")
 
 
+class CustomerInteractionItem(BaseModel):
+    """客户交互历史条目"""
+
+    interaction_type: str = Field(description="交互类型：opportunity/quote/contract/follow_up")
+    entity_id: int = Field(description="关联实体ID")
+    title: str = Field(description="标题/名称")
+    status: Optional[str] = Field(default=None, description="状态")
+    amount: Optional[Decimal] = Field(default=None, description="金额")
+    owner_name: Optional[str] = Field(default=None, description="负责人")
+    created_at: Optional[datetime] = Field(default=None, description="创建时间")
+    updated_at: Optional[datetime] = Field(default=None, description="更新时间")
+
+
+class CustomerDetailResponse(CustomerResponse):
+    """客户详情响应（含联系人和交互历史）"""
+
+    contacts: List["ContactBriefResponse"] = Field(default=[], description="联系人列表")
+    interactions: List[CustomerInteractionItem] = Field(default=[], description="交互历史")
+    opportunities_count: int = Field(default=0, description="商机数量")
+    quotes_count: int = Field(default=0, description="报价数量")
+    contracts_count: int = Field(default=0, description="合同数量")
+
+
+class ContactBriefResponse(BaseModel):
+    """联系人简要信息"""
+
+    id: int = Field(description="联系人ID")
+    name: str = Field(description="姓名")
+    position: Optional[str] = Field(default=None, description="职位")
+    mobile: Optional[str] = Field(default=None, description="手机")
+    email: Optional[str] = Field(default=None, description="邮箱")
+    is_primary: bool = Field(default=False, description="是否主要联系人")
+
+
 class CustomerStatsResponse(BaseModel):
     """客户统计响应"""
 

@@ -38,6 +38,7 @@ from . import (
     quote_delivery,
     quote_exports,
     quote_items,
+    quote_per_id_approval,
     quote_quotes_crud,
     quote_status,
     quote_templates,
@@ -108,6 +109,7 @@ router.include_router(quote_cost_calculations.router, tags=["sales-quote-cost-ca
 router.include_router(quote_delivery.router, tags=["sales-quote-delivery"])
 router.include_router(quote_exports.router, tags=["sales-quote-exports"])
 router.include_router(quote_items.router, tags=["sales-quote-items"])
+router.include_router(quote_per_id_approval.router, tags=["sales-quote-per-id-approval"])
 router.include_router(quote_quotes_crud.router, tags=["sales-quote-crud"])
 router.include_router(quote_status.router, tags=["sales-quote-status"])
 router.include_router(quote_templates.router, tags=["sales-quote-templates"])
