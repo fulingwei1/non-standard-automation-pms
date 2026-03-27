@@ -57,6 +57,14 @@ export const frequencyOptions = [
   { value: "WEEKLY", label: "每周" },
 ];
 
+// 执行模式选项
+export const enforcementModeOptions = [
+  { value: "ALLOW", label: "允许", color: "emerald", description: "仅记录，不阻止操作" },
+  { value: "WARN", label: "警告", color: "amber", description: "弹出警告，用户可选择继续" },
+  { value: "DENY", label: "拒绝", color: "red", description: "直接阻止操作" },
+  { value: "REQUIRE_APPROVAL", label: "需审批", color: "blue", description: "操作需要审批后才能执行" },
+];
+
 // 通知渠道选项
 export const channelOptions = [
   { value: "SYSTEM", label: "站内消息" },
@@ -83,6 +91,7 @@ export const initialFormData = {
   notify_channels: ["SYSTEM"],
   notify_roles: [],
   notify_users: [],
+  enforcement_mode: "WARN",
   check_frequency: "DAILY",
   is_enabled: true,
   description: "",
@@ -102,5 +111,15 @@ export const formatLevel = (level) => {
 
 export const getLevelColor = (level) => {
   const option = alertLevelOptions.find((o) => o.value === level);
+  return option?.color || "slate";
+};
+
+export const formatEnforcementMode = (mode) => {
+  const option = enforcementModeOptions.find((o) => o.value === mode);
+  return option?.label || mode || "警告";
+};
+
+export const getEnforcementModeColor = (mode) => {
+  const option = enforcementModeOptions.find((o) => o.value === mode);
   return option?.color || "slate";
 };

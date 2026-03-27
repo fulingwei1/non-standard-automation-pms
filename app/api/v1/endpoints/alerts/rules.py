@@ -185,6 +185,14 @@ def create_alert_rule(
             detail=f"无效的预警级别: {rule_in.alert_level}。支持的级别: {', '.join(valid_levels)}",
         )
 
+    # 验证执行模式
+    valid_modes = ["ALLOW", "WARN", "DENY", "REQUIRE_APPROVAL"]
+    if rule_in.enforcement_mode and rule_in.enforcement_mode.upper() not in valid_modes:
+        raise HTTPException(
+            status_code=400,
+            detail=f"无效的执行模式: {rule_in.enforcement_mode}。支持的模式: {', '.join(valid_modes)}",
+        )
+
     rule = AlertRule(**rule_in.model_dump(), created_by=current_user.id)
     return save_obj(db, rule)
 
