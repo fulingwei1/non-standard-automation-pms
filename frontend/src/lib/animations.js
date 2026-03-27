@@ -186,3 +186,30 @@ export const shake = {
     transition: { duration: 0.4 },
   },
 };
+
+/**
+ * CSS-based list stagger helper.
+ * Returns a style object with --stagger-index for use with .animate-list-stagger class.
+ * @param {number} index - Item index in the list
+ * @returns {object} Style object
+ */
+export function listStaggerStyle(index) {
+  return { "--stagger-index": index };
+}
+
+/**
+ * Returns className + style for animated list items.
+ * Usage: <div {...listItemAnimation(index)}>...</div>
+ */
+export function listItemAnimation(index) {
+  return {
+    className: "animate-list-stagger",
+    style: { "--stagger-index": index },
+  };
+}
+
+/**
+ * Content refresh animation class.
+ * Apply to containers when data updates to provide a subtle transition.
+ */
+export const CONTENT_REFRESH_CLASS = "animate-content-refresh";
