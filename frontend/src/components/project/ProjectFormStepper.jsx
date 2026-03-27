@@ -27,7 +27,11 @@ import {
   Calendar,
   FileText,
   Loader2,
+  CloudOff,
+  Cloud,
+  CheckCircle2,
 } from "lucide-react";
+import { useAutoSave } from "../../hooks/useAutoSave";
 import { cn } from "../../lib/utils";
 import { projectApi, customerApi, orgApi, stageViewsApi } from "../../services/api";
 import { toast } from "../ui/toast";
@@ -76,7 +80,6 @@ export default function ProjectFormStepper({
 }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [savingDraft, setSavingDraft] = useState(false);
   const [validatingCode, setValidatingCode] = useState(false);
   const [codeError, setCodeError] = useState("");
 
@@ -106,6 +109,14 @@ export default function ProjectFormStepper({
     stage_template_id: null, // 阶段模板ID
     ...initialData,
   });
+
+  // 自动保存草稿
+  const draftKey = `project_draft_${initialData.id || "new"}`;
+  const { status: autoSaveStatus, restore: restoreDraft, clear: clearDraft, hasDraft } = useAutoSave(
+    draftKey,
+    formData,
+    { delay: 1500, enabled: open }
+  );
 
   // 选项数据
   const [customers, setCustomers] = useState([]);
@@ -247,36 +258,16 @@ export default function ProjectFormStepper({
     }
   };
 
-  // 保存草稿
-  const handleSaveDraft = async () => {
-    setSavingDraft(true);
-    try {
-      // 保存到 localStorage
-      const draftKey = `project_draft_${initialData.id || "new"}`;
-      localStorage.setItem(draftKey, JSON.stringify(formData));
-      toast.success("表单数据已保存为草稿");
-    } catch (err) {
-      console.error("Failed to save draft:", err);
-    } finally {
-      setSavingDraft(false);
-    }
-  };
-
-  // 加载草稿
+  // 打开表单时自动恢复草稿
   useEffect(() => {
-    if (open && !initialData.id) {
-      const draftKey = "project_draft_new";
-      const draft = localStorage.getItem(draftKey);
-      if (draft) {
-        try {
-          const draftData = JSON.parse(draft);
-          setFormData((prev) => ({ ...prev, ...draftData }));
-        } catch (err) {
-          console.error("Failed to load draft:", err);
-        }
+    if (open && hasDraft) {
+      const draftData = restoreDraft();
+      if (draftData) {
+        setFormData((prev) => ({ ...prev, ...draftData }));
+        toast.info("已自动恢复上次编辑的草稿");
       }
     }
-  }, [open, initialData.id]);
+  }, [open]);
 
   // 表单验证
   const validateStep = (stepIndex) => {
@@ -342,10 +333,7 @@ export default function ProjectFormStepper({
     setLoading(true);
     try {
       await onSubmit(formData);
-      // 清除草稿
-      if (!initialData.id) {
-        localStorage.removeItem("project_draft_new");
-      }
+      clearDraft();
       onOpenChange(false);
     } catch (err) {
       console.error("Failed to submit form:", err);
@@ -486,22 +474,25 @@ export default function ProjectFormStepper({
 
         {/* 底部操作 */}
         <DialogFooter className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleSaveDraft}
-              disabled={savingDraft}
-            >
-              {savingDraft ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  保存中...
-                </>
-              ) : (
-                "保存草稿"
-              )}
-            </Button>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            {autoSaveStatus === 'saving' && (
+              <span className="flex items-center gap-1.5">
+                <Cloud className="h-3.5 w-3.5 animate-pulse" />
+                正在保存草稿...
+              </span>
+            )}
+            {autoSaveStatus === 'saved' && (
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                草稿已自动保存
+              </span>
+            )}
+            {autoSaveStatus === 'idle' && hasDraft && (
+              <span className="flex items-center gap-1.5">
+                <Cloud className="h-3.5 w-3.5" />
+                草稿自动保存中
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

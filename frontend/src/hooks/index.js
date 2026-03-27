@@ -13,3 +13,5 @@ export { useModal } from './useModal';
 export { useForm } from './useForm';
 export { useAsync } from './useAsync';
 export { useToggle } from './useToggle';
+export { useSelection } from './useSelection';
+export { useAutoSave } from './useAutoSave';

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 /**
  * 表单管理 Hook
@@ -35,12 +35,56 @@ import { useState, useCallback } from 'react';
  * </button>
  */
 export function useForm(initialValues = {}, options = {}) {
-  const { validate, onSubmit } = options;
+  const { validate, onSubmit, autoSaveKey, autoSaveDelay = 2000 } = options;
 
-  const [values, setValues] = useState(initialValues);
+  // Restore auto-saved draft if key is provided
+  const resolvedInitial = (() => {
+    if (autoSaveKey) {
+      try {
+        const raw = localStorage.getItem(autoSaveKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return { ...initialValues, ...(parsed.data || parsed) };
+        }
+      } catch { /* ignore */ }
+    }
+    return initialValues;
+  })();
+
+  const [values, setValues] = useState(resolvedInitial);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState('idle');
+  const autoSaveTimerRef = useRef(null);
+  const isFirstRender = useRef(true);
+
+  // Auto-save to localStorage with debounce
+  useEffect(() => {
+    if (!autoSaveKey) return;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (JSON.stringify(values) === JSON.stringify(initialValues)) return;
+
+    setAutoSaveStatus('saving');
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(autoSaveKey, JSON.stringify({ data: values, savedAt: new Date().toISOString() }));
+        setAutoSaveStatus('saved');
+        setTimeout(() => setAutoSaveStatus('idle'), 3000);
+      } catch {
+        setAutoSaveStatus('idle');
+      }
+    }, autoSaveDelay);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [values, autoSaveKey, autoSaveDelay, initialValues]);
 
   // 设置单个字段值
   const setValue = useCallback((name, value) => {
@@ -117,13 +161,16 @@ export function useForm(initialValues = {}, options = {}) {
     return { success: true };
   }, [values, validateForm, onSubmit]);
 
-  // 重置表单
+  // 重置表单（同时清除自动保存的草稿）
   const reset = useCallback(() => {
     setValues(initialValues);
     setErrors({});
     setTouched({});
     setSubmitting(false);
-  }, [initialValues]);
+    if (autoSaveKey) {
+      try { localStorage.removeItem(autoSaveKey); } catch { /* ignore */ }
+    }
+  }, [initialValues, autoSaveKey]);
 
   // 设置多个值
   const setMultiple = useCallback((updates) => {
@@ -151,6 +198,7 @@ export function useForm(initialValues = {}, options = {}) {
     submitting,
     isValid: Object.keys(errors).length === 0,
     isDirty: JSON.stringify(values) !== JSON.stringify(initialValues),
+    autoSaveStatus,
 
     // 操作
     setValue,

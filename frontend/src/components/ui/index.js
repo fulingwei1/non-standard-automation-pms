@@ -21,6 +21,9 @@ export {
   SkeletonCard,
   SkeletonTable,
   SkeletonProjectList,
+  SkeletonDashboardStats,
+  SkeletonDashboard,
+  SkeletonProjectDetail,
 } from "./skeleton";
 export { Progress, ProgressWithLabel, CircularProgress } from "./progress";
 export {

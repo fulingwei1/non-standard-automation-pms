@@ -21,13 +21,15 @@ import {
   Badge,
   Progress,
   Skeleton,
+  SkeletonProjectDetail,
   UserAvatar,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter } from
+  DialogFooter,
+  toast } from
 "../components/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import QuickActionPanel from "../components/project/QuickActionPanel";
@@ -184,7 +186,7 @@ export default function ProjectDetail() {
 
   const handleAddMember = async () => {
     if (!newMember.user_id) {
-      alert("请选择成员");
+      toast.warning("请先选择要添加的成员");
       return;
     }
     setAddingMember(true);
@@ -198,10 +200,17 @@ export default function ProjectDetail() {
       setShowAddMemberDialog(false);
       setNewMember({ user_id: "", role: "member", status: "active" });
       fetchProjectData();
-      alert("成员添加成功");
+      toast.success("成员添加成功");
     } catch (error) {
       console.error("添加成员失败:", error);
-      alert("添加失败：" + (error.response?.data?.message || error.message));
+      const status = error.response?.status;
+      if (status === 409) {
+        toast.error("该成员已在项目中，无需重复添加");
+      } else if (status === 403) {
+        toast.error("您没有添加成员的权限，请联系项目负责人");
+      } else {
+        toast.error("添加成员失败，请检查网络后重试");
+      }
     } finally {
       setAddingMember(false);
     }
@@ -273,40 +282,7 @@ export default function ProjectDetail() {
   } : null;
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <Skeleton className="h-10 w-10" />
-          <Skeleton className="h-8 w-64" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) =>
-          <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-4 w-24 mb-2" />
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-          </Card>
-          )}
-        </div>
-        <Card>
-          <CardContent className="p-6">
-            <Skeleton className="h-6 w-32 mb-4" />
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) =>
-              <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-10 w-10" />
-                  <div className="flex-1">
-                    <Skeleton className="h-4 w-48 mb-2" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-              </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>);
-
+    return <SkeletonProjectDetail />;
   }
 
   if (!project) {
