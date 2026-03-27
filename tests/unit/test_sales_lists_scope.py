@@ -22,7 +22,7 @@ class TestPipelineAnalysisScope:
     def test_pipeline_breaks_passes_user(self):
         source = inspect.getsource(
             __import__(
-                "app.api.v1.endpoints.sales.pipeline_analysis",
+                "app.api.v1.endpoints.sales.sales_funnel",
                 fromlist=["get_pipeline_breaks"],
             ).get_pipeline_breaks
         )
@@ -31,7 +31,7 @@ class TestPipelineAnalysisScope:
     def test_break_reasons_passes_user(self):
         source = inspect.getsource(
             __import__(
-                "app.api.v1.endpoints.sales.pipeline_analysis",
+                "app.api.v1.endpoints.sales.sales_funnel",
                 fromlist=["get_break_reasons"],
             ).get_break_reasons
         )
@@ -40,7 +40,7 @@ class TestPipelineAnalysisScope:
     def test_break_patterns_passes_user(self):
         source = inspect.getsource(
             __import__(
-                "app.api.v1.endpoints.sales.pipeline_analysis",
+                "app.api.v1.endpoints.sales.sales_funnel",
                 fromlist=["get_break_patterns"],
             ).get_break_patterns
         )
@@ -49,7 +49,7 @@ class TestPipelineAnalysisScope:
     def test_break_warnings_passes_user(self):
         source = inspect.getsource(
             __import__(
-                "app.api.v1.endpoints.sales.pipeline_analysis",
+                "app.api.v1.endpoints.sales.sales_funnel",
                 fromlist=["get_pipeline_break_warnings"],
             ).get_pipeline_break_warnings
         )

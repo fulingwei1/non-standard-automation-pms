@@ -30,23 +30,23 @@ class TestQuoteCostBreakdownScope:
     """GET/PUT/POST cost-breakdown endpoints must gate on parent Quote."""
 
     def test_get_cost_breakdown_has_scope_check(self):
-        from app.api.v1.endpoints.sales.quote_cost_breakdown import get_cost_breakdown
+        from app.api.v1.endpoints.sales.quote_costs import get_cost_breakdown
         source = inspect.getsource(get_cost_breakdown)
         assert "_check_quote_scope" in source
 
     def test_update_cost_item_has_scope_check(self):
-        from app.api.v1.endpoints.sales.quote_cost_breakdown import update_cost_item
+        from app.api.v1.endpoints.sales.quote_costs import update_cost_item
         source = inspect.getsource(update_cost_item)
         assert "_check_quote_scope" in source
 
     def test_recalculate_cost_has_scope_check(self):
-        from app.api.v1.endpoints.sales.quote_cost_breakdown import recalculate_cost
+        from app.api.v1.endpoints.sales.quote_costs import recalculate_cost
         source = inspect.getsource(recalculate_cost)
         assert "_check_quote_scope" in source
 
     def test_recalculate_quote_cost_delegates(self):
         """The compat alias delegates to recalculate_cost which has scope."""
-        from app.api.v1.endpoints.sales.quote_cost_breakdown import recalculate_quote_cost
+        from app.api.v1.endpoints.sales.quote_costs import recalculate_quote_cost
         source = inspect.getsource(recalculate_quote_cost)
         assert "recalculate_cost" in source
 
@@ -59,12 +59,12 @@ class TestQuoteCostAnalysisScope:
     """Cost analysis endpoints must enforce scope."""
 
     def test_get_cost_analysis_has_scope_check(self):
-        from app.api.v1.endpoints.sales.quote_cost_analysis import get_cost_analysis
+        from app.api.v1.endpoints.sales.quote_costs import get_cost_analysis
         source = inspect.getsource(get_cost_analysis)
         assert "check_sales_data_permission" in source
 
     def test_benchmark_has_scope_filter(self):
-        from app.api.v1.endpoints.sales.quote_cost_analysis import get_cost_benchmark
+        from app.api.v1.endpoints.sales.quote_costs import get_cost_benchmark
         source = inspect.getsource(get_cost_benchmark)
         assert "filter_sales_data_by_scope" in source
 
@@ -77,17 +77,17 @@ class TestQuoteCostCalculationsScope:
     """Cost calculation endpoints must enforce scope."""
 
     def test_get_cost_calculations_has_scope_check(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import get_cost_calculations
+        from app.api.v1.endpoints.sales.quote_costs import get_cost_calculations
         source = inspect.getsource(get_cost_calculations)
         assert "_check_quote_scope" in source
 
     def test_batch_update_prices_has_scope_check(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import batch_update_prices
+        from app.api.v1.endpoints.sales.quote_costs import batch_update_prices
         source = inspect.getsource(batch_update_prices)
         assert "_check_quote_scope" in source
 
     def test_margin_analysis_has_scope_filter(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import get_margin_analysis
+        from app.api.v1.endpoints.sales.quote_costs import get_margin_analysis
         source = inspect.getsource(get_margin_analysis)
         assert "filter_sales_data_by_scope" in source
 
