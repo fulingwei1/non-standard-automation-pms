@@ -6,12 +6,14 @@
 - StageTemplate: 阶段模板表
 - StageDefinition: 大阶段定义表
 - NodeDefinition: 小节点定义表
+- StageTemplateChangeLog: 模板变更历史表
 """
 
 from sqlalchemy import (
     Boolean,
     Column,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -44,6 +46,8 @@ class StageTemplate(Base, TimestampMixin):
     is_default = Column(Boolean, default=False, comment="是否默认模板")
     is_active = Column(Boolean, default=True, comment="是否启用")
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
+    updated_by = Column(Integer, ForeignKey("users.id"), comment="最近更新人ID")
+    change_description = Column(Text, comment="最近修改说明")
 
     # 关系
     stages = relationship(
@@ -53,6 +57,13 @@ class StageTemplate(Base, TimestampMixin):
         order_by="StageDefinition.sequence",
     )
     creator = relationship("User", foreign_keys=[created_by])
+    updater = relationship("User", foreign_keys=[updated_by])
+    change_logs = relationship(
+        "StageTemplateChangeLog",
+        back_populates="template",
+        cascade="all, delete-orphan",
+        order_by="StageTemplateChangeLog.id.desc()",
+    )
 
     __table_args__ = {"comment": "阶段模板表"}
 
@@ -139,3 +150,40 @@ class NodeDefinition(Base, TimestampMixin):
     stage = relationship("StageDefinition", back_populates="nodes")
 
     __table_args__ = {"comment": "小节点定义表"}
+
+
+class StageTemplateChangeLog(Base, TimestampMixin):
+    """模板变更历史表"""
+
+    __tablename__ = "stage_template_change_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    template_id = Column(
+        Integer,
+        ForeignKey("stage_templates.id", ondelete="CASCADE"),
+        nullable=False,
+        comment="所属模板ID",
+    )
+    action = Column(
+        String(30),
+        nullable=False,
+        comment="操作类型: CREATE/UPDATE_TEMPLATE/ADD_STAGE/UPDATE_STAGE/DELETE_STAGE/"
+        "ADD_NODE/UPDATE_NODE/DELETE_NODE/REORDER_STAGES/REORDER_NODES/"
+        "COPY/IMPORT/SET_DEFAULT",
+    )
+    target_type = Column(String(20), comment="目标类型: TEMPLATE/STAGE/NODE")
+    target_id = Column(Integer, comment="目标ID")
+    target_name = Column(String(100), comment="目标名称(快照)")
+    change_description = Column(Text, comment="修改说明")
+    change_detail = Column(JSONType, comment="变更详情(JSON: {field: {old, new}})")
+    changed_by = Column(Integer, ForeignKey("users.id"), comment="操作人ID")
+
+    # 关系
+    template = relationship("StageTemplate", back_populates="change_logs")
+    operator = relationship("User", foreign_keys=[changed_by])
+
+    __table_args__ = (
+        Index("idx_changelog_template", "template_id"),
+        Index("idx_changelog_action", "action"),
+        {"comment": "模板变更历史表"},
+    )
