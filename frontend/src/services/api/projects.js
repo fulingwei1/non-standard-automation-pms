@@ -86,6 +86,11 @@ export const projectApi = {
   getStatusLogs: (id, params) =>
     api.get(`/projects/${id}/status-history`, { params }),
   getHealthDetails: (id) => api.get(`/projects/${id}/health/details`),
+  // 健康度可视化增强
+  getHealthTrend: (id, params) =>
+    api.get(`/projects/${id}/health/trend`, { params }),
+  getRiskBreakdown: (id) => api.get(`/projects/${id}/health/risk-breakdown`),
+  getImprovements: (id) => api.get(`/projects/${id}/health/improvements`),
   // Sprint 3.2: 项目经理统计
   getStats: (params) => api.get("/projects/stats", { params }),
   // 项目工时汇总
