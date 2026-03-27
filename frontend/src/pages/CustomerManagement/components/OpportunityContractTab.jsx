@@ -179,46 +179,8 @@ const OpportunityContractTab = ({ customer, loading }) => {
     },
   ];
 
-  // 模拟数据（实际应从API获取）
-  const opportunities = customer?.opportunities || [
-    {
-      id: 1,
-      name: "智能制造系统升级项目",
-      amount: 1500000,
-      stage: "proposal",
-      expected_close_date: "2026-05-15",
-      win_probability: 75,
-    },
-    {
-      id: 2,
-      name: "数字化转型咨询服务",
-      amount: 800000,
-      stage: "negotiation",
-      expected_close_date: "2026-04-20",
-      win_probability: 85,
-    },
-  ];
-
-  const contracts = customer?.contracts || [
-    {
-      id: 1,
-      contract_number: "CT-2026-001",
-      name: "年度技术服务合同",
-      amount: 2000000,
-      signed_date: "2026-01-10",
-      end_date: "2027-01-10",
-      status: "active",
-    },
-    {
-      id: 2,
-      contract_number: "CT-2025-089",
-      name: "系统集成项目合同",
-      amount: 1200000,
-      signed_date: "2025-11-15",
-      end_date: "2026-03-15",
-      status: "completed",
-    },
-  ];
+  const opportunities = customer?.opportunities || [];
+  const contracts = customer?.contracts || [];
 
   return (
     <div style={{ padding: "24px" }}>

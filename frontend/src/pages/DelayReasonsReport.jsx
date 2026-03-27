@@ -141,7 +141,6 @@ export default function DelayReasonsReport() {
 
         setPersonData({ persons: personList, total: data.total_delayed_tasks });
       } else {
-        // 如果没有详细任务数据，使用模拟数据结构
         setPersonData(null);
       }
     } catch (error) {

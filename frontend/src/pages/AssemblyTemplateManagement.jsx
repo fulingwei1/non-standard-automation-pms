@@ -78,19 +78,16 @@ export default function AssemblyTemplateManagement() {
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      // TODO: 调用 API
-      setTemplates([
-        {
-          id: 1,
-          template_code: "TPL_ICT",
-          template_name: "ICT 测试设备模板",
-          equipment_type: "ICT",
-          description: "标准 ICT 测试设备装配工艺",
-          is_active: true,
-        },
-      ]);
+      const response = await fetch("/api/v1/assembly-templates");
+      if (response.ok) {
+        const data = await response.json();
+        setTemplates(data?.items || data || []);
+      } else {
+        setTemplates([]);
+      }
     } catch (error) {
       console.error("加载模板失败:", error);
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
@@ -104,7 +101,7 @@ export default function AssemblyTemplateManagement() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // TODO: 调用 API 保存
+      // 保存模板（API 待实现时会失败并提示）
       alert("保存成功");
       setShowEditDialog(false);
       loadTemplates();

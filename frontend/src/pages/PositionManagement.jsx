@@ -105,7 +105,6 @@ export default function PositionManagement() {
       setTotal(data.total || 0);
     } catch (error) {
       console.error("加载岗位列表失败:", error);
-      // 使用模拟数据作为降级
       setPositions([]);
     } finally {
       setLoading(false);

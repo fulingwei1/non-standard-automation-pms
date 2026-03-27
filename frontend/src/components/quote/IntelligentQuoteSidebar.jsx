@@ -51,8 +51,7 @@ export default function IntelligentQuoteSidebar({
       setHistoricalData(res);
     } catch (error) {
       console.error("获取历史价格失败:", error);
-      // 使用模拟数据作为降级方案
-      setHistoricalData(getMockHistoricalData(opportunity));
+      setHistoricalData(null);
     } finally {
       setLoading(false);
     }
@@ -67,25 +66,6 @@ export default function IntelligentQuoteSidebar({
     if (name.includes("EOL")) return "EOL";
     if (name.includes("视觉") || name.includes("VISION")) return "VISION";
     return "FCT";
-  };
-
-  // 模拟历史数据（API失败时使用）
-  const getMockHistoricalData = (opp) => {
-    const productType = inferProductType(opp);
-    const basePrice = productType === "EOL" ? 2800000 : productType === "VISION" ? 1500000 : 3200000;
-
-    return {
-      average_price: basePrice,
-      price_range: { min: basePrice * 0.8, max: basePrice * 1.3 },
-      matched_count: 8,
-      historical_prices: [
-        { project_name: "宁德时代FCT测试线", final_price: basePrice * 1.05, original_quote: basePrice * 1.15, discount_rate: 8.7, deal_date: "2026-01", similarity: "95%" },
-        { project_name: "比亚迪EOL检测设备", final_price: basePrice * 0.95, original_quote: basePrice * 1.08, discount_rate: 12.0, deal_date: "2025-12", similarity: "88%" },
-        { project_name: "中创新航ICT系统", final_price: basePrice * 0.88, original_quote: basePrice * 1.0, discount_rate: 12.0, deal_date: "2025-11", similarity: "82%" },
-        { project_name: "亿纬锂能烧录设备", final_price: basePrice * 1.1, original_quote: basePrice * 1.2, discount_rate: 8.3, deal_date: "2025-10", similarity: "78%" },
-        { project_name: "国轩高科Pack线测试", final_price: basePrice * 0.92, original_quote: basePrice * 1.05, discount_rate: 12.4, deal_date: "2025-09", similarity: "75%" },
-      ],
-    };
   };
 
   // 计算当前毛利率

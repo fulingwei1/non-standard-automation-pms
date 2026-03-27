@@ -95,26 +95,8 @@ function ConversionRates() {
         setFunnelData(res.formatted || res.data?.data || res.data);
       } catch (err) {
         console.error("加载转化率数据失败:", err);
-        setError("加载数据失败，显示示例数据");
-        // 降级到示例数据
-        setFunnelData({
-          stages: [
-            { stage: "DISCOVERY", stage_name: "初步接触", count: 45, conversion_to_next: 62.2, avg_days_in_stage: 5.2, trend: "up" },
-            { stage: "QUALIFICATION", stage_name: "需求挖掘", count: 28, conversion_to_next: 53.6, avg_days_in_stage: 7.8, trend: "stable" },
-            { stage: "PROPOSAL", stage_name: "方案介绍", count: 15, conversion_to_next: 66.7, avg_days_in_stage: 10.5, trend: "up" },
-            { stage: "NEGOTIATION", stage_name: "价格谈判", count: 10, conversion_to_next: 50.0, avg_days_in_stage: 8.3, trend: "down" },
-            { stage: "CLOSING", stage_name: "成交促成", count: 6, conversion_to_next: 83.3, avg_days_in_stage: 4.5, trend: "stable" },
-            { stage: "WON", stage_name: "赢单", count: 5, conversion_to_next: null, avg_days_in_stage: null, trend: "up" },
-          ],
-          overall_metrics: {
-            total_leads: 45,
-            total_won: 5,
-            overall_conversion_rate: 11.1,
-            avg_sales_cycle_days: 31.8,
-            total_pipeline_value: 15800000,
-            weighted_pipeline_value: 6320000,
-          },
-        });
+        setError("加载转化率数据失败，请稍后重试");
+        setFunnelData(null);
       } finally {
         setLoading(false);
       }
@@ -216,21 +198,8 @@ function Bottlenecks() {
         setBottlenecks(responseData?.bottlenecks || responseData || []);
       } catch (err) {
         console.error("加载瓶颈数据失败:", err);
-        setError("加载数据失败，显示示例数据");
-        // 降级到示例数据
-        setBottlenecks([
-          {
-            stage: "NEGOTIATION",
-            stage_name: "价格谈判",
-            issue_type: "low_conversion",
-            current_rate: 50.0,
-            benchmark_rate: 65.0,
-            severity: "HIGH",
-            impact: "每月约损失 3-5 个商机，预计金额 800-1200 万",
-            root_causes: ["价格异议处理能力不足", "价值传递不够清晰", "决策链渗透不够深入"],
-            recommendations: ["加强价格谈判培训", "准备 TCO（总拥有成本）分析工具", "提前识别并接触技术/采购决策人"],
-          },
-        ]);
+        setError("加载瓶颈数据失败，请稍后重试");
+        setBottlenecks([]);
       } finally {
         setLoading(false);
       }
@@ -665,23 +634,8 @@ function PredictionAccuracy() {
         setAccuracyData(res.formatted || res.data?.data || res.data);
       } catch (err) {
         console.error("加载预测准确性数据失败:", err);
-        setError("加载数据失败，显示示例数据");
-        // 降级到示例数据
-        setAccuracyData({
-          overall_accuracy: {
-            predicted_win_rate: 68.5,
-            actual_win_rate: 62.9,
-            accuracy_score: 91.8,
-            bias: "略微乐观",
-          },
-          by_stage: [
-            { stage: "DISCOVERY", stage_name: "初步接触", predicted: 25.0, actual: 18.5, accuracy: 74.0, bias: "乐观" },
-            { stage: "QUALIFICATION", stage_name: "需求挖掘", predicted: 45.0, actual: 42.3, accuracy: 94.0, bias: "准确" },
-            { stage: "PROPOSAL", stage_name: "方案介绍", predicted: 65.0, actual: 68.2, accuracy: 95.1, bias: "准确" },
-            { stage: "NEGOTIATION", stage_name: "价格谈判", predicted: 80.0, actual: 71.4, accuracy: 89.3, bias: "乐观" },
-            { stage: "CLOSING", stage_name: "成交促成", predicted: 90.0, actual: 88.9, accuracy: 98.8, bias: "准确" },
-          ],
-        });
+        setError("加载预测准确性数据失败，请稍后重试");
+        setAccuracyData(null);
       } finally {
         setLoading(false);
       }
@@ -1010,13 +964,7 @@ export default function SalesFunnel() {
       setFunnelData(transformedData);
     } catch (error) {
       console.error("Failed to load funnel data:", error);
-      // 使用模拟数据作为降级方案
-      setFunnelData([
-        { stage: "leads", label: "线索", count: 120, value: 0, conversion: 100 },
-        { stage: "opportunities", label: "商机", count: 80, value: 8000000, conversion: 66.7 },
-        { stage: "quotes", label: "报价", count: 45, value: 0, conversion: 56.3 },
-        { stage: "contracts", label: "合同", count: 25, value: 2500000, conversion: 55.6 },
-      ]);
+      setFunnelData([]);
     } finally {
       setLoading(false);
     }

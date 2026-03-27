@@ -52,8 +52,6 @@ const TAG_TYPES = [
   { key: "SPECIAL", label: "特殊能力", icon: Zap, color: "red" },
 ];
 
-// 模拟数据
-// Mock data - 已移除，使用真实API
 export default function TagManagement() {
   const [activeType, setActiveType] = useState("SKILL");
   const [tags, setTags] = useState([]);
@@ -140,17 +138,7 @@ export default function TagManagement() {
       loadTags();
     } catch (error) {
       console.error("保存失败:", error);
-      const newTag = editingTag
-        ? { ...editingTag, ...formData }
-        : { id: Date.now(), ...formData, is_active: true };
-
-      setTags((prev) => ({
-        ...prev,
-        [activeType]: editingTag
-          ? prev[activeType].map((t) => (t.id === editingTag.id ? newTag : t))
-          : [...prev[activeType], newTag],
-      }));
-      setShowDialog(false);
+      alert("保存标签失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -163,10 +151,7 @@ export default function TagManagement() {
       loadTags();
     } catch (error) {
       console.error("删除失败:", error);
-      setTags((prev) => ({
-        ...prev,
-        [activeType]: prev[activeType].filter((t) => t.id !== tag.id),
-      }));
+      alert("删除标签失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
