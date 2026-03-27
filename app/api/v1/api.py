@@ -122,6 +122,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 物料采购模块加载失败: {e}")
     
+    # ==================== 物料进度跟踪(BOM→采购联动) ====================
+    try:
+        from app.api.v1.endpoints.material_tracking import router as material_tracking_router
+        api_router.include_router(material_tracking_router, prefix="/material", tags=["material-tracking"])
+        print("✓ 物料进度跟踪模块加载成功")
+    except Exception as e:
+        print(f"✗ 物料进度跟踪模块加载失败: {e}")
+
     # ==================== 采购智能管理 (暂时禁用 - 缺少MaterialShortage) ====================
     # try:
     #     from app.api.v1.endpoints.purchase_intelligence import router as purchase_intelligence_router
