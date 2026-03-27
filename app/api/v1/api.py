@@ -803,6 +803,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 经验教训库模块加载失败：{e}")
 
+    # ==================== 知识自动沉淀 ====================
+    try:
+        from app.api.v1.endpoints.knowledge import router as knowledge_router
+        api_router.include_router(knowledge_router, prefix="/knowledge", tags=["knowledge"])
+        print("✓ 知识自动沉淀模块加载成功")
+    except Exception as e:
+        print(f"✗ 知识自动沉淀模块加载失败：{e}")
+
     # ==================== 销售区域 ====================
     try:
         from app.api.v1.endpoints.sales_regions import router as sales_regions_router
