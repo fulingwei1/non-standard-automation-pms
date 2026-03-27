@@ -20,6 +20,9 @@ from .change_impact import (  # noqa: F401
     ChangeResponseSuggestion,
 )
 
+# Project-Change (ECN) Integration
+from .project.change_impact import ProjectChangeImpact  # noqa: F401
+
 # Change Request System
 from .change_request import (  # noqa: F401
     ChangeApprovalRecord,
@@ -586,6 +589,8 @@ __all__ = [
     # Change Impact Analysis System
     "ChangeImpactAnalysis",
     "ChangeResponseSuggestion",
+    # Project-Change (ECN) Integration
+    "ProjectChangeImpact",
     # Purchase Intelligence System
     "PurchaseSuggestion",
     "SupplierQuotation",

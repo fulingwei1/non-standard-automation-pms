@@ -240,6 +240,7 @@ def create_api_router() -> APIRouter:
         from app.api.v1.endpoints.business_support import router as business_support_router
         from app.api.v1.endpoints.data_import_export import router as data_import_export_router
         from app.api.v1.endpoints.ecn import router as ecn_router
+        from app.api.v1.endpoints.project_change_impact import router as pci_router
         from app.api.v1.endpoints.management_rhythm import router as management_rhythm_router
         from app.api.v1.endpoints.outsourcing import router as outsourcing_router
         from app.api.v1.endpoints.performance import router as performance_router
@@ -249,6 +250,7 @@ def create_api_router() -> APIRouter:
         from app.api.v1.endpoints.task_center import router as task_center_router
 
         api_router.include_router(ecn_router, prefix="/ecn", tags=["ecn"])
+        api_router.include_router(pci_router, prefix="", tags=["project-change-impact"])
         api_router.include_router(outsourcing_router, prefix="/outsourcing", tags=["outsourcing"])
         api_router.include_router(task_center_router, prefix="/task-center", tags=["task-center"])
         api_router.include_router(pmo_router, prefix="/pmo", tags=["pmo"])

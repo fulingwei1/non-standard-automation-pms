@@ -462,6 +462,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ ECN模块加载失败：{e}")
 
+    # ==================== 项目-变更联动集成 ====================
+    try:
+        from app.api.v1.endpoints.project_change_impact import router as pci_router
+        api_router.include_router(pci_router, prefix="", tags=["project-change-impact"])
+        print("✓ 项目-变更联动模块加载成功")
+    except Exception as e:
+        print(f"✗ 项目-变更联动模块加载失败：{e}")
+
     # ==================== 安装派工 ====================
     try:
         from app.api.v1.endpoints.installation_dispatch import router as installation_dispatch_router

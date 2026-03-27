@@ -192,6 +192,8 @@ class Project(Base, TimestampMixin):
     presale_info = relationship("ProjectPresale", back_populates="project", uselist=False)
     # 变更管理关系
     change_requests = relationship("ChangeRequest", back_populates="project", lazy="dynamic")
+    # 项目-ECN 联动影响记录
+    change_impacts = relationship("ProjectChangeImpact", foreign_keys="ProjectChangeImpact.project_id", lazy="dynamic")
     # 成本预测关系
     cost_predictions = relationship("CostPrediction", back_populates="project", lazy="dynamic")
 
