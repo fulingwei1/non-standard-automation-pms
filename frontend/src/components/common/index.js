@@ -5,3 +5,4 @@ export { ErrorMessage, EmptyState } from "./ErrorMessage";
 export { default as LoadingPage } from "./LoadingPage";
 export { default as DeleteConfirmDialog } from "./DeleteConfirmDialog";
 export { default as ConfirmDialog } from "./ConfirmDialog";
+export { AnimatedPage } from "./AnimatedPage";

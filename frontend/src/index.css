@@ -320,6 +320,220 @@ a:hover {
 }
 
 /* ========================================
+   Page Transition Animations
+   ======================================== */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.page-enter {
+  animation: page-fade-in 200ms ease-out both;
+}
+
+.page-exit {
+  animation: page-fade-out 150ms ease-in both;
+}
+
+/* ========================================
+   List Item Animations
+   ======================================== */
+@keyframes list-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes list-item-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+.animate-list-item-in {
+  animation: list-item-in 200ms ease-out both;
+}
+
+.animate-list-item-out {
+  animation: list-item-out 150ms ease-in both;
+}
+
+/* Staggered list items via CSS custom property */
+.animate-list-stagger {
+  animation: list-item-in 200ms ease-out both;
+  animation-delay: calc(var(--stagger-index, 0) * 40ms);
+}
+
+/* ========================================
+   Button Ripple Effect
+   ======================================== */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+    rgba(255, 255, 255, 0.3) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transform: scale(0);
+  transition: none;
+}
+
+.btn-ripple:active::after {
+  opacity: 1;
+  transform: scale(2.5);
+  transition: transform 300ms ease-out, opacity 200ms ease-out;
+}
+
+/* ========================================
+   Card Hover Float Effect
+   ======================================== */
+.card-hover-float {
+  transition: transform 250ms ease-out, box-shadow 250ms ease-out, border-color 250ms ease-out;
+}
+
+.card-hover-float:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px -8px rgba(0, 0, 0, 0.4),
+    0 0 20px -5px rgba(139, 92, 246, 0.15);
+}
+
+/* ========================================
+   Content Refresh Animation
+   ======================================== */
+@keyframes content-refresh {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-content-refresh {
+  animation: content-refresh 250ms ease-out both;
+}
+
+/* Skeleton pulse for loading states */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-skeleton-pulse {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ========================================
+   Modal Animations (enhanced)
+   ======================================== */
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes modal-content-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes modal-content-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+/* ========================================
+   Respect prefers-reduced-motion
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .page-enter,
+  .page-exit,
+  .animate-list-item-in,
+  .animate-list-item-out,
+  .animate-list-stagger,
+  .animate-content-refresh {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .card-hover-float:hover {
+    transform: none !important;
+  }
+
+  .btn-ripple:active::after {
+    display: none;
+  }
+}
+
+/* ========================================
    Print Styles
    ======================================== */
 @media print {

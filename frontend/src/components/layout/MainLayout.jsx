@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ToastContainer, useToast } from "../ui";
+import { AnimatedPage } from "../common/AnimatedPage";
 
 /**
  * 主布局组件
@@ -76,7 +76,7 @@ export function MainLayout({ children, onLogout }) {
         )}
       >
         <div className="p-6">
-          <AnimatePresence mode="wait">{children}</AnimatePresence>
+          <AnimatedPage>{children}</AnimatedPage>
         </div>
       </main>
     </div>

@@ -8,11 +8,7 @@ const Card = React.forwardRef(({ className, hover = true, ...props }, ref) => (
       "rounded-2xl",
       "bg-gradient-to-br from-white/[0.05] to-white/[0.02]",
       "border border-white/10",
-      hover && [
-        "transition-all duration-300",
-        "hover:border-white/20",
-        "hover:shadow-lg hover:shadow-violet-500/10",
-      ],
+      hover && "card-hover-float hover:border-white/20",
       className,
     )}
     {...props}
