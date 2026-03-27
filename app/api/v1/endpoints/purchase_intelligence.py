@@ -110,36 +110,6 @@ def approve_purchase_suggestion(
 # ==================== 3. 供应商绩效 ====================
 
 
-@router.get(
-    "/suppliers/{supplier_id}/performance",
-    response_model=List[SupplierPerformanceResponse],
-)
-def get_supplier_performance(
-    supplier_id: int,
-    evaluation_period: Optional[str] = None,
-    limit: int = Query(12, ge=1, le=24),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    获取供应商绩效记录
-
-    Args:
-        supplier_id: 供应商ID
-        evaluation_period: 评估期间（可选，格式：YYYY-MM）
-        limit: 返回记录数
-    """
-    service = PurchaseIntelligenceService(db)
-    return service.get_supplier_performance(
-        supplier_id=supplier_id,
-        evaluation_period=evaluation_period,
-        limit=limit,
-    )
-
-
-# ==================== 4. 触发评估 ====================
-
-
 @router.post("/suppliers/{supplier_id}/evaluate", response_model=SupplierPerformanceResponse)
 def evaluate_supplier_performance(
     supplier_id: int,
@@ -165,29 +135,6 @@ def evaluate_supplier_performance(
 
 # ==================== 5. 供应商排名 ====================
 
-
-@router.get("/suppliers/ranking", response_model=SupplierRankingResponse)
-def get_supplier_ranking(
-    evaluation_period: str = Query(..., description="评估期间 YYYY-MM"),
-    limit: int = Query(20, ge=1, le=100),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """获取供应商排名"""
-    service = PurchaseIntelligenceService(db)
-    rankings, total_suppliers = service.get_supplier_ranking(
-        evaluation_period=evaluation_period,
-        limit=limit,
-    )
-
-    return SupplierRankingResponse(
-        evaluation_period=evaluation_period,
-        total_suppliers=total_suppliers,
-        rankings=rankings,
-    )
-
-
-# ==================== 6. 创建报价 ====================
 
 
 @router.post(
