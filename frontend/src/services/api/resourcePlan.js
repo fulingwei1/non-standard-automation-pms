@@ -134,6 +134,14 @@ export const resourceConflictApi = {
   summary: () => api.get("/analytics/resource-conflicts/summary"),
 
   /**
+   * 获取冲突的自动调解建议
+   * @param {number} conflictId - 冲突ID
+   * @returns {Promise} { alternative_candidates, schedule_adjustments, workload_balancing }
+   */
+  getRecommendations: (conflictId) =>
+    api.get(`/analytics/resource-conflicts/${conflictId}/recommendations`),
+
+  /**
    * 标记冲突已解决
    * @param {number} conflictId - 冲突ID
    * @param {Object} data - { resolution_note }

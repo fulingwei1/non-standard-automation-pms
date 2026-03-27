@@ -24,6 +24,7 @@ import {
 import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { resourceOverviewApi } from "../services/api/resourceOverview";
+import ConflictRecommendations from "../components/common/ConflictRecommendations";
 // ============================================================================
 // Color palette for projects
 
@@ -232,9 +233,16 @@ function EmployeeRow({ employee, timeRange, projectColorMap, onSelect, isExpande
                 <div className="mt-2 pt-2 border-t border-red-500/20">
                   <div className="text-[10px] text-red-400 font-medium mb-1">⚠ 资源冲突</div>
                   {employee.conflicts.map((c, i) => (
-                    <div key={i} className="text-[10px] text-red-300/80 ml-2">
-                      {c.start_date} ~ {c.end_date}: 总分配 {Math.round(c.total_allocation)}%
-                      ({(c.projects || []).join(" + ")})
+                    <div key={i}>
+                      <div className="text-[10px] text-red-300/80 ml-2">
+                        {c.start_date} ~ {c.end_date}: 总分配 {Math.round(c.total_allocation)}%
+                        ({(c.projects || []).join(" + ")})
+                      </div>
+                      {c.conflict_id && (
+                        <div className="ml-2 mt-1">
+                          <ConflictRecommendations conflictId={c.conflict_id} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
