@@ -292,6 +292,8 @@ export const salesStatisticsApi = {
     api.get("/sales/statistics/prediction/accuracy", { params }),
   // 销售业绩报告
   performance: (params) => api.get("/sales/reports/sales-performance", { params }),
+  // 销售仪表盘
+  getDashboard: (params) => api.get("/sales/dashboard", { params }),
 };
 
 export const salesApi = {

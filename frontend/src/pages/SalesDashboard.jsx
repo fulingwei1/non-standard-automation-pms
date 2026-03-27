@@ -7,13 +7,12 @@
  * 4. 预测 vs 实际
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Target,
   TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   Award,
@@ -35,104 +34,101 @@ import {
   CardTitle,
   Badge,
   Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
+  Skeleton,
+  SkeletonDashboardStats,
+  SkeletonCard,
 } from "../components/ui";
+import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { salesStatisticsApi, opportunityApi } from "../services/api";
-
-// Mock data for dashboard (fallback when API unavailable)
-const MOCK_PERSONAL = {
-  target: 12000000,
-  achieved: 7860000,
-  quota_pct: 65.5,
-  won_count: 8,
-  pipeline_value: 15200000,
-  avg_deal_size: 982500,
-  monthly: [
-    { month: "1月", target: 1000000, actual: 920000 },
-    { month: "2月", target: 1000000, actual: 1100000 },
-    { month: "3月", target: 1000000, actual: 1340000 },
-    { month: "4月", target: 1000000, actual: 980000 },
-    { month: "5月", target: 1000000, actual: 1120000 },
-    { month: "6月", target: 1000000, actual: 1400000 },
-  ],
-};
-
-const MOCK_TEAM_RANKING = [
-  { name: "张三", amount: 3200000, deals: 5, target_pct: 80, avatar_color: "bg-blue-500" },
-  { name: "李四", amount: 2800000, deals: 4, target_pct: 70, avatar_color: "bg-emerald-500" },
-  { name: "王五", amount: 2100000, deals: 3, target_pct: 52.5, avatar_color: "bg-purple-500" },
-  { name: "赵六", amount: 1900000, deals: 3, target_pct: 47.5, avatar_color: "bg-amber-500" },
-  { name: "钱七", amount: 1500000, deals: 2, target_pct: 37.5, avatar_color: "bg-pink-500" },
-  { name: "孙八", amount: 1200000, deals: 2, target_pct: 30, avatar_color: "bg-cyan-500" },
-];
-
-const MOCK_PIPELINE = {
-  total_value: 28500000,
-  weighted_value: 12800000,
-  deal_count: 24,
-  avg_cycle_days: 45,
-  health_score: 72,
-  stages: [
-    { name: "初步接触", count: 8, value: 8500000, avg_days: 12, health: "good" },
-    { name: "需求挖掘", count: 6, value: 7200000, avg_days: 18, health: "good" },
-    { name: "方案介绍", count: 5, value: 6800000, avg_days: 22, health: "warning" },
-    { name: "价格谈判", count: 3, value: 4200000, avg_days: 15, health: "good" },
-    { name: "成交促成", count: 2, value: 1800000, avg_days: 8, health: "good" },
-  ],
-  risks: [
-    { type: "stalled", count: 3, desc: "3个商机超过30天无进展" },
-    { type: "no_activity", count: 2, desc: "2个商机近14天无跟进" },
-    { type: "overdue", count: 1, desc: "1个商机已过预计成交日期" },
-  ],
-};
-
-const MOCK_FORECAST = {
-  quarters: [
-    { label: "Q1", forecast: 3500000, actual: 3360000, variance: -4 },
-    { label: "Q2", forecast: 4200000, actual: 3800000, variance: -9.5 },
-    { label: "Q3 (当前)", forecast: 4800000, actual: 2400000, variance: null },
-    { label: "Q4", forecast: 5000000, actual: null, variance: null },
-  ],
-  accuracy: 87.5,
-  total_forecast: 17500000,
-  total_actual: 9560000,
-};
+import { salesStatisticsApi } from "../services/api";
+import { handleApiError } from "../utils/apiErrorHandler";
 
 export default function SalesDashboard() {
   const navigate = useNavigate();
-  const [personal, setPersonal] = useState(MOCK_PERSONAL);
-  const [teamRanking, setTeamRanking] = useState(MOCK_TEAM_RANKING);
-  const [pipeline, setPipeline] = useState(MOCK_PIPELINE);
-  const [forecast, setForecast] = useState(MOCK_FORECAST);
-  const [loading, setLoading] = useState(false);
+  const [personal, setPersonal] = useState(null);
+  const [teamRanking, setTeamRanking] = useState(null);
+  const [pipeline, setPipeline] = useState(null);
+  const [forecast, setForecast] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await salesStatisticsApi.getDashboard();
+      const d = response.data?.data || response.data || {};
+      setPersonal(d.personal || null);
+      setTeamRanking(d.team_ranking || null);
+      setPipeline(d.pipeline || null);
+      setForecast(d.forecast || null);
+    } catch (err) {
+      handleApiError(err, "加载销售仪表盘");
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [statsRes] = await Promise.allSettled([
-          salesStatisticsApi?.getDashboard?.(),
-        ]);
-        if (statsRes.status === "fulfilled" && statsRes.value?.data) {
-          const d = statsRes.value.data;
-          if (d.personal) setPersonal(d.personal);
-          if (d.team_ranking) setTeamRanking(d.team_ranking);
-          if (d.pipeline) setPipeline(d.pipeline);
-          if (d.forecast) setForecast(d.forecast);
-        }
-      } catch {
-        // fallback to mock data
-      } finally {
-        setLoading(false);
-      }
-    };
     loadData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <SkeletonDashboardStats columns={4} />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 space-y-6">
+            <SkeletonCard className="h-64" />
+            <SkeletonCard className="h-64" />
+          </div>
+          <div className="space-y-6">
+            <SkeletonCard className="h-80" />
+            <SkeletonCard className="h-48" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="销售仪表盘"
+          description="个人业绩、团队表现、Pipeline 健康度一览"
+        />
+        <ErrorMessage
+          title="加载失败"
+          message="无法加载销售仪表盘数据，请检查网络后重试"
+          error={error}
+          onRetry={loadData}
+        />
+      </div>
+    );
+  }
+
+  if (!personal || !pipeline || !forecast) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="销售仪表盘"
+          description="个人业绩、团队表现、Pipeline 健康度一览"
+        />
+        <ErrorMessage
+          title="暂无数据"
+          message="当前没有仪表盘数据可显示"
+          variant="info"
+        />
+      </div>
+    );
+  }
 
   const pipelineHealthColor = pipeline.health_score >= 80 ? "text-emerald-400" :
     pipeline.health_score >= 60 ? "text-amber-400" : "text-red-400";
@@ -417,7 +413,7 @@ export default function SalesDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {teamRanking.map((member, idx) => (
+              {teamRanking && teamRanking.length > 0 ? teamRanking.map((member, idx) => (
                 <div key={member.name} className={cn(
                   "flex items-center gap-3 p-3 rounded-lg transition-colors",
                   idx === 0 ? "bg-amber-500/5 border border-amber-500/10" :
@@ -458,7 +454,9 @@ export default function SalesDashboard() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-slate-500 text-center py-4">暂无排行数据</p>
+              )}
             </CardContent>
           </Card>
 
@@ -499,13 +497,6 @@ export default function SalesDashboard() {
                 )}>
                   {((pipeline.total_value / personal.target) * 100).toFixed(0)}%
                 </span>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-slate-800/30 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-300">本月预计成交</span>
-                </div>
-                <span className="text-sm font-medium text-emerald-400">3个</span>
               </div>
             </CardContent>
           </Card>

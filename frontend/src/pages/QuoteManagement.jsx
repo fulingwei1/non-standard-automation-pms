@@ -43,32 +43,6 @@ import {
 // Import utilities
 import { fadeIn, staggerContainer } from "../lib/animations";
 
-const DEFAULT_COST_INSIGHTS = {
-  totalCost: 1280000,
-  orderCount: 18,
-  averageOrderCost: 71000,
-  costSavings: 93000,
-  savingsRate: 7.6,
-  categories: [
-    { name: "核心材料", amount: 520000 },
-    { name: "外协加工", amount: 280000 },
-    { name: "系统集成", amount: 210000 },
-    { name: "安装调试", amount: 135000 }
-  ],
-  suppliers: [
-    { name: "华东自动化", amount: 310000 },
-    { name: "苏南精工", amount: 265000 },
-    { name: "易联智采", amount: 188000 },
-    { name: "鸿泰机电", amount: 142000 }
-  ],
-  trend: [
-    { month: "2024-10", amount: 410000, orders: 6 },
-    { month: "2024-11", amount: 368000, orders: 5 },
-    { month: "2024-12", amount: 295000, orders: 4 },
-    { month: "2025-01", amount: 210000, orders: 3 }
-  ]
-};
-
 const EMPTY_COST_INSIGHTS = {
   totalCost: 0,
   orderCount: 0,
@@ -116,38 +90,8 @@ export default function QuoteManagement({ embedded = false } = {}) {
   const [sortBy, setSortBy] = useState("created_desc");
   const [timeRange, setTimeRange] = useState("month");
   const [costTimeRange, setCostTimeRange] = useState("month");
-  const [costInsights, setCostInsights] = useState(DEFAULT_COST_INSIGHTS);
+  const [costInsights, setCostInsights] = useState(EMPTY_COST_INSIGHTS);
   const [costLoading, setCostLoading] = useState(false);
-
-  // 模拟报价数据（API失败时使用）
-  const MOCK_QUOTES = [
-    { id: 1, title: "宁德时代FCT测试线", quote_code: "QT-202603-001", status: "APPROVED", type: "PROJECT", priority: "HIGH", customer_id: 1, customer_name: "宁德时代", valid_until: "2026-04-15", created_at: "2026-03-01", version: { version_no: "V2", total_price: 3500000, cost_total: 2275000, gross_margin: 35 } },
-    { id: 2, title: "比亚迪EOL检测设备", quote_code: "QT-202603-002", status: "SENT", type: "STANDARD", priority: "MEDIUM", customer_id: 2, customer_name: "比亚迪", valid_until: "2026-04-20", created_at: "2026-03-05", version: { version_no: "V1", total_price: 2800000, cost_total: 1820000, gross_margin: 35 } },
-    { id: 3, title: "中创新航ICT测试系统", quote_code: "QT-202603-003", status: "DRAFT", type: "CUSTOM", priority: "LOW", customer_id: 3, customer_name: "中创新航", valid_until: "2026-05-01", created_at: "2026-03-08", version: { version_no: "V1", total_price: 1500000, cost_total: 975000, gross_margin: 35 } },
-    { id: 4, title: "亿纬锂能烧录设备", quote_code: "QT-202602-015", status: "IN_REVIEW", type: "STANDARD", priority: "HIGH", customer_id: 4, customer_name: "亿纬锂能", valid_until: "2026-03-25", created_at: "2026-02-20", version: { version_no: "V3", total_price: 1800000, cost_total: 1170000, gross_margin: 35 } },
-    { id: 5, title: "国轩高科Pack线测试", quote_code: "QT-202602-012", status: "ACCEPTED", type: "PROJECT", priority: "URGENT", customer_id: 5, customer_name: "国轩高科", valid_until: "2026-04-10", created_at: "2026-02-15", version: { version_no: "V2", total_price: 4200000, cost_total: 2730000, gross_margin: 35 } },
-    { id: 6, title: "蜂巢能源模组测试线", quote_code: "QT-202601-008", status: "CONVERTED", type: "PROJECT", priority: "HIGH", customer_id: 6, customer_name: "蜂巢能源", valid_until: "2026-03-01", created_at: "2026-01-20", version: { version_no: "V1", total_price: 2200000, cost_total: 1430000, gross_margin: 35 } },
-  ];
-
-  // 模拟统计数据
-  const MOCK_STATS = {
-    total: 256,
-    draft: 40,
-    inReview: 30,
-    approved: 46,
-    sent: 33,
-    expired: 18,
-    rejected: 19,
-    accepted: 44,
-    converted: 19,
-    totalAmount: 89500000,
-    avgAmount: 349609,
-    avgMargin: 35,
-    conversionRate: 57.6,
-    thisMonth: 28,
-    lastMonth: 24,
-    growth: 16.7
-  };
 
   // 获取报价列表
   const fetchQuotes = useCallback(async () => {
@@ -160,11 +104,10 @@ export default function QuoteManagement({ embedded = false } = {}) {
       };
       const response = await quoteApi.getQuotes(apiParams);
       const quotesData = response.data?.items || response.data?.data?.items || response.data || [];
-      setQuotes(Array.isArray(quotesData) && quotesData.length > 0 ? quotesData : MOCK_QUOTES);
+      setQuotes(Array.isArray(quotesData) ? quotesData : []);
     } catch (error) {
       handleApiError(error, '获取报价列表');
-      // API失败时使用模拟数据
-      setQuotes(MOCK_QUOTES);
+      setQuotes([]);
     } finally {
       setLoading(false);
     }
@@ -175,16 +118,10 @@ export default function QuoteManagement({ embedded = false } = {}) {
     try {
       const response = await quoteApi.getStats({ timeRange });
       const statsData = response.data?.data || response.data || {};
-      // 如果返回数据有效则使用，否则使用模拟数据
-      if (statsData.total > 0) {
-        setStats(statsData);
-      } else {
-        setStats(MOCK_STATS);
-      }
+      setStats(statsData.total > 0 ? statsData : DEFAULT_QUOTE_STATS);
     } catch (error) {
       handleApiError(error, '获取统计数据');
-      // API失败时使用模拟数据
-      setStats(MOCK_STATS);
+      setStats(DEFAULT_QUOTE_STATS);
     }
   }, [timeRange]);
 
@@ -373,8 +310,8 @@ export default function QuoteManagement({ embedded = false } = {}) {
         trend: trendList
       });
     } catch (error) {
-      const { useMockData } = handleApiError(error, "加载成本洞察");
-      setCostInsights(useMockData ? DEFAULT_COST_INSIGHTS : EMPTY_COST_INSIGHTS);
+      handleApiError(error, "加载成本洞察");
+      setCostInsights(EMPTY_COST_INSIGHTS);
     } finally {
       setCostLoading(false);
     }
