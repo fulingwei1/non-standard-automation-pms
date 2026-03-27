@@ -91,34 +91,62 @@ export const BasicInfoStep = ({
         </Card>
       )}
 
-      {/* 模板推荐 */}
+      {/* 智能模板推荐 */}
       {recommendedTemplates.length > 0 && currentStep === 0 && (
         <Card className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border-violet-500/20">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-4 w-4 text-violet-400" />
               <span className="text-sm font-medium text-violet-300">
-                推荐模板
+                智能推荐模板
               </span>
             </div>
+            <p className="text-xs text-slate-500 mb-3">
+              根据客户、产品类型、合同金额和历史成功模式为您推荐
+            </p>
             <div className="space-y-2">
               {recommendedTemplates.slice(0, 3).map((template) => (
                 <div
                   key={template.template_id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex items-start justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border border-transparent hover:border-violet-500/30"
                   onClick={() => onApplyTemplate(template)}
                 >
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-white">
-                      {template.template_name}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white truncate">
+                        {template.template_name}
+                      </span>
+                      {template.score >= 60 && (
+                        <span className="shrink-0 px-1.5 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 rounded">
+                          强烈推荐
+                        </span>
+                      )}
+                      {template.score >= 40 && template.score < 60 && (
+                        <span className="shrink-0 px-1.5 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-400 rounded">
+                          推荐
+                        </span>
+                      )}
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">
-                      {template.reasons.join("、")}
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {(template.reasons || []).map((reason, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-block px-1.5 py-0.5 text-xs bg-violet-500/10 text-violet-300 rounded"
+                        >
+                          {reason}
+                        </span>
+                      ))}
                     </div>
+                    {template.usage_count > 0 && (
+                      <div className="text-xs text-slate-500 mt-1">
+                        已被使用 {template.usage_count} 次
+                      </div>
+                    )}
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="shrink-0 ml-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       onApplyTemplate(template);

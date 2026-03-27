@@ -72,6 +72,7 @@ export default function ProjectFormStepper({
   onSubmit,
   initialData = {},
   recommendedTemplates = [],
+  onRefreshRecommendations,
 }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -164,21 +165,42 @@ export default function ProjectFormStepper({
     }
   }, [customerSearch, customers]);
 
-  // 选择客户时自动填充信息
+  // 选择客户时自动填充信息并刷新推荐
   const handleCustomerSelect = (customerId) => {
     const customer = (customers || []).find((c) => c.id === customerId);
     if (customer) {
       setSelectedCustomer(customer);
-      setFormData((prev) => ({
-        ...prev,
+      const updatedData = {
+        ...formData,
         customer_id: customer.id,
         customer_name: customer.customer_name,
         customer_contact: customer.contact_person || "",
         customer_phone: customer.contact_phone || "",
-      }));
+      };
+      setFormData(updatedData);
       setCustomerSearch("");
+      // 刷新推荐
+      onRefreshRecommendations?.({
+        customer_id: customer.id,
+        product_category: updatedData.product_category,
+        industry: customer.industry || updatedData.industry,
+        contract_amount: updatedData.contract_amount,
+        project_type: updatedData.project_type,
+      });
     }
   };
+
+  // 关键字段变化时刷新推荐（防抖）
+  useEffect(() => {
+    if (!open || !onRefreshRecommendations) return;
+    const { product_category, industry, contract_amount, project_type, customer_id } = formData;
+    // 只在有实际输入时刷新
+    if (!product_category && !industry && !contract_amount && !customer_id) return;
+    const timer = setTimeout(() => {
+      onRefreshRecommendations({ customer_id, product_category, industry, contract_amount, project_type });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.product_category, formData.industry, formData.contract_amount, formData.project_type]);
 
   // 项目编码唯一性检查
   const handleCodeBlur = async () => {

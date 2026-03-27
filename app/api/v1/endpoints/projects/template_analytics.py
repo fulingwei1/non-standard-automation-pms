@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-项目模板 - 分析和统计
+项目模板 - 智能推荐和统计
 
-包含推荐模板、使用统计等
+包含基于客户类型、产品类型、合同金额、历史成功模式的模板推荐
 """
 
 from typing import Any, Optional
@@ -16,6 +16,7 @@ from app.core import security
 from app.models.project import Project, ProjectTemplate
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.template_recommendation_service import TemplateRecommendationService
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -26,53 +27,39 @@ def get_recommended_templates(
     *,
     db: Session = Depends(deps.get_db),
     project_type: Optional[str] = Query(None, description="项目类型"),
+    product_category: Optional[str] = Query(None, description="产品类别（ICT/FCT/EOL等）"),
+    industry: Optional[str] = Query(None, description="行业"),
+    customer_id: Optional[int] = Query(None, description="客户ID（用于客户类型匹配和历史复用）"),
+    contract_amount: Optional[float] = Query(None, description="合同金额（用于大/中/小项目匹配）"),
     limit: int = Query(5, ge=1, le=20, description="返回数量限制"),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取推荐模板
+    智能推荐模板
+
+    推荐维度：
+    1. 客户类型 — 老客户/新客户/行业类型
+    2. 产品类型 — 标准品/定制品/研发项目(ICT/FCT/EOL)
+    3. 合同金额 — 大/中/小项目复杂度
+    4. 历史成功模式 — 类似客户/产品的成功交付模板
     """
-    query = db.query(ProjectTemplate).filter(ProjectTemplate.is_active)
-
-    if project_type:
-        query = query.filter(ProjectTemplate.project_type == project_type)
-
-    # 按使用次数排序
-    templates = query.order_by(desc(ProjectTemplate.usage_count)).limit(limit).all()
-
-    import json as _json
-
-    items = []
-    for template in templates:
-        config = {}
-        if template.template_config:
-            try:
-                config = (
-                    _json.loads(template.template_config)
-                    if isinstance(template.template_config, str)
-                    else template.template_config
-                )
-            except Exception:
-                pass
-
-        items.append(
-            {
-                "id": template.id,
-                "template_id": template.id,
-                "template_code": template.template_code,
-                "template_name": template.template_name,
-                "project_type": template.project_type,
-                "product_category": template.product_category,
-                "industry": template.industry,
-                "description": template.description,
-                "usage_count": template.usage_count or 0,
-                "template_config": _json.dumps(config) if config else None,
-                "milestones_count": len(config.get("milestones", [])),
-            }
-        )
+    service = TemplateRecommendationService(db)
+    recommendations = service.recommend_templates(
+        project_type=project_type,
+        product_category=product_category,
+        industry=industry,
+        customer_id=customer_id,
+        contract_amount=contract_amount,
+        limit=limit,
+    )
 
     return ResponseModel(
-        code=200, message="获取推荐模板成功", data={"recommendations": items, "templates": items}
+        code=200,
+        message="获取推荐模板成功",
+        data={
+            "recommendations": recommendations,
+            "templates": recommendations,  # 兼容旧字段
+        },
     )
 
 
@@ -111,13 +98,20 @@ def get_template_usage_statistics(
             health_stats[health] = 0
         health_stats[health] += 1
 
+    # 成功交付率
+    total = len(projects)
+    success_count = sum(1 for p in projects if p.stage == "S9")
+    success_rate = round(success_count / total * 100, 1) if total > 0 else 0
+
     return ResponseModel(
         code=200,
         message="获取模板使用统计成功",
         data={
             "template_id": template_id,
             "template_name": template.template_name,
-            "usage_count": len(projects),
+            "usage_count": total,
+            "success_count": success_count,
+            "success_rate": success_rate,
             "by_stage": stage_stats,
             "by_health": health_stats,
             "projects": [

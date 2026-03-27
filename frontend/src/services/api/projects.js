@@ -61,6 +61,11 @@ export const projectApi = {
   // Sprint 3 & 4: 模板和阶段门校验相关API
   recommendTemplates: (params) =>
     api.get("/projects/templates/recommend", { params }),
+  // 智能推荐：传入客户/产品/金额上下文
+  smartRecommendTemplates: ({ customer_id, product_category, industry, contract_amount, project_type, limit = 5 } = {}) =>
+    api.get("/projects/templates/recommend", {
+      params: { customer_id, product_category, industry, contract_amount, project_type, limit },
+    }),
   createFromTemplate: (templateId, data) =>
     api.post(`/projects/templates/${templateId}/create-project`, data),
   checkAutoTransition: (id, autoAdvance = false) =>

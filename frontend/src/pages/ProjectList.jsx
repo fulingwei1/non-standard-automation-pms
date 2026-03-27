@@ -165,14 +165,12 @@ export default function ProjectList() {
     fetchProjects();
   }, []);
 
-  // Sprint 3.2: 加载模板推荐
+  // 智能模板推荐：表单打开时加载初始推荐
   useEffect(() => {
     if (formOpen) {
       const loadRecommendedTemplates = async () => {
         try {
-          const response = await projectApi.recommendTemplates({
-            limit: 5,
-          });
+          const response = await projectApi.smartRecommendTemplates({ limit: 5 });
           setRecommendedTemplates(response.data?.recommendations || []);
         } catch (err) {
           console.error("Failed to load recommended templates:", err);
@@ -182,6 +180,23 @@ export default function ProjectList() {
       loadRecommendedTemplates();
     }
   }, [formOpen]);
+
+  // 根据表单上下文动态刷新推荐
+  const refreshRecommendations = async (context) => {
+    try {
+      const response = await projectApi.smartRecommendTemplates({
+        customer_id: context.customer_id || undefined,
+        product_category: context.product_category || undefined,
+        industry: context.industry || undefined,
+        contract_amount: context.contract_amount || undefined,
+        project_type: context.project_type || undefined,
+        limit: 5,
+      });
+      setRecommendedTemplates(response.data?.recommendations || []);
+    } catch (err) {
+      console.error("Failed to refresh recommendations:", err);
+    }
+  };
 
   const handleCreateProject = async (data) => {
     try {
@@ -328,6 +343,7 @@ export default function ProjectList() {
         onOpenChange={setFormOpen}
         onSubmit={handleCreateProject}
         recommendedTemplates={recommendedTemplates}
+        onRefreshRecommendations={refreshRecommendations}
       />
     </motion.div>
   );
