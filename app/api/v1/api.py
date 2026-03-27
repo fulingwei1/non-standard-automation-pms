@@ -430,6 +430,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 采购管理优化模块加载失败：{e}")
 
+    # ==================== 齐套率优化（催货/替代料/安全库存/改进建议） ====================
+    try:
+        from app.api.v1.endpoints.kitting_optimization import router as kitting_opt_router
+        api_router.include_router(kitting_opt_router, prefix="/procurement", tags=["齐套率优化"])
+        print("✓ 齐套率优化模块加载成功")
+    except Exception as e:
+        print(f"✗ 齐套率优化模块加载失败：{e}")
+
     # ==================== 战略管理 ====================
     try:
         from app.api.v1.endpoints.strategy import router as strategy_router

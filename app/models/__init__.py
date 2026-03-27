@@ -49,6 +49,9 @@ from .inventory_tracking import (  # noqa: F401
 # Security & Authentication
 from .login_attempt import LoginAttempt  # noqa: F401
 
+# Kitting Optimization (expedite, alternatives)
+from .kitting_optimization import ExpediteRecord, MaterialAlternative  # noqa: F401
+
 # Material Shortage (from material.py)
 from .material import MaterialShortage  # noqa: F401
 from .presale_ai import (  # noqa: F401
