@@ -20,7 +20,12 @@ import {
   Eye,
   FileText,
   LayoutGrid,
-  List } from
+  List,
+  TrendingUp,
+  AlertCircle,
+  Swords,
+  ArrowRight,
+  Calendar } from
 "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -39,6 +44,7 @@ import {
   DialogFooter,
   Label,
   Textarea,
+  Progress,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -575,6 +581,35 @@ export default function OpportunityManagement({ embedded = false }) {
         </Card>
       </div>
 
+      {/* Pipeline Mini Funnel */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-blue-400" />
+            <span className="text-sm font-medium text-white">销售漏斗概览</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {["DISCOVERY", "QUALIFIED", "PROPOSAL", "REVIEW", "NEGOTIATION", "WON"].map((stage, idx) => {
+              const count = (opportunities || []).filter((o) => o.stage === stage).length;
+              const conf = stageConfig[stage] || {};
+              const maxCount = Math.max(1, ...(["DISCOVERY", "QUALIFIED", "PROPOSAL", "REVIEW", "NEGOTIATION", "WON"].map(
+                (s) => (opportunities || []).filter((o) => o.stage === s).length
+              )));
+              return (
+                <div key={stage} className="flex-1 group cursor-pointer" onClick={() => setStageFilter(stageFilter === stage ? "all" : stage)}>
+                  <div className="text-center mb-1">
+                    <div className="text-xs text-slate-500">{conf.label || stage}</div>
+                    <div className={cn("text-lg font-bold", conf.textColor || "text-white")}>{count}</div>
+                  </div>
+                  <div className={cn("h-2 rounded-full transition-all", stageFilter === stage ? "ring-2 ring-white/30" : "", conf.color || "bg-slate-600")} style={{ opacity: Math.max(0.3, count / maxCount) }} />
+                  {idx < 5 && <div className="hidden md:flex justify-center mt-1"><ArrowRight className="w-3 h-3 text-slate-600" /></div>}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 筛选栏 */}
       <Card>
         <CardContent className="p-4">
@@ -721,7 +756,39 @@ export default function OpportunityManagement({ embedded = false }) {
                   </div>
                   }
                     </div>
-                    <div className="grid grid-cols-4 gap-2 mt-4">
+
+                    {/* Win Rate Indicator */}
+                    {opp.probability != null && (
+                      <div className="mt-3 p-2 bg-surface-50/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-slate-400">赢单率</span>
+                          <span className={cn("text-xs font-medium", opp.probability >= 70 ? "text-emerald-400" : opp.probability >= 40 ? "text-blue-400" : "text-amber-400")}>
+                            {opp.probability}%
+                          </span>
+                        </div>
+                        <Progress value={opp.probability} className="h-1.5" />
+                      </div>
+                    )}
+
+                    {/* Next Action Reminder */}
+                    {opp.expected_close_date && (
+                      <div className="mt-2 flex items-center gap-2 p-2 bg-amber-500/5 border border-amber-500/10 rounded-lg">
+                        <Calendar className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                        <span className="text-xs text-amber-300">
+                          预计成交: {String(opp.expected_close_date).slice(0, 10)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Competitor Info */}
+                    {opp.competitor_info && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <Swords className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                        <span className="text-xs text-slate-400 truncate">竞争: {opp.competitor_info}</span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-4 gap-2 mt-3">
                       <Button
                     variant="outline"
                     size="sm"
