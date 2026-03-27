@@ -71,6 +71,14 @@ class Project(Base, TimestampMixin):
     # 进度
     progress_pct = Column(Numeric(5, 2), default=0, comment="整体进度(%)")
 
+    # 物料融合字段
+    kitting_rate = Column(Numeric(5, 1), default=0, comment="物料齐套率(0-100%)")
+    material_status = Column(
+        String(20), default="待采购",
+        comment="物料状态：待采购/采购中/部分到货/齐套/缺料",
+    )
+    shortage_items_count = Column(Integer, default=0, comment="缺料项数量")
+
     # 时间
     contract_date = Column(Date, comment="合同日期")
     planned_start_date = Column(Date, comment="计划开始")
