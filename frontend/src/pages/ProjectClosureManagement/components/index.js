@@ -17,3 +17,4 @@ export * from './ProjectClosureQuality';
 export * from './ProjectClosureReview';
 export * from './ProjectClosureActions';
 export * from './ProjectClosureContent';
+export * from './ClosureReadinessPanel';
