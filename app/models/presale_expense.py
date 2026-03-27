@@ -8,6 +8,7 @@
 from sqlalchemy import (
     Column,
     Date,
+    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -29,20 +30,28 @@ class PresaleExpense(Base, TimestampMixin):
 
     # 项目关联
     project_id = Column(
-        Integer, ForeignKey("projects.id"), nullable=False, comment="项目ID（未中标项目）"
+        Integer, ForeignKey("projects.id"), nullable=True, comment="项目ID"
     )
     project_code = Column(String(50), comment="项目编号（冗余字段）")
     project_name = Column(String(200), comment="项目名称（冗余字段）")
+
+    # 工单关联
+    ticket_id = Column(
+        Integer,
+        ForeignKey("presale_support_ticket.id"),
+        nullable=True,
+        comment="关联售前工单ID",
+    )
 
     # 线索/商机关联
     lead_id = Column(Integer, ForeignKey("leads.id"), comment="关联线索ID")
     opportunity_id = Column(Integer, ForeignKey("opportunities.id"), comment="关联商机ID")
 
-    # 费用信息
+    # 费用信息 — 类型扩展：TRAVEL/ENTERTAIN/TENDER/SOLUTION/LABOR_COST/TRAVEL_COST/OTHER
     expense_type = Column(
-        String(20), nullable=False, comment="费用类型：LABOR_COST/TRAVEL_COST/OTHER"
+        String(20), nullable=False, comment="费用类型"
     )
-    expense_category = Column(String(50), nullable=False, comment="费用分类：LOST_BID/ABANDONED")
+    expense_category = Column(String(50), comment="费用分类")
     amount = Column(Numeric(14, 2), nullable=False, comment="费用金额")
 
     # 工时信息（如果是工时费用）
@@ -67,6 +76,14 @@ class PresaleExpense(Base, TimestampMixin):
     loss_reason = Column(String(50), comment="未中标原因")
     loss_reason_detail = Column(Text, comment="未中标原因详情")
 
+    # 审批流程
+    approval_status = Column(
+        String(20), default="PENDING", comment="审批状态：PENDING/APPROVED/REJECTED"
+    )
+    approved_by = Column(Integer, ForeignKey("users.id"), comment="审批人ID")
+    approved_at = Column(DateTime, comment="审批时间")
+    approval_note = Column(Text, comment="审批意见")
+
     # 创建信息
     created_by = Column(Integer, ForeignKey("users.id"), comment="创建人ID")
 
@@ -74,8 +91,10 @@ class PresaleExpense(Base, TimestampMixin):
     project = relationship("Project", foreign_keys=[project_id])
     lead = relationship("Lead", foreign_keys=[lead_id])
     opportunity = relationship("Opportunity", foreign_keys=[opportunity_id])
+    ticket = relationship("PresaleSupportTicket", foreign_keys=[ticket_id])
     user = relationship("User", foreign_keys=[user_id])
     salesperson = relationship("User", foreign_keys=[salesperson_id])
+    approver = relationship("User", foreign_keys=[approved_by])
     creator = relationship("User", foreign_keys=[created_by])
 
     __table_args__ = (
@@ -88,8 +107,10 @@ class PresaleExpense(Base, TimestampMixin):
         Index("idx_presale_expense_user", "user_id"),
         Index("idx_presale_expense_salesperson", "salesperson_id"),
         Index("idx_presale_expense_department", "department_id"),
+        Index("idx_presale_expense_ticket", "ticket_id"),
+        Index("idx_presale_expense_approval", "approval_status"),
         {"comment": "售前费用表"},
     )
 
     def __repr__(self):
-        return f"<PresaleExpense {self.project_code}-{self.expense_type}>"
+        return f"<PresaleExpense {self.id}-{self.expense_type}>"
