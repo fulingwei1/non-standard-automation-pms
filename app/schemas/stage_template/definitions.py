@@ -167,6 +167,7 @@ class StageTemplateUpdate(BaseModel):
     project_type: Optional[str] = Field(default=None, description="项目类型")
     is_default: Optional[bool] = Field(default=None, description="是否默认")
     is_active: Optional[bool] = Field(default=None, description="是否启用")
+    change_description: Optional[str] = Field(default=None, description="修改说明")
 
 
 class StageTemplateResponse(StageTemplateBase):
@@ -176,6 +177,8 @@ class StageTemplateResponse(StageTemplateBase):
     is_default: bool = False
     is_active: bool = True
     created_by: Optional[int] = None
+    updated_by: Optional[int] = None
+    change_description: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -200,3 +203,24 @@ class StageTemplateCopy(BaseModel):
 
     new_code: str = Field(..., max_length=50, description="新模板编码")
     new_name: str = Field(..., max_length=100, description="新模板名称")
+
+
+# ==================== 变更历史 Schemas ====================
+
+
+class StageTemplateChangeLogResponse(BaseModel):
+    """模板变更历史响应"""
+
+    id: int
+    template_id: int
+    action: str = Field(..., description="操作类型")
+    target_type: Optional[str] = Field(default=None, description="目标类型")
+    target_id: Optional[int] = Field(default=None, description="目标ID")
+    target_name: Optional[str] = Field(default=None, description="目标名称")
+    change_description: Optional[str] = Field(default=None, description="修改说明")
+    change_detail: Optional[Dict[str, Any]] = Field(default=None, description="变更详情")
+    changed_by: Optional[int] = Field(default=None, description="操作人ID")
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
