@@ -240,3 +240,86 @@ class KittingImprovementSuggestions(BaseModel):
     common_stock_materials: List[CommonStockMaterial] = Field(description="建议备库通用物料")
     improvement_target: ImprovementTarget = Field(description="改进目标及路径")
     generated_at: datetime = Field(description="生成时间")
+
+
+# ==================== 5. 齐套率同步 ====================
+
+class KittingRateSyncRequest(BaseModel):
+    """齐套率手动同步请求"""
+    project_ids: List[int] = Field(min_length=1, max_length=50, description="项目ID列表")
+
+
+class ProjectKittingRateResult(BaseModel):
+    """单个项目齐套率同步结果"""
+    project_id: int
+    project_code: Optional[str] = None
+    old_rate: float = Field(description="原齐套率(%)")
+    new_rate: float = Field(description="新齐套率(%)")
+    changed: bool = Field(description="是否发生变化")
+    change_delta: Optional[float] = Field(None, description="变化幅度(%)")
+    shortage_count: int = Field(default=0, description="缺料项数量")
+    total_items: Optional[int] = Field(None, description="BOM物料总数")
+    fulfilled_items: Optional[int] = Field(None, description="已齐套项数")
+    error: Optional[str] = None
+
+
+class KittingRateSyncResult(BaseModel):
+    """齐套率同步结果"""
+    total_synced: int = Field(description="同步项目总数")
+    significant_changes: List[ProjectKittingRateResult] = Field(description="显著变化项目列表")
+    significant_count: int = Field(description="显著变化项目数")
+    errors: List[Dict[str, Any]] = Field(default=[], description="错误列表")
+    error_count: int = Field(default=0, description="错误数量")
+    threshold: float = Field(description="变化阈值(%)")
+
+
+# ==================== 6. 缺料交付预测 ====================
+
+class CriticalMaterialForecast(BaseModel):
+    """关键路径缺料物料预测"""
+    material_id: int
+    material_code: str
+    material_name: str
+    is_key_item: bool = False
+    shortage_qty: float = Field(description="缺料数量")
+    in_transit_qty: float = Field(default=0, description="在途数量")
+    required_date: Optional[str] = None
+    estimated_arrival: Optional[str] = None
+    delay_days: int = Field(description="预计延期天数")
+    lead_time_days: int = Field(description="采购周期(天)")
+    suggestions: List[str] = Field(description="缓解建议")
+
+
+class MaterialDelayForecastResult(BaseModel):
+    """缺料影响交付预测结果"""
+    project_id: int
+    project_code: str
+    project_name: str
+    planned_end_date: Optional[str] = None
+    predicted_end_date: Optional[str] = None
+    max_delay_days: int = Field(description="最大预计延期天数")
+    critical_material_count: int = Field(description="关键缺料物料数")
+    critical_materials: List[CriticalMaterialForecast] = Field(description="关键缺料物料列表")
+    overall_suggestions: List[str] = Field(description="总体缓解建议")
+    risk_level: str = Field(description="风险级别: LOW/MEDIUM/HIGH/CRITICAL")
+
+
+# ==================== 7. 优先级自动调整 ====================
+
+class PriorityAdjustment(BaseModel):
+    """单个项目优先级调整记录"""
+    project_id: int
+    project_code: str
+    project_name: str
+    kitting_rate: float = Field(description="当前齐套率(%)")
+    old_priority: str
+    new_priority: str
+    reason: str = Field(description="调整原因")
+
+
+class PriorityAutoAdjustResult(BaseModel):
+    """优先级自动调整结果"""
+    total_adjusted: int = Field(description="调整项目数")
+    protected_count: int = Field(description="受保护未调整数(大金额/战略客户)")
+    adjustments: List[PriorityAdjustment] = Field(description="调整明细")
+    timestamp: str = Field(description="执行时间")

@@ -941,6 +941,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 行业最佳实践模块加载失败: {e}")
 
+    # ==================== 物料管理优化（齐套率同步/交付预测/优先级联动） ====================
+    try:
+        from app.api.v1.endpoints.material_sync import router as material_sync_router
+        api_router.include_router(material_sync_router, tags=["物料管理优化"])
+        print("✓ 物料管理优化模块加载成功（齐套率同步/交付预测/优先级联动）")
+    except Exception as e:
+        print(f"✗ 物料管理优化模块加载失败：{e}")
+
     # ==================== Stub Endpoints (必须放最后作为fallback) ====================
     try:
         from app.api.v1.endpoints.stub_endpoints import router as stub_router
