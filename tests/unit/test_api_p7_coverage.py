@@ -751,34 +751,34 @@ class TestQuoteCostCalculations:
     """报价成本计算测试"""
 
     def test_calculate_margin_positive(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import calculate_margin
+        from app.api.v1.endpoints.sales.quote_costs import calculate_margin
 
         result = calculate_margin(Decimal("100"), Decimal("60"))
         assert result == Decimal("40.00")
 
     def test_calculate_margin_zero_price(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import calculate_margin
+        from app.api.v1.endpoints.sales.quote_costs import calculate_margin
 
         result = calculate_margin(Decimal("0"), Decimal("60"))
         assert result == Decimal("0")
 
     def test_calculate_markup_positive(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import calculate_markup
+        from app.api.v1.endpoints.sales.quote_costs import calculate_markup
 
         result = calculate_markup(Decimal("100"), Decimal("80"))
         assert result == Decimal("25.00")
 
     def test_calculate_markup_zero_cost(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import calculate_markup
+        from app.api.v1.endpoints.sales.quote_costs import calculate_markup
 
         result = calculate_markup(Decimal("100"), Decimal("0"))
         assert result == Decimal("0")
 
     def test_get_cost_calculations_not_found(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import get_cost_calculations
+        from app.api.v1.endpoints.sales.quote_costs import get_cost_calculations
 
         db = _mock_db()
-        with patch("app.api.v1.endpoints.sales.quote_cost_calculations.get_or_404") as mock_get:
+        with patch("app.api.v1.endpoints.sales.quote_costs.get_or_404") as mock_get:
             mock_get.side_effect = HTTPException(status_code=404, detail="报价不存在")
             with pytest.raises(HTTPException) as exc:
                 get_cost_calculations(
@@ -787,7 +787,7 @@ class TestQuoteCostCalculations:
             assert exc.value.status_code == 404
 
     def test_simulate_cost(self):
-        from app.api.v1.endpoints.sales.quote_cost_calculations import simulate_cost
+        from app.api.v1.endpoints.sales.quote_costs import simulate_cost
 
         db = _mock_db()
         mock_schema = MagicMock()
