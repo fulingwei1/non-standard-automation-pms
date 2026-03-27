@@ -210,6 +210,19 @@ export const costApi = {
     api.put(`/projects/${projectId}/costs/${costId}`, data),
   delete: (projectId, costId) =>
     api.delete(`/projects/${projectId}/costs/${costId}`),
+  // 利润分析
+  getProfitOptimization: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/profit-optimization`, { params }),
+  getMarginAnalysis: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/margin-analysis`, { params }),
+  getCostOptimization: (projectId) =>
+    api.get(`/projects/${projectId}/costs/cost-optimization`),
+  getQuoteCostVariance: (projectId) =>
+    api.get(`/projects/${projectId}/costs/quote-cost-variance`),
+  getHighProfitPatterns: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/high-profit-patterns`, { params }),
+  getLowProfitRootCause: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/low-profit-root-cause`, { params }),
   // 兼容旧接口（已废弃，请使用上面的接口）
   getProjectCosts: (projectId, params) =>
     api.get(`/projects/${projectId}/costs`, { params }),
