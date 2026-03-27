@@ -6,7 +6,7 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -225,6 +225,22 @@ class StageAdvanceRequest(BaseModel):
     skip_gate_check: bool = Field(False, description="是否跳过阶段门校验（仅管理员）")
 
 
+class StageApprovalBridgeEntry(BaseModel):
+    """阶段特批桥接入口"""
+
+    approval_type: str = Field(..., description="特批类型：STAGE_GATE_OVERRIDE等")
+    approval_hint: str = Field(..., description="人可读提示（如'合同未签订，需发起立项特批'）")
+    template_code: str = Field(..., description="审批模板编码")
+    template_exists: bool = Field(False, description="审批模板是否已配置")
+    entity_type: str = Field(..., description="业务实体类型")
+    urgency: str = Field("NORMAL", description="紧急程度：NORMAL/URGENT/CRITICAL")
+    action_url: str = Field(..., description="审批发起URL（前端可直接跳转）")
+    form_data_prefill: Optional[Dict[str, Any]] = Field(None, description="预填表单数据")
+    existing_instance: Optional[Dict[str, Any]] = Field(
+        None, description="已有的进行中特批单（避免重复发起）"
+    )
+
+
 class GateCheckCondition(BaseModel):
     """阶段门校验条件项"""
 
@@ -251,6 +267,10 @@ class GateCheckResult(BaseModel):
     missing_items: List[str] = Field(default_factory=list, description="缺失项列表（兼容旧格式）")
     suggestions: List[str] = Field(default_factory=list, description="建议操作")
     progress_pct: float = Field(..., description="完成进度百分比")
+    approval_bridges: List[StageApprovalBridgeEntry] = Field(
+        default_factory=list,
+        description="特批入口列表（阶段被阻断时，提供具体的审批发起入口）",
+    )
 
 
 class StageAdvanceResponse(BaseModel):
