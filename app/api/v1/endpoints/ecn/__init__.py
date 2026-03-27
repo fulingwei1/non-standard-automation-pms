@@ -23,6 +23,7 @@ from . import (
     analysis,
     approval,
     core,
+    cost_impact,
     evaluations,
     execution,
     impacts,
@@ -77,3 +78,6 @@ router.include_router(analysis.router, tags=["ecn-analysis"])
 
 # 物料影响跟踪路由（影响分析/执行进度/相关人员/通知/处置）
 router.include_router(material_impact.router, tags=["ecn-material-impact"])
+
+# ECN成本影响跟踪路由（成本分析/执行跟踪/成本记录/预警）
+router.include_router(cost_impact.router, tags=["ecn-cost-impact"])
