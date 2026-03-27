@@ -39,6 +39,20 @@ from app.services.dashboard_adapters.strategy import (  # noqa: F401
     StrategyDashboardAdapter,
 )
 
+# 角色个性化视图适配器
+from app.services.dashboard_adapters.pm_view import (  # noqa: F401
+    PmViewDashboardAdapter,
+)
+from app.services.dashboard_adapters.dept_head_view import (  # noqa: F401
+    DeptHeadViewDashboardAdapter,
+)
+from app.services.dashboard_adapters.executive_view import (  # noqa: F401
+    ExecutiveViewDashboardAdapter,
+)
+from app.services.dashboard_adapters.member_view import (  # noqa: F401
+    MemberViewDashboardAdapter,
+)
+
 __all__ = [
     "AssemblyKitDashboardAdapter",
     "BusinessSupportDashboardAdapter",
@@ -51,4 +65,9 @@ __all__ = [
     "ShortageDashboardAdapter",
     "StaffMatchingDashboardAdapter",
     "StrategyDashboardAdapter",
+    # 角色个性化视图
+    "PmViewDashboardAdapter",
+    "DeptHeadViewDashboardAdapter",
+    "ExecutiveViewDashboardAdapter",
+    "MemberViewDashboardAdapter",
 ]

@@ -102,6 +102,9 @@ export const roleDashboardMap = {
   // 生产管理扩展
   'PRODUCTION_MGR': '/workstation/production', // 生产经理
   'MANUFACTURING_DIR': '/workstation/production', // 制造总监
+
+  // 通用角色视图
+  'DEPT_HEAD': '/workstation/management',     // 部门负责人（通用）
 };
 
 /**

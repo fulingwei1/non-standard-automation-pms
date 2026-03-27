@@ -39,6 +39,30 @@ const WorkOrderList = lazy(() => import('../widgets/production/WorkOrderList'));
 const SystemHealth = lazy(() => import('../widgets/admin/SystemHealth'));
 const UserStats = lazy(() => import('../widgets/admin/UserStats'));
 
+// PM 视图组件
+const PmProjectHealth = lazy(() => import('../widgets/pm/PmProjectHealth'));
+const PmMilestoneReminder = lazy(() => import('../widgets/pm/PmMilestoneReminder'));
+const PmRiskOverview = lazy(() => import('../widgets/pm/PmRiskOverview'));
+const PmResourceConflict = lazy(() => import('../widgets/pm/PmResourceConflict'));
+
+// 高管视图组件
+const ExecPortfolioHealth = lazy(() => import('../widgets/executive/ExecPortfolioHealth'));
+const ExecStrategicProjects = lazy(() => import('../widgets/executive/ExecStrategicProjects'));
+const ExecMajorRisks = lazy(() => import('../widgets/executive/ExecMajorRisks'));
+const ExecRoiAnalysis = lazy(() => import('../widgets/executive/ExecRoiAnalysis'));
+
+// 部门负责人视图组件
+const DeptProjectRanking = lazy(() => import('../widgets/dept-head/DeptProjectRanking'));
+const DeptResourceLoad = lazy(() => import('../widgets/dept-head/DeptResourceLoad'));
+const DeptRiskSummary = lazy(() => import('../widgets/dept-head/DeptRiskSummary'));
+const DeptBudgetExecution = lazy(() => import('../widgets/dept-head/DeptBudgetExecution'));
+
+// 成员视图组件
+const MemberTaskList = lazy(() => import('../widgets/member/MemberTaskList'));
+const MemberProjectProgress = lazy(() => import('../widgets/member/MemberProjectProgress'));
+const MemberTimesheetTrend = lazy(() => import('../widgets/member/MemberTimesheetTrend'));
+const MemberOverdueAlert = lazy(() => import('../widgets/member/MemberOverdueAlert'));
+
 /**
  * 组件注册表
  *
@@ -189,6 +213,110 @@ export const widgetRegistry = {
     category: 'admin',
     defaultSize: 'medium',
     description: '用户统计'
+  },
+
+  // ============ PM 视图组件 ============
+  'pm-project-health': {
+    component: PmProjectHealth,
+    category: 'pm-view',
+    defaultSize: 'large',
+    description: '项目健康度一览'
+  },
+  'pm-milestone-reminder': {
+    component: PmMilestoneReminder,
+    category: 'pm-view',
+    defaultSize: 'medium',
+    description: '近期里程碑提醒'
+  },
+  'pm-risk-overview': {
+    component: PmRiskOverview,
+    category: 'pm-view',
+    defaultSize: 'medium',
+    description: '活跃风险TOP'
+  },
+  'pm-resource-conflict': {
+    component: PmResourceConflict,
+    category: 'pm-view',
+    defaultSize: 'medium',
+    description: '资源冲突告警'
+  },
+
+  // ============ 高管视图组件 ============
+  'exec-portfolio-health': {
+    component: ExecPortfolioHealth,
+    category: 'executive-view',
+    defaultSize: 'medium',
+    description: '项目组合健康度'
+  },
+  'exec-strategic-projects': {
+    component: ExecStrategicProjects,
+    category: 'executive-view',
+    defaultSize: 'large',
+    description: '战略项目进度'
+  },
+  'exec-major-risks': {
+    component: ExecMajorRisks,
+    category: 'executive-view',
+    defaultSize: 'medium',
+    description: '重大风险/问题'
+  },
+  'exec-roi-analysis': {
+    component: ExecRoiAnalysis,
+    category: 'executive-view',
+    defaultSize: 'large',
+    description: '投资回报率分析'
+  },
+
+  // ============ 部门负责人视图组件 ============
+  'dept-project-ranking': {
+    component: DeptProjectRanking,
+    category: 'dept-head-view',
+    defaultSize: 'large',
+    description: '部门项目绩效排行'
+  },
+  'dept-resource-load': {
+    component: DeptResourceLoad,
+    category: 'dept-head-view',
+    defaultSize: 'medium',
+    description: '部门资源负荷'
+  },
+  'dept-risk-summary': {
+    component: DeptRiskSummary,
+    category: 'dept-head-view',
+    defaultSize: 'medium',
+    description: '部门风险汇总'
+  },
+  'dept-budget-execution': {
+    component: DeptBudgetExecution,
+    category: 'dept-head-view',
+    defaultSize: 'large',
+    description: '预算执行率统计'
+  },
+
+  // ============ 成员视图组件 ============
+  'member-task-list': {
+    component: MemberTaskList,
+    category: 'member-view',
+    defaultSize: 'large',
+    description: '我的任务'
+  },
+  'member-project-progress': {
+    component: MemberProjectProgress,
+    category: 'member-view',
+    defaultSize: 'medium',
+    description: '参与项目进度'
+  },
+  'member-timesheet-trend': {
+    component: MemberTimesheetTrend,
+    category: 'member-view',
+    defaultSize: 'medium',
+    description: '个人工时趋势'
+  },
+  'member-overdue-alert': {
+    component: MemberOverdueAlert,
+    category: 'member-view',
+    defaultSize: 'medium',
+    description: '逾期任务告警'
   },
 };
 

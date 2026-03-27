@@ -221,6 +221,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ Dashboard统一模块加载失败: {e}")
 
+    # Dashboard 布局自定义
+    try:
+        from app.api.v1.endpoints.dashboard_layout import router as dashboard_layout_router
+        api_router.include_router(dashboard_layout_router, tags=["dashboard_layout"])
+        print("✓ Dashboard布局自定义模块加载成功")
+    except Exception as e:
+        print(f"✗ Dashboard布局自定义模块加载失败: {e}")
+
     # 通知中心
     try:
         from app.api.v1.endpoints.notifications import router as notifications_router
