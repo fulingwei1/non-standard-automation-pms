@@ -35,6 +35,7 @@ import ProjectBonusPanel from "../components/project/ProjectBonusPanel";
 import ProjectMeetingPanel from "../components/project/ProjectMeetingPanel";
 import ProjectIssuePanel from "../components/project/ProjectIssuePanel";
 import SolutionLibrary from "../components/project/SolutionLibrary";
+import ProfitAnalysisCard from "../components/project/ProfitAnalysisCard";
 import StageGantt from "../components/project/StageGantt";
 import {
   ArrowLeft,
@@ -54,7 +55,8 @@ import {
   ListTodo,
   Flag,
   GitBranch,
-  CreditCard } from
+  CreditCard,
+  PieChart } from
 "lucide-react";
 
 // Tab 配置
@@ -64,6 +66,7 @@ const PROJECT_TABS = [
   { id: "milestones", label: "里程碑", icon: Flag },
   { id: "gantt", label: "甘特图", icon: GitBranch },
   { id: "budget", label: "预算", icon: CreditCard },
+  { id: "profit", label: "利润", icon: PieChart },
 ];
 
 export default function ProjectDetail() {
@@ -355,7 +358,7 @@ export default function ProjectDetail() {
 
       {/* Tab 导航 */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+        <TabsList className="grid w-full grid-cols-6 lg:w-[720px]">
           {PROJECT_TABS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -525,6 +528,9 @@ export default function ProjectDetail() {
         </div>
 
         <div className="space-y-6">
+          {/* 利润分析 */}
+          <ProfitAnalysisCard projectId={project.id} />
+
           {/* 快速操作 */}
           <QuickActionPanel project={project} onRefresh={fetchProjectData} />
 
@@ -695,6 +701,30 @@ export default function ProjectDetail() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* 利润分析 Tab */}
+        <TabsContent value="profit" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ProfitAnalysisCard projectId={project.id} />
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">利润改善</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                  <p>在概览页右侧可查看实时利润分析卡片。</p>
+                  <p>API 端点：</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>综合分析: GET /costs/profit-optimization</li>
+                    <li>毛利率: GET /costs/margin-analysis</li>
+                    <li>优化建议: GET /costs/cost-optimization</li>
+                    <li>报价偏差: GET /costs/quote-cost-variance</li>
+                    <li>高利润特征: GET /costs/high-profit-patterns</li>
+                    <li>低利润根因: GET /costs/low-profit-root-cause</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
