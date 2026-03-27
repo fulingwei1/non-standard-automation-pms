@@ -278,6 +278,14 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 绩效合约模块加载失败：{e}")
 
+    # ==================== 绩效分析 ====================
+    try:
+        from app.api.v1.endpoints.performance_analysis import router as perf_analysis_router
+        api_router.include_router(perf_analysis_router, prefix="/performance-analysis", tags=["绩效分析"])
+        print("✓ 绩效分析模块加载成功")
+    except Exception as e:
+        print(f"✗ 绩效分析模块加载失败：{e}")
+
     # ==================== AI战略辅助 ====================
     try:
         from app.api.v1.endpoints.ai_strategy import router as ai_strategy_router
