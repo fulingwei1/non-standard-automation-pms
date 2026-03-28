@@ -422,15 +422,18 @@ def purchase_order_tracking(
 
 @router.post("/goods-received-notify")
 def goods_received_notify(
-    receipt_id: int = Query(..., description="收货单ID"),
+    receipt_id: int = Query(..., description="收货单 ID"),
     db: Session = Depends(get_db),
 ):
     """
-    物料入库后触发通知
+    物料入库自动触发通知并同步项目齐套率
 
-    - 通知项目经理/采购员/计划员（写 Notification 记录）
-    - 更新项目物料齐套状态
-    - 记录到货历史
+    功能:
+    - 更新 BomItem 到货数量和齐套状态
+    - 重算项目齐套率/物料状态/缺料项数
+    - 齐套率变化时记录项目状态日志
+    - 齐套率 < 90% 自动标记项目健康度为警告 (H2)
+    - 通知项目经理/采购员/计划员
     """
 
     # 1. 查询收货单
@@ -452,47 +455,110 @@ def goods_received_notify(
     if not receipt_items:
         return error_response("收货单无明细行", code=404)
 
-    # 3. 更新采购订单行的收货数量 & BomItem 已到货数量
-    updated_bom_items = []
+    # 3. 更新 BomItem 到货数量 & 实际到货日期
+    updated_bom_count = 0
     for ri in receipt_items:
-        # 更新 PurchaseOrderItem
+        if not ri.order_item_id:
+            continue
         oi = db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == ri.order_item_id).first()
-        if oi:
-            oi.received_qty = _decimal(oi.received_qty) + _decimal(ri.received_qty)
-            oi.qualified_qty = _decimal(oi.qualified_qty) + _decimal(ri.qualified_qty)
-            oi.rejected_qty = _decimal(oi.rejected_qty) + _decimal(ri.rejected_qty)
+        if not oi or not oi.bom_item_id:
+            continue
+        bom_item = db.query(BomItem).filter(BomItem.id == oi.bom_item_id).first()
+        if not bom_item:
+            continue
+        bom_item.received_qty = _decimal(bom_item.received_qty) + _decimal(ri.qualified_qty)
+        bom_item.actual_arrival_date = date.today()
+        updated_bom_count += 1
 
-            # 更新关联 BomItem
-            if oi.bom_item_id:
-                bom_item = db.query(BomItem).filter(BomItem.id == oi.bom_item_id).first()
-                if bom_item:
-                    bom_item.received_qty = _decimal(bom_item.received_qty) + _decimal(ri.qualified_qty)
-                    updated_bom_items.append(bom_item)
-
-    # 4. 计算项目物料齐套率
+    # 4. 计算项目物料齐套率（如果有项目）
     kitting_info = None
+    project = None
+    old_kitting_rate = 0
+    old_health = None
+    
     if order.project_id:
-        project_bom_items = (
-            db.query(BomItem)
-            .join(BomHeader, BomItem.bom_id == BomHeader.id)
-            .filter(
-                BomHeader.project_id == order.project_id,
-                BomItem.source_type == "PURCHASE",
+        project = db.query(Project).filter(Project.id == order.project_id).first()
+        if project:
+            old_kitting_rate = float(project.kitting_rate or 0)
+            old_health = project.health
+            
+            project_bom_items = (
+                db.query(BomItem)
+                .join(BomHeader, BomItem.bom_id == BomHeader.id)
+                .filter(
+                    BomHeader.project_id == order.project_id,
+                    BomItem.source_type == "PURCHASE",
+                )
+                .all()
             )
-            .all()
-        )
-        total_lines = len(project_bom_items)
-        complete_lines = sum(
-            1 for b in project_bom_items if _decimal(b.received_qty) >= _decimal(b.quantity)
-        )
-        kitting_rate = round(complete_lines / total_lines * 100, 1) if total_lines else 0
-        kitting_info = {
-            "project_id": order.project_id,
-            "total_material_lines": total_lines,
-            "complete_lines": complete_lines,
-            "kitting_rate": kitting_rate,
-            "is_complete": kitting_rate >= 100,
-        }
+            total_lines = len(project_bom_items)
+            complete_lines = sum(
+                1 for b in project_bom_items if _decimal(b.received_qty) >= _decimal(b.quantity)
+            )
+            kitting_rate = round(complete_lines / total_lines * 100, 1) if total_lines else 0
+            
+            # 判断是否有采购中的物料
+            has_purchased = (
+                db.query(BomItem.id)
+                .join(BomHeader, BomItem.bom_id == BomHeader.id)
+                .filter(
+                    BomHeader.project_id == order.project_id,
+                    BomItem.purchased_qty > 0,
+                )
+                .first()
+                is not None
+            )
+            
+            # 更新项目齐套率相关字段
+            project.kitting_rate = kitting_rate
+            project.shortage_items_count = total_lines - complete_lines
+            
+            # 推导物料状态
+            if kitting_rate >= 100:
+                project.material_status = "COMPLETE"
+            elif kitting_rate >= 95:
+                project.material_status = "PARTIAL_ARRIVAL"
+            elif kitting_rate >= 90:
+                project.material_status = "IN_PROGRESS"
+            elif kitting_rate > 0:
+                project.material_status = "IN_PROGRESS"
+            else:
+                project.material_status = "PENDING"
+            
+            # 齐套率 < 90% → 项目健康度警告
+            new_health = old_health
+            if kitting_rate < 90 and project.health == "H1":
+                project.health = "H2"
+                new_health = "H2"
+            elif kitting_rate >= 100 and project.health == "H2":
+                project.health = "H1"
+                new_health = "H1"
+            
+            # 齐套率变化时记录日志
+            rate_changed = abs(kitting_rate - old_kitting_rate) > 0.05
+            health_changed = new_health != old_health
+            if rate_changed or health_changed:
+                log = ProjectStatusLog(
+                    project_id=project.id,
+                    old_health=old_health,
+                    new_health=new_health,
+                    change_type="HEALTH_CHANGE" if health_changed else "STATUS_CHANGE",
+                    change_reason=f"物料到货更新齐套率：{old_kitting_rate}% → {kitting_rate}%",
+                    change_note=f"收货单：{receipt.receipt_no}",
+                    changed_at=datetime.now(),
+                )
+                db.add(log)
+            
+            kitting_info = {
+                "project_id": order.project_id,
+                "total_material_lines": total_lines,
+                "complete_lines": complete_lines,
+                "kitting_rate": kitting_rate,
+                "is_complete": kitting_rate >= 100,
+                "old_kitting_rate": old_kitting_rate,
+                "old_health": old_health,
+                "new_health": new_health,
+            }
 
     # 5. 生成通知记录
     notify_users = set()
@@ -506,6 +572,9 @@ def goods_received_notify(
             notify_users.add(pr.requested_by)
         if pr and pr.created_by:
             notify_users.add(pr.created_by)
+    # 项目经理
+    if project and project.pm_id:
+        notify_users.add(project.pm_id)
 
     material_summary = ", ".join(
         f"{ri.material_name}×{float(ri.received_qty or 0)}" for ri in receipt_items[:5]
@@ -523,9 +592,9 @@ def goods_received_notify(
             title=f"物料到货通知 - {receipt.receipt_no}",
             content=(
                 f"收货单 {receipt.receipt_no} 已入库。"
-                f"订单: {order.order_no}。"
-                f"物料: {material_summary}。"
-                + (f"项目齐套率: {kitting_info['kitting_rate']}%" if kitting_info else "")
+                f"订单：{order.order_no}。"
+                f"物料：{material_summary}。"
+                + (f"项目齐套率：{kitting_info['kitting_rate']}%" if kitting_info else "")
             ),
             priority="HIGH" if (kitting_info and kitting_info["is_complete"]) else "NORMAL",
             extra_data={
@@ -548,20 +617,10 @@ def goods_received_notify(
             "receipt_no": receipt.receipt_no,
             "order_no": order.order_no,
             "items_processed": len(receipt_items),
-            "bom_items_updated": len(updated_bom_items),
-            "notifications_sent_to": notifications_created,
+            "bom_items_updated": updated_bom_count,
             "kitting_info": kitting_info,
-            "receipt_items": [
-                {
-                    "material_code": ri.material_code,
-                    "material_name": ri.material_name,
-                    "delivery_qty": float(ri.delivery_qty or 0),
-                    "received_qty": float(ri.received_qty or 0),
-                    "qualified_qty": float(ri.qualified_qty or 0),
-                    "rejected_qty": float(ri.rejected_qty or 0),
-                }
-                for ri in receipt_items
-            ],
+            "notifications_sent": len(notifications_created),
         },
-        message=f"到货通知已发送给 {len(notifications_created)} 人",
+        message=f"物料到货已处理：{len(receipt_items)}项物料，更新{updated_bom_count}个 BOM 行",
     )
+
