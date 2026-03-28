@@ -164,7 +164,10 @@ export function ProjectRoutes() {
       <Route path="/wbs-templates" element={<WBSTemplateManagement />} />
       <Route path="/schedule" element={<ScheduleBoard />} />
       <Route path="/ecn" element={<ECNManagement />} />
+      <Route path="/ecn/:ecnId/cost-impact" element={<ECNCostImpact />} />
+      <Route path="/ecn/:ecnId/material-impact" element={<ECNMaterialImpact />} />
       <Route path="/field-commissioning" element={<FieldCommissioning />} />
+      <Route path="/projects/:projectId/material-progress" element={<MaterialProgressView />} />
       <Route path="/projects/:id/schedule-generation" element={<ScheduleGeneration />} />
       <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
       <Route path="/project-list-with-cost" element={<ProjectListWithCost />} />
