@@ -7,7 +7,7 @@ ECN任务管理 API endpoints
 
 import logging
 from datetime import datetime
-from typing import Any, List
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
