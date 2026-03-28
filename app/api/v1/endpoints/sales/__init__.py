@@ -188,3 +188,4 @@ from app.api.v1.endpoints import sales_organization
 router.include_router(
     sales_organization.router, prefix="/organization", tags=["sales-organization"]
 )
+\nrouter.include_router(conversion_analysis.router, tags=["sales-conversion-analysis"])\n
