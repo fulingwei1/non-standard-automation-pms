@@ -31,6 +31,93 @@ from .utils import get_user_display_name
 router = APIRouter()
 
 
+def _validate_ecn_for_task(db: Session, ecn_id: int) -> Ecn:
+    """验证 ECN 是否可创建任务"""
+    ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
+    if not ecn:
+        raise HTTPException(status_code=404, detail="ECN 不存在")
+    
+    if ecn.status not in ["APPROVED", "EXECUTING"]:
+        raise HTTPException(status_code=400, detail="ECN 当前不在执行阶段")
+    
+    return ecn
+
+
+def _validate_assignee(db: Session, assignee_id: Optional[int], task_dept: Optional[str]) -> Optional[User]:
+    """验证负责人"""
+    if not assignee_id:
+        return None
+    
+    assignee = db.query(User).filter(User.id == assignee_id).first()
+    if not assignee:
+        raise HTTPException(status_code=404, detail="负责人不存在")
+    
+    return assignee
+
+
+def _get_next_task_no(db: Session, ecn_id: int) -> int:
+    """获取下一个任务序号"""
+    max_order = (
+        db.query(EcnTask)
+        .filter(EcnTask.ecn_id == ecn_id)
+        .order_by(desc(EcnTask.task_no))
+        .first()
+    )
+    return (max_order.task_no + 1) if max_order else 1
+
+
+def _create_task_object(ecn_id: int, task_no: int, task_in: EcnTaskCreate) -> EcnTask:
+    """创建任务对象"""
+    return EcnTask(
+        ecn_id=ecn_id,
+        task_no=task_no,
+        task_name=task_in.task_name,
+        task_type=task_in.task_type,
+        task_dept=task_in.task_dept,
+        task_description=task_in.task_description,
+        assignee_id=task_in.assignee_id,
+        planned_start=task_in.planned_start,
+        planned_end=task_in.planned_end,
+        status="PENDING",
+        progress_pct=0,
+    )
+
+
+def _assign_task_executive(db: Session, ecn: Ecn, task: EcnTask, task_in: EcnTaskCreate) -> None:
+    """分配任务执行人"""
+    assignee_id = task_in.assignee_id
+    
+    # 验证手动指定的执行人
+    if assignee_id:
+        assignee = (
+            db.query(User)
+            .filter(
+                User.id == assignee_id,
+                User.department == task_in.task_dept,
+                User.is_active
+            )
+            .first()
+        )
+        if not assignee:
+            assignee_id = None
+    
+    # 自动分配
+    if not assignee_id:
+        assignee_id = auto_assign_task(db, ecn, task)
+    
+    task.assignee_id = assignee_id
+
+
+def _update_ecn_status_if_needed(ecn: Ecn, db: Session) -> None:
+    """如果 ECN 状态是已审批，自动更新为执行中"""
+    if ecn.status == "APPROVED":
+        ecn.status = "EXECUTING"
+        ecn.execution_start = datetime.now()
+        ecn.current_step = "EXECUTION"
+        db.add(ecn)
+
+
+
 @router.get(
     "/ecns/{ecn_id}/tasks", response_model=List[EcnTaskResponse], status_code=status.HTTP_200_OK
 )

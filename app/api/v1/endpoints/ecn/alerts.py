@@ -21,6 +21,82 @@ from app.services.ecn_notification import notify_overdue_alert
 router = APIRouter()
 
 
+def _find_users_for_alert(db: Session, alert_type: str, alert_data: dict, ecn: Ecn) -> List[int]:
+    """根据提醒类型找到相关人员"""
+    from app.models.organization import Department
+    
+    user_ids = []
+    
+    if alert_type == "EVALUATION_OVERDUE":
+        eval_dept = alert_data.get("dept")
+        if eval_dept:
+            evaluation = (
+                db.query(EcnEvaluation)
+                .filter(
+                    EcnEvaluation.ecn_id == ecn.id,
+                    EcnEvaluation.eval_dept == eval_dept,
+                    EcnEvaluation.status == "PENDING",
+                )
+                .first()
+            )
+            
+            if evaluation and evaluation.evaluator_id:
+                user_ids.append(evaluation.evaluator_id)
+            else:
+                dept = db.query(Department).filter(Department.dept_name == eval_dept).first()
+                if dept and dept.manager_id:
+                    user_ids.append(dept.manager_id)
+                elif ecn.applicant_id:
+                    user_ids.append(ecn.applicant_id)
+                    
+    elif alert_type == "APPROVAL_OVERDUE":
+        approval_level = alert_data.get("approval_level")
+        if approval_level:
+            approval = (
+                db.query(EcnApproval)
+                .filter(
+                    EcnApproval.ecn_id == ecn.id,
+                    EcnApproval.approval_level == approval_level,
+                    EcnApproval.status == "PENDING",
+                )
+                .first()
+            )
+            if approval and approval.approver_id:
+                user_ids.append(approval.approver_id)
+    
+    return user_ids
+
+
+def _process_single_alert(db: Session, alert_data: dict, current_user: User) -> dict:
+    """处理单个提醒"""
+    try:
+        alert_type = alert_data.get("type")
+        ecn_id = alert_data.get("ecn_id")
+        
+        if not alert_type or not ecn_id:
+            return {"alert": alert_data, "status": "failed", "message": "缺少必要字段"}
+        
+        ecn = db.query(Ecn).filter(Ecn.id == ecn_id).first()
+        if not ecn:
+            return {"alert": alert_data, "status": "failed", "message": "ECN 不存在"}
+        
+        user_ids = _find_users_for_alert(db, alert_type, alert_data, ecn)
+        
+        if not user_ids:
+            return {"alert": alert_data, "status": "failed", "message": "未找到相关人员"}
+        
+        # 发送通知
+        for user_id in user_ids:
+            # TODO: 发送通知逻辑
+            pass
+        
+        return {"alert": alert_data, "status": "success", "user_ids": user_ids}
+        
+    except Exception as e:
+        return {"alert": alert_data, "status": "failed", "message": str(e)}
+
+
+
 @router.get("/ecns/overdue-alerts", response_model=List[dict], status_code=status.HTTP_200_OK)
 def get_ecn_overdue_alerts(
     db: Session = Depends(deps.get_db),
