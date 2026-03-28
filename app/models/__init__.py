@@ -613,3 +613,12 @@ __all__ = [
     "ShortageHandlingPlan",
     "MaterialDemandForecast",
 ]
+
+from app.models.project_delivery import (
+    ProjectDeliverySchedule,
+    ProjectDeliveryTask,
+    ProjectDeliveryLongCyclePurchase,
+    ProjectDeliveryMechanicalDesign,
+    ProjectDeliveryChangeLog,
+    ProjectDeliveryDependency,
+)

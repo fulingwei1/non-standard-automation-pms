@@ -15,6 +15,10 @@ import {
   QualityRoutes
 } from "./modules";
 import SalesFunnel from "../pages/SalesFunnel";
+import ProjectDeliveryScheduleList from "../pages/ProjectDeliverySchedule/ScheduleList";
+import ProjectDeliveryScheduleGantt from "../pages/ProjectDeliverySchedule/ScheduleGantt";
+import ProjectDeliveryScheduleCreate from "../pages/ProjectDeliverySchedule/ScheduleCreate";
+import ProjectDeliveryScheduleTaskFill from "../pages/ProjectDeliverySchedule/TaskFill";
 
 export function AppRoutes() {
   return (
@@ -36,6 +40,11 @@ export function AppRoutes() {
       {StrategyRoutes()}
       {WarehouseRoutes()}
       {QualityRoutes()}
+      {/* 项目交付排产计划 */}
+      {/* 项目交付排产 - 项目子模块 */}
+      <Route path="/projects/:projectId/delivery" element={<ProjectDeliveryScheduleGantt />} />
+      <Route path="/projects/:projectId/delivery/create" element={<ProjectDeliveryScheduleCreate />} />
+      <Route path="/projects/:projectId/delivery/task-fill/:department" element={<ProjectDeliveryScheduleTaskFill />} />
       {/* Catch-all route for unmatched paths */}
       <Route path="*" element={<Navigate to="/workstation/management" replace />} />
     </Routes>
