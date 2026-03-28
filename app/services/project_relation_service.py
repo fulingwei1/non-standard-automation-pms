@@ -81,12 +81,8 @@ class ProjectRelationService:
     
     def get_after_sales_status(self, project_id: int) -> Dict[str, Any]:
         """获取售后状态"""
-        # TODO: 待完善售后模块
-        return {
-            "feedback_count": 0,
-            "maintenance_count": 0,
-            "support_tickets_count": 0,
-        }
+        from app.services.views.project_after_sales_view import get_project_after_sales_overview
+        return get_project_after_sales_overview(self.db, project_id)
 
 
 def get_project_relation_service(db: Session) -> ProjectRelationService:
