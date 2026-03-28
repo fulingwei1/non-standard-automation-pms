@@ -211,3 +211,189 @@ def get_conversion_by_person(
             "avg_overall_conversion": round(sum(p["overall_conversion"] for p in person_data) / len(person_data), 1) if person_data else 0,
         },
     )
+
+
+
+@router.get("/conversion/trend", response_model=ResponseModel, summary="转化率趋势（按月）")
+def get_conversion_trend(
+    db: Session = Depends(deps.get_db),
+    months: int = Query(6, ge=1, le=24, description="统计月数"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    按月统计转化率趋势
+    
+    返回每个月的：线索数/商机数/报价数/合同数 + 各步骤转化率
+    """
+    from dateutil.relativedelta import relativedelta
+    
+    now = datetime.now()
+    monthly_data = []
+    
+    for i in range(months - 1, -1, -1):
+        month_start = (now - relativedelta(months=i)).replace(day=1, hour=0, minute=0, second=0)
+        month_end = (month_start + relativedelta(months=1)) - timedelta(seconds=1)
+        month_label = month_start.strftime("%Y-%m")
+        
+        leads = db.query(func.count(Lead.id)).filter(Lead.created_at >= month_start, Lead.created_at <= month_end).scalar() or 0
+        opps = db.query(func.count(Opportunity.id)).filter(Opportunity.created_at >= month_start, Opportunity.created_at <= month_end).scalar() or 0
+        quotes = db.query(func.count(Quote.id)).filter(Quote.created_at >= month_start, Quote.created_at <= month_end).scalar() or 0
+        contracts = db.query(func.count(Contract.id)).filter(Contract.created_at >= month_start, Contract.created_at <= month_end).scalar() or 0
+        
+        monthly_data.append({
+            "month": month_label,
+            "leads": leads,
+            "opportunities": opps,
+            "quotes": quotes,
+            "contracts": contracts,
+            "lead_to_opportunity": round(opps / leads * 100, 1) if leads else 0,
+            "opportunity_to_quote": round(quotes / opps * 100, 1) if opps else 0,
+            "quote_to_contract": round(contracts / quotes * 100, 1) if quotes else 0,
+            "overall": round(contracts / leads * 100, 1) if leads else 0,
+        })
+    
+    # 计算趋势方向
+    if len(monthly_data) >= 2:
+        recent = monthly_data[-1]["overall"]
+        previous = monthly_data[-2]["overall"]
+        trend = "UP" if recent > previous else ("DOWN" if recent < previous else "STABLE")
+        trend_delta = round(recent - previous, 1)
+    else:
+        trend = "STABLE"
+        trend_delta = 0
+    
+    return ResponseModel(code=200, message="success", data={
+        "months": monthly_data,
+        "trend": trend,
+        "trend_delta": trend_delta,
+    })
+
+
+@router.get("/conversion/bottleneck", response_model=ResponseModel, summary="转化率瓶颈分析")
+def get_conversion_bottleneck(
+    db: Session = Depends(deps.get_db),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    识别转化率最低的环节，给出优化建议
+    """
+    now = datetime.now()
+    start = datetime.strptime(start_date, "%Y-%m-%d") if start_date else now - timedelta(days=365)
+    end = datetime.strptime(end_date, "%Y-%m-%d") if end_date else now
+    
+    leads = db.query(func.count(Lead.id)).filter(Lead.created_at >= start, Lead.created_at <= end).scalar() or 0
+    opps = db.query(func.count(Opportunity.id)).filter(Opportunity.created_at >= start, Opportunity.created_at <= end).scalar() or 0
+    quotes = db.query(func.count(Quote.id)).filter(Quote.created_at >= start, Quote.created_at <= end).scalar() or 0
+    contracts = db.query(func.count(Contract.id)).filter(Contract.created_at >= start, Contract.created_at <= end).scalar() or 0
+    
+    steps = [
+        {"step": "线索→商机", "rate": round(opps / leads * 100, 1) if leads else 0, "benchmark": 60, "from_count": leads, "to_count": opps},
+        {"step": "商机→报价", "rate": round(quotes / opps * 100, 1) if opps else 0, "benchmark": 50, "from_count": opps, "to_count": quotes},
+        {"step": "报价→合同", "rate": round(contracts / quotes * 100, 1) if quotes else 0, "benchmark": 40, "from_count": quotes, "to_count": contracts},
+    ]
+    
+    # 找出瓶颈
+    bottleneck = min(steps, key=lambda x: x["rate"]) if steps else None
+    
+    # 生成建议
+    suggestions = []
+    for step in steps:
+        if step["rate"] < step["benchmark"]:
+            gap = round(step["benchmark"] - step["rate"], 1)
+            if step["step"] == "线索→商机":
+                suggestions.append({
+                    "step": step["step"],
+                    "current_rate": step["rate"],
+                    "benchmark": step["benchmark"],
+                    "gap": gap,
+                    "suggestions": [
+                        "提高线索质量筛选标准",
+                        "加快线索跟进速度（48 小时内首次联系）",
+                        "优化客户画像匹配度",
+                        "增加行业活动/展会获客渠道",
+                    ],
+                })
+            elif step["step"] == "商机→报价":
+                suggestions.append({
+                    "step": step["step"],
+                    "current_rate": step["rate"],
+                    "benchmark": step["benchmark"],
+                    "gap": gap,
+                    "suggestions": [
+                        "缩短方案制作周期",
+                        "提供更有竞争力的报价",
+                        "加强售前技术支持",
+                        "建立标准化报价模板",
+                    ],
+                })
+            elif step["step"] == "报价→合同":
+                suggestions.append({
+                    "step": step["step"],
+                    "current_rate": step["rate"],
+                    "benchmark": step["benchmark"],
+                    "gap": gap,
+                    "suggestions": [
+                        "分析丢单原因（价格/技术/交期）",
+                        "加强商务谈判能力",
+                        "提供灵活的付款方式",
+                        "展示成功案例和客户评价",
+                    ],
+                })
+    
+    return ResponseModel(code=200, message="success", data={
+        "steps": steps,
+        "bottleneck": bottleneck,
+        "suggestions": suggestions,
+        "overall_rate": round(contracts / leads * 100, 1) if leads else 0,
+    })
+
+
+@router.get("/conversion/lost-analysis", response_model=ResponseModel, summary="丢单原因分析")
+def get_lost_analysis(
+    db: Session = Depends(deps.get_db),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """分析丢单原因"""
+    now = datetime.now()
+    start = datetime.strptime(start_date, "%Y-%m-%d") if start_date else now - timedelta(days=365)
+    end = datetime.strptime(end_date, "%Y-%m-%d") if end_date else now
+    
+    # 查询丢单商机
+    lost_opps = db.query(Opportunity).filter(
+        Opportunity.stage == "LOST",
+        Opportunity.created_at >= start,
+        Opportunity.created_at <= end,
+    ).all()
+    
+    # 按丢单原因分类
+    reasons = {}
+    for opp in lost_opps:
+        reason = getattr(opp, 'loss_reason', '未知') or '未知'
+        if reason not in reasons:
+            reasons[reason] = {"count": 0, "amount": 0}
+        reasons[reason]["count"] += 1
+        reasons[reason]["amount"] += float(opp.est_amount or 0)
+    
+    # 按人统计丢单
+    lost_by_person = {}
+    for opp in lost_opps:
+        owner = opp.owner_id
+        if owner not in lost_by_person:
+            lost_by_person[owner] = {"count": 0, "amount": 0}
+        lost_by_person[owner]["count"] += 1
+        lost_by_person[owner]["amount"] += float(opp.est_amount or 0)
+    
+    # 查询用户名
+    user_ids = list(lost_by_person.keys())
+    users = {u.id: u.username for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+    
+    return ResponseModel(code=200, message="success", data={
+        "total_lost": len(lost_opps),
+        "total_lost_amount": sum(float(o.est_amount or 0) for o in lost_opps),
+        "by_reason": [{"reason": k, "count": v["count"], "amount": v["amount"]} for k, v in sorted(reasons.items(), key=lambda x: x[1]["count"], reverse=True)],
+        "by_person": [{"user_id": k, "user_name": users.get(k, f"用户{k}"), "count": v["count"], "amount": v["amount"]} for k, v in sorted(lost_by_person.items(), key=lambda x: x[1]["count"], reverse=True)],
+    })
