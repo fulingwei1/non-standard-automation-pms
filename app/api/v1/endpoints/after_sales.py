@@ -182,3 +182,65 @@ def create_support_ticket(
     db.refresh(ticket)
     
     return {"id": ticket.id, "ticket_no": ticket.ticket_no, "message": "工单创建成功"}
+
+
+
+# ==================== 质保管理 ====================
+
+@router.get("/projects/{project_id}/warranty")
+def get_warranty(project_id: int, db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """获取项目质保信息"""
+    from app.models.after_sales import AfterSalesWarranty
+    warranties = db.query(AfterSalesWarranty).filter(AfterSalesWarranty.project_id == project_id).all()
+    return [{"id": w.id, "warranty_no": w.warranty_no, "warranty_type": w.warranty_type, "warranty_start": str(w.warranty_start), "warranty_end": str(w.warranty_end), "status": w.status, "scope": w.scope} for w in warranties]
+
+@router.post("/projects/{project_id}/warranty", status_code=status.HTTP_201_CREATED)
+def create_warranty(project_id: int, warranty_type: str = Query("STANDARD"), warranty_months: int = Query(12), scope: str = Query(""), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """创建质保记录"""
+    from app.models.after_sales import AfterSalesWarranty
+    from datetime import date
+    from dateutil.relativedelta import relativedelta
+    start = date.today()
+    end = start + relativedelta(months=warranty_months)
+    w = AfterSalesWarranty(project_id=project_id, warranty_no=f"WRT-{project_id}-{start.strftime('%Y%m%d')}", warranty_type=warranty_type, warranty_start=start, warranty_end=end, warranty_months=warranty_months, scope=scope, status="ACTIVE")
+    db.add(w)
+    db.commit()
+    return {"id": w.id, "warranty_no": w.warranty_no}
+
+
+# ==================== 备件管理 ====================
+
+@router.get("/projects/{project_id}/spare-parts")
+def get_spare_parts(project_id: int, db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """获取项目备件列表"""
+    from app.models.after_sales import AfterSalesSparePart
+    parts = db.query(AfterSalesSparePart).filter(AfterSalesSparePart.project_id == project_id).all()
+    return [{"id": p.id, "part_no": p.part_no, "part_name": p.part_name, "quantity": p.quantity, "min_stock": p.min_stock, "status": p.status, "supplier": p.supplier} for p in parts]
+
+@router.post("/projects/{project_id}/spare-parts", status_code=status.HTTP_201_CREATED)
+def create_spare_part(project_id: int, part_name: str = Query(...), part_spec: str = Query(""), quantity: int = Query(0), supplier: str = Query(""), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """添加备件"""
+    from app.models.after_sales import AfterSalesSparePart
+    p = AfterSalesSparePart(project_id=project_id, part_no=f"SP-{project_id}-{datetime.now().strftime('%H%M%S')}", part_name=part_name, part_spec=part_spec, quantity=quantity, supplier=supplier, status="IN_STOCK" if quantity > 0 else "OUT_OF_STOCK")
+    db.add(p)
+    db.commit()
+    return {"id": p.id, "part_no": p.part_no}
+
+
+# ==================== 现场服务 ====================
+
+@router.get("/projects/{project_id}/field-services")
+def get_field_services(project_id: int, db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """获取项目现场服务记录"""
+    from app.models.after_sales import AfterSalesFieldService
+    services = db.query(AfterSalesFieldService).filter(AfterSalesFieldService.project_id == project_id).all()
+    return [{"id": s.id, "service_no": s.service_no, "service_type": s.service_type, "service_content": s.service_content, "planned_date": str(s.planned_date), "engineer_name": s.engineer_name, "status": s.status, "is_warranty": s.is_warranty} for s in services]
+
+@router.post("/projects/{project_id}/field-services", status_code=status.HTTP_201_CREATED)
+def create_field_service(project_id: int, service_type: str = Query(...), service_content: str = Query(...), planned_date: str = Query(...), engineer_name: str = Query(""), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """创建现场服务记录"""
+    from app.models.after_sales import AfterSalesFieldService
+    s = AfterSalesFieldService(project_id=project_id, service_no=f"FS-{project_id}-{datetime.now().strftime('%Y%m%d%H%M')}", service_type=service_type, service_content=service_content, planned_date=planned_date, engineer_name=engineer_name, status="PLANNED", is_warranty=True)
+    db.add(s)
+    db.commit()
+    return {"id": s.id, "service_no": s.service_no}
