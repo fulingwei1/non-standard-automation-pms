@@ -22,6 +22,7 @@ from app.dependencies import get_db
 from app.models.inventory_tracking import MaterialStock
 from app.models.material import BomHeader, BomItem, Material
 from app.models.notification import Notification
+from app.models.project import Project, ProjectStatusLog
 from app.models.purchase import (
     GoodsReceipt,
     GoodsReceiptItem,
