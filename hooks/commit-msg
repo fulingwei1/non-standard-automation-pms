@@ -6,8 +6,24 @@
 commit_msg_file=$1
 commit_msg=$(cat "$commit_msg_file")
 
-# Define allowed commit types based on project git-workflow.md
-allowed_types="feat|fix|refactor|docs|test|chore|perf|ci"
+# 允许的 commit 类型，与 .commitlintrc.json type-enum 保持一致
+allowed_types="feat|fix|refactor|docs|test|chore|perf|ci|style|revert"
+
+# 拒绝仍含 emoji 前缀的消息（prepare-commit-msg 应已清理，此处做兜底）
+if echo "$commit_msg" | head -n 1 | perl -ne 'exit 0 if /^[^\x00-\x7F]/; exit 1'; then
+    echo "❌ Commit message must not start with an emoji prefix"
+    echo "  Remove the emoji and use a conventional type prefix instead."
+    echo "  Your message: $commit_msg"
+    exit 1
+fi
+
+# 拒绝冒号后缺少空格的消息（如 "fix:msg"）
+if echo "$commit_msg" | head -n 1 | grep -qE "^($allowed_types)(\(.+\))?:[^ ]"; then
+    echo "❌ Missing space after colon in commit message"
+    echo "  Expected: <type>: <description>"
+    echo "  Got:      $(head -n 1 "$commit_msg_file")"
+    exit 1
+fi
 
 # Conventional commit pattern: <type>: <description>
 # Optional scope: <type>(scope): <description>
@@ -25,7 +41,7 @@ if ! echo "$commit_msg" | grep -qE "$pattern"; then
     echo "  or"
     echo "  <type>(scope): <description>"
     echo ""
-    echo "Allowed types: feat, fix, refactor, docs, test, chore, perf, ci"
+    echo "Allowed types: feat, fix, refactor, docs, test, chore, perf, ci, style, revert"
     echo ""
     echo "Examples:"
     echo "  feat: add user authentication"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Git hooks installation script
-# This script installs commit message validation hooks
+# Installs commit-msg and prepare-commit-msg hooks via symlink
 
 set -e
 
@@ -24,20 +24,39 @@ if [ ! -d "$HOOKS_DIR" ]; then
     exit 1
 fi
 
-# Install commit-msg hook
-if [ -f "$HOOKS_DIR/commit-msg" ]; then
-    echo "📝 Installing commit-msg hook..."
-    cp "$HOOKS_DIR/commit-msg" "$GIT_HOOKS_DIR/commit-msg"
-    chmod +x "$GIT_HOOKS_DIR/commit-msg"
-    echo "✅ commit-msg hook installed"
-else
-    echo "⚠️  Warning: commit-msg hook not found in $HOOKS_DIR"
-fi
+# 安装单个 hook 的辅助函数：使用 symlink 而非 cp，已正确则跳过
+install_hook() {
+    local hook_name=$1
+    local source="$HOOKS_DIR/$hook_name"
+    local target="$GIT_HOOKS_DIR/$hook_name"
+
+    if [ ! -f "$source" ]; then
+        echo "⚠️  Warning: $hook_name not found in $HOOKS_DIR — skipped"
+        return
+    fi
+
+    # 如果 symlink 已指向正确目标，跳过
+    if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
+        echo "✅ $hook_name already installed (symlink up to date)"
+        return
+    fi
+
+    # 如果存在旧文件/symlink，先移除
+    [ -e "$target" ] || [ -L "$target" ] && rm -f "$target"
+
+    ln -s "$source" "$target"
+    chmod +x "$source"
+    echo "✅ $hook_name installed (symlinked)"
+}
+
+install_hook "prepare-commit-msg"
+install_hook "commit-msg"
 
 echo ""
 echo "✨ Git hooks installation complete!"
 echo ""
 echo "The following hooks are now active:"
+echo "  - prepare-commit-msg: Auto-normalizes commit message formatting"
 echo "  - commit-msg: Validates conventional commit message format"
 echo ""
 echo "See docs/COMMIT_MESSAGE_GUIDE.md for commit message guidelines."

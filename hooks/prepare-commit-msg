@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# prepare-commit-msg hook — auto-normalize common commit message issues
+# Runs before commit-msg validation so minor formatting problems are fixed silently.
+
+commit_msg_file=$1
+commit_source=$2
+
+# 只处理用户手写的提交消息，跳过 merge/squash/template 等场景
+if [ -n "$commit_source" ]; then
+    exit 0
+fi
+
+# 使用 perl 做全部规范化（兼容 macOS + Linux）
+# 1. 去除 emoji 前缀（非 ASCII 字符开头的前缀）
+# 2. 将 type 前缀转为小写
+# 3. 确保冒号后有一个空格
+# 4. 去除 subject 末尾的句号
+perl -i -pe '
+    if ($. == 1) {
+        s/^\s*[^\x00-\x7F]+\s*//;            # 去除 emoji 前缀
+        s/^([A-Za-z]+)(\([^)]*\))?:/lc($1).$2.":"/e;  # type 小写化
+        s/^([a-z]+(?:\([^)]*\))?):(\S)/\1: \2/; # 冒号后补空格
+        s/\.\s*$//;                            # 去除末尾句号
+    }
+' "$commit_msg_file"
+
+exit 0
