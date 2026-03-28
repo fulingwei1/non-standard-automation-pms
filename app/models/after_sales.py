@@ -236,3 +236,82 @@ class AfterSalesFieldService(Base, TimestampMixin):
         Index("idx_asfs_status", "status"),
         Index("idx_asfs_engineer", "engineer_id"),
     )
+
+
+class AfterSalesSLA(Base, TimestampMixin):
+    """SLA 管理表"""
+    
+    __tablename__ = "after_sales_sla"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
+    ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), comment="工单 ID")
+    
+    # SLA 指标
+    response_target_hours = Column(Integer, default=4, comment="响应目标(小时)")
+    resolve_target_hours = Column(Integer, default=24, comment="解决目标(小时)")
+    actual_response_hours = Column(Integer, comment="实际响应(小时)")
+    actual_resolve_hours = Column(Integer, comment="实际解决(小时)")
+    
+    # 达标
+    response_met = Column(Boolean, comment="响应是否达标")
+    resolve_met = Column(Boolean, comment="解决是否达标")
+    
+    project = relationship("Project", foreign_keys=[project_id])
+    
+    __table_args__ = (Index("idx_sla_project", "project_id"), Index("idx_sla_ticket", "ticket_id"),)
+
+
+class AfterSalesSatisfaction(Base, TimestampMixin):
+    """客户满意度表"""
+    
+    __tablename__ = "after_sales_satisfaction"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), comment="项目 ID")
+    customer_id = Column(Integer, ForeignKey("customers.id"), comment="客户 ID")
+    ticket_id = Column(Integer, ForeignKey("after_sales_support_tickets.id"), nullable=True, comment="工单 ID")
+    field_service_id = Column(Integer, ForeignKey("after_sales_field_services.id"), nullable=True, comment="现场服务 ID")
+    
+    # 满意度评分
+    overall_score = Column(Integer, comment="总体满意度 1-10")
+    response_score = Column(Integer, comment="响应速度 1-10")
+    quality_score = Column(Integer, comment="服务质量 1-10")
+    attitude_score = Column(Integer, comment="服务态度 1-10")
+    nps_score = Column(Integer, comment="NPS 评分 0-10")
+    
+    # 反馈
+    comments = Column(Text, comment="客户评价")
+    
+    project = relationship("Project", foreign_keys=[project_id])
+    customer = relationship("Customer", foreign_keys=[customer_id])
+    
+    __table_args__ = (Index("idx_sat_project", "project_id"),)
+
+
+class AfterSalesKnowledge(Base, TimestampMixin):
+    """售后知识库表"""
+    
+    __tablename__ = "after_sales_knowledge"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # 知识信息
+    title = Column(String(200), comment="标题")
+    category = Column(String(30), comment="分类：FAQ/SOLUTION/GUIDE/TROUBLESHOOT")
+    content = Column(Text, comment="内容")
+    keywords = Column(String(500), comment="关键词(逗号分隔)")
+    
+    # 关联
+    project_type = Column(String(50), comment="项目类型：ICT/FCT/EOL")
+    product_category = Column(String(100), comment="产品类别")
+    
+    # 统计
+    view_count = Column(Integer, default=0, comment="浏览次数")
+    helpful_count = Column(Integer, default=0, comment="有用次数")
+    
+    # 状态
+    status = Column(String(20), default="PUBLISHED", comment="状态：DRAFT/PUBLISHED/ARCHIVED")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
+    
+    __table_args__ = (Index("idx_ask_category", "category"), Index("idx_ask_status", "status"),)

@@ -244,3 +244,97 @@ def create_field_service(project_id: int, service_type: str = Query(...), servic
     db.add(s)
     db.commit()
     return {"id": s.id, "service_no": s.service_no}
+
+
+
+# ==================== SLA 管理 ====================
+
+@router.get("/projects/{project_id}/sla-stats")
+def get_sla_stats(project_id: int, db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """获取项目 SLA 统计"""
+    from app.models.after_sales import AfterSalesSLA
+    sla_records = db.query(AfterSalesSLA).filter(AfterSalesSLA.project_id == project_id).all()
+    total = len(sla_records)
+    response_met = sum(1 for s in sla_records if s.response_met)
+    resolve_met = sum(1 for s in sla_records if s.resolve_met)
+    return {
+        "total": total,
+        "response_met_rate": round(response_met / total * 100, 1) if total else 0,
+        "resolve_met_rate": round(resolve_met / total * 100, 1) if total else 0,
+        "avg_response_hours": round(sum(s.actual_response_hours or 0 for s in sla_records) / total, 1) if total else 0,
+        "avg_resolve_hours": round(sum(s.actual_resolve_hours or 0 for s in sla_records) / total, 1) if total else 0,
+    }
+
+
+# ==================== 客户满意度 ====================
+
+@router.get("/projects/{project_id}/satisfaction")
+def get_satisfaction(project_id: int, db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """获取项目满意度统计"""
+    from app.models.after_sales import AfterSalesSatisfaction
+    records = db.query(AfterSalesSatisfaction).filter(AfterSalesSatisfaction.project_id == project_id).all()
+    total = len(records)
+    if not total:
+        return {"total": 0, "avg_overall": 0, "avg_nps": 0}
+    return {
+        "total": total,
+        "avg_overall": round(sum(r.overall_score or 0 for r in records) / total, 1),
+        "avg_response": round(sum(r.response_score or 0 for r in records) / total, 1),
+        "avg_quality": round(sum(r.quality_score or 0 for r in records) / total, 1),
+        "avg_attitude": round(sum(r.attitude_score or 0 for r in records) / total, 1),
+        "avg_nps": round(sum(r.nps_score or 0 for r in records) / total, 1),
+        "promoters": sum(1 for r in records if (r.nps_score or 0) >= 9),
+        "passives": sum(1 for r in records if 7 <= (r.nps_score or 0) <= 8),
+        "detractors": sum(1 for r in records if (r.nps_score or 0) <= 6),
+    }
+
+@router.post("/projects/{project_id}/satisfaction", status_code=status.HTTP_201_CREATED)
+def create_satisfaction(project_id: int, overall_score: int = Query(..., ge=1, le=10), response_score: int = Query(5, ge=1, le=10), quality_score: int = Query(5, ge=1, le=10), attitude_score: int = Query(5, ge=1, le=10), nps_score: int = Query(5, ge=0, le=10), comments: str = Query(""), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """提交满意度评价"""
+    from app.models.after_sales import AfterSalesSatisfaction
+    s = AfterSalesSatisfaction(project_id=project_id, overall_score=overall_score, response_score=response_score, quality_score=quality_score, attitude_score=attitude_score, nps_score=nps_score, comments=comments)
+    db.add(s)
+    db.commit()
+    return {"id": s.id, "message": "满意度评价已提交"}
+
+
+# ==================== 知识库 ====================
+
+@router.get("/knowledge")
+def search_knowledge(keyword: str = Query(""), category: str = Query(None), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """搜索售后知识库"""
+    from app.models.after_sales import AfterSalesKnowledge
+    query = db.query(AfterSalesKnowledge).filter(AfterSalesKnowledge.status == "PUBLISHED")
+    if keyword:
+        query = query.filter(AfterSalesKnowledge.title.contains(keyword) | AfterSalesKnowledge.keywords.contains(keyword) | AfterSalesKnowledge.content.contains(keyword))
+    if category:
+        query = query.filter(AfterSalesKnowledge.category == category)
+    results = query.order_by(AfterSalesKnowledge.view_count.desc()).limit(20).all()
+    return [{"id": k.id, "title": k.title, "category": k.category, "keywords": k.keywords, "view_count": k.view_count, "helpful_count": k.helpful_count} for k in results]
+
+@router.post("/knowledge", status_code=status.HTTP_201_CREATED)
+def create_knowledge(title: str = Query(...), category: str = Query("FAQ"), content: str = Query(...), keywords: str = Query(""), project_type: str = Query(""), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """添加知识库文章"""
+    from app.models.after_sales import AfterSalesKnowledge
+    k = AfterSalesKnowledge(title=title, category=category, content=content, keywords=keywords, project_type=project_type, status="PUBLISHED", created_by=current_user.id)
+    db.add(k)
+    db.commit()
+    return {"id": k.id, "message": "知识库文章已创建"}
+
+
+# ==================== 工单升级 ====================
+
+@router.post("/projects/{project_id}/support-tickets/{ticket_id}/escalate")
+def escalate_ticket(project_id: int, ticket_id: int, reason: str = Query(...), db: Session = Depends(deps.get_db), current_user: User = Depends(security.get_current_active_user)):
+    """工单升级"""
+    ticket = db.query(AfterSalesSupportTicket).filter(AfterSalesSupportTicket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="工单不存在")
+    # 升级优先级
+    priority_order = ["LOW", "MEDIUM", "HIGH", "URGENT"]
+    current_idx = priority_order.index(ticket.priority) if ticket.priority in priority_order else 0
+    if current_idx < len(priority_order) - 1:
+        ticket.priority = priority_order[current_idx + 1]
+    ticket.status = "IN_PROGRESS"
+    db.commit()
+    return {"id": ticket.id, "new_priority": ticket.priority, "message": f"工单已升级为 {ticket.priority}，原因：{reason}"}
