@@ -498,10 +498,10 @@ class TestQuoteAdapterCore(unittest.TestCase):
         mock_instance.id = 200
         mock_instance.status = "PENDING"
 
-        # Mock WorkflowEngine
-        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as MockEngine:
+        # Mock ApprovalEngineService
+        with patch("app.services.approval_engine.adapters.quote.ApprovalEngineService") as MockEngine:
             mock_engine = MockEngine.return_value
-            mock_engine.create_instance.return_value = mock_instance
+            mock_engine.submit.return_value = mock_instance
 
             result = self.adapter.submit_for_approval(
                 quote_version=mock_version,
@@ -510,11 +510,11 @@ class TestQuoteAdapterCore(unittest.TestCase):
                 summary="测试摘要",
             )
 
-            # 验证WorkflowEngine被正确调用
+            # 验证ApprovalEngineService被正确调用
             MockEngine.assert_called_once_with(self.db)
-            mock_engine.create_instance.assert_called_once()
+            mock_engine.submit.assert_called_once()
 
-            call_kwargs = mock_engine.create_instance.call_args[1]
+            call_kwargs = mock_engine.submit.call_args[1]
             self.assertEqual(call_kwargs["flow_code"], "SALES_QUOTE")
             self.assertEqual(call_kwargs["business_type"], "SALES_QUOTE")
             self.assertEqual(call_kwargs["business_id"], 100)
@@ -556,14 +556,14 @@ class TestQuoteAdapterCore(unittest.TestCase):
         mock_instance = MagicMock(spec=ApprovalInstance)
         mock_instance.id = 300
 
-        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as MockEngine:
+        with patch("app.services.approval_engine.adapters.quote.ApprovalEngineService") as MockEngine:
             mock_engine = MockEngine.return_value
-            mock_engine.create_instance.return_value = mock_instance
+            mock_engine.submit.return_value = mock_instance
 
             self.adapter.submit_for_approval(quote_version=mock_version, initiator_id=10)
 
             # 验证使用默认标题
-            call_kwargs = mock_engine.create_instance.call_args[1]
+            call_kwargs = mock_engine.submit.call_args[1]
             self.assertEqual(call_kwargs["business_title"], "QT-2024-002")
 
     # ========== create_quote_approval() 测试 ==========

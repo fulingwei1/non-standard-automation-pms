@@ -242,9 +242,9 @@ class TestGetTitleAndSummary:
 class TestSubmitForApproval:
     """测试提交审批流程"""
 
-    @patch("app.services.approval_engine.adapters.ecn.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.ecn.ApprovalEngineService")
     def test_submit_for_approval_success(
-        self, mock_workflow_engine, ecn_adapter, db_mock, sample_ecn
+        self, mock_engine_service, ecn_adapter, db_mock, sample_ecn
     ):
         """测试成功提交审批"""
         # Mock审批实例
@@ -252,10 +252,10 @@ class TestSubmitForApproval:
         instance.id = 100
         instance.status = "PENDING"
 
-        # Mock WorkflowEngine
+        # Mock ApprovalEngineService
         engine_instance = MagicMock()
-        engine_instance.create_instance.return_value = instance
-        mock_workflow_engine.return_value = engine_instance
+        engine_instance.submit.return_value = instance
+        mock_engine_service.return_value = engine_instance
 
         # Mock评估列表
         db_mock.query.return_value.filter.return_value.all.return_value = []
@@ -274,9 +274,9 @@ class TestSubmitForApproval:
         db_mock.add.assert_called_with(sample_ecn)
         db_mock.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.adapters.ecn.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.ecn.ApprovalEngineService")
     def test_submit_for_approval_with_evaluations(
-        self, mock_workflow_engine, ecn_adapter, db_mock, sample_ecn
+        self, mock_engine_service, ecn_adapter, db_mock, sample_ecn
     ):
         """测试包含评估数据的提交"""
         # Mock评估数据
@@ -297,15 +297,15 @@ class TestSubmitForApproval:
         instance.id = 100
 
         engine_instance = MagicMock()
-        engine_instance.create_instance.return_value = instance
-        mock_workflow_engine.return_value = engine_instance
+        engine_instance.submit.return_value = instance
+        mock_engine_service.return_value = engine_instance
 
         db_mock.query.return_value.filter.return_value.all.return_value = [eval1]
 
         result = ecn_adapter.submit_for_approval(ecn=sample_ecn, initiator_id=100)
 
-        # 验证create_instance被调用时包含评估数据
-        call_args = engine_instance.create_instance.call_args
+        # 验证submit被调用时包含评估数据
+        call_args = engine_instance.submit.call_args
         config = call_args[1]["config"]
         assert "ecn" in config
         assert "evaluations" in config["ecn"]

@@ -616,7 +616,7 @@ class TestValidateSubmit:
 class TestSubmitForApproval:
     """提交审批集成测试"""
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
     def test_submit_for_approval_new_submission(self, mock_workflow_engine):
         """测试提交审批 - 新提交"""
         db = make_db()
@@ -627,7 +627,7 @@ class TestSubmitForApproval:
         instance = make_approval_instance(id=5000, entity_id=10)
 
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = instance
+        mock_engine.submit.return_value = instance
         mock_workflow_engine.return_value = mock_engine
 
         adapter = InvoiceApprovalAdapter(db)
@@ -647,14 +647,14 @@ class TestSubmitForApproval:
         db.commit.assert_called_once()
 
         # 验证调用参数
-        mock_engine.create_instance.assert_called_once()
-        call_args = mock_engine.create_instance.call_args
+        mock_engine.submit.assert_called_once()
+        call_args = mock_engine.submit.call_args
         assert call_args[1]["flow_code"] == "SALES_INVOICE"
         assert call_args[1]["business_type"] == "SALES_INVOICE"
         assert call_args[1]["business_id"] == 10
         assert call_args[1]["submitted_by"] == 15
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
     def test_submit_for_approval_already_submitted(self, mock_workflow_engine):
         """测试提交审批 - 已提交过"""
         db = make_db()
@@ -670,7 +670,7 @@ class TestSubmitForApproval:
         mock_workflow_engine.assert_not_called()
         db.commit.assert_not_called()
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
     def test_submit_for_approval_default_parameters(self, mock_workflow_engine):
         """测试提交审批 - 使用默认参数"""
         db = make_db()
@@ -678,7 +678,7 @@ class TestSubmitForApproval:
         instance = make_approval_instance(id=7000)
 
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = instance
+        mock_engine.submit.return_value = instance
         mock_workflow_engine.return_value = mock_engine
 
         adapter = InvoiceApprovalAdapter(db)
