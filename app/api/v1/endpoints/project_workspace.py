@@ -15,7 +15,7 @@ from app.models.issue import Issue
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.project_bonus_service import ProjectBonusService
+from app.services.bonus.project_bonus_service import ProjectBonusService
 from app.services.project_meeting_service import ProjectMeetingService
 from app.services.project_solution_service import ProjectSolutionService
 from app.utils.db_helpers import get_or_404

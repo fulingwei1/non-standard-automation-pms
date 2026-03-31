@@ -182,7 +182,7 @@ def check_budget_alert(db: Session, project_id: int, user_id: int) -> None:
     检查预算执行情况并生成预警
     """
     try:
-        from app.services.cost_alert_service import CostAlertService
+        from app.services.cost.cost_alert_service import CostAlertService
 
         CostAlertService.check_budget_execution(
             db, project_id, trigger_source="TIMESHEET", source_id=user_id

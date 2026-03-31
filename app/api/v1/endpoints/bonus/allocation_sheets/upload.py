@@ -44,7 +44,7 @@ async def upload_allocation_sheet(
     except ImportError:
         raise HTTPException(status_code=500, detail="Excel处理库未安装，请安装pandas和openpyxl")
 
-    from app.services.bonus_allocation_parser import (
+    from app.services.bonus.bonus_allocation_parser import (
         parse_allocation_sheet,
         parse_excel_file,
         read_and_save_file,

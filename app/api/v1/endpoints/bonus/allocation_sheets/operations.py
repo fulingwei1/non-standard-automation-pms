@@ -80,7 +80,7 @@ def distribute_bonus_from_sheet(
     只有线下确认完成（财务、人力、总经理都确认）的明细表才能发放
     """
     from app.services.bonus import BonusCalculator
-    from app.services.bonus_distribution_service import (
+    from app.services.bonus.bonus_distribution_service import (
         check_distribution_exists,
         create_calculation_from_team_allocation,
         create_distribution_record,

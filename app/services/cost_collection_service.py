@@ -15,7 +15,7 @@ from app.models.ecn import Ecn
 from app.models.outsourcing import OutsourcingOrder
 from app.models.project import Project, ProjectCost
 from app.models.purchase import PurchaseOrder
-from app.services.cost_alert_service import CostAlertService
+from app.services.cost.cost_alert_service import CostAlertService
 from app.utils.db_helpers import delete_obj
 
 

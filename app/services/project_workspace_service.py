@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.issue import Issue
 from app.models.project import Project, ProjectDocument, ProjectMember
 from app.models.task_center import TaskUnified
-from app.services.project_bonus_service import ProjectBonusService
+from app.services.bonus.project_bonus_service import ProjectBonusService
 from app.services.project_meeting_service import ProjectMeetingService
 from app.services.project_solution_service import ProjectSolutionService
 

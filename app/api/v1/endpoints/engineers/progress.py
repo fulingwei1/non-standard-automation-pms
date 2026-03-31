@@ -16,7 +16,7 @@ from app.models.project import Project
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
-from app.services.progress_aggregation_service import aggregate_task_progress
+from app.services.progress_service import aggregate_task_progress
 from app.services.task_progress_service import (
     progress_error_to_http,
 )
