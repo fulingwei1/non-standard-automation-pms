@@ -20,3 +20,19 @@ export const priorityConfigs = {
     high: { label: '高', color: 'bg-amber-500' },
     urgent: { label: '紧急', color: 'bg-red-500' },
 };
+
+export const INITIAL_FORM_DATA = {
+  service_type: "CONSULTATION",
+  project_name: "",
+  customer_name: "",
+  service_location: "",
+  service_date: "",
+  service_start_time: "",
+  service_end_time: "",
+  service_engineer: "",
+  customer_contact: "",
+  customer_phone: "",
+  service_content: "",
+  service_result: "",
+  photos: [],
+};
