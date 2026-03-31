@@ -15,8 +15,6 @@ from sqlalchemy.orm import Session
 from app.models.approval import ApprovalInstance, ApprovalNodeDefinition, ApprovalTask
 from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation
 from app.models.user import Role, User, UserRole
-from app.schemas.approval.instance import ApprovalInstanceCreate
-
 from .base import ApprovalAdapter
 
 logger = logging.getLogger(__name__)
@@ -230,30 +228,21 @@ class EcnApprovalAdapter(ApprovalAdapter):
                 for e in evaluations
             ]
 
-        # 创建审批实例
-        ApprovalInstanceCreate(
+        # 使用统一审批引擎创建实例
+        from ..engine import ApprovalEngineService
+
+        engine = ApprovalEngineService(self.db)
+
+        instance = engine.submit(
             template_code="ECN_STANDARD",
             entity_type="ECN",
             entity_id=ecn.id,
             form_data=form_data,
+            initiator_id=initiator_id,
             title=title or f"ECN审批 - {ecn.ecn_title}",
             summary=summary or f"{ecn.ecn_type}变更审批：{ecn.ecn_no}",
             urgency=urgency,
             cc_user_ids=cc_user_ids,
-        )
-
-        # 使用统一引擎创建实例
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
-
-        workflow_engine = WorkflowEngine(self.db)
-
-        instance = workflow_engine.create_instance(
-            flow_code="ECN_STANDARD",
-            business_type="ECN",
-            business_id=ecn.id,
-            business_title=ecn.ecn_title,
-            submitted_by=initiator_id,
-            config={"ecn": form_data},
         )
 
         # 更新ECN记录，关联审批实例

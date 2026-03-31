@@ -474,8 +474,8 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         self.db = MagicMock()
         self.adapter = QuoteApprovalAdapter(self.db)
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_success(self, MockWorkflowEngine):
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
+    def test_submit_for_approval_success(self, MockEngineService):
         """测试成功提交审批"""
         # 创建mock对象
         mock_version = MagicMock()
@@ -491,10 +491,10 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         mock_instance.id = 100
         mock_instance.status = "PENDING"
 
-        # Mock WorkflowEngine
+        # Mock ApprovalEngineService
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = mock_instance
-        MockWorkflowEngine.return_value = mock_engine
+        mock_engine.submit.return_value = mock_instance
+        MockEngineService.return_value = mock_engine
 
         # 执行测试
         result = self.adapter.submit_for_approval(
@@ -513,16 +513,16 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         self.db.add.assert_called_once_with(mock_version)
         self.db.commit.assert_called_once()
 
-        # 验证WorkflowEngine调用
-        mock_engine.create_instance.assert_called_once()
-        call_args = mock_engine.create_instance.call_args
+        # 验证ApprovalEngineService调用
+        mock_engine.submit.assert_called_once()
+        call_args = mock_engine.submit.call_args
         self.assertEqual(call_args[1]["flow_code"], "SALES_QUOTE")
         self.assertEqual(call_args[1]["business_type"], "SALES_QUOTE")
         self.assertEqual(call_args[1]["business_id"], 1)
         self.assertEqual(call_args[1]["submitted_by"], 20)
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_already_submitted(self, MockWorkflowEngine):
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
+    def test_submit_for_approval_already_submitted(self, MockEngineService):
         """测试重复提交"""
         mock_version = MagicMock()
         mock_version.quote_code = "Q2024001"
@@ -539,10 +539,10 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
 
         self.assertEqual(result, mock_instance)
         # 不应该创建新实例
-        MockWorkflowEngine.assert_not_called()
+        MockEngineService.assert_not_called()
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_with_defaults(self, MockWorkflowEngine):
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
+    def test_submit_for_approval_with_defaults(self, MockEngineService):
         """测试使用默认参数提交审批"""
         mock_version = MagicMock()
         mock_version.id = 1
@@ -557,15 +557,15 @@ class TestQuoteApprovalAdapterSubmitForApproval(unittest.TestCase):
         mock_instance.status = "PENDING"
 
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = mock_instance
-        MockWorkflowEngine.return_value = mock_engine
+        mock_engine.submit.return_value = mock_instance
+        MockEngineService.return_value = mock_engine
 
         result = self.adapter.submit_for_approval(mock_version, initiator_id=20)
 
         self.assertEqual(result, mock_instance)
 
         # 验证form_data中的默认值
-        call_args = mock_engine.create_instance.call_args
+        call_args = mock_engine.submit.call_args
         form_data = call_args[1]["config"]["quote"]
         self.assertEqual(form_data["quote_code"], "")
         self.assertEqual(form_data["quote_total"], 0)

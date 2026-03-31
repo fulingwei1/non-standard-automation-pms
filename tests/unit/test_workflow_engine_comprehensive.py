@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated WorkflowEngine, will be removed when workflow_engine.py is deleted
 # -*- coding: utf-8 -*-
 """
 WorkflowEngine 和 ApprovalRouter 综合单元测试
@@ -22,6 +23,8 @@ from decimal import Decimal
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 
 class TestWorkflowEngineInit:

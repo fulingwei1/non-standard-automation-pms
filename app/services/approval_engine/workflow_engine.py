@@ -1,9 +1,20 @@
 # -*- coding: utf-8 -*-
 """
 ApprovalEngine 工作流引擎
+
+[DEPRECATED] 此模块已废弃，请使用 engine.ApprovalEngineService 替代。
+Legacy 系统仅保留用于测试兼容性，将在后续版本中删除。
 """
 
 import logging
+import warnings
+
+warnings.warn(
+    "approval_engine.workflow_engine 已废弃，请使用 engine.ApprovalEngineService。"
+    "此模块将在后续版本中删除。",
+    DeprecationWarning,
+    stacklevel=2,
+)
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 

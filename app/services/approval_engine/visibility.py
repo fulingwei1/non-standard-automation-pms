@@ -13,7 +13,6 @@
 """
 
 import logging
-from enum import Enum
 from typing import Optional
 
 from sqlalchemy import exists
@@ -24,17 +23,9 @@ from app.models.approval.instance import ApprovalInstance
 from app.models.approval.task import ApprovalCarbonCopy, ApprovalTask
 from app.models.user import User
 
+from .approval_scope import ParticipantRole  # noqa: F401 - 统一枚举定义
+
 logger = logging.getLogger(__name__)
-
-
-class ParticipantRole(str, Enum):
-    """用户在某个审批实例中的参与角色"""
-
-    INITIATOR = "INITIATOR"
-    APPROVER = "APPROVER"
-    CC = "CC"
-    ADMIN = "ADMIN"
-    NONE = "NONE"
 
 
 def _is_approval_admin(user: User, db: Session) -> bool:

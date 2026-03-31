@@ -427,8 +427,8 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
 
     # ========== submit_for_approval() 测试 ==========
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_success(self, mock_workflow_engine_class):
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
+    def test_submit_for_approval_success(self, mock_engine_class):
         """测试提交审批 - 成功"""
         # 创建mock报价版本
         mock_quote_version = MagicMock()
@@ -445,10 +445,10 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         mock_instance.id = 100
         mock_instance.status = "PENDING"
 
-        # 配置WorkflowEngine mock
+        # 配置ApprovalEngineService mock
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = mock_instance
-        mock_workflow_engine_class.return_value = mock_engine
+        mock_engine.submit.return_value = mock_instance
+        mock_engine_class.return_value = mock_engine
 
         result = self.adapter.submit_for_approval(
             quote_version=mock_quote_version,
@@ -464,8 +464,8 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         self.mock_db.add.assert_called_with(mock_quote_version)
         self.mock_db.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_already_submitted(self, mock_workflow_engine_class):
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
+    def test_submit_for_approval_already_submitted(self, mock_engine_class):
         """测试提交审批 - 已经提交过"""
         mock_quote_version = MagicMock()
         mock_quote_version.id = 1
@@ -484,7 +484,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
 
         self.assertEqual(result, mock_existing_instance)
         # 不应该创建新实例
-        mock_workflow_engine_class.assert_not_called()
+        mock_engine_class.assert_not_called()
 
     # ========== create_quote_approval() 测试 ==========
 

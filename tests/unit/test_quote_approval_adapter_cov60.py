@@ -346,16 +346,16 @@ class TestQuoteApprovalAdapter:
         assert valid is False
         assert "未添加任何版本" in error
 
-    @patch("app.services.approval_engine.adapters.quote.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_submit_for_approval_success(self, mock_workflow_engine):
         """测试提交审批 - 成功"""
         db = make_db()
         quote_version = make_quote_version(approval_instance_id=None)
         instance = make_approval_instance(id=5000)
 
-        # Mock WorkflowEngine
+        # Mock ApprovalEngineService
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = instance
+        mock_engine.submit.return_value = instance
         mock_workflow_engine.return_value = mock_engine
 
         adapter = QuoteApprovalAdapter(db)
@@ -368,7 +368,7 @@ class TestQuoteApprovalAdapter:
         db.add.assert_called_with(quote_version)
         db.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.adapters.quote.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_submit_for_approval_already_submitted(self, mock_workflow_engine):
         """测试提交审批 - 已提交"""
         db = make_db()

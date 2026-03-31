@@ -488,11 +488,11 @@ class TestInvoiceAdapterCore(unittest.TestCase):
         mock_instance.status = "PENDING"
 
         with patch(
-            "app.services.approval_engine.workflow_engine.WorkflowEngine"
-        ) as MockWorkflowEngine:
+            "app.services.approval_engine.adapters.invoice.ApprovalEngineService"
+        ) as MockEngineService:
             mock_engine = MagicMock()
-            mock_engine.create_instance.return_value = mock_instance
-            MockWorkflowEngine.return_value = mock_engine
+            mock_engine.submit.return_value = mock_instance
+            MockEngineService.return_value = mock_engine
 
             result = self.adapter.submit_for_approval(
                 invoice=mock_invoice,
@@ -506,9 +506,9 @@ class TestInvoiceAdapterCore(unittest.TestCase):
             # 验证返回新实例
             self.assertEqual(result, mock_instance)
 
-            # 验证调用了WorkflowEngine.create_instance
-            mock_engine.create_instance.assert_called_once()
-            call_kwargs = mock_engine.create_instance.call_args[1]
+            # 验证调用了ApprovalEngineService.submit
+            mock_engine.submit.assert_called_once()
+            call_kwargs = mock_engine.submit.call_args[1]
             self.assertEqual(call_kwargs["flow_code"], "SALES_INVOICE")
             self.assertEqual(call_kwargs["business_type"], "SALES_INVOICE")
             self.assertEqual(call_kwargs["business_id"], mock_invoice.id)

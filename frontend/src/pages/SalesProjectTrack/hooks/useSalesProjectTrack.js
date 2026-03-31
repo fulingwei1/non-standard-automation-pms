@@ -1,52 +1,96 @@
-import { useState, useCallback, useEffect } from 'react';
-import { salesApi as salesProjectApi } from '../../../services/api';
+import { useState, useMemo, useEffect } from "react";
+import { projectApi } from "../../../services/api";
 
 /**
- * 销售项目跟踪数据 Hook
+ * Custom hook for Sales Project Track page.
+ * Handles data fetching, filtering, and derived stats.
  */
 export function useSalesProjectTrack() {
-    const [projects, setProjects] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [filters, setFilters] = useState({ stage: '', owner: '' });
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStage, setSelectedStage] = useState("all");
+  const [selectedHealth, setSelectedHealth] = useState("all");
 
-    const loadProjects = useCallback(async () => {
-        try {
-            setLoading(true);
-            const params = { page_size: 50 };
-            if (filters.stage && filters.stage !== 'all') params.stage = filters.stage;
-            if (filters.owner) params.owner_id = filters.owner;
+  // Fetch projects from API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await projectApi.list();
+        const data = res.data?.items || res.data || [];
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to load sales projects:", err);
+        setError("加载项目数据失败");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
-            const response = await salesProjectApi.list(params);
-            setProjects(response.data?.items || response.data?.items || response.data || []);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, [filters]);
+  // Filtered project list
+  const filteredProjects = useMemo(() => {
+    return (projects || []).filter((project) => {
+      const projectName = project.name || project.project_name || "";
+      const projectId = String(project.id || project.project_code || "");
+      const customerName =
+        project.customerShort ||
+        project.customer_name ||
+        project.customer?.name ||
+        "";
 
-    const updateStage = useCallback(async (id, stage) => {
-        try {
-            await salesProjectApi.updateStage(id, { stage });
-            await loadProjects();
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: err.response?.data?.detail || err.message };
-        }
-    }, [loadProjects]);
+      const matchesSearch =
+        !searchTerm ||
+        projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        projectId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customerName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const addFollowUp = useCallback(async (id, content) => {
-        try {
-            await salesProjectApi.addFollowUp(id, { content });
-            await loadProjects();
-            return { success: true };
-        } catch (err) {
-            return { success: false, error: err.response?.data?.detail || err.message };
-        }
-    }, [loadProjects]);
+      const matchesStage =
+        selectedStage === "all" || project.stage === selectedStage;
+      const matchesHealth =
+        selectedHealth === "all" || project.health === selectedHealth;
 
-    useEffect(() => { loadProjects(); }, [loadProjects]);
+      return matchesSearch && matchesStage && matchesHealth;
+    });
+  }, [projects, searchTerm, selectedStage, selectedHealth]);
 
-    return { projects, loading, error, filters, setFilters, loadProjects, updateStage, addFollowUp };
+  // Derived stats
+  const stats = useMemo(() => {
+    return {
+      total: projects?.length ?? 0,
+      inProgress: (projects || []).filter(
+        (p) => !["warranty", "S9"].includes(p.stage)
+      ).length,
+      nearDelivery: (projects || []).filter((p) => {
+        const deliveryDate =
+          p.expectedDelivery || p.expected_delivery || p.plan_delivery_date;
+        if (!deliveryDate) return false;
+        const delivery = new Date(deliveryDate);
+        const now = new Date();
+        const diff = (delivery - now) / (1000 * 60 * 60 * 24);
+        return diff <= 14 && diff > 0;
+      }).length,
+      hasIssue: (projects || []).filter(
+        (p) => p.health && !["good", "H1"].includes(p.health)
+      ).length,
+    };
+  }, [projects]);
+
+  return {
+    projects,
+    loading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    selectedStage,
+    setSelectedStage,
+    selectedHealth,
+    setSelectedHealth,
+    filteredProjects,
+    stats,
+  };
 }
