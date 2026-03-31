@@ -294,8 +294,3 @@ class MaterialShortage(Base, TimestampMixin):
         Index("idx_shortage_status", "status"),
     )
 
-
-# ---------------------------------------------------------------------------
-# 兼容层：旧 Supplier 模型（现已合并至 Vendor）
-# ---------------------------------------------------------------------------
-Supplier = Vendor

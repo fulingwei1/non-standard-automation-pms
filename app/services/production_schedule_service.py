@@ -27,6 +27,11 @@ from app.schemas.production_schedule import (
     ScheduleResponse,
     ScheduleScoreMetrics,
 )
+from app.core.production_config import (
+    WORK_START_HOUR,
+    WORK_END_HOUR,
+    WORK_HOURS_PER_DAY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +41,10 @@ class ProductionScheduleService:
 
     ALGORITHM_VERSION = "v1.0.0"
 
-    # 工作时间配置
-    WORK_START_HOUR = 8  # 08:00
-    WORK_END_HOUR = 18  # 18:00
-    WORK_HOURS_PER_DAY = 8
+    # 工作时间配置（从 app.core.production_config 读取，支持环境变量覆盖）
+    WORK_START_HOUR = WORK_START_HOUR
+    WORK_END_HOUR = WORK_END_HOUR
+    WORK_HOURS_PER_DAY = WORK_HOURS_PER_DAY
 
     # 甘特图状态颜色映射
     GANTT_COLOR_MAP = {

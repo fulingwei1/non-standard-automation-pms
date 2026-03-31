@@ -15,3 +15,4 @@ export { useAsync } from './useAsync';
 export { useToggle } from './useToggle';
 export { useSelection } from './useSelection';
 export { useAutoSave } from './useAutoSave';
+export { useDataManagement } from './useDataManagement';

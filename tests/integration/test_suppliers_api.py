@@ -187,9 +187,9 @@ class TestSuppliersAPI:
 
     def test_delete_supplier(self, client, admin_token, db_session):
         """测试删除供应商"""
-        from app.models.material import Supplier
+        from app.models.vendor import Vendor
 
-        supplier = Supplier(
+        supplier = Vendor(
             supplier_code=f"SUP-DELETE-{date.today().strftime('%Y%m%d')}",
             supplier_name="待删除测试供应商",
             contact_person="测试",
