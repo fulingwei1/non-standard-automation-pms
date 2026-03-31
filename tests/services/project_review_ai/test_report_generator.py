@@ -12,7 +12,7 @@ import pytest
 
 from app.models.change_request import ChangeRequest
 from app.models.project import Project
-from app.models.project_cost import ProjectCost
+from app.models.project.financial import ProjectCost
 from app.models.timesheet import Timesheet
 from app.services.project_review_ai.report_generator import ProjectReviewReportGenerator
 
