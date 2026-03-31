@@ -26,7 +26,7 @@ from app.schemas.dashboard import (
     TopProjectsSchema,
 )
 from app.services.cost.cost_dashboard_service import CostDashboardService
-from app.services.dashboard_cache_service import get_cache_service
+from app.services.dashboard.dashboard_cache_service import get_cache_service
 
 router = APIRouter()
 

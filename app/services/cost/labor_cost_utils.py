@@ -208,7 +208,7 @@ def process_user_costs(
         Tuple[List[ProjectCost], Decimal]: (创建的成本记录列表, 总成本)
     """
     # 延迟导入，避免循环依赖
-    from app.services.labor_cost_service import LaborCostService
+    from app.services.cost.labor_cost_service import LaborCostService
 
     created_costs = []
     total_cost = Decimal("0")
@@ -253,7 +253,7 @@ def process_user_costs(
 def __getattr__(name):
     """支持从本模块导入 LaborCostCalculationService（向后兼容）"""
     if name == "LaborCostCalculationService":
-        from app.services.labor_cost_service import LaborCostCalculationService
+        from app.services.cost.labor_cost_service import LaborCostCalculationService
 
         return LaborCostCalculationService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

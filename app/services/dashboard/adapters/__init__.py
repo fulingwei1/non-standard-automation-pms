@@ -7,49 +7,49 @@ Dashboard 适配器模块
 """
 
 # 导入所有适配器，触发自动注册
-from app.services.dashboard_adapters.assembly_kit import (  # noqa: F401
+from app.services.dashboard.adapters.assembly_kit import (  # noqa: F401
     AssemblyKitDashboardAdapter,
 )
-from app.services.dashboard_adapters.business_support import (  # noqa: F401
+from app.services.dashboard.adapters.business_support import (  # noqa: F401
     BusinessSupportDashboardAdapter,
 )
-from app.services.dashboard_adapters.hr_management import (  # noqa: F401
+from app.services.dashboard.adapters.hr_management import (  # noqa: F401
     HrDashboardAdapter,
 )
-from app.services.dashboard_adapters.management_rhythm import (  # noqa: F401
+from app.services.dashboard.adapters.management_rhythm import (  # noqa: F401
     ManagementRhythmDashboardAdapter,
 )
-from app.services.dashboard_adapters.others import (  # noqa: F401
+from app.services.dashboard.adapters.others import (  # noqa: F401
     KitRateDashboardAdapter,
     StaffMatchingDashboardAdapter,
 )
-from app.services.dashboard_adapters.pmo import (  # noqa: F401
+from app.services.dashboard.adapters.pmo import (  # noqa: F401
     PmoDashboardAdapter,
 )
-from app.services.dashboard_adapters.presales import (  # noqa: F401
+from app.services.dashboard.adapters.presales import (  # noqa: F401
     PresalesDashboardAdapter,
 )
-from app.services.dashboard_adapters.production import (  # noqa: F401
+from app.services.dashboard.adapters.production import (  # noqa: F401
     ProductionDashboardAdapter,
 )
-from app.services.dashboard_adapters.shortage import (  # noqa: F401
+from app.services.dashboard.adapters.shortage import (  # noqa: F401
     ShortageDashboardAdapter,
 )
-from app.services.dashboard_adapters.strategy import (  # noqa: F401
+from app.services.dashboard.adapters.strategy import (  # noqa: F401
     StrategyDashboardAdapter,
 )
 
 # 角色个性化视图适配器
-from app.services.dashboard_adapters.pm_view import (  # noqa: F401
+from app.services.dashboard.adapters.pm_view import (  # noqa: F401
     PmViewDashboardAdapter,
 )
-from app.services.dashboard_adapters.dept_head_view import (  # noqa: F401
+from app.services.dashboard.adapters.dept_head_view import (  # noqa: F401
     DeptHeadViewDashboardAdapter,
 )
-from app.services.dashboard_adapters.executive_view import (  # noqa: F401
+from app.services.dashboard.adapters.executive_view import (  # noqa: F401
     ExecutiveViewDashboardAdapter,
 )
-from app.services.dashboard_adapters.member_view import (  # noqa: F401
+from app.services.dashboard.adapters.member_view import (  # noqa: F401
     MemberViewDashboardAdapter,
 )
 

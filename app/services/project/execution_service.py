@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.project import Project
 from app.models.user import User
 from app.services.project.core_service import ProjectCoreService
-from app.services.project_dashboard_service import (
+from app.services.dashboard.project_dashboard_service import (
     calculate_milestone_stats,
     calculate_progress_stats,
     calculate_task_stats,

@@ -24,7 +24,7 @@ from app.models.purchase import (
 from app.models.user import User
 from app.models.vendor import Vendor
 from app.services.data_scope.config import DataScopeConfig
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import (

@@ -97,7 +97,7 @@ def load_permissions(
     """
     # 1. 尝试缓存
     try:
-        from app.services.permission_cache_service import get_permission_cache_service
+        from app.services.permission_management.permission_cache_service import get_permission_cache_service
         cache_svc = get_permission_cache_service()
         cached = cache_svc.get_user_permissions(user_id, tenant_id)
         if cached is not None:

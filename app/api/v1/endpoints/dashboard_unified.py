@@ -25,7 +25,7 @@ from app.schemas.dashboard import (
     DetailedDashboardResponse,
     UnifiedDashboardResponse,
 )
-from app.services.dashboard_adapter import dashboard_registry
+from app.services.dashboard.dashboard_adapter import dashboard_registry
 
 router = APIRouter()
 

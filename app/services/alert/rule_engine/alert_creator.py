@@ -37,7 +37,7 @@ class AlertCreator(ConditionEvaluator):
     def subscription_service(self):
         """延迟加载订阅服务"""
         if self._subscription_service is None:
-            from app.services.alert_subscription_service import AlertSubscriptionService
+            from app.services.alert.alert_subscription_service import AlertSubscriptionService
 
             self._subscription_service = AlertSubscriptionService(self.db)
         return self._subscription_service

@@ -181,7 +181,7 @@ async def execute_kit_analysis(
         # 如果是L1或L2级别，发送企业微信预警
         if detail["alert_level"] in ["L1", "L2"]:
             try:
-                from app.services.wechat_alert_service import WeChatAlertService
+                from app.services.alert.wechat_alert_service import WeChatAlertService
 
                 WeChatAlertService.send_shortage_alert(db, shortage, detail["alert_level"])
             except Exception as e:

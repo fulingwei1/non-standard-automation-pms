@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.alert import AlertRecord
 from app.models.project import Project
 from app.models.user import User
-from app.services.alert_rule_engine import AlertRuleEngine
+from app.services.alert.rule_engine import AlertRuleEngine
 
 
 def calculate_basic_metrics(

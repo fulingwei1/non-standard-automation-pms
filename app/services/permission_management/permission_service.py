@@ -23,7 +23,7 @@ from app.models.permission import (
     RoleMenu,
 )
 from app.models.user import Role, User, UserRole
-from app.services.permission_cache_service import get_permission_cache_service
+from app.services.permission_management.permission_cache_service import get_permission_cache_service
 
 logger = logging.getLogger(__name__)
 

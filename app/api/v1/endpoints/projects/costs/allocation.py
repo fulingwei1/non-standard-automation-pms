@@ -34,7 +34,7 @@ def allocate_cost(
     分摊成本到多个机台或项目
     验证成本记录属于指定项目
     """
-    from app.services.cost_allocation_service import CostAllocationService
+    from app.services.cost.cost_allocation_service import CostAllocationService
 
     # 验证成本记录存在且属于指定项目
     cost = (

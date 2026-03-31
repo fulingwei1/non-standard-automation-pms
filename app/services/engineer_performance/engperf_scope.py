@@ -16,7 +16,7 @@ from app.models.performance import PerformanceResult
 from app.models.permission import ScopeType
 from app.models.user import User
 from app.services.data_scope.user_scope import UserScopeService
-from app.services.permission_service import PermissionService
+from app.services.permission_management.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def resolve_engperf_scope(db: Session, user: User) -> EngPerfScopeContext:
         ScopeType.DEPARTMENT.value,
         ScopeType.BUSINESS_UNIT.value,
     ):
-        from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced
+        from app.services.data_scope.data_scope_service_enhanced import DataScopeServiceEnhanced
 
         accessible_dept_ids = DataScopeServiceEnhanced.get_accessible_org_units(
             db, user.id, scope_type

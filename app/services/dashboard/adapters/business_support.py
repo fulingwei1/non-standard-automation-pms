@@ -11,7 +11,7 @@ from app.schemas.dashboard import (
     DashboardWidget,
     DetailedDashboardResponse,
 )
-from app.services.dashboard_adapter import DashboardAdapter, register_dashboard
+from app.services.dashboard.dashboard_adapter import DashboardAdapter, register_dashboard
 
 
 @register_dashboard
@@ -32,7 +32,7 @@ class BusinessSupportDashboardAdapter(DashboardAdapter):
 
     def get_stats(self) -> List[DashboardStatCard]:
         """获取统计卡片"""
-        from app.services.business_support_dashboard_service import (
+        from app.services.dashboard.business_support_dashboard_service import (
             calculate_acceptance_rate,
             calculate_invoice_rate,
             calculate_overdue_amount,
@@ -100,7 +100,7 @@ class BusinessSupportDashboardAdapter(DashboardAdapter):
 
     def get_widgets(self) -> List[DashboardWidget]:
         """获取Widget列表"""
-        from app.services.business_support_dashboard_service import (
+        from app.services.dashboard.business_support_dashboard_service import (
             get_today_todos,
             get_urgent_tasks,
         )
@@ -132,7 +132,7 @@ class BusinessSupportDashboardAdapter(DashboardAdapter):
         """获取详细数据"""
         from datetime import datetime
 
-        from app.services.business_support_dashboard_service import (
+        from app.services.dashboard.business_support_dashboard_service import (
             calculate_acceptance_rate,
             calculate_invoice_rate,
             calculate_overdue_amount,

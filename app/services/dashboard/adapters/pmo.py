@@ -12,7 +12,7 @@ from app.schemas.dashboard import (
     DashboardWidget,
     DetailedDashboardResponse,
 )
-from app.services.dashboard_adapter import DashboardAdapter, register_dashboard
+from app.services.dashboard.dashboard_adapter import DashboardAdapter, register_dashboard
 
 
 @register_dashboard
@@ -34,7 +34,7 @@ class PmoDashboardAdapter(DashboardAdapter):
     def get_stats(self) -> List[DashboardStatCard]:
         """获取统计卡片"""
         # 应用数据权限过滤
-        from app.services.data_scope_service import DataScopeService
+        from app.services.data_scope.data_scope_service import DataScopeService
 
         query = self.db.query(Project).filter(Project.is_active)
         query = DataScopeService.apply_data_scope(
@@ -102,7 +102,7 @@ class PmoDashboardAdapter(DashboardAdapter):
     def get_widgets(self) -> List[DashboardWidget]:
         """获取Widget列表"""
         # 获取风险项目列表
-        from app.services.data_scope_service import DataScopeService
+        from app.services.data_scope.data_scope_service import DataScopeService
 
         query = self.db.query(Project).filter(Project.is_active, Project.health.in_(["H2", "H3"]))
         query = DataScopeService.apply_data_scope(
@@ -143,7 +143,7 @@ class PmoDashboardAdapter(DashboardAdapter):
         summary = {card.key: card.value for card in stats_cards}
 
         # 按阶段统计
-        from app.services.data_scope_service import DataScopeService
+        from app.services.data_scope.data_scope_service import DataScopeService
 
         query = self.db.query(Project).filter(Project.is_active)
         query = DataScopeService.apply_data_scope(

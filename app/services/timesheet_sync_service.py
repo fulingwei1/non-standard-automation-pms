@@ -15,7 +15,7 @@ from app.models.project import FinancialProjectCost
 from app.models.rd_project import RdCost, RdProject
 from app.models.timesheet import Timesheet
 from app.services.hourly_rate_service import HourlyRateService
-from app.services.labor_cost_service import LaborCostService
+from app.services.cost.labor_cost_service import LaborCostService
 from app.utils.db_helpers import save_obj
 
 

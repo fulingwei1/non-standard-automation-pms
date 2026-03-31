@@ -20,7 +20,7 @@ from app.schemas.project import (
     ProjectDocumentResponse,
 )
 from app.services.data_scope.config import DataScopeConfig
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.common.query_filters import apply_pagination
 from app.utils.db_helpers import get_or_404
 

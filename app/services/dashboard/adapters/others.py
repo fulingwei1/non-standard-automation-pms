@@ -13,7 +13,7 @@ from app.schemas.dashboard import (
     DashboardWidget,
     DetailedDashboardResponse,
 )
-from app.services.dashboard_adapter import DashboardAdapter, register_dashboard
+from app.services.dashboard.dashboard_adapter import DashboardAdapter, register_dashboard
 
 
 class OthersDashboardAdapter:

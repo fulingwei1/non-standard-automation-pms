@@ -6,7 +6,7 @@
 DataScopeService 现在是 DataScopeServiceEnhanced 的别名。
 """
 
-from app.services.data_scope_service_enhanced import DataScopeServiceEnhanced  # noqa: F401
+from app.services.data_scope.data_scope_service_enhanced import DataScopeServiceEnhanced  # noqa: F401
 
 # 向后兼容别名
 DataScopeService = DataScopeServiceEnhanced

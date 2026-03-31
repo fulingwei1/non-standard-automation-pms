@@ -47,7 +47,7 @@ class CustomRuleService:
             DataScopeRule 或 None
         """
         try:
-            from app.services.permission_service import PermissionService
+            from app.services.permission_management.permission_service import PermissionService
 
             # 获取用户的有效角色
             roles = PermissionService.get_user_effective_roles(db, user_id)

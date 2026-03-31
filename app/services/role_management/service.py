@@ -668,7 +668,7 @@ class RoleManagementService:
     def _invalidate_permission_cache(self, role_id: int, tenant_id: Optional[int]) -> None:
         """清除角色权限缓存"""
         try:
-            from app.services.permission_cache_service import get_permission_cache_service
+            from app.services.permission_management.permission_cache_service import get_permission_cache_service
 
             cache_service = get_permission_cache_service()
             cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)

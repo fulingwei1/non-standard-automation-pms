@@ -20,7 +20,7 @@ from app.schemas.alert import (
     ExceptionEventResponse,
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
-from app.services.alert_exceptions import AlertExceptionsService
+from app.services.alert.exception_service import AlertExceptionsService
 
 from .notifications import generate_exception_no
 

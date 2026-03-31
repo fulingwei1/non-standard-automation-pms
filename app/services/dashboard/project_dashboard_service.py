@@ -99,7 +99,7 @@ def calculate_cost_stats(db: Session, project_id: int, budget_amount: float) -> 
     Returns:
         dict: 成本统计数据
     """
-    from app.services.cost_service import CostService
+    from app.services.cost.cost_service import CostService
 
     service = CostService(db)
     return service.calculate_cost_stats(project_id, budget_amount)

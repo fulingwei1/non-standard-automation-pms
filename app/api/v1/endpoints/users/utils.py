@@ -142,7 +142,7 @@ def replace_user_roles(db: Session, user_id: int, role_ids: Optional[List[int]])
 def _invalidate_user_cache(user_id: int, old_role_ids: List[int], new_role_ids: List[int]) -> None:
     """使用户权限缓存失效"""
     try:
-        from app.services.permission_cache_service import get_permission_cache_service
+        from app.services.permission_management.permission_cache_service import get_permission_cache_service
 
         cache_service = get_permission_cache_service()
         cache_service.invalidate_user_role_change(user_id, old_role_ids, new_role_ids)

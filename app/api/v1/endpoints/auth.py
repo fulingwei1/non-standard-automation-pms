@@ -539,7 +539,7 @@ def get_permissions(
     - menus: 可访问的菜单树
     - dataScopes: 数据权限范围映射
     """
-    from app.services.permission_service import PermissionService
+    from app.services.permission_management.permission_service import PermissionService
 
     permission_data = PermissionService.get_full_permission_data(
         db=db,
