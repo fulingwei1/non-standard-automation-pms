@@ -1,20 +1,64 @@
-export const readinessConfigs = {
-    ready: { min: 100, label: '齐套', color: 'bg-emerald-500' },
-    mostly: { min: 80, label: '基本齐套', color: 'bg-blue-500' },
-    partial: { min: 50, label: '部分齐套', color: 'bg-amber-500' },
-    shortage: { min: 0, label: '缺料', color: 'bg-red-500' },
+/**
+ * Assembly Kit Board - Constants and Config
+ */
+import {
+  Wrench,
+  Package,
+  Zap,
+  Cable,
+  Bug,
+  Palette,
+} from "lucide-react";
+
+// 阶段图标映射
+export const stageIcons = {
+  FRAME: Wrench,
+  MECH: Package,
+  ELECTRIC: Zap,
+  WIRING: Cable,
+  DEBUG: Bug,
+  COSMETIC: Palette,
 };
 
-export const materialStatusConfigs = {
-    available: { label: '可用', color: 'text-emerald-500' },
-    reserved: { label: '已预留', color: 'text-blue-500' },
-    on_order: { label: '在途', color: 'text-amber-500' },
-    shortage: { label: '缺料', color: 'text-red-500' },
+// 预警级别配置
+export const alertLevelConfig = {
+  L1: {
+    label: "停工预警",
+    color: "bg-red-600",
+    textColor: "text-red-600",
+    bgLight: "bg-red-50 border-red-500",
+  },
+  L2: {
+    label: "紧急预警",
+    color: "bg-orange-500",
+    textColor: "text-orange-600",
+    bgLight: "bg-orange-50 border-orange-500",
+  },
+  L3: {
+    label: "提前预警",
+    color: "bg-yellow-500",
+    textColor: "text-yellow-600",
+    bgLight: "bg-yellow-50 border-yellow-500",
+  },
+  L4: {
+    label: "常规预警",
+    color: "bg-blue-500",
+    textColor: "text-blue-600",
+    bgLight: "bg-blue-50 border-blue-500",
+  },
 };
 
-export const priorityConfigs = {
-    low: { label: '低', color: 'bg-slate-400' },
-    normal: { label: '普通', color: 'bg-blue-500' },
-    high: { label: '高', color: 'bg-amber-500' },
-    urgent: { label: '紧急', color: 'bg-red-500' },
+// Utility functions
+export const getKitRateColor = (rate) => {
+  if (rate >= 100) return "text-emerald-600";
+  if (rate >= 80) return "text-blue-600";
+  if (rate >= 50) return "text-amber-600";
+  return "text-red-600";
+};
+
+export const getProgressColor = (rate) => {
+  if (rate >= 100) return "bg-emerald-500";
+  if (rate >= 80) return "bg-blue-500";
+  if (rate >= 50) return "bg-amber-500";
+  return "bg-red-500";
 };
