@@ -1,21 +1,47 @@
-export const trackingStatusConfigs = {
-    pending: { label: '待采购', color: 'bg-slate-500' },
-    ordered: { label: '已下单', color: 'bg-blue-500' },
-    shipped: { label: '运输中', color: 'bg-purple-500' },
-    received: { label: '已到货', color: 'bg-emerald-500' },
-    inspected: { label: '已检验', color: 'bg-cyan-500' },
-    stored: { label: '已入库', color: 'bg-teal-500' },
+/**
+ * Material Tracking - Constants and configuration objects
+ */
+
+import { AlertTriangle, Truck, CheckCircle2, Zap } from "lucide-react";
+
+export const statusConfig = {
+  "not-arrived": {
+    label: "未到货",
+    color: "bg-red-500/20 text-red-400",
+    icon: AlertTriangle,
+    description: "采购订单已下达，等待物料到达"
+  },
+  "partial-arrived": {
+    label: "部分到货",
+    color: "bg-amber-500/20 text-amber-400",
+    icon: Truck,
+    description: "物料已部分到达，继续等待后续"
+  },
+  "fully-arrived": {
+    label: "全部到货",
+    color: "bg-emerald-500/20 text-emerald-400",
+    icon: CheckCircle2,
+    description: "采购的全部物料已到达仓库"
+  },
+  "in-use": {
+    label: "使用中",
+    color: "bg-blue-500/20 text-blue-400",
+    icon: Zap,
+    description: "物料正在生产中使用"
+  },
+  completed: {
+    label: "已完成",
+    color: "bg-slate-500/20 text-slate-400",
+    icon: CheckCircle2,
+    description: "物料已全部使用或返库"
+  }
 };
 
-export const materialCategoryConfigs = {
-    mechanical: { label: '机械件', icon: 'Cog' },
-    electrical: { label: '电气件', icon: 'Zap' },
-    standard: { label: '标准件', icon: 'Box' },
-    electronic: { label: '电子件', icon: 'Cpu' },
-};
-
-export const urgencyLevelConfigs = {
-    normal: { label: '普通', color: 'bg-slate-500' },
-    urgent: { label: '紧急', color: 'bg-amber-500' },
-    critical: { label: '特急', color: 'bg-red-500' },
+export const qualityStatusConfig = {
+  qualified: { label: "合格", color: "bg-emerald-500/20 text-emerald-400" },
+  "pending-inspection": {
+    label: "待检验",
+    color: "bg-amber-500/20 text-amber-400"
+  },
+  rejected: { label: "不合格", color: "bg-red-500/20 text-red-400" }
 };
