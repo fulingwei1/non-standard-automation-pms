@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated approval models/router
 # -*- coding: utf-8 -*-
 """单元测试 - approval_engine models (cov48)"""
 
@@ -17,7 +18,10 @@ try:
 except Exception:
     _IMPORT_OK = False
 
-pytestmark = pytest.mark.skipif(not _IMPORT_OK, reason="Import failed for approval_engine models")
+pytestmark = [
+    pytest.mark.skipif(not _IMPORT_OK, reason="Import failed for approval_engine models"),
+    pytest.mark.filterwarnings("ignore::DeprecationWarning"),
+]
 
 
 def test_approval_flow_type_single_level():
