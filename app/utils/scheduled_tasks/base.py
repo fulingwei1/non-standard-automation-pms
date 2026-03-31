@@ -33,7 +33,7 @@ def send_notification_for_alert(db: Session, alert: AlertRecord, logger_instance
 
     try:
         # 延迟导入避免循环依赖
-        from app.services.notification_dispatcher import NotificationDispatcher
+        from app.services.notification.notification_dispatcher import NotificationDispatcher
 
         dispatcher = NotificationDispatcher(db)
         result = dispatcher.dispatch_alert_notifications(alert=alert)
@@ -63,7 +63,7 @@ def enqueue_or_dispatch_notification(
     if logger_instance is None:
         logger_instance = logger
 
-    from app.services.notification_queue import enqueue_notification
+    from app.services.notification.notification_queue import enqueue_notification
 
     try:
         if request is None:

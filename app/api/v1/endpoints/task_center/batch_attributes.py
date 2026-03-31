@@ -18,7 +18,7 @@ from app.core import security
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas.common import BatchOperationResponse
-from app.services.notification_dispatcher import NotificationDispatcher
+from app.services.notification.notification_dispatcher import NotificationDispatcher
 from app.services.task_progress_service import apply_task_progress_update
 from app.utils.batch_operations import BatchOperationExecutor, BatchOperationResult
 from app.utils.db_helpers import get_or_404

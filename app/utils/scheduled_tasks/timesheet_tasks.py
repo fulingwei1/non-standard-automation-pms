@@ -16,7 +16,7 @@ def daily_timesheet_reminder_task():
     每日工时填报提醒任务
     每天上午9:00执行，提醒未填报昨天工时的用户
     """
-    from app.services.timesheet_reminder import notify_timesheet_missing
+    from app.services.timesheet.reminder import notify_timesheet_missing
 
     try:
         with get_db_session() as db:
@@ -37,7 +37,7 @@ def weekly_timesheet_reminder_task():
     每周工时填报提醒任务
     每周一上午10:00执行，提醒未完成上周工时填报的用户
     """
-    from app.services.timesheet_reminder import notify_weekly_timesheet_missing
+    from app.services.timesheet.reminder import notify_weekly_timesheet_missing
 
     try:
         with get_db_session() as db:
@@ -59,9 +59,9 @@ def timesheet_anomaly_alert_task():
     每天下午14:00执行，检测并提醒异常工时记录
     """
     from app.models.timesheet_reminder import ReminderTypeEnum
-    from app.services.timesheet_reminder.anomaly_detector import TimesheetAnomalyDetector
-    from app.services.timesheet_reminder.notification_sender import NotificationSender
-    from app.services.timesheet_reminder.reminder_manager import TimesheetReminderManager
+    from app.services.timesheet.reminder.anomaly_detector import TimesheetAnomalyDetector
+    from app.services.timesheet.reminder.notification_sender import NotificationSender
+    from app.services.timesheet.reminder.reminder_manager import TimesheetReminderManager
 
     try:
         with get_db_session() as db:
@@ -117,7 +117,7 @@ def timesheet_approval_timeout_reminder_task():
     工时审批超时提醒任务
     每天上午11:00和下午15:00执行，提醒审批超时的记录
     """
-    from app.services.timesheet_reminder import notify_approval_timeout
+    from app.services.timesheet.reminder import notify_approval_timeout
 
     try:
         with get_db_session() as db:
@@ -138,7 +138,7 @@ def timesheet_sync_failure_alert_task():
     工时数据同步失败提醒任务
     每天下午16:00执行，检查并提醒同步失败的记录
     """
-    from app.services.timesheet_reminder import notify_sync_failure
+    from app.services.timesheet.reminder import notify_sync_failure
 
     try:
         with get_db_session() as db:
@@ -159,7 +159,7 @@ def daily_timesheet_aggregation_task():
     每日工时汇总任务
     每天凌晨1点执行，汇总前一天的数据
     """
-    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    from app.services.timesheet.timesheet_aggregation_service import TimesheetAggregationService
 
     with get_db_session() as db:
         try:
@@ -190,7 +190,7 @@ def weekly_timesheet_aggregation_task():
     每周工时汇总任务
     每周一凌晨2点执行，汇总上一周的数据
     """
-    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    from app.services.timesheet.timesheet_aggregation_service import TimesheetAggregationService
 
     with get_db_session() as db:
         try:
@@ -226,7 +226,7 @@ def monthly_timesheet_aggregation_task():
     每月工时汇总任务
     每月1号凌晨3点执行，汇总上一个月的数据
     """
-    from app.services.timesheet_aggregation_service import TimesheetAggregationService
+    from app.services.timesheet.timesheet_aggregation_service import TimesheetAggregationService
 
     with get_db_session() as db:
         try:

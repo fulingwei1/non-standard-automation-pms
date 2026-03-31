@@ -30,7 +30,7 @@ from app.schemas.ecn_material_impact import (
     StakeholderListResponse,
     SubscriptionUpdateRequest,
 )
-from app.services.ecn_material_impact_service import EcnMaterialImpactService
+from app.services.ecn.ecn_material_impact_service import EcnMaterialImpactService
 
 router = APIRouter()
 

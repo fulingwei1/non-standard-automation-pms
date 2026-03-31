@@ -16,7 +16,7 @@ from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.schemas.ecn import EcnTaskCreate
-from app.services.ecn_integration import EcnIntegrationService
+from app.services.ecn.integration import EcnIntegrationService
 
 logger = logging.getLogger(__name__)
 

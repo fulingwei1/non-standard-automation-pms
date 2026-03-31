@@ -24,7 +24,7 @@ from app.schemas.presale_ai_knowledge import (
     SemanticSearchResponse,
     TagsResponse,
 )
-from app.services.presale_ai_knowledge_service import PresaleAIKnowledgeService
+from app.services.presale.presale_ai_knowledge_service import PresaleAIKnowledgeService
 
 router = APIRouter(prefix="/api/v1/presale/ai", tags=["售前AI知识库"])
 

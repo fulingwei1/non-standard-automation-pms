@@ -16,7 +16,7 @@
 from sqlalchemy.orm import Session
 
 # 导入统一通知服务（已启用）
-from app.services.unified_notification_service import (
+from app.services.notification.unified_notification_service import (
     NotificationService,
     get_notification_service,
 )

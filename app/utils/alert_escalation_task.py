@@ -12,7 +12,7 @@ from app.dependencies import get_db_session
 from app.models.alert import AlertRecord
 from app.models.enums import AlertLevelEnum
 from app.services.alert.rule_engine import AlertRuleEngine
-from app.services.notification_service import AlertNotificationService
+from app.services.notification.notification_service import AlertNotificationService
 
 
 def check_alert_timeout_escalation():

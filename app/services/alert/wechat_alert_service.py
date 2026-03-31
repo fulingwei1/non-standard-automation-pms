@@ -272,12 +272,12 @@ class WeChatAlertService:
 
         通过统一通知服务发送，避免重复实现发送逻辑。
         """
-        from app.services.channel_handlers.base import (
+        from app.services.notification.channels.base import (
             NotificationChannel,
             NotificationPriority,
             NotificationRequest,
         )
-        from app.services.notification_dispatcher import NotificationDispatcher
+        from app.services.notification.notification_dispatcher import NotificationDispatcher
 
         title = ""
         content = ""
@@ -350,6 +350,6 @@ from app.utils.wechat_client import WeChatClient  # noqa: F401, E402
 
 def get_wechat_notification_handler():
     """Lazy import to avoid circular dependency."""
-    from app.services.notification_handlers.wechat_handler import WeChatNotificationHandler
+    from app.services.notification.handlers.wechat_handler import WeChatNotificationHandler
 
     return WeChatNotificationHandler

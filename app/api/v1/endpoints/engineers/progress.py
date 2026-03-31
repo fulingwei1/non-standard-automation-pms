@@ -106,8 +106,8 @@ def complete_task(
     aggregation_result = aggregate_task_progress(db, task.id)
 
     # 发送通知
-    from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
-    from app.services.notification_dispatcher import NotificationDispatcher
+    from app.services.notification.channels.base import NotificationPriority, NotificationRequest
+    from app.services.notification.notification_dispatcher import NotificationDispatcher
 
     try:
         # 通知项目经理任务已完成

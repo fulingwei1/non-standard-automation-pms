@@ -26,7 +26,7 @@ from app.schemas.presale_mobile import (
     VoiceQuestionResponse,
     VoiceToVisitRecordRequest,
 )
-from app.services.presale_mobile_service import PresaleMobileService
+from app.services.presale.presale_mobile_service import PresaleMobileService
 
 logger = logging.getLogger(__name__)
 

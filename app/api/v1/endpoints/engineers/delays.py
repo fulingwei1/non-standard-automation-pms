@@ -94,8 +94,8 @@ def report_task_delay(
         notifications_count = 5
 
     # 发送异常通知
-    from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
-    from app.services.notification_dispatcher import NotificationDispatcher
+    from app.services.notification.channels.base import NotificationPriority, NotificationRequest
+    from app.services.notification.notification_dispatcher import NotificationDispatcher
 
     try:
         # 通知项目经理

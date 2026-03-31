@@ -10,7 +10,7 @@ from sqlalchemy import or_
 
 from app.dependencies import get_db_session
 from app.models.alert import AlertNotification, AlertRecord
-from app.services.notification_dispatcher import NotificationDispatcher
+from app.services.notification.notification_dispatcher import NotificationDispatcher
 from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
 
 logger = logging.getLogger(__name__)

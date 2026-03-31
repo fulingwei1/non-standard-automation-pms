@@ -28,7 +28,7 @@ class AlertUpgrader(AlertRuleEngineBase):
     def notification_service(self):
         """延迟加载通知服务"""
         if self._notification_service is None:
-            from app.services.notification_service import AlertNotificationService
+            from app.services.notification.notification_service import AlertNotificationService
 
             self._notification_service = AlertNotificationService(self.db)
         return self._notification_service

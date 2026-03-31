@@ -462,7 +462,7 @@ class MilestoneAlertService:
                 logger.debug(f"里程碑 {milestone.milestone_code} 无可通知的接收人")
                 return
 
-            from app.services.notification_dispatcher import NotificationDispatcher
+            from app.services.notification.notification_dispatcher import NotificationDispatcher
 
             dispatcher = NotificationDispatcher(self.db)
             result = dispatcher.dispatch_alert_notifications(

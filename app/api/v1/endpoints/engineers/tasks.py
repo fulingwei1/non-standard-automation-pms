@@ -134,8 +134,8 @@ def create_task(
         db.add(approval_workflow)
 
         # 发送通知给PM
-        from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
-        from app.services.notification_dispatcher import NotificationDispatcher
+        from app.services.notification.channels.base import NotificationPriority, NotificationRequest
+        from app.services.notification.notification_dispatcher import NotificationDispatcher
 
         try:
             dispatcher = NotificationDispatcher(db)

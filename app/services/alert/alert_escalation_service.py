@@ -157,7 +157,7 @@ class AlertEscalationService:
         try:
             from types import SimpleNamespace
 
-            from app.services.notification_service import AlertNotificationService
+            from app.services.notification.notification_service import AlertNotificationService
 
             recipient_ids = []
             for attr in (

@@ -26,8 +26,8 @@ from app.schemas.timesheet_analytics import (
     WorkloadAlertResponse,
     WorkloadHeatmapResponse,
 )
-from app.services.timesheet_analytics_service import TimesheetAnalyticsService
-from app.services.timesheet_forecast_service import TimesheetForecastService
+from app.services.timesheet.timesheet_analytics_service import TimesheetAnalyticsService
+from app.services.timesheet.timesheet_forecast_service import TimesheetForecastService
 
 router = APIRouter()
 

@@ -695,7 +695,7 @@ class BudgetAlertService:
         3. 动作中心待办
         """
         try:
-            from app.services.notification_dispatcher import NotificationDispatcher
+            from app.services.notification.notification_dispatcher import NotificationDispatcher
 
             dispatcher = NotificationDispatcher(self.db)
 

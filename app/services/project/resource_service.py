@@ -19,7 +19,7 @@ from app.schemas.workload import (
     UserWorkloadSummary,
 )
 from app.services.project.core_service import ProjectCoreService
-from app.services.timesheet_aggregation_service import TimesheetAggregationService
+from app.services.timesheet.timesheet_aggregation_service import TimesheetAggregationService
 from app.services.user_workload_service import (
     build_daily_load,
     build_project_workload,
