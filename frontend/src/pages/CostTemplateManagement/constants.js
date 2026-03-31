@@ -1,19 +1,38 @@
-export const templateTypeConfigs = {
-    standard: { label: '标准模板', color: 'bg-blue-500' },
-    custom: { label: '自定义模板', color: 'bg-purple-500' },
-    project: { label: '项目模板', color: 'bg-emerald-500' },
+/**
+ * Constants for Cost Template Management
+ */
+
+export const TEMPLATE_TYPES = [
+  { value: "STANDARD", label: "标准模板" },
+  { value: "CUSTOM", label: "自定义模板" },
+  { value: "PROJECT", label: "项目模板" },
+];
+
+export const TEMPLATE_TYPE_LABEL_MAP = {
+  STANDARD: "标准",
+  CUSTOM: "自定义",
+  PROJECT: "项目",
 };
 
-export const costCategoryConfigs = {
-    material: { label: '物料成本', icon: 'Package' },
-    labor: { label: '人工成本', icon: 'Users' },
-    equipment: { label: '设备成本', icon: 'Settings' },
-    overhead: { label: '管理费用', icon: 'Building' },
-    other: { label: '其他费用', icon: 'MoreHorizontal' },
+export const INITIAL_FORM_DATA = {
+  template_code: "",
+  template_name: "",
+  template_type: "STANDARD",
+  equipment_type: "",
+  industry: "",
+  description: "",
+  cost_structure: {
+    categories: [],
+  },
+  is_active: true,
 };
 
-export const statusConfigs = {
-    draft: { label: '草稿', color: 'bg-slate-500' },
-    active: { label: '激活', color: 'bg-emerald-500' },
-    archived: { label: '归档', color: 'bg-amber-500' },
+export const INITIAL_COST_ITEM = {
+  item_name: "",
+  specification: "",
+  unit: "",
+  default_qty: 1,
+  default_unit_price: 0,
+  default_cost: 0,
+  lead_time_days: 0,
 };
