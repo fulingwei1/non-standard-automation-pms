@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated WorkflowEngine, will be removed when workflow_engine.py is deleted
 import uuid
 
 # -*- coding: utf-8 -*-
@@ -15,6 +16,8 @@ Sales审批流程集成测试
 from datetime import datetime
 
 import pytest
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 from sqlalchemy.orm import Session
 
 from app.models.sales import (

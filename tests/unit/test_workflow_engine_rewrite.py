@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated WorkflowEngine, will be removed when workflow_engine.py is deleted
 # -*- coding: utf-8 -*-
 """
 WorkflowEngine 单元测试 - 重写版本
@@ -21,6 +22,10 @@ WorkflowEngine 单元测试 - 重写版本
 """
 
 import unittest
+
+import pytest
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
