@@ -3,7 +3,12 @@ import { Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { SkeletonDashboard } from "./skeleton";
 
-export function LoadingSpinner({ size = "md", className }) {
+export function LoadingSpinner({
+  size = "md",
+  className,
+  text,
+  fullScreen = false,
+}) {
   const sizeClasses = {
     sm: "w-4 h-4",
     md: "w-6 h-6",
@@ -11,14 +16,49 @@ export function LoadingSpinner({ size = "md", className }) {
     xl: "w-12 h-12",
   };
 
-  return (
-    <motion.div
-      animate={{ rotate: 360 }}
-      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-      className={cn(sizeClasses[size], className)}
+  const spinner = (
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center gap-3",
+        className,
+      )}
     >
-      <Loader2 className="w-full h-full text-primary" />
-    </motion.div>
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className={sizeClasses[size]}
+      >
+        <Loader2 className="w-full h-full text-primary" />
+      </motion.div>
+      {text && <p className="text-sm text-slate-400">{text}</p>}
+    </div>
+  );
+
+  if (fullScreen) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        {spinner}
+      </div>
+    );
+  }
+
+  return spinner;
+}
+
+export function LoadingSkeleton({
+  className,
+  width = "w-full",
+  height = "h-4",
+}) {
+  return (
+    <div
+      className={cn(
+        "animate-pulse bg-slate-800/50 rounded",
+        width,
+        height,
+        className,
+      )}
+    />
   );
 }
 
