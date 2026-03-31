@@ -1,0 +1,64 @@
+import { Search } from "lucide-react";
+import { Card, CardContent } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { typeConfigs } from "./constants";
+
+export function WorkshopFilters({
+  searchKeyword,
+  setSearchKeyword,
+  filterType,
+  setFilterType,
+  filterActive,
+  setFilterActive,
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Input
+              placeholder="搜索车间编码、名称..."
+              value={searchKeyword || "unknown"}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={filterType || "unknown"} onValueChange={setFilterType}>
+            <SelectTrigger>
+              <SelectValue placeholder="选择类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部类型</SelectItem>
+              {Object.entries(typeConfigs).map(([key, config]) => (
+                <SelectItem key={key} value={key || "unknown"}>
+                  {config.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={filterActive || "unknown"}
+            onValueChange={setFilterActive}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="选择状态" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部状态</SelectItem>
+              <SelectItem value="true">启用</SelectItem>
+              <SelectItem value="false">停用</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
