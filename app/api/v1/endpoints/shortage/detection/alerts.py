@@ -1,9 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-预警管理 - alerts.py
+预警管理 - alerts.py  (detection/alerts.py)
 
 合并来源:
 - app/api/v1/endpoints/shortage_alerts/alerts_crud.py
+
+PURPOSE / SCOPE
+---------------
+This file is the **canonical operational CRUD layer** for shortage alerts. It
+performs direct database operations on the MaterialShortage model and owns the
+full lifecycle of an alert record:
+
+    OPEN  →  ACKNOWLEDGED  →  (updated)  →  RESOLVED
+
+It also handles progress-integration side-effects: when a critical alert is
+escalated, dependent project tasks are blocked; when the alert is resolved,
+those tasks are unblocked.
+
+Registered under the prefix:  /shortage/detection/
+
+DISTINCTION FROM shortage/smart_alerts.py
+------------------------------------------
+- detection/alerts.py (this file)  →  **Operational CRUD layer**: list, detail,
+  acknowledge, update, resolve, and follow-up management. Single source of truth
+  for alert state transitions in the database. Use these endpoints for all
+  day-to-day alert management.
+
+- smart_alerts.py  →  **Intelligence layer**: AI-driven demand forecasting,
+  trend analysis, root-cause analysis, project-impact summaries, AI-generated
+  handling-solution suggestions, and notification subscriptions. Exposes a
+  trigger-scan endpoint. Its overlapping list/detail/resolve endpoints are
+  deprecated in favour of the ones in this file.
+  Registered under: /shortage/smart/
 
 路由:
 - GET    /alerts                    预警列表（系统检测）
