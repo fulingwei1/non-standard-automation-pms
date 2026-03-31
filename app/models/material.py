@@ -18,7 +18,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
-from .vendor import Vendor  # 兼容旧的 Supplier 引用
 
 
 class MaterialCategory(Base, TimestampMixin):
@@ -87,8 +86,6 @@ class Material(Base, TimestampMixin):
 
     # 关系
     category = relationship("MaterialCategory", back_populates="materials")
-    # default_supplier 关系已禁用 - Supplier 模型是废弃的兼容层
-    # TODO: 迁移到 Vendor 模型
     suppliers = relationship("MaterialSupplier", back_populates="material", lazy="dynamic")
     bom_items = relationship("BomItem", back_populates="material", lazy="dynamic")
 
@@ -294,8 +291,3 @@ class MaterialShortage(Base, TimestampMixin):
         Index("idx_shortage_status", "status"),
     )
 
-
-# ---------------------------------------------------------------------------
-# 兼容层：旧 Supplier 模型（现已合并至 Vendor）
-# ---------------------------------------------------------------------------
-Supplier = Vendor

@@ -349,9 +349,9 @@ def test_customer(db_session: Session):
 @pytest.fixture
 def test_supplier(db_session: Session):
     """创建测试供应商"""
-    from app.models.material import Supplier
+    from app.models.vendor import Vendor
 
-    supplier = Supplier(
+    supplier = Vendor(
         supplier_code="SUP-UNIT-TEST",
         supplier_name="单元测试供应商",
         supplier_type="STANDARD",

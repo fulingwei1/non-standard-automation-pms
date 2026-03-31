@@ -1,3 +1,21 @@
+/**
+ * @deprecated This file is superseded by `procurement.js`.
+ *
+ * All functionality here is available via `purchaseApi.requests` exported
+ * from `./procurement.js`. Import from there instead:
+ *
+ *   import { purchaseApi } from "./procurement.js";
+ *   purchaseApi.requests.list(params)
+ *   purchaseApi.requests.create(data)
+ *   purchaseApi.requests.submit(id)
+ *   // etc.
+ *
+ * Note: `getMaterials` (GET /purchase-orders/requests/materials) is not
+ * currently present in `procurement.js`; add it there if needed.
+ *
+ * This file is kept only for backward compatibility and will be removed
+ * in a future cleanup pass.
+ */
 import { api } from "./client.js";
 
 export const purchaseRequestApi = {

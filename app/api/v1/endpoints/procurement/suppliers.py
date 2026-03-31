@@ -55,9 +55,11 @@ def _serialize_vendor(v: Vendor) -> Dict[str, Any]:
 
 
 # ==================== 供应商列表 ====================
+# NOTE: 此端点与 /suppliers 重复，建议前端迁移至 GET /suppliers
+# 保留以向后兼容，后续版本将移除
 
 
-@router.get("/")
+@router.get("/", deprecated=True)
 def list_suppliers(
     db: Session = Depends(get_db),
     pagination: PaginationParams = Depends(get_pagination_query),
@@ -136,9 +138,11 @@ def list_suppliers(
 
 
 # ==================== 新增供应商 ====================
+# NOTE: 此端点与 POST /suppliers 重复，建议前端迁移至 POST /suppliers
+# 保留以向后兼容，后续版本将移除
 
 
-@router.post("/")
+@router.post("/", deprecated=True)
 def create_supplier(
     payload: Dict[str, Any],
     db: Session = Depends(get_db),
