@@ -34,11 +34,8 @@ from .visibility import (
     filter_visible_instances,
     resolve_participant_role,
 )
-from .workflow_engine import WorkflowEngine
-
 # 服务层导出
 __all__ = [
-    "WorkflowEngine",
     "ApprovalEngineService",
     "ApprovalRouterService",
     "ApprovalNodeExecutor",

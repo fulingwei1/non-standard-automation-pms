@@ -21,8 +21,6 @@ from sqlalchemy.orm import Session
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.quotes import Quote, QuoteVersion
 from app.models.user import User
-from app.schemas.approval.instance import ApprovalInstanceCreate
-
 from .base import ApprovalAdapter
 
 logger = logging.getLogger(__name__)
@@ -242,30 +240,21 @@ class QuoteApprovalAdapter(ApprovalAdapter):
             "status": quote_version.status if quote_version else "DRAFT",
         }
 
-        # 创建审批实例
-        ApprovalInstanceCreate(
+        # 使用统一审批引擎创建实例
+        from ..engine import ApprovalEngineService
+
+        engine = ApprovalEngineService(self.db)
+
+        instance = engine.submit(
             template_code="SALES_QUOTE",
             entity_type="QUOTE",
             entity_id=quote_version.id,
             form_data=form_data,
+            initiator_id=initiator_id,
             title=title or f"报价审批 - {quote_version.quote_code if quote_version else ''}",
             summary=summary or f"报价审批：{quote_version.quote_code if quote_version else ''}",
             urgency=urgency,
             cc_user_ids=cc_user_ids,
-        )
-
-        # 使用统一引擎创建实例
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
-
-        workflow_engine = WorkflowEngine(self.db)
-
-        instance = workflow_engine.create_instance(
-            flow_code="SALES_QUOTE",
-            business_type="SALES_QUOTE",
-            business_id=quote_version.id,
-            business_title=quote_version.quote_code if quote_version else "",
-            submitted_by=initiator_id,
-            config={"quote": form_data},
         )
 
         # 更新报价版本，关联审批实例

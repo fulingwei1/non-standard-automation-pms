@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class ParticipantRole(str, Enum):
-    """用户在某审批实例中的参与角色"""
+    """用户在某审批实例中的参与角色（统一定义）"""
 
     INITIATOR = "INITIATOR"  # 发起人
     APPROVER = "APPROVER"  # 当前/历史审批人（含正常分配）
@@ -38,6 +38,7 @@ class ParticipantRole(str, Enum):
     TRANSFERRED_APPROVER = "TRANSFERRED_APPROVER"  # 转审审批人
     CC = "CC"  # 抄送人
     ADMIN = "ADMIN"  # 审批管理员（全局角色，非实例级）
+    NONE = "NONE"  # 无参与关系
 
 
 # 拥有完整详情查看权的角色（含 form_data / action_logs）
