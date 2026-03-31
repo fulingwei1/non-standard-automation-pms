@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import BusinessException
+from app.core.exceptions import BusinessException, NotFoundException, OperationNotAllowedException
 from app.models.project import Project
 from app.models.shortage.smart_alert import (
     MaterialDemandForecast,
@@ -108,7 +108,7 @@ class ShortageAlertService:
         alert = self.db.query(ShortageAlert).filter(ShortageAlert.id == alert_id).first()
 
         if not alert:
-            raise BusinessException("预警不存在")
+            raise NotFoundException("预警", alert_id)
 
         return alert
 
@@ -196,7 +196,7 @@ class ShortageAlertService:
         alert = self.get_alert_by_id(alert_id)
 
         if alert.status == "RESOLVED":
-            raise BusinessException("预警已解决")
+            raise OperationNotAllowedException("预警已解决")
 
         # 更新状态
         alert.status = "RESOLVED"

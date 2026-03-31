@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Tuple
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import BusinessException
+from app.core.exceptions import InsufficientDataException, NotFoundException, ValidationException
 from app.models.production.work_order import WorkOrder
 from app.models.shortage.smart_alert import MaterialDemandForecast
 from app.utils.db_helpers import save_obj
@@ -63,7 +63,7 @@ class DemandForecastEngine:
         )
 
         if not historical_data:
-            raise BusinessException("历史数据不足，无法进行预测")
+            raise InsufficientDataException("历史数据不足，无法进行预测")
 
         # 2. 计算历史统计指标
         historical_avg = self._calculate_average(historical_data)
@@ -80,7 +80,7 @@ class DemandForecastEngine:
         elif algorithm == "LINEAR_REGRESSION":
             forecasted_demand = self._linear_regression_forecast(historical_data)
         else:
-            raise BusinessException(f"不支持的预测算法: {algorithm}")
+            raise ValidationException(f"不支持的预测算法: {algorithm}")
 
         # 应用季节性调整
         forecasted_demand = forecasted_demand * seasonal_factor
@@ -148,7 +148,7 @@ class DemandForecastEngine:
         )
 
         if not forecast:
-            raise BusinessException("预测记录不存在")
+            raise NotFoundException("预测记录", forecast_id)
 
         # 计算误差
         forecast_error = actual_demand - forecast.forecasted_demand

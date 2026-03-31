@@ -6,7 +6,14 @@
 import pytest
 from fastapi import HTTPException
 
-from app.core.exceptions import BusinessException
+from app.core.exceptions import (
+    AlreadyExistsException,
+    BusinessException,
+    InsufficientDataException,
+    NotFoundException,
+    OperationNotAllowedException,
+    ValidationException,
+)
 
 
 class TestBusinessException:
@@ -66,3 +73,81 @@ class TestBusinessException:
 
         assert exc_info.value.message == "Test error"
         assert exc_info.value.code == 422
+
+
+class TestNotFoundException:
+    """测试资源不存在异常"""
+
+    def test_with_resource_name_only(self):
+        exc = NotFoundException("项目")
+        assert exc.status_code == 404
+        assert exc.message == "项目不存在"
+        assert exc.resource_name == "项目"
+        assert exc.resource_id is None
+
+    def test_with_resource_id(self):
+        exc = NotFoundException("任务", 42)
+        assert exc.status_code == 404
+        assert exc.message == "任务 (ID=42) 不存在"
+        assert exc.resource_id == 42
+
+    def test_is_business_exception(self):
+        exc = NotFoundException("项目")
+        assert isinstance(exc, BusinessException)
+
+    def test_catchable_as_business_exception(self):
+        with pytest.raises(BusinessException):
+            raise NotFoundException("项目", 1)
+
+
+class TestAlreadyExistsException:
+    """测试资源已存在异常"""
+
+    def test_with_resource_name_only(self):
+        exc = AlreadyExistsException("供应商")
+        assert exc.status_code == 409
+        assert exc.message == "供应商已存在"
+
+    def test_with_field_and_value(self):
+        exc = AlreadyExistsException("供应商", field="编码", value="SUP001")
+        assert exc.status_code == 409
+        assert "编码=SUP001" in exc.message
+
+    def test_is_business_exception(self):
+        assert isinstance(AlreadyExistsException("x"), BusinessException)
+
+
+class TestValidationException:
+    """测试业务验证异常"""
+
+    def test_basic(self):
+        exc = ValidationException("不支持的预测算法: XYZ")
+        assert exc.status_code == 400
+        assert exc.message == "不支持的预测算法: XYZ"
+
+    def test_is_business_exception(self):
+        assert isinstance(ValidationException("x"), BusinessException)
+
+
+class TestOperationNotAllowedException:
+    """测试操作不允许异常"""
+
+    def test_basic(self):
+        exc = OperationNotAllowedException("系统预置角色不允许删除")
+        assert exc.status_code == 400
+        assert exc.message == "系统预置角色不允许删除"
+
+    def test_is_business_exception(self):
+        assert isinstance(OperationNotAllowedException("x"), BusinessException)
+
+
+class TestInsufficientDataException:
+    """测试数据不足异常"""
+
+    def test_basic(self):
+        exc = InsufficientDataException("历史数据不足，无法进行预测")
+        assert exc.status_code == 400
+        assert exc.message == "历史数据不足，无法进行预测"
+
+    def test_is_business_exception(self):
+        assert isinstance(InsufficientDataException("x"), BusinessException)
