@@ -272,7 +272,7 @@ class PermissionManagementService:
     ) -> None:
         """清除权限缓存"""
         try:
-            from app.services.permission_cache_service import get_permission_cache_service
+            from app.services.permission_management.permission_cache_service import get_permission_cache_service
 
             cache_service = get_permission_cache_service()
             cache_service.invalidate_role_and_users(role_id, tenant_id=tenant_id)
@@ -299,7 +299,7 @@ class PermissionManagementService:
         - 支持角色继承（如果启用）
         - 返回去重后的权限列表
         """
-        from app.services.permission_service import PermissionService
+        from app.services.permission_management.permission_service import PermissionService
 
         permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
 
@@ -319,7 +319,7 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> bool:
         """检查用户是否有指定权限"""
-        from app.services.permission_service import PermissionService
+        from app.services.permission_management.permission_service import PermissionService
 
         return PermissionService.check_permission(
             self.db, user_id, permission_code, user, tenant_id

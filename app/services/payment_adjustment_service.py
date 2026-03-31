@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectMilestone, ProjectPaymentPlan
 from app.models.sales import Contract
-from app.services.notification_dispatcher import NotificationDispatcher
+from app.services.notification.notification_dispatcher import NotificationDispatcher
 
 logger = logging.getLogger(__name__)
 

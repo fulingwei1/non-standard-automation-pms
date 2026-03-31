@@ -124,8 +124,8 @@ def create_api_router() -> APIRouter:
     
     # ==================== 物料进度跟踪(BOM→采购联动) ====================
     try:
-        from app.api.v1.endpoints.material_tracking import router as material_tracking_router
-        from app.api.v1.endpoints.material_procurement_optimization import (
+        from app.api.v1.endpoints.material.tracking import router as material_tracking_router
+        from app.api.v1.endpoints.material.procurement_optimization import (
             router as material_procurement_optimization_router,
         )
         api_router.include_router(material_tracking_router, prefix="/material", tags=["material-tracking"])
@@ -140,7 +140,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 项目×物料深度融合 ====================
     try:
-        from app.api.v1.endpoints.material_project_fusion import (
+        from app.api.v1.endpoints.material.project_fusion import (
             router as material_project_fusion_router,
             project_router as material_project_fusion_project_router,
         )
@@ -241,29 +241,17 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 节点任务模块加载失败: {e}")
 
-    # Dashboard 统计
+    # Dashboard 统计/统一入口/布局自定义
     try:
-        from app.api.v1.endpoints.dashboard_stats import router as dashboard_stats_router
+        from app.api.v1.endpoints.dashboard.stats import router as dashboard_stats_router
+        from app.api.v1.endpoints.dashboard.unified import router as dashboard_unified_router
+        from app.api.v1.endpoints.dashboard.layout import router as dashboard_layout_router
         api_router.include_router(dashboard_stats_router, tags=["dashboard_stats"])
-        print("✓ Dashboard统计模块加载成功")
-    except Exception as e:
-        print(f"✗ Dashboard统计模块加载失败: {e}")
-
-    # Dashboard 统一入口
-    try:
-        from app.api.v1.endpoints.dashboard_unified import router as dashboard_unified_router
         api_router.include_router(dashboard_unified_router, tags=["dashboard_unified"])
-        print("✓ Dashboard统一模块加载成功")
-    except Exception as e:
-        print(f"✗ Dashboard统一模块加载失败: {e}")
-
-    # Dashboard 布局自定义
-    try:
-        from app.api.v1.endpoints.dashboard_layout import router as dashboard_layout_router
         api_router.include_router(dashboard_layout_router, tags=["dashboard_layout"])
-        print("✓ Dashboard布局自定义模块加载成功")
+        print("✓ Dashboard统计/统一/布局模块加载成功")
     except Exception as e:
-        print(f"✗ Dashboard布局自定义模块加载失败: {e}")
+        print(f"✗ Dashboard统计/统一/布局模块加载失败: {e}")
 
     # 通知中心
     try:
@@ -314,21 +302,15 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 绩效管理模块加载失败：{e}")
 
-    # ==================== 绩效合约 ====================
+    # ==================== 绩效合约/绩效分析 ====================
     try:
-        from app.api.v1.endpoints.performance_contract import router as perf_contract_router
+        from app.api.v1.endpoints.performance.contract import router as perf_contract_router
+        from app.api.v1.endpoints.performance.analysis import router as perf_analysis_router
         api_router.include_router(perf_contract_router, prefix="/performance-contract", tags=["绩效合约"])
-        print("✓ 绩效合约模块加载成功")
-    except Exception as e:
-        print(f"✗ 绩效合约模块加载失败：{e}")
-
-    # ==================== 绩效分析 ====================
-    try:
-        from app.api.v1.endpoints.performance_analysis import router as perf_analysis_router
         api_router.include_router(perf_analysis_router, prefix="/performance-analysis", tags=["绩效分析"])
-        print("✓ 绩效分析模块加载成功")
+        print("✓ 绩效合约/分析模块加载成功")
     except Exception as e:
-        print(f"✗ 绩效分析模块加载失败：{e}")
+        print(f"✗ 绩效合约/分析模块加载失败：{e}")
 
     # ==================== AI战略辅助 ====================
     try:
@@ -452,7 +434,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 采购分析 ====================
     try:
-        from app.api.v1.endpoints.procurement_analysis import router as procurement_analysis_router
+        from app.api.v1.endpoints.procurement.analysis import router as procurement_analysis_router
         api_router.include_router(procurement_analysis_router, prefix="/procurement-analysis", tags=["procurement-analysis"])
         print("✓ 采购分析模块加载成功")
     except Exception as e:
@@ -468,7 +450,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 齐套率优化（催货/替代料/安全库存/改进建议） ====================
     try:
-        from app.api.v1.endpoints.kitting_optimization import router as kitting_opt_router
+        from app.api.v1.endpoints.procurement.kitting_optimization import router as kitting_opt_router
         api_router.include_router(kitting_opt_router, prefix="/procurement", tags=["齐套率优化"])
         print("✓ 齐套率优化模块加载成功")
     except Exception as e:
@@ -484,7 +466,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 供应商价格趋势 ====================
     try:
-        from app.api.v1.endpoints.supplier_price_trend import router as supplier_price_trend_router
+        from app.api.v1.endpoints.procurement.supplier_price_trend import router as supplier_price_trend_router
         api_router.include_router(supplier_price_trend_router, prefix="/supplier-price", tags=["supplier-price"])
         print("✓ 供应商价格趋势模块加载成功")
     except Exception as e:
@@ -524,7 +506,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 项目-变更联动集成 ====================
     try:
-        from app.api.v1.endpoints.project_change_impact import router as pci_router
+        from app.api.v1.endpoints.projects.change_impact import router as pci_router
         api_router.include_router(pci_router, prefix="", tags=["project-change-impact"])
         print("✓ 项目-变更联动模块加载成功")
     except Exception as e:
@@ -780,43 +762,31 @@ def create_api_router() -> APIRouter:
 
     # ==================== PM参与度 ====================
     try:
-        from app.api.v1.endpoints.pm_involvement import router as pm_involvement_router
+        from app.api.v1.endpoints.performance.pm_involvement import router as pm_involvement_router
         api_router.include_router(pm_involvement_router, prefix="/pm-involvement", tags=["pm-involvement"])
         print("✓ PM参与度模块加载成功")
     except Exception as e:
         print(f"✗ PM参与度模块加载失败：{e}")
 
-    # ==================== 预售AI需求 ====================
+    # ==================== 预售AI需求/移动端 ====================
     try:
-        from app.api.v1.endpoints.presale_ai_requirement import router as presale_ai_requirement_router
+        from app.api.v1.endpoints.presale.ai_requirement import router as presale_ai_requirement_router
+        from app.api.v1.endpoints.presale.mobile import router as presale_mobile_router
         api_router.include_router(presale_ai_requirement_router, tags=["presale-ai-requirement"])
-        print("✓ 预售AI需求模块加载成功")
-    except Exception as e:
-        print(f"✗ 预售AI需求模块加载失败：{e}")
-
-    # ==================== 预售移动端 ====================
-    try:
-        from app.api.v1.endpoints.presale_mobile import router as presale_mobile_router
         api_router.include_router(presale_mobile_router, prefix="/presale-mobile", tags=["presale-mobile"])
-        print("✓ 预售移动端模块加载成功")
+        print("✓ 预售AI需求/移动端模块加载成功")
     except Exception as e:
-        print(f"✗ 预售移动端模块加载失败：{e}")
+        print(f"✗ 预售AI需求/移动端模块加载失败：{e}")
 
-    # ==================== 项目贡献 ====================
+    # ==================== 项目贡献/工作空间 ====================
     try:
-        from app.api.v1.endpoints.project_contributions import router as project_contributions_router
+        from app.api.v1.endpoints.projects.contributions import router as project_contributions_router
+        from app.api.v1.endpoints.projects.workspace import router as project_workspace_router
         api_router.include_router(project_contributions_router, prefix="/project-contributions", tags=["project-contributions"])
-        print("✓ 项目贡献模块加载成功")
-    except Exception as e:
-        print(f"✗ 项目贡献模块加载失败：{e}")
-
-    # ==================== 项目工作空间 ====================
-    try:
-        from app.api.v1.endpoints.project_workspace import router as project_workspace_router
         api_router.include_router(project_workspace_router, prefix="/project-workspace", tags=["project-workspace"])
-        print("✓ 项目工作空间模块加载成功")
+        print("✓ 项目贡献/工作空间模块加载成功")
     except Exception as e:
-        print(f"✗ 项目工作空间模块加载失败：{e}")
+        print(f"✗ 项目贡献/工作空间模块加载失败：{e}")
 
     # ==================== 质量风险 ====================
     try:
@@ -837,19 +807,19 @@ def create_api_router() -> APIRouter:
         from app.api.v1.endpoints.margin_prediction import router as margin_prediction_router
         api_router.include_router(margin_prediction_router, prefix="/margin-prediction", tags=["margin-prediction"])
 
-        from app.api.v1.endpoints.cost_collection import router as cost_collection_router
+        from app.api.v1.endpoints.cost_endpoints.collection import router as cost_collection_router
         api_router.include_router(cost_collection_router, prefix="/cost-collection", tags=["cost-collection"])
 
-        from app.api.v1.endpoints.quote_actual_compare import router as quote_compare_router
+        from app.api.v1.endpoints.cost_endpoints.quote_actual_compare import router as quote_compare_router
         api_router.include_router(quote_compare_router, prefix="/quote-compare", tags=["quote-compare"])
 
-        from app.api.v1.endpoints.cost_variance_analysis import router as cost_variance_router
+        from app.api.v1.endpoints.cost_endpoints.variance_analysis import router as cost_variance_router
         api_router.include_router(cost_variance_router, prefix="/cost-variance", tags=["cost-variance"])
 
         from app.api.v1.endpoints.gantt_dependency import router as gantt_dependency_router
         api_router.include_router(gantt_dependency_router, prefix="/gantt", tags=["gantt-dependency"])
 
-        from app.api.v1.endpoints.labor_cost_detail import router as labor_cost_router
+        from app.api.v1.endpoints.cost_endpoints.labor_cost_detail import router as labor_cost_router
         api_router.include_router(labor_cost_router, prefix="/labor-cost", tags=["labor-cost"])
         print("✓ 资源调度模块加载成功")
     except Exception as e:
@@ -871,29 +841,17 @@ def create_api_router() -> APIRouter:
     except Exception as e:
         print(f"✗ 知识自动沉淀模块加载失败：{e}")
 
-    # ==================== 销售区域 ====================
+    # ==================== 销售区域/目标/团队 ====================
     try:
-        from app.api.v1.endpoints.sales_regions import router as sales_regions_router
+        from app.api.v1.endpoints.sales.regions import router as sales_regions_router
+        from app.api.v1.endpoints.sales.targets_standalone import router as sales_targets_router
+        from app.api.v1.endpoints.sales.teams_standalone import router as sales_teams_router
         api_router.include_router(sales_regions_router, prefix="/sales-regions", tags=["sales-regions"])
-        print("✓ 销售区域模块加载成功")
-    except Exception as e:
-        print(f"✗ 销售区域模块加载失败：{e}")
-
-    # ==================== 销售目标 ====================
-    try:
-        from app.api.v1.endpoints.sales_targets import router as sales_targets_router
         api_router.include_router(sales_targets_router, prefix="/sales-targets", tags=["sales-targets"])
-        print("✓ 销售目标模块加载成功")
-    except Exception as e:
-        print(f"✗ 销售目标模块加载失败：{e}")
-
-    # ==================== 销售团队 ====================
-    try:
-        from app.api.v1.endpoints.sales_teams import router as sales_teams_router
         api_router.include_router(sales_teams_router, prefix="/sales-teams", tags=["sales-teams"])
-        print("✓ 销售团队模块加载成功")
+        print("✓ 销售区域/目标/团队模块加载成功")
     except Exception as e:
-        print(f"✗ 销售团队模块加载失败：{e}")
+        print(f"✗ 销售区域/目标/团队模块加载失败：{e}")
 
     # ==================== 租户管理 ====================
     try:
@@ -943,7 +901,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 物料管理优化（齐套率同步/交付预测/优先级联动） ====================
     try:
-        from app.api.v1.endpoints.material_sync import router as material_sync_router
+        from app.api.v1.endpoints.material.sync import router as material_sync_router
         api_router.include_router(material_sync_router, tags=["物料管理优化"])
         print("✓ 物料管理优化模块加载成功（齐套率同步/交付预测/优先级联动）")
     except Exception as e:

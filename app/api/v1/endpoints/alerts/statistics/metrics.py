@@ -37,7 +37,7 @@ def get_response_metrics(
     - 按类型统计响应时效
     - 响应时效排行榜（最快/最慢的项目/责任人）
     """
-    from app.services.alert_response_service import (
+    from app.services.alert.alert_response_service import (
         calculate_handler_metrics,
         calculate_level_metrics,
         calculate_project_metrics,
@@ -163,14 +163,14 @@ def get_efficiency_metrics(
     - 按项目、责任人、类型统计处理效率
     - 处理效率排行榜
     """
-    from app.services.alert_efficiency_service import (
+    from app.services.alert.alert_efficiency_service import (
         calculate_basic_metrics,
         calculate_handler_metrics,
         calculate_project_metrics,
         calculate_type_metrics,
         generate_rankings,
     )
-    from app.services.alert_rule_engine import AlertRuleEngine
+    from app.services.alert.rule_engine import AlertRuleEngine
 
     query = db.query(AlertRecord).filter(AlertRecord.triggered_at.isnot(None))
 

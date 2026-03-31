@@ -374,7 +374,7 @@ def approve_outsourcing_order(
     # 审批通过时自动归集成本
     if order.project_id:
         try:
-            from app.services.cost_collection_service import CostCollectionService
+            from app.services.cost.cost_collection_service import CostCollectionService
 
             CostCollectionService.collect_from_outsourcing_order(
                 db, order_id, created_by=current_user.id

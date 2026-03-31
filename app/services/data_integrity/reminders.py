@@ -145,11 +145,11 @@ class RemindersMixin:
 
         # 使用统一通知服务发送提醒
         try:
-            from app.services.channel_handlers.base import NotificationPriority as UnifiedPriority
-            from app.services.channel_handlers.base import (
+            from app.services.notification.channels.base import NotificationPriority as UnifiedPriority
+            from app.services.notification.channels.base import (
                 NotificationRequest,
             )
-            from app.services.notification_dispatcher import NotificationDispatcher
+            from app.services.notification.notification_dispatcher import NotificationDispatcher
 
             dispatcher = NotificationDispatcher(self.db)
             for reminder in reminders:

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, Mock, PropertyMock, call
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.approval import ApprovalInstance, ApprovalNodeDefinition, ApprovalTask
-from app.models.machine import Machine
+from app.models.project.core import Machine
 from app.models.project import Project
 from app.models.user import User
 from app.services.acceptance_approval.service import AcceptanceApprovalService

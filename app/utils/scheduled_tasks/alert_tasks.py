@@ -10,7 +10,7 @@ from sqlalchemy import or_
 
 from app.dependencies import get_db_session
 from app.models.alert import AlertNotification, AlertRecord
-from app.services.notification_dispatcher import NotificationDispatcher
+from app.services.notification.notification_dispatcher import NotificationDispatcher
 from app.utils.scheduled_tasks.base import enqueue_or_dispatch_notification
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def check_alert_escalation():
     """
     try:
         with get_db_session() as db:
-            from app.services.alert_escalation_service import AlertEscalationService
+            from app.services.alert.alert_escalation_service import AlertEscalationService
 
             service = AlertEscalationService(db)
             result = service.check_and_escalate()
@@ -236,7 +236,7 @@ def calculate_response_metrics():
     """
     try:
         with get_db_session() as db:
-            from app.services.alert_response_service import AlertResponseService
+            from app.services.alert.alert_response_service import AlertResponseService
 
             service = AlertResponseService(db)
             result = service.calculate_daily_metrics()

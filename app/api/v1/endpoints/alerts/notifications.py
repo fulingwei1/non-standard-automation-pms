@@ -38,7 +38,7 @@ def read_alert_notifications(
     """
     获取预警通知列表（当前用户的）
     """
-    from app.services.notification_service import AlertNotificationService
+    from app.services.notification.notification_service import AlertNotificationService
 
     service = AlertNotificationService(db)
     result = service.get_user_notifications(
@@ -71,7 +71,7 @@ def mark_notification_read(
     """
     标记通知已读
     """
-    from app.services.notification_service import AlertNotificationService
+    from app.services.notification.notification_service import AlertNotificationService
 
     service = AlertNotificationService(db)
     success = service.mark_notification_read(notification_id, current_user.id)
@@ -92,7 +92,7 @@ def get_unread_notification_count(
     """
     获取未读通知数量
     """
-    from app.services.notification_service import AlertNotificationService
+    from app.services.notification.notification_service import AlertNotificationService
 
     service = AlertNotificationService(db)
     count = service.get_unread_count(current_user.id)
@@ -111,7 +111,7 @@ def batch_mark_notifications_read(
     """
     批量标记通知为已读
     """
-    from app.services.notification_service import AlertNotificationService
+    from app.services.notification.notification_service import AlertNotificationService
 
     service = AlertNotificationService(db)
     result = service.batch_mark_read(notification_ids, current_user.id)

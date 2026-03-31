@@ -34,7 +34,7 @@ def get_alert_trends(
     - 按类型统计趋势
     - 按状态统计趋势
     """
-    from app.services.alert_trend_service import (
+    from app.services.alert.alert_trend_service import (
         build_summary_statistics,
         build_trend_statistics,
         generate_date_range,

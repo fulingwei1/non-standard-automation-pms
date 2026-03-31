@@ -13,11 +13,11 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.channel_handlers.base import (
+from app.services.notification.channels.base import (
     NotificationPriority,
     NotificationRequest,
 )
-from app.services.unified_notification_service import get_notification_service
+from app.services.notification.unified_notification_service import get_notification_service
 
 logger = logging.getLogger(__name__)
 

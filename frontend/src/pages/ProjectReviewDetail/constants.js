@@ -20,3 +20,35 @@ export const decisionOptions = [
     { value: 'reject', label: '驳回', color: 'bg-red-500' },
     { value: 'revise', label: '需修改', color: 'bg-amber-500' },
 ];
+
+export const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+  },
+};
+
+export const staggerChild = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
+
+export const INITIAL_LESSON_FORM = {
+  title: "",
+  description: "",
+  category: "",
+  impact: "",
+  actions: "",
+  tags: [],
+};
+
+export const INITIAL_PRACTICE_FORM = {
+  title: "",
+  description: "",
+  category: "",
+  applicability: "",
+  benefits: "",
+  implementation: "",
+  tags: [],
+};

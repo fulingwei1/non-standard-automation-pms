@@ -63,7 +63,7 @@ def release_bom(
 
     # BOM发布时自动归集材料成本
     try:
-        from app.services.cost_collection_service import CostCollectionService
+        from app.services.cost.cost_collection_service import CostCollectionService
 
         CostCollectionService.collect_from_bom(db, bom_id, created_by=current_user.id)
     except Exception as e:

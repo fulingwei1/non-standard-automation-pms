@@ -18,7 +18,7 @@ from app.core import security
 from app.models.ecn import Ecn, EcnSolutionTemplate
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.ecn_knowledge_service import EcnKnowledgeService
+from app.services.ecn.knowledge import EcnKnowledgeService
 
 router = APIRouter()
 

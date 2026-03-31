@@ -14,7 +14,7 @@ from app.api.deps import get_current_user, get_db
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.solution_engineer_bonus_service import SolutionEngineerBonusService
+from app.services.bonus.solution_engineer_bonus_service import SolutionEngineerBonusService
 
 router = APIRouter(prefix="/solution", tags=["方案工程师"])
 

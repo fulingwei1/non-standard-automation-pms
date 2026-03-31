@@ -19,12 +19,12 @@ from app.models.project.core import Project
 from app.models.project.team import ProjectMember
 from app.models.report_center import ReportGeneration
 from app.models.user import User
-from app.services.channel_handlers.base import (
+from app.services.notification.channels.base import (
     NotificationChannel,
     NotificationPriority,
     NotificationRequest,
 )
-from app.services.unified_notification_service import NotificationService
+from app.services.notification.unified_notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
