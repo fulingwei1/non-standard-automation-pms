@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated WorkflowEngine, will be removed when workflow_engine.py is deleted
 # -*- coding: utf-8 -*-
 """第七批覆盖率测试 - approval_engine/workflow_engine"""
 from datetime import datetime, timedelta
@@ -17,7 +18,10 @@ try:
 except Exception:
     HAS_MODULE = False
 
-pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="module unavailable")
+pytestmark = [
+    pytest.mark.skipif(not HAS_MODULE, reason="module unavailable"),
+    pytest.mark.filterwarnings("ignore::DeprecationWarning"),
+]
 
 
 def _make_engine():

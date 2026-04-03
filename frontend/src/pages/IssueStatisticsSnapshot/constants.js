@@ -1,3 +1,14 @@
+export const CSV_EXPORT_HEADERS = [
+  "日期",
+  "总问题数",
+  "待处理",
+  "处理中",
+  "已解决",
+  "已关闭",
+  "阻塞问题",
+  "逾期问题",
+];
+
 export const issueStatusConfigs = {
     open: { label: '待处理', color: 'bg-red-500' },
     in_progress: { label: '处理中', color: 'bg-amber-500' },

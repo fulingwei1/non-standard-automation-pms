@@ -26,13 +26,14 @@
  */
 
 import { useState, useCallback } from 'react';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle, Lightbulb } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PageHeader } from '../layout/PageHeader';
 import { Button } from '../ui/button';
-import { SkeletonCard } from '../ui/skeleton';
+import { SkeletonCard, SkeletonDashboardStats } from '../ui/skeleton';
 import { useDashboardData } from './useDashboardData';
 import { cn } from '../../lib/utils';
+import { getFriendlyError } from '../../utils/friendlyErrors';
 
 // Stagger animation variants
 const staggerContainer = {
@@ -149,14 +150,10 @@ export function BaseDashboard({
     ) : null;
   };
 
-  // 渲染加载状态
+  // 渲染加载状态 - 使用骨架屏代替 spinner
   const renderLoading = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <SkeletonCard key={i} className="h-32" />
-        ))}
-      </div>
+      <SkeletonDashboardStats />
       <SkeletonCard className="h-64" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <SkeletonCard className="h-64" />
@@ -165,9 +162,11 @@ export function BaseDashboard({
     </div>
   );
 
-  // 渲染错误状态
+  // 渲染错误状态 - 使用友好的错误提示
   const renderError = () => {
     if (!error || !showError) return null;
+
+    const friendly = getFriendlyError(error);
 
     return (
       <motion.div
@@ -175,15 +174,21 @@ export function BaseDashboard({
         animate={{ opacity: 1, y: 0 }}
         className="mx-4 mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg"
       >
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-destructive" />
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-medium text-destructive">
-              加载失败
+              {friendly.title}
             </p>
             <p className="text-sm text-destructive/80 mt-1">
-              {error.message || '无法加载数据，请稍后重试'}
+              {friendly.message}
             </p>
+            {friendly.suggestion && (
+              <div className="flex items-start gap-1.5 mt-2">
+                <Lightbulb className="h-3.5 w-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-slate-400">{friendly.suggestion}</p>
+              </div>
+            )}
           </div>
           <Button
             variant="outline"

@@ -30,8 +30,8 @@ from app.schemas.ecn import (
     EcnSubmit,
     EcnUpdate,
 )
-from app.services.ecn_auto_assign_service import auto_assign_evaluation
-from app.services.ecn_notification import (
+from app.services.ecn.ecn_auto_assign_service import auto_assign_evaluation
+from app.services.ecn.notification import (
     notify_evaluation_assigned,
 )
 from app.utils.db_helpers import get_or_404

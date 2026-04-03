@@ -20,8 +20,8 @@ from app.core import security
 from app.models.ecn import Ecn, EcnApproval, EcnApprovalMatrix, EcnEvaluation, EcnType
 from app.models.user import User
 from app.schemas.ecn import EcnEvaluationCreate, EcnEvaluationResponse
-from app.services.ecn_auto_assign_service import auto_assign_approval
-from app.services.ecn_notification import (
+from app.services.ecn.ecn_auto_assign_service import auto_assign_approval
+from app.services.ecn.notification import (
     notify_approval_assigned,
     notify_evaluation_assigned,
     notify_evaluation_completed,

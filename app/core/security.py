@@ -71,6 +71,7 @@ __all__ = [
     "get_sales_data_scope",
     "filter_sales_data_by_scope",
     "filter_sales_finance_data_by_scope",
+    "check_sales_data_permission",
     "check_sales_create_permission",
     "check_sales_data_permission",
     "check_sales_edit_permission",

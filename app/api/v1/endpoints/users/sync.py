@@ -16,7 +16,7 @@ from app.core import security
 from app.models.organization import Employee
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.permission_audit_service import PermissionAuditService
+from app.services.permission_management.permission_audit_service import PermissionAuditService
 from app.services.user_sync_service import UserSyncService
 from app.utils.db_helpers import get_or_404
 

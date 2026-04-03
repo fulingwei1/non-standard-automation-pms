@@ -70,10 +70,6 @@ const ROLE_OPTIONS = [
   { value: "ASSY", label: "装配技工" },
 ];
 
-// 模拟数据
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
-// Mock data - 已移除，使用真实API
 export default function ProjectStaffingNeed() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -225,36 +221,7 @@ export default function ProjectStaffingNeed() {
       loadNeeds();
     } catch (error) {
       console.error("保存失败:", error);
-      // 本地更新用于演示
-      const newNeed = editingNeed
-        ? {
-            ...editingNeed,
-            ...formData,
-            role_name: ROLE_OPTIONS.find((r) => r.value === formData.role_code)
-              ?.label,
-          }
-        : {
-            id: Date.now(),
-            ...formData,
-            role_name: ROLE_OPTIONS.find((r) => r.value === formData.role_code)
-              ?.label,
-            project_name: (projects || []).find((p) => p.id === formData.project_id)
-              ?.name,
-            status: "OPEN",
-            filled_count: 0,
-            required_skills: (formData.required_skill_ids || []).map((id) => ({
-              tag_id: id,
-              tag_name: (tags || []).find((t) => t.id === id)?.tag_name,
-            })),
-            created_at: new Date().toISOString(),
-          };
-
-      setNeeds((prev) =>
-        editingNeed
-          ? (prev || []).map((n) => (n.id === editingNeed.id ? newNeed : n))
-          : [...prev, newNeed],
-      );
-      setShowDialog(false);
+      alert("保存失败: " + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -272,9 +239,7 @@ export default function ProjectStaffingNeed() {
       loadNeeds();
     } catch (error) {
       console.error("取消失败:", error);
-      setNeeds((prev) =>
-        (prev || []).map((n) => (n.id === need.id ? { ...n, status: "CANCELLED" } : n)),
-      );
+      alert("取消失败: " + (error.response?.data?.detail || error.message));
     }
   };
 

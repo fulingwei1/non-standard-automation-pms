@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter
 from app.models.user import Role, User, UserRole
-from app.services.notification_dispatcher import NotificationDispatcher
+from app.services.notification.notification_dispatcher import NotificationDispatcher
 
 
 def find_users_by_role(db: Session, role_name: str) -> List[User]:

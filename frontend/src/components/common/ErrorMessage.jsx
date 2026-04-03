@@ -1,17 +1,20 @@
-import { AlertCircle, RefreshCw, Inbox } from "lucide-react";
+import { AlertCircle, RefreshCw, Inbox, Lightbulb } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "../../lib/utils";
+import { getFriendlyError } from "../../utils/friendlyErrors";
 
 export function ErrorMessage({
   error,
   onRetry,
-  title = "加载失败",
+  title,
   className,
   showDetails = false,
 }) {
-  const errorMessage =
-    error?.message || error?.response?.data?.detail || "未知错误";
+  const friendly = error ? getFriendlyError(error) : null;
+  const displayTitle = title || friendly?.title || "加载失败";
+  const displayMessage = friendly?.message || error?.message || "未知错误";
+  const displaySuggestion = friendly?.suggestion;
 
   return (
     <Card className={cn("border-red-500/20 bg-red-500/5", className)}>
@@ -19,8 +22,14 @@ export function ErrorMessage({
         <div className="flex items-start gap-4">
           <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-red-400 mb-2">{title}</h3>
-            <p className="text-slate-300 mb-4">{errorMessage}</p>
+            <h3 className="text-lg font-semibold text-red-400 mb-2">{displayTitle}</h3>
+            <p className="text-slate-300 mb-3">{displayMessage}</p>
+            {displaySuggestion && (
+              <div className="flex items-start gap-2 mb-4 p-3 rounded-lg bg-white/[0.03] border border-white/5">
+                <Lightbulb className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-slate-300">{displaySuggestion}</p>
+              </div>
+            )}
             {showDetails && error?.response?.data && (
               <details className="mb-4">
                 <summary className="text-sm text-slate-500 cursor-pointer mb-2">

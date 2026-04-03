@@ -281,6 +281,58 @@ class ClosureResponse(TimestampSchema):
     reviewed_by: Optional[int] = None
 
 
+# ==================== 结项准备度检查 ====================
+
+
+class ClosureCheckItem(BaseModel):
+    """单项检查结果"""
+    key: str
+    label: str
+    passed: bool
+    detail: str
+    missing: List[str] = []
+    recommendations: List[str] = []
+
+
+class ClosureReadinessResponse(BaseModel):
+    """结项准备度检查响应"""
+    ready: bool
+    score: int = Field(ge=0, le=100)
+    project_id: int
+    project_code: str = ""
+    project_name: str = ""
+    checked_at: str = ""
+    checks: List[ClosureCheckItem] = []
+    missing_items: List[str] = []
+    recommendations: List[str] = []
+
+
+class ClosureReadinessRulesUpdate(BaseModel):
+    """自定义结项检查规则"""
+    stage_completion: Optional[Dict[str, Any]] = None
+    deliverable_upload: Optional[Dict[str, Any]] = None
+    customer_acceptance: Optional[Dict[str, Any]] = None
+    cost_settlement: Optional[Dict[str, Any]] = None
+    document_completeness: Optional[Dict[str, Any]] = None
+
+
+class LessonsAutoCollectResponse(BaseModel):
+    """经验沉淀自动收集响应"""
+    review_id: Optional[int] = None
+    review_no: Optional[str] = None
+    already_exists: bool = False
+    lessons_count: int = 0
+    best_practices_count: int = 0
+    message: str = ""
+
+
+class ClosureNotificationResponse(BaseModel):
+    """结项通知响应"""
+    notification_ids: List[int] = []
+    notified: bool = False
+    message: str = ""
+
+
 # ==================== PMO 驾驶舱 ====================
 
 class DashboardSummary(BaseModel):

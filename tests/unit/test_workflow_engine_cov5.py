@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated WorkflowEngine, will be removed when workflow_engine.py is deleted
 # -*- coding: utf-8 -*-
 """第五批：approval_engine/workflow_engine.py 单元测试"""
 from datetime import datetime, timedelta
@@ -12,7 +13,10 @@ try:
 except ImportError:
     HAS_MODULE = False
 
-pytestmark = pytest.mark.skipif(not HAS_MODULE, reason="workflow_engine not importable")
+pytestmark = [
+    pytest.mark.skipif(not HAS_MODULE, reason="workflow_engine not importable"),
+    pytest.mark.filterwarnings("ignore::DeprecationWarning"),
+]
 
 
 def make_db():

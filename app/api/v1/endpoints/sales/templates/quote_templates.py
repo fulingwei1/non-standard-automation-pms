@@ -29,7 +29,7 @@ from app.schemas.sales import (
     QuoteTemplateVersionCreate,
     QuoteTemplateVersionResponse,
 )
-from app.services.cpq_pricing_service import CpqPricingService
+from app.services.presale.cpq_pricing_service import CpqPricingService
 from app.utils.db_helpers import save_obj
 
 from .common import (

@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
@@ -26,7 +27,7 @@ async def get_data_collection(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取工程师的数据采集结果"""
     collector = PerformanceDataCollector(db)
@@ -56,7 +57,7 @@ async def extract_self_evaluation(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """从工作日志中提取自我评价数据"""
     collector = PerformanceDataCollector(db)
@@ -82,7 +83,7 @@ async def trigger_collect_all(
     engineer_id: int,
     period_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """触发对指定工程师的完整数据采集（增强版：包含统计信息）"""
     collector = PerformanceDataCollector(db)
@@ -101,7 +102,7 @@ async def generate_collection_report(
     start_date: Optional[date] = Query(None, description="开始日期"),
     end_date: Optional[date] = Query(None, description="结束日期"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """生成数据采集报告（包含统计、缺失分析和建议）"""
     collector = PerformanceDataCollector(db)

@@ -255,10 +255,10 @@ class TestSubmitForApproval:
         eval_query.all.return_value = []
 
         with patch(
-            "app.services.approval_engine.adapters.ecn.WorkflowEngine"
-        ) as MockWorkflowEngine:
-            engine_instance = MockWorkflowEngine.return_value
-            engine_instance.create_instance.return_value = new_instance
+            "app.services.approval_engine.adapters.ecn.ApprovalEngineService"
+        ) as MockEngineService:
+            engine_instance = MockEngineService.return_value
+            engine_instance.submit.return_value = new_instance
             mock_db.query.return_value.filter.return_value.all.return_value = []
             result = adapter.submit_for_approval(ecn, initiator_id=1)
             assert result is new_instance
@@ -283,10 +283,10 @@ class TestSubmitForApproval:
         new_instance.status = "PENDING"
 
         with patch(
-            "app.services.approval_engine.adapters.ecn.WorkflowEngine"
-        ) as MockWorkflowEngine:
-            engine_instance = MockWorkflowEngine.return_value
-            engine_instance.create_instance.return_value = new_instance
+            "app.services.approval_engine.adapters.ecn.ApprovalEngineService"
+        ) as MockEngineService:
+            engine_instance = MockEngineService.return_value
+            engine_instance.submit.return_value = new_instance
             mock_db.query.return_value.filter.return_value.all.return_value = [eval1]
             result = adapter.submit_for_approval(ecn, initiator_id=1)
             assert result is new_instance

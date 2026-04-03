@@ -7,7 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api import deps
+from app.core import security
 from app.models.approval import ApprovalComment, ApprovalTask
+from app.models.user import User
 from app.schemas.approval.task import (
     AddApproverRequest,
     AddCCRequest,
@@ -21,6 +23,13 @@ from app.schemas.approval.task import (
     TransferRequest,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.services.approval_engine.visibility import (
+    check_can_comment,
+    check_can_operate_instance,
+    check_can_remind,
+    check_instance_visible,
+    check_task_visible,
+)
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -30,9 +39,13 @@ router = APIRouter()
 def get_task(
     task_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取审批任务详情"""
+    """获取审批任务详情（需参与关系）"""
     task = get_or_404(db, ApprovalTask, task_id, "任务不存在")
+
+    if not check_task_visible(db, task, current_user):
+        raise HTTPException(status_code=403, detail="无权查看此审批任务")
 
     result = ApprovalTaskResponse.model_validate(task)
 
@@ -52,7 +65,7 @@ def approve_task(
     task_id: int,
     data: ApproveRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     审批通过
@@ -84,7 +97,7 @@ def reject_task(
     task_id: int,
     data: RejectRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     审批驳回
@@ -118,7 +131,7 @@ def return_task(
     task_id: int,
     data: ReturnRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """退回到指定节点"""
     engine = ApprovalEngineService(db)
@@ -143,7 +156,7 @@ def transfer_task(
     task_id: int,
     data: TransferRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     转审
@@ -172,7 +185,7 @@ def add_approver(
     task_id: int,
     data: AddApproverRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     加签
@@ -203,13 +216,17 @@ def remind_task(
     task_id: int,
     data: RemindRequest = None,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """
     催办
 
-    向审批人发送催办通知
+    向审批人发送催办通知。仅发起人、同实例审批人及管理员可催办。
     """
+    task = get_or_404(db, ApprovalTask, task_id, "任务不存在")
+    if not check_can_remind(db, task, current_user):
+        raise HTTPException(status_code=403, detail="无权催办此任务")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -230,9 +247,12 @@ def add_cc(
     instance_id: int,
     data: AddCCRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """加抄送"""
+    """加抄送（仅发起人、审批人及管理员可操作）"""
+    if not check_can_operate_instance(db, instance_id, current_user):
+        raise HTTPException(status_code=403, detail="无权为此审批加抄送")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -257,9 +277,12 @@ def add_comment(
     instance_id: int,
     data: CommentRequest,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """添加评论"""
+    """添加评论（发起人、审批人、管理员可评论；抄送人仅可查看）"""
+    if not check_can_comment(db, instance_id, current_user):
+        raise HTTPException(status_code=403, detail="无权评论此审批")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -281,13 +304,17 @@ def add_comment(
 def list_comments(
     instance_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取评论列表"""
+    """获取评论列表（仅参与者可查看）"""
+    if not check_instance_visible(db, instance_id, current_user):
+        raise HTTPException(status_code=403, detail="无权查看此审批评论")
+
     comments = (
         db.query(ApprovalComment)
         .filter(
             ApprovalComment.instance_id == instance_id,
-            not ApprovalComment.is_deleted,
+            ApprovalComment.is_deleted == False,  # noqa: E712
         )
         .order_by(ApprovalComment.created_at)
         .all()
@@ -300,7 +327,7 @@ def list_comments(
 def delete_comment(
     comment_id: int,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
     """删除评论（软删除）"""
     from datetime import datetime

@@ -34,7 +34,7 @@ def calculate_project_labor_cost(
     计算项目人工成本
     从已审批的工时记录自动计算项目人工成本
     """
-    from app.services.labor_cost_service import LaborCostService
+    from app.services.cost.labor_cost_service import LaborCostService
 
     start = None
     end = None

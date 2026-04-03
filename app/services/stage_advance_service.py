@@ -246,7 +246,7 @@ def generate_cost_review_report(
 
     try:
         from app.models.project import ProjectReview
-        from app.services.cost_review_service import CostReviewService
+        from app.services.cost.cost_review_service import CostReviewService
 
         # 自动生成成本复盘报告（如果不存在）
         existing_review = (

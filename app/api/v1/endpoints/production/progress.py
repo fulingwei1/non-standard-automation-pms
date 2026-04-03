@@ -9,8 +9,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-
-# from app.core.permissions import check_permissions  # FIXME: Module does not exist
 from app.models.user import User
 from app.schemas.production_progress import (
     BottleneckWorkstation,
@@ -52,8 +50,6 @@ async def get_realtime_progress(
 
     **权限要求**: production:read
     """
-    # check_permissions(current_user, ["production:read"])
-
     service = ProductionProgressService(db)
     overview = service.get_realtime_overview(workshop_id=workshop_id)
 
@@ -82,8 +78,6 @@ async def get_work_order_timeline(
 
     **权限要求**: production:read
     """
-    # check_permissions(current_user, ["production:read"])
-
     service = ProductionProgressService(db)
     timeline = service.get_work_order_timeline(work_order_id)
 
@@ -119,8 +113,6 @@ async def get_workstation_realtime(
 
     **权限要求**: production:read
     """
-    # check_permissions(current_user, ["production:read"])
-
     service = ProductionProgressService(db)
     ws_status = service.get_workstation_realtime(workstation_id)
 
@@ -155,8 +147,6 @@ async def create_progress_log(
 
     **权限要求**: production:write
     """
-    # check_permissions(current_user, ["production:write"])
-
     service = ProductionProgressService(db)
 
     try:
@@ -195,8 +185,6 @@ async def get_bottleneck_workstations(
 
     **权限要求**: production:read
     """
-    # check_permissions(current_user, ["production:read"])
-
     service = ProductionProgressService(db)
     bottlenecks = service.identify_bottlenecks(workshop_id=workshop_id, min_level=min_level)
 
@@ -237,8 +225,6 @@ async def get_progress_alerts(
 
     **权限要求**: production:read
     """
-    # check_permissions(current_user, ["production:read"])
-
     service = ProductionProgressService(db)
     alerts = service.get_alerts(
         work_order_id=work_order_id,
@@ -273,8 +259,6 @@ async def dismiss_progress_alert(
 
     **权限要求**: production:write
     """
-    # check_permissions(current_user, ["production:write"])
-
     service = ProductionProgressService(db)
     success = service.dismiss_alert(
         alert_id=alert_id, user_id=current_user.id, note=dismiss_data.resolution_note
@@ -316,8 +300,6 @@ async def get_progress_deviation(
 
     **权限要求**: production:read
     """
-    # check_permissions(current_user, ["production:read"])
-
     service = ProductionProgressService(db)
     deviations = service.get_progress_deviations(
         workshop_id=workshop_id, min_deviation=min_deviation, only_delayed=only_delayed

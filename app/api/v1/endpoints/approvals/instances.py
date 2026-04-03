@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter
+from app.core import security
 from app.models.approval import ApprovalActionLog, ApprovalInstance, ApprovalTask
+from app.models.user import User
 from app.schemas.approval.instance import (
     ApprovalInstanceCreate,
     ApprovalInstanceDetail,
@@ -22,6 +24,12 @@ from app.schemas.approval.instance import (
     ApprovalTaskBrief,
 )
 from app.services.approval_engine import ApprovalEngineService
+from app.services.approval_engine.visibility import (
+    ParticipantRole,
+    check_can_operate_instance,
+    filter_visible_instances,
+    resolve_participant_role,
+)
 from app.utils.db_helpers import get_or_404
 
 router = APIRouter()
@@ -31,7 +39,7 @@ router = APIRouter()
 def submit_approval(
     data: ApprovalInstanceCreate,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:create")),
 ):
     """
     提交审批
@@ -64,7 +72,7 @@ def submit_approval(
 def save_draft(
     data: ApprovalInstanceSaveDraft,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:create")),
 ):
     """保存审批草稿"""
     engine = ApprovalEngineService(db)
@@ -92,9 +100,13 @@ def list_instances(
     entity_id: Optional[int] = None,
     keyword: Optional[str] = None,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取审批实例列表"""
+    """获取审批实例列表（按参与关系过滤可见性）"""
     query = db.query(ApprovalInstance)
+
+    # 参与者可见性过滤（fail-closed）
+    query = filter_visible_instances(query, db, current_user)
 
     if status:
         query = query.filter(ApprovalInstance.status == status)
@@ -126,9 +138,17 @@ def list_instances(
 def get_instance(
     instance_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """获取审批实例详情"""
+    """获取审批实例详情（需参与关系；抄送人仅看摘要）"""
     instance = get_or_404(db, ApprovalInstance, instance_id, "审批实例不存在")
+
+    role = resolve_participant_role(db, instance_id, current_user)
+    if role == ParticipantRole.NONE:
+        raise HTTPException(status_code=403, detail="无权查看此审批实例")
+
+    # CC 用户仅看摘要，不看 form_data / 详细日志
+    is_summary_only = role == ParticipantRole.CC
 
     # 获取任务列表
     tasks = (
@@ -148,6 +168,10 @@ def get_instance(
 
     result = ApprovalInstanceDetail.model_validate(instance)
 
+    # 抄送人不可见 form_data
+    if is_summary_only:
+        result.form_data = None
+
     # 获取模板名称
     if instance.template:
         result.template_name = instance.template.template_name
@@ -164,35 +188,41 @@ def get_instance(
         if current_node:
             result.current_node_name = current_node.node_name
 
-    # 转换任务列表
-    result.tasks = []
-    for task in tasks:
-        task_brief = ApprovalTaskBrief(
-            id=task.id,
-            node_id=task.node_id,
-            node_name=task.node.node_name if task.node else None,
-            assignee_id=task.assignee_id,
-            assignee_name=task.assignee_name,
-            status=task.status,
-            action=task.action,
-            comment=task.comment,
-            completed_at=task.completed_at,
-            created_at=task.created_at,
-        )
-        result.tasks.append(task_brief)
+    # 转换任务列表（抄送人不可见任务详情）
+    if is_summary_only:
+        result.tasks = []
+    else:
+        result.tasks = []
+        for task in tasks:
+            task_brief = ApprovalTaskBrief(
+                id=task.id,
+                node_id=task.node_id,
+                node_name=task.node.node_name if task.node else None,
+                assignee_id=task.assignee_id,
+                assignee_name=task.assignee_name,
+                status=task.status,
+                action=task.action,
+                comment=task.comment,
+                completed_at=task.completed_at,
+                created_at=task.created_at,
+            )
+            result.tasks.append(task_brief)
 
-    # 转换日志列表
-    result.logs = [
-        ApprovalLogBrief(
-            id=log.id,
-            operator_id=log.operator_id,
-            operator_name=log.operator_name,
-            action=log.action,
-            comment=log.comment,
-            action_at=log.action_at,
-        )
-        for log in logs
-    ]
+    # 转换日志列表（抄送人不可见操作日志）
+    if is_summary_only:
+        result.logs = []
+    else:
+        result.logs = [
+            ApprovalLogBrief(
+                id=log.id,
+                operator_id=log.operator_id,
+                operator_name=log.operator_name,
+                action=log.action,
+                comment=log.comment,
+                action_at=log.action_at,
+            )
+            for log in logs
+        ]
 
     return result
 
@@ -202,7 +232,7 @@ def withdraw_instance(
     instance_id: int,
     comment: Optional[str] = None,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:create")),
 ):
     """
     撤回审批
@@ -227,11 +257,19 @@ def terminate_instance(
     instance_id: int,
     comment: str,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_user),
+    current_user: User = Depends(security.require_permission("approval:approve")),
 ):
     """
     终止审批（管理员操作）
+
+    仅审批管理员（approval:admin / superuser）可执行。
     """
+    if not check_can_operate_instance(
+        db, instance_id, current_user,
+        allowed_roles=(ParticipantRole.ADMIN,),
+    ):
+        raise HTTPException(status_code=403, detail="仅管理员可终止审批")
+
     engine = ApprovalEngineService(db)
 
     try:
@@ -251,12 +289,16 @@ def get_instances_by_entity(
     entity_id: int,
     pagination: PaginationParams = Depends(get_pagination_query),
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.require_permission("approval:view")),
 ):
-    """根据业务实体获取审批实例列表"""
+    """根据业务实体获取审批实例列表（按参与关系过滤可见性）"""
     query = db.query(ApprovalInstance).filter(
         ApprovalInstance.entity_type == entity_type,
         ApprovalInstance.entity_id == entity_id,
     )
+
+    # 参与者可见性过滤（fail-closed）
+    query = filter_visible_instances(query, db, current_user)
 
     total = query.count()
     items = (

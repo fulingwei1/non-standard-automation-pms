@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated WorkflowEngine, will be removed when workflow_engine.py is deleted
 # -*- coding: utf-8 -*-
 """
 审批引擎模块分支测试
@@ -15,6 +16,8 @@ from unittest.mock import MagicMock, patch
 from decimal import Decimal
 
 import pytest
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 from app.services.approval_engine.condition_parser import (
     ConditionEvaluator,

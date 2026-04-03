@@ -621,7 +621,7 @@ class TestCCUserLogic:
 class TestWorkflowIntegration:
     """工作流集成测试"""
 
-    @patch("app.services.approval_engine.adapters.quote.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_quote_workflow_creates_with_correct_params(self, mock_engine_class):
         """报价 - 工作流引擎接收正确参数"""
         db = make_db()
@@ -637,20 +637,20 @@ class TestWorkflowIntegration:
         instance.id = 5000
 
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = instance
+        mock_engine.submit.return_value = instance
         mock_engine_class.return_value = mock_engine
 
         adapter = QuoteApprovalAdapter(db)
         adapter.submit_for_approval(quote_version, initiator_id=10)
 
         # 验证调用参数
-        mock_engine.create_instance.assert_called_once()
-        call_args = mock_engine.create_instance.call_args
+        mock_engine.submit.assert_called_once()
+        call_args = mock_engine.submit.call_args
         assert call_args[1]["flow_code"] == "SALES_QUOTE"
         assert call_args[1]["business_id"] == 123
         assert call_args[1]["submitted_by"] == 10
 
-    @patch("app.services.approval_engine.adapters.invoice.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
     def test_invoice_workflow_updates_entity(self, mock_engine_class):
         """发票 - 工作流创建后更新实体"""
         db = make_db()
@@ -666,7 +666,7 @@ class TestWorkflowIntegration:
         instance.status = "PENDING"
 
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = instance
+        mock_engine.submit.return_value = instance
         mock_engine_class.return_value = mock_engine
 
         adapter = InvoiceApprovalAdapter(db)

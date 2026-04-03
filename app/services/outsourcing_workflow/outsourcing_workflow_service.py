@@ -69,7 +69,7 @@ class OutsourcingWorkflowService(BaseApprovalWorkflowService):
     def _on_approved(self, entity_id: int, approver_id: int) -> None:
         """审批通过后触发成本归集"""
         try:
-            from app.services.cost_collection_service import CostCollectionService
+            from app.services.cost.cost_collection_service import CostCollectionService
 
             CostCollectionService.collect_from_outsourcing_order(
                 self.db, entity_id, created_by=approver_id

@@ -199,7 +199,7 @@ def _invalidate_user_cache(
 ) -> None:
     """使用户权限缓存失效"""
     try:
-        from app.services.permission_cache_service import get_permission_cache_service
+        from app.services.permission_management.permission_cache_service import get_permission_cache_service
 
         cache_service = get_permission_cache_service()
         cache_service.invalidate_user_role_change(

@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, Dict, List
 
 from app.models.acceptance import AcceptanceOrder
 from app.models.sales import Contract
-from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
-from app.services.notification_dispatcher import NotificationDispatcher
+from app.services.notification.channels.base import NotificationPriority, NotificationRequest
+from app.services.notification.notification_dispatcher import NotificationDispatcher
 
 if TYPE_CHECKING:
     from app.services.invoice_auto_service import InvoiceAutoService

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.models.base import get_db
 from app.models.warehouse import (
     InboundOrder,
@@ -18,6 +19,7 @@ from app.models.warehouse import (
     OutboundOrderItem,
     Warehouse,
 )
+from app.models.user import User
 
 router = APIRouter()
 
@@ -193,13 +195,19 @@ def _gen_no(db: Session, prefix: str) -> str:
 
 # ===== 仓库 =====
 @router.get("/warehouses", response_model=List[WarehouseOut])
-def list_warehouses(db: Session = Depends(get_db)):
+def list_warehouses(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:view")),
+):
     return db.query(Warehouse).filter(Warehouse.is_active == True).all()
 
 
 # ===== 统计 =====
 @router.get("/stats", response_model=StatsOut)
-def get_stats(db: Session = Depends(get_db)):
+def get_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:view")),
+):
     today = date.today()
     pi = (
         db.query(func.count(InboundOrder.id))
@@ -255,6 +263,7 @@ def list_inbound(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:view")),
 ):
     q = db.query(InboundOrder)
     if status:
@@ -283,7 +292,11 @@ def list_inbound(
 
 
 @router.get("/inbound/{order_id}", response_model=InboundOrderOut)
-def get_inbound(order_id: int, db: Session = Depends(get_db)):
+def get_inbound(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:view")),
+):
     o = db.query(InboundOrder).filter(InboundOrder.id == order_id).first()
     if not o:
         raise HTTPException(404, "入库单不存在")
@@ -291,7 +304,11 @@ def get_inbound(order_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/inbound", response_model=InboundOrderOut)
-def create_inbound(data: InboundOrderCreate, db: Session = Depends(get_db)):
+def create_inbound(
+    data: InboundOrderCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:create")),
+):
     no = _gen_no(db, "IN")
     total_qty = sum(i.planned_quantity for i in data.items)
     o = InboundOrder(
@@ -315,7 +332,12 @@ def create_inbound(data: InboundOrderCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/inbound/{order_id}/status")
-def update_inbound_status(order_id: int, status: str = Query(...), db: Session = Depends(get_db)):
+def update_inbound_status(
+    order_id: int,
+    status: str = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:update")),
+):
     o = db.query(InboundOrder).filter(InboundOrder.id == order_id).first()
     if not o:
         raise HTTPException(404, "入库单不存在")
@@ -335,6 +357,7 @@ def list_outbound(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:view")),
 ):
     q = db.query(OutboundOrder)
     if status:
@@ -363,7 +386,11 @@ def list_outbound(
 
 
 @router.get("/outbound/{order_id}", response_model=OutboundOrderOut)
-def get_outbound(order_id: int, db: Session = Depends(get_db)):
+def get_outbound(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:view")),
+):
     o = db.query(OutboundOrder).filter(OutboundOrder.id == order_id).first()
     if not o:
         raise HTTPException(404, "出库单不存在")
@@ -371,7 +398,11 @@ def get_outbound(order_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/outbound", response_model=OutboundOrderOut)
-def create_outbound(data: OutboundOrderCreate, db: Session = Depends(get_db)):
+def create_outbound(
+    data: OutboundOrderCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:create")),
+):
     no = _gen_no(db, "OUT")
     total_qty = sum(i.planned_quantity for i in data.items)
     o = OutboundOrder(
@@ -396,7 +427,12 @@ def create_outbound(data: OutboundOrderCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/outbound/{order_id}/status")
-def update_outbound_status(order_id: int, status: str = Query(...), db: Session = Depends(get_db)):
+def update_outbound_status(
+    order_id: int,
+    status: str = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:update")),
+):
     o = db.query(OutboundOrder).filter(OutboundOrder.id == order_id).first()
     if not o:
         raise HTTPException(404, "出库单不存在")
@@ -416,6 +452,7 @@ def list_inventory(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("inventory:view")),
 ):
     q = db.query(Inventory)
     if warehouse_id:

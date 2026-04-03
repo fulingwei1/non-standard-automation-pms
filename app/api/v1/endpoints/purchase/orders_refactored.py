@@ -29,7 +29,7 @@ from app.services.purchase_order_from_bom_service import (
     preview_purchase_orders_from_bom,
 )
 from app.services.data_scope.config import DataScopeConfig
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .utils import (

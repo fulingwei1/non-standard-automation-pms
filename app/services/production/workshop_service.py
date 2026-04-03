@@ -5,7 +5,7 @@
 处理车间响应构建、产能计算、车间验证等业务逻辑。
 """
 from datetime import date
-from typing import Optional
+from typing import Dict, List, Optional
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -25,12 +25,38 @@ class WorkshopService:
     def __init__(self, db: Session):
         self.db = db
 
-    def _build_workshop_response(self, workshop: Workshop) -> WorkshopResponse:
-        """构建车间响应（含主管名称查询）"""
-        manager_name = None
-        if workshop.manager_id:
-            manager = self.db.query(User).filter(User.id == workshop.manager_id).first()
-            manager_name = manager.real_name if manager else None
+    # ------------------------------------------------------------------
+    # Internal helpers for batch-loading related name maps
+    # ------------------------------------------------------------------
+
+    def _fetch_manager_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(User.id, User.real_name).filter(User.id.in_(ids)).all()
+        return {r.id: r.real_name for r in rows}
+
+    # ------------------------------------------------------------------
+    # Response builder
+    # ------------------------------------------------------------------
+
+    def _build_workshop_response(
+        self,
+        workshop: Workshop,
+        *,
+        manager_map: Optional[Dict[int, str]] = None,
+    ) -> WorkshopResponse:
+        """构建车间响应（含主管名称查询）。
+
+        当调用方传入预构建的名称映射字典时，直接从字典中查找，避免 N+1 查询。
+        未传入时退回到单条查询（兼容单记录场景）。
+        """
+        if manager_map is not None:
+            manager_name = manager_map.get(workshop.manager_id) if workshop.manager_id else None
+        else:
+            manager_name = None
+            if workshop.manager_id:
+                manager = self.db.query(User).filter(User.id == workshop.manager_id).first()
+                manager_name = manager.real_name if manager else None
 
         return WorkshopResponse(
             id=workshop.id,
@@ -68,7 +94,12 @@ class WorkshopService:
             pagination.limit,
         ).all()
 
-        items = [self._build_workshop_response(ws) for ws in workshops]
+        # Batch-load all managers in 1 query instead of up to N queries.
+        manager_map = self._fetch_manager_map(
+            list({ws.manager_id for ws in workshops if ws.manager_id})
+        )
+
+        items = [self._build_workshop_response(ws, manager_map=manager_map) for ws in workshops]
         return pagination.to_response(items, total)
 
     def create_workshop(self, workshop_in) -> WorkshopResponse:

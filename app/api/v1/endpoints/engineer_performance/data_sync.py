@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.services.debug_issue_sync_service import DebugIssueSyncService
@@ -35,7 +36,7 @@ class SyncRequest(BaseModel):
 async def generate_work_logs(
     request: SyncRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """从工时记录自动生成工作日志"""
     generator = WorkLogAutoGenerator(db)
@@ -57,7 +58,7 @@ async def generate_work_logs(
 async def sync_design_reviews(
     request: SyncRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """从技术评审系统同步设计评审记录"""
     sync_service = DesignReviewSyncService(db)
@@ -73,7 +74,7 @@ async def sync_design_reviews(
 async def sync_debug_issues(
     request: SyncRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """从问题管理系统同步调试问题记录"""
     sync_service = DebugIssueSyncService(db)
@@ -89,7 +90,7 @@ async def sync_debug_issues(
 async def identify_knowledge(
     request: SyncRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """从服务工单和知识库自动识别知识贡献"""
     identification_service = KnowledgeAutoIdentificationService(db)
@@ -113,7 +114,7 @@ async def identify_knowledge(
 async def sync_all_performance_data(
     request: SyncRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:manage")),
 ):
     """同步所有绩效数据（工作日志、设计评审、调试问题、知识贡献）"""
     results = {}
@@ -159,7 +160,8 @@ async def sync_all_performance_data(
 
 @router.get("/status", summary="获取同步状态")
 async def get_sync_status(
-    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
     """获取数据同步状态（最近7天）"""
     end_date = date.today()

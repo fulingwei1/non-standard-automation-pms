@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.models.performance import PerformancePeriod, PerformanceResult
 
+from .engperf_scope import EngPerfScopeContext, apply_ranking_scope
+
 
 class RankingService:
     """排名统计服务"""
@@ -26,6 +28,7 @@ class RankingService:
         department_id: Optional[int] = None,
         limit: int = 20,
         offset: int = 0,
+        scope: Optional[EngPerfScopeContext] = None,
     ) -> Tuple[List[PerformanceResult], int]:
         """获取绩效排名"""
         query = self.db.query(PerformanceResult).filter(
@@ -39,6 +42,10 @@ class RankingService:
         if department_id:
             query = query.filter(PerformanceResult.department_id == department_id)
 
+        # 注入数据范围过滤
+        if scope is not None:
+            query = apply_ranking_scope(query, scope)
+
         total = query.count()
         items = (
             query.order_by(desc(PerformanceResult.total_score)).offset(offset).limit(limit).all()
@@ -46,15 +53,21 @@ class RankingService:
 
         return items, total
 
-    def get_company_summary(self, period_id: int) -> Dict[str, Any]:
+    def get_company_summary(
+        self,
+        period_id: int,
+        scope: Optional[EngPerfScopeContext] = None,
+    ) -> Dict[str, Any]:
         """获取公司整体概况"""
-        results = (
-            self.db.query(PerformanceResult)
-            .filter(
-                PerformanceResult.period_id == period_id, PerformanceResult.job_type.isnot(None)
-            )
-            .all()
+        query = self.db.query(PerformanceResult).filter(
+            PerformanceResult.period_id == period_id, PerformanceResult.job_type.isnot(None)
         )
+
+        # 注入数据范围过滤
+        if scope is not None:
+            query = apply_ranking_scope(query, scope)
+
+        results = query.all()
 
         if not results:
             return {}

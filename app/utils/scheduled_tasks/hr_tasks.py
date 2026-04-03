@@ -126,7 +126,7 @@ def check_employee_confirmation_reminder():
         from app.common.query_filters import apply_keyword_filter
         from app.models.organization import Employee, EmployeeHrProfile, HrTransaction
         from app.models.user import Role, User, UserRole
-        from app.services.notification_dispatcher import NotificationDispatcher
+        from app.services.notification.notification_dispatcher import NotificationDispatcher
 
         with get_db_session() as db:
             today = date.today()

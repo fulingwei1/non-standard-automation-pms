@@ -55,9 +55,6 @@ const defaultStats = {
   auditLogsThisWeek: 0
 };
 
-// Mock data - 已移除，使用真实API
-
-// Mock data - 已移除，使用真实API
 
 const DEFAULT_PERMISSION_MODULES = [
 { code: "users", name: "用户管理", description: "创建、停用和分配用户角色" },
@@ -198,7 +195,7 @@ export default function AdminDashboard() {
     setRolePermissions(cloneRolePermissions(savedRolePermissions));
     setPermissionNotice({
       type: "info",
-      message: "已恢复到最近保存的配置（模拟数据）"
+      message: "已恢复到最近保存的配置"
     });
   };
 
@@ -216,7 +213,7 @@ export default function AdminDashboard() {
       setSavedRolePermissions(cloneRolePermissions(rolePermissions));
       setPermissionNotice({
         type: "success",
-        message: "权限配置已保存（仅 UI 演示）"
+        message: "权限配置已保存"
       });
     }, 600);
   };

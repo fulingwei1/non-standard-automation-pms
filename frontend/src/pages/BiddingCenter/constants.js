@@ -21,3 +21,38 @@ export const evaluationCriteria = [
     { id: 'service', label: '售后服务', weight: 10 },
     { id: 'delivery', label: '交付周期', weight: 10 },
 ];
+
+// 投标阶段配置
+export const biddingStages = [
+  { id: "tracking", name: "跟踪中", color: "bg-slate-500" },
+  { id: "preparing", name: "准备中", color: "bg-blue-500" },
+  { id: "submitted", name: "已投标", color: "bg-violet-500" },
+  { id: "evaluating", name: "待开标", color: "bg-amber-500" },
+  { id: "won", name: "已中标", color: "bg-emerald-500" },
+  { id: "lost", name: "未中标", color: "bg-red-500" },
+];
+
+// 获取阶段样式
+export const getStageStyle = (stage) => {
+  const config = (biddingStages || []).find((s) => s.id === stage);
+  return config?.color || "bg-slate-500";
+};
+
+// 获取阶段名称
+export const getStageName = (stage) => {
+  const config = (biddingStages || []).find((s) => s.id === stage);
+  return config?.name || stage;
+};
+
+// Map backend status to frontend stage
+export const mapTenderStatus = (backendStatus) => {
+  const statusMap = {
+    TRACKING: "tracking",
+    PREPARING: "preparing",
+    SUBMITTED: "submitted",
+    EVALUATING: "evaluating",
+    WON: "won",
+    LOST: "lost",
+  };
+  return statusMap[backendStatus] || "tracking";
+};

@@ -29,7 +29,7 @@ from app.schemas.business_support import (
     CustomerSupplierRegistrationResponse,
     InvoiceRequestResponse,
 )
-from app.services.notification_dispatcher import NotificationDispatcher
+from app.services.notification.notification_dispatcher import NotificationDispatcher
 
 logger = logging.getLogger(__name__)
 

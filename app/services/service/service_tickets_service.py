@@ -594,8 +594,8 @@ class ServiceTicketsService:
     def _send_ticket_notification(self, service_ticket: ServiceTicket, action: str):
         """发送工单通知"""
         try:
-            from app.services.channel_handlers.base import NotificationRequest
-            from app.services.unified_notification_service import get_notification_service
+            from app.services.notification.channels.base import NotificationRequest
+            from app.services.notification.unified_notification_service import get_notification_service
 
             notification_service = get_notification_service(self.db)
 

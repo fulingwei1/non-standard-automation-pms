@@ -1,16 +1,24 @@
-import { AlertCircle, RefreshCw, XCircle } from "lucide-react";
+import { AlertCircle, RefreshCw, XCircle, Lightbulb } from "lucide-react";
 import { Card, CardContent } from "./card";
 import { Button } from "./button";
 import { Badge } from "./badge";
 import { cn } from "../../lib/utils";
+import { getFriendlyError } from "../../utils/friendlyErrors";
 
 export function ErrorMessage({
-  title = "加载失败",
-  message = "数据加载失败，请稍后重试",
+  title,
+  message,
+  error,
   onRetry,
   className,
   variant = "default",
 }) {
+  // 如果传入了 error 对象，自动转换为友好信息
+  const friendly = error ? getFriendlyError(error) : null;
+  const displayTitle = title || friendly?.title || "加载失败";
+  const displayMessage = message || friendly?.message || "数据加载失败，请稍后重试";
+  const displaySuggestion = friendly?.suggestion;
+
   const variantStyles = {
     default: "bg-red-500/10 border-red-500/20",
     warning: "bg-amber-500/10 border-amber-500/20",
@@ -31,8 +39,14 @@ export function ErrorMessage({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-white mb-1">{title}</h3>
-            <p className="text-slate-400 text-sm">{message}</p>
+            <h3 className="text-lg font-semibold text-white mb-1">{displayTitle}</h3>
+            <p className="text-slate-400 text-sm">{displayMessage}</p>
+            {displaySuggestion && (
+              <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-white/[0.03] border border-white/5">
+                <Lightbulb className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-slate-300">{displaySuggestion}</p>
+              </div>
+            )}
             {onRetry && (
               <Button
                 variant="outline"
@@ -85,22 +99,7 @@ export function ApiIntegrationError({
   onRetry,
   className,
 }) {
-  // 处理 FastAPI 的验证错误格式 (detail 可能是数组)
-  const rawDetail = error?.response?.data?.detail;
-  let errorMessage = "API 调用失败";
-  if (typeof rawDetail === "string") {
-    errorMessage = rawDetail;
-  } else if (Array.isArray(rawDetail)) {
-    // FastAPI validation errors: [{type, loc, msg, input}, ...]
-    errorMessage = rawDetail
-      .map((e) => e.msg || e.message || JSON.stringify(e))
-      .join("; ");
-  } else if (error?.message) {
-    errorMessage = error.message;
-  }
-
-  const statusCode = error?.response?.status;
-  const statusText = error?.response?.statusText;
+  const friendly = getFriendlyError(error);
 
   return (
     <Card
@@ -112,35 +111,18 @@ export function ApiIntegrationError({
             <AlertCircle className="w-6 h-6 text-amber-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-lg font-semibold text-amber-400">
-                ⚠️ API 集成未完成
-              </h3>
-              {statusCode && (
-                <Badge variant="outline" className="text-xs">
-                  {statusCode} {statusText}
-                </Badge>
-              )}
-            </div>
+            <h3 className="text-lg font-semibold text-amber-400 mb-2">
+              {friendly.title}
+            </h3>
 
-            <p className="text-slate-300 mb-2">{errorMessage}</p>
+            <p className="text-slate-300 mb-2">{friendly.message}</p>
 
-            {apiEndpoint && (
-              <p className="text-xs text-slate-500 mb-3">
-                API 端点:{" "}
-                <code className="bg-slate-800 px-1 py-0.5 rounded">
-                  {apiEndpoint}
-                </code>
-              </p>
+            {friendly.suggestion && (
+              <div className="flex items-start gap-2 mt-2 mb-4 p-3 rounded-lg bg-white/[0.03] border border-white/5">
+                <Lightbulb className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-slate-300">{friendly.suggestion}</p>
+              </div>
             )}
-
-            <div className="bg-slate-900/50 border border-slate-700 rounded p-3 mb-4">
-              <p className="text-xs text-amber-300 font-medium mb-1">💡 说明</p>
-              <p className="text-xs text-slate-400">
-                后端 API 端点可能未实现或不可用。此页面已移除 fallback 逻辑，
-                以确保能清楚识别 API 集成状态。
-              </p>
-            </div>
 
             {onRetry && (
               <Button

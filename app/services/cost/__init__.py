@@ -10,6 +10,12 @@
 - cost_forecast_service: 成本预测（趋势分析、线性/指数/历史预测）
 - cost_overrun_analysis_service: 超支分析（原因、归责、影响）
 - cost_prediction_service: AI成本预测（GLM-5模型）
+- cost_service: 成本统一Facade（聚合分析与利润计算）
+- cost_allocation_service: 费用分摊
+- cost_collection_service: 成本自动归集
+- cost_review_service: 成本复盘报告
+- labor_cost_service: 工时成本计算
+- labor_cost_utils: 工时成本辅助工具
 """
 
 from app.services.cost.cost_alert_service import CostAlertService

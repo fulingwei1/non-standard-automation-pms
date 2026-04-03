@@ -61,13 +61,41 @@ def auto_trigger_urgent_purchase_from_shortage_alerts():
     pass
 
 
-@_stub_task("daily_kit_check", "每日齐套检查")
 def daily_kit_check():
     """
     每日齐套检查
-    检查所有活跃项目的物料齐套情况
+    检查所有活跃项目的物料齐套情况，同步齐套率并更新健康度。
     """
-    pass
+    return _run_kitting_sync("daily_kit_check")
+
+
+def sync_kitting_rate_hourly():
+    """
+    每小时齐套率同步
+    同步所有活跃项目齐套率，识别显著变化，更新健康度。
+    """
+    return _run_kitting_sync("sync_kitting_rate_hourly")
+
+
+def _run_kitting_sync(task_name: str):
+    """齐套率同步的共享实现"""
+    from app.dependencies import get_db_session
+    from app.services.kitting_optimization_service import KittingOptimizationService
+
+    try:
+        with get_db_session() as db:
+            svc = KittingOptimizationService(db)
+            result = svc.sync_all_projects_kitting_rate(threshold=5.0)
+            logger.info(
+                f"[{task_name}] 同步完成: "
+                f"total={result['total_synced']}, "
+                f"significant={result['significant_count']}, "
+                f"errors={result['error_count']}"
+            )
+            return result
+    except Exception as e:
+        logger.error(f"[{task_name}] 执行失败: {e}")
+        raise
 
 
 @_stub_task("generate_shortage_daily_report", "生成缺料日报")
@@ -199,6 +227,7 @@ __all__ = [
     "generate_shortage_alerts",
     "auto_trigger_urgent_purchase_from_shortage_alerts",
     "daily_kit_check",
+    "sync_kitting_rate_hourly",
     "generate_shortage_daily_report",
     "check_equipment_maintenance_reminder",
     "check_cost_overrun_alerts",

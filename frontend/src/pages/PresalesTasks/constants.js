@@ -1,21 +1,85 @@
-export const taskStatusConfigs = {
-    pending: { label: '待处理', color: 'bg-slate-500' },
-    in_progress: { label: '进行中', color: 'bg-blue-500' },
-    review: { label: '待审核', color: 'bg-amber-500' },
-    completed: { label: '已完成', color: 'bg-emerald-500' },
-};
+/**
+ * 售前技术任务中心 - 常量配置
+ */
+import {
+  ListTodo,
+  ClipboardList,
+  MessageSquare,
+  FileText,
+  Eye,
+  DollarSign,
+  Target,
+} from "lucide-react";
 
-export const taskTypeConfigs = {
-    survey: { label: '需求调研', icon: 'ClipboardList', color: 'bg-blue-500' },
-    solution: { label: '方案设计', icon: 'Layout', color: 'bg-purple-500' },
-    quote: { label: '报价编制', icon: 'DollarSign', color: 'bg-amber-500' },
-    demo: { label: '演示/POC', icon: 'Monitor', color: 'bg-cyan-500' },
-    support: { label: '技术支持', icon: 'HelpCircle', color: 'bg-emerald-500' },
-};
+// 任务类型配置
+export const taskTypes = [
+  { id: "all", name: "全部", icon: ListTodo, color: "text-slate-400" },
+  {
+    id: "survey",
+    name: "需求调研",
+    icon: ClipboardList,
+    color: "text-emerald-400",
+  },
+  {
+    id: "exchange",
+    name: "技术交流",
+    icon: MessageSquare,
+    color: "text-blue-400",
+  },
+  {
+    id: "solution",
+    name: "方案设计",
+    icon: FileText,
+    color: "text-violet-400",
+  },
+  { id: "review", name: "方案评审", icon: Eye, color: "text-pink-400" },
+  {
+    id: "costing",
+    name: "成本核算",
+    icon: DollarSign,
+    color: "text-emerald-400",
+  },
+  { id: "bidding", name: "投标支持", icon: Target, color: "text-amber-400" },
+];
 
-export const priorityConfigs = {
-    low: { label: '低', color: 'bg-slate-400' },
-    normal: { label: '普通', color: 'bg-blue-500' },
-    high: { label: '高', color: 'bg-amber-500' },
-    urgent: { label: '紧急', color: 'bg-red-500' },
+// 任务状态配置
+export const taskStatuses = [
+  {
+    id: "pending",
+    name: "待处理",
+    color: "bg-slate-500",
+    textColor: "text-slate-400",
+  },
+  {
+    id: "in_progress",
+    name: "进行中",
+    color: "bg-blue-500",
+    textColor: "text-blue-400",
+  },
+  {
+    id: "reviewing",
+    name: "待评审",
+    color: "bg-amber-500",
+    textColor: "text-amber-400",
+  },
+  {
+    id: "completed",
+    name: "已完成",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400",
+  },
+];
+
+// 获取优先级样式
+export const getPriorityStyle = (priority) => {
+  switch (priority) {
+    case "high":
+      return { bg: "bg-red-500/10", text: "text-red-400", label: "紧急" };
+    case "medium":
+      return { bg: "bg-amber-500/10", text: "text-amber-400", label: "中等" };
+    case "low":
+      return { bg: "bg-slate-500/10", text: "text-slate-400", label: "普通" };
+    default:
+      return { bg: "bg-slate-500/10", text: "text-slate-400", label: "普通" };
+  }
 };

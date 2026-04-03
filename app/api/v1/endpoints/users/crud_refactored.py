@@ -17,6 +17,8 @@ from app.core import security
 from app.core.schemas import paginated_response, success_response
 from app.models.organization import Employee
 from app.models.user import User
+from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdate
+from app.services.permission_management.permission_audit_service import PermissionAuditService
 from app.schemas.auth import BatchRoleAssign, UserCreate, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_audit_service import PermissionAuditService
 from app.utils.db_helpers import get_or_404

@@ -123,11 +123,39 @@ API_PERMISSIONS = [
         "module": "CONTRACT",
         "action": "DELETE",
     },
+    {
+        "perm_code": "contract:approve",
+        "perm_name": "审批合同",
+        "module": "CONTRACT",
+        "action": "APPROVE",
+    },
+    {
+        "perm_code": "contract:sign",
+        "perm_name": "签订合同",
+        "module": "CONTRACT",
+        "action": "SIGN",
+    },
+    {
+        "perm_code": "contract:export",
+        "perm_name": "导出合同",
+        "module": "CONTRACT",
+        "action": "EXPORT",
+    },
     # 任务管理权限
     {"perm_code": "task:read", "perm_name": "查看任务", "module": "TASK", "action": "VIEW"},
     {"perm_code": "task:create", "perm_name": "创建任务", "module": "TASK", "action": "CREATE"},
     {"perm_code": "task:update", "perm_name": "编辑任务", "module": "TASK", "action": "UPDATE"},
     {"perm_code": "task:delete", "perm_name": "删除任务", "module": "TASK", "action": "DELETE"},
+    # 仓储管理权限
+    {"perm_code": "warehouse:view", "perm_name": "查看仓库", "module": "WAREHOUSE", "action": "VIEW"},
+    {"perm_code": "warehouse:create", "perm_name": "创建库位", "module": "WAREHOUSE", "action": "CREATE"},
+    {"perm_code": "warehouse:update", "perm_name": "编辑库位", "module": "WAREHOUSE", "action": "UPDATE"},
+    {"perm_code": "warehouse:delete", "perm_name": "删除库位", "module": "WAREHOUSE", "action": "DELETE"},
+    # 库存管理权限
+    {"perm_code": "inventory:view", "perm_name": "查看库存", "module": "INVENTORY", "action": "VIEW"},
+    {"perm_code": "inventory:create", "perm_name": "创建出入库单", "module": "INVENTORY", "action": "CREATE"},
+    {"perm_code": "inventory:update", "perm_name": "更新出入库状态", "module": "INVENTORY", "action": "UPDATE"},
+    {"perm_code": "inventory:count", "perm_name": "盘点操作", "module": "INVENTORY", "action": "EDIT"},
     # 财务管理权限
     {"perm_code": "finance:read", "perm_name": "查看财务", "module": "FINANCE", "action": "VIEW"},
     {
@@ -148,25 +176,21 @@ API_PERMISSIONS = [
         "module": "FINANCE",
         "action": "DELETE",
     },
-    # 售后服务权限
-    {"perm_code": "service:read", "perm_name": "查看售后服务", "module": "SERVICE", "action": "VIEW"},
+    # 审批管理权限
+    {"perm_code": "approval:view", "perm_name": "查看审批", "module": "APPROVAL", "action": "VIEW"},
+    {"perm_code": "approval:create", "perm_name": "发起审批", "module": "APPROVAL", "action": "CREATE"},
+    {"perm_code": "approval:approve", "perm_name": "审批操作", "module": "APPROVAL", "action": "APPROVE"},
     {
-        "perm_code": "service:create",
-        "perm_name": "创建售后服务数据",
-        "module": "SERVICE",
-        "action": "CREATE",
+        "perm_code": "approval:template:view",
+        "perm_name": "查看审批模板",
+        "module": "APPROVAL",
+        "action": "VIEW",
     },
     {
-        "perm_code": "service:update",
-        "perm_name": "编辑售后服务数据",
-        "module": "SERVICE",
-        "action": "UPDATE",
-    },
-    {
-        "perm_code": "service:delete",
-        "perm_name": "删除售后服务数据",
-        "module": "SERVICE",
-        "action": "DELETE",
+        "perm_code": "approval:template:manage",
+        "perm_name": "管理审批模板",
+        "module": "APPROVAL",
+        "action": "EDIT",
     },
 ]
 
@@ -184,9 +208,18 @@ ROLE_PERMISSIONS_MAPPING = {
         "opportunity:read",
         "contract:read",
         "contract:update",
-        "task:read",
-        "finance:read",
-        "service:read",
+        "contract:approve",
+        "contract:sign",
+        "contract:export",
+        "task:view",
+        "finance:view",
+        "warehouse:view",
+        "inventory:view",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
+        "approval:template:view",
+        "approval:template:manage",
     ],
     # 项目经理 - 项目相关全权限
     "PM": [
@@ -198,8 +231,11 @@ ROLE_PERMISSIONS_MAPPING = {
         "task:create",
         "task:update",
         "task:delete",
-        "contract:read",
-        "service:read",
+        "contract:view",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
+        "approval:template:view",
     ],
     # 销售总监 - 销售相关全权限
     "SALES_DIR": [
@@ -210,38 +246,61 @@ ROLE_PERMISSIONS_MAPPING = {
         "contract:read",
         "contract:create",
         "contract:update",
-        "finance:read",
+        "contract:approve",
+        "contract:sign",
+        "contract:export",
+        "finance:view",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
+        "approval:template:view",
     ],
     # 销售专员 - 销售相关基础权限
     "SALES": [
         "opportunity:read",
         "opportunity:create",
         "opportunity:update",
-        "contract:read",
+        "contract:view",
+        "contract:export",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 工程师 - 项目和任务查看权限
     "ENGINEER": [
         "project:read",
         "task:read",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 机械工程师
     "ME": [
         "project:read",
         "task:read",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 电气工程师
     "EE": [
         "project:read",
         "task:read",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
     # 软件工程师
     "SW": [
         "project:read",
         "task:read",
         "task:update",
+        "approval:view",
+        "approval:create",
+        "approval:approve",
     ],
 }
 

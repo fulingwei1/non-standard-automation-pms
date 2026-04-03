@@ -1,9 +1,39 @@
 # -*- coding: utf-8 -*-
 """
-智能缺料预警系统 - API接口
+智能缺料预警系统 - API接口 (smart_alerts.py)
 
 Team 3: 智能缺料预警系统
 提供10个API接口
+
+PURPOSE / SCOPE
+---------------
+This file is the **AI/intelligence layer** for shortage alerts. It exposes
+endpoints that involve forecasting, algorithmic analysis, root-cause reasoning,
+project-impact summaries, AI-generated handling plans, and user notification
+subscriptions. It delegates all business logic to ShortageAlertService.
+
+Registered under the prefix:  /shortage/smart/
+
+DISTINCTION FROM detection/alerts.py
+--------------------------------------
+- detection/alerts.py  →  **Operational CRUD layer**: direct database operations
+  on MaterialShortage records, lifecycle state transitions (OPEN → ACKNOWLEDGED →
+  RESOLVED), manual updates, follow-up notes, and progress-integration side-effects
+  (task blocking/unblocking). Canonical source for alert list/detail/resolve.
+  Registered under: /shortage/detection/
+
+- smart_alerts.py (this file)  →  **Intelligence layer**: demand forecasting,
+  shortage-trend analysis, root-cause analysis, project-impact aggregation,
+  AI-generated solution plans, and notification subscriptions. The three endpoints
+  below that mirror detection/alerts.py (list, detail, resolve) are kept for
+  backward compatibility only and are marked deprecated — prefer the canonical
+  endpoints in detection/alerts.py for those operations.
+
+DUPLICATE REGISTRATION WARNING
+-------------------------------
+This router must only be mounted once (via shortage/__init__.py at
+/shortage/smart/). The legacy registration at /shortage/smart-alerts/ in
+api.py / api_medium.py has been removed to avoid serving duplicate routes.
 """
 from typing import Optional
 
@@ -35,9 +65,16 @@ router = APIRouter()
 
 
 # ==================== 1. 缺料预警列表 ====================
+# NOTE: Deprecated in favour of GET /shortage/detection/alerts which provides
+# the same list through the canonical operational layer (detection/alerts.py).
+# This endpoint is retained for backward compatibility only.
 
 
-@router.get("/alerts", response_model=ShortageAlertListResponse)
+@router.get(
+    "/alerts",
+    response_model=ShortageAlertListResponse,
+    deprecated=True,
+)
 async def get_shortage_alerts(
     project_id: Optional[int] = Query(None, description="项目ID"),
     material_id: Optional[int] = Query(None, description="物料ID"),
@@ -51,9 +88,15 @@ async def get_shortage_alerts(
     current_user: User = Depends(get_current_user),
 ):
     """
-    获取缺料预警列表
+    [DEPRECATED] 获取缺料预警列表
 
-    支持多维度筛选和分页
+    **Use GET /shortage/detection/alerts instead.**
+
+    This endpoint is superseded by the canonical operational alert list in
+    `detection/alerts.py` which provides richer filtering (handler_id),
+    standard pagination, and is the single source of truth for alert records.
+
+    支持多维度筛选和分页。
     """
     service = ShortageAlertService(db)
     alerts, total = service.get_alerts_with_filters(
@@ -76,16 +119,29 @@ async def get_shortage_alerts(
 
 
 # ==================== 2. 预警详情 ====================
+# NOTE: Deprecated in favour of GET /shortage/detection/alerts/{id} which is
+# the canonical detail endpoint (detection/alerts.py) and includes additional
+# fields such as bom_item_id, remark, and updated_at.
 
 
-@router.get("/alerts/{alert_id}", response_model=ShortageAlertResponse)
+@router.get(
+    "/alerts/{alert_id}",
+    response_model=ShortageAlertResponse,
+    deprecated=True,
+)
 async def get_shortage_alert_detail(
     alert_id: int = Path(..., description="预警ID"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
-    获取缺料预警详情
+    [DEPRECATED] 获取缺料预警详情
+
+    **Use GET /shortage/detection/alerts/{alert_id} instead.**
+
+    The canonical detail endpoint in `detection/alerts.py` returns additional
+    fields (bom_item_id, remark, updated_at) and uses a consistent ResponseModel
+    envelope shared across the rest of the detection layer.
     """
     service = ShortageAlertService(db)
     alert = service.get_alert_by_id(alert_id)
@@ -146,9 +202,16 @@ async def get_handling_solutions(
 
 
 # ==================== 5. 标记解决 ====================
+# NOTE: Deprecated in favour of POST /shortage/detection/alerts/{id}/resolve
+# which is the canonical resolve endpoint (detection/alerts.py). That endpoint
+# also handles progress-integration side-effects (unblocking blocked tasks) and
+# enforces the RESOLVED status guard. Use it for all production resolve actions.
 
 
-@router.post("/alerts/{alert_id}/resolve")
+@router.post(
+    "/alerts/{alert_id}/resolve",
+    deprecated=True,
+)
 async def resolve_shortage_alert(
     alert_id: int = Path(..., description="预警ID"),
     request: ResolveAlertRequest = None,
@@ -156,7 +219,18 @@ async def resolve_shortage_alert(
     current_user: User = Depends(get_current_user),
 ):
     """
-    标记预警已解决
+    [DEPRECATED] 标记预警已解决
+
+    **Use POST /shortage/detection/alerts/{alert_id}/resolve instead.**
+
+    The canonical resolve endpoint in `detection/alerts.py` additionally:
+    - Guards against resolving an already-RESOLVED alert (400 error).
+    - Triggers progress-integration side-effects to unblock dependent tasks.
+    - Accepts a simple `solution` string body (no extra cost/delay metadata).
+
+    This endpoint accepts richer metadata (resolution_type, actual_cost_impact,
+    actual_delay_days) via ShortageAlertService; if those fields are required,
+    keep using this endpoint until the canonical one is extended.
     """
     service = ShortageAlertService(db)
 

@@ -256,7 +256,7 @@ def export_alerts_pdf(
     from reportlab.lib.units import cm
     from reportlab.platypus import SimpleDocTemplate
 
-    from app.services.alert_pdf_service import (
+    from app.services.alert.alert_pdf_service import (
         build_alert_query,
         build_pdf_content,
         get_pdf_styles,

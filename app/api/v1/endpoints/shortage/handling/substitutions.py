@@ -338,8 +338,8 @@ def execute_substitution(
 
     # 发送通知
     try:
-        from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
-        from app.services.notification_dispatcher import NotificationDispatcher
+        from app.services.notification.channels.base import NotificationPriority, NotificationRequest
+        from app.services.notification.notification_dispatcher import NotificationDispatcher
 
         if sub.project_id:
             project = db.query(Project).filter(Project.id == sub.project_id).first()

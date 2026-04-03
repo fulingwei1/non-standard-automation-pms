@@ -29,8 +29,17 @@ from app.schemas.common import ResponseModel
 from app.schemas.pmo import (
     ClosureCreate,
     ClosureLessonsRequest,
+    ClosureNotificationResponse,
+    ClosureReadinessResponse,
+    ClosureReadinessRulesUpdate,
     ClosureResponse,
     ClosureReviewRequest,
+    LessonsAutoCollectResponse,
+)
+from app.services.project.closure_readiness_service import (
+    ClosureNotificationService,
+    ClosureReadinessService,
+    LessonsCollectionService,
 )
 
 # Included without extra prefix; decorators already include `/pmo/...` paths.
@@ -351,3 +360,124 @@ def archive_closure(
             "archived_at": datetime.now().isoformat(),
         },
     )
+
+
+# ==================== 结项准备度自动检查 ====================
+
+
+@router.get(
+    "/pmo/projects/{project_id}/closure-readiness",
+    response_model=ClosureReadinessResponse,
+)
+def check_closure_readiness(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    结项准备度检查 — 自动检查所有结项条件并返回准备度评分
+
+    检查项：
+    - 所有阶段是否完成
+    - 关键交付物是否上传
+    - 客户验收是否签署
+    - 成本是否归集完成
+    - 项目文档是否齐全
+    """
+    service = ClosureReadinessService(db)
+    result = service.check_readiness(project_id)
+    return result
+
+
+@router.post(
+    "/pmo/projects/{project_id}/closure-readiness",
+    response_model=ClosureReadinessResponse,
+)
+def check_closure_readiness_custom(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    rules: ClosureReadinessRulesUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    使用自定义规则执行结项准备度检查
+    """
+    service = ClosureReadinessService(db)
+    custom_rules = {k: v for k, v in rules.model_dump().items() if v is not None}
+    # 合并默认规则
+    from app.services.project.closure_readiness_service import DEFAULT_CLOSURE_RULES
+
+    merged = {**DEFAULT_CLOSURE_RULES, **custom_rules}
+    result = service.check_readiness(project_id, rules=merged)
+    return result
+
+
+# ==================== 结项提醒自动推送 ====================
+
+
+@router.post(
+    "/pmo/projects/{project_id}/closure-notify",
+    response_model=ClosureNotificationResponse,
+)
+def notify_closure_readiness(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    检查结项条件并自动通知项目负责人
+
+    当满足结项条件时：
+    - 自动通知项目负责人（HIGH 优先级）
+    - 当准备度 >= 80% 时发送提醒
+
+    通知会出现在动作中心待办列表中。
+    """
+    readiness_service = ClosureReadinessService(db)
+    readiness = readiness_service.check_readiness(project_id)
+
+    notify_service = ClosureNotificationService(db)
+    notification_ids = notify_service.notify_if_ready(project_id, readiness)
+
+    return ClosureNotificationResponse(
+        notification_ids=notification_ids,
+        notified=len(notification_ids) > 0,
+        message=(
+            f"已通知 {len(notification_ids)} 人，项目准备度 {readiness['score']}%"
+            if notification_ids
+            else f"项目准备度 {readiness['score']}%，暂无需通知"
+        ),
+    )
+
+
+# ==================== 经验沉淀自动收集 ====================
+
+
+@router.post(
+    "/pmo/projects/{project_id}/closure-lessons-collect",
+    response_model=LessonsAutoCollectResponse,
+)
+def auto_collect_lessons(
+    *,
+    db: Session = Depends(deps.get_db),
+    project_id: int,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    结项时自动触发经验沉淀收集
+
+    自动执行：
+    - 创建结项复盘报告模板（POST_MORTEM 类型）
+    - 从项目数据提取经验教训（进度/成本偏差分析）
+    - 生成最佳实践建议
+    """
+    service = LessonsCollectionService(db)
+    result = service.auto_collect(project_id, triggered_by=current_user.id)
+
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    return LessonsAutoCollectResponse(**result)

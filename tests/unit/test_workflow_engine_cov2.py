@@ -1,3 +1,4 @@
+# Legacy: tests for deprecated WorkflowEngine, will be removed when workflow_engine.py is deleted
 # -*- coding: utf-8 -*-
 """
 approval_engine/workflow_engine.py 单元测试（第二批）
@@ -6,6 +7,8 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 
 def _make_engine(mock_db=None):

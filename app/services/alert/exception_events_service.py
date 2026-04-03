@@ -358,8 +358,8 @@ class ExceptionEventsService:
     def _send_exception_notification(self, exception_event: ExceptionEvent, action: str):
         """发送异常事件通知"""
         try:
-            from app.services.channel_handlers.base import NotificationRequest
-            from app.services.unified_notification_service import get_notification_service
+            from app.services.notification.channels.base import NotificationRequest
+            from app.services.notification.unified_notification_service import get_notification_service
 
             notification_service = get_notification_service(self.db)
 
@@ -426,8 +426,8 @@ class ExceptionEventsService:
     ):
         """发送升级通知"""
         try:
-            from app.services.channel_handlers.base import NotificationRequest
-            from app.services.unified_notification_service import get_notification_service
+            from app.services.notification.channels.base import NotificationRequest
+            from app.services.notification.unified_notification_service import get_notification_service
 
             notification_service = get_notification_service(self.db)
 

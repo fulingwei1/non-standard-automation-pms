@@ -5,7 +5,7 @@
 处理工单验证、创建、响应构建、派工（单个和批量）等业务逻辑。
 """
 from datetime import datetime
-from typing import List
+from typing import Dict, List, Optional
 
 from fastapi import HTTPException
 from sqlalchemy import desc
@@ -31,39 +31,135 @@ class WorkOrderService:
     def __init__(self, db: Session):
         self.db = db
 
-    def build_response(self, order: WorkOrder) -> WorkOrderResponse:
-        """构建工单响应对象"""
-        project_name = None
-        if order.project_id:
-            project = self.db.query(Project).filter(Project.id == order.project_id).first()
-            project_name = project.project_name if project else None
+    # ------------------------------------------------------------------
+    # Internal helpers for batch-loading related name maps
+    # ------------------------------------------------------------------
 
-        machine_name = None
-        if order.machine_id:
-            machine = self.db.query(Machine).filter(Machine.id == order.machine_id).first()
-            machine_name = machine.machine_name if machine else None
+    def _fetch_project_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(Project.id, Project.project_name).filter(Project.id.in_(ids)).all()
+        return {r.id: r.project_name for r in rows}
 
-        workshop_name = None
-        if order.workshop_id:
-            workshop = self.db.query(Workshop).filter(Workshop.id == order.workshop_id).first()
-            workshop_name = workshop.workshop_name if workshop else None
+    def _fetch_machine_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(Machine.id, Machine.machine_name).filter(Machine.id.in_(ids)).all()
+        return {r.id: r.machine_name for r in rows}
 
-        workstation_name = None
-        if order.workstation_id:
-            workstation = (
-                self.db.query(Workstation).filter(Workstation.id == order.workstation_id).first()
+    def _fetch_workshop_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(Workshop.id, Workshop.workshop_name).filter(Workshop.id.in_(ids)).all()
+        return {r.id: r.workshop_name for r in rows}
+
+    def _fetch_workstation_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = (
+            self.db.query(Workstation.id, Workstation.workstation_name)
+            .filter(Workstation.id.in_(ids))
+            .all()
+        )
+        return {r.id: r.workstation_name for r in rows}
+
+    def _fetch_process_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = (
+            self.db.query(ProcessDict.id, ProcessDict.process_name)
+            .filter(ProcessDict.id.in_(ids))
+            .all()
+        )
+        return {r.id: r.process_name for r in rows}
+
+    def _fetch_worker_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(Worker.id, Worker.worker_name).filter(Worker.id.in_(ids)).all()
+        return {r.id: r.worker_name for r in rows}
+
+    # ------------------------------------------------------------------
+    # Response builder
+    # ------------------------------------------------------------------
+
+    def build_response(
+        self,
+        order: WorkOrder,
+        *,
+        project_map: Optional[Dict[int, str]] = None,
+        machine_map: Optional[Dict[int, str]] = None,
+        workshop_map: Optional[Dict[int, str]] = None,
+        workstation_map: Optional[Dict[int, str]] = None,
+        process_map: Optional[Dict[int, str]] = None,
+        worker_map: Optional[Dict[int, str]] = None,
+    ) -> WorkOrderResponse:
+        """构建工单响应对象。
+
+        当调用方传入预构建的名称映射字典时，直接从字典中查找，避免 N+1 查询。
+        未传入时退回到单条查询（兼容单记录场景）。
+        """
+        # project_name
+        if project_map is not None:
+            project_name = project_map.get(order.project_id) if order.project_id else None
+        else:
+            project_name = None
+            if order.project_id:
+                project = self.db.query(Project).filter(Project.id == order.project_id).first()
+                project_name = project.project_name if project else None
+
+        # machine_name
+        if machine_map is not None:
+            machine_name = machine_map.get(order.machine_id) if order.machine_id else None
+        else:
+            machine_name = None
+            if order.machine_id:
+                machine = self.db.query(Machine).filter(Machine.id == order.machine_id).first()
+                machine_name = machine.machine_name if machine else None
+
+        # workshop_name
+        if workshop_map is not None:
+            workshop_name = workshop_map.get(order.workshop_id) if order.workshop_id else None
+        else:
+            workshop_name = None
+            if order.workshop_id:
+                workshop = self.db.query(Workshop).filter(Workshop.id == order.workshop_id).first()
+                workshop_name = workshop.workshop_name if workshop else None
+
+        # workstation_name
+        if workstation_map is not None:
+            workstation_name = (
+                workstation_map.get(order.workstation_id) if order.workstation_id else None
             )
-            workstation_name = workstation.workstation_name if workstation else None
+        else:
+            workstation_name = None
+            if order.workstation_id:
+                workstation = (
+                    self.db.query(Workstation)
+                    .filter(Workstation.id == order.workstation_id)
+                    .first()
+                )
+                workstation_name = workstation.workstation_name if workstation else None
 
-        process_name = None
-        if order.process_id:
-            process = self.db.query(ProcessDict).filter(ProcessDict.id == order.process_id).first()
-            process_name = process.process_name if process else None
+        # process_name
+        if process_map is not None:
+            process_name = process_map.get(order.process_id) if order.process_id else None
+        else:
+            process_name = None
+            if order.process_id:
+                process = (
+                    self.db.query(ProcessDict).filter(ProcessDict.id == order.process_id).first()
+                )
+                process_name = process.process_name if process else None
 
-        assigned_worker_name = None
-        if order.assigned_to:
-            worker = self.db.query(Worker).filter(Worker.id == order.assigned_to).first()
-            assigned_worker_name = worker.worker_name if worker else None
+        # assigned_worker_name
+        if worker_map is not None:
+            assigned_worker_name = worker_map.get(order.assigned_to) if order.assigned_to else None
+        else:
+            assigned_worker_name = None
+            if order.assigned_to:
+                worker = self.db.query(Worker).filter(Worker.id == order.assigned_to).first()
+                assigned_worker_name = worker.worker_name if worker else None
 
         return WorkOrderResponse(
             id=order.id,
@@ -134,12 +230,54 @@ class WorkOrderService:
             pagination.limit,
         ).all()
 
-        items = [self.build_response(order) for order in orders]
+        # Batch-load all related entities in 6 queries instead of up to 6N queries.
+        project_map = self._fetch_project_map(
+            list({o.project_id for o in orders if o.project_id})
+        )
+        machine_map = self._fetch_machine_map(
+            list({o.machine_id for o in orders if o.machine_id})
+        )
+        workshop_map = self._fetch_workshop_map(
+            list({o.workshop_id for o in orders if o.workshop_id})
+        )
+        workstation_map = self._fetch_workstation_map(
+            list({o.workstation_id for o in orders if o.workstation_id})
+        )
+        process_map = self._fetch_process_map(
+            list({o.process_id for o in orders if o.process_id})
+        )
+        worker_map = self._fetch_worker_map(
+            list({o.assigned_to for o in orders if o.assigned_to})
+        )
+
+        items = [
+            self.build_response(
+                order,
+                project_map=project_map,
+                machine_map=machine_map,
+                workshop_map=workshop_map,
+                workstation_map=workstation_map,
+                process_map=process_map,
+                worker_map=worker_map,
+            )
+            for order in orders
+        ]
         return pagination.to_response(items, total)
 
     def create_work_order(self, order_in, current_user_id: int) -> WorkOrderResponse:
         """创建工单"""
         from app.api.v1.endpoints.production.utils import generate_work_order_no
+
+        # 日期合法性校验：计划结束日期不能早于计划开始日期
+        if order_in.plan_start_date and order_in.plan_end_date:
+            if order_in.plan_end_date < order_in.plan_start_date:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"计划结束日期（{order_in.plan_end_date}）"
+                        f"不能早于计划开始日期（{order_in.plan_start_date}）。"
+                    ),
+                )
 
         # 验证关联实体
         if order_in.project_id:

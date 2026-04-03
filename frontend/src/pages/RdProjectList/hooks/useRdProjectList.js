@@ -1,27 +1,104 @@
-import { useState, useCallback, useEffect } from 'react';
-import { rdProjectApi } from '../../../services/api';
+import { useState, useCallback, useEffect } from "react";
+import { rdProjectApi } from "../../../services/api";
+import { DEFAULT_PAGINATION } from "../constants";
 
 export function useRdProjectList() {
-    const [projects, setProjects] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [filters, setFilters] = useState({ status: '', keyword: '' });
-    const [pagination, setPagination] = useState({ page: 1, pageSize: 20, total: 0 });
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCategoryType, setFilterCategoryType] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+  const [formOpen, setFormOpen] = useState(false);
+  const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
 
-    const loadProjects = useCallback(async () => {
-        try {
-            setLoading(true);
-            const params = { page: pagination.page, page_size: pagination.pageSize };
-            if (filters.status && filters.status !== 'all') params.status = filters.status;
-            if (filters.keyword) params.keyword = filters.keyword;
-            const response = await rdProjectApi.list(params);
-            const data = response.data || response;
-            setProjects(data.items || data || []);
-            if (data.total) setPagination(prev => ({ ...prev, total: data.total }));
-        } catch (err) { setError(err.message); }
-        finally { setLoading(false); }
-    }, [pagination.page, pagination.pageSize, filters]);
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await rdProjectApi.getCategories();
+      const data =
+        response.data?.data || response.data?.items || response.data || [];
+      setCategories(data);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  }, []);
 
-    useEffect(() => { loadProjects(); }, [loadProjects]);
-    return { projects, loading, error, filters, setFilters, pagination, setPagination, loadProjects };
+  const fetchProjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: pagination.page,
+        page_size: pagination.page_size,
+      };
+      if (searchQuery) params.keyword = searchQuery;
+      if (filterStatus && filterStatus !== "all") params.status = filterStatus;
+      if (filterCategoryType && filterCategoryType !== "all")
+        params.category_type = filterCategoryType;
+
+      const response = await rdProjectApi.list(params);
+      const data = response.data || response;
+
+      if (data.items) {
+        setProjects(data.items || []);
+        setPagination({
+          page: data.page || 1,
+          page_size: data.page_size || 20,
+          total: data.total || 0,
+          pages: data.pages || 0,
+        });
+      } else {
+        setProjects(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch projects:", err);
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.page, searchQuery, filterStatus, filterCategoryType]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  const handleCreateProject = async (data) => {
+    try {
+      const response = await rdProjectApi.create(data);
+      if (response.data?.code === 201 || response.status === 201) {
+        setFormOpen(false);
+        fetchProjects();
+      } else {
+        throw new Error(response.data?.message || "创建失败");
+      }
+    } catch (err) {
+      alert(
+        "创建研发项目失败: " + (err.response?.data?.detail || err.message)
+      );
+      throw err;
+    }
+  };
+
+  return {
+    loading,
+    projects,
+    categories,
+    searchQuery,
+    setSearchQuery,
+    filterStatus,
+    setFilterStatus,
+    filterCategoryType,
+    setFilterCategoryType,
+    viewMode,
+    setViewMode,
+    formOpen,
+    setFormOpen,
+    pagination,
+    setPagination,
+    handleCreateProject,
+  };
 }

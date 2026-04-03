@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
+from app.core.sales_permissions import check_sales_data_permission
 from app.models.project import Customer, Project
 from app.models.sales import Contract, ContractDeliverable
 from app.models.user import User
@@ -46,15 +47,18 @@ def sign_contract(
     contract_id: int,
     sign_request: ContractSignRequest,
     auto_generate_payment_plans: bool = Query(True, description="自动生成收款计划"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:sign")),
 ) -> Any:
     """
     合同签订（自动生成收款计划）
     """
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
 
-    if sign_request.signed_date is not None:
-        contract.signing_date = sign_request.signed_date
+    # 数据权限：校验当前用户是否有权操作该合同
+    if not check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权签订该合同")
+
+    contract.signing_date = sign_request.signed_date
     contract.status = "SIGNED"
 
     # Sprint 2.1 + Issue 1.2: 合同签订自动创建项目并触发阶段流转
@@ -127,12 +131,16 @@ def create_contract_project(
     contract_id: int,
     project_request: ContractProjectCreateRequest,
     skip_g4_validation: bool = Query(False, description="跳过G4验证"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:create")),
 ) -> Any:
     """
     合同生成项目（G4阶段门验证）
     """
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+
+    # 数据权限：校验当前用户是否有权操作该合同
+    if not check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权为该合同创建项目")
 
     # P0-3: 验证合同状态必须为已签订
     if contract.status != "SIGNED":

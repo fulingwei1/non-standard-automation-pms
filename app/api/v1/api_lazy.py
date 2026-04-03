@@ -125,11 +125,12 @@ def create_api_router() -> APIRouter:
         print(f"⚠️  通知模块导入失败（循环依赖）: {e}")
 
     # ==================== 仪表盘 ====================
-    from app.api.v1.endpoints import dashboard_stats, dashboard_unified
+    from app.api.v1.endpoints.dashboard.stats import router as dashboard_stats_router
+    from app.api.v1.endpoints.dashboard.unified import router as dashboard_unified_router
 
-    api_router.include_router(dashboard_unified.router, prefix="/dashboard", tags=["dashboard"])
+    api_router.include_router(dashboard_unified_router, prefix="/dashboard", tags=["dashboard"])
     api_router.include_router(
-        dashboard_stats.router, prefix="/dashboard-stats", tags=["dashboard-stats"]
+        dashboard_stats_router, prefix="/dashboard-stats", tags=["dashboard-stats"]
     )
 
     # ==================== 其他业务模块 ====================
@@ -151,9 +152,6 @@ def create_api_router() -> APIRouter:
         kit_check,
         kit_rate,
         material_demands,
-        procurement_analysis,
-        project_contributions,
-        project_workspace,
         qualification,
         scheduler,
         sla,
@@ -162,6 +160,9 @@ def create_api_router() -> APIRouter:
         technical_review,
         technical_spec,
     )
+    from app.api.v1.endpoints.procurement.analysis import router as procurement_analysis_router_lazy
+    from app.api.v1.endpoints.projects.contributions import router as project_contributions_router_lazy
+    from app.api.v1.endpoints.projects.workspace import router as project_workspace_router_lazy
 
     api_router.include_router(audits.router, prefix="/audits", tags=["audits"])
     api_router.include_router(issues.router, prefix="/issues", tags=["issues"])
@@ -197,15 +198,15 @@ def create_api_router() -> APIRouter:
         material_demands.router, prefix="/material-demands", tags=["material-demands"]
     )
     api_router.include_router(
-        procurement_analysis.router, prefix="/procurement-analysis", tags=["procurement-analysis"]
+        procurement_analysis_router_lazy, prefix="/procurement-analysis", tags=["procurement-analysis"]
     )
     api_router.include_router(
-        project_contributions.router,
+        project_contributions_router_lazy,
         prefix="/project-contributions",
         tags=["project-contributions"],
     )
     api_router.include_router(
-        project_workspace.router, prefix="/project-workspace", tags=["project-workspace"]
+        project_workspace_router_lazy, prefix="/project-workspace", tags=["project-workspace"]
     )
     api_router.include_router(qualification.router, prefix="/qualification", tags=["qualification"])
     api_router.include_router(scheduler.router, prefix="/scheduler", tags=["scheduler"])
@@ -240,6 +241,7 @@ def create_api_router() -> APIRouter:
         from app.api.v1.endpoints.business_support import router as business_support_router
         from app.api.v1.endpoints.data_import_export import router as data_import_export_router
         from app.api.v1.endpoints.ecn import router as ecn_router
+        from app.api.v1.endpoints.projects.change_impact import router as pci_router
         from app.api.v1.endpoints.management_rhythm import router as management_rhythm_router
         from app.api.v1.endpoints.outsourcing import router as outsourcing_router
         from app.api.v1.endpoints.performance import router as performance_router
@@ -249,6 +251,7 @@ def create_api_router() -> APIRouter:
         from app.api.v1.endpoints.task_center import router as task_center_router
 
         api_router.include_router(ecn_router, prefix="/ecn", tags=["ecn"])
+        api_router.include_router(pci_router, prefix="", tags=["project-change-impact"])
         api_router.include_router(outsourcing_router, prefix="/outsourcing", tags=["outsourcing"])
         api_router.include_router(task_center_router, prefix="/task-center", tags=["task-center"])
         api_router.include_router(pmo_router, prefix="/pmo", tags=["pmo"])
@@ -273,7 +276,7 @@ def create_api_router() -> APIRouter:
 
     # ==================== 采购库存系统 ====================
     try:
-        from app.api.v1.endpoints.material_tracking import router as material_tracking_router
+        from app.api.v1.endpoints.material.tracking import router as material_tracking_router
         from app.api.v1.endpoints.purchase_intelligence import (
             router as purchase_intelligence_router,
         )

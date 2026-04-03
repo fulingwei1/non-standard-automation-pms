@@ -67,6 +67,30 @@ SHORTAGE_TASKS = [
         },
     },
     {
+        "id": "sync_kitting_rate_hourly",
+        "name": "每小时齐套率同步",
+        "module": "app.utils.scheduled_tasks",
+        "callable": "sync_kitting_rate_hourly",
+        "cron": {"minute": 0},  # 每小时整点执行
+        "owner": "Supply Chain",
+        "category": "Shortage",
+        "description": "每小时同步所有活跃项目齐套率，更新健康度，识别显著变化。",
+        "enabled": True,
+        "dependencies_tables": [
+            "projects",
+            "bom_headers",
+            "bom_items",
+            "materials",
+            "purchase_orders",
+            "purchase_order_items",
+        ],
+        "risk_level": "HIGH",
+        "sla": {
+            "max_execution_time_seconds": 600,
+            "retry_on_failure": True,
+        },
+    },
+    {
         "id": "generate_shortage_daily_report",
         "name": "缺料日报自动生成",
         "module": "app.utils.scheduled_tasks",

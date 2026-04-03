@@ -17,7 +17,7 @@ from app.models.project import Project
 from app.models.task_center import TaskUnified
 from app.models.user import User
 from app.schemas import engineer as schemas
-from app.services.progress_aggregation_service import aggregate_task_progress
+from app.services.progress_service import aggregate_task_progress
 from app.utils.db_helpers import get_or_404
 
 logger = logging.getLogger(__name__)
@@ -94,8 +94,8 @@ def report_task_delay(
         notifications_count = 5
 
     # 发送异常通知
-    from app.services.channel_handlers.base import NotificationPriority, NotificationRequest
-    from app.services.notification_dispatcher import NotificationDispatcher
+    from app.services.notification.channels.base import NotificationPriority, NotificationRequest
+    from app.services.notification.notification_dispatcher import NotificationDispatcher
 
     try:
         # 通知项目经理

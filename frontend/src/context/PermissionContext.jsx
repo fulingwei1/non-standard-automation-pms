@@ -75,17 +75,9 @@ export function PermissionProvider({ children }) {
           }
         }
       } catch (_permError) {
-        // 如果新的权��� API 不存在，使用旧的 nav_groups
-        console.warn('新权限 API 不可用，使用兼容模式');
-        // 从 localStorage 获取用户数据（兼容旧系统）
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          // 使用旧的权限数据
-          if (parsedUser.permissions) {
-            setPermissions(parsedUser.permissions);
-          }
-        }
+        // fail-closed: 扩展权限 API 不可用时，仅保留 /auth/me 返回的基础权限
+        // 不再从 localStorage 回填权限数据，避免过期缓存导致越权
+        console.warn('[PermissionContext] 扩展权限 API 不可用，仅使用 /auth/me 返回的基础权限');
       }
 
     } catch (err) {
@@ -99,21 +91,9 @@ export function PermissionProvider({ children }) {
         localStorage.removeItem('user');
         setError('登录已过期，请重新登录');
       } else if (err.response?.status === 500) {
-        console.error('[PermissionContext] 服务器错误，尝试从本地恢复');
-        setError('服务器暂时不可用，使用缓存数据');
-
-        // 尝试从 localStorage 恢复
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-            setIsSuperuser(parsedUser.is_superuser || parsedUser.isSuperuser || false);
-            setPermissions(parsedUser.permissions || []);
-          } catch (parseError) {
-            console.error('解析本地用户数据失败:', parseError);
-          }
-        }
+        // fail-closed: 服务器错误时不从 localStorage 恢复，避免过期权限
+        console.error('[PermissionContext] 服务器错误，权限不可用');
+        setError('服务器暂时不可用，请稍后重试');
       } else {
         setError(err.message || '加载权限数据失败');
       }

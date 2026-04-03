@@ -1,3 +1,5 @@
+export const SOLUTION_CENTER_PATH = "/presales/solutions";
+
 export const opportunityStageConfigs = {
     initial: { label: '初步接触', color: 'bg-slate-500' },
     qualified: { label: '需求确认', color: 'bg-blue-500' },

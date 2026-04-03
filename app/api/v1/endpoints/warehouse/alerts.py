@@ -7,7 +7,9 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core import security
 from app.models.base import get_db
+from app.models.user import User
 from app.models.warehouse import Inventory
 
 router = APIRouter()
@@ -38,7 +40,10 @@ class AlertSummary(BaseModel):
 
 
 @router.get("/alerts/summary", response_model=AlertSummary)
-def get_alert_summary(db: Session = Depends(get_db)):
+def get_alert_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:view")),
+):
     low = (
         db.query(func.count(Inventory.id))
         .filter(Inventory.available_quantity <= Inventory.min_stock, Inventory.min_stock > 0)
@@ -61,6 +66,7 @@ def list_alerts(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
+    current_user: User = Depends(security.require_permission("warehouse:view")),
 ):
     results = []
     if alert_type != "OVERSTOCK":

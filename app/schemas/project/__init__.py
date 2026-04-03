@@ -49,6 +49,7 @@ from .project_analysis import (
     ChangeImpactResponse,
     GateCheckCondition,
     GateCheckResult,
+    StageApprovalBridgeEntry,
     InProductionProjectSummary,
     ProjectArchiveRequest,
     ProjectCloneRequest,

@@ -21,6 +21,9 @@ export {
   SkeletonCard,
   SkeletonTable,
   SkeletonProjectList,
+  SkeletonDashboardStats,
+  SkeletonDashboard,
+  SkeletonProjectDetail,
 } from "./skeleton";
 export { Progress, ProgressWithLabel, CircularProgress } from "./progress";
 export {
@@ -61,7 +64,7 @@ export {
   DropdownMenuRadioGroup,
 } from "./dropdown-menu";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
-export { LoadingSpinner, LoadingCard, LoadingPage } from "./LoadingSpinner";
+export { LoadingSpinner, LoadingCard, LoadingPage, LoadingSkeleton } from "./LoadingSpinner";
 export { ErrorMessage, EmptyState, ApiIntegrationError } from "./ErrorMessage";
 export { default as ErrorBoundary } from "./ErrorBoundary";
 export { ToastContainer, useToast, toast } from "./toast";

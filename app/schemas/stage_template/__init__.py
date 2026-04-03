@@ -25,6 +25,7 @@ from .definitions import (
     StageDefinitionUpdate,
     StageDefinitionWithNodes,
     StageTemplateBase,
+    StageTemplateChangeLogResponse,
     StageTemplateCopy,
     StageTemplateCreate,
     StageTemplateDetail,
@@ -141,6 +142,7 @@ __all__ = [
     "StageTemplateWithStages",
     "StageTemplateDetail",
     "StageTemplateCopy",
+    "StageTemplateChangeLogResponse",
     # 项目阶段和节点实例
     "ProjectStageInstanceBase",
     "ProjectStageInstanceUpdate",

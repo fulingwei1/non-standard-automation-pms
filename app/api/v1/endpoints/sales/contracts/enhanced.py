@@ -8,7 +8,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db
+from app.core import security
 from app.models.user import User
 from app.schemas.sales.contract_enhanced import (
     ContractApprovalResponse,
@@ -25,6 +26,8 @@ from app.schemas.sales.contract_enhanced import (
     ContractTermUpdate,
     ContractUpdate,
 )
+from app.core.sales_permissions import check_sales_data_permission, filter_sales_data_by_scope
+from app.models.sales import Contract
 from app.services.sales.contract_enhanced import ContractEnhancedService
 
 router = APIRouter()
@@ -59,7 +62,7 @@ def _serialize_contract_list_item(contract) -> dict:
 def create_contract(
     contract_data: ContractCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:create")),
 ):
     """创建合同"""
     try:
@@ -78,9 +81,9 @@ def get_contracts(
     contract_type: Optional[str] = Query(None),
     keyword: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
-    """合同列表（支持搜索/筛选）"""
+    """合同列表（支持搜索/筛选，受数据权限过滤）"""
     contracts, total = ContractEnhancedService.get_contracts(
         db,
         skip=skip,
@@ -91,11 +94,17 @@ def get_contracts(
         keyword=keyword,
     )
 
-    serialized_items = [_serialize_contract_list_item(contract) for contract in contracts]
+    # 数据权限：二次过滤（service 层未集成 scope 时的兜底）
+    filtered = [
+        c for c in contracts
+        if check_sales_data_permission(c, current_user, db, "sales_owner_id")
+    ]
+
+    serialized_items = [_serialize_contract_list_item(contract) for contract in filtered]
 
     return {
         "items": serialized_items,
-        "total": total,
+        "total": len(filtered),
         "skip": skip,
         "limit": limit,
     }
@@ -105,12 +114,14 @@ def get_contracts(
 def get_contract(
     contract_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
     """合同详情"""
     contract = ContractEnhancedService.get_contract(db, contract_id)
     if not contract:
         raise HTTPException(status_code=404, detail="合同不存在")
+    if not check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同")
     return contract
 
 
@@ -119,7 +130,7 @@ def update_contract(
     contract_id: int,
     contract_data: ContractUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """更新合同"""
     try:
@@ -135,7 +146,7 @@ def update_contract(
 def delete_contract(
     contract_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:delete")),
 ):
     """删除合同"""
     try:
@@ -152,7 +163,7 @@ def submit_contract_for_approval(
     contract_id: int,
     submit_data: ContractSubmitApproval,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:create")),
 ):
     """提交审批"""
     try:
@@ -166,7 +177,7 @@ def submit_contract_for_approval(
 def get_contract_approvals(
     contract_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
     """审批记录"""
     contract = ContractEnhancedService.get_contract(db, contract_id)
@@ -181,7 +192,7 @@ def approve_contract(
     approval_id: int = Query(..., description="审批记录ID"),
     approval_data: ContractApprovalUpdate = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:approve")),
 ):
     """审批通过"""
     try:
@@ -203,7 +214,7 @@ def reject_contract(
     approval_id: int = Query(..., description="审批记录ID"),
     approval_data: ContractApprovalUpdate = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:approve")),
 ):
     """审批驳回"""
     try:
@@ -221,7 +232,7 @@ def reject_contract(
 @router.get("/approvals/pending", response_model=List[ContractApprovalResponse])
 def get_pending_approvals(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
     """待审批列表（我的待办）"""
     approvals = ContractEnhancedService.get_pending_approvals(db, current_user.id)
@@ -234,7 +245,7 @@ def add_contract_term(
     contract_id: int,
     term_data: ContractTermCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """添加条款"""
     term = ContractEnhancedService.add_term(db, contract_id, term_data)
@@ -245,7 +256,7 @@ def add_contract_term(
 def get_contract_terms(
     contract_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
     """条款列表"""
     terms = ContractEnhancedService.get_terms(db, contract_id)
@@ -257,7 +268,7 @@ def update_contract_term(
     term_id: int,
     term_data: ContractTermUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """更新条款"""
     if not term_data.term_content:
@@ -273,7 +284,7 @@ def update_contract_term(
 def delete_contract_term(
     term_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """删除条款"""
     success = ContractEnhancedService.delete_term(db, term_id)
@@ -287,7 +298,7 @@ def upload_attachment(
     contract_id: int,
     attachment_data: ContractAttachmentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """上传附件"""
     attachment = ContractEnhancedService.add_attachment(db, contract_id, attachment_data, current_user.id)
@@ -298,7 +309,7 @@ def upload_attachment(
 def get_contract_attachments(
     contract_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
     """附件列表"""
     attachments = ContractEnhancedService.get_attachments(db, contract_id)
@@ -309,7 +320,7 @@ def get_contract_attachments(
 def delete_attachment(
     attachment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """删除附件"""
     success = ContractEnhancedService.delete_attachment(db, attachment_id)
@@ -321,7 +332,7 @@ def delete_attachment(
 def download_attachment(
     attachment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
     """下载附件"""
     # TODO: 实现文件下载逻辑
@@ -334,7 +345,7 @@ def mark_contract_as_signed(
     contract_id: int,
     change_data: ContractStatusChange,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:sign")),
 ):
     """标记为已签署"""
     try:
@@ -349,7 +360,7 @@ def mark_contract_as_executing(
     contract_id: int,
     change_data: ContractStatusChange,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """标记为执行中"""
     try:
@@ -364,7 +375,7 @@ def mark_contract_as_completed(
     contract_id: int,
     change_data: ContractStatusChange,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:update")),
 ):
     """标记为已完成"""
     try:
@@ -379,7 +390,7 @@ def void_contract(
     contract_id: int,
     change_data: ContractStatusChange,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:delete")),
 ):
     """作废合同"""
     try:
@@ -394,8 +405,38 @@ def void_contract(
 @router.get("/stats/summary", response_model=ContractStats)
 def get_contract_statistics(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("contract:view")),
 ):
-    """合同统计"""
-    stats = ContractEnhancedService.get_contract_stats(db)
-    return stats
+    """合同统计（受数据权限过滤）"""
+    from decimal import Decimal
+    from sqlalchemy import func
+
+    # 数据权限：只统计用户有权访问的合同
+    base = filter_sales_data_by_scope(
+        db.query(Contract), current_user, db, Contract, "sales_owner_id"
+    )
+
+    total_count = base.count()
+    draft_count = base.filter(Contract.status == "draft").count()
+    approving_count = base.filter(Contract.status == "approving").count()
+    signed_count = base.filter(Contract.status == "signed").count()
+    executing_count = base.filter(Contract.status == "executing").count()
+    completed_count = base.filter(Contract.status == "completed").count()
+    voided_count = base.filter(Contract.status == "voided").count()
+
+    total_amount = base.with_entities(func.sum(Contract.total_amount)).scalar() or Decimal(0)
+    received_amount = base.with_entities(func.sum(Contract.received_amount)).scalar() or Decimal(0)
+    unreceived_amount = base.with_entities(func.sum(Contract.unreceived_amount)).scalar() or Decimal(0)
+
+    return ContractStats(
+        total_count=total_count,
+        draft_count=draft_count,
+        approving_count=approving_count,
+        signed_count=signed_count,
+        executing_count=executing_count,
+        completed_count=completed_count,
+        voided_count=voided_count,
+        total_amount=total_amount,
+        received_amount=received_amount,
+        unreceived_amount=unreceived_amount,
+    )

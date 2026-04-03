@@ -9,7 +9,9 @@ from .core import Ecn
 from .evaluation_approval import EcnApproval, EcnEvaluation
 from .execution import EcnTask
 from .impact import EcnAffectedMaterial, EcnAffectedOrder, EcnBomImpact
+from .cost_record import EcnCostRecord
 from .log import EcnLog
+from .material_impact import EcnExecutionProgress, EcnMaterialDisposition, EcnStakeholder
 from .responsibility_template import EcnResponsibility, EcnSolutionTemplate
 
 __all__ = [
@@ -24,5 +26,9 @@ __all__ = [
     "EcnBomImpact",
     "EcnResponsibility",
     "EcnSolutionTemplate",
+    "EcnCostRecord",
     "EcnLog",
+    "EcnMaterialDisposition",
+    "EcnExecutionProgress",
+    "EcnStakeholder",
 ]

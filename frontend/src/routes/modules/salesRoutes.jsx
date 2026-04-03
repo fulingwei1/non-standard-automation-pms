@@ -53,6 +53,9 @@ const SalesOpportunityCenter = lazyLoad(() => import("../../pages/SalesOpportuni
 // 销售漏斗
 const SalesFunnel = lazyLoad(() => import("../../pages/SalesFunnel"));
 
+// 销售仪表盘
+import SalesDashboard from "../../pages/SalesDashboard";
+
 // 售前相关
 const PresalesTasks = lazyLoad(() => import("../../pages/PresalesTasks"));
 const SalesPresaleWorkbench = lazyLoad(() => import("../../pages/SalesPresaleWorkbench"));
@@ -92,6 +95,9 @@ const SalesWorkstation = lazyLoad(() => import("../../pages/SalesWorkstation"));
 export function SalesRoutes() {
   return (
     <>
+      {/* 销售仪表盘 */}
+      <Route path="/sales/dashboard" element={<SalesDashboard />} />
+
       {/* 销售漏斗（固定路径，放在最前避免被 /sales/:param 抢匹配） */}
       <Route path="/sales-funnel" element={<Navigate to="/sales/funnel" replace />} />
       <Route path="/sales/funnel" element={<SalesFunnel />} />

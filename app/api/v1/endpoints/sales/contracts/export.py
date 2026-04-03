@@ -14,6 +14,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
+from fastapi import HTTPException
+
 from app.api import deps
 from app.core import security
 from app.models.sales import Contract, ContractDeliverable, Opportunity
@@ -90,7 +92,7 @@ def export_contracts(
     status: Optional[str] = Query(None, description="状态筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:export")),
 ) -> Any:
     """
     Issue 4.3: 导出合同列表（Excel）
@@ -101,6 +103,12 @@ def export_contracts(
     )
 
     query = db.query(Contract)
+
+    # 数据权限过滤 —— 导出只能导出权限范围内的合同
+    query = security.filter_sales_data_by_scope(
+        query, current_user, db, Contract, "sales_owner_id"
+    )
+
     if keyword:
         query = query.filter(
             or_(
@@ -179,7 +187,7 @@ def export_contract_pdf(
     *,
     db: Session = Depends(deps.get_db),
     contract_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:export")),
 ) -> Any:
     """
     Issue 4.5: 导出合同 PDF
@@ -187,6 +195,9 @@ def export_contract_pdf(
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
 
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+
+    if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同")
 
     deliverables = (
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()

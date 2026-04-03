@@ -17,7 +17,7 @@ from app.core import security
 from app.models.presale_expense import PresaleExpense
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.labor_cost_service import LaborCostExpenseService
+from app.services.cost.labor_cost_service import LaborCostExpenseService
 
 router = APIRouter()
 

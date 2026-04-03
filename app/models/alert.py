@@ -73,6 +73,9 @@ class AlertRule(Base, TimestampMixin):
     notify_users = Column(JSON, comment="指定通知用户")
 
     # 执行配置
+    enforcement_mode = Column(
+        String(20), default="WARN", comment="执行模式: ALLOW/WARN/DENY/REQUIRE_APPROVAL"
+    )
     check_frequency = Column(String(20), default="DAILY", comment="检查频率")
     is_enabled = Column(Boolean, default=True, comment="是否启用")
     is_system = Column(Boolean, default=False, comment="是否系统预置")

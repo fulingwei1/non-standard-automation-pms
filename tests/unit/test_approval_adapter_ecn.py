@@ -364,16 +364,16 @@ class TestEcnApprovalAdapterSubmitForApproval(unittest.TestCase):
         # 配置db.query
         self.mock_db.query.return_value.filter.return_value.all.return_value = [mock_eval]
 
-        # Mock WorkflowEngine (在函数内部导入)
+        # Mock ApprovalEngineService (在函数内部导入)
         with patch(
-            "app.services.approval_engine.workflow_engine.WorkflowEngine"
-        ) as mock_workflow_engine_class:
-            mock_workflow_engine = MagicMock()
+            "app.services.approval_engine.adapters.ecn.ApprovalEngineService"
+        ) as mock_engine_class:
+            mock_engine_inst = MagicMock()
             mock_instance = MagicMock()
             mock_instance.id = 999
             mock_instance.status = "PENDING"
-            mock_workflow_engine.create_instance.return_value = mock_instance
-            mock_workflow_engine_class.return_value = mock_workflow_engine
+            mock_engine_inst.submit.return_value = mock_instance
+            mock_engine_class.return_value = mock_engine_inst
 
             # 执行测试
             result = self.adapter.submit_for_approval(
@@ -385,9 +385,9 @@ class TestEcnApprovalAdapterSubmitForApproval(unittest.TestCase):
                 cc_user_ids=[101, 102],
             )
 
-            # 验证WorkflowEngine被正确调用
-            mock_workflow_engine.create_instance.assert_called_once()
-            call_args = mock_workflow_engine.create_instance.call_args
+            # 验证ApprovalEngineService被正确调用
+            mock_engine_inst.submit.assert_called_once()
+            call_args = mock_engine_inst.submit.call_args
             self.assertEqual(call_args[1]["flow_code"], "ECN_STANDARD")
             self.assertEqual(call_args[1]["business_type"], "ECN")
             self.assertEqual(call_args[1]["business_id"], 1)

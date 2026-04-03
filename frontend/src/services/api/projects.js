@@ -61,6 +61,11 @@ export const projectApi = {
   // Sprint 3 & 4: 模板和阶段门校验相关API
   recommendTemplates: (params) =>
     api.get("/projects/templates/recommend", { params }),
+  // 智能推荐：传入客户/产品/金额上下文
+  smartRecommendTemplates: ({ customer_id, product_category, industry, contract_amount, project_type, limit = 5 } = {}) =>
+    api.get("/projects/templates/recommend", {
+      params: { customer_id, product_category, industry, contract_amount, project_type, limit },
+    }),
   createFromTemplate: (templateId, data) =>
     api.post(`/projects/templates/${templateId}/create-project`, data),
   checkAutoTransition: (id, autoAdvance = false) =>
@@ -81,6 +86,11 @@ export const projectApi = {
   getStatusLogs: (id, params) =>
     api.get(`/projects/${id}/status-history`, { params }),
   getHealthDetails: (id) => api.get(`/projects/${id}/health/details`),
+  // 健康度可视化增强
+  getHealthTrend: (id, params) =>
+    api.get(`/projects/${id}/health/trend`, { params }),
+  getRiskBreakdown: (id) => api.get(`/projects/${id}/health/risk-breakdown`),
+  getImprovements: (id) => api.get(`/projects/${id}/health/improvements`),
   // Sprint 3.2: 项目经理统计
   getStats: (params) => api.get("/projects/stats", { params }),
   // 项目工时汇总
@@ -200,6 +210,19 @@ export const costApi = {
     api.put(`/projects/${projectId}/costs/${costId}`, data),
   delete: (projectId, costId) =>
     api.delete(`/projects/${projectId}/costs/${costId}`),
+  // 利润分析
+  getProfitOptimization: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/profit-optimization`, { params }),
+  getMarginAnalysis: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/margin-analysis`, { params }),
+  getCostOptimization: (projectId) =>
+    api.get(`/projects/${projectId}/costs/cost-optimization`),
+  getQuoteCostVariance: (projectId) =>
+    api.get(`/projects/${projectId}/costs/quote-cost-variance`),
+  getHighProfitPatterns: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/high-profit-patterns`, { params }),
+  getLowProfitRootCause: (projectId, params) =>
+    api.get(`/projects/${projectId}/costs/low-profit-root-cause`, { params }),
   // 兼容旧接口（已废弃，请使用上面的接口）
   getProjectCosts: (projectId, params) =>
     api.get(`/projects/${projectId}/costs`, { params }),

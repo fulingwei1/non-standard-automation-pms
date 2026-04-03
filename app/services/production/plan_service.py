@@ -4,6 +4,8 @@
 
 处理生产计划的响应构建、工作流状态转换、CRUD 验证等业务逻辑。
 """
+from datetime import datetime
+from typing import Dict, List, Optional
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -30,17 +32,53 @@ class ProductionPlanService:
     def __init__(self, db: Session):
         self.db = db
 
-    def _build_plan_response(self, plan: ProductionPlan) -> ProductionPlanResponse:
-        """构建计划响应（含项目名/车间名查询）"""
-        project_name = None
-        if plan.project_id:
-            project = self.db.query(Project).filter(Project.id == plan.project_id).first()
-            project_name = project.project_name if project else None
+    # ------------------------------------------------------------------
+    # Internal helpers for batch-loading related name maps
+    # ------------------------------------------------------------------
 
-        workshop_name = None
-        if plan.workshop_id:
-            workshop = self.db.query(Workshop).filter(Workshop.id == plan.workshop_id).first()
-            workshop_name = workshop.workshop_name if workshop else None
+    def _fetch_project_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(Project.id, Project.project_name).filter(Project.id.in_(ids)).all()
+        return {r.id: r.project_name for r in rows}
+
+    def _fetch_workshop_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(Workshop.id, Workshop.workshop_name).filter(Workshop.id.in_(ids)).all()
+        return {r.id: r.workshop_name for r in rows}
+
+    # ------------------------------------------------------------------
+    # Response builder
+    # ------------------------------------------------------------------
+
+    def _build_plan_response(
+        self,
+        plan: ProductionPlan,
+        *,
+        project_map: Optional[Dict[int, str]] = None,
+        workshop_map: Optional[Dict[int, str]] = None,
+    ) -> ProductionPlanResponse:
+        """构建计划响应（含项目名/车间名查询）。
+
+        当调用方传入预构建的名称映射字典时，直接从字典中查找，避免 N+1 查询。
+        未传入时退回到单条查询（兼容单记录场景）。
+        """
+        if project_map is not None:
+            project_name = project_map.get(plan.project_id) if plan.project_id else None
+        else:
+            project_name = None
+            if plan.project_id:
+                project = self.db.query(Project).filter(Project.id == plan.project_id).first()
+                project_name = project.project_name if project else None
+
+        if workshop_map is not None:
+            workshop_name = workshop_map.get(plan.workshop_id) if plan.workshop_id else None
+        else:
+            workshop_name = None
+            if plan.workshop_id:
+                workshop = self.db.query(Workshop).filter(Workshop.id == plan.workshop_id).first()
+                workshop_name = workshop.workshop_name if workshop else None
 
         return ProductionPlanResponse(
             id=plan.id,
@@ -204,7 +242,18 @@ class ProductionPlanService:
             pagination.limit,
         ).all()
 
-        items = [self._build_plan_response(plan) for plan in plans]
+        # Batch-load all related entities in 2 queries instead of up to 2N queries.
+        project_map = self._fetch_project_map(
+            list({p.project_id for p in plans if p.project_id})
+        )
+        workshop_map = self._fetch_workshop_map(
+            list({p.workshop_id for p in plans if p.workshop_id})
+        )
+
+        items = [
+            self._build_plan_response(plan, project_map=project_map, workshop_map=workshop_map)
+            for plan in plans
+        ]
         return pagination.to_response(items, total)
 
     def create_plan(self, plan_in, current_user_id: int) -> ProductionPlanResponse:

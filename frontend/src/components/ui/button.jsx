@@ -84,13 +84,30 @@ const Button = React.forwardRef(
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
+    const isRippleVariant = variant !== "link" && variant !== "ghost";
+
+    const handlePointerDown = (e) => {
+      if (isRippleVariant) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        e.currentTarget.style.setProperty("--ripple-x", `${x}%`);
+        e.currentTarget.style.setProperty("--ripple-y", `${y}%`);
+      }
+      props.onPointerDown?.(e);
+    };
 
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size }),
+          isRippleVariant && "btn-ripple",
+          className,
+        )}
         ref={ref}
         disabled={loading || props.disabled}
         {...props}
+        onPointerDown={handlePointerDown}
       >
         {loading ? (
           <>
