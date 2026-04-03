@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -11,6 +11,13 @@ import {
   ToggleLeft,
   ToggleRight,
   Info,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  MinusCircle,
+  Users,
+  ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { PageHeader } from "../components/layout";
 import {
@@ -150,6 +157,9 @@ export default function UserManagement() {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [showBulkDialog, setShowBulkDialog] = useState(false);
   const [bulkSelectedRoles, setBulkSelectedRoles] = useState([]);
+  const [bulkMode, setBulkMode] = useState("replace"); // "replace" | "remove"
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null); // { success: [], failed: [] }
   const [newUser, setNewUser] = useState({
     username: "",
     email: "",
@@ -410,22 +420,47 @@ export default function UserManagement() {
     );
   };
 
-  const openBulkPermissionDialog = async () => {
+  const openBulkPermissionDialog = async (mode = "replace") => {
     if (selectedUserIds.length === 0) {
       toast.error("请先选择用户");
       return;
     }
     try {
       const response = await roleApi.list({ page_size: 100 });
-      const allRoles = response.data?.items || response.data?.items || response.data || [];
+      const listData = response.formatted || response.data;
+      const allRoles = listData?.items || listData || [];
       setAvailableRoles(allRoles);
       setBulkSelectedRoles([]);
+      setBulkMode(mode);
+      setBulkResult(null);
       setShowBulkDialog(true);
     } catch (error) {
       console.error("Failed to load roles:", error);
       toast.error("加载角色列表失败");
     }
   };
+
+  // 批量预览统计（memoized）
+  const bulkPreviewStats = useMemo(() => {
+    if (!showBulkDialog || selectedUserIds.length === 0) return null;
+    const selectedUsers = (users || []).filter((u) => selectedUserIds.includes(u.id));
+    const alreadyHave = selectedUsers.filter((u) =>
+      bulkSelectedRoles.length > 0 &&
+      bulkSelectedRoles.every((rid) => (u.role_ids || []).includes(rid)),
+    ).length;
+    const willChange = selectedUsers.length - alreadyHave;
+
+    // 每个角色有多少用户已拥有
+    const roleOwnership = (availableRoles || [])
+      .filter((r) => bulkSelectedRoles.includes(r.id))
+      .map((r) => ({
+        ...r,
+        ownedCount: selectedUsers.filter((u) => (u.role_ids || []).includes(r.id)).length,
+        newCount: selectedUsers.filter((u) => !(u.role_ids || []).includes(r.id)).length,
+      }));
+
+    return { selectedUsers, alreadyHave, willChange, roleOwnership };
+  }, [showBulkDialog, selectedUserIds, bulkSelectedRoles, users, availableRoles]);
 
   const handleBulkRoleToggle = (roleId) => {
     setBulkSelectedRoles((prev) =>
@@ -436,19 +471,34 @@ export default function UserManagement() {
   };
 
   const handleBulkSavePermissions = async () => {
+    if (bulkSelectedRoles.length === 0 && bulkMode === "remove") {
+      toast.error("请选择要移除的角色");
+      return;
+    }
+    setBulkSaving(true);
+    setBulkResult(null);
     try {
-      await Promise.all(
-        (selectedUserIds || []).map((userId) =>
-          userApi.assignRoles(userId, { role_ids: bulkSelectedRoles }),
-        ),
+      const response = await userApi.batchAssignRoles(
+        selectedUserIds,
+        bulkSelectedRoles,
+        bulkMode,
       );
-      toast.success(`已为 ${selectedUserIds.length} 个用户更新权限`);
-      setShowBulkDialog(false);
-      setSelectedUserIds([]);
+      const result = response.formatted || response.data;
+      setBulkResult(result);
+
+      const ok = result?.success?.length || 0;
+      const fail = result?.failed?.length || 0;
+      if (fail === 0) {
+        toast.success(`${bulkMode === "remove" ? "移除" : "分配"}成功：${ok} 个用户已更新`);
+      } else {
+        toast.error(`${ok} 成功，${fail} 失败，请查看详情`);
+      }
       fetchUsers();
     } catch (error) {
       console.error("Failed to update bulk permissions:", error);
-      toast.error("批量更新权限失败");
+      toast.error("批量操作失败：" + (error.message || "未知错误"));
+    } finally {
+      setBulkSaving(false);
     }
   };
 
@@ -645,11 +695,20 @@ export default function UserManagement() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={openBulkPermissionDialog}
+                    onClick={() => openBulkPermissionDialog("replace")}
                     className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
                   >
                     <Key className="w-4 h-4 mr-1" />
-                    批量分配权限
+                    批量分配角色
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openBulkPermissionDialog("remove")}
+                    className="text-red-400 hover:text-red-300 border-red-500/50 hover:border-red-400"
+                  >
+                    <MinusCircle className="w-4 h-4 mr-1" />
+                    批量移除角色
                   </Button>
                   <Button
                     variant="outline"
@@ -1212,131 +1271,281 @@ export default function UserManagement() {
           </Dialog>
         )}
 
-        {/* Bulk Permission Dialog */}
+        {/* Bulk Permission Dialog - Enhanced */}
         {showBulkDialog && (
-          <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
-            <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-700 text-white">
+          <Dialog open={showBulkDialog} onOpenChange={(open) => {
+            if (!bulkSaving) {
+              setShowBulkDialog(open);
+              if (!open) setBulkResult(null);
+            }
+          }}>
+            <DialogContent className="sm:max-w-[700px] bg-slate-900 border-slate-700 text-white">
               <DialogHeader>
-                <DialogTitle>
-                  批量分配权限 - {selectedUserIds.length} 个用户
+                <DialogTitle className="flex items-center gap-2">
+                  {bulkMode === "remove" ? (
+                    <MinusCircle className="w-5 h-5 text-red-400" />
+                  ) : (
+                    <Key className="w-5 h-5 text-blue-400" />
+                  )}
+                  {bulkMode === "remove" ? "批量移除角色" : "批量分配角色"} - {selectedUserIds.length} 个用户
                 </DialogTitle>
               </DialogHeader>
               <DialogBody>
-                <div className="space-y-4">
-                  <p className="text-sm text-slate-400">
-                    为选中的 {selectedUserIds.length} 个用户分配相同的角色权限。
-                  </p>
-
-                  {/* 快速模板 */}
-                  <div>
-                    <Label className="text-sm text-slate-300 mb-2 block">
-                      快速角色模板
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(ROLE_TEMPLATES).map(([key, tmpl]) => (
-                        <Button
-                          key={key}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => applyBulkRoleTemplate(key)}
-                          className="text-xs"
-                          title={tmpl.codes.join(" + ")}
-                        >
-                          {tmpl.label}
-                        </Button>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => applyBulkRoleTemplate("admin")}
-                        className="text-xs"
-                      >
-                        全部权限
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setBulkSelectedRoles([])}
-                        className="text-xs text-red-400 hover:text-red-300"
-                      >
-                        清空
-                      </Button>
+                {/* 操作完成结果面板 */}
+                {bulkResult && (
+                  <div className="mb-4 space-y-2">
+                    <div className={cn(
+                      "p-3 rounded-lg border",
+                      bulkResult.failed?.length > 0
+                        ? "bg-yellow-500/10 border-yellow-500/30"
+                        : "bg-green-500/10 border-green-500/30",
+                    )}>
+                      <div className="flex items-center gap-2 font-medium mb-2">
+                        {bulkResult.failed?.length > 0 ? (
+                          <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4 text-green-400" />
+                        )}
+                        <span>
+                          操作完成：{bulkResult.success?.length || 0} 成功
+                          {bulkResult.failed?.length > 0 && `，${bulkResult.failed.length} 失败`}
+                        </span>
+                      </div>
+                      {bulkResult.failed?.length > 0 && (
+                        <div className="space-y-1 text-sm">
+                          {bulkResult.failed.map((f) => {
+                            const failUser = (users || []).find((u) => u.id === f.user_id);
+                            return (
+                              <div key={f.user_id} className="flex items-center gap-2 text-red-400">
+                                <XCircle className="w-3 h-3 shrink-0" />
+                                <span>{failUser?.real_name || failUser?.username || `用户#${f.user_id}`}：{f.reason}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
+                )}
 
-                  <div className="max-h-[400px] overflow-y-auto space-y-2">
-                    {(availableRoles || []).map((role) => (
-                      <div
-                        key={role.id}
-                        className={cn(
-                          "flex items-center justify-between p-3 rounded-lg border transition-colors",
-                          bulkSelectedRoles.includes(role.id)
-                            ? "bg-blue-500/20 border-blue-500/50"
-                            : "bg-slate-800 border-slate-700 hover:border-slate-600",
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Shield
-                            className={cn(
-                              "w-5 h-5",
-                              bulkSelectedRoles.includes(role.id)
-                                ? "text-blue-400"
-                                : "text-slate-500",
-                            )}
-                          />
-                          <div>
-                            <div className="font-medium">
-                              {role.role_name || role.name}
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              {role.description || role.role_code}
-                            </div>
-                          </div>
+                <div className="space-y-4">
+                  {/* 影响预览面板 */}
+                  {bulkPreviewStats && bulkSelectedRoles.length > 0 && !bulkResult && (
+                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                        <Users className="w-4 h-4" />
+                        影响预览
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div className="p-2 rounded bg-slate-800">
+                          <div className="text-lg font-bold text-white">{selectedUserIds.length}</div>
+                          <div className="text-xs text-slate-400">影响用户数</div>
                         </div>
-                        <button
-                          onClick={() => handleBulkRoleToggle(role.id)}
+                        {bulkMode === "replace" ? (
+                          <>
+                            <div className="p-2 rounded bg-blue-500/10">
+                              <div className="text-lg font-bold text-blue-400">{bulkPreviewStats.willChange}</div>
+                              <div className="text-xs text-slate-400">将发生变更</div>
+                            </div>
+                            <div className="p-2 rounded bg-slate-800">
+                              <div className="text-lg font-bold text-slate-400">{bulkPreviewStats.alreadyHave}</div>
+                              <div className="text-xs text-slate-400">已全部拥有</div>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="p-2 rounded bg-red-500/10">
+                              <div className="text-lg font-bold text-red-400">{bulkSelectedRoles.length}</div>
+                              <div className="text-xs text-slate-400">待移除角色</div>
+                            </div>
+                            <div className="p-2 rounded bg-slate-800">
+                              <div className="text-lg font-bold text-slate-400">
+                                {bulkPreviewStats.roleOwnership.reduce((s, r) => s + r.ownedCount, 0)}
+                              </div>
+                              <div className="text-xs text-slate-400">影响授权条数</div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {/* 每个角色的影响明细 */}
+                      {bulkPreviewStats.roleOwnership.length > 0 && (
+                        <div className="text-xs space-y-1 pt-2 border-t border-slate-700/50">
+                          {bulkPreviewStats.roleOwnership.map((r) => (
+                            <div key={r.id} className="flex items-center justify-between text-slate-400">
+                              <span>{r.role_name || r.name}</span>
+                              <span>
+                                {bulkMode === "replace" ? (
+                                  <>
+                                    <span className="text-slate-500">{r.ownedCount} 已有</span>
+                                    {r.newCount > 0 && (
+                                      <span className="text-blue-400 ml-2">+{r.newCount} 新增</span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-red-400">{r.ownedCount} 将移除</span>
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 快速模板（仅分配模式） */}
+                  {bulkMode === "replace" && (
+                    <div>
+                      <Label className="text-sm text-slate-300 mb-2 block">
+                        快速角色模板
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(ROLE_TEMPLATES).map(([key, tmpl]) => (
+                          <Button
+                            key={key}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => applyBulkRoleTemplate(key)}
+                            className="text-xs"
+                            title={tmpl.codes.join(" + ")}
+                            disabled={bulkSaving}
+                          >
+                            {tmpl.label}
+                          </Button>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyBulkRoleTemplate("admin")}
+                          className="text-xs"
+                          disabled={bulkSaving}
+                        >
+                          全部权限
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setBulkSelectedRoles([])}
+                          className="text-xs text-red-400 hover:text-red-300"
+                          disabled={bulkSaving}
+                        >
+                          清空
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {bulkMode === "remove" && (
+                    <p className="text-sm text-red-400/80">
+                      选择要从 {selectedUserIds.length} 个用户移除的角色。仅移除选中的角色，其余角色保留不变。
+                    </p>
+                  )}
+
+                  <div className="max-h-[350px] overflow-y-auto space-y-2">
+                    {(availableRoles || []).map((role) => {
+                      const isSelected = bulkSelectedRoles.includes(role.id);
+                      const isRemove = bulkMode === "remove";
+                      return (
+                        <div
+                          key={role.id}
                           className={cn(
-                            "w-12 h-6 rounded-full transition-colors relative",
-                            bulkSelectedRoles.includes(role.id)
-                              ? "bg-blue-600"
-                              : "bg-slate-700",
+                            "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                            isSelected
+                              ? isRemove
+                                ? "bg-red-500/20 border-red-500/50"
+                                : "bg-blue-500/20 border-blue-500/50"
+                              : "bg-slate-800 border-slate-700 hover:border-slate-600",
                           )}
                         >
-                          <span
+                          <div className="flex items-center gap-3">
+                            <Shield
+                              className={cn(
+                                "w-5 h-5",
+                                isSelected
+                                  ? isRemove ? "text-red-400" : "text-blue-400"
+                                  : "text-slate-500",
+                              )}
+                            />
+                            <div>
+                              <div className="font-medium">
+                                {role.role_name || role.name}
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {role.description || role.role_code}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleBulkRoleToggle(role.id)}
+                            disabled={bulkSaving}
                             className={cn(
-                              "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
-                              bulkSelectedRoles.includes(role.id)
-                                ? "translate-x-7"
-                                : "translate-x-1",
+                              "w-12 h-6 rounded-full transition-colors relative",
+                              isSelected
+                                ? bulkMode === "remove" ? "bg-red-600" : "bg-blue-600"
+                                : "bg-slate-700",
                             )}
-                          />
-                        </button>
-                      </div>
-                    ))}
+                          >
+                            <span
+                              className={cn(
+                                "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                                isSelected
+                                  ? "translate-x-7"
+                                  : "translate-x-1",
+                              )}
+                            />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-slate-400 pt-2 border-t border-slate-700">
                     <Info className="w-4 h-4" />
                     <span>
-                      已选择 {bulkSelectedRoles.length} 个角色，将应用到{" "}
-                      {selectedUserIds.length} 个用户
+                      已选择 {bulkSelectedRoles.length} 个角色，将{bulkMode === "remove" ? "从" : "应用到"}{" "}
+                      {selectedUserIds.length} 个用户{bulkMode === "remove" ? "移除" : ""}
                     </span>
                   </div>
                 </div>
               </DialogBody>
               <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowBulkDialog(false)}
-                >
-                  取消
-                </Button>
-                <Button
-                  onClick={handleBulkSavePermissions}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  批量保存
-                </Button>
+                {bulkResult ? (
+                  <Button
+                    onClick={() => {
+                      setShowBulkDialog(false);
+                      setSelectedUserIds([]);
+                      setBulkResult(null);
+                    }}
+                    className="bg-slate-700 hover:bg-slate-600"
+                  >
+                    关闭
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowBulkDialog(false)}
+                      disabled={bulkSaving}
+                    >
+                      取消
+                    </Button>
+                    <Button
+                      onClick={handleBulkSavePermissions}
+                      disabled={bulkSaving || bulkSelectedRoles.length === 0}
+                      className={cn(
+                        bulkMode === "remove"
+                          ? "bg-red-600 hover:bg-red-700"
+                          : "bg-blue-600 hover:bg-blue-700",
+                      )}
+                    >
+                      {bulkSaving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+                      {bulkSaving
+                        ? "处理中..."
+                        : bulkMode === "remove"
+                          ? `移除 ${bulkSelectedRoles.length} 个角色`
+                          : `分配到 ${selectedUserIds.length} 个用户`}
+                    </Button>
+                  </>
+                )}
               </DialogFooter>
             </DialogContent>
           </Dialog>

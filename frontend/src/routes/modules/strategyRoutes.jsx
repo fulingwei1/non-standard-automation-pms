@@ -1,20 +1,18 @@
-/**
- * 战略管理模块路由配置
- */
 import { Route, Navigate } from "react-router-dom";
-
-import StrategyDashboard from "../../pages/Strategy";
-import StrategyMap from "../../pages/StrategyMap";
-import CSFList from "../../pages/CSFList";
-import KPIList from "../../pages/KPIList";
-import AnnualWorkList from "../../pages/AnnualWorkList";
-import Decomposition from "../../pages/Decomposition";
-import StrategyCalendar from "../../pages/StrategyCalendar";
-import YearComparison from "../../pages/YearComparison";
-import AIStrategyAssistant from "../../pages/AIStrategyAssistant";
-import TeamGeneration from "../../pages/TeamGeneration";
-import ExecutiveDashboard from "../../pages/executive-dashboard";
 import { StrategyProtectedRoute } from "../../components/common/ProtectedRoute";
+import { lazyLoad } from "../lazyLoad";
+
+const StrategyDashboard = lazyLoad(() => import("../../pages/Strategy"));
+const StrategyMap = lazyLoad(() => import("../../pages/StrategyMap"));
+const CSFList = lazyLoad(() => import("../../pages/CSFList"));
+const KPIList = lazyLoad(() => import("../../pages/KPIList"));
+const AnnualWorkList = lazyLoad(() => import("../../pages/AnnualWorkList"));
+const Decomposition = lazyLoad(() => import("../../pages/Decomposition"));
+const StrategyCalendar = lazyLoad(() => import("../../pages/StrategyCalendar"));
+const YearComparison = lazyLoad(() => import("../../pages/YearComparison"));
+const AIStrategyAssistant = lazyLoad(() => import("../../pages/AIStrategyAssistant"));
+const TeamGeneration = lazyLoad(() => import("../../pages/TeamGeneration"));
+const ExecutiveDashboard = lazyLoad(() => import("../../pages/executive-dashboard"));
 
 export function StrategyRoutes() {
   return (

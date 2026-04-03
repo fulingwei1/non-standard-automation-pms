@@ -1,19 +1,20 @@
 import { Route } from "react-router-dom";
 import { QualityProtectedRoute } from "../../components/common/ProtectedRoute";
+import { lazyLoad } from "../lazyLoad";
 
-import QualityWorkstation from "../../pages/quality/QualityWorkstation";
-import InspectionList from "../../pages/quality/InspectionList";
-import InspectionDetail from "../../pages/quality/InspectionDetail";
-import InspectionNew from "../../pages/quality/InspectionNew";
-import QualityIssues from "../../pages/quality/QualityIssues";
-import IssueDetail from "../../pages/quality/IssueDetail";
-import AcceptanceList from "../../pages/quality/AcceptanceList";
-import AcceptanceDetail from "../../pages/quality/AcceptanceDetail";
-import QualityReports from "../../pages/quality/QualityReports";
-import NCManagement from "../../pages/quality/NCManagement";
-import ReportTemplates from "../../pages/ReportTemplates";
-import ReportGeneration from "../../pages/ReportGeneration";
-import ReportArchives from "../../pages/ReportArchives";
+const QualityWorkstation = lazyLoad(() => import("../../pages/quality/QualityWorkstation"));
+const InspectionList = lazyLoad(() => import("../../pages/quality/InspectionList"));
+const InspectionDetail = lazyLoad(() => import("../../pages/quality/InspectionDetail"));
+const InspectionNew = lazyLoad(() => import("../../pages/quality/InspectionNew"));
+const QualityIssues = lazyLoad(() => import("../../pages/quality/QualityIssues"));
+const IssueDetail = lazyLoad(() => import("../../pages/quality/IssueDetail"));
+const AcceptanceList = lazyLoad(() => import("../../pages/quality/AcceptanceList"));
+const AcceptanceDetail = lazyLoad(() => import("../../pages/quality/AcceptanceDetail"));
+const QualityReports = lazyLoad(() => import("../../pages/quality/QualityReports"));
+const NCManagement = lazyLoad(() => import("../../pages/quality/NCManagement"));
+const ReportTemplates = lazyLoad(() => import("../../pages/ReportTemplates"));
+const ReportGeneration = lazyLoad(() => import("../../pages/ReportGeneration"));
+const ReportArchives = lazyLoad(() => import("../../pages/ReportArchives"));
 
 export function QualityRoutes() {
   return (

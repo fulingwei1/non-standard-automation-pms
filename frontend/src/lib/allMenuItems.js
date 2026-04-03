@@ -484,6 +484,12 @@ export const allMenuGroups = [
         path: "/financial-costs",
         icon: "DollarSign",
       },
+      {
+        id: "finance-analytics-dashboard",
+        name: "财务分析",
+        path: "/finance/analytics-dashboard",
+        icon: "BarChart3",
+      },
       { id: "costs", name: "成本核算", path: "/costs", icon: "Calculator" },
       {
         id: "payment-approval",

@@ -1,19 +1,20 @@
 import { Route, Navigate } from "react-router-dom";
+import { lazyLoad } from "../lazyLoad";
 
-import PresalesWorkstation from "../../pages/PresalesWorkstation";
-import PresaleAnalytics from "../../pages/PresaleAnalytics";
-import PresalesManagerWorkstation from "../../pages/PresalesManagerWorkstation";
-import PresalesWorkbenchRedirect from "../../pages/PresalesWorkbenchRedirect";
-import PresalesCostEstimation from "../../pages/PresalesCostEstimation";
-import PresalesReviewCenter from "../../pages/PresalesReviewCenter";
-import PresaleProposals from "../../pages/PresaleProposals";
-import SolutionDetail from "../../pages/SolutionDetail";
-import RequirementSurvey from "../../pages/RequirementSurvey";
-import BiddingCenter from "../../pages/BiddingCenter";
-import PresaleBids from "../../pages/PresaleBids";
-import KnowledgeBase from "../../pages/KnowledgeBase";
-import PresaleTemplates from "../../pages/PresaleTemplates";
-import PresaleTicketBoard from "../../pages/PresaleTicketBoard";
+const PresalesWorkstation = lazyLoad(() => import("../../pages/PresalesWorkstation"));
+const PresaleAnalytics = lazyLoad(() => import("../../pages/PresaleAnalytics"));
+const PresalesManagerWorkstation = lazyLoad(() => import("../../pages/PresalesManagerWorkstation"));
+const PresalesWorkbenchRedirect = lazyLoad(() => import("../../pages/PresalesWorkbenchRedirect"));
+const PresalesCostEstimation = lazyLoad(() => import("../../pages/PresalesCostEstimation"));
+const PresalesReviewCenter = lazyLoad(() => import("../../pages/PresalesReviewCenter"));
+const PresaleProposals = lazyLoad(() => import("../../pages/PresaleProposals"));
+const SolutionDetail = lazyLoad(() => import("../../pages/SolutionDetail"));
+const RequirementSurvey = lazyLoad(() => import("../../pages/RequirementSurvey"));
+const BiddingCenter = lazyLoad(() => import("../../pages/BiddingCenter"));
+const PresaleBids = lazyLoad(() => import("../../pages/PresaleBids"));
+const KnowledgeBase = lazyLoad(() => import("../../pages/KnowledgeBase"));
+const PresaleTemplates = lazyLoad(() => import("../../pages/PresaleTemplates"));
+const PresaleTicketBoard = lazyLoad(() => import("../../pages/PresaleTicketBoard"));
 
 export function PresalesRoutes() {
   return (

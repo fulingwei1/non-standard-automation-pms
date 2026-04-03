@@ -1,19 +1,20 @@
 import { Route } from "react-router-dom";
 import { ProjectReviewProtectedRoute } from "../../components/common/ProtectedRoute";
+import { lazyLoad } from "../lazyLoad";
 
-import PMODashboard from "../../pages/PMODashboard";
-import InitiationManagement from "../../pages/InitiationManagement";
-import ProjectPhaseManagement from "../../pages/ProjectPhaseManagement";
-import RiskManagement from "../../pages/RiskManagement";
-import ProjectClosureManagement from "../../pages/ProjectClosureManagement";
-import ProjectReviewList from "../../pages/ProjectReviewList";
-import ProjectReviewDetail from "../../pages/ProjectReviewDetail";
-import LessonsLearnedLibrary from "../../pages/LessonsLearnedLibrary";
-import BestPracticeRecommendations from "../../pages/BestPracticeRecommendations";
-import ResourceOverview from "../../pages/ResourceOverview";
-import MeetingManagement from "../../pages/MeetingManagement";
-import RiskWall from "../../pages/RiskWall";
-import WeeklyReport from "../../pages/WeeklyReport";
+const PMODashboard = lazyLoad(() => import("../../pages/PMODashboard"));
+const InitiationManagement = lazyLoad(() => import("../../pages/InitiationManagement"));
+const ProjectPhaseManagement = lazyLoad(() => import("../../pages/ProjectPhaseManagement"));
+const RiskManagement = lazyLoad(() => import("../../pages/RiskManagement"));
+const ProjectClosureManagement = lazyLoad(() => import("../../pages/ProjectClosureManagement"));
+const ProjectReviewList = lazyLoad(() => import("../../pages/ProjectReviewList"));
+const ProjectReviewDetail = lazyLoad(() => import("../../pages/ProjectReviewDetail"));
+const LessonsLearnedLibrary = lazyLoad(() => import("../../pages/LessonsLearnedLibrary"));
+const BestPracticeRecommendations = lazyLoad(() => import("../../pages/BestPracticeRecommendations"));
+const ResourceOverview = lazyLoad(() => import("../../pages/ResourceOverview"));
+const MeetingManagement = lazyLoad(() => import("../../pages/MeetingManagement"));
+const RiskWall = lazyLoad(() => import("../../pages/RiskWall"));
+const WeeklyReport = lazyLoad(() => import("../../pages/WeeklyReport"));
 
 export function PMORoutes() {
   return (

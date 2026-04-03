@@ -16,7 +16,14 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.core.security import get_current_active_user, require_permission
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.schemas.role import RoleCreate, RoleUpdate
+from app.schemas.role import (
+    CreateRoleFromTemplate,
+    RoleCreate,
+    RoleTemplateCreate,
+    RoleTemplateUpdate,
+    RoleUpdate,
+    SaveRoleAsTemplate,
+)
 from app.services.role_management import RoleManagementService
 from app.services.role_service import RoleService
 
@@ -64,6 +71,106 @@ def list_role_templates(
     service = RoleManagementService(db)
     result = service.get_role_templates()
     return ResponseModel(code=200, message="获取成功", data=result)
+
+
+@router.get("/templates/{template_id}", response_model=ResponseModel)
+def get_role_template(
+    template_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("role:read")),
+):
+    """获取角色模板详情"""
+    service = RoleManagementService(db)
+    result = service.get_template_detail(template_id)
+    return ResponseModel(code=200, message="获取成功", data=result)
+
+
+@router.post("/templates/", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+def create_role_template(
+    template_in: RoleTemplateCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("role:create")),
+):
+    """创建角色模板"""
+    service = RoleManagementService(db)
+    result = service.create_template(
+        template_code=template_in.template_code,
+        template_name=template_in.template_name,
+        description=template_in.description,
+        role_type=template_in.role_type,
+        scope_type=template_in.scope_type,
+        data_scope=template_in.data_scope,
+        level=template_in.level,
+        permission_codes=template_in.permission_codes,
+    )
+    return ResponseModel(code=201, message="模板创建成功", data=result)
+
+
+@router.put("/templates/{template_id}", response_model=ResponseModel)
+def update_role_template(
+    template_id: int,
+    template_in: RoleTemplateUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("role:update")),
+):
+    """更新角色模板"""
+    service = RoleManagementService(db)
+    update_data = template_in.model_dump(exclude_unset=True)
+    result = service.update_template(template_id=template_id, **update_data)
+    return ResponseModel(code=200, message="模板更新成功", data=result)
+
+
+@router.delete("/templates/{template_id}", response_model=ResponseModel)
+def delete_role_template(
+    template_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("role:delete")),
+):
+    """删除角色模板"""
+    service = RoleManagementService(db)
+    service.delete_template(template_id)
+    return ResponseModel(code=200, message="模板删除成功")
+
+
+@router.post("/templates/{template_id}/create-role", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+def create_role_from_template(
+    template_id: int,
+    body: CreateRoleFromTemplate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("role:create")),
+):
+    """从模板创建角色"""
+    service = RoleManagementService(db)
+    role = service.create_role_from_template(
+        template_id=template_id,
+        role_code=body.role_code,
+        role_name=body.role_name,
+        tenant_id=current_user.tenant_id,
+        description=body.description,
+    )
+    role_service = RoleService(db)
+    return ResponseModel(
+        code=201, message="从模板创建角色成功", data=role_service._to_response(role).model_dump()
+    )
+
+
+@router.post("/{role_id}/save-as-template", response_model=ResponseModel, status_code=status.HTTP_201_CREATED)
+def save_role_as_template(
+    role_id: int,
+    body: SaveRoleAsTemplate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("role:create")),
+):
+    """将现有角色另存为模板"""
+    service = RoleManagementService(db)
+    result = service.save_role_as_template(
+        role_id=role_id,
+        template_code=body.template_code,
+        template_name=body.template_name,
+        description=body.description,
+        tenant_id=current_user.tenant_id,
+    )
+    return ResponseModel(code=201, message="角色已保存为模板", data=result)
 
 
 @router.get("/config/all", response_model=ResponseModel)

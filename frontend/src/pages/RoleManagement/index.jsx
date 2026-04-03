@@ -23,6 +23,9 @@ import {
     FileText,
     CheckSquare,
     Square,
+    Copy,
+    LayoutGrid,
+    BookTemplate,
 } from 'lucide-react';
 import { PageHeader } from '../../components/layout';
 import {
@@ -86,6 +89,8 @@ export default function RoleManagement() {
     const [showDetailDialog, setShowDetailDialog] = useState(false);
     const [showCompareDialog, setShowCompareDialog] = useState(false);
     const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+    const [showSaveAsTemplateDialog, setShowSaveAsTemplateDialog] = useState(false);
+    const [showTemplateCenterDialog, setShowTemplateCenterDialog] = useState(false);
 
     // 表单状态
     const [createForm, setCreateForm] = useState({
@@ -114,6 +119,15 @@ export default function RoleManagement() {
         template_id: null,
         role_code: '',
         role_name: '',
+        description: '',
+    });
+
+    // 另存为模板状态
+    const [saveAsTemplateForm, setSaveAsTemplateForm] = useState({
+        role_id: null,
+        role_name: '',
+        template_code: '',
+        template_name: '',
         description: '',
     });
 
@@ -341,6 +355,47 @@ export default function RoleManagement() {
         }
     };
 
+    // 另存为模板
+    const handleOpenSaveAsTemplate = (role) => {
+        setSaveAsTemplateForm({
+            role_id: role.id,
+            role_name: role.role_name,
+            template_code: `TPL_${role.role_code}`,
+            template_name: `${role.role_name}模板`,
+            description: role.description || '',
+        });
+        setShowSaveAsTemplateDialog(true);
+    };
+
+    const handleSaveAsTemplateSubmit = async () => {
+        if (!saveAsTemplateForm.template_code || !saveAsTemplateForm.template_name) {
+            alert('请填写完整信息');
+            return;
+        }
+
+        const result = await roleData.saveRoleAsTemplate(saveAsTemplateForm.role_id, {
+            template_code: saveAsTemplateForm.template_code,
+            template_name: saveAsTemplateForm.template_name,
+            description: saveAsTemplateForm.description,
+        });
+
+        if (result.success) {
+            setShowSaveAsTemplateDialog(false);
+            setSaveAsTemplateForm({ role_id: null, role_name: '', template_code: '', template_name: '', description: '' });
+        } else {
+            alert('保存失败: ' + result.error);
+        }
+    };
+
+    // 删除模板
+    const handleDeleteTemplate = async (templateId) => {
+        if (!await confirmAction('确定要删除该模板吗？')) return;
+        const result = await roleData.deleteTemplate(templateId);
+        if (!result.success) {
+            alert('删除失败: ' + result.error);
+        }
+    };
+
     // 渲染数据权限标签
     const renderDataScopeBadge = (scope) => {
         const config = DATA_SCOPE_MAP[scope] || DATA_SCOPE_MAP['OWN'];
@@ -381,6 +436,13 @@ export default function RoleManagement() {
                             对比 ({selectedForCompare.length})
                         </Button>
                     )}
+                    <Button variant="outline" onClick={() => setShowTemplateCenterDialog(true)}>
+                        <LayoutGrid className="w-4 h-4 mr-2" />
+                        模板中心
+                        {templates.length > 0 && (
+                            <Badge variant="secondary" className="ml-1">{templates.length}</Badge>
+                        )}
+                    </Button>
                     {templates.length > 0 && (
                         <Button variant="outline" onClick={() => setShowTemplateDialog(true)}>
                             <FileText className="w-4 h-4 mr-2" />
@@ -503,6 +565,14 @@ export default function RoleManagement() {
                                                         title="编辑"
                                                     >
                                                         <Edit3 className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleOpenSaveAsTemplate(role)}
+                                                        title="另存为模板"
+                                                    >
+                                                        <Copy className="w-4 h-4 text-purple-500" />
                                                     </Button>
                                                     {!role.is_system && (
                                                         <Button
@@ -1128,6 +1198,162 @@ export default function RoleManagement() {
                         <Button onClick={handleTemplateCreate}>
                             <FileText className="w-4 h-4 mr-2" />
                             创建角色
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* 另存为模板对话框 */}
+            <Dialog open={showSaveAsTemplateDialog} onOpenChange={setShowSaveAsTemplateDialog}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>
+                            <Copy className="w-5 h-5 inline mr-2 text-purple-500" />
+                            另存为模板
+                        </DialogTitle>
+                    </DialogHeader>
+                    <DialogBody>
+                        <div className="space-y-4">
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm text-purple-700">
+                                将角色 <strong>{saveAsTemplateForm.role_name}</strong> 的配置和权限保存为可复用模板
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">模板编码 *</label>
+                                <Input
+                                    value={saveAsTemplateForm.template_code}
+                                    onChange={(e) => setSaveAsTemplateForm({ ...saveAsTemplateForm, template_code: e.target.value })}
+                                    placeholder="如: TPL_SALES_MGR"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">唯一标识，建议使用 TPL_ 前缀</p>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">模板名称 *</label>
+                                <Input
+                                    value={saveAsTemplateForm.template_name}
+                                    onChange={(e) => setSaveAsTemplateForm({ ...saveAsTemplateForm, template_name: e.target.value })}
+                                    placeholder="如: 销售经理模板"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-2 block">描述</label>
+                                <Input
+                                    value={saveAsTemplateForm.description}
+                                    onChange={(e) => setSaveAsTemplateForm({ ...saveAsTemplateForm, description: e.target.value })}
+                                    placeholder="模板描述"
+                                />
+                            </div>
+                        </div>
+                    </DialogBody>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowSaveAsTemplateDialog(false)}>
+                            取消
+                        </Button>
+                        <Button onClick={handleSaveAsTemplateSubmit} className="bg-purple-600 hover:bg-purple-700">
+                            <Copy className="w-4 h-4 mr-2" />
+                            保存为模板
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* 模板中心对话框 */}
+            <Dialog open={showTemplateCenterDialog} onOpenChange={setShowTemplateCenterDialog}>
+                <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                        <DialogTitle>
+                            <LayoutGrid className="w-5 h-5 inline mr-2" />
+                            模板中心
+                        </DialogTitle>
+                    </DialogHeader>
+                    <DialogBody>
+                        {templates.length === 0 ? (
+                            <div className="text-center py-12">
+                                <BookTemplate className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                                <p className="text-slate-500 mb-2">暂无角色模板</p>
+                                <p className="text-sm text-slate-400">
+                                    可在角色列表中点击 <Copy className="w-3.5 h-3.5 inline text-purple-500" /> 将角色保存为模板
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {(templates || []).map((tpl) => (
+                                    <Card key={tpl.id} className="border hover:border-blue-300 transition-colors">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div>
+                                                    <h4 className="font-medium text-base">
+                                                        {tpl.template_name || tpl.role_name}
+                                                    </h4>
+                                                    <p className="text-xs font-mono text-slate-500 mt-0.5">
+                                                        {tpl.template_code || tpl.role_code}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setTemplateForm({
+                                                                template_id: tpl.id,
+                                                                role_code: '',
+                                                                role_name: '',
+                                                                description: '',
+                                                            });
+                                                            setShowTemplateCenterDialog(false);
+                                                            setShowTemplateDialog(true);
+                                                        }}
+                                                        title="从此模板创建角色"
+                                                    >
+                                                        <Plus className="w-4 h-4 text-blue-500" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteTemplate(tpl.id)}
+                                                        title="删除模板"
+                                                    >
+                                                        <Trash2 className="w-4 h-4 text-red-500" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            {tpl.description && (
+                                                <p className="text-sm text-slate-500 mb-3 line-clamp-2">
+                                                    {tpl.description}
+                                                </p>
+                                            )}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {renderDataScopeBadge(tpl.data_scope)}
+                                                <Badge variant="outline" className="text-xs font-mono">
+                                                    v{tpl.version || 1}
+                                                </Badge>
+                                                {tpl.permission_codes && (
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {Array.isArray(tpl.permission_codes)
+                                                            ? tpl.permission_codes.length
+                                                            : 0} 个权限
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <div className="mt-2 text-xs text-slate-400 space-y-0.5">
+                                                {tpl.source_role_name && (
+                                                    <p>来源角色: {tpl.source_role_name}</p>
+                                                )}
+                                                {tpl.version_note && (
+                                                    <p>版本说明: {tpl.version_note}</p>
+                                                )}
+                                                {tpl.created_at && (
+                                                    <p>创建: {new Date(tpl.created_at).toLocaleDateString('zh-CN')}{tpl.updated_at && tpl.updated_at !== tpl.created_at ? ` · 更新: ${new Date(tpl.updated_at).toLocaleDateString('zh-CN')}` : ''}</p>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                    </DialogBody>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowTemplateCenterDialog(false)}>
+                            关闭
                         </Button>
                     </DialogFooter>
                 </DialogContent>

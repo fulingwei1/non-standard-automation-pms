@@ -14,7 +14,9 @@ import {
   WarehouseRoutes,
   QualityRoutes
 } from "./modules";
-import SalesFunnel from "../pages/SalesFunnel";
+import { lazyLoad } from "./lazyLoad";
+
+const SalesFunnel = lazyLoad(() => import("../pages/SalesFunnel"));
 
 export function AppRoutes() {
   return (
