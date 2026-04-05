@@ -95,37 +95,38 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 describe('BOMManagement', () => {
+  // Mock data must match UI field names (bom_no, bom_name, project_name, etc.)
   const mockBOMs = {
     items: [
       {
         id: 1,
-        code: 'BOM-001',
-        name: '产品A BOM',
+        bom_no: 'BOM-001',
+        bom_name: '产品A BOM',
         version: 'V1.0',
-        productCode: 'PRD-001',
-        productName: '产品A',
+        project_name: '产品A项目',
+        machine_name: '机台A',
         status: 'active',
-        level: 3,
-        itemCount: 25,
-        totalCost: 12500,
-        createdBy: '张工',
-        createdAt: '2024-01-15',
-        updatedAt: '2024-02-20'
+        is_latest: true,
+        total_items: 25,
+        total_amount: 12500,
+        created_by: '张工',
+        created_at: '2024-01-15',
+        updated_at: '2024-02-20'
       },
       {
         id: 2,
-        code: 'BOM-002',
-        name: '产品B BOM',
+        bom_no: 'BOM-002',
+        bom_name: '产品B BOM',
         version: 'V2.1',
-        productCode: 'PRD-002',
-        productName: '产品B',
+        project_name: '产品B项目',
+        machine_name: '机台B',
         status: 'draft',
-        level: 2,
-        itemCount: 18,
-        totalCost: 8900,
-        createdBy: '李工',
-        createdAt: '2024-02-01',
-        updatedAt: '2024-02-22'
+        is_latest: false,
+        total_items: 18,
+        total_amount: 8900,
+        created_by: '李工',
+        created_at: '2024-02-01',
+        updated_at: '2024-02-22'
       }
     ],
     total: 2,

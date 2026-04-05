@@ -16,6 +16,23 @@ vi.mock('../../../../services/api', async (importOriginal) => {
       patch: vi.fn(),
       defaults: { baseURL: '/api' },
     },
+    bomApi: {
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      getItems: vi.fn(),
+      addItem: vi.fn(),
+      updateItem: vi.fn(),
+      deleteItem: vi.fn(),
+      getVersions: vi.fn(),
+      compareVersions: vi.fn(),
+      release: vi.fn(),
+      import: vi.fn(),
+      export: vi.fn(),
+      generatePR: vi.fn(),
+    },
   };
 });
 
@@ -28,16 +45,9 @@ describe('useBOMManagement Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Auto-setup mocks for known methods
-    const apiObjects = [bomApi];
-    apiObjects.forEach(api => {
-        if (api) {
-            if (api.list) api.list.mockResolvedValue(mockResponse);
-            if (api.get) api.get.mockResolvedValue({ data: mockDetail });
-            if (api.query) api.query.mockResolvedValue(mockResponse);
-            if (api.aiMatch) api.aiMatch.mockResolvedValue(mockResponse); // specialized
-        }
-    });
+    // Mock bomApi methods
+    if (bomApi.list) bomApi.list.mockResolvedValue(mockResponse);
+    if (bomApi.get) bomApi.get.mockResolvedValue({ data: mockDetail });
   });
 
   it('should load data', async () => {

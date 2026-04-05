@@ -106,7 +106,7 @@ describe('MachineManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    machineApi.list.mockResolvedValue({ data: mockMachines });
+    machineApi.list.mockResolvedValue({ data: { items: mockMachines.items, total: mockMachines.items.length } });
     machineApi.get.mockResolvedValue({ data: mockMachines.items[0] });
     machineApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
     machineApi.update.mockResolvedValue({ data: { success: true } });
