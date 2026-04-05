@@ -13,8 +13,8 @@ export const getCurrentPeriod = () => {
     year,
     month,
     period: `${year}-${String(month).padStart(2, "0")}`,
-    startDate: new Date(year, month - 1, 1).toISOString().split("T")[0],
-    endDate: new Date(year, month, 0).toISOString().split("T")[0],
+    startDate: new Date(year, month - 1, 1).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-'),
+    endDate: new Date(year, month, 0).toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-'),
     daysLeft: new Date(year, month, 0).getDate() - now.getDate(),
   };
 };

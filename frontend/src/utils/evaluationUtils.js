@@ -85,7 +85,7 @@ export const commentTemplates = [
 export const validateScore = (score) => {
   if (!score) {return { valid: false, message: "请输入评分" };}
   const numScore = Number(score);
-  if (numScore < 60 || numScore > 100) {
+  if (isNaN(numScore) || numScore < 60 || numScore > 100) {
     return { valid: false, message: "评分必须在60-100之间" };
   }
   return { valid: true };

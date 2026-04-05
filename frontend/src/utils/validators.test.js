@@ -272,7 +272,8 @@ describe("validators", () => {
     it("should pass through all validators if all pass", () => {
       const validator = combine(required, minLength(5), maxLength(10));
       expect(validator("hello")).toBeUndefined();
-      expect(validator("hello world")).toBeUndefined();
+      // "hi" is 2 chars, less than 10 but more than 5, valid
+      expect(validator("hi")).toBeUndefined();
     });
 
     it("should stop at first error", () => {

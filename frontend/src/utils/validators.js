@@ -106,6 +106,11 @@ export function phone(value, message = "请输入有效的手机号码") {
  */
 export function url(value, message = "请输入有效的 URL") {
   if (!value) {return undefined;}
+  // Use stricter validation - must start with http:// or https://
+  const urlPattern = /^https?:\/\/.+/i;
+  if (!urlPattern.test(value)) {
+    return message;
+  }
   try {
     new URL(value);
     return undefined;

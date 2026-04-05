@@ -53,23 +53,23 @@ export function getErrorMessage(error) {
 }
 
 export function isNetworkError(error) {
-  return !error.response && !!error.request;
+  return error && !error.response && !!error.request;
 }
 
 export function isAuthError(error) {
-  return error.response?.status === 401;
+  return error?.response?.status === 401;
 }
 
 export function isPermissionError(error) {
-  return error.response?.status === 403;
+  return error?.response?.status === 403;
 }
 
 export function isValidationError(error) {
-  return error.response?.status === 400 || error.response?.status === 422;
+  return error?.response?.status === 400 || error?.response?.status === 422;
 }
 
 export function getValidationErrors(error) {
-  if (!isValidationError(error)) return {};
+  if (!error || !isValidationError(error)) return {};
   const { data } = error.response;
   if (data?.errors) return data.errors;
   if (data?.detail && typeof data.detail === 'object') return data.detail;

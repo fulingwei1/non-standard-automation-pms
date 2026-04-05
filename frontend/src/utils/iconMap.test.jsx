@@ -198,7 +198,8 @@ describe("iconMap", () => {
 
     it("should return a React component", () => {
       const IconComponent = getIcon("Clock");
-      expect(typeof IconComponent).toBe("function");
+      // React.forwardRef components have typeof 'object' not 'function'
+      expect(typeof IconComponent === 'function' || typeof IconComponent === 'object').toBe(true);
       // It should be renderable
       const { container } = render(<IconComponent />);
       expect(container.querySelector("svg")).toBeInTheDocument();
