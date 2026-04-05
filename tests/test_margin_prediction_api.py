@@ -215,7 +215,11 @@ class TestMarginPredictionAPI:
         mock_cost_result = MagicMock()
         mock_cost_result.fetchall.return_value = []
         
-        mock_db.execute.side_effect = [mock_result, mock_cost_result]
+        # 每个项目需要一次成本查询，共3次，然后是分类聚合
+        mock_db.execute.side_effect = [
+            mock_result,  # 主查询
+            mock_cost_result, mock_cost_result, mock_cost_result,  # 每个项目的成本查询
+        ]
 
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
@@ -259,13 +263,16 @@ class TestMarginPredictionAPI:
         
         mock_similar_result = MagicMock()
         mock_similar_result.fetchall.return_value = []
+        
+        mock_similar_sql_result = MagicMock()
+        mock_similar_sql_result.fetchall.return_value = []
 
         mock_db.execute.side_effect = [
-            mock_material_result,
-            mock_rd_result,
-            mock_prod_result,
-            mock_overhead_result,
-            mock_similar_result
+            mock_material_result,  # 物料比率
+            mock_rd_result,  # 研发工时费率
+            mock_prod_result,  # 生产人工比率
+            mock_overhead_result,  # 制造费用比率
+            mock_similar_sql_result,  # 相似项目
         ]
 
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
@@ -331,6 +338,30 @@ class TestMarginPredictionEdgeCases:
     def test_predict_margin_zero_amount(self):
         """测试合同金额为0的情况"""
         mock_db = get_mock_db()
+        
+        # Mock 所有需要的 SQL 查询
+        mock_material_result = MagicMock()
+        mock_material_result.avg_material_ratio = 50.0
+        
+        mock_rd_result = MagicMock()
+        mock_rd_result.avg_rd_rate = 150.0
+        
+        mock_prod_result = MagicMock()
+        mock_prod_result.avg_prod_labor_ratio = 15.0
+        
+        mock_overhead_result = MagicMock()
+        mock_overhead_result.avg_overhead_ratio = 12.0
+        
+        mock_similar_result = MagicMock()
+        mock_similar_result.fetchall.return_value = []
+
+        mock_db.execute.side_effect = [
+            mock_material_result,
+            mock_rd_result,
+            mock_prod_result,
+            mock_overhead_result,
+            mock_similar_result
+        ]
         
         with patch("app.api.v1.endpoints.margin_prediction.security.get_current_active_user") as mock_auth:
             mock_auth.return_value = get_mock_user()
