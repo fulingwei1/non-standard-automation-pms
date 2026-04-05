@@ -27,9 +27,9 @@ from app.schemas.presale_ai_solution import (
     TemplateMatchRequest,
     TemplateMatchResponse,
 )
-from app.services.presale_ai_export_service import PresaleAIExportService
-from app.services.presale_ai_service import PresaleAIService
-from app.services.presale_ai_template_service import PresaleAITemplateService
+from app.services.presale.presale_ai_export_service import PresaleAIExportService
+from app.services.presale.presale_ai_service import PresaleAIService
+from app.services.presale.presale_ai_template_service import PresaleAITemplateService
 
 router = APIRouter(prefix="/api/v1/presale/ai", tags=["Presale AI Solution"])
 

@@ -177,7 +177,7 @@ export default function ArrivalDetail() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <XCircle className="h-12 w-12 text-muted-foreground" />
         <div className="text-muted-foreground">到货跟踪不存在</div>
-        <Button variant="outline" onClick={() => navigate("/shortage")}>
+        <Button variant="outline" onClick={() => navigate("/arrival-tracking")}>
           返回列表
         </Button>
       </div>
@@ -190,7 +190,7 @@ export default function ArrivalDetail() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/shortage")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/arrival-tracking")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -441,7 +441,7 @@ export default function ArrivalDetail() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate("/shortage")}
+                onClick={() => navigate("/arrival-tracking")}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 返回列表

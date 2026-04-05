@@ -19,7 +19,7 @@ from app.models import (
     Task,
     TaskDependency,
 )
-from app.services.glm_service import call_glm_api
+from app.services.presale.glm_service import call_glm_api
 
 logger = logging.getLogger(__name__)
 

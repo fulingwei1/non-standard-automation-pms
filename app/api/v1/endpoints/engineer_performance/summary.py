@@ -9,9 +9,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.core import security
 from app.models.performance import PerformancePeriod
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.engineer_performance.engperf_scope import resolve_engperf_scope
 from app.services.engineer_performance.engineer_performance_service import (
     EngineerPerformanceService,
 )
@@ -24,9 +26,10 @@ router = APIRouter(prefix="/summary", tags=["绩效总览"])
 async def get_company_summary(
     period_id: Optional[int] = Query(None, description="考核周期ID，不传则使用当前周期"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
-    """获取公司工程师绩效整体概况"""
+    """获取公司工程师绩效整体概况（数据范围受 scope 限制）"""
+    scope = resolve_engperf_scope(db, current_user)
     service = EngineerPerformanceService(db)
 
     # 如果未指定周期，获取当前活跃周期
@@ -38,7 +41,7 @@ async def get_company_summary(
     else:
         period = get_or_404(db, PerformancePeriod, period_id, "考核周期不存在")
 
-    summary = service.get_company_summary(period_id)
+    summary = service.get_company_summary(period_id, scope=scope)
 
     return ResponseModel(
         code=200,
@@ -52,12 +55,13 @@ async def get_job_type_summary(
     job_type: str,
     period_id: Optional[int] = Query(None, description="考核周期ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(security.require_permission("performance:engineer:read")),
 ):
-    """获取指定岗位类型的绩效概况"""
+    """获取指定岗位类型的绩效概况（数据范围受 scope 限制）"""
     if job_type not in ["mechanical", "test", "electrical"]:
         raise HTTPException(status_code=400, detail="无效的岗位类型")
 
+    scope = resolve_engperf_scope(db, current_user)
     service = EngineerPerformanceService(db)
 
     # 获取周期
@@ -67,8 +71,10 @@ async def get_job_type_summary(
             raise HTTPException(status_code=404, detail="未找到当前考核周期")
         period_id = period.id
 
-    # 获取排名数据
-    results, total = service.get_ranking(period_id=period_id, job_type=job_type, limit=100)
+    # 获取排名数据（注入 scope）
+    results, total = service.get_ranking(
+        period_id=period_id, job_type=job_type, limit=100, scope=scope
+    )
 
     if not results:
         return ResponseModel(

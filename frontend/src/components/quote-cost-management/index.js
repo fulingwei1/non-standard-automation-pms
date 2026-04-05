@@ -5,3 +5,5 @@ export { CostOverview } from "./CostOverview";
 export { CostBreakdown } from "./CostBreakdown";
 export { CostCheck } from "./CostCheck";
 export { CostApproval } from "./CostApproval";
+export { BindingValidationCard } from "./BindingValidationCard";
+export { BindQuoteDialog } from "./BindQuoteDialog";

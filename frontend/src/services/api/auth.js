@@ -60,6 +60,12 @@ export const userApi = {
       user_ids: userIds,
       is_active: isActive,
     }),
+  batchAssignRoles: (userIds, roleIds, mode = "replace") =>
+    api.put("/users/batch-roles", {
+      user_ids: userIds,
+      role_ids: roleIds,
+      mode,
+    }),
 };
 
 export const roleApi = {
@@ -88,7 +94,9 @@ export const roleApi = {
   updateTemplate: (id, data) => api.put(`/roles/templates/${id}`, data),
   deleteTemplate: (id) => api.delete(`/roles/templates/${id}`),
   createFromTemplate: (templateId, data) =>
-    api.post(`/roles/templates/${templateId}/create-role`, null, { params: data }),
+    api.post(`/roles/templates/${templateId}/create-role`, data),
+  saveAsTemplate: (roleId, data) =>
+    api.post(`/roles/${roleId}/save-as-template`, data),
 };
 
 // 权限矩阵 API

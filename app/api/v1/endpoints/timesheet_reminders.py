@@ -27,7 +27,7 @@ from app.schemas.timesheet_reminder import (
     ReminderRecordResponse,
     ReminderStatistics,
 )
-from app.services.timesheet_reminders import TimesheetReminderService
+from app.services.timesheet.reminders import TimesheetReminderService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

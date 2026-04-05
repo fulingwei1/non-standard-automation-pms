@@ -378,6 +378,8 @@ class CandidateScore(BaseModel):
     missing_skills: Optional[List[str]] = None
     current_workload_pct: Optional[float] = None
     available_hours: Optional[float] = None
+    recommendation_reason: Optional[str] = None
+    risk_notes: Optional[List[str]] = None
 
 
 class MatchingRequest(BaseModel):
@@ -403,6 +405,7 @@ class MatchingResult(BaseModel):
     total_candidates: int
     qualified_count: int  # 达到阈值的候选人数
     matching_time: datetime
+    analysis_summary: Optional[str] = None
 
 
 class MatchingAcceptRequest(BaseModel):

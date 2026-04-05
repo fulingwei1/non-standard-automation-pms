@@ -5,16 +5,17 @@
 处理车间响应构建、产能计算、车间验证等业务逻辑。
 """
 from datetime import date
-from typing import Optional
+from typing import Dict, List, Optional
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.common.date_range import get_month_range
 from app.common.query_filters import apply_pagination
-from app.models.production import ProductionDailyReport, WorkOrder, Workshop
+from app.models.production import ProductionDailyReport, WorkOrder, Worker, Workshop, Workstation
 from app.models.user import User
-from app.schemas.production import WorkshopResponse
+from app.schemas.production import WorkshopResponse, WorkshopTaskBoardResponse
+from app.services.production.work_order_service import WorkOrderService
 from app.utils.db_helpers import get_or_404, save_obj
 
 
@@ -24,12 +25,38 @@ class WorkshopService:
     def __init__(self, db: Session):
         self.db = db
 
-    def _build_workshop_response(self, workshop: Workshop) -> WorkshopResponse:
-        """构建车间响应（含主管名称查询）"""
-        manager_name = None
-        if workshop.manager_id:
-            manager = self.db.query(User).filter(User.id == workshop.manager_id).first()
-            manager_name = manager.real_name if manager else None
+    # ------------------------------------------------------------------
+    # Internal helpers for batch-loading related name maps
+    # ------------------------------------------------------------------
+
+    def _fetch_manager_map(self, ids: List[int]) -> Dict[int, str]:
+        if not ids:
+            return {}
+        rows = self.db.query(User.id, User.real_name).filter(User.id.in_(ids)).all()
+        return {r.id: r.real_name for r in rows}
+
+    # ------------------------------------------------------------------
+    # Response builder
+    # ------------------------------------------------------------------
+
+    def _build_workshop_response(
+        self,
+        workshop: Workshop,
+        *,
+        manager_map: Optional[Dict[int, str]] = None,
+    ) -> WorkshopResponse:
+        """构建车间响应（含主管名称查询）。
+
+        当调用方传入预构建的名称映射字典时，直接从字典中查找，避免 N+1 查询。
+        未传入时退回到单条查询（兼容单记录场景）。
+        """
+        if manager_map is not None:
+            manager_name = manager_map.get(workshop.manager_id) if workshop.manager_id else None
+        else:
+            manager_name = None
+            if workshop.manager_id:
+                manager = self.db.query(User).filter(User.id == workshop.manager_id).first()
+                manager_name = manager.real_name if manager else None
 
         return WorkshopResponse(
             id=workshop.id,
@@ -67,7 +94,12 @@ class WorkshopService:
             pagination.limit,
         ).all()
 
-        items = [self._build_workshop_response(ws) for ws in workshops]
+        # Batch-load all managers in 1 query instead of up to N queries.
+        manager_map = self._fetch_manager_map(
+            list({ws.manager_id for ws in workshops if ws.manager_id})
+        )
+
+        items = [self._build_workshop_response(ws, manager_map=manager_map) for ws in workshops]
         return pagination.to_response(items, total)
 
     def create_workshop(self, workshop_in) -> WorkshopResponse:
@@ -111,6 +143,88 @@ class WorkshopService:
         save_obj(self.db, workshop)
         return self._build_workshop_response(workshop)
 
+    def get_task_board(self, workshop_id: int) -> WorkshopTaskBoardResponse:
+        """获取车间任务看板（兼容前端 /production/workshops/{id}/task-board）"""
+        workshop = get_or_404(self.db, Workshop, workshop_id, detail="车间不存在")
+        work_order_service = WorkOrderService(self.db)
+
+        workstations = (
+            self.db.query(Workstation)
+            .filter(Workstation.workshop_id == workshop_id)
+            .order_by(Workstation.workstation_code)
+            .all()
+        )
+        workers = (
+            self.db.query(Worker)
+            .filter(Worker.workshop_id == workshop_id)
+            .order_by(Worker.worker_no)
+            .all()
+        )
+        work_orders = (
+            self.db.query(WorkOrder)
+            .filter(WorkOrder.workshop_id == workshop_id)
+            .order_by(WorkOrder.created_at.desc())
+            .all()
+        )
+
+        workstation_items = []
+        for workstation in workstations:
+            current_worker_name = None
+            if workstation.current_worker_id:
+                current_worker = (
+                    self.db.query(Worker)
+                    .filter(Worker.id == workstation.current_worker_id)
+                    .first()
+                )
+                current_worker_name = current_worker.worker_name if current_worker else None
+
+            current_work_order_no = None
+            if workstation.current_work_order_id:
+                current_order = (
+                    self.db.query(WorkOrder)
+                    .filter(WorkOrder.id == workstation.current_work_order_id)
+                    .first()
+                )
+                current_work_order_no = current_order.work_order_no if current_order else None
+
+            workstation_items.append(
+                {
+                    "id": workstation.id,
+                    "workstation_code": workstation.workstation_code,
+                    "workstation_name": workstation.workstation_name,
+                    "status": workstation.status,
+                    "current_worker_id": workstation.current_worker_id,
+                    "current_worker_name": current_worker_name,
+                    "current_work_order_id": workstation.current_work_order_id,
+                    "current_work_order_no": current_work_order_no,
+                    "is_active": workstation.is_active,
+                }
+            )
+
+        worker_items = [
+            {
+                "id": worker.id,
+                "worker_code": worker.worker_no,
+                "worker_name": worker.worker_name,
+                "status": worker.status,
+                "skill_level": worker.skill_level,
+                "is_active": worker.is_active,
+            }
+            for worker in workers
+        ]
+
+        work_order_items = [
+            work_order_service.build_response(order).model_dump(mode="json") for order in work_orders
+        ]
+
+        return WorkshopTaskBoardResponse(
+            workshop_id=workshop.id,
+            workshop_name=workshop.workshop_name,
+            workstations=workstation_items,
+            work_orders=work_order_items,
+            workers=worker_items,
+        )
+
     def get_capacity(
         self,
         workshop_id: int,
@@ -126,7 +240,11 @@ class WorkshopService:
 
         # 基础产能信息
         capacity_hours = float(workshop.capacity_hours) if workshop.capacity_hours else 0.0
-        worker_count = workshop.worker_count or 0
+        worker_count = (
+            self.db.query(Worker)
+            .filter(Worker.workshop_id == workshop_id, Worker.is_active.is_(True))
+            .count()
+        )
 
         # 如果没有指定日期范围，使用当前月
         today = date.today()

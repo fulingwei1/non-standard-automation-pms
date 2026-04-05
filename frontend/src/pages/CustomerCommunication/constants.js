@@ -1,13 +1,67 @@
-export const communicationTypeConfigs = {
-    phone: { label: '电话', icon: 'Phone', color: 'bg-blue-500' },
-    meeting: { label: '会议', icon: 'Users', color: 'bg-purple-500' },
-    email: { label: '邮件', icon: 'Mail', color: 'bg-cyan-500' },
-    visit: { label: '拜访', icon: 'MapPin', color: 'bg-emerald-500' },
-    other: { label: '其他', icon: 'MessageSquare', color: 'bg-slate-500' },
+import {
+  Phone,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Users,
+  Video,
+} from "lucide-react";
+import {
+  COMMUNICATION_TYPE,
+  COMMUNICATION_TYPE_LABELS,
+  COMMUNICATION_PRIORITY,
+  COMMUNICATION_PRIORITY_LABELS,
+  COMMUNICATION_STATUS,
+  COMMUNICATION_STATUS_LABELS,
+  CUSTOMER_SATISFACTION,
+  CUSTOMER_SATISFACTION_LABELS,
+  COMMUNICATION_TOPIC,
+} from "../../components/customer-communication";
+
+// 配置常量 - 使用新的配置系统
+export const communicationTypeConfig = {
+  [COMMUNICATION_TYPE.PHONE]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.PHONE], icon: Phone },
+  [COMMUNICATION_TYPE.EMAIL]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.EMAIL], icon: Mail },
+  [COMMUNICATION_TYPE.ON_SITE]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.ON_SITE], icon: MapPin },
+  [COMMUNICATION_TYPE.WECHAT]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.WECHAT], icon: MessageSquare },
+  [COMMUNICATION_TYPE.MEETING]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.MEETING], icon: Users },
+  [COMMUNICATION_TYPE.VIDEO_CALL]: { label: COMMUNICATION_TYPE_LABELS[COMMUNICATION_TYPE.VIDEO_CALL], icon: Video }
 };
 
-export const resultConfigs = {
-    positive: { label: '积极', color: 'text-emerald-500' },
-    neutral: { label: '中立', color: 'text-slate-500' },
-    negative: { label: '消极', color: 'text-red-500' },
+export const priorityConfig = {
+  [COMMUNICATION_PRIORITY.HIGH]: { label: COMMUNICATION_PRIORITY_LABELS[COMMUNICATION_PRIORITY.HIGH], color: "text-red-400", bg: "bg-red-500/20" },
+  [COMMUNICATION_PRIORITY.MEDIUM]: { label: COMMUNICATION_PRIORITY_LABELS[COMMUNICATION_PRIORITY.MEDIUM], color: "text-yellow-400", bg: "bg-yellow-500/20" },
+  [COMMUNICATION_PRIORITY.LOW]: { label: COMMUNICATION_PRIORITY_LABELS[COMMUNICATION_PRIORITY.LOW], color: "text-green-400", bg: "bg-green-500/20" }
+};
+
+export const statusConfig = {
+  [COMMUNICATION_STATUS.PENDING]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.PENDING], color: "text-purple-400", bg: "bg-purple-500/20" },
+  [COMMUNICATION_STATUS.IN_PROGRESS]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.IN_PROGRESS], color: "text-blue-400", bg: "bg-blue-500/20" },
+  [COMMUNICATION_STATUS.COMPLETED]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.COMPLETED], color: "text-green-400", bg: "bg-green-500/20" },
+  [COMMUNICATION_STATUS.FOLLOW_UP]: { label: COMMUNICATION_STATUS_LABELS[COMMUNICATION_STATUS.FOLLOW_UP], color: "text-orange-400", bg: "bg-orange-500/20" }
+};
+
+export const satisfactionConfig = {
+  [CUSTOMER_SATISFACTION.VERY_SATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.VERY_SATISFIED], color: "text-green-500", stars: 5 },
+  [CUSTOMER_SATISFACTION.SATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.SATISFIED], color: "text-green-400", stars: 4 },
+  [CUSTOMER_SATISFACTION.NEUTRAL]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.NEUTRAL], color: "text-yellow-400", stars: 3 },
+  [CUSTOMER_SATISFACTION.DISSATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.DISSATISFIED], color: "text-orange-400", stars: 2 },
+  [CUSTOMER_SATISFACTION.VERY_DISSATISFIED]: { label: CUSTOMER_SATISFACTION_LABELS[CUSTOMER_SATISFACTION.VERY_DISSATISFIED], color: "text-red-400", stars: 1 }
+};
+
+export const initialFormData = {
+  customer_id: "",
+  communication_type: COMMUNICATION_TYPE.PHONE,
+  topic: COMMUNICATION_TOPIC.SUPPORT,
+  priority: COMMUNICATION_PRIORITY.MEDIUM,
+  subject: "",
+  content: "",
+  communication_date: new Date().toISOString().split('T')[0],
+  duration_minutes: "",
+  customer_feedback: "",
+  satisfaction_rating: null,
+  next_action: "",
+  next_action_date: "",
+  assigned_to: "",
+  notes: ""
 };

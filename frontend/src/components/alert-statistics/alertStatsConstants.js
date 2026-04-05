@@ -700,7 +700,27 @@ export const ALERT_TYPES = {
  RECALL: { label: "产品召回", severity: "CRITICAL" },
   COMPLIANCE: { label: "标准违规", severity: "HIGH" }
   }
+  },
+ MILESTONE_DUE_SOON: {
+  label: "里程碑到期预警",
+  category: "项目管理",
+  icon: "CalendarClock",
+  subtypes: {
+   DUE_3_DAYS: { label: "3天内到期", severity: "MEDIUM" },
+   DUE_1_DAY: { label: "1天内到期", severity: "HIGH" },
+   OVERDUE: { label: "已逾期", severity: "CRITICAL" }
   }
+ },
+ MILESTONE_AT_RISK: {
+  label: "里程碑风险预警",
+  category: "项目管理",
+  icon: "ShieldAlert",
+  subtypes: {
+   PROGRESS_LAG: { label: "进度落后", severity: "MEDIUM" },
+   PREDECESSOR_OVERDUE: { label: "前置逾期", severity: "HIGH" },
+   NOT_STARTED: { label: "未启动风险", severity: "HIGH" }
+  }
+ }
 };
 
 // ==================== 预警规则配置 ====================

@@ -13,11 +13,12 @@ from . import assignment, crud, issues, statistics, status
 router = APIRouter()
 
 # 直接合并所有子路由的 routes（避免空路径问题）
-for route in crud.router.routes:
-    router.routes.append(route)
+# 静态路径要先于 /{ticket_id} 注册，避免被动态路由吞掉。
 for route in statistics.router.routes:
     router.routes.append(route)
 for route in assignment.router.routes:
+    router.routes.append(route)
+for route in crud.router.routes:
     router.routes.append(route)
 for route in status.router.routes:
     router.routes.append(route)

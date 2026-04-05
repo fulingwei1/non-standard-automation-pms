@@ -14,10 +14,12 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.models.service import ServiceTicket
+from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_ticket_status
 from app.models.user import User
 from app.schemas.service import ServiceTicketClose, ServiceTicketResponse
 from app.services.status_update_service import StatusUpdateService
-from app.utils.db_helpers import get_or_404
+
+from ..access import ensure_service_ticket_access_or_raise
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -31,7 +33,7 @@ def update_service_ticket_status(
     db: Session = Depends(deps.get_db),
     ticket_id: int,
     status: str = Query(..., description="新状态：PENDING/IN_PROGRESS/RESOLVED/CLOSED"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:update")),
 ) -> Any:
     """
     更新工单状态
@@ -42,7 +44,7 @@ def update_service_ticket_status(
     - 历史记录
     - SLA监控同步
     """
-    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
+    ticket = ensure_service_ticket_access_or_raise(db, current_user, ticket_id)
 
     # 创建历史记录回调
     def history_callback(entity, old_status, new_status, operator, reason):
@@ -70,15 +72,16 @@ def update_service_ticket_status(
 
     # 使用统一状态更新服务
     service = StatusUpdateService(db)
+    normalized_status = normalize_service_ticket_status(status)
     result = service.update_status(
         entity=ticket,
-        new_status=status,
+        new_status=normalized_status,
         operator=current_user,
-        valid_statuses=["PENDING", "IN_PROGRESS", "RESOLVED", "CLOSED"],
+        valid_statuses=[status_enum.value for status_enum in ServiceTicketStatusEnum],
         timestamp_fields={
-            "RESOLVED": "resolved_time",
-            "CLOSED": "resolved_time",
-            "IN_PROGRESS": "response_time",
+            ServiceTicketStatusEnum.RESOLVED.value: "resolved_time",
+            ServiceTicketStatusEnum.CLOSED.value: "resolved_time",
+            ServiceTicketStatusEnum.IN_PROGRESS.value: "response_time",
         },
         history_callback=history_callback,
         after_update_callback=after_update_callback,
@@ -101,7 +104,7 @@ def close_service_ticket(
     db: Session = Depends(deps.get_db),
     ticket_id: int,
     close_in: ServiceTicketClose,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("service:update")),
 ) -> Any:
     """
     关闭服务工单
@@ -113,9 +116,9 @@ def close_service_ticket(
     - SLA监控同步
     - 知识自动提取
     """
-    ticket = get_or_404(db, ServiceTicket, ticket_id, "服务工单不存在")
+    ticket = ensure_service_ticket_access_or_raise(db, current_user, ticket_id)
 
-    if ticket.status == "CLOSED":
+    if ticket.status == ServiceTicketStatusEnum.CLOSED.value:
         raise HTTPException(status_code=400, detail="工单已关闭")
 
     # 更新关闭相关字段
@@ -164,11 +167,11 @@ def close_service_ticket(
     service = StatusUpdateService(db)
     result = service.update_status(
         entity=ticket,
-        new_status="CLOSED",
+        new_status=ServiceTicketStatusEnum.CLOSED.value,
         operator=current_user,
-        valid_statuses=["CLOSED"],  # 只允许关闭状态
+        valid_statuses=[ServiceTicketStatusEnum.CLOSED.value],  # 只允许关闭状态
         timestamp_fields={
-            "CLOSED": "resolved_time",
+            ServiceTicketStatusEnum.CLOSED.value: "resolved_time",
         },
         history_callback=history_callback,
         after_update_callback=after_update_callback,

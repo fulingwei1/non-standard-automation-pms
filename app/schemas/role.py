@@ -47,6 +47,47 @@ class RoleUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class RoleTemplateCreate(BaseModel):
+    """创建角色模板"""
+
+    template_code: str = Field(..., min_length=1, max_length=30, description="模板编码")
+    template_name: str = Field(..., min_length=1, max_length=50, description="模板名称")
+    description: Optional[str] = Field(None, description="模板描述")
+    role_type: str = Field(default="BUSINESS", description="角色类型")
+    scope_type: str = Field(default="GLOBAL", description="范围类型")
+    data_scope: str = Field(default="PROJECT", description="数据权限范围")
+    level: int = Field(default=2, description="层级")
+    permission_codes: Optional[List[str]] = Field(default_factory=list, description="权限编码列表")
+
+
+class RoleTemplateUpdate(BaseModel):
+    """更新角色模板"""
+
+    template_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    description: Optional[str] = None
+    data_scope: Optional[str] = None
+    role_type: Optional[str] = None
+    permission_codes: Optional[List[str]] = None
+    is_active: Optional[bool] = None
+    version_note: Optional[str] = Field(None, max_length=200, description="版本说明")
+
+
+class SaveRoleAsTemplate(BaseModel):
+    """角色另存为模板"""
+
+    template_code: str = Field(..., min_length=1, max_length=30, description="模板编码")
+    template_name: str = Field(..., min_length=1, max_length=50, description="模板名称")
+    description: Optional[str] = Field(None, description="模板描述")
+
+
+class CreateRoleFromTemplate(BaseModel):
+    """从模板创建角色"""
+
+    role_code: str = Field(..., min_length=1, max_length=50, description="角色编码")
+    role_name: str = Field(..., min_length=1, max_length=100, description="角色名称")
+    description: Optional[str] = Field(None, description="角色描述")
+
+
 class RoleResponse(RoleBase):
     """角色响应"""
 

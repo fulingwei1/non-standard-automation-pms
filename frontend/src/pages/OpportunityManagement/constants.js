@@ -1,26 +1,40 @@
-export const stageConfigs = {
-    initial: { label: '初步接触', color: 'bg-slate-500', order: 1 },
-    qualified: { label: '需求确认', color: 'bg-blue-500', order: 2 },
-    proposal: { label: '方案报价', color: 'bg-cyan-500', order: 3 },
-    negotiation: { label: '商务谈判', color: 'bg-amber-500', order: 4 },
-    closed_won: { label: '赢单', color: 'bg-emerald-500', order: 5 },
-    closed_lost: { label: '丢单', color: 'bg-red-500', order: 6 },
+// 商机阶段配置
+export const stageConfig = {
+  DISCOVERY: {
+    label: "需求澄清",
+    color: "bg-blue-500",
+    textColor: "text-blue-400"
+  },
+  QUALIFIED: {
+    label: "商机合格",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-400"
+  },
+  PROPOSAL: {
+    label: "方案/报价中",
+    color: "bg-amber-500",
+    textColor: "text-amber-400"
+  },
+  REVIEW: {
+    label: "方案评审",
+    color: "bg-pink-500",
+    textColor: "text-pink-400"
+  },
+  NEGOTIATION: {
+    label: "商务谈判",
+    color: "bg-purple-500",
+    textColor: "text-purple-400"
+  },
+  WON: { label: "赢单", color: "bg-green-500", textColor: "text-green-400" },
+  LOST: { label: "丢单", color: "bg-red-500", textColor: "text-red-400" },
+  ON_HOLD: {
+    label: "暂停",
+    color: "bg-slate-500",
+    textColor: "text-slate-400"
+  }
 };
 
-export const sourceConfigs = {
-    website: '官网',
-    referral: '转介绍',
-    exhibition: '展会',
-    cold_call: '陌生拜访',
-    advertisement: '广告',
-};
-
-export const initialOpportunityForm = {
-    name: '',
-    customer_id: '',
-    expected_revenue: 0,
-    stage: 'initial',
-    source: '',
-    expected_close_date: '',
-    description: '',
+export const isGatePassed = (status) => {
+  const normalized = String(status || "").toUpperCase();
+  return normalized === "PASS" || normalized === "PASSED";
 };

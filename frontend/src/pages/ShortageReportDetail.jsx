@@ -145,7 +145,7 @@ export default function ShortageReportDetail() {
   };
 
   const handleCreateArrival = () => {
-    navigate("/shortage/arrivals/new", {
+    navigate("/arrival-tracking/new", {
       state: {
         shortage_report_id: id,
         project_id: report.project_id,

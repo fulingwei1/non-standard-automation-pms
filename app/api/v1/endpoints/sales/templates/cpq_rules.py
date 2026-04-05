@@ -26,7 +26,7 @@ from app.schemas.sales import (
     CpqRuleSetResponse,
     CpqRuleSetUpdate,
 )
-from app.services.cpq_pricing_service import CpqPricingService
+from app.services.presale.cpq_pricing_service import CpqPricingService
 from app.utils.db_helpers import get_or_404, save_obj
 
 from .common import _serialize_rule_set

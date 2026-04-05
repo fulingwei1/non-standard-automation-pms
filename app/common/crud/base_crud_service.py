@@ -359,7 +359,7 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Res
         """
         try:
             from app.common.context import get_audit_context
-            from app.services.permission_audit_service import PermissionAuditService
+            from app.services.permission_management.permission_audit_service import PermissionAuditService
 
             ctx = get_audit_context()
             operator_id = ctx.get("operator_id")

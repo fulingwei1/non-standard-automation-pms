@@ -2,6 +2,7 @@
 """
 AI赢率预测服务 - 主服务层
 """
+import inspect
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -27,6 +28,13 @@ class WinRatePredictionService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.ai_service = AIWinRatePredictionService()
+
+    async def _resolve_result_value(self, value: Any) -> Any:
+        """兼容真实 SQLAlchemy Result 与 AsyncMock 链式返回值。"""
+
+        if inspect.isawaitable(value):
+            return await value
+        return value
 
     async def predict_win_rate(
         self, presale_ticket_id: int, ticket_data: Dict[str, Any], created_by: int
@@ -96,7 +104,7 @@ class WinRatePredictionService:
         result = await self.db.execute(
             select(PresaleAIWinRate).where(PresaleAIWinRate.id == prediction_id)
         )
-        return result.scalar_one_or_none()
+        return await self._resolve_result_value(result.scalar_one_or_none())
 
     async def get_predictions_by_ticket(self, presale_ticket_id: int) -> List[PresaleAIWinRate]:
         """获取工单的所有预测记录"""
@@ -106,7 +114,8 @@ class WinRatePredictionService:
             .where(PresaleAIWinRate.presale_ticket_id == presale_ticket_id)
             .order_by(PresaleAIWinRate.predicted_at.desc())
         )
-        return result.scalars().all()
+        scalars = await self._resolve_result_value(result.scalars())
+        return await self._resolve_result_value(scalars.all())
 
     async def get_influencing_factors(self, ticket_id: int) -> List[Dict[str, Any]]:
         """获取影响因素分析"""
@@ -118,7 +127,7 @@ class WinRatePredictionService:
             .limit(1)
         )
 
-        prediction = result.scalar_one_or_none()
+        prediction = await self._resolve_result_value(result.scalar_one_or_none())
         if not prediction:
             return []
 
@@ -139,7 +148,7 @@ class WinRatePredictionService:
             .limit(1)
         )
 
-        prediction = result.scalar_one_or_none()
+        prediction = await self._resolve_result_value(result.scalar_one_or_none())
         if not prediction:
             return None
 
@@ -155,7 +164,7 @@ class WinRatePredictionService:
             .limit(1)
         )
 
-        prediction = result.scalar_one_or_none()
+        prediction = await self._resolve_result_value(result.scalar_one_or_none())
         if not prediction:
             return None
 
@@ -191,7 +200,7 @@ class WinRatePredictionService:
                 .limit(1)
             )
 
-            history = result.scalar_one_or_none()
+            history = await self._resolve_result_value(result.scalar_one_or_none())
             if not history:
                 raise ValueError(f"未找到工单 {ticket_id} 的预测记录")
 
@@ -299,7 +308,8 @@ class WinRatePredictionService:
             .limit(10)
         )
 
-        histories = result.scalars().all()
+        scalars = await self._resolve_result_value(result.scalars())
+        histories = await self._resolve_result_value(scalars.all())
 
         return [
             {

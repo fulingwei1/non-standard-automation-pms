@@ -14,6 +14,9 @@ from .workflow import router as workflow_router
 
 router = APIRouter()
 
+# 导出功能路由（必须在 basic_router 之前注册，避免路径冲突）
+router.include_router(export_router)
+
 # 基础 CRUD 路由
 router.include_router(basic_router)
 
@@ -25,9 +28,6 @@ router.include_router(approvals_router)
 
 # 工作流审批路由（新版）
 router.include_router(workflow_router)
-
-# 导出功能路由
-router.include_router(export_router)
 
 # 兼容旧版路由
 router.include_router(legacy_router)

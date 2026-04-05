@@ -8,8 +8,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.models.service.enums import (
+    KnowledgeBaseStatusEnum,
+    ServiceRecordStatusEnum,
+    ServiceTicketStatusEnum,
+    SurveyStatusEnum,
+    normalize_knowledge_base_status,
+    normalize_service_record_status,
+    normalize_service_ticket_status,
+    normalize_survey_status,
+)
 from app.schemas.common import PaginatedResponse  # noqa: F401 - re-exported
 
 # ==================== 服务工单 ====================
@@ -32,7 +42,9 @@ class ServiceTicketUpdate(BaseModel):
     """更新服务工单"""
     problem_desc: Optional[str] = Field(None, description="问题描述")
     urgency: Optional[str] = Field(None, description="紧急程度")
-    status: Optional[str] = Field(None, description="状态")
+    status: Optional[ServiceTicketStatusEnum] = Field(None, description="状态")
+
+    _normalize_status = field_validator("status", mode="before")(normalize_service_ticket_status)
 
 
 class ServiceTicketAssign(BaseModel):
@@ -66,7 +78,7 @@ class ServiceTicketResponse(BaseModel):
     assigned_to_id: Optional[int] = None
     assigned_to_name: Optional[str] = None
     assigned_time: Optional[datetime] = None
-    status: str
+    status: ServiceTicketStatusEnum
     response_time: Optional[datetime] = None
     resolved_time: Optional[datetime] = None
     solution: Optional[str] = None
@@ -78,11 +90,34 @@ class ServiceTicketResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    _normalize_status = field_validator("status", mode="before")(normalize_service_ticket_status)
+
     class Config:
         from_attributes = True
 
 
 # ==================== 现场服务记录 ====================
+
+
+class ServiceRecordPhoto(BaseModel):
+    """服务记录照片"""
+
+    url: str = Field(..., description="照片路径")
+    filename: Optional[str] = Field(None, description="文件名")
+    size: Optional[int] = Field(None, description="文件大小（字节）")
+    type: Optional[str] = Field(None, description="文件MIME类型")
+    description: Optional[str] = Field(None, description="照片描述")
+    uploaded_at: Optional[datetime] = Field(None, description="上传时间")
+    uploaded_by: Optional[str] = Field(None, description="上传人")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_payload(cls, value: Any) -> Any:
+        """兼容历史字符串照片数据，统一为对象结构。"""
+        if isinstance(value, str):
+            filename = value.rsplit("/", 1)[-1] if value else None
+            return {"url": value, "filename": filename}
+        return value
 
 class ServiceRecordCreate(BaseModel):
     """创建服务记录"""
@@ -102,11 +137,16 @@ class ServiceRecordCreate(BaseModel):
     service_result: Optional[str] = Field(None, description="服务结果")
     issues_found: Optional[str] = Field(None, description="发现的问题")
     solution_provided: Optional[str] = Field(None, description="提供的解决方案")
-    photos: Optional[List[str]] = Field(None, description="照片列表")
+    photos: Optional[List[ServiceRecordPhoto]] = Field(None, description="照片列表")
     customer_satisfaction: Optional[int] = Field(None, ge=1, le=5, description="客户满意度")
     customer_feedback: Optional[str] = Field(None, description="客户反馈")
     customer_signed: Optional[bool] = Field(False, description="客户是否签字")
-    status: Optional[str] = Field("SCHEDULED", description="状态")
+    status: Optional[ServiceRecordStatusEnum] = Field(
+        ServiceRecordStatusEnum.SCHEDULED,
+        description="状态",
+    )
+
+    _normalize_status = field_validator("status", mode="before")(normalize_service_record_status)
 
 
 class ServiceRecordUpdate(BaseModel):
@@ -115,11 +155,13 @@ class ServiceRecordUpdate(BaseModel):
     service_result: Optional[str] = None
     issues_found: Optional[str] = None
     solution_provided: Optional[str] = None
-    photos: Optional[List[str]] = None
+    photos: Optional[List[ServiceRecordPhoto]] = None
     customer_satisfaction: Optional[int] = None
     customer_feedback: Optional[str] = None
     customer_signed: Optional[bool] = None
-    status: Optional[str] = None
+    status: Optional[ServiceRecordStatusEnum] = None
+
+    _normalize_status = field_validator("status", mode="before")(normalize_service_record_status)
 
 
 class ServiceRecordResponse(BaseModel):
@@ -145,13 +187,15 @@ class ServiceRecordResponse(BaseModel):
     service_result: Optional[str] = None
     issues_found: Optional[str] = None
     solution_provided: Optional[str] = None
-    photos: Optional[List[str]] = None
+    photos: Optional[List[ServiceRecordPhoto]] = None
     customer_satisfaction: Optional[int] = None
     customer_feedback: Optional[str] = None
     customer_signed: Optional[bool] = None
-    status: str
+    status: ServiceRecordStatusEnum
     created_at: datetime
     updated_at: datetime
+
+    _normalize_status = field_validator("status", mode="before")(normalize_service_record_status)
 
     class Config:
         from_attributes = True
@@ -242,12 +286,14 @@ class CustomerSatisfactionCreate(BaseModel):
 
 class CustomerSatisfactionUpdate(BaseModel):
     """更新满意度调查"""
-    status: Optional[str] = None
+    status: Optional[SurveyStatusEnum] = None
     response_date: Optional[date] = None
     overall_score: Optional[Decimal] = None
     scores: Optional[Dict] = None
     feedback: Optional[str] = None
     suggestions: Optional[str] = None
+
+    _normalize_status = field_validator("status", mode="before")(normalize_survey_status)
 
 
 class CustomerSatisfactionResponse(BaseModel):
@@ -265,7 +311,7 @@ class CustomerSatisfactionResponse(BaseModel):
     send_date: Optional[date] = None
     send_method: Optional[str] = None
     deadline: Optional[date] = None
-    status: str
+    status: SurveyStatusEnum
     response_date: Optional[date] = None
     overall_score: Optional[Decimal] = None
     scores: Optional[Dict] = None
@@ -275,6 +321,8 @@ class CustomerSatisfactionResponse(BaseModel):
     created_by_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+    _normalize_status = field_validator("status", mode="before")(normalize_survey_status)
 
     class Config:
         from_attributes = True
@@ -334,8 +382,13 @@ class KnowledgeBaseCreate(BaseModel):
     tags: Optional[List[str]] = Field(None, description="标签列表")
     is_faq: Optional[bool] = Field(False, description="是否FAQ")
     is_featured: Optional[bool] = Field(False, description="是否精选")
-    status: Optional[str] = Field("DRAFT", description="状态")
+    status: Optional[KnowledgeBaseStatusEnum] = Field(
+        KnowledgeBaseStatusEnum.DRAFT,
+        description="状态",
+    )
     allow_download: Optional[bool] = Field(True, description="是否允许他人下载")
+
+    _normalize_status = field_validator("status", mode="before")(normalize_knowledge_base_status)
 
 
 class KnowledgeBaseUpdate(BaseModel):
@@ -346,8 +399,10 @@ class KnowledgeBaseUpdate(BaseModel):
     tags: Optional[List[str]] = None
     is_faq: Optional[bool] = None
     is_featured: Optional[bool] = None
-    status: Optional[str] = None
+    status: Optional[KnowledgeBaseStatusEnum] = None
     allow_download: Optional[bool] = None
+
+    _normalize_status = field_validator("status", mode="before")(normalize_knowledge_base_status)
 
 
 class KnowledgeBaseResponse(BaseModel):
@@ -360,7 +415,7 @@ class KnowledgeBaseResponse(BaseModel):
     tags: Optional[List[str]] = None
     is_faq: Optional[bool] = False
     is_featured: Optional[bool] = False
-    status: Optional[str] = "DRAFT"
+    status: KnowledgeBaseStatusEnum = KnowledgeBaseStatusEnum.DRAFT
     view_count: Optional[int] = 0
     like_count: Optional[int] = 0
     helpful_count: Optional[int] = 0
@@ -377,6 +432,7 @@ class KnowledgeBaseResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    _normalize_status = field_validator("status", mode="before")(normalize_knowledge_base_status)
+
     class Config:
         from_attributes = True
-

@@ -20,6 +20,7 @@ from app.schemas.engineer_performance import (
 )
 
 from .dimension_config_service import DimensionConfigService
+from .engperf_scope import EngPerfScopeContext
 from .performance_calculator import PerformanceCalculator
 from .profile_service import ProfileService
 from .ranking_service import RankingService
@@ -193,6 +194,7 @@ class EngineerPerformanceService:
         department_id: Optional[int] = None,
         limit: int = 20,
         offset: int = 0,
+        scope: Optional[EngPerfScopeContext] = None,
     ) -> Tuple[List[PerformanceResult], int]:
         """获取绩效排名"""
         return self.ranking_service.get_ranking(
@@ -202,11 +204,16 @@ class EngineerPerformanceService:
             department_id=department_id,
             limit=limit,
             offset=offset,
+            scope=scope,
         )
 
-    def get_company_summary(self, period_id: int) -> Dict[str, Any]:
+    def get_company_summary(
+        self,
+        period_id: int,
+        scope: Optional[EngPerfScopeContext] = None,
+    ) -> Dict[str, Any]:
         """获取公司整体概况"""
-        return self.ranking_service.get_company_summary(period_id)
+        return self.ranking_service.get_company_summary(period_id, scope=scope)
 
     def get_engineer_trend(self, engineer_id: int, periods: int = 6) -> List[Dict[str, Any]]:
         """获取工程师历史趋势"""

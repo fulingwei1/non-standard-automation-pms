@@ -10,6 +10,8 @@ export const alertTypeConfigs = {
     quality: { label: '质量预警', icon: 'AlertTriangle' },
     material: { label: '物料预警', icon: 'Package' },
     resource: { label: '资源预警', icon: 'Users' },
+    milestone_due_soon: { label: '里程碑到期', icon: 'CalendarClock' },
+    milestone_at_risk: { label: '里程碑风险', icon: 'ShieldAlert' },
 };
 
 export const alertStatusConfigs = {

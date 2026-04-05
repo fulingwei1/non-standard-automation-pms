@@ -1,8 +1,11 @@
+# Legacy: tests for deprecated approval models/router
 # -*- coding: utf-8 -*-
 """Unit tests for app/services/approval_engine/models.py - batch 41"""
 from unittest.mock import MagicMock
 
 import pytest
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 pytest.importorskip("app.services.approval_engine.models")
 

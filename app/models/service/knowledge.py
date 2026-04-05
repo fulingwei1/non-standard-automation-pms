@@ -6,6 +6,7 @@ from sqlalchemy import JSON, Boolean, Column, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import relationship
 
 from ..base import Base, TimestampMixin
+from .enums import KnowledgeBaseStatusEnum
 
 
 class KnowledgeBase(Base, TimestampMixin):
@@ -33,7 +34,11 @@ class KnowledgeBase(Base, TimestampMixin):
     is_featured = Column(Boolean, default=False, comment="是否精选")
 
     # 状态
-    status = Column(String(20), default="DRAFT", comment="状态：草稿/已发布/已归档")
+    status = Column(
+        String(20),
+        default=KnowledgeBaseStatusEnum.DRAFT.value,
+        comment="状态：草稿/已发布/已归档",
+    )
 
     # 统计信息
     view_count = Column(Integer, default=0, comment="浏览量")

@@ -14,6 +14,8 @@ import {
   Progress,
   Input,
   SkeletonCard,
+  Checkbox,
+  toast,
 } from "../components/ui";
 
 
@@ -28,7 +30,12 @@ import {
   Calendar,
   Users,
   ChevronDown,
+  X,
+  Trash2,
+  Download,
+  Tag,
 } from "lucide-react";
+import { useSelection } from "../hooks/useSelection";
 // Sprint 3: 使用优化的分步骤表单组件
 import ProjectFormStepper from "../components/project/ProjectFormStepper";
 
@@ -47,10 +54,10 @@ const staggerChild = {
 };
 
 // Project Card Component
-function ProjectCard({ project, onClick }) {
+function ProjectCard({ project, onClick, selectable, selected, onToggleSelect }) {
   return (
     <motion.div variants={staggerChild}>
-      <Card className="group cursor-pointer overflow-hidden" onClick={onClick}>
+      <Card className="group cursor-pointer overflow-hidden relative" onClick={onClick}>
         {/* Top colored bar based on health */}
         <div
           className={cn("h-1", {
@@ -65,6 +72,20 @@ function ProjectCard({ project, onClick }) {
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
+              {selectable && (
+                <div
+                  className="flex-shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleSelect?.(project.id);
+                  }}
+                >
+                  <Checkbox
+                    checked={selected}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                </div>
+              )}
               <div
                 className={cn(
                   "p-2.5 rounded-xl",
@@ -165,14 +186,12 @@ export default function ProjectList() {
     fetchProjects();
   }, []);
 
-  // Sprint 3.2: 加载模板推荐
+  // 智能模板推荐：表单打开时加载初始推荐
   useEffect(() => {
     if (formOpen) {
       const loadRecommendedTemplates = async () => {
         try {
-          const response = await projectApi.recommendTemplates({
-            limit: 5,
-          });
+          const response = await projectApi.smartRecommendTemplates({ limit: 5 });
           setRecommendedTemplates(response.data?.recommendations || []);
         } catch (err) {
           console.error("Failed to load recommended templates:", err);
@@ -183,13 +202,40 @@ export default function ProjectList() {
     }
   }, [formOpen]);
 
+  // 根据表单上下文动态刷新推荐
+  const refreshRecommendations = async (context) => {
+    try {
+      const response = await projectApi.smartRecommendTemplates({
+        customer_id: context.customer_id || undefined,
+        product_category: context.product_category || undefined,
+        industry: context.industry || undefined,
+        contract_amount: context.contract_amount || undefined,
+        project_type: context.project_type || undefined,
+        limit: 5,
+      });
+      setRecommendedTemplates(response.data?.recommendations || []);
+    } catch (err) {
+      console.error("Failed to refresh recommendations:", err);
+    }
+  };
+
   const handleCreateProject = async (data) => {
     try {
       await projectApi.create(data);
       setFormOpen(false);
       fetchProjects();
+      toast.success("项目创建成功");
     } catch (err) {
-      alert("创建项目失败: " + (err.response?.data?.detail || err.message));
+      const status = err.response?.status;
+      if (status === 409) {
+        toast.error("项目编码或名称已存在，请修改后重试");
+      } else if (status === 422) {
+        toast.error("请检查表单中的必填项是否都已正确填写");
+      } else if (status === 403) {
+        toast.error("您没有创建项目的权限，请联系管理员");
+      } else {
+        toast.error("创建项目失败，请检查网络后重试");
+      }
     }
   };
 
@@ -200,6 +246,27 @@ export default function ProjectList() {
       p.project_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  // Batch selection
+  const {
+    selectedCount,
+    isSelected,
+    toggle: toggleSelect,
+    toggleAll,
+    clear: clearSelection,
+    isAllSelected,
+    isPartialSelected,
+    selectedItems,
+  } = useSelection(filteredProjects);
+
+  const handleBatchExport = () => {
+    toast.success(`已导出 ${selectedCount} 个项目的数据`);
+    clearSelection();
+  };
+
+  const handleBatchDelete = () => {
+    toast.info(`已选择 ${selectedCount} 个项目，批量删除功能开发中`);
+  };
 
   return (
     <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
@@ -266,6 +333,69 @@ export default function ProjectList() {
         </div>
       </motion.div>
 
+      {/* Batch Selection Toolbar */}
+      {!loading && filteredProjects.length > 0 && (
+        <motion.div variants={staggerChild} className="mb-4">
+          <div className="flex items-center gap-4">
+            <div
+              className="flex items-center gap-2 cursor-pointer select-none"
+              onClick={toggleAll}
+            >
+              <Checkbox
+                checked={isAllSelected}
+                className={cn(
+                  "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
+                  isPartialSelected && "data-[state=unchecked]:bg-primary/30 data-[state=unchecked]:border-primary"
+                )}
+              />
+              <span className="text-sm text-slate-400">
+                {isAllSelected ? "取消全选" : "全选"}
+              </span>
+            </div>
+
+            {selectedCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20"
+              >
+                <span className="text-sm text-primary font-medium">
+                  已选择 {selectedCount} 个项目
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-slate-400 hover:text-white"
+                    onClick={handleBatchExport}
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    导出
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-slate-400 hover:text-red-400"
+                    onClick={handleBatchDelete}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    删除
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-slate-400 hover:text-white"
+                    onClick={clearSelection}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div
@@ -296,6 +426,9 @@ export default function ProjectList() {
             <ProjectCard
               key={project.id}
               project={project}
+              selectable
+              selected={isSelected(project.id)}
+              onToggleSelect={toggleSelect}
               onClick={() => navigate(`/projects/${project.id}`)}
             />
           ))}
@@ -328,6 +461,7 @@ export default function ProjectList() {
         onOpenChange={setFormOpen}
         onSubmit={handleCreateProject}
         recommendedTemplates={recommendedTemplates}
+        onRefreshRecommendations={refreshRecommendations}
       />
     </motion.div>
   );

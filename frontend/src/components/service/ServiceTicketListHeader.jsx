@@ -37,6 +37,7 @@ export function ServiceTicketListHeader({
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showDateRange, setShowDateRange] = useState(false);
+  const safeDateRange = dateRange || { start: "", end: "" };
 
   return (
     <div className="space-y-4">
@@ -48,8 +49,8 @@ export function ServiceTicketListHeader({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="搜索工单编号、客户、设备、问题描述..."
-              value={searchQuery || "unknown"}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={searchQuery || ""}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               className="pl-10 w-full lg:w-96" />
 
           </div>
@@ -58,7 +59,7 @@ export function ServiceTicketListHeader({
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-500 whitespace-nowrap">排序:</span>
             <Select
-              value={sortBy || "unknown"}
+              value={sortBy || "reported_time"}
               onValueChange={onSortChange}>
 
               <SelectTrigger className="w-32">
@@ -93,7 +94,9 @@ export function ServiceTicketListHeader({
 
               <Filter className="w-4 h-4" />
               筛选
-              {(statusFilter !== "ALL" || urgencyFilter !== "ALL" || problemTypeFilter !== "ALL") &&
+              {((statusFilter && statusFilter !== "ALL") ||
+                (urgencyFilter && urgencyFilter !== "ALL") ||
+                (problemTypeFilter && problemTypeFilter !== "ALL")) &&
               <span className="w-2 h-2 bg-blue-500 rounded-full" />
               }
             </Button>
@@ -106,7 +109,7 @@ export function ServiceTicketListHeader({
 
               <Calendar className="w-4 h-4" />
               日期
-              {(dateRange.start || dateRange.end) &&
+              {(safeDateRange.start || safeDateRange.end) &&
               <span className="w-2 h-2 bg-blue-500 rounded-full" />
               }
             </Button>
@@ -156,7 +159,7 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">工单状态</label>
               <Select
-              value={statusFilter || "unknown"}
+              value={statusFilter || "ALL"}
               onValueChange={onStatusChange}>
 
                 <SelectTrigger>
@@ -176,7 +179,7 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">紧急程度</label>
               <Select
-              value={urgencyFilter || "unknown"}
+              value={urgencyFilter || "ALL"}
               onValueChange={onUrgencyChange}>
 
                 <SelectTrigger>
@@ -196,7 +199,7 @@ export function ServiceTicketListHeader({
             <div>
               <label className="text-sm font-medium mb-2 block">问题类型</label>
               <Select
-              value={problemTypeFilter || "unknown"}
+              value={problemTypeFilter || "ALL"}
               onValueChange={onProblemTypeChange}>
 
                 <SelectTrigger>
@@ -223,8 +226,8 @@ export function ServiceTicketListHeader({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  onStatusChange("PENDING");
-                  onUrgencyChange("URGENT");
+                  onStatusChange?.("PENDING");
+                  onUrgencyChange?.("URGENT");
                 }}
                 className="text-xs">
 
@@ -234,8 +237,8 @@ export function ServiceTicketListHeader({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  onStatusChange("PENDING_VERIFY");
-                  onUrgencyChange("ALL");
+                  onStatusChange?.("PENDING_VERIFY");
+                  onUrgencyChange?.("ALL");
                 }}
                 className="text-xs">
 
@@ -245,8 +248,8 @@ export function ServiceTicketListHeader({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  onStatusChange("ASSIGNED");
-                  onUrgencyChange("HIGH");
+                  onStatusChange?.("IN_PROGRESS");
+                  onUrgencyChange?.("HIGH");
                 }}
                 className="text-xs">
 
@@ -262,10 +265,10 @@ export function ServiceTicketListHeader({
             variant="outline"
             size="sm"
             onClick={() => {
-              onStatusChange("ALL");
-              onUrgencyChange("ALL");
-              onProblemTypeChange("ALL");
-              onDateRangeChange({ start: "", end: "" });
+              onStatusChange?.("ALL");
+              onUrgencyChange?.("ALL");
+              onProblemTypeChange?.("ALL");
+              onDateRangeChange?.({ start: "", end: "" });
             }}>
 
               清除所有筛选
@@ -282,16 +285,16 @@ export function ServiceTicketListHeader({
               <label className="text-sm font-medium mb-2 block">开始日期</label>
               <Input
               type="date"
-              value={dateRange.start}
-              onChange={(e) => onDateRangeChange({ ...dateRange, start: e.target.value })} />
+              value={safeDateRange.start || ""}
+              onChange={(e) => onDateRangeChange?.({ ...safeDateRange, start: e.target.value })} />
 
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">结束日期</label>
               <Input
               type="date"
-              value={dateRange.end}
-              onChange={(e) => onDateRangeChange({ ...dateRange, end: e.target.value })} />
+              value={safeDateRange.end || ""}
+              onChange={(e) => onDateRangeChange?.({ ...safeDateRange, end: e.target.value })} />
 
             </div>
             <div className="flex items-end">
@@ -303,7 +306,7 @@ export function ServiceTicketListHeader({
                 const end = new Date();
                 const start = new Date();
                 start.setDate(start.getDate() - 7);
-                onDateRangeChange({
+                onDateRangeChange?.({
                   start: start.toISOString().split('T')[0],
                   end: end.toISOString().split('T')[0]
                 });
@@ -320,7 +323,7 @@ export function ServiceTicketListHeader({
                 const end = new Date();
                 const start = new Date();
                 start.setDate(start.getDate() - 30);
-                onDateRangeChange({
+                onDateRangeChange?.({
                   start: start.toISOString().split('T')[0],
                   end: end.toISOString().split('T')[0]
                 });
@@ -333,7 +336,7 @@ export function ServiceTicketListHeader({
               variant="outline"
               size="sm"
               onClick={() => {
-                onDateRangeChange({ start: "", end: "" });
+                onDateRangeChange?.({ start: "", end: "" });
               }}>
 
                 清除

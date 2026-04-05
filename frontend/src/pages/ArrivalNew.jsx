@@ -129,7 +129,7 @@ export default function ArrivalNew() {
 
       const res = await shortageApi.arrivals.create(submitData);
       alert("到货跟踪创建成功！");
-      navigate(`/shortage/arrivals/${res.data.id}`);
+      navigate(`/arrival-tracking/${res.data.id}`);
     } catch (error) {
       console.error("创建到货跟踪失败", error);
       alert("创建失败：" + (error.response?.data?.detail || error.message));
@@ -178,7 +178,7 @@ export default function ArrivalNew() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/shortage")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/arrival-tracking")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
@@ -367,7 +367,7 @@ export default function ArrivalNew() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/shortage")}
+            onClick={() => navigate("/arrival-tracking")}
             disabled={loading}>
 
             <X className="h-4 w-4 mr-2" />

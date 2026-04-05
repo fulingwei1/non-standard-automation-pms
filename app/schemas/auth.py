@@ -140,6 +140,14 @@ class UserRoleAssign(BaseModel):
     role_ids: List[int] = Field(default_factory=list, description="角色ID列表")
 
 
+class BatchRoleAssign(BaseModel):
+    """批量角色分配"""
+
+    user_ids: List[int] = Field(..., description="用户ID列表", min_length=1)
+    role_ids: List[int] = Field(default_factory=list, description="角色ID列表")
+    mode: str = Field(default="replace", description="操作模式: replace=替换, remove=移除指定角色")
+
+
 # ============================================================
 # 角色模板 Schemas
 # ============================================================

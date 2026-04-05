@@ -5,16 +5,17 @@
 
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.enums import ApprovalRecordStatusEnum, GateStatusEnum, QuoteStatusEnum
+from app.models.enums import ApprovalRecordStatusEnum, GateStatusEnum, LeadStatusEnum, QuoteStatusEnum
 from app.models.notification import Notification
 from app.models.sales import (
     ApprovalRecord,
     ApprovalWorkflowStep,
     Lead,
+    LeadFollowUp,
     Opportunity,
     Quote,
     QuoteVersion,
@@ -143,6 +144,167 @@ def notify_gate_timeout(db: Session, timeout_days: int = 3) -> int:
                 count += 1
 
     return count
+
+
+def notify_lead_weekly_summary(db: Session) -> int:
+    """
+    未关闭线索周提醒（轻量版）
+
+    规则：
+    - 仅在指定周几发送（默认周一）
+    - 仅提醒两类线索：
+      1) next_action_at 已逾期超过 N 天（默认 7）
+      2) 高优先级线索（priority_score >= 阈值）超过 M 天未跟进（默认 3）
+    - 同一线索在 repeat_days 内不重复提醒（默认 14 天）
+    - 每个负责人仅收到 1 条周汇总通知
+    """
+    today = date.today()
+    now = datetime.now()
+
+    weekly_day = getattr(settings, "SALES_LEAD_WEEKLY_REMINDER_WEEKDAY", 0)  # 0=Monday
+    overdue_days = getattr(settings, "SALES_LEAD_OVERDUE_DAYS", 7)
+    high_priority_score = getattr(settings, "SALES_LEAD_HIGH_PRIORITY_SCORE", 80)
+    high_priority_stale_days = getattr(settings, "SALES_LEAD_HIGH_PRIORITY_STALE_DAYS", 3)
+    repeat_days = getattr(settings, "SALES_LEAD_REPEAT_REMINDER_DAYS", 14)
+    max_items = getattr(settings, "SALES_LEAD_WEEKLY_SUMMARY_MAX_ITEMS", 20)
+
+    # 非指定周几直接跳过
+    if today.weekday() != weekly_day:
+        return 0
+
+    overdue_cutoff = now - timedelta(days=overdue_days)
+    stale_cutoff = now - timedelta(days=high_priority_stale_days)
+
+    # 线索最近跟进时间子查询
+    latest_followup_subq = (
+        db.query(
+            LeadFollowUp.lead_id.label("lead_id"),
+            func.max(LeadFollowUp.created_at).label("last_follow_up_at"),
+        )
+        .group_by(LeadFollowUp.lead_id)
+        .subquery()
+    )
+
+    # 未关闭线索
+    rows = (
+        db.query(Lead, latest_followup_subq.c.last_follow_up_at)
+        .outerjoin(latest_followup_subq, latest_followup_subq.c.lead_id == Lead.id)
+        .filter(
+            Lead.status.notin_([LeadStatusEnum.CONVERTED, LeadStatusEnum.LOST]),
+            Lead.owner_id.isnot(None),
+        )
+        .all()
+    )
+
+    # 按负责人分组
+    owner_buckets = {}
+    for lead, last_follow_up_at in rows:
+        is_overdue = bool(lead.next_action_at and lead.next_action_at <= overdue_cutoff)
+
+        latest_activity_at = last_follow_up_at or lead.updated_at or lead.created_at
+        is_high_priority_stale = bool(
+            (lead.priority_score or 0) >= high_priority_score
+            and latest_activity_at
+            and latest_activity_at <= stale_cutoff
+        )
+
+        if not (is_overdue or is_high_priority_stale):
+            continue
+
+        owner_buckets.setdefault(lead.owner_id, []).append(
+            {
+                "lead": lead,
+                "last_follow_up_at": last_follow_up_at,
+                "is_overdue": is_overdue,
+                "is_high_priority_stale": is_high_priority_stale,
+            }
+        )
+
+    notification_count = 0
+
+    for owner_id, items in owner_buckets.items():
+        # 14 天内已提醒过的线索，去重
+        recent_notifications = (
+            db.query(Notification)
+            .filter(
+                Notification.user_id == owner_id,
+                Notification.notification_type == "LEAD_WEEKLY_SUMMARY",
+                Notification.created_at >= now - timedelta(days=repeat_days),
+            )
+            .all()
+        )
+
+        reminded_ids = set()
+        for n in recent_notifications:
+            extra = n.extra_data or {}
+            ids = extra.get("reminded_lead_ids") or []
+            reminded_ids.update([i for i in ids if isinstance(i, int)])
+
+        filtered = [x for x in items if x["lead"].id not in reminded_ids]
+        if not filtered:
+            continue
+
+        # 只展示前 max_items 条，避免消息过长
+        filtered_sorted = sorted(
+            filtered,
+            key=lambda x: (
+                0 if x["is_overdue"] else 1,
+                x["lead"].next_action_at or datetime.max,
+            ),
+        )
+        display_items = filtered_sorted[:max_items]
+
+        lines = []
+        reminded_lead_ids = []
+        for item in display_items:
+            lead = item["lead"]
+            reminded_lead_ids.append(lead.id)
+
+            if item["is_overdue"] and lead.next_action_at:
+                overdue_for = (now - lead.next_action_at).days
+                reason = f"逾期{overdue_for}天"
+            elif item["is_high_priority_stale"]:
+                last_at = item["last_follow_up_at"] or lead.updated_at or lead.created_at
+                stale_for = (now - last_at).days if last_at else high_priority_stale_days
+                reason = f"高优先级未跟进{stale_for}天"
+            else:
+                reason = "待跟进"
+
+            lines.append(f"- {lead.lead_code or lead.id} | {lead.customer_name or '未知客户'} | {reason}")
+
+        omitted = len(filtered_sorted) - len(display_items)
+        if omitted > 0:
+            lines.append(f"- 其余 {omitted} 条已省略")
+
+        title = f"线索周提醒：待处理 {len(filtered_sorted)} 条"
+        content = "\n".join(lines)
+
+        create_notification(
+            db=db,
+            user_id=owner_id,
+            notification_type="LEAD_WEEKLY_SUMMARY",
+            title=title,
+            content=content,
+            source_type="lead",
+            source_id=display_items[0]["lead"].id if display_items else None,
+            link_url="/sales/leads",
+            priority="NORMAL",
+            extra_data={
+                "summary_date": today.isoformat(),
+                "reminded_lead_ids": reminded_lead_ids,
+                "total_candidates": len(filtered_sorted),
+                "omitted_count": omitted,
+                "policy": {
+                    "overdue_days": overdue_days,
+                    "high_priority_score": high_priority_score,
+                    "high_priority_stale_days": high_priority_stale_days,
+                    "repeat_days": repeat_days,
+                },
+            },
+        )
+        notification_count += 1
+
+    return notification_count
 
 
 def notify_quote_expiring(db: Session) -> dict:

@@ -457,8 +457,8 @@ class TestValidateSubmit:
 class TestSubmitForApproval:
     """测试提交审批"""
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_success(self, mock_workflow_engine_class):
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
+    def test_submit_for_approval_success(self, mock_engine_class):
         """测试成功提交审批"""
         mock_db = MagicMock()
         adapter = InvoiceApprovalAdapter(mock_db)
@@ -489,10 +489,10 @@ class TestSubmitForApproval:
         mock_instance.id = 999
         mock_instance.status = "PENDING"
 
-        # 模拟WorkflowEngine
+        # 模拟ApprovalEngineService
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = mock_instance
-        mock_workflow_engine_class.return_value = mock_engine
+        mock_engine.submit.return_value = mock_instance
+        mock_engine_class.return_value = mock_engine
 
         result = adapter.submit_for_approval(
             invoice=mock_invoice,
@@ -509,8 +509,8 @@ class TestSubmitForApproval:
         mock_db.add.assert_called_with(mock_invoice)
         mock_db.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_already_submitted(self, mock_workflow_engine_class):
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
+    def test_submit_for_approval_already_submitted(self, mock_engine_class):
         """测试已提交审批的发票"""
         mock_db = MagicMock()
         adapter = InvoiceApprovalAdapter(mock_db)
@@ -532,7 +532,7 @@ class TestSubmitForApproval:
 
         assert result == mock_instance
         # 不应该创建新实例
-        mock_workflow_engine_class.assert_not_called()
+        mock_engine_class.assert_not_called()
 
 
 @pytest.mark.unit

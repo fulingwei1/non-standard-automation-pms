@@ -22,6 +22,13 @@ class PresaleAISolution(Base):
         Integer, ForeignKey("presale_ai_requirement_analysis.id"), comment="需求分析ID"
     )
 
+    # === 【新增】版本管理 ===
+    current_version_id = Column(
+        Integer,
+        ForeignKey("solution_versions.id", use_alter=True, name="fk_solution_current_version"),
+        comment="当前生效版本ID",
+    )
+
     # 模板匹配结果
     matched_template_ids = Column(JSON, comment="匹配的模板ID列表 (TOP 3)")
 
@@ -73,6 +80,23 @@ class PresaleAISolution(Base):
     # requirement_analysis = relationship("PresaleAIRequirementAnalysis", back_populates="solutions")
     creator = relationship("User", foreign_keys=[created_by])
     reviewer = relationship("User", foreign_keys=[reviewed_by])
+
+    # === 【新增】版本关系 ===
+    # 当前生效版本
+    current_version = relationship(
+        "SolutionVersion",
+        foreign_keys=[current_version_id],
+        post_update=True,
+        uselist=False,
+    )
+    # 所有版本列表
+    versions = relationship(
+        "SolutionVersion",
+        back_populates="solution",
+        cascade="all, delete-orphan",
+        foreign_keys="SolutionVersion.solution_id",
+        order_by="SolutionVersion.created_at.desc()",
+    )
 
     # 索引
     __table_args__ = (

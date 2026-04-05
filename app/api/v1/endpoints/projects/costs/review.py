@@ -29,7 +29,7 @@ def generate_cost_review(
     """
     手动触发生成项目成本复盘报告
     """
-    from app.services.cost_review_service import CostReviewService
+    from app.services.cost.cost_review_service import CostReviewService
 
     try:
         review = CostReviewService.generate_cost_review_report(db, project_id, current_user.id)

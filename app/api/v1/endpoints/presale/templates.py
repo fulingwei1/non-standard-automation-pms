@@ -26,6 +26,7 @@ from app.schemas.presale import (
     SolutionResponse,
     TemplateCreate,
     TemplateResponse,
+    TemplateUpdate,
 )
 from app.utils.db_helpers import get_or_404, save_obj
 
@@ -37,6 +38,26 @@ generate_solution_no = presale_codes.generate_solution_no
 generate_tender_no = presale_codes.generate_tender_no
 
 router = APIRouter(prefix="/templates", tags=["templates"])
+
+
+def build_template_response(template: PresaleSolutionTemplate) -> TemplateResponse:
+    use_count = template.use_count or 0
+    return TemplateResponse(
+        id=template.id,
+        template_no=template.template_no,
+        name=template.name,
+        industry=template.industry,
+        test_type=template.test_type,
+        description=template.description,
+        use_count=use_count,
+        apply_count=use_count,
+        usage_count=use_count,
+        used_count=use_count,
+        is_active=template.is_active,
+        created_at=template.created_at,
+        updated_at=template.updated_at,
+    )
+
 
 # 共 5 个路由
 
@@ -77,22 +98,7 @@ def read_templates(
         pagination.limit,
     ).all()
 
-    items = []
-    for template in templates:
-        items.append(
-            TemplateResponse(
-                id=template.id,
-                template_no=template.template_no,
-                name=template.name,
-                industry=template.industry,
-                test_type=template.test_type,
-                description=template.description,
-                use_count=template.use_count,
-                is_active=template.is_active,
-                created_at=template.created_at,
-                updated_at=template.updated_at,
-            )
-        )
+    items = [build_template_response(template) for template in templates]
 
     return pagination.to_response(items, total)
 
@@ -139,18 +145,7 @@ def create_template(
 
     save_obj(db, template)
 
-    return TemplateResponse(
-        id=template.id,
-        template_no=template.template_no,
-        name=template.name,
-        industry=template.industry,
-        test_type=template.test_type,
-        description=template.description,
-        use_count=template.use_count,
-        is_active=template.is_active,
-        created_at=template.created_at,
-        updated_at=template.updated_at,
-    )
+    return build_template_response(template)
 
 
 @router.get("/stats", response_model=ResponseModel)
@@ -251,18 +246,42 @@ def read_template(
     """
     template = get_or_404(db, PresaleSolutionTemplate, template_id, detail="模板不存在")
 
-    return TemplateResponse(
-        id=template.id,
-        template_no=template.template_no,
-        name=template.name,
-        industry=template.industry,
-        test_type=template.test_type,
-        description=template.description,
-        use_count=template.use_count,
-        is_active=template.is_active,
-        created_at=template.created_at,
-        updated_at=template.updated_at,
-    )
+    return build_template_response(template)
+
+
+@router.put("/{template_id}", response_model=TemplateResponse)
+def update_template(
+    *,
+    db: Session = Depends(deps.get_db),
+    template_id: int,
+    template_in: TemplateUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新模板
+
+    兼容前端直接 PUT /presale/templates/{id} 的调用，支持 apply_count/usage_count 等历史字段名。
+    rating 系列字段当前仅做兼容接收，不做持久化。
+    """
+    template = get_or_404(db, PresaleSolutionTemplate, template_id, detail="模板不存在")
+
+    update_data = template_in.model_dump(exclude_unset=True)
+    for alias_field in ("apply_count", "usage_count", "used_count"):
+        alias_value = update_data.pop(alias_field, None)
+        if alias_value is not None:
+            update_data["use_count"] = alias_value
+            break
+
+    update_data.pop("rating", None)
+    update_data.pop("rating_count", None)
+    update_data.pop("avg_rating", None)
+
+    for field, value in update_data.items():
+        setattr(template, field, value)
+
+    save_obj(db, template)
+
+    return build_template_response(template)
 
 
 @router.post(

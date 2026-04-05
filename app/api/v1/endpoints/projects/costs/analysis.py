@@ -16,7 +16,7 @@ from app.core import security
 from app.models.project import Machine, ProjectCost
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.cost_service import CostService
+from app.services.cost.cost_service import CostService
 
 router = APIRouter()
 

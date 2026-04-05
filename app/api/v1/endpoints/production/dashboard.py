@@ -66,10 +66,10 @@ class ProductionDashboardEndpoint(BaseDashboardEndpoint):
 
         pass_rate = 95.0  # 默认值
         if recent_reports:
-            total_produced = sum(r.produced_quantity or 0 for r in recent_reports)
-            total_defects = sum(r.defect_quantity or 0 for r in recent_reports)
+            total_produced = sum(r.completed_qty or 0 for r in recent_reports)
+            total_qualified = sum(r.qualified_qty or 0 for r in recent_reports)
             if total_produced > 0:
-                pass_rate = round((total_produced - total_defects) / total_produced * 100, 1)
+                pass_rate = round(total_qualified / total_produced * 100, 1)
 
         # 使用基类方法创建统计卡片
         stats = [

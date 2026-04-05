@@ -8,7 +8,7 @@ import {
 "react-router-dom";
 import { ConfigProvider, theme } from "antd";
 import zhCN from "antd/locale/zh_CN";
-import ErrorBoundary from "./components/common/ErrorBoundary";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AppRoutes } from "./routes/routeConfig";
 import { PermissionProvider } from "./context/PermissionContext";

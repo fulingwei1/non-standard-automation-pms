@@ -32,12 +32,16 @@ class CustomerCreate(BaseModel):
     # 财务信息
     credit_limit: Optional[Decimal] = Field(default=0, description="信用额度")
     payment_terms: Optional[str] = Field(default=None, max_length=100, description="付款条件")
-    account_period: Optional[int] = Field(default=30, description="账期(天)")
+    account_period: Optional[int] = Field(default=30, description="账期 (天)")
     
     # 业务信息
     customer_source: Optional[str] = Field(default=None, max_length=100, description="客户来源")
-    sales_owner_id: Optional[int] = Field(default=None, description="负责销售人员ID")
+    sales_owner_id: Optional[int] = Field(default=None, description="负责销售人员 ID")
     status: Optional[str] = Field(default="potential", description="客户状态：potential/prospect/customer/lost")
+    
+    # 客户等级自动计算字段
+    annual_revenue: Optional[Decimal] = Field(default=None, description="年成交额")
+    cooperation_years: Optional[int] = Field(default=None, description="合作年限")
     
     @field_validator('customer_type')
     @classmethod
@@ -69,9 +73,9 @@ class CustomerUpdate(BaseModel):
     established_date: Optional[date] = Field(default=None, description="成立日期")
     credit_limit: Optional[Decimal] = Field(default=None, description="信用额度")
     payment_terms: Optional[str] = Field(default=None, max_length=100, description="付款条件")
-    account_period: Optional[int] = Field(default=None, description="账期(天)")
+    account_period: Optional[int] = Field(default=None, description="账期 (天)")
     customer_source: Optional[str] = Field(default=None, max_length=100, description="客户来源")
-    sales_owner_id: Optional[int] = Field(default=None, description="负责销售人员ID")
+    sales_owner_id: Optional[int] = Field(default=None, description="负责销售人员 ID")
     status: Optional[str] = Field(default=None, description="客户状态")
     annual_revenue: Optional[Decimal] = Field(default=None, description="年成交额")
     cooperation_years: Optional[int] = Field(default=None, description="合作年限")
@@ -80,7 +84,7 @@ class CustomerUpdate(BaseModel):
 class CustomerResponse(TimestampSchema):
     """客户响应"""
 
-    id: int = Field(description="客户ID")
+    id: int = Field(description="客户 ID")
     customer_code: str = Field(description="客户编码")
     customer_name: str = Field(description="客户名称")
     short_name: Optional[str] = Field(default=None, description="客户简称")
@@ -93,9 +97,9 @@ class CustomerResponse(TimestampSchema):
     customer_level: Optional[str] = Field(default="C", description="客户等级")
     credit_limit: Optional[Decimal] = Field(default=Decimal("0"), description="信用额度")
     payment_terms: Optional[str] = Field(default=None, description="付款条件")
-    account_period: Optional[int] = Field(default=30, description="账期(天)")
+    account_period: Optional[int] = Field(default=30, description="账期 (天)")
     customer_source: Optional[str] = Field(default=None, description="客户来源")
-    sales_owner_id: Optional[int] = Field(default=None, description="负责销售人员ID")
+    sales_owner_id: Optional[int] = Field(default=None, description="负责销售人员 ID")
     sales_owner_name: Optional[str] = Field(default=None, description="负责销售人员姓名")
     status: Optional[str] = Field(default="potential", description="客户状态")
     last_follow_up_at: Optional[datetime] = Field(default=None, description="最后跟进时间")
@@ -141,6 +145,40 @@ class CustomerListResponse(BaseModel):
     items: List[CustomerResponse] = Field(description="客户列表")
 
 
+class CustomerInteractionItem(BaseModel):
+    """客户交互历史条目"""
+
+    interaction_type: str = Field(description="交互类型：opportunity/quote/contract/follow_up")
+    entity_id: int = Field(description="关联实体ID")
+    title: str = Field(description="标题/名称")
+    status: Optional[str] = Field(default=None, description="状态")
+    amount: Optional[Decimal] = Field(default=None, description="金额")
+    owner_name: Optional[str] = Field(default=None, description="负责人")
+    created_at: Optional[datetime] = Field(default=None, description="创建时间")
+    updated_at: Optional[datetime] = Field(default=None, description="更新时间")
+
+
+class CustomerDetailResponse(CustomerResponse):
+    """客户详情响应（含联系人和交互历史）"""
+
+    contacts: List["ContactBriefResponse"] = Field(default=[], description="联系人列表")
+    interactions: List[CustomerInteractionItem] = Field(default=[], description="交互历史")
+    opportunities_count: int = Field(default=0, description="商机数量")
+    quotes_count: int = Field(default=0, description="报价数量")
+    contracts_count: int = Field(default=0, description="合同数量")
+
+
+class ContactBriefResponse(BaseModel):
+    """联系人简要信息"""
+
+    id: int = Field(description="联系人ID")
+    name: str = Field(description="姓名")
+    position: Optional[str] = Field(default=None, description="职位")
+    mobile: Optional[str] = Field(default=None, description="手机")
+    email: Optional[str] = Field(default=None, description="邮箱")
+    is_primary: bool = Field(default=False, description="是否主要联系人")
+
+
 class CustomerStatsResponse(BaseModel):
     """客户统计响应"""
 
@@ -150,10 +188,10 @@ class CustomerStatsResponse(BaseModel):
     customer_count: int = Field(description="成交客户数")
     lost_count: int = Field(description="流失客户数")
     
-    level_a_count: int = Field(description="A级客户数")
-    level_b_count: int = Field(description="B级客户数")
-    level_c_count: int = Field(description="C级客户数")
-    level_d_count: int = Field(description="D级客户数")
+    level_a_count: int = Field(description="A 级客户数")
+    level_b_count: int = Field(description="B 级客户数")
+    level_c_count: int = Field(description="C 级客户数")
+    level_d_count: int = Field(description="D 级客户数")
     
     total_annual_revenue: Decimal = Field(description="总年成交额")
     avg_cooperation_years: float = Field(description="平均合作年限")

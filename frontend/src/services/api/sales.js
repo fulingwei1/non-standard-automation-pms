@@ -9,6 +9,7 @@ export const leadApi = {
   update: (id, data) => api.put(`/sales/leads/${id}`, data),
   getFollowUps: (id) => api.get(`/sales/leads/${id}/follow-ups`),
   createFollowUp: (id, data) => api.post(`/sales/leads/${id}/follow-ups`, data),
+  createQuickFollowUp: (id, data) => api.post(`/sales/leads/${id}/follow-ups/quick`, data),
   convert: (id, customerId, requirementData, skipValidation) =>
     api.post(`/sales/leads/${id}/convert`, requirementData, {
       params: {
@@ -248,6 +249,8 @@ export const disputeApi = {
 export const salesTeamApi = {
   // 获取销售团队成员统计视图
   getTeam: (params) => api.get("/sales/team", { params }),
+  // 获取销售团队组织架构树
+  getOrg: (params) => api.get("/sales/team/org", { params }),
   // 获取销售团队实体列表
   listTeams: (params) => api.get("/sales/sales-teams", { params }),
   // 创建销售团队实体
@@ -292,11 +295,15 @@ export const salesStatisticsApi = {
     api.get("/sales/statistics/prediction/accuracy", { params }),
   // 销售业绩报告
   performance: (params) => api.get("/sales/reports/sales-performance", { params }),
+  // 销售仪表盘
+  getDashboard: (params) => api.get("/sales/dashboard", { params }),
 };
 
 export const salesApi = {
-  // 销售漏斗
-  getFunnel: (params) => api.get("/sales/statistics/funnel", { params }),
+  // 销售漏斗（综合版）
+  getFunnel: (params) => api.get("/sales/funnel", { params }),
+  // 销售漏斗（旧版统计）
+  getFunnelLegacy: (params) => api.get("/sales/statistics/funnel", { params }),
   // 待审批合同（使用合同列表筛选）
   getPendingApprovals: (params) =>
     api.get("/sales/contracts", {
@@ -416,6 +423,84 @@ export const quoteDeliveryApi = {
   upcoming: (params) => api.get("/sales/quotes/delivery/upcoming", { params }),
   overdue: () => api.get("/sales/quotes/delivery/overdue"),
   calendar: (params) => api.get("/sales/quotes/delivery/calendar", { params }),
+};
+
+// ========== P0/P1 新功能 API ==========
+
+// 智能跟进提醒 API
+export const followUpReminderApi = {
+  // 获取跟进提醒列表
+  list: (params) => api.get("/sales/follow-up/reminders", { params }),
+  // 获取汇总统计
+  getSummary: () => api.get("/sales/follow-up/reminders/summary"),
+  // 获取紧急提醒
+  getUrgent: () => api.get("/sales/follow-up/reminders/urgent"),
+};
+
+// 催款优先级排序 API
+export const collectionPriorityApi = {
+  // 获取催款优先级列表
+  list: (params) => api.get("/sales/collection/priority", { params }),
+  // 获取汇总统计
+  getSummary: () => api.get("/sales/collection/priority/summary"),
+  // 获取紧急催款项
+  getCritical: () => api.get("/sales/collection/priority/critical"),
+};
+
+// 一键成本推荐 API
+export const quickCostApi = {
+  // 商机成本推荐
+  getForOpportunity: (oppId) =>
+    api.get(`/sales/quick-cost/opportunities/${oppId}/quick-cost`),
+  // 报价成本推荐
+  getForQuote: (quoteId) =>
+    api.get(`/sales/quick-cost/quotes/${quoteId}/quick-cost`),
+};
+
+// 商机健康度评分 API
+export const opportunityHealthApi = {
+  // 获取单个商机健康度
+  get: (oppId) => api.get(`/sales/opportunities/${oppId}/health`),
+  // 获取用户所有商机健康度
+  list: (params) => api.get("/sales/opportunities/health", { params }),
+  // 获取健康度汇总
+  getSummary: () => api.get("/sales/opportunities/health/summary"),
+  // 获取问题商机
+  getCritical: () => api.get("/sales/opportunities/health/critical"),
+};
+
+// 报价对比分析 API
+export const quoteComparisonApi = {
+  // 对比多版本（支持2-4个版本）
+  compareVersions: (quoteId, versionIds) =>
+    api.get(`/sales/quotes/${quoteId}/versions/compare`, {
+      params: { version_ids: versionIds },
+    }),
+  // 对比同商机多报价
+  compareByOpportunity: (oppId) =>
+    api.get(`/sales/quotes/opportunity/${oppId}/compare`),
+  // 与竞品对比
+  compareWithCompetitor: (quoteId, competitorPrice, competitorName) =>
+    api.post("/sales/quotes/competitor-compare", null, {
+      params: {
+        quote_id: quoteId,
+        competitor_price: competitorPrice,
+        competitor_name: competitorName,
+      },
+    }),
+};
+
+// 合同里程碑提醒 API
+export const contractMilestoneApi = {
+  // 获取里程碑列表
+  list: (params) => api.get("/sales/contracts/milestones", { params }),
+  // 获取汇总统计
+  getSummary: () => api.get("/sales/contracts/milestones/summary"),
+  // 获取过期里程碑
+  getOverdue: () => api.get("/sales/contracts/milestones/overdue"),
+  // 获取付款节点
+  getPayments: (params) =>
+    api.get("/sales/contracts/milestones/payments", { params }),
 };
 
 // 销售漏斗优化 API（Issue 6.x）

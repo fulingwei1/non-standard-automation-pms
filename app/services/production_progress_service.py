@@ -27,6 +27,11 @@ from app.schemas.production_progress import (
     RealtimeProgressOverview,
     WorkOrderProgressTimeline,
 )
+from app.core.production_config import (
+    BOTTLENECK_LEVEL1_THRESHOLD,
+    BOTTLENECK_LEVEL2_THRESHOLD,
+    BOTTLENECK_LEVEL3_THRESHOLD,
+)
 
 
 class ProductionProgressService:
@@ -191,11 +196,11 @@ class ProductionProgressService:
             WorkOrder.status == 'PENDING'
         ).scalar() or 0
         
-        if utilization > 98 and pending_count > 3:
+        if utilization > BOTTLENECK_LEVEL3_THRESHOLD * 100 and pending_count > 3:
             return 3, f"产能利用率{utilization:.1f}%，排队工单{pending_count}个"
-        elif utilization > 95 and pending_count > 0:
+        elif utilization > BOTTLENECK_LEVEL2_THRESHOLD * 100 and pending_count > 0:
             return 2, f"产能利用率{utilization:.1f}%，排队工单{pending_count}个"
-        elif utilization > 90:
+        elif utilization > BOTTLENECK_LEVEL1_THRESHOLD * 100:
             return 1, f"产能利用率{utilization:.1f}%"
         else:
             return 0, "正常"

@@ -16,9 +16,11 @@ from app.schemas.project_risk import (
     ProjectRiskUpdate,
     ProjectRiskResponse,
 )
+from app.schemas.auto_risk import AutoRiskScanRequest, AutoRiskScanResult
 from app.schemas.common import ResponseModel
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.services.project_risk import ProjectRiskService
+from app.services.project_risk.auto_risk_service import AutoRiskService
 
 router = APIRouter()
 
@@ -296,9 +298,43 @@ def get_risk_summary(
     """
     service = ProjectRiskService(db)
     summary = service.get_risk_summary(project_id)
-    
+
     return ResponseModel(
         code=200,
         message="获取风险汇总统计成功",
         data=summary
+    )
+
+
+@router.post("/{project_id}/risks/auto-scan", response_model=ResponseModel)
+def auto_scan_risks(
+    project_id: int,
+    scan_request: AutoRiskScanRequest = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_risk_permission("risk:create")),
+):
+    """
+    自动风险识别扫描
+
+    基于项目数据自动检测进度/成本/资源/质量四类风险。
+    识别后自动创建风险记录（带"系统识别"标签和置信度），
+    并通知项目负责人。
+
+    需要权限：risk:create
+    """
+    if scan_request is None:
+        scan_request = AutoRiskScanRequest()
+
+    service = AutoRiskService(db)
+    result = service.scan_project(
+        project_id=project_id,
+        categories=scan_request.categories,
+        min_confidence=scan_request.min_confidence,
+        auto_create=scan_request.auto_create,
+    )
+
+    return ResponseModel(
+        code=200,
+        message=f"自动扫描完成，识别到 {result.total_risks_found} 项风险",
+        data=result.dict(),
     )

@@ -124,6 +124,29 @@ def create_purchase_request(
     )
 
 
+# 静态路径必须在动态路径之前注册，避免被 /{request_id} 吞掉
+@router.put("/requests/{request_id}/approve")
+def approve_purchase_request(
+    request_id: int,
+    approved: bool = Query(True),
+    approval_note: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """审批采购申请"""
+    request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
+    if request.status != "SUBMITTED":
+        raise HTTPException(status_code=400, detail="只有已提交的申请可审批")
+    request.approved_by = current_user.id
+    request.approved_at = datetime.now()
+    request.approval_note = approval_note
+    request.status = "APPROVED" if approved else "REJECTED"
+    db.commit()
+
+    # 使用统一响应格式
+    return success_response(data=None, message="采购申请审批完成")
+
+
 @router.get("/requests/{request_id}")
 def get_purchase_request_detail(
     request_id: int,
@@ -157,28 +180,6 @@ def submit_purchase_request(
 
     # 使用统一响应格式
     return success_response(data=None, message="采购申请提交成功")
-
-
-@router.put("/requests/{request_id}/approve")
-def approve_purchase_request(
-    request_id: int,
-    approved: bool = Query(True),
-    approval_note: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    """审批采购申请"""
-    request = get_or_404(db, PurchaseRequest, request_id, "采购申请不存在")
-    if request.status != "SUBMITTED":
-        raise HTTPException(status_code=400, detail="只有已提交的申请可审批")
-    request.approved_by = current_user.id
-    request.approved_at = datetime.now()
-    request.approval_note = approval_note
-    request.status = "APPROVED" if approved else "REJECTED"
-    db.commit()
-
-    # 使用统一响应格式
-    return success_response(data=None, message="采购申请审批完成")
 
 
 @router.delete("/requests/{request_id}")

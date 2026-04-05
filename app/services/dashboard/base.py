@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 
 
 def _get_cache_service_class():
-    from app.services.dashboard_cache_service import DashboardCacheService
+    from app.services.dashboard.dashboard_cache_service import DashboardCacheService
 
     return DashboardCacheService
 

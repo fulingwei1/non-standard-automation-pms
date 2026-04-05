@@ -52,7 +52,6 @@ export function useHRTransactions() {
       setTransactions(response.data?.items || []);
     } catch (err) {
       console.error("加载人事事务失败:", err);
-      // 使用模拟数据
       setTransactions([]);
     } finally {
       setLoading(false);

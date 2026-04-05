@@ -25,11 +25,17 @@ from .engine import ApprovalEngineService
 from .executor import ApprovalNodeExecutor
 from .notify import ApprovalNotifyService
 from .router import ApprovalRouterService
-from .workflow_engine import WorkflowEngine
-
+from .visibility import (
+    ParticipantRole,
+    check_can_operate_instance,
+    check_can_remind,
+    check_instance_visible,
+    check_task_visible,
+    filter_visible_instances,
+    resolve_participant_role,
+)
 # 服务层导出
 __all__ = [
-    "WorkflowEngine",
     "ApprovalEngineService",
     "ApprovalRouterService",
     "ApprovalNodeExecutor",
@@ -42,6 +48,14 @@ __all__ = [
     "InvoiceApprovalAdapter",
     "ProjectApprovalAdapter",
     "TimesheetApprovalAdapter",
+    # Visibility
+    "ParticipantRole",
+    "check_instance_visible",
+    "check_task_visible",
+    "filter_visible_instances",
+    "check_can_operate_instance",
+    "check_can_remind",
+    "resolve_participant_role",
 ]
 
 # 适配器注册表

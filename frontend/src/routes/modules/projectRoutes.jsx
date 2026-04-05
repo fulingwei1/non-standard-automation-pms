@@ -1,5 +1,6 @@
 import { Route, Navigate } from "react-router-dom";
 import { ProjectReviewProtectedRoute } from "../../components/common/ProtectedRoute";
+import { lazyLoad } from "../lazyLoad";
 
 // ProjectList 已整合到 ProjectBoard 的卡片视图
 // import ProjectList from "../../pages/ProjectList";
@@ -34,6 +35,9 @@ import ResourceOverview from "../../pages/ResourceOverview";
 import AcceptanceManagement from "../../pages/AcceptanceManagement";
 import GanttDependency from "../../pages/GanttDependency";
 import ECNManagement from "../../pages/ECNManagement";
+import ECNCostImpact from "../../pages/ECNCostImpact";
+import ECNMaterialImpact from "../../pages/ECNMaterialImpact";
+import MaterialProgressView from "../../pages/MaterialProgressView";
 import FieldCommissioning from "../../pages/FieldCommissioning";
 import AssemblyKitBoard from "../../pages/AssemblyKitBoard";
 import TemplateConfigList from "../../pages/TemplateConfigList";
@@ -58,10 +62,10 @@ export function ProjectRoutes() {
       <Route path="/project/dashboard-center" element={<ProjectDashboardCenter />} />
       <Route path="/project/cost-center" element={<ProjectCostCenter />} />
       <Route path="/pmo/dashboard" element={<PMODashboard />} />
-      
+
       {/* 全局进度看板 */}
       <Route path="/progress-board" element={<ProgressBoard />} />
-      
+
       {/* 全局里程碑管理 */}
       <Route path="/milestones" element={<MilestoneManagement />} />
 
@@ -112,7 +116,6 @@ export function ProjectRoutes() {
 
       {/* 向后兼容 - 保留旧路由 */}
       <Route path="/board" element={<ProjectBoard />} />
-      {/* /projects 已重定向到 /board?view=card */}
       <Route path="/projects/:id" element={<ProjectDetail />} />
       <Route path="/projects/:id/workspace" element={<ProjectWorkspace />} />
       <Route
@@ -161,14 +164,16 @@ export function ProjectRoutes() {
       <Route path="/wbs-templates" element={<WBSTemplateManagement />} />
       <Route path="/schedule" element={<ScheduleBoard />} />
       <Route path="/ecn" element={<ECNManagement />} />
+      <Route path="/ecn/:ecnId/cost-impact" element={<ECNCostImpact />} />
+      <Route path="/ecn/:ecnId/material-impact" element={<ECNMaterialImpact />} />
       <Route path="/field-commissioning" element={<FieldCommissioning />} />
+      <Route path="/projects/:projectId/material-progress" element={<MaterialProgressView />} />
       <Route path="/projects/:id/schedule-generation" element={<ScheduleGeneration />} />
       <Route path="/progress-tracking/resource-overview" element={<ResourceOverview />} />
       <Route path="/project-list-with-cost" element={<ProjectListWithCost />} />
       <Route path="/projects/:projectId/schedule-optimization" element={<ScheduleOptimization />} />
       <Route path="/projects/:projectId/engineer-recommendation" element={<EngineerRecommendation />} />
       <Route path="/projects/:projectId/engineer-workload-board" element={<EngineerWorkloadBoard />} />
-      <Route path="/assembly-template-management" element={<AssemblyTemplateManagement />} />
       <Route path="/project-presales-tasks" element={<PresalesTasks />} />
       <Route path="/tasks" element={<TaskCenter />} />
       <Route path="/assembly-tasks" element={<AssemblerTaskCenter />} />

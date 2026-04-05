@@ -54,6 +54,17 @@ export const pmoApi = {
       api.put(`/pmo/closures/${closureId}/review`, data),
     updateLessons: (closureId, data) =>
       api.put(`/pmo/closures/${closureId}/lessons`, data),
+    // 结项准备度检查
+    checkReadiness: (projectId) =>
+      api.get(`/pmo/projects/${projectId}/closure-readiness`),
+    checkReadinessCustom: (projectId, rules) =>
+      api.post(`/pmo/projects/${projectId}/closure-readiness`, rules),
+    // 结项提醒通知
+    notifyReadiness: (projectId) =>
+      api.post(`/pmo/projects/${projectId}/closure-notify`),
+    // 经验沉淀自动收集
+    autoCollectLessons: (projectId) =>
+      api.post(`/pmo/projects/${projectId}/closure-lessons-collect`),
   },
 
   // Meeting Management

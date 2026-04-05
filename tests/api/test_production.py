@@ -4,16 +4,123 @@
 测试车间管理、工位管理、生产计划、工单管理、报工系统等功能
 """
 
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.production import ProductionPlan, WorkOrder, WorkReport, Worker, Workshop, Workstation
 
 
 def _auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture()
+def production_seed(db: Session) -> dict:
+    """构造一组最小生产测试数据，避免详情接口因空库而跳过。"""
+    suffix = uuid4().hex[:8]
+    today = date.today()
+
+    workshop = Workshop(
+        workshop_code=f"WS-{suffix}",
+        workshop_name=f"测试车间-{suffix}",
+        workshop_type="MACHINING",
+        capacity_hours=Decimal("8.00"),
+        is_active=True,
+    )
+    db.add(workshop)
+    db.flush()
+
+    worker = Worker(
+        worker_no=f"WK-{suffix}",
+        worker_name=f"测试工人-{suffix}",
+        workshop_id=workshop.id,
+        position="OPERATOR",
+        skill_level="INTERMEDIATE",
+        entry_date=today,
+        status="ACTIVE",
+        is_active=True,
+    )
+    db.add(worker)
+    db.flush()
+
+    workstation = Workstation(
+        workstation_code=f"ST-{suffix}",
+        workstation_name=f"测试工位-{suffix}",
+        workshop_id=workshop.id,
+        status="IDLE",
+        is_active=True,
+    )
+    db.add(workstation)
+    db.flush()
+
+    plan = ProductionPlan(
+        plan_no=f"PLAN-{suffix}",
+        plan_name=f"测试计划-{suffix}",
+        plan_type="WORKSHOP",
+        workshop_id=workshop.id,
+        plan_start_date=today,
+        plan_end_date=today,
+        status="DRAFT",
+        progress=0,
+    )
+    db.add(plan)
+    db.flush()
+
+    work_order = WorkOrder(
+        work_order_no=f"WO-{suffix}",
+        task_name=f"测试工单-{suffix}",
+        task_type="MACHINING",
+        production_plan_id=plan.id,
+        workshop_id=workshop.id,
+        workstation_id=workstation.id,
+        assigned_to=worker.id,
+        plan_qty=10,
+        completed_qty=5,
+        qualified_qty=5,
+        defect_qty=0,
+        standard_hours=Decimal("4.00"),
+        actual_hours=Decimal("2.00"),
+        plan_start_date=today,
+        plan_end_date=today,
+        status="ASSIGNED",
+        priority="NORMAL",
+        progress=50,
+    )
+    db.add(work_order)
+    db.flush()
+
+    workstation.current_worker_id = worker.id
+    workstation.current_work_order_id = work_order.id
+
+    report = WorkReport(
+        report_no=f"WR-{suffix}",
+        work_order_id=work_order.id,
+        worker_id=worker.id,
+        report_type="PROGRESS",
+        report_time=datetime.now(),
+        progress_percent=50,
+        work_hours=Decimal("2.00"),
+        completed_qty=5,
+        qualified_qty=5,
+        defect_qty=0,
+        status="APPROVED",
+    )
+    db.add(report)
+    db.commit()
+
+    return {
+        "workshop_id": workshop.id,
+        "workstation_id": workstation.id,
+        "plan_id": plan.id,
+        "work_order_id": work_order.id,
+        "worker_id": worker.id,
+    }
 
 
 class TestWorkshops:
@@ -59,13 +166,18 @@ class TestWorkshops:
 
         assert response.status_code == 200
 
-    def test_get_workshop_by_id(self, client: TestClient, admin_token: str):
+    def test_get_workshop_by_id(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
         """测试获取单个车间"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(f"{settings.API_V1_PREFIX}/production/workshops/1", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/production/workshops/{production_seed['workshop_id']}",
+            headers=headers,
+        )
 
         if response.status_code == 403:
             pytest.skip("User does not have production:read permission")
@@ -74,14 +186,17 @@ class TestWorkshops:
 
         assert response.status_code == 200
 
-    def test_get_workshop_capacity(self, client: TestClient, admin_token: str):
+    def test_get_workshop_capacity(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
         """测试获取车间产能"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workshops/1/capacity", headers=headers
+            f"{settings.API_V1_PREFIX}/production/workshops/{production_seed['workshop_id']}/capacity",
+            headers=headers
         )
 
         if response.status_code == 403:
@@ -95,14 +210,17 @@ class TestWorkshops:
 class TestWorkstations:
     """工位管理测试"""
 
-    def test_list_workstations(self, client: TestClient, admin_token: str):
+    def test_list_workstations(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
         """测试获取工位列表"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workshops/1/workstations", headers=headers
+            f"{settings.API_V1_PREFIX}/production/workshops/{production_seed['workshop_id']}/workstations",
+            headers=headers
         )
 
         if response.status_code == 403:
@@ -135,13 +253,18 @@ class TestProductionPlans:
 
         assert response.status_code == 200
 
-    def test_get_production_plan_by_id(self, client: TestClient, admin_token: str):
+    def test_get_production_plan_by_id(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
         """测试获取单个生产计划"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(f"{settings.API_V1_PREFIX}/production/plans/1", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/production/plans/{production_seed['plan_id']}",
+            headers=headers,
+        )
 
         if response.status_code == 403:
             pytest.skip("User does not have production:read permission")
@@ -192,13 +315,18 @@ class TestWorkOrders:
 
         assert response.status_code == 200
 
-    def test_get_work_order_by_id(self, client: TestClient, admin_token: str):
+    def test_get_work_order_by_id(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
         """测试获取单个工单"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(f"{settings.API_V1_PREFIX}/production/work-orders/1", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/production/work-orders/{production_seed['work_order_id']}",
+            headers=headers,
+        )
 
         if response.status_code == 403:
             pytest.skip("User does not have production:read permission")
@@ -295,14 +423,17 @@ class TestProductionDashboard:
 
         assert response.status_code == 200
 
-    def test_get_workshop_task_board(self, client: TestClient, admin_token: str):
+    def test_get_workshop_task_board(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
         """测试获取车间任务看板"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workshops/1/task-board", headers=headers
+            f"{settings.API_V1_PREFIX}/production/workshops/{production_seed['workshop_id']}/task-board",
+            headers=headers,
         )
 
         if response.status_code == 403:
@@ -335,14 +466,17 @@ class TestWorkerManagement:
 
         assert response.status_code == 200
 
-    def test_get_worker_performance(self, client: TestClient, admin_token: str):
+    def test_get_worker_performance(
+        self, client: TestClient, admin_token: str, production_seed: dict
+    ):
         """测试获取工人绩效报告"""
         if not admin_token:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
         response = client.get(
-            f"{settings.API_V1_PREFIX}/production/workers/1/performance", headers=headers
+            f"{settings.API_V1_PREFIX}/production/workers/{production_seed['worker_id']}/performance",
+            headers=headers,
         )
 
         if response.status_code == 403:

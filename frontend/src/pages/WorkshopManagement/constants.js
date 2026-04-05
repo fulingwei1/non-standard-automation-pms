@@ -1,11 +1,20 @@
-export const workshopTypeConfigs = {
-    assembly: { label: '装配车间', color: 'bg-blue-500' },
-    machining: { label: '机加工车间', color: 'bg-purple-500' },
-    testing: { label: '测试车间', color: 'bg-cyan-500' },
-    welding: { label: '焊接车间', color: 'bg-amber-500' },
+/**
+ * Workshop Management Constants - 车间管理常量
+ */
+
+export const typeConfigs = {
+  MACHINING: { label: "机加车间", color: "bg-blue-500" },
+  ASSEMBLY: { label: "装配车间", color: "bg-purple-500" },
+  DEBUGGING: { label: "调试车间", color: "bg-emerald-500" },
 };
-export const statusConfigs = {
-    active: { label: '运行中', color: 'bg-emerald-500' },
-    maintenance: { label: '维护中', color: 'bg-amber-500' },
-    inactive: { label: '停用', color: 'bg-slate-500' },
+
+export const DEFAULT_WORKSHOP_FORM = {
+  workshop_code: "",
+  workshop_name: "",
+  workshop_type: "MACHINING",
+  manager_id: null,
+  location: "",
+  capacity_hours: 0,
+  description: "",
+  is_active: true,
 };

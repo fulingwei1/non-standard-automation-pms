@@ -20,6 +20,9 @@ from .change_impact import (  # noqa: F401
     ChangeResponseSuggestion,
 )
 
+# Project-Change (ECN) Integration
+from .project.change_impact import ProjectChangeImpact  # noqa: F401
+
 # Change Request System
 from .change_request import (  # noqa: F401
     ChangeApprovalRecord,
@@ -46,8 +49,12 @@ from .inventory_tracking import (  # noqa: F401
 # Security & Authentication
 from .login_attempt import LoginAttempt  # noqa: F401
 
+# Kitting Optimization (expedite, alternatives)
+from .kitting_optimization import ExpediteRecord, MaterialAlternative  # noqa: F401
+
 # Material Shortage (from material.py)
 from .material import MaterialShortage  # noqa: F401
+from .material_progress_subscription import MaterialProgressSubscription  # noqa: F401
 from .presale_ai import (  # noqa: F401
     PresaleAIAuditLog,
     PresaleAIConfig,
@@ -199,6 +206,7 @@ __all__ = [
     "BomHeader",
     "BomItem",
     "MaterialShortage",
+    "MaterialProgressSubscription",
     # Shortage
     "ShortageReport",
     "MaterialArrival",
@@ -586,6 +594,8 @@ __all__ = [
     # Change Impact Analysis System
     "ChangeImpactAnalysis",
     "ChangeResponseSuggestion",
+    # Project-Change (ECN) Integration
+    "ProjectChangeImpact",
     # Purchase Intelligence System
     "PurchaseSuggestion",
     "SupplierQuotation",
@@ -603,3 +613,12 @@ __all__ = [
     "ShortageHandlingPlan",
     "MaterialDemandForecast",
 ]
+
+from app.models.project_delivery import (
+    ProjectDeliverySchedule,
+    ProjectDeliveryTask,
+    ProjectDeliveryLongCyclePurchase,
+    ProjectDeliveryMechanicalDesign,
+    ProjectDeliveryChangeLog,
+    ProjectDeliveryDependency,
+)

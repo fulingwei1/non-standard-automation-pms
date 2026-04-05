@@ -1,6 +1,81 @@
 import { api } from "./client.js";
 
+const pickFirstDefined = (...values) => values.find((value) => value !== undefined && value !== null && value !== "");
 
+// ============ 生产异常兼容层 ============
+const PRODUCTION_EXCEPTION_STATUS_MAP = {
+  REPORTED: "OPEN",
+  IN_PROGRESS: "IN_PROGRESS",
+  RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
+};
+
+const PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP = {
+  OPEN: "REPORTED",
+  IN_PROGRESS: "IN_PROGRESS",
+  RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
+};
+
+const unwrapProductionResponse = (response) => response?.data?.data ?? response?.data ?? response;
+
+const pickLatestActionContent = (actions = [], actionType) => {
+  const matched = [...actions].find((action) => action?.action_type === actionType);
+  return matched?.action_content || "";
+};
+
+const normalizeProductionException = (item = {}) => ({
+  ...item,
+  exception_no: item.exception_no || item.event_no,
+  title: item.title || item.event_title,
+  description: item.description || item.event_description,
+  exception_type: item.exception_type || item.event_type,
+  exception_level: item.exception_level || item.severity,
+  report_time: item.report_time || item.discovered_at,
+  reporter_name: item.reporter_name || item.discovered_by_name,
+  impact_hours: item.impact_hours ?? item.schedule_impact ?? 0,
+  impact_cost: item.impact_cost ?? item.cost_impact ?? 0,
+  handle_plan: item.handle_plan || item.solution || pickLatestActionContent(item.actions, "PLAN"),
+  handle_result:
+    item.handle_result ||
+    item.resolution_note ||
+    pickLatestActionContent(item.actions, "RESULT"),
+  status: PRODUCTION_EXCEPTION_STATUS_REVERSE_MAP[item.status] || item.status,
+});
+
+const toIntegerOrNull = (value) => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const buildAssignPayload = (data = {}) => {
+  const workerId = toIntegerOrNull(
+    pickFirstDefined(data.worker_id, data.assigned_to, data.assigned_worker_id, data.workerId, data.assignedTo),
+  );
+  const workstationId = toIntegerOrNull(
+    pickFirstDefined(data.workstation_id, data.workstationId),
+  );
+
+  return {
+    ...(workerId !== null ? { worker_id: workerId, assigned_to: workerId } : {}),
+    ...(workstationId !== null ? { workstation_id: workstationId } : {}),
+    ...(data.remark ? { remark: data.remark } : {}),
+  };
+};
+
+const buildReportPayload = (data = {}) => {
+  const workerId = toIntegerOrNull(
+    pickFirstDefined(data.worker_id, data.assigned_to, data.assigned_worker_id, data.workerId, data.assignedTo, 0),
+  );
+
+  return {
+    ...data,
+    worker_id: workerId ?? 0,
+  };
+};
 
 export const shortageApi = {
   // 缺料上报 - /shortage/handling/reports
@@ -68,7 +143,8 @@ export const shortageApi = {
   },
   // 统计分析 - /shortage/analytics/...
   statistics: {
-    dashboard: () => api.get("/shortage/analytics/overview"),
+    dashboard: (params) => api.get("/shortage/analytics/dashboard", { params }),
+    overview: (params) => api.get("/shortage/analytics/overview", { params }),
     causeAnalysis: (params) =>
       api.get("/shortage/analytics/cause-analysis", { params }),
     kitRate: (params) =>
@@ -104,8 +180,8 @@ export const productionApi = {
       api.post(`/production/workshops/${id}/workstations`, data),
   },
   workstations: {
-    list: (params) => api.get("/production/workshops", { params }),
-    get: (id) => api.get(`/production/workshops/${id}`),
+    list: (workshopId) =>
+      api.get(`/production/workshops/${workshopId}/workstations`),
     getStatus: (id) => api.get(`/production/workstations/${id}/status`),
   },
   productionPlans: {
@@ -114,16 +190,19 @@ export const productionApi = {
     create: (data) => api.post("/production/production-plans", data),
     update: (id, data) => api.put(`/production/production-plans/${id}`, data),
     submit: (id) => api.put(`/production/production-plans/${id}/submit`),
-    approve: (id) => api.put(`/production/production-plans/${id}/approve`),
+    approve: (id, params = {}) =>
+      api.put(`/production/production-plans/${id}/approve`, null, {
+        params: { approved: true, ...params },
+      }),
     publish: (id) => api.put(`/production/production-plans/${id}/publish`),
-    calendar: (params) => api.get("/production/production-plans/calendar", { params }),
   },
   workOrders: {
     list: (params) => api.get("/production/work-orders", { params }),
     get: (id) => api.get(`/production/work-orders/${id}`),
     create: (data) => api.post("/production/work-orders", data),
     update: (id, data) => api.put(`/production/work-orders/${id}`, data),
-    assign: (id, data) => api.put(`/production/work-orders/${id}/assign`, data),
+    assign: (id, data) =>
+      api.put(`/production/work-orders/${id}/assign`, buildAssignPayload(data)),
     start: (id) => api.put(`/production/work-orders/${id}/start`),
     pause: (id) => api.put(`/production/work-orders/${id}/pause`),
     resume: (id) => api.put(`/production/work-orders/${id}/resume`),
@@ -144,10 +223,13 @@ export const productionApi = {
     list: (params) => api.get("/production/work-reports", { params }),
     get: (id) => api.get(`/production/work-reports/${id}`),
     create: (data) => api.post("/production/work-reports", data),
-    start: (data) => api.post("/production/work-reports/start", data),
-    progress: (data) => api.post("/production/work-reports/progress", data),
-    complete: (data) => api.post("/production/work-reports/complete", data),
-    approve: (id) => api.put(`/production/work-reports/${id}/approve`),
+    start: (data) => api.post("/production/work-reports/start", buildReportPayload(data)),
+    progress: (data) => api.post("/production/work-reports/progress", buildReportPayload(data)),
+    complete: (data) => api.post("/production/work-reports/complete", buildReportPayload(data)),
+    approve: (id, params = {}) =>
+      api.put(`/production/work-reports/${id}/approve`, null, {
+        params: { approved: true, ...params },
+      }),
     my: (params) => api.get("/production/work-reports/my", { params }),
   },
   materialRequisitions: {
@@ -171,6 +253,12 @@ export const productionApi = {
       api.get("/production/reports/worker-performance", { params }),
     workerRanking: (params) =>
       api.get("/production/reports/worker-ranking", { params }),
+  },
+  capacity: {
+    oee: (params) => api.get("/production/capacity/oee", { params }),
+    bottlenecks: (params) => api.get("/production/capacity/bottlenecks", { params }),
+    trend: (params) => api.get("/production/capacity/trend", { params }),
+    forecast: (params) => api.get("/production/capacity/forecast", { params }),
   },
 };
 
@@ -269,6 +357,12 @@ export const kitCheckApi = {
 };
 
 export const assemblyKitApi = {
+  // 兼容旧页面/Hook 的齐套列表与分析接口
+  listKits: (params) => api.get("/assembly/projects/readiness", { params }),
+  analyzeKit: (machineId) =>
+    api.post("/assembly/analysis", {
+      machine_id: machineId,
+    }),
   // 基于时间的齐套率预警
   getTimeBasedKitRate: (projectId, params) => api.get(`/assembly/kit-rate/project/${projectId}/time-based-kit-rate`, { params }),
   // 看板数据

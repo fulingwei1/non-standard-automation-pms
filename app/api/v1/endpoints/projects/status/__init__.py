@@ -13,6 +13,7 @@ from fastapi import APIRouter
 
 from .batch import router as batch_router
 from .health import router as health_router
+from .health_viz import router as health_viz_router
 from .stages import router as stages_router
 from .status_crud import router as status_crud_router
 
@@ -23,6 +24,9 @@ router.include_router(status_crud_router, tags=["项目状态"])
 
 # 健康度相关
 router.include_router(health_router, tags=["项目健康度"])
+
+# 健康度可视化
+router.include_router(health_viz_router, tags=["项目健康度可视化"])
 
 # 阶段管理
 router.include_router(stages_router, tags=["项目阶段"])

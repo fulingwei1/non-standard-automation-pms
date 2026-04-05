@@ -38,7 +38,7 @@ from app.schemas.acceptance import (
 )
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.services.data_scope.config import DataScopeConfig
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.utils.db_helpers import get_or_404
 
 from .utils import generate_order_no, validate_acceptance_rules, validate_edit_rules
@@ -118,7 +118,7 @@ def read_acceptance_orders(
                 machine_name=machine.machine_name if machine else None,
                 acceptance_type=order.acceptance_type,
                 planned_date=order.planned_date,
-                status=order.status,
+                status=order.status or "DRAFT",
                 overall_result=order.overall_result,
                 pass_rate=order.pass_rate or Decimal("0"),
                 open_issues=open_issues,
@@ -172,7 +172,7 @@ def read_acceptance_order(
         actual_start_date=order.actual_start_date,
         actual_end_date=order.actual_end_date,
         location=order.location,
-        status=order.status,
+        status=order.status or "DRAFT",
         total_items=order.total_items or 0,
         passed_items=order.passed_items or 0,
         failed_items=order.failed_items or 0,

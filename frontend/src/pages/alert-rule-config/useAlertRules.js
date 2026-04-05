@@ -103,6 +103,7 @@ export function useAlertRules() {
       threshold_max: rule.threshold_max || "",
       condition_expr: rule.condition_expr || "",
       alert_level: rule.alert_level,
+      enforcement_mode: rule.enforcement_mode || "WARN",
       advance_days: rule.advance_days || 0,
       notify_channels: rule.notify_channels || ["SYSTEM"],
       notify_roles: rule.notify_roles || [],

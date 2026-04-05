@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from app.services.notification_service import NotificationPriority
+from app.services.notification.notification_service import NotificationPriority
 
 from .exceptions import (
     InvalidStateTransitionError,

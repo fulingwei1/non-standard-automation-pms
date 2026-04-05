@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
@@ -19,10 +20,171 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
 from app.utils.db_helpers import get_or_404
 
+
+class PaymentRecordCreate(BaseModel):
+    """创建付款记录请求"""
+
+    contract_id: int = Field(..., description="合同 ID")
+    payment_date: date = Field(..., description="付款日期")
+    amount: Decimal = Field(..., gt=0, description="付款金额")
+    payment_method: Optional[str] = Field(default=None, description="付款方式")
+    transaction_no: Optional[str] = Field(default=None, description="交易号")
+    remarks: Optional[str] = Field(default=None, description="备注")
+
+
 router = APIRouter()
 
 
-@router.get("/payments", response_model=PaginatedResponse)
+@router.get("/payments/overdue", response_model=PaginatedResponse)
+def get_overdue_payments(
+    *,
+    db: Session = Depends(deps.get_db),
+    pagination: PaginationParams = Depends(get_pagination_query),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取逾期付款列表
+    """
+    today = date.today()
+
+    query = db.query(Invoice).filter(
+        Invoice.status == "ISSUED",
+        Invoice.payment_status.in_(["PENDING", "PARTIAL"]),
+        Invoice.due_date.isnot(None),
+        Invoice.due_date < today,
+    )
+
+    # Issue 7.1: 应用财务数据权限过滤
+    query = security.filter_sales_finance_data_by_scope(
+        query, current_user, db, Invoice, "owner_id"
+    )
+
+    total = query.count()
+    invoices = apply_pagination(
+        query.order_by(desc(Invoice.due_date)), pagination.offset, pagination.limit
+    ).all()
+
+    items = []
+    for invoice in invoices:
+        contract = invoice.contract
+        total_amount = invoice.total_amount or invoice.amount or Decimal("0")
+        paid = invoice.paid_amount or Decimal("0")
+        unpaid = total_amount - paid
+        overdue_days = (today - invoice.due_date).days
+
+        items.append(
+            {
+                "id": invoice.id,
+                "invoice_code": invoice.invoice_code,
+                "contract_id": invoice.contract_id,
+                "contract_code": contract.contract_code if contract else None,
+                "project_id": invoice.project_id,
+                "project_code": invoice.project.project_code if invoice.project else None,
+                "customer_id": contract.customer_id if contract else None,
+                "customer_name": (
+                    contract.customer.customer_name if contract and contract.customer else None
+                ),
+                "invoice_amount": float(total_amount),
+                "paid_amount": float(paid),
+                "unpaid_amount": float(unpaid),
+                "payment_status": invoice.payment_status,
+                "due_date": invoice.due_date,
+                "overdue_days": overdue_days,
+            }
+        )
+
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=pagination.page,
+        page_size=pagination.page_size,
+        pages=pagination.pages_for_total(total),
+    )
+
+
+@router.get("/payments/reconciliation", response_model=ResponseModel)
+def get_payment_reconciliation(
+    *,
+    db: Session = Depends(deps.get_db),
+    contract_id: Optional[int] = Query(None, description="合同 ID 筛选"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取付款对账数据（按合同汇总已开票、已收款、未收款）
+    """
+    from app.models.sales import Contract as ContractModel
+
+    query = db.query(Invoice).filter(Invoice.status == "ISSUED")
+
+    if contract_id:
+        query = query.filter(Invoice.contract_id == contract_id)
+
+    # Issue 7.1: 应用财务数据权限过滤
+    query = security.filter_sales_finance_data_by_scope(
+        query, current_user, db, Invoice, "owner_id"
+    )
+
+    invoices = query.all()
+
+    # 按合同汇总
+    contract_data = {}
+    for invoice in invoices:
+        cid = invoice.contract_id
+        if cid not in contract_data:
+            contract = invoice.contract
+            contract_data[cid] = {
+                "contract_id": cid,
+                "contract_code": contract.contract_code if contract else None,
+                "customer_id": contract.customer_id if contract else None,
+                "customer_name": (
+                    contract.customer.customer_name if contract and contract.customer else None
+                ),
+                "total_invoiced": Decimal("0"),
+                "total_paid": Decimal("0"),
+                "invoices": [],
+            }
+        total = invoice.total_amount or invoice.amount or Decimal("0")
+        paid = invoice.paid_amount or Decimal("0")
+        contract_data[cid]["total_invoiced"] += total
+        contract_data[cid]["total_paid"] += paid
+        contract_data[cid]["invoices"].append(
+            {
+                "invoice_id": invoice.id,
+                "invoice_code": invoice.invoice_code,
+                "amount": float(total),
+                "paid_amount": float(paid),
+                "payment_status": invoice.payment_status,
+                "issue_date": invoice.issue_date,
+                "due_date": invoice.due_date,
+                "paid_date": invoice.paid_date,
+            }
+        )
+
+    result = []
+    for cid, data in contract_data.items():
+        unpaid = data["total_invoiced"] - data["total_paid"]
+        result.append(
+            {
+                "contract_id": cid,
+                "contract_code": data["contract_code"],
+                "customer_id": data["customer_id"],
+                "customer_name": data["customer_name"],
+                "total_invoiced": float(data["total_invoiced"]),
+                "total_paid": float(data["total_paid"]),
+                "total_unpaid": float(unpaid),
+                "invoice_count": len(data["invoices"]),
+                "invoices": data["invoices"],
+            }
+        )
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={"reconciliation": result},
+    )
+
+
+@router.get("/payments/records", response_model=PaginatedResponse)
 def get_payment_records(
     *,
     db: Session = Depends(deps.get_db),
@@ -112,31 +274,34 @@ def get_payment_records(
     )
 
 
-@router.post("/payments", response_model=ResponseModel)
+@router.post("/payments/records", response_model=ResponseModel)
 def create_payment_record(
     *,
     db: Session = Depends(deps.get_db),
-    invoice_id: int = Query(..., description="发票ID"),
-    paid_amount: Decimal = Query(..., description="收款金额"),
-    paid_date: date = Query(..., description="收款日期"),
-    payment_method: Optional[str] = Query(None, description="收款方式"),
-    bank_account: Optional[str] = Query(None, description="收款账户"),
-    remark: Optional[str] = Query(None, description="备注"),
+    record_data: PaymentRecordCreate,
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
     登记回款
     """
-    invoice = get_or_404(db, Invoice, invoice_id, detail="发票不存在")
+    # 根据合同 ID 查找发票
+    invoice = (
+        db.query(Invoice)
+        .filter(
+            Invoice.contract_id == record_data.contract_id,
+            Invoice.status == "ISSUED"
+        )
+        .first()
+    )
 
-    if invoice.status != "ISSUED":
-        raise HTTPException(status_code=400, detail="只有已开票的发票才能登记回款")
+    if not invoice:
+        raise HTTPException(status_code=404, detail="发票不存在")
 
     # 更新收款信息
     current_paid = invoice.paid_amount or Decimal("0")
-    new_paid = current_paid + paid_amount
+    new_paid = current_paid + record_data.amount
     invoice.paid_amount = new_paid
-    invoice.paid_date = paid_date
+    invoice.paid_date = record_data.payment_date
 
     # 更新收款状态
     total = invoice.total_amount or invoice.amount or Decimal("0")
@@ -148,13 +313,13 @@ def create_payment_record(
         invoice.payment_status = "PENDING"
 
     # 更新备注
-    payment_note = f"收款记录: {paid_date}, 金额: {paid_amount}"
-    if payment_method:
-        payment_note += f", 方式: {payment_method}"
-    if bank_account:
-        payment_note += f", 账户: {bank_account}"
-    if remark:
-        payment_note += f", 备注: {remark}"
+    payment_note = f"收款记录：{record_data.payment_date}, 金额：{record_data.amount}"
+    if record_data.payment_method:
+        payment_note += f", 方式：{record_data.payment_method}"
+    if record_data.transaction_no:
+        payment_note += f", 交易号：{record_data.transaction_no}"
+    if record_data.remarks:
+        payment_note += f", 备注：{record_data.remarks}"
 
     invoice.remark = (invoice.remark or "") + f"\n{payment_note}"
 
@@ -172,7 +337,7 @@ def create_payment_record(
     )
 
 
-@router.get("/payments/{payment_id}", response_model=ResponseModel)
+@router.get("/payments/records/{payment_id}", response_model=ResponseModel)
 def get_payment_detail(
     *,
     db: Session = Depends(deps.get_db),
@@ -234,7 +399,7 @@ def get_payment_detail(
     )
 
 
-@router.put("/payments/{payment_id}/match-invoice", response_model=ResponseModel)
+@router.put("/payments/records/{payment_id}/match-invoice", response_model=ResponseModel)
 def match_payment_to_invoice(
     *,
     db: Session = Depends(deps.get_db),

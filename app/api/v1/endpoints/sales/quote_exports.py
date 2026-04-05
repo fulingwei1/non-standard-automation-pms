@@ -51,6 +51,10 @@ def export_quote_to_excel(
     if not quote:
         raise HTTPException(status_code=404, detail="报价不存在")
 
+    # 数据权限检查
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权导出该报价")
+
     # 获取版本
     if version_id:
         version = (
@@ -145,6 +149,10 @@ def export_quote_to_pdf(
 
     if not quote:
         raise HTTPException(status_code=404, detail="报价不存在")
+
+    # 数据权限检查
+    if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+        raise HTTPException(status_code=403, detail="无权导出该报价")
 
     # 获取版本
     if version_id:
@@ -285,6 +293,11 @@ def batch_export_quotes(
     quotes = db.query(Quote).filter(Quote.id.in_(ids)).all()
     if len(quotes) != len(ids):
         raise HTTPException(status_code=404, detail="部分报价不存在")
+
+    # 数据权限检查：过滤掉用户无权访问的报价
+    for quote in quotes:
+        if not security.check_sales_data_permission(quote, current_user, db, "owner_id"):
+            raise HTTPException(status_code=403, detail=f"无权导出报价 {quote.quote_code}")
 
     # 实际项目中这里应该创建异步任务
     return ResponseModel(

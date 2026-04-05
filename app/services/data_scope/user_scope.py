@@ -12,6 +12,8 @@ from app.models.enums import DataScopeEnum
 from app.models.project import ProjectMember
 from app.models.user import User
 
+from .normalization import normalize_data_scope, pick_broadest_scope
+
 
 class UserScopeService:
     """用户权限范围服务"""
@@ -28,22 +30,13 @@ class UserScopeService:
 
         # 获取用户所有角色的数据权限范围
         scopes = set()
-        for user_role in user.roles:
+        user_roles = user.roles.all() if hasattr(user.roles, "all") else user.roles
+        for user_role in user_roles or []:
             role = user_role.role
             if role and role.is_active:
-                scopes.add(role.data_scope)
+                scopes.add(normalize_data_scope(role.data_scope))
 
-        # 返回最宽松的权限
-        if DataScopeEnum.ALL.value in scopes:
-            return DataScopeEnum.ALL.value
-        elif DataScopeEnum.DEPT.value in scopes:
-            return DataScopeEnum.DEPT.value
-        elif DataScopeEnum.SUBORDINATE.value in scopes:
-            return DataScopeEnum.SUBORDINATE.value
-        elif DataScopeEnum.PROJECT.value in scopes:
-            return DataScopeEnum.PROJECT.value
-        else:
-            return DataScopeEnum.OWN.value
+        return pick_broadest_scope(scopes)
 
     @staticmethod
     def get_user_project_ids(db: Session, user_id: int) -> Set[int]:

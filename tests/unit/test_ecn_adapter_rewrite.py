@@ -807,7 +807,7 @@ class TestEcnAdapterCore(unittest.TestCase):
     def test_submit_for_approval_success(self):
         """测试成功提交ECN到审批引擎"""
         # 在方法内部导入，所以需要patch正确的位置
-        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as mock_wf_class:
+        with patch("app.services.approval_engine.adapters.ecn.ApprovalEngineService") as mock_wf_class:
             mock_ecn = self._create_mock_ecn(
                 ecn_no="ECN-2024-001",
                 ecn_title="测试变更",
@@ -840,13 +840,13 @@ class TestEcnAdapterCore(unittest.TestCase):
 
             self.db.query.side_effect = query_side_effect
 
-            # Mock WorkflowEngine
+            # Mock ApprovalEngineService
             mock_instance = MagicMock(spec=ApprovalInstance)
             mock_instance.id = 100
             mock_instance.status = "PENDING"
 
             mock_engine = MagicMock()
-            mock_engine.create_instance.return_value = mock_instance
+            mock_engine.submit.return_value = mock_instance
             mock_wf_class.return_value = mock_engine
 
             result = self.adapter.submit_for_approval(
@@ -854,7 +854,7 @@ class TestEcnAdapterCore(unittest.TestCase):
             )
 
             # 验证调用
-            mock_engine.create_instance.assert_called_once()
+            mock_engine.submit.assert_called_once()
             self.assertEqual(mock_ecn.approval_instance_id, 100)
             self.assertEqual(result, mock_instance)
             self.db.add.assert_called_with(mock_ecn)
@@ -862,7 +862,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_submit_for_approval_already_submitted(self):
         """测试ECN已提交审批"""
-        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as mock_wf_class:
+        with patch("app.services.approval_engine.adapters.ecn.ApprovalEngineService") as mock_wf_class:
             mock_ecn = self._create_mock_ecn(
                 ecn_no="ECN-2024-002", approval_instance_id=50  # 已有实例ID
             )
@@ -884,7 +884,7 @@ class TestEcnAdapterCore(unittest.TestCase):
 
     def test_build_form_data_in_submit_for_approval(self):
         """测试在submit_for_approval中构建表单数据"""
-        with patch("app.services.approval_engine.workflow_engine.WorkflowEngine") as mock_wf_class:
+        with patch("app.services.approval_engine.adapters.ecn.ApprovalEngineService") as mock_wf_class:
             mock_ecn = self._create_mock_ecn(
                 id=1,
                 ecn_no="ECN-2024-001",
@@ -914,13 +914,13 @@ class TestEcnAdapterCore(unittest.TestCase):
             mock_instance = MagicMock(spec=ApprovalInstance)
             mock_instance.id = 100
             mock_engine = MagicMock()
-            mock_engine.create_instance.return_value = mock_instance
+            mock_engine.submit.return_value = mock_instance
             mock_wf_class.return_value = mock_engine
 
             self.adapter.submit_for_approval(mock_ecn, initiator_id=1)
 
-            # 获取create_instance的调用参数
-            call_args = mock_engine.create_instance.call_args
+            # 获取submit的调用参数
+            call_args = mock_engine.submit.call_args
             config = call_args.kwargs["config"]
 
             # 验证表单数据

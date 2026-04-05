@@ -60,18 +60,20 @@ export default function ServiceTicketManagement() {
     total: 0,
     pending: 0,
     inProgress: 0,
-    completed: 0,
+    pendingVerify: 0,
+    closed: 0,
     overdue: 0
   });
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterUrgency, setFilterUrgency] = useState("");
-  const [filterDateRange, setFilterDateRange] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filterUrgency, setFilterUrgency] = useState("ALL");
+  const [filterProblemType, setFilterProblemType] = useState("ALL");
+  const [filterDateRange, setFilterDateRange] = useState({ start: "", end: "" });
 
   // Sort state
-  const [sortField, setSortField] = useState("created_time");
+  const [sortField, setSortField] = useState("reported_time");
   const [sortDirection, setSortDirection] = useState("desc");
 
   // Dialog states
@@ -109,7 +111,8 @@ export default function ServiceTicketManagement() {
         total: 0,
         pending: 0,
         inProgress: 0,
-        completed: 0,
+        pendingVerify: 0,
+        closed: 0,
         overdue: 0
       });
     } catch (error) {
@@ -142,40 +145,29 @@ export default function ServiceTicketManagement() {
     }
 
     // Status filter
-    if (filterStatus) {
-      filtered = (filtered || []).filter((ticket) => ticket.status === filterStatus);
+    if (filterStatus && filterStatus !== "ALL") {
+      const normalizedStatus = filterStatus === "ASSIGNED" ? "IN_PROGRESS" : filterStatus;
+      filtered = (filtered || []).filter((ticket) => ticket.status === normalizedStatus);
     }
 
     // Urgency filter
-    if (filterUrgency) {
+    if (filterUrgency && filterUrgency !== "ALL") {
       filtered = (filtered || []).filter((ticket) => ticket.urgency === filterUrgency);
     }
 
-    // Date range filter
-    if (filterDateRange !== "all") {
-      const now = new Date();
-      const filterDate = new Date();
+    if (filterProblemType && filterProblemType !== "ALL") {
+      filtered = (filtered || []).filter((ticket) => ticket.problem_type === filterProblemType);
+    }
 
-      switch (filterDateRange) {
-        case "today":
-          filterDate.setDate(now.getDate() - 1);
-          break;
-        case "week":
-          filterDate.setDate(now.getDate() - 7);
-          break;
-        case "month":
-          filterDate.setMonth(now.getMonth() - 1);
-          break;
-        case "quarter":
-          filterDate.setMonth(now.getMonth() - 3);
-          break;
-        default:
-          break;
-      }
-
+    if (filterDateRange.start || filterDateRange.end) {
       filtered = (filtered || []).filter((ticket) => {
-        const ticketDate = new Date(ticket.created_time);
-        return ticketDate >= filterDate;
+        const ticketDate = new Date(ticket.reported_time || ticket.created_time);
+        if (Number.isNaN(ticketDate.getTime())) {
+          return false;
+        }
+        const afterStart = !filterDateRange.start || ticketDate >= new Date(`${filterDateRange.start}T00:00:00`);
+        const beforeEnd = !filterDateRange.end || ticketDate <= new Date(`${filterDateRange.end}T23:59:59`);
+        return afterStart && beforeEnd;
       });
     }
 
@@ -204,7 +196,7 @@ export default function ServiceTicketManagement() {
     });
 
     setFilteredTickets(filtered);
-  }, [tickets, searchTerm, filterStatus, filterUrgency, filterDateRange, sortField, sortDirection]);
+  }, [tickets, searchTerm, filterStatus, filterUrgency, filterProblemType, filterDateRange, sortField, sortDirection]);
 
   // Event handlers
   const handleCreateTicket = async (ticketData) => {
@@ -392,7 +384,7 @@ export default function ServiceTicketManagement() {
 
       <div className="p-6 max-w-[1600px] mx-auto space-y-6">
         {/* Statistics Cards */}
-        <ServiceTicketStats statistics={statistics} loading={loading} />
+        <ServiceTicketStats tickets={filteredTickets} stats={statistics} loading={loading} />
 
         {/* Filters and Search */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
@@ -401,21 +393,25 @@ export default function ServiceTicketManagement() {
           </CardHeader>
           <CardContent>
             <ServiceTicketListHeader
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-              filterUrgency={filterUrgency}
-              setFilterUrgency={setFilterUrgency}
-              filterDateRange={filterDateRange}
-              setFilterDateRange={setFilterDateRange}
-              sortField={sortField}
-              setSortField={setSortField}
-              sortDirection={sortDirection}
-              setSortDirection={setSortDirection}
-              tickets={filteredTickets}
+              searchQuery={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={filterStatus}
+              onStatusChange={setFilterStatus}
+              urgencyFilter={filterUrgency}
+              onUrgencyChange={setFilterUrgency}
+              problemTypeFilter={filterProblemType}
+              onProblemTypeChange={setFilterProblemType}
+              dateRange={filterDateRange}
+              onDateRangeChange={setFilterDateRange}
+              sortBy={sortField}
+              onSortChange={setSortField}
+              sortOrder={sortDirection}
+              onSortOrderChange={setSortDirection}
+              onCreateTicket={() => setShowCreateDialog(true)}
+              onRefresh={handleRefresh}
+              exporting={loading}
               onExport={() => handleBatchExport(filteredTickets)}
-              loading={loading} />
+            />
 
           </CardContent>
         </Card>
@@ -431,19 +427,14 @@ export default function ServiceTicketManagement() {
             <ServiceTicketListTable
               tickets={filteredTickets}
               loading={loading}
-              selectedTickets={selectedTickets}
-              onSelectTicket={handleSelectTicket}
-              onSelectAll={handleSelectAll}
+              selectedTicketIds={new Set(selectedTickets)}
+              onSelectionChange={(selection) => setSelectedTickets(Array.from(selection))}
               onViewDetail={handleViewDetail}
-              onAssign={(ticket) => {
+              onEditTicket={(ticket) => {
                 setSelectedTicket(ticket);
-                // Show assign dialog
+                setShowDetailDialog(true);
               }}
-              onClose={(ticket) => {
-                setSelectedTicket(ticket);
-                // Show close dialog
-              }}
-              searchTerm={searchTerm} />
+            />
 
           </CardContent>
         </Card>

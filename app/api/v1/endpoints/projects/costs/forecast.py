@@ -15,7 +15,7 @@ from app.api import deps
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.cost_forecast_service import CostForecastService
+from app.services.cost.cost_forecast_service import CostForecastService
 
 router = APIRouter()
 

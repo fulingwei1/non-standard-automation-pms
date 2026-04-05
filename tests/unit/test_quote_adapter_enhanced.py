@@ -434,7 +434,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
 
     # ========== submit_for_approval 测试 ========== #
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_submit_for_approval_success(self, mock_workflow_engine_class):
         """测试成功提交审批"""
         mock_version = Mock()
@@ -451,7 +451,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         mock_instance.status = "PENDING"
 
         mock_engine = Mock()
-        mock_engine.create_instance.return_value = mock_instance
+        mock_engine.submit.return_value = mock_instance
         mock_workflow_engine_class.return_value = mock_engine
 
         result = self.adapter.submit_for_approval(mock_version, initiator_id=1)
@@ -462,7 +462,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         self.db.add.assert_called_once_with(mock_version)
         self.db.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_submit_for_approval_already_submitted(self, mock_workflow_engine_class):
         """测试重复提交审批"""
         mock_version = Mock()
@@ -477,7 +477,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         self.assertEqual(result, mock_instance)
         mock_workflow_engine_class.assert_not_called()
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.quote.ApprovalEngineService")
     def test_submit_for_approval_with_custom_params(self, mock_workflow_engine_class):
         """测试带自定义参数提交审批"""
         mock_version = Mock()
@@ -494,7 +494,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         mock_instance.status = "PENDING"
 
         mock_engine = Mock()
-        mock_engine.create_instance.return_value = mock_instance
+        mock_engine.submit.return_value = mock_instance
         mock_workflow_engine_class.return_value = mock_engine
 
         result = self.adapter.submit_for_approval(
@@ -507,7 +507,7 @@ class TestQuoteApprovalAdapter(unittest.TestCase):
         )
 
         self.assertEqual(result, mock_instance)
-        mock_engine.create_instance.assert_called_once()
+        mock_engine.submit.assert_called_once()
 
     # ========== create_quote_approval 测试 ========== #
 

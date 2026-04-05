@@ -18,7 +18,6 @@ from sqlalchemy.orm import Session
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.contracts import Contract
 from app.models.user import User
-from app.schemas.approval.instance import ApprovalInstanceCreate
 
 from .base import ApprovalAdapter
 
@@ -181,30 +180,21 @@ class ContractApprovalAdapter(ApprovalAdapter):
             "acceptance_summary": contract.acceptance_summary,
         }
 
-        # 创建审批实例
-        ApprovalInstanceCreate(
+        # 使用统一审批引擎创建实例
+        from ..engine import ApprovalEngineService
+
+        engine = ApprovalEngineService(self.db)
+
+        instance = engine.submit(
             template_code="SALES_CONTRACT",
             entity_type="CONTRACT",
             entity_id=contract.id,
             form_data=form_data,
+            initiator_id=initiator_id,
             title=title or f"合同审批 - {contract.contract_code}",
             summary=summary or f"合同审批：{contract.contract_code}",
             urgency=urgency,
             cc_user_ids=cc_user_ids,
-        )
-
-        # 使用统一引擎创建实例
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
-
-        workflow_engine = WorkflowEngine(self.db)
-
-        instance = workflow_engine.create_instance(
-            flow_code="SALES_CONTRACT",
-            business_type="SALES_CONTRACT",
-            business_id=contract.id,
-            business_title=contract.contract_code,
-            submitted_by=initiator_id,
-            config={"contract": form_data},
         )
 
         # 更新合同，关联审批实例

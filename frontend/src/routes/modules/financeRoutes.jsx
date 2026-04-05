@@ -1,16 +1,17 @@
 import { Route, Navigate } from "react-router-dom";
+import { lazyLoad } from "../lazyLoad";
 
-import CostAccounting from "../../pages/CostAccounting";
-import PaymentApproval from "../../pages/PaymentApproval";
-import ProjectSettlement from "../../pages/ProjectSettlement";
-import FinancialReports from "../../pages/FinancialReports";
-import CostCollection from "../../pages/CostCollection";
-import QuoteActualCompare from "../../pages/QuoteActualCompare";
-import CostVarianceAnalysis from "../../pages/CostVarianceAnalysis";
-import LaborCostDetail from "../../pages/LaborCostDetail";
-import MultiCurrency from "../../pages/MultiCurrency";
-import AnalyticsDashboard from "../../pages/AnalyticsDashboard";
-import FinanceCostCenter from "../../pages/FinanceCostCenter";
+const CostAccounting = lazyLoad(() => import("../../pages/CostAccounting"));
+const PaymentApproval = lazyLoad(() => import("../../pages/PaymentApproval"));
+const ProjectSettlement = lazyLoad(() => import("../../pages/ProjectSettlement"));
+const FinancialReports = lazyLoad(() => import("../../pages/FinancialReports"));
+const CostCollection = lazyLoad(() => import("../../pages/CostCollection"));
+const QuoteActualCompare = lazyLoad(() => import("../../pages/QuoteActualCompare"));
+const CostVarianceAnalysis = lazyLoad(() => import("../../pages/CostVarianceAnalysis"));
+const LaborCostDetail = lazyLoad(() => import("../../pages/LaborCostDetail"));
+const MultiCurrency = lazyLoad(() => import("../../pages/MultiCurrency"));
+const AnalyticsDashboard = lazyLoad(() => import("../../pages/AnalyticsDashboard"));
+const FinanceCostCenter = lazyLoad(() => import("../../pages/FinanceCostCenter"));
 
 export function FinanceRoutes() {
   return (

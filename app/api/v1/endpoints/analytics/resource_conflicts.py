@@ -24,6 +24,7 @@ from app.models.project import (
 )
 from app.models.user import User
 from app.schemas.common import ResponseModel
+from app.services.conflict_mediation_service import ConflictMediationService
 
 router = APIRouter()
 
@@ -279,6 +280,31 @@ def get_conflicts_summary(
             "affected_projects": affected_projects or 0,
         }
     )
+
+
+@router.get("/analytics/resource-conflicts/{conflict_id}/recommendations", response_model=ResponseModel)
+def get_conflict_recommendations(
+    conflict_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    获取冲突的自动调解建议
+
+    返回三类建议：
+    - alternative_candidates: 替代人选推荐
+    - schedule_adjustments: 时间调整建议
+    - workload_balancing: 负荷均衡建议
+    """
+    conflict = db.query(ResourceConflict).filter(ResourceConflict.id == conflict_id).first()
+
+    if not conflict:
+        raise HTTPException(status_code=404, detail="冲突记录不存在")
+
+    service = ConflictMediationService(db)
+    recommendations = service.get_recommendations(conflict_id)
+
+    return ResponseModel(data=recommendations)
 
 
 @router.post("/analytics/resource-conflicts/{conflict_id}/resolve", response_model=ResponseModel)

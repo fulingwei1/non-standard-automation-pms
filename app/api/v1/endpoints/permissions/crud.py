@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.common.pagination import PaginationParams, get_pagination_query
+from app.core.permission_codes import canonicalize_permission_code
 from app.core.security import require_permission
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, ResponseModel
@@ -59,7 +60,7 @@ def list_permissions(
     items = [
         {
             "id": p.id,
-            "permission_code": p.perm_code,
+            "permission_code": canonicalize_permission_code(p.perm_code),
             "permission_name": p.perm_name,
             "module": p.module,
             "page_code": p.page_code,
@@ -116,7 +117,7 @@ def get_permission(
 
     result = {
         "id": permission.id,
-        "permission_code": permission.perm_code,
+        "permission_code": canonicalize_permission_code(permission.perm_code),
         "permission_name": permission.perm_name,
         "module": permission.module,
         "page_code": permission.page_code,
@@ -173,7 +174,7 @@ def create_permission(
 
     result = {
         "id": permission.id,
-        "permission_code": permission.perm_code,
+        "permission_code": canonicalize_permission_code(permission.perm_code),
         "permission_name": permission.perm_name,
         "module": permission.module,
     }
@@ -222,7 +223,7 @@ def update_permission(
 
     result = {
         "id": permission.id,
-        "permission_code": permission.perm_code,
+        "permission_code": canonicalize_permission_code(permission.perm_code),
         "permission_name": permission.perm_name,
         "module": permission.module,
     }
@@ -295,7 +296,7 @@ def get_role_permissions(
         "permissions": [
             {
                 "id": p.id,
-                "permission_code": p.perm_code,
+                "permission_code": canonicalize_permission_code(p.perm_code),
                 "permission_name": p.perm_name,
                 "module": p.module,
                 "action": p.action,
@@ -385,7 +386,7 @@ def get_user_permissions(
         "permissions": [
             {
                 "id": p.id,
-                "permission_code": p.perm_code,
+                "permission_code": canonicalize_permission_code(p.perm_code),
                 "permission_name": p.perm_name,
                 "module": p.module,
                 "action": p.action,

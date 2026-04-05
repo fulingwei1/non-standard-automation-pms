@@ -15,7 +15,7 @@ from app.core import security
 from app.models.ecn import EcnBomImpact
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.services.ecn_bom_analysis_service import EcnBomAnalysisService
+from app.services.ecn.bom_analysis import EcnBomAnalysisService
 
 router = APIRouter()
 

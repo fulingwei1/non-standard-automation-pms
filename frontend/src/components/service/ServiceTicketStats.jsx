@@ -20,7 +20,20 @@ import {
 
 export function ServiceTicketStats({ tickets = [], stats: externalStats = null }) {
   // 计算统计数据
-  const stats = externalStats || calculateTicketStats(tickets);
+  const stats = {
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    pendingVerify: 0,
+    closed: 0,
+    urgent: 0,
+    high: 0,
+    avgResolutionTime: 0,
+    satisfactionScore: 0,
+    ...(externalStats || calculateTicketStats(tickets) || {}),
+  };
+  const satisfactionScore = Number(stats.satisfactionScore ?? 0);
+  const avgResolutionTime = Number(stats.avgResolutionTime ?? 0);
 
   const cardConfigs = [
     {
@@ -91,7 +104,7 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
     },
     {
       title: "平均解决时间",
-      value: `${Math.round(stats.avgResolutionTime)}h`,
+      value: `${Math.round(avgResolutionTime)}h`,
       icon: Clock,
       color: "text-indigo-600",
       bgColor: "bg-indigo-50 dark:bg-indigo-900/20",
@@ -103,14 +116,14 @@ export function ServiceTicketStats({ tickets = [], stats: externalStats = null }
   const satisfactionCards = [
     {
       title: "客户满意度",
-      value: stats.satisfactionScore.toFixed(1),
+      value: satisfactionScore.toFixed(1),
       icon: Star,
       color: "text-yellow-600",
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
       borderColor: "border-yellow-200 dark:border-yellow-800",
       description: "客户评分（满分5.0）",
       showStars: true,
-      rating: stats.satisfactionScore
+      rating: satisfactionScore
     },
     {
       title: "关闭率",

@@ -155,6 +155,10 @@ def create_api_router() -> APIRouter:
         print(f"✗ 库存管理模块加载失败: {e}")
 
     # ==================== 缺料管理 ====================
+    # NOTE: This single registration covers all shortage sub-routers including
+    # the smart-alerts intelligence layer (mounted at /shortage/smart/ via
+    # shortage/__init__.py). Do NOT add a separate registration for smart_alerts
+    # here — doing so would create duplicate routes at /shortage/smart-alerts/.
     try:
         from app.api.v1.endpoints.shortage import router as shortage_router
 
@@ -162,17 +166,6 @@ def create_api_router() -> APIRouter:
         print("✓ 缺料管理模块加载成功")
     except Exception as e:
         print(f"✗ 缺料管理模块加载失败: {e}")
-
-    # ==================== 智能缺料预警 ====================
-    try:
-        from app.api.v1.endpoints.shortage.smart_alerts import router as smart_alerts_router
-
-        api_router.include_router(
-            smart_alerts_router, prefix="/shortage/smart-alerts", tags=["smart-alerts"]
-        )
-        print("✓ 智能缺料预警模块加载成功")
-    except Exception as e:
-        print(f"✗ 智能缺料预警模块加载失败: {e}")
 
     # ==================== 预售管理 ====================
     try:

@@ -280,9 +280,13 @@ class RoleTemplate(Base, TimestampMixin):
     description = Column(Text, comment="模板描述")
     permission_snapshot = Column(Text, comment="权限快照")
     is_active = Column(Boolean, default=True, comment="是否启用")
+    version = Column(Integer, default=1, nullable=False, comment="版本号")
+    version_note = Column(String(200), comment="版本说明")
+    source_role_id = Column(Integer, comment="来源角色ID")
+    source_role_name = Column(String(100), comment="来源角色名称")
 
     def __repr__(self):
-        return f"<RoleTemplate {self.template_code}>"
+        return f"<RoleTemplate {self.template_code} v{self.version}>"
 
 
 class PermissionAudit(Base, TimestampMixin):

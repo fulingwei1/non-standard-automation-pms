@@ -26,6 +26,19 @@ export default defineConfig({
       preserveSymlinks: false,
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-antd': ['antd'],
+          'vendor-antd-icons': ['@ant-design/icons'],
+          'vendor-charts': ['recharts'],
+          'vendor-antd-plots': ['@ant-design/plots'],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {

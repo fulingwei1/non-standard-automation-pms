@@ -39,24 +39,19 @@ class TestSalesCustomersAPI:
         headers = _auth_headers(admin_token)
 
         customer_data = {
-            "name": "测试科技有限公司",
+            "customer_name": "测试科技有限公司",
             "short_name": "测试科技",
             "industry": "制造业",
-            "level": "A",
-            "contact_person": "张经理",
-            "contact_phone": "13800138000",
-            "contact_email": "zhang@test.com",
             "address": "北京市海淀区",
-            "description": "重要客户",
         }
 
         response = client.post(
-            f"{settings.API_V1_PREFIX}/customers/", headers=headers, json=customer_data
+            f"{settings.API_V1_PREFIX}/sales/customers", headers=headers, json=customer_data
         )
 
         assert response.status_code in [200, 201], response.text
         data = response.json()
-        assert data["name"] == customer_data["name"]
+        assert data["customer_name"] == customer_data["customer_name"]
 
     def test_get_customer_detail(self, client: TestClient, admin_token: str):
         """测试获取客户详情"""
@@ -205,7 +200,7 @@ class TestSalesCustomersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(f"{settings.API_V1_PREFIX}/customers/1/projects", headers=headers)
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/customers/1/projects", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Customer projects API not implemented")
@@ -219,7 +214,7 @@ class TestSalesCustomersAPI:
 
         headers = _auth_headers(admin_token)
 
-        response = client.get(f"{settings.API_V1_PREFIX}/customers/statistics", headers=headers)
+        response = client.get(f"{settings.API_V1_PREFIX}/sales/customers/stats", headers=headers)
 
         if response.status_code == 404:
             pytest.skip("Customer statistics API not implemented")

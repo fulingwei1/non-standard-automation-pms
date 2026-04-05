@@ -74,6 +74,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('refresh_token');
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);

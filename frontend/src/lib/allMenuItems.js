@@ -79,6 +79,12 @@ export const allMenuGroups = [
         icon: "LayoutDashboard",
       },
       {
+        id: "sales-workstation",
+        name: "销售员工作站",
+        path: "/sales/workstation",
+        icon: "Briefcase",
+      },
+      {
         id: "sales-director-dashboard",
         name: "销售总监工作台",
         path: "/sales-director-dashboard",
@@ -271,8 +277,8 @@ export const allMenuGroups = [
         path: "/suppliers",
         icon: "Building2",
       },
-      { id: "shortage", name: "缺料管理", path: "/shortage", icon: "Package" },
-      { id: "arrivals", name: "到货跟踪", path: "/arrivals", icon: "Truck" },
+      { id: "shortage", name: "缺料看板", path: "/shortage/dashboard", icon: "Package" },
+      { id: "arrivals", name: "到货跟踪", path: "/arrival-tracking", icon: "Truck" },
     ],
   },
   {
@@ -477,6 +483,12 @@ export const allMenuGroups = [
         name: "财务成本上传",
         path: "/financial-costs",
         icon: "DollarSign",
+      },
+      {
+        id: "finance-analytics-dashboard",
+        name: "财务分析",
+        path: "/finance/analytics-dashboard",
+        icon: "BarChart3",
       },
       { id: "costs", name: "成本核算", path: "/costs", icon: "Calculator" },
       {

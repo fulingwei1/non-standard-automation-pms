@@ -8,6 +8,7 @@ worker Schemas
 """
 生产管理模块 Schema
 """
+from datetime import date
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -24,20 +25,30 @@ class WorkerCreate(BaseModel):
     worker_name: str = Field(max_length=100, description="工人姓名")
     user_id: Optional[int] = Field(default=None, description="关联用户ID")
     workshop_id: Optional[int] = Field(default=None, description="所属车间ID")
-    worker_type: Optional[str] = Field(default=None, description="工人类型")
+    worker_type: Optional[str] = Field(default=None, description="工人类型/岗位")
     phone: Optional[str] = Field(default=None, max_length=20, description="联系电话")
+    email: Optional[str] = Field(default=None, description="邮箱（兼容前端展示）")
+    skill_level: Optional[str] = Field(default="JUNIOR", description="技能等级")
+    hire_date: Optional[date] = Field(default=None, description="入职日期")
     status: str = Field(default="ACTIVE", description="状态：ACTIVE/LEAVE/RESIGNED")
+    is_active: bool = Field(default=True, description="是否启用")
     remark: Optional[str] = None
 
 
 class WorkerUpdate(BaseModel):
     """更新生产人员"""
 
+    worker_code: Optional[str] = None
     worker_name: Optional[str] = None
+    user_id: Optional[int] = None
     workshop_id: Optional[int] = None
     worker_type: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[str] = None
+    skill_level: Optional[str] = None
+    hire_date: Optional[date] = None
     status: Optional[str] = None
+    is_active: Optional[bool] = None
     remark: Optional[str] = None
 
 
@@ -52,7 +63,11 @@ class WorkerResponse(TimestampSchema):
     workshop_name: Optional[str] = None
     worker_type: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[str] = None
+    skill_level: Optional[str] = None
+    hire_date: Optional[date] = None
     status: str
+    is_active: bool = True
     remark: Optional[str] = None
 
 

@@ -5,14 +5,16 @@
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
+
+from fastapi import HTTPException
 
 from app.api import deps
 from app.core import security
@@ -23,6 +25,65 @@ from app.utils.db_helpers import get_or_404
 router = APIRouter()
 
 
+@router.get("/contracts/expiring")
+def get_expiring_contracts(
+    *,
+    db: Session = Depends(deps.get_db),
+    days: int = Query(30, ge=1, le=3650, description="未来多少天内到期"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取即将到期合同（兼容 /sales/contracts/expiring）。"""
+    threshold = datetime.now().date() + timedelta(days=days)
+
+    contracts = (
+        db.query(Contract)
+        .filter(Contract.expiry_date.isnot(None))
+        .filter(Contract.expiry_date <= threshold)
+        .order_by(Contract.expiry_date.asc())
+        .all()
+    )
+
+    return {
+        "items": [
+            {
+                "id": c.id,
+                "contract_code": c.contract_code,
+                "contract_name": c.contract_name,
+                "expiry_date": c.expiry_date,
+                "status": c.status,
+            }
+            for c in contracts
+        ],
+        "total": len(contracts),
+        "days": days,
+    }
+
+
+@router.get("/contracts/statistics")
+def get_contract_statistics(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """获取合同统计（兼容 /sales/contracts/statistics）。"""
+    total_contracts = db.query(func.count(Contract.id)).scalar() or 0
+    total_amount = db.query(func.coalesce(func.sum(Contract.total_amount), 0)).scalar() or 0
+
+    status_rows = (
+        db.query(Contract.status, func.count(Contract.id))
+        .group_by(Contract.status)
+        .all()
+    )
+
+    status_breakdown = {status or "unknown": count for status, count in status_rows}
+
+    return {
+        "total_contracts": int(total_contracts),
+        "total_amount": float(total_amount),
+        "status_breakdown": status_breakdown,
+    }
+
+
 @router.get("/contracts/export")
 def export_contracts(
     *,
@@ -31,7 +92,7 @@ def export_contracts(
     status: Optional[str] = Query(None, description="状态筛选"),
     customer_id: Optional[int] = Query(None, description="客户ID筛选"),
     owner_id: Optional[int] = Query(None, description="负责人ID筛选"),
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:export")),
 ) -> Any:
     """
     Issue 4.3: 导出合同列表（Excel）
@@ -42,6 +103,12 @@ def export_contracts(
     )
 
     query = db.query(Contract)
+
+    # 数据权限过滤 —— 导出只能导出权限范围内的合同
+    query = security.filter_sales_data_by_scope(
+        query, current_user, db, Contract, "sales_owner_id"
+    )
+
     if keyword:
         query = query.filter(
             or_(
@@ -120,7 +187,7 @@ def export_contract_pdf(
     *,
     db: Session = Depends(deps.get_db),
     contract_id: int,
-    current_user: User = Depends(security.get_current_active_user),
+    current_user: User = Depends(security.require_permission("contract:export")),
 ) -> Any:
     """
     Issue 4.5: 导出合同 PDF
@@ -128,6 +195,9 @@ def export_contract_pdf(
     from app.services.pdf_export_service import PDFExportService, create_pdf_response
 
     contract = get_or_404(db, Contract, contract_id, detail="合同不存在")
+
+    if not security.check_sales_data_permission(contract, current_user, db, "sales_owner_id"):
+        raise HTTPException(status_code=403, detail="无权访问该合同")
 
     deliverables = (
         db.query(ContractDeliverable).filter(ContractDeliverable.contract_id == contract_id).all()

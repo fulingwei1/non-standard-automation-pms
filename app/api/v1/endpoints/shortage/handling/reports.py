@@ -28,7 +28,7 @@ from app.api import deps
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_keyword_filter, apply_pagination
 from app.core import security
-from app.models.machine import Machine
+from app.models.project.core import Machine
 from app.models.material import Material
 from app.models.project import Project
 from app.models.shortage import ShortageReport

@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func, or_
@@ -17,11 +17,17 @@ from app.core import security
 from app.models.project.customer import Customer
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
+from app.models.sales import Contract, Opportunity, Quote
 from app.schemas.sales import (
     CustomerCreate,
     CustomerResponse,
     CustomerStatsResponse,
     CustomerUpdate,
+)
+from app.schemas.sales.customers import (
+    ContactBriefResponse,
+    CustomerDetailResponse,
+    CustomerInteractionItem,
 )
 from app.utils.db_helpers import delete_obj, get_or_404, save_obj
 
@@ -172,14 +178,14 @@ def get_customer_stats(
     )
 
 
-@router.get("/customers/{customer_id}", response_model=CustomerResponse)
+@router.get("/customers/{customer_id}", response_model=CustomerDetailResponse)
 def read_customer(
     customer_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(security.get_current_active_user),
 ) -> Any:
     """
-    获取客户详情
+    获取客户详情（含联系人列表和交互历史）
     """
     customer = (
         db.query(Customer)
@@ -199,14 +205,104 @@ def read_customer(
     if not security.check_sales_data_permission(customer, current_user, db, "sales_owner_id"):
         raise HTTPException(status_code=403, detail="无权访问该客户")
 
+    # 构建联系人列表
+    contacts = [
+        ContactBriefResponse(
+            id=c.id,
+            name=c.name,
+            position=c.position,
+            mobile=c.mobile,
+            email=c.email,
+            is_primary=c.is_primary or False,
+        )
+        for c in customer.contacts
+    ]
+
+    # 构建交互历史
+    interactions = []
+
+    # 商机
+    opportunities = (
+        db.query(Opportunity)
+        .filter(Opportunity.customer_id == customer_id)
+        .order_by(desc(Opportunity.created_at))
+        .limit(20)
+        .all()
+    )
+    for opp in opportunities:
+        interactions.append(
+            CustomerInteractionItem(
+                interaction_type="opportunity",
+                entity_id=opp.id,
+                title=opp.opp_name,
+                status=opp.stage,
+                amount=opp.est_amount,
+                owner_name=opp.owner.real_name if opp.owner else None,
+                created_at=opp.created_at,
+                updated_at=opp.updated_at,
+            )
+        )
+
+    # 报价
+    quotes = (
+        db.query(Quote)
+        .filter(Quote.customer_id == customer_id)
+        .order_by(desc(Quote.created_at))
+        .limit(20)
+        .all()
+    )
+    for q in quotes:
+        interactions.append(
+            CustomerInteractionItem(
+                interaction_type="quote",
+                entity_id=q.id,
+                title=q.quote_code,
+                status=q.status,
+                amount=None,
+                owner_name=q.owner.real_name if q.owner else None,
+                created_at=q.created_at,
+                updated_at=q.updated_at,
+            )
+        )
+
+    # 合同
+    contracts = (
+        db.query(Contract)
+        .filter(Contract.customer_id == customer_id)
+        .order_by(desc(Contract.created_at))
+        .limit(20)
+        .all()
+    )
+    for ct in contracts:
+        interactions.append(
+            CustomerInteractionItem(
+                interaction_type="contract",
+                entity_id=ct.id,
+                title=ct.contract_code,
+                status=ct.status,
+                amount=ct.total_amount,
+                owner_name=ct.sales_owner.real_name if ct.sales_owner else None,
+                created_at=ct.created_at,
+                updated_at=ct.updated_at,
+            )
+        )
+
+    # 按时间倒序排列
+    interactions.sort(key=lambda x: x.created_at or datetime.min, reverse=True)
+
     customer_dict = {
         **{c.name: getattr(customer, c.name) for c in customer.__table__.columns},
         "sales_owner_name": customer.sales_owner.real_name if customer.sales_owner else None,
         "contacts_count": len(customer.contacts),
         "tags": [tag.tag_name for tag in customer.tags],
+        "contacts": contacts,
+        "interactions": interactions,
+        "opportunities_count": len(opportunities),
+        "quotes_count": len(quotes),
+        "contracts_count": len(contracts),
     }
 
-    return CustomerResponse(**customer_dict)
+    return CustomerDetailResponse(**customer_dict)
 
 
 @router.post("/customers", response_model=CustomerResponse, status_code=201)

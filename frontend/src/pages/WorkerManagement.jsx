@@ -45,6 +45,7 @@ import {
 } from "../components/ui/dialog";
 import { formatDate } from "../lib/utils";
 import { productionApi } from "../services/api";
+import { getItemsCompat, getResponseData } from "../utils/apiResponse";
 
 export default function WorkerManagement() {
   const [loading, setLoading] = useState(true);
@@ -78,8 +79,7 @@ export default function WorkerManagement() {
       const params = { page: 1, page_size: 100 };
       if (searchKeyword) {params.search = searchKeyword;}
       const res = await productionApi.workers.list(params);
-      const workerList = res.data?.items || res.data?.items || res.data || [];
-      setWorkers(workerList);
+      setWorkers(getItemsCompat(res));
     } catch (error) {
       console.error("Failed to fetch workers:", error);
     } finally {
@@ -119,7 +119,7 @@ export default function WorkerManagement() {
   const handleViewDetail = async (workerId) => {
     try {
       const res = await productionApi.workers.get(workerId);
-      setSelectedWorker(res.data || res);
+      setSelectedWorker(getResponseData(res));
       setShowDetailDialog(true);
     } catch (error) {
       console.error("Failed to fetch worker detail:", error);
@@ -189,7 +189,7 @@ export default function WorkerManagement() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
               placeholder="搜索工人编码、姓名、电话..."
-              value={searchKeyword || "unknown"}
+              value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="pl-10"
             />
@@ -365,7 +365,7 @@ export default function WorkerManagement() {
                     <SelectContent>
                       {Object.entries(skillLevelConfigs).map(
                         ([key, config]) => (
-                          <SelectItem key={key} value={key || "unknown"}>
+                          <SelectItem key={key} value={key}>
                             {config.label}
                           </SelectItem>
                         ),
@@ -482,7 +482,7 @@ export default function WorkerManagement() {
                     <SelectContent>
                       {Object.entries(skillLevelConfigs).map(
                         ([key, config]) => (
-                          <SelectItem key={key} value={key || "unknown"}>
+                          <SelectItem key={key} value={key}>
                             {config.label}
                           </SelectItem>
                         ),

@@ -11,13 +11,17 @@ from . import (
     capacity,
     dashboard,
     exception_enhancement,
+    exceptions,
+    material_requisitions,
     material_tracking,
     plans,
     progress,
     quality,
+    reports,
     schedule,
     work_orders,
     work_reports,
+    workers,
     workshops,
     workstations,
 )
@@ -29,9 +33,13 @@ router = APIRouter()
 router.include_router(dashboard.router, tags=["production-dashboard"])
 router.include_router(workshops.router, tags=["production-workshops"])
 router.include_router(workstations.router, tags=["production-workstations"])
+router.include_router(workers.router, prefix="/workers", tags=["production-workers"])
 router.include_router(plans.router, tags=["production-plans"])
 router.include_router(work_orders.router, tags=["production-work-orders"])
 router.include_router(work_reports.router, tags=["production-work-reports"])
+router.include_router(reports.router, tags=["production-reports"])
+router.include_router(exceptions.router, prefix="/exceptions", tags=["production-exceptions"])
+router.include_router(material_requisitions.router, tags=["production-material-requisitions"])
 router.include_router(
     material_tracking.router, prefix="/material", tags=["production-material-tracking"]
 )

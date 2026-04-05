@@ -31,6 +31,9 @@ from .extensions import (
     ProjectWarranty,
 )
 
+# 项目-变更联动
+from .change_impact import ProjectChangeImpact
+
 # 项目财务
 from .financial import (
     FinancialProjectCost,
@@ -98,6 +101,8 @@ __all__ = [
     "CostAlertRule",
     # 项目复盘
     "ProjectReview",
+    # 项目-变更联动
+    "ProjectChangeImpact",
     # 枚举兼容
     "ProjectHealth",
     "ProjectHealthEnum",

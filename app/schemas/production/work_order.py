@@ -12,7 +12,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..common import PaginatedResponse, TimestampSchema
 
@@ -47,6 +47,12 @@ class WorkOrderUpdate(BaseModel):
     """更新工单"""
 
     task_name: Optional[str] = None
+    task_type: Optional[str] = None
+    workshop_id: Optional[int] = None
+    workstation_id: Optional[int] = None
+    assigned_to: Optional[int] = None
+    material_name: Optional[str] = None
+    specification: Optional[str] = None
     plan_qty: Optional[int] = None
     plan_start_date: Optional[date] = None
     plan_end_date: Optional[date] = None
@@ -58,8 +64,25 @@ class WorkOrderUpdate(BaseModel):
 class WorkOrderAssignRequest(BaseModel):
     """工单派工请求"""
 
-    worker_id: Optional[int] = Field(default=None, description="指派给(工人ID)")
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    assigned_to: Optional[int] = Field(default=None, description="指派给(工人ID)，兼容 worker_id")
     workstation_id: Optional[int] = Field(default=None, description="工位ID")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_worker_id(cls, data):
+        if isinstance(data, dict):
+            payload = dict(data)
+            if payload.get("assigned_to") is None and payload.get("worker_id") is not None:
+                payload["assigned_to"] = payload["worker_id"]
+            return payload
+        return data
+
+    @property
+    def worker_id(self) -> Optional[int]:
+        """兼容旧代码/旧契约读取 worker_id。"""
+        return self.assigned_to
 
 
 class WorkOrderResponse(TimestampSchema):

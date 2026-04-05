@@ -15,6 +15,7 @@ from . import opportunity_analytics, opportunity_crud, opportunity_workflow
 router = APIRouter()
 
 # 聚合所有子路由
+# 注意：静态路由必须在动态路由之前注册（如 /my-opportunities 在 /{opp_id} 之前）
+router.include_router(opportunity_analytics.router)
 router.include_router(opportunity_crud.router)
 router.include_router(opportunity_workflow.router)
-router.include_router(opportunity_analytics.router)

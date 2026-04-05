@@ -16,7 +16,7 @@ from app.models.project import (
     ProjectMemberContribution,
 )
 from app.models.task_center import TaskUnified
-from app.services.project_bonus_service import ProjectBonusService
+from app.services.bonus.project_bonus_service import ProjectBonusService
 
 
 class ProjectContributionService:

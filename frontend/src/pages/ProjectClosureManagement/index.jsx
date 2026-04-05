@@ -20,6 +20,7 @@ export default function ProjectClosureManagement() {
         loading,
         project,
         closure,
+        selectedProjectId,
         projectSearch,
         setProjectSearch,
         projectList,
@@ -86,6 +87,7 @@ export default function ProjectClosureManagement() {
             <ProjectClosureContent
                 loading={loading}
                 closure={closure}
+                projectId={selectedProjectId}
                 onCreate={() => setCreateDialogOpen(true)}
                 onReview={(id) => setReviewDialog({ open: true, closureId: id })}
                 onEditLessons={(id) => setLessonsDialog({ open: true, closureId: id })}

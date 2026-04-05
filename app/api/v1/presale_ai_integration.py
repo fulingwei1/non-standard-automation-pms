@@ -29,7 +29,7 @@ from app.schemas.presale_ai import (
     WorkflowStartRequest,
     WorkflowStatusResponse,
 )
-from app.services.presale_ai_integration import PresaleAIIntegrationService
+from app.services.presale.presale_ai_integration import PresaleAIIntegrationService
 
 logger = logging.getLogger(__name__)
 

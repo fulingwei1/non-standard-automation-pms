@@ -109,6 +109,7 @@ class Ecn(Base, TimestampMixin):
         back_populates="source_ecn",
     )
     logs = relationship("EcnLog", back_populates="ecn", lazy="dynamic")
+    cost_records = relationship("EcnCostRecord", back_populates="ecn", lazy="dynamic")
 
     __table_args__ = (
         Index("idx_ecn_project", "project_id"),

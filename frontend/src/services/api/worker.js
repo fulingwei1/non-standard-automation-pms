@@ -1,5 +1,8 @@
-import { api } from "./client.js";
+import { productionApi } from "./production.js";
 
 export const workerApi = {
-  list: (params) => api.get("/workers", { params }),
+  list: productionApi.workers.list,
+  get: productionApi.workers.get,
+  create: productionApi.workers.create,
+  update: productionApi.workers.update,
 };

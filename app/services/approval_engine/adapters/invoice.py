@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 from app.models.approval import ApprovalInstance, ApprovalTask
 from app.models.sales.invoices import Invoice, InvoiceApproval
 from app.models.user import User
-from app.schemas.approval.instance import ApprovalInstanceCreate
 
 from .base import ApprovalAdapter
 
@@ -191,30 +190,21 @@ class InvoiceApprovalAdapter(ApprovalAdapter):
             "buyer_tax_no": invoice.buyer_tax_no,
         }
 
-        # 创建审批实例
-        ApprovalInstanceCreate(
+        # 使用统一审批引擎创建实例
+        from ..engine import ApprovalEngineService
+
+        engine = ApprovalEngineService(self.db)
+
+        instance = engine.submit(
             template_code="SALES_INVOICE",
             entity_type="INVOICE",
             entity_id=invoice.id,
             form_data=form_data,
+            initiator_id=initiator_id,
             title=title or f"发票审批 - {invoice.invoice_code}",
             summary=summary or f"发票审批：{invoice.invoice_code}",
             urgency=urgency,
             cc_user_ids=cc_user_ids,
-        )
-
-        # 使用统一引擎创建实例
-        from app.services.approval_engine.workflow_engine import WorkflowEngine
-
-        workflow_engine = WorkflowEngine(self.db)
-
-        instance = workflow_engine.create_instance(
-            flow_code="SALES_INVOICE",
-            business_type="SALES_INVOICE",
-            business_id=invoice.id,
-            business_title=invoice.invoice_code,
-            submitted_by=initiator_id,
-            config={"invoice": form_data},
         )
 
         # 更新发票，关联审批实例

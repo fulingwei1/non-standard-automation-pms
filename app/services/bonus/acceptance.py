@@ -36,7 +36,7 @@ class AcceptanceBonusTrigger(BonusCalculatorBase):
         Returns:
             List: 团队奖金分配记录列表
         """
-        from app.services.acceptance_bonus_service import (
+        from app.services.bonus.acceptance_bonus_service import (
             calculate_presale_bonus,
             calculate_project_bonus,
             calculate_sales_bonus,

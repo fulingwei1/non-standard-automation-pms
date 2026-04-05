@@ -110,6 +110,7 @@ from .stub_tasks import (
     check_task_delay_alerts,
     check_workload_overload_alerts,
     daily_kit_check,
+    sync_kitting_rate_hourly,
     generate_job_duty_tasks,
     generate_monthly_reports_task,
     generate_shortage_alerts,
@@ -178,6 +179,8 @@ SCHEDULED_TASKS = {
     "check_employee_confirmation_reminder": check_employee_confirmation_reminder,
     # 齐套率任务
     "daily_kit_rate_snapshot": daily_kit_rate_snapshot,
+    "daily_kit_check": daily_kit_check,
+    "sync_kitting_rate_hourly": sync_kitting_rate_hourly,
     # 项目风险任务
     "calculate_all_project_risks": calculate_all_project_risks,
     "create_daily_risk_snapshots": create_daily_risk_snapshots,
@@ -267,6 +270,8 @@ TASK_GROUPS = {
         "name": "齐套率管理",
         "tasks": [
             "daily_kit_rate_snapshot",
+            "daily_kit_check",
+            "sync_kitting_rate_hourly",
         ],
     },
     "risk": {
@@ -391,6 +396,8 @@ __all__ = [
     "daily_kit_rate_snapshot",
     "create_kit_rate_snapshot",
     "create_stage_change_snapshot",
+    "daily_kit_check",
+    "sync_kitting_rate_hourly",
     # 项目风险
     "calculate_all_project_risks",
     "create_daily_risk_snapshots",

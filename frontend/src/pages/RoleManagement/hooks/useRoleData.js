@@ -214,6 +214,34 @@ export function useRoleData() {
         }
     }, [loadRoles, loadInheritanceTree]);
 
+    // 角色另存为模板
+    const saveRoleAsTemplate = useCallback(async (roleId, templateData) => {
+        try {
+            await roleApi.saveAsTemplate(roleId, templateData);
+            await loadTemplates();
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.response?.data?.detail || error.message
+            };
+        }
+    }, [loadTemplates]);
+
+    // 删除模板
+    const deleteTemplate = useCallback(async (templateId) => {
+        try {
+            await roleApi.deleteTemplate(templateId);
+            await loadTemplates();
+            return { success: true };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.response?.data?.detail || error.message
+            };
+        }
+    }, [loadTemplates]);
+
     // 初始加载
     useEffect(() => {
         loadRoles();
@@ -251,5 +279,8 @@ export function useRoleData() {
         // 高级功能
         compareRoles,
         createRoleFromTemplate,
+        // 模板管理
+        saveRoleAsTemplate,
+        deleteTemplate,
     };
 }

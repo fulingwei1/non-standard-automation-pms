@@ -17,9 +17,10 @@ router = APIRouter()
 
 # 聚合所有子模块路由
 router.include_router(enhanced_router, prefix="/enhanced", tags=["合同增强"])
+# 静态路径优先，避免被 /contracts/{contract_id} 吞掉
+router.include_router(export_router)
 router.include_router(basic_router)
 router.include_router(sign_project_router)
 router.include_router(deliverables_router)
 router.include_router(payment_plans_router)
 router.include_router(approval_router)
-router.include_router(export_router)

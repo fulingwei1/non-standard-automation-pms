@@ -29,6 +29,7 @@ class AlertRuleCreate(BaseModel):
     threshold_max: Optional[str] = None
     condition_expr: Optional[str] = None
     alert_level: str = Field(default="WARNING")
+    enforcement_mode: str = Field(default="WARN", description="执行模式: ALLOW/WARN/DENY/REQUIRE_APPROVAL")
     advance_days: int = Field(default=0, ge=0)
     notify_channels: Optional[List[str]] = None
     notify_roles: Optional[List[str]] = None
@@ -43,6 +44,7 @@ class AlertRuleUpdate(BaseModel):
 
     rule_name: Optional[str] = None
     target_field: Optional[str] = None
+    enforcement_mode: Optional[str] = None
     condition_operator: Optional[str] = None
     threshold_value: Optional[str] = None
     threshold_min: Optional[str] = None
@@ -69,6 +71,7 @@ class AlertRuleResponse(TimestampSchema):
     target_type: str
     condition_type: str
     alert_level: Optional[str] = None
+    enforcement_mode: Optional[str] = "WARN"
     advance_days: Optional[int] = 0
     check_frequency: Optional[str] = "DAILY"
     is_enabled: Optional[bool] = True

@@ -211,8 +211,11 @@ class DataScopeEnum(str, Enum):
 
     ALL = "ALL"
     DEPT = "DEPT"
+    DEPARTMENT = "DEPT"  # 兼容新模型 ScopeType.DEPARTMENT
     SUBORDINATE = "SUBORDINATE"
     PROJECT = "PROJECT"
+    CUSTOMER = "CUSTOMER"
+    CUSTOM = "CUSTOM"
     OWN = "OWN"
 
 
@@ -236,6 +239,8 @@ class AlertStatusEnum(str, Enum):
 class AlertRuleTypeEnum(str, Enum):
     QUALITY_ISSUE = "QUALITY_ISSUE"
     MILESTONE_DUE = "MILESTONE_DUE"
+    MILESTONE_DUE_SOON = "MILESTONE_DUE_SOON"
+    MILESTONE_AT_RISK = "MILESTONE_AT_RISK"
     COST_OVERRUN = "COST_OVERRUN"
     SCHEDULE_DELAY = "SCHEDULE_DELAY"
     FINANCIAL = "FINANCIAL"

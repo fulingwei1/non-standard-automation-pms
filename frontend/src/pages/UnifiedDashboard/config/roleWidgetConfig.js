@@ -41,11 +41,12 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
-      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'executive', metrics: ['revenue', 'profit', 'projects', 'employees'] } },
+      { id: 'exec-portfolio-health' },
+      { id: 'exec-strategic-projects', size: 'large' },
+      { id: 'exec-major-risks' },
+      { id: 'exec-roi-analysis', size: 'large' },
       { id: 'revenue-chart', props: { view: 'executive' } },
-      { id: 'trend-chart', props: { type: 'company-kpi' } },
-      { id: 'project-progress', props: { view: 'executive' } },
       { id: 'approval-pending' },
       { id: 'notification-panel' },
     ],
@@ -70,11 +71,12 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
-      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'cto', metrics: ['projects', 'engineers', 'deliverables', 'issues'] } },
+      { id: 'dept-project-ranking', size: 'large' },
+      { id: 'dept-resource-load' },
+      { id: 'dept-risk-summary' },
+      { id: 'dept-budget-execution', size: 'large' },
       { id: 'project-progress', props: { view: 'engineering' } },
-      { id: 'trend-chart', props: { type: 'engineering-kpi' } },
-      { id: 'task-list', props: { filter: 'engineering' } },
       { id: 'approval-pending' },
       { id: 'notification-panel' },
     ],
@@ -103,11 +105,13 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
-      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'pm', metrics: ['my-projects', 'tasks', 'issues', 'timeline'] } },
-      { id: 'project-progress', props: { view: 'my-projects' } },
+      { id: 'pm-project-health', size: 'large' },
+      { id: 'pm-milestone-reminder' },
+      { id: 'pm-risk-overview' },
+      { id: 'pm-resource-conflict' },
+      { id: 'approval-pending' },
       { id: 'task-list', props: { filter: 'project' } },
-      { id: 'timesheet-summary' },
       { id: 'notification-panel' },
     ],
   },
@@ -164,11 +168,11 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
-      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'engineer', metrics: ['tasks', 'hours-logged', 'designs', 'reviews'] } },
-      { id: 'task-list', props: { filter: 'mechanical' } },
-      { id: 'project-progress', props: { view: 'my-tasks' } },
-      { id: 'timesheet-summary' },
+      { id: 'member-task-list', size: 'large' },
+      { id: 'member-project-progress' },
+      { id: 'member-timesheet-trend' },
+      { id: 'member-overdue-alert' },
       { id: 'ecn-list', props: { filter: 'mechanical' } },
     ],
   },
@@ -323,10 +327,12 @@ export const roleWidgetConfig = {
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
-      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card', props: { type: 'chairman', metrics: ['annual-revenue', 'growth', 'market-share', 'roi'] } },
+      { id: 'exec-portfolio-health' },
+      { id: 'exec-strategic-projects', size: 'large' },
+      { id: 'exec-major-risks' },
+      { id: 'exec-roi-analysis', size: 'large' },
       { id: 'revenue-chart', props: { view: 'strategic' } },
-      { id: 'trend-chart', props: { type: 'strategic-kpi' } },
       { id: 'notification-panel', props: { filter: 'critical' } },
     ],
   },
@@ -518,18 +524,37 @@ export const roleWidgetConfig = {
   },
 
   // ============================================
-  // 默认配置
+  // 部门负责人（通用）
+  // ============================================
+  'DEPT_HEAD': {
+    label: '部门负责人',
+    layout: '2-column',
+    widgets: [
+      { id: 'welcome-card', size: 'full' },
+      { id: 'stats-card', props: { type: 'dept-head', metrics: ['projects', 'resources', 'risks', 'budget'] } },
+      { id: 'dept-project-ranking', size: 'large' },
+      { id: 'dept-resource-load' },
+      { id: 'dept-risk-summary' },
+      { id: 'dept-budget-execution', size: 'large' },
+      { id: 'approval-pending' },
+      { id: 'notification-panel' },
+    ],
+  },
+
+  // ============================================
+  // 默认配置（成员视图）
   // ============================================
   'DEFAULT': {
     label: '默认',
     layout: '2-column',
     widgets: [
       { id: 'welcome-card', size: 'full' },
-      { id: 'culture-wall', size: 'full' },
       { id: 'stats-card' },
-      { id: 'task-list' },
+      { id: 'member-task-list', size: 'large' },
+      { id: 'member-project-progress' },
+      { id: 'member-timesheet-trend' },
+      { id: 'member-overdue-alert' },
       { id: 'notification-panel' },
-      { id: 'quick-actions' },
     ],
   },
 };

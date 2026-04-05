@@ -15,6 +15,7 @@ from app.models.project import Project
 from app.models.user import User
 
 from .config import DataScopeConfig
+from .normalization import normalize_data_scope
 from .user_scope import UserScopeService
 
 logger = logging.getLogger(__name__)
@@ -64,10 +65,10 @@ class GenericFilterService:
 
         # 如果有自定义过滤函数，优先使用
         if config.custom_filter:
-            data_scope = UserScopeService.get_user_data_scope(db, user)
+            data_scope = normalize_data_scope(UserScopeService.get_user_data_scope(db, user))
             return config.custom_filter(query, user, data_scope, db)
 
-        data_scope = UserScopeService.get_user_data_scope(db, user)
+        data_scope = normalize_data_scope(UserScopeService.get_user_data_scope(db, user))
 
         if data_scope == DataScopeEnum.ALL.value:
             return query
@@ -167,7 +168,7 @@ class GenericFilterService:
             return query.filter(False)
 
         # CUSTOM：自定义规则
-        if data_scope == "CUSTOM":
+        if data_scope == DataScopeEnum.CUSTOM.value:
             try:
                 from .custom_rule import CustomRuleService
 
@@ -210,7 +211,7 @@ class GenericFilterService:
         if user.is_superuser:
             return True
 
-        data_scope = UserScopeService.get_user_data_scope(db, user)
+        data_scope = normalize_data_scope(UserScopeService.get_user_data_scope(db, user))
 
         if data_scope == DataScopeEnum.ALL.value:
             return True

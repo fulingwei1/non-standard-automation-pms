@@ -63,7 +63,7 @@ def apply_cost_allocation(
     应用费用分摊规则
     根据分摊规则将共享费用分摊到多个研发项目
     """
-    from app.services.cost_allocation_service import (
+    from app.services.cost.cost_allocation_service import (
         calculate_allocation_rates,
         create_allocated_cost,
         get_target_project_ids,

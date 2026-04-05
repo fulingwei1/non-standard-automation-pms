@@ -76,6 +76,12 @@ class TicketRatingRequest(BaseModel):
     feedback: Optional[str] = Field(None, description="反馈意见")
 
 
+class TicketCompleteRequest(BaseModel):
+    """完成工单请求"""
+
+    actual_hours: Optional[float] = Field(None, ge=0, description="实际工时")
+
+
 class TicketResponse(TimestampSchema):
     """工单响应"""
 
@@ -233,6 +239,26 @@ class TemplateCreate(BaseModel):
     attachments: Optional[List[Dict[str, Any]]] = Field(None, description="附件列表")
 
 
+class TemplateUpdate(BaseModel):
+    """更新方案模板"""
+
+    name: Optional[str] = Field(None, description="模板名称")
+    industry: Optional[str] = Field(None, description="所属行业")
+    test_type: Optional[str] = Field(None, description="测试类型")
+    description: Optional[str] = Field(None, description="模板描述")
+    content_template: Optional[str] = Field(None, description="内容模板")
+    cost_template: Optional[Dict[str, Any]] = Field(None, description="成本模板")
+    attachments: Optional[List[Dict[str, Any]]] = Field(None, description="附件列表")
+    is_active: Optional[bool] = Field(None, description="是否启用")
+    use_count: Optional[int] = Field(None, ge=0, description="使用次数")
+    apply_count: Optional[int] = Field(None, ge=0, description="兼容前端的应用次数")
+    usage_count: Optional[int] = Field(None, ge=0, description="兼容旧字段名")
+    used_count: Optional[int] = Field(None, ge=0, description="兼容旧字段名")
+    rating: Optional[float] = Field(None, ge=0, le=5, description="前端评分（兼容保留）")
+    rating_count: Optional[int] = Field(None, ge=0, description="评分人数（兼容保留）")
+    avg_rating: Optional[float] = Field(None, ge=0, le=5, description="平均评分（兼容保留）")
+
+
 class TemplateResponse(TimestampSchema):
     """模板响应"""
 
@@ -243,6 +269,11 @@ class TemplateResponse(TimestampSchema):
     test_type: Optional[str] = None
     description: Optional[str] = None
     use_count: int = 0
+    apply_count: int = 0
+    usage_count: int = 0
+    used_count: int = 0
+    avg_rating: Optional[float] = None
+    rating_count: int = 0
     is_active: bool
 
 
@@ -277,6 +308,26 @@ class TenderResultUpdate(BaseModel):
     technical_score: Optional[Decimal] = Field(None, description="技术得分")
     commercial_score: Optional[Decimal] = Field(None, description="商务得分")
     total_score: Optional[Decimal] = Field(None, description="总得分")
+
+
+class TenderUpdate(BaseModel):
+    """更新投标记录"""
+
+    tender_no: Optional[str] = Field(None, description="招标编号")
+    tender_name: Optional[str] = Field(None, description="投标项目名称")
+    ticket_id: Optional[int] = Field(None, description="关联工单ID")
+    opportunity_id: Optional[int] = Field(None, description="关联商机ID")
+    customer_name: Optional[str] = Field(None, description="招标单位")
+    publish_date: Optional[date] = Field(None, description="发布日期")
+    deadline: Optional[datetime] = Field(None, description="投标截止时间")
+    bid_opening_date: Optional[date] = Field(None, description="开标日期")
+    budget_amount: Optional[Decimal] = Field(None, description="预算金额")
+    qualification_requirements: Optional[str] = Field(None, description="资质要求")
+    technical_requirements: Optional[str] = Field(None, description="技术要求")
+    our_bid_amount: Optional[Decimal] = Field(None, description="我方报价")
+    competitors: Optional[List[Dict[str, Any]]] = Field(None, description="竞争对手信息")
+    leader_id: Optional[int] = Field(None, description="投标负责人ID")
+    team_members: Optional[List[Dict[str, Any]]] = Field(None, description="投标团队")
 
 
 class TenderResponse(TimestampSchema):

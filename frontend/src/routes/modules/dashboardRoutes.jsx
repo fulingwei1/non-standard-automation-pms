@@ -1,26 +1,27 @@
 import { Route, Navigate } from "react-router-dom";
 import { AppProtectedRoute } from "../../components/common/AppProtectedRoute";
+import { lazyLoad } from "../lazyLoad";
 
-import UnifiedDashboard from "../../pages/UnifiedDashboard";
-import AdminDashboard from "../../pages/AdminDashboard";
-import OperationDashboard from "../../pages/OperationDashboard";
-import KeyDecisions from "../../pages/KeyDecisions";
-import ManagementRhythmDashboard from "../../pages/ManagementRhythmDashboard";
-import MeetingMap from "../../pages/MeetingMap";
-import StrategicMeetingManagement from "../../pages/StrategicMeetingManagement";
-import StrategicMeetingDetail from "../../pages/StrategicMeetingDetail";
-import MeetingReports from "../../pages/MeetingReports";
-import CultureWall from "../../pages/CultureWall";
-import Shipments from "../../pages/Shipments";
-import DeliveryManagement from "../../pages/DeliveryManagement";
-import Documents from "../../pages/Documents";
-import ProductionBoard from "../../pages/ProductionBoard";
-import ChairmanWorkstation from "../../pages/ChairmanWorkstation";
-import AdministrativeApprovals from "../../pages/AdministrativeApprovals";
-import AdministrativeExpenses from "../../pages/AdministrativeExpenses";
-import OfficeSuppliesManagement from "../../pages/OfficeSuppliesManagement";
-import VehicleManagement from "../../pages/VehicleManagement";
-import FixedAssetsManagement from "../../pages/FixedAssetsManagement";
+const UnifiedDashboard = lazyLoad(() => import("../../pages/UnifiedDashboard"));
+const AdminDashboard = lazyLoad(() => import("../../pages/AdminDashboard"));
+const OperationDashboard = lazyLoad(() => import("../../pages/OperationDashboard"));
+const KeyDecisions = lazyLoad(() => import("../../pages/KeyDecisions"));
+const ManagementRhythmDashboard = lazyLoad(() => import("../../pages/ManagementRhythmDashboard"));
+const MeetingMap = lazyLoad(() => import("../../pages/MeetingMap"));
+const StrategicMeetingManagement = lazyLoad(() => import("../../pages/StrategicMeetingManagement"));
+const StrategicMeetingDetail = lazyLoad(() => import("../../pages/StrategicMeetingDetail"));
+const MeetingReports = lazyLoad(() => import("../../pages/MeetingReports"));
+const CultureWall = lazyLoad(() => import("../../pages/CultureWall"));
+const Shipments = lazyLoad(() => import("../../pages/Shipments"));
+const DeliveryManagement = lazyLoad(() => import("../../pages/DeliveryManagement"));
+const Documents = lazyLoad(() => import("../../pages/Documents"));
+const ProductionBoard = lazyLoad(() => import("../../pages/ProductionBoard"));
+const ChairmanWorkstation = lazyLoad(() => import("../../pages/ChairmanWorkstation"));
+const AdministrativeApprovals = lazyLoad(() => import("../../pages/AdministrativeApprovals"));
+const AdministrativeExpenses = lazyLoad(() => import("../../pages/AdministrativeExpenses"));
+const OfficeSuppliesManagement = lazyLoad(() => import("../../pages/OfficeSuppliesManagement"));
+const VehicleManagement = lazyLoad(() => import("../../pages/VehicleManagement"));
+const FixedAssetsManagement = lazyLoad(() => import("../../pages/FixedAssetsManagement"));
 
 export function DashboardRoutes() {
   return (

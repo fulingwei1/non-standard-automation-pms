@@ -25,6 +25,7 @@ from app.services.sales_reminder.payment_reminders import (
 from app.services.sales_reminder.sales_flow_reminders import (
     notify_approval_pending,
     notify_gate_timeout,
+    notify_lead_weekly_summary,
     notify_quote_expiring,
 )
 from app.services.sales_reminder.scanner import (
@@ -52,6 +53,7 @@ __all__ = [
     "notify_gate_timeout",
     "notify_quote_expiring",
     "notify_approval_pending",
+    "notify_lead_weekly_summary",
     # Scanners
     "scan_and_notify_all",
     "scan_sales_reminders",

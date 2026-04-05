@@ -6,7 +6,7 @@
 from datetime import datetime
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -70,6 +70,11 @@ def read_audits(
     - **end_date**: 结束日期
     """
     query = db.query(PermissionAudit)
+
+    if not current_user.is_superuser:
+        query = query.join(User, PermissionAudit.operator_id == User.id).filter(
+            User.tenant_id == current_user.tenant_id
+        )
 
     # 操作人筛选
     if operator_id:
@@ -144,6 +149,10 @@ def read_audit(
     - **audit_id**: 审计日志ID
     """
     audit = get_or_404(db, PermissionAudit, audit_id, "审计日志不存在")
+
+    if not current_user.is_superuser:
+        if not audit.operator or audit.operator.tenant_id != current_user.tenant_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="审计日志不存在")
 
     operator_name = None
     if audit.operator:

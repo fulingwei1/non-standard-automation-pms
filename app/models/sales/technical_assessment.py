@@ -44,13 +44,53 @@ class TechnicalAssessment(Base, TimestampMixin):
     conditions = Column(Text, comment="立项条件(JSON)")
     evaluated_at = Column(DateTime, comment="评估完成时间")
 
+    # 售前工单关联（2026-03-12 新增）
+    presale_ticket_id = Column(
+        Integer,
+        ForeignKey("presale_support_ticket.id"),
+        comment="关联售前工单ID"
+    )
+
+    # 评估模板关联（2026-03-12 新增）
+    template_id = Column(
+        Integer,
+        ForeignKey("assessment_templates.id"),
+        comment="使用的评估模板ID"
+    )
+
+    # 版本控制（2026-03-12 新增）
+    version_no = Column(String(20), default="V1.0", comment="评估版本号")
+    is_latest = Column(Boolean, default=True, comment="是否为最新版本")
+    previous_version_id = Column(
+        Integer,
+        ForeignKey("technical_assessments.id"),
+        comment="上一版本ID"
+    )
+
+    # 评分明细（2026-03-12 新增）
+    item_scores = Column(Text, comment="评估项分数详情(JSON)")
+
     evaluator = relationship("User", foreign_keys=[evaluator_id])
+    presale_ticket = relationship(
+        "PresaleSupportTicket",
+        foreign_keys=[presale_ticket_id],
+        backref="assessments"
+    )
+    template = relationship("AssessmentTemplate", foreign_keys=[template_id])
+    previous_version = relationship(
+        "TechnicalAssessment",
+        remote_side=[id],
+        foreign_keys=[previous_version_id]
+    )
 
     __table_args__ = (
         Index("idx_assessment_source", "source_type", "source_id"),
         Index("idx_assessment_status", "status"),
         Index("idx_assessment_evaluator", "evaluator_id"),
         Index("idx_assessment_decision", "decision"),
+        Index("idx_assessment_ticket", "presale_ticket_id"),
+        Index("idx_assessment_template", "template_id"),
+        Index("idx_assessment_version", "version_no"),
     )
 
     def __repr__(self):

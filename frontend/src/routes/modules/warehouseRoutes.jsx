@@ -1,18 +1,19 @@
 import { Route } from "react-router-dom";
 import { WarehouseProtectedRoute } from "../../components/common/ProtectedRoute";
+import { lazyLoad } from "../lazyLoad";
 
-import WarehouseWorkstation from "../../pages/warehouse/WarehouseWorkstation";
-import InboundList from "../../pages/warehouse/InboundList";
-import InboundDetail from "../../pages/warehouse/InboundDetail";
-import InboundNew from "../../pages/warehouse/InboundNew";
-import OutboundList from "../../pages/warehouse/OutboundList";
-import OutboundDetail from "../../pages/warehouse/OutboundDetail";
-import OutboundNew from "../../pages/warehouse/OutboundNew";
-import InventoryList from "../../pages/warehouse/InventoryList";
-import StockAlerts from "../../pages/warehouse/StockAlerts";
-import StockCount from "../../pages/warehouse/StockCount";
-import LocationManagement from "../../pages/warehouse/LocationManagement";
-import TimeBasedKitRateBoard from "../../pages/TimeBasedKitRateBoard";
+const WarehouseWorkstation = lazyLoad(() => import("../../pages/warehouse/WarehouseWorkstation"));
+const InboundList = lazyLoad(() => import("../../pages/warehouse/InboundList"));
+const InboundDetail = lazyLoad(() => import("../../pages/warehouse/InboundDetail"));
+const InboundNew = lazyLoad(() => import("../../pages/warehouse/InboundNew"));
+const OutboundList = lazyLoad(() => import("../../pages/warehouse/OutboundList"));
+const OutboundDetail = lazyLoad(() => import("../../pages/warehouse/OutboundDetail"));
+const OutboundNew = lazyLoad(() => import("../../pages/warehouse/OutboundNew"));
+const InventoryList = lazyLoad(() => import("../../pages/warehouse/InventoryList"));
+const StockAlerts = lazyLoad(() => import("../../pages/warehouse/StockAlerts"));
+const StockCount = lazyLoad(() => import("../../pages/warehouse/StockCount"));
+const LocationManagement = lazyLoad(() => import("../../pages/warehouse/LocationManagement"));
+const TimeBasedKitRateBoard = lazyLoad(() => import("../../pages/TimeBasedKitRateBoard"));
 
 export function WarehouseRoutes() {
   return (

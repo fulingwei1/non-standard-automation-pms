@@ -149,11 +149,14 @@ class TestPresaleEdgeCases:
             pytest.skip("Admin token not available")
 
         headers = _auth_headers(admin_token)
-        response = client.get(f"{settings.API_V1_PREFIX}/presale/proposals/99999", headers=headers)
+        # 当前售前方案详情路由实际挂在 /presale/proposals/solutions/{solution_id}
+        # 这里直接验证真实详情接口的 404 语义，避免误打到 stub/fallback 路由。
+        response = client.get(
+            f"{settings.API_V1_PREFIX}/presale/proposals/solutions/99999",
+            headers=headers,
+        )
 
-        if response.status_code != 404:
-            pytest.skip("Proposals endpoint returns non-404 for missing resource")
-        assert response.status_code == 404
+        assert response.status_code == 404, response.text
 
     def test_pagination_edge_cases(self, client: TestClient, admin_token: str):
         """测试分页边界条件"""

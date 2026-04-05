@@ -18,11 +18,14 @@ from app.core.schemas import paginated_response, success_response
 from app.models.organization import Employee
 from app.models.user import User
 from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdate
+from app.services.permission_management.permission_audit_service import PermissionAuditService
+from app.schemas.auth import BatchRoleAssign, UserCreate, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_audit_service import PermissionAuditService
 from app.utils.db_helpers import get_or_404
 
 from .utils import (
     build_user_response,
+    ensure_user_access,
     ensure_employee_unbound,
     prepare_employee_for_new_user,
     replace_user_roles,
@@ -47,6 +50,9 @@ def read_users(
         from app.models.user import Role, UserRole
 
         query = db.query(User)
+
+        if not current_user.is_superuser:
+            query = query.filter(User.tenant_id == current_user.tenant_id)
 
         query = apply_keyword_filter(
             query, User, keyword, ["username", "real_name", "employee_no", "email"]
@@ -155,6 +161,12 @@ def create_user(
     if exist:
         raise HTTPException(status_code=400, detail="该用户名已存在")
 
+    if current_user.is_superuser and current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="系统管理员创建租户用户时需要显式指定租户，请使用专门的租户管理接口",
+        )
+
     employee = prepare_employee_for_new_user(db, user_in)
 
     # 创建用户时确保租户数据一致性
@@ -188,7 +200,7 @@ def create_user(
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
-    replace_user_roles(db, user.id, user_in.role_ids)
+    replace_user_roles(db, user.id, user_in.role_ids, acting_user=current_user)
     db.commit()
     db.refresh(user)
 
@@ -224,7 +236,8 @@ def read_user_by_id(
 ) -> Any:
     """获取指定用户"""
     user = get_or_404(db, User, user_id, "用户不存在")
-    if user.id != current_user.id and not security.check_permission(current_user, "user:read"):
+    ensure_user_access(current_user, user)
+    if user.id != current_user.id and not security.check_permission(current_user, "user:read", db):
         raise HTTPException(status_code=403, detail="权限不足")
 
     # 使用统一响应格式
@@ -242,6 +255,7 @@ def update_user(
 ) -> Any:
     """更新用户信息"""
     user = get_or_404(db, User, user_id, "用户不存在")
+    ensure_user_access(current_user, user)
 
     old_is_active = user.is_active
     old_data = {
@@ -272,7 +286,7 @@ def update_user(
             )
         setattr(user, field, value)
 
-    replace_user_roles(db, user.id, role_ids)
+    replace_user_roles(db, user.id, role_ids, acting_user=current_user)
 
     # 验证用户数据一致性
     try:
@@ -327,8 +341,9 @@ def assign_user_roles(
 ) -> Any:
     """分配用户角色"""
     user = get_or_404(db, User, user_id, "用户不存在")
+    ensure_user_access(current_user, user)
 
-    replace_user_roles(db, user.id, role_data.role_ids)
+    replace_user_roles(db, user.id, role_data.role_ids, acting_user=current_user)
     db.commit()
 
     try:
@@ -347,6 +362,69 @@ def assign_user_roles(
     return success_response(data=None, message="用户角色分配成功")
 
 
+@router.put("/batch-roles", status_code=status.HTTP_200_OK)
+def batch_assign_roles(
+    *,
+    db: Session = Depends(deps.get_db),
+    batch_data: BatchRoleAssign,
+    request: Request,
+    current_user: User = Depends(security.require_permission("user:update")),
+) -> Any:
+    """批量分配/移除用户角色（原子操作）"""
+    from app.models.user import Role, UserRole
+
+    results = {"success": [], "failed": []}
+
+    for uid in batch_data.user_ids:
+        try:
+            user = db.query(User).filter(User.id == uid).first()
+            if not user:
+                results["failed"].append({"user_id": uid, "reason": "用户不存在"})
+                continue
+
+            ensure_user_access(current_user, user)
+
+            if batch_data.mode == "remove":
+                # 移除模式：只删除指定角色
+                if batch_data.role_ids:
+                    db.query(UserRole).filter(
+                        UserRole.user_id == uid,
+                        UserRole.role_id.in_(batch_data.role_ids),
+                    ).delete(synchronize_session=False)
+            else:
+                # 替换模式：完整替换角色
+                replace_user_roles(db, uid, batch_data.role_ids, acting_user=current_user)
+
+            results["success"].append(uid)
+
+            try:
+                PermissionAuditService.log_user_role_assignment(
+                    db=db,
+                    operator_id=current_user.id,
+                    user_id=uid,
+                    role_ids=batch_data.role_ids,
+                    ip_address=request.client.host if request.client else None,
+                    user_agent=request.headers.get("user-agent"),
+                )
+            except Exception:
+                logger.warning(f"用户 {uid} 审计日志记录失败", exc_info=True)
+
+        except HTTPException as e:
+            results["failed"].append({"user_id": uid, "reason": e.detail})
+        except Exception as e:
+            results["failed"].append({"user_id": uid, "reason": str(e)})
+
+    db.commit()
+
+    total = len(batch_data.user_ids)
+    ok = len(results["success"])
+    msg = f"批量操作完成：{ok}/{total} 成功"
+    if results["failed"]:
+        msg += f"，{len(results['failed'])} 失败"
+
+    return success_response(data=results, message=msg)
+
+
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK)
 def delete_user(
     *,
@@ -356,6 +434,7 @@ def delete_user(
 ) -> Any:
     """删除/禁用用户（软删除）"""
     user = get_or_404(db, User, user_id, "用户不存在")
+    ensure_user_access(current_user, user)
 
     if user.is_superuser:
         raise HTTPException(status_code=400, detail="不能删除超级管理员")

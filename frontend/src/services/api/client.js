@@ -12,10 +12,13 @@ const api = axios.create({
 const PUBLIC_ENDPOINTS = [
   "/auth/login",
   "/auth/register",
+  "/auth/refresh",
   "/health",
   "/docs",
   "/openapi.json",
 ];
+
+let refreshPromise = null;
 
 // 判断是否为公开 API（精确匹配路径，避免 /report-center/bi/health-distribution 被误判为 /health）
 const isPublicEndpoint = (url) => {
@@ -24,6 +27,77 @@ const isPublicEndpoint = (url) => {
   return PUBLIC_ENDPOINTS.some((endpoint) =>
     cleanUrl === endpoint || cleanUrl.startsWith(`${endpoint}/`)
   );
+};
+
+const clearAuthState = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("refresh_token");
+};
+
+const isAuthEndpoint = (url) => (url || "").includes("/auth/");
+
+const shouldAttemptTokenRefresh = (error) => {
+  const status = error?.response?.status;
+  const requestUrl = error?.config?.url || "";
+  const hasRetryFlag = Boolean(error?.config?._retry);
+  const token = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refresh_token");
+
+  if (status !== 401 || hasRetryFlag) {
+    return false;
+  }
+
+  if (!token || token.startsWith("demo_token_")) {
+    return false;
+  }
+
+  if (!refreshToken) {
+    return false;
+  }
+
+  if (isPublicEndpoint(requestUrl) || requestUrl.includes("/auth/refresh")) {
+    return false;
+  }
+
+  return !isAuthEndpoint(requestUrl);
+};
+
+const extractAccessToken = (response) =>
+  response?.formatted?.access_token ||
+  response?.data?.access_token ||
+  response?.data?.data?.access_token ||
+  null;
+
+const refreshAccessToken = async () => {
+  if (!refreshPromise) {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) {
+      throw new Error("refresh_token 不存在");
+    }
+
+    console.log("[API] Access Token 已失效，尝试刷新");
+    refreshPromise = api
+      .post(
+        "/auth/refresh",
+        { refresh_token: refreshToken },
+        { _skipAuthRefresh: true },
+      )
+      .then((response) => {
+        const newAccessToken = extractAccessToken(response);
+        if (!newAccessToken) {
+          throw new Error("刷新接口未返回新的 access_token");
+        }
+        localStorage.setItem("token", newAccessToken);
+        console.log("[API] Access Token 刷新成功");
+        return newAccessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
 };
 
 // Request interceptor for adding auth token
@@ -86,13 +160,13 @@ api.interceptors.response.use(
  } else {
   // 旧格式或无包装格式，直接使用
   response.formatted = response.data;
-  }
+ }
  } else {
   response.formatted = response.data;
  }
     return response;
   },
-  (error) => {
+  async (error) => {
     try {
       const method = error?.config?.method?.toUpperCase?.() || "?"
       const url = error?.config?.url || ""
@@ -112,6 +186,29 @@ api.interceptors.response.use(
       // best-effort logging; never block the original error
     }
 
+    if (
+      !error?.config?._skipAuthRefresh &&
+      shouldAttemptTokenRefresh(error)
+    ) {
+      const originalRequest = error.config;
+      originalRequest._retry = true;
+
+      try {
+        const newToken = await refreshAccessToken();
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        console.log("[API] 使用新的 Access Token 重试原请求");
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error("[API] 刷新 Token 失败，需要重新登录", refreshError);
+        clearAuthState();
+        if (window.location.pathname !== "/") {
+          window.location.href = "/";
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
     if (error.response && error.response.status === 401) {
       const token = localStorage.getItem("token");
       const requestUrl = error.config?.url || "";
@@ -124,11 +221,9 @@ api.interceptors.response.use(
       } else {
         // 只有在认证相关的 API 返回 401 时才清除 token 并重定向
         // 其他 API 的 401 错误可能是权限问题，不应该导致登出
-        const isAuthEndpoint = requestUrl.includes("/auth/");
-        if (isAuthEndpoint) {
+        if (isAuthEndpoint(requestUrl)) {
           console.log("认证 API 返回 401，清除 token");
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          clearAuthState();
           // Redirect to login
           if (window.location.pathname !== "/") {
             window.location.href = "/";

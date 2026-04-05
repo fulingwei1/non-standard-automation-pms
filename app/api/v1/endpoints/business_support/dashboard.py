@@ -69,7 +69,7 @@ class BusinessSupportDashboardEndpoint(BaseDashboardEndpoint):
         获取商务支持工作台统计数据
         包括：进行中合同数、待回款金额、逾期款项、开票率、投标数、验收率等
         """
-        from app.services.business_support_dashboard_service import (
+        from app.services.dashboard.business_support_dashboard_service import (
             calculate_acceptance_rate,
             calculate_invoice_rate,
             calculate_overdue_amount,

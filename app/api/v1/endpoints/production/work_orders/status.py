@@ -2,7 +2,7 @@
 """
 工单管理 - 状态操作
 
-使用统一状态更新服务重构
+使用统一状态更新服务重构，并通过状态机校验合法转换。
 """
 import logging
 from typing import Any, Optional
@@ -15,6 +15,7 @@ from app.core import security
 from app.models.production import WorkOrder, Workstation
 from app.models.user import User
 from app.schemas.production import WorkOrderResponse
+from app.services.production.work_order_state_machine import validate_transition
 from app.services.status_update_service import StatusUpdateService
 from app.utils.db_helpers import get_or_404
 
@@ -41,6 +42,12 @@ def start_work_order(
     """
     order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
+    # 状态机校验
+    try:
+        validate_transition(order.status, "STARTED")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     # 准备关联实体更新（工位）
     related_entities = []
     if order.workstation_id:
@@ -63,9 +70,6 @@ def start_work_order(
         entity=order,
         new_status="STARTED",
         operator=current_user,
-        transition_rules={
-            "ASSIGNED": ["STARTED"],  # 只能从ASSIGNED转换到STARTED
-        },
         timestamp_fields={
             "STARTED": "actual_start_time",
         },
@@ -99,6 +103,12 @@ def complete_work_order(
     """
     order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
+    # 状态机校验
+    try:
+        validate_transition(order.status, "COMPLETED")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     # 准备关联实体更新（工位）
     related_entities = []
     if order.workstation_id:
@@ -125,10 +135,6 @@ def complete_work_order(
         entity=order,
         new_status="COMPLETED",
         operator=current_user,
-        transition_rules={
-            "STARTED": ["COMPLETED"],
-            "PAUSED": ["COMPLETED"],
-        },
         timestamp_fields={
             "COMPLETED": "actual_end_time",
         },
@@ -163,6 +169,12 @@ def pause_work_order(
     """
     order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
+    # 状态机校验
+    try:
+        validate_transition(order.status, "PAUSED")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     # 准备关联实体更新（工位）
     related_entities = []
     if order.workstation_id:
@@ -187,9 +199,6 @@ def pause_work_order(
         entity=order,
         new_status="PAUSED",
         operator=current_user,
-        transition_rules={
-            "STARTED": ["PAUSED"],  # 只能从STARTED转换到PAUSED
-        },
         related_entities=related_entities,
         before_update_callback=before_update_callback,
         reason=pause_reason,
@@ -220,6 +229,12 @@ def resume_work_order(
     """
     order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
+    # 状态机校验（恢复 = PAUSED → STARTED）
+    try:
+        validate_transition(order.status, "STARTED")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     # 准备关联实体更新（工位）
     related_entities = []
     if order.workstation_id:
@@ -242,9 +257,6 @@ def resume_work_order(
         entity=order,
         new_status="STARTED",
         operator=current_user,
-        transition_rules={
-            "PAUSED": ["STARTED"],  # 只能从PAUSED转换到STARTED
-        },
         related_entities=related_entities,
     )
 
@@ -275,6 +287,12 @@ def cancel_work_order(
     """
     order = get_or_404(db, WorkOrder, order_id, detail="工单不存在")
 
+    # 状态机校验
+    try:
+        validate_transition(order.status, "CANCELLED")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     # 准备关联实体更新（工位）
     related_entities = []
     if order.workstation_id:
@@ -302,12 +320,6 @@ def cancel_work_order(
         entity=order,
         new_status="CANCELLED",
         operator=current_user,
-        transition_rules={
-            # 允许从除COMPLETED和CANCELLED外的所有状态转换到CANCELLED
-            "ASSIGNED": ["CANCELLED"],
-            "STARTED": ["CANCELLED"],
-            "PAUSED": ["CANCELLED"],
-        },
         related_entities=related_entities,
         before_update_callback=before_update_callback,
         reason=cancel_reason,

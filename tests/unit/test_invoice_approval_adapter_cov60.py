@@ -352,16 +352,16 @@ class TestInvoiceApprovalAdapter:
         assert valid is False
         assert "购买方名称" in error
 
-    @patch("app.services.approval_engine.adapters.invoice.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
     def test_submit_for_approval_success(self, mock_workflow_engine):
         """测试提交审批 - 成功"""
         db = make_db()
         invoice = make_invoice(approval_instance_id=None)
         instance = make_approval_instance(id=5000)
 
-        # Mock WorkflowEngine
+        # Mock ApprovalEngineService
         mock_engine = MagicMock()
-        mock_engine.create_instance.return_value = instance
+        mock_engine.submit.return_value = instance
         mock_workflow_engine.return_value = mock_engine
 
         adapter = InvoiceApprovalAdapter(db)
@@ -374,7 +374,7 @@ class TestInvoiceApprovalAdapter:
         db.add.assert_called_with(invoice)
         db.commit.assert_called_once()
 
-    @patch("app.services.approval_engine.adapters.invoice.WorkflowEngine")
+    @patch("app.services.approval_engine.adapters.invoice.ApprovalEngineService")
     def test_submit_for_approval_already_submitted(self, mock_workflow_engine):
         """测试提交审批 - 已提交"""
         db = make_db()

@@ -27,6 +27,8 @@ from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
 
+from .permission_codes import canonicalize_permission_code, canonicalize_permission_codes
+
 # API Key Header名称
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
@@ -186,9 +188,11 @@ def require_api_key_scope(required_scope: str):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API Key required")
 
         scopes = api_key_info.get("scopes", [])
+        normalized_scopes = canonicalize_permission_codes(scopes)
+        normalized_required_scope = canonicalize_permission_code(required_scope)
 
         # 检查是否有管理员权限或特定权限
-        if "admin" not in scopes and required_scope not in scopes:
+        if "admin" not in scopes and normalized_required_scope not in normalized_scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Insufficient API Key scope: {required_scope} required",

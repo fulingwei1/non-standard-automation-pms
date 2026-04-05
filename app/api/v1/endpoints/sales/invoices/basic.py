@@ -125,15 +125,13 @@ def read_invoice(
     return InvoiceResponse(**invoice_dict)
 
 
-@router.post("/invoices", response_model=InvoiceResponse, status_code=201)
-def create_invoice(
-    *,
-    db: Session = Depends(deps.get_db),
+def _create_invoice_logic(
+    db: Session,
     invoice_in: InvoiceCreate,
-    current_user: User = Depends(security.require_permission("finance:read")),
+    current_user: User,
 ) -> Any:
     """
-    创建发票
+    创建发票核心逻辑
     """
     invoice_data = invoice_in.model_dump()
 
@@ -186,6 +184,28 @@ def create_invoice(
         "customer_name": customer.customer_name if customer else None,
     }
     return InvoiceResponse(**invoice_dict)
+
+
+@router.post("/invoices/", response_model=InvoiceResponse, status_code=201, include_in_schema=False)
+def create_invoice_slash(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_in: InvoiceCreate,
+    current_user: User = Depends(security.require_permission("finance:read")),
+) -> Any:
+    """创建发票 (trailing slash)"""
+    return _create_invoice_logic(db, invoice_in, current_user)
+
+
+@router.post("/invoices", response_model=InvoiceResponse, status_code=201)
+def create_invoice(
+    *,
+    db: Session = Depends(deps.get_db),
+    invoice_in: InvoiceCreate,
+    current_user: User = Depends(security.require_permission("finance:read")),
+) -> Any:
+    """创建发票"""
+    return _create_invoice_logic(db, invoice_in, current_user)
 
 
 @router.delete("/invoices/{invoice_id}", status_code=200)

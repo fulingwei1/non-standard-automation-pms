@@ -374,8 +374,8 @@ class TestSubmitForApproval(unittest.TestCase):
         self.db_mock = MagicMock()
         self.adapter = EcnApprovalAdapter(self.db_mock)
 
-    @patch("app.services.approval_engine.workflow_engine.WorkflowEngine")
-    def test_submit_for_approval_new(self, mock_workflow_engine_class):
+    @patch("app.services.approval_engine.adapters.ecn.ApprovalEngineService")
+    def test_submit_for_approval_new(self, mock_engine_class):
         """测试提交新的审批"""
         # 模拟ECN对象
         mock_ecn = MagicMock()
@@ -392,13 +392,13 @@ class TestSubmitForApproval(unittest.TestCase):
         # 模拟评估记录
         self.db_mock.query.return_value.filter.return_value.all.return_value = []
 
-        # 模拟WorkflowEngine实例
+        # 模拟ApprovalEngineService实例
         mock_engine = MagicMock()
         mock_instance = MagicMock()
         mock_instance.id = 1001
         mock_instance.status = "PENDING"
-        mock_engine.create_instance.return_value = mock_instance
-        mock_workflow_engine_class.return_value = mock_engine
+        mock_engine.submit.return_value = mock_instance
+        mock_engine_class.return_value = mock_engine
 
         result = self.adapter.submit_for_approval(ecn=mock_ecn, initiator_id=100, urgency="URGENT")
 

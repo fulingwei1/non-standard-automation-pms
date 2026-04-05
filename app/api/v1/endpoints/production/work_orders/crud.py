@@ -12,7 +12,7 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.core import security
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.schemas.production import WorkOrderCreate, WorkOrderResponse
+from app.schemas.production import WorkOrderCreate, WorkOrderResponse, WorkOrderUpdate
 from app.services.production.work_order_service import WorkOrderService
 
 router = APIRouter()
@@ -69,3 +69,18 @@ def read_work_order(
     """
     service = WorkOrderService(db)
     return service.get_work_order(order_id)
+
+
+@router.put("/work-orders/{order_id}", response_model=WorkOrderResponse)
+def update_work_order(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    order_in: WorkOrderUpdate,
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    更新工单
+    """
+    service = WorkOrderService(db)
+    return service.update_work_order(order_id, order_in)

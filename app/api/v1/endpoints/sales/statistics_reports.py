@@ -14,13 +14,16 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from sqlalchemy import func as sa_func
+
 from app.api import deps
 from app.core import security
 from app.core.sales_permissions import (
     filter_sales_data_by_scope,
     filter_sales_finance_data_by_scope,
 )
-from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote
+from app.models.organization import Department
+from app.models.sales import Contract, Invoice, Lead, Opportunity, Quote, SalesTarget
 from app.models.user import User
 from app.schemas.common import ResponseModel
 
@@ -405,3 +408,350 @@ def get_o2c_pipeline(
             },
         },
     )
+
+
+# ==================== 综合业绩报表 ====================
+
+
+@router.get("/reports/performance", response_model=ResponseModel)
+def get_performance_report(
+    db: Session = Depends(deps.get_db),
+    start_date: Optional[date] = Query(None, description="开始日期"),
+    end_date: Optional[date] = Query(None, description="结束日期"),
+    user_id: Optional[int] = Query(None, description="用户ID（查看个人）"),
+    department_id: Optional[int] = Query(None, description="部门ID（查看团队）"),
+    report_type: str = Query("personal", description="报表类型: personal/team/forecast"),
+    current_user: User = Depends(security.get_current_active_user),
+) -> Any:
+    """
+    综合销售业绩报表
+
+    - personal: 个人业绩报表（赢单、合同、回款、目标完成率）
+    - team: 团队业绩报表（部门/团队维度汇总 + 成员明细）
+    - forecast: 销售预测报表（管道加权预测 vs 实际）
+    """
+    # 默认时间范围：当年
+    now = datetime.now()
+    if not start_date:
+        start_date = date(now.year, 1, 1)
+    if not end_date:
+        end_date = date(now.year, 12, 31)
+
+    dt_start = datetime.combine(start_date, datetime.min.time())
+    dt_end = datetime.combine(end_date, datetime.max.time())
+
+    if report_type == "team":
+        data = _team_performance(db, current_user, dt_start, dt_end, department_id)
+    elif report_type == "forecast":
+        data = _forecast_report(db, current_user, dt_start, dt_end)
+    else:
+        data = _personal_performance(db, current_user, dt_start, dt_end, user_id)
+
+    return ResponseModel(
+        code=200,
+        message="success",
+        data={
+            "report_type": report_type,
+            "date_range": {
+                "start": start_date.isoformat(),
+                "end": end_date.isoformat(),
+            },
+            **data,
+        },
+    )
+
+
+def _personal_performance(
+    db: Session,
+    current_user: User,
+    dt_start: datetime,
+    dt_end: datetime,
+    user_id: Optional[int],
+) -> dict:
+    """个人业绩报表"""
+    target_uid = user_id or current_user.id
+
+    # 商机
+    opps = (
+        db.query(Opportunity)
+        .filter(
+            Opportunity.owner_id == target_uid,
+            Opportunity.created_at >= dt_start,
+            Opportunity.created_at <= dt_end,
+        )
+        .all()
+    )
+    total_opps = len(opps)
+    won_opps = [o for o in opps if o.stage == "WON"]
+    lost_opps = [o for o in opps if o.stage == "LOST"]
+    won_amount = sum(float(o.est_amount or 0) for o in won_opps)
+    lost_amount = sum(float(o.est_amount or 0) for o in lost_opps)
+    pipeline_amount = sum(
+        float(o.est_amount or 0)
+        for o in opps
+        if o.stage not in ("WON", "LOST", "ON_HOLD")
+    )
+
+    # 合同
+    contracts = (
+        db.query(Contract)
+        .filter(
+            Contract.sales_owner_id == target_uid,
+            Contract.created_at >= dt_start,
+            Contract.created_at <= dt_end,
+        )
+        .all()
+    )
+    signed = [c for c in contracts if c.status == "signed"]
+    contract_amount = sum(float(c.total_amount or 0) for c in signed)
+    received = sum(float(c.received_amount or 0) for c in signed)
+
+    # 目标完成率
+    year_str = str(dt_start.year)
+    target_row = (
+        db.query(SalesTarget)
+        .filter(
+            SalesTarget.user_id == target_uid,
+            SalesTarget.target_scope == "PERSONAL",
+            SalesTarget.target_type == "CONTRACT_AMOUNT",
+            SalesTarget.target_period == "YEARLY",
+            SalesTarget.period_value == year_str,
+            SalesTarget.status == "ACTIVE",
+        )
+        .first()
+    )
+    target_val = float(target_row.target_value) if target_row else 0
+    completion_rate = round(won_amount / target_val * 100, 1) if target_val > 0 else 0
+
+    # 用户信息
+    user = db.query(User).filter(User.id == target_uid).first()
+
+    return {
+        "user": {
+            "id": target_uid,
+            "name": (user.real_name or user.username) if user else None,
+        },
+        "opportunities": {
+            "total": total_opps,
+            "won": len(won_opps),
+            "lost": len(lost_opps),
+            "in_pipeline": total_opps - len(won_opps) - len(lost_opps),
+            "won_amount": won_amount,
+            "lost_amount": lost_amount,
+            "pipeline_amount": pipeline_amount,
+            "win_rate": (
+                round(len(won_opps) / (len(won_opps) + len(lost_opps)) * 100, 1)
+                if (len(won_opps) + len(lost_opps)) > 0
+                else 0
+            ),
+        },
+        "contracts": {
+            "total": len(contracts),
+            "signed": len(signed),
+            "contract_amount": contract_amount,
+            "received_amount": received,
+            "collection_rate": (
+                round(received / contract_amount * 100, 1) if contract_amount > 0 else 0
+            ),
+        },
+        "target": {
+            "target_value": target_val,
+            "achieved": won_amount,
+            "completion_rate": completion_rate,
+            "gap": round(target_val - won_amount, 2),
+        },
+    }
+
+
+def _team_performance(
+    db: Session,
+    current_user: User,
+    dt_start: datetime,
+    dt_end: datetime,
+    department_id: Optional[int],
+) -> dict:
+    """团队业绩报表"""
+    # 获取部门信息
+    dept = None
+    if department_id:
+        dept = db.query(Department).filter(Department.id == department_id).first()
+
+    # 查询范围内所有赢单，按 owner 分组
+    query = db.query(Opportunity).filter(
+        Opportunity.stage == "WON",
+        Opportunity.created_at >= dt_start,
+        Opportunity.created_at <= dt_end,
+    )
+    query = filter_sales_data_by_scope(query, current_user, db, Opportunity, "owner_id")
+
+    won_opps = query.all()
+
+    # 按负责人汇总
+    member_map = {}
+    for opp in won_opps:
+        uid = opp.owner_id
+        if uid not in member_map:
+            member_map[uid] = {"won_count": 0, "won_amount": 0}
+        member_map[uid]["won_count"] += 1
+        member_map[uid]["won_amount"] += float(opp.est_amount or 0)
+
+    # 构建成员明细
+    members = []
+    for uid, stats in sorted(member_map.items(), key=lambda x: -x[1]["won_amount"]):
+        user = db.query(User).filter(User.id == uid).first()
+        if not user:
+            continue
+
+        # 个人合同
+        signed_contracts = (
+            db.query(Contract)
+            .filter(
+                Contract.sales_owner_id == uid,
+                Contract.status == "signed",
+                Contract.created_at >= dt_start,
+                Contract.created_at <= dt_end,
+            )
+            .all()
+        )
+        contract_amount = sum(float(c.total_amount or 0) for c in signed_contracts)
+
+        # 个人目标
+        year_str = str(dt_start.year)
+        t = (
+            db.query(SalesTarget)
+            .filter(
+                SalesTarget.user_id == uid,
+                SalesTarget.target_scope == "PERSONAL",
+                SalesTarget.target_type == "CONTRACT_AMOUNT",
+                SalesTarget.target_period == "YEARLY",
+                SalesTarget.period_value == year_str,
+                SalesTarget.status == "ACTIVE",
+            )
+            .first()
+        )
+        t_val = float(t.target_value) if t else 0
+        completion = round(stats["won_amount"] / t_val * 100, 1) if t_val > 0 else 0
+
+        members.append(
+            {
+                "user_id": uid,
+                "name": user.real_name or user.username,
+                "won_count": stats["won_count"],
+                "won_amount": stats["won_amount"],
+                "contract_amount": contract_amount,
+                "target": t_val,
+                "completion_rate": completion,
+            }
+        )
+
+    # 汇总
+    total_won = sum(m["won_amount"] for m in members)
+    total_contracts = sum(m["contract_amount"] for m in members)
+
+    return {
+        "department": {
+            "id": department_id,
+            "name": dept.dept_name if dept else "全部",
+        },
+        "summary": {
+            "member_count": len(members),
+            "total_won_amount": total_won,
+            "total_contract_amount": total_contracts,
+            "avg_per_member": round(total_won / len(members), 2) if members else 0,
+        },
+        "members": members,
+    }
+
+
+def _forecast_report(
+    db: Session,
+    current_user: User,
+    dt_start: datetime,
+    dt_end: datetime,
+) -> dict:
+    """销售预测报表"""
+    base_query = db.query(Opportunity).filter(
+        Opportunity.created_at >= dt_start,
+        Opportunity.created_at <= dt_end,
+    )
+    base_query = filter_sales_data_by_scope(base_query, current_user, db, Opportunity, "owner_id")
+
+    # 已赢单
+    won = base_query.filter(Opportunity.stage == "WON").all()
+    actual_amount = sum(float(o.est_amount or 0) for o in won)
+
+    # 管道中各阶段加权预测
+    active_stages = ["DISCOVERY", "QUALIFICATION", "PROPOSAL", "NEGOTIATION"]
+    stage_names = {
+        "DISCOVERY": "初步接触",
+        "QUALIFICATION": "需求确认",
+        "PROPOSAL": "方案报价",
+        "NEGOTIATION": "商务谈判",
+    }
+
+    stage_forecasts = []
+    total_weighted = 0
+    for stage in active_stages:
+        stage_opps = base_query.filter(Opportunity.stage == stage).all()
+        raw = sum(float(o.est_amount or 0) for o in stage_opps)
+        weighted = sum(
+            float(o.est_amount or 0) * (o.probability or 0) / 100 for o in stage_opps
+        )
+        total_weighted += weighted
+        stage_forecasts.append(
+            {
+                "stage": stage_names.get(stage, stage),
+                "count": len(stage_opps),
+                "raw_amount": raw,
+                "weighted_amount": round(weighted, 2),
+            }
+        )
+
+    forecast_total = actual_amount + total_weighted
+
+    # 按月拆分预测
+    import datetime as dt_module
+
+    monthly_forecast = []
+    current = dt_start
+    while current < dt_end:
+        m = current.month
+        y = current.year
+        m_end = datetime(y, m + 1, 1) if m < 12 else datetime(y + 1, 1, 1)
+
+        m_won = (
+            base_query.filter(
+                Opportunity.stage == "WON",
+                Opportunity.created_at >= current,
+                Opportunity.created_at < m_end,
+            )
+            .with_entities(sa_func.coalesce(sa_func.sum(Opportunity.est_amount), 0))
+            .scalar()
+        )
+
+        m_pipeline = base_query.filter(
+            Opportunity.stage.in_(active_stages),
+            Opportunity.expected_close_date >= current.date(),
+            Opportunity.expected_close_date < m_end.date(),
+        ).all()
+        m_weighted = sum(
+            float(o.est_amount or 0) * (o.probability or 0) / 100 for o in m_pipeline
+        )
+
+        monthly_forecast.append(
+            {
+                "month": f"{y}-{m:02d}",
+                "actual": float(m_won or 0),
+                "forecast": round(float(m_won or 0) + m_weighted, 2),
+            }
+        )
+
+        current = m_end
+
+    return {
+        "actual_won": actual_amount,
+        "pipeline_weighted": round(total_weighted, 2),
+        "forecast_total": round(forecast_total, 2),
+        "by_stage": stage_forecasts,
+        "monthly": monthly_forecast,
+    }
