@@ -636,3 +636,135 @@ class ProfitAnalysisService:
             "product_types": top_n(product_freq),
             "industries": top_n(industry_freq),
         }
+
+    # ------------------------------------------------------------------
+    # 6. 计算项目利润
+    # ------------------------------------------------------------------
+    def calculate_project_profit(
+        self, project_id: int, include_forecast: bool = True
+    ) -> Dict[str, Any]:
+        """
+        计算项目利润：
+        - 实际利润 = 合同金额 - 实际成本
+        - 预计利润 = 合同金额 - (实际成本 + 剩余预算)
+        """
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            return {"error": "项目不存在"}
+
+        contract_amount = float(project.contract_amount or 0)
+        actual_cost = self._get_actual_cost(project_id)
+
+        # 实际利润
+        actual_profit = contract_amount - actual_cost
+
+        # 预计利润
+        budget_amount = float(project.budget_amount or 0)
+        remaining_cost = max(budget_amount - actual_cost, 0) if budget_amount > 0 else 0
+        forecast_cost = actual_cost + remaining_cost
+        forecast_profit = contract_amount - forecast_cost
+
+        return {
+            "project_id": project_id,
+            "contract_amount": round(contract_amount, 2),
+            "actual_cost": round(actual_cost, 2),
+            "actual_profit": round(actual_profit, 2),
+            "forecast_cost": round(forecast_cost, 2),
+            "forecast_profit": round(forecast_profit, 2),
+            "remaining_cost": round(remaining_cost, 2),
+            "has_forecast": include_forecast and budget_amount > 0,
+        }
+
+    # ------------------------------------------------------------------
+    # 7. 计算毛利率
+    # ------------------------------------------------------------------
+    def calculate_gross_margin(
+        self, project_id: int, use_forecast: bool = False
+    ) -> Dict[str, Any]:
+        """
+        计算毛利率：
+        - 毛利率 = 毛利 / 合同金额 * 100%
+        """
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            return {"error": "项目不存在"}
+
+        contract_amount = float(project.contract_amount or 0)
+        if contract_amount <= 0:
+            return {"error": "合同金额无效"}
+
+        actual_cost = self._get_actual_cost(project_id)
+
+        if use_forecast:
+            budget_amount = float(project.budget_amount or 0)
+            remaining_cost = max(budget_amount - actual_cost, 0) if budget_amount > 0 else 0
+            total_cost = actual_cost + remaining_cost
+        else:
+            total_cost = actual_cost
+
+        profit = contract_amount - total_cost
+        margin_rate = (profit / contract_amount * 100) if contract_amount > 0 else 0
+
+        return {
+            "project_id": project_id,
+            "contract_amount": round(contract_amount, 2),
+            "total_cost": round(total_cost, 2),
+            "profit": round(profit, 2),
+            "gross_margin_rate": round(margin_rate, 2),
+            "is_forecast": use_forecast,
+        }
+
+    # ------------------------------------------------------------------
+    # 8. 分配成本
+    # ------------------------------------------------------------------
+    def allocate_costs(
+        self, project_id: int, cost_allocation: Dict[str, float]
+    ) -> Dict[str, Any]:
+        """
+        将成本分配到不同类别：
+        - 输入：成本分配比例或金额
+        - 输出：各类别的成本明细
+        """
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            return {"error": "项目不存在"}
+
+        total_cost = self._get_actual_cost(project_id)
+
+        if not cost_allocation:
+            # 如果没有提供分配方案，按默认类型分配
+            cost_by_type = self._get_cost_by_type(project_id)
+            return {
+                "project_id": project_id,
+                "total_cost": round(total_cost, 2),
+                "allocated_costs": [
+                    {"category": k, "amount": round(v, 2)} for k, v in cost_by_type.items()
+                ],
+                "unallocated": 0.0,
+            }
+
+        # 计算分配金额
+        allocated_total = sum(cost_allocation.values())
+        allocated_costs = []
+        unallocated = total_cost
+
+        for category, ratio_or_amount in cost_allocation.items():
+            if ratio_or_amount <= 1.0:
+                # 比例
+                allocated_amount = total_cost * ratio_or_amount
+            else:
+                # 固定金额
+                allocated_amount = ratio_or_amount
+
+            allocated_costs.append({
+                "category": category,
+                "amount": round(allocated_amount, 2),
+            })
+            unallocated -= allocated_amount
+
+        return {
+            "project_id": project_id,
+            "total_cost": round(total_cost, 2),
+            "allocated_costs": allocated_costs,
+            "unallocated": round(max(unallocated, 0), 2),
+        }
