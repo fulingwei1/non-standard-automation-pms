@@ -38,6 +38,7 @@ def db_session():
 def test_customer(db_session: Session):
     """创建测试客户"""
     customer = Customer(
+        customer_code="CUST001",
         customer_name="测试客户",
         contact_person="张三",
         contact_phone="13800138000",
