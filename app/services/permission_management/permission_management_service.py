@@ -20,9 +20,9 @@ from app.models.user import (
     RoleApiPermission,
     User,
 )
-from app.services.permission_audit_service import PermissionAuditService
-from app.services.permission_cache_service import get_permission_cache_service
-from app.services.permission_service import PermissionService
+from app.services.permission_management.permission_audit_service import PermissionAuditService
+from app.services.permission_management.permission_cache_service import get_permission_cache_service
+from app.services.permission_management.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -310,7 +310,6 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> None:
         """清除权限缓存"""
-        try:
         from app.services.permission_management.permission_service import PermissionService
 
         permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
