@@ -156,7 +156,7 @@ def calc_vac(
 
 
 def calc_cumulative_kit_rate(
-    batches: Union[Sequence[Tuple[float, int, Decimal], float | int | Decimal]],
+    batches: Union[Sequence[Tuple[float, int, Decimal]], float | int | Decimal],
 ) -> Decimal:
     """
     计算分批到货的累计套件率。
@@ -317,6 +317,37 @@ def calc_price_breakdown(
         "price": price.quantize(PLACES_2),
         "profit": profit.quantize(PLACES_2),
         "margin_rate_actual": (profit / price).quantize(PLACES_6),
+    }
+
+
+def calculate_project_profit(
+    revenue: Union[float, int, Decimal],
+    cost: Union[float, int, Decimal],
+) -> Dict[str, Decimal]:
+    """
+    计算项目利润。
+
+    利润 = 收入 - 成本
+
+    Args:
+        revenue: 收入金额（元）
+        cost:    成本金额（元）
+
+    Returns:
+        包含以下键的字典：
+          revenue, cost, profit, margin_rate
+    """
+    r = Decimal(str(revenue))
+    c = Decimal(str(cost))
+    profit = r - c
+
+    margin_rate = profit / r if r > 0 else Decimal("0")
+
+    return {
+        "revenue": r.quantize(PLACES_2),
+        "cost": c.quantize(PLACES_2),
+        "profit": profit.quantize(PLACES_2),
+        "margin_rate": margin_rate.quantize(PLACES_6),
     }
 
 
