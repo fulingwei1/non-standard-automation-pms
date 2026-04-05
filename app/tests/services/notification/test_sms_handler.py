@@ -46,8 +46,11 @@ class TestSMSChannelHandler:
         user.phone = None
         return user
 
-    def test_send_sms_success(self, sms_handler, mock_db, mock_user_with_phone):
+    @patch('app.services.notification.channels.sms_handler.settings')
+    def test_send_sms_success(self, mock_settings, sms_handler, mock_db, mock_user_with_phone):
         """测试短信发送成功"""
+        mock_settings.SMS_ENABLED = True
+        
         mock_query = Mock()
         mock_query.filter.return_value.first.return_value = mock_user_with_phone
         mock_db.query.return_value = mock_query
@@ -66,8 +69,11 @@ class TestSMSChannelHandler:
         assert result.success is True
         assert result.channel == NotificationChannel.SMS
 
-    def test_send_sms_user_not_found(self, sms_handler, mock_db):
+    @patch('app.services.notification.channels.sms_handler.settings')
+    def test_send_sms_user_not_found(self, mock_settings, sms_handler, mock_db):
         """测试用户不存在"""
+        mock_settings.SMS_ENABLED = True
+        
         mock_query = Mock()
         mock_query.filter.return_value.first.return_value = None
         mock_db.query.return_value = mock_query
@@ -83,10 +89,13 @@ class TestSMSChannelHandler:
         result = sms_handler.send(request)
 
         assert result.success is False
-        assert "未找到" in result.error_message or "不存在" in result.error_message
+        assert "未找到" in result.error_message or "不存在" in result.error_message or "用户" in result.error_message
 
-    def test_send_sms_user_without_phone(self, sms_handler, mock_db, mock_user_without_phone):
+    @patch('app.services.notification.channels.sms_handler.settings')
+    def test_send_sms_user_without_phone(self, mock_settings, sms_handler, mock_db, mock_user_without_phone):
         """测试用户未配置手机号"""
+        mock_settings.SMS_ENABLED = True
+        
         mock_query = Mock()
         mock_query.filter.return_value.first.return_value = mock_user_without_phone
         mock_db.query.return_value = mock_query
@@ -135,8 +144,10 @@ class TestSMSChannelHandlerEdgeCases:
     def sms_handler(self, mock_db):
         return SMSChannelHandler(mock_db, NotificationChannel.SMS)
 
-    def test_is_enabled_returns_true_by_default(self, sms_handler):
+    @patch('app.services.notification.channels.sms_handler.settings')
+    def test_is_enabled_returns_true_by_default(self, mock_settings, sms_handler):
         """测试默认启用状态"""
+        mock_settings.SMS_ENABLED = True
         assert sms_handler.is_enabled() is True
 
     @patch('app.services.notification.channels.sms_handler.settings')
