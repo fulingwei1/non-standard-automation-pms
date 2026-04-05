@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
 """进度服务单元测试"""
+import sys
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+
+# Mock notification_handlers module to fix import issues
+_mock_handlers = MagicMock()
+sys.modules["app.services.notification_handlers"] = _mock_handlers
+sys.modules["app.services.notification_handlers.email_handler"] = MagicMock()
+sys.modules["app.services.notification_handlers.sms_handler"] = MagicMock()
+sys.modules["app.services.notification_handlers.system_handler"] = MagicMock()
+sys.modules["app.services.notification_handlers.wechat_handler"] = MagicMock()
+sys.modules["app.services.notification_handlers.unified_adapter"] = MagicMock()
 
 from app.services.progress_service import (
     ProgressAggregationService,
@@ -301,3 +311,173 @@ class TestProgressAutoServiceRunAutoProcessing:
         svc = ProgressAutoService(db)
         result = svc.run_auto_processing(1)
         assert result["success"] is True
+
+
+# =============================================================================
+# 任务要求的 5 个核心测试
+# =============================================================================
+
+
+class TestUpdateProgressBasic:
+    """test_update_progress_basic - 基础进度更新"""
+
+    def test_update_progress_basic(self):
+        """测试基本进度更新功能"""
+        task = _make_task(status="ACCEPTED", progress=0)
+        apply_task_progress_update(task, 25, 1)
+        assert task.progress == 25
+        assert task.status == "IN_PROGRESS"
+        assert task.updated_by == 1
+
+    def test_update_progress_maintains_other_fields(self):
+        """测试更新进度时保持其他字段不变"""
+        task = _make_task(
+            status="IN_PROGRESS",
+            progress=30,
+            estimated_hours=Decimal("16"),
+            project_id=100,
+        )
+        apply_task_progress_update(task, 60, 1, actual_hours=Decimal("8"))
+        assert task.progress == 60
+        assert task.estimated_hours == Decimal("16")
+        assert task.project_id == 100
+
+
+class TestUpdateProgressWithPercentage:
+    """test_update_progress_with_percentage - 百分比进度"""
+
+    def test_progress_0_percent(self):
+        """测试进度为 0% 的情况"""
+        task = _make_task(status="ACCEPTED")
+        apply_task_progress_update(task, 0, 1)
+        assert task.progress == 0
+        assert task.status == "ACCEPTED"  # 0% 不改变状态
+
+    def test_progress_50_percent(self):
+        """测试进度为 50% 的情况"""
+        task = _make_task(status="ACCEPTED")
+        apply_task_progress_update(task, 50, 1)
+        assert task.progress == 50
+        assert task.status == "IN_PROGRESS"
+
+    def test_progress_99_percent(self):
+        """测试进度为 99% 的情况"""
+        task = _make_task(status="IN_PROGRESS")
+        apply_task_progress_update(task, 99, 1)
+        assert task.progress == 99
+        assert task.status == "IN_PROGRESS"  # 未完成不改变状态
+
+
+class TestGetProgressStatus:
+    """test_get_progress_status - 进度状态查询"""
+
+    def test_get_progress_summary_with_completed(self):
+        """测试获取项目进度汇总 - 包含已完成任务"""
+        db = _make_db()
+        # Mock scalar to return values based on call order
+        mock_scalar = MagicMock()
+        mock_scalar.side_effect = [10, 5, 3, 2, 1, 65.5]
+        db.query.return_value.filter.return_value.scalar = mock_scalar
+        db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            ("COMPLETED", 5),
+            ("IN_PROGRESS", 3),
+            ("PENDING", 2),
+        ]
+        result = get_project_progress_summary(db, 1)
+        assert result["total_tasks"] == 10
+        assert result["completed_tasks"] == 5
+        assert result["in_progress_tasks"] == 3
+
+    def test_get_progress_summary_no_completed(self):
+        """测试获取项目进度汇总 - 无已完成任务"""
+        db = _make_db()
+        mock_scalar = MagicMock()
+        mock_scalar.side_effect = [5, 0, 5, 0, 0, 20.0]
+        db.query.return_value.filter.return_value.scalar = mock_scalar
+        db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            ("IN_PROGRESS", 5),
+        ]
+        result = get_project_progress_summary(db, 1)
+        assert result["completed_tasks"] == 0
+        assert result["completion_rate"] == 0.0
+
+    def test_aggregate_service_returns_correct_structure(self):
+        """测试聚合服务返回正确的结构"""
+        db = _make_db()
+        # Multiple scalar calls
+        mock_scalar = MagicMock()
+        mock_scalar.side_effect = [3, 1, 2, 0, 0]
+        db.query.return_value.filter.return_value.scalar = mock_scalar
+        db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+            ("COMPLETED", 1),
+            ("IN_PROGRESS", 2),
+        ]
+        result = ProgressAggregationService.aggregate_project_progress(1, db)
+        assert "project_id" in result
+        assert "total_tasks" in result
+        assert "completed_tasks" in result
+        assert "in_progress_tasks" in result
+        assert "overall_progress" in result
+
+
+class TestProgressWithNoData:
+    """test_progress_with_no_data - 空数据边界"""
+
+    def test_aggregate_task_progress_no_task(self):
+        """测试聚合无任务的情况"""
+        db = _make_db()
+        db.query.return_value.filter.return_value.first.return_value = None
+        result = aggregate_task_progress(db, 999)
+        assert result["project_progress_updated"] is False
+        assert result["project_id"] is None
+
+    def test_project_progress_no_tasks(self):
+        """测试项目无任务时的进度汇总"""
+        db = _make_db()
+        db.query.return_value.filter.return_value.scalar.side_effect = [0, 0, 0, 0, 0, 0.0]
+        db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        result = get_project_progress_summary(db, 1)
+        assert result["total_tasks"] == 0
+        assert result["completed_tasks"] == 0
+        assert result["overall_progress"] == 0.0
+        assert result["completion_rate"] == 0.0
+
+    def test_aggregation_service_empty_project(self):
+        """测试聚合服务处理空项目"""
+        db = _make_db()
+        db.query.return_value.filter.return_value.scalar.return_value = 0
+        db.query.return_value.filter.return_value.group_by.return_value.all.return_value = []
+        result = ProgressAggregationService.aggregate_project_progress(1, db)
+        assert result["total_tasks"] == 0
+        assert result["overall_progress"] == 0.0
+        assert result["completed_tasks"] == 0
+
+
+class TestProgressOver100Percent:
+    """test_progress_over_100_percent - 超 100% 边界"""
+
+    def test_progress_over_100_rejected(self):
+        """测试进度超过 100 被拒绝"""
+        task = _make_task()
+        with pytest.raises(ValueError, match="0到100"):
+            apply_task_progress_update(task, 101, 1)
+
+    def test_progress_exactly_100_completes(self):
+        """测试进度正好 100 完成任务"""
+        task = _make_task(status="IN_PROGRESS", progress=80)
+        apply_task_progress_update(task, 100, 1)
+        assert task.progress == 100
+        assert task.status == "COMPLETED"
+        assert task.actual_end_date == date.today()
+
+    def test_progress_150_rejected(self):
+        """测试进度 150 被拒绝"""
+        task = _make_task()
+        with pytest.raises(ValueError, match="0到100"):
+            apply_task_progress_update(task, 150, 1)
+
+    def test_progress_200_rejected(self):
+        """测试进度 200 被拒绝"""
+        task = _make_task()
+        with pytest.raises(ValueError, match="进度必须在0到100之间"):
+            apply_task_progress_update(task, 200, 1)
