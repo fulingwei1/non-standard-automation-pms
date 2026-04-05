@@ -10,7 +10,7 @@ vi.mock("../services/api", () => ({
   },
 }));
 
-import ContractApproval from "./ContractApproval.jsx";
+import ContractApproval from "./ContractApproval";
 import { contractApi } from "../services/api";
 
 function renderPage() {

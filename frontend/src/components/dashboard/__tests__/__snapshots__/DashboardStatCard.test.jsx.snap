@@ -3,7 +3,7 @@
 exports[`DashboardStatCard > Snapshot > matches snapshot in loading state 1`] = `
 <div>
   <div
-    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10 p-5"
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 card-hover-float hover:border-white/20 p-5"
   >
     <div
       class="animate-pulse"
@@ -27,7 +27,7 @@ exports[`DashboardStatCard > Snapshot > matches snapshot with all props 1`] = `
   tabindex="0"
 >
   <div
-    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10 p-5 group cursor-pointer custom"
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 card-hover-float hover:border-white/20 p-5 group cursor-pointer custom"
   >
     <div
       class="flex items-center justify-between mb-4"
@@ -85,7 +85,7 @@ exports[`DashboardStatCard > Snapshot > matches snapshot with all props 1`] = `
 exports[`DashboardStatCard > Snapshot > matches snapshot with minimal props 1`] = `
 <div>
   <div
-    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-violet-500/10 p-5 group"
+    class="rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 card-hover-float hover:border-white/20 p-5 group"
   >
     <div
       class="flex items-center justify-between mb-4"

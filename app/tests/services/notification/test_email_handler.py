@@ -1,0 +1,131 @@
+# -*- coding: utf-8 -*-
+"""
+邮件通知处理器测试
+"""
+from unittest.mock import Mock, patch, MagicMock
+import pytest
+from datetime import datetime
+
+from app.services.notification.channels.email_handler import EmailChannelHandler
+from app.services.channel_handlers.base import (
+    NotificationRequest,
+    NotificationChannel,
+    NotificationPriority,
+)
+from app.models.user import User
+
+
+class TestEmailChannelHandler:
+    """EmailChannelHandler 测试类"""
+
+    @pytest.fixture
+    def mock_db(self):
+        """创建模拟数据库会话"""
+        db = Mock()
+        return db
+
+    @pytest.fixture
+    def email_handler(self, mock_db):
+        """创建邮件处理器实例"""
+        return EmailChannelHandler(mock_db, NotificationChannel.EMAIL)
+
+    @pytest.fixture
+    def mock_user_with_email(self):
+        """创建带邮箱的用户"""
+        user = Mock(spec=User)
+        user.id = 1
+        user.email = "test@example.com"
+        user.phone = "13800138000"
+        return user
+
+    @pytest.fixture
+    def mock_user_without_email(self):
+        """创建不带邮箱的用户"""
+        user = Mock(spec=User)
+        user.id = 2
+        user.email = None
+        user.phone = "13800138000"
+        return user
+
+    def test_send_email_success(self, email_handler, mock_db, mock_user_with_email):
+        """测试邮件发送成功"""
+        # Mock查询返回用户
+        mock_query = Mock()
+        mock_query.filter.return_value.first.return_value = mock_user_with_email
+        mock_db.query.return_value = mock_query
+
+        # 创建通知请求
+        request = NotificationRequest(
+            recipient_id=1,
+            notification_type="TEST",
+            category="test",
+            title="测试邮件",
+            content="这是测试内容",
+            priority=NotificationPriority.NORMAL,
+        )
+
+        # 执行发送
+        result = email_handler.send(request)
+
+        # 验证结果
+        assert result.success is True
+        assert result.channel == NotificationChannel.EMAIL
+        assert result.sent_at is not None
+        mock_db.query.assert_called_once()
+
+    def test_send_email_user_not_found(self, email_handler, mock_db):
+        """测试用户不存在"""
+        # Mock查询返回None
+        mock_query = Mock()
+        mock_query.filter.return_value.first.return_value = None
+        mock_db.query.return_value = mock_query
+
+        request = NotificationRequest(
+            recipient_id=999,
+            notification_type="TEST",
+            category="test",
+            title="测试邮件",
+            content="这是测试内容",
+        )
+
+        result = email_handler.send(request)
+
+        assert result.success is False
+        assert "未找到" in result.error_message or "不存在" in result.error_message
+
+    def test_send_email_user_without_email(self, email_handler, mock_db, mock_user_without_email):
+        """测试用户未配置邮箱"""
+        mock_query = Mock()
+        mock_query.filter.return_value.first.return_value = mock_user_without_email
+        mock_db.query.return_value = mock_query
+
+        request = NotificationRequest(
+            recipient_id=2,
+            notification_type="TEST",
+            category="test",
+            title="测试邮件",
+            content="这是测试内容",
+        )
+
+        result = email_handler.send(request)
+
+        assert result.success is False
+        assert "邮箱" in result.error_message
+
+    @patch('app.services.notification.channels.email_handler.settings')
+    def test_send_email_disabled(self, mock_settings, email_handler, mock_db):
+        """测试邮件功能未启用"""
+        mock_settings.EMAIL_ENABLED = False
+
+        request = NotificationRequest(
+            recipient_id=1,
+            notification_type="TEST",
+            category="test",
+            title="测试邮件",
+            content="这是测试内容",
+        )
+
+        result = email_handler.send(request)
+
+        assert result.success is False
+        assert "未启用" in result.error_message

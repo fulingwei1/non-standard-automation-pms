@@ -8,10 +8,12 @@ exports[`LoadingPage > Snapshot Tests > matches snapshot for default loading pag
     <div
       class="flex flex-col items-center justify-center gap-3"
     >
-      <div>
+      <div
+        class="w-12 h-12"
+      >
         <svg
           aria-hidden="true"
-          class="lucide lucide-loader-circle text-primary w-16 h-16"
+          class="lucide lucide-loader-circle w-full h-full text-primary"
           fill="none"
           height="24"
           stroke="currentColor"
@@ -45,10 +47,12 @@ exports[`LoadingPage > Snapshot Tests > matches snapshot with custom className 1
     <div
       class="flex flex-col items-center justify-center gap-3"
     >
-      <div>
+      <div
+        class="w-12 h-12"
+      >
         <svg
           aria-hidden="true"
-          class="lucide lucide-loader-circle text-primary w-16 h-16"
+          class="lucide lucide-loader-circle w-full h-full text-primary"
           fill="none"
           height="24"
           stroke="currentColor"
@@ -82,10 +86,12 @@ exports[`LoadingPage > Snapshot Tests > matches snapshot with custom text 1`] = 
     <div
       class="flex flex-col items-center justify-center gap-3"
     >
-      <div>
+      <div
+        class="w-12 h-12"
+      >
         <svg
           aria-hidden="true"
-          class="lucide lucide-loader-circle text-primary w-16 h-16"
+          class="lucide lucide-loader-circle w-full h-full text-primary"
           fill="none"
           height="24"
           stroke="currentColor"
