@@ -5,9 +5,9 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import MachineManagement from '../MachineManagement/index';
-import api from '../../services/api';
+import { machineApi, projectApi } from '../../services/api';
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -20,6 +20,19 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }) => children,
 }));
 
+vi.mock('../../services/api', () => ({
+  machineApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  projectApi: {
+    get: vi.fn(),
+  },
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
@@ -30,6 +43,16 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 describe('MachineManagement', () => {
+  // 包装组件以提供路由参数
+  const renderWithRouter = (ui) =>
+    render(
+      <MemoryRouter initialEntries={['/projects/1/machines']}>
+        <Routes>
+          <Route path="/projects/:id/machines" element={ui} />
+        </Routes>
+      </MemoryRouter>
+    );
+
   const mockMachines = {
     items: [
       {
@@ -83,10 +106,12 @@ describe('MachineManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockMachines });
-    api.post.mockResolvedValue({ data: { success: true, id: 3 } });
-    api.put.mockResolvedValue({ data: { success: true } });
-    api.delete.mockResolvedValue({ data: { success: true } });
+    machineApi.list.mockResolvedValue({ data: mockMachines });
+    machineApi.get.mockResolvedValue({ data: mockMachines.items[0] });
+    machineApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
+    machineApi.update.mockResolvedValue({ data: { success: true } });
+    machineApi.delete.mockResolvedValue({ data: { success: true } });
+    projectApi.get.mockResolvedValue({ data: { project_name: '测试项目' } });
   });
 
   afterEach(() => {
@@ -96,20 +121,24 @@ describe('MachineManagement', () => {
   describe('Component Rendering', () => {
     it('should render machine management page', async () => {
       render(
-        <MemoryRouter>
-          <MachineManagement />
+        <MemoryRouter initialEntries={['/projects/1/machines']}>
+          <Routes>
+            <Route path="/projects/:id/machines" element={<MachineManagement />} />
+          </Routes>
         </MemoryRouter>
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/设备管理|Machine Management/i)).toBeInTheDocument();
+        expect(screen.getByText(/机台管理|Machine Management/i)).toBeInTheDocument();
       });
     });
 
     it('should render machine list', async () => {
       render(
-        <MemoryRouter>
-          <MachineManagement />
+        <MemoryRouter initialEntries={['/projects/1/machines']}>
+          <Routes>
+            <Route path="/projects/:id/machines" element={<MachineManagement />} />
+          </Routes>
         </MemoryRouter>
       );
 
@@ -121,8 +150,10 @@ describe('MachineManagement', () => {
 
     it('should display machine codes', async () => {
       render(
-        <MemoryRouter>
-          <MachineManagement />
+        <MemoryRouter initialEntries={['/projects/1/machines']}>
+          <Routes>
+            <Route path="/projects/:id/machines" element={<MachineManagement />} />
+          </Routes>
         </MemoryRouter>
       );
 
@@ -136,8 +167,10 @@ describe('MachineManagement', () => {
   describe('Data Loading', () => {
     it('should load machines on mount', async () => {
       render(
-        <MemoryRouter>
-          <MachineManagement />
+        <MemoryRouter initialEntries={['/projects/1/machines']}>
+          <Routes>
+            <Route path="/projects/:id/machines" element={<MachineManagement />} />
+          </Routes>
         </MemoryRouter>
       );
 

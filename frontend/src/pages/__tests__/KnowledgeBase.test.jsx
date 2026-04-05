@@ -8,22 +8,23 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import KnowledgeBase from '../KnowledgeBase';
 
-const serviceApi = {
+// Use vi.hoisted to avoid hoisting issues with vi.fn()
+const { serviceApi } = vi.hoisted(() => ({
   knowledgeBase: {
-    list: vi.fn(),
-    get: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    publish: vi.fn(),
-    archive: vi.fn(),
-    statistics: vi.fn(),
-    upload: vi.fn(),
-    getQuota: vi.fn(),
-    like: vi.fn(),
-    adopt: vi.fn(),
+    list: vi.fn().mockResolvedValue({ data: { items: [] } }),
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    create: vi.fn().mockResolvedValue({ data: { success: true } }),
+    update: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    publish: vi.fn().mockResolvedValue({ data: { success: true } }),
+    archive: vi.fn().mockResolvedValue({ data: { success: true } }),
+    statistics: vi.fn().mockResolvedValue({ data: {} }),
+    upload: vi.fn().mockResolvedValue({ data: { url: 'mock-url' } }),
+    getQuota: vi.fn().mockResolvedValue({ data: { used: 0, total: 1000 } }),
+    like: vi.fn().mockResolvedValue({ data: { success: true } }),
+    adopt: vi.fn().mockResolvedValue({ data: { success: true } }),
   },
-};
+}));
 
 vi.mock('../../services/api/service', () => ({
   serviceApi,

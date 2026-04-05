@@ -18,6 +18,8 @@ describe('Approval API', () => {
   let APPROVAL_STATUS, getStatusConfig, calculateProgress;
 
   beforeEach(async () => {
+    // 取消全局 mock，确保使用真正的 axios 实例
+    vi.unmock('../client.js');
     vi.resetModules();
     
     const clientModule = await import('../client.js');

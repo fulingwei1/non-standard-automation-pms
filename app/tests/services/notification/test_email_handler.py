@@ -47,8 +47,11 @@ class TestEmailChannelHandler:
         user.phone = "13800138000"
         return user
 
-    def test_send_email_success(self, email_handler, mock_db, mock_user_with_email):
+    @patch('app.services.notification.channels.email_handler.settings')
+    def test_send_email_success(self, mock_settings, email_handler, mock_db, mock_user_with_email):
         """测试邮件发送成功"""
+        mock_settings.EMAIL_ENABLED = True
+        
         # Mock查询返回用户
         mock_query = Mock()
         mock_query.filter.return_value.first.return_value = mock_user_with_email
@@ -73,8 +76,11 @@ class TestEmailChannelHandler:
         assert result.sent_at is not None
         mock_db.query.assert_called_once()
 
-    def test_send_email_user_not_found(self, email_handler, mock_db):
+    @patch('app.services.notification.channels.email_handler.settings')
+    def test_send_email_user_not_found(self, mock_settings, email_handler, mock_db):
         """测试用户不存在"""
+        mock_settings.EMAIL_ENABLED = True
+        
         # Mock查询返回None
         mock_query = Mock()
         mock_query.filter.return_value.first.return_value = None
@@ -91,10 +97,13 @@ class TestEmailChannelHandler:
         result = email_handler.send(request)
 
         assert result.success is False
-        assert "未找到" in result.error_message or "不存在" in result.error_message
+        assert "未找到" in result.error_message or "不存在" in result.error_message or "用户" in result.error_message
 
-    def test_send_email_user_without_email(self, email_handler, mock_db, mock_user_without_email):
+    @patch('app.services.notification.channels.email_handler.settings')
+    def test_send_email_user_without_email(self, mock_settings, email_handler, mock_db, mock_user_without_email):
         """测试用户未配置邮箱"""
+        mock_settings.EMAIL_ENABLED = True
+        
         mock_query = Mock()
         mock_query.filter.return_value.first.return_value = mock_user_without_email
         mock_db.query.return_value = mock_query

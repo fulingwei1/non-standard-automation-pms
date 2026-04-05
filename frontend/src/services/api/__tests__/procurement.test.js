@@ -14,6 +14,8 @@ describe('Procurement API', () => {
   let purchaseApi, outsourcingApi, procurementAnalysisApi;
 
   beforeEach(async () => {
+    // 取消全局 mock，确保使用真正的 axios 实例
+    vi.unmock('../client.js');
     vi.resetModules();
     
     const clientModule = await import('../client.js');
@@ -64,7 +66,7 @@ describe('Procurement API', () => {
         project_id: 1,
         items: [{ material: 'Steel', quantity: 100 }],
       };
-      mock.onPost('/api/v1/purchase-orders').reply(201, {
+      mock.onPost('/api/v1/purchase-orders/').reply(201, {
         success: true,
         data: { id: 1, ...order },
       });
@@ -311,7 +313,7 @@ describe('Procurement API', () => {
 
     it('deliveries.create() - 应该创建交付记录', async () => {
       const delivery = { order_id: 1, items: [] };
-      mock.onPost('/api/v1/outsourcing-orders/1/deliveries').reply(201, {
+      mock.onPost('/api/v1/outsourcing-deliveries').reply(201, {
         success: true,
         data: { id: 1, ...delivery },
       });
@@ -323,7 +325,7 @@ describe('Procurement API', () => {
 
     it('inspections.create() - 应该创建质检记录', async () => {
       const inspection = { order_id: 1, result: 'PASSED' };
-      mock.onPost('/api/v1/outsourcing-orders/1/inspections').reply(201, {
+      mock.onPost('/api/v1/outsourcing-inspections').reply(201, {
         success: true,
         data: { id: 1, ...inspection },
       });

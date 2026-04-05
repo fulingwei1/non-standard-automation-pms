@@ -62,8 +62,10 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 // Mock API client globally with proper response structure
+// 注意：这个 mock 会被 axios-mock-adapter 覆盖，所以需要返回正确的响应格式
 vi.mock('../services/api/client', () => {
-  const mockResponse = (data = {}) => ({
+  const mockResponse = (data = {}, status = 200) => ({
+    status,
     data: {
       success: true,
       data,
@@ -74,6 +76,8 @@ vi.mock('../services/api/client', () => {
       unread_cc: 0,
       urgent: 0,
     },
+    headers: {},
+    config: {},
   });
 
   const apiMock = {

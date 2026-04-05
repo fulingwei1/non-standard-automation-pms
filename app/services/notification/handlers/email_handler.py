@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.alert import AlertNotification, AlertRecord
 from app.models.user import User
-from app.services.notification_handlers.unified_adapter import (
+from app.services.notification.handlers.unified_adapter import (
     NotificationChannel,
     send_alert_via_unified,
 )
