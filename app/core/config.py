@@ -179,8 +179,8 @@ class Settings(BaseSettings):
     WECHAT_TOKEN_CACHE_TTL: int = 7000  # Token缓存时间（秒），默认7000秒（约2小时）
 
     # 销售模块配置
-    SALES_GROSS_MARGIN_THRESHOLD: float = 15.0  # 毛利率阈值（%），低于此值需要审批
-    SALES_GROSS_MARGIN_WARNING: float = 20.0  # 毛利率警告阈值（%），低于此值发出警告
+    SALES_GROSS_MARGIN_THRESHOLD: float = 20.0  # 毛利率阈值（%），低于此值需要审批
+    SALES_GROSS_MARGIN_WARNING: float = 25.0  # 毛利率警告阈值（%），低于此值发出警告
     SALES_MIN_LEAD_TIME_DAYS: int = 30  # 最小交期（天），低于此值发出警告
 
     # 销售评分阈值配置

@@ -67,9 +67,9 @@ class MarginAlertConfig(Base, TimestampMixin):
 
     # 毛利率阈值（百分比）
     standard_margin = Column(Numeric(5, 2), default=25, comment="标准毛利率阈值(%)")
-    warning_margin = Column(Numeric(5, 2), default=20, comment="警告毛利率阈值(%)")
-    alert_margin = Column(Numeric(5, 2), default=15, comment="警报毛利率阈值(%)")
-    minimum_margin = Column(Numeric(5, 2), default=10, comment="最低毛利率(%)")
+    warning_margin = Column(Numeric(5, 2), default=25, comment="警告毛利率阈值(%)")
+    alert_margin = Column(Numeric(5, 2), default=20, comment="警报毛利率阈值(%)")
+    minimum_margin = Column(Numeric(5, 2), default=15, comment="最低毛利率(%)")
 
     # 审批规则
     # {
