@@ -237,10 +237,17 @@ class TestCreateProjectErrorBranches:
         )
         assert response.status_code == 422
         # 检查错误信息中包含对应字段
+        # 兼容两种错误响应格式：Pydantic v2 (loc) 和自定义格式 (field)
         if response.status_code == 422:
             error_detail = response.json().get("detail", [])
             if isinstance(error_detail, list):
-                fields = [err.get("loc", [])[-1] for err in error_detail]
+                # 尝试从 loc 或 field 中提取字段名
+                fields = []
+                for err in error_detail:
+                    if "loc" in err and isinstance(err.get("loc"), list) and len(err["loc"]) > 0:
+                        fields.append(err["loc"][-1])
+                    elif "field" in err:
+                        fields.append(err["field"])
                 # 某些字段可能在错误中
                 assert len(fields) > 0
 

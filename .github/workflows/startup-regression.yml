@@ -1,0 +1,27 @@
+name: startup-regression
+
+on:
+  pull_request:
+    paths:
+      - 'app/api/v1/api.py'
+      - 'app/main.py'
+      - 'app/api/v1/endpoints/**'
+      - 'scripts/startup_regression_check.py'
+      - '.github/workflows/startup-regression.yml'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Startup regression (strict mode)
+        run: python scripts/startup_regression_check.py --strict true --enable-stub false
+      - name: Startup regression (non-strict mode)
+        run: python scripts/startup_regression_check.py --strict false --enable-stub false

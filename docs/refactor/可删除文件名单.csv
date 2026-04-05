@@ -1,0 +1,15 @@
+类别,目标,置信度,判定依据,建议动作,风险
+后端文件,app/api/v1/endpoints/template_configs/apply.py,高,未在api.py/main.py注册且全仓库无业务引用,删除（先git rm到分支）,低
+后端文件,app/api/v1/endpoints/template_configs/crud.py,高,未在api.py/main.py注册且全仓库无业务引用,删除（先git rm到分支）,低
+后端文件,app/api/v1/endpoints/base_crud_router.py,高,项目实际使用base_crud_router_sync，非sync版本无调用,删除或迁移到deprecated/,低
+前端依赖,@dnd-kit/utilities,高,源码import命中0，仅lockfile存在,pnpm remove @dnd-kit/utilities,低
+前端依赖,@radix-ui/react-popover,高,源码import命中0，仅lockfile存在,pnpm remove @radix-ui/react-popover,低
+前端依赖,@radix-ui/react-scroll-area,高,源码import命中0，仅lockfile存在,pnpm remove @radix-ui/react-scroll-area,低
+前端依赖,@radix-ui/react-separator,高,源码import命中0，仅lockfile存在,pnpm remove @radix-ui/react-separator,低
+前端依赖,@radix-ui/react-tabs,高,源码import命中0，仅lockfile存在,pnpm remove @radix-ui/react-tabs,低
+前端依赖,zustand,高,源码import命中0，仅lockfile存在,pnpm remove zustand,低
+后端模块（运行失败）,app/api/v1/endpoints/two_factor.py 相关链路,高,启动日志报No module named qrcode（认证模块加载失败）,修复依赖后保留，不可删除,高
+后端模块（运行失败）,app/api/v1/endpoints/itr.py 相关链路,高,启动日志报No module named app.models.customer（ITR模块加载失败）,修复导入路径后保留，不可删除,高
+架构风险项,app/api/v1/endpoints/stub_endpoints.py,高,全路径兜底会把未实现API伪装成成功,生产禁用或改为501（保留开发可观测）,高
+前端页面（部分集成）,30个“API+mock/fallback”页面,中,scripts/check_frontend_api_integration.py结果显示仍有mock/fallback,去除mock/fallback改为真实错误处理,中
+前端页面（未集成）,62个“仅mock”页面,中,scripts/check_frontend_api_integration.py结果显示无API调用,按业务优先级逐步补API,中

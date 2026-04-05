@@ -233,7 +233,6 @@ class MachineFactory(BaseFactory):
         model = Machine
 
     project = factory.SubFactory(ProjectFactory)
-    project_id = factory.LazyAttribute(lambda o: o.project.id)
     machine_code = factory.Sequence(lambda n: f"PN{n:06d}")
     machine_name = factory.Sequence(lambda n: f"测试机台{n}")
     machine_type = "TEST_EQUIPMENT"
@@ -242,7 +241,10 @@ class MachineFactory(BaseFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         project = kwargs.pop("project", None)
-        if project is None and "project_id" not in kwargs:
+        # 如果传入了 project_id 但没有 project，直接使用传入的 project_id
+        if project is None and "project_id" in kwargs:
+            pass  # 使用传入的 project_id
+        elif project is None and "project_id" not in kwargs:
             project = ProjectFactory()
             kwargs["project_id"] = project.id
         elif project is not None:

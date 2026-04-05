@@ -238,7 +238,13 @@ async def setup_two_factor(
 
     # 生成TOTP密钥和二维码
     service = get_two_factor_service()
-    secret, qr_code_png = service.setup_2fa_for_user(db, current_user)
+    try:
+        secret, qr_code_png = service.setup_2fa_for_user(db, current_user)
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        )
 
     # 返回二维码（base64编码）
     import base64

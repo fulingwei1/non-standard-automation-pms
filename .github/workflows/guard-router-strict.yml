@@ -1,0 +1,24 @@
+name: guard-router-strict
+
+on:
+  pull_request:
+    paths:
+      - 'app/api/v1/api.py'
+      - 'scripts/ci_guard_router_strict.py'
+      - '.github/workflows/guard-router-strict.yml'
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'app/api/v1/api.py'
+      - 'scripts/ci_guard_router_strict.py'
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate api router strict strategy
+        run: python scripts/ci_guard_router_strict.py

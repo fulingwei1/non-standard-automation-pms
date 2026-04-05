@@ -5,19 +5,44 @@ API路由聚合 - 中等版本（跳过有问题的模块）
 基于api_lazy.py，但跳过导致递归错误的模块
 """
 
+import os
+
 from fastapi import APIRouter
+
+STRICT_API_ROUTER = os.getenv("STRICT_API_ROUTER", "true").lower() == "true"
+ENABLE_STUB_ENDPOINTS = os.getenv("ENABLE_STUB_ENDPOINTS", "false").lower() == "true"
+
 
 def create_api_router() -> APIRouter:
     """
     创建API路由（跳过有问题的模块）
-    
+
     跳过的模块:
     - timesheet.analytics (Pydantic递归错误)
     - 其他可能有问题的模块
     """
+    import builtins
+
     api_router = APIRouter()
-    
+    router_load_failures = []
+
+    def _router_print(*args, **kwargs):
+        builtins.print(*args, **kwargs)
+        try:
+            line = " ".join(str(a) for a in args)
+            if line.startswith("✗"):
+                router_load_failures.append(line)
+        except Exception:
+            pass
+
+    # 捕获路由加载失败日志，便于启动后统一汇总
+    print = _router_print  # noqa: A001
+
     print("开始加载API路由...")
+    print(
+        f"路由加载策略: STRICT_API_ROUTER={STRICT_API_ROUTER}, "
+        f"ENABLE_STUB_ENDPOINTS={ENABLE_STUB_ENDPOINTS}"
+    )
     
     # ==================== 核心认证模块 ====================
     # auth 已在 main.py 中优先注册；此处只注册 sessions、2fa
@@ -28,6 +53,8 @@ def create_api_router() -> APIRouter:
         print("✓ 认证模块(sessions/2fa)加载成功")
     except Exception as e:
         print(f"✗ 认证模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[auth]: {e}") from e
     
     # ==================== 用户和组织 ====================
     try:
@@ -37,6 +64,8 @@ def create_api_router() -> APIRouter:
         print("✓ 用户组织模块加载成功")
     except Exception as e:
         print(f"✗ 用户组织模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[users/org]: {e}") from e
     
     # ==================== 角色管理 ====================
     try:
@@ -45,6 +74,8 @@ def create_api_router() -> APIRouter:
         print("✓ 角色管理模块加载成功")
     except Exception as e:
         print(f"✗ 角色管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[roles]: {e}") from e
     
     # ==================== 权限管理 ====================
     try:
@@ -53,6 +84,8 @@ def create_api_router() -> APIRouter:
         print("✓ 权限管理模块加载成功")
     except Exception as e:
         print(f"✗ 权限管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[permissions]: {e}") from e
     
     # ==================== 项目管理 ====================
     try:
@@ -61,6 +94,8 @@ def create_api_router() -> APIRouter:
         print("✓ 项目管理模块加载成功")
     except Exception as e:
         print(f"✗ 项目管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[projects]: {e}") from e
     
     # ==================== 生产管理 ====================
     try:
@@ -69,6 +104,8 @@ def create_api_router() -> APIRouter:
         print("✓ 生产管理模块加载成功")
     except Exception as e:
         print(f"✗ 生产管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[production]: {e}") from e
     
     # ==================== 销售管理 ====================
     try:
@@ -77,6 +114,8 @@ def create_api_router() -> APIRouter:
         print("✓ 销售管理模块加载成功")
     except Exception as e:
         print(f"✗ 销售管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[sales]: {e}") from e
     
     # ==================== 工时管理 ====================
     try:
@@ -85,6 +124,8 @@ def create_api_router() -> APIRouter:
         print("✓ 工时管理模块加载成功 (analytics已禁用)")
     except Exception as e:
         print(f"✗ 工时管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[timesheet]: {e}") from e
     
     # ==================== 研发项目 ====================
     try:
@@ -93,6 +134,8 @@ def create_api_router() -> APIRouter:
         print("✓ 研发项目模块加载成功")
     except Exception as e:
         print(f"✗ 研发项目模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[rd-projects]: {e}") from e
     
     # ==================== 审批流程 ====================
     try:
@@ -101,6 +144,8 @@ def create_api_router() -> APIRouter:
         print("✓ 审批流程模块加载成功")
     except Exception as e:
         print(f"✗ 审批流程模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[approvals]: {e}") from e
     
     # ==================== 客户和供应商 ====================
     try:
@@ -111,6 +156,8 @@ def create_api_router() -> APIRouter:
         print("✓ 客户供应商模块加载成功")
     except Exception as e:
         print(f"✗ 客户供应商模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[customers/suppliers]: {e}") from e
     
     # ==================== 物料和采购 ====================
     try:
@@ -121,6 +168,8 @@ def create_api_router() -> APIRouter:
         print("✓ 物料采购模块加载成功")
     except Exception as e:
         print(f"✗ 物料采购模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[materials/purchase/bom]: {e}") from e
     
     # ==================== 采购智能管理 (暂时禁用 - 缺少MaterialShortage) ====================
     # try:
@@ -137,6 +186,8 @@ def create_api_router() -> APIRouter:
         print("✓ 库存管理模块加载成功")
     except Exception as e:
         print(f"✗ 库存管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[inventory]: {e}") from e
     
     # ==================== 缺料管理 ====================
     try:
@@ -145,6 +196,8 @@ def create_api_router() -> APIRouter:
         print("✓ 缺料管理模块加载成功")
     except Exception as e:
         print(f"✗ 缺料管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[shortage]: {e}") from e
     
     # ==================== 智能缺料预警 ====================
     try:
@@ -153,6 +206,8 @@ def create_api_router() -> APIRouter:
         print("✓ 智能缺料预警模块加载成功")
     except Exception as e:
         print(f"✗ 智能缺料预警模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[shortage-smart-alerts]: {e}") from e
     
     # ==================== 预售管理 ====================
     try:
@@ -161,6 +216,8 @@ def create_api_router() -> APIRouter:
         print("✓ 预售管理模块加载成功")
     except Exception as e:
         print(f"✗ 预售管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[presale]: {e}") from e
     
     # ==================== 预售AI ====================
     try:
@@ -171,6 +228,8 @@ def create_api_router() -> APIRouter:
         print("✓ 预售AI模块加载成功")
     except Exception as e:
         print(f"✗ 预售AI模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[presale-ai]: {e}") from e
     
     # ==================== 验收管理 ====================
     try:
@@ -179,6 +238,8 @@ def create_api_router() -> APIRouter:
         print("✓ 验收管理模块加载成功")
     except Exception as e:
         print(f"✗ 验收管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[acceptance]: {e}") from e
     
     # ==================== 报表框架 ====================
     try:
@@ -187,6 +248,8 @@ def create_api_router() -> APIRouter:
         print("✓ 报表框架模块加载成功")
     except Exception as e:
         print(f"✗ 报表框架模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[reports-unified]: {e}") from e
     
 
     # ==================== 仓储管理 ====================
@@ -196,6 +259,8 @@ def create_api_router() -> APIRouter:
         print("✓ 仓储管理模块加载成功")
     except Exception as e:
         print(f"✗ 仓储管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[warehouse]: {e}") from e
 
     # 节点任务
     try:
@@ -204,6 +269,8 @@ def create_api_router() -> APIRouter:
         print("✓ 节点任务模块加载成功")
     except Exception as e:
         print(f"✗ 节点任务模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[node-tasks]: {e}") from e
 
     # Dashboard 统计
     try:
@@ -212,6 +279,8 @@ def create_api_router() -> APIRouter:
         print("✓ Dashboard统计模块加载成功")
     except Exception as e:
         print(f"✗ Dashboard统计模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[dashboard-stats]: {e}") from e
 
     # Dashboard 统一入口
     try:
@@ -220,6 +289,8 @@ def create_api_router() -> APIRouter:
         print("✓ Dashboard统一模块加载成功")
     except Exception as e:
         print(f"✗ Dashboard统一模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[dashboard-unified]: {e}") from e
 
     # 通知中心
     try:
@@ -228,6 +299,8 @@ def create_api_router() -> APIRouter:
         print("✓ 通知中心模块加载成功")
     except Exception as e:
         print(f"✗ 通知中心模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[notifications]: {e}") from e
 
 
     # ==================== 预警管理 ====================
@@ -237,6 +310,8 @@ def create_api_router() -> APIRouter:
         print("✓ 预警管理模块加载成功")
     except Exception as e:
         print(f"✗ 预警管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[alerts]: {e}") from e
 
     # ==================== 问题管理 ====================
     try:
@@ -245,6 +320,8 @@ def create_api_router() -> APIRouter:
         print("✓ 问题管理模块加载成功")
     except Exception as e:
         print(f"✗ 问题管理模块加载失败: {e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[issues]: {e}") from e
 
     # ==================== 奖金管理 ====================
     try:
@@ -253,6 +330,8 @@ def create_api_router() -> APIRouter:
         print("✓ 奖金管理模块加载成功")
     except Exception as e:
         print(f"✗ 奖金管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[bonus]: {e}") from e
 
     # ==================== 工程师绩效 ====================
     try:
@@ -261,6 +340,8 @@ def create_api_router() -> APIRouter:
         print("✓ 工程师绩效模块加载成功")
     except Exception as e:
         print(f"✗ 工程师绩效模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[engineer-performance]: {e}") from e
 
     # ==================== 绩效管理 ====================
     try:
@@ -269,6 +350,8 @@ def create_api_router() -> APIRouter:
         print("✓ 绩效管理模块加载成功")
     except Exception as e:
         print(f"✗ 绩效管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[performance]: {e}") from e
 
     # ==================== 绩效合约 ====================
     try:
@@ -277,6 +360,8 @@ def create_api_router() -> APIRouter:
         print("✓ 绩效合约模块加载成功")
     except Exception as e:
         print(f"✗ 绩效合约模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[performance-contract]: {e}") from e
 
     # ==================== AI战略辅助 ====================
     try:
@@ -285,6 +370,8 @@ def create_api_router() -> APIRouter:
         print("✓ AI战略辅助模块加载成功")
     except Exception as e:
         print(f"✗ AI战略辅助模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[ai-strategy]: {e}") from e
 
     # ==================== 人事管理 ====================
     try:
@@ -293,6 +380,8 @@ def create_api_router() -> APIRouter:
         print("✓ 人事管理模块加载成功")
     except Exception as e:
         print(f"✗ 人事管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[hr-management]: {e}") from e
 
     # ==================== 外包管理 ====================
     try:
@@ -301,6 +390,8 @@ def create_api_router() -> APIRouter:
         print("✓ 外包管理模块加载成功")
     except Exception as e:
         print(f"✗ 外包管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[outsourcing]: {e}") from e
 
     # ==================== PMO ====================
     try:
@@ -309,6 +400,8 @@ def create_api_router() -> APIRouter:
         print("✓ PMO 模块加载成功")
     except Exception as e:
         print(f"✗ PMO 模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[pmo]: {e}") from e
 
     # ==================== 人岗匹配 ====================
     try:
@@ -317,6 +410,8 @@ def create_api_router() -> APIRouter:
         print("✓ 人岗匹配模块加载成功")
     except Exception as e:
         print(f"✗ 人岗匹配模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[staff-matching]: {e}") from e
 
     # ==================== 任务中心 ====================
     try:
@@ -325,6 +420,8 @@ def create_api_router() -> APIRouter:
         print("✓ 任务中心模块加载成功")
     except Exception as e:
         print(f"✗ 任务中心模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[task-center]: {e}") from e
 
     # ==================== 技术评审 ====================
     try:
@@ -333,6 +430,8 @@ def create_api_router() -> APIRouter:
         print("✓ 技术评审模块加载成功")
     except Exception as e:
         print(f"✗ 技术评审模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[technical-reviews]: {e}") from e
 
     # ==================== 任务调度 ====================
     try:
@@ -341,6 +440,8 @@ def create_api_router() -> APIRouter:
         print("✓ 任务调度模块加载成功")
     except Exception as e:
         print(f"✗ 任务调度模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[scheduler]: {e}") from e
 
     # ==================== 资格认证 ====================
     try:
@@ -349,6 +450,8 @@ def create_api_router() -> APIRouter:
         print("✓ 资格认证模块加载成功")
     except Exception as e:
         print(f"✗ 资格认证模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[qualifications]: {e}") from e
 
     # ==================== 文档管理 ====================
     try:
@@ -357,6 +460,8 @@ def create_api_router() -> APIRouter:
         print("✓ 文档管理模块加载成功")
     except Exception as e:
         print(f"✗ 文档管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[documents]: {e}") from e
 
     # ==================== 工程师管理 ====================
     try:
@@ -365,6 +470,8 @@ def create_api_router() -> APIRouter:
         print("✓ 工程师管理模块加载成功")
     except Exception as e:
         print(f"✗ 工程师管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[engineers]: {e}") from e
 
     # ==================== 工时费率 ====================
     try:
@@ -373,6 +480,8 @@ def create_api_router() -> APIRouter:
         print("✓ 工时费率模块加载成功")
     except Exception as e:
         print(f"✗ 工时费率模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[hourly-rates]: {e}") from e
 
     # ==================== 成套率 ====================
     try:
@@ -381,6 +490,8 @@ def create_api_router() -> APIRouter:
         print("✓ 成套率模块加载成功")
     except Exception as e:
         print(f"✗ 成套率模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[kit-rates]: {e}") from e
 
     # ==================== 报表中心 ====================
     try:
@@ -389,6 +500,8 @@ def create_api_router() -> APIRouter:
         print("✓ 报表中心模块加载成功")
     except Exception as e:
         print(f"✗ 报表中心模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[report-center]: {e}") from e
 
     # ==================== 管理统计 ====================
     try:
@@ -397,6 +510,8 @@ def create_api_router() -> APIRouter:
         print("✓ 管理统计模块加载成功")
     except Exception as e:
         print(f"✗ 管理统计模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[admin-stats]: {e}") from e
 
     # ==================== 采购分析 ====================
     try:
@@ -405,6 +520,8 @@ def create_api_router() -> APIRouter:
         print("✓ 采购分析模块加载成功")
     except Exception as e:
         print(f"✗ 采购分析模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[procurement-analysis]: {e}") from e
 
     # ==================== 战略管理 ====================
     try:
@@ -413,6 +530,8 @@ def create_api_router() -> APIRouter:
         print("✓ 战略管理模块加载成功")
     except Exception as e:
         print(f"✗ 战略管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[strategy]: {e}") from e
 
     # ==================== 供应商价格趋势 ====================
     try:
@@ -421,6 +540,8 @@ def create_api_router() -> APIRouter:
         print("✓ 供应商价格趋势模块加载成功")
     except Exception as e:
         print(f"✗ 供应商价格趋势模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[supplier-price]: {e}") from e
 
     # ==================== ECN工程变更→BOM联动 ====================
     try:
@@ -429,6 +550,8 @@ def create_api_router() -> APIRouter:
         print("✓ ECN工程变更模块加载成功")
     except Exception as e:
         print(f"✗ ECN工程变更模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[ecn-bom]: {e}") from e
 
     # ==================== 现场调试 ====================
     try:
@@ -437,6 +560,8 @@ def create_api_router() -> APIRouter:
         print("✓ 现场调试模块加载成功")
     except Exception as e:
         print(f"✗ 现场调试模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[field-commissioning]: {e}") from e
 
     # ==================== 多币种 ====================
     try:
@@ -445,6 +570,8 @@ def create_api_router() -> APIRouter:
         print("✓ 多币种模块加载成功")
     except Exception as e:
         print(f"✗ 多币种模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[multi-currency]: {e}") from e
 
     # ==================== ECN 工程变更 ====================
     try:
@@ -453,6 +580,8 @@ def create_api_router() -> APIRouter:
         print("✓ ECN模块加载成功")
     except Exception as e:
         print(f"✗ ECN模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[ecn]: {e}") from e
 
     # ==================== 安装派工 ====================
     try:
@@ -461,6 +590,8 @@ def create_api_router() -> APIRouter:
         print("✓ 安装派工模块加载成功")
     except Exception as e:
         print(f"✗ 安装派工模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[installation-dispatch]: {e}") from e
 
     # ==================== 阶段模板 ====================
     try:
@@ -469,6 +600,8 @@ def create_api_router() -> APIRouter:
         print("✓ 阶段模板模块加载成功")
     except Exception as e:
         print(f"✗ 阶段模板模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[stage-templates]: {e}") from e
 
     # ==================== 优势产品 ====================
     try:
@@ -477,6 +610,8 @@ def create_api_router() -> APIRouter:
         print("✓ 优势产品模块加载成功")
     except Exception as e:
         print(f"✗ 优势产品模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[advantage-products]: {e}") from e
 
     # ==================== 成套分析 ====================
     try:
@@ -485,6 +620,8 @@ def create_api_router() -> APIRouter:
         print("✓ 成套分析模块加载成功")
     except Exception as e:
         print(f"✗ 成套分析模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[assembly-kit]: {e}") from e
 
     # ==================== AI 功能模块 ====================
     try:
@@ -501,6 +638,8 @@ def create_api_router() -> APIRouter:
         print("✓ AI 功能模块加载成功")
     except Exception as e:
         print(f"✗ AI 功能模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[ai-modules]: {e}") from e
 
     # ==================== 预算管理 ====================
     try:
@@ -509,6 +648,8 @@ def create_api_router() -> APIRouter:
         print("✓ 预算管理模块加载成功")
     except Exception as e:
         print(f"✗ 预算管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[budget]: {e}") from e
 
     # ==================== 商务支持 ====================
     try:
@@ -517,6 +658,8 @@ def create_api_router() -> APIRouter:
         print("✓ 商务支持模块加载成功")
     except Exception as e:
         print(f"✗ 商务支持模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[business-support]: {e}") from e
 
     # ==================== 商务支持订单 ====================
     try:
@@ -525,6 +668,8 @@ def create_api_router() -> APIRouter:
         print("✓ 商务支持订单模块加载成功")
     except Exception as e:
         print(f"✗ 商务支持订单模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[business-support-orders]: {e}") from e
 
     # ==================== 文化墙 ====================
     try:
@@ -533,6 +678,8 @@ def create_api_router() -> APIRouter:
         print("✓ 文化墙模块加载成功")
     except Exception as e:
         print(f"✗ 文化墙模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[culture-wall]: {e}") from e
 
     # ==================== 数据导入导出 ====================
     try:
@@ -541,6 +688,8 @@ def create_api_router() -> APIRouter:
         print("✓ 数据导入导出模块加载成功")
     except Exception as e:
         print(f"✗ 数据导入导出模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[data-import-export]: {e}") from e
 
     # ==================== 部门管理 ====================
     try:
@@ -549,6 +698,8 @@ def create_api_router() -> APIRouter:
         print("✓ 部门管理模块加载成功")
     except Exception as e:
         print(f"✗ 部门管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[departments]: {e}") from e
 
     # ==================== 成套检查 ====================
     try:
@@ -557,6 +708,8 @@ def create_api_router() -> APIRouter:
         print("✓ 成套检查模块加载成功")
     except Exception as e:
         print(f"✗ 成套检查模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[kit-check]: {e}") from e
 
     # ==================== 管理节奏 ====================
     try:
@@ -565,6 +718,8 @@ def create_api_router() -> APIRouter:
         print("✓ 管理节奏模块加载成功")
     except Exception as e:
         print(f"✗ 管理节奏模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[management-rhythm]: {e}") from e
 
     # ==================== 物料需求 ====================
     try:
@@ -573,6 +728,8 @@ def create_api_router() -> APIRouter:
         print("✓ 物料需求模块加载成功")
     except Exception as e:
         print(f"✗ 物料需求模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[material-demands]: {e}") from e
 
     # ==================== 我的 ====================
     try:
@@ -581,6 +738,8 @@ def create_api_router() -> APIRouter:
         print("✓ 我的模块加载成功")
     except Exception as e:
         print(f"✗ 我的模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[my]: {e}") from e
 
     # ==================== 分析 ====================
     try:
@@ -589,6 +748,8 @@ def create_api_router() -> APIRouter:
         print("✓ 分析模块加载成功")
     except Exception as e:
         print(f"✗ 分析模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[analytics]: {e}") from e
 
     # ==================== 踩坑记录 ====================
     try:
@@ -597,6 +758,8 @@ def create_api_router() -> APIRouter:
         print("✓ 踩坑记录模块加载成功")
     except Exception as e:
         print(f"✗ 踩坑记录模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[pitfalls]: {e}") from e
 
     # ==================== 预售分析 ====================
     try:
@@ -605,6 +768,8 @@ def create_api_router() -> APIRouter:
         print("✓ 预售分析模块加载成功")
     except Exception as e:
         print(f"✗ 预售分析模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[presale-analytics]: {e}") from e
 
     # ==================== 项目评审 ====================
     try:
@@ -613,6 +778,8 @@ def create_api_router() -> APIRouter:
         print("✓ 项目评审模块加载成功")
     except Exception as e:
         print(f"✗ 项目评审模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[project-reviews]: {e}") from e
 
     # ==================== 服务工单 ====================
     try:
@@ -621,6 +788,8 @@ def create_api_router() -> APIRouter:
         print("✓ 服务工单模块加载成功")
     except Exception as e:
         print(f"✗ 服务工单模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[service]: {e}") from e
 
     # ==================== SLA ====================
     try:
@@ -629,6 +798,8 @@ def create_api_router() -> APIRouter:
         print("✓ SLA模块加载成功")
     except Exception as e:
         print(f"✗ SLA模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[sla]: {e}") from e
 
     # ==================== 方案学分 ====================
     try:
@@ -637,6 +808,8 @@ def create_api_router() -> APIRouter:
         print("✓ 方案学分模块加载成功")
     except Exception as e:
         print(f"✗ 方案学分模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[solution-credits]: {e}") from e
 
     # ==================== 标准成本 ====================
     try:
@@ -645,6 +818,8 @@ def create_api_router() -> APIRouter:
         print("✓ 标准成本模块加载成功")
     except Exception as e:
         print(f"✗ 标准成本模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[standard-costs]: {e}") from e
 
     # ==================== 技术规格 ====================
     try:
@@ -653,6 +828,8 @@ def create_api_router() -> APIRouter:
         print("✓ 技术规格模块加载成功")
     except Exception as e:
         print(f"✗ 技术规格模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[technical-specs]: {e}") from e
 
     # ==================== 账号解锁 ====================
     try:
@@ -661,6 +838,8 @@ def create_api_router() -> APIRouter:
         print("✓ 账号解锁模块加载成功")
     except Exception as e:
         print(f"✗ 账号解锁模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[account-unlock]: {e}") from e
 
     # ==================== 审计日志 ====================
     try:
@@ -669,6 +848,8 @@ def create_api_router() -> APIRouter:
         print("✓ 审计日志模块加载成功")
     except Exception as e:
         print(f"✗ 审计日志模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[audits]: {e}") from e
 
     # ==================== 备份 ====================
     try:
@@ -677,6 +858,8 @@ def create_api_router() -> APIRouter:
         print("✓ 备份模块加载成功")
     except Exception as e:
         print(f"✗ 备份模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[backup]: {e}") from e
 
     # ==================== 变更影响 ====================
     try:
@@ -685,6 +868,8 @@ def create_api_router() -> APIRouter:
         print("✓ 变更影响模块加载成功")
     except Exception as e:
         print(f"✗ 变更影响模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[change-impact]: {e}") from e
 
     # ==================== 文化墙配置 ====================
     try:
@@ -693,6 +878,8 @@ def create_api_router() -> APIRouter:
         print("✓ 文化墙配置模块加载成功")
     except Exception as e:
         print(f"✗ 文化墙配置模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[culture-wall-config]: {e}") from e
 
     # ==================== 库存分析 ====================
     try:
@@ -701,6 +888,8 @@ def create_api_router() -> APIRouter:
         print("✓ 库存分析模块加载成功")
     except Exception as e:
         print(f"✗ 库存分析模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[inventory-analysis]: {e}") from e
 
     # ==================== ITR ====================
     try:
@@ -709,6 +898,8 @@ def create_api_router() -> APIRouter:
         print("✓ ITR模块加载成功")
     except Exception as e:
         print(f"✗ ITR模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[itr]: {e}") from e
 
     # ==================== PM参与度 ====================
     try:
@@ -717,6 +908,8 @@ def create_api_router() -> APIRouter:
         print("✓ PM参与度模块加载成功")
     except Exception as e:
         print(f"✗ PM参与度模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[pm-involvement]: {e}") from e
 
     # ==================== 预售AI需求 ====================
     try:
@@ -725,6 +918,8 @@ def create_api_router() -> APIRouter:
         print("✓ 预售AI需求模块加载成功")
     except Exception as e:
         print(f"✗ 预售AI需求模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[presale-ai-requirement]: {e}") from e
 
     # ==================== 预售移动端 ====================
     try:
@@ -733,6 +928,8 @@ def create_api_router() -> APIRouter:
         print("✓ 预售移动端模块加载成功")
     except Exception as e:
         print(f"✗ 预售移动端模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[presale-mobile]: {e}") from e
 
     # ==================== 项目贡献 ====================
     try:
@@ -741,6 +938,8 @@ def create_api_router() -> APIRouter:
         print("✓ 项目贡献模块加载成功")
     except Exception as e:
         print(f"✗ 项目贡献模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[project-contributions]: {e}") from e
 
     # ==================== 项目工作空间 ====================
     try:
@@ -749,6 +948,8 @@ def create_api_router() -> APIRouter:
         print("✓ 项目工作空间模块加载成功")
     except Exception as e:
         print(f"✗ 项目工作空间模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[project-workspace]: {e}") from e
 
     # ==================== 质量风险 ====================
     try:
@@ -757,6 +958,8 @@ def create_api_router() -> APIRouter:
         print("✓ 质量风险模块加载成功")
     except Exception as e:
         print(f"✗ 质量风险模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[quality-risk]: {e}") from e
 
     # ==================== 资源调度 ====================
     try:
@@ -786,6 +989,8 @@ def create_api_router() -> APIRouter:
         print("✓ 资源调度模块加载成功")
     except Exception as e:
         print(f"✗ 资源调度模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[resource-scheduling]: {e}") from e
 
     # ==================== 经验教训库 ====================
     try:
@@ -794,6 +999,8 @@ def create_api_router() -> APIRouter:
         print("✓ 经验教训库模块加载成功")
     except Exception as e:
         print(f"✗ 经验教训库模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[lessons]: {e}") from e
 
     # ==================== 销售区域 ====================
     try:
@@ -802,6 +1009,8 @@ def create_api_router() -> APIRouter:
         print("✓ 销售区域模块加载成功")
     except Exception as e:
         print(f"✗ 销售区域模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[sales-regions]: {e}") from e
 
     # ==================== 销售目标 ====================
     try:
@@ -810,6 +1019,8 @@ def create_api_router() -> APIRouter:
         print("✓ 销售目标模块加载成功")
     except Exception as e:
         print(f"✗ 销售目标模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[sales-targets]: {e}") from e
 
     # ==================== 销售团队 ====================
     try:
@@ -818,6 +1029,8 @@ def create_api_router() -> APIRouter:
         print("✓ 销售团队模块加载成功")
     except Exception as e:
         print(f"✗ 销售团队模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[sales-teams]: {e}") from e
 
     # ==================== 租户管理 ====================
     try:
@@ -826,6 +1039,8 @@ def create_api_router() -> APIRouter:
         print("✓ 租户管理模块加载成功")
     except Exception as e:
         print(f"✗ 租户管理模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[tenants]: {e}") from e
 
     # ==================== 工时提醒 ====================
     try:
@@ -834,6 +1049,8 @@ def create_api_router() -> APIRouter:
         print("✓ 工时提醒模块加载成功")
     except Exception as e:
         print(f"✗ 工时提醒模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[timesheet-reminders]: {e}") from e
 
     # ==================== Dashboard ====================
     try:
@@ -842,6 +1059,8 @@ def create_api_router() -> APIRouter:
         print("✓ Dashboard模块加载成功")
     except Exception as e:
         print(f"✗ Dashboard模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[dashboard]: {e}") from e
 
     # ==================== 报表 ====================
     try:
@@ -850,27 +1069,33 @@ def create_api_router() -> APIRouter:
         print("✓ 报表模块加载成功")
     except Exception as e:
         print(f"✗ 报表模块加载失败：{e}")
+        if STRICT_API_ROUTER:
+            raise RuntimeError(f"关键模块加载失败[report]: {e}") from e
 
     # ==================== Stub Endpoints (必须放最后作为fallback) ====================
-    try:
-        from app.api.v1.endpoints.stub_endpoints import router as stub_router
-        api_router.include_router(stub_router, tags=["stub-未实现"])
-        print("✓ Stub Endpoints加载成功（未实现API的兜底响应）")
-    except Exception as e:
-        print(f"✗ Stub模块加载失败：{e}")
+    if ENABLE_STUB_ENDPOINTS:
+        try:
+            from app.api.v1.endpoints.stub_endpoints import router as stub_router
+            api_router.include_router(stub_router, tags=["stub-未实现"])
+            print("✓ Stub Endpoints加载成功（未实现API的兜底响应）")
+        except Exception as e:
+            print(f"✗ Stub模块加载失败：{e}")
+            if STRICT_API_ROUTER:
+                raise RuntimeError(f"Stub模块加载失败: {e}") from e
+    else:
+        print("! Stub Endpoints已禁用（ENABLE_STUB_ENDPOINTS=false）")
 
-    print(f"\n✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
+    if router_load_failures:
+        print(f"\n⚠ 路由加载失败汇总（{len(router_load_failures)}项）:")
+        for item in router_load_failures:
+            print(f"  - {item}")
+    else:
+        print("\n✓ 路由加载失败汇总：0项")
+
+    print(f"✓ API路由加载完成，共 {len(api_router.routes)} 个路由")
     return api_router
 
 # 创建全局API路由实例
 print("[DEBUG] app/api/v1/api.py: 准备调用 create_api_router()")
-try:
-    api_router = create_api_router()
-    print(f"[DEBUG] app/api/v1/api.py: 成功创建api_router，路由数={len(api_router.routes)}")
-except Exception as e:
-    print(f"[ERROR] app/api/v1/api.py: create_api_router() 失败: {e}")
-    import traceback
-    traceback.print_exc()
-    # 创建空路由器作为fallback
-    api_router = APIRouter()
-    print("[WARN] app/api/v1/api.py: 使用空路由器作为fallback")
+api_router = create_api_router()
+print(f"[DEBUG] app/api/v1/api.py: 成功创建api_router，路由数={len(api_router.routes)}")

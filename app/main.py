@@ -94,6 +94,8 @@ try:
         tags=["auth"],
     )
 except Exception as e:  # noqa: BLE001
+    if os.getenv("STRICT_API_ROUTER", "true").lower() == "true":
+        raise RuntimeError(f"Auth router 注册失败: {e}") from e
     import logging
     logging.getLogger(__name__).warning("Auth router not registered at app level: %s", e)
 

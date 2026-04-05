@@ -1,8 +1,11 @@
 # 🚀 非标自动化项目管理系统
 
+[![CI](https://github.com/fulingwei1/non-standard-automation-pms/actions/workflows/ci.yml/badge.svg)](https://github.com/fulingwei1/non-standard-automation-pms/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+> ⭐ 如果这个项目对你有帮助，请点一个 **Star** 支持一下！
 
 > 专为非标自动化设备制造企业打造的智能项目管理系统  
 > 从签单到售后的全生命周期管理 + AI驱动的成本预测与风险控制
@@ -21,6 +24,34 @@
 | **风险控制** | 人工评估，滞后发现 | **AI实时风险评分 + 多维度预警** |
 | **数据分析** | 静态报表 | **AI驱动的趋势预测 + 智能决策建议** |
 | **项目特性** | 标准化流程 | **支持非标项目的多变性与定制化** |
+
+---
+
+## 📸 系统演示
+
+> 💡 以下是系统核心功能界面预览
+
+### 项目成本 Dashboard
+
+![成本 Dashboard](docs/assets/screenshots/cost-dashboard.png)
+*实时项目成本监控 + AI 超支预警*
+
+### AI 工时分析热力图
+
+![工时热力图](docs/assets/screenshots/timesheet-heatmap.png)
+*人员负荷可视化 + 智能预警*
+
+### 项目甘特图
+
+![项目甘特图](docs/assets/screenshots/project-gantt.png)
+*全生命周期进度跟踪 + 关键路径*
+
+### 风险管理看板
+
+![风险看板](docs/assets/screenshots/risk-dashboard.png)
+*AI 实时风险评分 + 多维度预警*
+
+> 📹 **视频演示**：[2 分钟快速演示](https://www.loom.com/share/xxxxx) （待添加）
 
 ---
 

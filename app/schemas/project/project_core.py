@@ -49,7 +49,7 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     """更新项目"""
 
-    project_name: Optional[str] = None
+    project_name: Optional[str] = Field(None, min_length=1, max_length=200, description="项目名称")
     short_name: Optional[str] = None
     customer_id: Optional[int] = None
     contract_no: Optional[str] = None

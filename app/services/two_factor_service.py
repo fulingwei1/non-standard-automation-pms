@@ -16,8 +16,12 @@ import secrets
 from typing import List, Optional, Tuple
 
 import pyotp
-import qrcode
 from cryptography.fernet import Fernet
+
+try:
+    import qrcode
+except ImportError:  # pragma: no cover - 环境依赖问题
+    qrcode = None
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from sqlalchemy.orm import Session
@@ -78,6 +82,11 @@ class TwoFactorService:
         Returns:
             PNG图片字节流
         """
+        if qrcode is None:
+            raise RuntimeError(
+                "缺少依赖 qrcode[pil]，请安装后再使用 2FA 二维码功能"
+            )
+
         # 生成TOTP URI（兼容Google Authenticator / Microsoft Authenticator）
         totp = pyotp.TOTP(secret)
         uri = totp.provisioning_uri(name=user.email or user.username, issuer_name=issuer_name)

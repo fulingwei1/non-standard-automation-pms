@@ -12,10 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.customer import Customer
-from app.models.project import Project
-from app.models.service import ServiceTicket
-from app.models.user import User
+from app.models import Customer, Project, ServiceTicket, User
 from app.schemas.common import ResponseModel
 from app.schemas.service import (
     ServiceTicketClose,
