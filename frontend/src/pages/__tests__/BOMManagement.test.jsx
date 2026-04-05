@@ -175,14 +175,13 @@ describe('BOMManagement', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    projectApi.list.mockImplementation((url) => {
-      if (url.includes('/bom') && !url.includes('/bom/')) {
-        return Promise.resolve({ data: mockBOMs });
-      }
-      if (url.includes('/bom/1')) {
-        return Promise.resolve({ data: mockBOMDetail });
-      }
-      return Promise.resolve({ data: {} });
+    // Mock projectApi.list - returns projects list
+    projectApi.list.mockResolvedValue({ 
+      data: { items: [{ id: 1, name: 'Test Project', code: 'PRJ-001' }], total: 1 } 
+    });
+    // Mock bomApi.list - returns BOMs array (boms should be an array, not object with items)
+    bomApi.list.mockResolvedValue({ 
+      data: { items: mockBOMs.items, total: mockBOMs.total }
     });
     bomApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
     bomApi.update.mockResolvedValue({ data: { success: true } });
