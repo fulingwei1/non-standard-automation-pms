@@ -199,7 +199,7 @@ class TestAICostEstimationService(unittest.TestCase):
 
     def test_calculate_risk_reserve_with_historical_variance(self):
         """测试风险储备金计算 - 有历史偏差数据"""
-        with patch.object(self.service, "_get_historical_variance", return_value=Decimal("0.1")):
+        with patch.object(self.service._calculator, "_get_historical_variance", return_value=Decimal("0.1")):
             base_cost = Decimal("100000")
             result = self.service._calculate_risk_reserve("project_a", "medium", base_cost)
 
