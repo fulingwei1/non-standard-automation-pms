@@ -4,6 +4,32 @@
 记录权限相关的操作日志
 """
 
+import inspect
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.services.permission_management.permission_audit_service import PermissionAuditService
+
+
+# 单例实例缓存
+_permission_audit_service_instance: "PermissionAuditService | None" = None
+
+
+def get_permission_audit_service() -> "PermissionAuditService":
+    """
+    获取权限审计服务单例实例
+    
+    Returns:
+        PermissionAuditService: 权限审计服务实例
+    """
+    global _permission_audit_service_instance
+    
+    if _permission_audit_service_instance is None:
+        # 获取类的所有方法（包括继承的）
+        _permission_audit_service_instance = PermissionAuditService()
+    
+    return _permission_audit_service_instance
+
 from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session

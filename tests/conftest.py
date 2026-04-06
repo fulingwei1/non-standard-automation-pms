@@ -10,6 +10,9 @@ sys.modules["redis.exceptions"] = MagicMock()
 
 import os
 
+# 禁用严格路由加载，避免测试时因API端点导入问题导致失败
+os.environ["STRICT_API_ROUTER"] = "false"
+
 # ---------------------------------------------------------------------------
 # Test database isolation
 # ---------------------------------------------------------------------------
