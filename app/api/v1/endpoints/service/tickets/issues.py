@@ -13,11 +13,9 @@ from app.common.pagination import PaginationParams, get_pagination_query
 from app.common.query_filters import apply_pagination
 from app.core import security
 from app.models.issue import Issue
-from app.models.service import ServiceTicket
 from app.models.user import User
 from app.schemas.issue import IssueListResponse
 from app.services.data_scope import DataScopeService
-from app.utils.db_helpers import get_or_404
 
 from ..access import ensure_service_ticket_access_or_raise
 

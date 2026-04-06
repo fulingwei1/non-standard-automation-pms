@@ -18,7 +18,6 @@ from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.service import ServiceTicketCreate, ServiceTicketResponse
-from app.utils.db_helpers import get_or_404
 from app.utils.permission_helpers import check_project_access_or_raise
 
 from ..access import (

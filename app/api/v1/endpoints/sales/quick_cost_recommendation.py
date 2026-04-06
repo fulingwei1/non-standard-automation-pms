@@ -6,15 +6,14 @@
 """
 
 import logging
-from decimal import Decimal
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.core import security
-from app.models.sales import Opportunity, Quote, QuoteVersion
+from app.models.sales import Opportunity, Quote
 from app.models.user import User
 from app.schemas.common import ResponseModel
 

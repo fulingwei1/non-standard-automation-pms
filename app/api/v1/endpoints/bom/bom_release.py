@@ -15,7 +15,6 @@ from app.core import security
 from app.models.material import BomHeader
 from app.models.project import Project
 from app.models.user import User
-from app.models.vendor import Vendor
 from app.schemas.material import BomResponse
 from app.utils.db_helpers import get_or_404
 

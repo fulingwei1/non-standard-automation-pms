@@ -14,7 +14,6 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales.assessment_template import (
-    AssessmentDimensionEnum,
     AssessmentItem,
     AssessmentRisk,
     AssessmentTemplate,

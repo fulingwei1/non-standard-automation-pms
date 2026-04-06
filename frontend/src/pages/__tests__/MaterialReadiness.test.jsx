@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { materialApi, projectApi, supplierApi } from '../../services/api';
 import { MemoryRouter } from 'react-router-dom';
 import MaterialReadiness from '../MaterialReadiness';
@@ -212,7 +212,7 @@ describe('MaterialReadiness', () => {
       );
 
       // 源组件: loading 状态
-      const loadingElement = screen.queryByText(/加载中|Loading/i);
+      screen.queryByText(/加载中|Loading/i);
       // 可能是 Skeleton 或 Loader，只要不崩溃就行
       expect(true).toBe(true);
     });

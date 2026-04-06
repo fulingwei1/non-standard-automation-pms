@@ -16,7 +16,6 @@ from app.core import security
 from app.models.service import SatisfactionSurveyTemplate
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.utils.db_helpers import get_or_404
 
 from .access import filter_owned_service_query, get_owned_service_object_or_404
 

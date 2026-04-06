@@ -188,7 +188,7 @@ vi.mock('framer-motion', () => {
   // 创建代理，将 motion.xxx 转为普通 HTML 元素
   const motionProxy = new Proxy({}, {
     get: (_, tag) => {
-      return React.forwardRef(({ children, initial, animate, exit, transition, whileHover, whileTap, whileInView, variants, layout, ...props }, ref) => {
+      return React.forwardRef(({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileHover: _whileHover, whileTap: _whileTap, whileInView: _whileInView, variants: _variants, layout: _layout, ...props }, ref) => {
         return React.createElement(tag, { ...props, ref }, children);
       });
     },
@@ -245,7 +245,7 @@ for (const name of rechartsComponentNames) {
 // 多个源文件使用 motion.div 等但未 import
 const motionGlobalProxy = new Proxy({}, {
   get: (_, tag) => {
-    return React.forwardRef(({ children, initial, animate, exit, transition, whileHover, whileTap, whileInView, variants, layout, ...props }, ref) => {
+    return React.forwardRef(({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileHover: _whileHover, whileTap: _whileTap, whileInView: _whileInView, variants: _variants, layout: _layout, ...props }, ref) => {
       return React.createElement(String(tag), { ...props, ref }, children);
     });
   },
@@ -405,7 +405,7 @@ for (const name of uiComponents) {
 // 特殊处理 Button（支持 onClick）
 if (!globalThis.Button._isPatched) {
   const OrigButton = globalThis.Button;
-  const ButtonWithClick = React.forwardRef(({ children, onClick, disabled, type, className, variant, size, asChild, ...props }, ref) =>
+  const ButtonWithClick = React.forwardRef(({ children, onClick, disabled, type, className, variant: _variant, size: _size, asChild: _asChild, ...props }, ref) =>
     React.createElement('button', { ref, onClick, disabled, type: type || 'button', className, ...props }, children)
   );
   ButtonWithClick.displayName = 'Button';
@@ -452,16 +452,16 @@ const antdComponentFallback = (name, tag = 'div') => {
 // Radio 组件需要特殊处理（支持 Radio.Group / Radio.Button）
 if (typeof globalThis.Radio === 'undefined') {
   const RadioComp = antdComponentFallback('Radio', 'span');
-  RadioComp.Group = ({ children, value, onChange, buttonStyle, ...props }) =>
+  RadioComp.Group = ({ children, value: _value, onChange: _onChange, buttonStyle: _buttonStyle, ...props }) =>
     React.createElement('div', { 'data-testid': 'antd-radio-group', ...props }, children);
-  RadioComp.Button = ({ children, value, ...props }) =>
+  RadioComp.Button = ({ children, value: _value, ...props }) =>
     React.createElement('label', { 'data-testid': 'antd-radio-button', ...props }, children);
   globalThis.Radio = RadioComp;
 }
 
 // Checkbox 组件
 if (typeof globalThis.Checkbox === 'undefined') {
-  globalThis.Checkbox = ({ children, checked, onChange, ...props }) =>
+  globalThis.Checkbox = ({ children, checked, onChange, ..._props }) =>
     React.createElement('label', { 'data-testid': 'antd-checkbox' },
       React.createElement('input', { type: 'checkbox', checked, onChange }),
       children
@@ -470,7 +470,7 @@ if (typeof globalThis.Checkbox === 'undefined') {
 
 // Modal 组件（支持 open 属性控制显隐）
 if (typeof globalThis.Modal === 'undefined') {
-  globalThis.Modal = ({ children, open, title, onCancel, onOk, footer, confirmLoading, okText, cancelText, width, destroyOnHidden, ...props }) => {
+  globalThis.Modal = ({ children, open, title, onCancel, onOk, footer, confirmLoading, okText, cancelText, width: _width, destroyOnHidden: _destroyOnHidden, ..._props }) => {
     if (!open) return null;
     return React.createElement('div', { role: 'dialog', 'aria-label': title || '', 'data-testid': 'antd-modal' },
       title ? React.createElement('div', { 'data-testid': 'antd-modal-title' }, title) : null,
@@ -485,37 +485,37 @@ if (typeof globalThis.Modal === 'undefined') {
 
 // Spin 组件
 if (typeof globalThis.Spin === 'undefined') {
-  globalThis.Spin = ({ children, spinning, size, ...props }) =>
+  globalThis.Spin = ({ children, spinning: _spinning, size: _size, ...props }) =>
     React.createElement('div', { 'data-testid': 'antd-spin', ...props }, children);
 }
 
 // Rate 组件
 if (typeof globalThis.Rate === 'undefined') {
-  globalThis.Rate = ({ value, disabled, ...props }) =>
+  globalThis.Rate = ({ value, disabled: _disabled, ..._props }) =>
     React.createElement('span', { 'data-testid': 'antd-rate' }, `${value || 0}星`);
 }
 
 // Avatar 组件
 if (typeof globalThis.Avatar === 'undefined') {
-  globalThis.Avatar = ({ children, icon, size, ...props }) =>
+  globalThis.Avatar = ({ children, icon: _icon, size: _size, ..._props }) =>
     React.createElement('span', { 'data-testid': 'antd-avatar' }, children);
 }
 
 // Row / Col 布局组件
 if (typeof globalThis.Row === 'undefined') {
-  globalThis.Row = ({ children, gutter, ...props }) =>
+  globalThis.Row = ({ children, gutter: _gutter, ...props }) =>
     React.createElement('div', { 'data-testid': 'antd-row', ...props }, children);
 }
 if (typeof globalThis.Col === 'undefined') {
-  globalThis.Col = ({ children, span, xs, sm, md, lg, xl, ...props }) =>
+  globalThis.Col = ({ children, span: _span, xs: _xs, sm: _sm, md: _md, lg: _lg, xl: _xl, ..._props }) =>
     React.createElement('div', { 'data-testid': 'antd-col' }, children);
 }
 
 // Select 组件（antd 版本，需要 Select.Option）
 if (typeof globalThis.Select === 'undefined' || !globalThis.Select.Option) {
-  const AntSelect = ({ children, placeholder, value, onChange, style, allowClear, options, ...props }) =>
+  const AntSelect = ({ children, placeholder: _placeholder, value, onChange, style: _style, allowClear: _allowClear, options: _options, ..._props }) =>
     React.createElement('select', { value, onChange: (e) => onChange?.(e.target.value), 'data-testid': 'antd-select' }, children);
-  AntSelect.Option = ({ children, value, ...props }) =>
+  AntSelect.Option = ({ children, value, ..._props }) =>
     React.createElement('option', { value }, children);
   // 只在全局没有 Select 或不支持 Select.Option 时设置
   if (typeof globalThis.Select === 'undefined') {

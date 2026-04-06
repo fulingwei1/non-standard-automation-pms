@@ -10,12 +10,11 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, case, func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales import Contract, Customer, Invoice

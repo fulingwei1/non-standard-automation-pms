@@ -12,8 +12,8 @@ import { BrowserRouter } from 'react-router-dom';
 import SalesOpportunityCenter from './SalesOpportunityCenter';
 
 // 覆盖全局子组件（源码中未显式 import，作为全局组件使用）
-globalThis.LeadManagement = ({ embedded }) => <div data-testid="lead-management">线索管理组件</div>;
-globalThis.OpportunityManagement = ({ embedded }) => <div data-testid="opportunity-management">商机管理组件</div>;
+globalThis.LeadManagement = ({ embedded: _embedded }) => <div data-testid="lead-management">线索管理组件</div>;
+globalThis.OpportunityManagement = ({ embedded: _embedded }) => <div data-testid="opportunity-management">商机管理组件</div>;
 
 // 覆盖全局 TabbedCenterPage 桩组件，使其渲染 title/tabs 内容
 // 源码中 TabbedCenterPage 作为全局组件使用（未显式 import）
