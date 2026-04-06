@@ -123,7 +123,7 @@ class PricingEngine:
         budget: Decimal,
         pricing: PricingRecommendation
     ) -> str:
-        """获取定价策略"""
+        """获取定价策略（内部方法）"""
         if budget >= pricing.high:
             return "客户预算充足,可报高价档,强调高附加值服务"
         elif budget >= pricing.medium:
@@ -132,6 +132,34 @@ class PricingEngine:
             return "客户预算偏紧,可考虑低价档,但需简化部分服务"
         else:
             return "客户预算低于成本,建议优化方案或放弃该项目"
+
+    def get_pricing_strategy(
+        self,
+        budget: Optional[Decimal],
+        total_cost: Decimal
+    ) -> str:
+        """
+        获取定价策略
+
+        Args:
+            budget: 客户预算
+            total_cost: 总成本
+
+        Returns:
+            定价策略描述
+        """
+        if budget is None:
+            return "无预算信息,建议按标准报价"
+        
+        # 基于成本和预算生成定价建议
+        suggested_price = total_cost / Decimal("0.7")  # 假设30%利润率
+        
+        if budget >= suggested_price * Decimal("1.15"):
+            return "high"
+        elif budget >= suggested_price:
+            return "medium"
+        else:
+            return "low"
 
     def calculate_competitiveness(
         self,

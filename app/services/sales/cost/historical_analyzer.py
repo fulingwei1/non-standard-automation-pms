@@ -6,7 +6,7 @@
 """
 
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from sqlalchemy.orm import Session
 
@@ -131,3 +131,30 @@ class HistoricalAnalyzer:
             "learning_applied": True,
             "message": "实际成本已记录,模型将从此数据学习",
         }
+
+    def get_historical_variance(self, project_type: str) -> Optional[Decimal]:
+        """
+        获取历史方差
+
+        Args:
+            project_type: 项目类型
+
+        Returns:
+            历史方差值（百分比形式转为小数）
+        """
+        # 查询该类型项目的历史记录的平均方差率
+        result = (
+            self.db.query(PresaleCostHistory.variance_rate)
+            .filter(PresaleCostHistory.project_features.contains(project_type))
+            .scalar()
+        )
+
+        if result is None:
+            return None
+
+        try:
+            # 将百分比转换为小数形式
+            value = Decimal(str(result))
+            return value / Decimal("100")
+        except Exception:
+            return None

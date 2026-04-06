@@ -917,7 +917,8 @@ class TestAICostEstimationService(unittest.TestCase):
         def mock_save(db, obj):
             obj.id = 123
 
-        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save):
+        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save), \
+             patch("app.services.sales.cost.historical_analyzer.save_obj", side_effect=mock_save):
             input_data = UpdateActualCostInput(
                 estimation_id=1,
                 project_id=100,
@@ -944,7 +945,8 @@ class TestAICostEstimationService(unittest.TestCase):
         def mock_save(db, obj):
             obj.id = 124
 
-        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save):
+        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save), \
+             patch("app.services.sales.cost.historical_analyzer.save_obj", side_effect=mock_save):
             input_data = UpdateActualCostInput(
                 estimation_id=1,
                 project_id=100,
@@ -970,7 +972,8 @@ class TestAICostEstimationService(unittest.TestCase):
             obj.id = 1
             obj.created_at = datetime.now()
 
-        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save):
+        with patch("app.services.sales.ai_cost_estimation_service.save_obj", side_effect=mock_save), \
+             patch("app.services.sales.cost.historical_analyzer.save_obj", side_effect=mock_save):
             input_data = CostEstimationInput(
                 presale_ticket_id=1,
                 solution_id=1,
