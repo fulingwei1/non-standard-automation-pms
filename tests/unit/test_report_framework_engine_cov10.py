@@ -59,8 +59,9 @@ def test_exception_classes():
 
 def test_list_available_no_user(engine):
     """无用户时列出可用报告"""
-    engine._config_loader = MagicMock()
-    engine._config_loader.list_configs.return_value = []
+    mock_loader = MagicMock()
+    mock_loader.list_available.return_value = []
+    engine.config_loader = mock_loader
 
     if hasattr(engine, "list_available"):
         result = engine.list_available()
@@ -69,8 +70,9 @@ def test_list_available_no_user(engine):
 
 def test_list_available_with_user(engine):
     """有用户时列出可用报告"""
-    engine._config_loader = MagicMock()
-    engine._config_loader.list_configs.return_value = []
+    mock_loader = MagicMock()
+    mock_loader.list_available.return_value = []
+    engine.config_loader = mock_loader
 
     user = _make_user()
     if hasattr(engine, "list_available"):

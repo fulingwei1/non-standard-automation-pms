@@ -249,17 +249,10 @@ class TestEvaluateAlertRules:
         ws_status.bottleneck_level = 2
         ws_status.capacity_utilization = Decimal("96")
 
-        def side_effect_first(*args, **kwargs):
-            # First call: work order, second: ws_status
-            call_count = side_effect_first.count
-            side_effect_first.count += 1
-            if call_count == 0:
-                return wo
-            return ws_status
-
-        side_effect_first.count = 0
-
-        self.db.query.return_value.filter.return_value.first.side_effect = side_effect_first
+        # First call: work order for evaluate_alert_rules
+        # Second call: work order inside calculate_progress_deviation
+        # Third call: ws_status
+        self.db.query.return_value.filter.return_value.first.side_effect = [wo, wo, ws_status]
 
         alerts = self.svc.evaluate_alert_rules(1, user_id=1)
         assert any(a.alert_type == "BOTTLENECK" for a in alerts)

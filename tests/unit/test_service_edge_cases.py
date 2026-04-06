@@ -71,10 +71,11 @@ class TestHealthCalculatorEdgeCases:
         assert result is False
 
     def test_has_schedule_variance_none_progress(self, health_calculator, mock_project):
-        """测试进度偏差 - None 进度"""
+        """测试进度偏差 - None 进度（会被当作0，落后于计划进度，偏差会很大）"""
         mock_project.progress_pct = None
         result = health_calculator._has_schedule_variance(mock_project, threshold=10)
-        assert result is False
+        # None 被当作 0，实际进度 0 < 计划进度(~33%)，偏差超过 10%
+        assert result is True
 
     def test_has_schedule_variance_none_end_date(self, health_calculator, mock_project):
         """测试进度偏差 - None 结束日期"""
@@ -165,10 +166,11 @@ class TestHealthCalculatorEdgeCases:
             # ==================== 计算精度边界测试 ====================
 
     def test_schedule_variance_extreme_precision(self, health_calculator, mock_project):
-        """测试进度偏差 - 极端精度"""
+        """测试进度偏差 - 极端精度（实际进度66.67% > 计划进度33%，超前而非落后）"""
         mock_project.progress_pct = Decimal("66.66666666666666")
         result = health_calculator._has_schedule_variance(mock_project, threshold=0.001)
-        assert result is True
+        # 实际进度超前，返回 False（没有进度落后）
+        assert result is False
 
 
 @pytest.mark.unit

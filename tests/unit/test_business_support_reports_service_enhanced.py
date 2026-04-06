@@ -53,7 +53,10 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     @patch("app.services.business_support_reports.business_support_reports_service.date")
     def test_get_current_week_range(self, mock_date_class):
         """测试获取当前周范围"""
-        mock_date_class.today.return_value = date(2024, 3, 15)  # 周五
+        # 使用 wraps 保留真实 date 类的功能
+        import datetime as real_datetime
+        mock_date_class.side_effect = lambda *args, **kw: real_datetime.date(*args, **kw)
+        mock_date_class.today.return_value = real_datetime.date(2024, 3, 15)  # 周五
         year, week_num, week_start, week_end = self.service.get_current_week_range()
 
         self.assertEqual(year, 2024)
@@ -64,7 +67,9 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     @patch("app.services.business_support_reports.business_support_reports_service.date")
     def test_get_current_week_range_monday(self, mock_date_class):
         """测试周一获取当前周范围"""
-        mock_date_class.today.return_value = date(2024, 3, 11)  # 周一
+        import datetime as real_datetime
+        mock_date_class.side_effect = lambda *args, **kw: real_datetime.date(*args, **kw)
+        mock_date_class.today.return_value = real_datetime.date(2024, 3, 11)  # 周一
         year, week_num, week_start, week_end = self.service.get_current_week_range()
 
         self.assertEqual(week_start, date(2024, 3, 11))
@@ -75,9 +80,9 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_calculate_contract_stats_with_data(self):
         """测试有数据的合同统计"""
         mock_contract1 = MagicMock()
-        mock_contract1.total_amount = Decimal("100000")
+        mock_contract1.contract_amount = Decimal("100000")
         mock_contract2 = MagicMock()
-        mock_contract2.total_amount = Decimal("200000")
+        mock_contract2.contract_amount = Decimal("200000")
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
@@ -112,7 +117,7 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     def test_calculate_contract_stats_with_none_amount(self):
         """测试合同金额为None的情况"""
         mock_contract = MagicMock()
-        mock_contract.total_amount = None
+        mock_contract.contract_amount = None
 
         mock_query = self.mock_db.query.return_value
         mock_filter = mock_query.filter.return_value
@@ -396,9 +401,11 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     @patch("app.services.business_support_reports.business_support_reports_service.date")
     def test_get_daily_report_with_date(self, mock_date_class):
         """测试指定日期的日报"""
+        import datetime as real_datetime
+        mock_date_class.side_effect = lambda *args, **kw: real_datetime.date(*args, **kw)
         # Mock all database queries
         mock_contract = MagicMock()
-        mock_contract.total_amount = Decimal("100000")
+        mock_contract.contract_amount = Decimal("100000")
 
         mock_order = MagicMock()
         mock_order.order_amount = Decimal("50000")
@@ -451,6 +458,8 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     @patch("app.services.business_support_reports.business_support_reports_service.date")
     def test_get_daily_report_default_today(self, mock_date_class):
         """测试默认使用今天日期的日报"""
+        import datetime as real_datetime
+        mock_date_class.side_effect = lambda *args, **kw: real_datetime.date(*args, **kw)
         mock_date_class.today.return_value = date(2024, 1, 20)
 
         # Mock all queries to return empty
@@ -478,8 +487,10 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     @patch("app.services.business_support_reports.business_support_reports_service.date")
     def test_get_daily_report_with_none_amounts(self, mock_date_class):
         """测试日报中金额为None的情况"""
+        import datetime as real_datetime
+        mock_date_class.side_effect = lambda *args, **kw: real_datetime.date(*args, **kw)
         mock_contract = MagicMock()
-        mock_contract.total_amount = None
+        mock_contract.contract_amount = None
 
         mock_order = MagicMock()
         mock_order.order_amount = None
@@ -565,6 +576,8 @@ class TestBusinessSupportReportsService(unittest.TestCase):
     @patch("app.services.business_support_reports.business_support_reports_service.date")
     def test_get_weekly_report_default_current_week(self, mock_date_class):
         """测试默认使用当前周的周报"""
+        import datetime as real_datetime
+        mock_date_class.side_effect = lambda *args, **kw: real_datetime.date(*args, **kw)
         mock_date_class.today.return_value = date(2024, 3, 15)
 
         # Mock calculate methods

@@ -108,6 +108,7 @@ class TestGenerateProjectWeeklyReport:
 class TestGenerateProjectMonthlyReport:
     def test_error_when_project_missing(self, mock_db):
         """月报与周报同样需要项目存在"""
+        from datetime import date
         chain = MagicMock()
         mock_db.query.return_value = chain
         chain.filter.return_value = chain
@@ -119,8 +120,8 @@ class TestGenerateProjectMonthlyReport:
             result = ProjectReportMixin.generate_project_monthly_report(
                 mock_db,
                 project_id=999,
-                year=2026,
-                month=2,
+                start_date=date(2026, 2, 1),
+                end_date=date(2026, 2, 28),
             )
             assert "error" in result
         else:
