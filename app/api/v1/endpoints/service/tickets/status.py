@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.service import ServiceTicket
 from app.models.service.enums import ServiceTicketStatusEnum, normalize_service_ticket_status
 from app.models.user import User
 from app.schemas.service import ServiceTicketClose, ServiceTicketResponse

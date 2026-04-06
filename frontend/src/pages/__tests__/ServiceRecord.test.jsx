@@ -63,7 +63,7 @@ globalThis.ErrorMessage = ({ message, onRetry }) => (
     {onRetry && <button onClick={onRetry}>重试</button>}
   </div>
 );
-globalThis.EmptyState = ({ icon, title, description, action }) => (
+globalThis.EmptyState = ({ icon: _icon, title, description, action }) => (
   <div data-testid="empty-state">
     <span>{title}</span>
     {description && <p>{description}</p>}

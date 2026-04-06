@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { bomApi, projectApi } from '../../services/api';
 import { MemoryRouter } from 'react-router-dom';
 import BOMManagement from '../BOMManagement';

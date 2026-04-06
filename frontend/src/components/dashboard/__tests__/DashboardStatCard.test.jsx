@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }) => {
-      const { whileHover, whileTap, initial, animate, transition, ...validProps } = props;
+      const { whileHover: _whileHover, whileTap: _whileTap, initial: _initial, animate: _animate, transition: _transition, ...validProps } = props;
       return <div {...validProps}>{children}</div>;
     },
   },
