@@ -2,7 +2,6 @@
  * StatsCard - Summary stat card with click-to-filter behavior
  */
 
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 
 export default function StatsCard({ label, value, icon: Icon, color, onClick, active }) {

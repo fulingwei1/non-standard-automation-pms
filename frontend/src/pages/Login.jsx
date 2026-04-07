@@ -1,14 +1,9 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { authApi } from '../services/api';
 import { diagnoseLogin } from '../utils/diagnose';
 import { logger } from '../utils/logger';
 import { resolveRoleCode } from '../utils/roleMapping';
-import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
-import LoginBackground from '../components/login/LoginBackground';
-import FeatureShowcase from '../components/login/FeatureShowcase';
-import QuickLoginGrid from '../components/login/QuickLoginGrid';
 
 const DEFAULT_BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || "8002";
 const DEFAULT_BACKEND_TARGET =

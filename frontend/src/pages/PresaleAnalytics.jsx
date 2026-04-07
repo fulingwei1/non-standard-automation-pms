@@ -1,28 +1,11 @@
 import {
-  BarChart3,
-  Briefcase,
-  Clock3,
   Gauge,
-  LineChart,
   Target,
   TrendingUp,
   UserRound,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui";
+
+
 
 const conversionFunnelData = [
   { stage: "线索 -> 技术澄清", count: 148, conversionRate: 78.2 },

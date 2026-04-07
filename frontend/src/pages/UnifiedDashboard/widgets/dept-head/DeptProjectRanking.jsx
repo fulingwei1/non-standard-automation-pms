@@ -1,10 +1,6 @@
 /**
  * 部门负责人视图 - 项目绩效排行
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Progress } from '../../../../components/ui/progress';
-import { Badge } from '../../../../components/ui/badge';
-import { Trophy } from 'lucide-react';
 
 const healthLabel = { H1: '健康', H2: '关注', H3: '风险', H4: '严重' };
 const healthBadge = { H1: 'default', H2: 'secondary', H3: 'outline', H4: 'destructive' };

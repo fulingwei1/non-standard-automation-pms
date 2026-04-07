@@ -6,14 +6,7 @@
  * to the shared state managed by useShortageManagement.
  */
 
-import { PageHeader } from "../../components/layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { useShortageManagement } from "./hooks/useShortageManagement";
-import { DashboardTab } from "./DashboardTab";
-import { ReportsTab } from "./ReportsTab";
-import { ArrivalsTab } from "./ArrivalsTab";
-import { SubstitutionsTab } from "./SubstitutionsTab";
-import { TransfersTab } from "./TransfersTab";
 
 export default function ShortageManagement() {
   const {

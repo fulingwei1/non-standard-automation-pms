@@ -4,8 +4,6 @@ ECN成本记录模型 - 跟踪ECN导致的实际成本
 """
 
 from sqlalchemy import (
-    JSON,
-    Boolean,
     Column,
     Date,
     DateTime,

@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import PMODashboard from "./PMODashboard";
-import ProjectHealthMonitor from "./ProjectHealthMonitor";
 
 export default function ProjectDashboardCenter() {
   const tabs = useMemo(

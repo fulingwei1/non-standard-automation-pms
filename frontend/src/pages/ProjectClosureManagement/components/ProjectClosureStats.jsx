@@ -1,5 +1,3 @@
-import { TrendingUp, TrendingDown } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui";
 import { cn, formatCurrency } from "../../../lib/utils";
 
 export function ProjectClosureStats({ closure }) {

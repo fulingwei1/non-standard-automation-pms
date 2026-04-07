@@ -1,5 +1,3 @@
-import { motion } from "framer-motion";
-import { Card, CardContent } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 

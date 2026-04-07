@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui";
-import { LineChart, BarChart, CostAnalysisChart } from "../../../components/charts";
 import { formatCurrency } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 

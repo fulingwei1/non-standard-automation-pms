@@ -1,10 +1,6 @@
 /**
  * 高管视图 - 战略项目进度
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Progress } from '../../../../components/ui/progress';
-import { Badge } from '../../../../components/ui/badge';
-import { Target } from 'lucide-react';
 
 const healthBadge = { H1: 'default', H2: 'secondary', H3: 'outline', H4: 'destructive' };
 const healthLabel = { H1: '健康', H2: '关注', H3: '风险', H4: '严重' };

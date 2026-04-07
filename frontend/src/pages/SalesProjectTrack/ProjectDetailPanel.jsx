@@ -1,22 +1,11 @@
-import { motion } from "framer-motion";
 import {
-  X,
   Building2,
   User,
   Calendar,
   Truck,
   ClipboardCheck,
   Clock,
-  DollarSign,
-  FileText,
-  Phone,
-  MessageSquare,
-  Eye,
-  CheckCircle2,
-  Flag,
-  AlertTriangle,
 } from "lucide-react";
-import { Badge, Button, Progress } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import {
   stageConfig,

@@ -185,7 +185,6 @@ def test_project_no_costs(db_session: Session, test_customer):
 def test_invoice(db_session: Session, test_project):
     """创建测试发票"""
     # 需要先创建一个合同
-    from app.models.sales import Contract
     contract = Contract(
         contract_code="CONTRACT001",
         contract_name="测试合同",

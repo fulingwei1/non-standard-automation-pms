@@ -5,42 +5,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Users,
-  TrendingUp,
-  Target,
-  Heart,
-  MessageSquare,
-  Award,
-  AlertTriangle,
-  CheckCircle,
-  ArrowUp,
-  ArrowDown,
-  Activity,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
+
+
 
 // 关系成熟度评估
 function RelationshipAssessment() {

@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
 import {
   Target,
   TrendingUp,
   MapPin,
   CheckCircle2,
   Route,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  Trash2,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { managementRhythmApi } from "../services/api";

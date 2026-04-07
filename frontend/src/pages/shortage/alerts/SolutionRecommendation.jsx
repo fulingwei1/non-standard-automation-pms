@@ -5,13 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAlertSolutions } from '@/services/api/shortage';
-import SolutionCard from './components/SolutionCard';
-import SolutionCompare from './components/SolutionCompare';
-import { ArrowLeft, Loader2, Lightbulb } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const SolutionRecommendation = () => {

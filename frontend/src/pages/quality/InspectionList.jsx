@@ -4,13 +4,8 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  FileCheck, Search, ChevronLeft, ChevronRight, Plus,
-  RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle,
+import { CheckCircle, XCircle, Clock, AlertTriangle,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { qualityApi } from "../../services/api/quality";
 
 const INSPECTION_TYPES = [

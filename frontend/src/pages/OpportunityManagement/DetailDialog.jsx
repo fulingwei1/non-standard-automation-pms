@@ -1,16 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-  Badge,
-  Input,
-  Label,
-  Textarea
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { stageConfig } from "./constants";
 

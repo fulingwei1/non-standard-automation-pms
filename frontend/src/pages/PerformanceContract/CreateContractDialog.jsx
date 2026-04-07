@@ -1,20 +1,5 @@
-import { Save } from "lucide-react";
-import {
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-  Textarea,
-} from "@/components/ui";
+
+
 import { CONTRACT_TYPE_OPTIONS } from "./constants";
 
 export default function CreateContractDialog({

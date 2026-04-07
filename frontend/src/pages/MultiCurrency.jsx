@@ -8,25 +8,12 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  RefreshCw,
   DollarSign,
   Euro,
   PoundSterling,
   Wallet,
-  History,
-  Calculator,
-  Edit3,
-  Check,
-  X,
-  Globe,
-  ArrowRightLeft,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { multiCurrencyApi } from "../services/api/multiCurrency";
 

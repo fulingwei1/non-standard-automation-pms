@@ -1,20 +1,11 @@
 /**
  * Lessons tab content for ProjectReviewDetail
  */
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-} from "../../components/ui";
-import {
-  Edit,
-  Trash2,
-  Plus,
-  FileText,
-} from "lucide-react";
+
+
+
+
 import { getLessonType } from "../../components/project-review";
 import { staggerChild } from "./constants";
 

@@ -2,9 +2,6 @@
  * 支付列表表格组件
  * 显示支付记录的表格视图
  */
-import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Eye } from 'lucide-react';
-import { Card, CardContent, Badge, Button } from '../ui';
 import { cn } from '../../lib/utils';
 import { getPaymentStatus, getPaymentType, formatCurrency } from '@/lib/constants/finance';
 import { getIcon } from '@/utils/iconMap';

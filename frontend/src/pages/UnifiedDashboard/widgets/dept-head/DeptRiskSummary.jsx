@@ -1,9 +1,6 @@
 /**
  * 部门负责人视图 - 风险汇总（饼图）
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { ShieldAlert } from 'lucide-react';
 
 const LEVEL_CONFIG = [
   { key: 'critical', label: '严重', color: '#ef4444' },

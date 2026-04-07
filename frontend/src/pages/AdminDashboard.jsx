@@ -5,27 +5,17 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import {
   Users,
   Shield,
   Activity,
-  AlertTriangle,
   Key } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress } from
-"../components/ui";
+
+
 import { fadeIn, staggerContainer } from "../lib/animations";
-import { ApiIntegrationError } from "../components/ui";
-import StatCard from "../components/common/StatCard";
 
 // 默认统计数据（加载前显示）
 const defaultStats = {

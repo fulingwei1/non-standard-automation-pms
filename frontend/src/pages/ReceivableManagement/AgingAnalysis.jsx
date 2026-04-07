@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle, Badge, Progress } from "../../components/ui";
 import { agingBucketOrder, agingBucketLabelMap, agingBucketColorMap } from "./constants";
 
 /**

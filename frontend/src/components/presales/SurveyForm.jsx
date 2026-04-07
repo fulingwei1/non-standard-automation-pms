@@ -3,24 +3,11 @@
  * 用于填写客户需求调研信息
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Building2,
   Phone,
   MapPin,
-  Package,
-  Settings,
-  Target,
-  DollarSign,
-  Shield,
-  Plus,
-  X,
-  Save,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

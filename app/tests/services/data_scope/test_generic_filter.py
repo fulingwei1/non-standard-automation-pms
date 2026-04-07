@@ -5,9 +5,7 @@ GenericFilterService 测试
 测试 app/services/data_scope/generic_filter.py 中的核心功能
 """
 
-import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime
 
 
 class MockUser:

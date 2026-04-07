@@ -1,14 +1,5 @@
-import { Search, RefreshCw } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
+
 import { cn } from "../../lib/utils";
 
 const FilterBar = ({ searchText, setSearchText, filters, updateFilters, refresh, loading }) => (

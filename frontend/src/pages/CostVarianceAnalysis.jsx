@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { AlertTriangle, TrendingUp, DollarSign, Lightbulb, BarChart3 } from "lucide-react";
-import { PageHeader } from "../components/layout";
+import { AlertTriangle, TrendingUp, DollarSign, BarChart3 } from "lucide-react";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { costVarianceApi } from "../services/api/costVariance";
 

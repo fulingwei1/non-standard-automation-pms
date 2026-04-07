@@ -116,7 +116,7 @@ export function useDataManagement(fetchFn, options = {}) {
     } finally {
       setLoading(false);
     }
-  }, [filters, pagination.page, pagination.pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters, pagination.page, pagination.pageSize]);  
 
   // ── Auto-load ───────────────────────────────────────────────────────────────
   useEffect(() => {

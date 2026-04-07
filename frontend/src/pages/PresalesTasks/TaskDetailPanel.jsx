@@ -2,21 +2,8 @@
  * 任务详情面板
  */
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Clock,
-  Users,
-  Building2,
-  FileText,
-  CheckCircle,
-  User,
-  X,
-  Briefcase,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Input } from "../../components/ui/input";
-import { Progress } from "../../components/ui/progress";
+
+
 import { cn } from "../../lib/utils";
 import { presaleApi } from "../../services/api";
 import { taskStatuses, getPriorityStyle } from "./constants";

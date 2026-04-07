@@ -3,13 +3,9 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  AlertCircle, ArrowLeft, RefreshCw, AlertTriangle, Clock,
+import { AlertTriangle, Clock,
   CheckCircle, User, Calendar, MessageSquare, Tag,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { issueApi } from "../../services/api/issues";
 
 function SeverityBadge({ level }) {

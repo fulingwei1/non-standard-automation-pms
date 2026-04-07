@@ -1,4 +1,3 @@
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui";
 
 export function ImportPreviewResult({ previewData }) {
     if (!previewData) return null;

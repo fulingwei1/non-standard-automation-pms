@@ -6,18 +6,12 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   Bell,
   AlertTriangle,
   Info,
   CheckCircle2,
-  ChevronRight,
-  Clock,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
 import { notificationApi } from '../../../services/api';
 import { cn } from '../../../lib/utils';
 

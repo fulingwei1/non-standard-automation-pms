@@ -1,9 +1,8 @@
 /**
  * 项目交付排产计划 - 列表页面
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Button, Table, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { projectDeliveryApi } from '@/services/api/projectDelivery';
 
 export default function ProjectDeliveryScheduleList() {

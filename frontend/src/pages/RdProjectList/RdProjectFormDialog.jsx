@@ -1,19 +1,6 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  Button,
-  Input,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "../../components/ui";
+
+
 import { DEFAULT_FORM_DATA } from "./constants";
 
 export function RdProjectFormDialog({ open, onOpenChange, onSubmit, categories = [] }) {

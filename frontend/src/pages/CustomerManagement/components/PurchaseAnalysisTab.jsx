@@ -3,21 +3,9 @@
  * 展示购买偏好和历史统计
  */
 
-import { Card, Row, Col, Statistic, Tag, Typography, List, Space } from "antd";
-import { ShoppingCart, DollarSign, TrendingUp, Package, Calendar, Award } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { Typography } from "antd";
+
+
 
 const { Title, Text, Paragraph } = Typography;
 

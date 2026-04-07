@@ -3,38 +3,14 @@
  * Features: 团队负荷统计、负荷热力图、可用资源查询
  */
 import { useState, useEffect } from "react";
-import {
-  Users,
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-  BarChart3,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
+
+
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { workloadApi } from "../services/api";
 export default function WorkloadBoard() {

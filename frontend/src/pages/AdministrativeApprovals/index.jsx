@@ -3,22 +3,11 @@
  * Features: Approval list, approval workflow, approval history
  */
 
-import { motion } from "framer-motion";
-import { Download } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
 import { staggerContainer } from "../../lib/animations";
 
 import { useAdministrativeApprovals } from "./hooks/useAdministrativeApprovals";
-import { ApprovalStatsGrid } from "./ApprovalStatsGrid";
-import { PendingTab } from "./PendingTab";
-import { ApprovedTab, RejectedTab, HistoryTab } from "./HistoryTabs";
 
 export default function AdministrativeApprovals() {
   const {

@@ -3,18 +3,9 @@
  * Features: Template list, create, edit, delete, preview
  */
 
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import DeleteConfirmDialog from "../../components/common/DeleteConfirmDialog";
-import { Card, CardContent, Button } from "../../components/ui";
 import { staggerContainer } from "../../lib/animations";
 
 import { useCostTemplates } from "./useCostTemplates";
-import TemplateFilters from "./TemplateFilters";
-import TemplateCard from "./TemplateCard";
-import TemplateFormDialog from "./TemplateFormDialog";
-import TemplatePreviewDialog from "./TemplatePreviewDialog";
 
 export default function CostTemplateManagement() {
   const {

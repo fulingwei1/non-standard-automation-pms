@@ -1,34 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
-import {
-  ArrowLeft,
-  Plus,
-  Save,
-  Calculator,
-  FileText,
-  AlertCircle } from
-"lucide-react";
+
+
+
+
 
 const _costTypeMap = {
   LABOR: { label: "人工费用", color: "primary" },

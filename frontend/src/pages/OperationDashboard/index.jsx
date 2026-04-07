@@ -1,24 +1,9 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Activity, BarChart3 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { TIME_RANGE_LABELS } from "./constants";
 import { useOperationDashboard } from "./useOperationDashboard";
-import { KpiCard } from "./KpiCard";
-import { HealthDonut } from "./HealthDonut";
-import { MiniBarChart } from "./MiniBarChart";
-import { DepartmentPerformance } from "./DepartmentPerformance";
-import { AlertsPanel } from "./AlertsPanel";
-import { TopProjects } from "./TopProjects";
 
 export default function OperationDashboard() {
   const [timeRange, setTimeRange] = useState("month");

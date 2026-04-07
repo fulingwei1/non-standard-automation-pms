@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import {
   Award, Settings, Shield, TrendingUp, DollarSign,

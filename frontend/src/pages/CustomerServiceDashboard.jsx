@@ -4,57 +4,20 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  Users,
-  FileText,
-  Star,
-  Plus,
-  Search,
-  Eye,
-  Edit,
-  Settings,
-  RefreshCw,
-  Download,
-  BarChart3,
-  Headphones,
-  Car,
-  Shield } from
-"lucide-react";
+
+
 
 import {
-  Card,
-  Button,
   Input,
-  Select,
   DatePicker,
-  Modal,
-  Form,
-  Space,
-  Tag,
-  Row,
-  Col,
   Typography,
-  Dropdown,
-  Menu,
   message,
-  Tabs,
-  Rate,
   Steps } from
 "antd";
 
 // 导入拆分后的组件
-import {
-  ServiceOverview,
-  TicketManager,
-  FieldServiceManager,
-  WarrantyManager,
-  SatisfactionTracker } from
-'../components/customer-service';
+
+
 
 import {
   SERVICE_TYPES,

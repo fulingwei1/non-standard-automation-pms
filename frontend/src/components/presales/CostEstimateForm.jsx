@@ -3,12 +3,7 @@
  * 售前技术工程师填写成本估算
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
-  X,
-  Save,
-  Send,
-  AlertCircle,
   Package,
   Wrench,
   Zap,
@@ -16,10 +11,6 @@ import {
   Truck,
   Users,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 
 // 成本分类配置

@@ -3,7 +3,7 @@
 项目报告自动生成 — Schema 定义
 """
 
-from datetime import date, datetime
+from datetime import date
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field

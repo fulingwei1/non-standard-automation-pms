@@ -3,27 +3,13 @@
  * 展示雷达图、六维度得分、改进建议、历史趋势
  */
 
-import { Card, Row, Col, Progress, Alert, Typography, List, Tag } from "antd";
-import { TrendingUp, Target, AlertCircle, CheckCircle } from "lucide-react";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { Typography } from "antd";
+
+
 
 const { Title, Text, Paragraph } = Typography;
 
-const RelationshipMaturityTab = ({ healthScore, customerId, loading }) => {
+const RelationshipMaturityTab = ({ healthScore, customerId: _customerId, loading }) => {
   if (!healthScore && !loading) {
     return (
       <div style={{ textAlign: "center", padding: "40px" }}>

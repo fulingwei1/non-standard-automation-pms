@@ -5,15 +5,8 @@
  */
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  LineChart,
-  PieChart } from
-"../../components/charts";
-import { Card, CardContent } from "../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { Badge } from "../../components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+
+
 import { cn } from "../../lib/utils";
 import {
   formatCurrency,

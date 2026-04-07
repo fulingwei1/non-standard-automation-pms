@@ -9,29 +9,15 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   TrendingUp,
-  Calculator,
   AlertTriangle,
   BarChart3,
   DollarSign,
-  Target,
   Percent,
-  ArrowUpRight,
-  ArrowDownRight,
-  Zap,
-  RefreshCw,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+
+
 import { fadeIn } from "../../lib/animations";
 import { marginPredictionApi } from "../../services/api/marginPrediction";
 

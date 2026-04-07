@@ -1,31 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
-import {
-  ArrowLeft,
-  Plus,
-  Clock,
-  Calendar,
-  FileText,
-  AlertCircle,
-  Edit2,
-  Trash2 } from
-"lucide-react";
+
+
+
+
 
 const statusMap = {
   DRAFT: { label: "草稿", color: "secondary" },

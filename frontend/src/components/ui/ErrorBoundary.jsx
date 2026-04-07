@@ -1,7 +1,4 @@
 import React from "react";
-import { AlertTriangle, RefreshCw, Home, Lightbulb } from "lucide-react";
-import { Button } from "./button";
-import { Card, CardContent } from "./card";
 
 const isDev = import.meta.env.DEV;
 

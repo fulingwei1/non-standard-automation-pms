@@ -4,18 +4,8 @@
  */
 
 import { useState, useMemo } from "react";
-import { Search, Plus, Package } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Badge } from "../../ui/badge";
+
+
 import { cn } from "../../../lib/utils";
 
 export default function MaterialSelectDialog({

@@ -4,13 +4,8 @@
  */
 
 import { useParams } from "react-router-dom";
-import { PageHeader } from "../../components/layout";
 import { useAssessmentData } from "./hooks/useAssessmentData";
 import { exportReport } from "./utils/exportReport";
-import { AssessmentStatusCard } from "./components/AssessmentStatusCard";
-import { AssessmentHistory } from "./components/AssessmentHistory";
-import { AssessmentResults } from "./components/AssessmentResults";
-import { RequirementDataForm } from "./components/RequirementDataForm";
 
 export default function TechnicalAssessment() {
   const { sourceType, sourceId } = useParams();

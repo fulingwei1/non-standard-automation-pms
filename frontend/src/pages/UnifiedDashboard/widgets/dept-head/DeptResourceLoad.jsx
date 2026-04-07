@@ -1,10 +1,6 @@
 /**
  * 部门负责人视图 - 资源负荷
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Progress } from '../../../../components/ui/progress';
-import { Badge } from '../../../../components/ui/badge';
-import { Users } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 
 export default function DeptResourceLoad({ data }) {

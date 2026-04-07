@@ -3,9 +3,6 @@
  * Displays a single material item with status, progress bars, and actions
  */
 
-import { motion } from "framer-motion";
-import { Eye } from "lucide-react";
-import { Badge, Button, Progress } from "../../components/ui";
 import { cn, formatDate } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { statusConfig, qualityStatusConfig } from "./constants";

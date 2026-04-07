@@ -1,17 +1,5 @@
-import {
-  Button,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 import {
   OPPORTUNITY_PRIORITY_CONFIGS,
   SALES_SOURCE_CONFIGS,

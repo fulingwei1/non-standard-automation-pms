@@ -1,12 +1,5 @@
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    Button,
-    Badge,
-} from "../../components/ui";
-import { Plus } from "lucide-react";
+
+
 import { formatDate } from "../../lib/utils";
 import { getStatusBadge, ISSUE_LEVEL_COLORS } from "./constants";
 

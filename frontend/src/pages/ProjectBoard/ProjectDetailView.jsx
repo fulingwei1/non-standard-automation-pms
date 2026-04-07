@@ -1,24 +1,12 @@
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { Badge, Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui";
-import {
-  Layers,
-  ArrowLeft,
-  RefreshCw,
-  Calendar,
-  GitBranch,
-  Target,
-} from "lucide-react";
 
-import {
-  PipelineView,
-  TimelineView,
-  TreeView,
-} from "../../pages/ProjectStageView/components";
+
+
+
+
 
 import { VIEW_TYPES } from "../../pages/ProjectStageView/constants";
 
-import MilestonePanel from "./MilestonePanel";
 
 export default function ProjectDetailView({
   selectedProjectId,

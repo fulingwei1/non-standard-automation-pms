@@ -4,10 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import {
-  TrendingUp,
-  TrendingDown,
   Users,
   Activity,
   Target,
@@ -18,8 +15,6 @@ import {
   Zap,
   Factory } from
 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
-import { Progress } from '../../components/ui';
 import { cn } from '../../lib/utils';
 
 

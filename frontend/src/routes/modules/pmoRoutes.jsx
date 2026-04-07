@@ -1,5 +1,3 @@
-import { Route } from "react-router-dom";
-import { ProjectReviewProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
 
 const PMODashboard = lazyLoad(() => import("../../pages/PMODashboard"));

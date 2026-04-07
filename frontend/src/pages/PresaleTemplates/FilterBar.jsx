@@ -1,6 +1,5 @@
 import { Search } from "lucide-react";
 
-import { Button, Card, CardContent, Input } from "../../components/ui";
 
 export function FilterBar({
   categories,

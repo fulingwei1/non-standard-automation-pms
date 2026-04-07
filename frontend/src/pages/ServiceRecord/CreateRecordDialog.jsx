@@ -1,14 +1,5 @@
-import { Upload, FileCheck, X } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Textarea } from "../../components/ui/textarea";
+
+
 import { SERVICE_TYPES } from "../../components/service-record";
 
 export default function CreateRecordDialog({

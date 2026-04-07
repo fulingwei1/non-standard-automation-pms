@@ -4,28 +4,10 @@
  * 显示阶段/节点/任务的三级分解结构
  */
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronDown,
-  ChevronRight,
-  Folder,
-  FolderOpen,
-  FileText,
-  CheckSquare,
-  Square,
-  User,
-  Clock,
-  Star,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Progress,
-  Skeleton,
-} from "../../../components/ui";
+
+
+
+
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import {

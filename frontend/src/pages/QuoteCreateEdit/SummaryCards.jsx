@@ -1,9 +1,6 @@
 /**
  * SummaryCards - 价格汇总、成本汇总、利润分析
  */
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
 import { cn, formatCurrency } from "../../lib/utils";
 
 export default function SummaryCards({ versionData, setVersionData, costStructure, grossMargin }) {

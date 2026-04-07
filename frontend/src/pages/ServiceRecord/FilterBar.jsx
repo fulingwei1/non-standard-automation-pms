@@ -1,7 +1,3 @@
-import { motion } from "framer-motion";
-import { Search } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
 import { fadeIn } from "../../lib/animations";
 import { SERVICE_STATUS, SERVICE_TYPES } from "../../components/service-record";
 

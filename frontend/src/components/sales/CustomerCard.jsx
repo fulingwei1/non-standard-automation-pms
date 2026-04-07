@@ -3,24 +3,9 @@
  * Enhanced: higher info density, quick contact actions, value tags
  */
 
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import {
-  Building2,
-  MapPin,
-  Phone,
-  Mail,
-  Calendar,
-  AlertTriangle,
-  ChevronRight,
-  MoreHorizontal,
-  MessageSquare,
-  DollarSign,
-  TrendingUp,
-  Star,
-} from "lucide-react";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+
+
 
 const gradeColors = {
   A: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",

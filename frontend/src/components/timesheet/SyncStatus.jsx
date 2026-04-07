@@ -9,14 +9,7 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  CloudUpload,
-  Activity,
-  TrendingUp,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
 import { formatDate, cn } from "../../lib/utils";
 import { projectApi } from "../../services/api";
 

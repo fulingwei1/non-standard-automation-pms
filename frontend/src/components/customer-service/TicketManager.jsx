@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { Card, Table, Tag, Space, Button, Typography } from 'antd';
+import { Typography } from 'antd';
 import { SERVICE_TYPES, TICKET_STATUS, PRIORITY_LEVELS, TABLE_CONFIG } from '../../lib/constants/service';
 
 const { Text } = Typography;

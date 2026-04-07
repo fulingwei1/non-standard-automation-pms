@@ -7,15 +7,11 @@
  */
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
-import { PageHeader } from '../../components/layout';
-import { Button } from '../../components/ui/button';
 
 // Hooks
 import { useMachineData, useMachineDocuments } from './hooks';
 
 // Components
-import { MachineFilters, MachineTable, CreateMachineDialog, MachineDetailDialog } from './components';
 
 // Constants
 import { initialMachineForm } from './constants';

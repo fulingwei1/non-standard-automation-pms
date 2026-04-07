@@ -1,4 +1,3 @@
-import { Card, CardContent, Progress } from '../../../components/ui';
 
 export function ProjectClosureQuality({ closure }) {
     return (

@@ -5,39 +5,15 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Calculator,
-  Search,
-  Plus,
-  Download,
-  TrendingUp,
-  DollarSign,
-  Briefcase,
-  BarChart3,
-  PieChart,
   FileText,
   Package,
   Users,
   Wrench } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Progress,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter } from
-"../components/ui";
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { useCostAccounting } from "./CostAccounting/hooks";

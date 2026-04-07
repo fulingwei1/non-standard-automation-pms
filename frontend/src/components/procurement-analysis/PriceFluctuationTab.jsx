@@ -2,9 +2,6 @@
  * 物料价格波动分析 Tab 组件
  * 显示物料价格波动统计和详情表格
  */
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Badge } from '../ui/badge';
-import ProcurementStatsCard from './ProcurementStatsCard';
 import { STATS_CARD_CONFIGS } from '@/lib/constants/procurementAnalysis';
 
 /**

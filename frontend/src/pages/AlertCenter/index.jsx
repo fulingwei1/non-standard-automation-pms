@@ -12,15 +12,8 @@
  */
 
 import { Settings } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { LoadingCard, ErrorMessage } from "../../components/common";
-import { AlertCenterOverview } from "../../components/alert-center";
 
 import useAlertData from "./useAlertData";
-import AlertFilterBar from "./AlertFilterBar";
-import AlertList from "./AlertList";
-import ResolveDialog from "./ResolveDialog";
-import DetailDialog from "./DetailDialog";
 
 export default function AlertCenter() {
   const {

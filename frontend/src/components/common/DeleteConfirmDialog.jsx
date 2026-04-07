@@ -4,16 +4,8 @@
  */
 
 import React from "react";
-import { AlertTriangle } from "lucide-react";
-import {
- Dialog,
- DialogContent,
- DialogHeader,
- DialogTitle,
- DialogDescription,
-  DialogFooter,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
+
+
 
 /**
  * @param {boolean} open - 对话框是否打开

@@ -2,19 +2,10 @@
  * Reminder Alert Banner and Info Card Components
  */
 
-import { motion } from "framer-motion";
-import {
-  CheckCircle2,
-  Bell,
-  AlertTriangle,
-  Settings,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-} from "../../components/ui";
+
+
+
+
 import { formatDate } from "../../lib/utils";
 
 export function ReminderDueAlert({ reminder, onAcknowledge, onOpenSettings }) {

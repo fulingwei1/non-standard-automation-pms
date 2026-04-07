@@ -5,25 +5,11 @@
 
 import { useState } from 'react';
 import {
-  Card,
-  Button,
-  Select,
-  Input,
-  InputNumber,
-  Space,
   Typography,
-  Tag,
-  Popconfirm,
   Empty,
-  Form,
 } from 'antd';
-import {
-  Plus,
-  Trash2,
-  GitBranch,
-  ChevronRight,
-  Copy,
-} from 'lucide-react';
+
+
 
 import { CONDITION_OPERATORS } from '../constants';
 

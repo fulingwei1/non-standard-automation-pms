@@ -4,28 +4,13 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  BarChart3,
-  Star,
-  ArrowUpRight,
-  ArrowDownRight,
-  RefreshCw } from
-"lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui/select";
+
+
+
+
 
 
 import { cn } from "../../lib/utils";
-import { Progress } from "../ui";
 import {
   getSatisfactionScoreConfig,
   satisfactionConstants

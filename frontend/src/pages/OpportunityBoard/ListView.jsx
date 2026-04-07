@@ -1,5 +1,3 @@
-import { Flame, Eye } from "lucide-react";
-import { Badge, Button } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { OpportunityUtils } from "../../components/opportunity-board";
 

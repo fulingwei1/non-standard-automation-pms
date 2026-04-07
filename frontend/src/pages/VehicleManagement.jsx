@@ -4,37 +4,14 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Car,
-  Wrench,
-  MapPin,
-  CheckCircle2,
-  Edit,
-  Eye } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import {
-  MonthlyTrendChart,
-  SimplePieChart,
-  TrendComparisonCard } from
-"../components/administrative/StatisticsCharts";
+
+
 import { adminApi } from "../services/api";
 
 export default function VehicleManagement() {

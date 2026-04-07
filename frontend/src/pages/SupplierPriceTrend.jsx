@@ -1,23 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Activity, BarChart3, RefreshCw, TrendingUp } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  LoadingSpinner,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui";
+
+
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { cn, formatCurrency } from "../lib/utils";
 import { supplierPriceTrendApi } from "../services/api";

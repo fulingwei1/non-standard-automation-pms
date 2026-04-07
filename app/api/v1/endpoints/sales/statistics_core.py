@@ -289,7 +289,6 @@ def get_sales_statistics_overview(
     """
     销售统计总览：按时间/产品/客户类型统计，赢单率/输单率
     """
-    from calendar import monthrange
 
     now = datetime.now()
     target_year = year or now.year

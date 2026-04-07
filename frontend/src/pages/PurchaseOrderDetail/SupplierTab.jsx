@@ -2,9 +2,6 @@
  * Supplier details tab
  */
 
-import { motion } from "framer-motion";
-import { Building2, Phone, Mail, MapPin } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../components/ui";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
 const SupplierTab = ({ po }) => (

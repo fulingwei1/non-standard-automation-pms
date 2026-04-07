@@ -2,24 +2,11 @@
  * 我的战略面板组件
  * 展示当前用户负责的 KPI 和重点工作
  */
-import { motion } from "framer-motion";
 import {
-  User,
-  Target,
-  Calendar,
   Clock,
-  ChevronRight,
-  TrendingUp,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Progress,
-  Button,
-} from "../../../components/ui";
+
+
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
 import { getStrategyHealthConfig, ANNUAL_WORK_STATUS } from "../../../lib/constants/strategy";

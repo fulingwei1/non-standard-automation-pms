@@ -4,31 +4,14 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { projectReviewApi } from "../../services/api";
-import { PageHeader } from "../../components/layout/PageHeader";
-import DeleteConfirmDialog from "../../components/common/DeleteConfirmDialog";
-import {
-  Card,
-  CardContent,
-  Button,
-  SkeletonCard,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "../../components/ui";
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  CheckCircle2,
-  Archive,
-} from "lucide-react";
+
+
+
+
 
 // 导入重构的组件
 import {
-  ProjectReviewOverview,
   getReviewStatus,
   getReviewType,
 } from "../../components/project-review";
@@ -36,10 +19,6 @@ import {
 import { confirmAction } from "@/lib/confirmAction";
 
 import { staggerContainer, INITIAL_LESSON_FORM, INITIAL_PRACTICE_FORM } from "./constants";
-import LessonDialog from "./LessonDialog";
-import PracticeDialog from "./PracticeDialog";
-import LessonsTab from "./LessonsTab";
-import PracticesTab from "./PracticesTab";
 
 export default function ProjectReviewDetail() {
   const { reviewId } = useParams();

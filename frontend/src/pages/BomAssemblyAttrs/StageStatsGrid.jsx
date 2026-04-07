@@ -1,7 +1,6 @@
 /**
  * Stage Statistics Grid - 阶段统计卡片
  */
-import { Card, CardContent } from "../../components/ui/card";
 import { cn } from "../../lib/utils";
 import { stageOptions } from "./constants";
 

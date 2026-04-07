@@ -4,7 +4,7 @@
 目标覆盖率: 60%+
 测试用例数: 8个
 """
-from datetime import datetime, date
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
@@ -82,7 +82,7 @@ class TestQualityService:
 
         with patch("app.services.quality_service.save_obj") as mock_save:
             with patch("app.services.quality_service.QualityService._check_quality_alerts"):
-                result = QualityService.create_inspection(
+                QualityService.create_inspection(
                     mock_db, sample_inspection_data, current_user_id=1
                 )
                 saved_obj = mock_save.call_args[0][1]

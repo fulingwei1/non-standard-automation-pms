@@ -1,18 +1,6 @@
-import { motion } from "framer-motion";
-import { Search } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
 import { fadeIn } from "../../lib/animations";
-import { ApprovalListItem } from "./ApprovalListItem";
-import { ApprovalHistoryItem } from "./ApprovalHistoryItem";
 
 export function ApprovalList({
   activeTab,

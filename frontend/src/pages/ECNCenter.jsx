@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import ECNManagement from "./ECNManagement";
-import ECNTypeManagement from "./ECNTypeManagement";
-import ECNStatistics from "./ECNStatistics";
 
 export default function ECNCenter() {
   const tabs = useMemo(

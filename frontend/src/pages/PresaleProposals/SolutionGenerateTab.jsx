@@ -1,26 +1,7 @@
-import {
-  Sparkles,
-  CheckCircle2,
-  ArrowRight,
-} from "lucide-react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from "../../components/ui";
+
+
+
+
 import {
   TYPE_OPTIONS,
   INDUSTRY_OPTIONS,

@@ -2,14 +2,7 @@
  * BOM Management Page - BOM管理页面
  * Features: BOM列表、详情、版本管理、导入导出、发布审批
  */
-import { PageHeader } from '../../components/layout';
 import { useBOMManagement } from './hooks';
-import BOMFilterBar from './BOMFilterBar';
-import BOMTable from './BOMTable';
-import BOMDetailDialog from './BOMDetailDialog';
-import CreateBOMDialog from './CreateBOMDialog';
-import ImportBOMDialog from './ImportBOMDialog';
-import ReleaseBOMDialog from './ReleaseBOMDialog';
 
 export default function BOMManagement() {
     const {

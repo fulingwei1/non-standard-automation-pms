@@ -1,6 +1,4 @@
-import { motion } from "framer-motion";
 import { Key, Package, Shield } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
 import { ANIMATION_VARIANTS, STAT_CARD_DELAYS } from "./constants";
 
 export function StatsCards({ stats }) {

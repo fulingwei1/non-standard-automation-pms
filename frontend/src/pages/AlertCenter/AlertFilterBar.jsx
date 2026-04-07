@@ -2,14 +2,8 @@
  * AlertFilterBar - Search and filter controls for alert list
  */
 
-import { motion } from "framer-motion";
-import { Search, ArrowUpDown } from "lucide-react";
-import {
-  Card,
-  CardContent } from
-"../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+
+
 import { fadeIn } from "../../lib/animations";
 import {
   ALERT_LEVELS,

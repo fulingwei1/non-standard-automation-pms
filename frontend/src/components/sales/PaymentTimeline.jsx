@@ -2,17 +2,14 @@
  * Payment Timeline Component - Displays payment schedule and status
  */
 
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import {
-  Calendar,
   CheckCircle2,
   Clock,
   AlertTriangle,
   FileText,
 } from "lucide-react";
-import { Badge } from "../ui/badge";
 
 const paymentTypeLabels = {
   deposit: "签约款",

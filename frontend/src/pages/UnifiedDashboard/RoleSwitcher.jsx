@@ -6,15 +6,8 @@
  */
 
 import { useMemo } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select';
-import { Badge } from '../../components/ui/badge';
-import { User } from 'lucide-react';
+
+
 
 /**
  * 角色切换器

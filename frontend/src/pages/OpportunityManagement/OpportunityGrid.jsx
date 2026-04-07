@@ -1,24 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  Building2,
-  DollarSign,
-  User,
-  CheckCircle2,
-  Edit,
-  Eye,
-  FileText,
-  Calendar,
-  Swords
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress
-} from "../../components/ui";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { stageConfig, isGatePassed } from "./constants";
 

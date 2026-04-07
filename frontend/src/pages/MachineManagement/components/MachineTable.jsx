@@ -1,23 +1,8 @@
-import { Eye, Box } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-import { Progress } from '../../../components/ui/progress';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '../../../components/ui/table';
+
+
+
+
 import { formatDate } from '../../../lib/utils';
 import { statusConfigs, healthConfigs } from '../constants';
 

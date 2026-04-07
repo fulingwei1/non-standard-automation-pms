@@ -3,15 +3,8 @@
  * Features: Pending approvals, Approval history, Contract review, Approval actions
  */
 
-import { motion } from "framer-motion";
-import { Filter, History } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { useContractApproval } from "./hooks";
-import { ApprovalStatsCards } from "./ApprovalStatsCards";
-import { ApprovalList } from "./ApprovalList";
-import { ApprovalDetailDialog } from "./ApprovalDetailDialog";
 
 export default function ContractApproval() {
   const {

@@ -1,24 +1,8 @@
-import { motion } from "framer-motion";
 import {
-  Plus,
   FileText,
-  ChevronDown,
-  ChevronUp,
-  Send,
-  PenTool,
-  Calculator,
-  Edit2,
-  Trash2,
-  Target,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-} from "@/components/ui";
+
+
 import { fadeIn } from "@/lib/animations";
 import {
   getStatusConfig,

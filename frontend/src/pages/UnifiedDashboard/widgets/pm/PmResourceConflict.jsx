@@ -1,9 +1,6 @@
 /**
  * PM视图 - 资源冲突告警
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
-import { Users } from 'lucide-react';
 
 export default function PmResourceConflict({ data }) {
   const items = data?.items || [];

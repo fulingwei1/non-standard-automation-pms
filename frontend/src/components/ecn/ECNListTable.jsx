@@ -3,18 +3,8 @@
  * ECN列表表格组件
  */
 import { useState } from "react";
-import { Eye, CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react";
-import { Checkbox } from "../ui/checkbox";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
+
+
 import { formatDate } from "../../lib/utils";
 import { 
   statusConfigs, 

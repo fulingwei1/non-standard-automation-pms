@@ -1,27 +1,11 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { managementRhythmApi, projectApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  Badge,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle } from
-"../components/ui";
+
+
 import { formatDate } from "@/lib/formatters";
-import {
-  Plus,
-  Edit,
-  Calendar,
-  Target,
-  CheckCircle2,
-  Users,
-  FileText } from
-"lucide-react";
+
+
 
 const rhythmLevelConfig = {
   STRATEGIC: { label: "战略层", color: "bg-purple-500" },

@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import MaterialAnalysis from "./MaterialAnalysis";
-import SupplierPriceTrend from "./SupplierPriceTrend";
-import ProcurementAnalysis from "./ProcurementAnalysis";
 
 export default function ProcurementAnalysisCenter() {
   const tabs = useMemo(

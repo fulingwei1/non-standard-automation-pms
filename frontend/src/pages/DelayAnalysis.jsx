@@ -6,25 +6,8 @@
 import { useState, useEffect } from "react";
 
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { delayAnalysisApi } from "../services/api";
 import { formatAmount } from "../lib/utils";
 

@@ -1,14 +1,5 @@
-import { motion } from "framer-motion";
-import { Search, Plus, Flame } from "lucide-react";
-import {
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import {

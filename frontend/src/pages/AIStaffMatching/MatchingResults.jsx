@@ -1,7 +1,4 @@
 // -*- coding: utf-8 -*-
-import { RefreshCw, Users } from "lucide-react";
-import { Badge } from "../../components/ui/badge";
-import CandidateCard from "./CandidateCard";
 
 export default function MatchingResults({
   matching,

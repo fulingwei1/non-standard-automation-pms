@@ -1,19 +1,10 @@
 /**
  * Best Practices tab content for ProjectReviewDetail
  */
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-} from "../../components/ui";
-import {
-  Edit,
-  Trash2,
-  Plus,
-  BookOpen,
-} from "lucide-react";
+
+
+
+
 import { staggerChild } from "./constants";
 
 export default function PracticesTab({

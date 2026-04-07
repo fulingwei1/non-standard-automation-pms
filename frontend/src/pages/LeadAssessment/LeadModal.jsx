@@ -3,8 +3,6 @@
  * Modal wrapper around <AssessmentForm> for creating / editing a lead.
  */
 
-import { Modal } from 'antd';
-import { AssessmentForm } from '../../components/lead-assessment';
 
 const LeadModal = ({ open, editingLead, onSave, onCancel }) => (
   <Modal

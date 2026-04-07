@@ -1,14 +1,5 @@
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { FileCheck } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
+
+
 import { fadeIn } from "../../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../../lib/formatters";
 import { SOLUTION_CENTER_PATH } from "../constants";

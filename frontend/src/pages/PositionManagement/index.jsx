@@ -1,18 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import DeleteConfirmDialog from "../../components/common/DeleteConfirmDialog";
 import { staggerContainer } from "../../lib/animations";
 import { organizationApi, roleApi } from "../../services/api";
 import { DEFAULT_FORM_DATA } from "./categoryConstants";
-import StatsCards from "./StatsCards";
-import PositionTable from "./PositionTable";
-import CreateDialog from "./CreateDialog";
-import EditDialog from "./EditDialog";
-import DetailDialog from "./DetailDialog";
-import RoleMappingDialog from "./RoleMappingDialog";
 
 export default function PositionManagement() {
   const [positions, setPositions] = useState([]);

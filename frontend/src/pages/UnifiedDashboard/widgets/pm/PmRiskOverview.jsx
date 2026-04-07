@@ -1,9 +1,6 @@
 /**
  * PM视图 - 活跃风险 TOP
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
-import { AlertTriangle } from 'lucide-react';
 
 const levelColors = {
   CRITICAL: 'destructive',

@@ -2,27 +2,11 @@
  * Article Card Component - Displays knowledge base articles in card format
  */
 
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/formatters";
 import { fadeIn, scaleIn } from "../../lib/animations";
-import {
-  Clock,
-  Eye,
-  User,
-  Bookmark,
-  Share2,
-  MoreHorizontal,
-  Star,
-  TrendingUp,
-  ChevronRight,
-  Calendar,
-  ThumbsUp,
-  File,
-  Download } from
-"lucide-react";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+
+
 import {
   articleTypeConfigs,
   getCategoryConfig,

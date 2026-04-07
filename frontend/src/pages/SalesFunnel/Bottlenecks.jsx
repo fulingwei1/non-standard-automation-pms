@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle, AlertCircle, ArrowRight, Activity } from "lucide-react";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Badge, Alert,
-} from "../../components/ui";
+
 import { funnelOptimizationApi } from "../../services/api";
 import { STAGE_NAME_MAP } from "./constants";
 

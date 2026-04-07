@@ -3,22 +3,8 @@
  * 显示预警的关键指标和快速操作入口
  */
 import { useMemo } from "react";
-import {
-  AlertTriangle,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  Bell,
-  Activity,
-  BarChart3,
-  Eye,
-  Settings } from
-"lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Progress } from "../ui/progress";
+
+
 import {
   ALERT_LEVELS,
   getAlertLevelConfig,

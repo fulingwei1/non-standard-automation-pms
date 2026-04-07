@@ -1,6 +1,3 @@
-import { ClipboardCheck, CheckCircle2, XCircle } from 'lucide-react';
-import { Card, CardContent } from '../../components/ui/card';
-import { Progress } from '../../components/ui/progress';
 
 /**
  * Four summary stat cards shown at the top of the AcceptanceExecution page:

@@ -5,23 +5,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Send,
-  Bot,
-  User,
-  MessageSquare,
-  Loader } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Textarea,
-  Badge } from
-"../components/ui";
+
+
+
+
 import { technicalAssessmentApi } from "../services/api";
 
 export default function AIClarificationChat() {

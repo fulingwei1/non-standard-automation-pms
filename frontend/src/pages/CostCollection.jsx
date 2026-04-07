@@ -6,19 +6,10 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
-  ArrowDownToLine,
   Package,
   Wrench,
-  CheckCircle2,
-  Clock,
-  RefreshCw,
-  DollarSign,
-  FolderOpen,
-  Zap,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { costCollectionApi } from "../services/api/costCollection";
 

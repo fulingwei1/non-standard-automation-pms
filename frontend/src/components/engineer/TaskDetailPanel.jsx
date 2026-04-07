@@ -4,9 +4,7 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
-  X,
   Calendar,
   Timer,
   Flag,
@@ -14,21 +12,14 @@ import {
   User,
   Users,
   FileText,
-  Upload,
-  Download,
-  Eye,
-  Send,
   MessageSquare,
-  CheckCircle2,
-  AlertTriangle,
   Layers,
   Box,
   ClipboardCheck,
   ExternalLink,
-  ChevronRight,
   Target,
 } from "lucide-react";
-import { Button, Badge, Input, Progress, Card, CardContent, toast } from "../ui";
+import { toast } from "../ui";
 import { cn } from "../../lib/utils";
 
 // Deliverable status config

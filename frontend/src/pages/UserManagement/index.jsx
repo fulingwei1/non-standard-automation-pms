@@ -1,25 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Search,
-  RefreshCw,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
+
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { userApi, roleApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 import {
-  UserManagementOverview,
   USER_STATUS,
   USER_ROLE,
   USER_DEPARTMENT,
@@ -30,11 +17,6 @@ import {
 } from "../../components/user-management";
 import { confirmAction } from "@/lib/confirmAction";
 import { ROLE_TEMPLATES } from "./constants";
-import UserTable from "./UserTable";
-import CreateUserDialog from "./CreateUserDialog";
-import EditUserDialog from "./EditUserDialog";
-import PermissionDialog from "./PermissionDialog";
-import BulkPermissionDialog from "./BulkPermissionDialog";
 
 export default function UserManagement() {
   const [loading, setLoading] = useState(true);

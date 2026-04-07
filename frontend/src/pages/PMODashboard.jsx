@@ -1,27 +1,18 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { pmoApi } from "../services/api";
 import { formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  DashboardStatCard,
-  ApiIntegrationError,
-} from "../components/ui";
+
+
 import {
   Briefcase,
   AlertTriangle,
-  ArrowRight,
   BarChart3,
   DollarSign,
   Users,
   Target,
   Activity,
 } from "lucide-react";
-import { CrossDepartmentProgress } from "../components/pmo/CrossDepartmentProgress";
 
 const staggerContainer = {
   hidden: { opacity: 0 },

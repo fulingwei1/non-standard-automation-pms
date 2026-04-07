@@ -13,25 +13,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { PageHeader } from "../components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 
 // Import components
-import { ServiceTicketStats } from "../components/service/ServiceTicketStats";
-import { ServiceTicketListHeader } from "../components/service/ServiceTicketListHeader";
-import { ServiceTicketListTable } from "../components/service/ServiceTicketListTable";
-import { ServiceTicketCreateDialog } from "../components/service/ServiceTicketCreateDialog";
-import { ServiceTicketDetailDialog } from "../components/service/ServiceTicketDetailDialog";
-import { ServiceTicketBatchActions } from "../components/service/ServiceTicketBatchActions";
 
 // Import constants and utilities
 import { urgencyConfigs } from "@/lib/constants/service";
 import { serviceApi } from "../services/api";
-import { Plus, RefreshCw } from "lucide-react";
 
 export default function ServiceTicketManagement() {
   const _navigate = useNavigate();
@@ -329,7 +318,7 @@ export default function ServiceTicketManagement() {
     setShowDetailDialog(true);
   };
 
-  const handleSelectTicket = (ticketId) => {
+  const _handleSelectTicket = (ticketId) => {
     setSelectedTickets((prev) =>
     prev.includes(ticketId) ?
     (prev || []).filter((id) => id !== ticketId) :
@@ -337,7 +326,7 @@ export default function ServiceTicketManagement() {
     );
   };
 
-  const handleSelectAll = () => {
+  const _handleSelectAll = () => {
     if (selectedTickets.length === filteredTickets.length) {
       setSelectedTickets([]);
     } else {

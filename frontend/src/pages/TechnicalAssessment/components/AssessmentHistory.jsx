@@ -1,10 +1,5 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-} from "../../../components/ui";
+
+
 import { statusConfig, decisionConfig } from "../utils/pageConstants";
 
 export function AssessmentHistory({ assessments, currentAssessment, onSelect }) {

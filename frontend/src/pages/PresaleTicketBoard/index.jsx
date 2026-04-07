@@ -1,11 +1,4 @@
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Card, CardContent } from "../../components/ui";
-import KanbanBoard from "./KanbanBoard";
-import PriorityPanel from "./PriorityPanel";
-import ProcessingStats from "./ProcessingStats";
-import StatsCards from "./StatsCards";
-import TicketTable from "./TicketTable";
+import { RefreshCw } from "lucide-react";
 import usePresaleTickets from "./usePresaleTickets";
 
 export default function PresaleTicketBoard() {

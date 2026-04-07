@@ -1,18 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  Phone,
-  Mail,
-  MapPin,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Eye,
-  Edit,
-  Award,
-  AlertTriangle,
-  Users,
-} from "lucide-react";
-import { Badge, Button, Progress } from "../../components/ui";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { levelConfig, statusConfig } from "./pageConstants";

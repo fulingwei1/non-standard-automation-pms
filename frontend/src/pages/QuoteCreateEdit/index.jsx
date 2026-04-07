@@ -4,18 +4,10 @@
  */
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, RefreshCw, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import { quoteApi, opportunityApi } from "../../services/api";
 
 import { DEFAULT_FORM_DATA, DEFAULT_VERSION_DATA, DEFAULT_ITEM, COST_LINKED_FIELDS, ITEM_SUBMIT_FIELDS } from "./constants";
-import BasicInfoCard from "./BasicInfoCard";
-import QuoteItemsTable from "./QuoteItemsTable";
-import SummaryCards from "./SummaryCards";
-import AdditionalInfoCard from "./AdditionalInfoCard";
-import AiSidebarPanel from "./AiSidebarPanel";
 
 export default function QuoteCreateEdit() {
   const { id } = useParams();

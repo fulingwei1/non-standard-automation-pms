@@ -11,9 +11,6 @@
  * 本文件保留旧的 export 签名，内部已迁移到新权限体系。
  */
 
-import { Navigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Button } from "../ui/button";
 import { usePermission } from "../../hooks/usePermission";
 import { useModuleAccess } from "../../lib/permission";
 

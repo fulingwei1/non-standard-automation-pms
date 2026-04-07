@@ -1,14 +1,5 @@
-import { Edit } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+
+
 import { typeConfigs } from "./constants";
 
 export function WorkshopDetailDialog({

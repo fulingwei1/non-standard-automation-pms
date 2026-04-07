@@ -2,9 +2,6 @@
  * 预测曲线图组件
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart } from 'recharts';
-import { TrendingUp } from 'lucide-react';
 
 const ForecastChart = ({ historicalData = [], forecastData = null }) => {
   if (!forecastData) {

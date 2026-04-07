@@ -1,41 +1,12 @@
 import { useMemo, useState } from "react";
 import {
-  Award,
-  BarChart3,
-  CalendarClock,
   CheckCircle2,
   Clock3,
   FileSearch,
   Gavel,
-  Target,
-  TrendingUp,
-  Users,
-  XCircle,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui";
+
+
 import { cn } from "../lib/utils";
 
 const bidStatusConfig = {

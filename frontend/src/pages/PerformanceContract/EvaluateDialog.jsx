@@ -1,16 +1,5 @@
-import { Save } from "lucide-react";
-import {
-  Button,
-  Input,
-  Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-  Textarea,
-} from "@/components/ui";
+
+
 import { getCategoryLabel } from "@/services/api/performanceContract";
 
 export default function EvaluateDialog({

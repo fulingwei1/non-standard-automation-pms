@@ -4,10 +4,9 @@
 端点：GET /solutions/{id}/compare
 """
 
-from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api import deps

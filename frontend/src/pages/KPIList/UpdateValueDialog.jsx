@@ -2,16 +2,8 @@
  * 更新 KPI 值弹窗
  */
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogBody,
-  Button,
-  Input,
-} from "../../components/ui";
+
+
 
 export default function UpdateValueDialog({ kpi, open, onClose, onSubmit, loading }) {
   const [value, setValue] = useState(kpi?.current_value || 0);

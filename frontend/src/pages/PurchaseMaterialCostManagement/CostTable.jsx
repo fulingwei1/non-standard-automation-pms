@@ -2,22 +2,8 @@
  * Cost List Table Component
  */
 
-import { Edit, Trash2 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui";
+
+
 import { formatCurrency, formatDate } from "../../lib/utils";
 
 export default function CostTable({

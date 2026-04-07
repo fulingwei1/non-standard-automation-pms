@@ -1,10 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-} from "../../components/ui";
+
+
 import { formatDate, formatCurrency } from "../../lib/utils";
 
 export default function CostsTab({ id, costs, costSummary }) {

@@ -1,25 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  FileText,
-  User,
-  Calendar,
-  Users,
-  AlertTriangle,
-  Paperclip,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { getStatusStyle, getStatusName, getMethodIcon } from "./utils";

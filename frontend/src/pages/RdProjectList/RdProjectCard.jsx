@@ -1,16 +1,6 @@
-import { motion } from "framer-motion";
-import {
-  FlaskConical,
-  Calendar,
-  Users,
-  DollarSign,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  ArrowRight,
-} from "lucide-react";
+
+
 import { formatDate, formatCurrency } from "../../lib/utils";
-import { Card, CardContent, Badge } from "../../components/ui";
 import { staggerChild, statusMap, approvalStatusMap, categoryTypeMap } from "./constants";
 
 export function RdProjectCard({ project, onClick }) {

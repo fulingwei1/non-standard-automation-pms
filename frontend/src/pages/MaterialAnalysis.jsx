@@ -1,25 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Search,
-  Download,
-  RefreshCw,
-  AlertTriangle,
-  BarChart3 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+
+
 import { cn } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { purchaseApi } from "../services/api";
-import {
-  MaterialStatsOverview } from
-"../components/material-analysis";
+
+
 
 /**
  * 📦 材料分析管理系统 - 重构版

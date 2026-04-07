@@ -19,8 +19,6 @@
  *   </ModuleProtectedRoute>
  */
 
-import { motion } from 'framer-motion';
-import { Button } from '../../components/ui/button';
 import { useModuleAccess } from './useModuleAccess';
 import { MODULE_LABELS } from './constants';
 

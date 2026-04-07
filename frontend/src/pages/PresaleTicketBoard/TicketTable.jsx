@@ -1,30 +1,7 @@
-import {
-  AlertTriangle,
-  Filter,
-  ListFilter,
-  Search,
-} from "lucide-react";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { BOARD_STATUS_ORDER, PRIORITY_CONFIG, STATUS_CONFIG } from "./constants";
 import { formatDate } from "./utils";

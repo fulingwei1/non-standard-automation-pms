@@ -1,28 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi } from "../services/api";
 import { formatCurrency } from "../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Progress,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent } from
-"../components/ui";
-import {
-  ArrowLeft,
-  DollarSign,
-  TrendingUp,
-  BarChart3,
-  Download,
-  Users,
-  Clock } from
-"lucide-react";
+
+
+
+
 
 export default function RdCostSummary() {
   const { id } = useParams();

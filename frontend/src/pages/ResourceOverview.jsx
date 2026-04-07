@@ -7,24 +7,14 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
   AlertTriangle,
-  Filter,
-  ChevronDown,
-  ChevronRight,
-  Calendar,
   Activity,
-  TrendingUp,
   Flame,
-  Shield,
-  X,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { resourceOverviewApi } from "../services/api/resourceOverview";
-import ConflictRecommendations from "../components/common/ConflictRecommendations";
 // ============================================================================
 // Color palette for projects
 

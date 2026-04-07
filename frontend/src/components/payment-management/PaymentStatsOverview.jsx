@@ -1,20 +1,10 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   DollarSign,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  BarChart3,
-  PieChart,
-  Calendar,
-  Bell } from
+  Clock } from
 "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { SimpleBarChart, SimplePieChart, SimpleLineChart } from "../../components/administrative/StatisticsCharts";
 import {
   COLLECTION_LEVELS,
   getPaymentStatus,

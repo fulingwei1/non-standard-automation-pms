@@ -1,5 +1,3 @@
-import { Route, Navigate } from "react-router-dom";
-import { StrategyProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
 
 const StrategyDashboard = lazyLoad(() => import("../../pages/Strategy"));

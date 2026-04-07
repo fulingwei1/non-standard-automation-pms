@@ -4,31 +4,17 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Tabs, message } from 'antd';
-import {
-  BarChart3,
-  Users,
-  Award,
-  Target,
-  MessageSquare,
-} from 'lucide-react';
+import { message } from 'antd';
 
-import {
-  LeadOverview,
-  LeadList,
-  AssessmentForm,
-  ScoringEngine,
-  FollowUpManager,
-} from '../../components/lead-assessment';
+
+
+
+
 
 import { ASSESSMENT_CRITERIA } from '../../lib/constants/leadAssessment';
 
 import { useLeadData } from './hooks/useLeadData';
 import { TAB_KEYS } from './constants';
-import PageHeader from './PageHeader';
-import FilterBar from './FilterBar';
-import LeadModal from './LeadModal';
 
 const LeadAssessment = () => {
   const {
@@ -46,7 +32,7 @@ const LeadAssessment = () => {
     handleDeleteLead,
     handleSaveLead,
     handleConvertLead,
-    handleExportLeads,
+    handleExportLeads: _handleExportLeads,
   } = useLeadData();
 
   const [activeTab, setActiveTab] = useState(TAB_KEYS.OVERVIEW);
@@ -167,7 +153,7 @@ const LeadAssessment = () => {
         <ScoringEngine
           leads={leads}
           criteria={ASSESSMENT_CRITERIA}
-          onReScore={(updatedLeads) => {
+          onReScore={(_updatedLeads) => {
             // Surface updated leads back through the hook's setter indirectly
             // by calling loadData; parent state is managed by useLeadData.
             loadData();

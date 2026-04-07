@@ -1,14 +1,6 @@
 import { useState } from "react";
-import { FileWarning, Camera, X, Send } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-} from "../../ui";
+
+
 import { cn } from "../../../lib/utils";
 
 export default function QualityFeedbackDialog({ open, onClose, task: _task, material }) {

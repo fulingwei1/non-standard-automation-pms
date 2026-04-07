@@ -2,14 +2,8 @@
  * DetailDialog - Dialog for viewing alert details
  */
 
-import { Button } from "../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../../components/ui/dialog";
+
+
 import {
   getAlertLevelConfig,
   getAlertStatusConfig,

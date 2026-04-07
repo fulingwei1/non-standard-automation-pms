@@ -1,8 +1,3 @@
-import { motion } from "framer-motion";
-import { Calendar, ChevronLeft, ChevronRight, Plus, Copy, Save, Send } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
 import { fadeIn } from "../../../lib/animations";
 import { formatFullDate } from "../utils/dateUtils";
 

@@ -2,7 +2,6 @@
  * ECN列表组件 (ECN List)
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { ecnApi } from '../../../../services/api/ecn';
 
 const statusColors = {

@@ -1,13 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-  Input,
-} from "../../components/ui";
+
+
 
 export default function CreateContractDialog({ open, onOpenChange }) {
   const handleClose = () => onOpenChange(false);

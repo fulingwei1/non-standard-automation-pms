@@ -1,5 +1,3 @@
-import { Clock, CheckCircle2, XCircle, Calendar } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui";
 
 export function LeaveStatsCards({ stats }) {
     return (

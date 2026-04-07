@@ -5,8 +5,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import GeneralManagerWorkstation from '../GeneralManagerWorkstation';
 
 // Mock API
 vi.mock('../../../services/api', async (importOriginal) => {

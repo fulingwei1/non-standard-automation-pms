@@ -1,17 +1,8 @@
 /**
  * Lesson edit/create dialog for ProjectReviewDetail
  */
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui";
-import { Input, Textarea } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+
+
 
 export default function LessonDialog({
   lessonDialog,

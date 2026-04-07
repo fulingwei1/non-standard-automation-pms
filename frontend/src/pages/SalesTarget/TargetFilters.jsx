@@ -1,15 +1,5 @@
-import { motion } from "framer-motion";
-import { Search } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 import { fadeIn } from "../../lib/animations";
 
 export default function TargetFilters({ searchTerm, setSearchTerm, filters, setFilters }) {

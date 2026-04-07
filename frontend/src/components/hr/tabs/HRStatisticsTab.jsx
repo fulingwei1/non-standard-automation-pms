@@ -2,23 +2,10 @@
  * HRStatisticsTab Component
  * 统计分析 Tab 组件
  */
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Progress } from
-"../../ui";
-import {
-  Users,
-  Clock,
-  GraduationCap,
-  Filter,
-  FileSpreadsheet,
-  BarChart3 } from
-"lucide-react";
+
+
+
+
 import { fadeIn } from "../../../lib/animations";
 import { cn } from "../../../lib/utils";
 

@@ -1,59 +1,9 @@
-import { Route, Navigate } from "react-router-dom";
-import { ProjectReviewProtectedRoute } from "../../components/common/ProtectedRoute";
-import { lazyLoad } from "../lazyLoad";
 
 // ProjectList 已整合到 ProjectBoard 的卡片视图
 // import ProjectList from "../../pages/ProjectList";
-import ProjectDetail from "../../pages/ProjectDetail";
-import ProjectWorkspace from "../../pages/ProjectWorkspace";
-import ProjectContributionReport from "../../pages/ProjectContributionReport";
-import ProjectBoard from "../../pages/ProjectBoard";
 // ProjectGantt 已废弃，重定向到 GanttAndResource
-import WBSTemplateManagement from "../../pages/WBSTemplateManagement";
-import ProgressReport from "../../pages/ProgressReport";
-import ProgressBoard from "../../pages/ProgressBoard";
-import ProgressForecast from "../../pages/ProgressForecast";
-import DependencyCheck from "../../pages/DependencyCheck";
-import MilestoneRateReport from "../../pages/MilestoneRateReport";
-import DelayReasonsReport from "../../pages/DelayReasonsReport";
-import TaskCenter from "../../pages/TaskCenter";
-import ScheduleBoard from "../../pages/ScheduleBoard";
-import ProjectTaskList from "../../pages/ProjectTaskList";
-import MachineManagement from "../../pages/MachineManagement";
-import MilestoneManagement from "../../pages/MilestoneManagement";
-import AssemblerTaskCenter from "../../pages/AssemblerTaskCenter";
-import AssemblyTemplateManagement from "../../pages/AssemblyTemplateManagement";
-import EngineerRecommendation from "../../pages/EngineerRecommendation";
-import EngineerWorkloadBoard from "../../pages/EngineerWorkloadBoard";
-import EngineerWorkstation from "../../pages/EngineerWorkstation";
 // ProjectStageView 已整合到 ProjectBoard 的流水线视图
 // import ProjectStageView from "../../pages/ProjectStageView";
-import ProjectTimelineView from "../../pages/ProjectTimelineView";
-import PresalesTasks from "../../pages/PresalesTasks";
-import ProjectListWithCost from "../../pages/ProjectListWithCost";
-import ResourceOverview from "../../pages/ResourceOverview";
-import AcceptanceManagement from "../../pages/AcceptanceManagement";
-import GanttDependency from "../../pages/GanttDependency";
-import ECNManagement from "../../pages/ECNManagement";
-import ECNCostImpact from "../../pages/ECNCostImpact";
-import ECNMaterialImpact from "../../pages/ECNMaterialImpact";
-import MaterialProgressView from "../../pages/MaterialProgressView";
-import FieldCommissioning from "../../pages/FieldCommissioning";
-import AssemblyKitBoard from "../../pages/AssemblyKitBoard";
-import TemplateConfigList from "../../pages/TemplateConfigList";
-import MarginPrediction from "../../pages/MarginPrediction";
-import ScheduleOptimization from "../../pages/ScheduleOptimization";
-import ScheduleGeneration from "../../pages/ScheduleGeneration";
-import ScheduleGenerationEntry from "../../pages/ScheduleGenerationEntry";
-import EngineerRecommendationEntry from "../../pages/EngineerRecommendationEntry";
-import PMODashboard from "../../pages/PMODashboard";
-import ProjectClosing from "../../pages/ProjectClosing";
-import AIProjectTools from "../../pages/AIProjectTools";
-import GanttAndResource from "../../pages/GanttAndResource";
-import ProjectHealthMonitor from "../../pages/ProjectHealthMonitor";
-import TimeCostMarginFlow from "../../pages/TimeCostMarginFlow";
-import ProjectDashboardCenter from "../../pages/ProjectDashboardCenter";
-import ProjectCostCenter from "../../pages/ProjectCostCenter";
 
 export function ProjectRoutes() {
   return (

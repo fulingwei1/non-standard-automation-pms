@@ -1,27 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { cn } from "../../lib/utils";
 import { PROJECT_STAGES } from "../../lib/constants";
 import { useRoleFilter } from "../../hooks/useRoleFilter";
 import { projectApi, milestoneApi } from "../../services/api";
-import { PageHeader } from "../../components/layout/PageHeader";
-import { BoardColumn, BoardFilters } from "../../components/board";
-import { ProjectCard, ProjectFormStepper } from "../../components/project";
-import { Button } from "../../components/ui/button";
-import { ApiIntegrationError, Skeleton } from "../../components/ui";
-import {
-  Layers,
-  ChevronLeft,
-  ChevronRight,
-  GitBranch,
-  Plus,
-} from "lucide-react";
+
+
 
 // 导入阶段视图组件
-import {
-  PipelineView,
-} from "../../pages/ProjectStageView/components";
+
+
 
 // 导入阶段视图常量和hooks
 import {
@@ -31,9 +18,6 @@ import { useStageViews, useStageActions } from "../../pages/ProjectStageView/hoo
 
 // 导入拆分出的子组件和常量
 import { getStoredUser } from "./constants";
-import MatrixView from "./MatrixView";
-import ListView from "./ListView";
-import ProjectDetailView from "./ProjectDetailView";
 
 export default function ProjectBoard() {
   const [searchParams] = useSearchParams();

@@ -1,11 +1,8 @@
 /**
  * PaginationControls - 分页控件
  */
-import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "../../components/ui/card";
+
+
 
 export function PaginationControls({ pagination, setPagination }) {
   if (pagination.total <= pagination.page_size) {

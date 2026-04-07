@@ -9,30 +9,9 @@
  * 5. 快速操作
  */
 
-import { motion } from 'framer-motion';
+
+
 import {
-  GraduationCap,
-  Calendar,
-  Users,
-  CheckCircle2,
-  Clock,
-  Target,
-  TrendingUp,
-  Plus,
-  FileText,
-  BarChart3,
-  BookOpen,
-  Award,
-  ChevronRight
-} from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
   toast
 } from '../ui';
 import { cn } from '../../lib/utils';

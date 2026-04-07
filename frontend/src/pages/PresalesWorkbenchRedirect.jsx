@@ -1,4 +1,3 @@
-import { Navigate } from "react-router-dom";
 import { usePermission } from "../hooks/usePermission";
 
 export default function PresalesWorkbenchRedirect() {

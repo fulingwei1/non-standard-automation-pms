@@ -1,4 +1,3 @@
-import { Route, Navigate } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
 
 const CapacityAnalysis = lazyLoad(() => import("../../pages/CapacityAnalysis"));

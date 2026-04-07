@@ -1,9 +1,6 @@
-import { TabsContent, Progress } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
-import {
-  BarChart as BarChartComponent,
-  PieChart as PieChartComponent,
-} from "../../components/charts";
+
+
 
 export default function CostAnalysisTab({ costBreakdown }) {
   return (

@@ -1,4 +1,3 @@
-import { Route } from "lucide-react";
 import { formatDate } from "../../lib/utils";
 
 export default function CriticalPathPanel({ criticalPathTaskIds, sortedTasks }) {

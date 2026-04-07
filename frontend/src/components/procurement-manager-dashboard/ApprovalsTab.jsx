@@ -1,12 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  Input,
-  Card,
-  CardContent,
-  Badge,
-  Button,
-} from "../../components/ui";
-import { Eye, CheckCircle2, XCircle } from "lucide-react";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
 import { getPriorityColor } from "./utils";
 

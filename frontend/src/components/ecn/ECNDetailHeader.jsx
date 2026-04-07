@@ -2,10 +2,6 @@
  * ECN Detail Header Component
  * ECN 详情页头部 - 显示基本信息和操作按钮
  */
-import { ArrowLeft, RefreshCw, Edit2, CheckCircle2, XCircle } from "lucide-react";
-import { PageHeader } from "../layout";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
 import { getStatusBadge, getTypeBadge, getPriorityBadge } from "@/lib/constants/ecn";
 
 export default function ECNDetailHeader({

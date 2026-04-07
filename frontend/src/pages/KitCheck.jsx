@@ -5,37 +5,10 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Package,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  Eye,
-  Play } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Input,
-  Badge,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui";
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { kitCheckApi } from "../services/api";

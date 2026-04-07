@@ -4,26 +4,10 @@
  */
 
 import { useMemo, useState } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-  BarChart,
-  Bar } from
-"recharts";
-import {
-  TimeRangeSelector } from
-"../../components/ui/time-range-selector";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { Button } from "../../components/ui/button";
+
+
+
+
 import {
   ALERT_LEVEL_STATS,
   getTrendDirection,

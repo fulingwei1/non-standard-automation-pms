@@ -5,39 +5,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  CreditCard,
-  TrendingUp,
-  AlertTriangle,
-  Search,
-  Download,
-  Eye,
-  Target } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { projectApi, costApi } from "../services/api";

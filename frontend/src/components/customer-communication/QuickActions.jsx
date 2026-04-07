@@ -3,21 +3,9 @@
  * 客户沟通快速操作组件
  */
 import { useState } from "react";
-import { motion } from 'framer-motion';
-import {
-  Plus, Send, MessageSquare, Phone, Mail, Video,
-  FileText, Users,
-  CheckCircle, Search, MoreHorizontal } from
-"lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger } from
-"../ui/dropdown-menu";
+
+
+
 import { cn } from "../../lib/utils";
 import {
   typeConfigs } from

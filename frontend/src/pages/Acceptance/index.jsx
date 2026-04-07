@@ -1,41 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   ClipboardList,
   Clock,
-  Plus,
-  Search,
-  Download,
   CheckCircle2,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody,
-} from "../../components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
+
+
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { acceptanceApi, projectApi } from "../../services/api";
 import { typeConfigs } from "./constants";
-import AcceptanceCard from "./AcceptanceCard";
-import AcceptanceDetailDialog from "./AcceptanceDetailDialog";
 
 export default function Acceptance() {
   const [acceptances, setAcceptances] = useState([]);

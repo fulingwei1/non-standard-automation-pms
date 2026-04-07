@@ -3,7 +3,6 @@
  * 展示项目交付准时率趋势和分布
  */
 
-import { Line, Column, Gauge } from "@ant-design/plots";
 
 /**
  * DeliveryRateChart - 交付准时率图表

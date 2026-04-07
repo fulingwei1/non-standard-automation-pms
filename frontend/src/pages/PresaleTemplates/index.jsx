@@ -1,11 +1,5 @@
-import { motion } from "framer-motion";
 
-import { PageHeader } from "../../components/layout";
 import { fadeIn, staggerContainer } from "../../lib/animations";
-import { FilterBar } from "./FilterBar";
-import { PreviewDialog } from "./PreviewDialog";
-import { StatsBar } from "./StatsBar";
-import { TemplateGrid } from "./TemplateGrid";
 import { usePresaleTemplates } from "./usePresaleTemplates";
 
 export default function PresaleTemplates() {

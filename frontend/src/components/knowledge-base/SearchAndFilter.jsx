@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { Card, Form, Row, Col, Select, Space, Button, Tag, Typography } from 'antd';
+import { Form, Typography } from 'antd';
 import {
   KNOWLEDGE_TYPES,
   CATEGORIES,

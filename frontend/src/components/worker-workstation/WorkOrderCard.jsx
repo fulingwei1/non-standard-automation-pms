@@ -2,11 +2,6 @@
  * 工单卡片组件
  * 显示单个工单的详细信息
  */
-import { Clock, Wrench, AlertTriangle, Package } from 'lucide-react';
-import { Card, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { Button } from '../ui/button';
 import { cn, formatDate } from '../../lib/utils';
 import { WORK_ORDER_STATUS, WORK_ORDER_TYPES, calculateProgress } from '@/lib/constants/workerWorkstation';
 

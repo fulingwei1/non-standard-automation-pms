@@ -2,41 +2,12 @@
  * 战略管理仪表板
  * BEM 战略解码主页面 - 展示战略健康度、BSC四维度、执行状态
  */
-import { motion } from "framer-motion";
-import {
-  Target,
-  RefreshCw,
-  Settings,
-  BarChart3,
-  Map,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-} from "../../components/ui";
+
+
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { useStrategyDashboard } from "./hooks/useStrategyDashboard";
-import { HealthScoreCard } from "./components/HealthScoreCard";
-import { DimensionCard } from "./components/DimensionCard";
-import { QuickStatsPanel } from "./components/QuickStatsPanel";
-import { ExecutionStatusPanel } from "./components/ExecutionStatusPanel";
-import { MyStrategyPanel } from "./components/MyStrategyPanel";
-import { MultiYearTrendChart } from "./components/MultiYearTrendChart";
 import { BSC_DIMENSIONS, STRATEGY_STATUS } from "../../lib/constants/strategy";
 
 export default function StrategyDashboard() {

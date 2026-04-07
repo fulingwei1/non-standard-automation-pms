@@ -9,7 +9,7 @@
 import pytest
 from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from app.models.project import Project, ProjectCost
 from app.models.user import User

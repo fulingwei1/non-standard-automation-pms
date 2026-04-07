@@ -1,17 +1,8 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import {
-  Award,
-  ArrowLeft,
-  User,
-  Calendar,
-  Briefcase,
-  AlertCircle } from
-"lucide-react";
+
+
 import { performanceApi } from "../services/api";
-import { WorkSummaryDisplay } from "../components/evaluation/WorkSummaryDisplay";
-import { ScoringForm } from "../components/evaluation/ScoringForm";
 import {
   scoringGuidelines,
   commentTemplates,

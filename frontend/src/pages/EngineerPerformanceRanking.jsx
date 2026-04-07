@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Select, Input, Tag, Space, Button, Tabs } from 'antd';
-import { SearchOutlined, FilterOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Select } from 'antd';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 

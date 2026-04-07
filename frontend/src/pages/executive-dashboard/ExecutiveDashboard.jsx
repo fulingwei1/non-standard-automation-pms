@@ -1,26 +1,12 @@
-import { motion } from "framer-motion";
-import { LayoutDashboard, RefreshCw, Download } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
-import { ApiIntegrationError } from "../../components/ui";
+import { LayoutDashboard } from "lucide-react";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { timeRangeOptions } from "./constants";
 import { useExecutiveDashboard } from "./useExecutiveDashboard";
-import { KpiCard } from "./KpiCard";
-import {
-  OverviewTab,
-  ProjectsTab,
-  FinanceTab,
-  ResourcesTab,
-  SalesTab,
-} from "./tabs";
+
+
 
 export default function ExecutiveDashboard() {
   const {

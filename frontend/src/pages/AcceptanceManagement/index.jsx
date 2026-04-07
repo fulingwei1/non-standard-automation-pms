@@ -5,17 +5,10 @@
  * Orchestrator — composes sub-components; owns no direct state.
  */
 
-import { motion } from "framer-motion";
 import { ClipboardCheck } from "lucide-react";
 
-import { PageHeader } from "../../components/layout";
 
 import useAcceptanceManagement from "./useAcceptanceManagement";
-import StatsCards from "./StatsCards";
-import FilterBar from "./FilterBar";
-import RecordsTable from "./RecordsTable";
-import CreateFormDialog from "./CreateFormDialog";
-import DetailDialog from "./DetailDialog";
 
 const AcceptanceManagement = () => {
   const {

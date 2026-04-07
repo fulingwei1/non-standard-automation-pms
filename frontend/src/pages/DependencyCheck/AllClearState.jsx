@@ -1,6 +1,3 @@
-import React from "react";
-import { CheckCircle2 } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
 
 export default function AllClearState() {
   return (

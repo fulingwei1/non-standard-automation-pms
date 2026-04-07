@@ -1,13 +1,7 @@
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { 
-  Clock, CheckCircle2, Target, Award, 
-  BarChart3, TrendingUp, Star 
+  Clock, CheckCircle2, Target, Award 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import StatCard from '../common/StatCard';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

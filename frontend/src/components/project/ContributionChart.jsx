@@ -1,6 +1,4 @@
 import { useMemo } from "react";
-import { Card, CardContent } from "../ui";
-import { TrendingUp, Award, Clock, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "../../lib/utils";
 
 export default function ContributionChart({ contributions = [] }) {

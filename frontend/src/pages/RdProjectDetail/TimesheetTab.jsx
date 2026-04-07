@@ -1,11 +1,7 @@
-import {
-  Card,
-  CardContent,
-} from "../../components/ui";
-import {
-  Clock,
-  AlertCircle,
-} from "lucide-react";
+
+
+
+
 
 export default function TimesheetTab({ project, timesheetSummary }) {
   if (timesheetSummary) {

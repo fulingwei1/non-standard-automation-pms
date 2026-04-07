@@ -1,13 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Button,
-  Badge,
-} from "../../components/ui";
-import {
-  ArrowLeft,
-  Edit2,
-  FlaskConical,
-} from "lucide-react";
+
+
+
+
 import { formatDate } from "../../lib/utils";
 
 export default function ProjectHeader({ project, status, categoryType }) {

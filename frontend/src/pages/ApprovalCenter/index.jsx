@@ -10,34 +10,14 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Clock,
-  CheckCircle2,
-  Send,
-  Mail,
-  RefreshCw,
-} from "lucide-react";
 
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui/tabs";
+
+
+
+
 import { cn } from "../../lib/utils";
 
 import { useApprovalCenter, APPROVAL_TABS } from "./hooks/useApprovalCenter";
-import StatCards from "./StatCards";
-import FilterBar from "./FilterBar";
-import PendingList from "./PendingList";
-import InitiatedList from "./InitiatedList";
-import CcList from "./CcList";
-import ProcessedList from "./ProcessedList";
-import QuickApprovalDialog from "./QuickApprovalDialog";
 
 const ApprovalCenter = () => {
   const navigate = useNavigate();

@@ -4,30 +4,17 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Package,
-  Search,
-  Plus,
-  AlertCircle
+  Plus
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input
-} from "../../components/ui";
+
+
 import { cn, formatCurrency, formatDate } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { materialApi, purchaseApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 
 import { statusConfig } from "./constants";
-import MaterialRow from "./MaterialRow";
-import CreateMaterialDialog from "./CreateMaterialDialog";
 
 export default function MaterialTracking() {
   const [materials, setMaterials] = useState([]);

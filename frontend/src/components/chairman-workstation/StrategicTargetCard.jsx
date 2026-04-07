@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Target } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 
 export const StrategicTargetCard = () => {

@@ -1,15 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-  Input,
-  Label,
-  Textarea
-} from "../../components/ui";
+
+
 import { stageConfig } from "./constants";
 
 export default function CreateDialog({

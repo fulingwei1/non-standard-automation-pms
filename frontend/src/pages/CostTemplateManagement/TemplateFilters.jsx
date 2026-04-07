@@ -2,17 +2,8 @@
  * Template filter bar component
  */
 
-import { Search } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 import { TEMPLATE_TYPES } from "./constants";
 
 export default function TemplateFilters({

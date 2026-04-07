@@ -1,14 +1,8 @@
 /**
  * Recent Analyses Card - 最近齐套分析
  */
-import { Eye } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+
+
 import { cn } from "../../lib/utils";
 import { getKitRateColor } from "./constants";
 

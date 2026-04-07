@@ -5,33 +5,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Save,
-  X,
-  TrendingUp } from
+  ArrowLeft } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import { Badge } from "../components/ui/badge";
-import { CompetencyRadarChart } from "../components/qualification/CompetencyRadarChart";
-import { QualificationTrendChart } from "../components/qualification/QualificationTrendChart";
+
+
+
+
 import { qualificationApi, employeeApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { fadeIn } from "../lib/animations";

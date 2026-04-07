@@ -2,17 +2,12 @@
  * 竞品分析组件
  * 展示竞争对手信息和比较
  */
-import { motion } from "framer-motion";
 import {
   Shield,
   Award,
   ThumbsDown,
   HelpCircle,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
 } from "lucide-react";
-import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

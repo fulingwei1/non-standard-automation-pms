@@ -1,10 +1,6 @@
 /**
  * 成员视图 - 参与项目进度
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Progress } from '../../../../components/ui/progress';
-import { Badge } from '../../../../components/ui/badge';
-import { FolderOpen } from 'lucide-react';
 
 const healthColors = { H1: 'bg-green-500', H2: 'bg-yellow-500', H3: 'bg-orange-500', H4: 'bg-red-500' };
 

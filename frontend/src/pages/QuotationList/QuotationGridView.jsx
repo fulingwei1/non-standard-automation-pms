@@ -1,5 +1,3 @@
-import { Building2, Target } from "lucide-react";
-import { Card, CardContent, Badge } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { statusConfig } from "./statusConfig";
 

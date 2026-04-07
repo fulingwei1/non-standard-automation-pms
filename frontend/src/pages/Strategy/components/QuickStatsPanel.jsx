@@ -2,7 +2,6 @@
  * 快速统计面板组件
  * 展示战略关键统计数据
  */
-import { motion } from "framer-motion";
 import {
   Target,
   CheckCircle2,
@@ -13,7 +12,6 @@ import {
   Calendar,
   Award,
 } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui";
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
 

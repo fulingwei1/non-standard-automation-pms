@@ -1,4 +1,3 @@
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui";
 
 export function LeaveBalanceTable({ balanceRows }) {
     return (

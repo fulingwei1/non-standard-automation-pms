@@ -7,7 +7,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.ecn.core import Ecn
@@ -15,7 +15,6 @@ from app.models.issue import Issue
 from app.models.knowledge_base import (
     KnowledgeEntry,
     KnowledgeSourceEnum,
-    KnowledgeStatusEnum,
     KnowledgeTypeEnum,
 )
 from app.models.project.core import Project
@@ -183,7 +182,6 @@ class BestPracticeInductionService:
         self, items: List[Dict], created_by: Optional[int]
     ) -> Optional[KnowledgeEntry]:
         """高绩效项目共同特征"""
-        project_codes = [i["project"].project_code for i in items[:10]]
         avg_satisfaction = sum(i["satisfaction"] for i in items) / len(items)
         avg_issues = sum(i["issue_count"] for i in items) / len(items)
 
@@ -229,7 +227,6 @@ class BestPracticeInductionService:
         self, items: List[Dict], created_by: Optional[int]
     ) -> Optional[KnowledgeEntry]:
         """按时交付项目的管理做法"""
-        project_codes = [i["project"].project_code for i in items[:10]]
 
         detail_lines = []
         for i in items[:10]:

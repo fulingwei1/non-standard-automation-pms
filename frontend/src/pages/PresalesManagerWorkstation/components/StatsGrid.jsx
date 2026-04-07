@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   Users,
   FileText,
@@ -8,7 +7,6 @@ import {
 } from "lucide-react";
 import { staggerContainer } from "../../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../../lib/formatters";
-import StatCard from "../../../components/common/StatCard";
 
 export default function StatsGrid({ overallStats }) {
   return (

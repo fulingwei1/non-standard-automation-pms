@@ -4,16 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { qualityApi } from "../../services/api/quality";
-import { motion } from "framer-motion";
 import {
   AlertCircle,
   FileCheck,
   TrendingUp,
-  Shield,
   Award,
   AlertTriangle,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
 import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片

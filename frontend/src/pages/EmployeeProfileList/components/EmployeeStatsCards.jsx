@@ -1,5 +1,3 @@
-import { Users, User, Clock } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui/card";
 
 export function EmployeeStatsCards({ stats, activeStatusTab }) {
     return (

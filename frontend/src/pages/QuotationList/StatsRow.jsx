@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { FileText, Clock, CheckCircle2, Percent } from "lucide-react";
-import { Card, CardContent } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 
 export function StatsRow({ stats }) {

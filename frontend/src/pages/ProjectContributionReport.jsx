@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { projectContributionApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Skeleton } from
-"../components/ui";
-import ContributionChart from "../components/project/ContributionChart";
+
+
 import { formatCurrency } from "../lib/utils";
-import { Award } from "lucide-react";
 
 export default function ProjectContributionReport() {
   const { id } = useParams();

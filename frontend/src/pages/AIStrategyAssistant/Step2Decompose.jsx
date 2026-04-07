@@ -1,23 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  Target,
-  Loader2,
-  Sparkles,
-  Upload,
-  ArrowRight,
-  ArrowLeft,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Textarea,
-  Label,
-} from "@/components/ui";
+
+
+
+
 import { staggerContainer } from "@/lib/animations";
 import { getDimensionLabel, getDimensionColor } from "@/services/api/aiStrategy";
 

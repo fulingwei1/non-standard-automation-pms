@@ -1,8 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Calendar, ZoomIn, ZoomOut } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import { workloadApi } from "../../services/api";
 

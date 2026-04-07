@@ -1,15 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Edit3,
-  Trash2,
-  GripVertical,
-  ChevronDown,
-  ChevronRight,
-} from "lucide-react";
-import { Card, CardContent, CardHeader } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+
+
 import { cn } from "../../lib/utils";
 import { NODE_TYPES, COMPLETION_METHODS } from "./constants";
 
@@ -66,7 +56,7 @@ function NodeRow({ stage, node, onEdit, onDelete }) {
 
 export default function StageCard({
   stage,
-  stageIndex,
+  stageIndex: _stageIndex,
   isExpanded,
   onToggleExpanded,
   onAddNode,

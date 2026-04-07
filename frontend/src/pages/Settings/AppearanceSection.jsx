@@ -1,12 +1,7 @@
 import { useState } from "react";
-import { Sun, Moon, Monitor, Check } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
+import { Sun, Moon, Monitor } from "lucide-react";
+
+
 import { cn } from "../../lib/utils";
 
 const themes = [

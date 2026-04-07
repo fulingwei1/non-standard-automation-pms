@@ -6,20 +6,8 @@
 import { useState, useEffect } from "react";
 
 
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
 import { informationGapApi } from "../services/api";
 
 export default function InformationGapAnalysis() {

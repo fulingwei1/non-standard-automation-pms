@@ -5,12 +5,10 @@
 """
 
 import pytest
-from datetime import datetime
-from decimal import Decimal
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.models.base import Base

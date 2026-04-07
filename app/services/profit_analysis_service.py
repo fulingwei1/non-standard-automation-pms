@@ -10,17 +10,16 @@
 5. 低利润项目根因分析
 """
 
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import case, func, and_, or_, desc
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.models.budget import ProjectBudget, ProjectBudgetItem
 from app.models.project.core import Project
 from app.models.project.financial import ProjectCost, FinancialProjectCost
 from app.models.sales.contracts import Contract
-from app.models.sales.quotes import Quote, QuoteVersion, QuoteItem
+from app.models.sales.quotes import QuoteItem
 
 
 # 默认目标毛利率（%）
@@ -744,7 +743,6 @@ class ProfitAnalysisService:
             }
 
         # 计算分配金额
-        allocated_total = sum(cost_allocation.values())
         allocated_costs = []
         unallocated = total_cost
 

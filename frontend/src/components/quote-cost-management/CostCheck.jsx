@@ -1,13 +1,5 @@
-import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Alert, AlertDescription } from "../../components/ui/alert";
+
+
 import { formatCurrency } from "../../lib/utils";
 
 export function CostCheck({ costCheck }) {

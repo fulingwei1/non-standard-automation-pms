@@ -1,11 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  FileSignature,
-  DollarSign,
-  CheckCircle2,
-  Clock,
-} from "lucide-react";
-import { Card, CardContent } from "../../components/ui";
+
+
 import { fadeIn } from "../../lib/animations";
 
 export default function ContractStatsRow({ stats }) {

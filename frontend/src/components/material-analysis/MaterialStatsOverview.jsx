@@ -1,21 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   Package,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle2,
-  Truck,
-  BarChart3,
-  Activity,
-  RefreshCw } from
+  Truck } from
 "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import { Button } from "../../components/ui/button";
-import { SimpleBarChart, SimplePieChart, SimpleLineChart } from "../../components/administrative/StatisticsCharts";
 import {
   getMaterialStatus,
   getMaterialType,

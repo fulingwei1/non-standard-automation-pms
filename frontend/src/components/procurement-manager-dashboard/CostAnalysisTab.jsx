@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Progress,
-} from "../../components/ui";
-import { BarChart3, PieChart, Target, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+
+
 import { formatCurrency } from "../../lib/utils";
 import { procurementAnalysisApi } from "../../services/api";
 

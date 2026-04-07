@@ -5,10 +5,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Eye } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button, ApiIntegrationError } from "../components/ui";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import {
   pmoApi,
@@ -16,19 +12,7 @@ import {
   projectApi,
   reportCenterApi
 } from "../services/api";
-import CultureWallCarousel from "../components/culture/CultureWallCarousel";
 import {
-  FinancialMetricsGrid,
-  StrategicTargetCard,
-  OperatingTargetCard,
-  RevenueTrendCard,
-  ProjectHealthCard,
-  RiskProjectsCard,
-  DepartmentPerformanceCard,
-  KeyDecisionsCard,
-  PendingApprovalsCard,
-  RecentProjectsCard,
-  OperationalOverviewCard,
   formatCurrency
 } from "../components/chairman-workstation";
 

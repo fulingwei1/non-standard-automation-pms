@@ -2,7 +2,6 @@
  * 商机看板组件 (Opportunity Board)
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { opportunityApi } from '../../../../services/api/sales';
 
 const stages = ['初步接触', '需求确认', '方案报价', '商务谈判', '赢单'];

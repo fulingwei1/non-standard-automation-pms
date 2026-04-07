@@ -4,12 +4,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
-  ChevronDown,
-  Search,
-  Star,
   Zap,
   Car,
   Battery,
@@ -17,11 +13,7 @@ import {
   Wrench,
   Factory,
   Settings,
-  GraduationCap,
-  Loader2,
-  AlertCircle,
-  CheckCircle2,
-  Copy } from
+  GraduationCap } from
 "lucide-react";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";

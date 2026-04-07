@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """项目售后关联视图 - 完整版"""
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 from datetime import date
 from sqlalchemy.orm import Session
 

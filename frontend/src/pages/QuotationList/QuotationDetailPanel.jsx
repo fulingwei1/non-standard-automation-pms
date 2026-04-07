@@ -1,19 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  X,
-  Building2,
-  Target,
-  Calendar,
-  User,
-  Copy,
-  History,
-  Download,
-  Send,
-  Edit,
-  AlertTriangle,
-  XCircle,
-} from "lucide-react";
-import { Button, Badge } from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { statusConfig } from "./statusConfig";
 

@@ -3,17 +3,8 @@
  * 显示订单完整信息、采购项目列表、状态变更历史
  */
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
-import { Label } from "../../ui/label";
-import { Badge } from "../../ui/badge";
+
+
 import { cn } from "../../../lib/utils";
 import { ORDER_STATUS_CONFIGS, PurchaseOrderUtils } from "@/lib/constants/procurement";
 

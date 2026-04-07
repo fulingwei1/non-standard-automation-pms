@@ -4,23 +4,11 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import {
-  Plus,
-  BarChart3,
-  Target,
-  RefreshCw,
-  Grid,
-  List } from
-"lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
-import OpportunityCard from "./OpportunityCard";
-import OpportunityFilters from "./OpportunityFilters";
 import {
   opportunityStageConfig,
   opportunityStageFlow,

@@ -1,8 +1,6 @@
 /**
  * 高管视图 - 项目组合健康度（饼图）
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 const COLORS = ['#22c55e', '#eab308', '#f97316', '#ef4444'];
 

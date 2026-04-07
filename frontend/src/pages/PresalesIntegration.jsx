@@ -1,29 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  DollarSign,
-  BarChart3,
-  AlertTriangle } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 
 
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
+
+
+
+
+
+
 import { presalesIntegrationApi } from "../services/api";
 import { fadeIn } from "../lib/animations";
 

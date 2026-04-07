@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import ProjectTimeline from '../ProjectTimeline';
 
 describe('ProjectTimeline', () => {
   const mockStatusLogs = [

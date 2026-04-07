@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { Loader2, AlertCircle, RefreshCw, BarChart3 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 /**

@@ -1,16 +1,5 @@
-import {
-  Button,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Label,
-  Textarea,
-  Badge,
-} from "../../components/ui";
+
+
 import {
   FOLLOW_UP_TYPES,
   LEAD_QUICK_FOLLOW_UP_TEMPLATES,

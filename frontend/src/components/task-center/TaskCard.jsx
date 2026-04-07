@@ -1,19 +1,6 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Flag,
-  Folder,
-  MoreHorizontal,
-  Timer,
-  AlertTriangle,
-  ArrowRight
-} from "lucide-react";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
-import { Button } from "../ui/button";
+
+
 import { cn } from "../../lib/utils";
 import { statusConfigs, priorityConfigs } from "./taskConfig";
 

@@ -1,21 +1,8 @@
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FileText } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { staggerContainer, fadeIn } from "../../lib/animations";
 import { useSolutionDetail } from "./hooks";
-import {
-    SolutionHeader,
-    SolutionStatsCards,
-    SolutionTabs,
-    SolutionOverviewTab,
-    SolutionSpecsTab,
-    SolutionEquipmentTab,
-    SolutionCostTab,
-    SolutionDeliverablesTab,
-    SolutionHistoryTab,
-} from "./components";
+
+
 
 export default function SolutionDetail() {
     const navigate = useNavigate();

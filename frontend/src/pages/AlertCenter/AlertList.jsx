@@ -2,16 +2,10 @@
  * AlertList - Alert list with batch actions, items, and pagination
  */
 
-import { motion } from "framer-motion";
-import { AlertTriangle, Download } from "lucide-react";
-import {
-  Card,
-  CardContent } from
-"../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { EmptyState } from "../../components/common";
+import { AlertTriangle } from "lucide-react";
+
+
 import { staggerContainer } from "../../lib/animations";
-import AlertListItem from "./AlertListItem";
 
 export default function AlertList({
   filteredAlerts,

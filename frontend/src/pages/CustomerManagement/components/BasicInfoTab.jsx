@@ -3,18 +3,9 @@
  * 展示客户基本信息和决策链联系人列表
  */
 
-import { Card, Row, Col, Tag, Table, Badge, Space, Typography, Divider } from "antd";
-import {
-  Building2,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  User,
-  Award,
-  Star,
-  Crown,
-} from "lucide-react";
+import { Typography } from "antd";
+
+
 
 const { Title, Text } = Typography;
 

@@ -1,5 +1,3 @@
-import { Route } from "react-router-dom";
-import { WarehouseProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
 
 const WarehouseWorkstation = lazyLoad(() => import("../../pages/warehouse/WarehouseWorkstation"));

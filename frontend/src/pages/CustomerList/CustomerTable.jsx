@@ -1,23 +1,7 @@
-import {
-  Building2,
-  AlertTriangle,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Target,
-  MessageSquare,
-} from "lucide-react"
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "../../components/ui"
+
+
+
+
 import { cn } from "../../lib/utils"
 import { gradeColors, statusConfig } from "./constants"
 

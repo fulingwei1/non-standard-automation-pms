@@ -2,19 +2,9 @@
  * 售前工作台
  * 核心功能：团队管理、方案审核、投标支持、团队绩效监控
  */
-import { motion } from "framer-motion";
-import { Users, BarChart3 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 import { useDashboardData } from "./hooks/useDashboardData";
-import StatsGrid from "./components/StatsGrid";
-import TeamPerformanceCard from "./components/TeamPerformanceCard";
-import OngoingSolutionsCard from "./components/OngoingSolutionsCard";
-import PendingReviewsCard from "./components/PendingReviewsCard";
-import BiddingProjectsCard from "./components/BiddingProjectsCard";
-import MonthlyTargetCard from "./components/MonthlyTargetCard";
 
 export default function PresalesManagerWorkstation() {
   const {

@@ -61,7 +61,6 @@ class ExecutiveViewDashboardAdapter(DashboardAdapter):
 
         # 财务概览
         total_contract = sum(float(p.contract_amount or 0) for p in projects)
-        total_budget = sum(float(p.budget_amount or 0) for p in projects)
         total_actual = sum(float(p.actual_cost or 0) for p in projects)
         gross_profit = total_contract - total_actual
         roi = round((gross_profit / total_actual * 100), 1) if total_actual > 0 else 0

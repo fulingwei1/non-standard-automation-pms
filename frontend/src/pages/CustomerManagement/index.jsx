@@ -1,18 +1,7 @@
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { useCustomerManagement } from "./hooks";
-import {
-    CustomerFilters,
-    CustomerTable,
-    CreateCustomerDialog,
-    EditCustomerDialog,
-    CustomerDetailDialog,
-    Customer360Dialog
-} from "./components";
+
+
 
 export default function CustomerManagement() {
     const {

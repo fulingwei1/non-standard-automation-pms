@@ -4,9 +4,6 @@
  * 整合自原 WorkCenter 页面
  */
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Progress } from '../../../components/ui/progress';
 import { cn, formatDate } from '../../../lib/utils';
 import { useAuth } from '../../../context/AuthContext';
 

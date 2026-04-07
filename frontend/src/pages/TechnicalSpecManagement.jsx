@@ -1,36 +1,12 @@
 import { useState, useEffect } from "react";
-import {
-  Plus,
-  Search,
-  Edit3,
-  Trash2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../components/ui/dialog";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
+
+
+
+
+
+
+
+
 import api from "../services/api";
 
 import { confirmAction } from "@/lib/confirmAction";

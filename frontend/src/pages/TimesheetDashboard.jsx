@@ -1,37 +1,14 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Clock,
-  Users,
-  Briefcase,
-  Download,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
+
+
+
+
+
+
 import { timesheetApi } from "../services/api";
 import { fadeIn, staggerContainer } from "../lib/animations";
-import {
-  TimesheetTrendChart,
-  DepartmentComparisonChart,
-  ProjectDistributionChart } from
-"../components/timesheet/TimesheetCharts";
+
+
 
 export default function TimesheetDashboard() {
   const [loading, setLoading] = useState(true);

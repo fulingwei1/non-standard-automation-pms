@@ -2,24 +2,10 @@
  * EmployeesTab - 员工认证管理标签页
  */
 import { useNavigate } from "react-router-dom";
-import { Eye, TrendingUp } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+
+
+
+
 import { formatDate } from "../../lib/utils";
 import { getLevelBadgeColor, getStatusInfo } from "./constants";
 

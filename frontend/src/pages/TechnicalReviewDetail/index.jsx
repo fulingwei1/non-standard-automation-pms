@@ -4,23 +4,10 @@
  */
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "../../components/layout/PageHeader";
-import {
-    Button,
-    Tabs,
-    TabsList,
-    TabsTrigger,
-    TabsContent,
-    SkeletonCard,
-} from "../../components/ui";
-import { ArrowLeft, Save } from "lucide-react";
+
+
 
 import { useTechnicalReviewForm } from "./hooks";
-import { BasicInfoTab } from "./BasicInfoTab";
-import { ParticipantsTab } from "./ParticipantsTab";
-import { MaterialsTab } from "./MaterialsTab";
-import { ChecklistTab } from "./ChecklistTab";
-import { IssuesTab } from "./IssuesTab";
 
 export default function TechnicalReviewDetail() {
     const { reviewId } = useParams();

@@ -4,7 +4,6 @@
  */
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui";
 import { hasFinanceAccess } from "../lib/roleConfig";
 
 export default function PermissionDebug() {

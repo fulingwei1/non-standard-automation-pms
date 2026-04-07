@@ -4,15 +4,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { getTrendAnalysis } from '@/services/api/shortage';
 import { ALERT_COLORS, ALERT_LEVELS } from '../constants';
-import TrendLineChart from './components/TrendLineChart';
-import { BarChart3, Clock, CheckCircle, TrendingUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const TrendAnalysis = () => {

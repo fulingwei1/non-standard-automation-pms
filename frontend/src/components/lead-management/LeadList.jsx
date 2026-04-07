@@ -1,30 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "../../components/ui";
-import {
-  User,
-  Phone,
-  MapPin,
-  Eye,
-  Edit,
-  ArrowRight,
-  Star,
-  Building2,
-  Calendar,
-  Clock,
-  MessageSquare,
-  Zap,
-} from "lucide-react";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { formatDate, formatDateTime } from "../../lib/formatters";
 import { fadeIn } from "../../lib/animations";

@@ -2,22 +2,9 @@
  * CostStructureTab — "成本结构" tab content
  */
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui";
+
+
 import { formatCurrency } from "../../lib/utils";
-import { CostStructureChart } from "../../components/cost/CostStructureChart";
 
 export function CostStructureTab({ costStructure, structureByCategory }) {
   if (!costStructure || structureByCategory.length === 0) {

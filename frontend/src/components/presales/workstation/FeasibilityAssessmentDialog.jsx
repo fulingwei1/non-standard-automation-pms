@@ -1,7 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Lightbulb, X } from "lucide-react";
-import { Button } from "../../ui/button";
-import FeasibilityAssessmentForm from "../FeasibilityAssessmentForm";
 
 export default function FeasibilityAssessmentDialog({
   isOpen,

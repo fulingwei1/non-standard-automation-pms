@@ -3,8 +3,6 @@
  */
 
 import { useState } from "react";
-import { ChevronRight, ChevronDown } from "lucide-react";
-import { Badge } from "../../components/ui";
 import { LEVEL_COLORS } from "./constants";
 import { getRateColor } from "./utils";
 

@@ -1,16 +1,7 @@
-import { motion } from "framer-motion";
-import { DollarSign } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress
-} from "../../components/ui";
-import {
-  MonthlyTrendChart,
-  CategoryBreakdownCard
-} from "../../components/administrative/StatisticsCharts";
+
+
+
+
 import { fadeIn } from "../../lib/animations";
 import { formatCurrency } from "./utils";
 

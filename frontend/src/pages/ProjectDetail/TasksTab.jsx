@@ -1,6 +1,4 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, Button } from "../../components/ui";
-import { ListTodo } from "lucide-react";
 
 export default function TasksTab() {
   const { id } = useParams();

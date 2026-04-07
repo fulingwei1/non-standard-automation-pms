@@ -2,10 +2,7 @@
  * Acceptance Management — stats summary cards (total / passed / failed / pending)
  */
 
-import { motion } from "framer-motion";
-import { FileText, CheckCircle2, XCircle, Clock } from "lucide-react";
 
-import { Card, CardContent } from "../../components/ui";
 
 const StatsCards = ({ stats }) => {
   return (

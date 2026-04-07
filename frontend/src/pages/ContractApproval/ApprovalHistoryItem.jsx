@@ -1,4 +1,3 @@
-import { Badge } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 import { typeConfig } from "./constants";

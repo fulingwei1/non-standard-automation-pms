@@ -5,15 +5,7 @@
  * This file is the orchestrator — it composes sub-components and wires them
  * together via the useExceptionManagement hook.
  */
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { useExceptionManagement } from "./hooks";
-import { ExceptionFilterBar } from "./ExceptionFilterBar";
-import { ExceptionTable } from "./ExceptionTable";
-import { CreateExceptionDialog } from "./CreateExceptionDialog";
-import { DetailDialog } from "./DetailDialog";
-import { HandleDialog } from "./HandleDialog";
 
 export default function ExceptionManagement() {
   const {

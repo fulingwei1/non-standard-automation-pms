@@ -4,17 +4,8 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, List, Timeline, Alert, Button, Avatar } from 'antd';
-import {
-  Target,
-  TrendingUp,
-  Users,
-  Star,
-  Calendar,
-  Phone,
-  Trophy,
-  Clock } from
-'lucide-react';
+
+
 import {
   LEAD_SOURCES,
   QUALIFICATION_LEVELS,

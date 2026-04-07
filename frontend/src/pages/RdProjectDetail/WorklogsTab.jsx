@@ -1,10 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  Button,
-} from "../../components/ui";
-import { FileText } from "lucide-react";
+
+
 
 export default function WorklogsTab({ id }) {
   const navigate = useNavigate();

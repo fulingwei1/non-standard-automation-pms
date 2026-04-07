@@ -1,27 +1,15 @@
-import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import {
-  DashboardLayout,
-  DashboardStatCard,
-  useDashboardData,
-  VirtualizedProjectList } from
+  useDashboardData } from
 "../components/dashboard";
-import {
-  Card,
-  CardContent,
-  Progress,
-  HealthBadge,
-  SkeletonCard } from
-"../components/ui";
+
+
 import {
   Briefcase,
   Box,
   AlertTriangle,
-  ArrowRight,
-  BarChart3,
-  CheckCircle2,
-  Clock } from
+  BarChart3 } from
 "lucide-react";
 
 // Stagger animation variants

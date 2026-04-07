@@ -1,13 +1,5 @@
-import { motion } from "framer-motion";
-import { Receipt, ChevronRight } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button
-} from "../../components/ui";
-import { PaymentTimeline } from "../../components/sales";
+
+
 import { fadeIn } from "../../lib/animations";
 
 export function PaymentScheduleCard({ payments }) {

@@ -2,17 +2,8 @@
  * ExceptionDetailDialog — read-only detail view for a single exception,
  * with action buttons to trigger Handle or Close flows.
  */
-import { Edit, CheckCircle2 } from "lucide-react";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
+
+
 import { formatDate } from "../../lib/utils";
 import { statusConfigs, typeConfigs, levelConfigs } from "./constants";
 

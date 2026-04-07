@@ -1,12 +1,6 @@
 // -*- coding: utf-8 -*-
-import { Button } from "../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "../../components/ui/dialog";
+
+
 
 export default function RejectDialog({
   open,

@@ -1,7 +1,5 @@
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { PROJECT_STAGES, HEALTH_CONFIG } from "../../lib/constants";
-import { Card } from "../../components/ui";
 
 export default function ListView({ projects, onProjectClick, isProjectRelevant }) {
   return (

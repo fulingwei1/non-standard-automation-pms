@@ -3,8 +3,6 @@
  * 成本结构与供应商面板
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 import { formatCurrency } from "../../lib/utils";
 
 export default function CostStructurePanel({

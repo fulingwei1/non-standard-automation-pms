@@ -3,11 +3,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ALERT_LEVELS, ALERT_STATUS } from '../../constants';
-import { ChevronRight, AlertCircle, Package, Calendar } from 'lucide-react';
 
 const AlertList = ({ alerts = [], loading = false }) => {
   const navigate = useNavigate();

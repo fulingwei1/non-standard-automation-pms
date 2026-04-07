@@ -4,18 +4,9 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { RefreshCw, Download } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { MATERIAL_TYPE, PRIORITY_LEVEL, MATERIAL_STATUS } from "../../components/material-readiness";
 import { toast } from "../../components/ui/toast";
 import { useMaterialReadiness } from "./hooks/useMaterialReadiness";
-import FilterBar from "./FilterBar";
-import OverviewPanel from "./OverviewPanel";
-import MaterialListView from "./MaterialListView";
-import AnalyticsView from "./AnalyticsView";
-import MaterialDetailDialog from "./MaterialDetailDialog";
 
 export default function MaterialReadiness() {
   const [viewMode, setViewMode] = useState("overview"); // overview | list | analytics

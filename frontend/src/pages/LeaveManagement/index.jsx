@@ -1,17 +1,7 @@
-import { motion } from "framer-motion";
-import { Download, BarChart3 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui";
 import { staggerContainer } from "../../lib/animations";
 import { useLeaveManagement } from "./hooks";
-import {
-    LeaveStatsCards,
-    LeaveOverview,
-    LeaveStatistics,
-    LeaveApplicationList,
-    LeaveFilters,
-    LeaveBalanceTable
-} from "./components";
+
+
 
 export default function LeaveManagement() {
     const {

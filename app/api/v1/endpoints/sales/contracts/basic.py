@@ -9,7 +9,7 @@ from typing import Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, joinedload
 

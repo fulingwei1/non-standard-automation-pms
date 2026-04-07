@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Modal, Form, Input, Select, Tag, Space, message, Tabs, Statistic, Row, Col, Rate } from 'antd';
-import { BulbOutlined, FileTextOutlined, CodeOutlined, PlusOutlined, CheckOutlined, CloseOutlined, StarOutlined } from '@ant-design/icons';
+import { Form, Input, Select, message } from 'antd';
 import api from '../services/api';
 
 const { TextArea } = Input;

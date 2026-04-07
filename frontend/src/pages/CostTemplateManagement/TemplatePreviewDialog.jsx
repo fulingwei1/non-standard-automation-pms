@@ -2,21 +2,8 @@
  * Template preview dialog component
  */
 
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui";
+
+
 import { formatCurrency } from "../../lib/utils";
 
 export default function TemplatePreviewDialog({

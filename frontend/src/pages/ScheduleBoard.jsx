@@ -1,20 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import {
   projectApi,
   milestoneApi,
   progressApi
 } from "../services/api";
-import {
-  StatsCards,
-  ViewControls,
-  StageColumn,
-  ScheduleGanttView,
-  ScheduleCalendarView,
-  ResourceHeatMap
-} from "../components/schedule-board";
+
+
 
 export default function ScheduleBoard() {
   const [viewMode, setViewMode] = useState("kanban"); // kanban | gantt | calendar

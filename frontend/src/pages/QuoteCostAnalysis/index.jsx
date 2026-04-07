@@ -4,22 +4,11 @@
  */
 
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, Download } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
 import { staggerContainer } from "../../lib/animations";
 import { ANALYSIS_TABS } from "./constants";
 import { useQuoteCostAnalysis } from "./hooks/useQuoteCostAnalysis";
-import { VersionComparison } from "./VersionComparison";
-import { CostTrendTab } from "./CostTrendTab";
-import { CostStructureTab } from "./CostStructureTab";
 
 export default function QuoteCostAnalysis() {
   const { id } = useParams();

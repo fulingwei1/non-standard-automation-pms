@@ -4,20 +4,9 @@
  * Features: Quote list, creation, version management, approval
  */
 
-import { motion } from "framer-motion";
-import { FileText, BarChart3 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { QuoteStatsOverview, QuoteListManager, MarginAnalysis } from "../../components/quote";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
 import useQuoteData from "./useQuoteData";
-import CostInsightsPanel from "./CostInsightsPanel";
-import CostStructurePanel from "./CostStructurePanel";
-import QuoteDetailDialog from "./QuoteDetailDialog";
-import QuoteCreateDialog from "./QuoteCreateDialog";
-import QuoteEditDialog from "./QuoteEditDialog";
 
 export default function QuoteManagement({ embedded = false } = {}) {
   const {

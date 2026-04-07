@@ -2,25 +2,13 @@
  * SnapshotDetailDialog — 快照详情对话框
  * 展示基本信息、状态分布饼图、严重程度柱状图、详细统计和处理时间统计
  */
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
+
+
+
+
 import { formatDate } from "../../lib/utils";
-import {
-  SimplePieChart,
-  SimpleBarChart,
-} from "../../components/administrative/StatisticsCharts";
+
+
 
 /**
  * @param {{

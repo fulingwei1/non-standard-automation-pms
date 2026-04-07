@@ -2,11 +2,8 @@
  * KPI 表单组件
  */
 import { useState } from "react";
-import {
-  Input,
-  Button,
-  DialogFooter,
-} from "../../components/ui";
+
+
 import { BSC_DIMENSIONS } from "../../lib/constants/strategy";
 import { COLLECTION_FREQUENCY } from "./constants";
 

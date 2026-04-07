@@ -1,24 +1,10 @@
 /**
  * ExceptionTable — the main data table listing production exceptions.
  */
-import { Eye, Edit, CheckCircle2 } from "lucide-react";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+
+
+
+
 import { formatDate } from "../../lib/utils";
 import { statusConfigs, typeConfigs, levelConfigs } from "./constants";
 

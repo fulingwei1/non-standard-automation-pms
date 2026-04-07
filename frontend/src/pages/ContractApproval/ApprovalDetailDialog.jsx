@@ -1,15 +1,5 @@
-import { CheckCircle2, XCircle, Loader2, FileText, Download } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Badge,
-  Button,
-  Textarea,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 import { typeConfig, priorityConfig } from "./constants";

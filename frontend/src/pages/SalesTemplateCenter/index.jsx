@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { resolveIcon } from "@/utils/iconMap";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { staggerContainer } from "../../lib/animations";
 import { salesTemplateApi } from "../../services/api";
 
@@ -14,13 +11,6 @@ import {
 } from "./constants";
 import { parseJsonField } from "./utils";
 
-import QuoteTab from "./QuoteTab";
-import ContractTab from "./ContractTab";
-import CpqTab from "./CpqTab";
-import QuoteTemplateDialog from "./QuoteTemplateDialog";
-import ContractTemplateDialog from "./ContractTemplateDialog";
-import RuleSetDialog from "./RuleSetDialog";
-import PreviewDialog from "./PreviewDialog";
 
 export default function SalesTemplateCenter({ embedded = false } = {}) {
   const [activeTab, setActiveTab] = useState("quote");

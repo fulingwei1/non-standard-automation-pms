@@ -2,10 +2,6 @@
  * ECN审批流程标签页组件
  * 用途：展示和管理ECN的审批流程（时间线视图）
  */
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { CheckCircle2, XCircle } from 'lucide-react';
 
 /**
  * 获取审批节点样式配置

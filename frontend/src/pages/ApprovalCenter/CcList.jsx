@@ -1,13 +1,7 @@
-import { Eye, Mail, MailOpen } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "../../components/ui/table";
+import { Mail } from "lucide-react";
+
 import { cn } from "../../lib/utils";
 import { formatDateTime } from "@/lib/formatters";
-import EmptyState from "./EmptyState";
 
 const CcList = ({ items, loading, goToDetail, handleMarkRead }) => (
   <Card className="bg-slate-800/50 border-slate-700">

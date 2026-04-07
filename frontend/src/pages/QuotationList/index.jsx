@@ -4,19 +4,8 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Download } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
-import { StatsRow } from "./StatsRow";
-import { FilterBar } from "./FilterBar";
-import { QuotationTableView } from "./QuotationTableView";
-import { QuotationGridView } from "./QuotationGridView";
-import { QuotationDetailPanel } from "./QuotationDetailPanel";
-import { CreateQuotationDialog } from "./CreateQuotationDialog";
-import { EmptyState } from "./EmptyState";
 
 export default function QuotationList() {
   const mockQuotations = [];

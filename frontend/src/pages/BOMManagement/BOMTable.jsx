@@ -1,15 +1,5 @@
-import { Plus, Eye, Download } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '../../components/ui/table';
+
+
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { statusConfigs } from './constants';
 

@@ -4,7 +4,6 @@
  */
 
 import { Package, Clock, AlertTriangle, DollarSign } from "lucide-react";
-import { Card, CardContent } from "../../ui";
 import { formatOrderAmount } from "@/lib/constants/procurement";
 
 export default function PurchaseOrderStats({ stats = {}, loading = false }) {

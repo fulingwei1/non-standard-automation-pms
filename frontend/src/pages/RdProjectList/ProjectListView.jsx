@@ -1,8 +1,4 @@
-import { motion } from "framer-motion";
-import { Plus, FileText } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { Card, CardContent, Button, SkeletonCard } from "../../components/ui";
-import { RdProjectCard } from "./RdProjectCard";
 import { staggerContainer } from "./constants";
 
 function LoadingGrid() {

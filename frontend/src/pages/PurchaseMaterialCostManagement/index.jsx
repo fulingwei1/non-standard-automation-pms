@@ -4,25 +4,12 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Download,
-  Upload,
-  Bell,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import DeleteConfirmDialog from "../../components/common/DeleteConfirmDialog";
-import { Button, Badge } from "../../components/ui";
+
+
 import { staggerContainer } from "../../lib/animations";
 import { salesTemplateApi, supplierApi } from "../../services/api";
 
 import { INITIAL_FORM_DATA } from "./constants";
-import CostFormDialog from "./CostFormDialog";
-import ReminderDialog from "./ReminderDialog";
-import CostTable from "./CostTable";
-import { ReminderDueAlert, ReminderInfoCard } from "./ReminderAlerts";
-import FilterBar from "./FilterBar";
 
 export default function PurchaseMaterialCostManagement() {
   const [loading, setLoading] = useState(false);

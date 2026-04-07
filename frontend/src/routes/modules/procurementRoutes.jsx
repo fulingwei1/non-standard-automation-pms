@@ -1,8 +1,5 @@
-import { Navigate, Route } from "react-router-dom";
-import {
-  ProcurementProtectedRoute,
-  ProductionProtectedRoute
-} from "../../components/common/ProtectedRoute";
+
+
 import { lazyLoad } from "../lazyLoad";
 
 const PurchaseOrders = lazyLoad(() => import("../../pages/PurchaseOrders"));

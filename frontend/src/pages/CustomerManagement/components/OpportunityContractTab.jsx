@@ -3,8 +3,7 @@
  * 展示活跃商机列表和合同管理
  */
 
-import { Card, Table, Tag, Progress, Typography, Space, Button } from "antd";
-import { FileText, DollarSign, Calendar, TrendingUp, Eye } from "lucide-react";
+import { Typography } from "antd";
 
 const { Text } = Typography;
 
@@ -109,7 +108,7 @@ const OpportunityContractTab = ({ customer, loading }) => {
     {
       title: "操作",
       key: "action",
-      render: (_, record) => (
+      render: (_, _record) => (
         <Button size="small" icon={<Eye size={14} />}>
           查看详情
         </Button>
@@ -166,7 +165,7 @@ const OpportunityContractTab = ({ customer, loading }) => {
     {
       title: "操作",
       key: "action",
-      render: (_, record) => (
+      render: (_, _record) => (
         <Space>
           <Button size="small" icon={<Eye size={14} />}>
             查看

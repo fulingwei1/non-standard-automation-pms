@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import SalesTeam from "./SalesTeam";
-import PerformanceIncentive from "./SalesAI/PerformanceIncentive";
 
 export default function SalesTeamCenter() {
   const tabs = useMemo(

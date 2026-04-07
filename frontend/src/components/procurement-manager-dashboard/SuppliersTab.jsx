@@ -1,11 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  Progress,
-  Button,
-} from "../../components/ui";
-import { Eye, Edit } from "lucide-react";
+
+
 import { formatCurrency } from "../../lib/utils";
 
 export default function SuppliersTab({ suppliers }) {

@@ -1,7 +1,3 @@
-import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
 import { fadeIn } from "../../../lib/animations";
 import { useNavigate } from "react-router-dom";
 

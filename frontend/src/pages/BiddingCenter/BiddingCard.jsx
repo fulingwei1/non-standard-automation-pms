@@ -1,29 +1,10 @@
 /**
  * 投标卡片组件
  */
-import { motion } from "framer-motion";
-import {
-  Calendar,
-  Building2,
-  FileText,
-  Eye,
-  Edit,
-  MoreHorizontal,
-  Timer,
-  DollarSign,
-  Award,
-  ThumbsDown,
-  Swords,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { getStageStyle, getStageName } from "./constants";

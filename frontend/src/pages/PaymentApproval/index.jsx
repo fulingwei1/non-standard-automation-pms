@@ -3,18 +3,10 @@
  * Features: Payment approval, Payment query, Approval history, Batch approval
  */
 
-import { motion } from "framer-motion";
-import { ClipboardCheck, Download, CheckCircle2 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui";
+import { ClipboardCheck } from "lucide-react";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
 import { usePaymentApprovalPage } from "./hooks/usePaymentApprovalPage";
-import { StatsCards } from "./StatsCards";
-import { PaymentFilters } from "./PaymentFilters";
-import { PaymentList } from "./PaymentList";
-import { ApprovalDialog } from "./ApprovalDialog";
-import { PaymentDetailDialog } from "./PaymentDetailDialog";
 
 export default function PaymentApproval() {
   const {

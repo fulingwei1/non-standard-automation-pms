@@ -1,23 +1,10 @@
 /**
  * Analysis Detail Dialog - 齐套分析详情对话框
  */
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { alertLevelConfig, getKitRateColor } from "./constants";
 

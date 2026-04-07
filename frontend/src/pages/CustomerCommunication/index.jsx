@@ -13,26 +13,15 @@
  */
 
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { customerCommunicationApi, customerApi, userApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 import {
-  CustomerCommunicationOverview,
-  COMMUNICATION_TYPE,
-  COMMUNICATION_TOPIC,
-  COMMUNICATION_PRIORITY,
   COMMUNICATION_STATUS,
   validateCommunicationData } from
 "../../components/customer-communication";
 import { confirmAction } from "@/lib/confirmAction";
 
 import { initialFormData } from "./constants";
-import CommunicationTable from "./CommunicationTable";
-import CreateDialog from "./CreateDialog";
-import DetailDialog from "./DetailDialog";
-import EditDialog from "./EditDialog";
 
 export default function CustomerCommunication() {
   const [loading, setLoading] = useState(true);

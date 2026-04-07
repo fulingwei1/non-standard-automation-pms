@@ -1,53 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   FileText,
-  ArrowLeft,
-  Edit,
-  Trash2,
-  Send,
   CheckCircle2,
   XCircle,
   Clock,
   Package,
-  Loader2,
-  ShoppingCart,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Label } from "../components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui/dialog";
-import { Textarea } from "../components/ui/textarea";
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { purchaseApi } from "../services/api";
 import { toast } from "../components/ui/toast";
-import { LoadingCard } from "../components/common";
-import { ErrorMessage } from "../components/common";
-import { EmptyState } from "../components/common";
 
 // 状态配置
 import { confirmAction } from "@/lib/confirmAction";

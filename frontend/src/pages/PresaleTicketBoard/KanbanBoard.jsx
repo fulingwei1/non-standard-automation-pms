@@ -1,12 +1,5 @@
-import { KanbanSquare } from "lucide-react";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { BOARD_STATUS_ORDER, STATUS_CONFIG } from "./constants";
 

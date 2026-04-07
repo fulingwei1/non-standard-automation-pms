@@ -4,16 +4,8 @@
  */
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  ZoomIn,
-  ZoomOut,
-  Calendar,
-  Flag,
-  Diamond,
-  AlertTriangle,
-} from "lucide-react";
-import { Button } from "../ui";
+
+
 import { cn } from "../../lib/utils";
 
 // Zoom levels configuration

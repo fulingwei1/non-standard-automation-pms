@@ -1,12 +1,5 @@
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  FormTextarea,
-  FormSelect,
-} from "../../ui";
-import { Sparkles, Loader2, Layers } from "lucide-react";
+
+
 
 const PROJECT_TYPES = [
   { value: "FIXED_PRICE", label: "固定价格" },

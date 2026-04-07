@@ -6,16 +6,12 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
-  History,
   Briefcase,
   FileText,
   Users,
   Package,
-  ChevronRight,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { cn } from '../../../lib/utils';
 
 // 类型图标映射

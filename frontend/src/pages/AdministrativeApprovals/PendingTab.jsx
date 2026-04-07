@@ -1,6 +1,3 @@
-import { ApprovalCharts } from "./ApprovalCharts";
-import { ApprovalFilters } from "./ApprovalFilters";
-import { ApprovalCard } from "./ApprovalCard";
 
 /**
  * Content for the "待审批" (Pending) tab.

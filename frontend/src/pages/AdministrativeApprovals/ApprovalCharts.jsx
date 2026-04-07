@@ -1,14 +1,7 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui";
-import {
-  MonthlyTrendChart,
-  SimplePieChart,
-  TrendComparisonCard,
-} from "../../components/administrative/StatisticsCharts";
+
+
+
+
 import { MONTHLY_TREND_BASELINE } from "./constants";
 
 /**

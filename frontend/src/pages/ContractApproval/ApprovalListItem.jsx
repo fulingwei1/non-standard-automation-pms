@@ -1,5 +1,3 @@
-import { Building2, User, Calendar, Eye, CheckCircle2 } from "lucide-react";
-import { Badge, Button } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 import { typeConfig, priorityConfig } from "./constants";

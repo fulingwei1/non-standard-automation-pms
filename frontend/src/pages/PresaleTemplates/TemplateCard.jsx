@@ -1,17 +1,8 @@
-import { Calendar, Eye, Star, Wand2 } from "lucide-react";
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui";
+
+
 import { cn, formatDate } from "../../lib/utils";
 import { CATEGORY_STYLE_MAP } from "./constants";
-import { RatingStars } from "./RatingStars";
 
 export function TemplateCard({
   template,

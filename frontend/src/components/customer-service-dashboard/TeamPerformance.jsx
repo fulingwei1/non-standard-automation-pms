@@ -3,32 +3,12 @@
  * 客户服务团队绩效视图组件
  */
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../ui/select";
-import {
-  Progress } from
-"../ui/progress";
-import {
-  BarChart3,
-  Users,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  Award as AwardIcon,
-  RefreshCw } from
-"lucide-react";
+
+
+
+
+
+
 
 export function TeamPerformance({
   teamData = [],

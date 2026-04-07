@@ -12,9 +12,7 @@ import {
   Copy,
   GitBranch,
   Split,
-  Trash2,
 } from 'lucide-react';
-import { Button, Tooltip } from 'antd';
 
 import { NODE_TYPES, CANVAS_CONFIG } from '../constants';
 

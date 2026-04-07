@@ -7,24 +7,10 @@
  * - 通知订阅管理
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Table,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress,
-  Alert,
-  Switch,
-} from '@/components/ui';
+
+
 import { projectApi } from '@/services/api';
 
 export default function MaterialProgressView() {

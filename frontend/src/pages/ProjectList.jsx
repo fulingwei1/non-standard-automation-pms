@@ -1,43 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
 import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  HealthBadge,
-  Progress,
-  Input,
-  SkeletonCard,
-  Checkbox,
   toast,
 } from "../components/ui";
 
 
 import {
-  Plus,
   Search,
-  Filter,
-  Grid3X3,
-  List,
-  ArrowRight,
-  Briefcase,
-  Calendar,
-  Users,
-  ChevronDown,
-  X,
-  Trash2,
-  Download,
-  Tag,
 } from "lucide-react";
 import { useSelection } from "../hooks/useSelection";
 // Sprint 3: 使用优化的分步骤表单组件
-import ProjectFormStepper from "../components/project/ProjectFormStepper";
 
 // Stagger animation
 const staggerContainer = {
@@ -256,7 +231,7 @@ export default function ProjectList() {
     clear: clearSelection,
     isAllSelected,
     isPartialSelected,
-    selectedItems,
+    selectedItems: _selectedItems,
   } = useSelection(filteredProjects);
 
   const handleBatchExport = () => {

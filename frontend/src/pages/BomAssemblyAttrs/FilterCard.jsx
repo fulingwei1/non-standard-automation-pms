@@ -1,17 +1,8 @@
 /**
  * Filter Card - 筛选条件卡片
  */
-import { Search } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
+
 import { stageOptions } from "./constants";
 
 export function FilterCard({

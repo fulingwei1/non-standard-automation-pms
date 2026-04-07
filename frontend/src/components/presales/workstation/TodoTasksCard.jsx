@@ -1,16 +1,5 @@
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ListTodo,
-  ChevronRight,
-  Users,
-  Building2,
-  Calendar,
-  ArrowUpRight,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { Button } from "../../ui/button";
-import { Badge } from "../../ui/badge";
+
+
 import { cn } from "../../../lib/utils";
 import { getPriorityStyle, getPriorityText } from "./utils";
 

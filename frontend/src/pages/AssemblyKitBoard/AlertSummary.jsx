@@ -1,11 +1,8 @@
 /**
  * Alert Summary Cards - 预警汇总
  */
-import { AlertTriangle } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "../../components/ui/card";
+
+
 import { cn } from "../../lib/utils";
 import { alertLevelConfig } from "./constants";
 

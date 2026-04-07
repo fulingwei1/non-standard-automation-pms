@@ -74,7 +74,6 @@ class ReportPushService:
             raise ValueError(f"报告状态不允许推送: {generation.status}")
 
         project_id = generation.scope_id
-        report_data = generation.report_data or {}
 
         # 确定接收人
         recipients = self._resolve_recipients(

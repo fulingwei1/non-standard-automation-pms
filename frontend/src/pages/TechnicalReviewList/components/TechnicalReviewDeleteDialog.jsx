@@ -1,4 +1,3 @@
-import DeleteConfirmDialog from "../../../components/common/DeleteConfirmDialog";
 
 export function TechnicalReviewDeleteDialog({ open, review, onClose, onConfirm }) {
     return (

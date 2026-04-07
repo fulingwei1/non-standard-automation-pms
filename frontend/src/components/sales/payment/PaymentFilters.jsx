@@ -3,10 +3,6 @@
  * 提供搜索、类型筛选、状态筛选和视图切换功能
  */
 
-import { Search, List, LayoutGrid } from "lucide-react";
-import { Input } from "../../../components/ui/input";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent } from "../../../components/ui/card";
 import { PAYMENT_TYPES, PAYMENT_STATUS } from "./paymentConstants";
 
 export default function PaymentFilters({

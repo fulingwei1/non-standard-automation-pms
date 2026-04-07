@@ -4,39 +4,15 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Search,
-  Download,
-  Eye } from
+  ArrowLeft } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
-import { QualificationTrendChart } from "../components/qualification/QualificationTrendChart";
+
+
+
+
+
+
 import { qualificationApi } from "../services/api";
 import { toast } from "../components/ui/toast";
 import { formatDate } from "../lib/utils";

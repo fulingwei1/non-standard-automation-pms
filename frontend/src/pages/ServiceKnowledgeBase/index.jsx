@@ -12,25 +12,9 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus,
-  Search,
-  Eye,
   BookOpen,
-  HelpCircle,
-  Tag,
-  Star,
-  RefreshCw,
-  XCircle,
-  ThumbsUp,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import { LoadingCard, ErrorMessage, EmptyState } from "../../components/common";
 import { toast } from "../../components/ui/toast";
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
@@ -38,8 +22,6 @@ import { serviceApi } from "../../services/api";
 import { confirmAction } from "@/lib/confirmAction";
 
 import { categoryConfig, statusConfig } from "./constants";
-import CreateArticleDialog from "./CreateArticleDialog";
-import ArticleDetailDialog from "./ArticleDetailDialog";
 
 export default function ServiceKnowledgeBase() {
   const [articles, setArticles] = useState([]);

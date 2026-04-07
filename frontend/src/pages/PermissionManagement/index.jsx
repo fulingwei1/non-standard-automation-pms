@@ -1,12 +1,5 @@
 import { Shield } from "lucide-react";
-import { PageHeader } from "../../components/layout";
 import { usePermissionData } from "./usePermissionData";
-import { StatsCards } from "./StatsCards";
-import { UsageStats } from "./UsageStats";
-import { SearchFilter } from "./SearchFilter";
-import { DemoAccountBanner } from "./DemoAccountBanner";
-import { PermissionList } from "./PermissionList";
-import { PermissionDetailDialog } from "./PermissionDetailDialog";
 
 export default function PermissionManagement() {
   const {

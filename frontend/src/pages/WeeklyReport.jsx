@@ -1,29 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { pmoApi } from "../services/api";
 import { formatDate } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  Badge,
-  Progress,
-  Input,
-  SkeletonCard,
-  Button } from
-"../components/ui";
-import {
-  TrendingUp,
-  TrendingDown,
-  CheckCircle2,
-  AlertTriangle,
-  Briefcase,
-  Target,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight } from
-"lucide-react";
+
+
+
+
 
 const staggerContainer = {
   hidden: { opacity: 0 },

@@ -1,20 +1,7 @@
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogBody,
-    DialogFooter,
-} from '../../components/ui/dialog';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../../components/ui/select';
+
+
+
+
 import { resultStatusConfigs } from './constants';
 
 /**

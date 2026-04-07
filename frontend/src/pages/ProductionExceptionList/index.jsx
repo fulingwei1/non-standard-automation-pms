@@ -10,15 +10,7 @@
  *   - ExceptionDetailDialog
  *   - HandleExceptionDialog
  */
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { useProductionExceptionList } from "./hooks";
-import { ExceptionFilters } from "./ExceptionFilters";
-import { ExceptionTable } from "./ExceptionTable";
-import { CreateExceptionDialog } from "./CreateExceptionDialog";
-import { ExceptionDetailDialog } from "./ExceptionDetailDialog";
-import { HandleExceptionDialog } from "./HandleExceptionDialog";
 
 export default function ProductionExceptionList({ embedded = false }) {
   const {

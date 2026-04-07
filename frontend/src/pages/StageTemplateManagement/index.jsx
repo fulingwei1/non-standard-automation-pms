@@ -1,16 +1,7 @@
-import { Plus, Upload, Layers } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
+import { Layers } from "lucide-react";
 import useStageTemplates from "./useStageTemplates";
-import StatsCards from "./StatsCards";
-import SearchFilterBar from "./SearchFilterBar";
-import TemplateTable from "./TemplateTable";
-import {
-  CreateDialog,
-  EditDialog,
-  CopyDialog,
-  TemplateDeleteDialog,
-} from "./TemplateDialogs";
+
+
 
 export default function StageTemplateManagement() {
   const {

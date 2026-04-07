@@ -18,7 +18,7 @@ from app.models.sales import Opportunity
 from app.models.user import User
 from app.schemas.common import ResponseModel
 from app.utils.db_helpers import get_or_404
-from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.common import PaginatedResponse
 from app.schemas.sales import OpportunityResponse, OpportunityRequirementResponse
 from app.common.pagination import PaginationParams, get_pagination_query
 

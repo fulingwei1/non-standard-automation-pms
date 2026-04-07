@@ -1,14 +1,5 @@
-import { motion } from "framer-motion";
-import { Target, Edit } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";

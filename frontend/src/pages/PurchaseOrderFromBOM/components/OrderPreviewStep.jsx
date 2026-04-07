@@ -1,9 +1,3 @@
-import { motion } from "framer-motion";
-import { Edit } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Label } from "../../../components/ui/label";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../../../components/ui/table";
 import { fadeIn } from "../../../lib/animations";
 
 export function OrderPreviewStep({

@@ -1,15 +1,5 @@
-import { CheckCircle2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
+
+
 import { formatDate } from "../../lib/utils";
 import { statusConfigs, typeConfigs } from "./constants";
 

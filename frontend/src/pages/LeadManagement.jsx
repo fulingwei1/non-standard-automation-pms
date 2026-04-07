@@ -4,20 +4,8 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui";
 import { leadApi, customerApi } from "../services/api";
 import {
-  LeadStatsCards,
-  LeadFilters,
-  LeadList,
-  LeadInsights,
-  CreateLeadDialog,
-  EditLeadDialog,
-  ConvertLeadDialog,
-  LeadDetailDialog,
-  FollowUpDialog,
   statusConfig,
 } from "../components/lead-management";
 

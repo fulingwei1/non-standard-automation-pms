@@ -4,16 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { warehouseApi } from "../../services/api/warehouse";
-import { motion } from "framer-motion";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
   AlertTriangle,
   ClipboardCheck,
   Search,
-  Warehouse,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
 import { staggerContainer } from "../../lib/animations";
 
 // 统计卡片

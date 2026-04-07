@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   Layers,
   CheckCircle,
@@ -6,7 +5,6 @@ import {
   Settings,
   FileText,
 } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 

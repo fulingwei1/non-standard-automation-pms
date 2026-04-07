@@ -1,9 +1,8 @@
 /**
  * 项目交付排产计划 - 甘特图页面
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tabs, TabsContent, TabsList, TabsTrigger, Alert } from '@/components/ui';
 import { projectDeliveryApi } from '@/services/api/projectDelivery';
 
 export default function ProjectDeliveryScheduleGantt() {

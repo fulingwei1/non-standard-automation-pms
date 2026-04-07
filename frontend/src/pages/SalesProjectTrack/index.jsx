@@ -4,15 +4,8 @@
  */
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FolderKanban } from "lucide-react";
-import { PageHeader } from "../../components/layout";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { useSalesProjectTrack } from "./hooks/useSalesProjectTrack";
-import { StatsRow } from "./StatsRow";
-import { ProjectFilters } from "./ProjectFilters";
-import { ProjectListItem } from "./ProjectListItem";
-import { ProjectDetailPanel } from "./ProjectDetailPanel";
 
 export default function SalesProjectTrack() {
   const {

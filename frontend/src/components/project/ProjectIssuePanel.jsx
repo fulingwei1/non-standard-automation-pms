@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../ui";
-import {
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
+
+
+
+
 import { formatDate } from "../../lib/utils";
 import { projectWorkspaceApi } from "../../services/api";
 

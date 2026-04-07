@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertCircle } from "lucide-react";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Badge, Progress,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-  Alert,
-} from "../../components/ui";
+
 import { funnelOptimizationApi } from "../../services/api";
 import { STAGE_NAME_MAP } from "./constants";
 

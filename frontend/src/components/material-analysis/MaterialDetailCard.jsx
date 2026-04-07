@@ -3,9 +3,6 @@
  * 显示单个物料的详细分析信息
  */
 import { Package, Truck, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
 import { cn, formatDate } from '../../lib/utils';
 
 /**

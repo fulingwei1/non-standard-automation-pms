@@ -6,39 +6,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Users,
-  User,
-  Briefcase,
-  TrendingUp,
-  DollarSign,
-  Target,
-  ChevronRight,
-  ChevronDown,
-  Building2,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
+
+
 
 // 组织树节点组件
 function OrgNode({ node, level, onSelect, selectedId }) {

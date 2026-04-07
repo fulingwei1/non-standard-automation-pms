@@ -2,14 +2,8 @@
  * AlertListItem - Single alert card in the list
  */
 
-import { motion } from "framer-motion";
-import { Eye } from "lucide-react";
-import {
-  Card,
-  CardContent } from
-"../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+
+
 import { fadeIn } from "../../lib/animations";
 import {
   getAlertLevelConfig,

@@ -7,23 +7,10 @@
  * - 成本预警
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Table,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Alert,
-  AlertDescription,
-} from '@/components/ui';
+
+
 import { ecnApi } from '@/services/api';
 
 export default function ECNCostImpact() {
@@ -32,7 +19,7 @@ export default function ECNCostImpact() {
   const [costImpact, setCostImpact] = useState(null);
   const [costTracking, setCostTracking] = useState(null);
   const [costRecords, setCostRecords] = useState([]);
-  const [alerts, setAlerts] = useState([]);
+  const [_alerts, _setAlerts] = useState([]);
 
   // 加载成本影响分析
   useEffect(() => {
@@ -69,7 +56,7 @@ export default function ECNCostImpact() {
     }
   };
 
-  const handleAddCostRecord = async (recordData) => {
+  const _handleAddCostRecord = async (recordData) => {
     try {
       await ecnApi.createCostRecord(ecnId, recordData);
       loadCostRecords();

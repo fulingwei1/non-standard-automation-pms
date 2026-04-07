@@ -1,14 +1,5 @@
-import { Shield, Info } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Button } from "../../components/ui/button";
-import { Label } from "../../components/ui/label";
+
+
 import { cn } from "../../lib/utils";
 import { ROLE_TEMPLATES } from "./constants";
 

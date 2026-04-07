@@ -4,16 +4,8 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, Alert as AntAlert, Space } from 'antd';
-import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  BarChart3,
-  Activity,
-  Shield } from
-'lucide-react';
-import { Button } from "../ui";
+
+
 import {
   ALERT_TYPES,
   ALERT_LEVELS,

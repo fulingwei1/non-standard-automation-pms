@@ -1,9 +1,6 @@
 /**
  * BasicInfoCard - 基本信息卡片
  */
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 
 export default function BasicInfoCard({ formData, setFormData, opportunities, isEdit }) {
   return (

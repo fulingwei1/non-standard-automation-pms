@@ -21,7 +21,6 @@ from app.models.user import (
     User,
 )
 from app.services.permission_management.permission_audit_service import PermissionAuditService
-from app.services.permission_management.permission_cache_service import get_permission_cache_service
 from app.services.permission_management.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
@@ -310,7 +309,6 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> None:
         """清除权限缓存"""
-        from app.services.permission_management.permission_service import PermissionService
 
         permission_codes = PermissionService.get_user_permissions(self.db, user_id, tenant_id)
 
@@ -330,7 +328,6 @@ class PermissionManagementService:
         tenant_id: int,
     ) -> bool:
         """检查用户是否有指定权限"""
-        from app.services.permission_management.permission_service import PermissionService
 
         return PermissionService.check_permission(
             self.db, user_id, permission_code, user, tenant_id

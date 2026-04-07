@@ -3,20 +3,14 @@
  * Used in BusinessSupportWorkstation and bidding management
  */
 
-import { motion } from "framer-motion";
 import {
   Target,
-  Calendar,
   FileText,
-  Download,
-  Eye,
-  Edit,
   Clock,
   CheckCircle2,
   AlertTriangle,
   Calculator,
 } from "lucide-react";
-import { Badge, Button, Progress } from "../ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

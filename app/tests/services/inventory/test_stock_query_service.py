@@ -4,7 +4,6 @@ from decimal import Decimal
 from unittest.mock import MagicMock, Mock
 
 import pytest
-from sqlalchemy import func
 
 from app.models.inventory_tracking import MaterialStock
 

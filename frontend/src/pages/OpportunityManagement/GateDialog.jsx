@@ -1,14 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-  Label,
-  Textarea
-} from "../../components/ui";
+
+
 
 export default function GateDialog({
   open,

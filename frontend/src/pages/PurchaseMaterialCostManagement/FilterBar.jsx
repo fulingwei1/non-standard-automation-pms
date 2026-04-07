@@ -2,17 +2,8 @@
  * Filter Bar Component
  */
 
-import { Search } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 import { STANDARD_FILTER_OPTIONS, ACTIVE_FILTER_OPTIONS } from "./constants";
 
 export default function FilterBar({

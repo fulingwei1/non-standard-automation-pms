@@ -2,9 +2,8 @@
  * 售后服务中心
  * 功能：客户反馈/维修保养/技术支持工单
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Button, Table, Badge, Tabs, TabsContent, TabsList, TabsTrigger, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
 export default function AfterSalesCenter() {
   const { projectId } = useParams();

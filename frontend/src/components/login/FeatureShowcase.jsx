@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { BarChart3, Clock, Users, AlertTriangle } from 'lucide-react';
 
 const FEATURES = [

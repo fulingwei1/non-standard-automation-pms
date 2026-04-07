@@ -1,14 +1,8 @@
-import { Eye, FileText } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "../../components/ui/table";
+import { FileText } from "lucide-react";
+
 import { cn } from "../../lib/utils";
 import { formatDateTime } from "@/lib/formatters";
 import { STATUS_CONFIG, ENTITY_TYPE_CONFIG } from "./configMaps";
-import EmptyState from "./EmptyState";
 
 const InitiatedList = ({ items, loading, goToDetail }) => (
   <Card className="bg-slate-800/50 border-slate-700">

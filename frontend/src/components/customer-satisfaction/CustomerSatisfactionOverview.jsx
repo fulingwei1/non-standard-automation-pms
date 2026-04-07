@@ -4,7 +4,6 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   Smile,
   Meh,
@@ -14,25 +13,13 @@ import {
   TrendingDown,
   User,
   Star,
-  FilePlus,
-  BarChart3,
-  MessageSquareWarning,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Progress,
-  Button,
-} from "../ui";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import {
   SATISFACTION_LEVELS,
-  SURVEY_STATUS,
-  CHART_COLORS,
 } from "@/lib/constants/customer";
 
 const CustomerSatisfactionOverview = ({ data, loading: _loading, onRefresh: _onRefresh }) => {

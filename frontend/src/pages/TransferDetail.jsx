@@ -5,33 +5,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   CheckCircle2,
   XCircle,
   Clock,
-  User,
   FileText,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Label,
-  Textarea,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../components/ui";
+
+
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { shortageApi } from "../services/api";

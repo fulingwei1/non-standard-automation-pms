@@ -1,4 +1,3 @@
-import { LoadingSpinner } from "../ui/LoadingSpinner";
 
 export default function LoadingPage({ message = "加载中..." }) {
   return (

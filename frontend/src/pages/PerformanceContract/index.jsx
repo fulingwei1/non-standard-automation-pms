@@ -3,35 +3,13 @@
  * 支持 L1/L2/L3 三种合约类型的管理
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  FileText,
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Target,
-  Users,
-  User,
-} from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-  Skeleton,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui";
+
+
+
+
 import { staggerContainer } from "@/lib/animations";
 import { performanceContractApi } from "@/services/api/performanceContract";
 import { INITIAL_CREATE_FORM, INITIAL_ITEM_FORM } from "./constants";
-import StatCard from "./StatCard";
-import ContractCard from "./ContractCard";
-import CreateContractDialog from "./CreateContractDialog";
-import ItemFormDialog from "./ItemFormDialog";
-import EvaluateDialog from "./EvaluateDialog";
 
 export default function PerformanceContract() {
   const [loading, setLoading] = useState(true);

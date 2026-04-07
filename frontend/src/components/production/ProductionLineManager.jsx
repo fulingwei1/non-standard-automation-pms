@@ -4,25 +4,12 @@
  */
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Factory,
-  Activity,
-  Users,
-  AlertTriangle,
   CheckCircle2,
-  Zap,
-  TrendingUp,
-  Search,
   Edit,
   Pause,
   Play } from
 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui';
-import { Button } from '../../components/ui';
-import { Badge } from '../../components/ui';
-import { Input } from '../../components/ui';
-import { Progress } from '../../components/ui';
 import { cn } from '../../lib/utils';
 import {
   PRODUCTION_LINE_STATUS,

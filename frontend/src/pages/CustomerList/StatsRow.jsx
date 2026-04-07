@@ -1,11 +1,5 @@
-import { motion } from "framer-motion"
-import {
-  Building2,
-  Star,
-  TrendingUp,
-  AlertTriangle,
-} from "lucide-react"
-import { Card, CardContent } from "../../components/ui"
+
+
 import { fadeIn } from "../../lib/animations"
 
 export function StatsRow({ stats }) {

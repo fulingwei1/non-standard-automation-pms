@@ -1,4 +1,3 @@
-import { Loader2 } from "lucide-react";
 
 const EmptyState = ({ items, loading, icon: Icon, message }) => (
   <>

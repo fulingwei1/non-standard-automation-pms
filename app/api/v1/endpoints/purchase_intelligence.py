@@ -35,7 +35,6 @@ from app.schemas.purchase_intelligence import (
     SupplierPerformanceResponse,
     SupplierQuotationCreate,
     SupplierQuotationResponse,
-    SupplierRankingResponse,
 )
 from app.services.purchase_intelligence import PurchaseIntelligenceService
 from app.utils.auth import get_current_user

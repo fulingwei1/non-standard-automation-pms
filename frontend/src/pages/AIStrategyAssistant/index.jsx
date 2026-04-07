@@ -4,15 +4,8 @@
  */
 import { useState } from "react";
 import { Brain } from "lucide-react";
-import { PageHeader } from "@/components/layout";
 import { aiStrategyApi } from "@/services/api/aiStrategy";
 import { DEFAULT_COMPANY_INFO } from "./constants";
-import StepNav from "./StepNav";
-import LoadingOverlay from "./LoadingOverlay";
-import Step1Analysis from "./Step1Analysis";
-import Step2Decompose from "./Step2Decompose";
-import Step3AnnualPlan from "./Step3AnnualPlan";
-import Step4DeptObjectives from "./Step4DeptObjectives";
 
 export default function AIStrategyAssistant() {
   const [currentStep, setCurrentStep] = useState(1);

@@ -1,15 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Settings, Save } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+import { Settings } from "lucide-react";
 import { fadeIn } from "../../lib/animations";
 import { useStageTemplate } from "./useStageTemplate";
-import StageCard from "./StageCard";
-import StageDialog from "./StageDialog";
-import NodeDialog from "./NodeDialog";
 
 export default function StageTemplateEditor() {
   const { templateId } = useParams();

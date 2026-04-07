@@ -4,19 +4,8 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Card, Row, Col, Statistic, Progress, Tag, List, Avatar, Badge, Timeline, Button } from 'antd';
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  TrendingUp,
-  Users,
-  FileText,
-  Calendar,
-  MessageSquare } from
-'lucide-react';
-import { Alert } from "../ui";
+
+
 import {
   APPROVAL_TYPES,
   APPROVAL_STATUS,

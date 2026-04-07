@@ -3,8 +3,7 @@
  * 审批列表组件：用于“我的审批/我提交的”等列表页
  */
 
-import { Card, Space, Table, Tag, Typography } from "antd";
-import { ClipboardCheck } from "lucide-react";
+import { Typography } from "antd";
 
 import { APPROVAL_TYPES, APPROVAL_STATUS, APPROVAL_PRIORITY, TABLE_CONFIG } from "@/lib/constants/approval";
 

@@ -2,7 +2,6 @@
  * 采购分析统计卡片组件
  * 用于显示各种统计数据
  */
-import { Card, CardContent } from '../ui/card';
 
 // 图标导入
 import {

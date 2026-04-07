@@ -3,44 +3,10 @@
  * 卡片列表展示、创建/编辑、进度更新
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Edit2,
-  Trash2,
-  ChevronRight,
-  TrendingUp,
-  DollarSign,
-  Target,
-  Calendar,
-  X,
-  Save,
-  Sliders,
-} from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Label,
-  Textarea,
-  Slider,
-} from "@/components/ui";
+
+
+
+
 import { fadeIn, staggerContainer } from "@/lib/animations";
 import { annualWorkApi, strategyApi } from "@/services/api/strategy";
 

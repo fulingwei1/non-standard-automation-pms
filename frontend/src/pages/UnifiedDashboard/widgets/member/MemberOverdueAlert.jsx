@@ -1,8 +1,6 @@
 /**
  * 成员视图 - 逾期任务告警
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { AlertCircle } from 'lucide-react';
 
 export default function MemberOverdueAlert({ data }) {
   const items = data?.items || [];

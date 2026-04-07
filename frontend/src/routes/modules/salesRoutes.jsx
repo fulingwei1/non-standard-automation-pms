@@ -1,5 +1,3 @@
-import { Route, Navigate } from "react-router-dom";
-import { FinanceProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
 
 // 客户管理
@@ -54,7 +52,6 @@ const SalesOpportunityCenter = lazyLoad(() => import("../../pages/SalesOpportuni
 const SalesFunnel = lazyLoad(() => import("../../pages/SalesFunnel"));
 
 // 销售仪表盘
-import SalesDashboard from "../../pages/SalesDashboard";
 
 // 售前相关
 const PresalesTasks = lazyLoad(() => import("../../pages/PresalesTasks"));

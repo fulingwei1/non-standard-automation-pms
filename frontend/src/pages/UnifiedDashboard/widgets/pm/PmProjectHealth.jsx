@@ -1,9 +1,6 @@
 /**
  * PM视图 - 项目健康度一览
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Progress } from '../../../../components/ui/progress';
-import { Badge } from '../../../../components/ui/badge';
 
 const healthLabels = { H1: '健康', H2: '关注', H3: '风险', H4: '严重' };
 const healthColors = { H1: 'bg-green-500', H2: 'bg-yellow-500', H3: 'bg-orange-500', H4: 'bg-red-500' };

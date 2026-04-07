@@ -1,5 +1,3 @@
-import { Route, Navigate } from "react-router-dom";
-import { AppProtectedRoute } from "../../components/common/AppProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
 
 const UnifiedDashboard = lazyLoad(() => import("../../pages/UnifiedDashboard"));

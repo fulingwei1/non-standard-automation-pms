@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import WorkOrderManagement from "./WorkOrderManagement";
-import DispatchManagement from "./DispatchManagement";
-import ProductionPlanList from "./ProductionPlanList";
 
 export default function ProductionExecutionCenter() {
   const tabs = useMemo(

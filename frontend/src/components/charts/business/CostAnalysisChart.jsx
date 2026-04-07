@@ -3,7 +3,6 @@
  * 展示成本构成、预算执行、成本趋势等
  */
 
-import { Pie, Column, DualAxes, Waterfall } from "@ant-design/plots";
 import { formatCurrency } from "../../../lib/utils";
 
 /**

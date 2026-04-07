@@ -1,9 +1,4 @@
 // -*- coding: utf-8 -*-
-import { motion } from "framer-motion";
-import { Check, X } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
 import { cn } from "../../lib/utils";
 import { RECOMMENDATION_CONFIG, DIMENSIONS } from "./constants";
 import { getScoreColor, getRecommendationBadge } from "./utils";

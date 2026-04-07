@@ -1,9 +1,6 @@
 /**
  * PM视图 - 近期里程碑提醒
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
-import { CalendarClock, Flag } from 'lucide-react';
 
 export default function PmMilestoneReminder({ data }) {
   const items = data?.items || [];

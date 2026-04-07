@@ -1,14 +1,6 @@
 import { useState } from "react";
-import { ClipboardCheck, Minus, Plus, CheckCircle2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-} from "../../ui";
+
+
 import { cn } from "../../../lib/utils";
 
 export default function TaskCompleteDialog({ open, onClose, task, onComplete }) {

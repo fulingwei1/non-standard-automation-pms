@@ -2,7 +2,6 @@
  * 报表生成页面
  */
 import { useState, useEffect } from 'react';
-import { FileText, Download } from 'lucide-react';
 import { reportCenterApi } from '../services/api';
 
 export default function ReportGeneration() {

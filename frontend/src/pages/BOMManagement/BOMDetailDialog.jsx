@@ -1,29 +1,9 @@
-import { Upload, Download, Eye, CheckCircle2 } from 'lucide-react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogBody,
-    DialogFooter,
-} from '../../components/ui/dialog';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { Card, CardContent } from '../../components/ui/card';
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '../../components/ui/tabs';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '../../components/ui/table';
+
+
+
+
+
+
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { statusConfigs } from './constants';
 

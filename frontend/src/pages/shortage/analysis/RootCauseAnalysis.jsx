@@ -4,11 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getRootCauseAnalysis } from '@/services/api/shortage';
-import RootCauseBarChart from './components/RootCauseBarChart';
-import { Badge } from '@/components/ui/badge';
-import { Lightbulb, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const RootCauseAnalysis = () => {

@@ -2,8 +2,6 @@
  * Header summary cards (supplier, status, payment, invoice)
  */
 
-import { motion } from "framer-motion";
-import { Card, CardContent, Badge } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { statusConfig, paymentStatusConfig, invoiceStatusConfig } from "./constants";

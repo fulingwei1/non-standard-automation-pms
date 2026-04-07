@@ -2,9 +2,6 @@
  * Order lifecycle timeline card
  */
 
-import { Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui";
-import TimelineStage from "./TimelineStage";
 
 const TimelineCard = ({ po }) => (
   <Card className="bg-slate-800/50 border-slate-700/50">

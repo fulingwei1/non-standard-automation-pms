@@ -3,38 +3,14 @@
  * Features: 齐套率分布、缺料预警汇总
  */
 import { useState, useEffect } from "react";
-import {
-  Package,
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-  BarChart3 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../components/ui/table";
+
+
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { purchaseApi, projectApi } from "../services/api";
 export default function KitRateBoard() {

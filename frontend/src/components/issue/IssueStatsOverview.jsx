@@ -4,7 +4,6 @@
  */
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   AlertCircle,
   Clock,
@@ -12,15 +11,8 @@ import {
   XCircle,
   AlertTriangle,
   TrendingUp,
-  TrendingDown,
-  Activity,
-  BarChart3,
-  Users,
-  Calendar } from
+  Activity } from
 "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Progress } from "../../components/ui/progress";
-import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import {
   DEFAULT_ISSUE_STATS,
@@ -30,10 +22,8 @@ import {
   formatResolutionTime,
   ISSUE_VIEW_MODES } from
 "@/lib/constants/issue";
-import {
-  SimpleBarChart,
-  SimplePieChart } from
-"../administrative/StatisticsCharts";
+
+
 
 export const IssueStatsOverview = ({
   stats = DEFAULT_ISSUE_STATS,

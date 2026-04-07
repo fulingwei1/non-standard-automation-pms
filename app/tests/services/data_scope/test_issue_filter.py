@@ -6,9 +6,7 @@ IssueFilterService 测试
 使用独立的 mock 避免导入问题
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
-from datetime import datetime
+from unittest.mock import Mock, patch
 
 
 # 独立的 Mock 类定义

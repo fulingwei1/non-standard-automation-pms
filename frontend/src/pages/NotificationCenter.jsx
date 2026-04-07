@@ -1,32 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
-  Check,
-  CheckCheck,
   AlertTriangle,
   Info,
   Calendar,
   Package,
   FileText,
-  Users,
-  Clock,
-  Trash2,
-  Filter,
-  Search } from
+  Users } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { notificationApi } from "../services/api";
-import { ApiIntegrationError } from "../components/ui";
 
 // Mock notification data - 已移除，使用真实API
 

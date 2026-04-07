@@ -1,4 +1,3 @@
-import { Check, ChevronRight } from "lucide-react";
 import { STEPS } from "./constants";
 
 export default function StepNav({ currentStep }) {

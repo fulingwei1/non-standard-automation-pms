@@ -4,10 +4,8 @@
  * 支持权限控制：无权限时显示置灰状态和提示
  */
 import { memo } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { cn } from "../../lib/utils";
-import { Star, Lock } from "lucide-react";
 import { Box } from "lucide-react";
 import { resolveIcon } from "@/utils/iconMap";
 

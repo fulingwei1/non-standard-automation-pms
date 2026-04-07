@@ -12,14 +12,14 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.sales import Contract, Lead, Opportunity, Quote
+from app.models.sales import Opportunity, Quote
 
 logger = logging.getLogger(__name__)
 

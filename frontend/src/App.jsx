@@ -1,21 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
   useLocation } from
 "react-router-dom";
-import { ConfigProvider, theme } from "antd";
+import { theme } from "antd";
 import zhCN from "antd/locale/zh_CN";
-import ErrorBoundary from "./components/ui/ErrorBoundary";
-import { MainLayout } from "./components/layout/MainLayout";
-import { AppRoutes } from "./routes/routeConfig";
-import { PermissionProvider } from "./context/PermissionContext";
-import { AuthProvider } from "./context/AuthContext";
 
 // Pages
-import Login from "./pages/Login";
 
 // Ant Design 深色主题配置 - 匹配项目设计系统
 const antdDarkTheme = {

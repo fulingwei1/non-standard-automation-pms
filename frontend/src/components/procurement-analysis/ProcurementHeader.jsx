@@ -2,9 +2,6 @@
  * 采购分析页面头部组件
  * 包含标题、时间范围筛选和导出按钮
  */
-import { Calendar, Download } from 'lucide-react';
-import { Button } from '../ui/button';
-import { PageHeader } from '../layout';
 import { TIME_RANGE_OPTIONS } from '@/lib/constants/procurementAnalysis';
 
 /**

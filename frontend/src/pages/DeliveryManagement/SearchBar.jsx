@@ -2,8 +2,6 @@
  * SearchBar — keyword search card for the delivery list view
  */
 
-import { Search } from "lucide-react";
-import { Card, CardContent, Input } from "../../components/ui";
 
 const SearchBar = ({ value, onChange }) => (
   <Card className="mb-4 bg-surface-100/50">

@@ -13,20 +13,10 @@
  * 8. 服务记录搜索和筛选
  */
 
-import { motion } from "framer-motion";
 import { Plus, FileText } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { LoadingCard, ErrorMessage, EmptyState } from "../../components/common";
 import { staggerContainer } from "../../lib/animations";
-import { ServiceRecordOverview } from "../../components/service-record";
 
 import { useServiceRecordPage } from "./useServiceRecordPage";
-import FilterBar from "./FilterBar";
-import RecordListItem from "./RecordListItem";
-import CreateRecordDialog from "./CreateRecordDialog";
-import DetailDialog from "./DetailDialog";
 
 export default function ServiceRecord() {
   const {

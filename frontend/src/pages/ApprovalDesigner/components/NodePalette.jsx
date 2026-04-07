@@ -3,7 +3,7 @@
  * 提供可拖拽的节点类型
  */
 
-import { Card, Space, Tooltip, Typography } from 'antd';
+import { Typography } from 'antd';
 import { useDraggable } from '@dnd-kit/core';
 import {
   Play,

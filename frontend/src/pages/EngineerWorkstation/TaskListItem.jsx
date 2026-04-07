@@ -2,20 +2,10 @@
  * TaskListItem - Individual task row for list and project views
  */
 
-import { motion } from "framer-motion";
-import {
-  Calendar,
-  ChevronRight,
-  Flag,
-  Folder,
-  Timer,
-  AlertTriangle,
-  FileText,
-} from "lucide-react";
-import {
-  Badge,
-  Progress,
-} from "../../components/ui";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { statusConfigs, priorityConfigs, taskTypeConfigs } from "./constants";
 

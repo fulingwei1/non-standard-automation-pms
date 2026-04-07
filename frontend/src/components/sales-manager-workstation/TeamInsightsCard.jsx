@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Activity } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui";
 import { formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

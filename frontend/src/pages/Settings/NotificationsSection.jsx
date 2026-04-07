@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { Bell, Mail, Smartphone } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
+
+
 import { cn } from "../../lib/utils";
 
 const notificationTypes = [

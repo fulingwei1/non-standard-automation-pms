@@ -1,10 +1,5 @@
-import { motion } from "framer-motion";
-import { Crown } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent } from
-"../components/ui/card";
+
+
 import { fadeIn } from "../lib/animations";
 
 export default function KeyDecisions() {

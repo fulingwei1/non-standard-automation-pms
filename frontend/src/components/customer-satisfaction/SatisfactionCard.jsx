@@ -4,23 +4,12 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Star,
   TrendingUp,
-  TrendingDown,
-  Clock,
-  CheckCircle2,
   Users,
-  ThumbsUp,
-  ChevronUp,
-  ChevronDown,
-  RefreshCw } from
+  ThumbsUp } from
 "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import { Button } from "../../components/ui/button";
 import {
   getSatisfactionScoreConfig,
   formatSatisfactionScore,

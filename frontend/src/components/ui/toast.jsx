@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, AlertCircle, Info, XCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Info, XCircle } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { resolveIcon } from "@/utils/iconMap";
 

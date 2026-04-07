@@ -1,30 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Sparkles,
-  FileText,
-  ClipboardCheck,
-  GitBranch,
-  RefreshCw,
-  PlusCircle,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
+
+
 import { presaleApi } from "../../services/api";
 import { extractItems, normalizeSolution } from "./utils";
-import SolutionListTab from "./SolutionListTab";
-import SolutionGenerateTab from "./SolutionGenerateTab";
-import SolutionReviewTab from "./SolutionReviewTab";
-import SolutionVersionsTab from "./SolutionVersionsTab";
 
 export default function PresaleProposals() {
   const navigate = useNavigate();

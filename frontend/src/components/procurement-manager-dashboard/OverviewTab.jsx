@@ -1,7 +1,3 @@
-import { TabsContent } from "../../components/ui";
-import RecentApprovalsCard from "./RecentApprovalsCard";
-import TeamOverviewCard from "./TeamOverviewCard";
-import KeyMetricsCard from "./KeyMetricsCard";
 
 export default function OverviewTab({ stats, recentApprovals }) {
   return (

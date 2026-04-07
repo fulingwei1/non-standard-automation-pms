@@ -4,20 +4,13 @@
  */
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   Users,
   Target,
   DollarSign,
   Activity,
-  Award,
-  Clock,
-  RefreshCw } from
+  Award } from
 "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import {
   DEFAULT_SALES_TEAM_STATS,

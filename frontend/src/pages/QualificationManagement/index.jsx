@@ -6,34 +6,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Award,
-  Plus,
-  UserCheck,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui/tabs";
+
+
+
+
 import { qualificationApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 import { formatDate } from "../../lib/utils";
 import { confirmAction } from "@/lib/confirmAction";
-import { StatsCards } from "./StatsCards";
-import { LevelsTab } from "./LevelsTab";
-import { ModelsTab } from "./ModelsTab";
-import { EmployeesTab } from "./EmployeesTab";
-import { EmployeeCharts } from "./EmployeeCharts";
-import { PaginationControls } from "./PaginationControls";
 
 export default function QualificationManagement() {
   const [pagination, setPagination] = useState({

@@ -1,28 +1,10 @@
-import React, { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Badge,
-  Button,
-  Avatar,
-  Progress,
-  ScrollArea,
-  Separator,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle } from
-'@/components/ui';
+import { useState } from 'react';
+
+
 import {
   PROJECT_ROLES } from
 '@/lib/constants/projectDetail';
 import { format } from 'date-fns';
-import { Mail, Phone, Calendar, UserX } from 'lucide-react';
 
 const ProjectTeamCard = ({ project, onAssignMember, onRemoveMember, onUpdateRole }) => {
   const [selectedMember, setSelectedMember] = useState(null);

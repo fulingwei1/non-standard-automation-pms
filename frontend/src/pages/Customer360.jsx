@@ -5,48 +5,18 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Building2,
-  FileText,
-  DollarSign,
-  Receipt,
-  Package,
-  Star,
-  MessageSquare,
-  TrendingUp,
-  BarChart3,
-  Target,
-  RefreshCw,
-  Download,
-  Edit,
-  Plus } from
-"lucide-react";
+
+
 
 import {
-  Card,
-  Tabs,
-  Button,
-  Space,
   Typography,
-  Spin,
   DatePicker,
   message } from
 "antd";
 
 // 导入拆分后的组件
-import {
-  CustomerBasicInfo,
-  CustomerOrderHistory,
-  CustomerQuoteHistory,
-  CustomerContractHistory,
-  CustomerPaymentRecords,
-  CustomerProjectDelivery,
-  CustomerSatisfaction,
-  CustomerServiceRecords,
-  CustomerAnalytics } from
-'../components/customer-360';
+
+
 
 import { customerApi } from '../services/api/crm';
 

@@ -3,8 +3,7 @@
  * 审批规则组件（简化版）
  */
 
-import { Card, List, Space, Tag, Typography } from "antd";
-import { Settings } from "lucide-react";
+import { Typography } from "antd";
 
 import { APPROVAL_RULES } from "@/lib/constants/approval";
 

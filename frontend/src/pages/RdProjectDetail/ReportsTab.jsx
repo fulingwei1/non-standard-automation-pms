@@ -1,16 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  Button,
-} from "../../components/ui";
-import {
-  FileText,
-  Calculator,
-  TrendingUp,
-  BarChart3,
-  Users,
-} from "lucide-react";
+
+
+
+
 
 export default function ReportsTab({ id }) {
   const navigate = useNavigate();

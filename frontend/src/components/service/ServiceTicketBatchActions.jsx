@@ -4,20 +4,9 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Button } from "../../components/ui/button";
-import { Textarea } from "../../components/ui/textarea";
+
+
 import { toast } from "../../components/ui/toast";
-import DeleteConfirmDialog from "../../components/common/DeleteConfirmDialog";
-import { Users, Download, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export function ServiceTicketBatchActions({
   selectedTickets,

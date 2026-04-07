@@ -1,15 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { PageHeader } from "../../components/layout";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
-import ProfileSection from "./ProfileSection";
-import NotificationsSection from "./NotificationsSection";
-import SecuritySection from "./SecuritySection";
-import AppearanceSection from "./AppearanceSection";
-import LanguageSection from "./LanguageSection";
-import SettingsSidebar from "./SettingsSidebar";
 
 export default function Settings() {
   const navigate = useNavigate();

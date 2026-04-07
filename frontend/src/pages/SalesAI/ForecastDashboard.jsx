@@ -9,44 +9,10 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  TrendingDown,
-  Target,
-  DollarSign,
-  Users,
-  Award,
-  AlertTriangle,
-  ArrowUpRight,
-  Activity,
-  BarChart3,
-  Eye,
-  Settings,
-  Plus,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-} from "../../components/ui";
-import TargetSettingModal from "../../components/sales/TargetSettingModal";
+
+
+
+
 import { salesTargetApi } from "../../services/api";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 
@@ -92,7 +58,7 @@ function CompanyOverview({ targets }) {
     };
   }, [targets]);
 
-  const [forecast, setForecast] = useState({
+  const [forecast, _setForecast] = useState({
     prediction: {
       predicted_revenue: 52800000,
       predicted_completion_rate: 105.6,
@@ -115,10 +81,10 @@ function CompanyOverview({ targets }) {
   }, [targetSummary, forecast]);
 
   // 计算差距
-  const gap = targetSummary.quarterly_target - targetSummary.actual_revenue;
+  const _gap = targetSummary.quarterly_target - targetSummary.actual_revenue;
   const predictedGap = forecast.prediction.predicted_revenue - targetSummary.quarterly_target;
 
-  const getRiskColor = (level) => {
+  const _getRiskColor = (level) => {
     switch (level) {
       case "LOW": return "text-green-500 bg-green-500/10";
       case "MEDIUM": return "text-orange-500 bg-orange-500/10";

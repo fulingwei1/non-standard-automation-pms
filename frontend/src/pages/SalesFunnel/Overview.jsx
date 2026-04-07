@@ -1,11 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  TrendingUp, TrendingDown, Target, Users, DollarSign, ChevronRight,
-} from "lucide-react";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Badge, Progress,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { stages } from "./constants";

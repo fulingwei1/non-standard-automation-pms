@@ -2,7 +2,6 @@
  * 报表模板管理页面
  */
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { reportCenterApi } from '../services/api';
 
 export default function ReportTemplates() {

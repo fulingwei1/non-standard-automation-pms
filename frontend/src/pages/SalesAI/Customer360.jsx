@@ -10,48 +10,10 @@
 
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Users,
-  TrendingUp,
-  Heart,
-  ShoppingCart,
-  Calendar,
-  Phone,
-  Mail,
-  MessageSquare,
-  Video,
-  CheckCircle,
-  AlertCircle,
-  AlertTriangle,
-  Target,
-  Star,
-  Clock,
-  ArrowRight,
-  Building2,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-} from "../../components/ui";
+
+
+
+
 
 // 交互历史时间线
 function InteractionTimeline() {

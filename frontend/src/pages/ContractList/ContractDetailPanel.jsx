@@ -1,20 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  X,
-  Building2,
-  Calendar,
-  Clock,
-  Shield,
-  User,
-  FileText,
-  Paperclip,
-  Download,
-  Edit,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-} from "lucide-react";
-import { Button, Badge, Progress } from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { statusConfig, paymentTypeLabels } from "./constants";
 

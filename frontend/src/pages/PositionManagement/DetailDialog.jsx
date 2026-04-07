@@ -1,14 +1,5 @@
-import { Shield } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Label } from "../../components/ui/label";
+
+
 import { getCategoryConfig } from "./categoryConstants";
 
 export default function DetailDialog({ open, onOpenChange, position }) {

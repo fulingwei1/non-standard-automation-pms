@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectApi } from "../services/api";
 import { formatDate } from "../lib/utils";
@@ -10,31 +9,11 @@ import {
   getCostStatus,
   getCostProgressColor 
 } from "../lib/utils/cost";
-import { PageHeader } from "../components/layout/PageHeader";
+
+
 import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  HealthBadge,
-  Progress,
-  Input,
-  SkeletonCard,
-} from "../components/ui";
-import {
-  Plus,
   Search,
-  Grid3X3,
-  List,
-  ArrowRight,
-  Briefcase,
-  Calendar,
-  Users,
-  Eye,
 } from "lucide-react";
-import ProjectFormStepper from "../components/project/ProjectFormStepper";
-import ProjectCostFilter from "../components/project/ProjectCostFilter";
-import ProjectCostDetailDialog from "../components/project/ProjectCostDetailDialog";
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
 

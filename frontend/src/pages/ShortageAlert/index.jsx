@@ -2,13 +2,7 @@
  * Shortage Alert Page - 缺料预警页面
  * Features: 缺料预警列表、详情、确认、处理、统计分析
  */
-import { PageHeader } from "../../components/layout";
 import { useShortageAlert } from "./hooks/useShortageAlert";
-import SummaryCards from "./SummaryCards";
-import AlertFilters from "./AlertFilters";
-import AlertTable from "./AlertTable";
-import AlertDetailDialog from "./AlertDetailDialog";
-import HandleAlertDialog from "./HandleAlertDialog";
 
 export default function ShortageAlert() {
   const {

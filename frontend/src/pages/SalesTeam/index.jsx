@@ -9,40 +9,19 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Users,
-  UserPlus,
-  TrendingUp,
-  BarChart3,
-  Download,
-  Building2,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
+
+
 import { salesTeamApi } from "../../services/api";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { getDefaultDateRange } from "@/lib/constants/salesTeam";
 import { useSalesTeamFilters } from "../../components/sales/team/hooks/useSalesTeamFilters";
 import { useSalesTeamData } from "../../components/sales/team/hooks/useSalesTeamData";
 import { useSalesTeamRanking } from "../../components/sales/team/hooks/useSalesTeamRanking";
-import {
-  TeamStatsCards,
-  TeamFilters,
-  TeamRankingBoard,
-  TeamMemberList,
-  TeamMemberDetailDialog,
-} from "../../components/sales/team";
 
-import OrganizationTree from "./OrganizationTree";
-import OrgHierarchyCard from "./OrgHierarchyCard";
-import CreateTeamDialog from "./CreateTeamDialog";
+
+
 import { filterMembersBySearch } from "./utils";
 
 export default function SalesTeam({ embedded = false }) {

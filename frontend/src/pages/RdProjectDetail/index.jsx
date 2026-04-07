@@ -1,32 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { rdProjectApi, projectApi } from "../../services/api";
 import { formatCurrency } from "../../lib/utils";
-import {
-  Button,
-  Skeleton,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "../../components/ui";
+
+
 import {
   DollarSign,
   Clock,
   Users,
   Calculator,
-  AlertCircle,
 } from "lucide-react";
 import { fadeIn, tabs, statusMap, categoryTypeMap } from "./constants";
-import ProjectHeader from "./ProjectHeader";
-import StatCards from "./StatCards";
-import OverviewTab from "./OverviewTab";
-import CostsTab from "./CostsTab";
-import TimesheetTab from "./TimesheetTab";
-import WorklogsTab from "./WorklogsTab";
-import DocumentsTab from "./DocumentsTab";
-import ReportsTab from "./ReportsTab";
 
 export default function RdProjectDetail() {
   const { id } = useParams();

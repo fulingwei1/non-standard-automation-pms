@@ -2,17 +2,8 @@
  * BOM Assembly Attributes Management Page - BOM装配属性维护页面
  * Features: 物料装配阶段配置、阻塞性设置、批量分配、模板套用
  */
-import { Save, Wand2, FileDown } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
 
 import { useBomAssemblyAttrs } from "./useBomAssemblyAttrs";
-import { FilterCard } from "./FilterCard";
-import { StageStatsGrid } from "./StageStatsGrid";
-import { AssemblyAttrsTable } from "./AssemblyAttrsTable";
-import { AutoAssignDialog } from "./AutoAssignDialog";
-import { TemplateDialog } from "./TemplateDialog";
 
 export default function BomAssemblyAttrs() {
   const {

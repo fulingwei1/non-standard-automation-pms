@@ -1,16 +1,7 @@
-import {
-  DollarSign,
-  Activity,
-  TrendingUp,
-  Package,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
+
+
+
+
 import { formatAmount } from "./utils";
 
 export default function TurnoverRateTab({ turnoverData }) {

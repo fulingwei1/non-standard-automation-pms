@@ -9,36 +9,14 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Target,
-  TrendingUp,
   Users,
   DollarSign,
-  Award,
   Activity,
-  AlertTriangle,
-  ArrowRight,
-  BarChart3,
-  PieChart,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Zap,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Progress,
-  Skeleton,
-  SkeletonDashboardStats,
-  SkeletonCard,
-} from "../components/ui";
-import { ErrorMessage } from "../components/ui/ErrorMessage";
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { salesStatisticsApi } from "../services/api";

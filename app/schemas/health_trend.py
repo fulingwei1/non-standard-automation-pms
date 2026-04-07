@@ -3,7 +3,7 @@
 健康度可视化 Schema
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 

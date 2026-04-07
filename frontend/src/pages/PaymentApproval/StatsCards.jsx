@@ -1,11 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  ClipboardCheck,
-  AlertTriangle,
-  DollarSign,
-  CreditCard,
-} from "lucide-react";
-import { Card, CardContent } from "../../components/ui";
+
+
 import { formatCurrency } from "../../lib/utils";
 import { staggerContainer } from "../../lib/animations";
 

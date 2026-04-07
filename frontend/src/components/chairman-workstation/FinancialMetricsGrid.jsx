@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   DollarSign,
   TrendingUp,
@@ -8,7 +7,6 @@ import {
   Receipt
 } from "lucide-react";
 import { staggerContainer } from "../../lib/animations";
-import StatCard from "../common/StatCard";
 import { formatCurrency } from "./utils";
 
 export const FinancialMetricsGrid = ({ companyStats }) => {

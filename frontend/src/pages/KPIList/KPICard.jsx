@@ -2,21 +2,11 @@
  * KPI 卡片组件
  */
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  RefreshCw,
-  Activity,
   Calendar,
-  ChevronDown,
-  ChevronRight,
-  CheckCircle2,
 } from "lucide-react";
-import {
-  Button,
-  Badge,
-  Progress,
-  Skeleton,
-} from "../../components/ui";
+
+
 import { fadeIn } from "../../lib/animations";
 import { kpiApi } from "../../services/api/strategy";
 import { HEALTH_STATUS, COLLECTION_FREQUENCY } from "./constants";

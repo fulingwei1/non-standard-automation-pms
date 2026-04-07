@@ -3,36 +3,13 @@
  * 展示 KPI 卡片、进度条、健康状态、历史趋势、数据采集
  */
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Search,
-  RefreshCw,
-  Target,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  Skeleton,
-} from "../../components/ui";
+
+
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { BSC_DIMENSIONS } from "../../lib/constants/strategy";
 import useKPIData from "./useKPIData";
-import KPIForm from "./KPIForm";
-import KPICard from "./KPICard";
-import UpdateValueDialog from "./UpdateValueDialog";
 
 export default function KPIList() {
   const {

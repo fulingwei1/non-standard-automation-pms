@@ -4,7 +4,6 @@ import {
   Mail,
   AlertTriangle,
 } from "lucide-react";
-import StatCard from "../../components/common/StatCard";
 
 const STAT_CARD_COMMON = {
   bg: "bg-transparent",

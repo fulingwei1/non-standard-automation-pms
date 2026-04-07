@@ -2,25 +2,10 @@
  * LevelsTab - 等级管理标签页
  */
 import { useNavigate } from "react-router-dom";
-import { Eye, Edit, Trash2 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
-import { Checkbox } from "../../components/ui/checkbox";
+
+
+
+
 import { getLevelBadgeColor } from "./constants";
 
 export function LevelsTab({

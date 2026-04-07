@@ -1,14 +1,5 @@
-import React from "react";
-import { Eye } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogBody,
-} from "../../components/ui/dialog";
-import { Button } from "../../components/ui/button";
+
+
 
 export default function PreviewDialog({
   open,

@@ -1,19 +1,9 @@
 import { useState } from "react";
 import {
-  Camera,
-  FileText,
   AlertCircle,
-  Image,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
+
+
 import { cn } from "../../lib/utils";
 import { typeConfigs, statusConfigs, severityConfigs } from "./constants";
 

@@ -7,22 +7,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Skeleton } from "../components/ui/skeleton";
 
 // Import ECN components
 import {
-  ECNBasicInfo,
-  ECNEvaluationManager,
-  ECNApprovalFlow,
-  ECNTaskBoard,
-  ECNImpactAnalysis,
-  ECNChangeLog,
   tabConfigs,
   getStatusConfig,
   formatDate } from

@@ -77,7 +77,7 @@ export function useAcceptanceExecutionPage(id) {
             fetchItems();
             fetchIssues();
         }
-    }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [id]);  
 
     // ── Actions ─────────────────────────────────────────────────────────────
 

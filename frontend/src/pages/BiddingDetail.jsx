@@ -5,32 +5,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Download,
-  Upload,
-  Send,
-  Edit,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  Paperclip,
-  User,
-  MessageSquare,
-  Share2,
-  ArrowLeft,
-  Loader2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress } from
-"../components/ui";
+
+
+
+
 import { formatCurrency } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi } from "../services/api";

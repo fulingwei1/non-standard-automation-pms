@@ -3,8 +3,7 @@
  * 统计分析组件（简化版）
  */
 
-import { Card, Col, Row, Space, Statistic, Progress, Typography } from "antd";
-import { TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { Typography } from "antd";
 
 const { Text } = Typography;
 

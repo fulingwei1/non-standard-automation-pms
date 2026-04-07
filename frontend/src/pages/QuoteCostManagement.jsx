@@ -1,33 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Calculator,
-  CheckCircle2,
-  Layers,
-  Search
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "../components/ui";
+
+
+
+
 import { staggerContainer } from "../lib/animations";
 import { quoteApi, salesTemplateApi } from "../services/api";
 
-import {
-  CostOverview,
-  CostBreakdown,
-  CostCheck,
-  CostApproval,
-  ApplyTemplateDialog,
-  SubmitApprovalDialog,
-  CostSuggestionsDialog
-} from "../components/quote-cost-management";
+
+
 
 export default function QuoteCostManagement() {
   const [costSuggestions, setCostSuggestions] = useState(null);

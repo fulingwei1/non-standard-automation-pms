@@ -4,31 +4,17 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Building2,
-  Star,
-  Search,
   Plus,
-  AlertTriangle,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { supplierApi } from "../../services/api";
 import { toast } from "../../components/ui/toast";
 
 import { levelConfig } from "./pageConstants";
-import SupplierCard from "./SupplierCard";
-import CreateSupplierDialog from "./CreateSupplierDialog";
 
 export default function SupplierManagement() {
   const [suppliers, setSuppliers] = useState([]);

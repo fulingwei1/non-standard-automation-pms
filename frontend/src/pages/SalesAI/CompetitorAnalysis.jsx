@@ -5,41 +5,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Sword,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  Award,
-  DollarSign,
-  Users,
-  Lightbulb,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
+
+
 
 // 竞争对手总览
 function CompetitorOverview() {

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   ClipboardCheck,
   AlertTriangle,
@@ -8,7 +7,6 @@ import {
   Building2
 } from "lucide-react";
 import { staggerContainer } from "../../lib/animations";
-import StatCard from "../common/StatCard";
 import { formatCurrency } from "./utils";
 
 const StatCardsGrid = ({ stats }) => {

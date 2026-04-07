@@ -1,4 +1,3 @@
-import { Route, Navigate } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
 
 const NotificationCenter = lazyLoad(() => import("../../pages/NotificationCenter"));

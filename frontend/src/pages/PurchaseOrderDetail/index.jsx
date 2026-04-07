@@ -5,22 +5,9 @@
 
 import { useParams, useNavigate } from "react-router-dom";
 import { Edit } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
 import { usePurchaseOrder } from "./usePurchaseOrder";
-import HeaderCards from "./HeaderCards";
-import ProgressCard from "./ProgressCard";
-import TimelineCard from "./TimelineCard";
-import ItemsTab from "./ItemsTab";
-import SupplierTab from "./SupplierTab";
-import DocumentsTab from "./DocumentsTab";
-import NotesTab from "./NotesTab";
-import ActionBar from "./ActionBar";
 
 export default function PurchaseOrderDetail() {
   const { id } = useParams();

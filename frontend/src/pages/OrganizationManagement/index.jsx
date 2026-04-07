@@ -1,38 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Building2,
-  FolderTree,
-  List,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import DeleteConfirmDialog from "../../components/common/DeleteConfirmDialog";
+
+
+
+
+
+
 import { staggerContainer, fadeIn } from "../../lib/animations";
 import { organizationApi } from "../../services/api";
 
 import { UNIT_TYPES } from "./unitTypeConfig";
-import OrgTreeNode from "./OrgTreeNode";
-import OrgListTable from "./OrgListTable";
-import StatsCards from "./StatsCards";
-import CreateDialog from "./CreateDialog";
-import EditDialog from "./EditDialog";
-import DetailDialog from "./DetailDialog";
 
 export default function OrganizationManagement() {
   const [orgTree, setOrgTree] = useState([]);

@@ -1,16 +1,7 @@
-import {
-  AlertTriangle,
-  DollarSign,
-  Warehouse,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+
+
+
+
 import { formatAmount } from "./utils";
 
 export default function StaleMaterialsTab({ staleMaterialsData, staleThreshold, setStaleThreshold, loading }) {

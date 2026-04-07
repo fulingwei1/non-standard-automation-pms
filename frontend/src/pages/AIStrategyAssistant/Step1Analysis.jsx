@@ -1,26 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  Building2,
-  DollarSign,
-  Globe,
-  AlertTriangle,
-  Loader2,
-  Sparkles,
-  Check,
-  TrendingUp,
-  Target,
-  ArrowRight,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Textarea,
-  Label,
-} from "@/components/ui";
+
+
+
+
 import { staggerContainer } from "@/lib/animations";
 
 export default function Step1Analysis({

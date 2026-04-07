@@ -1,8 +1,6 @@
 /**
  * 项目进度组件 (Project Progress)
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Progress } from '../../../../components/ui/progress';
 
 const defaultProjects = [
   { id: 'PJ250101-001', name: '智能检测设备', progress: 75, status: 'on-track' },

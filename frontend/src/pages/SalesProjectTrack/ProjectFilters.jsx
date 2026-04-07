@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Search } from "lucide-react";
-import { Input } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 import { stageConfig, healthConfig } from "./constants";
 

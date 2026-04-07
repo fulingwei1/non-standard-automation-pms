@@ -4,27 +4,14 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
-import {
-  Building2,
-  Plus,
-  Download,
-  Upload,
-} from "lucide-react"
-import { PageHeader } from "../../components/layout"
-import { Button } from "../../components/ui"
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations"
-import { CustomerCard } from "../../components/sales"
 import { useCustomerList } from "./hooks"
 import { customerApi } from "../../services/api"
 import { toast } from "sonner"
 
 import { normalizeCustomer } from "./utils"
-import { StatsRow } from "./StatsRow"
-import { FilterBar } from "./FilterBar"
-import { CustomerTable } from "./CustomerTable"
-import { CreateDialog } from "./CreateDialog"
-import { CustomerDetailPanel } from "./CustomerDetailPanel"
 
 export default function CustomerList() {
   const navigate = useNavigate();

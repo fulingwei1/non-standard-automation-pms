@@ -1,19 +1,5 @@
-import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Eye, Wrench, AlertCircle, CheckCircle2 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { useProjectDependencyCheck } from "./hooks/useProjectDependencyCheck";
-import LoadingState from "./LoadingState";
-import AutoFixOptions from "./AutoFixOptions";
-import SummaryCards from "./SummaryCards";
-import CycleIssuesList from "./CycleIssuesList";
-import TimingIssuesList from "./TimingIssuesList";
-import MissingIssuesList from "./MissingIssuesList";
-import OtherIssuesList from "./OtherIssuesList";
-import AllClearState from "./AllClearState";
-import PreviewDialog from "./PreviewDialog";
-import ConfirmDialog from "./ConfirmDialog";
 
 export default function DependencyCheck({ projectId }) {
   const { id: routeId } = useParams();

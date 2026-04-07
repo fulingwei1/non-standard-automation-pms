@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui";
-import { AreaChart, UtilizationChart } from "../../../components/charts";
 import { fadeIn } from "../../../lib/animations";
 
 export function ResourcesTab({ utilizationData }) {

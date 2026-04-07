@@ -3,17 +3,8 @@
  * Features: 库存周转率、呆滞物料预警、安全库存达标率、ABC分类、库存成本占用
  */
 import { useState, useEffect, useCallback } from "react";
-import { Download } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { api } from "../../services/api";
 import { buildExportData, downloadCsv } from "./utils";
-import TurnoverRateTab from "./TurnoverRateTab";
-import StaleMaterialsTab from "./StaleMaterialsTab";
-import SafetyStockTab from "./SafetyStockTab";
-import AbcAnalysisTab from "./AbcAnalysisTab";
-import CostOccupancyTab from "./CostOccupancyTab";
 
 export default function InventoryAnalysis() {
   const [activeTab, setActiveTab] = useState("turnover-rate");

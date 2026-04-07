@@ -4,25 +4,12 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import {
   TrendingUp,
-  BarChart3,
-  RefreshCw,
   Target,
   Zap,
-  CheckCircle,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus } from
+  CheckCircle } from
 "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import StatCard from "../common/StatCard";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { cn } from "../../lib/utils";
 import {
   SCORING_CATEGORIES,
@@ -32,9 +19,6 @@ import {
   BUDGET_RANGES,
   LEAD_STATUSES } from
 "@/lib/constants/leadAssessment";
-import { Checkbox } from "../ui/checkbox";
-import { Input } from "../ui";
-import { Mail, Phone } from "lucide-react";
 
 export const ScoringMatrix = ({
   leads = [],

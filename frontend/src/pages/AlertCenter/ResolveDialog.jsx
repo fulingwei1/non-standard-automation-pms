@@ -2,14 +2,8 @@
  * ResolveDialog - Dialog for resolving an alert
  */
 
-import { Button } from "../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../../components/ui/dialog";
+
+
 import { getAlertLevelConfig } from "../../components/alert-center";
 
 export default function ResolveDialog({

@@ -1,8 +1,5 @@
-import { Info, RotateCcw, Save, Users, Briefcase } from "lucide-react";
+import { Users, Briefcase } from "lucide-react";
 import { fadeIn } from "../../utils/weightConfigUtils";
-import { motion } from "framer-motion";
-import { WeightInputCard } from "./WeightInputCard";
-import { WeightValidation } from "./WeightValidation";
 
 /**
  * 当前配置卡片组件

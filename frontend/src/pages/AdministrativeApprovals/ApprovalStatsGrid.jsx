@@ -4,7 +4,6 @@ import {
   Car,
   AlertTriangle,
 } from "lucide-react";
-import { Card, CardContent } from "../../components/ui";
 
 /**
  * Four-card summary grid shown at the top of the page.

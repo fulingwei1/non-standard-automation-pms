@@ -4,23 +4,11 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  Users,
-  User,
-  Building2,
-  Briefcase,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Badge,
-  Progress,
-} from "../../components/ui";
+
+
+
+
 import { salesTeamApi } from "../../services/api";
-import OrgNode from "./OrgNode";
 
 export default function OrganizationTree() {
   const [selectedNode, setSelectedNode] = useState(null);

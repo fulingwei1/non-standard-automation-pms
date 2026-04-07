@@ -3,10 +3,6 @@
  * 报价详情对话框
  */
 
-import { DollarSign, Eye, GitCompare, CheckCircle2, XCircle, Printer } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 
 export default function QuoteDetailDialog({

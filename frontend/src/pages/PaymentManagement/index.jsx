@@ -1,19 +1,10 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, Bell, FileText, Eye, List, LayoutGrid } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-    Card, CardContent, CardHeader, CardTitle, Button, Badge, Input,
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
-} from "../../components/ui";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../components/ui/tabs";
+
+
 import { cn } from "../../lib/utils";
 import { staggerContainer, fadeIn } from "../../lib/animations";
-import { PaymentTimeline } from "../../components/sales";
-import {
-    PaymentStatsOverview, PAYMENT_TYPES, PAYMENT_STATUS, getPaymentType, getPaymentStatus, formatCurrency
+import { PAYMENT_TYPES, PAYMENT_STATUS, getPaymentType, getPaymentStatus, formatCurrency
 } from "../../components/payment-management";
 import { usePaymentManagement } from "./hooks";
-import { PaymentCard, AgingAnalysis } from "./components";
 
 export default function PaymentManagement() {
     const {

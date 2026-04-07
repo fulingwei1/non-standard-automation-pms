@@ -1,6 +1,4 @@
-import { CheckCircle2, Layers, Sparkles, Star } from "lucide-react";
 
-import { Card, CardContent } from "../../components/ui";
 
 export function StatsBar({ stats }) {
   return (

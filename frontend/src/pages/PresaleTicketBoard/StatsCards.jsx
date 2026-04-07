@@ -1,11 +1,5 @@
-import { Clock3, Gauge, Ticket, TrendingUp } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress,
-} from "../../components/ui";
+
+
 
 export default function StatsCards({ stats }) {
   return (

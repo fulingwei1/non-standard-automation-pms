@@ -1,17 +1,6 @@
-import { Search, CheckSquare, Square } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '../../components/ui/table';
-import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
-} from '../../components/ui/dialog';
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '../../components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+
+
+
 import { DATA_SCOPE_MAP } from './constants';
 
 export default function EditRoleDialog({

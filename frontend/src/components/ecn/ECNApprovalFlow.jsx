@@ -3,27 +3,10 @@
  * ECN 审批流程可视化组件 - 已更新为统一审批系统
  */
 
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Textarea } from "../../components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../../components/ui/dialog";
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  User,
-  Calendar,
-  MessageSquare } from
-"lucide-react";
+
+
+
+
 import {
   approvalStatusConfigs,
   formatStatus } from

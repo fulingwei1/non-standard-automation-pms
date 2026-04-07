@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { Clock, DollarSign, CheckCircle2, XCircle } from "lucide-react";
-import { Card, CardContent } from "../../components/ui";
 import { staggerContainer } from "../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../lib/formatters";
 

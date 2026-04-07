@@ -1,21 +1,12 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { roleApi } from "../../services/api";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { useDebounce } from "../../hooks/useDebounce";
 import { usePermission } from "../../hooks/usePermission";
-import NavGroup from "./NavGroup";
-import NavItem from "./NavItem";
 import { getRoleInfo } from "../../lib/roleConfig";
-import {
-  Box,
-  ChevronLeft,
-  LogOut,
-  User,
-  Search,
-  X
-} from "lucide-react";
+
+
 
 // Import from extracted modules
 import { iconMap } from "./sidebarIcons";

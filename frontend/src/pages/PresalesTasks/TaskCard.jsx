@@ -1,26 +1,10 @@
 /**
  * 任务卡片组件
  */
-import { motion } from "framer-motion";
-import {
-  Calendar,
-  Clock,
-  Users,
-  Building2,
-  Eye,
-  Edit,
-  Trash2,
-  MoreHorizontal,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { taskStatuses, getPriorityStyle } from "./constants";

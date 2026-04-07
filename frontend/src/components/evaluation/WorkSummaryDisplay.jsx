@@ -1,10 +1,5 @@
-import {
-  Target,
-  FileText,
-  TrendingUp,
-  AlertCircle,
-  ThumbsUp,
-} from "lucide-react";
+
+
 
 /**
  * 工作总结展示组件

@@ -2,9 +2,6 @@
  * 采购成本趋势分析 Tab 组件
  * 显示采购成本趋势图表和月度明细表格
  */
-import { TrendingUp, TrendingDown } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import ProcurementStatsCard from './ProcurementStatsCard';
 import { STATS_CARD_CONFIGS } from '@/lib/constants/procurementAnalysis';
 
 /**

@@ -2,12 +2,8 @@
  * Items tab - material line items table with summary
  */
 
-import { motion } from "framer-motion";
-import { Package } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui";
 import { formatCurrency } from "../../lib/utils";
 import { staggerContainer } from "../../lib/animations";
-import POLineItem from "./POLineItem";
 
 const ItemsTab = ({ po, totalItems }) => (
   <Card className="bg-slate-800/50 border-slate-700/50">

@@ -1,20 +1,5 @@
-import { RefreshCw } from "lucide-react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-  Badge,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 import { formatDate, formatWan, getStatusConfig } from "./utils";
 
 export default function SolutionVersionsTab({

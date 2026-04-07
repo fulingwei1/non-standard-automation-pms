@@ -6,33 +6,17 @@
  * the same directory; shared constants are imported from @/lib/constants/service.
  */
 
-import { motion } from "framer-motion";
-import {
-  PackageCheck,
-  Calendar,
-  Truck,
-} from "lucide-react";
 
-import {
-  Card,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "../../components/ui";
+
+
+
+
 
 // Shared delivery-management sub-components (from components directory)
-import {
-  DeliveryOverview,
-  DeliveryPlan,
-  DeliveryTracking,
-} from "../../components/delivery-management";
+
+
 
 // Page-local sub-components
-import DeliveryDetail from "./DeliveryDetail";
-import DeliveryForm from "./DeliveryForm";
-import PageHeader from "./PageHeader";
-import SearchBar from "./SearchBar";
 
 // Primary data / state hook
 import useDeliveryManagement from "./useDeliveryManagement";

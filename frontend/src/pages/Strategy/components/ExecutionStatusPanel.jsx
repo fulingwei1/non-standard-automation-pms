@@ -2,19 +2,11 @@
  * 执行状态面板组件
  * 展示战略执行追踪状态
  */
-import { motion } from "framer-motion";
 import {
   BarChart3,
-  CheckCircle2,
-  TrendingUp,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress,
-} from "../../../components/ui";
+
+
 import { cn } from "../../../lib/utils";
 import { fadeIn, staggerContainer } from "../../../lib/animations";
 import { BSC_DIMENSIONS } from "../../../lib/constants/strategy";

@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Heart, Cpu, DollarSign, Award, Eye,
-} from "lucide-react";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Badge, Progress,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "../../components/ui";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "../../components/ui/select";
+
+
+
 import { opportunityApi } from "../../services/api";
 import { STAGE_NAME_MAP } from "./constants";
 

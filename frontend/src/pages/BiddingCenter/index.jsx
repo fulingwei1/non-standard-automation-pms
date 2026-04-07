@@ -3,21 +3,11 @@
  * 管理投标项目、技术标书、竞争分析
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import {
-  Target,
-  Search,
-  Plus,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { presaleApi } from "../../services/api";
 import { biddingStages, mapTenderStatus } from "./constants";
-import { StatsCards } from "./StatsCards";
-import { BiddingKanban } from "./BiddingKanban";
-import { BiddingDetailPanel } from "./BiddingDetailPanel";
 
 export default function BiddingCenter() {
   const [searchTerm, setSearchTerm] = useState("");

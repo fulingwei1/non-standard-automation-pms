@@ -2,26 +2,10 @@ import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/formatters";
 import { useNavigate } from "react-router-dom";
 import { managementRhythmApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  Badge,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle } from
-"../components/ui";
-import {
-  Plus,
-  FileText,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Download,
-  Eye } from
-"lucide-react";
+
+
+
+
 
 const reportTypeConfig = {
   ANNUAL: { label: "年度报告", color: "bg-blue-500" },

@@ -1,13 +1,6 @@
 import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { Settings, AlertCircle } from "lucide-react";
 import { useWeightConfig } from "../hooks/useWeightConfig";
 import { fadeIn, validateWeights } from "../utils/weightConfigUtils";
-import { CurrentConfigCard } from "../components/weightConfig/CurrentConfigCard";
-import { ImpactStatistics } from "../components/weightConfig/ImpactStatistics";
-import { CalculationExamples } from "../components/weightConfig/CalculationExamples";
-import { ConfigHistory } from "../components/weightConfig/ConfigHistory";
-import { NoticeCard } from "../components/weightConfig/NoticeCard";
 
 const EvaluationWeightConfig = () => {
   const {

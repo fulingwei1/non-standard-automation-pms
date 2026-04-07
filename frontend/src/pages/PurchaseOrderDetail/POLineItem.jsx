@@ -2,8 +2,6 @@
  * Purchase Order Line Item row component
  */
 
-import { motion } from "framer-motion";
-import { Badge } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { statusConfig } from "./constants";

@@ -2,9 +2,6 @@
  * 供应商交期准时率分析 Tab 组件
  * 显示供应商交期绩效统计和排名
  */
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Badge } from '../ui/badge';
-import ProcurementStatsCard from './ProcurementStatsCard';
 import { STATS_CARD_CONFIGS, getOnTimeRateRating, getOnTimeRateBadgeColor } from '@/lib/constants/procurementAnalysis';
 
 /**

@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.models.ecn.core import Ecn
 from app.models.pmo.change_risk import PmoProjectRisk
 from app.models.project.change_impact import ProjectChangeImpact
-from app.models.project.core import Machine, Project
+from app.models.project.core import Project
 from app.models.project.financial import ProjectCost, ProjectMilestone
 
 logger = logging.getLogger(__name__)

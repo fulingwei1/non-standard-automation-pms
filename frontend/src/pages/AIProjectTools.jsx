@@ -6,26 +6,12 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Calendar,
-  Users,
-  ChevronRight,
-  Loader2,
-  Sparkles,
-  Search
+  Users
 } from "lucide-react";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Badge } from "../components/ui/badge";
+
+
 import { staggerContainer } from "../lib/animations";
 import { projectApi } from "../services/api";
 

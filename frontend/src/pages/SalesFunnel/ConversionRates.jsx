@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, Activity, AlertCircle } from "lucide-react";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Progress, Alert,
-} from "../../components/ui";
+
 import { funnelOptimizationApi } from "../../services/api";
 import { STAGE_NAME_MAP } from "./constants";
 

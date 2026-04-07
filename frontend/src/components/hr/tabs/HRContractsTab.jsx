@@ -2,24 +2,11 @@
  * HRContractsTab Component
  * 合同管理 Tab 组件
  */
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  EmptyState,
-} from "../../ui";
+
+
 import {
   FileText,
   Bell,
-  Search,
-  Plus,
-  AlertTriangle,
-  RefreshCw,
-  Eye,
 } from "lucide-react";
 import { cn, formatDate } from "../../../lib/utils";
 import { useHRContracts } from "../hooks/useHRContracts";

@@ -2,21 +2,9 @@
  * CostTrendTab — "成本趋势" tab content
  */
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui";
+
+
 import { cn, formatCurrency, formatDate } from "../../lib/utils";
-import { CostTrendChart } from "../../components/cost/CostTrendChart";
 
 export function CostTrendTab({ versions }) {
   if (!versions || versions.length === 0) {

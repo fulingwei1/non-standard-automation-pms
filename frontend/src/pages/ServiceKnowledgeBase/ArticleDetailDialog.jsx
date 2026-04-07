@@ -3,29 +3,10 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  Eye,
-  Edit,
-  Trash2,
-  HelpCircle,
-  Tag,
-  Star,
-  Save,
-  ThumbsUp,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogBody,
-} from "../../components/ui/dialog";
-import { Textarea } from "../../components/ui/textarea";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { categoryConfig, statusConfig } from "./constants";
 

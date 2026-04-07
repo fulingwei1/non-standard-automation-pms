@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.models.base import Base
-from app.models.material import Material, BomHeader, BomItem
+from app.models.material import Material, BomHeader
 from app.models.project import Project
 from app.models.user import User
 from app.models.vendor import Vendor

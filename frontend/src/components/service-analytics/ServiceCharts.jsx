@@ -1,18 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  BarChart3,
-  AlertCircle,
-  Clock,
-  Star,
-  TrendingUp,
-  TrendingDown
-} from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent
-} from "../../components/ui/card";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

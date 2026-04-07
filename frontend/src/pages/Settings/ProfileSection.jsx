@@ -1,21 +1,8 @@
 import { useState } from "react";
-import {
-  User,
-  Camera,
-  Save,
-  Mail,
-  Smartphone,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Avatar, AvatarImage, AvatarFallback } from "../../components/ui/avatar";
+
+
+
+
 
 export default function ProfileSection() {
   const [user, setUser] = useState(() => {

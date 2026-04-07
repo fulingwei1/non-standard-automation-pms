@@ -1,8 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import AcceptanceManagement from "./AcceptanceManagement";
-import FieldCommissioning from "./FieldCommissioning";
-import InstallationDispatchManagement from "./InstallationDispatchManagement";
 
 export default function DeliveryAcceptanceCenter() {
   const tabs = useMemo(

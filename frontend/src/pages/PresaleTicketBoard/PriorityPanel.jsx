@@ -1,13 +1,5 @@
-import { Activity } from "lucide-react";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Progress,
-} from "../../components/ui";
+
+
 import { PRIORITY_CONFIG } from "./constants";
 
 export default function PriorityPanel({ priorityDistribution, stats }) {

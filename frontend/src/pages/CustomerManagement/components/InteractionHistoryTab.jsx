@@ -3,9 +3,7 @@
  * 展示客户交互时间线和统计分析
  */
 
-import { Card, Row, Col, Statistic, Typography } from "antd";
-import { Phone, Mail, Users, FileText, Calendar } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Typography } from "antd";
 
 const { Text } = Typography;
 

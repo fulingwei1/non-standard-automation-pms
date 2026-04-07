@@ -5,14 +5,12 @@
 """
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.common.date_range import get_month_range
 from app.core import security
 from app.models.presale import (
     PresaleSolution,

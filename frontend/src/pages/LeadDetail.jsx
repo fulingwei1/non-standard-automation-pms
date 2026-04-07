@@ -4,46 +4,16 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Clock,
-  RefreshCw,
-  Plus,
-  ArrowRight,
-  AlertTriangle } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../components/ui/select";
 
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { formatDate } from "../lib/utils";
 import { leadApi, customerApi } from "../services/api";
 import { confirmAction } from "@/lib/confirmAction";

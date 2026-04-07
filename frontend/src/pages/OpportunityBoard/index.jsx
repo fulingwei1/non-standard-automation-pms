@@ -4,11 +4,8 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import { PageHeader } from "../../components/layout";
 import { fadeIn } from "../../lib/animations";
 import {
-  OpportunityBoardOverview,
   OPPORTUNITY_STAGES,
   OPPORTUNITY_PRIORITY,
   SALES_SOURCE,
@@ -18,13 +15,6 @@ import {
 import { opportunityApi, salesStatisticsApi } from "../../services/api";
 import { confirmAction } from "@/lib/confirmAction";
 
-import ViewModeTabs from "./ViewModeTabs";
-import FilterControls from "./FilterControls";
-import BoardView from "./BoardView";
-import ListView from "./ListView";
-import FunnelView from "./FunnelView";
-import CreateOpportunityDialog from "./CreateOpportunityDialog";
-import OpportunityDetailDialog from "./OpportunityDetailDialog";
 
 // 阶段映射函数
 const mapStageToFrontend = (backendStage) => {

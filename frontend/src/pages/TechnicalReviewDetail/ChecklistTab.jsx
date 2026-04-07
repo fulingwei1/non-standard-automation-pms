@@ -1,12 +1,5 @@
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    Button,
-    Badge,
-} from "../../components/ui";
-import { Plus } from "lucide-react";
+
+
 import { CHECKLIST_RESULT_COLORS } from "./constants";
 
 const RESULT_LABELS = {

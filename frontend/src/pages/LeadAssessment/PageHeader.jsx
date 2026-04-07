@@ -4,8 +4,7 @@
  * title, subtitle, action buttons, and view-layout toggle.
  */
 
-import { Typography, Space, Button, Radio } from 'antd';
-import { Plus, Upload, Download, LayoutGrid, List as ListIcon, Target } from 'lucide-react';
+import { Typography } from 'antd';
 
 const { Title, Text } = Typography;
 

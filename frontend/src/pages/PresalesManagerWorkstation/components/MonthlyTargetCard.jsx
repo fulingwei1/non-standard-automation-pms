@@ -1,12 +1,5 @@
-import { motion } from "framer-motion";
-import { Activity } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Progress } from "../../../components/ui/progress";
+
+
 import { fadeIn } from "../../../lib/animations";
 import { formatCurrencyCompact as formatCurrency } from "../../../lib/formatters";
 

@@ -4,29 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  Bell } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { pipelineAnalysisApi } from "../services/api";
 import { formatDate } from "../lib/utils";
 

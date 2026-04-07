@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { fadeIn } from "../../lib/animations";
 import { formatDate } from "../../lib/utils";
 import { STATUS_META, ROW_HEIGHT } from "./constants";

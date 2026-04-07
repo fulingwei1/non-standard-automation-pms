@@ -1,4 +1,3 @@
-import { TabsContent, Progress } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
 
 export default function BudgetTab({ costBreakdown }) {

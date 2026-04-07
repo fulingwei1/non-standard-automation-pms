@@ -4,32 +4,15 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   BarChart3,
-  Filter,
-  Download,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardHeader,
-  Button,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { financialReportApi } from "../../services/api";
 
 import { reportTypes } from "./constants";
-import PeriodSelector from "./PeriodSelector";
-import SummaryStatistics from "./SummaryStatistics";
-import ProfitLossTab from "./ProfitLossTab";
-import CashFlowTab from "./CashFlowTab";
-import BudgetTab from "./BudgetTab";
-import CostAnalysisTab from "./CostAnalysisTab";
-import ProjectProfitabilityTab from "./ProjectProfitabilityTab";
 
 export default function FinancialReports() {
   const [selectedPeriod, setSelectedPeriod] = useState("month"); // month, quarter, year

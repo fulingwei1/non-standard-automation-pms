@@ -4,28 +4,10 @@
  */
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  BarChart3,
-  Activity,
-  TrendingUp,
-  ShieldAlert,
-  Link2, Zap } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
+
+
+
+
 import { cn, formatDate } from "../lib/utils";
 import { progressApi, projectApi } from "../services/api";
 export default function ProgressBoard() {

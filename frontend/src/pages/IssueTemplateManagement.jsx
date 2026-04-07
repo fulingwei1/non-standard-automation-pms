@@ -3,9 +3,6 @@
  * Features: 问题模板列表、创建、编辑、删除、从模板创建问题
  */
 import { useState, useEffect, useMemo } from "react";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
 import { formatDate } from "../lib/utils";
 import {
   issueTemplateApi,
@@ -13,12 +10,6 @@ import {
   machineApi,
 } from "../services/api";
 import {
-  IssueTemplateFilters,
-  IssueTemplateList,
-  TemplateFormDialog,
-  TemplateDetailDialog,
-  DeleteTemplateDialog,
-  CreateIssueFromTemplateDialog,
   categoryConfigs,
   issueTypeConfigs,
   severityConfigs,

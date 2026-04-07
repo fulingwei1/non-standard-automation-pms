@@ -1,9 +1,6 @@
 import { memo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { HEALTH_CONFIG } from "../../lib/constants";
-import ProjectCard from "./ProjectCard";
-import { ChevronDown, ChevronUp, MoreHorizontal } from "lucide-react";
 
 /**
  * 看板列组件

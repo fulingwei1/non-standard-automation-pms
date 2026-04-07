@@ -4,33 +4,10 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingDown,
-  DollarSign,
-  Package,
-  Building2,
-  Calendar,
-  Download } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 import { purchaseApi } from "../services/api";

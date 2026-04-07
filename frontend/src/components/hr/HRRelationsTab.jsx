@@ -9,31 +9,15 @@
  * 5. 快速操作
  */
 
-import { motion } from 'framer-motion';
 import {
-  Heart,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   UserMinus,
   MessageSquare,
   FileText,
   TrendingUp,
-  Plus,
-  BarChart3,
-  Shield,
-  Users,
-  Calendar,
-  ChevronRight } from
+  Calendar } from
 'lucide-react';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
   toast } from
 '../ui';
 import { cn } from '../../lib/utils';

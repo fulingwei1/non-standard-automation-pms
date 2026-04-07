@@ -1,9 +1,6 @@
 /**
  * 高管视图 - 重大风险/问题
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
-import { ShieldAlert } from 'lucide-react';
 
 const levelColors = {
   CRITICAL: 'destructive',

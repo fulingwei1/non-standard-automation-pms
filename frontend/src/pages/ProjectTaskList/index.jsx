@@ -4,50 +4,16 @@
  */
 import { useParams, useNavigate } from "react-router-dom";
 import {
-    ArrowLeft,
-    Plus,
-    Search,
-    Users,
-    Circle,
-    Clock,
-    CheckCircle2,
-    TrendingUp,
-    Edit
+    Circle
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "../../components/ui/select";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from "../../components/ui/table";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogBody,
-    DialogFooter
-} from "../../components/ui/dialog";
+
+
+
+
+
+
+
+
 import { cn, formatDate } from "../../lib/utils";
 
 // Custom Hooks & Constants

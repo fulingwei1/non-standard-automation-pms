@@ -1,9 +1,6 @@
 // -*- coding: utf-8 -*-
-import { Target, Zap, Check, History } from "lucide-react";
-import {
-  Card,
-  CardContent
-} from "../../components/ui/card";
+
+
 
 export default function StatsCards({ stats }) {
   return (

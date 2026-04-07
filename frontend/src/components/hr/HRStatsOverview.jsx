@@ -3,7 +3,6 @@
  * HR 统计概览组件
  */
 
-import { motion } from "framer-motion";
 import {
   Users,
   UserPlus,
@@ -15,8 +14,6 @@ import {
   GraduationCap,
   Clock } from
 "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import StatCard from "../common/StatCard";
 import { cn } from "../../lib/utils";
 
 const STAT_CARD_PROPS = {

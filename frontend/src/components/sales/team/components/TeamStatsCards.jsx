@@ -3,14 +3,8 @@
  * 显示4个关键团队指标：目标、完成、项目、客户
  */
 
-import { motion } from "framer-motion";
-import {
-  Target,
-  DollarSign,
-  Activity,
-  Users,
-} from "lucide-react";
-import { Card, CardContent } from "../../../ui";
+
+
 import { formatCurrency } from "@/lib/constants/salesTeam";
 
 export default function TeamStatsCards({ teamStats }) {

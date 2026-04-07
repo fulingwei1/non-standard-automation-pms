@@ -3,31 +3,18 @@
  * 核心入口页面，展示技术支持任务、方案进度、投标项目等
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   ListTodo,
   FileText,
   Target,
   BookOpen,
-  Plus,
   Upload,
-  Search,
   DollarSign,
   ClipboardList
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import { Button } from "../components/ui/button";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { presaleApi, opportunityApi } from "../services/api";
 
-import StatsCards from "../components/presales/workstation/StatsCards";
-import TodoTasksCard from "../components/presales/workstation/TodoTasksCard";
-import OngoingSolutionsCard from "../components/presales/workstation/OngoingSolutionsCard";
-import QuickActionsCard from "../components/presales/workstation/QuickActionsCard";
-import RecentTendersCard from "../components/presales/workstation/RecentTendersCard";
-import LinkedOpportunitiesCard from "../components/presales/workstation/LinkedOpportunitiesCard";
-import CostEstimateDialog from "../components/presales/workstation/CostEstimateDialog";
-import FeasibilityAssessmentDialog from "../components/presales/workstation/FeasibilityAssessmentDialog";
 import { getTypeColor } from "../components/presales/workstation/utils";
 
 const YUAN_TO_CENTS = 10000;

@@ -1,8 +1,6 @@
 /**
  * ComparisonCards — 4 个指标对比卡片（总问题数 / 待处理 / 已解决 / 阻塞问题）
  */
-import { TrendingUp, TrendingDown } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
 import { cn } from "../../lib/utils";
 
 /**

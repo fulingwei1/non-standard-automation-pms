@@ -1,14 +1,7 @@
-import {
-  CheckCircle2,
-  Edit,
-  Eye,
-  FileText
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Button
-} from "../../components/ui";
+
+
+
+
 import { formatDateTime } from "@/lib/formatters";
 import { stageConfig, isGatePassed } from "./constants";
 

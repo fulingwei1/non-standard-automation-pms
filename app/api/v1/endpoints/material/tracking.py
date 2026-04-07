@@ -498,18 +498,6 @@ def goods_received_notify(
             )
             kitting_rate = round(complete_lines / total_lines * 100, 1) if total_lines else 0
             
-            # 判断是否有采购中的物料
-            has_purchased = (
-                db.query(BomItem.id)
-                .join(BomHeader, BomItem.bom_id == BomHeader.id)
-                .filter(
-                    BomHeader.project_id == order.project_id,
-                    BomItem.purchased_qty > 0,
-                )
-                .first()
-                is not None
-            )
-            
             # 更新项目齐套率相关字段
             project.kitting_rate = kitting_rate
             project.shortage_items_count = total_lines - complete_lines

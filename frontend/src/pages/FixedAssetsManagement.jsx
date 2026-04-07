@@ -4,38 +4,14 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Plus,
-  Building2,
-  TrendingDown,
-  Wrench,
-  DollarSign,
-  Edit,
-  Eye,
-  Download } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import {
-  MonthlyTrendChart,
-  CategoryBreakdownCard,
-  TrendComparisonCard } from
-"../components/administrative/StatisticsCharts";
+
+
 import { adminApi } from "../services/api";
 
 // Mock data - 已移除，使用真实API

@@ -1,5 +1,3 @@
-import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui";
-import { BarChart3, TrendingUp } from "lucide-react";
 
 export default function KeyMetricsCard() {
   return (

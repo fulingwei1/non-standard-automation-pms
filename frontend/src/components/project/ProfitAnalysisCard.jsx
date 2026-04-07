@@ -1,23 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Badge,
-  Progress,
-  Button,
-} from "../ui";
+
+
 import { costApi } from "../../services/api";
 import { formatCurrency } from "../../lib/utils";
-import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp,
-  Lightbulb,
-  BarChart3,
-} from "lucide-react";
+
+
 
 const HEALTH_CONFIG = {
   healthy: { label: "健康", color: "bg-green-500", textColor: "text-green-700", bgLight: "bg-green-50" },

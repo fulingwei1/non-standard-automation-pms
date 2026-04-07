@@ -8,36 +8,11 @@
  * - 合同里程碑提醒
  */
 
-import React, { useState } from "react";
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Tag,
-  Progress,
-  Tabs,
-  Badge,
-  Alert,
-  Spin,
-  Empty,
   Typography,
-  Space,
-  Button,
-  Tooltip,
 } from "antd";
-import {
-  BellOutlined,
-  DollarOutlined,
-  HeartOutlined,
-  CalendarOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
-  ClockCircleOutlined,
-  ReloadOutlined,
-} from "@ant-design/icons";
+
+
 import {
   useSalesWorkstationData,
   useFollowUpReminders,
@@ -234,7 +209,7 @@ function SummaryCards({ data, loading }) {
  * 跟进提醒列表
  */
 function FollowUpList() {
-  const { data, loading, error, refetch } = useFollowUpReminders();
+  const { data, loading, error, refetch: _refetch } = useFollowUpReminders();
 
   const columns = [
     {
@@ -324,7 +299,7 @@ function FollowUpList() {
  * 催款优先级列表
  */
 function CollectionList() {
-  const { data, loading, error, refetch } = useCollectionPriority();
+  const { data, loading, error, refetch: _refetch } = useCollectionPriority();
 
   const columns = [
     {
@@ -422,7 +397,7 @@ function CollectionList() {
  * 商机健康度列表
  */
 function HealthList() {
-  const { data, loading, error, refetch } = useOpportunityHealthList();
+  const { data, loading, error, refetch: _refetch } = useOpportunityHealthList();
 
   const columns = [
     {
@@ -523,7 +498,7 @@ function HealthList() {
  * 合同里程碑列表
  */
 function MilestoneList() {
-  const { data, loading, error, refetch } = useContractMilestones();
+  const { data, loading, error, refetch: _refetch } = useContractMilestones();
 
   const columns = [
     {

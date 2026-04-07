@@ -8,18 +8,15 @@ from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range
 from app.core import security
 from app.models.presale import (
-    PresaleSolution,
     PresaleSupportTicket,
     PresaleTenderRecord,
 )
-from app.models.sales.leads import Opportunity
 from app.models.user import User
 from app.schemas.common import ResponseModel
 
@@ -514,8 +511,6 @@ def _generate_roi_suggestions(
     if total_hours == 0:
         suggestions.append({"type": "info", "message": "暂无工时数据，建议完善工单工时记录以获取分析"})
         return suggestions
-
-    overall_roi = total_won_amount / total_hours if total_hours > 0 else 0
 
     # 找出投入多但产出低的客户
     low_roi_customers = []

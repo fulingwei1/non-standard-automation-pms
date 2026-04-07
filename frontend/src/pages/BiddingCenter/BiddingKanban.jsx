@@ -1,18 +1,10 @@
 /**
  * 投标看板视图组件
  */
-import { motion } from "framer-motion";
-import { Target } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
-import { BiddingCard } from "./BiddingCard";
 
 export function BiddingKanban({ biddingsByStage, onSelectBidding }) {
   return (

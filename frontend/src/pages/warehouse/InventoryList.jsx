@@ -1,11 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Package, Search, RefreshCw, AlertTriangle } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { warehouseApi } from "../../services/api";
 
 export default function InventoryList() {

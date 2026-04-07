@@ -4,16 +4,8 @@
  */
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { FileText, CheckCircle2 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-} from "../ui";
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { SURVEY_TYPES } from "@/lib/constants/customer";
 

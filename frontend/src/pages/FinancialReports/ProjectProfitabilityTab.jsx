@@ -1,6 +1,4 @@
-import { TabsContent, Progress } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
-import { BarChart as BarChartComponent } from "../../components/charts";
 
 export default function ProjectProfitabilityTab({ projectProfitability }) {
   return (

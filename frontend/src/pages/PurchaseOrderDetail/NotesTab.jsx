@@ -2,9 +2,6 @@
  * Notes / remarks tab
  */
 
-import { motion } from "framer-motion";
-import { Info } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 
 const NotesTab = ({ po }) => (

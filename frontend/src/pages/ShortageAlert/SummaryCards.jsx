@@ -1,5 +1,4 @@
 import { AlertTriangle, Package, CheckCircle2, BarChart3 } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
 
 export default function SummaryCards({ summary }) {
   if (!summary) return null;

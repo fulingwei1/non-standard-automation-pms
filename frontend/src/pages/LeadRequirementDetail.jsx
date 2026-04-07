@@ -5,28 +5,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Save,
-  Lock } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Label,
-  Textarea,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { technicalAssessmentApi } from "../services/api";
-import { Badge } from "../components/ui";
 
 export default function LeadRequirementDetail() {
   const { leadId } = useParams();

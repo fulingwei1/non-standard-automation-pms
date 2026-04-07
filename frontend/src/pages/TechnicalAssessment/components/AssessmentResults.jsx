@@ -1,19 +1,5 @@
-import { AlertTriangle, Target } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui";
-import { RadarChart } from "../../../components/assessment/RadarChart";
-import { TrendChart } from "../../../components/assessment/TrendChart";
-import { ComparisonChart } from "../../../components/assessment/ComparisonChart";
+
+
 import {
   decisionConfig,
   dimensionLabels,

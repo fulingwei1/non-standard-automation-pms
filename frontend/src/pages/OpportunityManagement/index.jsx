@@ -5,38 +5,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  Filter,
-  Plus,
-  Target,
-  DollarSign,
-  Clock,
-  LayoutGrid,
-  List,
-  TrendingUp,
-  ArrowRight
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "../../components/ui";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { opportunityApi, customerApi, userApi, presaleApi } from "../../services/api";
 import { stageConfig, isGatePassed } from "./constants";
-import OpportunityGrid from "./OpportunityGrid";
-import OpportunityTable from "./OpportunityTable";
-import CreateDialog from "./CreateDialog";
-import GateDialog from "./GateDialog";
-import DetailDialog from "./DetailDialog";
-import ReviewDialog from "./ReviewDialog";
 
 export default function OpportunityManagement({ embedded = false }) {
   const [opportunities, setOpportunities] = useState([]);

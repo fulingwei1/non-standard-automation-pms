@@ -2,8 +2,6 @@
  * Order progress card with progress bar
  */
 
-import { Zap } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Progress } from "../../components/ui";
 
 const ProgressCard = ({ po, progress }) => (
   <Card>

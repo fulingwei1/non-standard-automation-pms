@@ -2,27 +2,10 @@
  * ResponsibilityDialog Component
  * 责任分摊对话框
  */
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  DialogDescription,
-} from "../../ui/dialog";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
-import { Card } from "../../ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../ui/select";
-import { Plus, X } from "lucide-react";
+
+
+
+
 
 export default function ResponsibilityDialog({
   open,

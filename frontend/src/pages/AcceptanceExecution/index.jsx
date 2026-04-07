@@ -3,17 +3,8 @@
  * Features: 验收检查项执行、问题管理、验收完成
  */
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, CheckCircle2 } from 'lucide-react';
-import { PageHeader } from '../../components/layout';
-import { Button } from '../../components/ui/button';
 
 import { useAcceptanceExecutionPage } from './hooks/useAcceptanceExecutionPage';
-import { ExecutionSummaryCards } from './ExecutionSummaryCards';
-import { CheckItemsPanel } from './CheckItemsPanel';
-import { IssuesPanel } from './IssuesPanel';
-import { UpdateItemDialog } from './UpdateItemDialog';
-import { CreateIssueDialog } from './CreateIssueDialog';
-import { CompleteDialog } from './CompleteDialog';
 
 export default function AcceptanceExecution() {
     const { id } = useParams();

@@ -1,7 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { formatDate } from "../../lib/utils";
-import { Card, CardContent, Button } from "../../components/ui";
-import { CheckCircle, Clock, Flag } from "lucide-react";
 
 export default function MilestonesTab({ milestones }) {
   const { id } = useParams();

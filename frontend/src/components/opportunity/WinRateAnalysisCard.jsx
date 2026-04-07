@@ -9,16 +9,7 @@ import {
   Cpu,
   DollarSign,
   Award,
-  Target,
-  AlertTriangle,
-  TrendingUp,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
-import { Button } from "../ui/button";
 
 // 因素图标映射
 const FACTOR_ICONS = {

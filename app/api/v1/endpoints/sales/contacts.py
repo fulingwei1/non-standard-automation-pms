@@ -95,7 +95,7 @@ def read_contacts(
         query = query.filter(Contact.customer_id == customer_id)
 
     # 应用数据权限（通过客户的负责人过滤，已集成完整scope）
-    from app.core.sales_permissions import get_sales_data_scope, filter_sales_data_by_scope
+    from app.core.sales_permissions import get_sales_data_scope
     from app.services.data_scope import DataScopeService
 
     scope = get_sales_data_scope(current_user, db)
@@ -103,7 +103,6 @@ def read_contacts(
         pass  # 全部可见
     elif scope == "DEPT":
         if current_user.department:
-            from app.models.organization import Department
 
             dept_users = db.query(User).filter(User.department == current_user.department).all()
             dept_user_ids = [u.id for u in dept_users]

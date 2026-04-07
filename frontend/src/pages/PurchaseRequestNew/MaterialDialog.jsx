@@ -1,12 +1,6 @@
-import { Search, AlertCircle } from "lucide-react";
-import { Input } from "../../components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-} from "../../components/ui/dialog";
+import { Search } from "lucide-react";
+
+
 
 export default function MaterialDialog({
   open,

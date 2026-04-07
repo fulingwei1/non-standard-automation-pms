@@ -6,9 +6,9 @@
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, case, desc, func, or_
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.models.inventory_tracking import MaterialStock, MaterialTransaction
@@ -892,33 +892,6 @@ class KittingOptimizationService:
 
     def _get_common_stock_suggestions(self) -> List[Dict[str, Any]]:
         """建议备库的通用物料"""
-        six_months_ago = datetime.now() - timedelta(days=180)
-
-        # 查找近6个月使用频次高的物料
-        usage_stats = (
-            self.db.query(
-                BomItem.material_id,
-                func.count(func.distinct(BomItem.bom_id)).label("usage_frequency"),
-                func.count(
-                    func.distinct(
-                        self.db.query(func.coalesce(
-                            func.nullif(
-                                self.db.query(func.literal(1)).correlate(BomItem).scalar_subquery(),
-                                None
-                            ),
-                            None
-                        ))
-                    )
-                ).label("dummy"),
-            )
-            .filter(BomItem.material_id.isnot(None))
-            .group_by(BomItem.material_id)
-            .having(func.count(func.distinct(BomItem.bom_id)) >= 3)
-            .order_by(desc("usage_frequency"))
-            .limit(30)
-            .all()
-        )
-
         # 简化查询：直接查BomItem的使用频率
         usage_query = (
             self.db.query(
@@ -941,18 +914,6 @@ class KittingOptimizationService:
 
             current_stock = float(mat.current_stock or 0)
             safety_stock = float(mat.safety_stock or 0)
-
-            # 覆盖项目数
-            project_count = (
-                self.db.query(func.count(func.distinct(
-                    self.db.query(BomItem.bom_id)
-                    .join(Material, Material.id == BomItem.material_id)
-                    .filter(BomItem.material_id == material_id)
-                    .correlate(BomItem)
-                    .scalar_subquery()
-                )))
-                .scalar()
-            ) or 0
 
             # 简化：用BOM数近似项目覆盖数
             project_coverage = usage_freq

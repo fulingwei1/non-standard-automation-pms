@@ -4,10 +4,6 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { FileCheck, ArrowLeft, Save, Loader2 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { qualityApi } from "../../services/api/quality";
 
 const INSPECTION_TYPES = [

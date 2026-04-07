@@ -1,9 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout/PageHeader";
-import { Button } from "../../components/ui";
 import { useInitiationManagement } from "./hooks";
-import { InitiationFilter, InitiationList, CreateInitiationDialog } from "./components";
 
 export default function InitiationManagement() {
     const navigate = useNavigate();

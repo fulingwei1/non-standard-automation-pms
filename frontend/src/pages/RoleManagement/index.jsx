@@ -11,45 +11,17 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-    Plus,
-    Search,
-    Edit3,
-    Trash2,
-    Eye,
-    GitBranch,
-    FileText,
-} from 'lucide-react';
-import { PageHeader } from '../../components/layout';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '../../components/ui/table';
+
+
+
+
+
+
 import { fadeIn, staggerContainer } from '../../lib/animations';
 import { confirmAction } from "@/lib/confirmAction";
+import { DATA_SCOPE_MAP } from './constants';
 
 import { useRoleData } from './hooks';
-import { renderDataScopeBadge } from './constants';
-import CreateRoleDialog from './CreateRoleDialog';
-import EditRoleDialog from './EditRoleDialog';
-import RoleDetailDialog from './RoleDetailDialog';
-import CompareDialog from './CompareDialog';
-import TemplateDialog from './TemplateDialog';
 
 export default function RoleManagement() {
     const roleData = useRoleData();
@@ -60,8 +32,8 @@ export default function RoleManagement() {
     const [showDetailDialog, setShowDetailDialog] = useState(false);
     const [showCompareDialog, setShowCompareDialog] = useState(false);
     const [showTemplateDialog, setShowTemplateDialog] = useState(false);
-    const [showSaveAsTemplateDialog, setShowSaveAsTemplateDialog] = useState(false);
-    const [showTemplateCenterDialog, setShowTemplateCenterDialog] = useState(false);
+    const [_showSaveAsTemplateDialog, setShowSaveAsTemplateDialog] = useState(false);
+    const [_showTemplateCenterDialog, setShowTemplateCenterDialog] = useState(false);
 
     // 表单状态
     const [createForm, setCreateForm] = useState({
@@ -280,7 +252,7 @@ export default function RoleManagement() {
         setShowSaveAsTemplateDialog(true);
     };
 
-    const handleSaveAsTemplateSubmit = async () => {
+    const _handleSaveAsTemplateSubmit = async () => {
         if (!saveAsTemplateForm.template_code || !saveAsTemplateForm.template_name) {
             alert('请填写完整信息');
             return;
@@ -301,7 +273,7 @@ export default function RoleManagement() {
     };
 
     // 删除模板
-    const handleDeleteTemplate = async (templateId) => {
+    const _handleDeleteTemplate = async (templateId) => {
         if (!await confirmAction('确定要删除该模板吗？')) return;
         const result = await roleData.deleteTemplate(templateId);
         if (!result.success) {

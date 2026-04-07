@@ -6,22 +6,13 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   TrendingUp,
-  Calculator,
   AlertTriangle,
   BarChart3,
   DollarSign,
-  Target,
   Percent,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-  Zap,
-  RefreshCw,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { marginPredictionApi } from "../services/api/marginPrediction";
 

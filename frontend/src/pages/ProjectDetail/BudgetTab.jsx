@@ -1,6 +1,4 @@
 import { formatDate, formatCurrency } from "../../lib/utils";
-import { Card, CardContent, Button, Progress } from "../../components/ui";
-import { FileText, Download, Plus } from "lucide-react";
 
 export default function BudgetTab({
   normalizedProject: p,

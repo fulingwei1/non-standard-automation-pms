@@ -1,19 +1,8 @@
-import { motion } from "framer-motion";
 import {
-  ClipboardCheck,
   FileText,
-  Eye,
-  Check,
-  X,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-} from "../../components/ui";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { typeConfig } from "./constants";

@@ -5,29 +5,10 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Save,
-  X,
-} from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from "../components/ui";
+
+
+
+
 import { fadeIn } from "../lib/animations";
 import { shortageApi, projectApi, materialApi } from "../services/api";
 

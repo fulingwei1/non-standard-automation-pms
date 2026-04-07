@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { RefreshCw, FileSpreadsheet, CheckCircle, AlertCircle } from "lucide-react";
-import { Button } from "../../../components/ui/button";
 import { cn } from "../../../lib/utils";
 
 export function EmployeeUploadModal({

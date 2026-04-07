@@ -1,6 +1,4 @@
 import { CheckCircle2, XCircle, Clock } from "lucide-react";
-import { Card, CardContent, Badge } from "../../components/ui";
-import { ApprovalCard } from "./ApprovalCard";
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -5,8 +5,6 @@
  */
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui";
-import { Calendar, Package, Truck, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 import { DELIVERY_STATUS, DELIVERY_PRIORITY, SHIPPING_METHODS, PACKAGE_TYPES } from "@/lib/constants/service";

@@ -1,23 +1,10 @@
 /**
  * SnapshotTable — 快照列表表格 + 分页控件
  */
-import { Eye } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+
+
+
+
 import { formatDate } from "../../lib/utils";
 
 /**

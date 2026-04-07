@@ -4,42 +4,16 @@
  */
 
 import { useState } from "react";
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter } from
-"../../components/ui/dialog";
 
 
-import {
-  Label } from
-"../../components/ui/label";
-import {
-  Search,
-  Filter,
-  X,
-  User,
-  Building2,
-  Shield,
-  CheckCircle,
-  Clock,
-  Download,
-  Upload,
-  RotateCcw } from
-"lucide-react";
+
+
+
+
+
+
+
+
 import {
   userStatusConfigs,
   userTypeConfigs,
@@ -50,7 +24,6 @@ import {
   formatUserRole } from
 "@/lib/constants/userManagement";
 import { cn } from "../../lib/utils";
-import { UserX } from "lucide-react";
 
 export function UserFilters({
   onFiltersChange,

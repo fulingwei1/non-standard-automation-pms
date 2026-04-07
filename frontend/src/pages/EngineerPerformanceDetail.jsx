@@ -1,7 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Tag, Progress, Tabs, Empty, Spin, Space } from 'antd';
-import { TrophyOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
-import { Radar, Line } from '@ant-design/plots';
 import api from '../services/api';
 import { useParams } from 'react-router-dom';
 

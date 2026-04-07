@@ -1,19 +1,6 @@
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { Button, SkeletonProjectDetail } from "../../components/ui";
-import { PageHeader } from "../../components/layout/PageHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { AlertCircle, ArrowLeft, Edit2, Share, Download } from "lucide-react";
 
 import { PROJECT_TABS } from "./constants";
 import { useProjectDetail } from "./useProjectDetail";
-import AddMemberDialog from "./AddMemberDialog";
-import OverviewTab from "./OverviewTab";
-import TasksTab from "./TasksTab";
-import MilestonesTab from "./MilestonesTab";
-import GanttTab from "./GanttTab";
-import BudgetTab from "./BudgetTab";
-import ProfitTab from "./ProfitTab";
 
 export default function ProjectDetail() {
   const {

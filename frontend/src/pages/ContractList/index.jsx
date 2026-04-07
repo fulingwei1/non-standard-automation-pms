@@ -3,23 +3,11 @@
  * Features: Contract list, status tracking, payment milestones
  */
 
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Download,
-  Plus,
-  Loader2,
-  AlertTriangle,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button, Card, CardContent } from "../../components/ui";
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
 import { useContractList } from "./hooks";
-import ContractStatsRow from "./ContractStatsRow";
-import ContractFilters from "./ContractFilters";
-import ContractTable from "./ContractTable";
-import ContractDetailPanel from "./ContractDetailPanel";
-import CreateContractDialog from "./CreateContractDialog";
 
 export default function ContractList() {
   const {

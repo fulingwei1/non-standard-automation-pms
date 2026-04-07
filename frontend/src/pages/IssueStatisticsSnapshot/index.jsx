@@ -2,13 +2,7 @@
  * Issue Statistics Snapshot Page - 问题统计快照查看页面
  * Features: 快照列表、历史趋势对比、快照详情、数据导出
  */
-import { PageHeader } from "../../components/layout";
 import { useIssueStatisticsSnapshot } from "./hooks";
-import { FilterBar } from "./FilterBar";
-import { ComparisonCards } from "./ComparisonCards";
-import { TrendCharts } from "./TrendCharts";
-import { SnapshotTable } from "./SnapshotTable";
-import { SnapshotDetailDialog } from "./SnapshotDetailDialog";
 
 export default function IssueStatisticsSnapshot() {
   const {

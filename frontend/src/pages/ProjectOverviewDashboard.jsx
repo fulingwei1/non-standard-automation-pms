@@ -2,9 +2,8 @@
  * 项目总览仪表盘 - 完整版
  * 功能：生产/采购/交付/售后各模块状态卡片（含完整售后数据）
  */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Progress } from '@/components/ui';
 
 export default function ProjectOverviewDashboard() {
   const { projectId } = useParams();

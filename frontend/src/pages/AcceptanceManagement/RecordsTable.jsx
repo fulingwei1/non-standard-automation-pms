@@ -2,20 +2,9 @@
  * Acceptance Management — records data table
  */
 
-import { Eye, Edit, ClipboardCheck } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { STATUS_CONFIG, TYPE_CONFIG } from "./constants";
 

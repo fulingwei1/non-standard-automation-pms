@@ -1,7 +1,4 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, Button } from "../../components/ui";
-import StageGantt from "../../components/project/StageGantt";
-import { GitBranch } from "lucide-react";
 
 export default function GanttTab({ stages }) {
   const { id } = useParams();

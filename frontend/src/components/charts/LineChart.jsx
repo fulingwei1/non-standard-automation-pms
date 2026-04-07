@@ -3,7 +3,6 @@
  * 用于趋势分析、时间序列数据展示
  */
 
-import { Line } from "@ant-design/plots";
 import { useMemo } from "react";
 
 const defaultConfig = {

@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import TabbedCenterPage from "../components/layout/TabbedCenterPage";
-import AssemblerTaskCenter from "./AssemblerTaskCenter";
-import AssemblyKitBoard from "./AssemblyKitBoard";
 
 export default function AssemblyCenter() {
   const tabs = useMemo(

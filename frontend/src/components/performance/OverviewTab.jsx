@@ -1,6 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { Award, Target, TrendingUp, Users, Briefcase } from "lucide-react";
 import { cn } from "../../lib/utils";
 import {
   getStatusBadge,

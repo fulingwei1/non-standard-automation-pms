@@ -1,7 +1,4 @@
-import { Loader2 } from "lucide-react";
 
-import { Card, CardContent } from "../../components/ui";
-import { TemplateCard } from "./TemplateCard";
 
 export function TemplateGrid({
   loading,

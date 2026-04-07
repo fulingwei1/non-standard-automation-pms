@@ -1,10 +1,5 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui";
-import { SalesFunnel } from "../../components/sales";
+
+
 
 export default function FunnelView({ funnelData }) {
   return (

@@ -1,9 +1,6 @@
 /**
  * AiSidebarPanel - AI智能定价侧边栏
  */
-import { Sparkles, ChevronRight } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import IntelligentQuoteSidebar from "../../components/quote/IntelligentQuoteSidebar";
 
 export default function AiSidebarPanel({ selectedOpportunity, currentPrice, currentCost, onApplyPrice, onClose }) {
   return (

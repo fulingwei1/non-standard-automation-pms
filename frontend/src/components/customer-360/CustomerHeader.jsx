@@ -4,10 +4,6 @@
  * 展示客户基本信息和关键数据
  */
 
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Progress } from "../../components/ui/progress";
-import { Separator } from "../../components/ui/separator";
 import { cn, formatDate, formatCurrency } from "../../lib/utils";
 import {
   customer360TabConfigs,

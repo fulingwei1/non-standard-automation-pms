@@ -3,7 +3,6 @@
  * 用于层级数据展示、占比分析
  */
 
-import { Treemap } from "@ant-design/plots";
 import { useMemo } from "react";
 
 /**

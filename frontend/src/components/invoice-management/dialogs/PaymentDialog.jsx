@@ -1,15 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Button,
-  Label,
-  Input,
-  Textarea
-} from "../../ui";
+
+
 import { formatCurrency } from "../../../lib/utils";
 
 const PaymentDialog = ({

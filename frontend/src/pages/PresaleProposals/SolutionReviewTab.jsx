@@ -1,19 +1,7 @@
-import {
-  CheckCircle2,
-  XCircle,
-  GitBranch,
-} from "lucide-react";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Textarea,
-} from "../../components/ui";
+
+
+
+
 import { calculateCompleteness, getStatusConfig } from "./utils";
 
 export default function SolutionReviewTab({

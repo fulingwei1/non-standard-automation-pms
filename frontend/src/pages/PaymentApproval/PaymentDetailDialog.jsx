@@ -1,12 +1,5 @@
-import { FileText } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  Button,
-} from "../../components/ui";
+
+
 import { formatCurrency } from "../../lib/utils";
 
 export function PaymentDetailDialog({

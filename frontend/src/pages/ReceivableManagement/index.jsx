@@ -3,18 +3,9 @@
  * Features: Receivable list, payment recording, aging analysis, overdue tracking
  */
 
-import { motion } from "framer-motion";
-import { BarChart3, Download } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { PaymentDialog } from "../../components/invoice-management/dialogs";
-import { Button } from "../../components/ui";
 import { staggerContainer } from "../../lib/animations";
 
 import { useReceivableManagement } from "./hooks";
-import { StatsCards } from "./StatsCards";
-import { AgingAnalysis } from "./AgingAnalysis";
-import { FilterBar } from "./FilterBar";
-import { ReceivableList } from "./ReceivableList";
 
 export default function ReceivableManagement() {
   const {

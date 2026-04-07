@@ -1,7 +1,3 @@
-import React from "react";
-import { AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 
 export default function TimingIssuesList({ timingIssues, autoFixTiming }) {
   if (timingIssues.length === 0) return null;

@@ -1,26 +1,5 @@
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  X,
-  MapPin,
-  Calendar,
-  Edit,
-  FileText,
-  Image,
-  Eye,
-  AlertTriangle,
-  Paperclip,
-  Package,
-  Settings,
-  Target,
-  Building2,
-  Ruler,
-  Thermometer,
-  Zap,
-  DollarSign,
-  HelpCircle,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+
+
 import { cn } from "../../lib/utils";
 import { getStatusStyle, getStatusName, getMethodIcon } from "./utils";
 

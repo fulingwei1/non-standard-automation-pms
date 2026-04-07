@@ -1,10 +1,5 @@
-import { motion } from "framer-motion";
-import { CheckCircle, XCircle } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { fadeIn } from "../../lib/animations";
 import { useDataImportExport } from "./hooks";
-import { DataImportPanel, DataExportPanel, ImportPreviewResult } from "./components";
 
 export default function DataImportExport() {
     const {

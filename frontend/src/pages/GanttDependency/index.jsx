@@ -1,13 +1,6 @@
-import { motion } from "framer-motion";
-import { PageHeader } from "../../components/layout";
 import { staggerContainer, fadeIn } from "../../lib/animations";
 import useGanttData from "./useGanttData";
 import useBlockingHighlight from "./useBlockingHighlight";
-import Toolbar from "./Toolbar";
-import GanttTimeline from "./GanttTimeline";
-import DependencyForm from "./DependencyForm";
-import CriticalPathPanel from "./CriticalPathPanel";
-import DependencyList from "./DependencyList";
 
 export default function GanttDependency() {
   const {

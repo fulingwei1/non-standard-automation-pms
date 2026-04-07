@@ -1,13 +1,5 @@
-import { Search, Filter } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
+
 import { getModuleLabel } from "../../config/permissionLabels";
 
 export function SearchFilter({ searchKeyword, setSearchKeyword, filterModule, setFilterModule, modules }) {

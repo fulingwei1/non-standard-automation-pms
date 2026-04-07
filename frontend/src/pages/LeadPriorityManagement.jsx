@@ -4,30 +4,10 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  Star,
-  Target,
-  RefreshCw } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui";
+
+
+
+
 import { priorityApi } from "../services/api";
 
 export default function LeadPriorityManagement() {

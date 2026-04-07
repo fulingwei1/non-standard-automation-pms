@@ -1,21 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Key,
-  Eye,
-  EyeOff,
-  Monitor,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
+
+
+
+
 import { authApi } from "../../services/api";
 
 export default function SecuritySection() {

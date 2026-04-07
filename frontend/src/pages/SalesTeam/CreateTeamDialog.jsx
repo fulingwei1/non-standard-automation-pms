@@ -3,16 +3,8 @@
  */
 
 import { useState } from "react";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-} from "../../components/ui";
+
+
 import { salesTeamApi } from "../../services/api";
 import { toast } from "sonner";
 import { DEFAULT_CREATE_TEAM_FORM, TEAM_TYPE_OPTIONS } from "./constants";

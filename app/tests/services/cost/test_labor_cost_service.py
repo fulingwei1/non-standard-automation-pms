@@ -8,14 +8,11 @@
 - 项目工时统计
 """
 
-import pytest
 from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from app.models.project import Project
 from app.models.timesheet import Timesheet, TimesheetStatusEnum
-from app.models.user import User
 
 from app.services.cost.labor_cost_service import LaborCostService
 

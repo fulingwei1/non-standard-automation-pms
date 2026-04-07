@@ -1,6 +1,4 @@
-import { Badge } from "../../components/ui";
 import { cn } from "../../lib/utils";
-import { OpportunityCard } from "../../components/sales";
 import { OPPORTUNITY_STAGE_CONFIGS } from "../../components/opportunity-board";
 
 export default function BoardView({

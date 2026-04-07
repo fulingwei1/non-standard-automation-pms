@@ -1,29 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  Users,
-  Target,
-  Loader2,
-  Sparkles,
-  Upload,
-  ArrowLeft,
-  Check,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  Textarea,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Label,
-} from "@/components/ui";
+
+
+
+
 import { staggerContainer } from "@/lib/animations";
 import { DEPARTMENTS } from "./constants";
 

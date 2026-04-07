@@ -3,24 +3,16 @@
  * 售前技术工程师评估销售线索/商机的可行性
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Send,
-  X,
-  TrendingUp,
   Target,
   Zap,
   Users,
   Clock,
   DollarSign,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
 import { cn } from "../../lib/utils";
 
 // 评估维度配置

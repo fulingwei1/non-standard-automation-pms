@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { FileSignature, Plus, Eye, Download } from "lucide-react";
-import { Card, CardContent, Button, Badge, Progress } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 import { statusConfig } from "./constants";

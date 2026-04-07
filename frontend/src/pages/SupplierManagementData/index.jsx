@@ -1,22 +1,9 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { supplierApi } from "../../services/api";
 import { INITIAL_SUPPLIER } from "./utils";
-import SupplierFilters from "./SupplierFilters";
-import SupplierTable from "./SupplierTable";
-import CreateSupplierDialog from "./CreateSupplierDialog";
-import RatingDialog from "./RatingDialog";
-import DetailDialog from "./DetailDialog";
 
 export default function SupplierManagementData() {
   const [suppliers, setSuppliers] = useState([]);

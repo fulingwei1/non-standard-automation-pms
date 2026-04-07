@@ -1,5 +1,4 @@
 import { cn } from "../../lib/utils";
-import { Card } from "../../components/ui";
 
 export default function StatCards({ statCards }) {
   return (

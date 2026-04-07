@@ -1,26 +1,9 @@
 import { cn } from "../../lib/utils";
 import { formatDate, formatCurrency } from "../../lib/utils";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Progress,
-  UserAvatar,
-} from "../../components/ui";
-import QuickActionPanel from "../../components/project/QuickActionPanel";
-import ProjectBonusPanel from "../../components/project/ProjectBonusPanel";
-import ProjectMeetingPanel from "../../components/project/ProjectMeetingPanel";
-import ProjectIssuePanel from "../../components/project/ProjectIssuePanel";
-import SolutionLibrary from "../../components/project/SolutionLibrary";
-import ProfitAnalysisCard from "../../components/project/ProfitAnalysisCard";
-import {
-  Activity,
-  Target,
-  TrendingUp,
-  DollarSign,
-  Plus,
-} from "lucide-react";
+
+
+
+
 import { STATUS_CONFIG, PRIORITY_CONFIG } from "./constants";
 
 function StatusBadge({ status }) {

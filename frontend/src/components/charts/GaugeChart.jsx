@@ -3,7 +3,6 @@
  * 用于KPI展示、目标完成度
  */
 
-import { Gauge } from "@ant-design/plots";
 import { useMemo } from "react";
 
 /**

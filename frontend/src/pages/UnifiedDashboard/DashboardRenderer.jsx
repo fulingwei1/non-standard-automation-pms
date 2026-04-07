@@ -5,12 +5,7 @@
  * 支持懒加载、错误边界、加载状态
  */
 
-import { Suspense, memo } from 'react';
-import { motion } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react';
-import ErrorBoundary from '../../components/ui/ErrorBoundary';
-import { Skeleton } from '../../components/ui/skeleton';
-import { Card, CardContent } from '../../components/ui/card';
+import { memo } from 'react';
 import { widgetRegistry } from './config/widgetRegistry';
 import { cn } from '../../lib/utils';
 

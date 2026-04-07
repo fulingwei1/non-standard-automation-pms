@@ -1,14 +1,7 @@
-import { motion } from "framer-motion";
-import { RefreshCw } from "lucide-react";
-import { PageHeader } from "../../components/layout";
 import { staggerContainer } from "../../lib/animations";
 import { useTimesheet } from "./hooks";
-import {
-    AddEntryDialog,
-    WeekSummaryCards,
-    WeekNavigation,
-    TimesheetTable,
-} from "./components";
+
+
 
 export default function Timesheet() {
     const {

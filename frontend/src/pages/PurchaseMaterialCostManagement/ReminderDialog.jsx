@@ -2,18 +2,8 @@
  * Reminder Settings Dialog
  */
 
-import { CheckCircle2, AlertTriangle } from "lucide-react";
-import {
-  Button,
-  Input,
-  Label,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../../components/ui";
+
+
 import { formatDate } from "../../lib/utils";
 
 export default function ReminderDialog({

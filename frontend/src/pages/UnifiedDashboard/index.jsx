@@ -11,11 +11,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { PageHeader } from '../../components/layout';
-import { Button } from '../../components/ui/button';
-import { RoleSwitcher } from './RoleSwitcher';
-import { DashboardRenderer } from './DashboardRenderer';
 import { useUnifiedDashboard, useUserRoles } from './hooks/useUnifiedDashboard';
 
 /**

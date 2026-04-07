@@ -2,15 +2,7 @@
  * Acceptance Template Management Page - 验收模板管理页面
  * Features: 验收模板列表、创建、编辑、检查项管理
  */
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { useAcceptanceTemplateManagement } from "./hooks";
-import TemplateFilters from "./TemplateFilters";
-import TemplateTable from "./TemplateTable";
-import CreateTemplateDialog from "./CreateTemplateDialog";
-import TemplateDetailDialog from "./TemplateDetailDialog";
-import TemplateItemsDialog from "./TemplateItemsDialog";
 
 export default function AcceptanceTemplateManagement() {
   const {

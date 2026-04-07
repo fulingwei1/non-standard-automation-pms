@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { fadeIn } from "../../lib/animations";
 import {
   purchaseApi,
@@ -13,13 +9,7 @@ import {
   supplierApi,
 } from "../../services/api";
 import { toast } from "../../components/ui/toast";
-import { LoadingCard } from "../../components/common";
-import { ErrorMessage } from "../../components/common";
 
-import BasicInfoCard from "./BasicInfoCard";
-import ItemsCard from "./ItemsCard";
-import SummaryCard from "./SummaryCard";
-import MaterialDialog from "./MaterialDialog";
 import {
   calculateTotalAmount,
   filterMaterials,

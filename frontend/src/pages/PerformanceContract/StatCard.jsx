@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { fadeIn } from "@/lib/animations";
 
 export default function StatCard({ title, value, icon, color, subtitle }) {

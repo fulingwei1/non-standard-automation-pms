@@ -1,13 +1,7 @@
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  Progress,
-} from "../../components/ui";
-import {
-  TrendingUp,
-  Award,
-} from "lucide-react";
+
+
+
+
 import { formatCurrency } from "../../lib/utils";
 
 export default function PerformanceMetrics({ stats }) {

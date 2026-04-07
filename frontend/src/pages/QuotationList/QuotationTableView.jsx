@@ -1,5 +1,3 @@
-import { Target, Eye, Copy, Send } from "lucide-react";
-import { Card, CardContent, Button, Badge } from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { statusConfig } from "./statusConfig";
 

@@ -1,8 +1,3 @@
-import { Target, Briefcase, ExternalLink, MessageSquare, Users } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
-import { Badge } from "../../../components/ui/badge";
 import { cn } from "../../../lib/utils";
 
 export function SolutionOverviewTab({ solution }) {

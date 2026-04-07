@@ -1,6 +1,3 @@
-import { motion } from "framer-motion"
-import { Search, LayoutGrid, List } from "lucide-react"
-import { Button, Input } from "../../components/ui"
 import { fadeIn } from "../../lib/animations"
 import { gradeOptions, statusOptions, industryOptions } from "./constants"
 

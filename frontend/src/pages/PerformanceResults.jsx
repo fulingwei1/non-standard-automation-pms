@@ -3,37 +3,12 @@
  * Features: 个人绩效详情、历史记录、各项指标得分、趋势分析
  */
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  User,
-  Building2,
-  Target,
-  BarChart3,
-  Download,
-  MessageSquare,
-  ChevronRight,
-  CheckCircle,
-  Loader2 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle } from
-"../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { Progress } from "../components/ui/progress";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger } from
-"../components/ui/tabs";
+
+
+
+
+
+
 import { cn } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { performanceApi } from "../services/api";

@@ -1,18 +1,8 @@
 /**
  * Auto Assign Dialog - 自动分配装配属性对话框
  */
-import { AlertTriangle, Wand2 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Label } from "../../components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { Switch } from "../../components/ui/switch";
+
+
 
 export function AutoAssignDialog({
   open,

@@ -1,13 +1,6 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter } from
-"../../components/ui";
-import { Button } from "../../components/ui";
+
+
 
 export function ExitCheckDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({

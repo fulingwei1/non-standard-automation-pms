@@ -2,8 +2,6 @@
  * Bottom action bar with context-sensitive buttons
  */
 
-import { Send, Eye, Download, Edit } from "lucide-react";
-import { Card, CardContent, Button } from "../../components/ui";
 
 const ActionBar = ({ po }) => (
   <Card className="bg-gradient-to-r from-slate-800 to-slate-900 border-slate-700">

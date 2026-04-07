@@ -12,16 +12,15 @@
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.issue import Issue
 from app.models.project.core import Project
 from app.models.project.financial import ProjectCost, ProjectMilestone
 from app.models.project.team import ProjectMember
-from app.models.project_risk import ProjectRisk
 from app.models.report_center import ReportGeneration, ReportTemplate
 from app.models.timesheet import Timesheet
 from app.models.user import User

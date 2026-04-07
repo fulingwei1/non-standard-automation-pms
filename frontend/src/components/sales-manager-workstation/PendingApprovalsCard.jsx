@@ -1,13 +1,5 @@
-import { motion } from "framer-motion";
-import { AlertTriangle } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Button
-} from "../../components/ui";
+
+
 import { cn, formatCurrency } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";
 

@@ -141,7 +141,7 @@ def approve_quote(
         raise HTTPException(status_code=404, detail="未找到该报价的待审批任务")
 
     try:
-        result = service.perform_action(
+        service.perform_action(
             task_id=task_id,
             action="approve",
             approver_id=current_user.id,
@@ -187,7 +187,7 @@ def reject_quote(
         raise HTTPException(status_code=404, detail="未找到该报价的待审批任务")
 
     try:
-        result = service.perform_action(
+        service.perform_action(
             task_id=task_id,
             action="reject",
             approver_id=current_user.id,

@@ -1,6 +1,3 @@
-import { Edit3, Trash2, Eye } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
 import { getUnitTypeConfig } from "./unitTypeConfig";
 
 export default function OrgListTable({ orgList, onView, onEdit, onDelete }) {

@@ -3,27 +3,11 @@
  * HR Dashboard 页面头部组件
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "../layout";
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger } from
-"../ui";
-import {
-  UserPlus,
-  Award,
-  RefreshCw,
-  MoreVertical,
-  FileSpreadsheet,
-  Printer,
-  Share2,
-  Settings } from
-"lucide-react";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { toast } from "../ui/toast";
 import { fadeIn } from "../../lib/animations";

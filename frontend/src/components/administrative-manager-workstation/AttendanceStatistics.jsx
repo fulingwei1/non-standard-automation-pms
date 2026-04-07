@@ -1,13 +1,5 @@
-import { motion } from "framer-motion";
-import { UserCheck, ChevronRight } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Progress
-} from "../../components/ui";
+
+
 import { fadeIn } from "../../lib/animations";
 
 const AttendanceStatistics = ({ attendanceStats }) => {

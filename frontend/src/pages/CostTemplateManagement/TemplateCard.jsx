@@ -2,24 +2,10 @@
  * Individual template card component
  */
 
-import {
-  Edit,
-  Trash2,
-  Eye,
-  Layers,
-  FileText,
-  Calendar,
-  DollarSign,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-} from "../../components/ui";
+
+
+
+
 import { formatCurrency } from "../../lib/utils";
 import { TEMPLATE_TYPE_LABEL_MAP } from "./constants";
 

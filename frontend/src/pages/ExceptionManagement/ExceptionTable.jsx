@@ -1,21 +1,7 @@
-import { Eye, Edit, User } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+
+
+
+
 import { formatDate } from "../../lib/utils";
 import { statusConfigs, severityConfigs, typeConfigs } from "./constants";
 

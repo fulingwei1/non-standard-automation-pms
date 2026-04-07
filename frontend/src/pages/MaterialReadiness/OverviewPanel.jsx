@@ -1,23 +1,9 @@
-import {
-  Package,
-  AlertTriangle,
-  Clock,
-  TrendingUp,
-  Truck,
-  BarChart3,
-  Plus,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+
+
+
+
 import {
   MATERIAL_STATUS,
-  MATERIAL_TYPE,
   getMaterialStatusColor,
   getMaterialStatusLabel,
   getMaterialTypeLabel,

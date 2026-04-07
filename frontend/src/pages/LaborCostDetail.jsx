@@ -1,18 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { Users, FolderKanban, Wallet, Clock3 } from "lucide-react";
 
-import { PageHeader } from "../components/layout";
-import { Badge } from "../components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
+
+
 import { staggerContainer, fadeIn } from "../lib/animations";
 import { laborCostApi } from "../services/api/laborCost";
 

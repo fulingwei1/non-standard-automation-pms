@@ -1,29 +1,9 @@
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Layers,
-  Edit3,
-  Trash2,
-  Copy,
-  Star,
-  Eye,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
-import { Switch } from "../../components/ui/switch";
+
+
+
+
+
+
 import { cn } from "../../lib/utils";
 import { PROJECT_TYPES } from "./constants";
 

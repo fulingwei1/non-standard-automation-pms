@@ -2,24 +2,10 @@ import { useEffect, useState } from "react";
 import { formatDate } from "@/lib/formatters";
 import { useParams, useNavigate } from "react-router-dom";
 import { managementRhythmApi } from "../services/api";
-import { PageHeader } from "../components/layout/PageHeader";
-import StrategicStructureEditor from "../components/StrategicStructureEditor";
-import {
-  Card,
-  CardContent,
-  Badge,
-  Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui";
-import {
-  ArrowLeft,
-  FileText,
-  Target,
-  CheckCircle2,
-} from "lucide-react";
+
+
+
+
 
 export default function StrategicMeetingDetail() {
   const { id } = useParams();

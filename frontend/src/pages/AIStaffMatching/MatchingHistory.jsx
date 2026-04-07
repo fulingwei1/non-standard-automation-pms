@@ -1,8 +1,4 @@
 // -*- coding: utf-8 -*-
-import { motion } from "framer-motion";
-import { Check, X, Clock, ChevronRight, RefreshCw } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 import { getScoreColor } from "./utils";
 

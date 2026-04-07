@@ -1,15 +1,5 @@
-import { User } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-} from "../../components/ui/dialog";
+
+
 import { formatDate } from "../../lib/utils";
 import { statusConfigs, priorityConfigs } from "./statusConstants";
 

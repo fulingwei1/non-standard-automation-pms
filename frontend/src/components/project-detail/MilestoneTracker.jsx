@@ -1,16 +1,6 @@
 import { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Badge,
-  Progress,
-  Button,
-  ScrollArea,
-  Separator } from
-'@/components/ui';
+
+
 import {
   PROJECT_STAGES,
   MILESTONE_STATUSES } from

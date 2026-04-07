@@ -3,9 +3,7 @@
  * 从后端 API 加载当前用户本周工时数据
  */
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import { timesheetApi } from '../../../../services/api';
-import { Loader2 } from 'lucide-react';
 
 function getWeekStart() {
   const now = new Date();

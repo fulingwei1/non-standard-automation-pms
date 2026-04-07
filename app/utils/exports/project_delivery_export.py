@@ -7,8 +7,6 @@
 
 import io
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -25,7 +23,7 @@ class ProjectDeliveryExportService:
         """导出 Excel 格式"""
         try:
             import openpyxl
-            from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+            from openpyxl.styles import Font, PatternFill, Border, Side
         except ImportError:
             raise RuntimeError("需要安装 openpyxl: pip install openpyxl")
         
@@ -43,7 +41,6 @@ class ProjectDeliveryExportService:
         wb = openpyxl.Workbook()
         
         # 样式
-        header_font = Font(bold=True, size=12)
         header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
         header_font_white = Font(bold=True, size=11, color="FFFFFF")
         thin_border = Border(
@@ -138,8 +135,6 @@ class ProjectDeliveryExportService:
         """导出 Word 格式"""
         try:
             from docx import Document
-            from docx.shared import Inches, Pt
-            from docx.enum.text import WD_ALIGN_PARAGRAPH
         except ImportError:
             raise RuntimeError("需要安装 python-docx: pip install python-docx")
         

@@ -6,23 +6,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Rocket, History } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader
-} from "../../components/ui/card";
+
+
 import { cn } from "../../lib/utils";
 import { staffMatchingApi } from "../../services/api";
 import { confirmAction } from "@/lib/confirmAction";
 import { PRIORITY_CONFIG } from "./constants";
-import StatsCards from "./StatsCards";
-import NeedSelector from "./NeedSelector";
-import MatchingResults from "./MatchingResults";
-import MatchingHistory from "./MatchingHistory";
-import RejectDialog from "./RejectDialog";
 
 export default function AIStaffMatching() {
   const [searchParams] = useSearchParams();

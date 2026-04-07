@@ -3,30 +3,13 @@
  * Features: 6阶段进度可视化、齐套率分布、缺料预警、排产建议
  */
 import { useState, useEffect } from "react";
-import {
-  RefreshCw,
-  Calendar,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+
+
+
+
 import { projectApi } from "../../services/api";
 import { assemblyKitApi } from "../../services/api/production";
 
-import StatisticsCards from "./StatisticsCards";
-import StageProgress from "./StageProgress";
-import AlertSummary from "./AlertSummary";
-import RecentAnalyses from "./RecentAnalyses";
-import PendingSuggestions from "./PendingSuggestions";
-import ShortageAlerts from "./ShortageAlerts";
-import AnalysisDetailDialog from "./AnalysisDetailDialog";
-import RejectDialog from "./RejectDialog";
 
 export default function AssemblyKitBoard() {
   const [loading, setLoading] = useState(true);

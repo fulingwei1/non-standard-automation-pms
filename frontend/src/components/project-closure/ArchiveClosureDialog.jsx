@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 
 
 import { confirmAction } from "@/lib/confirmAction";
-import { Button, Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui";
 export default function ArchiveClosureDialog({ open, onOpenChange, onSubmit }) {
   const [pathsText, setPathsText] = useState("");
 

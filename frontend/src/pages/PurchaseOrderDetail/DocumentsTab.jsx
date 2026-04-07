@@ -2,9 +2,6 @@
  * Documents/attachments tab
  */
 
-import { motion } from "framer-motion";
-import { FileText, Download } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Button } from "../../components/ui";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
 const DocumentsTab = ({ po }) => (

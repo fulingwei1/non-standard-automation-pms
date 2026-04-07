@@ -3,8 +3,7 @@
  * 跟进管理组件：展示待跟进/逾期等跟进任务（简化版）
  */
 
-import { Card, Empty, List, Space, Tag, Typography, Button } from "antd";
-import { RefreshCw } from "lucide-react";
+import { Typography } from "antd";
 
 import { FOLLOW_UP_STATUS, TASK_TYPES } from "@/lib/constants/leadAssessment";
 

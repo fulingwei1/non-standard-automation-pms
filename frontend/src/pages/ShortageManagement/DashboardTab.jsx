@@ -1,15 +1,6 @@
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Package, AlertTriangle, Truck, Clock, Eye } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+
+
 import { cn } from "../../lib/utils";
 import { staggerContainer } from "../../lib/animations";
 import { statusConfigs, urgentLevelConfigs } from "./constants";

@@ -1,13 +1,6 @@
-import { motion } from "framer-motion";
 import {
-  Building2,
-  Calendar,
   AlertCircle,
-  Eye,
-  Edit3,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
 import { cn } from "../../lib/utils";
 import { typeConfigs, statusConfigs } from "./constants";
 

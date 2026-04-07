@@ -10,8 +10,6 @@ import {
 
 import { cn } from "../../lib/utils";
 import { typeConfigs, statusConfigs, severityConfigs } from "./acceptanceConfig";
-import { Badge, Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui";
-import { Camera } from "lucide-react";
 
 export default function AcceptanceDetailDialog({ acceptance, open, onOpenChange }) {
   const [activeTab, setActiveTab] = useState("checklist");

@@ -1,44 +1,18 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { lessonsApi } from "../services/api/lessons";
-import { PageHeader } from "../components/layout/PageHeader";
 import { staggerContainer, fadeIn } from "../lib/animations";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../components/ui/dialog";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
-import { Badge } from "../components/ui/badge";
+
+
+
+
+
+
 import {
   BookOpen,
-  Search,
-  Plus,
-  Filter,
   TrendingUp,
   AlertTriangle,
   CheckCircle,
   Lightbulb,
-  BarChart3,
-  X,
 } from "lucide-react";
 
 // 分类颜色配置

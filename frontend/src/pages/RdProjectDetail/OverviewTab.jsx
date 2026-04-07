@@ -1,20 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Progress,
-} from "../../components/ui";
-import {
-  DollarSign,
-  Calculator,
-  FileCheck,
-  FolderOpen,
-  BarChart3,
-  Target,
-  BookOpen,
-} from "lucide-react";
+
+
+
+
 import { formatDate, formatCurrency } from "../../lib/utils";
 
 export default function OverviewTab({

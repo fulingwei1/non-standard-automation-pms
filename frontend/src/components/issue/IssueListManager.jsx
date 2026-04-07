@@ -4,38 +4,17 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
-  useSensors,
-  DragOverlay } from
+  useSensors } from
 "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import {
-  Search,
-  Plus,
-  Eye,
-  Edit3,
-  ChevronDown,
-  ChevronUp,
-  Download,
-  Upload,
-  AlertTriangle,
-  User,
-  Calendar } from
-"lucide-react";
-import { DynamicIcon } from "../../utils/iconMap.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Input } from "../../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+
+
 import { cn } from "../../lib/utils";
-import { AlertCircle } from "lucide-react";
 import {
   issueStatusConfig,
   issueSeverityConfig,

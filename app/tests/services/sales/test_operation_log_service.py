@@ -5,8 +5,7 @@
 """
 
 import pytest
-from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -40,7 +39,7 @@ class TestSalesOperationLogService:
         from app.services.sales.operation_log_service import SalesOperationLogService
         from app.models.sales.operation_log import SalesOperationType, SalesEntityType
         
-        result = SalesOperationLogService.log_operation(
+        SalesOperationLogService.log_operation(
             db=mock_db_session,
             entity_type=SalesEntityType.OPPORTUNITY,
             entity_id=100,
@@ -48,7 +47,7 @@ class TestSalesOperationLogService:
             operator=mock_operator,
             entity_code="OPP-2024-001",
         )
-        
+
         # 验证数据库添加操作
         mock_db_session.add.assert_called_once()
         
@@ -69,7 +68,7 @@ class TestSalesOperationLogService:
         old_value = {"name": "旧名称", "amount": 10000}
         new_value = {"name": "新名称", "amount": 15000}
         
-        result = SalesOperationLogService.log_operation(
+        SalesOperationLogService.log_operation(
             db=mock_db_session,
             entity_type=SalesEntityType.CONTRACT,
             entity_id=200,
@@ -79,7 +78,7 @@ class TestSalesOperationLogService:
             new_value=new_value,
             changed_fields=["name", "amount"],
         )
-        
+
         call_args = mock_db_session.add.call_args[0][0]
         assert call_args.old_value == old_value
         assert call_args.new_value == new_value
@@ -92,7 +91,7 @@ class TestSalesOperationLogService:
         
         new_value = {"name": "新线索", "source": "官网"}
         
-        result = SalesOperationLogService.log_create(
+        SalesOperationLogService.log_create(
             db=mock_db_session,
             entity_type=SalesEntityType.LEAD,
             entity_id=300,
@@ -100,7 +99,7 @@ class TestSalesOperationLogService:
             entity_code="LEAD-001",
             new_value=new_value,
         )
-        
+
         call_args = mock_db_session.add.call_args[0][0]
         assert call_args.operation_type == SalesOperationType.CREATE
         assert call_args.operation_desc == "创建线索"
@@ -114,7 +113,7 @@ class TestSalesOperationLogService:
         old_value = {"name": "旧商机", "stage": "跟进中"}
         new_value = {"name": "新商机", "stage": "已成交"}
         
-        result = SalesOperationLogService.log_update(
+        SalesOperationLogService.log_update(
             db=mock_db_session,
             entity_type=SalesEntityType.OPPORTUNITY,
             entity_id=400,
@@ -122,7 +121,7 @@ class TestSalesOperationLogService:
             old_value=old_value,
             new_value=new_value,
         )
-        
+
         call_args = mock_db_session.add.call_args[0][0]
         assert call_args.operation_type == SalesOperationType.UPDATE
         assert call_args.operation_desc == "更新商机"
@@ -133,7 +132,7 @@ class TestSalesOperationLogService:
         from app.services.sales.operation_log_service import SalesOperationLogService
         from app.models.sales.operation_log import SalesEntityType, SalesOperationType
         
-        result = SalesOperationLogService.log_status_change(
+        SalesOperationLogService.log_status_change(
             db=mock_db_session,
             entity_type=SalesEntityType.QUOTE,
             entity_id=500,
@@ -142,7 +141,7 @@ class TestSalesOperationLogService:
             new_status="submitted",
             entity_code="QUOTE-001",
         )
-        
+
         call_args = mock_db_session.add.call_args[0][0]
         assert call_args.operation_type == SalesOperationType.STATUS_CHANGE
         assert call_args.operation_desc == "报价状态变更：draft → submitted"
@@ -155,7 +154,7 @@ class TestSalesOperationLogService:
         from app.services.sales.operation_log_service import SalesOperationLogService
         from app.models.sales.operation_log import SalesEntityType, SalesOperationType
         
-        result = SalesOperationLogService.log_approval(
+        SalesOperationLogService.log_approval(
             db=mock_db_session,
             entity_type=SalesEntityType.CONTRACT,
             entity_id=600,
@@ -163,7 +162,7 @@ class TestSalesOperationLogService:
             action="approve",
             comment="同意该合同",
         )
-        
+
         call_args = mock_db_session.add.call_args[0][0]
         assert call_args.operation_type == SalesOperationType.APPROVE
         assert call_args.operation_desc == "合同审批通过"
@@ -174,7 +173,7 @@ class TestSalesOperationLogService:
         from app.services.sales.operation_log_service import SalesOperationLogService
         from app.models.sales.operation_log import SalesEntityType, SalesOperationType
         
-        result = SalesOperationLogService.log_approval(
+        SalesOperationLogService.log_approval(
             db=mock_db_session,
             entity_type=SalesEntityType.CONTRACT,
             entity_id=600,
@@ -182,7 +181,7 @@ class TestSalesOperationLogService:
             action="reject",
             comment="条款需要修改",
         )
-        
+
         call_args = mock_db_session.add.call_args[0][0]
         assert call_args.operation_type == SalesOperationType.REJECT
         assert call_args.operation_desc == "合同审批驳回"
@@ -191,7 +190,7 @@ class TestSalesOperationLogService:
     def test_get_entity_logs(self, mock_db_session):
         """测试获取实体日志列表"""
         from app.services.sales.operation_log_service import SalesOperationLogService
-        from app.models.sales.operation_log import SalesOperationLog, SalesEntityType
+        from app.models.sales.operation_log import SalesEntityType
         
         # Mock 查询结果
         mock_log = Mock()
@@ -221,7 +220,7 @@ class TestSalesOperationLogService:
     def test_search_logs_by_operator(self, mock_db_session):
         """测试按操作人搜索日志"""
         from app.services.sales.operation_log_service import SalesOperationLogService
-        from app.models.sales.operation_log import SalesOperationLog, SalesOperationType
+        from app.models.sales.operation_log import SalesOperationType
         
         mock_log = Mock()
         mock_log.id = 1
@@ -249,7 +248,7 @@ class TestSalesOperationLogService:
         from app.services.sales.operation_log_service import SalesOperationLogService
         from app.models.sales.operation_log import SalesEntityType, SalesOperationType
         
-        result = SalesOperationLogService.log_operation(
+        SalesOperationLogService.log_operation(
             db=mock_db_session,
             entity_type=SalesEntityType.CUSTOMER,
             entity_id=700,
@@ -259,7 +258,7 @@ class TestSalesOperationLogService:
             user_agent="Mozilla/5.0 (Macintosh)",
             request_id="req-123456",
         )
-        
+
         call_args = mock_db_session.add.call_args[0][0]
         assert call_args.ip_address == "192.168.1.100"
         assert call_args.user_agent == "Mozilla/5.0 (Macintosh)"

@@ -10,12 +10,6 @@ import {
   UserPlus,
   Calendar,
   Scale,
-  ChevronDown,
-  ChevronRight,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  Lightbulb,
 } from "lucide-react";
 import { resourceConflictApi } from "../../services/api/resourcePlan";
 

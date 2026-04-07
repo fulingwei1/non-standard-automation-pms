@@ -3,17 +3,8 @@
  * 显示销售业绩排名表格和指标权重配置
  */
 
-import { motion } from "framer-motion";
-import { Award } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Button,
-  Progress,
-} from "../../../ui";
+
+
 import { cn } from "../../../../lib/utils";
 import {
   formatMetricValueDisplay,

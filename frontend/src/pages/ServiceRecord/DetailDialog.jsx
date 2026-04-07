@@ -1,12 +1,5 @@
-import { Download, Star } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
+
+
 import { toast } from "../../components/ui/toast";
 import { getServiceTypeConfig } from "../../components/service-record";
 

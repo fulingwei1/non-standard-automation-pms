@@ -1,13 +1,5 @@
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter
-} from "../../../components/ui/dialog";
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
-import { Label } from "../../../components/ui/label";
+
+
 
 export function CustomerDetailDialog({ open, onOpenChange, data }) {
     if (!data) return null;

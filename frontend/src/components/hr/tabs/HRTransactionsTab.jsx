@@ -3,26 +3,15 @@
  * 人事事务 Tab 组件
  */
 import { useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Input,
-  EmptyState,
-} from "../../ui";
+
+
 import {
   FileText,
-  Search,
-  Plus,
 } from "lucide-react";
 import { cn, formatDate } from "../../../lib/utils";
 import { useHRTransactions } from "../hooks/useHRTransactions";
 import { hrApi } from "../../../services/api";
 import { toast } from "../../ui/toast";
-import { DynamicIcon } from "../../../utils/iconMap.jsx";
 
 export default function HRTransactionsTab() {
   const {

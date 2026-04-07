@@ -2,12 +2,7 @@
  * ECNKnowledgeTab Component
  * ECN 知识库 Tab 组件
  */
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { FileText, Search, Lightbulb, Plus } from "lucide-react";
 import { useECNKnowledge } from "./hooks/useECNKnowledge";
-import SolutionTemplateDialog from "./dialogs/SolutionTemplateDialog";
 
 export default function ECNKnowledgeTab({ ecnId, ecn, refetch }) {
   const {

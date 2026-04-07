@@ -3,18 +3,9 @@
  * 客户基本信息组件
  */
 
-import { Card, Row, Col, Tag, Avatar, Space, Divider, Typography, Progress } from 'antd';
-import { 
-  Building2, 
-  User, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Calendar,
-  Award,
-  TrendingUp,
-  Star
-} from 'lucide-react';
+import { Typography } from 'antd';
+
+
 import { 
   CUSTOMER_TYPES, 
   CUSTOMER_STATUS, 

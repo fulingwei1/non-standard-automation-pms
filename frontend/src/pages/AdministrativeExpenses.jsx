@@ -4,43 +4,14 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  PieChart,
-  Download,
-  Package,
-  Car,
-  Building2,
-  Coffee,
-  Printer } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress } from
-"../components/ui";
+
+
+
+
 import { cn, formatCurrency } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
-import {
-  SimpleBarChart,
-  SimplePieChart,
-  MonthlyTrendChart,
-  TrendComparisonCard,
-  CategoryBreakdownCard } from
-"../components/administrative/StatisticsCharts";
+
+
 import { adminApi } from "../services/api";
 
 export default function AdministrativeExpenses() {

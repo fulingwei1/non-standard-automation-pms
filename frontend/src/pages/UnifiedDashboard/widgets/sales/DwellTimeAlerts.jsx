@@ -6,22 +6,14 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../../components/ui/card";
-import { Button } from "../../../../components/ui/button";
-import { Badge } from "../../../../components/ui/badge";
+
+
 import { funnelApi } from "../../../../services/api/funnel";
 import { cn } from "../../../../lib/utils";
 import {
   AlertTriangle,
-  CheckCircle,
   Clock,
   Eye,
-  RefreshCw,
 } from "lucide-react";
 
 // 实体类型中文映射

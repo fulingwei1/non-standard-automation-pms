@@ -3,10 +3,6 @@
  * 提供部门、区域、日期范围等筛选功能
  */
 
-import { motion } from "framer-motion";
-import { Filter, RefreshCw } from "lucide-react";
-import { Card, CardContent, Button, Input } from "../../../ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../ui/select";
 import { cn } from "../../../../lib/utils";
 import { QUICK_RANGE_PRESETS, formatAutoRefreshTime } from "@/lib/constants/salesTeam";
 

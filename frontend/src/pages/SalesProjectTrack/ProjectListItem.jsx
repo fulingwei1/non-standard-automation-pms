@@ -1,16 +1,5 @@
-import {
-  Building2,
-  FileText,
-  User,
-  Truck,
-  ClipboardCheck,
-  AlertTriangle,
-  ChevronRight,
-  CheckCircle2,
-  Flag,
-  Clock,
-} from "lucide-react";
-import { Card, CardContent, Badge, Progress } from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { stageConfig, defaultStageConf, healthConfig, defaultHealthConf } from "./constants";
 

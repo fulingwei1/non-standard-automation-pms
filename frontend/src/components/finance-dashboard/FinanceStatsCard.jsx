@@ -4,7 +4,6 @@
  * 用于展示关键财务指标的卡片
  */
 
-import { motion } from "framer-motion";
 import {
   DollarSign,
   TrendingUp,
@@ -14,9 +13,6 @@ import {
   Clock,
   Target
 } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
 import { cn } from "../../lib/utils";
 import {
   formatCurrency,
@@ -24,7 +20,6 @@ import {
   getHealthLevel,
   getBudgetStatus
 } from "@/lib/constants/finance";
-import StatCard from "../common/StatCard";
 
 // 指标状态指示器
 const MetricStatusIndicator = ({ status, size = "sm" }) => {

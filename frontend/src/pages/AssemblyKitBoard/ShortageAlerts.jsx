@@ -1,26 +1,12 @@
 /**
  * Shortage Alerts Table - 缺料预警明细
  */
-import {
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+
+
+
+
+
+
 import { alertLevelConfig } from "./constants";
 
 export default function ShortageAlerts({ alerts }) {

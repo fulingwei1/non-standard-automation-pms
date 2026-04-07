@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, desc, exc, or_, text
+from sqlalchemy import and_, desc, exc, or_
 from sqlalchemy.orm import Session
 
 from app.common.query_filters import apply_keyword_filter

@@ -3,29 +3,14 @@
  * 管理客户需求调研记录、现场勘察、问题跟踪
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import {
-  ClipboardList,
-  Search,
-  Plus,
-  Calendar,
-  Users,
-  CheckCircle,
-  AlertTriangle,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
+
+
+
+
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { presaleApi } from "../../services/api";
 import { surveyMethods, surveyStatuses } from "./constants";
 import { mapTicketTypeToMethod, mapTicketStatus } from "./utils";
-import SurveyCard from "./SurveyCard";
-import SurveyDetailPanel from "./SurveyDetailPanel";
 
 export default function RequirementSurvey({ embedded = false }) {
   const [selectedStatus, setSelectedStatus] = useState("all");

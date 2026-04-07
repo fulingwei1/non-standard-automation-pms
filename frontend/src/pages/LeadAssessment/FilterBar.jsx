@@ -3,8 +3,6 @@
  * Search input + source / status / qualification / industry select filters.
  */
 
-import { Card, Row, Col, Input, Select, Space, Tag } from 'antd';
-import { Search } from 'lucide-react';
 import {
   LEAD_SOURCES,
   LEAD_STATUS,

@@ -2,14 +2,7 @@
  * Workshop Management Page - 车间管理页面
  * Features: 车间列表、创建、编辑、工位管理
  */
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { useWorkshopManagement } from "./hooks/useWorkshopManagement";
-import { WorkshopFilters } from "./WorkshopFilters";
-import { WorkshopTable } from "./WorkshopTable";
-import { WorkshopFormDialog } from "./WorkshopFormDialog";
-import { WorkshopDetailDialog } from "./WorkshopDetailDialog";
 
 export default function WorkshopManagement() {
   const {

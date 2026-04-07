@@ -1,16 +1,6 @@
-import { FileText, Loader2, Star } from "lucide-react";
 
-import {
-  Badge,
-  Button,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { CATEGORY_STYLE_MAP } from "./constants";
 

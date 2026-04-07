@@ -6,32 +6,13 @@
  * - 时间轴视图 (Timeline): 单项目甘特图
  * - 分解树视图 (Tree): 阶段/节点/任务分解
  */
-import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Calendar,
   GitBranch,
-  RefreshCw,
-  Filter,
-  Search,
-  ChevronDown,
-  ArrowLeft,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Badge,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 
@@ -39,15 +20,8 @@ import { fadeIn, staggerContainer } from "../../lib/animations";
 import { useStageViews, useStageActions } from "./hooks";
 
 // Components
-import {
-  StatisticsCards,
-  ProgressOverviewCard,
-  CategoryStatsCard,
-  CurrentStageDistributionCard,
-  PipelineView,
-  TimelineView,
-  TreeView,
-} from "./components";
+
+
 
 // Constants
 import {

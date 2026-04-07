@@ -10,44 +10,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Sparkles,
-  MessageSquare,
-  FileText,
-  Target,
-  AlertTriangle,
-  TrendingUp,
-  Copy,
-  RefreshCw,
-  ChevronRight,
-  Users,
-  Lightbulb,
-  ShieldAlert,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Alert,
-  AlertTitle,
-  AlertDescription,
-  Progress,
-} from "../../components/ui";
+
+
+
+
 import { aiSalesApi } from "../../services/api";
 
 // 话术推荐组件

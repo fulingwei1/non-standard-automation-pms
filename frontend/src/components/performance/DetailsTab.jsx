@@ -1,5 +1,3 @@
-import { motion } from "framer-motion";
-import { MessageSquare } from "lucide-react";
 import { getLevelInfo } from "../../utils/performanceUtils";
 import { cn } from "../../lib/utils";
 

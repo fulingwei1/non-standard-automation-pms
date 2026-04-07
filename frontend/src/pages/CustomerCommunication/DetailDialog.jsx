@@ -1,11 +1,5 @@
-import { Button } from "../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter } from
-"../../components/ui/dialog";
+
+
 import { formatDate } from "../../lib/utils";
 import { COMMUNICATION_TOPIC_LABELS } from "../../components/customer-communication";
 import { getStatusBadge, getPriorityBadge, getTypeDisplay, getSatisfactionDisplay } from "./displayHelpers";

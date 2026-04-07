@@ -5,30 +5,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  Phone,
-  Mail,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Download,
-  Upload,
-  Edit,
-  Send,
-  Paperclip,
-  Printer } from
+  Edit } from
 "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress } from
-"../components/ui";
+
+
 import { cn, formatCurrency, formatDate } from "../lib/utils";
 import { fadeIn, staggerContainer } from "../lib/animations";
 import { contractApi } from "../services/api";

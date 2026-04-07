@@ -2,16 +2,10 @@
  * Stage Progress Visualization - 装配阶段齐套率
  */
 import {
-  PlayCircle,
   Package,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
+
+
 import { cn } from "../../lib/utils";
 import { stageIcons, getKitRateColor } from "./constants";
 

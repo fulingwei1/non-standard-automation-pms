@@ -1,17 +1,5 @@
-import { AlertTriangle, Trash2 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui";
+
+
 import { OpportunityUtils } from "../../components/opportunity-board";
 
 export default function OpportunityDetailDialog({

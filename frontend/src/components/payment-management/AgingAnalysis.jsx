@@ -2,7 +2,6 @@
  * 账龄分析组件
  * 显示应收账款的账龄分布
  */
-import { Card, CardContent, Progress } from '../ui';
 import { cn } from '../../lib/utils';
 import { formatCurrency } from '@/lib/constants/finance';
 

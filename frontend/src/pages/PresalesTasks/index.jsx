@@ -3,31 +3,15 @@
  * 管理技术支持请求、方案设计、投标任务等
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import {
-  ListTodo,
-  Search,
-  Plus,
-  List,
-  Kanban,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { presaleApi } from "../../services/api";
 import { taskTypes, taskStatuses } from "./constants";
-import TaskCard from "./TaskCard";
-import TaskDetailPanel from "./TaskDetailPanel";
 
 export default function PresalesTasks({ embedded = false } = {}) {
   const location = useLocation();

@@ -9,28 +9,13 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import {
-  TrendingUp, Filter, AlertTriangle, Activity, BarChart3, Target,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Input,
-  Tabs, TabsContent, TabsList, TabsTrigger,
-} from "../../components/ui";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "../../components/ui/select";
+
+
+
 import { fadeIn } from "../../lib/animations";
 import { salesStatisticsApi, customerApi, userApi } from "../../services/api";
 
-import Overview from "./Overview";
-import ConversionRates from "./ConversionRates";
-import Bottlenecks from "./Bottlenecks";
-import OpportunityWinRate from "./OpportunityWinRate";
-import PredictionAccuracy from "./PredictionAccuracy";
 
 export default function SalesFunnel() {
   const navigate = useNavigate();

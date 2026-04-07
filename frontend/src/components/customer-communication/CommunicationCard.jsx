@@ -5,20 +5,9 @@
 import { useState } from "react";
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronDown, ChevronRight, Clock, Send, Copy, Download, MoreHorizontal } from
-"lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger } from
-"../ui/popover";
-import { Delete, Edit, FileText } from "lucide-react";
+
+
+
 import { cn } from "../../lib/utils";
 import {
   getStatusConfig,

@@ -1,13 +1,5 @@
-import { Download } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
-} from "../../../components/ui";
+
+
 import { statusConfig } from "../utils/pageConstants";
 
 export function AssessmentStatusCard({

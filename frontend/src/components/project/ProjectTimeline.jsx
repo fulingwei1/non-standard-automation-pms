@@ -5,20 +5,11 @@
  */
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-  Badge,
-  Button } from
-"../ui";
+
+
 import {
   Search,
   Calendar,
-  User,
   FileText,
   CheckCircle2,
   AlertTriangle,

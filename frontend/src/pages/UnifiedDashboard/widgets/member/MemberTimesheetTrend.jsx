@@ -1,9 +1,6 @@
 /**
  * 成员视图 - 个人工时趋势
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Clock } from 'lucide-react';
 
 export default function MemberTimesheetTrend({ data }) {
   const items = data?.items || [];

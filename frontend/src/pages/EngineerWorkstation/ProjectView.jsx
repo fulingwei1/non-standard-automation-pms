@@ -3,16 +3,10 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import {
-  Briefcase,
-  Box,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Button,
-} from "../../components/ui";
-import TaskListItem from "./TaskListItem";
+
+
+
+
 
 export default function ProjectView({
   filteredTasks,

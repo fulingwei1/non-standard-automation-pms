@@ -1,5 +1,3 @@
-import { Card, CardContent } from "../../components/ui";
-import ProfitAnalysisCard from "../../components/project/ProfitAnalysisCard";
 
 export default function ProfitTab({ projectId }) {
   return (

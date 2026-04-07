@@ -1,12 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout/PageHeader";
-import { Button } from "../../components/ui";
 import { useRdProjectList } from "./hooks/useRdProjectList";
-import { ProjectFilters } from "./ProjectFilters";
-import { ProjectListView } from "./ProjectListView";
-import { RdProjectFormDialog } from "./RdProjectFormDialog";
 import { staggerContainer } from "./constants";
 
 export default function RdProjectList() {

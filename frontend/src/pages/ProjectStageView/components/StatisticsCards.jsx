@@ -3,7 +3,6 @@
  *
  * 显示项目阶段的关键统计指标
  */
-import { motion } from "framer-motion";
 import {
   Activity,
   CheckCircle2,
@@ -11,8 +10,6 @@ import {
   AlertTriangle,
   XCircle,
 } from "lucide-react";
-import { Card, CardContent } from "../../../components/ui";
-import StatCard from "../../../components/common/StatCard";
 import { STAGE_STATUS } from "../constants";
 
 /**

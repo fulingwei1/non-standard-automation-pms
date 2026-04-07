@@ -4,29 +4,13 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight,
   AlertTriangle,
   CheckCircle,
   Clock,
-  User,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  RefreshCw,
-  X,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Skeleton } from "../ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+
+
 import { ganttDependencyApi } from "../../services/api";
 import { formatDate, cn } from "../../lib/utils";
 

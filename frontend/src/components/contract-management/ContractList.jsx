@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { Card, Table, Tag, Space, Button, Typography } from 'antd';
+import { Typography } from 'antd';
 import {
   CONTRACT_TYPES,
   CONTRACT_STATUS,

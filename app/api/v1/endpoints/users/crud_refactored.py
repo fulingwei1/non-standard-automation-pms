@@ -19,8 +19,7 @@ from app.models.organization import Employee
 from app.models.user import User
 from app.schemas.auth import UserCreate, UserResponse, UserRoleAssign, UserUpdate
 from app.services.permission_management.permission_audit_service import PermissionAuditService
-from app.schemas.auth import BatchRoleAssign, UserCreate, UserResponse, UserRoleAssign, UserUpdate
-from app.services.permission_audit_service import PermissionAuditService
+from app.schemas.auth import BatchRoleAssign
 from app.utils.db_helpers import get_or_404
 
 from .utils import (
@@ -371,7 +370,7 @@ def batch_assign_roles(
     current_user: User = Depends(security.require_permission("user:update")),
 ) -> Any:
     """批量分配/移除用户角色（原子操作）"""
-    from app.models.user import Role, UserRole
+    from app.models.user import UserRole
 
     results = {"success": [], "failed": []}
 

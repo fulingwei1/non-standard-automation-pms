@@ -1,11 +1,5 @@
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    Button,
-} from "../../components/ui";
-import { Upload, FileText, Trash2 } from "lucide-react";
+
+
 import { technicalReviewApi } from "../../services/api";
 import { confirmAction } from "@/lib/confirmAction";
 

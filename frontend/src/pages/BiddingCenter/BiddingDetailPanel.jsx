@@ -1,28 +1,8 @@
 /**
  * 投标详情面板组件
  */
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Clock,
-  Building2,
-  FileText,
-  Eye,
-  Edit,
-  CheckCircle,
-  AlertTriangle,
-  X,
-  User,
-  GitBranch,
-  Send,
-  Shield,
-  Swords,
-  Flag,
-  Calculator,
-  MessageSquare,
-} from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
+
+
 import { cn } from "../../lib/utils";
 import { getStageStyle, getStageName } from "./constants";
 

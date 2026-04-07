@@ -1,13 +1,7 @@
-import {
-  DollarSign,
-  PieChart,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+
+
+
+
 import { formatAmount } from "./utils";
 
 export default function CostOccupancyTab({ costOccupancyData }) {

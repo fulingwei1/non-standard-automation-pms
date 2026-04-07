@@ -1,13 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-  Button,
-  Badge
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 
 const MeetingDetailDialog = ({

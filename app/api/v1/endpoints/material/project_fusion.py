@@ -8,27 +8,19 @@
 """
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, Path, Query
-from sqlalchemy import and_, func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.core.schemas.response import error_response, success_response
 from app.dependencies import get_db
-from app.models.material import BomHeader, BomItem, Material, MaterialShortage
+from app.models.material import BomHeader, BomItem, Material
 from app.models.notification import Notification
 from app.models.project.core import Project
-from app.models.project.lifecycle import ProjectStatusLog
 from app.models.project_risk import ProjectRisk, RiskStatusEnum, RiskTypeEnum
-from app.models.purchase import (
-    GoodsReceipt,
-    GoodsReceiptItem,
-    PurchaseOrder,
-    PurchaseOrderItem,
-)
 
 router = APIRouter()  # POST endpoints under /material prefix
 project_router = APIRouter()  # GET endpoint under /projects prefix
@@ -386,7 +378,6 @@ def get_project_material_status(
     )
 
     # 4. 交付影响评估
-    today = date.today()
     planned_end = project.planned_end_date
     delivery_impact = {
         "project_planned_end": planned_end.isoformat() if planned_end else None,

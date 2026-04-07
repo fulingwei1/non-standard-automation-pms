@@ -8,12 +8,11 @@
 """
 
 import logging
-from datetime import date, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from datetime import date
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, case, desc, func
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db

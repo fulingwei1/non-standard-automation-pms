@@ -1,12 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import ProductionPlanList from "../ProductionPlanList";
-import WorkReportList from "../WorkReportList";
-import ProductionExceptionList from "../ProductionExceptionList";
-import WorkerManagement from "../WorkerManagement";
-import CapacityAnalysis from "../CapacityAnalysis";
-import AssemblyKitBoard from "../AssemblyKitBoard";
 import { productionApi, projectApi } from "../../services/api";
 import { assemblyKitApi } from "../../services/api/production";
 

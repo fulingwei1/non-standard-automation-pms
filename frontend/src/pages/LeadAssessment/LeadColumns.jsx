@@ -5,21 +5,8 @@
  * back the columns array — no component state required.
  */
 
-import { Button, Space, Tag, Dropdown, Menu, Progress } from 'antd';
-import {
-  Building2,
-  Users,
-  Phone,
-  Mail,
-  Calendar,
-  Eye,
-  Edit,
-  Target,
-  CheckCircle2,
-  FileText,
-  XCircle,
-  Settings,
-} from 'lucide-react';
+
+
 import {
   LEAD_STATUS,
   QUALIFICATION_LEVELS,

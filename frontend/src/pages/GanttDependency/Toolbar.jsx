@@ -1,6 +1,3 @@
-import { motion } from "framer-motion";
-import { GitBranch, RefreshCw, AlertTriangle, EyeOff } from "lucide-react";
-import { Button } from "../../components/ui/button";
 import { fadeIn } from "../../lib/animations";
 
 export default function Toolbar({

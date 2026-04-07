@@ -1,11 +1,4 @@
-import { PageHeader } from "../../components/layout";
-import { LoadingCard, ErrorMessage } from "../../components/common";
-import { ServiceOverview } from "../../components/service-analytics/ServiceOverview";
-import { ServiceCharts } from "../../components/service-analytics/ServiceCharts";
-import { ServicePerformance } from "../../components/service-analytics/ServicePerformance";
-import { ServiceTrends } from "../../components/service-analytics/ServiceTrends";
 import { useServiceAnalytics } from "./hooks/useServiceAnalytics";
-import { AnalyticsToolbar } from "./AnalyticsToolbar";
 
 export default function ServiceAnalytics() {
   const { analytics, loading, error, period, setPeriod, reload } =

@@ -2,8 +2,6 @@
  * Timeline stage component for order lifecycle visualization
  */
 
-import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
 import { fadeIn } from "../../lib/animations";

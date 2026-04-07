@@ -1,6 +1,4 @@
-import { TabsContent, Progress } from "../../components/ui";
 import { cn, formatCurrency } from "../../lib/utils";
-import { AreaChart as AreaChartComponent } from "../../components/charts";
 
 export default function CashFlowTab({ cashFlowData }) {
   return (

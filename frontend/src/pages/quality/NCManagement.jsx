@@ -4,13 +4,8 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  XCircle, ChevronLeft, ChevronRight, RefreshCw,
-  Plus, AlertTriangle, Wrench,
+import { AlertTriangle, Wrench,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { qualityApi } from "../../services/api/quality";
 
 const TABS = [

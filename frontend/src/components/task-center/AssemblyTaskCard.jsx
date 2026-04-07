@@ -1,17 +1,6 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  ChevronRight,
-  Timer,
-  Wrench,
-  Package
-} from "lucide-react";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
+
+
 import { cn } from "../../lib/utils";
 import { statusConfigs, priorityConfigs } from "./taskConfig";
 

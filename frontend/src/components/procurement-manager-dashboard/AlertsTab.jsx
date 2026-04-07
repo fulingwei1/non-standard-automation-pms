@@ -1,5 +1,3 @@
-import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui";
-import { AlertTriangle } from "lucide-react";
 
 export default function AlertsTab() {
   return (

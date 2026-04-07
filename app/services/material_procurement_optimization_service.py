@@ -413,9 +413,6 @@ class MaterialProcurementOptimizationService:
 
     def get_slow_moving_analysis(self) -> Dict[str, Any]:
         today = datetime.now()
-        date_90 = today - timedelta(days=90)
-        date_180 = today - timedelta(days=180)
-        date_365 = today - timedelta(days=365)
 
         items: List[Dict[str, Any]] = []
         materials = self.db.query(Material).filter(Material.is_active.is_(True)).all()

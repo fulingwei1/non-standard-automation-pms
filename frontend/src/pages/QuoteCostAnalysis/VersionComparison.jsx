@@ -2,24 +2,8 @@
  * VersionComparison — "版本对比" tab content
  */
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui";
+
+
 import { cn, formatCurrency, formatDate } from "../../lib/utils";
 
 /**

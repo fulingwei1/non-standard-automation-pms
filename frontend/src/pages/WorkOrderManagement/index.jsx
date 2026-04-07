@@ -2,15 +2,7 @@
  * Work Order Management Page - 工单管理页面
  * Features: 工单列表、详情、创建、派工、进度跟踪
  */
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui/button";
 import { useWorkOrders } from "./hooks/useWorkOrders";
-import WorkOrderFilters from "./WorkOrderFilters";
-import WorkOrderTable from "./WorkOrderTable";
-import CreateOrderDialog from "./CreateOrderDialog";
-import OrderDetailDialog from "./OrderDetailDialog";
-import AssignDialog from "./AssignDialog";
 
 export default function WorkOrderManagement() {
   const {

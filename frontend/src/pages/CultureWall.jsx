@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cultureWallApi } from "../services/api";
 import {
   Target,
@@ -7,14 +6,7 @@ import {
   AlertCircle,
   Bell,
   Award,
-  TrendingUp,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-  Play,
-  Pause,
 } from "lucide-react";
-import { Card, CardContent, Badge, Button } from "../components/ui";
 import { cn } from "../lib/utils";
 import { formatDate } from "../lib/formatters";
 

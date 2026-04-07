@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { lazy } from "react";
 
 const Loading = () => (
   <div className="flex items-center justify-center h-64">

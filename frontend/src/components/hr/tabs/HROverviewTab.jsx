@@ -3,29 +3,10 @@
  * HR 概览 Tab 组件
  */
 import { useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
-} from "../../ui";
-import {
-  UserPlus,
-  Award,
-  Users,
-  PieChart,
-  Zap,
-  Building2,
-  Calendar,
-  UserCheck,
-  Heart,
-  BarChart3,
-  ChevronRight,
-} from "lucide-react";
+
+
+
+
 import { cn } from "../../../lib/utils";
 import { fadeIn } from "../../../lib/animations";
 import { useHROverview } from "../hooks/useHROverview";

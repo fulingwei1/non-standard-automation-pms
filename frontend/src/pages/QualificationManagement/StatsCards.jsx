@@ -1,14 +1,8 @@
 /**
  * StatsCards - 统计卡片区域
  */
-import { motion } from "framer-motion";
-import { Award, Users, FileText, Clock } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+
+
 import { staggerContainer } from "../../lib/animations";
 
 export function StatsCards({ stats }) {

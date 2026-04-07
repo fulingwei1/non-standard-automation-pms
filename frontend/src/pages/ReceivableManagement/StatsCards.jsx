@@ -1,5 +1,3 @@
-import { FileText, DollarSign, AlertTriangle, Clock } from "lucide-react";
-import { Card, CardContent } from "../../components/ui";
 
 /**
  * StatsCards — four summary metric tiles at the top of the receivable page.

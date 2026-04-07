@@ -2,13 +2,8 @@
  * Organization hierarchy definition card
  */
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
-} from "../../components/ui";
+
+
 import { ORG_HIERARCHY } from "./constants";
 
 export default function OrgHierarchyCard() {

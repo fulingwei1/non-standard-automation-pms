@@ -1,15 +1,5 @@
-import { motion } from "framer-motion";
-import {
-  Package,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  TrendingUp,
-  DollarSign,
-  BarChart3,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
+
+
 import { PurchaseOrderUtils, ORDER_STATUS_CONFIGS } from "@/lib/constants/procurement";
 
 export default function PurchaseOrdersOverview({ orders = [] }) {

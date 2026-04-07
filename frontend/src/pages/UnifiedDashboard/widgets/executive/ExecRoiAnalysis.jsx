@@ -1,9 +1,6 @@
 /**
  * 高管视图 - 投资回报率分析
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp } from 'lucide-react';
 
 export default function ExecRoiAnalysis({ data }) {
   const items = data?.items || [];

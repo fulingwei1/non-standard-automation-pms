@@ -1,14 +1,8 @@
 /**
  * EmployeeCharts - 员工认证可视化图表区域
  */
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
-import { CompetencyRadarChart } from "../../components/qualification/CompetencyRadarChart";
+
+
 import { LEVEL_CODES, LEVEL_LABELS, POSITION_TYPES, POSITION_LABELS } from "./constants";
 
 export function EmployeeCharts({ qualifications }) {

@@ -3,7 +3,6 @@
  * 用于趋势展示、数据量变化
  */
 
-import { Area } from "@ant-design/plots";
 import { useMemo } from "react";
 
 /**

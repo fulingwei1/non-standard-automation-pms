@@ -2,24 +2,8 @@
  * Create/Edit template dialog component
  */
 
-import { Plus, Trash2 } from "lucide-react";
-import {
-  Button,
-  Input,
-  Label,
-  Textarea,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 import { TEMPLATE_TYPES } from "./constants";
 
 export default function TemplateFormDialog({

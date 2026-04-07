@@ -1,29 +1,12 @@
 import { useState, useEffect } from "react";
 import {
-  Activity,
   AlertTriangle,
-  BarChart3,
-  CalendarDays,
   Factory,
   Gauge,
   TrendingUp,
-  Wrench,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui";
+
+
 import { cn } from "../lib/utils";
 import { productionApi } from "../services/api";
 
@@ -245,7 +228,7 @@ export default function CapacityAnalysis() {
   const totalPlannedHours = workCenterCapacityData.reduce((sum, item) => sum + (item.plannedHours || 0), 0);
   const totalAvailableHours = workCenterCapacityData.reduce((sum, item) => sum + (item.availableHours || 0), 0);
   const totalActualHours = workCenterCapacityData.reduce((sum, item) => sum + (item.actualHours || 0), 0);
-  const totalPlannedOutput = workCenterCapacityData.reduce((sum, item) => sum + (item.plannedOutput || 0), 0);
+  const _totalPlannedOutput = workCenterCapacityData.reduce((sum, item) => sum + (item.plannedOutput || 0), 0);
   const totalActualOutput = workCenterCapacityData.reduce((sum, item) => sum + (item.actualOutput || 0), 0);
   const averageUtilization = totalAvailableHours ? (totalActualHours / totalAvailableHours) * 100 : 0;
   const averageOee = workCenterCapacityData.length

@@ -1,4 +1,3 @@
-import { Card, CardContent } from '../../../components/ui';
 
 export function ProjectClosureReview({ closure }) {
     if (closure.status !== "REVIEWED") return null;

@@ -1,4 +1,3 @@
-import { Route, Navigate } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
 
 const PresalesWorkstation = lazyLoad(() => import("../../pages/PresalesWorkstation"));

@@ -1,14 +1,8 @@
-import { Eye, Check, X, CheckCircle2 } from "lucide-react";
-import { Card, CardContent } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "../../components/ui/table";
+import { CheckCircle2 } from "lucide-react";
+
 import { cn } from "../../lib/utils";
 import { formatDateTime } from "@/lib/formatters";
 import { URGENCY_CONFIG, ENTITY_TYPE_CONFIG } from "./configMaps";
-import EmptyState from "./EmptyState";
 
 const PendingList = ({ items, loading, goToDetail, openQuickApproval }) => (
   <Card className="bg-slate-800/50 border-slate-700">

@@ -1,15 +1,5 @@
-import { Search, Grid3X3, List } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "../../components/ui";
+
+
 
 export function ProjectFilters({
   searchQuery,

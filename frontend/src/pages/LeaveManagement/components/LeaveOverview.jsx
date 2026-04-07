@@ -1,5 +1,3 @@
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui";
-import { SimplePieChart, MonthlyTrendChart, TrendComparisonCard } from "../../../components/administrative/StatisticsCharts";
 
 export function LeaveOverview({ leaveApplications, stats, monthlyLeaveTrend }) {
     return (

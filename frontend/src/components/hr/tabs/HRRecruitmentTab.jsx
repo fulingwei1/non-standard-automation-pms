@@ -2,15 +2,8 @@
  * HRRecruitmentTab Component
  * 招聘管理 Tab 组件
  */
-import { Card, CardContent, CardHeader, CardTitle, Button } from "../../ui";
-import {
-  UserPlus,
-  UserCheck,
-  Target,
-  FileText,
-  BarChart3,
-  ChevronRight,
-} from "lucide-react";
+
+
 import { cn } from "../../../lib/utils";
 
 export default function HRRecruitmentTab({

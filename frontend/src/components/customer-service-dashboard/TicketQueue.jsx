@@ -3,38 +3,12 @@
  * 服务工单队列组件
  */
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"../ui/table";
-import {
-  Search,
-  Clock,
-  User,
-  MessageSquare,
-  ChevronUp,
-  ChevronDown,
-  ArrowUpDown,
-  RefreshCw,
-  Eye,
-  Edit,
-  Trash2 } from
-"lucide-react";
+
+
+
+
+
+
 import {
   servicePriorityConfigs,
   serviceStatusConfigs,

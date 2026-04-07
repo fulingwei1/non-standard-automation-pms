@@ -5,41 +5,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Heart,
-  Cpu,
-  DollarSign,
-  Award,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Target,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Progress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Alert,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui";
+
+
+
+
 
 // 单商机赢单率评估
 function OpportunityAssessment() {

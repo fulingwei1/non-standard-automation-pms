@@ -4,13 +4,9 @@
  * 使用角色：销售、售前、项目经理
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Card, CardContent, CardHeader, CardTitle,
-  Button, Input, Label, Select, SelectContent,
-  SelectItem, SelectTrigger, SelectValue, Alert,
-} from '@/components/ui';
+
 import { projectDeliveryApi } from '@/services/api/projectDelivery';
 
 export default function ProjectDeliveryScheduleCreate() {

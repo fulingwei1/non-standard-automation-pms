@@ -4,20 +4,10 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import { Button } from "../../components/ui";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { salesTargetApi, salesTeamApi } from "../../services/api";
 import { toast } from "sonner";
 import { parseMeta, buildDescriptionWithMeta, generatePeriodValue } from "./utils";
-import TargetFilters from "./TargetFilters";
-import SummaryCards from "./SummaryCards";
-import AggregationView from "./AggregationView";
-import TargetList from "./TargetList";
-import CreateTargetDialog from "./CreateTargetDialog";
-import EditTargetDialog from "./EditTargetDialog";
 
 export default function SalesTarget() {
   const [targets, setTargets] = useState([]);

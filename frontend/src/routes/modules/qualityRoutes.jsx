@@ -1,5 +1,3 @@
-import { Route } from "react-router-dom";
-import { QualityProtectedRoute } from "../../components/common/ProtectedRoute";
 import { lazyLoad } from "../lazyLoad";
 
 const QualityWorkstation = lazyLoad(() => import("../../pages/quality/QualityWorkstation"));

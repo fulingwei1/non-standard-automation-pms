@@ -4,30 +4,10 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  UserCheck,
-  Calendar,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  Download,
-  BarChart3 } from
-"lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Progress } from
-"../components/ui";
+
+
+
+
 import { cn } from "../lib/utils";
 import { staggerContainer } from "../lib/animations";
 

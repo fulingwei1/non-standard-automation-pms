@@ -1,14 +1,8 @@
-import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import { Button } from "../../components/ui/button";
-import { Badge, Card, CardContent, Skeleton } from "../../components/ui";
 import {
-  Target,
   CheckCircle2,
   Clock,
   AlertTriangle,
-  RefreshCw,
-  Calendar,
 } from "lucide-react";
 
 // 里程碑状态配置

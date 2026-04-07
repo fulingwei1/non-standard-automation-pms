@@ -2,15 +2,8 @@
  * ECNIntegrationTab Component
  * ECN 模块集成 Tab 组件
  */
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../ui/card";
-import { Button } from "../ui/button";
-import { GitBranch, TrendingUp, DollarSign, Layers } from "lucide-react";
+
+
 import { ecnApi } from "../../services/api";
 
 import { confirmAction } from "@/lib/confirmAction";

@@ -5,9 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import MachineManagement from '../MachineManagement/index';
-import { machineApi, projectApi } from '../../services/api';
+import api, { machineApi, projectApi } from '../../services/api';
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -21,6 +19,13 @@ vi.mock('framer-motion', () => ({
 }));
 
 vi.mock('../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { success: true } }),
+    put: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    defaults: { baseURL: '/api' },
+  },
   machineApi: {
     list: vi.fn(),
     get: vi.fn(),
@@ -44,7 +49,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 describe('MachineManagement', () => {
   // 包装组件以提供路由参数
-  const renderWithRouter = (ui) =>
+  const _renderWithRouter = (ui) =>
     render(
       <MemoryRouter initialEntries={['/projects/1/machines']}>
         <Routes>

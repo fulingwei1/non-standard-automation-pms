@@ -1,4 +1,3 @@
-import { Route } from "react-router-dom";
 import { lazyLoad } from "../lazyLoad";
 
 const PerformanceManagement = lazyLoad(() => import("../../pages/PerformanceManagement"));

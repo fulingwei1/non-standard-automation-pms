@@ -1,13 +1,8 @@
 /**
  * TrendCharts — 问题总数趋势图 + 待处理/已解决对比图
  */
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { SimpleLineChart } from "../../components/administrative/StatisticsCharts";
+
+
 
 /**
  * @param {{

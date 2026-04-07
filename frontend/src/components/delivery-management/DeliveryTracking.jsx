@@ -4,8 +4,7 @@
  * Refactored to shadcn/Tailwind Dark Theme
  */
 
-import { Card, CardContent, CardHeader, CardTitle, Badge, EmptyState } from "../ui";
-import { MapPin, Truck, PackageSearch } from "lucide-react";
+import { Truck } from "lucide-react";
 
 import { DELIVERY_STATUS, SHIPPING_METHODS } from "@/lib/constants/service";
 

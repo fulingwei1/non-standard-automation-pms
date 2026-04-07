@@ -2,19 +2,9 @@
  * Acceptance Management — search input, type/status filter selects, action buttons
  */
 
-import { Search, Plus, RefreshCw } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui";
+
+
 
 const FilterBar = ({ searchText, setSearchText, filters, setFilters, onCreate, onRefresh }) => {
   return (

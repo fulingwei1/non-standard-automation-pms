@@ -4,40 +4,23 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   CheckCircle2,
   Circle,
   PlayCircle,
   AlertTriangle,
-  Search,
-  Upload,
-  Send,
-  Box,
 } from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  Button,
-  Input,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { fadeIn, staggerContainer } from "../../lib/animations";
 import { taskCenterApi } from "../../services/api";
 
 // Import engineer components
-import GanttChart from "../../components/engineer/GanttChart";
-import CalendarView from "../../components/engineer/CalendarView";
-import TaskDetailPanel from "../../components/engineer/TaskDetailPanel";
-import { ApiIntegrationError } from "../../components/ui";
 
 // Import local sub-components and constants
 import { taskTypeConfigs, statusConfigs, priorityConfigs, VIEW_MODES } from "./constants";
-import StatsCard from "./StatsCard";
-import TaskListItem from "./TaskListItem";
-import ProjectView from "./ProjectView";
 
 // Main Component
 export default function EngineerWorkstation() {

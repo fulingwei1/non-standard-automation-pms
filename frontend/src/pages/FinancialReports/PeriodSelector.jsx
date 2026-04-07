@@ -1,5 +1,3 @@
-import { motion } from "framer-motion";
-import { Card, CardContent, Button } from "../../components/ui";
 import { fadeIn } from "../../lib/animations";
 
 export default function PeriodSelector({ selectedPeriod, setSelectedPeriod, dateRange, setDateRange }) {

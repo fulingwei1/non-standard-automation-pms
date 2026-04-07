@@ -5,25 +5,10 @@
  */
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Progress,
-} from "../ui";
-import {
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  ArrowRight,
-  ExternalLink,
-  RefreshCw,
-  Loader2,
-} from "lucide-react";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { projectApi } from "../../services/api";
 import { toast } from "../ui/toast";

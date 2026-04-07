@@ -9,41 +9,10 @@
  */
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  MessageSquare,
-  HelpCircle,
-  BookOpen,
-  Users,
-  Send,
-  Plus,
-  Search,
-  ThumbsUp,
-  Eye,
-  Calendar,
-  Clock,
-  Play,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
-import { PageHeader } from "../../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Input,
-  Textarea,
-  Avatar,
-  AvatarFallback,
-} from "../../components/ui";
+
+
+
+
 
 // 协作留言
 function CollaborationMessages() {

@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { Card, Table, Tag, Space, Button, message } from 'antd';
+import { message } from 'antd';
 import { CONTRACT_STATUS, SIGNATURE_STATUS } from '@/lib/constants/contractManagement';
 
 const SignatureManager = ({ contracts = [], loading = false, onRefresh, onSignComplete }) => {

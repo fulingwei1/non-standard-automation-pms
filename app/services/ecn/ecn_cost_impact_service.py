@@ -15,7 +15,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import func, extract, case
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.ecn.core import Ecn

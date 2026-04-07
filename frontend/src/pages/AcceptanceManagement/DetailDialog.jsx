@@ -2,22 +2,9 @@
  * Acceptance Management — record detail dialog (checklist + issues)
  */
 
-import { ClipboardCheck, AlertCircle, ClipboardList } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "../../components/ui";
+
+
 import { cn } from "../../lib/utils";
 import { STATUS_CONFIG, TYPE_CONFIG, RESULT_CONFIG } from "./constants";
 

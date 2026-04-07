@@ -2,10 +2,7 @@
  * 根因分析柱状图组件
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { ROOT_CAUSE_TYPES } from '../../constants';
-import { AlertCircle } from 'lucide-react';
 
 const RootCauseBarChart = ({ data = [] }) => {
   if (data?.length === 0) {

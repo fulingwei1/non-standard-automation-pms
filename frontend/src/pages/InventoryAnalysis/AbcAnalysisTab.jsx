@@ -1,14 +1,7 @@
-import {
-  Package,
-  BarChart3,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/ui/card";
+
+
+
+
 
 const ABC_COLORS = {
   A: 'from-red-600 to-red-400',

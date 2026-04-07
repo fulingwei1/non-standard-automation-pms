@@ -1,15 +1,8 @@
 /**
  * Shared form fields used by both Create and Edit dialogs
  */
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"../../components/ui/select";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
+
+
 import {
   COMMUNICATION_TYPE,
   COMMUNICATION_TYPE_LABELS,

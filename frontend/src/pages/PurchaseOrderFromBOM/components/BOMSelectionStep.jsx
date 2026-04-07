@@ -1,10 +1,4 @@
-import { motion } from "framer-motion";
 import { Package } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Label } from "../../../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { EmptyState } from "../../../components/common";
 import { fadeIn } from "../../../lib/animations";
 
 export function BOMSelectionStep({

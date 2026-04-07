@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 
 vi.mock("../../../services/api", () => ({
   notificationApi: {
@@ -8,7 +7,6 @@ vi.mock("../../../services/api", () => ({
   },
 }));
 
-import NotificationPanel from "./NotificationPanel.jsx";
 import { notificationApi } from "../../../services/api";
 
 function renderPanel(props = {}) {

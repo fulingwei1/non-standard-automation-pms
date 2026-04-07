@@ -1,16 +1,10 @@
 /**
  * Statistics Cards - 统计卡片
  */
-import {
-  BarChart3,
-  CheckCircle2,
-  TrendingUp,
-  Package,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "../../components/ui/card";
+
+
+
+
 import { cn } from "../../lib/utils";
 import { getKitRateColor } from "./constants";
 

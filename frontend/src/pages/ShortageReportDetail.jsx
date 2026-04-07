@@ -5,39 +5,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   CheckCircle2,
   Clock,
   RefreshCw,
   XCircle,
-  Truck,
-  ArrowRightLeft,
 } from "lucide-react";
-import { PageHeader } from "../components/layout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Button,
-  Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-  DialogFooter,
-  Label,
-  Textarea,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui";
+
+
 import { cn, formatDate } from "../lib/utils";
 import { fadeIn } from "../lib/animations";
 import { shortageApi } from "../services/api";

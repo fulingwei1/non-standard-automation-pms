@@ -4,31 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { cn } from "../lib/utils";
 import { projectReviewApi, projectApi } from "../services/api";
 import { formatDate, formatCurrency } from "../lib/utils";
-import { PageHeader } from "../components/layout/PageHeader";
-import {
-  Card,
-  CardContent,
-  Button,
-  Badge,
-  Input,
-  SkeletonCard,
-} from "../components/ui";
-import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
+
+
 import {
   Search,
-  Plus,
-  Eye,
-  Edit,
-  Trash2,
-  FileText,
-  TrendingUp,
-  CheckCircle2,
-  Clock,
-  Archive,
 } from "lucide-react";
 
 const staggerContainer = {

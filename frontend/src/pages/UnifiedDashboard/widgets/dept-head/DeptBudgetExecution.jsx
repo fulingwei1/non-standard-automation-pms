@@ -1,9 +1,6 @@
 /**
  * 部门负责人视图 - 预算执行率统计
  */
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Wallet } from 'lucide-react';
 
 export default function DeptBudgetExecution({ data }) {
   const items = data?.items || [];
