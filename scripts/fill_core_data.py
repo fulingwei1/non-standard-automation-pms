@@ -154,7 +154,7 @@ def fill_core_data():
                 cur.execute(f"SELECT COUNT(*) FROM {table}")
                 count = cur.fetchone()[0]
                 print(f"  {name}: {count} 条")
-            except Exception as e:
+            except Exception:
                 print(f"  {name}: 查询失败")
         
         return 0

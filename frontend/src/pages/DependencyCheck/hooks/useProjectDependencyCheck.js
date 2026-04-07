@@ -34,7 +34,7 @@ export function useProjectDependencyCheck(id) {
     }
     fetchProject();
     fetchDependencyCheck();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [id]);
 
   const fetchProject = async () => {

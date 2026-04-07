@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """BOM服务测试"""
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 

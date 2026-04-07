@@ -9,24 +9,22 @@ G1-G4 阶段门验证逻辑：
 - G4: 合同转项目（Contract → Project）
 """
 
-import json
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.sales.contracts import Contract
 from app.models.sales.leads import Lead, Opportunity
-from app.models.sales.quotes import Quote, QuoteVersion
+from app.models.sales.quotes import Quote
 from app.models.sales.sales_funnel import (
     GateResultEnum,
     GateTypeEnum,
     StageGateConfig,
     StageGateResult,
 )
-from app.models.sales.technical_assessment import TechnicalAssessment
 
 logger = logging.getLogger(__name__)
 

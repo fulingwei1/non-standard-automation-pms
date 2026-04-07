@@ -7,8 +7,7 @@
 from datetime import datetime
 from typing import Dict, List, Optional
 from collections import defaultdict
-from datetime import date, datetime, timedelta
-from typing import Optional
+from datetime import date, timedelta
 
 from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session

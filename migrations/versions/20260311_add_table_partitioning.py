@@ -20,7 +20,7 @@ Create Date: 2026-03-11
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date
 
 from alembic import op
 from sqlalchemy import text

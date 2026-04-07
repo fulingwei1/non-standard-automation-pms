@@ -4,16 +4,15 @@
 保持 InventoryManagementService 的完整 API 接口，
 内部委托给拆分后的子服务。所有现有消费者无需修改。
 """
-from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
 from app.models.inventory_tracking import MaterialReservation, MaterialStock, MaterialTransaction
 from app.services.inventory.stock_query_service import StockQueryService
 from app.services.inventory.transaction_service import TransactionService
-from app.services.inventory.stock_update_service import InsufficientStockError, StockUpdateService
+from app.services.inventory.stock_update_service import StockUpdateService
 from app.services.inventory.inbound_service import InboundService
 from app.services.inventory.outbound_service import OutboundService
 from app.services.inventory.transfer_service import TransferService

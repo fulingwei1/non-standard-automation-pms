@@ -8,18 +8,15 @@ from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.common.date_range import get_month_range
 from app.core import security
 from app.models.presale import (
-    PresaleSolution,
     PresaleSupportTicket,
     PresaleTenderRecord,
 )
-from app.models.sales.leads import Opportunity
 from app.models.user import User
 from app.schemas.common import ResponseModel
 

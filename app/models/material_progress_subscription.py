@@ -10,7 +10,6 @@ from sqlalchemy import (
     Index,
     Integer,
     Numeric,
-    String,
 )
 from sqlalchemy.orm import relationship
 

@@ -169,7 +169,6 @@ def apply_user_id_scope(
 
     # DEPARTMENT / BUSINESS_UNIT → 需要 JOIN User 获取 department
     if scope.accessible_dept_ids:
-        from sqlalchemy import and_
 
         return query.join(
             User, user_id_column == User.id

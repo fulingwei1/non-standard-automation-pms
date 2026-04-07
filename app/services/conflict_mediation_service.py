@@ -9,9 +9,8 @@
 """
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project, ProjectStageResourcePlan

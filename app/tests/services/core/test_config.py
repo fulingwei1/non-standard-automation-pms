@@ -2,10 +2,7 @@
 """
 核心配置模块测试
 """
-import os
-from unittest.mock import patch, MagicMock
 
-import pytest
 
 
 class TestSettings:

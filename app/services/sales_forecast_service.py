@@ -11,16 +11,13 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from app.models.sales.leads import Opportunity
 from app.models.sales.contracts import Contract
-from app.models.project.customer import Customer
 from app.models.enums.sales import OpportunityStageEnum
 
 logger = logging.getLogger(__name__)

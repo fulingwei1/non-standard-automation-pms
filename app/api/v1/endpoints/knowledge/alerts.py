@@ -4,7 +4,6 @@
 新项目创建时自动推送类似项目的历史坑点
 """
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session

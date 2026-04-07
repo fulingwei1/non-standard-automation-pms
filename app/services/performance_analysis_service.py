@@ -14,10 +14,10 @@
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import case, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.alert import AlertRecord, AlertRule, ProjectHealthSnapshot
+from app.models.alert import AlertRecord, ProjectHealthSnapshot
 from app.models.project import Project, ProjectMilestone, ProjectStatusLog
 
 # 健康度等级 → 数值映射（复用 health_trend_service 的标准）

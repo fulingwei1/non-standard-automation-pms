@@ -4,7 +4,7 @@
 支持按项目类型/产品/客户、风险类型、问题类型等多维检索
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session

@@ -11,13 +11,13 @@ import logging
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, desc, func
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
 from app.core.schemas import success_response
-from app.models.material import BomHeader, BomItem, Material, MaterialShortage
+from app.models.material import BomHeader, Material, MaterialShortage
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.models.user import User
 

@@ -4,9 +4,8 @@
 测试 PermissionAuditService 的各项功能
 """
 
-import json
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 
 @pytest.fixture

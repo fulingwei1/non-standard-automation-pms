@@ -7,7 +7,7 @@
 """
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -15,7 +15,6 @@ from sqlalchemy.orm import Session
 from app.services.purchase.purchase_service import PurchaseService
 from app.models.purchase import (
     PurchaseOrder,
-    PurchaseOrderItem,
     PurchaseRequest,
     GoodsReceipt,
 )

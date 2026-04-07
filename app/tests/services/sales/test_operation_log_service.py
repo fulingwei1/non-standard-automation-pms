@@ -5,8 +5,7 @@
 """
 
 import pytest
-from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -191,7 +190,7 @@ class TestSalesOperationLogService:
     def test_get_entity_logs(self, mock_db_session):
         """测试获取实体日志列表"""
         from app.services.sales.operation_log_service import SalesOperationLogService
-        from app.models.sales.operation_log import SalesOperationLog, SalesEntityType
+        from app.models.sales.operation_log import SalesEntityType
         
         # Mock 查询结果
         mock_log = Mock()
@@ -221,7 +220,7 @@ class TestSalesOperationLogService:
     def test_search_logs_by_operator(self, mock_db_session):
         """测试按操作人搜索日志"""
         from app.services.sales.operation_log_service import SalesOperationLogService
-        from app.models.sales.operation_log import SalesOperationLog, SalesOperationType
+        from app.models.sales.operation_log import SalesOperationType
         
         mock_log = Mock()
         mock_log.id = 1

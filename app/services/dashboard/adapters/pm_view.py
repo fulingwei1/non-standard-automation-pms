@@ -18,11 +18,9 @@ from app.models.project import Project
 from app.models.project.financial import ProjectMilestone
 from app.models.project.team import ProjectMember
 from app.models.project_risk import ProjectRisk
-from app.models.progress import Task
 from app.schemas.dashboard import (
     DashboardStatCard,
     DashboardWidget,
-    DetailedDashboardResponse,
 )
 from app.services.dashboard.dashboard_adapter import DashboardAdapter, register_dashboard
 

@@ -4,7 +4,7 @@
 支持按项目类型/产品/客户、风险类型、问题类型等多维检索
 """
 
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -13,7 +13,6 @@ from app.api.deps import get_db
 from app.core import security
 from app.models.user import User
 from app.schemas.common import ResponseModel
-from app.schemas.knowledge_base import KnowledgeEntryCreate, KnowledgeEntryUpdate
 from app.services.knowledge.search_service import KnowledgeSearchService
 
 router = APIRouter()

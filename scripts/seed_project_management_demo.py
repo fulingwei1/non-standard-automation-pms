@@ -10,7 +10,6 @@ import os
 import sqlite3
 import random
 from datetime import datetime, timedelta
-from decimal import Decimal
 
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "app.db"

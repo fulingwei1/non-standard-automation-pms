@@ -15,8 +15,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security
 from app.core.sales_permissions import filter_sales_data_by_scope
-from app.models.organization import Department
-from app.models.sales import Contract, Opportunity, Quote, SalesTarget
+from app.models.sales import Opportunity, SalesTarget
 from app.models.user import User
 from app.schemas.common import ResponseModel
 

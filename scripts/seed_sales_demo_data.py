@@ -6,7 +6,6 @@
 """
 
 import json
-from datetime import date, timedelta
 from pathlib import Path
 
 # ========== 1. 客户数据 ==========

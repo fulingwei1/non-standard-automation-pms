@@ -146,7 +146,7 @@ export function useShortageManagement() {
     } else if (activeTab === "transfers") {
       loadTransfers();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab]);
 
   // Re-fetch reports when search / status filter changes (reset to page 1)
@@ -155,7 +155,7 @@ export function useShortageManagement() {
       setPage(1);
       loadReports();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [searchKeyword, statusFilter]);
 
   // Re-fetch reports when page changes (without resetting page)
@@ -163,7 +163,7 @@ export function useShortageManagement() {
     if (activeTab === "reports") {
       loadReports();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [page]);
 
   // Re-fetch arrivals when arrival filters change
@@ -171,7 +171,7 @@ export function useShortageManagement() {
     if (activeTab === "arrivals") {
       loadArrivals();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [arrivalFilters]);
 
   // ── Return ────────────────────────────────────────────────────────────────

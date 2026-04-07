@@ -10,11 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.core import security
-from app.models.service import ServiceTicket, ServiceTicketCcUser
+from app.models.service import ServiceTicketCcUser
 from app.models.service.enums import ServiceTicketStatusEnum
 from app.models.user import User
 from app.schemas.service import ServiceTicketAssign, ServiceTicketResponse
-from app.utils.db_helpers import get_or_404
 
 from ..access import ensure_project_ids_access_or_raise, ensure_service_ticket_access_or_raise
 

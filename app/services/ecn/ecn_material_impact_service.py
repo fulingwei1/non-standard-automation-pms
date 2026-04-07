@@ -11,7 +11,7 @@ ECN物料影响跟踪服务
 """
 
 import logging
-from datetime import datetime, date
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -19,13 +19,12 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.ecn.core import Ecn
-from app.models.ecn.impact import EcnAffectedMaterial, EcnAffectedOrder, EcnBomImpact
+from app.models.ecn.impact import EcnAffectedMaterial, EcnAffectedOrder
 from app.models.ecn.material_impact import (
     EcnExecutionProgress,
     EcnMaterialDisposition,
     EcnStakeholder,
 )
-from app.models.material import BomItem
 from app.models.purchase import PurchaseOrder, PurchaseOrderItem
 from app.services.notification.channels.base import NotificationPriority, NotificationRequest
 from app.services.notification.unified_notification_service import NotificationService

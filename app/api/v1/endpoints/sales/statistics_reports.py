@@ -710,7 +710,6 @@ def _forecast_report(
     forecast_total = actual_amount + total_weighted
 
     # 按月拆分预测
-    import datetime as dt_module
 
     monthly_forecast = []
     current = dt_start

@@ -6,7 +6,6 @@ P2: 缺料影响交付日期预测
 P3: 项目优先级与齐套率联动
 """
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session

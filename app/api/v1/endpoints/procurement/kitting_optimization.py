@@ -17,12 +17,7 @@ from app.api.deps import get_current_active_user, get_db
 from app.core.schemas import success_response
 from app.models.user import User
 from app.schemas.kitting_optimization import (
-    AlternativeListResponse,
     ExpediteRequest,
-    ExpediteResult,
-    ExpediteStats,
-    KittingImprovementSuggestions,
-    SafetyStockAlertResponse,
 )
 from app.services.kitting_optimization_service import KittingOptimizationService
 

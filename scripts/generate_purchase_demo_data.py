@@ -8,9 +8,9 @@ sys.path.insert(0, '/Users/flw/non-standard-automation-pm')
 
 from sqlalchemy.orm import Session
 from app.models.base import SessionLocal
-from app.models.user import User, Role, UserRole
+from app.models.user import Role, UserRole
 from app.models.purchase import PurchaseRequest, PurchaseRequestItem
-from app.models.material import Material, BomHeader, BomItem, MaterialCategory
+from app.models.material import Material, MaterialCategory
 
 def create_purchase_manager(db: Session):
     """确保有采购经理角色"""
@@ -102,7 +102,6 @@ def create_purchase_requests(db: Session):
     return pr
 
 def main():
-    from datetime import date, timedelta
     print("=" * 60)
     print("生成采购模块演示数据")
     print("=" * 60)

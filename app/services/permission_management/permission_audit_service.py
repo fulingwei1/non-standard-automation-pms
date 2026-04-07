@@ -4,7 +4,6 @@
 记录权限相关的操作日志
 """
 
-import inspect
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

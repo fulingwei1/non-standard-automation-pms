@@ -7,7 +7,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.ecn.core import Ecn
@@ -15,7 +15,6 @@ from app.models.issue import Issue
 from app.models.knowledge_base import (
     KnowledgeEntry,
     KnowledgeSourceEnum,
-    KnowledgeStatusEnum,
     KnowledgeTypeEnum,
 )
 from app.models.project.core import Project

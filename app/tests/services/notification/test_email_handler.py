@@ -2,9 +2,8 @@
 """
 邮件通知处理器测试
 """
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import pytest
-from datetime import datetime
 
 from app.services.notification.channels.email_handler import EmailChannelHandler
 from app.services.channel_handlers.base import (

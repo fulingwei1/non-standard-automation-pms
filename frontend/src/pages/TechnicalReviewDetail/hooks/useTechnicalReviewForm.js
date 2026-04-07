@@ -40,7 +40,7 @@ export function useTechnicalReviewForm(reviewId) {
         }
         fetchProjects();
         fetchUsers();
-    }, [reviewId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [reviewId]);  
 
     const fetchProjects = async () => {
         try {

@@ -12,11 +12,9 @@ Revises: 20260312_add_sales_indexes
 Create Date: 2026-03-12
 """
 
-from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
 revision = "20260312_binding"

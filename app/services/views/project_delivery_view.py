@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """项目交付关联视图"""
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 

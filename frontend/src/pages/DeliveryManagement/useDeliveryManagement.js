@@ -38,7 +38,7 @@ const useDeliveryManagement = () => {
   // ── data loading ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (viewMode === "list") loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab, viewMode]);
 
   const loadData = async () => {

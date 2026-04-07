@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db
 from app.core import security
 from app.common.pagination import PaginationParams, get_pagination_query
 from app.models.performance import PerformancePeriod, PerformanceResult

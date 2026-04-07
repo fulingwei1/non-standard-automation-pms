@@ -3,7 +3,6 @@
 日志配置模块测试
 """
 import logging
-import pytest
 from unittest.mock import patch, MagicMock
 
 
@@ -156,7 +155,7 @@ class TestLoggingConfig:
         with patch("app.core.logging_config.settings") as mock_settings:
             mock_settings.DEBUG = True
             
-            from app.core.logging_config import setup_logging, SensitiveDataFilter, ProductionSensitiveFilter
+            from app.core.logging_config import setup_logging
             
             # 调用 setup_logging 不应抛出异常
             setup_logging()
@@ -185,7 +184,7 @@ class TestLoggingConfig:
 
     def test_log_format_constants(self):
         """测试日志格式常量"""
-        from app.core.logging_config import LOG_FORMAT, DETAILED_LOG_FORMAT, LOG_LEVEL_MAP
+        from app.core.logging_config import LOG_FORMAT, LOG_LEVEL_MAP
         
         assert "%(asctime)s" in LOG_FORMAT
         assert "%(name)s" in LOG_FORMAT

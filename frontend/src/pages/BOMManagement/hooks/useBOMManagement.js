@@ -102,7 +102,7 @@ export function useBOMManagement() {
     useEffect(() => {
         fetchProjects();
         if (filterProject) fetchMachines(filterProject);
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);  
 
     useEffect(() => {
         fetchBOMs();

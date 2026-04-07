@@ -13,9 +13,7 @@ Create Date: 2026-03-12
 注意：此迁移为数据迁移，需要在结构迁移之后执行
 """
 
-from datetime import datetime
 
-import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import text
 from sqlalchemy.orm import Session

@@ -7,9 +7,8 @@
 """
 
 from datetime import date, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.alert import AlertRecord, AlertRule, ProjectHealthSnapshot
