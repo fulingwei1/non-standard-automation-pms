@@ -235,13 +235,13 @@ def check_sla_warnings(db: Session, current_time: Optional[datetime] = None) -> 
                     and_(
                         SLAMonitor.actual_response_time.is_(None),
                         SLAMonitor.response_status == "WARNING",
-                        not SLAMonitor.response_warning_sent,
+                        SLAMonitor.response_warning_sent == False,
                     ),
                     # 解决预警：未解决且达到预警阈值且未发送过预警
                     and_(
                         SLAMonitor.actual_resolve_time.is_(None),
                         SLAMonitor.resolve_status == "WARNING",
-                        not SLAMonitor.resolve_warning_sent,
+                        SLAMonitor.resolve_warning_sent == False,
                     ),
                 ),
             )

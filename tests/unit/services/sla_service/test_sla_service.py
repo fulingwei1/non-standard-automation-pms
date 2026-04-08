@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from decimal import Decimal
 
 # Import models from the actual app structure
-from app.models.service import ServiceTicket
+from app.models.service.ticket import ServiceTicket
 from app.models.sla import SLAMonitor, SLAPolicy
 from app.services.sla_service import (
     match_sla_policy,
@@ -24,6 +24,8 @@ class TestSLAService:
         """测试精确匹配SLA策略"""
         # 创建测试数据
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_001",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -44,6 +46,8 @@ class TestSLAService:
         """测试问题类型匹配SLA策略"""
         # 创建仅匹配问题类型的策略
         policy = SLAPolicy(
+            policy_name="软件问题处理策略",
+            policy_code="SW_NORMAL_001",
             problem_type="软件问题",
             urgency=None,
             response_time_hours=4,
@@ -64,6 +68,8 @@ class TestSLAService:
         """测试紧急程度匹配SLA策略"""
         # 创建仅匹配紧急程度的策略
         policy = SLAPolicy(
+            policy_name="紧急问题处理策略",
+            policy_code="URGENCY_001",
             problem_type=None,
             urgency="紧急",
             response_time_hours=1,
@@ -84,6 +90,8 @@ class TestSLAService:
         """测试通用策略匹配"""
         # 创建通用策略
         policy = SLAPolicy(
+            policy_name="通用问题处理策略",
+            policy_code="GENERAL_001",
             problem_type=None,
             urgency=None,
             response_time_hours=8,
@@ -104,6 +112,8 @@ class TestSLAService:
         """测试无匹配策略的情况"""
         # 创建一个不匹配的策略
         policy = SLAPolicy(
+            policy_name="特定问题处理策略",
+            policy_code="SPECIFIC_001",
             problem_type="特定问题",
             urgency="特定紧急",
             response_time_hours=8,
@@ -122,6 +132,8 @@ class TestSLAService:
         """测试非激活策略不被匹配"""
         # 创建非激活策略
         policy = SLAPolicy(
+            policy_name="停用硬件故障处理策略",
+            policy_code="HW_INACTIVE_001",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -140,6 +152,8 @@ class TestSLAService:
         """测试创建SLA监控记录"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_002",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -152,9 +166,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET001",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
@@ -178,6 +196,8 @@ class TestSLAService:
         """测试更新SLA监控状态 - 响应按时"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_003",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -190,9 +210,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET002",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
@@ -221,6 +245,8 @@ class TestSLAService:
         """测试更新SLA监控状态 - 响应超时"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_004",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -234,9 +260,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET003",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
@@ -265,6 +295,8 @@ class TestSLAService:
         """测试更新SLA监控状态 - 解决按时"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_005",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -277,9 +309,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET004",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
@@ -308,6 +344,8 @@ class TestSLAService:
         """测试更新SLA监控状态 - 解决超时"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_006",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -321,9 +359,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET005",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
@@ -352,6 +394,8 @@ class TestSLAService:
         """测试同步工单到SLA监控 - 存在监控记录"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_007",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -364,9 +408,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET006",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0),
             response_time=datetime(2023, 1, 1, 11, 0, 0),
             resolved_time=datetime(2023, 1, 1, 15, 0, 0)
@@ -400,6 +448,8 @@ class TestSLAService:
         """测试同步工单到SLA监控 - 不存在监控记录"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_008",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -412,9 +462,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET007",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0),
             response_time=datetime(2023, 1, 1, 11, 0, 0)
         )
@@ -433,6 +487,8 @@ class TestSLAService:
         """测试检查SLA预警"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_009",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -446,9 +502,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET008",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
@@ -481,6 +541,8 @@ class TestSLAService:
         """测试标记响应预警已发送"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_010",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -493,9 +555,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET009",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
@@ -525,6 +591,8 @@ class TestSLAService:
         """测试标记解决预警已发送"""
         # 创建策略
         policy = SLAPolicy(
+            policy_name="硬件故障紧急处理策略",
+            policy_code="HW_EMERGENCY_011",
             problem_type="硬件故障",
             urgency="紧急",
             response_time_hours=2,
@@ -537,9 +605,13 @@ class TestSLAService:
 
         # 创建工单
         ticket = ServiceTicket(
-            title="测试工单",
+            ticket_no="TICKET010",
+            project_id=1,
+            customer_id=1,
             problem_type="硬件故障",
+            problem_desc="硬件故障描述",
             urgency="紧急",
+            reported_by="测试用户",
             reported_time=datetime(2023, 1, 1, 10, 0, 0)
         )
         db_session.add(ticket)
