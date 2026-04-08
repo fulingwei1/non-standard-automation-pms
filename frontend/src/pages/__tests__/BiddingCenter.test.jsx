@@ -12,52 +12,52 @@ import { presaleApi } from '../../services/api';
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
+    get: vi.fn().mockResolvedValue({data: { items: [] }}),
     post: vi.fn().mockResolvedValue({ data: { success: true } }),
     put: vi.fn().mockResolvedValue({ data: { success: true } }),
     delete: vi.fn().mockResolvedValue({ data: { success: true } }),
     defaults: { baseURL: '/api' },
   },
     presaleApi: {
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
       tickets: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        get: vi.fn().mockResolvedValue({ data: {} }),
-        accept: vi.fn().mockResolvedValue({ data: {} }),
-        updateProgress: vi.fn().mockResolvedValue({ data: {} }),
-        complete: vi.fn().mockResolvedValue({ data: {} }),
-        rate: vi.fn().mockResolvedValue({ data: {} }),
-        getBoard: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        get: vi.fn().mockResolvedValue({data: { items: [] }}),
+        accept: vi.fn().mockResolvedValue({data: { items: [] }}),
+        updateProgress: vi.fn().mockResolvedValue({data: { items: [] }}),
+        complete: vi.fn().mockResolvedValue({data: { items: [] }}),
+        rate: vi.fn().mockResolvedValue({data: { items: [] }}),
+        getBoard: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       solutions: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        get: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
-        update: vi.fn().mockResolvedValue({ data: {} }),
-        review: vi.fn().mockResolvedValue({ data: {} }),
-        getVersions: vi.fn().mockResolvedValue({ data: {} }),
-        getCost: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        get: vi.fn().mockResolvedValue({data: { items: [] }}),
+        create: vi.fn().mockResolvedValue({data: { items: [] }}),
+        update: vi.fn().mockResolvedValue({data: { items: [] }}),
+        review: vi.fn().mockResolvedValue({data: { items: [] }}),
+        getVersions: vi.fn().mockResolvedValue({data: { items: [] }}),
+        getCost: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       templates: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        get: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
-        update: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        get: vi.fn().mockResolvedValue({data: { items: [] }}),
+        create: vi.fn().mockResolvedValue({data: { items: [] }}),
+        update: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       tenders: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        get: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
-        update: vi.fn().mockResolvedValue({ data: {} }),
-        updateResult: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        get: vi.fn().mockResolvedValue({data: { items: [] }}),
+        create: vi.fn().mockResolvedValue({data: { items: [] }}),
+        update: vi.fn().mockResolvedValue({data: { items: [] }}),
+        updateResult: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       statistics: {
-        workload: vi.fn().mockResolvedValue({ data: {} }),
-        responseTime: vi.fn().mockResolvedValue({ data: {} }),
-        conversion: vi.fn().mockResolvedValue({ data: {} }),
-        performance: vi.fn().mockResolvedValue({ data: {} }),
+        workload: vi.fn().mockResolvedValue({data: { items: [] }}),
+        responseTime: vi.fn().mockResolvedValue({data: { items: [] }}),
+        conversion: vi.fn().mockResolvedValue({data: { items: [] }}),
+        performance: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
     }
 }));
@@ -84,7 +84,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('BiddingCenter', () => {
+describe('BiddingCenter', () => {
   const mockBiddingData = {
     items: [
       {

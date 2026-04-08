@@ -53,7 +53,7 @@ export function getErrorMessage(error) {
 }
 
 export function isNetworkError(error) {
-  return error && !error.response && !!error.request;
+  return !!(error && !error.response && !!error.request);
 }
 
 export function isAuthError(error) {

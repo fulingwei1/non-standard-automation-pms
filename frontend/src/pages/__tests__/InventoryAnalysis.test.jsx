@@ -1,405 +1,247 @@
-/**
- * InventoryAnalysis 组件测试
- * 测试覆盖：库存分析、周转率、安全库存、成本分析
- */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import InventoryAnalysis from "../InventoryAnalysis";
+import { api } from "../../services/api";
+import { buildExportData, downloadCsv } from "../InventoryAnalysis/utils";
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import InventoryAnalysis from '../InventoryAnalysis';
-import api from '../../services/api';
-
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
+vi.mock("../../services/api", () => ({
+  api: {
+    get: vi.fn(),
+  },
 }));
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+vi.mock("../InventoryAnalysis/utils", () => ({
+  buildExportData: vi.fn(() => [["库存分析报表"]]),
+  downloadCsv: vi.fn(),
+}));
 
-describe('InventoryAnalysis', () => {
-  const mockInventoryData = {
-    overview: {
-      totalValue: 5000000,
-      totalQuantity: 10000,
-      itemCount: 500,
-      avgTurnover: 4.5,
-      lowStockItems: 25,
-      overstockItems: 15
+vi.mock("../InventoryAnalysis/TurnoverRateTab", () => ({
+  default: ({ turnoverData }) => (
+    <div data-testid="turnover-rate-tab">
+      周转率分析内容：{turnoverData?.summary?.turnover_rate ?? "empty"}
+    </div>
+  ),
+}));
+
+vi.mock("../InventoryAnalysis/StaleMaterialsTab", () => ({
+  default: ({ staleMaterialsData, staleThreshold, setStaleThreshold, loading }) => (
+    <div data-testid="stale-materials-tab">
+      <div>呆滞物料内容：{staleMaterialsData?.summary?.stale_count ?? 0}</div>
+      <div>当前阈值：{staleThreshold}</div>
+      <div>{loading ? "加载中..." : "加载完成"}</div>
+      <label htmlFor="stale-threshold">库龄阈值</label>
+      <select
+        id="stale-threshold"
+        aria-label="库龄阈值"
+        value={staleThreshold}
+        onChange={(e) => setStaleThreshold(Number(e.target.value))}
+      >
+        <option value={30}>30天</option>
+        <option value={60}>60天</option>
+        <option value={90}>90天</option>
+        <option value={120}>120天</option>
+      </select>
+    </div>
+  ),
+}));
+
+vi.mock("../InventoryAnalysis/SafetyStockTab", () => ({
+  default: ({ safetyStockData }) => (
+    <div data-testid="safety-stock-tab">
+      安全库存内容：{safetyStockData?.summary?.compliant_rate ?? "empty"}
+    </div>
+  ),
+}));
+
+vi.mock("../InventoryAnalysis/AbcAnalysisTab", () => ({
+  default: ({ abcAnalysisData }) => (
+    <div data-testid="abc-analysis-tab">
+      ABC分类内容：{abcAnalysisData?.total_materials ?? "empty"}
+    </div>
+  ),
+}));
+
+vi.mock("../InventoryAnalysis/CostOccupancyTab", () => ({
+  default: ({ costOccupancyData }) => (
+    <div data-testid="cost-occupancy-tab">
+      成本占用内容：{costOccupancyData?.summary?.total_inventory_value ?? "empty"}
+    </div>
+  ),
+}));
+
+const turnoverResponse = {
+  summary: {
+    total_inventory_value: 256000,
+    turnover_rate: 3.5,
+    turnover_days: 102,
+    total_materials: 18,
+  },
+  category_breakdown: [
+    {
+      category_name: "电子料",
+      inventory_value: 156000,
+      material_count: 8,
+      value_percentage: 61,
     },
-    items: [
-      {
-        id: 1,
-        materialCode: 'MAT-001',
-        materialName: '钢板',
-        category: '原材料',
-        currentStock: 500,
-        safetyStock: 200,
-        avgConsumption: 100,
-        turnoverRate: 4.8,
-        stockDays: 5,
-        totalValue: 250000,
-        status: 'normal'
-      },
-      {
-        id: 2,
-        materialCode: 'MAT-002',
-        materialName: '螺栓',
-        category: '标准件',
-        currentStock: 50,
-        safetyStock: 100,
-        avgConsumption: 200,
-        turnoverRate: 2.5,
-        stockDays: 0.25,
-        totalValue: 5000,
-        status: 'low'
-      }
-    ],
-    trends: [
-      { month: '2024-01', turnover: 4.2, value: 4800000 },
-      { month: '2024-02', turnover: 4.5, value: 5000000 }
-    ]
-  };
+  ],
+};
 
+const staleResponse = {
+  summary: {
+    stale_count: 2,
+    stale_value: 56000,
+    total_value_with_stock: 320000,
+    threshold_days: 90,
+  },
+  stale_materials: [
+    {
+      material_code: "MAT-001",
+      material_name: "伺服器",
+    },
+  ],
+};
+
+const safetyStockResponse = {
+  summary: {
+    compliant_rate: 88,
+  },
+};
+
+const abcAnalysisResponse = {
+  total_materials: 42,
+};
+
+const costOccupancyResponse = {
+  summary: {
+    total_inventory_value: 888000,
+  },
+};
+
+describe("InventoryAnalysis", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue({ data: mockInventoryData });
-    api.post.mockResolvedValue({ data: { success: true } });
-  });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  describe('Component Rendering', () => {
-    it('should render inventory analysis page', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/库存分析|Inventory Analysis/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should display overview statistics', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/5,000,000|500万/i)).toBeInTheDocument();
-        expect(screen.getByText(/10,000|1万/)).toBeInTheDocument();
-      });
-    });
-
-    it('should render inventory items', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-        expect(screen.getByText('螺栓')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Data Loading', () => {
-    it('should load inventory data on mount', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(
-          expect.stringContaining('/inventory')
-        );
-      });
-    });
-
-    it('should show loading state', () => {
-      api.get.mockImplementation(() => new Promise(() => {}));
-
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      expect(screen.queryByText(/加载中|Loading/i)).toBeTruthy();
-    });
-
-    it('should handle load error', async () => {
-      api.get.mockRejectedValue(new Error('Load failed'));
-
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      });
-    });
-  });
-
-  describe('Turnover Analysis', () => {
-    it('should display turnover rates', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/4\.8/)).toBeInTheDocument();
-        expect(screen.getByText(/2\.5/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show average turnover', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/4\.5/)).toBeInTheDocument();
-      });
-    });
-
-    it('should display stock days', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/5.*天|5.*days/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Safety Stock Analysis', () => {
-    it('should display safety stock levels', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/200/)).toBeInTheDocument();
-        expect(screen.getByText(/100/)).toBeInTheDocument();
-      });
-    });
-
-    it('should highlight low stock items', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/低库存|Low Stock/i)).toBeInTheDocument();
-        expect(screen.getByText(/25.*低库存|25.*low/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should show overstock items', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/15.*超储|15.*overstock/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Cost Analysis', () => {
-    it('should display total inventory value', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/5,000,000|500万/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should show item values', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/250,000|25万/i)).toBeInTheDocument();
-        expect(screen.getByText(/5,000|5千/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Filtering and Search', () => {
-    it('should search inventory items', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: '钢板' } });
-
-        await waitFor(() => {
-          expect(api.get).toHaveBeenCalled();
+    api.get.mockImplementation((url, config) => {
+      if (url === "/inventory-analysis/turnover-rate") {
+        return Promise.resolve({ data: { data: turnoverResponse } });
+      }
+      if (url === "/inventory-analysis/stale-materials") {
+        return Promise.resolve({
+          data: {
+            data: {
+              ...staleResponse,
+              summary: {
+                ...staleResponse.summary,
+                threshold_days: config?.params?.threshold_days ?? 90,
+              },
+            },
+          },
         });
       }
-    });
-
-    it('should filter by category', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const categoryFilter = screen.queryByRole('combobox');
-      if (categoryFilter) {
-        fireEvent.change(categoryFilter, { target: { value: '原材料' } });
+      if (url === "/inventory-analysis/safety-stock-compliance") {
+        return Promise.resolve({ data: { data: safetyStockResponse } });
       }
-    });
-
-    it('should filter by stock status', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('Trend Analysis', () => {
-    it('should display trend data', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/趋势|Trend/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should show monthly data', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/2024-01/)).toBeInTheDocument();
-        expect(screen.getByText(/2024-02/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Export Functionality', () => {
-    it('should export analysis report', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      if (exportButton) {
-        fireEvent.click(exportButton);
-
-        await waitFor(() => {
-          expect(api.post).toHaveBeenCalledWith(
-            expect.stringContaining('/export')
-          );
-        });
+      if (url === "/inventory-analysis/abc-analysis") {
+        return Promise.resolve({ data: { data: abcAnalysisResponse } });
       }
+      if (url === "/inventory-analysis/cost-occupancy") {
+        return Promise.resolve({ data: { data: costOccupancyResponse } });
+      }
+      return Promise.reject(new Error(`unexpected url: ${url}`));
     });
   });
 
-  describe('Statistics Display', () => {
-    it('should show item count', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <InventoryAnalysis />
+      </MemoryRouter>,
+    );
+  }
 
-      await waitFor(() => {
-        expect(screen.getByText(/500.*项|500.*items/i)).toBeInTheDocument();
+  it("默认加载周转率页并渲染页面编排", async () => {
+    renderPage();
+
+    expect(screen.getByRole("heading", { name: "库存分析" })).toBeInTheDocument();
+    expect(screen.getByText("库存周转率、呆滞物料、安全库存全面监控")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "导出报表" })).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith("/inventory-analysis/turnover-rate");
+    });
+
+    expect(screen.getByTestId("turnover-rate-tab")).toHaveTextContent("周转率分析内容：3.5");
+    expect(screen.queryByTestId("stale-materials-tab")).not.toBeInTheDocument();
+  });
+
+  it("切到呆滞物料页后按阈值加载，并在阈值变化时重新请求", async () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "呆滞物料" }));
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith("/inventory-analysis/stale-materials", {
+        params: { threshold_days: 90 },
       });
     });
 
-    it('should display average consumption', async () => {
-      render(
-        <MemoryRouter>
-          <InventoryAnalysis />
-        </MemoryRouter>
-      );
+    expect(screen.getByTestId("stale-materials-tab")).toHaveTextContent("当前阈值：90");
 
-      await waitFor(() => {
-        expect(screen.getByText(/100/)).toBeInTheDocument();
-        expect(screen.getByText(/200/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("库龄阈值"), {
+      target: { value: "120" },
+    });
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith("/inventory-analysis/stale-materials", {
+        params: { threshold_days: 120 },
       });
     });
+
+    expect(screen.getByTestId("stale-materials-tab")).toHaveTextContent("当前阈值：120");
+  });
+
+  it("切换到其他标签时加载对应分析数据", async () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "安全库存" }));
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith("/inventory-analysis/safety-stock-compliance");
+    });
+    expect(screen.getByTestId("safety-stock-tab")).toHaveTextContent("安全库存内容：88");
+
+    fireEvent.click(screen.getByRole("button", { name: "ABC分类" }));
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith("/inventory-analysis/abc-analysis");
+    });
+    expect(screen.getByTestId("abc-analysis-tab")).toHaveTextContent("ABC分类内容：42");
+
+    fireEvent.click(screen.getByRole("button", { name: "成本占用" }));
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith("/inventory-analysis/cost-occupancy");
+    });
+    expect(screen.getByTestId("cost-occupancy-tab")).toHaveTextContent("成本占用内容：888000");
+  });
+
+  it("导出报表时按当前 tab 数据调用导出工具", async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("turnover-rate-tab")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "导出报表" }));
+
+    expect(buildExportData).toHaveBeenCalledWith(
+      "turnover-rate",
+      expect.objectContaining({
+        turnoverData: turnoverResponse,
+        staleMaterialsData: null,
+        safetyStockData: null,
+        abcAnalysisData: null,
+        costOccupancyData: null,
+      }),
+    );
+    expect(downloadCsv).toHaveBeenCalledWith([["库存分析报表"]], "turnover-rate");
   });
 });

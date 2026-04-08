@@ -18,9 +18,13 @@ const { knowledgeBaseApi, serviceApiMock } = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../services/api/service", () => ({
-  serviceApi: serviceApiMock,
-}));
+vi.mock('../../services/api/service', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    serviceApi: serviceApiMock,
+  };
+});
 
 vi.mock("framer-motion", () => ({
   motion: new Proxy(

@@ -408,13 +408,13 @@ export default function UserManagement() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="搜索用户..."
-            value={searchQuery || "unknown"}
+            value={searchQuery ?? ""}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
         <div className="flex gap-2">
-          <Select value={filterStatus || "unknown"} onValueChange={setFilterStatus}>
+          <Select value={filterStatus ?? ""} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="状态" />
             </SelectTrigger>
@@ -427,7 +427,7 @@ export default function UserManagement() {
             </SelectContent>
           </Select>
 
-          <Select value={filterRole || "unknown"} onValueChange={setFilterRole}>
+          <Select value={filterRole ?? ""} onValueChange={setFilterRole}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="角色" />
             </SelectTrigger>
@@ -440,7 +440,7 @@ export default function UserManagement() {
             </SelectContent>
           </Select>
 
-          <Select value={filterDepartment || "unknown"} onValueChange={setFilterDepartment}>
+          <Select value={filterDepartment ?? ""} onValueChange={setFilterDepartment}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="部门" />
             </SelectTrigger>

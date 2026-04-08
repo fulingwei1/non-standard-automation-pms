@@ -38,13 +38,13 @@ describe('Customer Service', () => {
         email: 'john@test.com',
       };
 
-      mock.onGet('/api/v1/customer/1').reply(200, mockData);
+      mock.onGet('/customer/1').reply(200, mockData);
 
       const result = await customerService.getCustomer360(1);
 
       expect(result).toEqual(mockData);
       expect(mock.history.get).toHaveLength(1);
-      expect(mock.history.get[0].url).toBe('/api/v1/customer/1');
+      expect(mock.history.get[0].url).toBe('/customer/1');
     });
 
     it('应该处理客户不存在的情况', async () => {

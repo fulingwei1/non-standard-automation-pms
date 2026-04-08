@@ -1,8 +1,3 @@
-/**
- * SupplierManagementData 组件测试
- * 测试覆盖：供应商数据分析、绩效报表、数据导入导出
- */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -10,333 +5,240 @@ import SupplierManagementData from '../SupplierManagementData';
 import { supplierApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    post: vi.fn().mockResolvedValue({ data: { success: true } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    defaults: { baseURL: '/api' },
+  supplierApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateRating: vi.fn(),
   },
-    supplierApi: {
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      updateRating: vi.fn().mockResolvedValue({ data: {} }),
-      getMaterials: vi.fn().mockResolvedValue({ data: {} }),
-    }
 }));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
+      const filtered = Object.fromEntries(
+        Object.entries(props).filter(
+          ([key]) =>
+            ![
+              'initial',
+              'animate',
+              'exit',
+              'variants',
+              'transition',
+              'whileHover',
+              'whileTap',
+              'whileInView',
+              'layout',
+              'layoutId',
+              'drag',
+              'dragConstraints',
+              'onDragEnd',
+            ].includes(key)
+        )
+      );
       const Tag = typeof tag === 'string' ? tag : 'div';
       return <Tag {...filtered}>{children}</Tag>;
-    }
+    },
   }),
   AnimatePresence: ({ children }) => children,
 }));
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+vi.mock('../../components/ui/dialog', () => ({
+  Dialog: ({ open, children }) => (open ? <div data-testid="dialog-root">{children}</div> : null),
+  DialogContent: ({ children, ...props }) => <div {...props}>{children}</div>,
+  DialogHeader: ({ children, ...props }) => <div {...props}>{children}</div>,
+  DialogTitle: ({ children, ...props }) => <h2 {...props}>{children}</h2>,
+  DialogFooter: ({ children, ...props }) => <div {...props}>{children}</div>,
+}));
+
+vi.mock('../../components/ui/select', () => ({
+  Select: ({ children }) => <div>{children}</div>,
+  SelectContent: ({ children }) => <div>{children}</div>,
+  SelectItem: ({ children, value }) => <div data-value={value}>{children}</div>,
+  SelectTrigger: ({ children, className }) => <button type="button" className={className}>{children}</button>,
+  SelectValue: ({ placeholder }) => <span>{placeholder}</span>,
+}));
+
+const mockSupplier = {
+  id: 1,
+  supplier_code: 'SUP-001',
+  supplier_name: '供应商A',
+  supplier_type: 'MATERIAL',
+  contact_person: '张三',
+  contact_phone: '13800138000',
+  supplier_level: 'A',
+  overall_rating: '4.6',
+  status: 'ACTIVE',
+};
+
+const renderPage = () =>
+  render(
+    <MemoryRouter>
+      <SupplierManagementData />
+    </MemoryRouter>
+  );
 
 describe('SupplierManagementData', () => {
-  const mockSupplierData = {
-    stats: {
-      totalSuppliers: 50,
-      activeSuppliers: 45,
-      ratingA: 15,
-      ratingB: 20,
-      ratingC: 10,
-      avgPerformance: 88,
-      totalOrders: 120,
-      totalAmount: 15000000
-    },
-    performanceData: [
-      {
-        supplierId: 1,
-        supplierName: '供应商A',
-        category: '电子元器件',
-        qualityScore: 95,
-        deliveryScore: 92,
-        serviceScore: 90,
-        overallScore: 92,
-        orderCount: 25,
-        totalAmount: 2500000,
-        onTimeRate: 96,
-        defectRate: 1.2
-      },
-      {
-        supplierId: 2,
-        supplierName: '供应商B',
-        category: '机械加工',
-        qualityScore: 85,
-        deliveryScore: 88,
-        serviceScore: 82,
-        overallScore: 85,
-        orderCount: 18,
-        totalAmount: 1800000,
-        onTimeRate: 89,
-        defectRate: 2.5
-      }
-    ],
-    trendData: [
-      { month: '2024-01', avgScore: 85, orderCount: 10 },
-      { month: '2024-02', avgScore: 88, orderCount: 12 }
-    ]
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
-    supplierApi.list.mockResolvedValue({ data: mockSupplierData });
+    supplierApi.list.mockResolvedValue({
+      formatted: { items: [mockSupplier], total: 1 },
+      data: { items: [mockSupplier], total: 1 },
+    });
+    supplierApi.get.mockResolvedValue({ data: mockSupplier });
     supplierApi.create.mockResolvedValue({ data: { success: true } });
+    supplierApi.update.mockResolvedValue({ data: { success: true } });
+    supplierApi.updateRating.mockResolvedValue({ data: { success: true } });
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  describe('Component Rendering', () => {
-    it('should render supplier data page', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+  it('renders supplier list page and loads suppliers on mount', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/供应商数据|Supplier Data/i)).toBeInTheDocument();
-      });
+    expect(screen.getByText('供应商管理')).toBeInTheDocument();
+    expect(screen.getByText('供应商列表')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(supplierApi.list).toHaveBeenCalledWith({ page: 1, page_size: 20 });
     });
 
-    it('should display statistics cards', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+    expect(await screen.findByText('供应商A')).toBeInTheDocument();
+    expect(screen.getByText('SUP-001')).toBeInTheDocument();
+  });
 
-      await waitFor(() => {
-        expect(screen.getByText(/50/)).toBeInTheDocument();
-        expect(screen.getByText(/45.*活跃|Active.*45/i)).toBeInTheDocument();
+  it('shows loading state while supplier list request is pending', () => {
+    supplierApi.list.mockImplementation(() => new Promise(() => {}));
+
+    renderPage();
+
+    expect(screen.getByText('加载中...')).toBeInTheDocument();
+  });
+
+  it('searches suppliers by keyword', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(supplierApi.list).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('搜索供应商名称/编码...'), {
+      target: { value: '供应商A' },
+    });
+
+    await waitFor(() => {
+      expect(supplierApi.list).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 20,
+        keyword: '供应商A',
       });
     });
   });
 
-  describe('Performance Data Display', () => {
-    it('should show supplier performance table', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+  it('creates a supplier from the create dialog', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText('供应商A')).toBeInTheDocument();
-        expect(screen.getByText('供应商B')).toBeInTheDocument();
-      });
+    fireEvent.click(screen.getByRole('button', { name: /新增供应商/i }));
+
+    expect(screen.getByRole('heading', { name: '新增供应商' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('供应商编码 *'), {
+      target: { name: 'supplier_code', value: 'SUP-002' },
+    });
+    fireEvent.change(screen.getByLabelText('供应商名称 *'), {
+      target: { name: 'supplier_name', value: '供应商B' },
     });
 
-    it('should display performance scores', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
 
-      await waitFor(() => {
-        expect(screen.getByText(/92|95/)).toBeInTheDocument();
-        expect(screen.getByText(/85|88/)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(supplierApi.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          supplier_code: 'SUP-002',
+          supplier_name: '供应商B',
+        })
+      );
     });
 
-    it('should show quality metrics', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/1\.2/)).toBeInTheDocument();
-        expect(screen.getByText(/96/)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(supplierApi.list).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe('Data Filtering', () => {
-    it('should filter by category', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(supplierApi.list).toHaveBeenCalled();
-      });
-
-      const categoryFilter = screen.queryByRole('combobox');
-      if (categoryFilter) {
-        fireEvent.change(categoryFilter, { target: { value: '电子元器件' } });
-      }
+  it('loads next page when pagination button is clicked', async () => {
+    supplierApi.list.mockResolvedValue({
+      formatted: { items: [mockSupplier], total: 25 },
+      data: { items: [mockSupplier], total: 25 },
     });
 
-    it('should filter by date range', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+    renderPage();
 
-      await waitFor(() => {
-        expect(supplierApi.list).toHaveBeenCalled();
-      });
+    expect(await screen.findByRole('button', { name: '下一页' })).toBeInTheDocument();
 
-      const dateInputs = screen.queryAllByRole('textbox');
-      if (dateInputs.length >= 2) {
-        fireEvent.change(dateInputs[0], { target: { value: '2024-01-01' } });
-        fireEvent.change(dateInputs[1], { target: { value: '2024-02-28' } });
-      }
+    fireEvent.click(screen.getByRole('button', { name: '下一页' }));
+
+    await waitFor(() => {
+      expect(supplierApi.list).toHaveBeenLastCalledWith({ page: 2, page_size: 20 });
     });
   });
 
-  describe('Data Export', () => {
-    it('should export supplier data', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+  it('alerts when loading suppliers fails', async () => {
+    supplierApi.list.mockRejectedValueOnce(new Error('Load failed'));
 
-      await waitFor(() => {
-        expect(supplierApi.list).toHaveBeenCalled();
-      });
+    renderPage();
 
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      if (exportButton) {
-        fireEvent.click(exportButton);
-
-        await waitFor(() => {
-          expect(supplierApi.create).toHaveBeenCalledWith(
-            expect.stringContaining('/export')
-          );
-        });
-      }
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith('加载供应商列表失败: Load failed');
     });
   });
 
-  describe('Data Import', () => {
-    it('should handle data import', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+  it('should handle create supplier failure', async () => {
+    supplierApi.create.mockRejectedValueOnce(new Error('Create failed'));
 
-      await waitFor(() => {
-        expect(supplierApi.list).toHaveBeenCalled();
-      });
+    renderPage();
 
-      const importButton = screen.queryByRole('button', { name: /导入|Import/i });
-      if (importButton) {
-        fireEvent.click(importButton);
+    fireEvent.click(screen.getByRole('button', { name: /新增供应商/i }));
 
-        expect(screen.queryByText(/选择文件|Select File/i)).toBeTruthy();
-      }
+    fireEvent.change(screen.getByLabelText('供应商编码 *'), {
+      target: { name: 'supplier_code', value: 'SUP-002' },
+    });
+    fireEvent.change(screen.getByLabelText('供应商名称 *'), {
+      target: { name: 'supplier_name', value: '供应商B' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith('创建供应商失败: Create failed');
     });
   });
 
-  describe('Trend Analysis', () => {
-    it('should display performance trends', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+  it('should handle update supplier failure', async () => {
+    supplierApi.update.mockRejectedValueOnce(new Error('Update failed'));
 
-      await waitFor(() => {
-        expect(screen.getByText(/趋势|Trend/i)).toBeInTheDocument();
-      });
-    });
+    renderPage();
 
-    it('should show monthly data', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+    // Mock getting supplier data for editing
+    supplierApi.get.mockResolvedValueOnce({ data: mockSupplier });
 
-      await waitFor(() => {
-        expect(screen.getByText(/2024-01/)).toBeInTheDocument();
-        expect(screen.getByText(/2024-02/)).toBeInTheDocument();
-      });
+    fireEvent.click(screen.getByText('供应商A')); // This would trigger edit
+
+    await waitFor(() => {
+      expect(window.alert).toHaveBeenCalledWith('获取供应商信息失败: Update failed');
     });
   });
 
-  describe('Statistics Display', () => {
-    it('should show total statistics', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
+  it('should handle update rating failure', async () => {
+    supplierApi.updateRating.mockRejectedValueOnce(new Error('Rating update failed'));
 
-      await waitFor(() => {
-        expect(screen.getByText(/15,000,000|1500万/)).toBeInTheDocument();
-        expect(screen.getByText(/120/)).toBeInTheDocument();
-      });
-    });
+    renderPage();
 
-    it('should display rating distribution', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/15.*A级/i)).toBeInTheDocument();
-        expect(screen.getByText(/20.*B级/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Data Loading', () => {
-    it('should load data on mount', async () => {
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(supplierApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('/supplier')
-        );
-      });
-    });
-
-    it('should handle loading error', async () => {
-      supplierApi.list.mockRejectedValue(new Error('Load failed'));
-
-      render(
-        <MemoryRouter>
-          <SupplierManagementData />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      });
+    await waitFor(() => {
+      expect(supplierApi.updateRating).not.toHaveBeenCalled();
     });
   });
 });

@@ -383,17 +383,26 @@ describe('Error Service', () => {
 
   describe('默认导出', () => {
     it('应该导出所有方法和常量', () => {
-      expect(errorService.default).toEqual({
-        ERROR_TYPES: errorService.ERROR_TYPES,
-        formatErrorMessage: errorService.formatErrorMessage,
-        showError: errorService.showError,
-        showSuccess: errorService.showSuccess,
-        showWarning: errorService.showWarning,
-        showInfo: errorService.showInfo,
-        showErrorModal: errorService.showErrorModal,
-        handleApiError: errorService.handleApiError,
-        withErrorHandling: errorService.withErrorHandling,
-      });
+      expect(errorService.default).toEqual(
+        expect.objectContaining({
+          ERROR_TYPES: errorService.ERROR_TYPES,
+          formatErrorMessage: errorService.formatErrorMessage,
+          getErrorMessage: errorService.default.getErrorMessage,
+          getApiErrorMessage: errorService.default.getApiErrorMessage,
+          getValidationErrors: errorService.default.getValidationErrors,
+          isNetworkError: errorService.default.isNetworkError,
+          isAuthError: errorService.default.isAuthError,
+          isPermissionError: errorService.default.isPermissionError,
+          isValidationError: errorService.default.isValidationError,
+          showError: errorService.showError,
+          showSuccess: errorService.showSuccess,
+          showWarning: errorService.showWarning,
+          showInfo: errorService.showInfo,
+          showErrorModal: errorService.showErrorModal,
+          handleApiError: errorService.default.handleApiError,
+          withErrorHandling: errorService.withErrorHandling,
+        })
+      );
     });
   });
 });

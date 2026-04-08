@@ -1,624 +1,307 @@
-/**
- * KnowledgeBase 组件测试
- * 测试覆盖：知识库列表、分类管理、搜索、收藏、评分
- */
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import KnowledgeBase from '../KnowledgeBase';
-
-// Use vi.hoisted to avoid hoisting issues with vi.fn()
-const { serviceApi } = vi.hoisted(() => ({
-  knowledgeBase: {
-    list: vi.fn().mockResolvedValue({ data: { items: [] } }),
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    create: vi.fn().mockResolvedValue({ data: { success: true } }),
-    update: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    publish: vi.fn().mockResolvedValue({ data: { success: true } }),
-    archive: vi.fn().mockResolvedValue({ data: { success: true } }),
-    statistics: vi.fn().mockResolvedValue({ data: {} }),
-    upload: vi.fn().mockResolvedValue({ data: { url: 'mock-url' } }),
-    getQuota: vi.fn().mockResolvedValue({ data: { used: 0, total: 1000 } }),
-    like: vi.fn().mockResolvedValue({ data: { success: true } }),
-    adopt: vi.fn().mockResolvedValue({ data: { success: true } }),
-  },
-}));
-
-vi.mock('../../services/api/service', () => ({
-  serviceApi,
-}));
-
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
+const { knowledgeBaseApi, serviceApiMock, antMessage } = vi.hoisted(() => ({
+  knowledgeBaseApi: {
+    list: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
     delete: vi.fn(),
   },
-  serviceApi,
+  serviceApiMock: {
+    knowledgeBase: {
+      list: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+  },
+  antMessage: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+  },
 }));
 
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
+serviceApiMock.knowledgeBase = knowledgeBaseApi;
+
+vi.mock("../../components/knowledge-base", () => ({
+  KnowledgeBaseOverview: ({ data, onNavigate, loading }) => (
+    <div data-testid="knowledge-overview">
+      <div>overview-documents:{data?.documents?.length ?? 0}</div>
+      <div>overview-categories:{data?.categories?.length ?? 0}</div>
+      <div>{loading ? "overview-loading" : "overview-ready"}</div>
+      <button onClick={() => onNavigate("categories")}>去分类管理</button>
+    </div>
+  ),
+  CategoryManager: ({ categories, loading, onRefresh }) => (
+    <div data-testid="category-manager">
+      <div>categories:{categories?.length ?? 0}</div>
+      <div>{loading ? "category-loading" : "category-ready"}</div>
+      <button onClick={onRefresh}>刷新分类</button>
+    </div>
+  ),
+  SearchAndFilter: ({ documents, loading }) => (
+    <div data-testid="search-filter">
+      {loading ? "search-loading" : `search-documents:${documents?.length ?? 0}`}
+    </div>
+  ),
+  DocumentViewer: ({ document }) => (
+    <div data-testid="document-viewer">viewer:{document?.title}</div>
+  ),
 }));
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
+vi.mock("../../services/api/service", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
+    serviceApi: serviceApiMock,
   };
 });
 
-describe('KnowledgeBase', () => {
-  const mockKnowledgeData = {
-    items: [
-      {
-        id: 1,
-        title: '设备操作指南',
-        category: 'operation',
-        type: 'document',
-        content: '详细的设备操作步骤...',
-        author: '张工',
-        createdAt: '2024-01-15',
-        updatedAt: '2024-02-20',
-        viewCount: 150,
-        likeCount: 25,
-        rating: 4.5,
-        tags: ['设备', '操作', '指南'],
-        status: 'published',
-        isFavorite: false
+vi.mock("framer-motion", () => ({
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => ({ children, ...props }) => {
+        const Tag = typeof tag === "string" ? tag : "div";
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(
+            ([key]) =>
+              ![
+                "initial",
+                "animate",
+                "exit",
+                "variants",
+                "transition",
+                "whileHover",
+                "whileTap",
+                "whileInView",
+                "layout",
+                "layoutId",
+                "drag",
+                "dragConstraints",
+                "onDragEnd",
+              ].includes(key),
+          ),
+        );
+        return <Tag {...filteredProps}>{children}</Tag>;
       },
-      {
-        id: 2,
-        title: '质量检验标准',
-        category: 'quality',
-        type: 'document',
-        content: '产品质量检验的标准和流程...',
-        author: '李工',
-        createdAt: '2024-02-01',
-        updatedAt: '2024-02-15',
-        viewCount: 200,
-        likeCount: 35,
-        rating: 4.8,
-        tags: ['质量', '检验', '标准'],
-        status: 'published',
-        isFavorite: true
-      }
-    ],
-    categories: [
-      { id: 1, name: 'operation', label: '操作指南', count: 15 },
-      { id: 2, name: 'quality', label: '质量管理', count: 20 },
-      { id: 3, name: 'maintenance', label: '维护保养', count: 10 }
-    ],
-    total: 2,
-    stats: {
-      total: 45,
-      published: 40,
-      draft: 5,
-      totalViews: 5000,
-      totalLikes: 800
-    }
+    },
+  ),
+  AnimatePresence: ({ children }) => children,
+}));
+
+vi.mock("antd", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    message: antMessage,
+    Tabs: ({ activeKey, onChange, items = [] }) => {
+      const current = items.find((item) => item.key === activeKey) || items[0];
+      return (
+        <div>
+          <div role="tablist">
+            {items.map((item) => (
+              <button
+                key={item.key}
+                role="tab"
+                aria-selected={item.key === activeKey}
+                onClick={() => onChange?.(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div role="tabpanel">{current?.children}</div>
+        </div>
+      );
+    },
   };
+});
+
+import KnowledgeBase from "../KnowledgeBase";
+
+describe("KnowledgeBase", () => {
+  let originalGetComputedStyle;
+
+  const mockDocuments = [
+    {
+      id: 1,
+      title: "设备操作指南",
+      category: "engineering",
+      content: "设备调试和操作步骤",
+      author_name: "张工",
+      created_at: "2026-03-01T10:00:00",
+      updated_at: "2026-03-02T10:00:00",
+      view_count: 150,
+      download_count: 12,
+      like_count: 25,
+      rating: 4,
+      tags: ["设备", "调试"],
+      status: "PUBLISHED",
+      allow_download: true,
+      file_path: "/files/doc-1.pdf",
+      file_type: "document",
+    },
+    {
+      id: 2,
+      title: "质量检验标准",
+      category: "quality",
+      content: "来料和过程质量检验标准",
+      author_name: "李工",
+      created_at: "2026-03-05T10:00:00",
+      updated_at: "2026-03-06T10:00:00",
+      view_count: 200,
+      download_count: 6,
+      like_count: 30,
+      rating: 5,
+      tags: ["质量", "检验"],
+      status: "PUBLISHED",
+      allow_download: true,
+      is_faq: true,
+    },
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    serviceApi.knowledgeBase.list.mockResolvedValue({ data: mockKnowledgeData });
-    serviceApi.knowledgeBase.get.mockResolvedValue({ data: mockKnowledgeData.items[0] });
-    serviceApi.knowledgeBase.create.mockResolvedValue({ data: { success: true, id: 3 } });
-    serviceApi.knowledgeBase.update.mockResolvedValue({ data: { success: true } });
-    serviceApi.knowledgeBase.delete.mockResolvedValue({ data: { success: true } });
-    serviceApi.knowledgeBase.statistics.mockResolvedValue({ data: mockKnowledgeData.stats });
+
+    global.ResizeObserver = class ResizeObserver {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+
+    originalGetComputedStyle = window.getComputedStyle;
+    window.getComputedStyle = vi.fn((element) => {
+      if (typeof originalGetComputedStyle === "function") {
+        try {
+          return originalGetComputedStyle(element);
+        } catch (_error) {
+          // ignore jsdom portal style gaps
+        }
+      }
+
+      return {
+        getPropertyValue: () => "",
+        overflow: "auto",
+        overflowX: "auto",
+        overflowY: "auto",
+      };
+    });
+
+    knowledgeBaseApi.list.mockResolvedValue({
+      data: {
+        items: mockDocuments,
+        total: 2,
+      },
+    });
+    knowledgeBaseApi.create.mockResolvedValue({ data: { id: 3 } });
+    knowledgeBaseApi.update.mockResolvedValue({ data: { id: 1 } });
+    knowledgeBaseApi.delete.mockResolvedValue({ data: { success: true } });
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    window.getComputedStyle = originalGetComputedStyle;
   });
 
-  describe('Component Rendering', () => {
-    it('should render knowledge base page', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <KnowledgeBase />
+      </MemoryRouter>,
+    );
+  }
 
-      await waitFor(() => {
-        expect(screen.getByText(/知识库|Knowledge Base/i)).toBeInTheDocument();
+  it("加载页面时按当前真实参数请求知识库，并渲染页头和概览", async () => {
+    renderPage();
+
+    expect(screen.getByText("知识库")).toBeInTheDocument();
+    expect(screen.getByText("历史方案、产品知识、工艺知识、竞品情报、模板库")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "创建文档" }).length).toBeGreaterThan(0);
+
+    await waitFor(() => {
+      expect(knowledgeBaseApi.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 100,
+        keyword: undefined,
+        category: undefined,
+        status: "published",
+        is_faq: undefined,
       });
     });
 
-    it('should render knowledge list', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-        expect(screen.getByText('质量检验标准')).toBeInTheDocument();
-      });
-    });
-
-    it('should display categories', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('操作指南')).toBeInTheDocument();
-        expect(screen.getByText('质量管理')).toBeInTheDocument();
-      });
-    });
+    expect(screen.getByTestId("knowledge-overview")).toHaveTextContent("overview-documents:2");
+    expect(screen.getByTestId("knowledge-overview")).toHaveTextContent("overview-categories:1");
   });
 
-  describe('Data Loading', () => {
-    it('should load knowledge items on mount', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
+  it("切到分类管理页后会触发重新加载", async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(serviceApi.knowledgeBase.list).toHaveBeenCalledWith(
-          expect.stringContaining('/knowledge')
-        );
-      });
+    await waitFor(() => {
+      expect(knowledgeBaseApi.list).toHaveBeenCalledTimes(1);
     });
 
-    it('should show loading state', () => {
-      serviceApi.knowledgeBase.list.mockImplementation(() => new Promise(() => {}));
+    fireEvent.click(screen.getByRole("tab", { name: /分类管理/ }));
 
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      expect(screen.queryByText(/加载中|Loading/i)).toBeTruthy();
-    });
-
-    it('should handle load error', async () => {
-      serviceApi.knowledgeBase.list.mockRejectedValue(new Error('Load failed'));
-
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      });
+    await waitFor(() => {
+      expect(knowledgeBaseApi.list).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe('Knowledge Information', () => {
-    it('should display author information', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
+  it("切到文档管理后会展示真实文档数据，并支持搜索过滤", async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText('张工')).toBeInTheDocument();
-        expect(screen.getByText('李工')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(knowledgeBaseApi.list).toHaveBeenCalled();
     });
 
-    it('should show view count', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole("tab", { name: /文档管理/ }));
 
-      await waitFor(() => {
-        expect(screen.getByText(/150.*浏览|150.*views/i)).toBeInTheDocument();
-        expect(screen.getByText(/200.*浏览|200.*views/i)).toBeInTheDocument();
-      });
+    expect(await screen.findByText("设备操作指南")).toBeInTheDocument();
+    expect(screen.getByText("质量检验标准")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText("搜索文档标题、内容、标签..."), {
+      target: { value: "质量" },
     });
 
-    it('should display like count', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
+    expect(screen.queryByText("设备操作指南")).not.toBeInTheDocument();
+    expect(screen.getByText("质量检验标准")).toBeInTheDocument();
+  });
 
-      await waitFor(() => {
-        expect(screen.getByText(/25.*赞|25.*likes/i)).toBeInTheDocument();
-        expect(screen.getByText(/35.*赞|35.*likes/i)).toBeInTheDocument();
-      });
+  it("文档管理列表视图下可以删除文档", async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(knowledgeBaseApi.list).toHaveBeenCalled();
     });
 
-    it('should show ratings', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole("tab", { name: /文档管理/ }));
+    fireEvent.click(screen.getAllByRole("radio")[1]);
 
-      await waitFor(() => {
-        expect(screen.getByText(/4\.5/)).toBeInTheDocument();
-        expect(screen.getByText(/4\.8/)).toBeInTheDocument();
-      });
+    const deleteButtons = await screen.findAllByRole("button", { name: "删除" });
+    expect(deleteButtons.length).toBeGreaterThan(0);
+
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(knowledgeBaseApi.delete).toHaveBeenCalledWith(1);
+      expect(antMessage.success).toHaveBeenCalledWith("删除成功");
     });
 
-    it('should display tags', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备')).toBeInTheDocument();
-        expect(screen.getByText('质量')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.queryByText("设备操作指南")).not.toBeInTheDocument();
     });
   });
 
-  describe('Search Functionality', () => {
-    it('should search knowledge items', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
+  it("加载失败时会提示错误消息", async () => {
+    knowledgeBaseApi.list.mockRejectedValueOnce(new Error("Load failed"));
 
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-      });
+    renderPage();
 
-      const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: '设备' } });
-
-        await waitFor(() => {
-          expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should filter by category', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('操作指南')).toBeInTheDocument();
-      });
-
-      const categoryButton = screen.getByText('操作指南');
-      fireEvent.click(categoryButton);
-
-      await waitFor(() => {
-        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-      });
-    });
-
-    it('should filter by tags', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备')).toBeInTheDocument();
-      });
-
-      const tagButton = screen.getByText('设备');
-      fireEvent.click(tagButton);
-
-      await waitFor(() => {
-        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('Favorite Management', () => {
-    it('should show favorite status', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('质量检验标准')).toBeInTheDocument();
-      });
-
-      const favoriteButtons = screen.queryAllByRole('button', { name: /收藏|Favorite/i });
-      expect(favoriteButtons.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should toggle favorite', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-      });
-
-      const favoriteButtons = screen.queryAllByRole('button', { name: /收藏|Favorite/i });
-      if (favoriteButtons.length > 0) {
-        fireEvent.click(favoriteButtons[0]);
-
-        await waitFor(() => {
-          expect(serviceApi.knowledgeBase.create).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should view favorites only', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-      });
-
-      const favoritesFilter = screen.queryByRole('button', { name: /我的收藏|My Favorites/i });
-      if (favoritesFilter) {
-        fireEvent.click(favoritesFilter);
-
-        await waitFor(() => {
-          expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-        });
-      }
-    });
-  });
-
-  describe('Rating and Feedback', () => {
-    it('should rate knowledge item', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-      });
-
-      const ratingButtons = screen.queryAllByRole('button', { name: /评分|Rate/i });
-      if (ratingButtons.length > 0) {
-        fireEvent.click(ratingButtons[0]);
-
-        await waitFor(() => {
-          expect(serviceApi.knowledgeBase.create).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should like knowledge item', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-      });
-
-      const likeButtons = screen.queryAllByRole('button', { name: /点赞|Like/i });
-      if (likeButtons.length > 0) {
-        fireEvent.click(likeButtons[0]);
-
-        await waitFor(() => {
-          expect(serviceApi.knowledgeBase.create).toHaveBeenCalled();
-        });
-      }
-    });
-  });
-
-  describe('CRUD Operations', () => {
-    it('should create new knowledge item', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-      });
-
-      const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
-      if (createButton) {
-        fireEvent.click(createButton);
-
-        expect(screen.queryByText(/新建知识|Create Knowledge/i)).toBeTruthy();
-      }
-    });
-
-    it('should edit knowledge item', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-      });
-
-      const editButtons = screen.queryAllByRole('button', { name: /编辑|Edit/i });
-      if (editButtons.length > 0) {
-        fireEvent.click(editButtons[0]);
-
-        expect(screen.queryByText(/编辑知识|Edit Knowledge/i)).toBeTruthy();
-      }
-    });
-
-    it('should delete knowledge item', async () => {
-      window.confirm = vi.fn(() => true);
-
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-      });
-
-      const deleteButtons = screen.queryAllByRole('button', { name: /删除|Delete/i });
-      if (deleteButtons.length > 0) {
-        fireEvent.click(deleteButtons[0]);
-
-        await waitFor(() => {
-          expect(serviceApi.knowledgeBase.delete).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should view knowledge detail', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('设备操作指南')).toBeInTheDocument();
-      });
-
-      const viewButtons = screen.queryAllByRole('button', { name: /查看|View|详情/i });
-      if (viewButtons.length > 0) {
-        fireEvent.click(viewButtons[0]);
-
-        await waitFor(() => {
-          expect(mockNavigate).toHaveBeenCalled();
-        });
-      }
-    });
-  });
-
-  describe('Category Management', () => {
-    it('should display category counts', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/15/)).toBeInTheDocument();
-        expect(screen.getByText(/20/)).toBeInTheDocument();
-      });
-    });
-
-    it('should manage categories', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-      });
-
-      const manageCategoryButton = screen.queryByRole('button', { name: /管理分类|Manage Categories/i });
-      if (manageCategoryButton) {
-        fireEvent.click(manageCategoryButton);
-
-        expect(screen.queryByText(/分类管理|Category Management/i)).toBeTruthy();
-      }
-    });
-  });
-
-  describe('Statistics Display', () => {
-    it('should show total knowledge count', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/45.*知识|Total.*45/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should display total views and likes', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/5,000|5千/)).toBeInTheDocument();
-        expect(screen.getByText(/800/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show status statistics', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/40.*已发布|Published.*40/i)).toBeInTheDocument();
-        expect(screen.getByText(/5.*草稿|Draft.*5/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Export Functionality', () => {
-    it('should export knowledge base', async () => {
-      render(
-        <MemoryRouter>
-          <KnowledgeBase />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(serviceApi.knowledgeBase.list).toHaveBeenCalled();
-      });
-
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      if (exportButton) {
-        fireEvent.click(exportButton);
-
-        await waitFor(() => {
-          expect(serviceApi.knowledgeBase.create).toHaveBeenCalledWith(
-            expect.stringContaining('/export')
-          );
-        });
-      }
+    await waitFor(() => {
+      expect(antMessage.error).toHaveBeenCalledWith("加载数据失败");
     });
   });
 });

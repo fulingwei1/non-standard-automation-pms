@@ -3,8 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePresalesTasks } from '../usePresalesTasks';
 import { presaleApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', () => ({
-  presaleApi: {
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    presaleApi: {
     tickets: {
       list: vi.fn(),
       accept: vi.fn(),
@@ -12,7 +15,8 @@ vi.mock('../../../../services/api', () => ({
       complete: vi.fn(),
     },
   },
-}));
+  };
+});
 
 describe('usePresalesTasks Hook', () => {
   const mockItems = [{ id: 1, title: 'Test 1' }, { id: 2, title: 'Test 2' }];

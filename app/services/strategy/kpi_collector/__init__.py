@@ -9,6 +9,7 @@ from .calculation import (
     batch_collect_kpis,
     calculate_formula,
     collect_kpi_value,
+    create_kpi_snapshot,
 )
 from .collectors import (
     collect_finance_metrics,
@@ -33,6 +34,7 @@ __all__ = [
     "collect_kpi_value",
     "auto_collect_kpi",
     "batch_collect_kpis",
+    "create_kpi_snapshot",
     # 状态查询
     "get_collection_status",
 ]

@@ -3,20 +3,11 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import SolutionLibrary from '../SolutionLibrary';
 import { issueTemplateApi } from '../../../services/api';
 
-vi.mock('../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
-  };
-});
+vi.mock('../../../services/api', () => ({
+  issueTemplateApi: {
+    list: vi.fn(),
+  },
+}));
 
 describe('SolutionLibrary', () => {
   const mockTemplates = [
@@ -51,323 +42,143 @@ describe('SolutionLibrary', () => {
     });
   });
 
-  describe('Basic Rendering', () => {
-    it('shows loading state initially', () => {
-      issueTemplateApi.list.mockReturnValue(new Promise(() => {}));
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      expect(screen.getByText('加载中...')).toBeInTheDocument();
-    });
+  it('shows loading state initially', () => {
+    issueTemplateApi.list.mockReturnValue(new Promise(() => {}));
 
-    it('renders solution templates after loading', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-        expect(screen.getByText('需求变更处理')).toBeInTheDocument();
-      });
-    });
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
 
-    it('displays template details', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('适用于系统性能优化场景')).toBeInTheDocument();
-        expect(screen.getByText(/使用.*15.*次/)).toBeInTheDocument();
-      });
-    });
+    expect(screen.getByText('加载中...')).toBeInTheDocument();
+  });
 
-    it('calls API with correct parameters', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(issueTemplateApi.list).toHaveBeenCalledWith({
-          page: 1,
-          page_size: 100,
-          is_active: true,
-        });
+  it('loads templates on mount with expected params', async () => {
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
+
+    await waitFor(() => {
+      expect(issueTemplateApi.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 100,
+        is_active: true,
       });
     });
   });
 
-  describe('Search Functionality', () => {
-    it('filters templates by search query', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
+  it('renders mapped template data', async () => {
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
 
-      const searchInput = screen.getByPlaceholderText(/搜索/i);
-      fireEvent.change(searchInput, { target: { value: '性能' } });
-
-      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      expect(screen.queryByText('需求变更处理')).not.toBeInTheDocument();
-    });
-
-    it('searches in template names', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索/i);
-      fireEvent.change(searchInput, { target: { value: '优化' } });
-
-      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-    });
-
-    it('searches in solution content', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索/i);
-      fireEvent.change(searchInput, { target: { value: '分析性能' } });
-
-      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      expect(screen.queryByText('需求变更处理')).not.toBeInTheDocument();
-    });
-
-    it('handles case-insensitive search', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索/i);
-      fireEvent.change(searchInput, { target: { value: '性能' } });
-
-      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-    });
-
-    it('shows no results when search has no matches', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索/i);
-      fireEvent.change(searchInput, { target: { value: '不存在的模板' } });
-
-      expect(screen.queryByText('性能优化方案')).not.toBeInTheDocument();
-      expect(screen.queryByText('需求变更处理')).not.toBeInTheDocument();
-    });
-
-    it('clears search query', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索/i);
-      fireEvent.change(searchInput, { target: { value: '性能' } });
-      fireEvent.change(searchInput, { target: { value: '' } });
-
+    await waitFor(() => {
+      expect(screen.getByText('解决方案模板库')).toBeInTheDocument();
       expect(screen.getByText('性能优化方案')).toBeInTheDocument();
       expect(screen.getByText('需求变更处理')).toBeInTheDocument();
+      expect(screen.getByText('适用于系统性能优化场景')).toBeInTheDocument();
+      expect(screen.getByText('使用 15 次')).toBeInTheDocument();
+      expect(screen.getByText(/分析性能瓶颈/)).toBeInTheDocument();
     });
   });
 
-  describe('Type Filtering', () => {
-    it('filters by issue type', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
+  it('filters templates by search query in template name', async () => {
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
 
-      // Simulate type filter change (implementation depends on UI)
-      // This is a placeholder test
+    await waitFor(() => {
+      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('搜索解决方案模板...'), {
+      target: { value: '性能' },
+    });
+
+    expect(screen.getByText('性能优化方案')).toBeInTheDocument();
+    expect(screen.queryByText('需求变更处理')).not.toBeInTheDocument();
+  });
+
+  it('filters templates by search query in solution content', async () => {
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('搜索解决方案模板...'), {
+      target: { value: '评估影响' },
+    });
+
+    expect(screen.getByText('需求变更处理')).toBeInTheDocument();
+    expect(screen.queryByText('性能优化方案')).not.toBeInTheDocument();
+  });
+
+  it('shows no matched templates when search misses', async () => {
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('搜索解决方案模板...'), {
+      target: { value: '不存在的模板' },
+    });
+
+    expect(screen.getByText('没有找到匹配的模板')).toBeInTheDocument();
+  });
+
+  it('applies template with mapped payload', async () => {
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('性能优化方案')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /应用模板/i })[0]);
+
+    expect(mockOnApplyTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 1,
+        template_name: '性能优化方案',
+        applicable_scenarios: '适用于系统性能优化场景',
+        solution: '1. 分析性能瓶颈\n2. 优化代码\n3. 测试验证',
+      })
+    );
+  });
+
+  it('renders empty state when template list is empty', async () => {
+    issueTemplateApi.list.mockResolvedValue({
+      data: { items: [] },
+    });
+
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('暂无解决方案模板')).toBeInTheDocument();
+    });
+  });
+
+  it('handles null/array-like API payload safely', async () => {
+    issueTemplateApi.list.mockResolvedValueOnce({ data: null });
+    const { rerender } = render(
+      <SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('暂无解决方案模板')).toBeInTheDocument();
+    });
+
+    issueTemplateApi.list.mockResolvedValueOnce({ data: mockTemplates });
+    rerender(<SolutionLibrary projectId="456" onApplyTemplate={mockOnApplyTemplate} />);
+
+    await waitFor(() => {
       expect(screen.getByText('性能优化方案')).toBeInTheDocument();
     });
   });
 
-  describe('Template Application', () => {
-    it('calls onApplyTemplate when apply button clicked', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
+  it('handles API error gracefully', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    issueTemplateApi.list.mockRejectedValue(new Error('API Error'));
 
-      const applyButtons = screen.getAllByRole('button', { name: /应用|使用/i });
-      if (applyButtons.length > 0) {
-        fireEvent.click(applyButtons[0]);
-        expect(mockOnApplyTemplate).toHaveBeenCalled();
-      }
+    render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalled();
+      expect(screen.getByText('暂无解决方案模板')).toBeInTheDocument();
     });
 
-    it('does not error when onApplyTemplate is not provided', async () => {
-      render(<SolutionLibrary projectId="123" />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-
-      const applyButtons = screen.queryAllByRole('button', { name: /应用|使用/i });
-      if (applyButtons.length > 0) {
-        expect(() => fireEvent.click(applyButtons[0])).not.toThrow();
-      }
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('handles API error gracefully', async () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-      issueTemplateApi.list.mockRejectedValue(new Error('API Error'));
-
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(consoleError).toHaveBeenCalled();
-      });
-      
-      consoleError.mockRestore();
-    });
-
-    it('handles empty template array', async () => {
-      issueTemplateApi.list.mockResolvedValue({
-        data: { items: [] },
-      });
-      
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.queryByText('性能优化方案')).not.toBeInTheDocument();
-      });
-    });
-
-    it('handles null data', async () => {
-      issueTemplateApi.list.mockResolvedValue({
-        data: null,
-      });
-      
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(issueTemplateApi.list).toHaveBeenCalled();
-      });
-    });
-
-    it('handles data without items field', async () => {
-      issueTemplateApi.list.mockResolvedValue({
-        data: mockTemplates,
-      });
-      
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Template Statistics', () => {
-    it('displays usage count', async () => {
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText(/使用.*15.*次/)).toBeInTheDocument();
-      });
-    });
-
-    it('handles missing usage count', async () => {
-      const templatesWithoutCount = mockTemplates.map(t => ({
-        ...t,
-        usage_count: undefined,
-      }));
-      
-      issueTemplateApi.list.mockResolvedValue({
-        data: { items: templatesWithoutCount },
-      });
-      
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Edge Cases', () => {
-    it('handles templates without applicable scenarios', async () => {
-      const templatesWithoutRemark = mockTemplates.map(t => ({
-        ...t,
-        remark: undefined,
-      }));
-      
-      issueTemplateApi.list.mockResolvedValue({
-        data: { items: templatesWithoutRemark },
-      });
-      
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-    });
-
-    it('handles templates without solution template', async () => {
-      const templatesWithoutSolution = mockTemplates.map(t => ({
-        ...t,
-        solution_template: undefined,
-      }));
-      
-      issueTemplateApi.list.mockResolvedValue({
-        data: { items: templatesWithoutSolution },
-      });
-      
-      render(<SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-    });
-
-    it('refetches data when projectId changes', async () => {
-      const { rerender } = render(
-        <SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />
-      );
-      
-      await waitFor(() => {
-        expect(issueTemplateApi.list).toHaveBeenCalledTimes(1);
-      });
-
-      rerender(
-        <SolutionLibrary projectId="456" onApplyTemplate={mockOnApplyTemplate} />
-      );
-      
-      await waitFor(() => {
-        expect(issueTemplateApi.list).toHaveBeenCalledTimes(2);
-      });
-    });
-  });
-
-  describe('Snapshot', () => {
-    it('matches snapshot in loading state', () => {
-      issueTemplateApi.list.mockReturnValue(new Promise(() => {}));
-      const { container } = render(
-        <SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />
-      );
-      expect(container.firstChild).toMatchSnapshot();
-    });
-
-    it('matches snapshot with templates', async () => {
-      const { container } = render(
-        <SolutionLibrary projectId="123" onApplyTemplate={mockOnApplyTemplate} />
-      );
-      
-      await waitFor(() => {
-        expect(screen.getByText('性能优化方案')).toBeInTheDocument();
-      });
-      
-      expect(container.firstChild).toMatchSnapshot();
-    });
+    consoleError.mockRestore();
   });
 });

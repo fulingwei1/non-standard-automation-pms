@@ -25,7 +25,7 @@ from app.models.purchase import (
 from app.models.user import User
 from app.models.vendor import Vendor
 from app.services.data_scope.config import DataScopeConfig
-from app.services.data_scope_service import DataScopeService
+from app.services.data_scope.data_scope_service import DataScopeService
 from app.services.purchase_order_from_bom_service import (
     build_order_items,
     create_order_preview,

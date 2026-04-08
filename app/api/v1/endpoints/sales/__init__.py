@@ -51,6 +51,13 @@ from . import (
     templates,
     workflows,
 )
+
+try:
+    from . import conversion_analysis
+except ImportError:
+    # conversion_analysis 模块可能不存在
+    conversion_analysis = None
+
 from .contracts import contracts as contracts_contracts
 
 # 创建主路由
@@ -190,4 +197,6 @@ router.include_router(
     sales_organization.router, prefix="/organization", tags=["sales-organization"]
 )
 
-router.include_router(conversion_analysis.router, tags=["sales-conversion-analysis"])
+# Conditional inclusion of conversion_analysis router
+if conversion_analysis is not None:
+    router.include_router(conversion_analysis.router, tags=["sales-conversion-analysis"])

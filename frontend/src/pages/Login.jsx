@@ -160,9 +160,17 @@ export default function Login({ onLoginSuccess }) {
         ) {
           errorMessage = `后端服务不可达，请确认后端(${DEFAULT_BACKEND_TARGET})已启动`;
         } else if (status === 401 || status === 403) {
-          errorMessage = typeof detail === "string"
-            ? detail
-            : "用户名或密码错误";
+          if (typeof detail === "string") {
+            errorMessage = detail;
+          } else if (detail?.message) {
+            errorMessage = detail.message;
+          } else if (detail?.error_code === 'USER_NOT_FOUND') {
+            errorMessage = detail.message || '该员工尚未开通系统账号';
+          } else if (detail?.error_code === 'USER_DISABLED') {
+            errorMessage = detail.message || '账号已被禁用';
+          } else {
+            errorMessage = "用户名或密码错误";
+          }
         } else if (status === 422) {
           errorMessage = "请输入正确格式的用户名和密码";
         } else if (status === 404) {

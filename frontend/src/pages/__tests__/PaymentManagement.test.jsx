@@ -14,7 +14,10 @@ import api from '../../services/api';
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
+      const validProps = ['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'];
+      const filtered = props && Object.entries(props).length > 0 
+        ? Object.fromEntries(Object.entries(props).filter(([k]) => !validProps.includes(k))) 
+        : {};
       const Tag = typeof tag === 'string' ? tag : 'div';
       return <Tag {...filtered}>{children}</Tag>;
     }
@@ -34,7 +37,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('PaymentManagement', () => {
+describe('PaymentManagement', () => {
   const mockPayments = [
     {
       id: 1,
@@ -122,7 +125,7 @@ describe.skip('PaymentManagement', () => {
           }
         });
       }
-      return Promise.resolve({ data: {} });
+      return Promise.resolve({ data: { items: [] } });
     });
 
     api.put.mockResolvedValue({ data: { success: true } });

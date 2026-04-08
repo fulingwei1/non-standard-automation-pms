@@ -6,11 +6,38 @@
 // 导入 jest-dom 扩展的 matchers
 import '@testing-library/jest-dom';
 
+// Mock window.getComputedStyle (jsdom 不支持，antd/rc-component 需要)
+window.getComputedStyle = vi.fn().mockImplementation(() => ({
+  display: 'block',
+  visibility: 'visible',
+  opacity: '1',
+  width: '100px',
+  height: '20px',
+  overflow: 'visible',
+  position: 'static',
+  top: '0px',
+  left: '0px',
+  getPropertyValue: vi.fn().mockReturnValue(''),
+}));
+
+// Mock window.alert (jsdom 不支持)
+window.alert = vi.fn();
+
+// Mock window.confirm (jsdom 不支持)
+window.confirm = vi.fn().mockReturnValue(true);
+
+// Mock window.prompt (jsdom 不支持)
+window.prompt = vi.fn().mockReturnValue(null);
+
+// Mock window.print (jsdom 不支持)
+window.print = vi.fn();
+
 // Mock window.matchMedia (Ant Design 需要)
+// 模拟大屏幕环境，使 lg: 断点的元素可见
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
-    matches: false,
+    matches: true, // 模拟大屏幕
     media: query,
     onchange: null,
     addListener: vi.fn(), // deprecated
@@ -22,29 +49,32 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock window.ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.ResizeObserver = ResizeObserverMock;
+window.ResizeObserver = ResizeObserverMock;
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+// Mock localStorage / sessionStorage with real in-memory behavior
+const createStorageMock = () => {
+  let store = {};
+  return {
+    getItem: vi.fn((key) => (key in store ? store[key] : null)),
+    setItem: vi.fn((key, value) => { store[key] = String(value); }),
+    removeItem: vi.fn((key) => { delete store[key]; }),
+    clear: vi.fn(() => { store = {}; }),
+  };
 };
+
+const localStorageMock = createStorageMock();
 global.localStorage = localStorageMock;
+window.localStorage = localStorageMock;
 
-// Mock sessionStorage
-const sessionStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
+const sessionStorageMock = createStorageMock();
 global.sessionStorage = sessionStorageMock;
+window.sessionStorage = sessionStorageMock;
 
 // Mock scrollTo
 window.scrollTo = vi.fn();
@@ -54,10 +84,24 @@ vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    useParams: vi.fn(() => ({ id: '1' })),
+    useParams: vi.fn(() => ({ 
+      id: '1',
+      projectId: '1',
+      taskId: '1',
+      customerId: '1',
+      ecnId: '1',
+      sourceType: 'project',
+      sourceId: '1',
+      department: 'engineering',
+    })),
     useNavigate: vi.fn(() => vi.fn()),
     useLocation: vi.fn(() => ({ pathname: '/', search: '', hash: '', state: null })),
     useSearchParams: vi.fn(() => [new URLSearchParams(), vi.fn()]),
+    useOutletContext: vi.fn(() => ({})),
+    Router: ({ children }) => children,
+    Routes: ({ children }) => children,
+    Route: () => null,
+    MemoryRouter: ({ children }) => children,
   };
 });
 

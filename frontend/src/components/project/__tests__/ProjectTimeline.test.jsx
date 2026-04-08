@@ -58,6 +58,8 @@ describe('ProjectTimeline', () => {
       uploaded_at: '2024-01-05T14:00:00',
       uploaded_by_name: '赵六',
       document_type: '需求文档',
+      status: 'APPROVED',
+      updated_at: '2024-01-05T14:00:00',
     },
     {
       id: 2,
@@ -65,6 +67,8 @@ describe('ProjectTimeline', () => {
       uploaded_at: '2024-01-18T11:00:00',
       uploaded_by_name: '孙七',
       document_type: '设计文档',
+      status: 'APPROVED',
+      updated_at: '2024-01-18T11:00:00',
     },
   ];
 
@@ -100,7 +104,7 @@ describe('ProjectTimeline', () => {
       );
       expect(screen.getByText(/需求分析.*设计/)).toBeInTheDocument();
       expect(screen.getByText('需求评审完成')).toBeInTheDocument();
-      expect(screen.getByText('需求规格说明书')).toBeInTheDocument();
+      expect(screen.getByText('文档审批通过: 需求规格说明书')).toBeInTheDocument();
     });
   });
 
@@ -161,8 +165,8 @@ describe('ProjectTimeline', () => {
           documents={mockDocuments}
         />
       );
-      expect(screen.getByText('需求规格说明书')).toBeInTheDocument();
-      expect(screen.getByText('赵六')).toBeInTheDocument();
+      expect(screen.getByText('文档审批通过: 需求规格说明书')).toBeInTheDocument();
+      expect(screen.getByText('需求文档')).toBeInTheDocument();
     });
   });
 
@@ -180,7 +184,7 @@ describe('ProjectTimeline', () => {
       fireEvent.change(searchInput, { target: { value: '需求' } });
       
       expect(screen.getByText('需求评审完成')).toBeInTheDocument();
-      expect(screen.getByText('需求规格说明书')).toBeInTheDocument();
+      expect(screen.getByText('文档审批通过: 需求规格说明书')).toBeInTheDocument();
     });
 
     it('shows no results when search does not match', () => {
@@ -242,13 +246,13 @@ describe('ProjectTimeline', () => {
       
       expect(screen.getByText(/需求分析.*设计/)).toBeInTheDocument();
       expect(screen.getByText('需求评审完成')).toBeInTheDocument();
-      expect(screen.getByText('需求规格说明书')).toBeInTheDocument();
+      expect(screen.getByText('文档审批通过: 需求规格说明书')).toBeInTheDocument();
     });
   });
 
   describe('Event Sorting', () => {
     it('displays events in chronological order', () => {
-      render(
+      const { container } = render(
         <ProjectTimeline
           statusLogs={mockStatusLogs}
           milestones={mockMilestones}
@@ -256,10 +260,13 @@ describe('ProjectTimeline', () => {
         />
       );
       
-      // Events should be sorted by date (newest first typically)
-      const events = screen.getAllByRole('article', { hidden: true }) || 
-                     screen.getAllByText(/2024/).map(el => el.closest('div'));
-      expect(events.length).toBeGreaterThan(0);
+      const content = container.textContent;
+      expect(content.indexOf('健康度变更: 良好 → 警告')).toBeLessThan(
+        content.indexOf('状态变更: 进行中 → 已完成')
+      );
+      expect(content.indexOf('状态变更: 进行中 → 已完成')).toBeLessThan(
+        content.indexOf('文档审批通过: 设计文档')
+      );
     });
   });
 
@@ -275,7 +282,7 @@ describe('ProjectTimeline', () => {
       
       expect(screen.getByText('张三')).toBeInTheDocument();
       expect(screen.getByText('李四')).toBeInTheDocument();
-      expect(screen.getByText('赵六')).toBeInTheDocument();
+      expect(screen.queryByText('赵六')).not.toBeInTheDocument();
     });
   });
 

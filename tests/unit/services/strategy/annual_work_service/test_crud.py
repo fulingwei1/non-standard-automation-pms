@@ -58,7 +58,7 @@ class TestCreateAnnualWork:
             pain_point="痛点",
             solution="解决方案",
             year=2024,
-            priority=1,
+            priority="HIGH",
             start_date=date(2024, 1, 1),
             end_date=date(2024, 12, 31),
             owner_dept_id=10,
@@ -292,7 +292,7 @@ class TestUpdateAnnualWork:
     def test_update_multiple_fields(self):
         """测试更新多个字段"""
         db = Mock(spec=Session)
-        data = AnnualKeyWorkUpdate(name="新名称", description="新描述", priority=5)
+        data = AnnualKeyWorkUpdate(name="新名称", description="新描述", priority="HIGH")
 
         mock_work = AnnualKeyWork(id=1, name="旧名称", is_active=True)
 
@@ -306,7 +306,7 @@ class TestUpdateAnnualWork:
 
         assert result.name == "新名称"
         assert result.description == "新描述"
-        assert result.priority == 5
+        assert result.priority == "HIGH"
 
     def test_update_partial_fields(self):
         """测试部分更新"""

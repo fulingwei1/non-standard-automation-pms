@@ -12,8 +12,11 @@ import { assemblyKitApi } from "../../services/api/production";
 
 const mockNavigate = vi.fn();
 
-vi.mock("../../services/api", () => ({
-  productionApi: {
+vi.mock('../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    productionApi: {
     workshops: {
       list: vi.fn(),
     },
@@ -51,7 +54,8 @@ vi.mock("../../services/api", () => ({
   projectApi: {
     list: vi.fn(),
   },
-}));
+  };
+});
 
 vi.mock("../../services/api/production", async () => {
   const actual = await vi.importActual("../../services/api/production");
@@ -90,176 +94,140 @@ describe("production module smoke", () => {
 
     projectApi.list.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [{ id: 88, project_name: "项目Alpha", name: "项目Alpha" }],
-        },
+        items: [{ id: 88, project_name: "项目Alpha", name: "项目Alpha" }],
       },
     });
 
     productionApi.workshops.list.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [{ id: 3, workshop_name: "总装一车间" }],
-        },
+        items: [{ id: 3, workshop_name: "总装一车间" }],
       },
     });
 
     productionApi.productionPlans.list.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [
-            {
-              id: 11,
-              plan_no: "PP-001",
-              plan_name: "三月装配排产",
-              project_name: "项目Alpha",
-              workshop_name: "总装一车间",
-              plan_start_date: "2026-03-15",
-              plan_end_date: "2026-03-20",
-              status: "DRAFT",
-              plan_type: "WEEKLY",
-            },
-          ],
-        },
+        items: [
+          {
+            id: 11,
+            plan_no: "PP-001",
+            plan_name: "三月装配排产",
+            project_name: "项目Alpha",
+            workshop_name: "总装一车间",
+            plan_start_date: "2026-03-15",
+            plan_end_date: "2026-03-20",
+            status: "DRAFT",
+            plan_type: "WEEKLY",
+          },
+        ],
       },
     });
 
     productionApi.workReports.list.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [
-            {
-              id: 21,
-              report_no: "WR-001",
-              work_order_no: "WO-001",
-              worker_name: "王师傅",
-              report_type: "PROGRESS",
-              status: "PENDING",
-              report_date: "2026-03-15",
-              reported_hours: 6,
-              completed_qty: 8,
-            },
-          ],
-        },
+        items: [
+          {
+            id: 21,
+            report_no: "WR-001",
+            work_order_no: "WO-001",
+            worker_name: "王师傅",
+            report_type: "PROGRESS",
+            status: "PENDING",
+            report_date: "2026-03-15",
+            reported_hours: 6,
+            completed_qty: 8,
+          },
+        ],
       },
     });
 
     productionApi.exceptions.list.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [
-            {
-              id: 31,
-              exception_no: "EX-001",
-              title: "装配缺料",
-              exception_type: "MATERIAL",
-              exception_level: "HIGH",
-              status: "OPEN",
-              project_name: "项目Alpha",
-              report_time: "2026-03-15 08:00:00",
-            },
-          ],
-        },
+        items: [
+          {
+            id: 31,
+            exception_no: "EX-001",
+            title: "装配缺料",
+            exception_type: "MATERIAL",
+            exception_level: "HIGH",
+            status: "OPEN",
+            project_name: "项目Alpha",
+            report_time: "2026-03-15 08:00:00",
+          },
+        ],
       },
     });
 
     productionApi.workers.list.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [
-            {
-              id: 41,
-              worker_code: "WK-001",
-              worker_name: "李工",
-              phone: "13800000000",
-              skill_level: "ADVANCED",
-              is_active: true,
-            },
-          ],
-        },
+        items: [
+          {
+            id: 41,
+            worker_code: "WK-001",
+            worker_name: "李工",
+            phone: "13800000000",
+            skill_level: "ADVANCED",
+            is_active: true,
+          },
+        ],
       },
     });
 
     productionApi.capacity.oee.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [{ equipment_id: 1, equipment_name: "装配线A", total_output: 10000, avg_oee: 91.2 }],
-        },
+        items: [{ equipment_id: 1, equipment_name: "装配线A", total_output: 10000, avg_oee: 91.2 }],
       },
     });
     productionApi.capacity.bottlenecks.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          equipment_bottlenecks: [{ equipment_name: "装配线A", utilization_rate: 96, total_downtime: 180, avg_oee: 91, suggestion: "补充工装" }],
-          workstation_bottlenecks: [{ workstation_name: "工位1", total_hours: 12, work_order_count: 3, suggestion: "优化工序" }],
-          low_efficiency_workers: [{ worker_name: "李工", avg_efficiency: 76, suggestion: "安排培训" }],
-        },
+        equipment_bottlenecks: [{ equipment_name: "装配线A", utilization_rate: 96, total_downtime: 180, avg_oee: 91, suggestion: "补充工装" }],
+        workstation_bottlenecks: [{ workstation_name: "工位1", total_hours: 12, work_order_count: 3, suggestion: "优化工序" }],
+        low_efficiency_workers: [{ worker_name: "李工", avg_efficiency: 76, suggestion: "安排培训" }],
       },
     });
     productionApi.capacity.trend.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          items: [{ period: "W11", avg_oee: 89.5 }],
-        },
+        items: [{ period: "W11", avg_oee: 89.5 }],
       },
     });
     productionApi.capacity.forecast.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          forecast_values: [{ forecast_value: 12000, upper_bound: 12800, lower_bound: 11300 }],
-          model_info: { r_squared: 0.88 },
-          summary: { confidence_level: "88" },
-        },
+        forecast_values: [{ forecast_value: 12000, upper_bound: 12800, lower_bound: 11300 }],
+        model_info: { r_squared: 0.88 },
+        summary: { confidence_level: "88" },
       },
     });
 
     assemblyKitApi.dashboard.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          stats: {
-            total_projects: 5,
-            can_start_count: 3,
-            avg_kit_rate: 82,
-            avg_blocking_rate: 18,
-          },
-          stage_stats: [
-            { stage_code: "FRAME", stage_name: "钣金", ready_count: 2, blocked_count: 1, total_count: 3, readiness_rate: 66 },
-          ],
-          alert_summary: { L1: 1, L2: 0, L3: 2, L4: 1 },
-          recent_analyses: [
-            { id: 1, readiness_id: 1, project_name: "项目Alpha", readiness_no: "AR-001", overall_readiness: 82 },
-          ],
-          pending_suggestions: [
-            {
-              id: 1,
-              project_name: "项目Alpha",
-              suggestion_type: "CAN_START",
-              suggested_start_date: "2026-03-16",
-              priority_score: 92,
-              current_kit_rate: 88,
-            },
-          ],
+        stats: {
+          total_projects: 5,
+          can_start_count: 3,
+          avg_kit_rate: 82,
+          avg_blocking_rate: 18,
         },
+        stage_stats: [
+          { stage_code: "FRAME", stage_name: "钣金", ready_count: 2, blocked_count: 1, total_count: 3, readiness_rate: 66 },
+        ],
+        alert_summary: { L1: 1, L2: 0, L3: 2, L4: 1 },
+        recent_analyses: [
+          { id: 1, readiness_id: 1, project_name: "项目Alpha", readiness_no: "AR-001", overall_readiness: 82 },
+        ],
+        pending_suggestions: [
+          {
+            id: 1,
+            project_name: "项目Alpha",
+            suggestion_type: "CAN_START",
+            suggested_start_date: "2026-03-16",
+            priority_score: 92,
+            current_kit_rate: 88,
+          },
+        ],
       },
     });
     assemblyKitApi.getShortageAlerts.mockResolvedValue({
       data: {
-        success: true,
-        data: {
-          total: 1,
-          items: [{ shortage_id: 1, project_name: "项目Alpha", level: "L1", material_name: "伺服电机", shortage_qty: 2 }],
-        },
+        total: 1,
+        items: [{ shortage_id: 1, project_name: "项目Alpha", level: "L1", material_name: "伺服电机", shortage_qty: 2 }],
       },
     });
   });

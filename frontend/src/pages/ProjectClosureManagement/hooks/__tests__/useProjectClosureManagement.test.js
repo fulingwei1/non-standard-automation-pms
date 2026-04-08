@@ -9,10 +9,23 @@ vi.mock('react-router-dom', () => ({
     useNavigate: vi.fn()
 }));
 
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('../../../../services/api', async () => {
   return {
-    ...actual,
+    __esModule: true,
+    pmoApi: {
+      closures: {
+        get: vi.fn(),
+        create: vi.fn(),
+        review: vi.fn(),
+        updateLessons: vi.fn(),
+        checkReadiness: vi.fn(),
+        notifyReadiness: vi.fn(),
+      },
+    },
+    projectApi: {
+      list: vi.fn(),
+      get: vi.fn(),
+    },
     default: {
       get: vi.fn(),
       post: vi.fn(),

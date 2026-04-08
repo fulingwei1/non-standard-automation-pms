@@ -9,6 +9,7 @@ export const mapBackendStatusToFrontend = (backendStatus) => {
   const statusMap = {
     DRAFT: "draft",
     SUBMITTED: "submitted",
+    APPROVED: "confirmed",
     CONFIRMED: "confirmed",
     SHIPPED: "shipped",
     RECEIVED: "received",
@@ -29,74 +30,101 @@ export const mapBackendPaymentStatus = (backendStatus) => {
   return statusMap[backendStatus] || backendStatus?.toLowerCase() || "unpaid";
 };
 
+const toDate = (value) => {
+  if (!value) return "";
+  return typeof value === "string" ? value.split("T")[0] : String(value);
+};
+
+const toNumber = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 /**
  * Transform raw backend order data (+ receipts) into the frontend PO shape
  */
 export const transformOrderData = (orderData, receipts = []) => {
+  const items = Array.isArray(orderData.items) ? orderData.items : [];
+  const attachments = Array.isArray(orderData.attachments)
+    ? orderData.attachments
+    : [];
+
   return {
     id: orderData.id?.toString(),
-    poNumber: orderData.order_no || orderData.id?.toString(),
-    projectName: orderData.project_name || "",
+    poNumber:
+      orderData.order_no ||
+      orderData.orderNo ||
+      orderData.code ||
+      orderData.id?.toString() ||
+      "",
+    projectName: orderData.project_name || orderData.projectName || "",
+    projectCode: orderData.project_code || orderData.projectCode || "",
     supplier: {
-      id: orderData.supplier_id?.toString(),
-      name: orderData.supplier_name || "",
-      contact: "",
-      phone: "",
-      email: "",
-      address: "",
-      paymentTerm: "",
+      id: orderData.supplier_id?.toString() || orderData.supplierId?.toString() || "",
+      name: orderData.supplier_name || orderData.supplierName || "",
+      contact: orderData.contact_person || orderData.contactPerson || "",
+      phone: orderData.contact_phone || orderData.contactPhone || "",
+      email: orderData.contact_email || orderData.contactEmail || "",
+      address: orderData.delivery_address || orderData.deliveryAddress || "",
+      paymentTerm: orderData.payment_terms || orderData.paymentTerms || "",
     },
     status: mapBackendStatusToFrontend(orderData.status),
-    issueDate:
-      orderData.order_date || orderData.created_at?.split("T")[0] || "",
-    requiredDate: orderData.required_date || "",
-    expectedDelivery: orderData.required_date || "",
-    actualDelivery: receipts.length > 0 ? receipts[0].receipt_date : null,
-    totalAmount: parseFloat(orderData.total_amount || 0),
+    issueDate: toDate(orderData.order_date || orderData.orderDate || orderData.created_at),
+    requiredDate: toDate(orderData.required_date || orderData.deliveryDate),
+    expectedDelivery: toDate(orderData.required_date || orderData.deliveryDate),
+    actualDelivery: receipts.length > 0 ? toDate(receipts[0].receipt_date) : toDate(orderData.receivedDate),
+    totalAmount: toNumber(orderData.total_amount ?? orderData.totalAmount, 0),
     taxRate:
-      orderData.tax_amount && orderData.total_amount
-        ? (orderData.tax_amount / orderData.total_amount) * 100
+      orderData.tax_amount && (orderData.total_amount || orderData.totalAmount)
+        ? (toNumber(orderData.tax_amount) /
+            toNumber(orderData.total_amount || orderData.totalAmount, 1)) *
+          100
         : 13,
-    taxAmount: parseFloat(orderData.tax_amount || 0),
-    totalWithTax: parseFloat(
-      orderData.amount_with_tax || orderData.total_amount || 0
+    taxAmount: toNumber(orderData.tax_amount, 0),
+    totalWithTax: toNumber(
+      orderData.amount_with_tax ?? orderData.total_amount ?? orderData.totalAmount,
+      0
     ),
     currency: "CNY",
     paymentStatus: mapBackendPaymentStatus(orderData.payment_status),
-    paidAmount: parseFloat(orderData.paid_amount || 0),
+    paidAmount: toNumber(orderData.paid_amount, 0),
     invoiceStatus: "pending",
     invoicedAmount: 0,
-    items: (orderData.items || []).map((item, index) => ({
+    items: items.map((item, index) => ({
       id: item.id?.toString() || `POL-${index + 1}`,
       itemNo: item.item_no || index + 1,
-      materialCode: item.material_code || "",
-      description: item.material_name || "",
+      materialCode: item.material_code || item.materialCode || "",
+      description: item.material_name || item.materialName || "",
       specification: item.specification || "",
-      quantity: item.quantity || 0,
-      unit: item.unit || "\u4e2a",
-      unitPrice: parseFloat(item.unit_price || 0),
-      amount: parseFloat(item.amount || item.amount_with_tax || 0),
-      receivedQty: item.received_qty || 0,
-      status: mapBackendStatusToFrontend(item.status || "confirmed"),
+      quantity: toNumber(item.quantity, 0),
+      unit: item.unit || "个",
+      unitPrice: toNumber(item.unit_price ?? item.unitPrice, 0),
+      amount: toNumber(
+        item.amount ?? item.totalPrice ?? item.total_price ?? item.amount_with_tax,
+        0
+      ),
+      receivedQty: toNumber(item.received_qty ?? item.receivedQuantity, 0),
+      status: mapBackendStatusToFrontend(item.status || orderData.status || "confirmed"),
       notes: "",
     })),
     timeline: [
       {
         stage: "draft",
-        label: "\u8349\u7a3f",
-        date: orderData.created_at?.split("T")[0] || "",
-        status: orderData.status === "DRAFT" ? "completed" : "completed",
-        description: "\u91c7\u8d2d\u8ba2\u5355\u521b\u5efa",
+        label: "草稿",
+        date: toDate(orderData.created_at || orderData.createdAt),
+        status: "completed",
+        description: "采购订单创建",
       },
       {
         stage: "submitted",
-        label: "\u5df2\u63d0\u4ea4",
+        label: "已提交",
         date:
-          orderData.status !== "DRAFT"
-            ? orderData.updated_at?.split("T")[0]
+          orderData.status && orderData.status !== "DRAFT"
+            ? toDate(orderData.updated_at || orderData.approvedAt)
             : null,
         status: [
           "SUBMITTED",
+          "APPROVED",
           "CONFIRMED",
           "SHIPPED",
           "RECEIVED",
@@ -104,58 +132,64 @@ export const transformOrderData = (orderData, receipts = []) => {
         ].includes(orderData.status)
           ? "completed"
           : "pending",
-        description: "\u8ba2\u5355\u5df2\u63d0\u4ea4\u7ed9\u4f9b\u5e94\u5546",
+        description: "订单已提交给供应商",
       },
       {
         stage: "confirmed",
-        label: "\u5df2\u786e\u8ba4",
-        date: ["CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
+        label: "已确认",
+        date: ["APPROVED", "CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
           orderData.status
         )
-          ? orderData.updated_at?.split("T")[0]
+          ? toDate(orderData.approvedAt || orderData.updated_at)
           : null,
-        status: ["CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
+        status: ["APPROVED", "CONFIRMED", "SHIPPED", "RECEIVED", "INVOICED"].includes(
           orderData.status
         )
           ? "completed"
           : "pending",
-        description: "\u4f9b\u5e94\u5546\u5df2\u786e\u8ba4\u8ba2\u5355",
+        description: "供应商已确认订单",
       },
       {
         stage: "shipped",
-        label: "\u5df2\u53d1\u8d27",
+        label: "已发货",
         date: ["SHIPPED", "RECEIVED", "INVOICED"].includes(orderData.status)
-          ? orderData.updated_at?.split("T")[0]
+          ? toDate(orderData.updated_at)
           : null,
         status: ["SHIPPED", "RECEIVED", "INVOICED"].includes(orderData.status)
           ? "completed"
           : "pending",
-        description: "\u7b49\u5f85\u4f9b\u5e94\u5546\u53d1\u8d27",
+        description: "等待供应商发货",
       },
       {
         stage: "received",
-        label: "\u5df2\u6536\u8d27",
-        date: receipts.length > 0 ? receipts[0].receipt_date : null,
-        status: receipts.length > 0 ? "completed" : "pending",
-        description: "\u7b49\u5f85\u7269\u6599\u5230\u8fbe",
+        label: "已收货",
+        date: receipts.length > 0 ? toDate(receipts[0].receipt_date) : toDate(orderData.receivedDate),
+        status: receipts.length > 0 || orderData.status === "RECEIVED" ? "completed" : "pending",
+        description: "等待物料到达",
       },
       {
         stage: "invoiced",
-        label: "\u5df2\u5f00\u7968",
-        date:
-          orderData.status === "INVOICED"
-            ? orderData.updated_at?.split("T")[0]
-            : null,
+        label: "已开票",
+        date: orderData.status === "INVOICED" ? toDate(orderData.updated_at) : null,
         status: orderData.status === "INVOICED" ? "completed" : "pending",
-        description: "\u7b49\u5f85\u6536\u7968\u548c\u4ed8\u6b3e",
+        description: "等待收票和付款",
       },
     ],
-    documents: [],
-    remarks: orderData.remark || "",
+    documents: attachments.map((doc, index) => ({
+      id: doc.id?.toString() || `DOC-${index + 1}`,
+      name: doc.name || `附件-${index + 1}`,
+      size: doc.size || "",
+      uploadDate: toDate(doc.uploadDate || doc.upload_date || orderData.created_at),
+      url: doc.url || "",
+    })),
+    remarks: orderData.remark || orderData.notes || "",
     attachedProject: {
-      id: orderData.project_id?.toString(),
-      name: orderData.project_name || "",
+      id: orderData.project_id?.toString() || orderData.projectId?.toString() || "",
+      name: orderData.project_name || orderData.projectName || "",
       stage: "",
     },
+    createdBy: orderData.createdBy || "",
+    approvedBy: orderData.approvedBy || "",
+    approvedAt: toDate(orderData.approvedAt),
   };
 };

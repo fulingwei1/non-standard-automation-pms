@@ -136,7 +136,8 @@ describe('ProjectCostFilter', () => {
           showCost={true}
         />
       );
-      expect(screen.getByText('显示成本')).toBeInTheDocument();
+      expect(screen.getByText('活跃筛选:')).toBeInTheDocument();
+      expect(screen.getAllByText('显示成本').length).toBeGreaterThan(1);
     });
 
     it('shows active filters when overrunOnly is true', () => {
@@ -148,7 +149,8 @@ describe('ProjectCostFilter', () => {
           showCost={true}
         />
       );
-      expect(screen.getByText('仅超支项目')).toBeInTheDocument();
+      expect(screen.getByText('活跃筛选:')).toBeInTheDocument();
+      expect(screen.getAllByText('仅超支项目').length).toBeGreaterThan(1);
     });
 
     it('handles filter clear action', () => {

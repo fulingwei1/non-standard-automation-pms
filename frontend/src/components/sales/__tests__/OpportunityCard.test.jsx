@@ -191,7 +191,7 @@ describe('OpportunityCard', () => {
   describe('Days in Stage', () => {
     it('displays days in stage', () => {
       render(<OpportunityCard opportunity={mockOpportunity} />);
-      expect(screen.getByText(/5/)).toBeInTheDocument();
+      expect(screen.getByText('5天')).toBeInTheDocument();
     });
 
     it('handles 0 days in stage', () => {
@@ -201,7 +201,7 @@ describe('OpportunityCard', () => {
 
     it('handles large days in stage value', () => {
       render(<OpportunityCard opportunity={{ ...mockOpportunity, daysInStage: 30 }} />);
-      expect(screen.getByText(/30/)).toBeInTheDocument();
+      expect(screen.getByText('30天')).toBeInTheDocument();
     });
 
     it('handles missing daysInStage with default', () => {

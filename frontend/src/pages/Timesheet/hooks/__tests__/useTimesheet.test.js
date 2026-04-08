@@ -3,10 +3,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useTimesheet } from '../useTimesheet';
 import { timesheetApi, projectApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('../../../../services/api', async () => {
   return {
-    ...actual,
+    __esModule: true,
+    timesheetApi: {
+      getWeek: vi.fn(),
+      list: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      submit: vi.fn(),
+      approve: vi.fn(),
+      reject: vi.fn(),
+    },
+    projectApi: {
+      myProjects: vi.fn(),
+      list: vi.fn(),
+      get: vi.fn(),
+    },
     default: {
       get: vi.fn(),
       post: vi.fn(),
@@ -39,7 +52,7 @@ describe('useTimesheet Hook', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        projectApi.list.mockResolvedValue({
+        projectApi.myProjects.mockResolvedValue({
             data: { items: mockProjects },
         });
         timesheetApi.getWeek.mockResolvedValue({
@@ -54,7 +67,7 @@ describe('useTimesheet Hook', () => {
             expect(result.current.loading).toBe(false);
         });
 
-        expect(projectApi.list).toHaveBeenCalled();
+        expect(projectApi.myProjects).toHaveBeenCalled();
         expect(result.current.projects).toHaveLength(2);
     });
 

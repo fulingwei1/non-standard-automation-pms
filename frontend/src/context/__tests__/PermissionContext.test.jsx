@@ -205,7 +205,7 @@ describe('PermissionContext', () => {
       };
 
       authApi.me.mockResolvedValue({ data: mockAdminData });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       let permData;
       const TestComponent = () => {
@@ -237,7 +237,7 @@ describe('PermissionContext', () => {
       };
 
       authApi.me.mockResolvedValue({ data: mockAdminData });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       let permData;
       const TestComponent = () => {
@@ -306,7 +306,7 @@ describe('PermissionContext', () => {
       };
 
       authApi.me.mockResolvedValue({ data: mockUserData });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       let permData;
       const TestComponent = () => {
@@ -400,7 +400,7 @@ describe('PermissionContext', () => {
       authApi.me.mockResolvedValue({
         data: { id: 1, username: 'test', permissions: ['project:view'] },
       });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       let permData;
       const TestComponent = () => {
@@ -437,7 +437,7 @@ describe('PermissionContext', () => {
           permissions: ['project:view', 'project:edit'],
         },
       });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       let permData;
       const TestComponent = () => {
@@ -471,7 +471,7 @@ describe('PermissionContext', () => {
       authApi.me.mockResolvedValue({
         data: { id: 1, username: 'test', permissions: ['project:view'] },
       });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       let permData;
       const TestComponent = () => {
@@ -524,7 +524,7 @@ describe('PermissionContext', () => {
       authApi.me.mockResolvedValue({
         data: { id: 1, username: 'test', permissions: ['project:view'] },
       });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       act(() => {
         localStorage.setItem('token', 'new-token');
@@ -548,7 +548,7 @@ describe('PermissionContext', () => {
       authApi.me.mockResolvedValue({
         data: { id: 1, username: 'test', permissions: ['project:view'] },
       });
-      authApi.getPermissions.mockResolvedValue({ data: {} });
+      authApi.getPermissions.mockResolvedValue({data: { items: [] }});
 
       let permData;
       const TestComponent = () => {

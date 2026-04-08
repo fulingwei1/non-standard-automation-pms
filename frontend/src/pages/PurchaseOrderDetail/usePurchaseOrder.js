@@ -6,6 +6,8 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { purchaseApi } from "../../services/api";
 import { transformOrderData } from "./utils";
 
+const resolveReceiptsApi = () => purchaseApi.goodsReceipts || purchaseApi.receipts;
+
 export function usePurchaseOrder(id) {
   const [po, setPo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,34 +18,43 @@ export function usePurchaseOrder(id) {
       setLoading(true);
       setError(null);
 
-      const orderId = id || parseInt(id);
+      const orderId = Number(id);
       if (!orderId) {
-        throw new Error("\u8ba2\u5355ID\u4e0d\u80fd\u4e3a\u7a7a");
+        throw new Error("订单ID不能为空");
       }
 
       const response = await purchaseApi.orders.get(orderId);
-      const orderData = response.data || response;
+      const orderData = response?.data ?? response;
 
-      // Load goods receipts for this order
-      let receipts = [];
-      try {
-        const receiptsResponse = await purchaseApi.goodsReceipts.list({
-          purchase_order_id: orderId,
-        });
-        receipts =
-          receiptsResponse.data?.items ||
-          receiptsResponse.data?.items ||
-          receiptsResponse.data ||
-          [];
-      } catch (err) {
-        console.error("Failed to load receipts:", err);
+      if (!orderData) {
+        setPo(null);
+        setError(null);
+        return;
       }
 
-      setPo(transformOrderData(orderData, receipts));
+      let receipts = [];
+      const receiptsApi = resolveReceiptsApi();
+
+      if (receiptsApi?.list) {
+        try {
+          const receiptsResponse = await receiptsApi.list({
+            purchase_order_id: orderId,
+          });
+          receipts =
+            receiptsResponse?.data?.items ||
+            receiptsResponse?.data ||
+            receiptsResponse ||
+            [];
+        } catch (err) {
+          console.error("Failed to load receipts:", err);
+        }
+      }
+
+      setPo(transformOrderData(orderData, Array.isArray(receipts) ? receipts : []));
     } catch (err) {
       console.error("Failed to load purchase order:", err);
       setError(
-        err.response?.data?.detail || err.message || "\u52a0\u8f7d\u91c7\u8d2d\u8ba2\u5355\u5931\u8d25"
+        err.response?.data?.detail || err.message || "加载采购订单失败"
       );
       setPo(null);
     } finally {
@@ -58,7 +69,7 @@ export function usePurchaseOrder(id) {
   const progress = useMemo(() => {
     if (!po) return 0;
     const completedStages = (po.timeline || []).filter(
-      (s) => s.status === "completed"
+      (stage) => stage.status === "completed"
     ).length;
     return po.timeline?.length > 0
       ? (completedStages / po.timeline.length) * 100

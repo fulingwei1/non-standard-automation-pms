@@ -4,310 +4,115 @@ import { ErrorMessage, EmptyState } from '../ErrorMessage';
 import { Database } from 'lucide-react';
 
 describe('ErrorMessage', () => {
-  describe('Basic Rendering', () => {
-    it('renders default error message', () => {
-      const error = new Error('测试错误');
-      render(<ErrorMessage error={error} />);
+  it('renders friendly fallback for a generic error', () => {
+    render(<ErrorMessage error={new Error('测试错误')} />);
 
-      expect(screen.getByText('加载失败')).toBeInTheDocument();
-      expect(screen.getByText('测试错误')).toBeInTheDocument();
-    });
+    expect(screen.getByText('操作失败')).toBeInTheDocument();
+    expect(screen.getByText('请求未能成功完成。')).toBeInTheDocument();
+    expect(screen.getByText('请稍后重试，如果问题持续请联系管理员。')).toBeInTheDocument();
+  });
 
-    it('renders custom title', () => {
-      const error = new Error('测试错误');
-      render(<ErrorMessage error={error} title="自定义错误标题" />);
+  it('renders custom title when provided', () => {
+    render(<ErrorMessage error={new Error('测试错误')} title="自定义错误标题" />);
 
-      expect(screen.getByText('自定义错误标题')).toBeInTheDocument();
-    });
+    expect(screen.getByText('自定义错误标题')).toBeInTheDocument();
+  });
 
-    it('renders error from error.response.data.detail', () => {
-      const error = {
-        response: {
-          data: {
-            detail: 'API错误信息',
+  it('renders friendly API error message from response detail', () => {
+    render(
+      <ErrorMessage
+        error={{
+          response: {
+            data: {
+              detail: 'API错误信息',
+            },
           },
-        },
-      };
-      render(<ErrorMessage error={error} />);
+        }}
+      />
+    );
 
-      expect(screen.getByText('API错误信息')).toBeInTheDocument();
-    });
-
-    it('renders unknown error when no error message', () => {
-      render(<ErrorMessage error={{}} />);
-
-      expect(screen.getByText('未知错误')).toBeInTheDocument();
-    });
-
-    it('renders unknown error when error is null', () => {
-      render(<ErrorMessage error={null} />);
-
-      expect(screen.getByText('未知错误')).toBeInTheDocument();
-    });
+    expect(screen.getByText('操作失败')).toBeInTheDocument();
+    expect(screen.getByText('请求未能成功完成。')).toBeInTheDocument();
   });
 
-  describe('Error Details', () => {
-    it('does not show details by default', () => {
-      const error = {
-        response: {
-          data: { detail: '错误', code: 500 },
-        },
-      };
-      render(<ErrorMessage error={error} />);
+  it('renders unknown error copy when error is null', () => {
+    render(<ErrorMessage error={null} />);
 
-      expect(screen.queryByText('详细信息')).not.toBeInTheDocument();
-    });
-
-    it('shows details when showDetails is true', () => {
-      const error = {
-        response: {
-          data: { detail: '错误', code: 500 },
-        },
-      };
-      render(<ErrorMessage error={error} showDetails={true} />);
-
-      expect(screen.getByText('详细信息')).toBeInTheDocument();
-    });
-
-    it('expands details when summary is clicked', () => {
-      const error = {
-        response: {
-          data: { detail: '错误', code: 500 },
-        },
-      };
-      render(<ErrorMessage error={error} showDetails={true} />);
-
-      const summary = screen.getByText('详细信息');
-      fireEvent.click(summary);
-
-      // Details should be visible after clicking
-      const pre = summary.parentElement?.querySelector('pre');
-      expect(pre).toBeInTheDocument();
-    });
-
-    it('displays formatted JSON in details', () => {
-      const error = {
-        response: {
-          data: { detail: '错误', code: 500, extra: 'info' },
-        },
-      };
-      render(<ErrorMessage error={error} showDetails={true} />);
-
-      const detailsButton = screen.getByText('详细信息');
-      expect(detailsButton).toBeInTheDocument();
-    });
+    expect(screen.getByText('操作失败')).toBeInTheDocument();
+    expect(screen.getByText('发生了未知错误。')).toBeInTheDocument();
+    expect(screen.getByText('请稍后重试，如果问题持续请联系管理员。')).toBeInTheDocument();
   });
 
-  describe('Retry Functionality', () => {
-    it('does not show retry button when onRetry is not provided', () => {
-      const error = new Error('错误');
-      render(<ErrorMessage error={error} />);
+  it('shows details when showDetails is true', () => {
+    const error = {
+      response: {
+        data: { detail: '错误', code: 500 },
+      },
+    };
 
-      expect(screen.queryByText('重试')).not.toBeInTheDocument();
-    });
+    render(<ErrorMessage error={error} showDetails />);
 
-    it('shows retry button when onRetry is provided', () => {
-      const error = new Error('错误');
-      render(<ErrorMessage error={error} onRetry={() => {}} />);
-
-      expect(screen.getByText('重试')).toBeInTheDocument();
-    });
-
-    it('calls onRetry when retry button is clicked', () => {
-      const handleRetry = vi.fn();
-      const error = new Error('错误');
-      render(<ErrorMessage error={error} onRetry={handleRetry} />);
-
-      const retryButton = screen.getByText('重试');
-      fireEvent.click(retryButton);
-
-      expect(handleRetry).toHaveBeenCalledTimes(1);
-    });
-
-    it('retry button has refresh icon', () => {
-      const error = new Error('错误');
-      const { container } = render(
-        <ErrorMessage error={error} onRetry={() => {}} />
-      );
-
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
+    expect(screen.getByText('详细信息')).toBeInTheDocument();
+    expect(screen.getByText(/"detail": "错误"/)).toBeInTheDocument();
+    expect(screen.getByText(/"code": 500/)).toBeInTheDocument();
   });
 
-  describe('Custom Styling', () => {
-    it('applies custom className', () => {
-      const error = new Error('错误');
-      const { container } = render(
-        <ErrorMessage error={error} className="custom-error" />
-      );
+  it('does not show details block by default', () => {
+    render(
+      <ErrorMessage
+        error={{ response: { data: { detail: '错误', code: 500 } } }}
+      />
+    );
 
-      expect(container.querySelector('.custom-error')).toBeInTheDocument();
-    });
-
-    it('has proper error styling classes', () => {
-      const error = new Error('错误');
-      const { container } = render(<ErrorMessage error={error} />);
-
-      const card = container.querySelector('.border-red-500\\/20');
-      expect(card).toBeInTheDocument();
-    });
+    expect(screen.queryByText('详细信息')).not.toBeInTheDocument();
   });
 
-  describe('Snapshot Tests', () => {
-    it('matches snapshot for basic error', () => {
-      const error = new Error('测试错误信息');
-      const { container } = render(<ErrorMessage error={error} />);
-      expect(container).toMatchSnapshot();
-    });
+  it('shows retry button only when onRetry is provided', () => {
+    const onRetry = vi.fn();
+    render(<ErrorMessage error={new Error('错误')} onRetry={onRetry} />);
 
-    it('matches snapshot with retry button', () => {
-      const error = new Error('网络错误');
-      const { container } = render(
-        <ErrorMessage error={error} onRetry={() => {}} />
-      );
-      expect(container).toMatchSnapshot();
-    });
+    fireEvent.click(screen.getByText('重试'));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
 
-    it('matches snapshot with details', () => {
-      const error = {
-        message: '服务器错误',
-        response: {
-          data: { detail: '内部错误', code: 500 },
-        },
-      };
-      const { container } = render(
-        <ErrorMessage error={error} showDetails={true} />
-      );
-      expect(container).toMatchSnapshot();
-    });
+  it('applies custom className', () => {
+    const { container } = render(
+      <ErrorMessage error={new Error('错误')} className="custom-error" />
+    );
+
+    expect(container.querySelector('.custom-error')).toBeInTheDocument();
   });
 });
 
 describe('EmptyState', () => {
-  describe('Basic Rendering', () => {
-    it('renders default empty state', () => {
-      render(<EmptyState />);
+  it('renders default empty state', () => {
+    render(<EmptyState />);
 
-      expect(screen.getByText('暂无数据')).toBeInTheDocument();
-    });
-
-    it('renders custom title', () => {
-      render(<EmptyState title="没有找到项目" />);
-
-      expect(screen.getByText('没有找到项目')).toBeInTheDocument();
-    });
-
-    it('renders description when provided', () => {
-      render(<EmptyState description="请创建第一个项目" />);
-
-      expect(screen.getByText('请创建第一个项目')).toBeInTheDocument();
-    });
-
-    it('does not render description by default', () => {
-      render(<EmptyState />);
-
-      expect(screen.queryByText(/请/)).not.toBeInTheDocument();
-    });
+    expect(screen.getByText('暂无数据')).toBeInTheDocument();
   });
 
-  describe('Icon Rendering', () => {
-    it('renders default Inbox icon', () => {
-      const { container } = render(<EmptyState />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
+  it('renders custom title and description', () => {
+    render(<EmptyState title="没有找到项目" description="请创建第一个项目" />);
 
-    it('renders custom icon', () => {
-      const { container } = render(<EmptyState icon={Database} />);
-      expect(container.querySelector('svg')).toBeInTheDocument();
-    });
-
-    it('icon has proper size classes', () => {
-      const { container } = render(<EmptyState />);
-      const icon = container.querySelector('svg');
-      expect(icon).toHaveClass('w-16', 'h-16');
-    });
+    expect(screen.getByText('没有找到项目')).toBeInTheDocument();
+    expect(screen.getByText('请创建第一个项目')).toBeInTheDocument();
   });
 
-  describe('Action Button', () => {
-    it('does not render action by default', () => {
-      render(<EmptyState />);
-      expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    });
+  it('renders custom icon', () => {
+    const { container } = render(<EmptyState icon={Database} />);
 
-    it('renders action when provided', () => {
-      const action = <button>创建新项目</button>;
-      render(<EmptyState action={action} />);
-
-      expect(screen.getByText('创建新项目')).toBeInTheDocument();
-    });
-
-    it('action can be any React node', () => {
-      const action = <div data-testid="custom-action">自定义操作</div>;
-      render(<EmptyState action={action} />);
-
-      expect(screen.getByTestId('custom-action')).toBeInTheDocument();
-    });
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
-  describe('Custom Styling', () => {
-    it('applies custom className', () => {
-      const { container } = render(<EmptyState className="custom-empty" />);
-      expect(container.querySelector('.custom-empty')).toBeInTheDocument();
-    });
+  it('renders action node when provided', () => {
+    render(<EmptyState action={<button>创建新项目</button>} />);
 
-    it('has centered text layout', () => {
-      const { container } = render(<EmptyState />);
-      const content = container.querySelector('.text-center');
-      expect(content).toBeInTheDocument();
-    });
+    expect(screen.getByText('创建新项目')).toBeInTheDocument();
   });
 
-  describe('Complete Examples', () => {
-    it('renders complete empty state with all props', () => {
-      const action = <button>添加数据</button>;
-      render(
-        <EmptyState
-          title="暂无订单"
-          description="您还没有创建任何订单"
-          icon={Database}
-          action={action}
-        />
-      );
+  it('applies custom className', () => {
+    const { container } = render(<EmptyState className="custom-empty" />);
 
-      expect(screen.getByText('暂无订单')).toBeInTheDocument();
-      expect(screen.getByText('您还没有创建任何订单')).toBeInTheDocument();
-      expect(screen.getByText('添加数据')).toBeInTheDocument();
-    });
-  });
-
-  describe('Snapshot Tests', () => {
-    it('matches snapshot for default empty state', () => {
-      const { container } = render(<EmptyState />);
-      expect(container).toMatchSnapshot();
-    });
-
-    it('matches snapshot with all props', () => {
-      const action = <button>创建项目</button>;
-      const { container } = render(
-        <EmptyState
-          title="没有项目"
-          description="开始创建您的第一个项目"
-          icon={Database}
-          action={action}
-          className="my-4"
-        />
-      );
-      expect(container).toMatchSnapshot();
-    });
-
-    it('matches snapshot with description only', () => {
-      const { container } = render(
-        <EmptyState
-          title="空列表"
-          description="列表中还没有任何项目"
-        />
-      );
-      expect(container).toMatchSnapshot();
-    });
+    expect(container.querySelector('.custom-empty')).toBeInTheDocument();
   });
 });

@@ -34,7 +34,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('PurchaseOrders', () => {
+describe('PurchaseOrders', () => {
   const mockOrders = [
     {
       id: 1,
@@ -122,7 +122,7 @@ describe.skip('PurchaseOrders', () => {
           }
         });
       }
-      return Promise.resolve({ data: {} });
+      return Promise.resolve({ data: { items: [] } });
     });
 
     api.put.mockResolvedValue({ data: { success: true } });

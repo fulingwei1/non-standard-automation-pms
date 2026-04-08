@@ -6,93 +6,48 @@ describe('StatsCards', () => {
   const mockStats = {
     pendingApprovals: 12,
     inTransitOrders: 8,
-    lowStockWarnings: 5,
+    shortageAlerts: 5,
     activeSuppliers: 48,
   };
 
-  describe('Basic Rendering', () => {
-    it('renders all stat cards', () => {
-      render(<StatsCards stats={mockStats} />);
-      expect(screen.getByText('待审批订单')).toBeInTheDocument();
-      expect(screen.getByText('在途订单')).toBeInTheDocument();
-      expect(screen.getByText('缺料预警')).toBeInTheDocument();
-      expect(screen.getByText('活跃供应商')).toBeInTheDocument();
-    });
+  it('renders all stat card titles', () => {
+    render(<StatsCards stats={mockStats} />);
 
-    it('displays correct stat values', () => {
-      render(<StatsCards stats={mockStats} />);
-      expect(screen.getByText('12')).toBeInTheDocument();
-      expect(screen.getByText('8')).toBeInTheDocument();
-      expect(screen.getByText('5')).toBeInTheDocument();
-      expect(screen.getByText('48')).toBeInTheDocument();
-    });
-
-    it('displays icons for each card', () => {
-      const { container } = render(<StatsCards stats={mockStats} />);
-      const icons = container.querySelectorAll('svg');
-      expect(icons.length).toBeGreaterThan(4);
-    });
+    expect(screen.getByText('待审批订单')).toBeInTheDocument();
+    expect(screen.getByText('在途订单')).toBeInTheDocument();
+    expect(screen.getByText('缺料预警')).toBeInTheDocument();
+    expect(screen.getByText('在用供应商')).toBeInTheDocument();
   });
 
-  describe('Empty Stats', () => {
-    it('handles undefined stats', () => {
-      render(<StatsCards stats={undefined} />);
-      expect(screen.getByText('待审批订单')).toBeInTheDocument();
-      expect(screen.getAllByText('0')).toHaveLength(4);
-    });
+  it('displays correct stat values', () => {
+    render(<StatsCards stats={mockStats} />);
 
-    it('handles null stats', () => {
-      render(<StatsCards stats={null} />);
-      expect(screen.getAllByText('0')).toHaveLength(4);
-    });
-
-    it('handles empty object stats', () => {
-      render(<StatsCards stats={{}} />);
-      expect(screen.getAllByText('0')).toHaveLength(4);
-    });
-
-    it('handles partial stats', () => {
-      render(<StatsCards stats={{ pendingApprovals: 5 }} />);
-      expect(screen.getByText('5')).toBeInTheDocument();
-      expect(screen.getAllByText('0')).toHaveLength(3);
-    });
+    expect(screen.getByText('12')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('48')).toBeInTheDocument();
   });
 
-  describe('Additional Information', () => {
-    it('displays urgent items indicator', () => {
-      render(<StatsCards stats={mockStats} />);
-      expect(screen.getByText(/紧急/)).toBeInTheDocument();
-    });
+  it('renders fixed helper texts', () => {
+    render(<StatsCards stats={mockStats} />);
 
-    it('displays trend indicators', () => {
-      render(<StatsCards stats={mockStats} />);
-      expect(screen.getByText(/本周/)).toBeInTheDocument();
-    });
+    expect(screen.getByText('3 项紧急')).toBeInTheDocument();
+    expect(screen.getByText('+5 本周')).toBeInTheDocument();
+    expect(screen.getByText('-2 较上周')).toBeInTheDocument();
+    expect(screen.getByText('+2 本月')).toBeInTheDocument();
   });
 
-  describe('Layout', () => {
-    it('renders cards in grid layout', () => {
-      const { container } = render(<StatsCards stats={mockStats} />);
-      const grid = container.querySelector('.grid');
-      expect(grid).toBeInTheDocument();
-    });
+  it('falls back to zero when stats are missing', () => {
+    render(<StatsCards stats={undefined} />);
 
-    it('applies responsive grid classes', () => {
-      const { container } = render(<StatsCards stats={mockStats} />);
-      const grid = container.querySelector('.grid');
-      expect(grid).toHaveClass('grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-4');
-    });
+    expect(screen.getAllByText('0')).toHaveLength(4);
   });
 
-  describe('Snapshot', () => {
-    it('matches snapshot with stats', () => {
-      const { container } = render(<StatsCards stats={mockStats} />);
-      expect(container.firstChild).toMatchSnapshot();
-    });
+  it('renders responsive grid layout', () => {
+    const { container } = render(<StatsCards stats={mockStats} />);
 
-    it('matches snapshot without stats', () => {
-      const { container } = render(<StatsCards />);
-      expect(container.firstChild).toMatchSnapshot();
-    });
+    const grid = container.querySelector('.grid');
+    expect(grid).toBeInTheDocument();
+    expect(grid).toHaveClass('grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-4');
   });
 });

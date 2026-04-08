@@ -9,8 +9,11 @@ import Login from '../Login';
 import { authApi } from '../../services/api';
 
 // Mock authApi
-vi.mock('../../services/api', () => ({
-  authApi: {
+vi.mock('../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    authApi: {
     login: vi.fn(),
     me: vi.fn(),
     refresh: vi.fn(),
@@ -18,16 +21,144 @@ vi.mock('../../services/api', () => ({
     changePassword: vi.fn(),
     getPermissions: vi.fn(),
   },
-}));
+  };
+});
 
-// Mock motion components
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }) => <button {...props}>{children}</button>,
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
+// Mock motion components - filter out framer-motion specific props
+vi.mock('framer-motion', () => {
+  const motionPropsToFilter = [
+    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
+    'whileTap', 'whileInView', 'whileFocus', 'onDrag', 'onDragEnd',
+    'onHoverStart', 'onHoverEnd', 'viewport',
+  ];
+
+  const filterMotionProps = (props) => {
+    const filtered = { ...props };
+    motionPropsToFilter.forEach((key) => delete filtered[key]);
+    return filtered;
+  };
+
+  return {
+    motion: {
+      div: ({ children, ...props }) => <div {...filterMotionProps(props)}>{children}</div>,
+      button: ({ children, ...props }) => <button {...filterMotionProps(props)}>{children}</button>,
+      form: ({ children, ...props }) => <form {...filterMotionProps(props)}>{children}</form>,
+      input: ({ children, ...props }) => <input {...filterMotionProps(props)}>{children}</input>,
+      span: ({ children, ...props }) => <span {...filterMotionProps(props)}>{children}</span>,
+      p: ({ children, ...props }) => <p {...filterMotionProps(props)}>{children}</p>,
+      h1: ({ children, ...props }) => <h1 {...filterMotionProps(props)}>{children}</h1>,
+      h2: ({ children, ...props }) => <h2 {...filterMotionProps(props)}>{children}</h2>,
+      h3: ({ children, ...props }) => <h3 {...filterMotionProps(props)}>{children}</h3>,
+      h4: ({ children, ...props }) => <h4 {...filterMotionProps(props)}>{children}</h4>,
+      img: ({ children, ...props }) => <img {...filterMotionProps(props)}>{children}</img>,
+      label: ({ children, ...props }) => <label {...filterMotionProps(props)}>{children}</label>,
+      svg: ({ children, ...props }) => <svg {...filterMotionProps(props)}>{children}</svg>,
+    },
+    AnimatePresence: ({ children }) => <>{children}</>,
+    useAnimation: () => ({ start: vi.fn() }),
+    useInView: () => true,
+  };
+});
+
+// Mock lucide-react icons - comprehensive mock for all icons used in Login and related components
+vi.mock('lucide-react', () => {
+  const createIcon = (name) => () => <span data-testid={`icon-${name}`}>{name}</span>;
+  
+  return {
+    User: createIcon('user'),
+    Lock: createIcon('lock'),
+    ArrowRight: createIcon('arrow-right'),
+    ArrowLeft: createIcon('arrow-left'),
+    Eye: createIcon('eye'),
+    EyeOff: createIcon('eye-off'),
+    Search: createIcon('search'),
+    BarChart3: createIcon('bar-chart-3'),
+    Clock: createIcon('clock'),
+    Users: createIcon('users'),
+    AlertTriangle: createIcon('alert-triangle'),
+    Award: createIcon('award'),
+    Settings: createIcon('settings'),
+    Shield: createIcon('shield'),
+    Briefcase: createIcon('briefcase'),
+    Building: createIcon('building'),
+    TrendingUp: createIcon('trending-up'),
+    TrendingDown: createIcon('trending-down'),
+    DollarSign: createIcon('dollar-sign'),
+    Percent: createIcon('percent'),
+    PieChart: createIcon('pie-chart'),
+    Activity: createIcon('activity'),
+    Zap: createIcon('zap'),
+    Layers: createIcon('layers'),
+    Box: createIcon('box'),
+    Package: createIcon('package'),
+    Truck: createIcon('truck'),
+    Factory: createIcon('factory'),
+    Wrench: createIcon('wrench'),
+    Hammer: createIcon('hammer'),
+    Cpu: createIcon('cpu'),
+    HardDrive: createIcon('hard-drive'),
+    Wifi: createIcon('wifi'),
+    Battery: createIcon('battery'),
+    Thermometer: createIcon('thermometer'),
+    Wind: createIcon('wind'),
+    Droplets: createIcon('droplets'),
+    Sun: createIcon('sun'),
+    Moon: createIcon('moon'),
+    Star: createIcon('star'),
+    Heart: createIcon('heart'),
+    ThumbUp: createIcon('thumb-up'),
+    Share2: createIcon('share-2'),
+    Copy: createIcon('copy'),
+    Link: createIcon('link'),
+    ExternalLink: createIcon('external-link'),
+    Print: createIcon('print'),
+    Mail: createIcon('mail'),
+    Phone: createIcon('phone'),
+    MapPin: createIcon('map-pin'),
+    Globe: createIcon('globe'),
+    GraduationCap: createIcon('graduation-cap'),
+    Target: createIcon('target'),
+    Compass: createIcon('compass'),
+    Unlock: createIcon('unlock'),
+    Key: createIcon('key'),
+    ShoppingCart: createIcon('shopping-cart'),
+    GitBranch: createIcon('git-branch'),
+    UserCog: createIcon('user-cog'),
+    UserCircle: createIcon('user-circle'),
+    Headphones: createIcon('headphones'),
+    // Additional icons
+    Plus: createIcon('plus'),
+    Minus: createIcon('minus'),
+    Edit: createIcon('edit'),
+    Delete: createIcon('delete'),
+    Save: createIcon('save'),
+    Download: createIcon('download'),
+    Upload: createIcon('upload'),
+    RefreshCw: createIcon('refresh-cw'),
+    X: createIcon('x'),
+    Check: createIcon('check'),
+    AlertCircle: createIcon('alert-circle'),
+    Info: createIcon('info'),
+    Menu: createIcon('menu'),
+    Bell: createIcon('bell'),
+    ChevronDown: createIcon('chevron-down'),
+    ChevronUp: createIcon('chevron-up'),
+    ChevronLeft: createIcon('chevron-left'),
+    ChevronRight: createIcon('chevron-right'),
+    MoreVertical: createIcon('more-vertical'),
+    Filter: createIcon('filter'),
+    Calendar: createIcon('calendar'),
+    FileText: createIcon('file-text'),
+    Folder: createIcon('folder'),
+    Home: createIcon('home'),
+    LogOut: createIcon('log-out'),
+    // default export
+    default: {
+      User: createIcon('user'),
+      Lock: createIcon('lock'),
+    },
+  };
+});
 
 // Mock diagnose
 vi.mock('../../utils/diagnose', () => ({
@@ -46,6 +177,21 @@ vi.mock('../../utils/logger', () => ({
 describe('Login 页面', () => {
   const mockOnLoginSuccess = vi.fn();
   let storage = {};
+
+  // 设置大视口以确保 lg: 断点的元素可见
+  beforeAll(() => {
+    // 设置视口宽度为 large (1024px)
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 1280,
+    });
+    Object.defineProperty(window, 'innerHeight', {
+      writable: true,
+      configurable: true,
+      value: 800,
+    });
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -78,7 +224,7 @@ describe('Login 页面', () => {
       expect(screen.getByText('欢迎回来')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('请输入用户名')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('请输入密码')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /登录/ })).toBeInTheDocument();
+      expect(screen.getByText('登录').closest('button')).toBeInTheDocument();
     });
 
     it('应该显示品牌信息', () => {
@@ -200,7 +346,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'testuser' } });
       fireEvent.change(passwordInput, { target: { value: 'password123' } });
@@ -228,7 +374,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'wronguser' } });
       fireEvent.change(passwordInput, { target: { value: 'wrongpass' } });
@@ -251,7 +397,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'testuser' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });
@@ -271,7 +417,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'testuser' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });
@@ -293,7 +439,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'testuser' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });
@@ -357,7 +503,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'newuser' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });
@@ -385,7 +531,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'disabled' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });
@@ -402,7 +548,7 @@ describe('Login 页面', () => {
       });
 
       authApi.me.mockRejectedValue({
-        response: { status: 500 },
+        response: { status: 403 },
         message: 'Server Error',
       });
 
@@ -410,7 +556,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'testuser' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });
@@ -444,7 +590,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'norole' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });
@@ -478,7 +624,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'admin' } });
       fireEvent.change(passwordInput, { target: { value: 'admin' } });
@@ -510,7 +656,7 @@ describe('Login 页面', () => {
 
       const usernameInput = screen.getByPlaceholderText('请输入用户名');
       const passwordInput = screen.getByPlaceholderText('请输入密码');
-      const loginButton = screen.getByRole('button', { name: /登录/ });
+      const loginButton = screen.getByText('登录').closest('button');
 
       fireEvent.change(usernameInput, { target: { value: 'pm' } });
       fireEvent.change(passwordInput, { target: { value: 'password' } });

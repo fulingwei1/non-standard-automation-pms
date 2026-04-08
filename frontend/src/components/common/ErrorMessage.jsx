@@ -11,7 +11,7 @@ export function ErrorMessage({
   className,
   showDetails = false,
 }) {
-  const friendly = error ? getFriendlyError(error) : null;
+  const friendly = getFriendlyError(error);
   const displayTitle = title || friendly?.title || "加载失败";
   const displayMessage = friendly?.message || error?.message || "未知错误";
   const displaySuggestion = friendly?.suggestion;

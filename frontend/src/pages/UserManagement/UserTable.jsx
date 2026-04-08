@@ -141,7 +141,7 @@ export default function UserTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(users || []).map((user) => (
+              {Array.isArray(users) ? users.map((user) => (
                 <TableRow
                   key={user.id}
                   className={
@@ -220,7 +220,7 @@ export default function UserTable({
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : <TableRow><TableCell colSpan="8" className="text-center py-8 text-slate-400">加载中...</TableCell></TableRow>}
             </TableBody>
           </Table>
         )}

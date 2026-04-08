@@ -336,7 +336,7 @@ class TestAutoCollectKPI:
             return_value=Decimal("85"),
         ):
             with patch(
-                "app.services.strategy.kpi_collector.calculation.create_kpi_snapshot"
+                "app.services.strategy.kpi_service.snapshot.create_kpi_snapshot"
             ) as mock_snapshot:
                 result = auto_collect_kpi(db, 1)
 
@@ -361,7 +361,7 @@ class TestAutoCollectKPI:
             return_value=Decimal("90"),
         ):
             with patch(
-                "app.services.strategy.kpi_collector.calculation.create_kpi_snapshot"
+                "app.services.strategy.kpi_service.snapshot.create_kpi_snapshot"
             ) as mock_snapshot:
                 result = auto_collect_kpi(db, 1, recorded_by=100)
 

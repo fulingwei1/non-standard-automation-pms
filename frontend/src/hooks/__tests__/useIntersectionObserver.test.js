@@ -44,9 +44,9 @@ describe('useIntersectionObserver', () => {
   beforeEach(() => {
     observerInstances = [];
     _observerCallback = null;
-    global.IntersectionObserver = vi.fn((callback, options) => {
-      return new MockIntersectionObserver(callback, options);
-    });
+    // Mock class must be used directly as constructor, not vi.fn()
+    // Store original class for reference
+    global.IntersectionObserver = MockIntersectionObserver;
   });
 
   it('should initialize with default values', () => {
@@ -77,7 +77,8 @@ describe('useIntersectionObserver', () => {
       useIntersectionObserver({ enabled: false })
     );
 
-    expect(global.IntersectionObserver).not.toHaveBeenCalled();
+    // When disabled, no observer should be created
+    expect(observerInstances.length).toBe(0);
     expect(result.current.isIntersecting).toBe(false);
   });
 

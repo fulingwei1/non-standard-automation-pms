@@ -68,6 +68,9 @@ class AnnualKeyWork(Base, TimestampMixin):
     risk_description = Column(Text, comment="风险描述")
     remark = Column(Text, comment="备注")
 
+    # 进度描述
+    progress_description = Column(Text, comment="进度描述")
+
     # 软删除
     is_active = Column(Boolean, default=True, comment="是否激活")
 
@@ -112,6 +115,9 @@ class AnnualKeyWorkProjectLink(Base, TimestampMixin):
 
     # 备注
     remark = Column(Text, comment="备注")
+
+    # 软删除
+    is_active = Column(Boolean, default=True, comment="是否激活")
 
     # 关系
     annual_work = relationship("AnnualKeyWork", back_populates="project_links")

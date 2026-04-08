@@ -12,98 +12,119 @@ import _api, { projectApi, machineApi as _machineApi, stageApi as _stageApi, mil
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
+    get: vi.fn().mockResolvedValue({data: { items: [] }}),
     post: vi.fn().mockResolvedValue({ data: { success: true } }),
     put: vi.fn().mockResolvedValue({ data: { success: true } }),
     delete: vi.fn().mockResolvedValue({ data: { success: true } }),
     defaults: { baseURL: '/api' },
   },
     projectApi: {
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      getBoard: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      getMachines: vi.fn().mockResolvedValue({ data: {} }),
-      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
-      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
-      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
-      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
-      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
-      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
-      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      clearCache: vi.fn().mockResolvedValue({ data: {} }),
-      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
-      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
-      getStats: vi.fn().mockResolvedValue({ data: {} }),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getBoard: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getMachines: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getInProductionSummary: vi.fn().mockResolvedValue({data: { items: [] }}),
+      recommendTemplates: vi.fn().mockResolvedValue({data: { items: [] }}),
+      createFromTemplate: vi.fn().mockResolvedValue({data: { items: [] }}),
+      checkAutoTransition: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getGateCheckResult: vi.fn().mockResolvedValue({data: { items: [] }}),
+      advanceStage: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getCacheStats: vi.fn().mockResolvedValue({data: { items: [] }}),
+      clearCache: vi.fn().mockResolvedValue({data: { items: [] }}),
+      resetCacheStats: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getStatusLogs: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getHealthDetails: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getStats: vi.fn().mockResolvedValue({data: { items: [] }}),
     },
     machineApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      updateProgress: vi.fn().mockResolvedValue({ data: {} }),
-      getBom: vi.fn().mockResolvedValue({ data: {} }),
-      getServiceHistory: vi.fn().mockResolvedValue({ data: {} }),
-      getSummary: vi.fn().mockResolvedValue({ data: {} }),
-      recalculate: vi.fn().mockResolvedValue({ data: {} }),
-      uploadDocument: vi.fn().mockResolvedValue({ data: {} }),
-      getDocuments: vi.fn().mockResolvedValue({ data: {} }),
-      downloadDocument: vi.fn().mockResolvedValue({ data: {} }),
-      getDocumentVersions: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      updateProgress: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getBom: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getServiceHistory: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getSummary: vi.fn().mockResolvedValue({data: { items: [] }}),
+      recalculate: vi.fn().mockResolvedValue({data: { items: [] }}),
+      uploadDocument: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getDocuments: vi.fn().mockResolvedValue({data: { items: [] }}),
+      downloadDocument: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getDocumentVersions: vi.fn().mockResolvedValue({data: { items: [] }}),
     },
     stageApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      statuses: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      statuses: vi.fn().mockResolvedValue({data: { items: [] }}),
     },
     milestoneApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      complete: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      complete: vi.fn().mockResolvedValue({data: { items: [] }}),
     },
     memberApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      add: vi.fn().mockResolvedValue({ data: {} }),
-      remove: vi.fn().mockResolvedValue({ data: {} }),
-      batchAdd: vi.fn().mockResolvedValue({ data: {} }),
-      checkConflicts: vi.fn().mockResolvedValue({ data: {} }),
-      getDeptUsers: vi.fn().mockResolvedValue({ data: {} }),
-      notifyDeptManager: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      add: vi.fn().mockResolvedValue({data: { items: [] }}),
+      remove: vi.fn().mockResolvedValue({data: { items: [] }}),
+      batchAdd: vi.fn().mockResolvedValue({data: { items: [] }}),
+      checkConflicts: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getDeptUsers: vi.fn().mockResolvedValue({data: { items: [] }}),
+      notifyDeptManager: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
     },
     costApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      getProjectCosts: vi.fn().mockResolvedValue({ data: {} }),
-      getProjectSummary: vi.fn().mockResolvedValue({ data: {} }),
-      getCostAnalysis: vi.fn().mockResolvedValue({ data: {} }),
-      getRevenueDetail: vi.fn().mockResolvedValue({ data: {} }),
-      getProfitAnalysis: vi.fn().mockResolvedValue({ data: {} }),
-      calculateLaborCost: vi.fn().mockResolvedValue({ data: {} }),
-      getBudgetExecution: vi.fn().mockResolvedValue({ data: {} }),
-      getBudgetTrend: vi.fn().mockResolvedValue({ data: {} }),
-      generateCostReview: vi.fn().mockResolvedValue({ data: {} }),
-      checkBudgetAlert: vi.fn().mockResolvedValue({ data: {} }),
-      allocateCost: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getProjectCosts: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getProjectSummary: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getCostAnalysis: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getRevenueDetail: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getProfitAnalysis: vi.fn().mockResolvedValue({data: { items: [] }}),
+      calculateLaborCost: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getBudgetExecution: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getBudgetTrend: vi.fn().mockResolvedValue({data: { items: [] }}),
+      generateCostReview: vi.fn().mockResolvedValue({data: { items: [] }}),
+      checkBudgetAlert: vi.fn().mockResolvedValue({data: { items: [] }}),
+      allocateCost: vi.fn().mockResolvedValue({data: { items: [] }}),
     },
     documentApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+    },
+    issueTemplateApi: {
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+    },
+    projectWorkspaceApi: {
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getIssues: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getMeetings: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getBonuses: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getSolutions: vi.fn().mockResolvedValue({data: { items: [] }}),
     }
 }));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
+      const validProps = ['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'];
+      const filtered = props && Object.entries(props).length > 0 
+        ? Object.fromEntries(Object.entries(props).filter(([k]) => !validProps.includes(k))) 
+        : {};
       const Tag = typeof tag === 'string' ? tag : 'div';
       return <Tag {...filtered}>{children}</Tag>;
     }
@@ -123,7 +144,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('ProjectDetail', () => {
+describe('ProjectDetail', () => {
   const mockProject = {
     id: 1,
     code: 'PROJ-2024-001',
@@ -211,7 +232,7 @@ describe.skip('ProjectDetail', () => {
       if (url.includes('/activities')) {
         return Promise.resolve({ data: mockActivities });
       }
-      return Promise.resolve({ data: {} });
+      return Promise.resolve({ data: { items: [] } });
     });
 
     projectApi.update.mockResolvedValue({ data: { success: true } });

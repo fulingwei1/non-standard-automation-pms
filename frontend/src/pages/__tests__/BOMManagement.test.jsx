@@ -1,750 +1,243 @@
-/**
- * BOMManagement 组件测试
- * 测试覆盖：BOM列表、层级结构、物料关联、版本管理
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+
+const { useBOMManagementMock } = vi.hoisted(() => ({
+  useBOMManagementMock: vi.fn(),
+}));
+
+vi.mock('../BOMManagement/hooks', () => ({
+  useBOMManagement: useBOMManagementMock,
+}));
+
+vi.mock('../BOMManagement/BOMFilterBar', () => ({
+  default: ({
+    searchKeyword,
+    setSearchKeyword,
+    onProjectChange,
+    setFilterMachine,
+    setFilterStatus,
+    projects,
+    machines,
+  }) => (
+    <div data-testid="bom-filter-bar">
+      <div>projects:{projects.length}</div>
+      <div>machines:{machines.length}</div>
+      <input
+        aria-label="搜索BOM"
+        value={searchKeyword}
+        onChange={(e) => setSearchKeyword(e.target.value)}
+      />
+      <button onClick={() => onProjectChange('1')}>切项目</button>
+      <button onClick={() => setFilterMachine('2')}>切机台</button>
+      <button onClick={() => setFilterStatus('active')}>切状态</button>
+    </div>
+  ),
+}));
+
+vi.mock('../BOMManagement/BOMTable', () => ({
+  default: ({ loading, filteredBoms, onViewDetail, onExport, onCreateNew }) => (
+    <div data-testid="bom-table">
+      <div>{loading ? 'loading' : `rows:${filteredBoms.length}`}</div>
+      {filteredBoms.map((bom) => (
+        <div key={bom.id}>{bom.bom_name}</div>
+      ))}
+      <button onClick={() => onViewDetail(filteredBoms[0]?.id)}>查看详情</button>
+      <button onClick={() => onExport(filteredBoms[0]?.id)}>导出BOM</button>
+      <button onClick={onCreateNew}>新建BOM</button>
+    </div>
+  ),
+}));
+
+vi.mock('../BOMManagement/BOMDetailDialog', () => ({
+  default: ({
+    open,
+    selectedBom,
+    versions,
+    onOpenChange,
+    onImport,
+    onExport,
+    onRelease,
+    onViewVersion,
+  }) =>
+    open ? (
+      <div data-testid="bom-detail-dialog">
+        <div>detail:{selectedBom?.bom_name}</div>
+        <button onClick={() => onOpenChange(false)}>关闭详情</button>
+        <button onClick={onImport}>打开导入</button>
+        <button onClick={() => onExport(selectedBom?.id)}>详情导出</button>
+        <button onClick={onRelease}>打开发布</button>
+        <button onClick={() => onViewVersion(versions[0])}>查看版本</button>
+      </div>
+    ) : null,
+}));
+
+vi.mock('../BOMManagement/CreateBOMDialog', () => ({
+  default: ({ open }) => (open ? <div data-testid="create-bom-dialog">create-dialog</div> : null),
+}));
+
+vi.mock('../BOMManagement/ImportBOMDialog', () => ({
+  default: ({ open }) => (open ? <div data-testid="import-bom-dialog">import-dialog</div> : null),
+}));
+
+vi.mock('../BOMManagement/ReleaseBOMDialog', () => ({
+  default: ({ open }) => (open ? <div data-testid="release-bom-dialog">release-dialog</div> : null),
+}));
+
 import BOMManagement from '../BOMManagement';
-import _api, { bomApi, projectApi, machineApi as _machineApi } from '../../services/api';
 
-// Mock dependencies
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    post: vi.fn().mockResolvedValue({ data: { success: true } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    defaults: { baseURL: '/api' },
-  },
-    bomApi: {
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      getByMachine: vi.fn().mockResolvedValue({ data: {} }),
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      getItems: vi.fn().mockResolvedValue({ data: {} }),
-      addItem: vi.fn().mockResolvedValue({ data: {} }),
-      updateItem: vi.fn().mockResolvedValue({ data: {} }),
-      deleteItem: vi.fn().mockResolvedValue({ data: {} }),
-      getVersions: vi.fn().mockResolvedValue({ data: {} }),
-      compareVersions: vi.fn().mockResolvedValue({ data: {} }),
-      release: vi.fn().mockResolvedValue({ data: {} }),
-      import: vi.fn().mockResolvedValue({ data: {} }),
-      export: vi.fn().mockResolvedValue({ data: {} }),
-      generatePR: vi.fn().mockResolvedValue({ data: {} }),
-    },
-    projectApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      getBoard: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      getMachines: vi.fn().mockResolvedValue({ data: {} }),
-      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
-      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
-      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
-      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
-      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
-      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
-      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      clearCache: vi.fn().mockResolvedValue({ data: {} }),
-      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
-      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
-      getStats: vi.fn().mockResolvedValue({ data: {} }),
-    },
-    machineApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      updateProgress: vi.fn().mockResolvedValue({ data: {} }),
-      getBom: vi.fn().mockResolvedValue({ data: {} }),
-      getServiceHistory: vi.fn().mockResolvedValue({ data: {} }),
-      getSummary: vi.fn().mockResolvedValue({ data: {} }),
-      recalculate: vi.fn().mockResolvedValue({ data: {} }),
-      uploadDocument: vi.fn().mockResolvedValue({ data: {} }),
-      getDocuments: vi.fn().mockResolvedValue({ data: {} }),
-      downloadDocument: vi.fn().mockResolvedValue({ data: {} }),
-      getDocumentVersions: vi.fn().mockResolvedValue({ data: {} }),
-    }
-}));
-
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-}));
-
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
+function createHookState(overrides = {}) {
   return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
-describe('BOMManagement', () => {
-  // Mock data must match UI field names (bom_no, bom_name, project_name, etc.)
-  const mockBOMs = {
-    items: [
+    loading: false,
+    filteredBoms: [
       {
         id: 1,
         bom_no: 'BOM-001',
         bom_name: '产品A BOM',
-        version: 'V1.0',
         project_name: '产品A项目',
         machine_name: '机台A',
+        version: 'V1.0',
         status: 'active',
-        is_latest: true,
         total_items: 25,
         total_amount: 12500,
-        created_by: '张工',
-        created_at: '2024-01-15',
-        updated_at: '2024-02-20'
       },
-      {
-        id: 2,
-        bom_no: 'BOM-002',
-        bom_name: '产品B BOM',
-        version: 'V2.1',
-        project_name: '产品B项目',
-        machine_name: '机台B',
-        status: 'draft',
-        is_latest: false,
-        total_items: 18,
-        total_amount: 8900,
-        created_by: '李工',
-        created_at: '2024-02-01',
-        updated_at: '2024-02-22'
-      }
     ],
-    total: 2,
-    page: 1,
-    pageSize: 10
+    projects: [{ id: 1, project_name: '产品A项目' }],
+    machines: [{ id: 2, machine_name: '机台A' }],
+    selectedBom: {
+      id: 1,
+      bom_no: 'BOM-001',
+      bom_name: '产品A BOM',
+      version: 'V1.0',
+      status: 'APPROVED',
+    },
+    setSelectedBom: vi.fn(),
+    bomItems: [{ id: 11, material_code: 'MAT-001' }],
+    versions: [{ id: 9, version: 'V0.9', status: 'draft' }],
+    searchKeyword: '',
+    setSearchKeyword: vi.fn(),
+    filterProject: '',
+    filterMachine: '',
+    setFilterMachine: vi.fn(),
+    filterStatus: '',
+    setFilterStatus: vi.fn(),
+    handleFilterProjectChange: vi.fn(),
+    showBomDetail: false,
+    setShowBomDetail: vi.fn(),
+    showCreateDialog: false,
+    setShowCreateDialog: vi.fn(),
+    showImportDialog: false,
+    setShowImportDialog: vi.fn(),
+    showReleaseDialog: false,
+    setShowReleaseDialog: vi.fn(),
+    newBom: { bom_name: '' },
+    setNewBom: vi.fn(),
+    importFile: null,
+    setImportFile: vi.fn(),
+    releaseNote: '',
+    setReleaseNote: vi.fn(),
+    fetchBOMDetail: vi.fn(),
+    handleCreateBOM: vi.fn(),
+    handleReleaseBOM: vi.fn(),
+    handleImport: vi.fn(),
+    handleExport: vi.fn(),
+    handleCreateDialogProjectChange: vi.fn(),
+    ...overrides,
   };
+}
 
-  const mockBOMDetail = {
-    id: 1,
-    code: 'BOM-001',
-    name: '产品A BOM',
-    version: 'V1.0',
-    productCode: 'PRD-001',
-    productName: '产品A',
-    status: 'active',
-    level: 3,
-    items: [
-      {
-        id: 1,
-        level: 1,
-        materialCode: 'MAT-001',
-        materialName: '钢板',
-        spec: '1000x2000x5mm',
-        quantity: 10,
-        unit: '张',
-        unitPrice: 500,
-        totalPrice: 5000,
-        supplier: '供应商A',
-        leadTime: 7
-      },
-      {
-        id: 2,
-        level: 2,
-        materialCode: 'MAT-002',
-        materialName: '螺栓',
-        spec: 'M8x20',
-        quantity: 100,
-        unit: '个',
-        unitPrice: 2,
-        totalPrice: 200,
-        supplier: '供应商B',
-        leadTime: 3,
-        parentId: 1
-      }
-    ]
-  };
-
+describe('BOMManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock projectApi.list - returns projects list
-    projectApi.list.mockResolvedValue({ 
-      data: { items: [{ id: 1, name: 'Test Project', code: 'PRJ-001' }], total: 1 } 
-    });
-    // Mock bomApi.list - returns BOMs array (boms should be an array, not object with items)
-    bomApi.list.mockResolvedValue({ 
-      data: { items: mockBOMs.items, total: mockBOMs.total }
-    });
-    bomApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
-    bomApi.update.mockResolvedValue({ data: { success: true } });
-    bomApi.delete.mockResolvedValue({ data: { success: true } });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it('按当前页面编排渲染页头、筛选区和表格', () => {
+    useBOMManagementMock.mockReturnValue(createHookState());
+
+    render(
+      <MemoryRouter>
+        <BOMManagement />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('BOM管理')).toBeInTheDocument();
+    expect(screen.getByText('物料清单管理，支持版本控制、导入导出、发布审批')).toBeInTheDocument();
+    expect(screen.getByTestId('bom-filter-bar')).toHaveTextContent('projects:1');
+    expect(screen.getByTestId('bom-table')).toHaveTextContent('rows:1');
+    expect(screen.getByText('产品A BOM')).toBeInTheDocument();
   });
 
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render BOM management page', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
+  it('筛选区操作会调用 hook 暴露的 setter 和 handler', () => {
+    const state = createHookState({ searchKeyword: '旧关键字' });
+    useBOMManagementMock.mockReturnValue(state);
 
-      await waitFor(() => {
-        expect(screen.getByText(/BOM管理|BOM Management/i)).toBeInTheDocument();
-      });
-    });
+    render(
+      <MemoryRouter>
+        <BOMManagement />
+      </MemoryRouter>,
+    );
 
-    it('should render BOM list', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
+    fireEvent.change(screen.getByLabelText('搜索BOM'), { target: { value: '新BOM' } });
+    fireEvent.click(screen.getByRole('button', { name: '切项目' }));
+    fireEvent.click(screen.getByRole('button', { name: '切机台' }));
+    fireEvent.click(screen.getByRole('button', { name: '切状态' }));
 
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-        expect(screen.getByText('产品B BOM')).toBeInTheDocument();
-      });
-    });
-
-    it('should display BOM codes and versions', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('BOM-001')).toBeInTheDocument();
-        expect(screen.getByText('V1.0')).toBeInTheDocument();
-        expect(screen.getByText('V2.1')).toBeInTheDocument();
-      });
-    });
+    expect(state.setSearchKeyword).toHaveBeenCalledWith('新BOM');
+    expect(state.handleFilterProjectChange).toHaveBeenCalledWith('1');
+    expect(state.setFilterMachine).toHaveBeenCalledWith('2');
+    expect(state.setFilterStatus).toHaveBeenCalledWith('active');
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should load BOMs on mount', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
+  it('表格操作会调用详情、导出和新建入口', () => {
+    const state = createHookState();
+    useBOMManagementMock.mockReturnValue(state);
 
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledWith(expect.stringContaining('/bom'));
-      });
-    });
+    render(
+      <MemoryRouter>
+        <BOMManagement />
+      </MemoryRouter>,
+    );
 
-    it('should show loading state', () => {
-      projectApi.list.mockImplementation(() => new Promise(() => {}));
+    fireEvent.click(screen.getByRole('button', { name: '查看详情' }));
+    fireEvent.click(screen.getByRole('button', { name: '导出BOM' }));
+    fireEvent.click(screen.getByRole('button', { name: '新建BOM' }));
 
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      expect(screen.queryByText(/加载中|Loading/i)).toBeTruthy();
-    });
-
-    it('should handle load error', async () => {
-      projectApi.list.mockRejectedValue(new Error('Load failed'));
-
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      });
-    });
+    expect(state.fetchBOMDetail).toHaveBeenCalledWith(1);
+    expect(state.handleExport).toHaveBeenCalledWith(1);
+    expect(state.setShowCreateDialog).toHaveBeenCalledWith(true);
   });
 
-  // 3. BOM信息显示测试
-  describe('BOM Information Display', () => {
-    it('should display product information', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A')).toBeInTheDocument();
-        expect(screen.getByText('PRD-001')).toBeInTheDocument();
-      });
+  it('详情弹窗里的版本、导入、发布动作会走页面编排回调', () => {
+    const state = createHookState({
+      showBomDetail: true,
+      showCreateDialog: true,
+      showImportDialog: true,
+      showReleaseDialog: true,
     });
-
-    it('should show BOM level', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/3.*层|Level.*3/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should display item count', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/25.*项|25.*items/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should show total cost', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/12,500|12500/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 4. BOM状态管理测试
-  describe('BOM Status Management', () => {
-    it('should display BOM status', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/active|激活|生效/i)).toBeInTheDocument();
-        expect(screen.getByText(/draft|草稿/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should activate BOM', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品B BOM')).toBeInTheDocument();
-      });
-
-      const activateButtons = screen.queryAllByRole('button', { name: /激活|Activate/i });
-      if (activateButtons.length > 0) {
-        fireEvent.click(activateButtons[0]);
-
-        await waitFor(() => {
-          expect(bomApi.update).toHaveBeenCalledWith(
-            expect.stringContaining('/bom/'),
-            expect.objectContaining({ status: 'active' })
-          );
-        });
-      }
-    });
-  });
-
-  // 5. 搜索和筛选测试
-  describe('Search and Filtering', () => {
-    it('should search BOMs', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: '产品A' } });
-
-        await waitFor(() => {
-          expect(projectApi.list).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should filter by status', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalled();
-      });
-
-      const statusFilter = screen.queryByRole('combobox');
-      if (statusFilter) {
-        fireEvent.change(statusFilter, { target: { value: 'active' } });
-      }
-    });
-
-    it('should filter by product', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalled();
-      });
-    });
-  });
-
-  // 6. BOM层级结构测试
-  describe('BOM Hierarchy', () => {
-    it('should display BOM tree structure', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const viewButton = screen.queryAllByRole('button', { name: /查看|View|详情/i })[0];
-      if (viewButton) {
-        fireEvent.click(viewButton);
-
-        await waitFor(() => {
-          expect(screen.getByText('钢板')).toBeInTheDocument();
-          expect(screen.getByText('螺栓')).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should show material hierarchy levels', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const viewButton = screen.queryAllByRole('button', { name: /查看|View|详情/i })[0];
-      if (viewButton) {
-        fireEvent.click(viewButton);
-
-        await waitFor(() => {
-          const levels = screen.getAllByText(/Level.*[12]|层级.*[12]/i);
-          expect(levels.length).toBeGreaterThanOrEqual(0);
-        });
-      }
-    });
-
-    it('should expand/collapse BOM nodes', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const expandButtons = screen.queryAllByRole('button', { name: /展开|Expand/i });
-      if (expandButtons.length > 0) {
-        fireEvent.click(expandButtons[0]);
-      }
-    });
-  });
-
-  // 7. 物料信息测试
-  describe('Material Information', () => {
-    it('should display material details', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const viewButton = screen.queryAllByRole('button', { name: /查看|View|详情/i })[0];
-      if (viewButton) {
-        fireEvent.click(viewButton);
-
-        await waitFor(() => {
-          expect(screen.getByText('MAT-001')).toBeInTheDocument();
-          expect(screen.getByText('1000x2000x5mm')).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should show material quantities', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const viewButton = screen.queryAllByRole('button', { name: /查看|View|详情/i })[0];
-      if (viewButton) {
-        fireEvent.click(viewButton);
-
-        await waitFor(() => {
-          expect(screen.getByText(/10.*张/)).toBeInTheDocument();
-          expect(screen.getByText(/100.*个/)).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should display supplier information', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const viewButton = screen.queryAllByRole('button', { name: /查看|View|详情/i })[0];
-      if (viewButton) {
-        fireEvent.click(viewButton);
-
-        await waitFor(() => {
-          expect(screen.getByText('供应商A')).toBeInTheDocument();
-          expect(screen.getByText('供应商B')).toBeInTheDocument();
-        });
-      }
-    });
-  });
-
-  // 8. BOM操作测试
-  describe('BOM Operations', () => {
-    it('should create new BOM', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalled();
-      });
-
-      const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
-      if (createButton) {
-        fireEvent.click(createButton);
-
-        expect(screen.queryByText(/新建BOM|Create BOM/i)).toBeTruthy();
-      }
-    });
-
-    it('should edit BOM', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const editButtons = screen.queryAllByRole('button', { name: /编辑|Edit/i });
-      if (editButtons.length > 0) {
-        fireEvent.click(editButtons[0]);
-
-        expect(screen.queryByText(/编辑BOM|Edit BOM/i)).toBeTruthy();
-      }
-    });
-
-    it('should copy BOM', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const copyButtons = screen.queryAllByRole('button', { name: /复制|Copy/i });
-      if (copyButtons.length > 0) {
-        fireEvent.click(copyButtons[0]);
-
-        await waitFor(() => {
-          expect(bomApi.create).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should delete BOM', async () => {
-      window.confirm = vi.fn(() => true);
-
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const deleteButtons = screen.queryAllByRole('button', { name: /删除|Delete/i });
-      if (deleteButtons.length > 0) {
-        fireEvent.click(deleteButtons[0]);
-
-        await waitFor(() => {
-          expect(bomApi.delete).toHaveBeenCalled();
-        });
-      }
-    });
-  });
-
-  // 9. 版本管理测试
-  describe('Version Management', () => {
-    it('should display BOM versions', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('V1.0')).toBeInTheDocument();
-        expect(screen.getByText('V2.1')).toBeInTheDocument();
-      });
-    });
-
-    it('should create new version', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const versionButtons = screen.queryAllByRole('button', { name: /版本|Version/i });
-      if (versionButtons.length > 0) {
-        fireEvent.click(versionButtons[0]);
-
-        const newVersionButton = screen.queryByRole('button', { name: /新版本|New Version/i });
-        if (newVersionButton) {
-          fireEvent.click(newVersionButton);
-        }
-      }
-    });
-
-    it('should compare BOM versions', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const compareButtons = screen.queryAllByRole('button', { name: /比较|Compare/i });
-      if (compareButtons.length > 0) {
-        fireEvent.click(compareButtons[0]);
-      }
-    });
-  });
-
-  // 10. 成本计算测试
-  describe('Cost Calculation', () => {
-    it('should calculate total BOM cost', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/12,500|12500/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show material unit prices', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const viewButton = screen.queryAllByRole('button', { name: /查看|View|详情/i })[0];
-      if (viewButton) {
-        fireEvent.click(viewButton);
-
-        await waitFor(() => {
-          expect(screen.getByText(/500|5,000/)).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should display cost breakdown', async () => {
-      render(
-        <MemoryRouter>
-          <BOMManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('产品A BOM')).toBeInTheDocument();
-      });
-
-      const costButtons = screen.queryAllByRole('button', { name: /成本|Cost/i });
-      if (costButtons.length > 0) {
-        fireEvent.click(costButtons[0]);
-      }
-    });
+    useBOMManagementMock.mockReturnValue(state);
+
+    render(
+      <MemoryRouter>
+        <BOMManagement />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('bom-detail-dialog')).toHaveTextContent('detail:产品A BOM');
+    expect(screen.getByTestId('create-bom-dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('import-bom-dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('release-bom-dialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '关闭详情' }));
+    fireEvent.click(screen.getByRole('button', { name: '打开导入' }));
+    fireEvent.click(screen.getByRole('button', { name: '详情导出' }));
+    fireEvent.click(screen.getByRole('button', { name: '打开发布' }));
+    fireEvent.click(screen.getByRole('button', { name: '查看版本' }));
+
+    expect(state.setShowBomDetail).toHaveBeenCalledWith(false);
+    expect(state.setShowImportDialog).toHaveBeenCalledWith(true);
+    expect(state.handleExport).toHaveBeenCalledWith(1);
+    expect(state.setShowReleaseDialog).toHaveBeenCalledWith(true);
+    expect(state.setSelectedBom).toHaveBeenCalledWith(state.versions[0]);
+    expect(state.fetchBOMDetail).toHaveBeenCalledWith(9);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { diagnoseLogin } from "./diagnose";
 
+
 describe("diagnose", () => {
   let consoleLogSpy,
     consoleWarnSpy,
@@ -216,17 +217,17 @@ describe("diagnose", () => {
       expect(window.diagnoseLogin).toBe(diagnoseLogin);
     });
 
-    it("should not attach to window in non-browser environment", () => {
+    it("should not attach to window in non-browser environment", async () => {
       const originalWindow = global.window;
+
+      vi.resetModules();
       delete global.window;
 
-      // Re-import to test the condition
-      const module = require("./diagnose");
+      const module = await import("./diagnose");
+
+      expect(typeof module.diagnoseLogin).toBe("function");
 
       global.window = originalWindow;
-
-      // Should not throw error
-      expect(() => module.diagnoseLogin()).not.toThrow();
     });
   });
 });

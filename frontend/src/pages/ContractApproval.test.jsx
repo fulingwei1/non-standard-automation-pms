@@ -3,12 +3,16 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
-vi.mock("../services/api", () => ({
-  contractApi: {
+vi.mock('../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    contractApi: {
     list: vi.fn(),
     approvalAction: vi.fn(),
   },
-}));
+  };
+});
 
 import ContractApproval from "./ContractApproval";
 import { contractApi } from "../services/api";
@@ -58,7 +62,7 @@ describe("ContractApproval page", () => {
     await screen.findByText("合同A");
 
     // Open detail dialog
-    await userEvent.click(screen.getByRole("button", { name: "审批" }));
+    await userEvent.click(screen.getByText("审批").closest("button"));
     await screen.findByText("审批详情");
 
     // Fill comment
@@ -68,7 +72,7 @@ describe("ContractApproval page", () => {
     );
 
     // Approve
-    await userEvent.click(screen.getByRole("button", { name: "批准" }));
+    await userEvent.click(screen.getByText("批准").closest("button"));
 
     await waitFor(() => {
       expect(contractApi.approvalAction).toHaveBeenCalledWith(1, {
@@ -83,7 +87,7 @@ describe("ContractApproval page", () => {
     });
 
     // Switch to history tab and verify item is there
-    await userEvent.click(screen.getByRole("button", { name: "审批历史 (1)" }));
+    await userEvent.click(screen.getByText("审批历史 (1)").closest("button"));
     const historyTitle = await screen.findByText("合同A");
     expect(within(historyTitle.parentElement).getByText("已批准")).toBeInTheDocument();
   });
@@ -118,10 +122,10 @@ describe("ContractApproval page", () => {
 
     await screen.findByText("合同B");
 
-    await userEvent.click(screen.getByRole("button", { name: "审批" }));
+    await userEvent.click(screen.getByText("审批").closest("button"));
     await screen.findByText("审批详情");
 
-    await userEvent.click(screen.getByRole("button", { name: "拒绝" }));
+    await userEvent.click(screen.getByText("拒绝").closest("button"));
 
     await waitFor(() => {
       expect(contractApi.approvalAction).toHaveBeenCalledWith(2, {
@@ -130,7 +134,7 @@ describe("ContractApproval page", () => {
       });
     });
 
-    await userEvent.click(screen.getByRole("button", { name: "审批历史 (1)" }));
+    await userEvent.click(screen.getByText("审批历史 (1)").closest("button"));
     const historyTitle = await screen.findByText("合同B");
     expect(within(historyTitle.parentElement).getByText("已拒绝")).toBeInTheDocument();
   });
@@ -165,10 +169,10 @@ describe("ContractApproval page", () => {
 
     await screen.findByText("合同C");
 
-    await userEvent.click(screen.getByRole("button", { name: "审批" }));
+    await userEvent.click(screen.getByText("审批").closest("button"));
     await screen.findByText("审批详情");
 
-    await userEvent.click(screen.getByRole("button", { name: "批准" }));
+    await userEvent.click(screen.getByText("批准").closest("button"));
 
     await waitFor(() => {
       expect(contractApi.approvalAction).toHaveBeenCalledWith(3, {
@@ -184,12 +188,12 @@ describe("ContractApproval page", () => {
     ).toBeInTheDocument();
 
     // Close dialog (dialog open will aria-hide the page)
-    const dialog = screen.getByRole("dialog", { name: "审批详情" });
-    await userEvent.click(within(dialog).getByRole("button", { name: "取消" }));
+    const dialog = screen.getByText("审批详情").closest('[role="dialog"]');
+    await userEvent.click(within(dialog).getByText("取消").closest("button"));
 
     // Item should still be pending; history should not include it
     expect(await screen.findByText("合同C")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "审批历史 (0)" }));
+    await userEvent.click(screen.getByText("审批历史 (0)").closest("button"));
     expect(screen.queryByText("合同C")).not.toBeInTheDocument();
   });
 });

@@ -1,456 +1,374 @@
-/**
- * Documents 组件测试
- * 测试覆盖：渲染、数据加载、交互、错误、权限
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import Documents from '../Documents';
-import { documentApi, projectApi } from '../../services/api';
 
-// Mock dependencies
+const {
+  mockProjectList,
+  mockDocumentList,
+  mockDocumentCreate,
+  toastSuccessMock,
+  toastErrorMock,
+  windowOpenMock,
+  consoleErrorMock,
+} = vi.hoisted(() => ({
+  mockProjectList: vi.fn(),
+  mockDocumentList: vi.fn(),
+  mockDocumentCreate: vi.fn(),
+  toastSuccessMock: vi.fn(),
+  toastErrorMock: vi.fn(),
+  windowOpenMock: vi.fn(),
+  consoleErrorMock: vi.fn(),
+}));
+
 vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    post: vi.fn().mockResolvedValue({ data: { success: true } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    defaults: { baseURL: '/api' },
+  projectApi: {
+    list: mockProjectList,
   },
-    documentApi: {
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      list: vi.fn().mockResolvedValue({ data: {} }),
-    },
-    projectApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      getBoard: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      getMachines: vi.fn().mockResolvedValue({ data: {} }),
-      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
-      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
-      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
-      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
-      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
-      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
-      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      clearCache: vi.fn().mockResolvedValue({ data: {} }),
-      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
-      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
-      getStats: vi.fn().mockResolvedValue({ data: {} }),
-    }
+  documentApi: {
+    list: mockDocumentList,
+    create: mockDocumentCreate,
+  },
 }));
 
 vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
-  useInView: () => true,
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => ({ children, ...props }) => {
+        const Tag = typeof tag === 'string' ? tag : 'div';
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(
+            ([key]) =>
+              ![
+                'initial',
+                'animate',
+                'exit',
+                'variants',
+                'transition',
+                'whileHover',
+                'whileTap',
+                'whileInView',
+                'layout',
+                'layoutId',
+                'drag',
+                'dragConstraints',
+                'onDragEnd',
+              ].includes(key),
+          ),
+        );
+        return <Tag {...filteredProps}>{children}</Tag>;
+      },
+    },
+  ),
 }));
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('../../components/layout', () => ({
+  PageHeader: ({ title, actions }) => (
+    <div>
+      <h1>{title}</h1>
+      <div>{actions}</div>
+    </div>
+  ),
+}));
+
+vi.mock('../../components/ui/card', () => ({
+  Card: ({ children }) => <div>{children}</div>,
+  CardContent: ({ children }) => <div>{children}</div>,
+}));
+
+vi.mock('../../components/ui/button', () => ({
+  Button: ({ children, onClick, disabled, type = 'button' }) => (
+    <button type={type} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock('../../components/ui/input', () => ({
+  Input: ({ value, onChange, placeholder, className }) => (
+    <input
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={className}
+    />
+  ),
+}));
+
+vi.mock('../../components/ui/badge', () => ({
+  Badge: ({ children }) => <span>{children}</span>,
+}));
+
+vi.mock('../../components/ui/select', async () => {
+  const React = await import('react');
+  const SelectContext = React.createContext(() => {});
+
   return {
-    ...actual,
-    useNavigate: () => mockNavigate,
+    Select: ({ value, onValueChange, children }) => (
+      <SelectContext.Provider value={onValueChange}>
+        <div data-testid="mock-select" data-value={value}>
+          {children}
+        </div>
+      </SelectContext.Provider>
+    ),
+    SelectTrigger: ({ children }) => <div>{children}</div>,
+    SelectValue: ({ placeholder }) => <span>{placeholder}</span>,
+    SelectContent: ({ children }) => <div>{children}</div>,
+    SelectItem: ({ value, children }) => {
+      const onValueChange = React.useContext(SelectContext);
+      return (
+        <button type="button" onClick={() => onValueChange?.(value)}>
+          {children}
+        </button>
+      );
+    },
   };
 });
 
-describe.skip('Documents', () => {
-  const mockDocData = {
-    items: [
-      {
-        id: 1,
-        fileName: '项目需求文档.pdf',
-        fileType: 'pdf',
-        fileSize: 2048576,
-        category: '需求文档',
-        uploadedBy: '张三',
-        uploadedAt: '2024-02-15',
-        downloadCount: 10,
-        version: 'v1.0'
-      },
-      {
-        id: 2,
-        fileName: '技术方案.docx',
-        fileType: 'docx',
-        fileSize: 1024000,
-        category: '技术文档',
-        uploadedBy: '李四',
-        uploadedAt: '2024-02-10',
-        downloadCount: 5,
-        version: 'v2.1'
-      }
-    ],
-    total: 2,
-    page: 1,
-    pageSize: 10
-  };
+vi.mock('../../components/ui/dialog', () => ({
+  Dialog: ({ open, children }) => (open ? <div>{children}</div> : null),
+  DialogContent: ({ children }) => <div>{children}</div>,
+  DialogHeader: ({ children }) => <div>{children}</div>,
+  DialogTitle: ({ children }) => <h2>{children}</h2>,
+  DialogBody: ({ children }) => <div>{children}</div>,
+  DialogFooter: ({ children }) => <div>{children}</div>,
+}));
 
+vi.mock('../../components/ui/toast', () => ({
+  toast: {
+    success: toastSuccessMock,
+    error: toastErrorMock,
+  },
+}));
+
+vi.mock('../../components/common', () => ({
+  LoadingCard: ({ rows }) => <div>加载中骨架-{rows}</div>,
+  ErrorMessage: ({ error, onRetry }) => (
+    <div>
+      <p>{error}</p>
+      <button type="button" onClick={onRetry}>
+        重试
+      </button>
+    </div>
+  ),
+  EmptyState: ({ title, description }) => (
+    <div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </div>
+  ),
+}));
+
+vi.mock('../../lib/utils', () => ({
+  cn: (...classes) => classes.filter(Boolean).join(' '),
+  formatDate: (value) => `日期:${value}`,
+}));
+
+vi.mock('../../lib/animations', () => ({
+  fadeIn: {},
+  staggerContainer: {},
+}));
+
+import Documents from '../Documents';
+
+const projects = [
+  { id: 'project-1', project_name: '项目A' },
+  { id: 'project-2', project_name: '项目B' },
+  { id: 'project-3', project_name: '项目C' },
+];
+
+const docsByProject = {
+  'project-1': [
+    {
+      id: 'doc-1',
+      file_name: '需求文档.pdf',
+      file_type: 'pdf',
+      file_size: 1024,
+      created_at: '2026-04-01',
+      project_id: 'project-1',
+      uploaded_by: '张三',
+      description: '项目A需求说明',
+      download_url: 'https://files.example.com/doc-1.pdf',
+    },
+  ],
+  'project-2': [
+    {
+      id: 'doc-2',
+      file_name: '现场照片.png',
+      file_type: 'png',
+      file_size: 2048,
+      created_at: '2026-04-02',
+      project_id: 'project-2',
+      uploaded_by: '李四',
+      description: '项目B现场照片',
+      file_url: 'https://files.example.com/doc-2.png',
+    },
+  ],
+  'project-3': [
+    {
+      id: 'doc-3',
+      file_name: '测试记录.xlsx',
+      file_type: 'xlsx',
+      file_size: 4096,
+      created_at: '2026-04-03',
+      project_id: 'project-3',
+      uploaded_by: '王五',
+      description: '项目C测试记录',
+    },
+  ],
+};
+
+describe('Documents', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    projectApi.list.mockResolvedValue({ data: mockDocData });
+    vi.spyOn(console, 'error').mockImplementation(consoleErrorMock);
+    vi.spyOn(window, 'open').mockImplementation(windowOpenMock);
+
+    mockProjectList.mockResolvedValue({
+      data: {
+        items: projects,
+      },
+    });
+
+    mockDocumentList.mockImplementation((projectId) =>
+      Promise.resolve({
+        data: docsByProject[projectId] || [],
+      }),
+    );
+
+    mockDocumentCreate.mockResolvedValue({ data: { success: true } });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <Documents />
+      </MemoryRouter>,
+    );
+  }
+
+  it('默认加载项目并聚合全部项目文档', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(mockProjectList).toHaveBeenCalledWith({ page_size: 1000 });
+    });
+
+    await waitFor(() => {
+      expect(mockDocumentList).toHaveBeenCalledWith('project-1');
+      expect(mockDocumentList).toHaveBeenCalledWith('project-2');
+      expect(mockDocumentList).toHaveBeenCalledWith('project-3');
+    });
+
+    expect(screen.getByText('文件管理')).toBeInTheDocument();
+    expect(await screen.findByText('需求文档.pdf')).toBeInTheDocument();
+    expect(screen.getByText('现场照片.png')).toBeInTheDocument();
+    expect(screen.getByText('测试记录.xlsx')).toBeInTheDocument();
+    expect(screen.getAllByText('项目A').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('项目B').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('项目C').length).toBeGreaterThanOrEqual(2);
   });
 
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render documents page with title', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
+  it('支持本地搜索过滤当前文档列表', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/文档管理|Document Management/i)).toBeInTheDocument();
-      });
+    await screen.findByText('需求文档.pdf');
+
+    fireEvent.change(screen.getByPlaceholderText('搜索文档名称、描述...'), {
+      target: { value: '现场' },
     });
 
-    it('should render document list table', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-        expect(screen.getByText('技术方案.docx')).toBeInTheDocument();
-      });
-    });
+    expect(screen.getByText('现场照片.png')).toBeInTheDocument();
+    expect(screen.queryByText('需求文档.pdf')).not.toBeInTheDocument();
+    expect(screen.queryByText('测试记录.xlsx')).not.toBeInTheDocument();
+    expect(screen.getByText('项目B现场照片')).toBeInTheDocument();
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should load documents on mount', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
+  it('切换项目后按选中项目单独加载文档，失败后可重试恢复', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('/documents')
-        );
-      });
+    await screen.findByText('需求文档.pdf');
+
+    mockDocumentList.mockRejectedValueOnce(new Error('加载项目文档失败'));
+    fireEvent.click(screen.getByRole('button', { name: '项目C' }));
+
+    expect(await screen.findByText('加载项目文档失败')).toBeInTheDocument();
+
+    mockDocumentList.mockResolvedValueOnce({
+      data: [docsByProject['project-3'][0]],
+    });
+    fireEvent.click(screen.getByRole('button', { name: '重试' }));
+
+    await waitFor(() => {
+      expect(mockDocumentList).toHaveBeenLastCalledWith('project-3');
     });
 
-    it('should display loading state', () => {
-      projectApi.list.mockImplementation(() => new Promise(() => {}));
-      
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByText(/加载中|Loading/i)).toBeInTheDocument();
-    });
-
-    it('should refresh data when refresh button clicked', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledTimes(1);
-      });
-
-      const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
-      fireEvent.click(refreshButton);
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledTimes(2);
-      });
-    });
+    expect(await screen.findByText('测试记录.xlsx')).toBeInTheDocument();
+    expect(screen.queryByText('需求文档.pdf')).not.toBeInTheDocument();
   });
 
-  // 3. 交互测试
-  describe('User Interactions', () => {
-    it('should upload document', async () => {
-      documentApi.create.mockResolvedValue({ data: { success: true, fileId: 3 } });
+  it('支持上传文件并提交真实 FormData 字段', async () => {
+    renderPage();
 
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
+    await screen.findByText('需求文档.pdf');
 
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
+    fireEvent.click(screen.getByRole('button', { name: /上传文件/i }));
 
-      const uploadButton = screen.getByRole('button', { name: /上传|Upload/i });
-      fireEvent.click(uploadButton);
+    expect(screen.getByRole('heading', { name: '上传文件' })).toBeInTheDocument();
 
-      const fileInput = screen.getByLabelText(/选择文件|Select File/i);
-      const file = new File(['content'], 'test.pdf', { type: 'application/pdf' });
-      fireEvent.change(fileInput, { target: { files: [file] } });
+    const uploadSelect = screen.getAllByTestId('mock-select')[1];
+    fireEvent.click(within(uploadSelect).getByRole('button', { name: '项目B' }));
 
-      await waitFor(() => {
-        expect(documentApi.create).toHaveBeenCalled();
-      });
+    const fileInput = document.getElementById('file-upload');
+    const file = new File(['hello'], '上传资料.pdf', { type: 'application/pdf' });
+    fireEvent.change(fileInput, {
+      target: { files: [file] },
     });
 
-    it('should filter by category', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const categoryFilter = screen.getByRole('combobox', { name: /分类|Category/i });
-      fireEvent.change(categoryFilter, { target: { value: '需求文档' } });
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('category=需求文档')
-        );
-      });
+    const descriptionInput = screen.getByPlaceholderText('输入文件描述...');
+    fireEvent.change(descriptionInput, {
+      target: { value: '补充说明' },
     });
 
-    it('should search by keyword', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
+    const uploadDialog = screen.getByRole('heading', { name: '上传文件' }).parentElement?.parentElement;
+    fireEvent.click(within(uploadDialog).getByRole('button', { name: '上传' }));
 
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.getByPlaceholderText(/搜索文档|Search document/i);
-      fireEvent.change(searchInput, { target: { value: '需求' } });
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('keyword=需求')
-        );
-      });
+    await waitFor(() => {
+      expect(mockDocumentCreate).toHaveBeenCalledTimes(1);
     });
 
-    it('should download document', async () => {
-      projectApi.list.mockResolvedValue({ data: new Blob(['content'], { type: 'application/pdf' }) });
-
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const downloadButton = screen.getAllByRole('button', { name: /下载|Download/i })[0];
-      fireEvent.click(downloadButton);
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('/documents/1/download')
-        );
-      });
-    });
-
-    it('should preview document', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const previewButton = screen.getAllByRole('button', { name: /预览|Preview/i })[0];
-      fireEvent.click(previewButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/文档预览|Document Preview/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should delete document', async () => {
-      documentApi.delete.mockResolvedValue({ data: { success: true } });
-      window.confirm = vi.fn(() => true);
-
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const deleteButton = screen.getAllByRole('button', { name: /删除|Delete/i })[0];
-      fireEvent.click(deleteButton);
-
-      await waitFor(() => {
-        expect(documentApi.delete).toHaveBeenCalledWith('/documents/1');
-      });
-    });
-
-    it('should share document', async () => {
-      documentApi.create.mockResolvedValue({ data: { success: true, shareLink: 'http://example.com/share' } });
-
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const shareButton = screen.getAllByRole('button', { name: /分享|Share/i })[0];
-      fireEvent.click(shareButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/分享文档|Share Document/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should move document to folder', async () => {
-      documentApi.update.mockResolvedValue({ data: { success: true } });
-
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const moveButton = screen.getAllByRole('button', { name: /移动|Move/i })[0];
-      fireEvent.click(moveButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/移动到文件夹|Move to Folder/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should handle pagination', async () => {
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const nextPageButton = screen.getByRole('button', { name: /下一页|Next/i });
-      fireEvent.click(nextPageButton);
-
-      await waitFor(() => {
-        expect(projectApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('page=2')
-        );
-      });
-    });
+    const formData = mockDocumentCreate.mock.calls[0][0];
+    expect(formData).toBeInstanceOf(FormData);
+    expect(formData.get('project_id')).toBe('project-2');
+    expect(formData.get('description')).toBe('补充说明');
+    expect(formData.get('file')).toBe(file);
+    expect(toastSuccessMock).toHaveBeenCalledWith('文件上传成功');
   });
 
-  // 4. 错误处理测试
-  describe('Error Handling', () => {
-    it('should display error message on load failure', async () => {
-      projectApi.list.mockRejectedValue(new Error('Network Error'));
+  it('下载按钮优先使用现成链接，没有链接时走兜底下载地址', async () => {
+    renderPage();
 
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
+    await screen.findByText('需求文档.pdf');
 
-      await waitFor(() => {
-        expect(screen.getByText(/加载失败|Load Failed/i)).toBeInTheDocument();
-      });
+    const firstDownloadButton = screen.getAllByRole('button', { name: '下载' })[0];
+    fireEvent.click(firstDownloadButton);
+
+    expect(windowOpenMock).toHaveBeenCalledWith(
+      'https://files.example.com/doc-1.pdf',
+      '_blank',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '项目C' }));
+
+    await waitFor(() => {
+      expect(mockDocumentList).toHaveBeenLastCalledWith('project-3');
     });
 
-    it('should handle upload failure', async () => {
-      documentApi.create.mockRejectedValue(new Error('Upload Failed'));
+    fireEvent.click(screen.getByRole('button', { name: '下载' }));
 
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('项目需求文档.pdf')).toBeInTheDocument();
-      });
-
-      const uploadButton = screen.getByRole('button', { name: /上传|Upload/i });
-      fireEvent.click(uploadButton);
-
-      const fileInput = screen.getByLabelText(/选择文件|Select File/i);
-      const file = new File(['content'], 'test.pdf', { type: 'application/pdf' });
-      fireEvent.change(fileInput, { target: { files: [file] } });
-
-      await waitFor(() => {
-        expect(screen.getByText(/上传失败|Upload Failed/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 5. 权限测试
-  describe('Permission Control', () => {
-    it('should show upload button for authorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify(['document:upload']));
-
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /上传|Upload/i })).toBeInTheDocument();
-      });
-    });
-
-    it('should hide upload button for unauthorized users', async () => {
-      localStorage.setItem('userPermissions', JSON.stringify([]));
-
-      render(
-        <MemoryRouter>
-          <Documents />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /上传|Upload/i })).not.toBeInTheDocument();
-      });
-    });
+    expect(windowOpenMock).toHaveBeenCalledWith(
+      '/api/v1/documents/doc-3/download',
+      '_blank',
+    );
   });
 });

@@ -8,6 +8,37 @@ vi.mock('../../../../services/api', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
+    progressApi: {
+      tasks: {
+        list: vi.fn(),
+        get: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        updateProgress: vi.fn(),
+        updateAssignee: vi.fn(),
+        complete: vi.fn(),
+      },
+      reports: {
+        list: vi.fn(),
+        create: vi.fn(),
+        get: vi.fn(),
+        getSummary: vi.fn(),
+        getGantt: vi.fn(),
+        getBoard: vi.fn(),
+        getMilestoneRate: vi.fn(),
+        getDelayReasons: vi.fn(),
+      },
+      analytics: {
+        getForecast: vi.fn(),
+        checkDependencies: vi.fn(),
+      },
+    },
+    projectApi: {
+      ...(actual.projectApi || {}),
+      list: vi.fn(),
+      get: vi.fn(),
+    },
     default: {
       get: vi.fn(),
       post: vi.fn(),

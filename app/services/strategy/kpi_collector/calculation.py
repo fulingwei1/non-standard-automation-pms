@@ -174,7 +174,7 @@ def auto_collect_kpi(db: Session, kpi_id: int, recorded_by: Optional[int] = None
     kpi.last_collected_at = datetime.now()
 
     # 创建历史记录
-    from app.services.strategy.kpi_service import create_kpi_snapshot
+    from app.services.strategy.kpi_service.snapshot import create_kpi_snapshot
 
     create_kpi_snapshot(db, kpi_id, "AUTO", recorded_by)
 
@@ -228,3 +228,10 @@ def batch_collect_kpis(
         "failed_kpis": failed_kpis,
         "collected_at": datetime.now(),
     }
+
+
+# 导入create_kpi_snapshot函数以供外部使用
+from app.services.strategy.kpi_service.snapshot import create_kpi_snapshot
+
+# 同时将此函数添加到模块的公共接口
+__all__ = ['calculate_formula', 'collect_kpi_value', 'auto_collect_kpi', 'batch_collect_kpis', 'create_kpi_snapshot']

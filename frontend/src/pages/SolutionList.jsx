@@ -520,7 +520,7 @@ export default function SolutionList({ embedded = false } = {}) {
             <Input
               type="text"
               placeholder="搜索方案名称、客户、编号、标签..."
-              value={searchTerm || "unknown"}
+              value={searchTerm ?? ""}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 w-full" />
 
@@ -529,7 +529,7 @@ export default function SolutionList({ embedded = false } = {}) {
           {/* 筛选和视图切换 */}
           <div className="flex items-center gap-3 flex-wrap">
             <select
-              value={selectedStatus || "unknown"}
+              value={selectedStatus ?? ""}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 
@@ -540,7 +540,7 @@ export default function SolutionList({ embedded = false } = {}) {
               )}
             </select>
             <select
-              value={selectedDeviceType || "unknown"}
+              value={selectedDeviceType ?? ""}
               onChange={(e) => setSelectedDeviceType(e.target.value)}
               className="bg-surface-50 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary">
 

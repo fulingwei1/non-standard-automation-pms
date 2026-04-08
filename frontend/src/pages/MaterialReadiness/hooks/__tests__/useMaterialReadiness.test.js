@@ -1,7 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useMaterialReadiness } from '../useMaterialReadiness';
-import { materialApi as materialReadinessApi } from '../../../../services/api';
 
 // Mock API
 vi.mock('../../../../services/api', async (importOriginal) => {
@@ -9,48 +8,74 @@ vi.mock('../../../../services/api', async (importOriginal) => {
   return {
     ...actual,
     default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '/api' },
+  },
+  materialApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    search: vi.fn(),
+    warehouse: {
+      statistics: vi.fn(),
     },
+    categories: {
+      list: vi.fn(),
+    },
+  },
+  projectApi: {
+    list: vi.fn(),
+  },
+  supplierApi: {
+    list: vi.fn(),
+  },
   };
 });
 
 describe('useMaterialReadiness Hook', () => {
-  // Setup common mock data
-  const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
-  const mockDetail = { id: 1, name: 'Test Detail' };
-  const mockResponse = { data: { items: mockItems, total: 2 }, items: mockItems }; 
+  // 导入已 mock 的模块
+  let materialApi;
+  let projectApi;
+  let supplierApi;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     
-    // Auto-setup mocks for known methods
-    const apiObjects = [materialReadinessApi];
-    apiObjects.forEach(api => {
-        if (api) {
-            if (api.list) api.list.mockResolvedValue(mockResponse);
-            if (api.get) api.get.mockResolvedValue({ data: mockDetail });
-            if (api.query) api.query.mockResolvedValue(mockResponse);
-            if (api.aiMatch) api.aiMatch.mockResolvedValue(mockResponse); // specialized
-        }
-    });
+    // 动态导入 mock 的模块
+    const api = await import('../../../../services/api');
+    materialApi = api.materialApi;
+    projectApi = api.projectApi;
+    supplierApi = api.supplierApi;
+
+    // Mock 数据 - 返回物料数组
+    const mockMaterials = [
+      { id: 1, code: 'MAT-001', name: '钢板', status: 'AVAILABLE', quantity: 100, required_quantity: 100, type: 'RAW_MATERIAL', priority: 'HIGH', project_id: 1 },
+      { id: 2, code: 'MAT-002', name: '螺栓', status: 'OUT_OF_STOCK', quantity: 50, required_quantity: 100, type: 'RAW_MATERIAL', priority: 'URGENT', project_id: 1 },
+    ];
+    
+    const mockProjects = [
+      { id: 1, name: '项目A' }
+    ];
+
+    // 设置 mock 返回值
+    materialApi.list.mockResolvedValue({ data: mockMaterials });
+    projectApi.list.mockResolvedValue({ data: mockProjects });
+    supplierApi.list.mockResolvedValue({ data: [] });
   });
 
   it('should load data', async () => {
     const { result } = renderHook(() => useMaterialReadiness());
 
-    // Wait for loading to finish
-    if (Object.prototype.hasOwnProperty.call(result.current, 'loading')) {
-        await waitFor(() => expect(result.current.loading).toBe(false));
-    } else {
-        await waitFor(() => {});
-    }
+    // 等待 loading 变为 false
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
-    // Basic assertion
-    expect(result.current).toBeDefined();
+    // 验证数据已加载
+    expect(result.current.materials).toBeDefined();
+    expect(Array.isArray(result.current.materials)).toBe(true);
   });
 });

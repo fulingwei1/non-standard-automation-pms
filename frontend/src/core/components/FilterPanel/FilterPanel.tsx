@@ -197,6 +197,7 @@ export function FilterPanel({
               <Button
                 icon={<ClearOutlined />}
                 onClick={handleClear}
+                aria-label="清除"
               >
                 清除
               </Button>

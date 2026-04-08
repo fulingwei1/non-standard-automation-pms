@@ -1,679 +1,578 @@
-/**
- * InvoiceManagement 组件测试
- * 测试覆盖：发票列表显示、开票管理、发票状态、筛选搜索、导出功能
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import InvoiceManagement from '../invoice/InvoiceManagement';
-import api from '../../services/api';
 
-// Mock API
-// Mock framer-motion
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
-  useInView: () => true,
+const {
+  mockInvoiceList,
+  mockInvoiceCreate,
+  mockInvoiceGet,
+  mockInvoiceUpdate,
+  mockInvoiceIssue,
+  mockInvoiceReceivePayment,
+  mockContractList,
+  consoleErrorMock,
+  alertMock,
+} = vi.hoisted(() => ({
+  mockInvoiceList: vi.fn(),
+  mockInvoiceCreate: vi.fn(),
+  mockInvoiceGet: vi.fn(),
+  mockInvoiceUpdate: vi.fn(),
+  mockInvoiceIssue: vi.fn(),
+  mockInvoiceReceivePayment: vi.fn(),
+  mockContractList: vi.fn(),
+  consoleErrorMock: vi.fn(),
+  alertMock: vi.fn(),
 }));
 
-// Mock react-router-dom
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+vi.mock('../../services/api', () => ({
+  invoiceApi: {
+    list: mockInvoiceList,
+    create: mockInvoiceCreate,
+    get: mockInvoiceGet,
+    update: mockInvoiceUpdate,
+    issue: mockInvoiceIssue,
+    receivePayment: mockInvoiceReceivePayment,
+  },
+  contractApi: {
+    list: mockContractList,
+  },
+}));
 
-describe.skip('InvoiceManagement', () => {
-  const mockInvoices = [
+vi.mock('framer-motion', () => ({
+  motion: new Proxy(
+    {},
     {
-      id: 1,
-      invoiceNo: 'INV-2024-001',
-      projectId: 1,
-      projectName: '智能制造系统',
-      customerId: 1,
-      customerName: '华为技术有限公司',
-      invoiceType: 'VAT_SPECIAL',
-      taxRate: 13,
-      amount: 1000000,
-      taxAmount: 130000,
-      totalAmount: 1130000,
-      invoiceDate: '2024-02-15',
-      status: 'issued',
-      paymentStatus: 'paid',
-      remark: '项目首期款发票',
-      createdAt: '2024-02-10',
-      issuedAt: '2024-02-15',
+      get: (_, tag) => ({ children, ...props }) => {
+        const Tag = typeof tag === 'string' ? tag : 'div';
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(
+            ([key]) =>
+              ![
+                'initial',
+                'animate',
+                'exit',
+                'variants',
+                'transition',
+                'whileHover',
+                'whileTap',
+                'whileInView',
+                'layout',
+                'layoutId',
+                'drag',
+                'dragConstraints',
+                'onDragEnd',
+              ].includes(key),
+          ),
+        );
+        return <Tag {...filteredProps}>{children}</Tag>;
+      },
     },
-    {
-      id: 2,
-      invoiceNo: 'INV-2024-002',
-      projectId: 2,
-      projectName: 'ERP系统升级',
-      customerId: 2,
-      customerName: '中兴通讯',
-      invoiceType: 'VAT_ORDINARY',
-      taxRate: 6,
-      amount: 500000,
-      taxAmount: 30000,
-      totalAmount: 530000,
-      invoiceDate: null,
-      status: 'draft',
-      paymentStatus: 'pending',
-      remark: '等待开票',
-      createdAt: '2024-02-01',
-      issuedAt: null,
-    },
-    {
-      id: 3,
-      invoiceNo: 'INV-2024-003',
-      projectId: 3,
-      projectName: 'CRM系统开发',
-      customerId: 3,
-      customerName: '小米科技',
-      invoiceType: 'VAT_SPECIAL',
-      taxRate: 13,
-      amount: 800000,
-      taxAmount: 104000,
-      totalAmount: 904000,
-      invoiceDate: '2024-01-30',
-      status: 'issued',
-      paymentStatus: 'paid',
-      remark: '全额开票',
-      createdAt: '2024-01-25',
-      issuedAt: '2024-01-30',
-    },
-  ];
+  ),
+  AnimatePresence: ({ children }) => <>{children}</>,
+}));
 
-  const mockStats = {
-    totalInvoices: 120,
-    draftCount: 15,
-    issuedCount: 85,
-    cancelledCount: 5,
-    totalAmount: 50000000,
-    paidAmount: 35000000,
-    unpaidAmount: 15000000,
-    thisMonthIssued: 8,
-  };
+vi.mock('../../components/layout', () => ({
+  PageHeader: ({ title, description, subtitle, action }) => (
+    <div>
+      <h1>{title}</h1>
+      <p>{description || subtitle}</p>
+      {action}
+    </div>
+  ),
+}));
 
+vi.mock('../../components/ui', () => ({
+  Card: ({ children }) => <div>{children}</div>,
+  CardHeader: ({ children }) => <div>{children}</div>,
+  CardContent: ({ children }) => <div>{children}</div>,
+  CardTitle: ({ children }) => <h2>{children}</h2>,
+  Button: ({ children, onClick, disabled, type = 'button' }) => (
+    <button type={type} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock('../../components/invoice-management/InvoiceStats', () => ({
+  default: ({ stats }) => (
+    <div>
+      <p>统计-总数:{stats.totalInvoices}</p>
+      <p>统计-总金额:{stats.totalAmount}</p>
+      <p>统计-已收款:{stats.paidAmount}</p>
+      <p>统计-待收款:{stats.pendingAmount}</p>
+    </div>
+  ),
+}));
+
+vi.mock('../../components/invoice-management/InvoiceFilters', () => ({
+  default: ({
+    searchText,
+    onSearchChange,
+    filterStatus,
+    onStatusChange,
+    filterPayment,
+    onPaymentChange,
+  }) => (
+    <div>
+      <label htmlFor="invoice-search">搜索</label>
+      <input
+        id="invoice-search"
+        value={searchText}
+        onChange={(event) => onSearchChange(event.target.value)}
+      />
+      <p>状态:{filterStatus}</p>
+      <button type="button" onClick={() => onStatusChange('draft')}>
+        筛选草稿
+      </button>
+      <button type="button" onClick={() => onStatusChange('issued')}>
+        筛选已开票
+      </button>
+      <p>收款:{filterPayment}</p>
+      <button type="button" onClick={() => onPaymentChange('pending')}>
+        筛选待收款
+      </button>
+      <button type="button" onClick={() => onPaymentChange('paid')}>
+        筛选已收款
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('../../components/invoice-management/InvoiceRow', () => ({
+  default: ({ invoice, onView, onEdit, onDelete, onIssue, onReceivePayment }) => (
+    <div data-testid={`invoice-row-${invoice.id}`}>
+      <span>{invoice.id}</span>
+      <span>{invoice.projectName}</span>
+      <span>{invoice.customerName}</span>
+      <span>{invoice.status}</span>
+      <span>{invoice.paymentStatus}</span>
+      <button type="button" onClick={() => onView(invoice)}>
+        查看-{invoice.id}
+      </button>
+      {invoice.status === 'draft' ? (
+        <>
+          <button type="button" onClick={() => onEdit(invoice)}>
+            编辑-{invoice.id}
+          </button>
+          <button type="button" onClick={() => onDelete(invoice)}>
+            删除-{invoice.id}
+          </button>
+        </>
+      ) : null}
+      {invoice.status === 'approved' ? (
+        <button type="button" onClick={() => onIssue(invoice)}>
+          开票-{invoice.id}
+        </button>
+      ) : null}
+      {invoice.status === 'issued' && invoice.paymentStatus !== 'paid' ? (
+        <button type="button" onClick={() => onReceivePayment(invoice)}>
+          收款-{invoice.id}
+        </button>
+      ) : null}
+    </div>
+  ),
+}));
+
+vi.mock('../../components/invoice-management/dialogs', () => ({
+  CreateInvoiceDialog: ({ open, onSubmit }) =>
+    open ? (
+      <div>
+        <h3>新建发票弹窗</h3>
+        <button type="button" onClick={onSubmit}>
+          提交新建发票
+        </button>
+      </div>
+    ) : null,
+  EditInvoiceDialog: ({ open, formData, onSubmit }) =>
+    open ? (
+      <div>
+        <h3>编辑发票弹窗</h3>
+        <p>合同:{formData.contract_id}</p>
+        <p>税率:{formData.tax_rate}</p>
+        <button type="button" onClick={onSubmit}>
+          提交编辑发票
+        </button>
+      </div>
+    ) : null,
+  IssueInvoiceDialog: ({ open, onSubmit }) =>
+    open ? (
+      <div>
+        <h3>开票弹窗</h3>
+        <button type="button" onClick={onSubmit}>
+          提交开票
+        </button>
+      </div>
+    ) : null,
+  PaymentDialog: ({ open, selectedInvoice, paymentData, onConfirm }) =>
+    open ? (
+      <div>
+        <h3>收款弹窗</h3>
+        <p>收款对象:{selectedInvoice?.id}</p>
+        <p>收款金额:{paymentData.paid_amount}</p>
+        <button type="button" onClick={onConfirm}>
+          提交收款
+        </button>
+      </div>
+    ) : null,
+  DeleteConfirmDialog: ({ open, description, onConfirm }) =>
+    open ? (
+      <div>
+        <h3>删除确认弹窗</h3>
+        <p>{description}</p>
+        <button type="button" onClick={onConfirm}>
+          确认删除发票
+        </button>
+      </div>
+    ) : null,
+}));
+
+import InvoiceManagement from '../invoice/InvoiceManagement';
+
+const invoiceItems = [
+  {
+    id: 101,
+    invoice_code: 'INV-001',
+    contract_code: 'HT-001',
+    project_name: '智能产线',
+    customer_name: '华为',
+    amount: '100',
+    tax_rate: '13',
+    tax_amount: '13',
+    total_amount: '113',
+    invoice_type: 'SPECIAL',
+    status: 'DRAFT',
+    issue_date: null,
+    due_date: '2026-04-30',
+    payment_status: 'PENDING',
+    paid_amount: '0',
+    paid_date: null,
+    remark: '待处理',
+  },
+  {
+    id: 102,
+    invoice_code: 'INV-002',
+    contract_code: 'HT-002',
+    project_name: '视觉检测',
+    customer_name: '中兴',
+    amount: '200',
+    tax_rate: '13',
+    tax_amount: '26',
+    total_amount: '226',
+    invoice_type: 'SPECIAL',
+    status: 'APPROVED',
+    issue_date: null,
+    due_date: '2026-05-05',
+    payment_status: 'PENDING',
+    paid_amount: '0',
+    paid_date: null,
+    remark: '待开票',
+  },
+  {
+    id: 103,
+    invoice_code: 'INV-003',
+    contract_code: 'HT-003',
+    project_name: '售后系统',
+    customer_name: '小米',
+    amount: '300',
+    tax_rate: '13',
+    tax_amount: '39',
+    total_amount: '339',
+    invoice_type: 'ORDINARY',
+    status: 'ISSUED',
+    issue_date: '2026-04-01',
+    due_date: '2026-04-20',
+    payment_status: 'PARTIAL',
+    paid_amount: '100',
+    paid_date: '2026-04-02',
+    remark: '已部分收款',
+  },
+];
+
+const contractItems = [
+  { id: 'contract-1', contract_code: 'HT-001', name: '合同1' },
+  { id: 'contract-2', contract_code: 'HT-002', name: '合同2' },
+];
+
+const invoiceDetail = {
+  contract_id: 'contract-1',
+  invoice_type: 'SPECIAL',
+  amount: '100',
+  tax_rate: '13',
+  issue_date: '2026-04-08',
+  due_date: '2026-04-30',
+  remark: '详情备注',
+};
+
+describe('InvoiceManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(consoleErrorMock);
+    vi.spyOn(window, 'alert').mockImplementation(alertMock);
+
+    mockInvoiceList.mockResolvedValue({
+      data: {
+        items: invoiceItems,
+        total: 45,
+      },
+    });
+    mockContractList.mockResolvedValue({
+      data: {
+        items: contractItems,
+      },
+    });
+    mockInvoiceCreate.mockResolvedValue({ data: { success: true } });
+    mockInvoiceGet.mockResolvedValue({ data: invoiceDetail });
+    mockInvoiceUpdate.mockResolvedValue({ data: { success: true } });
+    mockInvoiceIssue.mockResolvedValue({ data: { success: true } });
+    mockInvoiceReceivePayment.mockResolvedValue({ data: { success: true } });
+  });
+
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <InvoiceManagement />
+      </MemoryRouter>,
+    );
+  }
+
+  it('默认加载发票和合同并渲染页面统计', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(mockInvoiceList).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 20,
+        keyword: undefined,
+        status: undefined,
+        payment_status: undefined,
+      });
+    });
+
+    expect(mockContractList).toHaveBeenCalledWith({ page: 1, page_size: 100 });
+    expect(screen.getByText('对账开票管理')).toBeInTheDocument();
+    expect(screen.getByText('发票申请、开票、收款跟踪')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /新建发票/i })).toBeInTheDocument();
+    expect(await screen.findByText('统计-总数:3')).toBeInTheDocument();
+    expect(screen.getByText('统计-总金额:678')).toBeInTheDocument();
+    expect(screen.getByText('统计-已收款:0')).toBeInTheDocument();
+    expect(screen.getByText('统计-待收款:339')).toBeInTheDocument();
+    expect(screen.getByText('共 3 份发票')).toBeInTheDocument();
+    expect(screen.getByText('INV-001')).toBeInTheDocument();
+    expect(screen.getByText('INV-002')).toBeInTheDocument();
+    expect(screen.getByText('INV-003')).toBeInTheDocument();
+    expect(screen.getByText('第 1 页，共 3 页')).toBeInTheDocument();
+  });
+
+  it('搜索和筛选变化时按真实参数重新请求列表', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(mockInvoiceList).toHaveBeenCalledTimes(1);
+    });
+
+    vi.clearAllMocks();
+
+    fireEvent.change(screen.getByLabelText('搜索'), {
+      target: { value: '华为' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '筛选已开票' }));
+    fireEvent.click(screen.getByRole('button', { name: '筛选已收款' }));
+
+    await waitFor(() => {
+      expect(mockInvoiceList).toHaveBeenLastCalledWith({
+        page: 1,
+        page_size: 20,
+        keyword: '华为',
+        status: 'ISSUED',
+        payment_status: 'PAID',
+      });
+    });
+  });
+
+  it('支持打开新建发票弹窗并提交创建', async () => {
+    renderPage();
+
+    await screen.findByText('INV-001');
+
+    fireEvent.click(screen.getByRole('button', { name: /新建发票/i }));
+
+    expect(screen.getByText('新建发票弹窗')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '提交新建发票' }));
+
+    await waitFor(() => {
+      expect(mockInvoiceCreate).toHaveBeenCalledWith({
+        contract_id: '',
+        invoice_type: 'SPECIAL',
+        amount: '',
+        tax_rate: '13',
+        issue_date: '',
+        due_date: '',
+        remark: '',
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockInvoiceList).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('支持编辑草稿发票并按详情回填后更新', async () => {
+    renderPage();
+
+    await screen.findByText('INV-001');
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑-INV-001' }));
+
+    await waitFor(() => {
+      expect(mockInvoiceGet).toHaveBeenCalledWith(101);
+    });
+
+    expect(await screen.findByText('编辑发票弹窗')).toBeInTheDocument();
+    expect(screen.getByText('合同:contract-1')).toBeInTheDocument();
+    expect(screen.getByText('税率:13')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '提交编辑发票' }));
+
+    await waitFor(() => {
+      expect(mockInvoiceUpdate).toHaveBeenCalledWith(101, {
+        contract_id: 'contract-1',
+        invoice_type: 'SPECIAL',
+        amount: '100',
+        tax_rate: '13',
+        issue_date: '2026-04-08',
+        due_date: '2026-04-30',
+        remark: '详情备注',
+      });
+    });
+  });
+
+  it('支持删除草稿发票并调用作废更新接口', async () => {
+    renderPage();
+
+    await screen.findByText('INV-001');
+
+    fireEvent.click(screen.getByRole('button', { name: '删除-INV-001' }));
+
+    expect(await screen.findByText('删除确认弹窗')).toBeInTheDocument();
+    expect(screen.getByText('确定要删除发票 INV-001 吗？此操作不可撤销。')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '确认删除发票' }));
+
+    await waitFor(() => {
+      expect(mockInvoiceUpdate).toHaveBeenCalledWith(101, { status: 'VOID' });
+    });
+
+    expect(alertMock).toHaveBeenCalledWith('发票已删除');
+  });
+
+  it('列表接口失败时记录日志并显示空列表态', async () => {
+    mockInvoiceList.mockRejectedValueOnce(new Error('Load failed'));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(consoleErrorMock).toHaveBeenCalled();
+    });
+
+    expect(await screen.findByText('没有符合条件的发票')).toBeInTheDocument();
+  });
+
+  it('应该处理创建发票失败的情况', async () => {
+    mockInvoiceCreate.mockRejectedValueOnce(new Error('Create failed'));
     
-    api.get.mockImplementation((url) => {
-      if (url.includes('/invoices/stats')) {
-        return Promise.resolve({ data: mockStats });
-      }
-      if (url.includes('/invoices')) {
-        return Promise.resolve({ 
-          data: {
-            items: mockInvoices,
-            total: mockInvoices.length,
-            page: 1,
-            pageSize: 20,
-          }
-        });
-      }
-      return Promise.resolve({ data: {} });
-    });
+    renderPage();
 
-    api.post.mockResolvedValue({ data: { success: true } });
-    api.put.mockResolvedValue({ data: { success: true } });
-  });
+    await screen.findByText('INV-001');
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+    fireEvent.click(screen.getByRole('button', { name: /新建发票/i }));
+    fireEvent.click(screen.getByRole('button', { name: '提交新建发票' }));
 
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render invoice management title', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByText(/发票管理|Invoice Management/i)).toBeInTheDocument();
-    });
-
-    it('should render statistics cards', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/invoices/stats'));
-      });
-    });
-
-    it('should display action buttons', () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      const addButton = screen.queryByRole('button', { name: /新增发票|Add Invoice/i });
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      
-      expect(addButton || exportButton).toBeTruthy();
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith('创建发票失败: Create failed');
     });
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should call API to fetch invoices on mount', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
+  it('应该处理开票失败的情况', async () => {
+    mockInvoiceIssue.mockRejectedValueOnce(new Error('Issue failed'));
+    
+    renderPage();
 
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/invoices'));
-      });
-    });
+    await screen.findByText('INV-001');
 
-    it('should handle API error gracefully', async () => {
-      api.get.mockRejectedValueOnce(new Error('API Error'));
+    fireEvent.click(screen.getByRole('button', { name: '开票-INV-002' }));
+    fireEvent.click(screen.getByRole('button', { name: '提交开票' }));
 
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      });
-    });
-
-    it('should display empty state when no invoices', async () => {
-      api.get.mockResolvedValueOnce({ 
-        data: { items: [], total: 0, page: 1, pageSize: 20 } 
-      });
-
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/暂无发票|No invoices/i)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith('开票失败: Issue failed');
     });
   });
 
-  // 3. 发票列表显示测试
-  describe('Invoice List Display', () => {
-    it('should display invoice numbers', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
+  it('应该处理收款失败的情况', async () => {
+    mockInvoiceReceivePayment.mockRejectedValueOnce(new Error('Payment failed'));
+    
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText('INV-2024-001')).toBeInTheDocument();
-        expect(screen.getByText('INV-2024-002')).toBeInTheDocument();
-      });
-    });
+    await screen.findByText('INV-001');
 
-    it('should show project names', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: '收款-INV-003' }));
+    fireEvent.click(screen.getByRole('button', { name: '提交收款' }));
 
-      await waitFor(() => {
-        expect(screen.getByText(/智能制造系统/)).toBeInTheDocument();
-        expect(screen.getByText(/ERP系统升级/)).toBeInTheDocument();
-      });
-    });
-
-    it('should display customer names', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/华为技术有限公司/)).toBeInTheDocument();
-        expect(screen.getByText(/中兴通讯/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show invoice amounts', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const amounts = screen.queryAllByText(/1,130,000|530,000|904,000/);
-        expect(amounts.length).toBeGreaterThan(0);
-      });
-    });
-
-    it('should display invoice status badges', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getAllByText(/已开票|Issued/i).length).toBeGreaterThan(0);
-        expect(screen.getByText(/草稿|Draft/i)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith('记录收款失败: Payment failed');
     });
   });
 
-  // 4. 发票类型显示测试
-  describe('Invoice Type Display', () => {
-    it('should display VAT special invoices', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
+  it('应该处理更新发票失败的情况', async () => {
+    mockInvoiceUpdate.mockRejectedValueOnce(new Error('Update failed'));
+    
+    renderPage();
 
-      await waitFor(() => {
-        const vatSpecial = screen.queryAllByText(/增值税专用发票|VAT Special/i);
-        expect(vatSpecial.length).toBeGreaterThan(0);
-      });
+    await screen.findByText('INV-001');
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑-INV-001' }));
+    
+    // 等待编辑对话框出现并找到提交按钮
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '提交编辑发票' })).toBeInTheDocument();
     });
+    
+    fireEvent.click(screen.getByRole('button', { name: '提交编辑发票' }));
 
-    it('should show VAT ordinary invoices', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const vatOrdinary = screen.queryByText(/增值税普通发票|VAT Ordinary/i);
-        expect(vatOrdinary).toBeTruthy();
-      });
-    });
-
-    it('should display tax rates', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getAllByText(/13%/).length).toBeGreaterThan(0);
-        expect(screen.getByText(/6%/)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith('更新发票失败: Update failed');
     });
   });
 
-  // 5. 统计数据测试
-  describe('Statistics Display', () => {
-    it('should display total invoices count', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
+  it('应该处理删除发票失败的情况', async () => {
+    mockInvoiceUpdate.mockRejectedValueOnce(new Error('Delete failed'));
+    
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText('120')).toBeInTheDocument();
-      });
+    await screen.findByText('INV-001');
+
+    fireEvent.click(screen.getByRole('button', { name: '删除-INV-001' }));
+    
+    // 等待确认对话框出现并找到确认按钮
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '确认删除发票' })).toBeInTheDocument();
     });
+    
+    fireEvent.click(screen.getByRole('button', { name: '确认删除发票' }));
 
-    it('should show total amount', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const totalAmount = screen.queryByText(/50,000,000/);
-        expect(totalAmount).toBeTruthy();
-      });
-    });
-
-    it('should display paid amount', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const paidAmount = screen.queryByText(/35,000,000/);
-        expect(paidAmount).toBeTruthy();
-      });
-    });
-
-    it('should show this month issued count', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('8')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(alertMock).toHaveBeenCalledWith('删除发票失败: Delete failed');
     });
   });
 
-  // 6. 筛选功能测试
-  describe('Filter Functionality', () => {
-    it('should filter by invoice status', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
+  it('应该处理加载合同失败的情况', async () => {
+    mockContractList.mockRejectedValueOnce(new Error('Contract load failed'));
+    
+    renderPage();
 
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const issuedFilter = screen.queryByRole('button', { name: /已开票|Issued/i });
-      if (issuedFilter) {
-        fireEvent.click(issuedFilter);
-      }
-    });
-
-    it('should filter by invoice type', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const typeFilter = screen.queryByText(/增值税专用发票|VAT Special/i);
-      if (typeFilter) {
-        const button = typeFilter.closest('button');
-        if (button) fireEvent.click(button);
-      }
-    });
-
-    it('should filter by payment status', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const paidFilter = screen.queryByRole('button', { name: /已付款|Paid/i });
-      if (paidFilter) {
-        fireEvent.click(paidFilter);
-      }
-    });
-  });
-
-  // 7. 搜索功能测试
-  describe('Search Functionality', () => {
-    it('should render search input', () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      const searchInput = screen.queryByPlaceholderText(/搜索发票|Search invoice/i);
-      expect(searchInput).toBeTruthy();
-    });
-
-    it('should search by invoice number', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('INV-2024-001')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索发票|Search invoice/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: 'INV-2024-001' } });
-      }
-    });
-
-    it('should search by customer name', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/华为技术有限公司/)).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索发票|Search invoice/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: '华为' } });
-      }
-    });
-  });
-
-  // 8. 发票操作测试
-  describe('Invoice Actions', () => {
-    it('should view invoice detail', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('INV-2024-001')).toBeInTheDocument();
-      });
-
-      const viewButtons = screen.queryAllByRole('button', { name: /查看|View/i });
-      if (viewButtons.length > 0) {
-        fireEvent.click(viewButtons[0]);
-      }
-    });
-
-    it('should issue an invoice', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('INV-2024-002')).toBeInTheDocument();
-      });
-
-      const issueButtons = screen.queryAllByRole('button', { name: /开票|Issue/i });
-      if (issueButtons.length > 0) {
-        fireEvent.click(issueButtons[0]);
-        
-        await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should add new invoice', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      const addButton = screen.queryByRole('button', { name: /新增发票|Add Invoice/i });
-      if (addButton) {
-        fireEvent.click(addButton);
-      }
-    });
-
-    it('should cancel an invoice', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('INV-2024-001')).toBeInTheDocument();
-      });
-
-      const cancelButtons = screen.queryAllByRole('button', { name: /作废|Cancel/i });
-      if (cancelButtons.length > 0) {
-        fireEvent.click(cancelButtons[0]);
-        
-        await waitFor(() => {
-          expect(api.put).toHaveBeenCalled();
-        });
-      }
-    });
-  });
-
-  // 9. 导出功能测试
-  describe('Export Functionality', () => {
-    it('should render export button', () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      expect(exportButton).toBeTruthy();
-    });
-
-    it('should trigger export when clicking export button', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      if (exportButton) {
-        fireEvent.click(exportButton);
-      }
-    });
-  });
-
-  // 10. 分页功能测试
-  describe('Pagination', () => {
-    it('should display pagination controls', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const pagination = screen.queryByRole('navigation');
-        expect(pagination).toBeTruthy();
-      });
-    });
-
-    it('should navigate to next page', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const nextButton = screen.queryByRole('button', { name: /下一页|Next/i });
-      if (nextButton && !nextButton.disabled) {
-        fireEvent.click(nextButton);
-      }
-    });
-  });
-
-  // 11. 税额计算测试
-  describe('Tax Calculation', () => {
-    it('should display tax amounts', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const taxAmounts = screen.queryAllByText(/130,000|30,000|104,000/);
-        expect(taxAmounts.length).toBeGreaterThan(0);
-      });
-    });
-
-    it('should show total amounts including tax', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const totalAmounts = screen.queryAllByText(/1,130,000|530,000|904,000/);
-        expect(totalAmounts.length).toBeGreaterThan(0);
-      });
-    });
-  });
-
-  // 12. 日期显示测试
-  describe('Date Display', () => {
-    it('should display invoice dates', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/2024-02-15/)).toBeInTheDocument();
-        expect(screen.getByText(/2024-01-30/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show created dates', async () => {
-      render(
-        <MemoryRouter>
-          <InvoiceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const dates = screen.queryAllByText(/2024-02-10|2024-02-01|2024-01-25/);
-        expect(dates.length).toBeGreaterThan(0);
-      });
+    // Should still render the page even if contract loading fails
+    await waitFor(() => {
+      expect(screen.getByText('对账开票管理')).toBeInTheDocument();
     });
   });
 });

@@ -202,29 +202,27 @@ describe('ChartContainer', () => {
 
   describe('Height Customization', () => {
     it('uses default height', () => {
-      const { container } = render(
+      render(
         <ChartContainer loading={true}>
           <div>图表</div>
         </ChartContainer>
       );
 
-      const loadingContainer = container.querySelector(
-        '.flex.flex-col.items-center'
-      );
-      expect(loadingContainer).toHaveStyle({ height: '300px' });
+      const loadingContainer = screen.getByText('加载中...').closest('div[style]');
+      expect(loadingContainer).not.toBeNull();
+      expect(loadingContainer.style.height).toBe('300px');
     });
 
     it('uses custom height', () => {
-      const { container } = render(
+      render(
         <ChartContainer loading={true} height={500}>
           <div>图表</div>
         </ChartContainer>
       );
 
-      const loadingContainer = container.querySelector(
-        '.flex.flex-col.items-center'
-      );
-      expect(loadingContainer).toHaveStyle({ height: '500px' });
+      const loadingContainer = screen.getByText('加载中...').closest('div[style]');
+      expect(loadingContainer).not.toBeNull();
+      expect(loadingContainer.style.height).toBe('500px');
     });
   });
 

@@ -1,556 +1,257 @@
-/**
- * MaterialTracking 组件测试
- * 测试覆盖：物料追踪、批次管理、流转记录、库位信息
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import MaterialTracking from '../MaterialTracking';
-import { materialApi, purchaseApi as _purchaseApi } from '../../services/api';
+
+const { materialApiMock, purchaseApiMock, toastMock } = vi.hoisted(() => ({
+  materialApiMock: {
+    list: vi.fn(),
+    create: vi.fn(),
+    categories: {
+      list: vi.fn(),
+    },
+  },
+  purchaseApiMock: {
+    orders: {
+      list: vi.fn(),
+      getItems: vi.fn(),
+    },
+  },
+  toastMock: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 vi.mock('../../services/api', () => ({
-  materialApi: {
-    list: vi.fn(),
-    get: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-  _purchaseApi: {
-    list: vi.fn(),
-    get: vi.fn(),
-  }
+  materialApi: materialApiMock,
+  purchaseApi: purchaseApiMock,
+}));
+
+vi.mock('../../components/ui/toast', () => ({
+  toast: toastMock,
 }));
 
 vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => ({ children, ...props }) => {
+        const Tag = typeof tag === 'string' ? tag : 'div';
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(
+            ([key]) =>
+              ![
+                'initial',
+                'animate',
+                'exit',
+                'variants',
+                'transition',
+                'whileHover',
+                'whileTap',
+                'whileInView',
+                'layout',
+                'layoutId',
+                'drag',
+                'dragConstraints',
+                'onDragEnd',
+              ].includes(key),
+          ),
+        );
+        return <Tag {...filteredProps}>{children}</Tag>;
+      },
+    },
+  ),
   AnimatePresence: ({ children }) => children,
 }));
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
+vi.mock('../MaterialTracking/MaterialRow', () => ({
+  default: ({ material, onView }) => (
+    <div data-testid={`material-row-${material.id}`}>
+      <div>{material.name}</div>
+      <div>{material.code}</div>
+      <div>{material.status}</div>
+      <div>{material.totalQuantity}</div>
+      <div>{material.arrivedQuantity}</div>
+      <div>{material.nextAction}</div>
+      <button onClick={() => onView(material)}>查看物料</button>
+    </div>
+  ),
+}));
+
+vi.mock('../MaterialTracking/CreateMaterialDialog', () => ({
+  default: ({ categories, onClose, onSuccess }) => (
+    <div data-testid="create-material-dialog">
+      <div>categories:{categories.length}</div>
+      <button onClick={onClose}>关闭新建</button>
+      <button onClick={onSuccess}>创建成功</button>
+    </div>
+  ),
+}));
+
+import MaterialTracking from '../MaterialTracking';
 
 describe('MaterialTracking', () => {
-  const mockTrackingData = {
-    materials: [
-      {
-        id: 1,
-        materialCode: 'MAT-001',
-        materialName: '钢板',
-        batchNumber: 'BATCH-2024-001',
-        quantity: 500,
-        location: 'A区-01-05',
-        status: 'in_stock',
-        supplier: '供应商A',
-        receiveDate: '2024-02-01',
-        expiryDate: null,
-        qualityStatus: 'qualified',
-        lastOperation: 'receive',
-        lastOperator: '张三',
-        lastOperationTime: '2024-02-01 10:30'
-      },
-      {
-        id: 2,
-        materialCode: 'MAT-002',
-        materialName: '螺栓',
-        batchNumber: 'BATCH-2024-002',
-        quantity: 1000,
-        location: 'B区-02-10',
-        status: 'allocated',
-        supplier: '供应商B',
-        receiveDate: '2024-02-10',
-        expiryDate: null,
-        qualityStatus: 'qualified',
-        lastOperation: 'allocate',
-        lastOperator: '李四',
-        lastOperationTime: '2024-02-15 14:20'
-      }
-    ],
-    flowRecords: [
-      {
-        id: 1,
-        materialCode: 'MAT-001',
-        batchNumber: 'BATCH-2024-001',
-        operation: 'receive',
-        quantity: 500,
-        fromLocation: null,
-        toLocation: 'A区-01-05',
-        operator: '张三',
-        operationTime: '2024-02-01 10:30',
-        note: '采购入库'
-      },
-      {
-        id: 2,
-        materialCode: 'MAT-002',
-        batchNumber: 'BATCH-2024-002',
-        operation: 'allocate',
-        quantity: 100,
-        fromLocation: 'B区-02-10',
-        toLocation: '生产线1',
-        operator: '李四',
-        operationTime: '2024-02-15 14:20',
-        note: '分配给工单WO-001'
-      }
-    ]
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
-    materialApi.list.mockResolvedValue({ data: mockTrackingData });
-    materialApi.create.mockResolvedValue({ data: { success: true } });
+
+    materialApiMock.list.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 1,
+            material_code: 'MAT-001',
+            material_name: '钢板',
+            category_name: '原材料',
+            standard_price: 100,
+          },
+          {
+            id: 2,
+            material_code: 'MAT-002',
+            material_name: '螺栓',
+            category_name: '标准件',
+            standard_price: 50,
+          },
+        ],
+      },
+    });
+
+    materialApiMock.create.mockResolvedValue({ data: { success: true } });
+    materialApiMock.categories.list.mockResolvedValue({
+      data: {
+        items: [{ id: 1, category_name: '原材料' }],
+      },
+    });
+
+    purchaseApiMock.orders.list.mockResolvedValue({
+      data: {
+        items: [
+          { id: 11, order_no: 'PO-001' },
+          { id: 12, order_no: 'PO-002' },
+        ],
+      },
+    });
+
+    purchaseApiMock.orders.getItems
+      .mockResolvedValueOnce({
+        data: {
+          items: [
+            { id: 101, material_code: 'MAT-001', quantity: 500, received_quantity: 500, order_no: 'PO-001' },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          items: [
+            { id: 102, material_code: 'MAT-002', quantity: 1000, received_quantity: 0, order_no: 'PO-002' },
+          ],
+        },
+      });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <MaterialTracking />
+      </MemoryRouter>,
+    );
+  }
+
+  it('默认会按真实参数加载物料、采购单和分类，并渲染统计与列表', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(materialApiMock.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 100,
+        keyword: undefined,
+        is_active: true,
+      });
+      expect(purchaseApiMock.orders.list).toHaveBeenCalledWith({ page: 1, page_size: 100 });
+      expect(purchaseApiMock.orders.getItems).toHaveBeenCalledWith(11);
+      expect(purchaseApiMock.orders.getItems).toHaveBeenCalledWith(12);
+      expect(materialApiMock.categories.list).toHaveBeenCalled();
+    });
+
+    expect(screen.getByText('物料跟踪')).toBeInTheDocument();
+    expect(screen.getByText('实时监控物料采购、到货和使用状态')).toBeInTheDocument();
+    expect(screen.getByText('物料总数')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByTestId('material-row-1')).toHaveTextContent('钢板');
+    expect(screen.getByTestId('material-row-1')).toHaveTextContent('fully-arrived');
+    expect(screen.getByTestId('material-row-1')).toHaveTextContent('按需领取');
+    expect(screen.getByTestId('material-row-2')).toHaveTextContent('螺栓');
+    expect(screen.getByTestId('material-row-2')).toHaveTextContent('not-arrived');
+    expect(screen.getByTestId('material-row-2')).toHaveTextContent('等待到货');
   });
 
-  describe('Component Rendering', () => {
-    it('should render material tracking page', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
+  it('搜索输入会按关键字重新请求并过滤列表', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/物料追踪|Material Tracking/i)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(materialApiMock.list).toHaveBeenCalledTimes(1);
     });
 
-    it('should render material list', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-        expect(screen.getByText('螺栓')).toBeInTheDocument();
-      });
+    fireEvent.change(screen.getByPlaceholderText('搜索物料名、物料码、供应商...'), {
+      target: { value: '螺栓' },
     });
 
-    it('should display material codes', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('MAT-001')).toBeInTheDocument();
-        expect(screen.getByText('MAT-002')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Data Loading', () => {
-    it('should load tracking data on mount', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(materialApi.list).toHaveBeenCalledWith(
-          expect.stringContaining('/material-tracking')
-        );
-      });
-    });
-
-    it('should show loading state', () => {
-      materialApi.list.mockImplementation(() => new Promise(() => {}));
-
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      expect(screen.queryByText(/加载中|Loading/i)).toBeTruthy();
-    });
-
-    it('should handle load error', async () => {
-      materialApi.list.mockRejectedValue(new Error('Load failed'));
-
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      });
-    });
-  });
-
-  describe('Batch Information', () => {
-    it('should display batch numbers', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('BATCH-2024-001')).toBeInTheDocument();
-        expect(screen.getByText('BATCH-2024-002')).toBeInTheDocument();
-      });
-    });
-
-    it('should show batch quantities', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/500/)).toBeInTheDocument();
-        expect(screen.getByText(/1000|1,000/)).toBeInTheDocument();
-      });
-    });
-
-    it('should display supplier information', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('供应商A')).toBeInTheDocument();
-        expect(screen.getByText('供应商B')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(materialApiMock.list).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 100,
+        keyword: '螺栓',
+        is_active: true,
       });
     });
   });
 
-  describe('Location Information', () => {
-    it('should display storage locations', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
+  it('状态按钮会切换前端过滤结果', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/A区-01-05/)).toBeInTheDocument();
-        expect(screen.getByText(/B区-02-10/)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByTestId('material-row-1')).toBeInTheDocument();
+      expect(screen.getByTestId('material-row-2')).toBeInTheDocument();
     });
 
-    it('should track material movements', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: '未到货' }));
 
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.queryByTestId('material-row-1')).not.toBeInTheDocument();
+      expect(screen.getByTestId('material-row-2')).toBeInTheDocument();
+    });
 
-      const trackButtons = screen.queryAllByRole('button', { name: /追踪|Track|流转/i });
-      if (trackButtons.length > 0) {
-        fireEvent.click(trackButtons[0]);
+    fireEvent.click(screen.getByRole('button', { name: '全部状态' }));
 
-        await waitFor(() => {
-          expect(screen.getByText(/A区-01-05/)).toBeInTheDocument();
-        });
-      }
+    await waitFor(() => {
+      expect(screen.getByTestId('material-row-1')).toBeInTheDocument();
+      expect(screen.getByTestId('material-row-2')).toBeInTheDocument();
     });
   });
 
-  describe('Material Status', () => {
-    it('should display material status', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
+  it('点击新建物料会打开弹窗，成功后关闭并提示成功', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/库存|In Stock/i)).toBeInTheDocument();
-        expect(screen.getByText(/已分配|Allocated/i)).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '新建物料' })).toBeInTheDocument();
     });
 
-    it('should show quality status', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: '新建物料' }));
 
-      await waitFor(() => {
-        expect(screen.getAllByText(/合格|Qualified/i).length).toBeGreaterThan(0);
-      });
+    expect(await screen.findByTestId('create-material-dialog')).toHaveTextContent('categories:1');
+
+    fireEvent.click(screen.getByRole('button', { name: '创建成功' }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('create-material-dialog')).not.toBeInTheDocument();
+      expect(toastMock.success).toHaveBeenCalledWith('物料创建成功');
     });
   });
 
-  describe('Flow Records', () => {
-    it('should view flow records', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
+  it('加载失败时会显示错误信息', async () => {
+    materialApiMock.list.mockRejectedValueOnce(new Error('Load failed'));
 
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
+    renderPage();
 
-      const viewButtons = screen.queryAllByRole('button', { name: /查看|View|详情|流转/i });
-      if (viewButtons.length > 0) {
-        fireEvent.click(viewButtons[0]);
-
-        await waitFor(() => {
-          expect(screen.getByText(/采购入库/)).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should display operation types', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
-
-      const viewButtons = screen.queryAllByRole('button', { name: /查看|View|详情|流转/i });
-      if (viewButtons.length > 0) {
-        fireEvent.click(viewButtons[0]);
-
-        await waitFor(() => {
-          expect(screen.getByText(/receive|入库/i)).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should show operator information', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('张三')).toBeInTheDocument();
-        expect(screen.getByText('李四')).toBeInTheDocument();
-      });
-    });
-
-    it('should display operation timestamps', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/2024-02-01 10:30/)).toBeInTheDocument();
-        expect(screen.getByText(/2024-02-15 14:20/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Search and Filtering', () => {
-    it('should search by material code', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: 'MAT-001' } });
-
-        await waitFor(() => {
-          expect(materialApi.list).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should search by batch number', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/批次|Batch/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: 'BATCH-2024-001' } });
-
-        await waitFor(() => {
-          expect(materialApi.list).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should filter by status', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(materialApi.list).toHaveBeenCalled();
-      });
-
-      const statusFilter = screen.queryByRole('combobox');
-      if (statusFilter) {
-        fireEvent.change(statusFilter, { target: { value: 'in_stock' } });
-      }
-    });
-
-    it('should filter by location', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(materialApi.list).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('Timeline View', () => {
-    it('should display tracking timeline', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
-
-      const timelineButtons = screen.queryAllByRole('button', { name: /时间线|Timeline/i });
-      if (timelineButtons.length > 0) {
-        fireEvent.click(timelineButtons[0]);
-
-        expect(screen.queryByText(/流转历史|Flow History/i)).toBeTruthy();
-      }
-    });
-
-    it('should show chronological order', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
-
-      const viewButtons = screen.queryAllByRole('button', { name: /查看|View|详情|流转/i });
-      if (viewButtons.length > 0) {
-        fireEvent.click(viewButtons[0]);
-
-        await waitFor(() => {
-          const timestamps = screen.getAllByText(/2024-02/);
-          expect(timestamps.length).toBeGreaterThan(0);
-        });
-      }
-    });
-  });
-
-  describe('QR Code Tracking', () => {
-    it('should scan QR code', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(materialApi.list).toHaveBeenCalled();
-      });
-
-      const scanButton = screen.queryByRole('button', { name: /扫码|Scan/i });
-      if (scanButton) {
-        fireEvent.click(scanButton);
-
-        expect(screen.queryByText(/扫描二维码|Scan QR Code/i)).toBeTruthy();
-      }
-    });
-
-    it('should generate QR code', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('钢板')).toBeInTheDocument();
-      });
-
-      const qrButtons = screen.queryAllByRole('button', { name: /二维码|QR/i });
-      if (qrButtons.length > 0) {
-        fireEvent.click(qrButtons[0]);
-
-        expect(screen.queryByText(/生成二维码|Generate QR/i)).toBeTruthy();
-      }
-    });
-  });
-
-  describe('Export Functionality', () => {
-    it('should export tracking report', async () => {
-      render(
-        <MemoryRouter>
-          <MaterialTracking />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(materialApi.list).toHaveBeenCalled();
-      });
-
-      const exportButton = screen.queryByRole('button', { name: /导出|Export/i });
-      if (exportButton) {
-        fireEvent.click(exportButton);
-
-        await waitFor(() => {
-          expect(materialApi.create).toHaveBeenCalledWith(
-            expect.stringContaining('/export')
-          );
-        });
-      }
-    });
+    expect(await screen.findByText('Load failed')).toBeInTheDocument();
   });
 });

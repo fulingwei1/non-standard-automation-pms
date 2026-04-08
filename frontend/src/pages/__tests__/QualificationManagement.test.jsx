@@ -1,58 +1,74 @@
-/**
- * QualificationManagement 组件测试
- * 测试覆盖：资质列表、证书管理、到期提醒、审核流程
- */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import QualificationManagement from "../QualificationManagement";
+import { qualificationApi } from "../../services/api";
+import { toast } from "../../components/ui/toast";
+import { confirmAction } from "@/lib/confirmAction";
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import QualificationManagement from '../QualificationManagement';
-import { qualificationApi } from '../../services/api';
-
-vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    post: vi.fn().mockResolvedValue({ data: { success: true } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    defaults: { baseURL: '/api' },
+vi.mock("../../services/api", () => ({
+  qualificationApi: {
+    getLevels: vi.fn(),
+    deleteLevel: vi.fn(),
+    getModels: vi.fn(),
+    getEmployeeQualifications: vi.fn(),
   },
-    qualificationApi: {
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      deleteLevel: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      getLevels: vi.fn().mockResolvedValue({ data: {} }),
-      getLevel: vi.fn().mockResolvedValue({ data: {} }),
-      createLevel: vi.fn().mockResolvedValue({ data: {} }),
-      updateLevel: vi.fn().mockResolvedValue({ data: {} }),
-      getModels: vi.fn().mockResolvedValue({ data: {} }),
-      getModel: vi.fn().mockResolvedValue({ data: {} }),
-      getModelById: vi.fn().mockResolvedValue({ data: {} }),
-      createModel: vi.fn().mockResolvedValue({ data: {} }),
-      updateModel: vi.fn().mockResolvedValue({ data: {} }),
-      getEmployeeQualification: vi.fn().mockResolvedValue({ data: {} }),
-      getEmployeeQualifications: vi.fn().mockResolvedValue({ data: {} }),
-      certifyEmployee: vi.fn().mockResolvedValue({ data: {} }),
-      promoteEmployee: vi.fn().mockResolvedValue({ data: {} }),
-      getAssessments: vi.fn().mockResolvedValue({ data: {} }),
-      createAssessment: vi.fn().mockResolvedValue({ data: {} }),
-      submitAssessment: vi.fn().mockResolvedValue({ data: {} }),
-    }
 }));
 
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
+vi.mock("../../components/ui/toast", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/confirmAction", () => ({
+  confirmAction: vi.fn(),
+}));
+
+vi.mock("../../components/qualification/CompetencyRadarChart", () => ({
+  CompetencyRadarChart: ({ data }) => (
+    <div data-testid="competency-radar-chart">
+      雷达图:{Object.keys(data || {}).join(",")}
+    </div>
+  ),
+}));
+
+vi.mock("framer-motion", () => ({
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => ({ children, ...props }) => {
+        const filtered = Object.fromEntries(
+          Object.entries(props).filter(
+            ([k]) =>
+              ![
+                "initial",
+                "animate",
+                "exit",
+                "variants",
+                "transition",
+                "whileHover",
+                "whileTap",
+                "whileInView",
+                "layout",
+                "layoutId",
+                "drag",
+                "dragConstraints",
+                "onDragEnd",
+              ].includes(k),
+          ),
+        );
+        const Tag = typeof tag === "string" ? tag : "div";
+        return <Tag {...filtered}>{children}</Tag>;
+      },
+    },
+  ),
   AnimatePresence: ({ children }) => children,
 }));
 
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
+vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -60,462 +76,256 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe('QualificationManagement', () => {
-  const mockQualifications = {
-    items: [
-      {
-        id: 1,
-        code: 'QUAL-001',
-        name: '电工证',
-        category: 'technical',
-        level: '高级',
-        holderName: '张师傅',
-        holderType: 'employee',
-        issueDate: '2023-01-15',
-        expiryDate: '2026-01-15',
-        status: 'valid',
-        certNumber: 'DG20230001',
-        issueOrg: '劳动局',
-        daysToExpiry: 365
-      },
-      {
-        id: 2,
-        code: 'QUAL-002',
-        name: '焊工证',
-        category: 'technical',
-        level: '中级',
-        holderName: '李师傅',
-        holderType: 'employee',
-        issueDate: '2022-06-20',
-        expiryDate: '2024-03-20',
-        status: 'expiring',
-        certNumber: 'HG20220015',
-        issueOrg: '质监局',
-        daysToExpiry: 30
-      }
-    ],
-    total: 2,
-    stats: {
-      total: 2,
-      valid: 1,
-      expiring: 1,
-      expired: 0,
-      pending: 0
-    }
-  };
+const levelsResponse = {
+  data: {
+    code: 200,
+    data: {
+      items: [
+        {
+          id: 1,
+          level_code: "JUNIOR",
+          level_name: "初级",
+          level_order: 1,
+          role_type: "ENGINEER",
+          is_active: true,
+        },
+      ],
+      total: 3,
+    },
+  },
+};
 
+const modelsResponse = {
+  data: {
+    code: 200,
+    data: {
+      items: [
+        {
+          id: 11,
+          position_type: "ENGINEER",
+          position_subtype: "电气",
+          level: { level_name: "高级" },
+          level_id: 3,
+          is_active: true,
+          created_at: "2026-01-05T00:00:00.000Z",
+        },
+      ],
+      total: 12,
+    },
+  },
+};
+
+const employeeResponse = {
+  data: {
+    code: 200,
+    data: {
+      items: [
+        {
+          id: 21,
+          employee_id: 1001,
+          position_type: "ENGINEER",
+          level: {
+            level_code: "SENIOR",
+            level_name: "高级",
+          },
+          certified_date: "2026-02-01T00:00:00.000Z",
+          status: "APPROVED",
+          assessment_details: {
+            technical_skills: 88,
+            business_skills: 80,
+          },
+        },
+        {
+          id: 22,
+          employee_id: 1002,
+          position_type: "SALES",
+          level: {
+            level_code: "JUNIOR",
+            level_name: "初级",
+          },
+          certified_date: "2026-02-15T00:00:00.000Z",
+          status: "PENDING",
+          assessment_details: {
+            technical_skills: 70,
+            business_skills: 90,
+          },
+        },
+      ],
+      total: 21,
+    },
+  },
+};
+
+describe("QualificationManagement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    qualificationApi.getLevels.mockResolvedValue({ data: mockQualifications });
-    qualificationApi.create.mockResolvedValue({ data: { success: true, id: 3 } });
-    qualificationApi.update.mockResolvedValue({ data: { success: true } });
-    qualificationApi.deleteLevel.mockResolvedValue({ data: { success: true } });
-  });
+    confirmAction.mockResolvedValue(true);
+    qualificationApi.deleteLevel.mockResolvedValue({ data: { code: 200 } });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  describe('Component Rendering', () => {
-    it('should render qualification management page', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/资质管理|Qualification Management/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should render qualification list', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('电工证')).toBeInTheDocument();
-        expect(screen.getByText('焊工证')).toBeInTheDocument();
-      });
-    });
-
-    it('should display holder names', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('张师傅')).toBeInTheDocument();
-        expect(screen.getByText('李师傅')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Data Loading', () => {
-    it('should load qualifications on mount', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(qualificationApi.getLevels).toHaveBeenCalledWith(
-          expect.stringContaining('/qualification')
-        );
-      });
-    });
-
-    it('should show loading state', () => {
-      qualificationApi.getLevels.mockImplementation(() => new Promise(() => {}));
-
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      expect(screen.queryByText(/加载中|Loading/i)).toBeTruthy();
-    });
-
-    it('should handle load error', async () => {
-      qualificationApi.getLevels.mockRejectedValue(new Error('Load failed'));
-
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      });
-    });
-  });
-
-  describe('Qualification Information', () => {
-    it('should display certificate numbers', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('DG20230001')).toBeInTheDocument();
-        expect(screen.getByText('HG20220015')).toBeInTheDocument();
-      });
-    });
-
-    it('should show qualification level', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('高级')).toBeInTheDocument();
-        expect(screen.getByText('中级')).toBeInTheDocument();
-      });
-    });
-
-    it('should display issuing organization', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('劳动局')).toBeInTheDocument();
-        expect(screen.getByText('质监局')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Expiry Management', () => {
-    it('should display expiry dates', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/2026-01-15/)).toBeInTheDocument();
-        expect(screen.getByText(/2024-03-20/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show days to expiry', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/365.*天|365.*days/i)).toBeInTheDocument();
-        expect(screen.getByText(/30.*天|30.*days/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should highlight expiring qualifications', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/即将过期|Expiring/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should send renewal reminder', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('焊工证')).toBeInTheDocument();
-      });
-
-      const reminderButtons = screen.queryAllByRole('button', { name: /提醒|Remind/i });
-      if (reminderButtons.length > 0) {
-        fireEvent.click(reminderButtons[0]);
-
-        await waitFor(() => {
-          expect(qualificationApi.create).toHaveBeenCalled();
+    qualificationApi.getLevels.mockImplementation((params) => {
+      if (params?.page_size === 1) {
+        return Promise.resolve({
+          data: { code: 200, data: { total: 3, items: [] } },
         });
       }
-    });
-  });
-
-  describe('Status Management', () => {
-    it('should display qualification status', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/有效|Valid/i)).toBeInTheDocument();
-        expect(screen.getByText(/即将过期|Expiring/i)).toBeInTheDocument();
-      });
+      return Promise.resolve(levelsResponse);
     });
 
-    it('should update qualification status', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('电工证')).toBeInTheDocument();
-      });
-
-      const updateButtons = screen.queryAllByRole('button', { name: /更新|Update/i });
-      if (updateButtons.length > 0) {
-        fireEvent.click(updateButtons[0]);
-
-        await waitFor(() => {
-          expect(qualificationApi.update).toHaveBeenCalled();
+    qualificationApi.getModels.mockImplementation((params) => {
+      if (params?.page_size === 1) {
+        return Promise.resolve({
+          data: { code: 200, data: { total: 12, items: [] } },
         });
       }
+      return Promise.resolve(modelsResponse);
     });
-  });
 
-  describe('Search and Filtering', () => {
-    it('should search qualifications', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('电工证')).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: '电工' } });
-
-        await waitFor(() => {
-          expect(qualificationApi.getLevels).toHaveBeenCalled();
+    qualificationApi.getEmployeeQualifications.mockImplementation((params) => {
+      if (params?.page_size === 1 && params?.status === "PENDING") {
+        return Promise.resolve({
+          data: { code: 200, data: { total: 5, items: [] } },
         });
       }
+      return Promise.resolve(employeeResponse);
     });
+  });
 
-    it('should filter by category', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <QualificationManagement />
+      </MemoryRouter>,
+    );
+  }
 
-      await waitFor(() => {
-        expect(qualificationApi.getLevels).toHaveBeenCalled();
+  it("默认加载等级页并渲染统计卡片", async () => {
+    renderPage();
+
+    expect(screen.getAllByText("任职资格管理").length).toBeGreaterThan(0);
+    expect(screen.getByText("管理任职资格等级、能力模型和员工认证")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(qualificationApi.getLevels).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 100,
+        role_type: "",
+        is_active: true,
       });
-
-      const categoryFilter = screen.queryByRole('combobox');
-      if (categoryFilter) {
-        fireEvent.change(categoryFilter, { target: { value: 'technical' } });
-      }
     });
 
-    it('should filter by status', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+    expect(screen.getByText("等级总数")).toBeInTheDocument();
+    expect(screen.getAllByText("能力模型").length).toBeGreaterThan(0);
+    expect(screen.getByText("已认证员工")).toBeInTheDocument();
+    expect(screen.getByText("待认证")).toBeInTheDocument();
+    expect(screen.getByText("初级")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "新建等级" }).length).toBeGreaterThan(0);
 
-      await waitFor(() => {
-        expect(qualificationApi.getLevels).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(qualificationApi.getLevels).toHaveBeenCalledWith({ page: 1, page_size: 1 });
+      expect(qualificationApi.getModels).toHaveBeenCalledWith({ page: 1, page_size: 1 });
+      expect(qualificationApi.getEmployeeQualifications).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 1,
+        status: "PENDING",
       });
     });
   });
 
-  describe('CRUD Operations', () => {
-    it('should create new qualification', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+  it("切到能力模型页后加载模型列表并支持新建入口", async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(qualificationApi.getLevels).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "能力模型" }));
+
+    await waitFor(() => {
+      expect(qualificationApi.getModels).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 10,
+        position_type: "",
+        level_id: "",
       });
-
-      const createButton = screen.queryByRole('button', { name: /新建|Create|添加/i });
-      if (createButton) {
-        fireEvent.click(createButton);
-
-        expect(screen.queryByText(/新建资质|Create Qualification/i)).toBeTruthy();
-      }
     });
 
-    it('should edit qualification', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+    expect(screen.getByText("ENGINEER")).toBeInTheDocument();
+    expect(screen.getByText("电气")).toBeInTheDocument();
+    const createButtons = screen.getAllByRole("button", { name: "新建能力模型" });
+    expect(createButtons.length).toBeGreaterThan(0);
 
-      await waitFor(() => {
-        expect(screen.getByText('电工证')).toBeInTheDocument();
+    fireEvent.click(createButtons[0]);
+    expect(mockNavigate).toHaveBeenCalledWith("/qualifications/models/new");
+  });
+
+  it("切到员工认证页后加载员工列表、图表和分页", async () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "员工认证" }));
+
+    await waitFor(() => {
+      expect(qualificationApi.getEmployeeQualifications).toHaveBeenCalledWith({
+        page: 1,
+        page_size: 10,
+        position_type: "",
+        status: "",
       });
-
-      const editButtons = screen.queryAllByRole('button', { name: /编辑|Edit/i });
-      if (editButtons.length > 0) {
-        fireEvent.click(editButtons[0]);
-
-        expect(screen.queryByText(/编辑资质|Edit Qualification/i)).toBeTruthy();
-      }
     });
 
-    it('should delete qualification', async () => {
-      window.confirm = vi.fn(() => true);
+    expect(screen.getByText("员工 #1001")).toBeInTheDocument();
+    expect(screen.getByText("员工 #1002")).toBeInTheDocument();
+    expect(screen.getByText("平均能力维度")).toBeInTheDocument();
+    expect(screen.getByText("等级分布统计")).toBeInTheDocument();
+    expect(screen.getByText("岗位类型分布")).toBeInTheDocument();
+    expect(screen.getByTestId("competency-radar-chart")).toHaveTextContent(
+      "雷达图:technical_skills,business_skills",
+    );
+    expect(screen.getByText(/共 21 条记录，第 1 \/ 3 页/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "认证员工" })).toBeInTheDocument();
+  });
 
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+  it("删除等级成功时会确认、调用接口并提示成功", async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText('电工证')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByText("初级")).toBeInTheDocument();
+    });
 
-      const deleteButtons = screen.queryAllByRole('button', { name: /删除|Delete/i });
-      if (deleteButtons.length > 0) {
-        fireEvent.click(deleteButtons[0]);
+    const actionButtons = screen.getAllByRole("button");
+    fireEvent.click(actionButtons[actionButtons.length - 1]);
 
-        await waitFor(() => {
-          expect(qualificationApi.deleteLevel).toHaveBeenCalled();
-        });
-      }
+    await waitFor(() => {
+      expect(confirmAction).toHaveBeenCalledWith("确定要删除该等级吗？");
+      expect(qualificationApi.deleteLevel).toHaveBeenCalledWith(1);
+      expect(toast.success).toHaveBeenCalledWith("等级删除成功");
     });
   });
 
-  describe('Certificate Upload', () => {
-    it('should upload certificate file', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+  it("应该处理删除等级失败的情况", async () => {
+    // 设置删除API调用失败
+    qualificationApi.deleteLevel.mockRejectedValueOnce(new Error("Delete Failed"));
+    
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText('电工证')).toBeInTheDocument();
-      });
-
-      const uploadButtons = screen.queryAllByRole('button', { name: /上传|Upload/i });
-      if (uploadButtons.length > 0) {
-        fireEvent.click(uploadButtons[0]);
-
-        expect(screen.queryByText(/选择文件|Select File/i)).toBeTruthy();
-      }
+    await waitFor(() => {
+      expect(screen.getByText("初级")).toBeInTheDocument();
     });
 
-    it('should view certificate', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+    const actionButtons = screen.getAllByRole("button");
+    fireEvent.click(actionButtons[actionButtons.length - 1]);
 
-      await waitFor(() => {
-        expect(screen.getByText('电工证')).toBeInTheDocument();
-      });
-
-      const viewButtons = screen.queryAllByRole('button', { name: /查看|View|详情/i });
-      if (viewButtons.length > 0) {
-        fireEvent.click(viewButtons[0]);
-
-        expect(screen.queryByText(/证书详情|Certificate Details/i)).toBeTruthy();
-      }
+    await waitFor(() => {
+      expect(confirmAction).toHaveBeenCalledWith("确定要删除该等级吗？");
+      expect(qualificationApi.deleteLevel).toHaveBeenCalledWith(1);
+      expect(toast.error).toHaveBeenCalledWith("删除失败");
     });
   });
 
-  describe('Statistics Display', () => {
-    it('should show total qualification count', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
+  it("应该处理加载数据失败的情况", async () => {
+    // 设置API调用失败
+    qualificationApi.getLevels.mockRejectedValueOnce(new Error("Load Failed"));
+    
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/2.*资质|Total.*2/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should display status statistics', async () => {
-      render(
-        <MemoryRouter>
-          <QualificationManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/1.*有效|Valid.*1/i)).toBeInTheDocument();
-        expect(screen.getByText(/1.*即将过期|Expiring.*1/i)).toBeInTheDocument();
-      });
+    // 等待错误处理
+    await waitFor(() => {
+      expect(qualificationApi.getLevels).toHaveBeenCalled();
     });
   });
 });

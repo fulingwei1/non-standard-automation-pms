@@ -75,10 +75,10 @@ def calculate_progress_from_projects(db: Session, work_id: int) -> Optional[Deci
         from app.models.project import Project
 
         project = db.query(Project).filter(Project.id == link.project_id).first()
-        if project and project.progress is not None:
+        if project and project.progress_pct is not None:
             weight = link.contribution_weight or Decimal(1)
             total_weight += weight
-            weighted_progress += Decimal(str(project.progress)) * weight
+            weighted_progress += Decimal(str(project.progress_pct)) * weight
 
     if total_weight == 0:
         return None

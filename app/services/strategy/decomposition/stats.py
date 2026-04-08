@@ -100,7 +100,7 @@ def get_decomposition_stats(
 
         pkpi_count = (
             db.query(PersonalKPI)
-            .filter(PersonalKPI.dept_objective_id == obj.id, PersonalKPI.is_active)
+            .filter(PersonalKPI.department_objective_id == obj.id, PersonalKPI.is_active)
             .count()
         )
         dept_stats[dept_id]["personal_kpis"] += pkpi_count

@@ -12,49 +12,52 @@ import { issueApi } from '../../services/api';
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
+    get: vi.fn().mockResolvedValue({data: { items: [] }}),
     post: vi.fn().mockResolvedValue({ data: { success: true } }),
     put: vi.fn().mockResolvedValue({ data: { success: true } }),
     delete: vi.fn().mockResolvedValue({ data: { success: true } }),
     defaults: { baseURL: '/api' },
   },
     issueApi: {
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      getIssues: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      assign: vi.fn().mockResolvedValue({ data: {} }),
-      resolve: vi.fn().mockResolvedValue({ data: {} }),
-      verify: vi.fn().mockResolvedValue({ data: {} }),
-      close: vi.fn().mockResolvedValue({ data: {} }),
-      cancel: vi.fn().mockResolvedValue({ data: {} }),
-      changeStatus: vi.fn().mockResolvedValue({ data: {} }),
-      getStatistics: vi.fn().mockResolvedValue({ data: {} }),
-      getStats: vi.fn().mockResolvedValue({ data: {} }),
-      getTrend: vi.fn().mockResolvedValue({ data: {} }),
-      getEngineerStatistics: vi.fn().mockResolvedValue({ data: {} }),
-      getCauseAnalysis: vi.fn().mockResolvedValue({ data: {} }),
-      getSnapshots: vi.fn().mockResolvedValue({ data: {} }),
-      getSnapshot: vi.fn().mockResolvedValue({ data: {} }),
-      getFollowUps: vi.fn().mockResolvedValue({ data: {} }),
-      addFollowUp: vi.fn().mockResolvedValue({ data: {} }),
-      getRelated: vi.fn().mockResolvedValue({ data: {} }),
-      createRelated: vi.fn().mockResolvedValue({ data: {} }),
-      batchAssign: vi.fn().mockResolvedValue({ data: {} }),
-      batchStatus: vi.fn().mockResolvedValue({ data: {} }),
-      batchClose: vi.fn().mockResolvedValue({ data: {} }),
-      export: vi.fn().mockResolvedValue({ data: {} }),
-      import: vi.fn().mockResolvedValue({ data: {} }),
-      getBoard: vi.fn().mockResolvedValue({ data: {} }),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getIssues: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      assign: vi.fn().mockResolvedValue({data: { items: [] }}),
+      resolve: vi.fn().mockResolvedValue({data: { items: [] }}),
+      verify: vi.fn().mockResolvedValue({data: { items: [] }}),
+      close: vi.fn().mockResolvedValue({data: { items: [] }}),
+      cancel: vi.fn().mockResolvedValue({data: { items: [] }}),
+      changeStatus: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getStatistics: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getStats: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getTrend: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getEngineerStatistics: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getCauseAnalysis: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getSnapshots: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getSnapshot: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getFollowUps: vi.fn().mockResolvedValue({data: { items: [] }}),
+      addFollowUp: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getRelated: vi.fn().mockResolvedValue({data: { items: [] }}),
+      createRelated: vi.fn().mockResolvedValue({data: { items: [] }}),
+      batchAssign: vi.fn().mockResolvedValue({data: { items: [] }}),
+      batchStatus: vi.fn().mockResolvedValue({data: { items: [] }}),
+      batchClose: vi.fn().mockResolvedValue({data: { items: [] }}),
+      export: vi.fn().mockResolvedValue({data: { items: [] }}),
+      import: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getBoard: vi.fn().mockResolvedValue({data: { items: [] }}),
     }
 }));
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
+      const validProps = ['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'];
+      const filtered = props && Object.entries(props).length > 0 
+        ? Object.fromEntries(Object.entries(props).filter(([k]) => !validProps.includes(k))) 
+        : {};
       const Tag = typeof tag === 'string' ? tag : 'div';
       return <Tag {...filtered}>{children}</Tag>;
     }
@@ -73,7 +76,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('IssueManagement', () => {
+describe('IssueManagement', () => {
   const mockIssueData = {
     items: [
       {

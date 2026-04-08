@@ -170,7 +170,7 @@ describe('FilterPanel', () => {
       />
     );
 
-    const clearButton = screen.getByRole('button', { name: /清除|重置/i });
+    const clearButton = screen.getByText('清除').closest('button')!;
     expect(clearButton).toBeInTheDocument();
   });
 
@@ -196,7 +196,7 @@ describe('FilterPanel', () => {
       />
     );
 
-    const clearButton = screen.getByRole('button', { name: /清除|重置/i });
+    const clearButton = screen.getByText('清除').closest('button')!;
     fireEvent.click(clearButton);
 
     expect(mockOnChange).toHaveBeenCalledWith({});

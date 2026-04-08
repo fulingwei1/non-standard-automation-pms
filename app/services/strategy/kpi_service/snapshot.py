@@ -83,7 +83,7 @@ def create_kpi_snapshot(
         return None
 
     # 计算完成率和健康度
-    from .health_calculator import calculate_kpi_completion_rate, get_health_level
+    from app.services.strategy.health_calculator import calculate_kpi_completion_rate, get_health_level
 
     completion_rate = calculate_kpi_completion_rate(kpi)
     health_level = None

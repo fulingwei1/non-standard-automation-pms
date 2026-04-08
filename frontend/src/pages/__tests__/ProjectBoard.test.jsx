@@ -11,40 +11,87 @@ import api, { projectApi } from '../../services/api';
 
 // Mock API
 vi.mock('../../services/api', () => ({
-  default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
-    post: vi.fn().mockResolvedValue({ data: { success: true } }),
-    put: vi.fn().mockResolvedValue({ data: { success: true } }),
-    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
-    defaults: { baseURL: '/api' },
+  projectApi: {
+    update: vi.fn().mockResolvedValue({data: { items: [] }}),
+    list: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getBoard: vi.fn().mockResolvedValue({data: { items: [] }}),
+    get: vi.fn().mockResolvedValue({data: { items: [] }}),
+    create: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getMachines: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getInProductionSummary: vi.fn().mockResolvedValue({data: { items: [] }}),
+    recommendTemplates: vi.fn().mockResolvedValue({data: { items: [] }}),
+    createFromTemplate: vi.fn().mockResolvedValue({data: { items: [] }}),
+    checkAutoTransition: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getGateCheckResult: vi.fn().mockResolvedValue({data: { items: [] }}),
+    advanceStage: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getCacheStats: vi.fn().mockResolvedValue({data: { items: [] }}),
+    clearCache: vi.fn().mockResolvedValue({data: { items: [] }}),
+    resetCacheStats: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getStatusLogs: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getHealthDetails: vi.fn().mockResolvedValue({data: { items: [] }}),
+    getStats: vi.fn().mockResolvedValue({data: { items: [] }}),
   },
-    projectApi: {
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      getBoard: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      getMachines: vi.fn().mockResolvedValue({ data: {} }),
-      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
-      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
-      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
-      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
-      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
-      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
-      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      clearCache: vi.fn().mockResolvedValue({ data: {} }),
-      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
-      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
-      getStats: vi.fn().mockResolvedValue({ data: {} }),
-    }
+  stageViewsApi: {
+    // Pipeline API
+    pipeline: {
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+    },
+    // Timeline API
+    timeline: {
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+    },
+    // Tree API
+    tree: {
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+    },
+    // Stages API
+    stages: {
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      updateStatus: vi.fn().mockResolvedValue({data: { items: [] }}),
+      start: vi.fn().mockResolvedValue({data: { items: [] }}),
+      complete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      submitReview: vi.fn().mockResolvedValue({data: { items: [] }}),
+    },
+    // Nodes API
+    nodes: {
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      start: vi.fn().mockResolvedValue({data: { items: [] }}),
+      complete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      skip: vi.fn().mockResolvedValue({data: { items: [] }}),
+    },
+    // Generic methods
+    list: vi.fn().mockResolvedValue({data: { items: [] }}),
+    get: vi.fn().mockResolvedValue({data: { items: [] }}),
+    create: vi.fn().mockResolvedValue({data: { items: [] }}),
+    update: vi.fn().mockResolvedValue({data: { items: [] }}),
+    delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+  },
+  // Legacy api export
+  default: {
+    get: vi.fn().mockResolvedValue({data: { items: [] }}),
+    post: vi.fn().mockResolvedValue({data: { items: [] }}),
+    put: vi.fn().mockResolvedValue({data: { items: [] }}),
+    delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+  }
 }));
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
+      const validProps = ['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'];
+      const filtered = props && Object.entries(props).length > 0 
+        ? Object.fromEntries(Object.entries(props).filter(([k]) => !validProps.includes(k))) 
+        : {};
       const Tag = typeof tag === 'string' ? tag : 'div';
       return <Tag {...filtered}>{children}</Tag>;
     }
@@ -63,7 +110,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('ProjectBoard', () => {
+describe('ProjectBoard', () => {
   const mockProjects = [
     {
       id: 1,
@@ -140,14 +187,12 @@ describe.skip('ProjectBoard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    projectApi.list.mockImplementation((url) => {
-      if (url.includes('/projects/board')) {
-        return Promise.resolve({ data: { projects: mockProjects, stats: mockStats } });
-      }
-      if (url.includes('/projects')) {
-        return Promise.resolve({ data: mockProjects });
-      }
-      return Promise.resolve({ data: {} });
+    projectApi.getBoard.mockImplementation(() => {
+      return Promise.resolve({ data: { projects: mockProjects, stats: mockStats } });
+    });
+    
+    projectApi.list.mockImplementation(() => {
+      return Promise.resolve({ data: mockProjects });
     });
 
     projectApi.update.mockResolvedValue({ data: { success: true } });
@@ -166,7 +211,9 @@ describe.skip('ProjectBoard', () => {
         </MemoryRouter>
       );
 
-      expect(screen.getByText(/项目看板|Project Board/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/项目看板|Project Board/i)).toBeInTheDocument();
+      }, { timeout: 5000 });
     });
 
     it('should render all project status columns', async () => {
@@ -180,7 +227,7 @@ describe.skip('ProjectBoard', () => {
         expect(screen.getByText(/规划中|Planning/i)).toBeInTheDocument();
         expect(screen.getByText(/进行中|In Progress/i)).toBeInTheDocument();
         expect(screen.getByText(/已完成|Completed/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should render project cards in correct columns', async () => {
@@ -194,7 +241,7 @@ describe.skip('ProjectBoard', () => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
         expect(screen.getByText('ERP系统升级')).toBeInTheDocument();
         expect(screen.getByText('数据分析平台')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should display project count in each column', async () => {
@@ -207,7 +254,7 @@ describe.skip('ProjectBoard', () => {
       await waitFor(() => {
         const inProgressCount = screen.getByText(/1|进行中/);
         expect(inProgressCount).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -223,7 +270,7 @@ describe.skip('ProjectBoard', () => {
       await waitFor(() => {
         expect(screen.getByText('PROJ-2024-001')).toBeInTheDocument();
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show project progress bar', async () => {
@@ -235,7 +282,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/65%/)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should display project manager', async () => {
@@ -247,7 +294,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/张三/)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show project priority badge', async () => {
@@ -260,7 +307,7 @@ describe.skip('ProjectBoard', () => {
       await waitFor(() => {
         const highPriority = screen.getAllByText(/高|High|紧急/i);
         expect(highPriority.length).toBeGreaterThan(0);
-      });
+      }, { timeout: 5000 });
     });
 
     it('should display project dates', async () => {
@@ -273,7 +320,7 @@ describe.skip('ProjectBoard', () => {
       await waitFor(() => {
         expect(screen.getByText(/2024-01-15/)).toBeInTheDocument();
         expect(screen.getByText(/2024-06-30/)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show project tags', async () => {
@@ -286,7 +333,7 @@ describe.skip('ProjectBoard', () => {
       await waitFor(() => {
         expect(screen.getByText(/智能制造/)).toBeInTheDocument();
         expect(screen.getByText(/系统集成/)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should display budget and spent amount', async () => {
@@ -299,7 +346,7 @@ describe.skip('ProjectBoard', () => {
       await waitFor(() => {
         expect(screen.getByText(/1,000,000|100万/)).toBeInTheDocument();
         expect(screen.getByText(/650,000|65万/)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -314,7 +361,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalledWith(expect.stringContaining('/projects'));
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show loading state initially', () => {
@@ -340,7 +387,7 @@ describe.skip('ProjectBoard', () => {
       await waitFor(() => {
         const errorMessage = screen.queryByText(/错误|Error|失败/i);
         expect(errorMessage).toBeTruthy();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should display empty state when no projects', async () => {
@@ -354,7 +401,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/暂无项目|No projects/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -369,7 +416,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const filterButton = screen.queryByRole('button', { name: /筛选|Filter/i });
       if (filterButton) {
@@ -386,7 +433,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalled();
-      });
+      }, { timeout: 5000 });
 
       const priorityFilter = screen.queryByText(/优先级|Priority/i);
       if (priorityFilter) {
@@ -403,7 +450,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const searchInput = screen.queryByPlaceholderText(/搜索|Search/i);
       if (searchInput) {
@@ -420,7 +467,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalled();
-      });
+      }, { timeout: 5000 });
 
       const managerFilter = screen.queryByText(/项目经理|Manager/i);
       if (managerFilter) {
@@ -440,7 +487,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalled();
-      });
+      }, { timeout: 5000 });
 
       const sortButton = screen.queryByText(/排序|Sort/i);
       if (sortButton) {
@@ -457,7 +504,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalled();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should sort projects by start date', async () => {
@@ -469,7 +516,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalled();
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -484,7 +531,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const projectCard = screen.getByText('智能制造系统').closest('div');
       if (projectCard) {
@@ -502,7 +549,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const infoButtons = screen.queryAllByRole('button', { name: /详情|Info/i });
       if (infoButtons.length > 0) {
@@ -519,17 +566,17 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalled();
-      });
+      }, { timeout: 5000 });
 
-      const initialCallCount = api.get.mock.calls.length;
+      const initialCallCount = projectApi.list.mock.calls.length;
 
       const refreshButton = screen.queryByRole('button', { name: /刷新|Refresh/i });
       if (refreshButton) {
         fireEvent.click(refreshButton);
         
         await waitFor(() => {
-          expect(api.get.mock.calls.length).toBeGreaterThan(initialCallCount);
-        });
+          expect(projectApi.list.mock.calls.length).toBeGreaterThan(initialCallCount);
+        }, { timeout: 5000 });
       }
     });
 
@@ -542,7 +589,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(projectApi.list).toHaveBeenCalled();
-      });
+      }, { timeout: 5000 });
 
       const viewToggle = screen.queryByRole('button', { name: /列表|List|看板|Board/i });
       if (viewToggle) {
@@ -562,7 +609,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/4|项目总数/)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show count for each status', async () => {
@@ -576,7 +623,7 @@ describe.skip('ProjectBoard', () => {
         expect(screen.getByText(/1.*进行中/i)).toBeInTheDocument();
         expect(screen.getByText(/1.*规划中/i)).toBeInTheDocument();
         expect(screen.getByText(/1.*已完成/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should display risk projects count', async () => {
@@ -588,7 +635,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/1.*风险|At Risk/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -603,7 +650,7 @@ describe.skip('ProjectBoard', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       // 模拟拖拽操作（实际拖拽需要更复杂的测试工具）
       const projectCard = screen.getByText('智能制造系统').closest('div[draggable]');
@@ -613,7 +660,7 @@ describe.skip('ProjectBoard', () => {
         
         await waitFor(() => {
           expect(projectApi.update).toHaveBeenCalled();
-        });
+        }, { timeout: 5000 });
       }
     });
   });

@@ -3,31 +3,43 @@ import { render, screen } from '@testing-library/react';
 import { PermissionGuard, useHasPermission } from '../PermissionGuard';
 
 // Mock the usePermission hook
-vi.mock('../../../hooks/usePermission', () => ({
-  usePermission: vi.fn(() => ({
-    hasPermission: vi.fn((perm) => perm === 'test:read'),
-    hasAnyPermission: vi.fn((perms) => perms.some(p => p === 'test:read')),
-    hasAllPermissions: vi.fn((perms) => perms.every(p => p === 'test:read')),
-  })),
-  PermissionGuard: ({ permission, children, fallback, requireAll }) => {
-    const mockUser = JSON.parse(localStorage.getItem('user') || '{}');
-    const permissions = mockUser.permissions || [];
-    
-    const hasAccess = mockUser.is_superuser
-      ? true
-      : Array.isArray(permission)
-        ? (requireAll 
-            ? permission.every(p => permissions.includes(p))
-            : permission.some(p => permissions.includes(p)))
-        : permissions.includes(permission);
+vi.mock('../../../hooks/usePermission', () => {
+  const grantedPermissions = ['test:read', 'test:write'];
 
-    if (!hasAccess) {
-      return fallback || null;
+  const parseUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
     }
-    
-    return children;
-  },
-}));
+  };
+
+  return {
+    usePermission: vi.fn(() => ({
+      hasPermission: vi.fn((perm) => grantedPermissions.includes(perm)),
+      hasAnyPermission: vi.fn((perms) => perms.some(p => grantedPermissions.includes(p))),
+      hasAllPermissions: vi.fn((perms) => perms.every(p => grantedPermissions.includes(p))),
+    })),
+    PermissionGuard: ({ permission, children, fallback, requireAll }) => {
+      const mockUser = parseUser();
+      const permissions = mockUser.permissions || [];
+      
+      const hasAccess = mockUser.is_superuser
+        ? true
+        : Array.isArray(permission)
+          ? (requireAll 
+              ? permission.every(p => permissions.includes(p))
+              : permission.some(p => permissions.includes(p)))
+          : permissions.includes(permission);
+
+      if (!hasAccess) {
+        return fallback || null;
+      }
+      
+      return children;
+    },
+  };
+});
 
 describe('PermissionGuard', () => {
   beforeEach(() => {

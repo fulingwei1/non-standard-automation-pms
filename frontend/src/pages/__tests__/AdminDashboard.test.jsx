@@ -1,31 +1,52 @@
-/**
- * AdminDashboard 组件测试
- * 测试覆盖：组件渲染、数据加载、用户交互、错误处理、权限控制
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import AdminDashboard from '../AdminDashboard';
-import api from '../../services/api';
 
-// Mock API
-// Mock framer-motion to avoid animation issues in tests
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
-  useInView: () => true,
+const { mockApiGet, mockNavigate, consoleErrorMock, scrollToMock } = vi.hoisted(() => ({
+  mockApiGet: vi.fn(),
+  mockNavigate: vi.fn(),
+  consoleErrorMock: vi.fn(),
+  scrollToMock: vi.fn(),
 }));
 
-// Mock react-router-dom
-const mockNavigate = vi.fn();
+vi.mock('../../services/api', () => ({
+  default: {
+    get: mockApiGet,
+  },
+}));
+
+vi.mock('framer-motion', () => ({
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => ({ children, ...props }) => {
+        const Tag = typeof tag === 'string' ? tag : 'div';
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(
+            ([key]) =>
+              ![
+                'initial',
+                'animate',
+                'exit',
+                'variants',
+                'transition',
+                'whileHover',
+                'whileTap',
+                'whileInView',
+                'layout',
+                'layoutId',
+                'drag',
+                'dragConstraints',
+                'onDragEnd',
+              ].includes(key),
+          ),
+        );
+        return <Tag {...filteredProps}>{children}</Tag>;
+      },
+    },
+  ),
+}));
+
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal();
   return {
@@ -34,436 +55,194 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('AdminDashboard', () => {
-  const mockStatsData = {
-    totalUsers: 150,
-    activeUsers: 120,
-    inactiveUsers: 30,
-    newUsersThisMonth: 15,
-    usersWithRoles: 140,
-    usersWithoutRoles: 10,
-    totalRoles: 8,
-    systemRoles: 5,
-    customRoles: 3,
-    activeRoles: 7,
-    inactiveRoles: 1,
-    totalPermissions: 50,
-    assignedPermissions: 45,
-    unassignedPermissions: 5,
-    systemUptime: 99.9,
-    databaseSize: 2048,
-    storageUsed: 1536,
-    apiResponseTime: 120,
-    errorRate: 0.5,
-    loginCountToday: 50,
-    loginCountThisWeek: 300,
-    lastBackup: '2024-02-20T10:00:00Z',
-    auditLogsToday: 100,
-    auditLogsThisWeek: 500
-  };
+vi.mock('../../components/layout', () => ({
+  PageHeader: ({ title, subtitle }) => (
+    <div>
+      <h1>{title}</h1>
+      <p>{subtitle}</p>
+    </div>
+  ),
+}));
 
-  const mockRecentActivities = [
-    {
-      id: 1,
-      user: 'admin',
-      action: '创建用户',
-      target: 'user-123',
-      timestamp: new Date().toISOString(),
-      status: 'success'
-    },
-    {
-      id: 2,
-      user: 'admin',
-      action: '修改角色',
-      target: 'role-admin',
-      timestamp: new Date().toISOString(),
-      status: 'success'
-    }
-  ];
+vi.mock('../../components/ui', () => ({
+  Card: ({ children }) => <div>{children}</div>,
+  CardHeader: ({ children }) => <div>{children}</div>,
+  CardContent: ({ children }) => <div>{children}</div>,
+  CardTitle: ({ children }) => <h2>{children}</h2>,
+  Progress: ({ value }) => <div role="progressbar" aria-valuenow={value} />,
+  ApiIntegrationError: ({ error, apiEndpoint, onRetry }) => (
+    <div>
+      <p>接口异常：{error?.message || String(error)}</p>
+      <p>{apiEndpoint}</p>
+      <button type="button" onClick={onRetry}>
+        重试
+      </button>
+    </div>
+  ),
+}));
 
-  const mockSystemHealth = {
-    cpu: 45,
-    memory: 60,
-    disk: 75,
-    network: 30
-  };
+vi.mock('../../components/common/StatCard', () => ({
+  default: ({ title, value, subtitle, onClick }) => (
+    <button type="button" onClick={onClick}>
+      <span>{title}</span>
+      <span>{String(value)}</span>
+      {subtitle ? <span>{subtitle}</span> : null}
+    </button>
+  ),
+}));
 
+import AdminDashboard from '../AdminDashboard';
+
+const statsData = {
+  totalUsers: 151,
+  activeUsers: 121,
+  inactiveUsers: 30,
+  newUsersThisMonth: 17,
+  usersWithRoles: 140,
+  usersWithoutRoles: 11,
+  totalRoles: 8,
+  systemRoles: 5,
+  customRoles: 3,
+  activeRoles: 7,
+  inactiveRoles: 1,
+  totalPermissions: 53,
+  assignedPermissions: 45,
+  unassignedPermissions: 8,
+  systemUptime: 97.7,
+  databaseSize: 12.8,
+  storageUsed: 68,
+  apiResponseTime: 187,
+  errorRate: 0.3,
+  loginCountToday: 29,
+  loginCountThisWeek: 206,
+  lastBackup: '2026-04-06 23:00',
+  auditLogsToday: 41,
+  auditLogsThisWeek: 311,
+};
+
+describe('AdminDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Mock API responses
-    api.get.mockImplementation((url) => {
-      if (url.includes('/admin/stats')) {
-        return Promise.resolve({ data: mockStatsData });
-      }
-      if (url.includes('/admin/activities')) {
-        return Promise.resolve({ data: mockRecentActivities });
-      }
-      if (url.includes('/admin/system-health')) {
-        return Promise.resolve({ data: mockSystemHealth });
-      }
-      return Promise.resolve({ data: {} });
+    vi.spyOn(console, 'error').mockImplementation(consoleErrorMock);
+    vi.spyOn(window, 'scrollTo').mockImplementation(scrollToMock);
+
+    mockApiGet.mockResolvedValue({
+      data: {
+        data: statsData,
+      },
     });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <AdminDashboard />
+      </MemoryRouter>,
+    );
+  }
+
+  it('默认加载管理员统计并渲染核心卡片', async () => {
+    renderPage();
+
+    expect(screen.getByText('加载中...')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockApiGet).toHaveBeenCalledWith('/admin/stats');
+    });
+
+    expect(screen.getByText('管理员工作台')).toBeInTheDocument();
+    expect(screen.getByText('系统配置、用户管理、权限分配、系统维护')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /总用户数/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /角色总数/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /权限总数/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /系统可用性/i })).toBeInTheDocument();
+    expect(screen.getByText('快捷操作')).toBeInTheDocument();
+    expect(screen.getByText('系统健康状态')).toBeInTheDocument();
+    expect(screen.getByText('系统提醒')).toBeInTheDocument();
+    expect(screen.getByText('151')).toBeInTheDocument();
+    expect(screen.getByText('53')).toBeInTheDocument();
+    expect(screen.getAllByText('97.7%').length).toBeGreaterThanOrEqual(1);
   });
 
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render admin dashboard with title', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+  it('点击统计卡片会跳转到对应管理页面', async () => {
+    renderPage();
 
-      expect(screen.getByText(/管理员工作台|Admin Dashboard/i)).toBeInTheDocument();
-    });
+    await screen.findByRole('button', { name: /总用户数/i });
 
-    it('should render loading state initially', () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: /总用户数/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/user-management');
 
-      // 应该显示加载中的骨架屏或加载指示器
-      const loadingElements = screen.queryAllByRole('status') || screen.queryAllByText(/加载中|Loading/i);
-      expect(loadingElements.length).toBeGreaterThanOrEqual(0);
-    });
+    fireEvent.click(screen.getByRole('button', { name: /角色总数/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/role-management');
 
-    it('should render all stat cards after data loads', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: /权限总数/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/permission-management');
 
-      await waitFor(() => {
-        // 检查用户统计
-        expect(screen.getByText(/总用户|Total Users/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should display correct user statistics', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('150')).toBeInTheDocument(); // totalUsers
-      });
-    });
+    fireEvent.click(screen.getByRole('button', { name: /系统可用性/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/settings');
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should call API to fetch stats on mount', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+  it('顶部导航按钮支持滚动和页面跳转', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalledWith(expect.stringContaining('/admin/stats'));
-      });
-    });
+    await screen.findByText('系统概览');
 
-    it('should handle API success response', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: '系统概览' }));
+    expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
 
-      await waitFor(() => {
-        expect(screen.getByText('150')).toBeInTheDocument();
-        expect(screen.getByText('120')).toBeInTheDocument();
-      });
-    });
+    fireEvent.click(screen.getByRole('button', { name: '用户管理' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/user-management');
 
-    it('should handle API error gracefully', async () => {
-      api.get.mockRejectedValueOnce(new Error('API Error'));
+    fireEvent.click(screen.getByRole('button', { name: '角色权限' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/role-management');
 
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: '系统监控' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/scheduler-monitoring');
 
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|failed/i);
-        // 错误应该被捕获，或显示默认数据
-        expect(errorMessage || screen.queryByText('0')).toBeTruthy();
-      });
-    });
-
-    it('should refresh data when refresh button is clicked', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const initialCallCount = api.get.mock.calls.length;
-
-      const refreshButton = screen.queryByRole('button', { name: /刷新|Refresh/i });
-      if (refreshButton) {
-        fireEvent.click(refreshButton);
-        
-        await waitFor(() => {
-          expect(api.get.mock.calls.length).toBeGreaterThan(initialCallCount);
-        });
-      }
-    });
+    fireEvent.click(screen.getByRole('button', { name: '活动日志' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/scheduler-monitoring');
   });
 
-  // 3. 用户交互测试
-  describe('User Interactions', () => {
-    it('should navigate to user management when clicking user card', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+  it('渲染系统健康和运行数据摘要', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/总用户|Total Users/i)).toBeInTheDocument();
-      });
+    await screen.findByText('系统健康状态');
 
-      const userCards = screen.queryAllByText(/用户管理|User/i);
-      if (userCards.length > 0) {
-        const clickableCard = userCards[0].closest('button') || userCards[0].closest('a');
-        if (clickableCard) {
-          fireEvent.click(clickableCard);
-          // 验证导航被调用
-          expect(mockNavigate).toHaveBeenCalled();
-        }
-      }
-    });
-
-    it('should navigate to role management when clicking role card', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/角色|Role/i)).toBeInTheDocument();
-      });
-
-      const roleLinks = screen.queryAllByText(/角色管理|Role Management/i);
-      if (roleLinks.length > 0) {
-        const clickableElement = roleLinks[0].closest('button') || roleLinks[0].closest('a');
-        if (clickableElement) {
-          fireEvent.click(clickableElement);
-          expect(mockNavigate).toHaveBeenCalled();
-        }
-      }
-    });
-
-    it('should open settings when clicking settings button', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      const settingsButton = screen.queryByRole('button', { name: /设置|Settings/i });
-      if (settingsButton) {
-        fireEvent.click(settingsButton);
-        // 验证设置对话框或页面被打开
-        await waitFor(() => {
-          expect(mockNavigate).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should filter activities by status', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(api.get).toHaveBeenCalled();
-      });
-
-      const filterButtons = screen.queryAllByRole('button');
-      const statusFilter = filterButtons.find(btn => 
-        btn.textContent.includes('状态') || btn.textContent.includes('Status')
-      );
-
-      if (statusFilter) {
-        fireEvent.click(statusFilter);
-      }
-    });
+    expect(screen.getByText('存储使用率')).toBeInTheDocument();
+    expect(screen.getByText('数据库大小')).toBeInTheDocument();
+    expect(screen.getByText('API 平均响应时间')).toBeInTheDocument();
+    expect(screen.getByText('错误率')).toBeInTheDocument();
+    expect(screen.getByText('68%')).toBeInTheDocument();
+    expect(screen.getByText('12.8 GB')).toBeInTheDocument();
+    expect(screen.getByText('187 ms')).toBeInTheDocument();
+    expect(screen.getByText('0.3%')).toBeInTheDocument();
+    expect(screen.getByText('今日登录')).toBeInTheDocument();
+    expect(screen.getByText('今日审计日志')).toBeInTheDocument();
+    expect(screen.getByText('最后备份')).toBeInTheDocument();
+    expect(screen.getByText('2026-04-06 23:00')).toBeInTheDocument();
+    expect(screen.getAllByRole('progressbar')).toHaveLength(2);
   });
 
-  // 4. 权限控制测试
-  describe('Permission Control', () => {
-    it('should show admin-only features for admin users', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        // 管理员应该能看到系统配置
-        const adminFeatures = screen.queryByText(/系统配置|System Config/i);
-        expect(adminFeatures).toBeTruthy();
-      });
-    });
-
-    it('should display permission management section', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/权限|Permission/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 5. 错误处理测试
-  describe('Error Handling', () => {
-    it('should show error message when stats API fails', async () => {
-      api.get.mockRejectedValueOnce(new Error('Failed to fetch stats'));
-
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorElement = screen.queryByText(/错误|Error|failed/i);
-        // 应该显示错误提示或默认值
-        expect(errorElement || screen.queryByText('0')).toBeTruthy();
-      });
-    });
-
-    it('should show error message when activities API fails', async () => {
-      api.get.mockImplementation((url) => {
-        if (url.includes('/admin/activities')) {
-          return Promise.reject(new Error('Failed to fetch activities'));
-        }
-        return Promise.resolve({ data: mockStatsData });
+  it('接口失败时显示错误态并支持重试', async () => {
+    mockApiGet
+      .mockRejectedValueOnce(new Error('Load failed'))
+      .mockResolvedValueOnce({
+        data: {
+          data: statsData,
+        },
       });
 
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
+    renderPage();
 
-      await waitFor(() => {
-        // 统计数据应该加载成功
-        expect(screen.getByText('150')).toBeInTheDocument();
-      });
+    expect(await screen.findByText('接口异常：Load failed')).toBeInTheDocument();
+    expect(screen.getByText('/api/v1/admin/stats')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '重试' }));
+
+    await waitFor(() => {
+      expect(mockApiGet).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle network timeout', async () => {
-      api.get.mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 100)
-        )
-      );
-
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        // 应该显示超时错误或默认状态
-        const errorOrDefault = screen.queryByText(/超时|Timeout|0/);
-        expect(errorOrDefault).toBeTruthy();
-      }, { timeout: 3000 });
-    });
-  });
-
-  // 6. 系统健康监控测试
-  describe('System Health Monitoring', () => {
-    it('should display system uptime', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/99.9|运行时间|Uptime/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should show database size', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        // 2048 MB or formatted version
-        const dbSize = screen.queryByText(/2048|2.0 GB|数据库/i);
-        expect(dbSize).toBeTruthy();
-      });
-    });
-
-    it('should display API response time', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/120|响应时间|Response Time/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 7. 最近活动测试
-  describe('Recent Activities', () => {
-    it('should display recent activities list', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/最近活动|Recent Activities/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should show activity details', async () => {
-      render(
-        <MemoryRouter>
-          <AdminDashboard />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/创建用户|Create User/i)).toBeInTheDocument();
-      });
-    });
+    expect(await screen.findByRole('button', { name: /总用户数/i })).toBeInTheDocument();
   });
 });

@@ -118,6 +118,7 @@ class AnnualKeyWorkProgressUpdate(BaseModel):
     """更新工作进度"""
 
     progress_percent: int = Field(ge=0, le=100, description="完成进度（%）")
+    progress_description: Optional[str] = Field(default=None, description="进度描述")
     status: Optional[str] = Field(default=None, description="状态")
     remark: Optional[str] = Field(default=None, description="备注")
 

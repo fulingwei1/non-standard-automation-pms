@@ -4,12 +4,50 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AlertCenter from '../AlertCenter';
-import { alertApi } from '../../services/api';
+import { alertApi, notificationApi } from '../../services/api';
 
 // Mock API
+vi.mock('../../services/api', () => ({
+  alertApi: {
+    list: vi.fn().mockResolvedValue({ data: [] }),
+    get: vi.fn(),
+    acknowledge: vi.fn().mockResolvedValue({ data: { success: true } }),
+    resolve: vi.fn().mockResolvedValue({ data: { success: true } }),
+    close: vi.fn().mockResolvedValue({ data: { success: true } }),
+    ignore: vi.fn().mockResolvedValue({ data: { success: true } }),
+    rules: {
+      list: vi.fn().mockResolvedValue({ data: [] }),
+      get: vi.fn(),
+      create: vi.fn().mockResolvedValue({ data: { success: true } }),
+      update: vi.fn().mockResolvedValue({ data: { success: true } }),
+      delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+      toggle: vi.fn().mockResolvedValue({ data: { success: true } }),
+    },
+    templates: vi.fn().mockResolvedValue({ data: [] }),
+    statistics: vi.fn().mockResolvedValue({ data: {} }),
+    dashboard: vi.fn().mockResolvedValue({ data: {} }),
+    trends: vi.fn().mockResolvedValue({ data: [] }),
+    responseMetrics: vi.fn().mockResolvedValue({ data: {} }),
+    efficiencyMetrics: vi.fn().mockResolvedValue({ data: {} }),
+    exportExcel: vi.fn(),
+    exportPdf: vi.fn(),
+  },
+  notificationApi: {
+    list: vi.fn().mockResolvedValue({ data: [] }),
+    get: vi.fn(),
+    getUnreadCount: vi.fn().mockResolvedValue({ data: { count: 0 } }),
+    markRead: vi.fn().mockResolvedValue({ data: { success: true } }),
+    batchRead: vi.fn().mockResolvedValue({ data: { success: true } }),
+    readAll: vi.fn().mockResolvedValue({ data: { success: true } }),
+    delete: vi.fn().mockResolvedValue({ data: { success: true } }),
+    getSettings: vi.fn().mockResolvedValue({ data: {} }),
+    updateSettings: vi.fn().mockResolvedValue({ data: { success: true } }),
+  },
+}));
+
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
@@ -34,7 +72,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('AlertCenter', () => {
+describe('AlertCenter', () => {
   const mockAlerts = [
     {
       id: 1,
@@ -92,52 +130,13 @@ describe.skip('AlertCenter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
     alertApi.list.mockResolvedValue({ data: mockAlerts });
-    alertApi.getStats.mockResolvedValue({ data: mockStats });
-    alertApi.update.mockResolvedValue({ data: { success: true } });
-    alertApi.resolve.mockResolvedValue({ data: { success: true } });
+    alertApi.statistics.mockResolvedValue({ data: mockStats });
+    alertApi.dashboard.mockResolvedValue({ data: mockStats });
+    notificationApi.getUnreadCount.mockResolvedValue({ data: { count: 0 } });
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render alert center with title', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByText(/预警中心|Alert Center/i)).toBeInTheDocument();
-    });
-
-    it('should render loading state initially', () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      const loadingElements = screen.queryAllByRole('status') || screen.queryAllByText(/加载中|Loading/i);
-      expect(loadingElements.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should render alert statistics cards', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(alertApi.getStats).toHaveBeenCalled();
-      });
-    });
-
+  describe('Statistics', () => {
     it('should display total alerts count', async () => {
       render(
         <MemoryRouter>
@@ -146,11 +145,14 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('45')).toBeInTheDocument();
+        expect(alertApi.statistics).toHaveBeenCalled();
       });
+
+      expect(screen.getByText('总预警数')).toBeInTheDocument();
+      expect(screen.getByText(/45/)).toBeInTheDocument();
     });
 
-    it('should render alert list after loading', async () => {
+    it('should display pending alerts count', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -158,70 +160,57 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
+        expect(screen.getByText(/待处理/)).toBeInTheDocument();
       });
+
+      expect(screen.getByText(/12/)).toBeInTheDocument();
+    });
+
+    it('should display critical alerts count', async () => {
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/严重/)).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/3/)).toBeInTheDocument();
+    });
+
+    it('should display today\'s new alerts count', async () => {
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/今日新增|Today/)).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/5/)).toBeInTheDocument();
+    });
+
+    it('should display resolved alerts count', async () => {
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/已解决/)).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/28/)).toBeInTheDocument();
     });
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should call API to fetch alerts on mount', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(alertApi.list).toHaveBeenCalled();
-      });
-    });
-
-    it('should call API to fetch stats on mount', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(alertApi.getStats).toHaveBeenCalled();
-      });
-    });
-
-    it('should handle API error gracefully', async () => {
-      alertApi.list.mockRejectedValueOnce(new Error('API Error'));
-
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|failed/i);
-        expect(errorMessage).toBeTruthy();
-      });
-    });
-
-    it('should display empty state when no alerts', async () => {
-      alertApi.list.mockResolvedValueOnce({ data: [] });
-
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/暂无预警|No alerts/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 3. 预警级别筛选测试
-  describe('Alert Level Filtering', () => {
-    it('should filter alerts by critical level', async () => {
+  describe('Alert List', () => {
+    it('should render alert list with details', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -232,19 +221,15 @@ describe.skip('AlertCenter', () => {
         expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
       });
 
-      const criticalFilter = screen.queryByRole('button', { name: /紧急|Critical/i });
-      if (criticalFilter) {
-        fireEvent.click(criticalFilter);
-        
-        await waitFor(() => {
-          expect(alertApi.list).toHaveBeenCalledWith(expect.objectContaining({
-            level: 'critical'
-          }));
-        });
-      }
+      expect(screen.getByText(/项目进度延迟预警/)).toBeInTheDocument();
+      expect(screen.getByText(/资源冲突预警/)).toBeInTheDocument();
+
+      // Check alert details
+      expect(screen.getByText(/项目PROJ-001预算超支20%/)).toBeInTheDocument();
+      expect(screen.getByText(/项目PROJ-002进度延迟5天/)).toBeInTheDocument();
     });
 
-    it('should filter alerts by warning level', async () => {
+    it('should display alert levels with proper styling', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -252,16 +237,32 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(alertApi.list).toHaveBeenCalled();
+        expect(screen.getByText(/严重/)).toBeInTheDocument();
       });
 
-      const warningFilter = screen.queryByRole('button', { name: /警告|Warning/i });
-      if (warningFilter) {
-        fireEvent.click(warningFilter);
-      }
+      const warningBadges = screen.getAllByText(/警告|Warning/);
+      expect(warningBadges.length).toBeGreaterThan(0);
     });
 
-    it('should show all alerts when clicking "All" filter', async () => {
+    it('should display alert statuses', async () => {
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        const pendingStatusElements = screen.getAllByText(/待处理/);
+        expect(pendingStatusElements.length).toBeGreaterThan(0);
+      });
+
+      expect(screen.getByText(/处理中/)).toBeInTheDocument();
+      expect(screen.getByText(/已解决/)).toBeInTheDocument();
+    });
+  });
+
+  describe('Alert Actions', () => {
+    it('should handle alert acknowledgment', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -272,16 +273,58 @@ describe.skip('AlertCenter', () => {
         expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
       });
 
-      const allFilter = screen.queryByRole('button', { name: /全部|All/i });
-      if (allFilter) {
-        fireEvent.click(allFilter);
-      }
+      // Find the specific acknowledge button for the first alert
+      const ackButton = screen.getByRole('button', { name: /确认|Acknowledge|ack/i });
+      fireEvent.click(ackButton);
+
+      await waitFor(() => {
+        expect(alertApi.acknowledge).toHaveBeenCalledWith(1);
+      });
+    });
+
+    it('should handle alert resolution', async () => {
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/项目进度延迟预警/)).toBeInTheDocument();
+      });
+
+      // Find the specific resolve button for the second alert
+      const resolveButton = screen.getByRole('button', { name: /解决|Resolve|resolv/i });
+      fireEvent.click(resolveButton);
+
+      await waitFor(() => {
+        expect(alertApi.resolve).toHaveBeenCalledWith(2, expect.anything());
+      });
+    });
+
+    it('should handle alert ignoring', async () => {
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/资源冲突预警/)).toBeInTheDocument();
+      });
+
+      // Find the specific ignore button for the third alert
+      const ignoreButton = screen.getByRole('button', { name: /忽略|Ignore|ignor/i });
+      fireEvent.click(ignoreButton);
+
+      await waitFor(() => {
+        expect(alertApi.ignore).toHaveBeenCalledWith(3, expect.anything());
+      });
     });
   });
 
-  // 4. 预警状态管理测试
-  describe('Alert Status Management', () => {
-    it('should display pending alerts', async () => {
+  describe('Alert Details', () => {
+    it('should display alert creation time', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -289,11 +332,14 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/待处理|Pending/i)).toBeInTheDocument();
+        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
       });
+
+      // Should show formatted date/time
+      expect(screen.getByText(/2024/)).toBeInTheDocument();
     });
 
-    it('should display in-progress alerts', async () => {
+    it('should display project information', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -301,11 +347,13 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/处理中|In Progress/i)).toBeInTheDocument();
+        expect(screen.getByText(/智能制造系统/)).toBeInTheDocument();
       });
+
+      expect(screen.getByText(/ERP系统升级/)).toBeInTheDocument();
     });
 
-    it('should display resolved alerts', async () => {
+    it('should link to project details', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -313,7 +361,53 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/已解决|Resolved/i)).toBeInTheDocument();
+        const projectLinks = screen.getAllByText(/智能制造系统|智能/);
+        expect(projectLinks.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('Filtering', () => {
+    it('should filter alerts by level', async () => {
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
+      });
+
+      // Wait for filters to be rendered before interacting
+      await waitFor(() => {
+        const comboboxes = screen.queryAllByRole('combobox');
+        expect(comboboxes.length).toBeGreaterThan(0);
+      });
+      
+      // Find the level filter by its accessible name or role
+      let levelFilter;
+      try {
+        levelFilter = screen.getByRole('combobox', { name: /预警级别|level/i });
+      } catch {
+        const comboboxes = screen.getAllByRole('combobox');
+        levelFilter = comboboxes[0]; // fallback to first combobox
+      }
+      
+      fireEvent.click(levelFilter);
+      
+      // Wait for options to appear
+      await waitFor(() => {
+        expect(screen.getByText('严重')).toBeInTheDocument();
+      });
+      
+      const criticalOption = screen.getByText('严重');
+      fireEvent.click(criticalOption);
+
+      await waitFor(() => {
+        expect(alertApi.list).toHaveBeenCalledWith(expect.objectContaining({
+          level: 'critical'
+        }));
       });
     });
 
@@ -325,69 +419,42 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(alertApi.list).toHaveBeenCalled();
+        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
       });
 
-      const statusFilters = screen.queryAllByRole('button');
-      const pendingFilter = statusFilters.find(btn => 
-        btn.textContent.includes('待处理') || btn.textContent.includes('Pending')
-      );
-
-      if (pendingFilter) {
-        fireEvent.click(pendingFilter);
+      // Wait for filters to be rendered before interacting
+      await waitFor(() => {
+        const comboboxes = screen.queryAllByRole('combobox');
+        expect(comboboxes.length).toBeGreaterThan(1);
+      });
+      
+      // Find the status filter by its accessible name or role
+      let statusFilter;
+      try {
+        statusFilter = screen.getByRole('combobox', { name: /预警状态|status/i });
+      } catch {
+        const comboboxes = screen.getAllByRole('combobox');
+        statusFilter = comboboxes[1]; // fallback to second combobox
       }
-    });
-  });
-
-  // 5. 预警搜索功能测试
-  describe('Alert Search', () => {
-    it('should render search input', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      const searchInput = screen.getByPlaceholderText(/搜索预警|Search alerts/i);
-      expect(searchInput).toBeInTheDocument();
-    });
-
-    it('should search alerts by keyword', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      const searchInput = screen.getByPlaceholderText(/搜索预警|Search alerts/i);
-      fireEvent.change(searchInput, { target: { value: '预算' } });
+      
+      fireEvent.click(statusFilter);
+      
+      // Wait for options to appear
+      await waitFor(() => {
+        expect(screen.getByText('待处理')).toBeInTheDocument();
+      });
+      
+      const pendingOption = screen.getByText('待处理');
+      fireEvent.click(pendingOption);
 
       await waitFor(() => {
-        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
+        expect(alertApi.list).toHaveBeenCalledWith(expect.objectContaining({
+          status: 'pending'
+        }));
       });
     });
 
-    it('should clear search when input is empty', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      const searchInput = screen.getByPlaceholderText(/搜索预警|Search alerts/i);
-      fireEvent.change(searchInput, { target: { value: '预算' } });
-      fireEvent.change(searchInput, { target: { value: '' } });
-
-      await waitFor(() => {
-        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
-        expect(screen.getByText(/项目进度延迟预警/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 6. 预警处理操作测试
-  describe('Alert Actions', () => {
-    it('should resolve an alert', async () => {
+    it('should filter alerts by date range', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -398,58 +465,40 @@ describe.skip('AlertCenter', () => {
         expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
       });
 
-      const resolveButtons = screen.queryAllByRole('button', { name: /解决|Resolve/i });
-      if (resolveButtons.length > 0) {
-        fireEvent.click(resolveButtons[0]);
+      // Simulate date range filter
+      const dateFilter = screen.getByPlaceholderText?.('选择日期范围') || 
+                         screen.getByText?.('今天')?.closest('button') ||
+                         screen.getByText?.('本周')?.closest('button');
+      
+      if (dateFilter) {
+        fireEvent.click(dateFilter);
         
         await waitFor(() => {
-          expect(alertApi.resolve).toHaveBeenCalledWith(1);
-        });
-      }
-    });
-
-    it('should view alert details', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
-      });
-
-      const viewButtons = screen.queryAllByRole('button', { name: /查看|View/i });
-      if (viewButtons.length > 0) {
-        fireEvent.click(viewButtons[0]);
-      }
-    });
-
-    it('should dismiss an alert', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/项目预算超支预警/)).toBeInTheDocument();
-      });
-
-      const dismissButtons = screen.queryAllByRole('button', { name: /忽略|Dismiss/i });
-      if (dismissButtons.length > 0) {
-        fireEvent.click(dismissButtons[0]);
-        
-        await waitFor(() => {
-          expect(alertApi.dismiss).toHaveBeenCalled();
+          expect(alertApi.list).toHaveBeenCalled();
         });
       }
     });
   });
 
-  // 7. 预警详情测试
-  describe('Alert Details', () => {
-    it('should display alert level badge', async () => {
+  describe('Pagination', () => {
+    it('should handle pagination when multiple pages of alerts exist', async () => {
+      const manyAlerts = Array.from({ length: 25 }, (_, i) => ({
+        id: i + 1,
+        title: `预警 ${i + 1}`,
+        level: i % 3 === 0 ? 'critical' : i % 3 === 1 ? 'warning' : 'info',
+        status: i % 3 === 0 ? 'pending' : i % 3 === 1 ? 'in_progress' : 'resolved',
+        type: 'budget',
+        description: `描述 ${i + 1}`,
+        projectId: i + 1,
+        projectName: `项目 ${i + 1}`,
+        createdAt: '2024-02-20T10:00:00Z',
+        triggerTime: '2024-02-20T10:00:00Z',
+        responseTime: null,
+        resolvedAt: null,
+      }));
+
+      alertApi.list.mockResolvedValue({ data: manyAlerts, meta: { total: 25, page: 1, pageSize: 10 } });
+
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -457,11 +506,39 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/紧急|Critical/i)).toBeInTheDocument();
+        expect(screen.getByText(/预警 1/)).toBeInTheDocument();
+      });
+
+      // Should show pagination controls for multiple pages
+      expect(screen.getByRole('button', { name: /2/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /下一页/ })).toBeInTheDocument();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should display error message when loading fails', async () => {
+      const errorMessage = 'Failed to load alerts';
+      alertApi.list.mockRejectedValue(new Error(errorMessage));
+      alertApi.statistics.mockRejectedValue(new Error(errorMessage));
+
+      render(
+        <MemoryRouter>
+          <AlertCenter />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/加载失败|失败/)).toBeInTheDocument();
       });
     });
 
-    it('should display alert type', async () => {
+    it('should retry loading when error occurs', async () => {
+      // First call fails, second succeeds
+      alertApi.list.mockRejectedValueOnce(new Error('Network error'))
+                 .mockResolvedValue({ data: mockAlerts });
+      alertApi.statistics.mockRejectedValueOnce(new Error('Network error'))
+                          .mockResolvedValue({ data: mockStats });
+
       render(
         <MemoryRouter>
           <AlertCenter />
@@ -469,159 +546,42 @@ describe.skip('AlertCenter', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/预算|Budget/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should show related project information', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/智能制造系统/)).toBeInTheDocument();
-      });
-    });
-
-    it('should display alert creation time', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const timeElements = screen.queryAllByText(/2024-02-/);
-        expect(timeElements.length).toBeGreaterThan(0);
+        expect(screen.getByText(/项目预算超支预警|预算超支/)).toBeInTheDocument();
       });
     });
   });
 
-  // 8. 统计数据测试
-  describe('Statistics', () => {
-    it('should display total alerts count', async () => {
+  describe('Loading States', () => {
+    it('should display loading spinner while fetching data', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
         </MemoryRouter>
       );
 
-      await waitFor(() => {
-        expect(screen.getByText('45')).toBeInTheDocument();
-      });
+      // Wait briefly to ensure loading state renders
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Check for loading state with flexible text matching
+      const loadingText = screen.queryByText(/加载|Loading/);
+      expect(loadingText).not.toBeNull();
     });
 
-    it('should show pending alerts count', async () => {
+    it('should hide loading spinner after data loads', async () => {
       render(
         <MemoryRouter>
           <AlertCenter />
         </MemoryRouter>
       );
 
+      // Wait for API call to complete and data to load
       await waitFor(() => {
-        expect(screen.getByText('12')).toBeInTheDocument();
+        expect(screen.queryByText(/项目预算超支预警/)).toBeInTheDocument();
       });
-    });
-
-    it('should display resolved alerts count', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('28')).toBeInTheDocument();
-      });
-    });
-
-    it('should show critical alerts count', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('3')).toBeInTheDocument();
-      });
-    });
-
-    it('should display today new alerts', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('5')).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 9. 刷新功能测试
-  describe('Refresh Functionality', () => {
-    it('should refresh alerts when clicking refresh button', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(alertApi.list).toHaveBeenCalled();
-      });
-
-      const initialCallCount = alertApi.list.mock.calls.length;
-
-      const refreshButton = screen.queryByRole('button', { name: /刷新|Refresh/i });
-      if (refreshButton) {
-        fireEvent.click(refreshButton);
-        
-        await waitFor(() => {
-          expect(alertApi.list.mock.calls.length).toBeGreaterThan(initialCallCount);
-        });
-      }
-    });
-  });
-
-  // 10. 导航测试
-  describe('Navigation', () => {
-    it('should navigate to alert settings', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      const settingsButton = screen.queryByRole('button', { name: /设置|Settings/i });
-      if (settingsButton) {
-        fireEvent.click(settingsButton);
-        expect(mockNavigate).toHaveBeenCalled();
-      }
-    });
-
-    it('should navigate to project detail from alert', async () => {
-      render(
-        <MemoryRouter>
-          <AlertCenter />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/智能制造系统/)).toBeInTheDocument();
-      });
-
-      const projectLinks = screen.queryAllByText(/智能制造系统/);
-      if (projectLinks.length > 0) {
-        const clickableLink = projectLinks[0].closest('a') || projectLinks[0].closest('button');
-        if (clickableLink) {
-          fireEvent.click(clickableLink);
-        }
-      }
+      
+      // By this time, loading state should be gone
+      // Verify that we're now showing actual alert data instead of loading
+      expect(screen.queryByText(/加载|Loading/)).toBeNull();
     });
   });
 });

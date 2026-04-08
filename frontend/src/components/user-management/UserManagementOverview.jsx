@@ -104,13 +104,21 @@ const UserManagementOverview = ({
   };
 
   const getInactiveUsers = () => {
-    return (users || []).filter((user) =>
+    // 确保users是数组再进行filter操作
+    if (!Array.isArray(users)) {
+      return [];
+    }
+    return users.filter((user) =>
     user.status === USER_STATUS.INACTIVE || user.status === USER_STATUS.SUSPENDED
     );
   };
 
   const getPendingUsers = () => {
-    return (users || []).filter((user) => user.status === USER_STATUS.PENDING);
+    // 确保users是数组再进行filter操作
+    if (!Array.isArray(users)) {
+      return [];
+    }
+    return users.filter((user) => user.status === USER_STATUS.PENDING);
   };
 
   const topRoles = getTopRoles();

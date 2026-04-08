@@ -1,685 +1,252 @@
 /**
- * AcceptanceExecution 组件测试
- * 测试覆盖：验收执行、检查项管理、问题记录、验收完成
+ * AcceptanceExecution 页面测试
+ * 只校验页面编排逻辑，底层数据细节交给 hook / 子组件各自测试。
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AcceptanceExecution from '../AcceptanceExecution';
-import { acceptanceApi } from '../../services/api';
-
-// Mock dependencies
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-}));
+import { useAcceptanceExecutionPage } from '../AcceptanceExecution/hooks/useAcceptanceExecutionPage';
 
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
+const mockUseAcceptanceExecutionPage = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
 
-describe('AcceptanceExecution', () => {
-  const mockOrder = {
-    id: 1,
-    code: 'ACC-2024-001',
-    project_name: '智能制造系统',
-    template_name: '软件验收模板',
-    status: 'IN_PROGRESS',
-    scheduled_date: '2024-06-30',
-    executor_name: '张三',
-    created_at: '2024-06-20T10:00:00Z',
+vi.mock('../AcceptanceExecution/hooks/useAcceptanceExecutionPage', () => ({
+  useAcceptanceExecutionPage: (...args) => mockUseAcceptanceExecutionPage(...args),
+}));
+
+vi.mock('../../components/layout', () => ({
+  PageHeader: ({ title, description }) => (
+    <div>
+      <h1>{title}</h1>
+      <p>{description}</p>
+    </div>
+  ),
+}));
+
+vi.mock('../AcceptanceExecution/ExecutionSummaryCards', () => ({
+  ExecutionSummaryCards: ({ totalItems, passedCount, failedCount, totalChecked }) => (
+    <div data-testid="summary-cards">
+      <span>总项数:{totalItems}</span>
+      <span>通过:{passedCount}</span>
+      <span>不通过:{failedCount}</span>
+      <span>已检查:{totalChecked}</span>
+    </div>
+  ),
+}));
+
+vi.mock('../AcceptanceExecution/CheckItemsPanel', () => ({
+  CheckItemsPanel: ({ itemsByCategory, onItemClick, onAddIssue }) => (
+    <div data-testid="check-items-panel">
+      <button onClick={onAddIssue}>上报问题</button>
+      {Object.entries(itemsByCategory || {}).map(([category, items]) => (
+        <div key={category}>
+          <div>{category}</div>
+          {(items || []).map((item) => (
+            <button key={item.id} onClick={() => onItemClick(item)}>
+              {item.item_name}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
+vi.mock('../AcceptanceExecution/IssuesPanel', () => ({
+  IssuesPanel: ({ issues }) => (
+    <div data-testid="issues-panel">
+      {(issues || []).map((issue) => (
+        <div key={issue.id}>{issue.description}</div>
+      ))}
+    </div>
+  ),
+}));
+
+vi.mock('../AcceptanceExecution/UpdateItemDialog', () => ({
+  UpdateItemDialog: ({ open }) => open ? <div data-testid="update-item-dialog">update-dialog</div> : null,
+}));
+
+vi.mock('../AcceptanceExecution/CreateIssueDialog', () => ({
+  CreateIssueDialog: ({ open }) => open ? <div data-testid="create-issue-dialog">create-issue-dialog</div> : null,
+}));
+
+vi.mock('../AcceptanceExecution/CompleteDialog', () => ({
+  CompleteDialog: ({ open }) => open ? <div data-testid="complete-dialog">complete-dialog</div> : null,
+}));
+
+function renderPage() {
+  return render(
+    <MemoryRouter initialEntries={['/acceptance/execution/1']}>
+      <Routes>
+        <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
+      </Routes>
+    </MemoryRouter>
+  );
+}
+
+function buildHookState(overrides = {}) {
+  return {
+    loading: false,
+    order: {
+      id: 1,
+      order_no: 'ACC-2024-001',
+      status: 'IN_PROGRESS',
+    },
+    items: [
+      { id: 1, item_name: '用户登录功能', result_status: 'PENDING' },
+      { id: 2, item_name: '系统响应时间', result_status: 'PASSED' },
+    ],
+    issues: [
+      { id: 1, description: 'Safari浏览器下拉菜单无法正常显示' },
+    ],
+    itemsByCategory: {
+      功能测试: [{ id: 1, item_name: '用户登录功能', result_status: 'PENDING' }],
+      性能测试: [{ id: 2, item_name: '系统响应时间', result_status: 'PASSED' }],
+    },
+    passedCount: 1,
+    failedCount: 0,
+    totalChecked: 1,
+    showItemDialog: false,
+    setShowItemDialog: vi.fn(),
+    showIssueDialog: false,
+    setShowIssueDialog: vi.fn(),
+    showCompleteDialog: false,
+    setShowCompleteDialog: vi.fn(),
+    selectedItem: null,
+    itemResult: { result_status: 'PASSED', actual_value: '', deviation: '', remark: '' },
+    setItemResult: vi.fn(),
+    newIssue: { item_id: null, category: '', severity: 'MINOR', description: '', photos: [] },
+    setNewIssue: vi.fn(),
+    completeData: { overall_result: 'PASS', conclusion: '', conditions: '' },
+    setCompleteData: vi.fn(),
+    refreshAll: vi.fn(),
+    openItemDialog: vi.fn(),
+    handleUpdateItem: vi.fn(),
+    handleCreateIssue: vi.fn(),
+    handleComplete: vi.fn(),
+    ...overrides,
   };
+}
 
-  const mockItems = [
-    {
-      id: 1,
-      order_id: 1,
-      category: '功能测试',
-      description: '用户登录功能',
-      standard: '能够正常登录系统',
-      check_method: '手工测试',
-      result_status: 'PENDING',
-      actual_value: null,
-      deviation: null,
-      remark: null,
-    },
-    {
-      id: 2,
-      order_id: 1,
-      category: '性能测试',
-      description: '系统响应时间',
-      standard: '页面加载时间<3秒',
-      check_method: '性能工具测试',
-      result_status: 'PASSED',
-      actual_value: '2.5秒',
-      deviation: null,
-      remark: '性能良好',
-    },
-    {
-      id: 3,
-      order_id: 1,
-      category: '兼容性测试',
-      description: '浏览器兼容性',
-      standard: '支持Chrome、Firefox、Safari',
-      check_method: '手工测试',
-      result_status: 'FAILED',
-      actual_value: 'Safari部分功能异常',
-      deviation: '存在兼容性问题',
-      remark: '需要修复',
-    },
-  ];
-
-  const mockIssues = [
-    {
-      id: 1,
-      item_id: 3,
-      category: 'BUG',
-      severity: 'MAJOR',
-      description: 'Safari浏览器下拉菜单无法正常显示',
-      status: 'OPEN',
-      created_at: '2024-06-25T14:00:00Z',
-    },
-  ];
-
+describe('AcceptanceExecution', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    acceptanceApi.orders.get.mockResolvedValue({ data: mockOrder });
-    acceptanceApi.orders.getItems.mockResolvedValue({ data: mockItems });
-    acceptanceApi.issues.list.mockResolvedValue({ data: mockIssues });
-    acceptanceApi.orders.updateItem.mockResolvedValue({ data: { success: true } });
-    acceptanceApi.issues.create.mockResolvedValue({ 
-      data: { id: 2, ...mockIssues[0] } 
-    });
-    acceptanceApi.orders.complete.mockResolvedValue({ data: { success: true } });
+    mockUseAcceptanceExecutionPage.mockReturnValue(buildHookState());
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it('renders loading state', () => {
+    mockUseAcceptanceExecutionPage.mockReturnValue(buildHookState({ loading: true }));
+
+    renderPage();
+
+    expect(screen.getByText('加载中...')).toBeInTheDocument();
   });
 
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render page title', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('renders not-found state when order is missing', () => {
+    mockUseAcceptanceExecutionPage.mockReturnValue(
+      buildHookState({ loading: false, order: null })
+    );
 
-      await waitFor(() => {
-        expect(screen.getByText(/验收执行|Acceptance Execution/i)).toBeInTheDocument();
-      });
-    });
+    renderPage();
 
-    it('should render order information', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('ACC-2024-001')).toBeInTheDocument();
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-    });
-
-    it('should render acceptance items table', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('用户登录功能')).toBeInTheDocument();
-        expect(screen.getByText('系统响应时间')).toBeInTheDocument();
-        expect(screen.getByText('浏览器兼容性')).toBeInTheDocument();
-      });
-    });
-
-    it('should display result status badges', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/待检查|PENDING/i)).toBeInTheDocument();
-        expect(screen.getByText(/通过|PASSED/i)).toBeInTheDocument();
-        expect(screen.getByText(/不通过|FAILED/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should render progress bar', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        // 2 out of 3 items checked (PASSED + FAILED)
-        const progressText = screen.queryByText(/66|67|2\/3/);
-        expect(progressText).toBeTruthy();
-      });
-    });
+    expect(screen.getByText('验收单不存在')).toBeInTheDocument();
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should call API to fetch order details on mount', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('renders page content from hook state', () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(acceptanceApi.orders.get).toHaveBeenCalledWith(1);
-        expect(acceptanceApi.orders.getItems).toHaveBeenCalledWith(1);
-        expect(acceptanceApi.issues.list).toHaveBeenCalledWith(1);
-      });
-    });
-
-    it('should show loading state initially', () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      const loadingElements = screen.queryAllByRole('status') || screen.queryAllByText(/加载中|Loading/i);
-      expect(loadingElements.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle API error', async () => {
-      acceptanceApi.orders.get.mockRejectedValueOnce(new Error('Failed to load'));
-
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const errorMessage = screen.queryByText(/错误|Error|失败/i);
-        expect(errorMessage).toBeTruthy();
-      }, { timeout: 3000 });
-    });
+    expect(useAcceptanceExecutionPage).toBeDefined();
+    expect(screen.getByText('验收执行 - ACC-2024-001')).toBeInTheDocument();
+    expect(screen.getByText('验收检查项执行、问题管理')).toBeInTheDocument();
+    expect(screen.getByTestId('summary-cards')).toBeInTheDocument();
+    expect(screen.getByText('用户登录功能')).toBeInTheDocument();
+    expect(screen.getByText('系统响应时间')).toBeInTheDocument();
+    expect(screen.getByText('Safari浏览器下拉菜单无法正常显示')).toBeInTheDocument();
   });
 
-  // 3. 检查项执行测试
-  describe('Item Execution', () => {
-    it('should open item dialog when clicking check button', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('calls navigate when clicking back button', () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText('用户登录功能')).toBeInTheDocument();
-      });
+    fireEvent.click(screen.getByRole('button', { name: /返回列表/i }));
 
-      const checkButtons = screen.queryAllByRole('button', { name: /检查|Check|执行/i });
-      if (checkButtons.length > 0) {
-        fireEvent.click(checkButtons[0]);
-
-        await waitFor(() => {
-          expect(screen.getByText(/执行检查|Execute Check|检查项/i)).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should update item status to PASSED', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('用户登录功能')).toBeInTheDocument();
-      });
-
-      const checkButtons = screen.queryAllByRole('button', { name: /检查|Check|执行/i });
-      if (checkButtons.length > 0) {
-        fireEvent.click(checkButtons[0]);
-
-        await waitFor(() => {
-          const passButton = screen.queryByRole('button', { name: /通过|Pass|PASSED/i });
-          if (passButton) {
-            fireEvent.click(passButton);
-
-            const submitButton = screen.getByRole('button', { name: /提交|Submit|确定/i });
-            fireEvent.click(submitButton);
-          }
-        });
-
-        await waitFor(() => {
-          expect(acceptanceApi.orders.updateItem).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should update item status to FAILED', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('用户登录功能')).toBeInTheDocument();
-      });
-
-      const checkButtons = screen.queryAllByRole('button', { name: /检查|Check|执行/i });
-      if (checkButtons.length > 0) {
-        fireEvent.click(checkButtons[0]);
-
-        await waitFor(() => {
-          const failButton = screen.queryByRole('button', { name: /不通过|Fail|FAILED/i });
-          if (failButton) {
-            fireEvent.click(failButton);
-          }
-        });
-      }
-    });
-
-    it('should record actual value and deviation', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('系统响应时间')).toBeInTheDocument();
-      });
-
-      const checkButtons = screen.queryAllByRole('button', { name: /检查|Check|执行|查看/i });
-      if (checkButtons.length > 1) {
-        fireEvent.click(checkButtons[1]);
-
-        await waitFor(() => {
-          const actualValueInput = screen.queryByLabelText(/实际值|Actual Value/i);
-          if (actualValueInput) {
-            fireEvent.change(actualValueInput, { target: { value: '2.8秒' } });
-          }
-
-          const deviationInput = screen.queryByLabelText(/偏差|Deviation/i);
-          if (deviationInput) {
-            fireEvent.change(deviationInput, { target: { value: '性能良好' } });
-          }
-        });
-      }
-    });
+    expect(mockNavigate).toHaveBeenCalledWith('/acceptance-orders');
   });
 
-  // 4. 问题管理测试
-  describe('Issue Management', () => {
-    it('should display issues list', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('calls refreshAll when clicking refresh button', () => {
+    const state = buildHookState();
+    mockUseAcceptanceExecutionPage.mockReturnValue(state);
 
-      await waitFor(() => {
-        expect(screen.getByText(/Safari浏览器下拉菜单无法正常显示/i)).toBeInTheDocument();
-      });
-    });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /刷新/i }));
 
-    it('should open create issue dialog', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('用户登录功能')).toBeInTheDocument();
-      });
-
-      const issueButtons = screen.queryAllByRole('button', { name: /记录问题|Add Issue|新增/i });
-      if (issueButtons.length > 0) {
-        fireEvent.click(issueButtons[0]);
-
-        await waitFor(() => {
-          expect(screen.getByText(/记录问题|Create Issue/i)).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should create new issue', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('用户登录功能')).toBeInTheDocument();
-      });
-
-      const issueButtons = screen.queryAllByRole('button', { name: /记录问题|Add Issue|新增/i });
-      if (issueButtons.length > 0) {
-        fireEvent.click(issueButtons[0]);
-
-        await waitFor(() => {
-          const descInput = screen.queryByLabelText(/问题描述|Description/i);
-          if (descInput) {
-            fireEvent.change(descInput, { target: { value: '新发现的问题' } });
-          }
-
-          const submitButton = screen.getByRole('button', { name: /提交|Submit|确定/i });
-          fireEvent.click(submitButton);
-        });
-
-        await waitFor(() => {
-          expect(acceptanceApi.issues.create).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should display issue severity badges', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const severityBadge = screen.queryByText(/重要|MAJOR|严重|高/i);
-        expect(severityBadge).toBeTruthy();
-      });
-    });
+    expect(state.refreshAll).toHaveBeenCalledTimes(1);
   });
 
-  // 5. 验收完成测试
-  describe('Acceptance Completion', () => {
-    it('should open complete dialog', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('opens complete dialog when clicking complete button', () => {
+    const state = buildHookState();
+    mockUseAcceptanceExecutionPage.mockReturnValue(state);
 
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: /完成验收/i }));
 
-      const completeButton = screen.queryByRole('button', { name: /完成验收|Complete|提交验收/i });
-      if (completeButton) {
-        fireEvent.click(completeButton);
-
-        await waitFor(() => {
-          expect(screen.getByText(/完成验收|Complete Acceptance|验收结论/i)).toBeInTheDocument();
-        });
-      }
-    });
-
-    it('should submit completion with PASS result', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const completeButton = screen.queryByRole('button', { name: /完成验收|Complete|提交验收/i });
-      if (completeButton) {
-        fireEvent.click(completeButton);
-
-        await waitFor(() => {
-          const passOption = screen.queryByText(/通过|PASS/i);
-          if (passOption) {
-            fireEvent.click(passOption);
-          }
-
-          const conclusionInput = screen.queryByLabelText(/验收结论|Conclusion/i);
-          if (conclusionInput) {
-            fireEvent.change(conclusionInput, { target: { value: '验收通过' } });
-          }
-
-          const submitButton = screen.getByRole('button', { name: /提交|Submit|确定/i });
-          fireEvent.click(submitButton);
-        });
-
-        await waitFor(() => {
-          expect(acceptanceApi.orders.complete).toHaveBeenCalled();
-        });
-      }
-    });
-
-    it('should submit completion with CONDITIONAL result', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const completeButton = screen.queryByRole('button', { name: /完成验收|Complete|提交验收/i });
-      if (completeButton) {
-        fireEvent.click(completeButton);
-
-        await waitFor(() => {
-          const conditionalOption = screen.queryByText(/有条件通过|CONDITIONAL/i);
-          if (conditionalOption) {
-            fireEvent.click(conditionalOption);
-          }
-
-          const conditionsInput = screen.queryByLabelText(/附加条件|Conditions/i);
-          if (conditionsInput) {
-            fireEvent.change(conditionsInput, { 
-              target: { value: '需要在1个月内修复Safari兼容性问题' } 
-            });
-          }
-        });
-      }
-    });
-
-    it('should validate completion form', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
-
-      const completeButton = screen.queryByRole('button', { name: /完成验收|Complete|提交验收/i });
-      if (completeButton) {
-        fireEvent.click(completeButton);
-
-        await waitFor(() => {
-          const submitButton = screen.getByRole('button', { name: /提交|Submit|确定/i });
-          fireEvent.click(submitButton);
-        });
-
-        await waitFor(() => {
-          const errorMessage = screen.queryByText(/必填|Required|不能为空/i);
-          expect(errorMessage).toBeTruthy();
-        });
-      }
-    });
+    expect(state.setShowCompleteDialog).toHaveBeenCalledWith(true);
   });
 
-  // 6. 统计信息测试
-  describe('Statistics', () => {
-    it('should display total items count', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('does not show complete button when order is not in progress', () => {
+    mockUseAcceptanceExecutionPage.mockReturnValue(
+      buildHookState({ order: { id: 1, order_no: 'ACC-2024-001', status: 'COMPLETED' } })
+    );
 
-      await waitFor(() => {
-        const totalCount = screen.queryByText(/3|共3项|Total: 3/i);
-        expect(totalCount).toBeTruthy();
-      });
-    });
+    renderPage();
 
-    it('should display passed items count', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const passedCount = screen.queryByText(/1|通过: 1|Passed: 1/i);
-        expect(passedCount).toBeTruthy();
-      });
-    });
-
-    it('should display failed items count', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const failedCount = screen.queryByText(/1|不通过: 1|Failed: 1/i);
-        expect(failedCount).toBeTruthy();
-      });
-    });
-
-    it('should display issues count', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const issuesCount = screen.queryByText(/1|问题: 1|Issues: 1/i);
-        expect(issuesCount).toBeTruthy();
-      });
-    });
+    expect(screen.queryByRole('button', { name: /完成验收/i })).not.toBeInTheDocument();
   });
 
-  // 7. 导航功能测试
-  describe('Navigation', () => {
-    it('should go back when clicking back button', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('opens issue dialog from check-items panel', () => {
+    const state = buildHookState();
+    mockUseAcceptanceExecutionPage.mockReturnValue(state);
 
-      await waitFor(() => {
-        expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: '上报问题' }));
 
-      const backButton = screen.queryByRole('button', { name: /返回|Back/i });
-      if (backButton) {
-        fireEvent.click(backButton);
-        expect(mockNavigate).toHaveBeenCalledWith(-1);
-      }
-    });
+    expect(state.setShowIssueDialog).toHaveBeenCalledWith(true);
   });
 
-  // 8. 刷新功能测试
-  describe('Refresh Functionality', () => {
-    it('should refresh data when clicking refresh button', async () => {
-      render(
-        <MemoryRouter initialEntries={['/acceptance/execution/1']}>
-          <Routes>
-            <Route path="/acceptance/execution/:id" element={<AcceptanceExecution />} />
-          </Routes>
-        </MemoryRouter>
-      );
+  it('opens item dialog when clicking an item', () => {
+    const state = buildHookState();
+    mockUseAcceptanceExecutionPage.mockReturnValue(state);
 
-      await waitFor(() => {
-        expect(acceptanceApi.orders.getItems).toHaveBeenCalled();
-      });
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: '用户登录功能' }));
 
-      const initialCallCount = acceptanceApi.orders.getItems.mock.calls.length;
+    expect(state.openItemDialog).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 1, item_name: '用户登录功能' })
+    );
+  });
 
-      const refreshButton = screen.queryByRole('button', { name: /刷新|Refresh/i });
-      if (refreshButton) {
-        fireEvent.click(refreshButton);
+  it('passes dialog open state through to child dialogs', () => {
+    mockUseAcceptanceExecutionPage.mockReturnValue(
+      buildHookState({
+        showItemDialog: true,
+        showIssueDialog: true,
+        showCompleteDialog: true,
+      })
+    );
 
-        await waitFor(() => {
-          expect(acceptanceApi.orders.getItems.mock.calls.length).toBeGreaterThan(initialCallCount);
-        });
-      }
-    });
+    renderPage();
+
+    expect(screen.getByTestId('update-item-dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('create-issue-dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('complete-dialog')).toBeInTheDocument();
   });
 });

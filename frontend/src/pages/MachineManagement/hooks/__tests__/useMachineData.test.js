@@ -2,23 +2,25 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useMachineData } from '../useMachineData';
 
-// Mock the API module directly
-const mockMachineApi = {
-  list: vi.fn(),
-  get: vi.fn(),
-  create: vi.fn(),
-  update: vi.fn(),
-  delete: vi.fn(),
-};
+// Mock the API module
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    machineApi: {
+    list: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  projectApi: {
+    get: vi.fn(),
+  },
+  };
+});
 
-const mockProjectApi = {
-  get: vi.fn(),
-};
-
-vi.mock('../../../../services/api', () => ({
-  machineApi: mockMachineApi,
-  projectApi: mockProjectApi,
-}));
+import { machineApi, projectApi } from '../../../../services/api';
 
 describe('useMachineData Hook', () => {
   // Setup common mock data
@@ -32,9 +34,9 @@ describe('useMachineData Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup mock responses
-    mockMachineApi.list.mockResolvedValue(mockResponse);
-    mockMachineApi.get.mockResolvedValue({ data: mockDetail });
-    mockProjectApi.get.mockResolvedValue({ data: { project_name: 'Test Project' } });
+    machineApi.list.mockResolvedValue(mockResponse);
+    machineApi.get.mockResolvedValue({ data: mockDetail });
+    projectApi.get.mockResolvedValue({ data: { project_name: 'Test Project' } });
   });
 
   it('should load data', async () => {

@@ -10,6 +10,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.models.strategy import AnnualKeyWork, AnnualKeyWorkProjectLink
@@ -123,23 +124,12 @@ class TestUpdateProgress:
         assert result.progress_description == "旧描述"
 
     def test_update_progress_over_100(self):
-        """测试超过100%的进度"""
+        """测试超过100%的进度应该抛出验证错误"""
+        from pydantic import ValidationError
         db = Mock(spec=Session)
-        data = AnnualKeyWorkProgressUpdate(progress_percent=Decimal("120"))
-
-        mock_work = AnnualKeyWork(id=1, is_active=True)
-
-        with patch(
-            "app.services.strategy.annual_work_service.progress.get_annual_work",
-            return_value=mock_work,
-        ):
-            db.commit = MagicMock()
-            db.refresh = MagicMock()
-
-            result = update_progress(db, 1, data)
-
-        # 超过100%仍然标记为完成
-        assert result.status == "COMPLETED"
+        # 这里应该在创建data对象时就抛出验证错误，因为超过了100%
+        with pytest.raises(ValidationError):
+            AnnualKeyWorkProgressUpdate(progress_percent=Decimal("120"))
 
 
 class TestCalculateProgressFromProjects:

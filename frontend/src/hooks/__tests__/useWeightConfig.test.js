@@ -8,10 +8,9 @@ import { useWeightConfig } from '../useWeightConfig';
 import { performanceApi } from '../../services/api';
 
 // Mock API
-vi.mock('../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('../../services/api', async () => {
   return {
-    ...actual,
+    __esModule: true,
     default: {
       get: vi.fn(),
       post: vi.fn(),
@@ -19,6 +18,10 @@ vi.mock('../../services/api', async (importOriginal) => {
       delete: vi.fn(),
       patch: vi.fn(),
       defaults: { baseURL: '/api' },
+    },
+    performanceApi: {
+      getWeightConfig: vi.fn(),
+      updateWeightConfig: vi.fn(),
     },
   };
 });

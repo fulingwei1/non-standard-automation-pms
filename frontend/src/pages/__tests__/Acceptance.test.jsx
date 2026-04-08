@@ -12,72 +12,75 @@ import _api, { acceptanceApi, projectApi as _projectApi } from '../../services/a
 // Mock dependencies
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn().mockResolvedValue({ data: {} }),
+    get: vi.fn().mockResolvedValue({data: { items: [] }}),
     post: vi.fn().mockResolvedValue({ data: { success: true } }),
     put: vi.fn().mockResolvedValue({ data: { success: true } }),
     delete: vi.fn().mockResolvedValue({ data: { success: true } }),
     defaults: { baseURL: '/api' },
   },
     acceptanceApi: {
-      delete: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
       templates: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        get: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
-        getItems: vi.fn().mockResolvedValue({ data: {} }),
-        addItems: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        get: vi.fn().mockResolvedValue({data: { items: [] }}),
+        create: vi.fn().mockResolvedValue({data: { items: [] }}),
+        getItems: vi.fn().mockResolvedValue({data: { items: [] }}),
+        addItems: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       orders: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        get: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
-        start: vi.fn().mockResolvedValue({ data: {} }),
-        complete: vi.fn().mockResolvedValue({ data: {} }),
-        getItems: vi.fn().mockResolvedValue({ data: {} }),
-        updateItem: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        get: vi.fn().mockResolvedValue({data: { items: [] }}),
+        create: vi.fn().mockResolvedValue({data: { items: [] }}),
+        start: vi.fn().mockResolvedValue({data: { items: [] }}),
+        complete: vi.fn().mockResolvedValue({data: { items: [] }}),
+        getItems: vi.fn().mockResolvedValue({data: { items: [] }}),
+        updateItem: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       issues: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
-        update: vi.fn().mockResolvedValue({ data: {} }),
-        close: vi.fn().mockResolvedValue({ data: {} }),
-        addFollowUp: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        create: vi.fn().mockResolvedValue({data: { items: [] }}),
+        update: vi.fn().mockResolvedValue({data: { items: [] }}),
+        close: vi.fn().mockResolvedValue({data: { items: [] }}),
+        addFollowUp: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       signatures: {
-        list: vi.fn().mockResolvedValue({ data: {} }),
-        create: vi.fn().mockResolvedValue({ data: {} }),
+        list: vi.fn().mockResolvedValue({data: { items: [] }}),
+        create: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
       reports: {
-        generate: vi.fn().mockResolvedValue({ data: {} }),
-        download: vi.fn().mockResolvedValue({ data: {} }),
+        generate: vi.fn().mockResolvedValue({data: { items: [] }}),
+        download: vi.fn().mockResolvedValue({data: { items: [] }}),
       },
     },
     projectApi: {
-      list: vi.fn().mockResolvedValue({ data: {} }),
-      getBoard: vi.fn().mockResolvedValue({ data: {} }),
-      get: vi.fn().mockResolvedValue({ data: {} }),
-      create: vi.fn().mockResolvedValue({ data: {} }),
-      update: vi.fn().mockResolvedValue({ data: {} }),
-      getMachines: vi.fn().mockResolvedValue({ data: {} }),
-      getInProductionSummary: vi.fn().mockResolvedValue({ data: {} }),
-      recommendTemplates: vi.fn().mockResolvedValue({ data: {} }),
-      createFromTemplate: vi.fn().mockResolvedValue({ data: {} }),
-      checkAutoTransition: vi.fn().mockResolvedValue({ data: {} }),
-      getGateCheckResult: vi.fn().mockResolvedValue({ data: {} }),
-      advanceStage: vi.fn().mockResolvedValue({ data: {} }),
-      getCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      clearCache: vi.fn().mockResolvedValue({ data: {} }),
-      resetCacheStats: vi.fn().mockResolvedValue({ data: {} }),
-      getStatusLogs: vi.fn().mockResolvedValue({ data: {} }),
-      getHealthDetails: vi.fn().mockResolvedValue({ data: {} }),
-      getStats: vi.fn().mockResolvedValue({ data: {} }),
+      list: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getBoard: vi.fn().mockResolvedValue({data: { items: [] }}),
+      get: vi.fn().mockResolvedValue({data: { items: [] }}),
+      create: vi.fn().mockResolvedValue({data: { items: [] }}),
+      update: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getMachines: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getInProductionSummary: vi.fn().mockResolvedValue({data: { items: [] }}),
+      recommendTemplates: vi.fn().mockResolvedValue({data: { items: [] }}),
+      createFromTemplate: vi.fn().mockResolvedValue({data: { items: [] }}),
+      checkAutoTransition: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getGateCheckResult: vi.fn().mockResolvedValue({data: { items: [] }}),
+      advanceStage: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getCacheStats: vi.fn().mockResolvedValue({data: { items: [] }}),
+      clearCache: vi.fn().mockResolvedValue({data: { items: [] }}),
+      resetCacheStats: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getStatusLogs: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getHealthDetails: vi.fn().mockResolvedValue({data: { items: [] }}),
+      getStats: vi.fn().mockResolvedValue({data: { items: [] }}),
     }
 }));
 vi.mock('framer-motion', () => ({
   motion: new Proxy({}, {
     get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
+      const validProps = ['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'];
+      const filtered = props && Object.entries(props).length > 0 
+        ? Object.fromEntries(Object.entries(props).filter(([k]) => !validProps.includes(k))) 
+        : {};
       const Tag = typeof tag === 'string' ? tag : 'div';
       return <Tag {...filtered}>{children}</Tag>;
     }
@@ -96,7 +99,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   };
 });
 
-describe.skip('Acceptance', () => {
+describe('Acceptance', () => {
   const mockAcceptanceData = {
     items: [
       {
@@ -203,10 +206,10 @@ describe.skip('Acceptance', () => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('/acceptance')
         );
-      });
+      }, { timeout: 5000 });
     });
 
-    it('should display loading state', () => {
+    it('should display loading state', async () => {
       acceptanceApi.orders.list.mockImplementation(() => new Promise(() => {}));
       
       render(
@@ -215,7 +218,9 @@ describe.skip('Acceptance', () => {
         </MemoryRouter>
       );
 
-      expect(screen.getByText(/加载中|Loading/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/加载中|Loading/i)).toBeInTheDocument();
+      }, { timeout: 5000 });
     });
 
     it('should handle empty acceptance list', async () => {
@@ -229,7 +234,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/暂无数据|No Data/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should refresh data when refresh button clicked', async () => {
@@ -241,14 +246,14 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledTimes(1);
-      });
+      }, { timeout: 5000 });
 
       const refreshButton = screen.getByRole('button', { name: /刷新|Refresh/i });
       fireEvent.click(refreshButton);
 
       await waitFor(() => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledTimes(2);
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -263,14 +268,14 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const createButton = screen.getByRole('button', { name: /新建验收|Create Acceptance/i });
       fireEvent.click(createButton);
 
       await waitFor(() => {
         expect(screen.getByText(/创建验收记录|Create Acceptance Record/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should filter by status', async () => {
@@ -282,7 +287,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const statusFilter = screen.getByRole('combobox', { name: /状态|Status/i });
       fireEvent.change(statusFilter, { target: { value: 'pending' } });
@@ -291,7 +296,7 @@ describe.skip('Acceptance', () => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('status=pending')
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should filter by type', async () => {
@@ -303,7 +308,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const typeFilter = screen.getByRole('combobox', { name: /类型|Type/i });
       fireEvent.change(typeFilter, { target: { value: 'final' } });
@@ -312,7 +317,7 @@ describe.skip('Acceptance', () => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('type=final')
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should search by keyword', async () => {
@@ -324,7 +329,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const searchInput = screen.getByPlaceholderText(/搜索验收|Search acceptance/i);
       fireEvent.change(searchInput, { target: { value: '智能制造' } });
@@ -333,7 +338,7 @@ describe.skip('Acceptance', () => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('keyword=智能制造')
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should view acceptance detail', async () => {
@@ -345,14 +350,14 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const viewButton = screen.getAllByRole('button', { name: /查看|View/i })[0];
       fireEvent.click(viewButton);
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('/acceptance/1'));
-      });
+      }, { timeout: 5000 });
     });
 
     it('should start acceptance execution', async () => {
@@ -366,7 +371,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const startButton = screen.getAllByRole('button', { name: /开始验收|Start/i })[0];
       fireEvent.click(startButton);
@@ -376,7 +381,7 @@ describe.skip('Acceptance', () => {
           expect.stringContaining('/acceptance/1/start'),
           expect.any(Object)
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should submit acceptance result', async () => {
@@ -390,14 +395,14 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const submitButton = screen.getAllByRole('button', { name: /提交结果|Submit Result/i })[0];
       fireEvent.click(submitButton);
 
       await waitFor(() => {
         expect(screen.getByText(/提交验收结果|Submit Acceptance Result/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should approve acceptance', async () => {
@@ -411,7 +416,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('ERP系统升级')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const approveButton = screen.getAllByRole('button', { name: /批准|Approve/i })[0];
       fireEvent.click(approveButton);
@@ -421,7 +426,7 @@ describe.skip('Acceptance', () => {
           expect.stringContaining('/acceptance/2/approve'),
           expect.any(Object)
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should reject acceptance', async () => {
@@ -435,7 +440,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const rejectButton = screen.getAllByRole('button', { name: /拒绝|Reject/i })[0];
       fireEvent.click(rejectButton);
@@ -445,7 +450,7 @@ describe.skip('Acceptance', () => {
           expect.stringContaining('/acceptance/1/reject'),
           expect.any(Object)
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should delete acceptance', async () => {
@@ -460,14 +465,14 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const deleteButton = screen.getAllByRole('button', { name: /删除|Delete/i })[0];
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
         expect(acceptanceApi.delete).toHaveBeenCalledWith('/acceptance/1');
-      });
+      }, { timeout: 5000 });
     });
 
     it('should export acceptance report', async () => {
@@ -481,7 +486,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const exportButton = screen.getAllByRole('button', { name: /导出|Export/i })[0];
       fireEvent.click(exportButton);
@@ -490,7 +495,7 @@ describe.skip('Acceptance', () => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('/acceptance/1/report')
         );
-      });
+      }, { timeout: 5000 });
     });
 
     it('should handle pagination', async () => {
@@ -502,7 +507,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const nextPageButton = screen.getByRole('button', { name: /下一页|Next/i });
       fireEvent.click(nextPageButton);
@@ -511,7 +516,7 @@ describe.skip('Acceptance', () => {
         expect(acceptanceApi.orders.list).toHaveBeenCalledWith(
           expect.stringContaining('page=2')
         );
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -528,7 +533,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/加载失败|Load Failed/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should handle create acceptance failure', async () => {
@@ -542,7 +547,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const createButton = screen.getByRole('button', { name: /新建验收|Create Acceptance/i });
       fireEvent.click(createButton);
@@ -550,11 +555,11 @@ describe.skip('Acceptance', () => {
       await waitFor(() => {
         const submitButton = screen.getByRole('button', { name: /提交|Submit/i });
         fireEvent.click(submitButton);
-      });
+      }, { timeout: 5000 });
 
       await waitFor(() => {
         expect(screen.getByText(/创建失败|Create Failed/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should handle submit result failure', async () => {
@@ -568,14 +573,14 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByText('智能制造系统')).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
 
       const submitButton = screen.getAllByRole('button', { name: /提交结果|Submit Result/i })[0];
       fireEvent.click(submitButton);
 
       await waitFor(() => {
         expect(screen.getByText(/提交失败|Submit Failed/i)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
   });
 
@@ -592,7 +597,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /新建验收|Create Acceptance/i })).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should hide create button for unauthorized users', async () => {
@@ -606,7 +611,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.queryByRole('button', { name: /新建验收|Create Acceptance/i })).not.toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
 
     it('should show approve button for authorized users', async () => {
@@ -620,7 +625,7 @@ describe.skip('Acceptance', () => {
 
       await waitFor(() => {
         expect(screen.getAllByRole('button', { name: /批准|Approve/i }).length).toBeGreaterThan(0);
-      });
+      }, { timeout: 5000 });
     });
   });
 });

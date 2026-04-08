@@ -3,10 +3,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePaymentManagement } from '../usePaymentManagement';
 import { paymentApi, receivableApi } from '../../../../services/api';
 
-vi.mock('../../../../services/api', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('../../../../services/api', async () => {
   return {
-    ...actual,
+    __esModule: true,
+    paymentApi: {
+      list: vi.fn(),
+      get: vi.fn(),
+      getReminders: vi.fn(),
+      getStatistics: vi.fn(),
+    },
+    receivableApi: {
+      list: vi.fn(),
+      get: vi.fn(),
+      getAging: vi.fn(),
+    },
     default: {
       get: vi.fn(),
       post: vi.fn(),
@@ -23,8 +33,8 @@ describe('usePaymentManagement Hook', () => {
         vi.clearAllMocks();
         paymentApi.list.mockResolvedValue({ data: { items: [], total: 0 } });
         paymentApi.getReminders.mockResolvedValue({ data: { items: [] } });
-        paymentApi.getStatistics.mockResolvedValue({ data: {} });
-        receivableApi.getAging.mockResolvedValue({ data: {} });
+        paymentApi.getStatistics.mockResolvedValue({data: { items: [] }});
+        receivableApi.getAging.mockResolvedValue({data: { items: [] }});
     });
 
     it('should initialize with default state', async () => {

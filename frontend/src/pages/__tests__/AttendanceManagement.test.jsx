@@ -1,592 +1,227 @@
-/**
- * AttendanceManagement 组件测试
- * 测试覆盖：考勤记录显示、统计数据、筛选功能、请假申请、加班管理
- */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import AttendanceManagement from '../AttendanceManagement';
-import { adminApi } from '../../services/api';
+import { useState } from 'react';
 
-// Mock API
-// Mock framer-motion
-vi.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => ({ children, ...props }) => {
-      const filtered = Object.fromEntries(Object.entries(props).filter(([k]) => !['initial','animate','exit','variants','transition','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onDragEnd'].includes(k)));
-      const Tag = typeof tag === 'string' ? tag : 'div';
-      return <Tag {...filtered}>{children}</Tag>;
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({ start: vi.fn(), stop: vi.fn() }),
-  useInView: () => true,
+const { adminApiMock, consoleLogMock } = vi.hoisted(() => ({
+  adminApiMock: {
+    attendance: {
+      list: vi.fn(),
+    },
+  },
+  consoleLogMock: vi.fn(),
 }));
 
-describe.skip('AttendanceManagement', () => {
-  const mockAttendanceData = [
-    {
-      id: 1,
-      employeeId: 101,
-      employeeName: '张三',
-      department: '研发部',
-      date: '2024-02-20',
-      checkIn: '09:00:00',
-      checkOut: '18:00:00',
-      status: 'present',
-      workHours: 8,
-      overtime: 0,
-      late: false,
-      total: 1,
-      present: 1,
-      leave: 0,
-      lateCount: 0,
-    },
-    {
-      id: 2,
-      employeeId: 102,
-      employeeName: '李四',
-      department: '测试部',
-      date: '2024-02-20',
-      checkIn: '09:15:00',
-      checkOut: '18:00:00',
-      status: 'late',
-      workHours: 7.75,
-      overtime: 0,
-      late: true,
-      total: 1,
-      present: 1,
-      leave: 0,
-      lateCount: 1,
-    },
-    {
-      id: 3,
-      employeeId: 103,
-      employeeName: '王五',
-      department: '产品部',
-      date: '2024-02-20',
-      checkIn: null,
-      checkOut: null,
-      status: 'leave',
-      workHours: 0,
-      overtime: 0,
-      late: false,
-      total: 1,
-      present: 0,
-      leave: 1,
-      lateCount: 0,
-    },
-  ];
+vi.mock('../../services/api', () => ({
+  adminApi: adminApiMock,
+}));
 
-  const mockStats = {
-    totalEmployees: 150,
-    presentToday: 145,
-    lateToday: 3,
-    leaveToday: 2,
-    attendanceRate: 96.7,
-    avgWorkHours: 8.2,
-    overtimeHours: 15,
+vi.mock('framer-motion', () => ({
+  motion: new Proxy(
+    {},
+    {
+      get: (_, tag) => ({ children, ...props }) => {
+        const Tag = typeof tag === 'string' ? tag : 'div';
+        const filteredProps = Object.fromEntries(
+          Object.entries(props).filter(
+            ([key]) =>
+              ![
+                'initial',
+                'animate',
+                'exit',
+                'variants',
+                'transition',
+                'whileHover',
+                'whileTap',
+                'whileInView',
+                'layout',
+                'layoutId',
+                'drag',
+                'dragConstraints',
+                'onDragEnd',
+              ].includes(key),
+          ),
+        );
+        return <Tag {...filteredProps}>{children}</Tag>;
+      },
+    },
+  ),
+}));
+
+vi.mock('../../components/layout', () => ({
+  PageHeader: ({ title, description, actions }) => (
+    <div>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <div>{actions}</div>
+    </div>
+  ),
+}));
+
+vi.mock('../../lib/utils', () => ({
+  cn: (...values) => values.filter(Boolean).join(' '),
+}));
+
+vi.mock('../../lib/animations', () => ({
+  staggerContainer: {},
+}));
+
+vi.mock('../../components/ui', async () => {
+  const React = await import('react');
+  const TabsContext = React.createContext({ value: '', setValue: () => {} });
+
+  function Tabs({ children, defaultValue }) {
+    const [value, setValue] = useState(defaultValue);
+    return <TabsContext.Provider value={{ value, setValue }}>{children}</TabsContext.Provider>;
+  }
+
+  function TabsTrigger({ children, value }) {
+    const tabs = React.useContext(TabsContext);
+    return (
+      <button type="button" onClick={() => tabs.setValue(value)}>
+        {children}
+      </button>
+    );
+  }
+
+  function TabsContent({ children, value }) {
+    const tabs = React.useContext(TabsContext);
+    return tabs.value === value ? <div>{children}</div> : null;
+  }
+
+  return {
+    Card: ({ children }) => <div>{children}</div>,
+    CardContent: ({ children }) => <div>{children}</div>,
+    CardHeader: ({ children }) => <div>{children}</div>,
+    CardTitle: ({ children }) => <h2>{children}</h2>,
+    Button: ({ children, onClick, type = 'button', ...props }) => (
+      <button type={type} onClick={onClick} {...props}>
+        {children}
+      </button>
+    ),
+    Badge: ({ children }) => <span>{children}</span>,
+    Tabs,
+    TabsList: ({ children }) => <div>{children}</div>,
+    TabsTrigger,
+    TabsContent,
+    Progress: ({ value }) => <div role="progressbar" aria-valuenow={value} />, 
   };
+});
 
+import AttendanceManagement from '../AttendanceManagement';
+
+const departmentStats = [
+  {
+    department: '研发部',
+    total: 10,
+    present: 8,
+    leave: 1,
+    late: 1,
+    attendanceRate: 80,
+    earlyLeave: 0,
+    absence: 1,
+  },
+  {
+    department: '测试部',
+    total: 5,
+    present: 5,
+    leave: 0,
+    late: 0,
+    attendanceRate: 100,
+    earlyLeave: 0,
+    absence: 0,
+  },
+];
+
+describe('AttendanceManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    adminApi.attendance.list.mockResolvedValue({ 
-      data: { items: mockAttendanceData } 
-    });
-    adminApi.attendance.getStats.mockResolvedValue({ data: mockStats });
-  });
+    vi.spyOn(console, 'log').mockImplementation(consoleLogMock);
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  // 1. 组件渲染测试
-  describe('Component Rendering', () => {
-    it('should render attendance management title', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByText(/员工考勤管理|Attendance Management/i)).toBeInTheDocument();
-    });
-
-    it('should render statistics cards', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/出勤率|Attendance Rate/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should display action buttons', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByText(/导出报表|Export/i)).toBeInTheDocument();
-      expect(screen.getByText(/统计分析|Statistics/i)).toBeInTheDocument();
+    adminApiMock.attendance.list.mockResolvedValue({
+      data: { items: departmentStats },
     });
   });
 
-  // 2. 数据加载测试
-  describe('Data Loading', () => {
-    it('should call API to fetch attendance records', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
+  function renderPage() {
+    return render(
+      <MemoryRouter>
+        <AttendanceManagement />
+      </MemoryRouter>,
+    );
+  }
 
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
+  it('默认加载考勤统计并渲染页头和汇总卡片', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(adminApiMock.attendance.list).toHaveBeenCalledWith({ date: 'today' });
     });
 
-    it('should handle API error gracefully', async () => {
-      adminApi.attendance.list.mockRejectedValueOnce(new Error('API Error'));
+    expect(screen.getByText('员工考勤管理')).toBeInTheDocument();
+    expect(screen.getByText('员工考勤记录、统计分析、请假管理、加班管理')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /导出报表/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /统计分析/i })).toBeInTheDocument();
 
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
-    });
-
-    it('should display empty state when no records', async () => {
-      adminApi.attendance.list.mockResolvedValueOnce({ data: { items: [] } });
-
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/暂无考勤记录|No attendance records/i)).toBeInTheDocument();
-      });
-    });
+    expect(screen.getByText('总人数')).toBeInTheDocument();
+    expect(screen.getAllByText('出勤').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('请假').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('迟到').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('出勤率').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.getByText('13')).toBeInTheDocument();
+    expect(screen.getByText('86.7%')).toBeInTheDocument();
   });
 
-  // 3. 考勤记录显示测试
-  describe('Attendance Records Display', () => {
-    it('should display employee names', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
+  it('渲染部门统计列表和对应出勤率', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/张三/)).toBeInTheDocument();
-        expect(screen.getByText(/李四/)).toBeInTheDocument();
-        expect(screen.getByText(/王五/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show department information', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/研发部/)).toBeInTheDocument();
-        expect(screen.getByText(/测试部/)).toBeInTheDocument();
-      });
-    });
-
-    it('should display check-in and check-out times', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/09:00:00/)).toBeInTheDocument();
-        expect(screen.getByText(/18:00:00/)).toBeInTheDocument();
-      });
-    });
-
-    it('should show attendance status badges', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/正常|Present/i)).toBeInTheDocument();
-        expect(screen.getByText(/迟到|Late/i)).toBeInTheDocument();
-        expect(screen.getByText(/请假|Leave/i)).toBeInTheDocument();
-      });
-    });
+    expect(await screen.findByText('研发部')).toBeInTheDocument();
+    expect(screen.getByText('测试部')).toBeInTheDocument();
+    expect(screen.getByText('总人数: 10')).toBeInTheDocument();
+    expect(screen.getByText('总人数: 5')).toBeInTheDocument();
+    expect(screen.getByText('80.0%')).toBeInTheDocument();
+    expect(screen.getByText('100.0%')).toBeInTheDocument();
+    expect(screen.getAllByRole('progressbar')).toHaveLength(2);
   });
 
-  // 4. 统计数据测试
-  describe('Statistics Display', () => {
-    it('should display total employees count', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const totalText = screen.queryByText(/150|总人数/);
-        expect(totalText).toBeTruthy();
-      });
+  it('支持 data 直接为数组的返回形状', async () => {
+    adminApiMock.attendance.list.mockResolvedValueOnce({
+      data: departmentStats,
     });
 
-    it('should show attendance rate', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
+    renderPage();
 
-      await waitFor(() => {
-        expect(screen.getByText(/96.7%/)).toBeInTheDocument();
-      });
-    });
-
-    it('should display late count', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const lateCount = screen.queryByText(/3|迟到/);
-        expect(lateCount).toBeTruthy();
-      });
-    });
-
-    it('should show leave count', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const leaveCount = screen.queryByText(/2|请假/);
-        expect(leaveCount).toBeTruthy();
-      });
-    });
+    expect(await screen.findByText('研发部')).toBeInTheDocument();
+    expect(screen.getByText('测试部')).toBeInTheDocument();
   });
 
-  // 5. 日期筛选测试
-  describe('Date Filtering', () => {
-    it('should filter by today', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
+  it('可以切换到考勤记录、请假管理和加班管理标签页', async () => {
+    renderPage();
 
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
+    await screen.findByText('研发部');
 
-      const todayButton = screen.queryByRole('button', { name: /今天|Today/i });
-      if (todayButton) {
-        fireEvent.click(todayButton);
-      }
-    });
+    fireEvent.click(screen.getByRole('button', { name: '考勤记录' }));
+    expect(screen.getByText('暂无考勤明细记录（当前仅展示部门考勤统计）')).toBeInTheDocument();
 
-    it('should filter by this week', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
+    fireEvent.click(screen.getByRole('button', { name: '请假管理' }));
+    expect(screen.getByText('请假申请')).toBeInTheDocument();
 
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
-
-      const weekButton = screen.queryByRole('button', { name: /本周|This Week/i });
-      if (weekButton) {
-        fireEvent.click(weekButton);
-      }
-    });
-
-    it('should filter by this month', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
-
-      const monthButton = screen.queryByRole('button', { name: /本月|This Month/i });
-      if (monthButton) {
-        fireEvent.click(monthButton);
-      }
-    });
+    fireEvent.click(screen.getByRole('button', { name: '加班管理' }));
+    expect(screen.getByText('暂无加班申请数据')).toBeInTheDocument();
   });
 
-  // 6. 搜索功能测试
-  describe('Search Functionality', () => {
-    it('should render search input', () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
+  it('接口失败时会记录降级日志并保持空态汇总', async () => {
+    adminApiMock.attendance.list.mockRejectedValueOnce(new Error('API Error'));
 
-      const searchInput = screen.queryByPlaceholderText(/搜索员工|Search/i);
-      expect(searchInput).toBeTruthy();
+    renderPage();
+
+    await waitFor(() => {
+      expect(consoleLogMock).toHaveBeenCalledWith('Attendance API unavailable, using mock data');
     });
 
-    it('should search by employee name', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/张三/)).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索员工|Search/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: '张三' } });
-      }
-    });
-
-    it('should search by department', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/研发部/)).toBeInTheDocument();
-      });
-
-      const searchInput = screen.queryByPlaceholderText(/搜索员工|Search/i);
-      if (searchInput) {
-        fireEvent.change(searchInput, { target: { value: '研发部' } });
-      }
-    });
-  });
-
-  // 7. 状态筛选测试
-  describe('Status Filtering', () => {
-    it('should filter by present status', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
-
-      const presentFilter = screen.queryByRole('button', { name: /正常|Present/i });
-      if (presentFilter) {
-        fireEvent.click(presentFilter);
-      }
-    });
-
-    it('should filter by late status', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
-
-      const lateFilter = screen.queryByRole('button', { name: /迟到|Late/i });
-      if (lateFilter) {
-        fireEvent.click(lateFilter);
-      }
-    });
-
-    it('should filter by leave status', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(adminApi.attendance.list).toHaveBeenCalled();
-      });
-
-      const leaveFilter = screen.queryByRole('button', { name: /请假|Leave/i });
-      if (leaveFilter) {
-        fireEvent.click(leaveFilter);
-      }
-    });
-  });
-
-  // 8. 导出功能测试
-  describe('Export Functionality', () => {
-    it('should render export button', () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      const exportButton = screen.getByRole('button', { name: /导出报表|Export/i });
-      expect(exportButton).toBeInTheDocument();
-    });
-
-    it('should trigger export when clicking export button', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      const exportButton = screen.getByRole('button', { name: /导出报表|Export/i });
-      fireEvent.click(exportButton);
-    });
-  });
-
-  // 9. 标签页切换测试
-  describe('Tab Navigation', () => {
-    it('should render all tabs', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const tabs = screen.queryAllByRole('tab');
-        expect(tabs.length).toBeGreaterThan(0);
-      });
-    });
-
-    it('should switch between tabs', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const tabs = screen.queryAllByRole('tab');
-        if (tabs.length > 1) {
-          fireEvent.click(tabs[1]);
-        }
-      });
-    });
-  });
-
-  // 10. 加班管理测试
-  describe('Overtime Management', () => {
-    it('should display overtime hours', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const overtimeText = screen.queryByText(/15|加班/);
-        expect(overtimeText).toBeTruthy();
-      });
-    });
-
-    it('should show work hours for each record', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const workHours = screen.queryByText(/8|工时/);
-        expect(workHours).toBeTruthy();
-      });
-    });
-  });
-
-  // 11. 响应式行为测试
-  describe('Responsive Behavior', () => {
-    it('should render properly on mount', async () => {
-      const { container } = render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(container.firstChild).toBeInTheDocument();
-      });
-    });
-
-    it('should handle window resize', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      global.innerWidth = 768;
-      global.dispatchEvent(new Event('resize'));
-
-      await waitFor(() => {
-        expect(screen.getByText(/员工考勤管理/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  // 12. 权限控制测试
-  describe('Permission Control', () => {
-    it('should show management actions for authorized users', async () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const actionButtons = screen.queryAllByRole('button');
-        expect(actionButtons.length).toBeGreaterThan(0);
-      });
-    });
-
-    it('should display export and statistics buttons', () => {
-      render(
-        <MemoryRouter>
-          <AttendanceManagement />
-        </MemoryRouter>
-      );
-
-      expect(screen.getByRole('button', { name: /导出报表|Export/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /统计分析|Statistics/i })).toBeInTheDocument();
-    });
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(4);
+    expect(screen.getByText('0.0%')).toBeInTheDocument();
+    expect(screen.queryByText('研发部')).not.toBeInTheDocument();
   });
 });

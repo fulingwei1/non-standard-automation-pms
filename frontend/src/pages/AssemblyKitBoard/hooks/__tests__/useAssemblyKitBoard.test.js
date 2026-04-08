@@ -1,43 +1,33 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAssemblyKitBoard } from '../useAssemblyKitBoard';
-import { assemblyKitApi as assemblyApi } from '../../../../services/api/production';
 
-// Mock API
-vi.mock('../../../../services/api', async (importOriginal) => {
+// Mock assemblyKitApi
+vi.mock('../../../../services/api/production.js', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-      patch: vi.fn(),
-      defaults: { baseURL: '/api' },
-    },
+    assemblyKitApi: {
+    listKits: vi.fn(),
+    analyzeKit: vi.fn(),
+  },
   };
 });
 
+import { assemblyKitApi } from '../../../../services/api/production.js';
+
 describe('useAssemblyKitBoard Hook', () => {
   // Setup common mock data
-  const mockItems = [{ id: 1, name: 'Test 1' }, { id: 2, name: 'Test 2' }];
+  const mockItems = [{ id: 1, name: 'Test 1', readiness: 100 }, { id: 2, name: 'Test 2', readiness: 50 }];
   const mockDetail = { id: 1, name: 'Test Detail' };
-  const mockResponse = { data: { items: mockItems, total: 2 }, items: mockItems }; 
+  const mockResponse = { data: { items: mockItems, total: 2 }, items: mockItems };
 
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Auto-setup mocks for known methods
-    const apiObjects = [assemblyApi];
-    apiObjects.forEach(api => {
-        if (api) {
-            if (api.list) api.list.mockResolvedValue(mockResponse);
-            if (api.get) api.get.mockResolvedValue({ data: mockDetail });
-            if (api.query) api.query.mockResolvedValue(mockResponse);
-            if (api.aiMatch) api.aiMatch.mockResolvedValue(mockResponse); // specialized
-        }
-    });
+    // Setup mock responses
+    assemblyKitApi.listKits.mockResolvedValue(mockResponse);
+    assemblyKitApi.analyzeKit.mockResolvedValue({ data: mockDetail });
   });
 
   it('should load data', async () => {
