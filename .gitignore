@@ -136,6 +136,14 @@ Thumbs.db
 coverage.json
 coverage.xml
 coverage_*.json
+PERMISSION_COVERAGE_AUDIT.json
+
+# 生成的报告
+reports/
+
+# 临时计划文件
+*_PLAN.md
+*_SCOPE_PLAN.md
 
 # SQLite数据库
 *.db
