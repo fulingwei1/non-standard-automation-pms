@@ -60,8 +60,8 @@ def test_user(db_session: Session):
     user = User(
         username="testuser",
         email="test@example.com",
-        hashed_password="hashed",
-        full_name="测试用户",
+        password_hash="hashed",
+        real_name="测试用户",
         is_active=True,
         is_superuser=False,
     )
@@ -189,6 +189,7 @@ def test_invoice(db_session: Session, test_project):
     contract = Contract(
         contract_code="CONTRACT001",
         contract_name="测试合同",
+        contract_type="销售合同",
         project_id=test_project.id,
         customer_id=test_project.customer_id,
         contract_amount=Decimal("100000"),
