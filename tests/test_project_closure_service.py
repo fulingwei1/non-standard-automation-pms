@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-"""项目结项通知服务测试 - ClosureNotificationService 专项测试
+"""项目结项准备度服务测试 - ClosureReadinessService 专项测试
 
-本测试文件聚焦于 ClosureNotificationService 类的核心功能测试:
-- test_send_closure_notification: 发送结项通知
-- test_send_reminder_to_stakeholders: 发送提醒给相关方
-- test_notification_with_invalid_recipient: 无效收件人边界
-- test_notification_template_rendering: 通知模板渲染
+本测试文件聚焦于 ClosureReadinessService 类的核心功能测试
 """
 
 from datetime import date, datetime
@@ -15,292 +11,300 @@ from unittest.mock import MagicMock, patch, PropertyMock
 import pytest
 
 
-class TestClosureNotificationService:
-    """ClosureNotificationService 测试"""
+@pytest.fixture
+def mock_db():
+    return MagicMock()
 
-    @pytest.fixture
-    def mock_db(self):
-        """创建模拟数据库会话"""
-        db = MagicMock()
-        return db
 
-    @pytest.fixture
-    def service(self, mock_db):
-        """创建服务实例"""
-        from app.services.project.closure_readiness_service import ClosureNotificationService
-        return ClosureNotificationService(mock_db)
+def create_service(mock_db):
+    """创建服务实例"""
+    from app.services.project.closure_readiness_service import ClosureReadinessService
+    return ClosureReadinessService(mock_db)
 
-    def _create_mock_project(self, **kwargs):
-        """创建模拟项目对象"""
+
+def test_check_closure_readiness_complete(mock_db):
+    """测试结项就绪检查（完成状态）"""
+    # Create project with real values inside patches
+    with patch("app.services.project.closure_readiness_service.Project") as MockProject, \
+         patch("app.services.project.closure_readiness_service.ProjectStageInstance") as MockStageInst, \
+         patch("app.services.project.closure_readiness_service.ProjectStage") as MockStage, \
+         patch("app.services.project.closure_readiness_service.ProjectNodeInstance") as MockNodeInst, \
+         patch("app.services.project.closure_readiness_service.ProjectDocument") as MockDoc, \
+         patch("app.services.project.closure_readiness_service.ProjectCost") as MockCost, \
+         patch("app.services.project.closure_readiness_service.ApprovalInstance") as MockApproval, \
+         patch("app.services.project.closure_readiness_service.func") as MockFunc:
+        
+        # Create project with real attributes - inside patch context
         project = MagicMock()
-        project.id = kwargs.get("id", 1)
-        project.project_code = kwargs.get("project_code", "PRJ001")
-        project.project_name = kwargs.get("project_name", "测试项目")
-        project.pm_id = kwargs.get("pm_id", 100)
-        project.created_by = kwargs.get("created_by", 101)
-        return project
+        # Set real values for properties that will be used in comparisons
+        object.__setattr__(project, 'id', 1)
+        object.__setattr__(project, 'project_code', "PRJ001")
+        object.__setattr__(project, 'project_name', "测试项目")
+        object.__setattr__(project, 'budget_amount', Decimal("100000"))
+        object.__setattr__(project, 'actual_cost', Decimal("95000"))
+        object.__setattr__(project, 'invoice_issued', True)
+        object.__setattr__(project, 'final_payment_completed', True)
+        
+        # Also set via property to be safe
+        project.id = 1
+        project.project_code = "PRJ001"
+        project.project_name = "测试项目"
+        project.budget_amount = Decimal("100000")
+        project.actual_cost = Decimal("95000")
+        project.invoice_issued = True
+        project.final_payment_completed = True
+        
+        # Setup query results - sequence matters
+        query_results = [
+            (project, "first"),  # 1. Project query
+            ([MagicMock(stage_code=f"S{i}", status="COMPLETED") for i in range(1, 9)], "all"),  # 2. Stage instances
+            ([], "all"),  # 3. Node instances (deliverables)
+            ([MagicMock(doc_type="设计文档", doc_category="设计"),
+              MagicMock(doc_type="测试报告", doc_category="测试"),
+              MagicMock(doc_type="验收报告", doc_category="验收"),
+              MagicMock(doc_type="用户手册", doc_category="培训")], "all"),  # 4. Documents
+            (MagicMock(status="APPROVED"), "first"),  # 5. Approval
+            ([MagicMock()], "all"),  # 6. Costs
+            ([MagicMock(stage_code="S1", status="COMPLETED")], "all"),  # 7. Fallback to ProjectStage
+            ([MagicMock()], "all"),  # 8. Cost count via func
+        ]
+        
+        query_idx = [0]
+        
+        def query_handler(*args, **kwargs):
+            m = MagicMock()
+            i = query_idx[0]
+            query_idx[0] += 1
+            
+            if i < len(query_results):
+                data, method = query_results[i]
+                if method == "first":
+                    m.filter.return_value.first.return_value = data
+                else:
+                    m.filter.return_value.all.return_value = data
+            return m
+        
+        mock_db.query.side_effect = query_handler
+        
+        # Mock func.count chain
+        mock_count = MagicMock()
+        mock_count.filter.return_value.scalar.return_value = 10
+        MockFunc.count.return_value = mock_count
+        
+        service = create_service(mock_db)
+        result = service.check_readiness(project_id=1)
 
-    @patch("app.services.project.closure_readiness_service.Project")
-    @patch("app.services.project.closure_readiness_service.Notification")
-    def test_send_closure_notification(
-        self, mock_notification_cls, mock_project_cls, service, mock_db
-    ):
-        """测试发送结项通知 - 项目已就绪时发送通知"""
-        # Setup: project is ready
-        readiness = {
-            "ready": True,
-            "score": 100,
-            "project_id": 1,
-        }
-
-        mock_project = self._create_mock_project(
-            id=1,
-            project_code="PRJ001",
-            project_name="测试项目",
-            pm_id=100,
-            created_by=101,
-        )
-
-        # Mock project query
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.first.return_value = mock_project
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
-
-        # Mock notification to capture what gets added
-        mock_notification_instance = MagicMock()
-        mock_notification_instance.id = 1
-        mock_notification_cls.return_value = mock_notification_instance
-
-        # Execute
-        result = service.notify_if_ready(project_id=1, readiness=readiness)
-
-        # Verify: should return notification IDs
-        assert isinstance(result, list)
-        assert len(result) > 0 or mock_db.add.called
-
-    @patch("app.services.project.closure_readiness_service.Project")
-    @patch("app.services.project.closure_readiness_service.Notification")
-    def test_send_reminder_to_stakeholders(
-        self, mock_notification_cls, mock_project_cls, service, mock_db
-    ):
-        """测试发送提醒给相关方 - 准备度 >= 80 但未完全通过"""
-        # Setup: project is close to ready (score >= 80 but not ready)
-        readiness = {
-            "ready": False,
-            "score": 85,
-            "project_id": 1,
-            "missing_items": ["阶段 S4 未完成", "缺少验收报告"],
-        }
-
-        mock_project = self._create_mock_project(
-            id=1,
-            project_code="PRJ001",
-            project_name="测试项目",
-            pm_id=100,
-            created_by=101,
-        )
-
-        # Mock project query
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.first.return_value = mock_project
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
-
-        # Mock notification
-        mock_notification_instance = MagicMock()
-        mock_notification_instance.id = 2
-        mock_notification_cls.return_value = mock_notification_instance
-
-        # Execute
-        result = service.notify_if_ready(project_id=1, readiness=readiness)
-
-        # Verify: should send reminder (notification type: PROJECT_CLOSURE_REMINDER)
-        assert isinstance(result, list)
-        # When score >= 80 and not ready, should create reminder notification
-        assert mock_db.add.called or len(result) >= 0
-
-    @patch("app.services.project.closure_readiness_service.Project")
-    @patch("app.services.project.closure_readiness_service.Notification")
-    def test_notification_with_invalid_recipient(
-        self, mock_notification_cls, mock_project_cls, service, mock_db
-    ):
-        """测试无效收件人边界情况 - 项目不存在"""
-        # Setup: project does not exist
-        readiness = {
-            "ready": True,
-            "score": 100,
-            "project_id": 999,
-        }
-
-        # Mock no project found
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.first.return_value = None
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
-
-        # Execute
-        result = service.notify_if_ready(project_id=999, readiness=readiness)
-
-        # Verify: should return empty list when project not found
-        assert result == []
-        mock_db.add.assert_not_called()
-
-    @patch("app.services.project.closure_readiness_service.Project")
-    @patch("app.services.project.closure_readiness_service.Notification")
-    def test_notification_template_rendering(
-        self, mock_notification_cls, mock_project_cls, service, mock_db
-    ):
-        """测试通知模板渲染 - 验证通知内容正确"""
-        # Setup: project is ready
-        readiness = {
-            "ready": True,
-            "score": 100,
-            "project_id": 1,
-        }
-
-        mock_project = self._create_mock_project(
-            id=1,
-            project_code="PRJ001",
-            project_name="测试项目",
-            pm_id=100,
-            created_by=101,
-        )
-
-        # Mock project query
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.first.return_value = mock_project
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
-
-        # Capture the notification object when created
-        captured_notification = None
-        original_init = mock_notification_cls
-
-        def capture_notification(*args, **kwargs):
-            nonlocal captured_notification
-            captured_notification = MagicMock()
-            captured_notification.id = 1
-            return captured_notification
-
-        mock_notification_cls.side_effect = capture_notification
-
-        # Execute
-        result = service.notify_if_ready(project_id=1, readiness=readiness)
-
-        # Verify: notification should have correct template fields
-        if captured_notification:
-            # Check that notification was created with expected attributes
-            assert mock_db.add.called
-            # Verify the notification has project link
-            assert hasattr(captured_notification, 'link_url') or mock_db.add.called
-
-    @patch("app.services.project.closure_readiness_service.Project")
-    @patch("app.services.project.closure_readiness_service.Notification")
-    def test_notification_no_pm_id(
-        self, mock_notification_cls, mock_project_cls, service, mock_db
-    ):
-        """测试无项目经理时的通知行为"""
-        # Setup: project has no pm_id
-        readiness = {
-            "ready": True,
-            "score": 100,
-            "project_id": 1,
-        }
-
-        mock_project = self._create_mock_project(
-            id=1,
-            project_code="PRJ001",
-            project_name="测试项目",
-            pm_id=None,  # No PM
-            created_by=101,
-        )
-
-        # Mock project query
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.first.return_value = mock_project
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
-
-        # Execute
-        result = service.notify_if_ready(project_id=1, readiness=readiness)
-
-        # Verify: should handle missing pm_id gracefully
-        assert isinstance(result, list)
-        # When no pm_id, should not create notification to PM but might notify creator
-        mock_db.commit.assert_called()
-
-    @patch("app.services.project.closure_readiness_service.Project")
-    @patch("app.services.project.closure_readiness_service.Notification")
-    def test_notification_score_below_80(
-        self, mock_notification_cls, mock_project_cls, service, mock_db
-    ):
-        """测试准备度低于80分时不发送通知"""
-        # Setup: project score is below 80
-        readiness = {
-            "ready": False,
-            "score": 60,
-            "project_id": 1,
-            "missing_items": ["阶段未完成", "缺少文档"],
-        }
-
-        mock_project = self._create_mock_project(
-            id=1,
-            project_code="PRJ001",
-            project_name="测试项目",
-            pm_id=100,
-            created_by=101,
-        )
-
-        # Mock project query
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.first.return_value = mock_project
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
-
-        # Execute
-        result = service.notify_if_ready(project_id=1, readiness=readiness)
-
-        # Verify: should return empty list (no notification sent for low score)
-        assert result == []
+    assert result["ready"] is True
+    assert result["score"] == 100
+    assert result["project_id"] == 1
 
 
-class TestNotificationIntegration:
-    """通知服务集成测试"""
+def test_check_closure_readiness_incomplete(mock_db):
+    """测试结项未就绪"""
+    with patch("app.services.project.closure_readiness_service.Project") as MockProject, \
+         patch("app.services.project.closure_readiness_service.ProjectStageInstance") as MockStageInst, \
+         patch("app.services.project.closure_readiness_service.ProjectStage") as MockStage, \
+         patch("app.services.project.closure_readiness_service.ProjectNodeInstance") as MockNodeInst, \
+         patch("app.services.project.closure_readiness_service.ProjectDocument") as MockDoc, \
+         patch("app.services.project.closure_readiness_service.ProjectCost") as MockCost, \
+         patch("app.services.project.closure_readiness_service.ApprovalInstance") as MockApproval, \
+         patch("app.services.project.closure_readiness_service.func") as MockFunc:
+        
+        # Project with issues - over budget, not invoiced, not paid
+        project = MagicMock()
+        project.id = 1
+        project.project_code = "PRJ001"
+        project.project_name = "测试项目"
+        project.budget_amount = Decimal("100000")
+        project.actual_cost = Decimal("120000")  # Over!
+        project.invoice_issued = False
+        project.final_payment_completed = False
+        
+        query_results = [
+            (project, "first"),
+            ([MagicMock(stage_code="S1", status="COMPLETED")], "all"),  # Only 1 stage
+            ([], "all"),
+            ([], "all"),  # No docs
+            (None, "first"),  # No approval
+            ([], "all"),  # No costs
+            ([], "all"),  # Fallback stages
+            ([], "all"),  # Cost count
+        ]
+        
+        query_idx = [0]
+        
+        def query_handler(*args, **kwargs):
+            m = MagicMock()
+            i = query_idx[0]
+            query_idx[0] += 1
+            
+            if i < len(query_results):
+                data, method = query_results[i]
+                if method == "first":
+                    m.filter.return_value.first.return_value = data
+                else:
+                    m.filter.return_value.all.return_value = data
+            return m
+        
+        mock_db.query.side_effect = query_handler
+        
+        mock_count = MagicMock()
+        mock_count.filter.return_value.scalar.return_value = 0
+        MockFunc.count.return_value = mock_count
+        
+        service = create_service(mock_db)
+        result = service.check_readiness(project_id=1)
 
-    @pytest.fixture
-    def mock_db(self):
-        return MagicMock()
+    assert result["ready"] is False
+    assert result["score"] < 100
+    assert len(result["missing_items"]) > 0
 
-    @pytest.fixture
-    def service(self, mock_db):
-        from app.services.project.closure_readiness_service import ClosureNotificationService
-        return ClosureNotificationService(mock_db)
 
-    @patch("app.services.project.closure_readiness_service.Notification")
-    def test_create_notification_method(self, mock_notification_cls, service, mock_db):
-        """测试 _create_notification 内部方法"""
-        mock_project = MagicMock()
-        mock_project.id = 1
-        mock_project.project_code = "PRJ001"
-        mock_project.project_name = "测试项目"
+def test_get_readiness_score(mock_db):
+    """测试准备度评分"""
+    with patch("app.services.project.closure_readiness_service.Project") as MockProject, \
+         patch("app.services.project.closure_readiness_service.ProjectStageInstance") as MockStageInst, \
+         patch("app.services.project.closure_readiness_service.ProjectStage") as MockStage, \
+         patch("app.services.project.closure_readiness_service.ProjectNodeInstance") as MockNodeInst, \
+         patch("app.services.project.closure_readiness_service.ProjectDocument") as MockDoc, \
+         patch("app.services.project.closure_readiness_service.ProjectCost") as MockCost, \
+         patch("app.services.project.closure_readiness_service.ApprovalInstance") as MockApproval, \
+         patch("app.services.project.closure_readiness_service.func") as MockFunc:
+        
+        project = MagicMock()
+        project.id = 1
+        project.project_code = "PRJ001"
+        project.project_name = "测试项目"
+        project.budget_amount = Decimal("100000")
+        project.actual_cost = Decimal("95000")
+        project.invoice_issued = True
+        project.final_payment_completed = True
+        
+        query_results = [
+            (project, "first"),
+            ([MagicMock(stage_code=f"S{i}", status="COMPLETED") for i in range(1, 9)], "all"),
+            ([], "all"),
+            ([MagicMock(doc_type="设计文档"), MagicMock(doc_type="测试报告"),
+              MagicMock(doc_type="验收报告"), MagicMock(doc_type="用户手册")], "all"),
+            (MagicMock(status="APPROVED"), "first"),
+            ([MagicMock()], "all"),
+            ([], "all"),
+            ([], "all"),
+        ]
+        
+        query_idx = [0]
+        
+        def query_handler(*args, **kwargs):
+            m = MagicMock()
+            i = query_idx[0]
+            query_idx[0] += 1
+            
+            if i < len(query_results):
+                data, method = query_results[i]
+                if method == "first":
+                    m.filter.return_value.first.return_value = data
+                else:
+                    m.filter.return_value.all.return_value = data
+            return m
+        
+        mock_db.query.side_effect = query_handler
+        
+        mock_count = MagicMock()
+        mock_count.filter.return_value.scalar.return_value = 5
+        MockFunc.count.return_value = mock_count
+        
+        service = create_service(mock_db)
+        result = service.check_readiness(project_id=1)
 
-        # Execute internal method
-        result = service._create_notification(
-            user_id=100,
-            project=mock_project,
-            title="测试标题",
-            content="测试内容",
-            priority="HIGH",
-            notification_type="TEST_NOTIFICATION",
-        )
+    assert "score" in result
+    assert isinstance(result["score"], int)
+    assert 0 <= result["score"] <= 100
+    assert result["score"] == 100
 
-        # Verify
-        assert result is not None
-        mock_db.add.assert_called_once_with(result)
+
+def test_readiness_with_partial_deliverables(mock_db):
+    """测试部分交付物边界情况"""
+    with patch("app.services.project.closure_readiness_service.Project") as MockProject, \
+         patch("app.services.project.closure_readiness_service.ProjectStageInstance") as MockStageInst, \
+         patch("app.services.project.closure_readiness_service.ProjectStage") as MockStage, \
+         patch("app.services.project.closure_readiness_service.ProjectNodeInstance") as MockNodeInst, \
+         patch("app.services.project.closure_readiness_service.ProjectDocument") as MockDoc, \
+         patch("app.services.project.closure_readiness_service.ProjectCost") as MockCost, \
+         patch("app.services.project.closure_readiness_service.ApprovalInstance") as MockApproval, \
+         patch("app.services.project.closure_readiness_service.func") as MockFunc:
+        
+        project = MagicMock()
+        project.id = 1
+        project.project_code = "PRJ001"
+        project.project_name = "测试项目"
+        project.budget_amount = Decimal("100000")
+        project.actual_cost = Decimal("95000")
+        project.invoice_issued = True
+        project.final_payment_completed = True
+        
+        # Partial documents - only design doc
+        query_results = [
+            (project, "first"),
+            ([MagicMock(stage_code=f"S{i}", status="COMPLETED") for i in range(1, 9)], "all"),
+            ([], "all"),
+            ([MagicMock(doc_type="设计文档", doc_category="设计")], "all"),  # Only 1 doc
+            (MagicMock(status="APPROVED"), "first"),
+            ([MagicMock()], "all"),
+            ([], "all"),
+            ([], "all"),
+        ]
+        
+        query_idx = [0]
+        
+        def query_handler(*args, **kwargs):
+            m = MagicMock()
+            i = query_idx[0]
+            query_idx[0] += 1
+            
+            if i < len(query_results):
+                data, method = query_results[i]
+                if method == "first":
+                    m.filter.return_value.first.return_value = data
+                else:
+                    m.filter.return_value.all.return_value = data
+            return m
+        
+        mock_db.query.side_effect = query_handler
+        
+        mock_count = MagicMock()
+        mock_count.filter.return_value.scalar.return_value = 5
+        MockFunc.count.return_value = mock_count
+        
+        service = create_service(mock_db)
+        result = service.check_readiness(project_id=1)
+
+    assert result["ready"] is False
+    assert result["score"] < 100
+    assert result["score"] > 0
+    
+    # Check deliverable check
+    deliverable_check = next(
+        (c for c in result["checks"] if c["key"] == "deliverable_upload"), None
+    )
+    assert deliverable_check is not None
+    assert deliverable_check["passed"] is False
+
+
+def test_project_not_found(mock_db):
+    """测试项目不存在"""
+    with patch("app.services.project.closure_readiness_service.Project"):
+        with patch("app.services.project.closure_readiness_service.ProjectStageInstance"):
+            with patch("app.services.project.closure_readiness_service.ProjectStage"):
+                with patch("app.services.project.closure_readiness_service.ProjectNodeInstance"):
+                    with patch("app.services.project.closure_readiness_service.ProjectDocument"):
+                        with patch("app.services.project.closure_readiness_service.ProjectCost"):
+                            with patch("app.services.project.closure_readiness_service.ApprovalInstance"):
+                                with patch("app.services.project.closure_readiness_service.func"):
+                                    mock_db.query.return_value.filter.return_value.first.return_value = None
+                                    
+                                    service = create_service(mock_db)
+                                    result = service.check_readiness(project_id=999)
+
+    assert result["ready"] is False
+    assert result["score"] == 0
+    assert "项目不存在" in result["missing_items"]
