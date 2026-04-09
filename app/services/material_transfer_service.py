@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 # from app.models.inventory_tracking import MaterialStock, MaterialTransaction, MaterialReservation  # FIXME: Classes do not exist
 # Use correct class names:
 from app.models.inventory_tracking import MaterialReservation, MaterialStock, MaterialTransaction
-from app.models.material import Material, ProjectMaterial
+from app.models.material import Material  # ProjectMaterial class does not exist
 from app.models.project import Project
 from app.models.shortage import MaterialTransfer
 

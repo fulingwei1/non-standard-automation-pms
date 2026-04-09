@@ -15,7 +15,7 @@ from app.models.acceptance import (
     AcceptanceIssue,
     AcceptanceOrder,
 )
-from app.models.customer import Customer
+from app.models.project.customer import Customer
 from app.models.project import (
     Project,
 )

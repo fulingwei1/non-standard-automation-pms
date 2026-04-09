@@ -115,6 +115,7 @@ class ProjectPaymentPlan(Base, TimestampMixin):
         Index("idx_payment_plans_contract", "contract_id"),
         Index("idx_payment_plans_milestone", "milestone_id"),
         Index("idx_payment_plans_status", "status"),
+        {"extend_existing": True},
     )
 
     def __repr__(self):

@@ -56,6 +56,9 @@ from .resource_plan import (
 # 风险历史
 from .risk_history import ProjectRiskHistory, ProjectRiskSnapshot
 
+# 成本基准
+from .cost_benchmark import BenchmarkConfiguration, ProjectCostBenchmark, SimilarityLevelEnum
+
 # 项目团队
 from .team import ProjectMember, ProjectMemberContribution
 
@@ -106,4 +109,8 @@ __all__ = [
     # 枚举兼容
     "ProjectHealth",
     "ProjectHealthEnum",
+    # 成本基准
+    "BenchmarkConfiguration",
+    "ProjectCostBenchmark",
+    "SimilarityLevelEnum",
 ]
