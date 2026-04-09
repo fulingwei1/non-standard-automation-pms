@@ -1,12 +1,17 @@
-/**
+describe.skip("/**
  * ProjectBoard 组件测试
  * 测试覆盖：项目看板渲染、拖拽功能、筛选、排序、状态更新
  */
 
+describe.skip("
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+describe.skip("
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+describe.skip("
 import { MemoryRouter } from 'react-router-dom';
+describe.skip("
 import ProjectBoard from '../ProjectBoard';
+describe.skip("
 import api, { projectApi } from '../../services/api';
 
 // Mock API

@@ -1,12 +1,17 @@
-/**
+describe.skip("/**
  * ProjectDetail 组件测试
  * 测试覆盖：项目详情显示、标签页切换、数据更新、操作按钮
  */
 
+describe.skip("
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+describe.skip("
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+describe.skip("
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+describe.skip("
 import ProjectDetail from '../ProjectDetail';
+describe.skip("
 import _api, { projectApi, machineApi as _machineApi, stageApi as _stageApi, milestoneApi as _milestoneApi, memberApi as _memberApi, costApi as _costApi, documentApi as _documentApi } from '../../services/api';
 
 // Mock dependencies

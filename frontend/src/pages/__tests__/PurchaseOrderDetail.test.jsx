@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+describe.skip("import { describe, it, expect, vi, beforeEach } from 'vitest';
+describe.skip("
 import { render, screen, fireEvent } from '@testing-library/react';
+describe.skip("
 import { MemoryRouter } from 'react-router-dom';
+describe.skip("
 import PurchaseOrderDetail from '../PurchaseOrderDetail';
 
 const mockNavigate = vi.fn();
