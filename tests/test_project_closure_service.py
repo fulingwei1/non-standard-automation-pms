@@ -344,33 +344,42 @@ class TestClosureAutoReviewService:
         project.actual_end_date = kwargs.get("actual_end_date")
         return project
 
+    @patch("app.services.project.closure_readiness_service.date")
     @patch("app.services.project.closure_readiness_service.ProjectReview")
     @patch("app.services.project.closure_readiness_service.ProjectLesson")
     @patch("app.services.project.closure_readiness_service.ProjectBestPractice")
     @patch("app.services.project.closure_readiness_service.Project")
     @patch("app.services.project.closure_readiness_service.func")
     def test_auto_review_trigger_conditions(
-        self, mock_func, mock_project_cls, mock_practice_cls, mock_lesson_cls, mock_review_cls, service, mock_db
+        self, mock_func, mock_project_cls, mock_practice_cls, mock_lesson_cls, mock_review_cls, mock_date, service, mock_db
     ):
         """测试自动回顾触发条件 - 项目结项时自动触发"""
         from datetime import date
-        mock_project = self._create_mock_project(
-            id=1,
-            project_code="PRJ001",
-            project_name="测试项目",
-            budget_amount=Decimal("100000"),
-            actual_cost=Decimal("95000"),
-            planned_start_date=date(2025, 1, 1),
-            planned_end_date=date(2025, 6, 30),
-            actual_start_date=date(2025, 1, 1),
-            actual_end_date=date(2025, 7, 15),
-        )
+        # Mock date.today() to return a fixed date
+        mock_date.today.return_value = date(2025, 8, 1)
 
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.first.side_effect = [mock_project, None]
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
+        # Create mock project using object.__setattr__ to ensure real values
+        mock_project = MagicMock()
+        object.__setattr__(mock_project, 'id', 1)
+        object.__setattr__(mock_project, 'project_code', "PRJ001")
+        object.__setattr__(mock_project, 'project_name', "测试项目")
+        object.__setattr__(mock_project, 'budget_amount', Decimal("100000"))
+        object.__setattr__(mock_project, 'actual_cost', Decimal("95000"))
+        object.__setattr__(mock_project, 'planned_start_date', date(2025, 1, 1))
+        object.__setattr__(mock_project, 'planned_end_date', date(2025, 6, 30))
+        object.__setattr__(mock_project, 'actual_start_date', date(2025, 1, 1))
+        object.__setattr__(mock_project, 'actual_end_date', date(2025, 7, 15))
+
+        # Use side_effect to return project when query is called
+        def query_side_effect(*args):
+            m = MagicMock()
+            if args and hasattr(args[0], '__name__'):
+                # First call is for Project -> return project
+                # Second call is for ProjectReview -> return None
+                m.filter.return_value.first.return_value = mock_project
+            return m
+
+        mock_db.query.side_effect = query_side_effect
 
         mock_func.count.return_value.scalar.return_value = 0
 
