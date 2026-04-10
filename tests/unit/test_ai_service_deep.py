@@ -7,43 +7,57 @@ from unittest.mock import MagicMock, patch
 class TestAIServiceBusinessLogic:
     """AI服务业务逻辑测试"""
 
-    def test_chat(self):
-        """测试对话"""
+    def test_chat_completion(self):
+        """测试对话完成"""
         try:
             from app.services.ai_service import AIService
 
             mock_db = MagicMock()
             service = AIService(mock_db)
 
-            result = service.chat("你好")
+            result = service.chat_completion("你好")
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_analyze(self):
-        """测试分析"""
+    def test_simple_chat(self):
+        """测试简单对话"""
         try:
             from app.services.ai_service import AIService
 
             mock_db = MagicMock()
             service = AIService(mock_db)
 
-            result = service.analyze("分析这个")
+            result = service.simple_chat("你好")
 
             assert result is not None
         except ImportError:
             pytest.skip("Module not found")
 
-    def test_generate(self):
-        """测试生成"""
+    def test_project_analysis(self):
+        """测试项目分析"""
         try:
             from app.services.ai_service import AIService
 
             mock_db = MagicMock()
             service = AIService(mock_db)
 
-            result = service.generate("生成内容")
+            result = service.project_analysis(1)
+
+            assert result is not None
+        except ImportError:
+            pytest.skip("Module not found")
+
+    def test_close(self):
+        """测试关闭"""
+        try:
+            from app.services.ai_service import AIService
+
+            mock_db = MagicMock()
+            service = AIService(mock_db)
+
+            result = service.close()
 
             assert result is not None
         except ImportError:
